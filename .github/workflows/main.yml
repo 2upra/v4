@@ -1,0 +1,34 @@
+on: push
+name: 🚀 Enviar a producción 
+jobs:
+  web-deploy:
+    name: 🎉 Enviar
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🚚 Obteniendo cambios
+      uses: actions/checkout@v3
+    
+    - name: 📂 Sincronizando archivos 
+      uses: SamKirkland/FTP-Deploy-Action@4.3.3
+      with:
+        server: "167.86.117.147"
+        server-dir: ./
+        username: asley01ftp
+        password: ${{ secrets.passftp }}
+        exclude: |
+          **/.git/**
+          .github/
+          node_modules/
+          vendor/
+          tests/
+          stripe/**
+          .env
+          composer.lock
+          package-lock.json
+          yarn.lock
+          Dockerfile
+          docker-compose.yml
+          README.md
+          LICENSE
+          *.md
+          .*

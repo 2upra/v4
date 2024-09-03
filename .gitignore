@@ -1,0 +1,25 @@
+# Archivos de entorno
+.env
+
+# Dependencias de Node.js
+node_modules/
+
+# Dependencias de Composer
+vendor/
+
+# Archivos de configuracion de IDEs
+.vscode/
+.idea/
+
+# Archivos de sistema
+.DS_Store
+
+# Archivos de compilacion
+dist/
+build/
+
+# Archivos temporales
+*.log
+tmp/
+*.tmp
+*.txt
