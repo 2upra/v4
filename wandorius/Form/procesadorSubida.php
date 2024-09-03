@@ -558,34 +558,6 @@ add_filter('upload_mimes', 'agregar_mimes_permitidos');
 
 
 
-
-/*
-
-mira, no parece que este borrando el anterior o cumpliendo su funcion como debería, puedes ajustarlo para que funcione correctamente
-
-2024-08-24 22:48:23 - INICIO handle_file_upload
-2024-08-24 22:48:23 - Hash recibido: 2155baa2e8190c76a26e65e0e29ffb3cf7df25a40e57f0c34cfe7280e126216b
-2024-08-24 22:48:23 - Resultado de wp_handle_upload: Array
-(
-    [file] => /var/www/html/wp-content/uploads/2024/08/Their-Virtue-Is-A-Joke.flp
-    [url] => https://2upra.com/wp-content/uploads/2024/08/Their-Virtue-Is-A-Joke.flp
-    [type] => application/octet-stream
-)
-
-2024-08-24 22:48:23 - Carga exitosa. Hash guardado: 2155baa2e8190c76a26e65e0e29ffb3cf7df25a40e57f0c34cfe7280e126216b. URL del archivo: https://2upra.com/wp-content/uploads/2024/08/Their-Virtue-Is-A-Joke.flp
-2024-08-24 22:49:19 - ---------------------------------------------
-2024-08-24 22:49:19 - INICIO handle_file_upload
-2024-08-24 22:49:19 - Hash recibido: 2155baa2e8190c76a26e65e0e29ffb3cf7df25a40e57f0c34cfe7280e126216b
-2024-08-24 22:49:19 - Resultado de wp_handle_upload: Array
-(
-    [file] => /var/www/html/wp-content/uploads/2024/08/Their-Virtue-Is-A-Joke-1.flp
-    [url] => https://2upra.com/wp-content/uploads/2024/08/Their-Virtue-Is-A-Joke-1.flp
-    [type] => application/octet-stream
-)
-
-2024-08-24 22:49:19 - Carga exitosa. Hash guardado: 2155baa2e8190c76a26e65e0e29ffb3cf7df25a40e57f0c34cfe7280e126216b. URL del archivo: https://2upra.com/wp-content/uploads/2024/08/Their-Virtue-Is-A-Joke-1.flp */
-
-
 function handle_file_upload()
 {
     guardar_log("---------------------------------------------");

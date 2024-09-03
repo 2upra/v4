@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 
-$theme_path = '/var/www/html/wp-content/themes/records-2upra';
+$theme_path = '/var/www/wordpress/wp-content/themes/records-2upra';
 
 $command = "git -C $theme_path ls-files | xargs wc -l";
 $output = shell_exec($command);

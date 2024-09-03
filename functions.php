@@ -16,7 +16,7 @@ function guardar_log($log) {
     update_option($log_option_name, $logs);
 
     // Guardar en el archivo
-    $log_file = '/var/www/html/wp-content/themes/logsw.txt';
+    $log_file = '/var/www/wordpress/wp-content/themes/logsw.txt';
     file_put_contents($log_file, $timestamped_log . PHP_EOL, FILE_APPEND);
 
     // Verificar y truncar el archivo si supera las 400 líneas
@@ -147,14 +147,6 @@ function agregar_google_fonts()
 }
 add_action('wp_head', 'agregar_google_fonts', 1);
 
-
-
-
-
-
-
-
-// 
 function agregar_texto_flotante()
 {
 

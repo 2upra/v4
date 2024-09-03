@@ -1,15 +1,12 @@
 <?php
 
 define('ENABLE_LOGS', true);
-/*[22-Aug-2024 05:35:09 UTC] PHP Notice:  Undefined variable: user_id in /var/www/html/wp-content/themes/records-2upra/wandorius/Posts/manejadorposts.php on line 53
-[22-Aug-2024 05:35:09 UTC] PHP Notice:  Undefined variable: user_id in /var/www/html/wp-content/themes/records-2upra/wandorius/Posts/manejadorposts.php on line 72
-[22-Aug-2024 05:35:09 UTC] PHP Notice:  Undefined variable: user_id in /var/www/html/wp-content/themes/records-2upra/wandorius/Posts/manejadorposts.php on line 175
-[22-Aug-2024 05:35:09 UTC] PHP Notice:  Undefined index: identifier in /var/www/html/wp-content/themes/records-2upra/wandorius/Posts/manejadorposts.php on line 199 */
+
 function mostrar_publicaciones_sociales($atts, $is_ajax = false, $paged = 1)
 {
     $log_file_path = $is_ajax
-        ? '/var/www/html/wp-content/themes/wanlogAjax.txt'
-        : '/var/www/html/wp-content/themes/wanlog.txt';
+        ? '/var/www/wordpress/wp-content/themes/wanlogAjax.txt'
+        : '/var/www/wordpress/wp-content/themes/wanlog.txt';
 
     if (ENABLE_LOGS) {
         error_log("---------------------------------------\n", 3, $log_file_path);
@@ -55,7 +52,7 @@ function mostrar_publicaciones_sociales($atts, $is_ajax = false, $paged = 1)
         error_log("Identifier: $identifier\n", 3, $log_file_path);
         error_log("User ID: $user_id\n", 3, $log_file_path);
     }
-// [22-Aug-2024 05:35:09 UTC] PHP Notice:  Undefined variable: user_id in /var/www/html/wp-content/themes/records-2upra/wandorius/Posts/manejadorposts.php on line 53
+
     $meta_query = array();
 
     if (!empty($identifier)) {
@@ -227,7 +224,7 @@ add_shortcode('mostrar_publicaciones_sociales', 'mostrar_publicaciones_sociales'
 function cargar_mas_publicaciones_ajax()
 {
     // Determinar la ruta del archivo de log
-    $log_file_path = '/var/www/html/wp-content/themes/wanlogAjax.txt';
+    $log_file_path = '/var/www/wordpress/wp-content/themes/wanlogAjax.txt';
 
     // Obtener los parámetros de la solicitud POST
     $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;

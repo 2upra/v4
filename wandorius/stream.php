@@ -78,7 +78,7 @@ function custom_audio_streaming_handler() {
 /*
 add_action('template_redirect', 'custom_cache_handler');
 function custom_cache_handler() {
-    $log_file_path = '/var/www/html/wp-content/themes/wanlog.txt';
+    $log_file_path = '/var/www/wordpress/wp-content/themes/wanlog.txt';
     error_log("custom_cache_handler invoked\n", 3, $log_file_path);
 
     if (isset($_GET['custom-cache']) && $_GET['custom-cache'] == '1' && isset($_GET['file_path']) && !empty($_GET['file_path'])) {

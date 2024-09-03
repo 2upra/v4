@@ -2,7 +2,6 @@
 /*
 Template Name: Sello
 */
-
 get_header();
 ?>
 
