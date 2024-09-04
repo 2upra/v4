@@ -18,7 +18,8 @@ function enqueue_custom_scripts()
         ['handle' => 'formScriptFront', 'src' => '/js/formSubirRola.js', 'version' => '4.1.53'],
         ['handle' => 'social-post-script', 'src' => '/js/ajax-submit.js', 'version' => '2.1.38'],
         ['handle' => 'form-script', 'src' => '/js/formscript.js', 'version' => '1.1.11'],
-        ['handle' => 'estados', 'src' => 'js/estados.js', 'version' => '2.1.13'],
+        ['handle' => 'estados', 'src' => '/js/estados.js', 'version' => '2.1.13'],
+        ['handle' => 'wavejs', 'src' => 'js/wavejs.js', 'version' => '2.0.13'], 
     ];
 
     foreach ($scripts as $script) {
