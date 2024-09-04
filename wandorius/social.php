@@ -37,7 +37,7 @@ function social()
                     </div>
                     <div class="SUPMPQ">
                         <p>Sugerencia de seguimiento</p>
-                        <?php echo do_shortcode('[RecomendarUsuarios]'); ?>
+                        <?php echo RecomendarUsuarios() ?>
                     </div>
                 </div>
             </div>
