@@ -1,4 +1,8 @@
+<?php
+?>
+
 <!DOCTYPE html>
+<html <?php language_attributes(); ?>>
 
 <head>
 	<meta charset="<?php bloginfo('charset'); ?>">
@@ -10,13 +14,11 @@
 	<?php wp_body_open(); ?>
 
 	<div id="main">
-		<div id="content">
-			<p style="text-align: center;">404</p>
-		</div>
+		<p style="text-align: center;">404</p>
 	</div>
 
-
-
+	<div id="content">
+	</div>
 
 	<?php wp_footer(); ?>
 </body>
