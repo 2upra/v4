@@ -269,32 +269,40 @@ function ajax_submit() {
 function proyectoForm() {
     const form = document.getElementById('proyectoUnirte');
 
-    form.addEventListener('submit', function (e) {
-        e.preventDefault(); 
+    if (!form) {
+        console.error('El formulario no fue encontrado.');
+        return;
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = {
+            action: 'proyectoForm',
+            usernameReal: document.getElementById('usernameReal')?.value || '',
+            number: document.getElementById('number')?.value || '',
+            programmingExperience: document.getElementById('programmingExperience')?.value || '',
+            reasonToJoin: document.getElementById('reasonToJoin')?.value || '',
+            country: document.getElementById('country')?.value || '',
+            projectAttitude: document.getElementById('projectAttitude')?.value || '',
+            wordpressAttitude: document.getElementById('wordpressAttitude')?.value || '',
+            projectInitiative: document.getElementById('projectInitiative')?.value || '',
+            projectInitiativeOther: document.getElementById('projectInitiativeOther')?.value || ''
+        };
 
         fetch(ajaxurl, {
             method: 'POST',
-            body: new URLSearchParams({
-                action: 'proyectoForm',
-                usernameReal: document.getElementById('usernameReal').value,
-                number: document.getElementById('number').value,
-                programmingExperience: document.getElementById('programmingExperience').value,
-                reasonToJoin: document.getElementById('reasonToJoin').value,
-                country: document.getElementById('country').value,
-                projectAttitude: document.getElementById('projectAttitude').value,
-                wordpressAttitude: document.getElementById('wordpressAttitude').value,
-                projectInitiative: document.getElementById('projectInitiative').value,
-                projectInitiativeOther: document.getElementById('projectInitiativeOther').value,
-            })
-        }).then(response => response.json())
-          .then(data => {
-              alert('Formulario enviado correctamente.');
-              setTimeout(() => {
-                  location.reload(); // Reinicia la página después de 1 segundo
-              }, 1000);
-          })
-          .catch(error => {
-              console.log(error);
-          });
+            body: new URLSearchParams(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert('Formulario enviado correctamente.');
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        })
+        .catch(error => {
+            console.error('Error al enviar el formulario:', error);
+        });
     });
 }

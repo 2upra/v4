@@ -220,7 +220,7 @@ add_action('wp_enqueue_scripts', 'formScriptFront');
 //AJAX PARA SUBIR EL POST
 function enqueue_and_localize_social_post_scripts()
 {
-    wp_enqueue_script('social-post-script', get_template_directory_uri() . '/js/ajax-submit.js', array('jquery'), '2.1.37', true);
+    wp_enqueue_script('social-post-script', get_template_directory_uri() . '/js/ajax-submit.js', array('jquery'), '2.1.38', true);
     wp_localize_script('social-post-script', 'my_ajax_object', array(
         'ajax_url' => admin_url('admin-ajax.php'),
         'social_post_nonce' => wp_create_nonce('social-post-nonce'),
