@@ -1,10 +1,7 @@
 <?php
 
-
-
 function reproductor()
 {
-
 ?>
 
     <div class="TMLIWT" style="display: none;">
@@ -61,9 +58,6 @@ function reproductor()
 }
 add_action('wp_footer', 'reproductor');
 
-
-
-
 function manejar_reproducciones_y_oyentes(WP_REST_Request $request) {
     $audioSrc = $request->get_param('src');
     $postId = $request->get_param('post_id');
@@ -118,7 +112,3 @@ function contar_oyentes_unicos($artistId) {
     }));
 }
 
-function cargar_reproductor_js() {
-    wp_enqueue_script('reproductor-audio', get_template_directory_uri() . '/js/reproductor.js', [], '2.1.2', true);
-}
-add_action('wp_enqueue_scripts', 'cargar_reproductor_js');

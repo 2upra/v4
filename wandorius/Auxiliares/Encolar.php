@@ -12,6 +12,16 @@ function script_stripe_pro() {
 }
 add_action('wp_enqueue_scripts', 'script_stripe_pro');
 
+add_action('wp_enqueue_scripts', function() {
+    wp_enqueue_script('reporte', get_template_directory_uri() . '/js/reporte.js', ['jquery'], '1.0.17', true);
+    wp_localize_script('reporte', 'miAjax', ['ajaxurl' => admin_url('admin-ajax.php')]);
+});
+function cargar_reproductor_js() {
+    wp_enqueue_script('reproductor-audio', get_template_directory_uri() . '/js/reproductor.js', [], '2.1.2', true);
+}
+add_action('wp_enqueue_scripts', 'cargar_reproductor_js');
+
+
 function enqueue_custom_scripts()
 {
     $script_handles = [
