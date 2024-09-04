@@ -1,74 +1,51 @@
 <?php
 
-function reportesAdmin() {
+function render_admin_report($buttons, $contents) {
+    if (!current_user_can('administrator')) return '';
 
-    if ( ! current_user_can( 'administrator' ) ) {
-        return ''; 
-    }
-
-    ob_start(); 
-    ?>
-        <div class="QUHTCR">
-
-            <div class="iconosacciones">
-                <!-- Transacciones-->
-                <button id="BotonListaTransacciones" style="all:unset">
-                    <?php echo $GLOBALS['iconolista']; ?><span>Transacciones</span>
+    ob_start(); ?>
+    <div class="QUHTCR">
+        <div class="iconosacciones">
+            <?php foreach ($buttons as $id => $button): ?>
+                <button id="<?= $id ?>" style="all:unset">
+                    <?= $button['icon'] ?><span><?= $button['label'] ?></span>
                 </button>
-                <!-- Reporte de errores-->
-                <button id="BotonErrores" style="all:unset">
-                    <?php echo $GLOBALS['iconobugs']; ?><span>Reportes</span>
-                </button>
-            </div>
-            <!-- Contenido transacciones -->
-            <div id="ContenidoListaTranssacciones" class="transacciones">
-                <?php echo generate_transactions_table(); ?>
-            </div>
-
-            <div id="ContenidoErrores" class="transacciones reportescontenido">
-                <?php echo reportes(); ?>
-            </div>
-
+            <?php endforeach; ?>
         </div>
-
-
+        <?php foreach ($contents as $id => $content): ?>
+            <div id="<?= $id ?>" class="transacciones <?= $content['extra_class'] ?>">
+                <?= $content['content'] ?>
+            </div>
+        <?php endforeach; ?>
+    </div>
     <?php
-    $contenido = ob_get_clean(); 
-    return $contenido;
+    return ob_get_clean();
+}
+
+function reportesAdmin() {
+    $buttons = [
+        'BotonListaTransacciones' => ['icon' => $GLOBALS['iconolista'], 'label' => 'Transacciones'],
+        'BotonErrores' => ['icon' => $GLOBALS['iconobugs'], 'label' => 'Reportes'],
+    ];
+
+    $contents = [
+        'ContenidoListaTranssacciones' => ['content' => generate_transactions_table(), 'extra_class' => ''],
+        'ContenidoErrores' => ['content' => reportes(), 'extra_class' => 'reportescontenido'],
+    ];
+
+    return render_admin_report($buttons, $contents);
 }
 
 function logsAdmin() {
-    if ( ! current_user_can( 'administrator' ) ) {
-        return ''; 
-    }
+    $buttons = [
+        'BotonLogs1' => ['icon' => $GLOBALS['iconobugs'], 'label' => 'Propios'],
+        'BotonLogs2' => ['icon' => $GLOBALS['iconobugs'], 'label' => 'Wordpress'],
+    ];
 
-    ob_start();
-    ?>
-        <div class="QUHTCR">
+    $contents = [
+        'ContenidoLogs1' => ['content' => do_shortcode('[mostrar_logs_para_admin]'), 'extra_class' => 'logscontenido'],
+        'ContenidoLogs2' => ['content' => do_shortcode('[mostrar_logs_para_admin_w]'), 'extra_class' => 'logscontenido'],
+    ];
 
-            <div class="iconosacciones">
-                <!-- Transacciones -->
-                <button id="BotonLogs1">
-                    <?php echo $GLOBALS['iconobugs']; ?><span>Propios</span>
-                </button>
-                <!-- Reporte de errores -->
-                <button id="BotonLogs2">
-                    <?php echo $GLOBALS['iconobugs']; ?><span>Wordpress</span>
-                </button>
-            </div>
-            <!-- Contenido logs propios -->
-            <div id="ContenidoLogs1" class="logscontenido">
-                <?php echo do_shortcode('[mostrar_logs_para_admin]'); ?>
-            </div>
-
-            <!-- Contenido logs Wordpress -->
-            <div id="ContenidoLogs2" class="logscontenido">
-                <?php echo do_shortcode('[mostrar_logs_para_admin_w]'); ?>
-            </div>
-
-        </div>
-
-    <?php
-    $contenido = ob_get_clean();
-    return $contenido;
+    return render_admin_report($buttons, $contents);
 }
