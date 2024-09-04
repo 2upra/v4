@@ -7,6 +7,11 @@ function script_stripeacciones()
 }
 add_action('wp_enqueue_scripts', 'script_stripeacciones');
 
+function script_stripe_pro() {
+    wp_enqueue_script('script_stripe_pro', get_template_directory_uri() . '/js/stripepro.js', array(), '1.0.8', true);
+}
+add_action('wp_enqueue_scripts', 'script_stripe_pro');
+
 function enqueue_custom_scripts()
 {
     $script_handles = [
