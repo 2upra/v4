@@ -1,54 +1,56 @@
 <?php
 
+
 function enqueue_custom_scripts()
 {
-    // Scripts locales
-    $scripts = [
-        ['handle' => 'fan-script', 'src' => '/js/fan.js', 'version' => '1.0.36'],
-        ['handle' => 'progreso-script', 'src' => '/js/progreso.js', 'version' => '1.0.23'],
-        ['handle' => 'modal', 'src' => '/js/modal.js', 'version' => '1.0.22'],
-        ['handle' => 'alert', 'src' => '/js/alert.js', 'version' => '1.0.4'],
-        ['handle' => 'submenu', 'src' => '/js/submenu.js', 'version' => '1.2.15'],
-        ['handle' => 'pestanas', 'src' => '/js/pestanas.js', 'version' => '1.1.10'],
-        ['handle' => 'grafico', 'src' => '/js/grafico.js', 'version' => '1.0.23', 'deps' => ['jquery', 'lightweight-charts']],
-        ['handle' => 'configPerfiljs', 'src' => '/js/configPerfil.js', 'version' => '1.0.14'],
-        ['handle' => 'registro', 'src' => '/js/registro.js', 'version' => '1.0.12'],
-        ['handle' => 'grain', 'src' => '/js/grained.js', 'version' => '1.0.3'],
-        ['handle' => 'subida', 'src' => '/js/subida.js', 'version' => '1.1.21'],
-        ['handle' => 'formScriptFront', 'src' => '/js/formSubirRola.js', 'version' => '4.1.53'],
-        ['handle' => 'social-post-script', 'src' => '/js/ajax-submit.js', 'version' => '2.1.38'],
-        ['handle' => 'form-script', 'src' => '/js/formscript.js', 'version' => '1.1.11'],
-        ['handle' => 'estados', 'src' => '/js/estados.js', 'version' => '2.1.13'],
-        ['handle' => 'wavejs', 'src' => 'js/wavejs.js', 'version' => '2.0.13'], 
+    $script_handles = [
+        'fan-script' => '1.0.36',
+        'progreso-script' => '1.0.23',
+        'modal' => '1.0.22',
+        'alert' => '1.0.4',
+        'submenu' => '1.2.15',
+        'pestanas' => '1.1.10',
+        'grafico' => ['1.0.23', ['jquery', 'lightweight-charts']],
+        'configPerfiljs' => '1.0.14',
+        'registro' => '1.0.12',
+        'grain' => '1.0.3',
+        'subida' => '1.1.21',
+        'formScriptFront' => '4.1.53',
+        'social-post-script' => '2.1.38',
+        'form-script' => '1.1.11',
+        'estados' => '2.1.13',
+        'wavejs' => ['2.0.12', ['jquery', 'wavesurfer']],
     ];
 
-    foreach ($scripts as $script) {
+    foreach ($script_handles as $handle => $data) {
+        $version = is_array($data) ? $data[0] : $data;
+        $deps = is_array($data) && isset($data[1]) ? $data[1] : [];
+
         wp_enqueue_script(
-            $script['handle'],
-            get_template_directory_uri() . $script['src'],
-            isset($script['deps']) ? $script['deps'] : ['jquery'],
-            $script['version'],
+            $handle,
+            get_template_directory_uri() . "/js/{$handle}.js",
+            $deps,
+            $version,
             true
         );
     }
 
     // Scripts externos
-    // wp_enqueue_script('lightweight-charts', 'https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js', [], null, true);
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
     wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', ['chart-js'], null, true);
 
     // Localización de scripts
-    wp_localize_script('subida', 'my_ajax_object', ['ajax_url' => admin_url('admin-ajax.php')]);
+    $ajax_url = admin_url('admin-ajax.php');
+    wp_localize_script('subida', 'my_ajax_object', ['ajax_url' => $ajax_url]);
     wp_localize_script('social-post-script', 'my_ajax_object', [
-        'ajax_url' => admin_url('admin-ajax.php'),
+        'ajax_url' => $ajax_url,
         'social_post_nonce' => wp_create_nonce('social-post-nonce'),
     ]);
 
-    $is_admin = current_user_can('administrator') ? true : false;
-    wp_localize_script('form-script', 'wpData', ['isAdmin' => $is_admin]);
+    wp_localize_script('wavejs', 'ajax_params', ['ajaxurl' => $ajax_url]);
+    wp_localize_script('form-script', 'wpData', ['isAdmin' => current_user_can('administrator')]);
 }
+
 add_action('wp_enqueue_scripts', 'enqueue_custom_scripts');
-
-
 
 
