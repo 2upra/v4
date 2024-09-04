@@ -1,60 +1,24 @@
-<?php
-/**
- * The template for displaying 404 pages (not found)
- *
- * @link https://codex.wordpress.org/Creating_an_Error_404_Page
- *
- * @package Records_2upra
- */
+<!DOCTYPE html>
 
-get_header();
-?>
+<head>
+	<meta charset="<?php bloginfo('charset'); ?>">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<?php wp_head(); ?>
+</head>
 
-	<main id="primary" class="site-main">
+<body <?php body_class(); ?>>
+	<?php wp_body_open(); ?>
 
-		<section class="error-404 not-found">
-			<header class="page-header">
-				<h1 class="page-title"><?php esc_html_e( 'Oops! That page can&rsquo;t be found.', 'records-2upra' ); ?></h1>
-			</header><!-- .page-header -->
+	<div id="main">
+		<div id="content">
+			<p style="text-align: center;">404</p>
+		</div>
+	</div>
 
-			<div class="page-content">
-				<p><?php esc_html_e( 'It looks like nothing was found at this location. Maybe try one of the links below or a search?', 'records-2upra' ); ?></p>
 
-					<?php
-					get_search_form();
 
-					the_widget( 'WP_Widget_Recent_Posts' );
-					?>
 
-					<div class="widget widget_categories">
-						<h2 class="widget-title"><?php esc_html_e( 'Most Used Categories', 'records-2upra' ); ?></h2>
-						<ul>
-							<?php
-							wp_list_categories(
-								array(
-									'orderby'    => 'count',
-									'order'      => 'DESC',
-									'show_count' => 1,
-									'title_li'   => '',
-									'number'     => 10,
-								)
-							);
-							?>
-						</ul>
-					</div><!-- .widget -->
+	<?php wp_footer(); ?>
+</body>
 
-					<?php
-					/* translators: %1$s: smiley */
-					$records_2upra_archive_content = '<p>' . sprintf( esc_html__( 'Try looking in the monthly archives. %1$s', 'records-2upra' ), convert_smilies( ':)' ) ) . '</p>';
-					the_widget( 'WP_Widget_Archives', 'dropdown=1', "after_title=</h2>$records_2upra_archive_content" );
-
-					the_widget( 'WP_Widget_Tag_Cloud' );
-					?>
-
-			</div><!-- .page-content -->
-		</section><!-- .error-404 -->
-
-	</main><!-- #main -->
-
-<?php
-get_footer();
+</html>

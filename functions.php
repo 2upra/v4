@@ -416,7 +416,18 @@ function redirigir_si_no_logeado() {
 
 
 
-
+function custom_template_directory($template) {
+    $path = explode('/', $template);
+    $template_chosen = $path[count($path)-1];
+    $template_dir = get_template_directory() . '/app/routes/';
+    
+    if (file_exists($template_dir . $template_chosen)) {
+        return $template_dir . $template_chosen;
+    }
+    
+    return $template;
+}
+add_filter('template_include', 'custom_template_directory');
 
 
 
