@@ -421,7 +421,7 @@ function redirigir_si_no_logeado() {
 
 
 
-// Impedir el acceso al área de administración y la visualización de la barra de herramientas para todos los usuarios excepto los administradores
+
 function restrict_admin_area_and_toolbar()
 {
     if (!current_user_can('administrator') && !wp_doing_ajax()) {
@@ -431,7 +431,6 @@ function restrict_admin_area_and_toolbar()
 }
 add_action('admin_init', 'restrict_admin_area_and_toolbar');
 
-// Ocultar la barra de herramientas para todos los usuarios excepto los administradores
 function hide_admin_bar_for_non_admins()
 {
     if (!current_user_can('administrator')) {
@@ -458,10 +457,7 @@ add_action('after_setup_theme', 'replace_deprecated_function');
 function redirigir_busqueda_invalida() {
     if (isset($_SERVER['REQUEST_URI'])) {
         $request_uri = $_SERVER['REQUEST_URI'];
-
-        // Verifica si la URL contiene '?s=' (búsqueda)
         if (strpos($request_uri, '?s=') !== false) {
-            // Redirige a la página de inicio
             wp_redirect(home_url());
             exit;
         }

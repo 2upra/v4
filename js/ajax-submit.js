@@ -270,7 +270,6 @@ function proyectoForm() {
     const form = document.getElementById('proyectoUnirte');
 
     if (!form) {
-        console.error('El formulario no fue encontrado.');
         return;
     }
 
