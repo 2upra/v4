@@ -18,6 +18,7 @@ function enqueue_custom_scripts()
         ['handle' => 'formScriptFront', 'src' => '/js/formSubirRola.js', 'version' => '4.1.53'],
         ['handle' => 'social-post-script', 'src' => '/js/ajax-submit.js', 'version' => '2.1.38'],
         ['handle' => 'form-script', 'src' => '/js/formscript.js', 'version' => '1.1.11'],
+        ['handle' => 'estados', 'src' => 'js/estaodos.js', 'version' => '2.1.13'],
     ];
 
     foreach ($scripts as $script) {

@@ -41,17 +41,5 @@ add_action('wp_ajax_reject_post', 'manejarCambioEstadoPublicacion');
 add_action('wp_ajax_request_post_deletion', 'manejarCambioEstadoPublicacion');
 add_action('wp_ajax_eliminarPostRs', 'manejarCambioEstadoPublicacion');
 
-// Enqueue script y localización de AJAX
-function caos()
-{
-    wp_enqueue_script('caos', get_template_directory_uri() . '/js/caos.js', array('jquery'), '2.1.12', true);
-    wp_localize_script(
-        'caos',
-        'ajax_params',
-        array(
-            'ajax_url' => admin_url('admin-ajax.php')
-        )
-    );
-}
-add_action('wp_enqueue_scripts', 'caos');
+
 
