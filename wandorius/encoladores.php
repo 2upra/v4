@@ -1,5 +1,13 @@
 <?php
 
+
+function script_stripeacciones()
+{
+    wp_enqueue_script('script_stripeacciones', get_template_directory_uri() . '/js/stripeacciones.js', array(), '1.0.6', true);
+}
+add_action('wp_enqueue_scripts', 'script_stripeacciones');
+
+
 function enqueue_custom_scripts()
 {
     $script_handles = [
