@@ -7,15 +7,6 @@ function script_stripeacciones()
 }
 add_action('wp_enqueue_scripts', 'script_stripeacciones');
 
-
-function enqueue_likes_script() {
-    wp_enqueue_script('likes', get_template_directory_uri() . '/js/likes.js', ['jquery'], '2.1', true);
-    wp_localize_script('likes', 'ajax_var_likes', [
-        'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('ajax-nonce')
-    ]);
-}
-
 function enqueue_custom_scripts()
 {
     $script_handles = [
