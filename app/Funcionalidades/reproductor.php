@@ -59,10 +59,25 @@ function reproductor()
 add_action('wp_footer', 'reproductor');
 
 function manejar_reproducciones_y_oyentes(WP_REST_Request $request) {
-    $audioSrc = $request->get_param('src');
-    $postId = $request->get_param('post_id');
-    $artistId = $request->get_param('artist');
-    $userId = $request->get_param('user_id');
+    // Verificar nonce
+    if (!wp_verify_nonce($request->get_header('X-WP-Nonce'), 'wp_rest')) {
+        return new WP_Error('invalid_nonce', 'Nonce inválido', array('status' => 403));
+    }
+
+    // Limitar tasa de solicitudes
+    if (!limitar_tasa_solicitudes()) {
+        return new WP_Error('rate_limit_exceeded', 'Límite de solicitudes excedido', array('status' => 429));
+    }
+
+    // Validar y sanitizar entradas
+    $audioSrc = sanitize_text_field($request->get_param('src'));
+    $postId = absint($request->get_param('post_id'));
+    $artistId = absint($request->get_param('artist'));
+    $userId = get_current_user_id();
+
+    if (!$userId) {
+        return new WP_Error('unauthorized', 'Usuario no autenticado', array('status' => 401));
+    }
 
     guardar_log("Solicitud recibida: audioSrc=$audioSrc, postId=$postId, artistId=$artistId, userId=$userId");
 
@@ -75,7 +90,7 @@ function manejar_reproducciones_y_oyentes(WP_REST_Request $request) {
     }
 
     // Manejar oyente
-    if ($artistId && $userId) {
+    if ($artistId) {
         $meta_key = 'oyentes_' . $artistId;
         $oyentes = get_option($meta_key, []);
         $current_time = current_time('mysql', 1);
@@ -98,17 +113,28 @@ function registrar_endpoints_api() {
     register_rest_route('miplugin/v1', '/reproducciones-y-oyentes/', array(
         'methods' => 'POST',
         'callback' => 'manejar_reproducciones_y_oyentes',
-        'permission_callback' => '__return_true'
+        'permission_callback' => function() {
+            return is_user_logged_in();
+        }
     ));
 }
 add_action('rest_api_init', 'registrar_endpoints_api');
 
-function contar_oyentes_unicos($artistId) {
-    $meta_key = 'oyentes_' . $artistId;
-    $oyentes = get_option($meta_key, []);
-    $thirty_days_ago = date('Y-m-d H:i:s', strtotime('-30 days'));
-    return count(array_filter($oyentes, function($last_heard) use ($thirty_days_ago) {
-        return $last_heard >= $thirty_days_ago;
-    }));
+function limitar_tasa_solicitudes() {
+    $user_id = get_current_user_id();
+    $transient_name = 'rate_limit_' . $user_id;
+    $rate_limit = get_transient($transient_name);
+
+    if (false === $rate_limit) {
+        set_transient($transient_name, 1, 20); // 1 solicitud por 20 seg
+    } elseif ($rate_limit >= 5) { // Máximo 5 solicitudes por minuto
+        return false;
+    } else {
+        set_transient($transient_name, $rate_limit + 1, 60);
+    }
+
+    return true;
 }
+
+
 
