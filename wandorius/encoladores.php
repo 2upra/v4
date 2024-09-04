@@ -1,79 +1,51 @@
 <?php
 
-function enqueue_fan_script()
+function enqueue_custom_scripts()
 {
-    wp_enqueue_script('fan-script', get_template_directory_uri() . '/js/fan.js', array('jquery'), '1.0.36', true);
+    // Scripts locales
+    $scripts = [
+        ['handle' => 'fan-script', 'src' => '/js/fan.js', 'version' => '1.0.36'],
+        ['handle' => 'progreso-script', 'src' => '/js/progreso.js', 'version' => '1.0.23'],
+        ['handle' => 'modal', 'src' => '/js/modal.js', 'version' => '1.0.22'],
+        ['handle' => 'alert', 'src' => '/js/alert.js', 'version' => '1.0.4'],
+        ['handle' => 'submenu', 'src' => '/js/submenu.js', 'version' => '1.2.15'],
+        ['handle' => 'pestanas', 'src' => '/js/pestanas.js', 'version' => '1.1.10'],
+        ['handle' => 'grafico', 'src' => '/js/grafico.js', 'version' => '1.0.23', 'deps' => ['jquery', 'lightweight-charts']],
+        ['handle' => 'configPerfiljs', 'src' => '/js/configPerfil.js', 'version' => '1.0.14'],
+        ['handle' => 'registro', 'src' => '/js/registro.js', 'version' => '1.0.12'],
+        ['handle' => 'grain', 'src' => '/js/grained.js', 'version' => '1.0.3'],
+        ['handle' => 'subida', 'src' => '/js/subida.js', 'version' => '1.1.21'],
+        ['handle' => 'formScriptFront', 'src' => '/js/formSubirRola.js', 'version' => '4.1.53'],
+        ['handle' => 'social-post-script', 'src' => '/js/ajax-submit.js', 'version' => '2.1.38'],
+        ['handle' => 'form-script', 'src' => '/js/formscript.js', 'version' => '1.1.11'],
+    ];
+
+    foreach ($scripts as $script) {
+        wp_enqueue_script(
+            $script['handle'],
+            get_template_directory_uri() . $script['src'],
+            isset($script['deps']) ? $script['deps'] : ['jquery'],
+            $script['version'],
+            true
+        );
+    }
+
+    // Scripts externos
+    wp_enqueue_script('lightweight-charts', 'https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js', [], null, true);
+    wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
+    wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', ['chart-js'], null, true);
+
+    // Localización de scripts
+    wp_localize_script('subida', 'my_ajax_object', ['ajax_url' => admin_url('admin-ajax.php')]);
+    wp_localize_script('social-post-script', 'my_ajax_object', [
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'social_post_nonce' => wp_create_nonce('social-post-nonce'),
+    ]);
+
+    $is_admin = current_user_can('administrator') ? true : false;
+    wp_localize_script('form-script', 'wpData', ['isAdmin' => $is_admin]);
 }
-add_action('wp_enqueue_scripts', 'enqueue_fan_script');
-
-function enqueue_progreso_script()
-{
-    wp_enqueue_script('progreso-script', get_template_directory_uri() . '/js/progreso.js', array('jquery'), '1.0.23', true);
-}
-add_action('wp_enqueue_scripts', 'enqueue_progreso_script');
-
-function enqueue_modal_script()
-{
-    wp_enqueue_script('modal', get_template_directory_uri() . '/js/modal.js', array('jquery'), '1.0.22', true);
-}
-add_action('wp_enqueue_scripts', 'enqueue_modal_script');
-
-function enqueue_alert_script()
-{
-    wp_enqueue_script('alert', get_template_directory_uri() . '/js/alert.js', array('jquery'), '1.0.4', true);
-}
-add_action('wp_enqueue_scripts', 'enqueue_alert_script');
-
-function enqueue_submenu_script()
-{
-    wp_enqueue_script('submenu', get_template_directory_uri() . '/js/submenu.js', array('jquery'), '1.2.15', true);
-}
-add_action('wp_enqueue_scripts', 'enqueue_submenu_script');
-
-function enqueue_pestanas_script()
-{
-    wp_enqueue_script('pestanas', get_template_directory_uri() . '/js/pestanas.js', array('jquery'), '1.1.10', true);
-}
-add_action('wp_enqueue_scripts', 'enqueue_pestanas_script');
-
-function grafico_script()
-{
-    wp_enqueue_script('grafico', get_template_directory_uri() . '/js/grafico.js', array('jquery', 'lightweight-charts'), '1.0.23', true);
-}
-add_action('wp_enqueue_scripts', 'grafico_script');
-
-function enqueue_lightweight_charts()
-{
-    wp_enqueue_script('lightweight-charts', 'https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js', array(), null, true);
-}
-add_action('wp_enqueue_scripts', 'enqueue_lightweight_charts');
-
-function configPerfiljs()
-{
-    wp_enqueue_script('configPerfiljs', get_template_directory_uri() . '/js/configPerfil.js', array('jquery'), '1.0.14', true);
-}
-add_action('wp_enqueue_scripts', 'configPerfiljs');
-
-function registro()
-{
-    wp_enqueue_script('registro', get_template_directory_uri() . '/js/registro.js', array('jquery'), '1.0.12', true);
-}
-add_action('wp_enqueue_scripts', 'registro');
-
-function grain()
-{
-    wp_enqueue_script('grain', get_template_directory_uri() . '/js/grained.js', array('jquery'), '1.0.3', true);
-}
-add_action('wp_enqueue_scripts', 'grain');
-
-function enqueue_charts()
-{
-    wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', array(), null, true);
-    wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', array('chart-js'), null, true);
-}
-add_action('wp_enqueue_scripts', 'enqueue_charts');
-
-
+add_action('wp_enqueue_scripts', 'enqueue_custom_scripts');
 
 
 
