@@ -18,7 +18,7 @@ function postTop() {
         $author_id = get_post_field('post_author', $post_id);
         $likes = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_name WHERE post_id = %d", $post_id));
         
-        $hours_since_publication = (current_time('timestamp') - get_post_time('U', true, $post_id)) / 360;
+        $hours_since_publication = (current_time('timestamp') - get_post_time('U', true, $post_id)) / 3600;
         $puntuacion_final = (100 + ($likes * 10)) * pow(0.75, floor($hours_since_publication));
 
         update_post_meta($post_id, '_post_puntuacion_final', $puntuacion_final);
@@ -34,21 +34,27 @@ function postTop() {
 
 function updateUserScore($post_id) {
     $author_id = get_post_field('post_author', $post_id);
-    $user_scores = array_column(array_filter(get_user_meta($author_id, '_user_scores', true), fn($score) => $score['post_id'] != $post_id), 'score');
+    $user_scores = get_user_meta($author_id, '_user_scores', true);
+    
+    if (is_array($user_scores)) {
+        $user_scores = array_column(array_filter($user_scores, function($score) use ($post_id) {
+            return $score['post_id'] != $post_id;
+        }), 'score');
 
-    if ($user_scores) {
-        update_user_meta($author_id, '_average_user_score', array_sum($user_scores) / count($user_scores));
+        if ($user_scores) {
+            update_user_meta($author_id, '_average_user_score', array_sum($user_scores) / count($user_scores));
+        } else {
+            delete_user_meta($author_id, '_average_user_score');
+        }
     }
 }
 add_action('delete_post', 'updateUserScore');
 
 function reset_scores_and_recalculate() {
-    array_map(fn($post) => delete_post_meta($post->ID, '_post_puntuacion_final'), get_posts([
-        'post_type' => 'social_post',
-        'posts_per_page' => -1
-    ]));
+    global $wpdb;
 
-    array_map(fn($user) => delete_user_meta($user->ID, ['_average_user_score', '_user_scores']), get_users());
+    $wpdb->query("DELETE FROM $wpdb->postmeta WHERE meta_key = '_post_puntuacion_final'");
+    $wpdb->query("DELETE FROM $wpdb->usermeta WHERE meta_key IN ('_average_user_score', '_user_scores')");
 
     postTop();
 }
