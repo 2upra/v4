@@ -262,10 +262,8 @@ function cargar_mas_publicaciones_ajax()
     );
 }
 
-
 add_action('wp_ajax_cargar_mas_publicaciones', 'cargar_mas_publicaciones_ajax');
 add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'cargar_mas_publicaciones_ajax');
-
 
 function enqueue_diferido_post_script()
 {
@@ -280,68 +278,3 @@ function enqueue_diferido_post_script()
     );
 }
 add_action('wp_enqueue_scripts', 'enqueue_diferido_post_script'); 
-
-
-/*
-[mostrar_publicaciones_sociales filtro="con_imagen_sin_audio"]
-[mostrar_publicaciones_sociales filtro="solo_colab"]
-[mostrar_publicaciones_sociales filtro="no_bloqueado"]
-[mostrar_publicaciones_sociales filtro="bloqueado"]
-[mostrar_publicaciones_sociales filtro="venta"]
-[mostrar_publicaciones_sociales filtro="presentacion"]
-*/
-
-function mostrar_ultimas_publicaciones_rola_shortcode()
-{
-    ob_start();
-
-    $user_id = null;
-    $url_path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-    $url_segments = explode('/', trim($url_path, '/'));
-    $perfil_index = array_search('music', $url_segments);
-    if ($perfil_index !== false && isset($url_segments[$perfil_index + 1])) {
-        $nombre_usuario = $url_segments[$perfil_index + 1];
-        $usuario = get_user_by('slug', $nombre_usuario);
-        if ($usuario) {
-            $user_id = $usuario->ID;
-        }
-    }
-
-    // Si no se pudo obtener el user_id, termina aquí
-    if (null === $user_id) {
-        echo '<p>No se pudo determinar el usuario.</p>';
-        return ob_get_clean();  // Limpia el buffer y devuelve el contenido
-    }
-
-    $query_args = array(
-        'post_type' => 'social_post',
-        'posts_per_page' => 5,
-        'meta_query' => array(
-            array(
-                'key' => 'rola',
-                'value' => '1',
-                'compare' => '='
-            )
-        ),
-        'meta_key' => '_post_puntuacion_final',
-        'orderby' => 'meta_value_num',
-        'order' => 'DESC',
-        'author' => $user_id
-    );
-
-    $query = new WP_Query($query_args);
-    if ($query->have_posts()) {
-        echo '<ul class="rola social-post-list">';
-        while ($query->have_posts()) {
-            $query->the_post();
-            echo obtener_html_publicacion_rola_resumen();
-        }
-        echo '</ul>';
-    } else {
-        echo '<p>No se encontraron publicaciones.</p>';
-    }
-
-    return ob_get_clean();
-}
-
-add_shortcode('mostrar_ultimas_rolas', 'mostrar_ultimas_publicaciones_rola_shortcode');

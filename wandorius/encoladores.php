@@ -31,7 +31,7 @@ function enqueue_custom_scripts()
     }
 
     // Scripts externos
-    wp_enqueue_script('lightweight-charts', 'https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js', [], null, true);
+    // wp_enqueue_script('lightweight-charts', 'https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js', [], null, true);
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
     wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', ['chart-js'], null, true);
 
