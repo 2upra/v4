@@ -77,7 +77,7 @@ function incluir_archivos_recursivamente($directorio) {
 }
 
 $directorios = [
-    'wandorius/',
+    'app/',
 ];
 
 foreach ($directorios as $directorio) {
