@@ -1,23 +1,22 @@
 <?php
 
-
 function enqueue_custom_scripts()
 {
     $script_handles = [
-        'fan-script' => '1.0.36',
-        'progreso-script' => '1.0.23',
+        'fan' => '1.0.36',
+        'progreso' => '1.0.23',
         'modal' => '1.0.22',
         'alert' => '1.0.4',
         'submenu' => '1.2.15',
         'pestanas' => '1.1.10',
         'grafico' => ['1.0.23', ['jquery', 'lightweight-charts']],
-        'configPerfiljs' => '1.0.14',
+        'configPerfil' => '1.0.14',
         'registro' => '1.0.12',
-        'grain' => '1.0.3',
+        'grained' => '1.0.3',
         'subida' => '1.1.21',
-        'formScriptFront' => '4.1.53',
-        'social-post-script' => '2.1.38',
-        'form-script' => '1.1.11',
+        'formSubirRola' => '4.1.53',
+        'ajax-submit' => '2.1.38',
+        'formscript' => '1.1.11',
         'estados' => '2.1.13',
         'wavejs' => ['2.0.12', ['jquery', 'wavesurfer']],
     ];
