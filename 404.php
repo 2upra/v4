@@ -14,11 +14,13 @@
 	<?php wp_body_open(); ?>
 
 	<div id="main">
-		<p style="text-align: center;">404</p>
+		<div id="content">
+			<p style="text-align: center;">404</p>
+		</div>
 	</div>
 
-	<div id="content">
-	</div>
+
+
 
 	<?php wp_footer(); ?>
 </body>
