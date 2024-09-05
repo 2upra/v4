@@ -37,14 +37,6 @@ function social()
                 <?php echo devlogin(); ?>
             </div>
 
-            <div class="tab S4K7I3" id="Logs">
-                <?php echo logsAdmin() ?>
-            </div>
-
-            <div class="tab S4K7I3" id="Reportes">
-                <?php echo reportesAdmin() ?>
-            </div>
-
         </div>
     </div>
 
