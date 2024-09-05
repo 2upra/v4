@@ -12,15 +12,6 @@ function social()
     <div class="tabs">
         <div class="tab-content">
 
-
-
-            <?php if ($acciones > 1) : ?>
-                <div class="tab <?php echo ($active_tab === 'bolsa') ? 'active' : ''; ?> CRRWGL" id="bolsa" data-post-id="tab4-posts" data-id="unico4">
-                    <?php echo inversor(); ?>
-                </div>
-            <?php endif; ?>
-
-
             <div class="tab <?php echo ($active_tab === 'inicio') ? 'active' : ''; ?> S4K7I3" id="inicio">
                 <div class="OXMGLZ">
                     <div class="OAXRVB">
@@ -56,7 +47,7 @@ function social()
             <div class="tab S4K7I3" id="Reportes">
                 <?php echo reportesAdmin() ?>
             </div>
-
+            
         </div>
     </div>
 
