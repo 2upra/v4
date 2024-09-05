@@ -20,17 +20,20 @@ function dev()
                     </div>
 
                     <div class="JUJRQG">
+
                         <a href="https://github.com/1ndoryu" class="no-ajax">
                             <button class="DZYBQD" id="github-button">
                                 <?php echo $GLOBALS['Github']; ?> GitHub
                             </button>
                         </a>
 
-                        <a href="https://chat.whatsapp.com/IGHrIfvifHS9Fwz4ha6Uis" class="no-ajax">
+                        <a href="https://chat.whatsapp.com/JOduGKvWGR9KbYfBS9BWGL" class="no-ajax">
                             <button class="DZYBQD" id="whatsapp-button">
                                 <?php echo $GLOBALS['Whatsapp']; ?> WhatsApp
                             </button>
                         </a>
+
+                        <button class="DZYBQD<?php if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><?php echo $GLOBALS['randomIcono']; ?>Unirte al proyecto</button>
 
                     </div>
 
