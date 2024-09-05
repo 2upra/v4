@@ -13,10 +13,11 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
     <div id="content" class="<?php echo esc_attr($nologin_class); ?>">
         <input type="hidden" id="pagina_actual" name="pagina_actual" value="<?php echo esc_attr(get_the_title()); ?>">
         <?php if (!is_user_logged_in()): ?>
-            <?php echo inicio(); ?>
+            <?php echo devlogin(); ?>
         <?php else: ?>
 
             <div id="menuData" style="display:none;" pestanaActual="">
+                    <div data-tab="Proyecto"></div>
                 <?php if ($acciones > 1) : ?>
                     <div data-tab="bolsa"></div>
                 <?php endif; ?>
