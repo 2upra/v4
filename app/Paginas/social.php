@@ -19,9 +19,7 @@ function social()
                     <?php echo inversor(); ?>
                 </div>
             <?php endif; ?>
-            <div class="tab S4K7I3" id="Proyecto">
-                <?php echo devlogin(); ?>
-            </div>
+
 
             <div class="tab <?php echo ($active_tab === 'inicio') ? 'active' : ''; ?> S4K7I3" id="inicio">
                 <div class="OXMGLZ">
@@ -45,6 +43,10 @@ function social()
                         <?php echo RecomendarUsuarios() ?>
                     </div>
                 </div>
+            </div>
+
+            <div class="tab S4K7I3" id="Proyecto">
+                <?php echo devlogin(); ?>
             </div>
 
             <div class="tab S4K7I3" id="Logs">

@@ -17,11 +17,12 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
         <?php else: ?>
 
             <div id="menuData" style="display:none;" pestanaActual="">
-                    <div data-tab="Proyecto"></div>
+                    
                 <?php if ($acciones > 1) : ?>
                     <div data-tab="bolsa"></div>
                 <?php endif; ?>
                 <div data-tab="inicio"></div>
+                <div data-tab="Proyecto"></div>
                 <?php if (current_user_can('administrator')) : ?>
                     <div data-tab="Logs"></div>
                     <div data-tab="Reportes"></div>
