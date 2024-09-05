@@ -4,15 +4,12 @@ function social()
 {
     ob_start();
 
-    $user_id = get_current_user_id();
-    $acciones = get_user_meta($user_id, 'acciones', true);
-    $active_tab = ($acciones > 1) ? 'bolsa' : 'inicio';
 ?>
 
     <div class="tabs">
         <div class="tab-content">
 
-            <div class="tab <?php echo ($active_tab === 'inicio') ? 'active' : ''; ?> S4K7I3" id="inicio">
+            <div class="tab INICIO S4K7I3" id="inicio">
                 <div class="OXMGLZ">
                     <div class="OAXRVB">
                         <div class="K51M22">
@@ -47,7 +44,7 @@ function social()
             <div class="tab S4K7I3" id="Reportes">
                 <?php echo reportesAdmin() ?>
             </div>
-            
+
         </div>
     </div>
 
