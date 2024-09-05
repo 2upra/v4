@@ -299,171 +299,169 @@ function devlogin()
     ob_start();
 ?>
 
-    <div class="tabs">
-        <div class="tab-content">
-            <div class="tab active GMXSUJ LOGIN84" id="inicio">
-                <?php if ($acciones > 1 || $pro) : ?>
-                    <?php echo inversor(); ?>
-                <?php else: ?>
-                    <div class="UIKMYM">
+
+
+    <?php if ($acciones > 1 || $pro) : ?>
+        <?php echo inversor(); ?>
+    <?php else: ?>
+        <div class="UIKMYM">
 
 
 
 
-                        <div class="WZEFLA">
-                            <p>Hola <?php echo esc_html($user_name) ?></p>
+            <div class="WZEFLA">
+                <p>Hola <?php echo esc_html($user_name) ?></p>
+            </div>
+
+            <div class="OIEODG">
+                <p>Gracias por participar, estamos trabajando en mejorar la expriencia de entorno.</p>
+            </div>
+
+            <div class="JUJRQG">
+                <a href="https://github.com/1ndoryu" class="no-ajax">
+                    <button class="DZYBQD" id="github-button">
+                        <?php echo $GLOBALS['Github']; ?> GitHub
+                    </button>
+                </a>
+
+                <a href="https://chat.whatsapp.com/IGHrIfvifHS9Fwz4ha6Uis" class="no-ajax">
+                    <button class="DZYBQD" id="whatsapp-button">
+                        <?php echo $GLOBALS['Whatsapp']; ?> WhatsApp
+                    </button>
+                </a>
+
+            </div>
+        <?php endif; ?>
+
+        </div>
+
+        <?php if ($pro) : ?>
+
+        <?php else: ?>
+            <div class="DAEOXT">
+
+                <div class="TTVMWQ">
+                    <div class="XXDD IUNRBL">
+                        <h3 class="XXD1"><strong>Conviértete en patrocinador:</strong> Si te gusta el proyecto, puedes colaborar obteniendo participación creativa, acceso anticipado, contenido exclusivo, reconocimiento y acciones mensuales del proyecto.</h3>
+                        <div class="DZYSQD DZYSQF">
+                            <button class="DZYBQD subpro<?php if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><?php echo $GLOBALS['iconoCorazon']; ?>Patrocinar</button>
+                            <button class="DZYBQD donar<?php if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id="donarproyecto"><?php echo $GLOBALS['dolar']; ?>Donar</button>
                         </div>
-
-                        <div class="OIEODG">
-                            <p>Gracias por participar, estamos trabajando en mejorar la expriencia de entorno.</p>
-                        </div>
-
-                        <div class="JUJRQG">
-                            <a href="https://github.com/1ndoryu" class="no-ajax">
-                                <button class="DZYBQD" id="github-button">
-                                    <?php echo $GLOBALS['Github']; ?> GitHub
-                                </button>
-                            </a>
-
-                            <a href="https://chat.whatsapp.com/IGHrIfvifHS9Fwz4ha6Uis" class="no-ajax">
-                                <button class="DZYBQD" id="whatsapp-button">
-                                    <?php echo $GLOBALS['Whatsapp']; ?> WhatsApp
-                                </button>
-                            </a>
+                    </div>
+                    <div class="XXDD IUNRBL">
+                        <h3 class="XXD1"><strong>Colabora como desarrollador:</strong> Recibirás una compensación acorde a tu participación, que puede incluir reconocimiento, acciones del proyecto o la posibilidad de formar parte del equipo principal y beneficiarte de las ganancias futuras.</h3>
+                        <div class="DZYSQD DZYSQF">
+                            <button class="DZYBQD unirteproyecto<?php if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id="unirteproyecto"><?php echo $GLOBALS['randomIcono']; ?>Unirte al proyecto</button>
 
                         </div>
-                    <?php endif; ?>
 
                     </div>
+                </div>
 
-                    <?php if ($pro) : ?>
+                <div class="HMPGRM" id="modalproyecto">
+                    <form class="PVSHOT" method="post" data-action="proyectoForm" id="proyectoUnirte">
 
-                    <?php else: ?>
-                        <div class="DAEOXT">
+                        <!-- Cambiar nombre de usuario -->
+                        <p class="ONDNYU">Completa el formulario para unirte</p>
 
-                            <div class="TTVMWQ">
-                                <div class="XXDD IUNRBL">
-                                    <h3 class="XXD1"><strong>Conviértete en patrocinador:</strong> Si te gusta el proyecto, puedes colaborar obteniendo participación creativa, acceso anticipado, contenido exclusivo, reconocimiento y acciones mensuales del proyecto.</h3>
-                                    <div class="DZYSQD DZYSQF">
-                                        <button class="DZYBQD subpro<?php if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><?php echo $GLOBALS['iconoCorazon']; ?>Patrocinar</button>
-                                        <button class="DZYBQD donar<?php if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id="donarproyecto"><?php echo $GLOBALS['dolar']; ?>Donar</button>
-                                    </div>
-                                </div>
-                                <div class="XXDD IUNRBL">
-                                    <h3 class="XXD1"><strong>Colabora como desarrollador:</strong> Recibirás una compensación acorde a tu participación, que puede incluir reconocimiento, acciones del proyecto o la posibilidad de formar parte del equipo principal y beneficiarte de las ganancias futuras.</h3>
-                                    <div class="DZYSQD DZYSQF">
-                                        <button class="DZYBQD unirteproyecto<?php if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id="unirteproyecto"><?php echo $GLOBALS['randomIcono']; ?>Unirte al proyecto</button>
-
-                                    </div>
-
-                                </div>
-                            </div>
-
-                            <div class="HMPGRM" id="modalproyecto">
-                                <form class="PVSHOT" method="post" data-action="proyectoForm" id="proyectoUnirte">
-
-                                    <!-- Cambiar nombre de usuario -->
-                                    <p class="ONDNYU">Completa el formulario para unirte</p>
-
-                                    <!-- Cambiar nombre de usuario -->
-                                    <div class="PTORKC">
-                                        <label for="usernameReal">Tu nombre real</label>
-                                        <input type="text" id="usernameReal" name="usernameReal" placeholder="Ingresa tu nombre" required>
-                                    </div>
-
-                                    <!-- Cambiar descripción -->
-                                    <div class="PTORKC">
-                                        <label for="number">Numero de telefono</label>
-                                        <input type="tel" id="number" name="number" placeholder="Ingresa tu número de teléfono" required>
-                                    </div>
-
-                                    <!-- Cantidad de meses programando -->
-                                    <div class="PTORKC">
-                                        <label for="programmingExperience">Cantidad de meses programando:</label>
-                                        <select id="programmingExperience" name="programmingExperience" required>
-                                            <option value="">Selecciona una opción</option>
-                                            <option value="lessThan1Year">Menos de 1 año</option>
-                                            <option value="1Year">1 año</option>
-                                            <option value="2Years">2 años</option>
-                                            <option value="moreThan3Years">Más de 3 años</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- ¿Por qué te quieres unir al proyecto? -->
-                                    <div class="PTORKC">
-                                        <label for="reasonToJoin">¿Por qué te quieres unir al proyecto?</label>
-                                        <textarea id="reasonToJoin" name="reasonToJoin" rows="2" placeholder="Explica tus motivos" required></textarea>
-                                    </div>
-
-                                    <!-- País -->
-                                    <div class="PTORKC">
-                                        <label for="country">País:</label>
-                                        <input type="text" id="country" name="country" placeholder="Ingresa tu país" required>
-                                    </div>
-
-                                    <!-- Actitud respecto al proyecto -->
-                                    <div class="PTORKC">
-                                        <label for="projectAttitude">¿Cual es tu actitud respecto al proyecto?</label>
-                                        <textarea id="projectAttitude" name="projectAttitude" rows="2" placeholder="Describe tu actitud" required></textarea>
-                                    </div>
-
-                                    <!-- Actitud respecto a WordPress -->
-                                    <div class="PTORKC">
-                                        <label for="wordpressAttitude">¿Cual es tu actitud respecto a WordPress?</label>
-                                        <textarea id="wordpressAttitude" name="wordpressAttitude" rows="3" placeholder="Describe tu actitud" required></textarea>
-                                    </div>
-
-                                    <!-- Iniciativa para un proyecto así -->
-                                    <div class="PTORKC">
-                                        <label for="projectInitiative">¿Cual es tu iniciativa para un proyecto así?:</label>
-                                        <select id="projectInitiative" name="projectInitiative" required>
-                                            <option value="">Selecciona una opción</option>
-                                            <option value="money">Dinero</option>
-                                            <option value="somethingSpecial">Hacer algo especial</option>
-                                            <option value="bePartOfSomething">Formar parte de algo que puede salir bien</option>
-                                            <option value="recognition">Reconocimiento</option>
-                                            <option value="jobSecurity">Un puesto de trabajo asegurado</option>
-                                            <option value="learn">Aprender</option>
-                                            <option value="portafolio">Para mi portafolio</option>
-                                            <option value="meGusta">Me gusta el proyecto simplemente</option>
-                                            <option value="meEsUtil">Me será util, me gusta la música</option>
-                                            <option value="other">Otra cosa</option>
-                                        </select>
-                                        <textarea id="projectInitiativeOther" name="projectInitiativeOther" rows="3" placeholder="Si seleccionaste 'Otra cosa', especifica aquí"></textarea>
-                                    </div>
-
-                                    <div class="DZYSQD">
-                                        <button class="DZYBQD DGFDRD" type="submit">Enviar</button>
-                                        <button type="button" class="DZYBQD DGFDRDC">Cerrar</button>
-                                    </div>
-
-                                </form>
-                            </div>
-
-                            <div class="HMPGRM" id="modalinvertir">
-                                <div id="contenidocomprar">
-                                    <input type="text" id="cantidadCompra" placeholder="$">
-                                    <input type="hidden" id="cantidadReal">
-                                    <input type="hidden" id="userID" value="<?php echo get_current_user_id(); ?>">
-                                    <p>"Al donar, una parte de tu contribución se convierte en acciones de nuestra empresa a través de nuestro fondo de inversión algorítmico. Este sistema innovador ajusta automáticamente el valor de la empresa basándose en ingresos, gastos y otros factores clave. Tu apoyo no solo impulsa el proyecto, sino que te convierte en parte de nuestro crecimiento. Si en el futuro decides vender tus acciones, podrías beneficiarte económicamente del incremento de valor de la empresa."</p>
-                                    <div class="DZYSQD DZYSQF">
-                                        <button class="DZYBQD" id="botonComprar">Donar</button>
-                                        <button class="DZYBQD cerrardonar">Volver</button>
-                                    </div>
-                                </div>
-                            </div>
+                        <!-- Cambiar nombre de usuario -->
+                        <div class="PTORKC">
+                            <label for="usernameReal">Tu nombre real</label>
+                            <input type="text" id="usernameReal" name="usernameReal" placeholder="Ingresa tu nombre" required>
                         </div>
-                    <?php endif; ?>
+
+                        <!-- Cambiar descripción -->
+                        <div class="PTORKC">
+                            <label for="number">Numero de telefono</label>
+                            <input type="tel" id="number" name="number" placeholder="Ingresa tu número de teléfono" required>
+                        </div>
+
+                        <!-- Cantidad de meses programando -->
+                        <div class="PTORKC">
+                            <label for="programmingExperience">Cantidad de meses programando:</label>
+                            <select id="programmingExperience" name="programmingExperience" required>
+                                <option value="">Selecciona una opción</option>
+                                <option value="lessThan1Year">Menos de 1 año</option>
+                                <option value="1Year">1 año</option>
+                                <option value="2Years">2 años</option>
+                                <option value="moreThan3Years">Más de 3 años</option>
+                            </select>
+                        </div>
+
+                        <!-- ¿Por qué te quieres unir al proyecto? -->
+                        <div class="PTORKC">
+                            <label for="reasonToJoin">¿Por qué te quieres unir al proyecto?</label>
+                            <textarea id="reasonToJoin" name="reasonToJoin" rows="2" placeholder="Explica tus motivos" required></textarea>
+                        </div>
+
+                        <!-- País -->
+                        <div class="PTORKC">
+                            <label for="country">País:</label>
+                            <input type="text" id="country" name="country" placeholder="Ingresa tu país" required>
+                        </div>
+
+                        <!-- Actitud respecto al proyecto -->
+                        <div class="PTORKC">
+                            <label for="projectAttitude">¿Cual es tu actitud respecto al proyecto?</label>
+                            <textarea id="projectAttitude" name="projectAttitude" rows="2" placeholder="Describe tu actitud" required></textarea>
+                        </div>
+
+                        <!-- Actitud respecto a WordPress -->
+                        <div class="PTORKC">
+                            <label for="wordpressAttitude">¿Cual es tu actitud respecto a WordPress?</label>
+                            <textarea id="wordpressAttitude" name="wordpressAttitude" rows="3" placeholder="Describe tu actitud" required></textarea>
+                        </div>
+
+                        <!-- Iniciativa para un proyecto así -->
+                        <div class="PTORKC">
+                            <label for="projectInitiative">¿Cual es tu iniciativa para un proyecto así?:</label>
+                            <select id="projectInitiative" name="projectInitiative" required>
+                                <option value="">Selecciona una opción</option>
+                                <option value="money">Dinero</option>
+                                <option value="somethingSpecial">Hacer algo especial</option>
+                                <option value="bePartOfSomething">Formar parte de algo que puede salir bien</option>
+                                <option value="recognition">Reconocimiento</option>
+                                <option value="jobSecurity">Un puesto de trabajo asegurado</option>
+                                <option value="learn">Aprender</option>
+                                <option value="portafolio">Para mi portafolio</option>
+                                <option value="meGusta">Me gusta el proyecto simplemente</option>
+                                <option value="meEsUtil">Me será util, me gusta la música</option>
+                                <option value="other">Otra cosa</option>
+                            </select>
+                            <textarea id="projectInitiativeOther" name="projectInitiativeOther" rows="3" placeholder="Si seleccionaste 'Otra cosa', especifica aquí"></textarea>
+                        </div>
+
+                        <div class="DZYSQD">
+                            <button class="DZYBQD DGFDRD" type="submit">Enviar</button>
+                            <button type="button" class="DZYBQD DGFDRDC">Cerrar</button>
+                        </div>
+
+                    </form>
+                </div>
+
+                <div class="HMPGRM" id="modalinvertir">
+                    <div id="contenidocomprar">
+                        <input type="text" id="cantidadCompra" placeholder="$">
+                        <input type="hidden" id="cantidadReal">
+                        <input type="hidden" id="userID" value="<?php echo get_current_user_id(); ?>">
+                        <p>"Al donar, una parte de tu contribución se convierte en acciones de nuestra empresa a través de nuestro fondo de inversión algorítmico. Este sistema innovador ajusta automáticamente el valor de la empresa basándose en ingresos, gastos y otros factores clave. Tu apoyo no solo impulsa el proyecto, sino que te convierte en parte de nuestro crecimiento. Si en el futuro decides vender tus acciones, podrías beneficiarte económicamente del incremento de valor de la empresa."</p>
+                        <div class="DZYSQD DZYSQF">
+                            <button class="DZYBQD" id="botonComprar">Donar</button>
+                            <button class="DZYBQD cerrardonar">Volver</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
+        <?php endif; ?>
 
 
-<?php
+
+    <?php
     return ob_get_clean();
 }
 
-function proyectoForm_callback() {
+function proyectoForm_callback()
+{
     guardar_log(print_r($_POST, true));
 
     $usernameReal = sanitize_text_field($_POST['usernameReal']);
@@ -495,7 +493,8 @@ function proyectoForm_callback() {
 }
 add_action('wp_ajax_proyectoForm', 'proyectoForm_callback');
 
-function obtener_resumen_formulario_usuario($user_id) {
+function obtener_resumen_formulario_usuario($user_id)
+{
     $usernameReal = get_user_meta($user_id, 'usernameReal', true);
     $number = get_user_meta($user_id, 'number', true);
     $programmingExperience = get_user_meta($user_id, 'programmingExperience', true);
