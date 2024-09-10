@@ -229,6 +229,7 @@ function inversor()
     <div class="HKWTFM">
         <?php echo calcularAccionPorUsuario(true); ?>
     </div>
+    <?php modalComprarAcciones() ?>
 
 
 
