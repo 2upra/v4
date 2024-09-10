@@ -196,9 +196,9 @@ function inversor()
     <div class="GTVVIG">
 
         <div class="XFBZWO">
-            <div class="flex justify-between">
+            <div class="flex justify-between items-center">
                 <p class="ZTHAWI">Tu valor actual</p>
-                <?php echo botonSponsor() ?>
+                <?php echo botonComprarAcciones('comprar') ?>
             </div>
             <p class="BFUUUL">$<?php echo number_format($valD, 2, '.', '.'); ?></p>
             <div class="GraficoCapital">
