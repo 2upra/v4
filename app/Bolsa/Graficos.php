@@ -92,7 +92,7 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
                             type: "time",
                             time: {
                                 unit: "day",
-                                stepSize: 1
+                                stepSize: 7
                             },
                             ticks: {
                                 display: true
