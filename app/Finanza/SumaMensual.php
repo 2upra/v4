@@ -121,7 +121,7 @@ function sumaAcciones($mostrarTodos = false)
 
     return $resultado;
 }
-sumaAcciones()
+sumaAcciones();
 
 
 // Registrar y eliminar eventos cron mensuales
