@@ -64,39 +64,3 @@ function formCompraAcciones() {
     return ob_get_clean();
 }
 
-function calcularAccionPorUsuario($mostrarTodos = true)
-{
-    global $wpdb;
-    $totalAcciones = 810000;
-    $valAcc = calc_ing(48, false)['valAcc'];
-    if ($mostrarTodos) {
-        $usuarios = array_filter(get_users(), function ($user) {
-            return get_user_meta($user->ID, 'acciones', true);
-        });
-        usort($usuarios, function ($a, $b) {
-            return get_user_meta($b->ID, 'acciones', true) - get_user_meta($a->ID, 'acciones', true);
-        });
-        array_shift($usuarios); // Elimina el primer usuario si se requiere
-    } else {
-        $usuarios = [wp_get_current_user()];
-        $acciones = get_user_meta($usuarios[0]->ID, 'acciones', true);
-        if (!$acciones) return 'No tienes acciones.';
-    }
-    $output = '<table><thead><tr><th>Perfil</th><th>Usuario</th><th>Acciones</th><th>Valor</th><th>Participación</th></tr></thead><tbody>';
-    foreach ($usuarios as $user) {
-        $acciones = get_user_meta($user->ID, 'acciones', true);
-        $valor = $acciones * $valAcc;
-        $participacion = ($acciones / $totalAcciones) * 100;
-        $imagen = obtener_url_imagen_perfil_o_defecto($user->ID);
-        $output .= sprintf(
-            '<tr class="XXDD"><td><img src="%s" alt="%s" /></td><td>%s</td><td>%s</td><td>$%s</td><td>%s%%</td></tr>',
-            esc_url($imagen),
-            esc_attr($user->user_login),
-            esc_html($user->user_login),
-            esc_html($acciones),
-            number_format($valor, 2, '.', '.'),
-            number_format($participacion, 2, '.', '.')
-        );
-    }
-    return $output . '</tbody></table>';
-}
