@@ -74,10 +74,6 @@ function panelInversor()
 
     </div>
 
-    <div class="HKWTFM">
-        <?php echo calcularAccionPorUsuario(true); ?>
-    </div>
-
     <?php echo modalComprarAcciones() ?>
 
 
