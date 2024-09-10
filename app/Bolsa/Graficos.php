@@ -60,7 +60,7 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
     return '
     <canvas id="' . $idCanvas . '"></canvas>
     <script type="text/javascript">
-        function grafico() {
+        document.addEventListener("DOMContentLoaded", function() {
             var ctx = document.getElementById("' . $idCanvas . '").getContext("2d");
             var datos = ' . $datosJSON . ';
 
@@ -113,7 +113,7 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
                     }
                 }
             });
-        }
+        });
     </script>';
 }
 
