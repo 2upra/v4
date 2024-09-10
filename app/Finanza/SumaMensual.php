@@ -16,7 +16,18 @@ function sumaAcciones($mostrarTodos = false)
     function escribirLog($mensaje, $archivoLog) {
         $fecha = (new DateTime())->format('Y-m-d H:i:s');
         $mensajeCompleto = "[$fecha] $mensaje\n";
-        file_put_contents($archivoLog, $mensajeCompleto, FILE_APPEND);
+
+        // Intentar escribir en el archivo de log
+        $resultado = file_put_contents($archivoLog, $mensajeCompleto, FILE_APPEND);
+
+        // Si falla, escribir en el log de errores de PHP
+        if ($resultado === false) {
+            error_log("ERROR: No se pudo escribir en el archivo de log: $archivoLog");
+            error_log("Mensaje que se intentó escribir: $mensajeCompleto");
+
+            // Intentar escribir en un archivo temporal en /tmp/
+            file_put_contents('/tmp/SumaAcciones_temp.log', $mensajeCompleto, FILE_APPEND);
+        }
     }
 
     // Función para sumar acciones si corresponde
@@ -121,6 +132,7 @@ function sumaAcciones($mostrarTodos = false)
 
     return $resultado;
 }
+
 sumaAcciones();
 
 
