@@ -1,11 +1,24 @@
 <?php
 
-function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01', $numAccionesUsuarios = [])
+function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
 {
+    global $wpdb;
     $accTot = 810000;
     $tDesc = 0.10;
     $cGan = 0.05;
     $volatilidad = 0.02; // Factor de volatilidad
+
+    // Obtener el número de acciones de los usuarios, excluyendo al usuario con ID 1
+    $resultados = $wpdb->get_results("
+        SELECT user_id, meta_value AS acciones
+        FROM {$wpdb->usermeta}
+        WHERE meta_key = 'acciones' AND user_id != 1
+    ");
+
+    // Convertir los resultados en un array de números de acciones
+    $numAccionesUsuarios = array_map(function($row) {
+        return (int) $row->acciones;
+    }, $resultados);
 
     // Calcular oferta y demanda en base al número de acciones de los usuarios
     $totalAccionesUsuarios = array_sum($numAccionesUsuarios);
@@ -79,7 +92,6 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01', $n
         'pIng' => $pIng
     ];
 }
-
 
 function valores()
 {
