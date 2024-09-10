@@ -41,10 +41,8 @@ function setupTagSystem(options) {
 
     const container = document.getElementById(containerId);
     if (!container) {
-        //console.error(`Container with id ${containerId} not found`);
         return;
     } else {
-        //log03(`Container with id ${containerId} found successfully`);
     }
     
     let tags = [];

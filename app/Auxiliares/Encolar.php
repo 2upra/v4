@@ -31,6 +31,7 @@ function enqueue_custom_scripts()
         'alert' => '1.0.4',
         'submenu' => '1.2.15',
         'pestanas' => '1.1.10',
+        'tagify' => '2.0.1',
         //'grafico' => ['1.0.23', ['jquery', 'lightweight-charts']],
         'configPerfil' => '1.0.14',
         'registro' => '1.0.12',

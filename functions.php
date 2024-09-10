@@ -256,7 +256,7 @@ jQuery(document).ready(function($) {
 //SCRIPTS ESENCIAL AJAX - INTERCAMBIO DE PAGINA Y PESTAÑA
 function ajax()
 {
-    wp_enqueue_script('mi-script-ajax', get_template_directory_uri() . '/js/ajax-page.js', array('jquery'), '2.0.49', true);
+    wp_enqueue_script('mi-script-ajax', get_template_directory_uri() . '/js/ajax-page.js', array('jquery'), '2.0.50', true);
     wp_localize_script('mi-script-ajax', 'miAjax', array('ajaxurl' => admin_url('admin-ajax.php')));
 }
 add_action('wp_enqueue_scripts', 'ajax');
