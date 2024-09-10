@@ -196,7 +196,10 @@ function inversor()
     <div class="GTVVIG">
 
         <div class="XFBZWO">
-            <p class="ZTHAWI">Tu valor actual</p>
+            <div class="flex justify-between">
+                <p class="ZTHAWI">Tu valor actual</p>
+                <?php echo botonSponsor() ?>
+            </div>
             <p class="BFUUUL">$<?php echo number_format($valD, 2, '.', '.'); ?></p>
             <div class="GraficoCapital">
                 <?php echo graficoHistorialAcciones() ?>
