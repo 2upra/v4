@@ -91,8 +91,8 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
                         x: {
                             type: "time",
                             time: {
-                                unit: "day",
-                                stepSize: 7
+                                unit: "week", // Se muestra por semanas
+                                stepSize: 1 // 1 semana por tick
                             },
                             ticks: {
                                 display: true
@@ -116,6 +116,7 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
         });
     </script>';
 }
+
 
 
 function capitalValores() {
