@@ -56,25 +56,10 @@ function obtenerDatosJSON($mysqli, $tabla, $columnaTiempo, $columnaValor) {
 }
 
 
-// Encolar los scripts externos
-function encolar_scripts_graficos() {
-    // Encolar Chart.js
-    wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
-
-    // Encolar script personalizado
-    wp_enqueue_script('grafico-personalizado', get_template_directory_uri() . '/js/grafico.js', ['chart-js'], '1.0.6', true);
-
-    // Pasar los datos al archivo JS
-    wp_localize_script('grafico-personalizado', 'graficoData', [
-        'capital' => json_decode($datosCapital),
-        'bolsa' => json_decode($datosBolsa),
-        'historial' => json_decode($datosHistorialJSON)
-    ]);
-}
-add_action('wp_enqueue_scripts', 'encolar_scripts_graficos');
 
 
-/*
+
+
 function generarCodigoGrafico($idCanvas, $datosJSON) {
     return '
     <canvas id="' . $idCanvas . '"></canvas>
@@ -137,7 +122,7 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
         }
     </script>';
 }
-*/
+
 
 function capitalValores() {
     $resultado = calc_ing(48, false);
