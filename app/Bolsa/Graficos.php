@@ -119,8 +119,17 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
             });
         }
 
-        // Llamar a la función inmediatamente
-        bolsa();
+        // Verificar si Chart.js está cargado antes de ejecutar la función bolsa
+        function esperarChartJS() {
+            if (typeof Chart !== "undefined") {
+                bolsa();
+            } else {
+                setTimeout(esperarChartJS, 100); // Vuelve a verificar en 100ms
+            }
+        }
+
+        // Llamar a la función de espera
+        esperarChartJS();
     </script>';
 }
 
