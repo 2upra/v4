@@ -55,7 +55,44 @@ function obtenerDatosJSON($mysqli, $tabla, $columnaTiempo, $columnaValor) {
     return json_encode($datos);
 }
 
-// Función para generar el código del gráfico
+
+// Encolar los scripts externos
+function encolar_scripts_graficos() {
+    // Encolar Chart.js
+    wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
+
+    // Encolar script personalizado
+    wp_enqueue_script('grafico-personalizado', get_template_directory_uri() . '/js/grafico.js', ['chart-js'], '1.0.5', true);
+
+    // Obtener los datos desde el servidor y pasarlos a JavaScript
+    $mysqli = getDatabaseConnection();
+    
+    // Datos del gráfico de capital
+    $datosCapital = obtenerDatosJSON($mysqli, 'capital', 'time1', 'value1');
+    
+    // Datos del gráfico de bolsa
+    $datosBolsa = obtenerDatosJSON($mysqli, 'bolsa', 'time', 'value');
+
+    // Datos del historial de acciones
+    $historialAcciones = obtenerHistorialAccionesUsuario();
+    $datosHistorial = array_map(function($registro) {
+        return ['time' => $registro->fecha, 'value' => $registro->acciones];
+    }, $historialAcciones);
+    $datosHistorialJSON = json_encode($datosHistorial);
+    
+    $mysqli->close();
+
+    // Pasar los datos al archivo JS
+    wp_localize_script('grafico-personalizado', 'graficoData', [
+        'capital' => json_decode($datosCapital),
+        'bolsa' => json_decode($datosBolsa),
+        'historial' => json_decode($datosHistorialJSON)
+    ]);
+}
+add_action('wp_enqueue_scripts', 'encolar_scripts_graficos');
+
+
+/*
 function generarCodigoGrafico($idCanvas, $datosJSON) {
     return '
     <canvas id="' . $idCanvas . '"></canvas>
@@ -118,7 +155,7 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
         }
     </script>';
 }
-
+*/
 
 function capitalValores() {
     $resultado = calc_ing(48, false);
