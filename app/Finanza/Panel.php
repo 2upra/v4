@@ -75,11 +75,15 @@ function panelInversor()
     </div>
 
     <?php echo modalComprarAcciones() ?>
-    
-    <div class="MD46F">
-        <?php echo formCompraAcciones() ?>
-    </div>
 
+    <div class="YXJWYY flex ">
+        <div class="XFBZWO">
+            <?php echo formCompraAcciones() ?>
+        </div>
+        <div class="XFBZWO">
+            <?php echo calcularAccionPorUsuario() ?>
+        </div>
+    </div>
 
 
 <?php

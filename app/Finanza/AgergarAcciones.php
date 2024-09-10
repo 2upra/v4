@@ -1,0 +1,102 @@
+<?php
+
+function agregar_acciones_unica_vez($user_id, $monto_pagado, $m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
+{
+    $transaccion_key = 'transaccion_' . md5($monto_pagado);
+    $transaccion_realizada = get_user_meta($user_id, $transaccion_key, true);
+
+    if ($transaccion_realizada) {
+        return [
+            'status' => 'error',
+            'message' => 'Esta transacción ya se ha realizado anteriormente.'
+        ];
+    }
+    $valores = calc_ing($m, $ingresosReales, $fechaInicio);
+    $valorAccion = $valores['valAcc'];
+    $numAcciones = $monto_pagado / $valorAccion;
+    $accionesActuales = (int) get_user_meta($user_id, 'acciones', true);
+    $nuevasAcciones = $accionesActuales + $numAcciones;
+    update_user_meta($user_id, 'acciones', $nuevasAcciones);
+    update_user_meta($user_id, $transaccion_key, true);
+
+    return [
+        'status' => 'success',
+        'user_id' => $user_id,
+        'acciones_compradas' => $numAcciones,
+        'acciones_totales' => $nuevasAcciones,
+        'valor_accion' => $valorAccion
+    ];
+}
+
+function formCompraAcciones() {
+    if (!current_user_can('administrator')) {
+        return '<p>No tienes permisos para ver este formulario.</p>';
+    }
+
+    ob_start();
+    ?>
+    <form id="formulario-acciones" method="post">
+        <label for="user_id">ID de Usuario:</label>
+        <input type="number" id="user_id" name="user_id" required>
+        
+        <label for="monto_pagado">Monto Pagado:</label>
+        <input type="number" id="monto_pagado" name="monto_pagado" required>
+        
+        <input type="submit" name="submit_acciones" value="Agregar Acciones">
+    </form>
+    <?php
+    if (isset($_POST['submit_acciones'])) {
+        $user_id = intval($_POST['user_id']);
+        $monto_pagado = floatval($_POST['monto_pagado']);
+        
+        $resultado = agregar_acciones_unica_vez($user_id, $monto_pagado);
+        
+        if ($resultado['status'] === 'success') {
+            echo '<p>Acciones agregadas exitosamente.</p>';
+            echo '<p>ID de Usuario: ' . $resultado['user_id'] . '</p>';
+            echo '<p>Acciones Compradas: ' . $resultado['acciones_compradas'] . '</p>';
+            echo '<p>Acciones Totales: ' . $resultado['acciones_totales'] . '</p>';
+            echo '<p>Valor de la Acción: ' . $resultado['valor_accion'] . '</p>';
+        } else {
+            echo '<p>Error: ' . $resultado['message'] . '</p>';
+        }
+    }
+    return ob_get_clean();
+}
+
+function calcularAccionPorUsuario($mostrarTodos = false)
+{
+    global $wpdb;
+    $totalAcciones = 810000;
+    $valAcc = calc_ing(48, false)['valAcc'];
+    if ($mostrarTodos) {
+        $usuarios = array_filter(get_users(), function ($user) {
+            return get_user_meta($user->ID, 'acciones', true);
+        });
+        usort($usuarios, function ($a, $b) {
+            return get_user_meta($b->ID, 'acciones', true) - get_user_meta($a->ID, 'acciones', true);
+        });
+        array_shift($usuarios); // Elimina el primer usuario si se requiere
+    } else {
+        $usuarios = [wp_get_current_user()];
+        $acciones = get_user_meta($usuarios[0]->ID, 'acciones', true);
+        if (!$acciones) return 'No tienes acciones.';
+    }
+    $output = '<table><thead><tr><th>Perfil</th><th>Usuario</th><th>Acciones</th><th>Valor</th><th>Participación</th></tr></thead><tbody>';
+    foreach ($usuarios as $user) {
+        $acciones = get_user_meta($user->ID, 'acciones', true);
+        $valor = $acciones * $valAcc;
+        $participacion = ($acciones / $totalAcciones) * 100;
+        $imagen = obtener_url_imagen_perfil_o_defecto($user->ID);
+        $output .= sprintf(
+            '<tr class="XXDD"><td><img src="%s" alt="%s" /></td><td>%s</td><td>%s</td><td>$%s</td><td>%s%%</td></tr>',
+            esc_url($imagen),
+            esc_attr($user->user_login),
+            esc_html($user->user_login),
+            esc_html($acciones),
+            number_format($valor, 2, '.', '.'),
+            number_format($participacion, 2, '.', '.')
+        );
+    }
+    return $output . '</tbody></table>';
+}
