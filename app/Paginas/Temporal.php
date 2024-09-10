@@ -305,7 +305,7 @@ function devlogin()
 
 
     <?php if ($acciones > 1 || $pro) : ?>
-        <?php echo inversor(); ?>
+        <?php echo panelInversor(); ?>
     <?php else: ?>
         <div class="UIKMYM">
 

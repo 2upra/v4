@@ -4,15 +4,6 @@ add_action('rest_api_init', function () {
     register_rest_route('avada/v1', '/stripe_webhook_pro', ['methods' => 'POST', 'callback' => 'stripe_webhook_pro', 'permission_callback' => '__return_true']);
 });
 
-function boton_pro_shortcode()
-{
-    if (is_user_logged_in() && !get_user_meta(get_current_user_id(), 'user_pro', true)) {
-        $user_info = get_userdata(get_current_user_id());
-        return '<button id="botonPro" data-user-id="' . esc_attr(get_current_user_id()) . '" data-user-name="' . esc_attr($user_info->user_login) . '">PRO</button>';
-    }
-    return '';
-}
-
 function crear_sesion_pro(WP_REST_Request $request)
 {
     if (!isset($_ENV['STRIPEKEY'])) return new WP_Error('stripe_key_missing', 'La clave de Stripe no está configurada', ['status' => 500]);
@@ -66,49 +57,4 @@ function stripe_webhook_pro(WP_REST_Request $request)
     }
 }
 
-function verificar_estado_pro_usuario()
-{
-    if (!is_user_logged_in()) return "Debes iniciar sesión para ver tu estado de suscripción.";
-    return get_user_meta(get_current_user_id(), 'user_pro', true) == '1' ? "Eres un usuario Pro! 🌟" : "Aún no eres un usuario Pro. 😞";
-}
 
-function add_pro_modal_to_footer()
-{
-
-    $plan_title = 'Patrocinio ';
-    $highlight = '✨';
-    $modal_content = '
-        <p class="priceplan">$5 <span>USD/mensual</span></p>
-        <p class="beneficiosplan">+ Participación creativa</p>
-        <p class="beneficiosplan">+ Acceso anticipado</p>
-        <p class="beneficiosplan">+ Contenido exclusivo</p>
-        <p class="beneficiosplan">+ Reconocimiento</p>
-        <p class="beneficiosplan">+ Acciones mensuales del proyecto</p>
-        <p class="beneficiosplan">+ Sin limites de descarga</p>
-        <p class="beneficiosplan">+ Sin limites de almacenamiento</p>
-        <button class="DZYBQD MQKUSE">Suscribirte</button>';
-
-?>
-    <div class="panelperfilsup modalpro" id="propro">
-        <div class="panelperfilsupsec pla1">
-            <p class="titulomodal">Apoya el proyecto y recibe beneficios</p>
-        </div>
-        <div class="panelperfilsupsec plan2">
-            <p class="tituloplan"><?php echo $plan_title . $highlight; ?></p>
-            <?php echo $modal_content; ?>
-        </div>
-    </div>
-
-    <div class="panelperfilsup modalpro" id="proproacciones">
-        <div class="panelperfilsupsec pla1">
-            <p class="titulomodal">Apoya el proyecto y recibe acciones mensuales</p>
-        </div>
-        <div class="panelperfilsupsec plan2">
-            <p class="tituloplan"><?php echo $plan_title . $highlight; ?></p>
-            <?php echo $modal_content; ?>
-        </div>
-    </div>
-    <div id="modalBackground" class="modal-background"></div>
-<?php
-}
-add_action('wp_footer', 'add_pro_modal_to_footer');
