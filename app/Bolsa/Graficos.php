@@ -64,6 +64,8 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
     return '
     <canvas id="' . $idCanvas . '"></canvas>
     <script type="text/javascript">
+        var chart_' . $idCanvas . ';
+
         function bolsa() {
             var ctx = document.getElementById("' . $idCanvas . '").getContext("2d");
             var datos = ' . $datosJSON . ';
@@ -71,7 +73,12 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
             var labels = datos.map(function(e) { return e.time; });
             var data = datos.map(function(e) { return e.value; });
 
-            new Chart(ctx, {
+            // Destruir el gráfico existente si ya existe
+            if (chart_' . $idCanvas . ') {
+                chart_' . $idCanvas . '.destroy();
+            }
+
+            chart_' . $idCanvas . ' = new Chart(ctx, {
                 type: "line",
                 data: {
                     labels: labels,
