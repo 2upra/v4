@@ -31,7 +31,7 @@ function actualizarOInsertarValor($mysqli, $tabla, $columnaTiempo, $columnaValor
 
     if ($existing_row) {
         $last_time = strtotime($existing_row[$columnaTiempo]);
-        if ($current_time - $last_time >= 600) { // Actualizar si han pasado 10 minutos
+        if ($current_time - $last_time >= 5) { // Actualizar si han pasado 10 minutos
             $time = date('Y-m-d H:i:s');
             $stmt = $mysqli->prepare("UPDATE $tabla SET $columnaTiempo = ?, $columnaValor = ? WHERE DATE($columnaTiempo) = ?");
             $stmt->bind_param("sds", $time, $valor, $current_date);
