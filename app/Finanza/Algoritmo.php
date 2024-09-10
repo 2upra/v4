@@ -6,36 +6,22 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
     $accTot = 810000;
     $tDesc = 0.10;
     $cGan = 0.05;
-    $volatilidad = 0.01; // Reducir la volatilidad para mayor estabilidad
-
-    // Obtener el número de acciones de los usuarios, excluyendo al usuario con ID 1
+    $volatilidad = 0.01; 
     $resultados = $wpdb->get_results("
         SELECT user_id, meta_value AS acciones
         FROM {$wpdb->usermeta}
         WHERE meta_key = 'acciones' AND user_id != 1
     ");
-
-    // Convertir los resultados en un array de números de acciones
     $numAccionesUsuarios = array_map(function($row) {
         return (int) $row->acciones;
     }, $resultados);
-
-    // Calcular oferta y demanda en base al número de acciones de los usuarios
     $totalAccionesUsuarios = array_sum($numAccionesUsuarios);
-    
-    // Evitar división por cero en la oferta
     $oferta = $totalAccionesUsuarios > 0 ? $totalAccionesUsuarios / $accTot : 1;
 
-    // Calcular la concentración de acciones (demanda)
     $numUsuarios = count($numAccionesUsuarios);
-    
-    // Evitar división por cero en la demanda
-    $demanda = $numUsuarios > 0 ? 1 / (1 + (array_sum(array_map(fn($acciones) => $acciones / $totalAccionesUsuarios, $numAccionesUsuarios)) / $numUsuarios)) : 1;
-
-    // Suavizar el impacto de la oferta y demanda
+    $demanda = $numUsuarios > 0 ? 1 / (1 + (array_sum(array_map(fn($acciones) => $acciones / $totalAccionesUsuarios, $numAccionesUsuarios)) / $numUsuarios) * 0.8) : 1;
     $ajusteOfertaDemanda = $oferta > 0 ? min(max($demanda / $oferta, 0.9), 1.1) : 1;
 
-    // Generación de ingresos mensuales base
     $ingM = array_merge(
         array_fill(0, 6, 35.5),
         array_fill(0, 6, 35.5),
@@ -44,7 +30,6 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
         array_fill(0, max(0, $m - 36), 250)
     );
 
-    // Ajuste de ingresos reales si se proporcionan
     if (!empty($ingresosReales)) {
         $mesActual = (new DateTime($fechaInicio))->diff(new DateTime())->m + 1;
         $mesActual = min($mesActual, count($ingM));
@@ -52,11 +37,9 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
             $ingM[$i] = $ingresosReales[$i];
         }
         $ajusteDinamico = pow(array_product(array_map(
-            fn($i) => $ingresosReales[$i] / ($ingM[$i] * 2),
+            fn($i) => $ingresosReales[$i] / ($ingM[$i] * 1.5), // Ajuste más conservador
             range(0, count($ingresosReales) - 1)
         )), 1 / count($ingresosReales));
-
-        // Aplicar un ajuste más conservador
         $ajusteDinamico = min(max($ajusteDinamico, 0.95), 1.05);
 
         for ($i = count($ingresosReales); $i < count($ingM); $i++) {
@@ -64,29 +47,18 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
         }
     }
 
-    // Aplicar ajuste de oferta y demanda
     $ingM = array_map(fn($ing) => $ing * $ajusteOfertaDemanda, $ingM);
-
-    // Aplicar volatilidad
-    $ingM = array_map(fn($ing) => $ing * (1 + $volatilidad * (rand(-50, 50) / 100)), $ingM);
-
-    // Recortar a los meses solicitados
+    $ingM = array_map(fn($ing) => $ing * (1 + $volatilidad * (rand(-10, 10) / 100)), $ingM); // Volatilidad más controlada
     $ingM = array_slice($ingM, 0, $m);
 
-    // Cálculo del promedio de ingresos
     $pIng = array_sum($ingM) / count($ingM);
-
-    // Limitar el crecimiento mensual
     $aumPM = (end($ingM) - $ingM[0]) / (count($ingM) - 1);
-    $aumPM = min(max($aumPM, -5), 5); // Limitar el crecimiento mensual a un rango razonable
+    $aumPM = min(max($aumPM, -2), 2); // Rango más conservador para el crecimiento mensual
 
-    // Cálculo del total de ingresos esperados
     $tIngE = array_sum(array_map(
         fn($i) => ($pIng + $aumPM * $i) * (1 + $cGan),
         range(1, $m)
     ));
-
-    // Valor de la empresa y valor por acción
     $valEmp = $tIngE / (1 + $tDesc);
     $valAcc = $valEmp / $accTot;
 
