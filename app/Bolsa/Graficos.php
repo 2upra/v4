@@ -84,7 +84,7 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: false
+                            display: true
                         }
                     },
                     scales: {
