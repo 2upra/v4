@@ -64,7 +64,7 @@ function formCompraAcciones() {
     return ob_get_clean();
 }
 
-function calcularAccionPorUsuario($mostrarTodos = false)
+function calcularAccionPorUsuario($mostrarTodos = true)
 {
     global $wpdb;
     $totalAcciones = 810000;
