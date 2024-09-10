@@ -1,10 +1,24 @@
 <?php
 
-function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
+function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01', $numAccionesUsuarios = [])
 {
     $accTot = 810000;
     $tDesc = 0.10;
     $cGan = 0.05;
+    $volatilidad = 0.02; // Factor de volatilidad
+
+    // Calcular oferta y demanda en base al número de acciones de los usuarios
+    $totalAccionesUsuarios = array_sum($numAccionesUsuarios);
+    $oferta = $totalAccionesUsuarios / $accTot; // Oferta como proporción de acciones en circulación
+
+    // Calcular la concentración de acciones (demanda)
+    $numUsuarios = count($numAccionesUsuarios);
+    $demanda = 1 / (1 + (array_sum(array_map(fn($acciones) => $acciones / $totalAccionesUsuarios, $numAccionesUsuarios)) / $numUsuarios));
+
+    // Ajuste basado en oferta y demanda
+    $ajusteOfertaDemanda = $demanda / $oferta;
+
+    // Generación de ingresos mensuales base
     $ingM = array_merge(
         array_fill(0, 6, 35.5),
         array_fill(0, 6, 35.5),
@@ -12,6 +26,8 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
         array_fill(0, 12, 125),
         array_fill(0, max(0, $m - 36), 250)
     );
+
+    // Ajuste de ingresos reales si se proporcionan
     if (!empty($ingresosReales)) {
         $mesActual = (new DateTime($fechaInicio))->diff(new DateTime())->m + 1;
         $mesActual = min($mesActual, count($ingM));
@@ -27,19 +43,39 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
             $ingM[$i] *= $ajusteDinamico;
         }
     }
+
+    // Aplicar ajuste de oferta y demanda
+    $ingM = array_map(fn($ing) => $ing * $ajusteOfertaDemanda, $ingM);
+
+    // Aplicar volatilidad
+    $ingM = array_map(fn($ing) => $ing * (1 + $volatilidad * (rand(-100, 100) / 100)), $ingM);
+
+    // Recortar a los meses solicitados
     $ingM = array_slice($ingM, 0, $m);
+
+    // Cálculo del promedio de ingresos
     $pIng = array_sum($ingM) / count($ingM);
+
+    // Cálculo del aumento promedio mensual
     $aumPM = (end($ingM) - $ingM[0]) / (count($ingM) - 1);
+
+    // Cálculo del total de ingresos esperados
     $tIngE = array_sum(array_map(
         fn($i) => ($pIng + $aumPM * $i) * (1 + $cGan),
         range(1, $m)
     ));
+
+    // Valor de la empresa y valor por acción
+    $valEmp = $tIngE / (1 + $tDesc);
+    $valAcc = $valEmp / $accTot;
+
     return [
-        'valEmp' => $tIngE / (1 + $tDesc),
-        'valAcc' => $tIngE / (1 + $tDesc) / $accTot,
+        'valEmp' => $valEmp,
+        'valAcc' => $valAcc,
         'pIng' => $pIng
     ];
 }
+
 
 function valores()
 {
