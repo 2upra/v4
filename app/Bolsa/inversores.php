@@ -170,14 +170,13 @@ function inversor()
         <p>Hola <?php echo $name ?></p>
         <p class="GJYGYE">(Esta página solo es visible para inversores)</p>
 
+    </div>
 
-        <div class="XFBZWO">
-            <div class="progress-container">
-                <div class="progress-bar" style="width: 50%;"></div>
-            </div>
-            <p>500$ de 1000$</p>
+    <div class="XFBZWO MLJOFR">
+        <div class="progress-container">
+            <div class="progress-bar" style="width: 50%;"></div>
         </div>
-        
+        <p>500$ de 1000$</p>
     </div>
 
     <div class="GTVVIG">
