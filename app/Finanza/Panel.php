@@ -76,6 +76,7 @@ function panelInversor()
 
     <?php echo modalComprarAcciones() ?>
 
+    <?php if (current_user_can('administrator')) : ?>
     <div class="YXJWYY flex ">
         <div class="XFBZWO">
             <?php echo formCompraAcciones() ?>
@@ -84,6 +85,7 @@ function panelInversor()
             <?php echo calcularAccionPorUsuario() ?>
         </div>
     </div>
+    <?php endif; ?>
 
 
 <?php
