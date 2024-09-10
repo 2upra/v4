@@ -60,60 +60,62 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
     return '
     <canvas id="' . $idCanvas . '"></canvas>
     <script type="text/javascript">
-        document.addEventListener("DOMContentLoaded", function() {
-            var ctx = document.getElementById("' . $idCanvas . '").getContext("2d");
-            var datos = ' . $datosJSON . ';
+        function bolsa() {
+            document.addEventListener("DOMContentLoaded", function() {
+                var ctx = document.getElementById("' . $idCanvas . '").getContext("2d");
+                var datos = ' . $datosJSON . ';
 
-            var labels = datos.map(function(e) { return e.time; });
-            var data = datos.map(function(e) { return e.value; });
+                var labels = datos.map(function(e) { return e.time; });
+                var data = datos.map(function(e) { return e.value; });
 
-            new Chart(ctx, {
-                type: "line",
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: data,
-                        borderColor: "#fff",
-                        borderWidth: 2,
-                        pointRadius: 0, 
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
+                new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            borderColor: "#fff",
+                            borderWidth: 2,
+                            pointRadius: 0, 
+                            fill: false
+                        }]
                     },
-                    scales: {
-                        x: {
-                            type: "time",
-                            time: {
-                                unit: "week", // Se muestra por semanas
-                                stepSize: 7 // 1 semana por tick
-                            },
-                            ticks: {
-                                display: false
-                            },
-                            grid: {
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
                                 display: false
                             }
                         },
-                        y: {
-                            beginAtZero: false,
-                            ticks: {
-                                display: false
+                        scales: {
+                            x: {
+                                type: "time",
+                                time: {
+                                    unit: "week", // Se muestra por semanas
+                                    stepSize: 7 // 1 semana por tick
+                                },
+                                ticks: {
+                                    display: false
+                                },
+                                grid: {
+                                    display: false
+                                }
                             },
-                            grid: {
-                                display: false
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    display: false
+                                },
+                                grid: {
+                                    display: false
+                                }
                             }
                         }
                     }
-                }
+                });
             });
-        });
+        }
     </script>';
 }
 
