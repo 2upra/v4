@@ -37,7 +37,7 @@ function panelInversor()
 
         </div>
 
-        <div class="progress-container">
+        <div class="progress-containerA1">
             <div class="progress-barA1"></div>
         </div>
 
