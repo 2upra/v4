@@ -92,7 +92,7 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
                             type: "time",
                             time: {
                                 unit: "week", // Se muestra por semanas
-                                stepSize: 1 // 1 semana por tick
+                                stepSize: 7 // 1 semana por tick
                             },
                             ticks: {
                                 display: true
