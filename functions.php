@@ -129,7 +129,6 @@ add_action('wp_enqueue_scripts', 'enqueue_delete_post_script');
 add_action('wp_enqueue_scripts', 'enqueue_likes_script');
 add_action('wp_enqueue_scripts', 'enqueue_editar_comentario_script');
 add_action('wp_enqueue_scripts', 'enqueue_wavesurfer_script');
-add_action('wp_enqueue_scripts', 'enqueue_stripe_comprar_js_script');
 
 function agregar_google_fonts()
 {
