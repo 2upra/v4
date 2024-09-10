@@ -6,7 +6,7 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
     $accTot = 810000;
     $tDesc = 0.10;
     $cGan = 0.05;
-    $volatilidad = 0.02; // Factor de volatilidad
+    $volatilidad = 0.01; // Reducir la volatilidad para mayor estabilidad
 
     // Obtener el número de acciones de los usuarios, excluyendo al usuario con ID 1
     $resultados = $wpdb->get_results("
@@ -32,8 +32,8 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
     // Evitar división por cero en la demanda
     $demanda = $numUsuarios > 0 ? 1 / (1 + (array_sum(array_map(fn($acciones) => $acciones / $totalAccionesUsuarios, $numAccionesUsuarios)) / $numUsuarios)) : 1;
 
-    // Ajuste basado en oferta y demanda
-    $ajusteOfertaDemanda = $oferta > 0 ? $demanda / $oferta : 1;
+    // Suavizar el impacto de la oferta y demanda
+    $ajusteOfertaDemanda = $oferta > 0 ? min(max($demanda / $oferta, 0.9), 1.1) : 1;
 
     // Generación de ingresos mensuales base
     $ingM = array_merge(
@@ -56,6 +56,9 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
             range(0, count($ingresosReales) - 1)
         )), 1 / count($ingresosReales));
 
+        // Aplicar un ajuste más conservador
+        $ajusteDinamico = min(max($ajusteDinamico, 0.95), 1.05);
+
         for ($i = count($ingresosReales); $i < count($ingM); $i++) {
             $ingM[$i] *= $ajusteDinamico;
         }
@@ -65,7 +68,7 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
     $ingM = array_map(fn($ing) => $ing * $ajusteOfertaDemanda, $ingM);
 
     // Aplicar volatilidad
-    $ingM = array_map(fn($ing) => $ing * (1 + $volatilidad * (rand(-100, 100) / 100)), $ingM);
+    $ingM = array_map(fn($ing) => $ing * (1 + $volatilidad * (rand(-50, 50) / 100)), $ingM);
 
     // Recortar a los meses solicitados
     $ingM = array_slice($ingM, 0, $m);
@@ -73,8 +76,9 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
     // Cálculo del promedio de ingresos
     $pIng = array_sum($ingM) / count($ingM);
 
-    // Cálculo del aumento promedio mensual
+    // Limitar el crecimiento mensual
     $aumPM = (end($ingM) - $ingM[0]) / (count($ingM) - 1);
+    $aumPM = min(max($aumPM, -5), 5); // Limitar el crecimiento mensual a un rango razonable
 
     // Cálculo del total de ingresos esperados
     $tIngE = array_sum(array_map(
