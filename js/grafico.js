@@ -1,4 +1,4 @@
-function grafico() {
+function grafico1() {
     // Verificar si los datos están definidos
     if (typeof datos1 === 'undefined' || !Array.isArray(datos1)) {
         return;

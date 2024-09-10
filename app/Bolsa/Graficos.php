@@ -1,7 +1,8 @@
 <?php
 
 // Función para obtener la conexión a la base de datos
-function getDatabaseConnection() {
+function getDatabaseConnection()
+{
     $mysqli = new mysqli($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASSWORD'], $_ENV['DB_NAME']);
     if ($mysqli->connect_error) {
         die('Error de Conexión (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error);
@@ -10,7 +11,8 @@ function getDatabaseConnection() {
 }
 
 // Función para limpiar datos históricos de una tabla
-function limpiarDatosHistoricos($mysqli, $tabla, $columnaTiempo) {
+function limpiarDatosHistoricos($mysqli, $tabla, $columnaTiempo)
+{
     $mysqli->query("
         DELETE t1 FROM $tabla t1
         INNER JOIN (
@@ -22,7 +24,8 @@ function limpiarDatosHistoricos($mysqli, $tabla, $columnaTiempo) {
 }
 
 // Función para actualizar o insertar un valor en una tabla
-function actualizarOInsertarValor($mysqli, $tabla, $columnaTiempo, $columnaValor, $valor) {
+function actualizarOInsertarValor($mysqli, $tabla, $columnaTiempo, $columnaValor, $valor)
+{
     $current_time = time();
     $current_date = date('Y-m-d');
 
@@ -46,7 +49,8 @@ function actualizarOInsertarValor($mysqli, $tabla, $columnaTiempo, $columnaValor
 }
 
 // Función para obtener datos de una tabla y convertirlos a JSON
-function obtenerDatosJSON($mysqli, $tabla, $columnaTiempo, $columnaValor) {
+function obtenerDatosJSON($mysqli, $tabla, $columnaTiempo, $columnaValor)
+{
     $datos = [];
     $result = $mysqli->query("SELECT * FROM $tabla ORDER BY $columnaTiempo DESC");
     while ($row = $result->fetch_assoc()) {
@@ -56,10 +60,12 @@ function obtenerDatosJSON($mysqli, $tabla, $columnaTiempo, $columnaValor) {
 }
 
 // Función para generar el código del gráfico
-function generarCodigoGrafico($idCanvas, $datosJSON) {
+function generarCodigoGrafico($idCanvas, $datosJSON)
+{
     return '
     <canvas id="' . $idCanvas . '"></canvas>
     <script type="text/javascript">
+    function grafico() {
         document.addEventListener("DOMContentLoaded", function() {
             var ctx = document.getElementById("' . $idCanvas . '").getContext("2d");
             var datos = ' . $datosJSON . ';
@@ -114,12 +120,14 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
                 }
             });
         });
+    }
     </script>';
 }
 
 
 
-function capitalValores() {
+function capitalValores()
+{
     $resultado = calc_ing(48, false);
     $valEmp = $resultado['valEmp'];
 
@@ -132,7 +140,8 @@ function capitalValores() {
     return generarCodigoGrafico('myChart', $datosJSON);
 }
 
-function bolsavalores() {
+function bolsavalores()
+{
     $resultado = calc_ing(48, false);
     $valAcc = $resultado['valAcc'];
 
@@ -145,14 +154,14 @@ function bolsavalores() {
     return generarCodigoGrafico('myChartBolsa', $datosJSON);
 }
 
-function graficoHistorialAcciones() {
+function graficoHistorialAcciones()
+{
     $historial = obtenerHistorialAccionesUsuario();
     $datos = [];
     foreach ($historial as $registro) {
-        $datos[] = ['time' => $registro->fecha, 'value' => $registro->acciones]; 
+        $datos[] = ['time' => $registro->fecha, 'value' => $registro->acciones];
     }
     $datosJSON = json_encode($datos);
 
     return generarCodigoGrafico('myChartHistorial', $datosJSON);
 }
-

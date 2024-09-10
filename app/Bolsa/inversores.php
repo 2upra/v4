@@ -174,13 +174,13 @@ function inversor()
 
     <div class="XFBZWO MLJOFR">
         <div class="flex">
-            <div>
+            <div class="QSBVLN">
                 <p class="ZTHAWI">Total recaudado</p>
                 <p class="BFUUUL">612$</p>
             </div>
-            <div>
-                <p class="ZTHAWI">Total recaudado</p>
-                <p class="BFUUUL">612$</p>
+            <div class="MDOKUH">
+                <p class="ZTHAWI">Meta/p>
+                <p class="BFUUUL">5000$</p>
             </div>
         </div>
         <div class="progress-container">
@@ -188,11 +188,6 @@ function inversor()
         </div>
 
         <script>
-            const meta = 5000;
-            const recaudado = 612;
-            const porcentaje = (recaudado / meta) * 100;
-
-            document.querySelector('.progress-barA1').style.width = porcentaje + '%';
         </script>
 
     </div>

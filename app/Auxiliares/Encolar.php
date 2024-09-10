@@ -31,7 +31,7 @@ function enqueue_custom_scripts()
         'alert' => '1.0.4',
         'submenu' => '1.2.15',
         'pestanas' => '1.1.10',
-        'grafico' => ['1.0.23', ['jquery', 'lightweight-charts']],
+        //'grafico' => ['1.0.23', ['jquery', 'lightweight-charts']],
         'configPerfil' => '1.0.14',
         'registro' => '1.0.12',
         'grained' => '1.0.3',
@@ -41,6 +41,7 @@ function enqueue_custom_scripts()
         'formscript' => '1.1.11',
         'estados' => '2.1.13',
         'wavejs' => ['2.0.12', ['jquery', 'wavesurfer']],
+        'inversores' => '1.0.1',
     ];
 
     foreach ($script_handles as $handle => $data) {
