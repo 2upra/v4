@@ -173,13 +173,20 @@ function inversor()
     </div>
 
     <div class="XFBZWO MLJOFR">
-
-        <p class="ZTHAWI">Total recaudado</p>
-        <p class="BFUUUL">612$</p>
+        <div class="flex">
+            <div>
+                <p class="ZTHAWI">Total recaudado</p>
+                <p class="BFUUUL">612$</p>
+            </div>
+            <div>
+                <p class="ZTHAWI">Total recaudado</p>
+                <p class="BFUUUL">612$</p>
+            </div>
+        </div>
         <div class="progress-container">
             <div class="progress-barA1"></div>
         </div>
-        
+
         <script>
             const meta = 5000;
             const recaudado = 612;
