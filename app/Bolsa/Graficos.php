@@ -117,6 +117,7 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
     </script>';
 }
 
+
 function capitalValores() {
     $resultado = calc_ing(48, false);
     $valEmp = $resultado['valEmp'];
