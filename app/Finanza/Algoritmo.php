@@ -3,7 +3,7 @@
 function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
 {
     global $wpdb;
-    $accTot = 810000; // Total de acciones disponibles
+    $accTot = 810000; // Total de acciones emitidas
     $tDesc = 0.10; // Tasa de descuento
     $cGan = 0.05; // Costo de capital
     $volatilidad = 0.01; // Volatilidad del mercado
@@ -23,13 +23,11 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
     // Sumar el total de acciones de los usuarios
     $totalAccionesUsuarios = array_sum($numAccionesUsuarios);
     
-    // Calcular la oferta y la demanda
-    $oferta = $totalAccionesUsuarios / $accTot;
-    $demanda = count($numAccionesUsuarios) > 0 ? count($numAccionesUsuarios) / $totalAccionesUsuarios : 1;
+    // Calcular las acciones disponibles para comprar
+    $accionesDisponibles = $accTot - $totalAccionesUsuarios;
     
-    // Ajuste de oferta y demanda con un rango más amplio
-    $ajusteOfertaDemanda = $demanda / $oferta;
-    $ajusteOfertaDemanda = min(max($ajusteOfertaDemanda, 0.5), 2.0); // Permitir un rango más amplio
+    // Calcular el factor de escasez
+    $factorEscasez = 1 + (($accTot - $accionesDisponibles) / $accTot);
 
     // Ingresos mensuales proyectados
     $ingM = array_merge(
@@ -61,8 +59,8 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
         }
     }
 
-    // Ajustar ingresos proyectados por oferta y demanda
-    $ingM = array_map(fn($ing) => $ing * $ajusteOfertaDemanda, $ingM);
+    // Ajustar ingresos proyectados por el factor de escasez
+    $ingM = array_map(fn($ing) => $ing * $factorEscasez, $ingM);
     
     // Aplicar volatilidad de manera controlada
     $ingM = array_map(fn($ing) => $ing * (1 + $volatilidad * (rand(-10, 10) / 100)), $ingM);
@@ -92,7 +90,8 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
     return [
         'valEmp' => $valEmp,
         'valAcc' => $valAcc,
-        'pIng' => $pIng
+        'pIng' => $pIng,
+        'accionesDisponibles' => $accionesDisponibles
     ];
 }
 
