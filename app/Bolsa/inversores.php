@@ -212,6 +212,15 @@ function inversor()
         <p>500$ de 1000$</p>
     </div>
 
+    <script>
+        const meta = 1000;
+        const recaudado = 500;
+        const porcentaje = (recaudado / meta) * 100;
+
+        document.querySelector('.progress-bar').style.width = porcentaje + '%';
+    </script>
+
+
 
 <?php
     $contenido = ob_get_clean();
