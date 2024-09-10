@@ -1,6 +1,11 @@
 <?php
 
 function img($url, $quality = 40, $strip = 'all') {
+    // Check if $url is null or empty
+    if ($url === null || $url === '') {
+        return ''; // or return a default image URL
+    }
+
     $parsed_url = parse_url($url);
     
     // Check if the URL is already a CDN URL
