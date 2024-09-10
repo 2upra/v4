@@ -2,6 +2,7 @@
 
 function sumaAcciones($mostrarTodos = false)
 {
+    error_log("La función sumaAcciones se está ejecutando.");
     global $wpdb;
     $totalAcciones = 810000; // Acciones totales
     $valAcc = calc_ing(48, false)['valAcc']; // Valor por acción
