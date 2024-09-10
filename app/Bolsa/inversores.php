@@ -205,6 +205,14 @@ function inversor()
         <?php echo calcularAccionPorUsuario(true); ?>
     </div>
 
+    <div class="XFBZWO">
+        <div class="progress-container">
+            <div class="progress-bar" style="width: 50%;"></div>
+        </div>
+        <p>500$ de 1000$</p>
+    </div>
+
+
 <?php
     $contenido = ob_get_clean();
     return $contenido;
