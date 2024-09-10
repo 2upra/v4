@@ -173,11 +173,20 @@ function inversor()
     </div>
 
     <div class="XFBZWO MLJOFR">
+
         <p class="ZTHAWI">Total recaudado</p>
         <p class="BFUUUL">612$</p>
         <div class="progress-container">
-            <div class="progress-barA1" "></div>
+            <div class="progress-barA1"></div>
         </div>
+        
+        <script>
+            const meta = 5000;
+            const recaudado = 612;
+            const porcentaje = (recaudado / meta) * 100;
+
+            document.querySelector('.progress-barA1').style.width = porcentaje + '%';
+        </script>
 
     </div>
 
@@ -215,13 +224,6 @@ function inversor()
         <?php echo calcularAccionPorUsuario(true); ?>
     </div>
 
-    <script>
-        const meta = 5000;
-        const recaudado = 612;
-        const porcentaje = (recaudado / meta) * 100;
-
-        document.querySelector('.progress-barA1').style.width = porcentaje + '%';
-    </script>
 
 
 
