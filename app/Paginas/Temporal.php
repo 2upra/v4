@@ -15,7 +15,7 @@ function dev()
                         <p>Proyecto 2upra</p>
                     </div>
 
-                    <div class="OIEODG">
+                    <div class="OIEODG mb-3">
                         <p>2upra es un proyecto desarrollado en PHP y JavaScript. Consiste en una plataforma social que solucione problemas comunes en la producción musical y ofrezca herramientas a los artistas musicales.</p>
                     </div>
 
@@ -33,7 +33,7 @@ function dev()
                             </button>
                         </a>
 
-                        <button class="DZYBQD<?php if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><?php echo $GLOBALS['randomIcono']; ?>Unirte al proyecto</button>
+                        <?php botonSponsor() ?>
 
                     </div>
 

@@ -124,14 +124,6 @@ function enqueue_wavesurfer_script()
 
 
 
-
-
-
-function enqueue_stripe_comprar_js_script()
-{
-    enqueue_and_localize_scripts('stripe-comprar-js', '/js/stripe.js', [], '1.0.20', true, '', '');
-}
-
 add_action('wp_enqueue_scripts', 'enqueue_borrar_comentario_script');
 add_action('wp_enqueue_scripts', 'enqueue_delete_post_script');
 add_action('wp_enqueue_scripts', 'enqueue_likes_script');
