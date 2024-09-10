@@ -221,6 +221,7 @@ function mostrar_publicaciones_sociales($atts, $is_ajax = false, $paged = 1)
 }
 add_shortcode('mostrar_publicaciones_sociales', 'mostrar_publicaciones_sociales');
 
+
 function cargar_mas_publicaciones_ajax()
 {
     // Determinar la ruta del archivo de log
@@ -233,7 +234,11 @@ function cargar_mas_publicaciones_ajax()
     $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : ''; // Obtener data-identifier
     $tab_id = isset($_POST['tab_id']) ? sanitize_text_field($_POST['tab_id']) : '';
     $user_id = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
-    $publicacionesCargadas = isset($_POST['cargadas']) ? array_map('intval', $_POST['cargadas']) : array();
+
+    // Verificar si 'cargadas' es un array
+    $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas']) 
+        ? array_map('intval', $_POST['cargadas']) 
+        : array();
 
     // Registrar logs
     if (defined('ENABLE_LOGS') && ENABLE_LOGS) {
