@@ -62,7 +62,7 @@ function encolar_scripts_graficos() {
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
 
     // Encolar script personalizado
-    wp_enqueue_script('grafico-personalizado', get_template_directory_uri() . '/js/grafico.js', ['chart-js'], '1.0.5', true);
+    wp_enqueue_script('grafico-personalizado', get_template_directory_uri() . '/js/grafico.js', ['chart-js'], '1.0.6', true);
 
     // Obtener los datos desde el servidor y pasarlos a JavaScript
     $mysqli = getDatabaseConnection();
