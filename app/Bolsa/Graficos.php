@@ -95,7 +95,7 @@ function generarCodigoGrafico($idCanvas, $datosJSON) {
                                 stepSize: 7 // 1 semana por tick
                             },
                             ticks: {
-                                display: true
+                                display: false
                             },
                             grid: {
                                 display: false
