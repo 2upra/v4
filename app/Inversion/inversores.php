@@ -198,7 +198,7 @@ function inversor()
         <div class="XFBZWO">
             <div class="flex justify-between items-center">
                 <p class="ZTHAWI">Tu valor actual</p>
-                <?php echo botonComprarAcciones('comprar') ?>
+                <?php echo botonComprarAcciones('Comprar') ?>
             </div>
             <p class="BFUUUL">$<?php echo number_format($valD, 2, '.', '.'); ?></p>
             <div class="GraficoCapital">
@@ -229,6 +229,7 @@ function inversor()
     <div class="HKWTFM">
         <?php echo calcularAccionPorUsuario(true); ?>
     </div>
+    
     <?php modalComprarAcciones() ?>
 
 
