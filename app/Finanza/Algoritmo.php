@@ -9,14 +9,18 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01', $n
 
     // Calcular oferta y demanda en base al número de acciones de los usuarios
     $totalAccionesUsuarios = array_sum($numAccionesUsuarios);
-    $oferta = $totalAccionesUsuarios / $accTot; // Oferta como proporción de acciones en circulación
+    
+    // Evitar división por cero en la oferta
+    $oferta = $totalAccionesUsuarios > 0 ? $totalAccionesUsuarios / $accTot : 1;
 
     // Calcular la concentración de acciones (demanda)
     $numUsuarios = count($numAccionesUsuarios);
-    $demanda = 1 / (1 + (array_sum(array_map(fn($acciones) => $acciones / $totalAccionesUsuarios, $numAccionesUsuarios)) / $numUsuarios));
+    
+    // Evitar división por cero en la demanda
+    $demanda = $numUsuarios > 0 ? 1 / (1 + (array_sum(array_map(fn($acciones) => $acciones / $totalAccionesUsuarios, $numAccionesUsuarios)) / $numUsuarios)) : 1;
 
     // Ajuste basado en oferta y demanda
-    $ajusteOfertaDemanda = $demanda / $oferta;
+    $ajusteOfertaDemanda = $oferta > 0 ? $demanda / $oferta : 1;
 
     // Generación de ingresos mensuales base
     $ingM = array_merge(
