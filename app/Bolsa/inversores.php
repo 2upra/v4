@@ -169,6 +169,15 @@ function inversor()
     <div class="XIGFOL">
         <p>Hola <?php echo $name ?></p>
         <p class="GJYGYE">(Esta página solo es visible para inversores)</p>
+
+
+        <div class="XFBZWO">
+            <div class="progress-container">
+                <div class="progress-bar" style="width: 50%;"></div>
+            </div>
+            <p>500$ de 1000$</p>
+        </div>
+        
     </div>
 
     <div class="GTVVIG">
@@ -203,13 +212,6 @@ function inversor()
 
     <div class="HKWTFM">
         <?php echo calcularAccionPorUsuario(true); ?>
-    </div>
-
-    <div class="XFBZWO">
-        <div class="progress-container">
-            <div class="progress-bar" style="width: 50%;"></div>
-        </div>
-        <p>500$ de 1000$</p>
     </div>
 
     <script>
