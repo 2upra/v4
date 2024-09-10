@@ -64,24 +64,6 @@ function encolar_scripts_graficos() {
     // Encolar script personalizado
     wp_enqueue_script('grafico-personalizado', get_template_directory_uri() . '/js/grafico.js', ['chart-js'], '1.0.6', true);
 
-    // Obtener los datos desde el servidor y pasarlos a JavaScript
-    $mysqli = getDatabaseConnection();
-    
-    // Datos del gráfico de capital
-    $datosCapital = obtenerDatosJSON($mysqli, 'capital', 'time1', 'value1');
-    
-    // Datos del gráfico de bolsa
-    $datosBolsa = obtenerDatosJSON($mysqli, 'bolsa', 'time', 'value');
-
-    // Datos del historial de acciones
-    $historialAcciones = obtenerHistorialAccionesUsuario();
-    $datosHistorial = array_map(function($registro) {
-        return ['time' => $registro->fecha, 'value' => $registro->acciones];
-    }, $historialAcciones);
-    $datosHistorialJSON = json_encode($datosHistorial);
-    
-    $mysqli->close();
-
     // Pasar los datos al archivo JS
     wp_localize_script('grafico-personalizado', 'graficoData', [
         'capital' => json_decode($datosCapital),
