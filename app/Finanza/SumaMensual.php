@@ -9,7 +9,6 @@ function sumaAcciones($mostrarTodos = false)
     $fechaActual = new DateTime();
 
     // Rutas de los archivos de log
-
     $logAcciones = '/var/www/wordpress/wp-content/themes/SumaAcciones.log';
     $logRespaldo = '/var/www/wordpress/wp-content/themes/RespaldoValor.log';
 
@@ -51,19 +50,28 @@ function sumaAcciones($mostrarTodos = false)
 
     // Si se deben mostrar todos los usuarios con acciones
     if ($mostrarTodos) {
-        $usuarios = array_filter(get_users(), function ($user) {
+        escribirLog("INFO: Iniciando proceso para mostrar todos los usuarios con acciones.", $logAcciones);
+
+        $usuarios = get_users();
+        escribirLog("INFO: Se encontraron " . count($usuarios) . " usuarios en total.", $logAcciones);
+
+        $usuariosConAcciones = array_filter($usuarios, function ($user) {
             return get_user_meta($user->ID, 'acciones', true);
         });
 
-        usort($usuarios, function ($a, $b) {
+        escribirLog("INFO: Se encontraron " . count($usuariosConAcciones) . " usuarios con al menos una acción.", $logAcciones);
+
+        usort($usuariosConAcciones, function ($a, $b) {
             return get_user_meta($b->ID, 'acciones', true) - get_user_meta($a->ID, 'acciones', true);
         });
 
+        $usuariosProConAcciones = 0;
         $resultados = [];
-        foreach ($usuarios as $user) {
+        foreach ($usuariosConAcciones as $user) {
             $acciones = get_user_meta($user->ID, 'acciones', true);
             if (get_user_meta($user->ID, 'user_pro', true)) {
                 $acciones = actualizarAcciones($user->ID, $acciones, $accionesExtra, $fechaActual, $logAcciones);
+                $usuariosProConAcciones++;
             }
             if ($acciones) {
                 $resultado = [
@@ -80,11 +88,15 @@ function sumaAcciones($mostrarTodos = false)
             }
         }
 
+        escribirLog("INFO: Se encontraron " . $usuariosProConAcciones . " usuarios 'Pro' con al menos una acción.", $logAcciones);
+
         return $resultados;
     }
 
     // Para el usuario actual
     $usuarioActual = wp_get_current_user();
+    escribirLog("INFO: Procesando usuario actual: {$usuarioActual->user_login} (ID: {$usuarioActual->ID})", $logAcciones);
+
     $acciones = get_user_meta($usuarioActual->ID, 'acciones', true);
 
     if (!$acciones) {
@@ -109,7 +121,7 @@ function sumaAcciones($mostrarTodos = false)
 
     return $resultado;
 }
-sumaAcciones();
+sumaAcciones()
 
 
 // Registrar y eliminar eventos cron mensuales
