@@ -181,10 +181,10 @@ function inversor()
             </div>
 
             <div class="MDOKUH">
-                <p class="ZTHAWI">Meta/p>
+                <p class="ZTHAWI">Meta</p>
                 <p class="BFUUUL">5000$</p>
             </div>
-            
+
         </div>
 
         <div class="progress-container">

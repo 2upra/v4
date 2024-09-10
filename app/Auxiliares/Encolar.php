@@ -41,7 +41,7 @@ function enqueue_custom_scripts()
         'formscript' => '1.1.11',
         'estados' => '2.1.13',
         'wavejs' => ['2.0.12', ['jquery', 'wavesurfer']],
-        'inversores' => '1.0.2',
+        'inversores' => '1.0.3',
     ];
 
     foreach ($script_handles as $handle => $data) {

@@ -5,3 +5,5 @@ function meta() {
 
     document.querySelector('.progress-barA1').style.width = porcentaje + '%';
 }
+
+
