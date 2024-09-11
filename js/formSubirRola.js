@@ -915,22 +915,14 @@ function verificarCamposPost() {
     const postFormSample = document.getElementById('postFormRs');
     if (postFormSample) {
         const textoRsDiv = document.getElementById('textoRs');
-        
-        // Inicializa TagEnTexto y obtiene la función getContent
-        const getContent = TagEnTexto({
-            containerId: 'textoRs',
-            maxTags: 20,
-            minLength: 2,
-            maxLength: 40,
-            whitelist: [], // Puedes agregar una lista blanca de tags si es necesario
-            tagClass: 'tagRs'
-        });
+        const getContent = TagEnTexto({containerId: 'textoRs'});
 
         textoRsDiv.setAttribute('placeholder', 'Puedes agregar tags agregando un #');
         textoRsDiv.addEventListener('input', verificarCampos);
 
         function verificarCampos() {
-            const { tags, normalText } = getContent();
+            const {tags, normalText} = getContent();
+
             window.formState.postCampos = false;
             window.formState.postErrorMessage = '';
 
@@ -938,22 +930,26 @@ function verificarCamposPost() {
                 window.formState.postErrorMessage = 'El texto debe tener al menos 3 caracteres';
                 return;
             }
+
             if (normalText.length > 800) {
                 window.formState.postErrorMessage = 'El texto no puede exceder los 800 caracteres';
                 textoRsDiv.innerText = normalText.substring(0, 800);
                 return;
             }
+
             if (tags.length === 0) {
                 window.formState.postErrorMessage = 'Debe incluir al menos un tag';
                 return;
             }
+
             if (tags.some(tag => tag.length < 3)) {
                 window.formState.postErrorMessage = 'Cada tag debe tener al menos 3 caracteres';
                 return;
             }
 
+            // Si llegamos aquí, todos los campos son válidos
             window.formState.postCampos = true;
-            console.log('Todos los campos son válidos');
+            log01('Todos los campos son válidos');
         }
 
         verificarCampos();
