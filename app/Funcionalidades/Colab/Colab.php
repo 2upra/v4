@@ -16,3 +16,5 @@ function botonColab($post_id, $colab)
 <?php
     return ob_get_clean();
 }
+
+//En todas las publicaciones existe un boton, ese boton al dar click debe enviar una alerta al usuario preguntandole si quiere hacer un colab, entonces, esto debe crear un post 
