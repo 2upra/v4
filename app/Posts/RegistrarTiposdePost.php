@@ -25,13 +25,18 @@ add_action('init', 'register_custom_post_statuses');
 // Registrar tipos de post: Samples, Álbums, Momentos y Colaboraciones
 function register_custom_post_types() {
     $post_types = [
-        'social_post' => ['Samples', 'Sample', 'sample'],
-        'albums' => ['Albums', 'Album', 'album'],
+        'social_post' => ['Samples', 'Sample', 'sample', null],
+        'albums' => ['Albums', 'Album', 'album', null],
         'stories' => ['Momentos', 'Momento', 'momentos', 'dashicons-camera'],
-        'colab' => ['Colaboraciones', 'Colaboración', 'colab']
+        'colab' => ['Colaboraciones', 'Colaboración', 'colab', null]
     ];
 
-    foreach ($post_types as $key => [$name, $singular, $slug, $icon = null]) {
+    foreach ($post_types as $key => $type) {
+        $name = $type[0];
+        $singular = $type[1];
+        $slug = $type[2];
+        $icon = isset($type[3]) ? $type[3] : null; // Asegurarse que $icon tiene un valor válido
+
         $args = [
             'labels' => [
                 'name' => __($name),
