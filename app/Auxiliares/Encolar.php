@@ -37,7 +37,7 @@ function enqueue_custom_scripts()
         'registro' => '1.0.12',
         'grained' => '1.0.3',
         'subida' => '1.1.21',
-        'formSubirRola' => '4.1.55',
+        'formSubirRola' => '4.1.56',
         'ajax-submit' => '2.1.38',
         'formscript' => '1.1.11',
         'estados' => '2.1.13',
