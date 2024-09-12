@@ -84,142 +84,84 @@ function forms_submit(form, submitBtnId) {
 
     async function handleSubmit(e) {
         e.preventDefault();
-        // Verificar la URL actual}
 
-        const paginaActualElement = document.getElementById('pagina_actual');
-        const isSample = paginaActualElement && paginaActualElement.value === 'subir sample';
-        const isPost = paginaActualElement && paginaActualElement.value === '2upra Records';
+        const paginaActual = document.getElementById('pagina_actual')?.value || '';
+        const isSample = paginaActual === 'subir sample';
+        const isPost = paginaActual === '2upra Records';
 
-        let mensajesError = [];
+        const mensajesError = verificarCampos(isPost, isSample);
 
-        if (isPost) {
-            if (!window.formState.postCampos) {
-                const errorMessage = window.formState.postErrorMessage || '- Por favor verifica todos los campos del post';
-                alert(errorMessage);
-            }
-            if (!todosArchivosSubidos(window.formState.uploadedFiles)) {
-                mensajesError.push('- Esperar a que se complete la carga de los archivos');
-            }
-
-            if (!window.formState.archivo) {
-                mensajesError.push('- Espera que se cargue el archivo');
-            }
-
-            if (mensajesError.length > 0) {
-                let mensaje = 'Por favor, complete los siguientes pasos antes de continuar:\n\n';
-                mensaje += mensajesError.join('\n');
-                alert(mensaje);
-                return;
-            }
-        } else {
-            if (isSample && !window.formState.sampleCampos) {
-                mensajesError.push('- Rellenar todos los campos');
-            }
-
-            if (!window.formState.isAudioUploaded) {
-                mensajesError.push('- Subir un archivo de audio');
-            }
-
-            if (!window.formState.archivo) {
-                mensajesError.push('- Espera que se cargue el archivo');
-            }
-
-            if (!isSample && !window.formState.isImageUploaded) {
-                mensajesError.push('- Subir una imagen');
-            }
-
-            if (!isSample && !window.formState.camposRellenos) {
-                mensajesError.push('- Rellenar todos los campos del formulario');
-            }
-
-            if (!todosArchivosSubidos(window.formState.uploadedFiles)) {
-                mensajesError.push('- Esperar a que se complete la carga de los archivos');
-            }
-
-            if (mensajesError.length > 0) {
-                let mensaje = 'Por favor, complete los siguientes pasos antes de continuar:\n\n';
-                mensaje += mensajesError.join('\n');
-                alert(mensaje);
-                return;
-            }
+        if (mensajesError.length > 0) {
+            alert('Por favor, complete los siguientes pasos antes de continuar:\n\n' + mensajesError.join('\n'));
+            return;
         }
 
         window.procesarTagsSiExisten();
         window.procesarTagsSiExistenRs();
 
-        var postAudios = window.getPostAudios();
-        var fileRs = window.getfile();
-        submitBtn.textContent = 'Enviando...';
-        submitBtn.disabled = true; // Deshabilitar el botón para evitar múltiples envíos
+        const postAudios = window.getPostAudios();
+        const formData = new FormData(form);
 
-        // Advertir al usuario antes de salir de la página durante la carga
+        const hiddenTags = document.getElementById('postTagsHidden')?.value;
+        if (hiddenTags) formData.set('post_tags', hiddenTags);
+
+        postAudios.forEach((postAudio, index) => {
+            const key = `post_audio${index + 1}`;
+            const uploadedUrl = window.formState.uploadedFileUrls[index + 1];
+            if (uploadedUrl) {
+                formData.set(key, uploadedUrl);
+            } else if (postAudio.files?.length > 0) {
+                formData.set(key, postAudio.files[0]);
+            }
+        });
+
+        const selectedImage = window.formState.selectedImage || postImage.files?.[0];
+        if (selectedImage) formData.set('post_image', selectedImage);
+
+        log02('Contenido de FormData:', ...formData.entries());
+
+        submitBtn.textContent = 'Enviando...';
+        submitBtn.disabled = true;
         window.onbeforeunload = () => 'Hay una carga en progreso. ¿Estás seguro de que deseas salir de esta página?';
 
-        var formData = new FormData(form);
-
-        // Añadir post_tags si existe
-        var hiddenInput = document.getElementById('postTagsHidden');
-        if (hiddenInput?.value) {
-            formData.set('post_tags', hiddenInput.value);
-            log02('Tags añadidos al FormData:', hiddenInput.value);
-        }
-
-        // Guardar archivoURL o reintentar
-        function intentarGuardarArchivoURL(reintentosRestantes = 5, delay = 1000) {
-            if (window.formState.archivoURL) {
-                formData.set('archivo_url', window.formState.archivoURL);
-                procesarPostAudiosYImagenes();
-            } else if (reintentosRestantes > 0) {
-                setTimeout(() => intentarGuardarArchivoURL(reintentosRestantes - 1), delay);
-            } else {
-                log02('No se seleccionó ningún archivoURL después de varios intentos');
-                procesarPostAudiosYImagenes();
-            }
-        }
-
-        // Procesar audios e imágenes
-        function procesarPostAudiosYImagenes() {
-            postAudios.forEach((postAudio, index) => {
-                var key = `post_audio${index + 1}`;
-                var audioURL = window.formState.uploadedFileUrls[index + 1];
-                if (audioURL) {
-                    formData.set(key, audioURL);
-                } else if (postAudio?.files?.length > 0) {
-                    formData.set(key, postAudio.files[0]);
-                }
-            });
-
-            if (window.formState.selectedImage) {
-                formData.set('post_image', window.formState.selectedImage);
-            } else if (postImage?.files?.length > 0) {
-                formData.set('post_image', postImage.files[0]);
-            }
-        }
-
-        // Iniciar el proceso
-        intentarGuardarArchivoURL();
-
-        // Log del FormData
-        for (let [key, value] of formData.entries()) {
-            log02(key, value);
-        }
-
         try {
-            var messages = await sendFormData(formData);
+            const messages = await sendFormData(formData);
             alert(messages);
-            setTimeout(() => (window.location.href = 'https://2upra.com'), 99999999); // Evitar cierre en desarrollo
+            setTimeout(() => (window.location.href = 'https://2upra.com'), 99999999);
         } catch (error) {
             alert('Error: ' + error);
             submitBtn.disabled = false;
         } finally {
             submitBtn.textContent = 'Enviar';
-            window.onbeforeunload = null; // Remover el listener
+            window.onbeforeunload = null;
         }
     }
-    // Event listener para el submit
+
+    function verificarCampos(isPost, isSample) {
+        const mensajesError = [];
+
+        const verificar = (condicion, mensaje) => {
+            if (!condicion) mensajesError.push(mensaje);
+        };
+
+        if (isPost) {
+            verificar(window.formState.postCampos, window.formState.postErrorMessage || '- Por favor verifica todos los campos del post');
+            verificar(todosArchivosSubidos(window.formState.uploadedFiles), '- Esperar a que se complete la carga de los archivos');
+            verificar(window.formState.archivo, '- Espera que se cargue el archivo');
+        } else {
+            verificar(isSample ? window.formState.sampleCampos : window.formState.camposRellenos, '- Rellenar todos los campos');
+            verificar(window.formState.isAudioUploaded, '- Subir un archivo de audio');
+            verificar(window.formState.archivo, '- Espera que se cargue el archivo');
+            if (!isSample) verificar(window.formState.isImageUploaded, '- Subir una imagen');
+            verificar(todosArchivosSubidos(window.formState.uploadedFiles), '- Esperar a que se complete la carga de los archivos');
+        }
+
+        return mensajesError;
+    }
+
     form.addEventListener('submit', handleSubmit);
 }
-//
+
 function ajax_submit() {
     var formsAndButtons = [
         {formId: 'postFormRola', btnId: 'submitBtn'},
