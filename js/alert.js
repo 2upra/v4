@@ -14,6 +14,12 @@ function showCustomNotification(message, type) {
         contentDiv.textContent = message;
         notificationDiv.appendChild(contentDiv);
 
+        // Mostrar el modalBackground2
+        const modalBackground = document.getElementById('modalBackground2');
+        if (modalBackground) {
+            modalBackground.style.display = 'block';
+        }
+
         if (type === 'confirm') {
             const buttonsDiv = document.createElement('div');
             buttonsDiv.className = 'notification-buttons';
@@ -22,6 +28,9 @@ function showCustomNotification(message, type) {
             confirmButton.textContent = 'Confirmar';
             confirmButton.onclick = () => {
                 document.body.removeChild(notificationDiv);
+                if (modalBackground) {
+                    modalBackground.style.display = 'none';
+                }
                 resolve(true);
             };
 
@@ -29,6 +38,9 @@ function showCustomNotification(message, type) {
             cancelButton.textContent = 'Cancelar';
             cancelButton.onclick = () => {
                 document.body.removeChild(notificationDiv);
+                if (modalBackground) {
+                    modalBackground.style.display = 'none';
+                }
                 resolve(false);
             };
 
@@ -38,6 +50,9 @@ function showCustomNotification(message, type) {
         } else {
             setTimeout(() => {
                 document.body.removeChild(notificationDiv);
+                if (modalBackground) {
+                    modalBackground.style.display = 'none';
+                }
                 resolve();
             }, 3000);
         }
