@@ -129,7 +129,14 @@ function TagEnTexto(options) {
         tagClass = 'tagRs'
     } = options;
     log03('inicio TagEnTexto');
-
+    log03('Valores de const al inicio', {
+        containerId,
+        maxTags,
+        minLength,
+        maxLength,
+        whitelist,
+        tagClass
+    });
     const container = document.getElementById(containerId);
     const hiddenTagsInput = document.getElementById('postTagsHidden');
     const hiddenContentTextarea = document.getElementById('postContent');
