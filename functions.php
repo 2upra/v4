@@ -26,6 +26,12 @@ function guardarLog($log)
     }
 }
 
+function ajaxPage()
+{
+    wp_enqueue_script('ajaxPage', get_template_directory_uri() . '/js/ajaxPage.js', array('jquery'), '5.0.1', true);
+}
+add_action('wp_enqueue_scripts', 'ajaxPage');
+
 function scriptsOrdenados()
 {
     $dev_mode = true;
@@ -36,7 +42,6 @@ function scriptsOrdenados()
         'stripeAccion' => '1.0.6',
         'reproductor' => '2.1.2',
         'reporte' => '1.0.17',
-        'ajaxPage' => '4.0.1',
         'stripepro' => '1.0.8',
         'progreso' => '1.0.23',
         'modal' => '1.0.22',
