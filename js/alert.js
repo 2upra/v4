@@ -63,6 +63,7 @@ window.inicializarAlerta = function () {
             }
 
             document.body.appendChild(notificationDiv);
+            document.body.classList.add('no-scroll');  // Bloquear scroll
 
             function closeNotification(result) {
                 if (notificationDiv) {
@@ -72,6 +73,7 @@ window.inicializarAlerta = function () {
                     modalBackground.style.display = 'none';
                     modalBackground.onclick = null; // Desactivar el evento de clic fuera de la alerta
                 }
+                document.body.classList.remove('no-scroll');  // Habilitar scroll
                 resolve(result);
             }
         });
