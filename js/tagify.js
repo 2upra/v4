@@ -1,9 +1,6 @@
-//////////////////////////////////////////////
-//ACTIVAR O DESACTIVAR LOGS
-const A03 = false; // Cambia a true para activar los logs
-
+const A03 = true; 
 const log03 = A03 ? log03 : function () {};
-//////////////////////////////////////////////
+
 
 
 function initializeFormFunctions() {
