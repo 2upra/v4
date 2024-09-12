@@ -1,5 +1,5 @@
 //ACTIVAR O DESACTIVAR LOGS
-const enableLogs = true; // Cambia a true para activar los logs
+const enableLogs = false; // Cambia a true para activar los logs
 const log01 = enableLogs ? console.log : function () {};
 //////////////////////////////////////////////
 let rolaCount = 1;

@@ -1,4 +1,4 @@
-const A03 = true;
+const A03 = false;
 const log03 = A03 ? console.log : function () {};
 
 function initializeFormFunctions() {
