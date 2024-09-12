@@ -2,6 +2,9 @@
 
 function scriptsOrdenados()
 {
+    $dev_mode = true;
+    $error_log = [];
+
     $script_handles = [
         'fan' => '1.0.36',
         'stripeAccion' => '1.0.6',
@@ -33,9 +36,20 @@ function scriptsOrdenados()
         $version = is_array($data) ? $data[0] : $data;
         $deps = is_array($data) && isset($data[1]) ? $data[1] : [];
 
+        // En modo desarrollo, agregar un parámetro aleatorio para evitar el almacenamiento en caché
+        $version = $dev_mode ? $version . '.' . mt_rand() : $version;
+
+        $script_url = get_template_directory_uri() . "/js/{$handle}.js";
+
+        // Verificar si el archivo existe
+        if (!file_exists(get_template_directory() . "/js/{$handle}.js")) {
+            $error_log[] = "Error: El archivo {$handle}.js no existe.";
+            continue;
+        }
+
         wp_enqueue_script(
             $handle,
-            get_template_directory_uri() . "/js/{$handle}.js",
+            $script_url,
             $deps,
             $version,
             true
@@ -61,6 +75,11 @@ function scriptsOrdenados()
 
     wp_localize_script('wavejs', 'ajax_params', ['ajaxurl' => $ajax_url]);
     wp_localize_script('form-script', 'wpData', ['isAdmin' => current_user_can('administrator')]);
+
+    // Registrar errores si los hay
+    if (!empty($error_log)) {
+        error_log("Errores en scriptsOrdenados: " . print_r($error_log, true));
+    }
 }
 
 add_action('wp_enqueue_scripts', 'scriptsOrdenados');
