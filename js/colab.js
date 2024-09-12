@@ -1,5 +1,12 @@
 function empezarcolab() {
-    document.querySelectorAll('.ZYSVVV').forEach(button => {
+    const buttons = document.querySelectorAll('.ZYSVVV');
+    
+    if (buttons.length === 0) {
+        console.log('No se encontraron botones con la clase .ZYSVVV');
+        return;
+    }
+    
+    buttons.forEach(button => {
         button.addEventListener('click', async event => {
             console.log('Button clicked:', event.currentTarget);
             const postId = event.currentTarget?.dataset.postId;
