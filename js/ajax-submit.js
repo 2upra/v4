@@ -1,6 +1,6 @@
 //////////////////////////////////////////////
 //ACTIVAR O DESACTIVAR LOGS
-const A02 = false; // Cambia a true para activar los logs
+const A02 = true; // Cambia a true para activar los logs
 
 const log02 = A02 ? console.log : function () {};
 //////////////////////////////////////////////
