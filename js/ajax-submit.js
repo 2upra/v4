@@ -151,77 +151,55 @@ function forms_submit(form, submitBtnId) {
         var fileRs = window.getfile();
         submitBtn.textContent = 'Enviando...';
         submitBtn.disabled = true; // Deshabilitar el botón para evitar múltiples envíos
-        alert('Formulario en proceso de envío...');
 
-        // Advertir al usuario antes de que intente salir de la página
-        window.onbeforeunload = function () {
-            return 'Hay una carga en progreso. ¿Estás seguro de que deseas salir de esta página?';
-        };
+        // Advertir al usuario antes de salir de la página durante la carga
+        window.onbeforeunload = () => 'Hay una carga en progreso. ¿Estás seguro de que deseas salir de esta página?';
 
         var formData = new FormData(form);
 
+        // Añadir post_tags si existe
         var hiddenInput = document.getElementById('postTagsHidden');
-        if (hiddenInput && hiddenInput.value) {
+        if (hiddenInput?.value) {
             formData.set('post_tags', hiddenInput.value);
             log02('Tags añadidos al FormData:', hiddenInput.value);
         }
 
-        log02(`Se encontraron ${postAudios.length} archivos de audio.`);
-
-        var archivoUrlKey = 'archivo_url';
-        var maxRetries = 5; // Número máximo de reintentos
-        var retryDelay = 1000; // Tiempo de espera entre reintentos en milisegundos (1 segundo)
-
-        var archivoUrlKey = 'archivo_url';
-        var maxRetries = 5; // Número máximo de reintentos
-        var retryDelay = 1000; // Tiempo de espera entre reintentos en milisegundos (1 segundo)
-
-        function intentarGuardarArchivoURL(reintentosRestantes) {
+        // Guardar archivoURL o reintentar
+        function intentarGuardarArchivoURL(reintentosRestantes = 5, delay = 1000) {
             if (window.formState.archivoURL) {
-                log02(`Usando archivoURL para ${archivoUrlKey}`);
-                formData.set(archivoUrlKey, window.formState.archivoURL);
-                // Continuar con el resto del proceso
+                formData.set('archivo_url', window.formState.archivoURL);
                 procesarPostAudiosYImagenes();
             } else if (reintentosRestantes > 0) {
-                log02(`No se encontró archivoURL, reintentando en ${retryDelay / 1000} segundos...`);
-                setTimeout(function () {
-                    intentarGuardarArchivoURL(reintentosRestantes - 1);
-                }, retryDelay);
+                setTimeout(() => intentarGuardarArchivoURL(reintentosRestantes - 1), delay);
             } else {
                 log02('No se seleccionó ningún archivoURL después de varios intentos');
                 procesarPostAudiosYImagenes();
             }
         }
 
+        // Procesar audios e imágenes
         function procesarPostAudiosYImagenes() {
-            postAudios.forEach(function (postAudio, index) {
-                var key = 'post_audio' + (index + 1);
-                if (window.formState.uploadedFileUrls[index + 1]) {
-                    log02(`Usando uploadedFileUrl para ${key}`);
-                    formData.set(key, window.formState.uploadedFileUrls[index + 1]);
-                } else if (postAudio.files && postAudio.files.length > 0) {
-                    log02(`Usando postAudio.files[0] para ${key}`);
+            postAudios.forEach((postAudio, index) => {
+                var key = `post_audio${index + 1}`;
+                var audioURL = window.formState.uploadedFileUrls[index + 1];
+                if (audioURL) {
+                    formData.set(key, audioURL);
+                } else if (postAudio?.files?.length > 0) {
                     formData.set(key, postAudio.files[0]);
-                } else {
-                    log02(`No se seleccionó ningún archivo para ${key}`);
                 }
             });
 
             if (window.formState.selectedImage) {
-                log02('Usando selectedImage:', window.formState.selectedImage);
                 formData.set('post_image', window.formState.selectedImage);
-            } else if (postImage.files && postImage.files.length > 0) {
-                log02('Usando postImage.files[0]:', postImage.files[0]);
+            } else if (postImage?.files?.length > 0) {
                 formData.set('post_image', postImage.files[0]);
-            } else {
-                log02('No se seleccionó ninguna imagen');
             }
         }
 
-        // Iniciar el proceso con el número máximo de reintentos
-        intentarGuardarArchivoURL(maxRetries);
+        // Iniciar el proceso
+        intentarGuardarArchivoURL();
 
-        log02('Contenido de FormData:');
+        // Log del FormData
         for (let [key, value] of formData.entries()) {
             log02(key, value);
         }
@@ -229,20 +207,16 @@ function forms_submit(form, submitBtnId) {
         try {
             var messages = await sendFormData(formData);
             alert(messages);
-            setTimeout(() => {
-                window.location.href = 'https://2upra.com';
-            }, 99999999);
+            setTimeout(() => (window.location.href = 'https://2upra.com'), 99999999); // Evitar cierre en desarrollo
         } catch (error) {
             alert('Error: ' + error);
-            submitBtn.disabled = false; // Rehabilitar el botón en caso de error
+            submitBtn.disabled = false;
         } finally {
             submitBtn.textContent = 'Enviar';
-            // Remover el listener de beforeunload
-            window.onbeforeunload = null;
+            window.onbeforeunload = null; // Remover el listener
         }
     }
-
-    // Agregar nuevos event listeners
+    // Event listener para el submit
     form.addEventListener('submit', handleSubmit);
 }
 //
@@ -273,7 +247,7 @@ function proyectoForm() {
         return;
     }
 
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function (e) {
         e.preventDefault();
 
         const formData = {
@@ -293,15 +267,15 @@ function proyectoForm() {
             method: 'POST',
             body: new URLSearchParams(formData)
         })
-        .then(response => response.json())
-        .then(data => {
-            alert('Formulario enviado correctamente.');
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-        })
-        .catch(error => {
-            console.error('Error al enviar el formulario:', error);
-        });
+            .then(response => response.json())
+            .then(data => {
+                alert('Formulario enviado correctamente.');
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            })
+            .catch(error => {
+                console.error('Error al enviar el formulario:', error);
+            });
     });
 }
