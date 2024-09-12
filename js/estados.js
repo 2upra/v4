@@ -1,3 +1,4 @@
+//Generic Ajax
 async function enviarAjax(action, postId, additionalData = {}) {
     try {
         const response = await fetch(ajaxUrl, {
