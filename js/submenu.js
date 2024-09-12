@@ -1,26 +1,15 @@
-//////////////////////////////////////////////
-//ACTIVAR O DESACTIVAR LOGS
-const A04 = false; // Cambia a true para activar los logs
-
-const log04 = A04 ? log04 : function () {};
-//////////////////////////////////////////////
-
-
 function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundId, adjustTop = 0, adjustLeft = 0) {
     const triggers = document.querySelectorAll(triggerSelector);
     const modalBackground = document.getElementById(modalBackgroundId);
-    if (!modalBackground) return log04(`No se encontró el elemento de fondo modal con id ${modalBackgroundId}`);
+    if (!modalBackground) return;
 
     function toggleSubmenu(event) {
         const trigger = event.target.closest(triggerSelector);
-        if (!trigger) return log04("No se encontró el elemento trigger");
-
         const submenuId = `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || "default"}`;
         const submenu = document.getElementById(submenuId);
-        if (!submenu) return log04(`No se encontró el submenu con id ${submenuId}`);
+        if (!submenu) return;
 
         submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
-
         submenu.style.display === "block" ? hideSubmenu(submenu) : showSubmenu(event, submenu);
         event.stopPropagation();
     }
@@ -37,11 +26,13 @@ function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundId, adju
 
         submenu.style.display = "block";
         modalBackground.style.display = "block";
+        document.body.classList.add('no-scroll');  // Bloquear scroll
     }
 
     function hideSubmenu(submenu) {
         submenu.style.display = "none";
         modalBackground.style.display = "none";
+        document.body.classList.remove('no-scroll');  // Habilitar scroll
     }
 
     triggers.forEach(trigger => trigger.addEventListener("click", toggleSubmenu));
@@ -72,18 +63,12 @@ function submenu() {
     initializeSubirSample("#subirsample", "#formulariosubirsample", "#social-post-container");
 }
 
-// Ejecuta la inicialización de menús estáticos al cargar la página
 document.addEventListener('DOMContentLoaded', initializeStaticMenus);
 
-function initializeSubirSample(
-    triggerSelector,
-    formSelector,
-    containerSelector
-) {
+function initializeSubirSample(triggerSelector, formSelector, containerSelector) {
     const trigger = document.querySelector(triggerSelector);
     const form = document.querySelector(formSelector);
     const container = document.querySelector(containerSelector);
-
     if (!trigger || !form || !container) return;
 
     trigger.addEventListener("click", (event) => {
@@ -93,21 +78,13 @@ function initializeSubirSample(
     });
 
     document.addEventListener("click", (event) => {
-        if (
-            !form.contains(event.target) &&
-            event.target !== trigger &&
-            !container.contains(event.target)
-        ) {
+        if (!form.contains(event.target) && event.target !== trigger && !container.contains(event.target)) {
             form.style.display = "none";
         }
     });
 
     form.addEventListener("click", (event) => {
-        if (!container.contains(event.target)) {
-            form.style.display = "none";
-        }
+        if (!container.contains(event.target)) form.style.display = "none";
         event.stopPropagation();
     });
 }
-
-
