@@ -8,17 +8,20 @@ function botonColab($post_id, $colab) {
 // Función para manejar la colaboración
 function empezarColab() {
     if (!is_user_logged_in() || !isset($_POST['post_id'])) {
+        guardarLog('No autorizado o sin ID de publicación');
         wp_send_json_error(['message' => 'No autorizado o sin ID de publicación']);
     }
 
     $post_id = intval($_POST['post_id']);
     $original_post = get_post($post_id);
     if (!$original_post) {
+        guardarLog('Publicación no encontrada');
         wp_send_json_error(['message' => 'Publicación no encontrada']);
     }
 
     $current_user_id = get_current_user_id();
     if ($current_user_id === $original_post->post_author) {
+        guardarLog('No puedes colaborar contigo mismo.');
         wp_send_json_error(['message' => 'No puedes colaborar contigo mismo.']);
     }
 
@@ -33,7 +36,14 @@ function empezarColab() {
         ],
     ]);
 
-    wp_send_json($new_post_id ? ['message' => 'Colaboración iniciada correctamente'] : ['message' => 'Error al crear la colaboración']);
+    if ($new_post_id) {
+        guardarLog('Colaboración iniciada correctamente');
+        wp_send_json(['message' => 'Colaboración iniciada correctamente']);
+    } else {
+        guardarLog('Error al crear la colaboración');
+        wp_send_json_error(['message' => 'Error al crear la colaboración']);
+    }
+
     wp_die();
 }
 add_action('wp_ajax_empezarColab', 'empezarColab');
