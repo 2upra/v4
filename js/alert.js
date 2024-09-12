@@ -34,7 +34,15 @@ window.inicializarAlerta = function () {
             const modalBackground = document.getElementById('modalBackground2');
             if (modalBackground) {
                 console.log('modalBackground2 encontrado. Mostrándolo.');
-                modalBackground.style.display = 'block';
+                setTimeout(() => {
+                    modalBackground.style.display = 'block';
+                    modalBackground.style.visibility = 'visible';
+                    modalBackground.style.opacity = '1';
+                    modalBackground.style.zIndex = '9999'; // Asegurarse de que esté por encima de otros elementos
+                    console.log('Estado del modalBackground2 después de mostrarlo:', 
+                                modalBackground.style.display, 
+                                window.getComputedStyle(modalBackground).display);
+                }, 0);
             } else {
                 console.error('modalBackground2 no encontrado.');
             }
@@ -87,10 +95,15 @@ window.inicializarAlerta = function () {
 
             console.log('Agregando la notificación al cuerpo del documento.');
             document.body.appendChild(notificationDiv);
+
+            // Verificar el estado del modalBackground2 después de un breve retraso
+            setTimeout(() => {
+                if (modalBackground) {
+                    console.log('Estado final del modalBackground2:', 
+                                modalBackground.style.display, 
+                                window.getComputedStyle(modalBackground).display);
+                }
+            }, 100);
         });
     }
 }
-
-window.addEventListener('DOMContentLoaded', () => {
-    inicializarAlerta();
-});
