@@ -12,7 +12,13 @@ async function enviarAjax(action, postId, additionalData = {}) {
             })
         });
 
-        return await response.json();
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Respuesta del servidor:', data);
+        return data;
     } catch (error) {
         console.error('Error en la solicitud:', error);
         return {success: false, error: error.message};
