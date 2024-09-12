@@ -23,18 +23,12 @@ window.inicializarAlerta = function () {
             notificationDiv.appendChild(contentDiv);
 
             const modalBackground = document.getElementById('modalBackground2');
-            if (modalBackground && type === 'confirm') {
-                setTimeout(() => {
-                    modalBackground.style.display = 'block';
-                    modalBackground.style.visibility = 'visible';
-                    modalBackground.style.opacity = '1';
-                    modalBackground.style.zIndex = '9999';
-                }, 0);
-
-                // Clic fuera de la alerta se considera como cancelar
-                modalBackground.onclick = () => {
-                    closeNotification(false);
-                };
+            if (modalBackground) {
+                modalBackground.style.display = 'block';
+                modalBackground.style.visibility = 'visible';
+                modalBackground.style.opacity = '1';
+                modalBackground.style.zIndex = '9998';
+                document.body.classList.add('no-scroll');  // Bloquear scroll
             }
 
             if (type === 'confirm') {
@@ -63,17 +57,15 @@ window.inicializarAlerta = function () {
             }
 
             document.body.appendChild(notificationDiv);
-            document.body.classList.add('no-scroll');  // Bloquear scroll
 
             function closeNotification(result) {
                 if (notificationDiv) {
                     document.body.removeChild(notificationDiv);
                 }
-                if (modalBackground && type === 'confirm') {
+                if (modalBackground) {
                     modalBackground.style.display = 'none';
-                    modalBackground.onclick = null; // Desactivar el evento de clic fuera de la alerta
+                    document.body.classList.remove('no-scroll');  // Habilitar scroll
                 }
-                document.body.classList.remove('no-scroll');  // Habilitar scroll
                 resolve(result);
             }
         });
