@@ -13,11 +13,13 @@ function empezarColab() {
     }
 
     $post_id = intval($_POST['post_id']);
+    guardarLog("Intentando buscar post con ID $post_id");
     $original_post = get_post($post_id);
     if (!$original_post) {
         guardarLog('Publicación no encontrada');
         wp_send_json_error(['message' => 'Publicación no encontrada']);
     }
+
 
     $current_user_id = get_current_user_id();
     if ($current_user_id === $original_post->post_author) {
