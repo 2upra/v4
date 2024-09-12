@@ -102,21 +102,21 @@ function subidaDePost()
         require_once(ABSPATH . 'wp-admin/includes/image.php');
         require_once(ABSPATH . 'wp-admin/includes/file.php');
         require_once(ABSPATH . 'wp-admin/includes/media.php');
-    
+
         guardarLog("Intentando cargar el archivo con clave: {$fileKey} para el post {$post_id}");
-    
+
         if (!isset($_FILES[$fileKey]) || $_FILES[$fileKey]['error'] === UPLOAD_ERR_NO_FILE) {
             guardarLog("No se encontró archivo para subir con la clave: {$fileKey}");
             return false;
         }
-    
+
         $attachment_id = media_handle_upload($fileKey, $post_id);
-    
+
         if (is_wp_error($attachment_id)) {
             guardarLog("Error al subir el archivo: " . $attachment_id->get_error_message());
             return false;
         }
-    
+
         guardarLog("Archivo subido exitosamente. ID de adjunto: {$attachment_id}");
         return $attachment_id;
     };
@@ -175,36 +175,6 @@ function subidaDePost()
         guardarLog("No se proporcionó un archivo_url en el formulario.");
     }
 
-    /* 
-
-    2024-08-25 19:25:02 - Contenido de $_FILES: Array
-(
-    [post_image] => Array
-        (
-            [name] => 1107885577070174843_☆ ★.jpg
-            [type] => image/jpeg
-            [tmp_name] => /tmp/phpj4Y1Bk
-            [error] => 0
-            [size] => 62799
-        )
-
-)
-
-    2024-08-25 19:25:02 - Imagen recibida: Array
-(
-    [name] => 1107885577070174843_☆ ★.jpg
-    [type] => image/jpeg
-    [tmp_name] => /tmp/phpj4Y1Bk
-    [error] => 0
-    [size] => 62799
-)
-
-2024-08-25 19:25:04 - Intentando cargar el archivo con clave: post_image para el post 231384
-2024-08-25 19:25:04 - Error al establecer la imagen como miniatura del post.
-
-    */
-
-    // Manejar la subida de imagen
     if (isset($_FILES['post_image']) && $_FILES['post_image']['error'] != 4) {
         $image_id = $handleMediaUpload('post_image');
         if ($image_id) {
@@ -306,33 +276,25 @@ function subidaDePost()
 
     for ($i = 1; $i <= $max_audios; $i++) {
         $field_name = "post_audio{$i}";
+        $audio_procesado = false;
 
         if (isset($_FILES[$field_name]) && $_FILES[$field_name]['error'] != 4) {
-            if (procesarAudio($post_id, $field_name, $handleMediaUpload, $i, $is_post)) {
-                $audio_count++;
-                guardarLog("{$field_name} procesado correctamente");
-            } else {
-                $errors[] = "Error al procesar {$field_name}";
-                guardarLog("Error al procesar {$field_name}");
-            }
+            $audio_procesado = procesarAudio($post_id, $field_name, $handleMediaUpload, $i, $is_post);
         } elseif (isset($_POST[$field_name]) && $_POST[$field_name] !== 'undefined' && !empty($_POST[$field_name])) {
-            // Procesar URL de audio
-            if (procesarAudio($post_id, $field_name, $handleMediaUpload, $i, $is_post)) {
-                $audio_count++;
-                guardarLog("{$field_name} procesado correctamente");
-            } else {
-                $errors[] = "Error al procesar {$field_name}";
-                guardarLog("Error al procesar {$field_name}");
-            }
-        } else {
-            guardarLog("{$field_name} no presente o vacío");
+            $audio_procesado = procesarAudio($post_id, $field_name, $handleMediaUpload, $i, $is_post);
+        }
+
+        if ($audio_procesado) {
+            $audio_count++;
+        } elseif (!$audio_procesado && (isset($_FILES[$field_name]) || isset($_POST[$field_name]))) {
+            $errors[] = "Error al procesar {$field_name}";
         }
     }
 
     if (!empty($errors)) {
-        guardarLog("Errores encontrados: " . print_r($errors, true));
+        guardarLog("Errores encontrados en " . count($errors) . " audios: " . implode(', ', $errors));
     } elseif ($audio_count > 0) {
-        guardarLog("Todos los audios procesados correctamente.");
+        guardarLog("Todos los audios procesados correctamente. Total: {$audio_count}");
     } else {
         guardarLog("No se procesaron audios.");
     }
@@ -376,40 +338,44 @@ function subidaDePost()
     function procesarNameRolas($post_id)
     {
         guardarLog("procesarNameRolas iniciado con post_id: {$post_id}");
-
+    
         $max_rolas = 20;
         $rolas = [];
-        $log_resumen = [];
-
+        $campos_vacios = 0;
+        $campos_no_recibidos = 0;
+    
         for ($i = 1; $i <= $max_rolas; $i++) {
             $field_name = "name_Rola{$i}";
-
+    
             if (isset($_POST[$field_name])) {
                 $valor = trim($_POST[$field_name]);
                 if (!empty($valor)) {
                     $rolas[] = sanitize_textarea_field($valor);
-                    $log_resumen[] = "Rola {$i}: '{$valor}' agregada";
                 } else {
-                    $log_resumen[] = "Rola {$i}: Campo recibido pero vacío";
+                    $campos_vacios++;
                 }
             } else {
-                $log_resumen[] = "Rola {$i}: Campo no recibido";
+                $campos_no_recibidos++;
             }
         }
-
+    
         if (!empty($rolas)) {
             update_post_meta($post_id, 'rolas_meta_key', $rolas);
-            guardarLog("Metadatos actualizados para post_id: {$post_id} con rolas: " . implode(", ", $rolas));
+            guardarLog("Metadatos actualizados para post_id: {$post_id} con " . count($rolas) . " rolas: " . implode(", ", $rolas));
         } else {
             guardarLog("No se encontraron rolas válidas para post_id: {$post_id}");
         }
-
+    
         // Guardar log resumen
-        guardarLog("Resumen de procesamiento para post_id: {$post_id}:\n" . implode("\n", $log_resumen));
-
+        $resumen = "Resumen de procesamiento para post_id: {$post_id}: ";
+        $resumen .= count($rolas) . " rolas válidas agregadas, ";
+        $resumen .= "{$campos_vacios} campos vacíos, ";
+        $resumen .= "{$campos_no_recibidos} campos no recibidos.";
+    
+        guardarLog($resumen);
+    
         return $rolas;
     }
-
     // Procesar nombres de rolas
     $rolas = procesarNameRolas($post_id);
 
