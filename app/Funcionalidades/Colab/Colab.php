@@ -6,6 +6,7 @@ function botonColab($post_id, $colab) {
 }
 
 // Función para manejar la colaboración
+// Función para manejar la colaboración
 function empezarColab() {
     if (!is_user_logged_in() || !isset($_POST['post_id'])) {
         guardarLog('No autorizado o sin ID de publicación');
@@ -19,7 +20,6 @@ function empezarColab() {
         guardarLog('Publicación no encontrada');
         wp_send_json_error(['message' => 'Publicación no encontrada']);
     }
-
 
     $current_user_id = get_current_user_id();
     if ($current_user_id === $original_post->post_author) {
@@ -40,7 +40,10 @@ function empezarColab() {
 
     if ($new_post_id) {
         guardarLog('Colaboración iniciada correctamente');
-        wp_send_json(['message' => 'Colaboración iniciada correctamente']);
+        wp_send_json([
+            'success' => true,
+            'message' => 'Colaboración iniciada correctamente'
+        ]);
     } else {
         guardarLog('Error al crear la colaboración');
         wp_send_json_error(['message' => 'Error al crear la colaboración']);
