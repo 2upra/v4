@@ -1,5 +1,5 @@
-function inicializarAlertas() {
-    console.log('DOM completamente cargado y procesado.');
+window.inicializarAlerta = function () {
+    console.log('DOM completamente cargado y procesado');
     
     window.originalAlert = window.alert;
     window.originalConfirm = window.confirm;
@@ -90,3 +90,7 @@ function inicializarAlertas() {
         });
     }
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+    inicializarAlerta();
+});
