@@ -915,7 +915,7 @@ function verificarCamposPost() {
     const postFormSample = document.getElementById('postFormRs');
     if (postFormSample) {
         const textoRsDiv = document.getElementById('textoRs');
-        //const getContent = TagEnTexto({containerId: 'textoRs'});
+        const getContent = TagEnTexto({containerId: 'textoRs'});
 
         textoRsDiv.setAttribute('placeholder', 'Puedes agregar tags agregando un #');
         textoRsDiv.addEventListener('input', verificarCampos);
