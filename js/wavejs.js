@@ -1,44 +1,35 @@
 function inicializarWaveforms() {
-    console.log('wave iniciado');
     const loadAndPlayAudio = (container, wavesurfer, src) => {
-        console.log('Iniciando carga de audio...');
         window.audioLoading = true;
         container.querySelector('.waveform-loading').style.display = 'block';
         container.querySelector('.waveform-message').style.display = 'none';
-        console.log('Mostrando indicador de carga y ocultando mensajes.');
 
         // Ocultar el fondo de waveform
         const waveformBackground = container.querySelector('.waveform-background');
         if (waveformBackground) {
             waveformBackground.style.display = 'none';
-            console.log('Fondo de waveform ocultado.');
         }
 
         wavesurfer.load(src);
-        console.log('Cargando audio desde la fuente:', src);
 
         wavesurfer.on('ready', () => {
             window.audioLoading = false;
             container.dataset.audioLoaded = 'true';
             container.querySelector('.waveform-loading').style.display = 'none';
-            console.log('Audio cargado y listo para reproducir.');
 
             const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
-            console.log('¿Waveform ya cargada?:', waveCargada);
 
             if (!waveCargada) {
                 // Retrasar la exportación de la imagen solo si no está ya guardada
                 setTimeout(() => {
                     const image = generateWaveformImage(wavesurfer);
                     const postId = container.getAttribute('postIDWave');
-                    console.log('Generando imagen de waveform y enviándola al servidor para el post:', postId);
                     sendImageToServer(image, postId);
                 }, 1);
             }
         });
 
         wavesurfer.on('error', () => {
-            console.error('Error al cargar el audio, reintentando...');
             setTimeout(() => loadAndPlayAudio(container, wavesurfer, src), 3000);
         });
     };
@@ -49,9 +40,7 @@ function inicializarWaveforms() {
     }
 
     async function sendImageToServer(imageData, postId) {
-        console.log('Longitud de los datos de la imagen:', imageData.length);
         if (imageData.length < 100) {
-            console.error('Los datos de la imagen parecen ser demasiado cortos');
             return;
         }
 
@@ -78,9 +67,7 @@ function inicializarWaveforms() {
 
             const data = await response.json();
 
-            if (data.success) {
-                console.log('Imagen guardada exitosamente:', data.message);
-            } else {
+            if (!data.success) {
                 console.error('Error al guardar la imagen:', data.message);
             }
         } catch (error) {
@@ -162,3 +149,5 @@ function inicializarWaveforms() {
         }
     });
 }
+
+

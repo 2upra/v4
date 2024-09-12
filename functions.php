@@ -1,6 +1,6 @@
 <?php
-require_once ABSPATH . 'wp-content/stripe/init.php';
 
+require_once ABSPATH . 'wp-content/stripe/init.php';
 require_once __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
@@ -26,6 +26,7 @@ function guardarLog($log)
     }
 }
 
+//Script principal
 function ajaxPage()
 {
     wp_enqueue_script('ajaxPage', get_template_directory_uri() . '/js/ajaxPage.js', array('jquery'), '5.0.1', true);
@@ -66,13 +67,9 @@ function scriptsOrdenados()
     foreach ($script_handles as $handle => $data) {
         $version = is_array($data) ? $data[0] : $data;
         $deps = is_array($data) && isset($data[1]) ? $data[1] : [];
-
-        // En modo desarrollo, agregar un parámetro aleatorio para evitar el almacenamiento en caché
         $version = $dev_mode ? $version . '.' . mt_rand() : $version;
 
         $script_url = get_template_directory_uri() . "/js/{$handle}.js";
-
-        // Verificar si el archivo existe
         if (!file_exists(get_template_directory() . "/js/{$handle}.js")) {
             $error_log[] = "Error: El archivo {$handle}.js no existe.";
             continue;
