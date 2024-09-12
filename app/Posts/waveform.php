@@ -20,11 +20,11 @@ function wave($audio_url, $audio_id_lite, $post_id)
 
 function save_waveform_image()
 {
-    guardar_log('Iniciando la función save_waveform_image.');
+    guardarLog('Iniciando la función save_waveform_image.');
 
     // Validar datos de entrada.
     if (!isset($_FILES['image']) || !isset($_POST['post_id'])) {
-        guardar_log('Datos incompletos: ' . print_r($_POST, true) . print_r($_FILES, true));
+        guardarLog('Datos incompletos: ' . print_r($_POST, true) . print_r($_FILES, true));
         wp_send_json_error('Datos incompletos');
         return;
     }
@@ -32,14 +32,14 @@ function save_waveform_image()
     $file = $_FILES['image'];
     $post_id = intval($_POST['post_id']);
 
-    guardar_log('Archivo recibido: ' . print_r($file, true));
+    guardarLog('Archivo recibido: ' . print_r($file, true));
 
     // Eliminar la imagen anterior si waveCargada es false.
     if (get_post_meta($post_id, 'waveCargada', true) === 'false') {
         $existing_attachment_id = get_post_meta($post_id, 'waveform_image_id', true);
         if ($existing_attachment_id) {
             wp_delete_attachment($existing_attachment_id, true);
-            guardar_log('Imagen anterior eliminada: ' . $existing_attachment_id);
+            guardarLog('Imagen anterior eliminada: ' . $existing_attachment_id);
         }
     }
 
@@ -63,7 +63,7 @@ function save_waveform_image()
 
     // Manejar errores de subida.
     if (is_wp_error($attachment_id)) {
-        guardar_log('Error al subir la imagen: ' . $attachment_id->get_error_message());
+        guardarLog('Error al subir la imagen: ' . $attachment_id->get_error_message());
         wp_send_json_error('Error al subir la imagen');
         return;
     }
@@ -78,7 +78,7 @@ function save_waveform_image()
     update_post_meta($post_id, 'waveform_image_url', $image_url);
     update_post_meta($post_id, 'waveCargada', true);
 
-    guardar_log('Imagen guardada correctamente - ID: ' . $attachment_id . ', URL: ' . $image_url);
+    guardarLog('Imagen guardada correctamente - ID: ' . $attachment_id . ', URL: ' . $image_url);
     wp_send_json_success(array(
         'message' => 'Imagen guardada correctamente',
         'url' => $image_url,
@@ -88,7 +88,7 @@ function save_waveform_image()
 
 function reset_waveform_metas()
 {
-    guardar_log("Iniciando la función reset_waveform_metas.");
+    guardarLog("Iniciando la función reset_waveform_metas.");
 
     $args = array(
         'post_type' => 'social_post',
@@ -103,14 +103,14 @@ function reset_waveform_metas()
     );
 
     $query = new WP_Query($args);
-    guardar_log("WP_Query ejecutado. Número de posts encontrados: " . $query->found_posts);
+    guardarLog("WP_Query ejecutado. Número de posts encontrados: " . $query->found_posts);
 
     if ($query->have_posts()) {
-        guardar_log("Entrando en el bucle de posts.");
+        guardarLog("Entrando en el bucle de posts.");
         while ($query->have_posts()) {
             $query->the_post();
             $post_id = get_the_ID();
-            guardar_log("Procesando el post ID $post_id.");
+            guardarLog("Procesando el post ID $post_id.");
 
             // Resetear waveCargada a false.
             update_post_meta($post_id, 'waveCargada', false);
@@ -126,11 +126,11 @@ function reset_waveform_metas()
             delete_post_meta($post_id, 'waveform_image_url');
         }
     } else {
-        guardar_log("No se encontraron posts con el metadato 'waveCargada' igual a true.");
+        guardarLog("No se encontraron posts con el metadato 'waveCargada' igual a true.");
     }
 
     wp_reset_postdata();
-    guardar_log("Finalizando la función reset_waveform_metas.");
+    guardarLog("Finalizando la función reset_waveform_metas.");
 }
 
 // Registrar las acciones AJAX.

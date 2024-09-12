@@ -52,10 +52,10 @@ function process_album_post($post_id)
 
     for ($i = 0; $i < count($rola_names); $i++) {
         $rola_title = $rola_names[$i];
-        guardar_log("Processing rola " . ($i + 1) . ": $rola_title");
+        guardarLog("Processing rola " . ($i + 1) . ": $rola_title");
 
         // Agregar logs adicionales aquí
-        guardar_log("Obteniendo metadatos para rola $i");
+        guardarLog("Obteniendo metadatos para rola $i");
         $audio_id = get_post_meta($post_id, "post_audio" . ($i + 1), true);
         $audio_lite_id = get_post_meta($post_id, "post_audio_lite_" . ($i + 1), true);
         $audio_hd_id = get_post_meta($post_id, "post_audio_hd_" . ($i + 1), true);
@@ -63,7 +63,7 @@ function process_album_post($post_id)
         $duration = get_post_meta($post_id, "audio_duration_" . ($i + 1), true);
 
         if (!$audio_id || !$rola_title) {
-            guardar_log("Faltan datos críticos para la rola " . ($i + 1) . ": $rola_title. Continuando con la siguiente rola.");
+            guardarLog("Faltan datos críticos para la rola " . ($i + 1) . ": $rola_title. Continuando con la siguiente rola.");
             continue;
         }
 
@@ -96,11 +96,11 @@ function process_album_post($post_id)
         if ($album_thumbnail_id) {
             set_post_thumbnail($rola_post_id, $album_thumbnail_id);
         }
-        guardar_log("Rola creada: ID = $rola_post_id, Título = $rola_title");
+        guardarLog("Rola creada: ID = $rola_post_id, Título = $rola_title");
         $rola_posts[] = $rola_post_id;
     }
 
    
     update_post_meta($album_post_id, 'album_rolas', $rola_posts);
-    guardar_log("Valor final de rola_posts: " . print_r($rola_posts, true));
+    guardarLog("Valor final de rola_posts: " . print_r($rola_posts, true));
 }

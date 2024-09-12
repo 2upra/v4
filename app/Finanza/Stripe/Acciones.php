@@ -65,7 +65,7 @@ function manejador_webhook_acciones(WP_REST_Request $request) {
     try {
         $event = \Stripe\Webhook::constructEvent($payload, $sig_header, $endpoint_secret);
     } catch (\Exception $e) {
-        guardar_log('Error de webhook: ' . $e->getMessage());
+        guardarLog('Error de webhook: ' . $e->getMessage());
         return new WP_REST_Response('Webhook fallido', 400);
     }
 
@@ -78,10 +78,10 @@ function manejador_webhook_acciones(WP_REST_Request $request) {
             $compras[] = ['cantidad' => $session->amount_total / 100, 'fecha' => current_time('mysql')];
             update_user_meta($metadata->user_id, 'compras_acciones', $compras);
         } else {
-            guardar_log('Transaction type is not compra or metadata is missing.');
+            guardarLog('Transaction type is not compra or metadata is missing.');
         }
     } else {
-        guardar_log('Unhandled event type: ' . $event->type);
+        guardarLog('Unhandled event type: ' . $event->type);
     }
 
     return new WP_REST_Response('Webhook recibido correctamente', 200);

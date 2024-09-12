@@ -131,11 +131,5 @@ function like($post_id)
     return $output;
 }
 
-
 add_action('wp_ajax_nopriv_handle_post_like', 'handle_post_like');
 add_action('wp_ajax_handle_post_like', 'handle_post_like');
-
-function enqueue_likes_script()
-{
-    enqueue_and_localize_scripts('likes', '/js/likes.js', ['jquery'], '2.1', true, 'ajax_var_likes', 'ajax-nonce');
-}

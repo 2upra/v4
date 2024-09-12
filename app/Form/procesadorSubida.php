@@ -2,18 +2,18 @@
 // ACCIÓN PARA PUBLCIAR
 function subidaDePost()
 {
-    guardar_log("---------------------------------------------");
-    guardar_log("INICIO subidaDePost");
+    guardarLog("---------------------------------------------");
+    guardarLog("INICIO subidaDePost");
 
     // Registrar los datos recibidos
-    guardar_log("Contenido de \$_FILES: " . print_r($_FILES, true));
-    guardar_log("Contenido de \$_POST: " . print_r($_POST, true));
+    guardarLog("Contenido de \$_FILES: " . print_r($_FILES, true));
+    guardarLog("Contenido de \$_POST: " . print_r($_POST, true));
 
     if (isset($_FILES['post_image'])) {
-        guardar_log("Imagen recibida: " . print_r($_FILES['post_image'], true));
+        guardarLog("Imagen recibida: " . print_r($_FILES['post_image'], true));
         // Procesa la imagen aquí
     } else {
-        guardar_log("No se recibió ninguna imagen");
+        guardarLog("No se recibió ninguna imagen");
     }
 
     // Verificar si es una solicitud AJAX válida y si el usuario tiene permisos
@@ -22,8 +22,8 @@ function subidaDePost()
         || !is_user_logged_in()
         || !current_user_can('edit_posts')
     ) {
-        guardar_log("Error de permisos o nonce inválido en subidaDePost");
-        guardar_log("Error: Permisos insuficientes o nonce inválido");
+        guardarLog("Error de permisos o nonce inválido en subidaDePost");
+        guardarLog("Error: Permisos insuficientes o nonce inválido");
         wp_send_json_error(['message' => 'No tienes permiso para realizar esta acción.'], 403);
     }
 
@@ -62,7 +62,7 @@ function subidaDePost()
 
     // Manejar error al crear la publicación
     if (is_wp_error($post_id)) {
-        guardar_log("Error al crear la publicación en subidaDePost: " . $post_id->get_error_message());
+        guardarLog("Error al crear la publicación en subidaDePost: " . $post_id->get_error_message());
         wp_send_json_error(['message' => 'Error al crear la publicación.'], 500);
     }
 
@@ -103,37 +103,37 @@ function subidaDePost()
         require_once(ABSPATH . 'wp-admin/includes/file.php');
         require_once(ABSPATH . 'wp-admin/includes/media.php');
     
-        guardar_log("Intentando cargar el archivo con clave: {$fileKey} para el post {$post_id}");
+        guardarLog("Intentando cargar el archivo con clave: {$fileKey} para el post {$post_id}");
     
         if (!isset($_FILES[$fileKey]) || $_FILES[$fileKey]['error'] === UPLOAD_ERR_NO_FILE) {
-            guardar_log("No se encontró archivo para subir con la clave: {$fileKey}");
+            guardarLog("No se encontró archivo para subir con la clave: {$fileKey}");
             return false;
         }
     
         $attachment_id = media_handle_upload($fileKey, $post_id);
     
         if (is_wp_error($attachment_id)) {
-            guardar_log("Error al subir el archivo: " . $attachment_id->get_error_message());
+            guardarLog("Error al subir el archivo: " . $attachment_id->get_error_message());
             return false;
         }
     
-        guardar_log("Archivo subido exitosamente. ID de adjunto: {$attachment_id}");
+        guardarLog("Archivo subido exitosamente. ID de adjunto: {$attachment_id}");
         return $attachment_id;
     };
 
     function procesarArchivoURL($post_id, $field_name)
     {
-        guardar_log("+-----------------------------------------------+");
-        guardar_log("Procesando archivo para {$field_name} en el post {$post_id}");
+        guardarLog("+-----------------------------------------------+");
+        guardarLog("Procesando archivo para {$field_name} en el post {$post_id}");
 
         $archivo_id = false;
         // Log para depuración
-        guardar_log("Contenido de \$_POST[$field_name]: " . (isset($_POST[$field_name]) ? $_POST[$field_name] : 'No definido'));
+        guardarLog("Contenido de \$_POST[$field_name]: " . (isset($_POST[$field_name]) ? $_POST[$field_name] : 'No definido'));
 
         // Comprobar si se ha proporcionado una URL directamente en el campo
         if (isset($_POST[$field_name]) && !empty($_POST[$field_name])) {
             $url = esc_url_raw($_POST[$field_name]);
-            guardar_log("URL del archivo proporcionada directamente en POST: {$url}");
+            guardarLog("URL del archivo proporcionada directamente en POST: {$url}");
 
             // Procesar la URL
             $parsed_url = wp_parse_url($url);
@@ -149,30 +149,30 @@ function subidaDePost()
                     );
                     $archivo_id = media_handle_sideload($file_array, $post_id);
                 }
-                guardar_log("Archivo encontrado en el servidor: {$file_path}, ID de adjunto: {$archivo_id}");
+                guardarLog("Archivo encontrado en el servidor: {$file_path}, ID de adjunto: {$archivo_id}");
             } else {
-                guardar_log("El archivo no se encuentra en el servidor: {$file_path}");
+                guardarLog("El archivo no se encuentra en el servidor: {$file_path}");
                 return false;
             }
         } else {
-            guardar_log("No se proporcionó URL para {$field_name}");
+            guardarLog("No se proporcionó URL para {$field_name}");
             return false;
         }
 
         if ($archivo_id && !is_wp_error($archivo_id)) {
             update_post_meta($post_id, $field_name, $archivo_id);
-            guardar_log("Archivo procesado y guardado con éxito, ID de adjunto: {$archivo_id}");
+            guardarLog("Archivo procesado y guardado con éxito, ID de adjunto: {$archivo_id}");
             return true;
         }
 
-        guardar_log("Error procesando el archivo para {$field_name}");
+        guardarLog("Error procesando el archivo para {$field_name}");
         return false;
     }
 
     if (isset($_POST['archivo_url']) && !empty($_POST['archivo_url'])) {
         procesarArchivoURL($post_id, 'archivo_url');
     } else {
-        guardar_log("No se proporcionó un archivo_url en el formulario.");
+        guardarLog("No se proporcionó un archivo_url en el formulario.");
     }
 
     /* 
@@ -210,28 +210,28 @@ function subidaDePost()
         if ($image_id) {
             $result = set_post_thumbnail($post_id, $image_id);
             if ($result === false) {
-                guardar_log("Error al establecer la imagen como miniatura del post. Post ID: $post_id, Image ID: $image_id");
+                guardarLog("Error al establecer la imagen como miniatura del post. Post ID: $post_id, Image ID: $image_id");
             } else {
-                guardar_log("Imagen establecida correctamente como miniatura. Post ID: $post_id, Image ID: $image_id");
+                guardarLog("Imagen establecida correctamente como miniatura. Post ID: $post_id, Image ID: $image_id");
             }
         } else {
-            guardar_log("Error al subir la imagen. Detalles del archivo: " . print_r($_FILES['post_image'], true));
+            guardarLog("Error al subir la imagen. Detalles del archivo: " . print_r($_FILES['post_image'], true));
         }
     } else {
-        guardar_log("No se subió ninguna imagen o hubo un error en la subida.");
+        guardarLog("No se subió ninguna imagen o hubo un error en la subida.");
     }
 
     function procesarAudio($post_id, $field_name, $handleMediaUpload, $index, $is_post)
     {
-        guardar_log("+-----------------------------------------------+");
-        guardar_log("Procesando audio para {$field_name} en el post {$post_id}");
+        guardarLog("+-----------------------------------------------+");
+        guardarLog("Procesando audio para {$field_name} en el post {$post_id}");
 
         $audio_id = false;
-        guardar_log("Contenido de \$_POST[$field_name]: " . (isset($_POST[$field_name]) ? $_POST[$field_name] : 'No definido'));
+        guardarLog("Contenido de \$_POST[$field_name]: " . (isset($_POST[$field_name]) ? $_POST[$field_name] : 'No definido'));
 
         if (isset($_POST[$field_name]) && !empty($_POST[$field_name])) {
             $url = esc_url_raw($_POST[$field_name]);
-            guardar_log("URL del audio proporcionada directamente en POST: {$url}");
+            guardarLog("URL del audio proporcionada directamente en POST: {$url}");
 
             $parsed_url = wp_parse_url($url);
             $upload_dir = wp_upload_dir();
@@ -246,13 +246,13 @@ function subidaDePost()
                     );
                     $audio_id = media_handle_sideload($file_array, $post_id);
                 }
-                guardar_log("Archivo encontrado en el servidor: {$file_path}, ID de adjunto: {$audio_id}");
+                guardarLog("Archivo encontrado en el servidor: {$file_path}, ID de adjunto: {$audio_id}");
             } else {
-                guardar_log("El archivo no se encuentra en el servidor: {$file_path}");
+                guardarLog("El archivo no se encuentra en el servidor: {$file_path}");
                 return false;
             }
         } else {
-            guardar_log("No se proporcionó URL para {$field_name}");
+            guardarLog("No se proporcionó URL para {$field_name}");
             return false;
         }
 
@@ -262,7 +262,7 @@ function subidaDePost()
             $file_path = get_attached_file($audio_id);
             $info = pathinfo($file_path);
 
-            guardar_log("Archivo adjunto procesado, ruta: {$file_path}, info: " . print_r($info, true));
+            guardarLog("Archivo adjunto procesado, ruta: {$file_path}, info: " . print_r($info, true));
 
             $new_filename = sprintf(
                 '2upra_%s_%s.%s',
@@ -274,25 +274,25 @@ function subidaDePost()
             $new_file_path = $info['dirname'] . DIRECTORY_SEPARATOR . $new_filename;
 
             // Log de depuración adicional
-            guardar_log("Intentando renombrar el archivo: {$file_path} a {$new_file_path}");
+            guardarLog("Intentando renombrar el archivo: {$file_path} a {$new_file_path}");
 
             if (rename($file_path, $new_file_path)) {
                 update_attached_file($audio_id, $new_file_path);
                 update_post_meta($post_id, $field_name, $audio_id);
                 if ($is_post) {
                     update_post_meta($post_id, 'sample', true);
-                    guardar_log("Metadato 'sample' agregado con valor 'true'");
+                    guardarLog("Metadato 'sample' agregado con valor 'true'");
                 }
-                guardar_log("Archivo renombrado a: {$new_file_path}");
+                guardarLog("Archivo renombrado a: {$new_file_path}");
                 procesarAudioLigero($post_id, $audio_id, $index);
                 return true;
             } else {
-                guardar_log("Error al renombrar el archivo {$file_path} a {$new_file_path}");
+                guardarLog("Error al renombrar el archivo {$file_path} a {$new_file_path}");
                 return false;
             }
         }
 
-        guardar_log("Error procesando el archivo para {$field_name}");
+        guardarLog("Error procesando el archivo para {$field_name}");
         return false;
     }
 
@@ -302,7 +302,7 @@ function subidaDePost()
     $errors = [];
     $audio_count = 0;
 
-    guardar_log("Iniciando procesamiento de audios");
+    guardarLog("Iniciando procesamiento de audios");
 
     for ($i = 1; $i <= $max_audios; $i++) {
         $field_name = "post_audio{$i}";
@@ -310,31 +310,31 @@ function subidaDePost()
         if (isset($_FILES[$field_name]) && $_FILES[$field_name]['error'] != 4) {
             if (procesarAudio($post_id, $field_name, $handleMediaUpload, $i, $is_post)) {
                 $audio_count++;
-                guardar_log("{$field_name} procesado correctamente");
+                guardarLog("{$field_name} procesado correctamente");
             } else {
                 $errors[] = "Error al procesar {$field_name}";
-                guardar_log("Error al procesar {$field_name}");
+                guardarLog("Error al procesar {$field_name}");
             }
         } elseif (isset($_POST[$field_name]) && $_POST[$field_name] !== 'undefined' && !empty($_POST[$field_name])) {
             // Procesar URL de audio
             if (procesarAudio($post_id, $field_name, $handleMediaUpload, $i, $is_post)) {
                 $audio_count++;
-                guardar_log("{$field_name} procesado correctamente");
+                guardarLog("{$field_name} procesado correctamente");
             } else {
                 $errors[] = "Error al procesar {$field_name}";
-                guardar_log("Error al procesar {$field_name}");
+                guardarLog("Error al procesar {$field_name}");
             }
         } else {
-            guardar_log("{$field_name} no presente o vacío");
+            guardarLog("{$field_name} no presente o vacío");
         }
     }
 
     if (!empty($errors)) {
-        guardar_log("Errores encontrados: " . print_r($errors, true));
+        guardarLog("Errores encontrados: " . print_r($errors, true));
     } elseif ($audio_count > 0) {
-        guardar_log("Todos los audios procesados correctamente.");
+        guardarLog("Todos los audios procesados correctamente.");
     } else {
-        guardar_log("No se procesaron audios.");
+        guardarLog("No se procesaron audios.");
     }
 
     if ($is_sample || $is_post || $is_rola) {
@@ -361,21 +361,21 @@ function subidaDePost()
     }
     if ($audio_count >= 2) {
         update_post_meta($post_id, 'albumRolas', true);
-        guardar_log("Metadato 'albumRolas' agregado con valor 'true'");
+        guardarLog("Metadato 'albumRolas' agregado con valor 'true'");
     }
     if ($is_post && $audio_count >= 1) {
         update_post_meta($post_id, 'sample', true);
-        guardar_log("Metadato 'sample' agregado con valor 'true'");
+        guardarLog("Metadato 'sample' agregado con valor 'true'");
     }
     if (!$is_sample && !$is_post && $audio_count === 1) {
         update_post_meta($post_id, 'rola', true);
-        guardar_log("Metadato 'rola' agregado con valor 'true'");
+        guardarLog("Metadato 'rola' agregado con valor 'true'");
     }
 
     // Función para procesar nombres de rolas
     function procesarNameRolas($post_id)
     {
-        guardar_log("procesarNameRolas iniciado con post_id: {$post_id}");
+        guardarLog("procesarNameRolas iniciado con post_id: {$post_id}");
 
         $max_rolas = 20;
         $rolas = [];
@@ -399,13 +399,13 @@ function subidaDePost()
 
         if (!empty($rolas)) {
             update_post_meta($post_id, 'rolas_meta_key', $rolas);
-            guardar_log("Metadatos actualizados para post_id: {$post_id} con rolas: " . implode(", ", $rolas));
+            guardarLog("Metadatos actualizados para post_id: {$post_id} con rolas: " . implode(", ", $rolas));
         } else {
-            guardar_log("No se encontraron rolas válidas para post_id: {$post_id}");
+            guardarLog("No se encontraron rolas válidas para post_id: {$post_id}");
         }
 
         // Guardar log resumen
-        guardar_log("Resumen de procesamiento para post_id: {$post_id}:\n" . implode("\n", $log_resumen));
+        guardarLog("Resumen de procesamiento para post_id: {$post_id}:\n" . implode("\n", $log_resumen));
 
         return $rolas;
     }
@@ -420,7 +420,7 @@ function subidaDePost()
     // Obtener y guardar logs de datos de usuario y otros detalles
     $user_info = get_userdata(get_current_user_id());
     $user_name = $user_info->user_login;
-    guardar_log("Usuario obtenido: {$user_name} con ID: " . get_current_user_id());
+    guardarLog("Usuario obtenido: {$user_name} con ID: " . get_current_user_id());
 
     function extractSimpleList($tag_type)
     {
@@ -441,19 +441,19 @@ function subidaDePost()
         'rolas' => $rolas,
     ];
 
-    guardar_log("Datos adicionales compilados para post_id: {$post_id}");
+    guardarLog("Datos adicionales compilados para post_id: {$post_id}");
     // Codificar los datos adicionales en JSON y actualizar metadatos
     if ($additional_data_json = json_encode($additional_data)) {
         update_post_meta($post_id, 'additional_search_data', $additional_data_json);
-        guardar_log("Metadatos de búsqueda adicionales actualizados para post_id: {$post_id}");
+        guardarLog("Metadatos de búsqueda adicionales actualizados para post_id: {$post_id}");
     } else {
-        guardar_log("Error al codificar datos adicionales a JSON para post_id: {$post_id}");
+        guardarLog("Error al codificar datos adicionales a JSON para post_id: {$post_id}");
     }
 
     // Agregar Pinkys al usuario y enviar notificación
     $current_user_id = get_current_user_id();
     agregar_pinkys_al_usuario($current_user_id, 1);
-    guardar_log("Se ha agregado 1 Pinky al usuario con ID: {$current_user_id}");
+    guardarLog("Se ha agregado 1 Pinky al usuario con ID: {$current_user_id}");
 
     insertar_notificacion(
         $current_user_id,
@@ -462,13 +462,13 @@ function subidaDePost()
         $current_user_id
     );
 
-    guardar_log("Notificación enviada al usuario con ID: {$current_user_id} por la publicación con post_id: {$post_id}");
+    guardarLog("Notificación enviada al usuario con ID: {$current_user_id} por la publicación con post_id: {$post_id}");
     // Enviar respuesta exitosa
     echo json_encode(['success' => true, 'message' => 'Publicación creada exitosamente.']);
     process_album_post($post_id);
     wp_die();
-    guardar_log("Fin subidaDepost");
-    guardar_log("---------------------------------------------");
+    guardarLog("Fin subidaDepost");
+    guardarLog("---------------------------------------------");
 }
 
 
@@ -477,11 +477,11 @@ add_action('wp_ajax_nopriv_submit_social_post', 'subidaDePost');
 
 function procesarAudioLigero($post_id, $audio_id, $index)
 {
-    guardar_log("INICIO procesarAudioLigero");
+    guardarLog("INICIO procesarAudioLigero");
 
     // Obtener el archivo de audio original
     $audio_path = get_attached_file($audio_id);
-    guardar_log("Ruta del archivo de audio original: {$audio_path}");
+    guardarLog("Ruta del archivo de audio original: {$audio_path}");
 
     // Obtener las partes del camino del archivo
     $path_parts = pathinfo($audio_path);
@@ -491,10 +491,10 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     // Procesar archivo de audio ligero (128 kbps)
     $nuevo_archivo_path_lite = $base_path . '_128k.mp3';
     $comando_lite = "/usr/bin/ffmpeg -i {$audio_path} -b:a 128k {$nuevo_archivo_path_lite}";
-    guardar_log("Ejecutando comando: {$comando_lite}");
+    guardarLog("Ejecutando comando: {$comando_lite}");
     exec($comando_lite, $output_lite, $return_var_lite);
     if ($return_var_lite !== 0) {
-        guardar_log("Error al procesar audio ligero: " . implode("\n", $output_lite));
+        guardarLog("Error al procesar audio ligero: " . implode("\n", $output_lite));
     }
 
     // Insertar archivos en la biblioteca de medios
@@ -511,16 +511,16 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         'post_status' => 'inherit'
     );
     $attach_id_lite = wp_insert_attachment($attachment_lite, $nuevo_archivo_path_lite, $post_id);
-    guardar_log("ID de adjunto ligero: {$attach_id_lite}");
+    guardarLog("ID de adjunto ligero: {$attach_id_lite}");
     $attach_data_lite = wp_generate_attachment_metadata($attach_id_lite, $nuevo_archivo_path_lite);
     wp_update_attachment_metadata($attach_id_lite, $attach_data_lite);
     update_post_meta($post_id, "post_audio_lite_{$index}", $attach_id_lite);
 
     // Extraer y guardar la duración del audio
     $duration_command = "/usr/bin/ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {$nuevo_archivo_path_lite}";
-    guardar_log("Ejecutando comando para duración del audio: {$duration_command}");
+    guardarLog("Ejecutando comando para duración del audio: {$duration_command}");
     $duration_in_seconds = shell_exec($duration_command);
-    guardar_log("Salida de ffprobe: '{$duration_in_seconds}'");
+    guardarLog("Salida de ffprobe: '{$duration_in_seconds}'");
 
     // Limpiar y validar la duración del audio
     $duration_in_seconds = trim($duration_in_seconds);
@@ -528,9 +528,9 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         $duration_in_seconds = (float)$duration_in_seconds;
         $duration_formatted = floor($duration_in_seconds / 60) . ':' . str_pad($duration_in_seconds % 60, 2, '0', STR_PAD_LEFT);
         update_post_meta($post_id, "audio_duration_{$index}", $duration_formatted);
-        guardar_log("Duración del audio (formateada): {$duration_formatted}");
+        guardarLog("Duración del audio (formateada): {$duration_formatted}");
     } else {
-        guardar_log("Duración del audio no válida para el archivo {$audio_path}");
+        guardarLog("Duración del audio no válida para el archivo {$audio_path}");
     }
 }
 
@@ -560,58 +560,58 @@ add_filter('upload_mimes', 'agregar_mimes_permitidos');
 
 function handle_file_upload()
 {
-    guardar_log("---------------------------------------------");
-    guardar_log("INICIO handle_file_upload");
+    guardarLog("---------------------------------------------");
+    guardarLog("INICIO handle_file_upload");
 
     if (!isset($_FILES['file']) || !isset($_POST['file_hash'])) {
-        guardar_log("No se proporcionó archivo o hash");
+        guardarLog("No se proporcionó archivo o hash");
         wp_send_json_error('No se proporcionó archivo o hash');
         return;
     }
 
     $file_hash = sanitize_text_field($_POST['file_hash']);
-    guardar_log("Hash recibido: " . $file_hash);
+    guardarLog("Hash recibido: " . $file_hash);
 
     $existing_file_url = get_file_url_by_hash($file_hash);
 
     if ($existing_file_url) {
-        guardar_log("Archivo existente encontrado con URL: " . $existing_file_url);
+        guardarLog("Archivo existente encontrado con URL: " . $existing_file_url);
 
         $existing_file_path = str_replace(wp_get_upload_dir()['baseurl'], wp_get_upload_dir()['basedir'], $existing_file_url);
 
         if (file_exists($existing_file_path)) {
-            guardar_log("El archivo ya existe en el servidor. Se procederá a reemplazarlo.");
+            guardarLog("El archivo ya existe en el servidor. Se procederá a reemplazarlo.");
             unlink($existing_file_path);
-            guardar_log("Archivo anterior eliminado: " . $existing_file_path);
+            guardarLog("Archivo anterior eliminado: " . $existing_file_path);
         } else {
-            guardar_log("El archivo no existe físicamente en el servidor, aunque estaba registrado.");
+            guardarLog("El archivo no existe físicamente en el servidor, aunque estaba registrado.");
         }
 
         delete_file_hash($file_hash);
-        guardar_log("Registro del hash anterior eliminado.");
+        guardarLog("Registro del hash anterior eliminado.");
     } else {
-        guardar_log("No se encontró un archivo existente con este hash.");
+        guardarLog("No se encontró un archivo existente con este hash.");
     }
     // Procesar nuevo archivo
     $upload_overrides = array('test_form' => false, 'unique_filename_callback' => 'custom_unique_filename');
     $movefile = wp_handle_upload($_FILES['file'], $upload_overrides);
 
-    guardar_log("Resultado de wp_handle_upload: " . print_r($movefile, true));
+    guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
 
     if ($movefile && !isset($movefile['error'])) {
         // Guardar hash y URL
         save_file_hash($file_hash, $movefile['url']);
 
-        guardar_log("Carga exitosa. Hash guardado: " . $file_hash . ". URL del nuevo archivo: " . $movefile['url']);
+        guardarLog("Carga exitosa. Hash guardado: " . $file_hash . ". URL del nuevo archivo: " . $movefile['url']);
         wp_send_json_success(array('fileUrl' => $movefile['url']));
     } else {
         // Error en la carga
-        guardar_log("Error en la carga: " . ($movefile['error'] ?? 'Error desconocido'));
+        guardarLog("Error en la carga: " . ($movefile['error'] ?? 'Error desconocido'));
         wp_send_json_error($movefile['error'] ?? 'Error desconocido');
     }
 
-    guardar_log("FIN handle_file_upload");
-    guardar_log("---------------------------------------------");
+    guardarLog("FIN handle_file_upload");
+    guardarLog("---------------------------------------------");
 }
 
 function custom_unique_filename($dir, $name, $ext)

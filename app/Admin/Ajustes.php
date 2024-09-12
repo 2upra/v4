@@ -60,3 +60,39 @@ function personalizar_estilos_wp_admin_bar() {
 }
 add_action('admin_head', 'personalizar_estilos_wp_admin_bar');
 add_action('wp_head', 'personalizar_estilos_wp_admin_bar');
+
+function nonAdminRedirect()
+{
+    if (!current_user_can('administrator') && !wp_doing_ajax()) {
+        wp_redirect(home_url());
+        exit;
+    }
+}
+add_action('admin_init', 'nonAdminRedirect');
+
+function ocultarBarraAdmin()
+{
+    if (!current_user_can('administrator')) {
+        add_filter('show_admin_bar', '__return_false');
+    }
+}
+add_action('after_setup_theme', 'ocultarBarraAdmin');
+
+function remplazarFuncionObsoleta()
+{
+    remove_action('wp_footer', 'the_block_template_skip_link');
+    add_action('wp_footer', 'wp_enqueue_block_template_skip_link');
+}
+add_action('after_setup_theme', 'remplazarFuncionObsoleta');
+
+function redirigirBusquedaInvalida()
+{
+    if (isset($_SERVER['REQUEST_URI'])) {
+        $request_uri = $_SERVER['REQUEST_URI'];
+        if (strpos($request_uri, '?s=') !== false) {
+            wp_redirect(home_url());
+            exit;
+        }
+    }
+}
+add_action('template_redirect', 'redirigirBusquedaInvalida');
