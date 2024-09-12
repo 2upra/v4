@@ -16,13 +16,7 @@ function initializeFormFunctions() {
         minLength: 3,
         maxLength: 40,
         tagClass: 'tag'
-    });
-    const getContent = TagEnTexto({
-        containerId: 'textoRs',
-        maxTags: 20,
-        minLength: 2,
-        maxLength: 40
-    });    
+    }); 
 
 } 
 
