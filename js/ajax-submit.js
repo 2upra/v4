@@ -1,14 +1,10 @@
-//////////////////////////////////////////////
-//ACTIVAR O DESACTIVAR LOGS
-const A02 = true; // Cambia a true para activar los logs
-
+const A02 = true;
 const log02 = A02 ? console.log : function () {};
-//////////////////////////////////////////////
 
 window.getPostAudios = function () {
-    var postAudios = [];
-    for (var i = 1; i <= 20; i++) {
-        var postAudio = document.getElementById('postAudio' + i);
+    const postAudios = [];
+    for (let i = 1; i <= 20; i++) {
+        const postAudio = document.getElementById(`postAudio${i}`);
         if (postAudio) {
             postAudios.push(postAudio);
         }
@@ -17,33 +13,24 @@ window.getPostAudios = function () {
 };
 
 window.getfile = function () {
-    var fileInput = document.getElementById('flp');
-    if (fileInput && fileInput.files && fileInput.files.length > 0) {
-        return fileInput.files; // Devuelve el FileList directamente
-    }
-    return null; // Devuelve null si no hay archivos seleccionados
+    const fileInput = document.getElementById('flp');
+    return fileInput?.files?.length > 0 ? fileInput.files : null;
 };
 
 function forms_submit(form, submitBtnId) {
     var submitBtn = document.getElementById(submitBtnId);
     var postImage = document.getElementById('postImage');
     var form = document.getElementById(form);
-
     log02('submitBtn:', submitBtn);
     log02('postImage:', postImage);
     log02('form:', form);
-
     if (!form || !submitBtn || !postImage) {
         log02('One or more elements not found.');
         return;
     }
-
-    // Función para limpiar los event listeners existentes
     function removeExistingListeners() {
         form.removeEventListener('submit', handleSubmit);
     }
-
-    // Llamar a la función para limpiar los listeners existentes
     removeExistingListeners();
 
     async function sendFormData(formData) {
@@ -108,17 +95,23 @@ function forms_submit(form, submitBtnId) {
         postAudios.forEach((postAudio, index) => {
             const key = `post_audio${index + 1}`;
             const uploadedUrl = window.formState.uploadedFileUrls[index + 1];
+
             if (uploadedUrl) {
                 formData.set(key, uploadedUrl);
             } else if (postAudio.files?.length > 0) {
                 formData.set(key, postAudio.files[0]);
+            } else {
+                log02(`No se encontró URL cargada ni archivo para ${key}`);
             }
         });
 
         const selectedImage = window.formState.selectedImage || postImage.files?.[0];
         if (selectedImage) formData.set('post_image', selectedImage);
 
-        log02('Contenido de FormData:', ...formData.entries());
+        log02('Contenido de FormData:');
+        for (let [key, value] of formData.entries()) {
+            log02(key, value);
+        }
 
         submitBtn.textContent = 'Enviando...';
         submitBtn.disabled = true;
