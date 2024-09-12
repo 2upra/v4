@@ -1,7 +1,5 @@
-const A03 = true; 
-const log03 = A03 ? log03 : function () {};
-
-
+const A03 = true;
+const log03 = A03 ? console.log : function () {};
 
 function initializeFormFunctions() {
 
