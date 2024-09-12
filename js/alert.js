@@ -23,12 +23,18 @@ window.inicializarAlerta = function () {
             notificationDiv.appendChild(contentDiv);
 
             const modalBackground = document.getElementById('modalBackground2');
-            if (modalBackground) {
-                modalBackground.style.display = 'block';
-                modalBackground.style.visibility = 'visible';
-                modalBackground.style.opacity = '1';
-                modalBackground.style.zIndex = '9998';
-                document.body.classList.add('no-scroll');  // Bloquear scroll
+            if (modalBackground && type === 'confirm') {
+                setTimeout(() => {
+                    modalBackground.style.display = 'block';
+                    modalBackground.style.visibility = 'visible';
+                    modalBackground.style.opacity = '1';
+                    modalBackground.style.zIndex = '9999';
+                }, 0);
+
+                // Clic fuera de la alerta se considera como cancelar
+                modalBackground.onclick = () => {
+                    closeNotification(false);
+                };
             }
 
             if (type === 'confirm') {
@@ -62,9 +68,9 @@ window.inicializarAlerta = function () {
                 if (notificationDiv) {
                     document.body.removeChild(notificationDiv);
                 }
-                if (modalBackground) {
+                if (modalBackground && type === 'confirm') {
                     modalBackground.style.display = 'none';
-                    document.body.classList.remove('no-scroll');  // Habilitar scroll
+                    modalBackground.onclick = null; // Desactivar el evento de clic fuera de la alerta
                 }
                 resolve(result);
             }
