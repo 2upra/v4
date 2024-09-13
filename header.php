@@ -214,10 +214,16 @@ if (!defined('ABSPATH')) {
             </div>
 
             <!-- Modal de prueba -->
-             <div id="modalprueba" class="modal">
-                <textarea id="" placeholder="Escribe un mensaje de colaboracion"></textarea>
-                <button id=""></button>
-             </div>
+            <div id="modalprueba" class="modal">
+                <textarea id="" placeholder="Escribe un mensaje para tu solicitud de colaboración"></textarea>
+                
+                <div class="previewAreaArchivos" id="previewAreaColab">Arrastra tu música
+                    <label></label>
+                </div>
+                
+                <input type="file" id="postAudio1" name="post_audio1" accept="audio/*">
+                <button id="">Prueba</button>
+            </div>
 
             <!-- Configuración -->
 
@@ -236,7 +242,7 @@ if (!defined('ABSPATH')) {
             echo '<input type="hidden" id="user_name" value="' . esc_attr($user_name) . '">';
             echo '<input type="hidden" id="user_id" value="' . esc_attr($user_id) . '">';
             echo '<input type="hidden" id="descripcionUser" value="' . esc_attr($descripcion) . '">';
-            
+
             ?>
 
 
