@@ -16,10 +16,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
         ?>
         <?php else: ?>
 
-            <div id="menuData" style="display:none;" pestanaActual="">
-                <div data-tab="Colab"></div>
-            </div>
-            <?php echo colab(); ?>
+            <?php echo colabTabs(); ?>
 
         <?php endif; ?>
     </div>

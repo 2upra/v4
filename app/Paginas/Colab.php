@@ -1,11 +1,14 @@
 <?php
 
-function colab()
+function colabTabs()
 {
     ob_start();
 
 ?>
-
+    <div id="menuData" style="display:none;" pestanaActual="">
+        <div data-tab="Colab"></div>
+    </div>
+    
     <div class="tabs">
         <div class="tab-content">
 
