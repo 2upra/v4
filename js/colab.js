@@ -1,18 +1,3 @@
-/*
-<!-- colab modal -->
-<div id="modalcolab" class="modal gap-4" style="display: none;">
-    <textarea placeholder="Escribe un mensaje para tu solicitud de colaboración" rows="1"></textarea>
-    <div class="previewAreaArchivos" id="previewColab" style="display: block;">Arrastra tu música
-        <label></label>
-    </div>
-    <input type="file" id="postArchivoColab" name="postArchivoColab" style="display:none;">
-    <div class="flex gap-3 justify-end">
-        <button type="button">Cancelar</button>
-        <button id="empezarColab" class="botonprincipal">Enviar</button>
-    </div>
-</div>
-*/
-
 function empezarcolab() {
     const buttons = document.querySelectorAll('.ZYSVVV');
     const modal = document.getElementById('modalcolab');
@@ -33,7 +18,7 @@ function empezarcolab() {
                 return;
             }
             console.log('Post ID:', postId);
-            subidaArchivoColab();
+            subidaArchivoColab(); 
             modal.style.display = 'block';
         });
     });
@@ -64,10 +49,19 @@ function subidaArchivoColab() {
     const postArchivoColab = document.getElementById('postArchivoColab');
     if (!previewArchivo || !postArchivoColab) return;
 
+    let fileSelected = false;  // Bandera para evitar múltiples aperturas
+
     async function handleFileSelect(event) {
         event.preventDefault();
         const file = event.dataTransfer?.files[0] || event.target.files[0];
         if (!file) return;
+
+        // Evitar múltiples selecciones
+        if (fileSelected) {
+            console.log('Archivo ya seleccionado');
+            return;
+        }
+        fileSelected = true;
 
         const progressBarId = updatePreviewArea(file);
 
@@ -77,7 +71,7 @@ function subidaArchivoColab() {
             window.formColab = fileUrl;
             console.log('Archivo subido a:', fileUrl);
 
-            // Si el archivo es de audio, puedes manejar el preview aquí
+            // Si el archivo es de audio, manejar el preview aquí
             if (file.type.startsWith('audio')) {
                 // Agrega lógica si necesitas mostrar un preview de audio
             } else {
@@ -89,9 +83,15 @@ function subidaArchivoColab() {
         }
     }
 
-    previewArchivo.addEventListener('click', () => postArchivoColab.click());
+    previewArchivo.addEventListener('click', () => {
+        if (!fileSelected) {
+            postArchivoColab.click();  // Solo abrir si no hay un archivo seleccionado
+        }
+    });
+
     postArchivoColab.addEventListener('change', handleFileSelect);
 
+    // Eventos de drag and drop
     ['dragover', 'dragleave', 'drop'].forEach(eventName => {
         previewArchivo.addEventListener(eventName, e => {
             e.preventDefault();
@@ -148,6 +148,7 @@ async function subirArchivoColab(file, progressBarId) {
         xhr.send(formData);
     });
 }
+
 
 function updatePreviewArea(file) {
     const progressBarId = 'progressBar_' + Math.random().toString(36).substr(2, 9);
