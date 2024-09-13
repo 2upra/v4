@@ -224,7 +224,7 @@ if (!defined('ABSPATH')) {
                 </div>
 
                 <input type="file" id="postAudio1" name="post_audio1" accept="audio/*" style="display:none;">
-                <div class="flex alignright">
+                <div class="flex justify-end">
                     <button id="">Prueba</button>
                 </div>
             </div>
