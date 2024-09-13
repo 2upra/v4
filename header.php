@@ -210,9 +210,9 @@ if (!defined('ABSPATH')) {
             <!-- Enviar mensaje de error -->
             <div id="formularioError" class="formularioError" style="display:none;">
                 <textarea id="mensajeError" placeholder="Describe el error"></textarea>
-                <div class="flex alignright">
-                    <button id="enviarError">Enviar</button>
-                </div>
+
+                <button id="enviarError">Enviar</button>
+
             </div>
 
             <!-- Modal de prueba -->
@@ -224,7 +224,9 @@ if (!defined('ABSPATH')) {
                 </div>
 
                 <input type="file" id="postAudio1" name="post_audio1" accept="audio/*" style="display:none;">
-                <button id="">Prueba</button>
+                <div class="flex alignright">
+                    <button id="">Prueba</button>
+                </div>
             </div>
 
             <!-- Configuración -->
