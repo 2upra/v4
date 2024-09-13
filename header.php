@@ -211,14 +211,14 @@ if (!defined('ABSPATH')) {
             <div id="formularioError" class="formularioError" style="display:none;">
                 <textarea id="mensajeError" placeholder="Describe el error"></textarea>
                 <div class="flex alignright">
-                <button id="enviarError">Enviar</button>
+                    <button id="enviarError">Enviar</button>
                 </div>
             </div>
 
             <!-- Modal de prueba -->
             <div id="modalprueba" class="modal">
                 <textarea id="" placeholder="Escribe un mensaje para tu solicitud de colaboración"></textarea>
-                
+
                 <div class="previewAreaArchivos" id="previewColab" style="display: block;">Arrastra tu música
                     <label></label>
                 </div>
