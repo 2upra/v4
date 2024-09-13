@@ -23,7 +23,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
         <?php else : ?>
             <?php echo dev(); ?>
         <?php endif; ?>
-        
+
     </div>
 </div>
 

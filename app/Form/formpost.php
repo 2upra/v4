@@ -179,7 +179,6 @@ function postRolaForm()
 <?php
     return ob_get_clean();
 }
-add_shortcode('social_post_rolas', 'postRolaForm');
 
 
 

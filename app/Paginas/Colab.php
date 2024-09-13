@@ -1,6 +1,6 @@
 <?php
 
-function social()
+function colab()
 {
     ob_start();
 
