@@ -1,4 +1,4 @@
-//Generic Ajax
+//Generic Ajax, no se si puedes reuisarlo para este caso sin dañar sus funciones genericas que uso para toods los ajax mi pagina
 async function enviarAjax(action, postId, additionalData = {}) {
     try {
         const response = await fetch(ajaxUrl, {

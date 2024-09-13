@@ -215,23 +215,6 @@ if (!defined('ABSPATH')) {
 
             </div>
 
-            <!-- Modal generico -->
-            <div id="modalprueba" class="modal gap-4">
-                <textarea id="" placeholder="Escribe un mensaje para tu solicitud de colaboración" rows="1"></textarea>
-
-                <div class="previewAreaArchivos" id="previewColab" style="display: block;">Arrastra tu música
-                    <label></label>
-                </div>
-
-                <input type="file" id="postAudio1" name="post_audio1" accept="audio/*" style="display:none;">
-
-                <div class="flex gap-3 justify-end">
-                    <button id="">Cancelar</button>
-                    <button id="" class="botonprincipal">Enviar</button>
-                </div>
-                
-            </div>
-
             <!-- Configuración -->
 
 

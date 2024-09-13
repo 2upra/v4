@@ -6,6 +6,36 @@ function botonColab($post_id, $colab)
     return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$post_id'>{$GLOBALS['iconocolab']}</button></div>" : '';
 }
 
+
+
+function modalColab()
+{
+    ob_start()
+?>
+    <div id="modalprueba" class="modal gap-4">
+        <textarea id="" placeholder="Escribe un mensaje para tu solicitud de colaboración" rows="1"></textarea>
+        <div class="previewAreaArchivos" id="previewColab" style="display: block;">Arrastra tu música
+            <label></label>
+        </div>
+        <input type="file" id="postAudio1" name="post_audio1" accept="audio/*" style="display:none;">
+        <div class="flex gap-3 justify-end">
+            <button id="">Cancelar</button>
+            <button id="" class="botonprincipal">Enviar</button>
+        </div>
+    </div>
+<?php
+    return ob_get_clean();
+}
+
+
+
+
+
+
+
+
+
+
 // Función para manejar la colaboración
 
 function empezarColab()
@@ -97,17 +127,17 @@ function actualizarEstadoColab($post_id, $post_after, $post_before)
 }
 add_action('post_updated', 'actualizarEstadoColab', 10, 3);
 
-function colab() {
+function colab()
+{
 
     ob_start()
     // Aqui tiene que aparecer los colas pendientes
     // Tambien tiene que aparecer los colabs en cursos
-    ?>
-
-    
+?>
 
 
-    <?php
+
+
+<?php
     return ob_get_clean();
 }
-

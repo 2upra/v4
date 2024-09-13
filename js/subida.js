@@ -60,19 +60,14 @@ window.uploadFile = async function (file, progressBarId, formNumber) {
 
 async function generateFileHash(file) {
     console.log("Iniciando generación de hash para el archivo:", file.name);
-
     const buffer = await file.arrayBuffer();
     console.log("ArrayBuffer generado:", buffer);
-
     const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
     console.log("Hash buffer generado:", hashBuffer);
-
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     console.log("Array convertido a Uint8Array:", hashArray);
-
     const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     console.log("Hash final generado:", hash);
-
     return hash;
 }
 
@@ -80,13 +75,13 @@ async function generateFileHash(file) {
 function checkAllFilesUploaded() {
     const allUploaded = Object.values(window.formState.uploadedFiles).every(Boolean);
     console.log('Estado inicial de uploadedFiles:', window.formState.uploadedFiles);
-    console.log('Estado inicial de uploadedFileUrls:', window.formState.uploadedFileUrls); // Log de uploadedFileUrls inicial
-
+    console.log('Estado inicial de uploadedFileUrls:', window.formState.uploadedFileUrls); 
     if (allUploaded) {
         window.formState.cargaCompleta = true;
         console.log('Todos los archivos han sido cargados');
     }
-
-    console.log('Estado final de uploadedFiles:', window.formState.uploadedFiles); // Log del estado final de uploadedFiles
-    console.log('Estado final de uploadedFileUrls:', window.formState.uploadedFileUrls); // Log del estado final de uploadedFileUrls
+    console.log('Estado final de uploadedFiles:', window.formState.uploadedFiles); 
+    console.log('Estado final de uploadedFileUrls:', window.formState.uploadedFileUrls); 
 }
+
+
