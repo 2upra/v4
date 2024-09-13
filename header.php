@@ -215,8 +215,8 @@ if (!defined('ABSPATH')) {
 
             </div>
 
-            <!-- Modal de prueba -->
-            <div id="modalprueba" class="modal">
+            <!-- Modal generico -->
+            <div id="modalprueba" class="modal gap-3">
                 <textarea id="" placeholder="Escribe un mensaje para tu solicitud de colaboración" rows="1"></textarea>
 
                 <div class="previewAreaArchivos" id="previewColab" style="display: block;">Arrastra tu música
@@ -227,7 +227,7 @@ if (!defined('ABSPATH')) {
 
                 <div class="flex gap-3 justify-end">
                     <button id="">Cancelar</button>
-                    <button id="">Prueba</button>
+                    <button id="" class="botonprincipal">Enviar</button>
                 </div>
                 
             </div>
