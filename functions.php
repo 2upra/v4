@@ -29,7 +29,7 @@ function guardarLog($log)
 //Script principal
 function ajaxPage()
 {
-    wp_enqueue_script('ajaxPage', get_template_directory_uri() . '/js/ajaxPage.js', array('jquery'), '5.0.8', true);
+    wp_enqueue_script('ajaxPage', get_template_directory_uri() . '/js/ajaxPage.js', array('jquery'), '5.0.9', true);
 }
 add_action('wp_enqueue_scripts', 'ajaxPage');
 
