@@ -12,18 +12,14 @@ async function enviarAjax(action, postId, additionalData = {}) {
                 ...additionalData
             })
         });
-
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-
-        // Intentamos parsear la respuesta como JSON
         try {
             const data = await response.json();
             console.log('Respuesta del servidor (JSON):', data);
             return data;
         } catch (error) {
-            // Si la respuesta no es JSON, la tratamos como texto
             const text = await response.text();
             console.log('Respuesta del servidor (Texto):', text);
             return text;
