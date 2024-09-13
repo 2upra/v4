@@ -45,7 +45,7 @@
     }
 
     function initializeStripeFunctions() {
-        const stripeFunctions = ['stripe_suscripcion', 'stripeventa', 'stripepro', 'stripecompra'];
+        const stripeFunctions = ['stripepro', 'stripecompra'];
 
         stripeFunctions.forEach(func => {
             if (typeof window[func] === 'function') {
