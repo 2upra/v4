@@ -210,7 +210,9 @@ if (!defined('ABSPATH')) {
             <!-- Enviar mensaje de error -->
             <div id="formularioError" class="formularioError" style="display:none;">
                 <textarea id="mensajeError" placeholder="Describe el error"></textarea>
+                <div class="flex alignright">
                 <button id="enviarError">Enviar</button>
+                </div>
             </div>
 
             <!-- Modal de prueba -->
