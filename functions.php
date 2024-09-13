@@ -27,18 +27,13 @@ function guardarLog($log)
 }
 
 //Script principal
-function ajaxPage()
-{
-    wp_enqueue_script('ajaxPage', get_template_directory_uri() . '/js/ajaxPage.js', array('jquery'), '5.0.10', true);
-}
-add_action('wp_enqueue_scripts', 'ajaxPage');
-
-function scriptsOrdenados()
 {
     $dev_mode = true;
     $error_log = [];
 
     $script_handles = [
+        'ajaxPage' => '5.0.11',
+        'autorows' => '1.0.1',
         'fan' => '1.0.36',
         'stripeAccion' => '1.0.6',
         'reproductor' => '2.1.2',

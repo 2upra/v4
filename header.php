@@ -217,7 +217,7 @@ if (!defined('ABSPATH')) {
 
             <!-- Modal de prueba -->
             <div id="modalprueba" class="modal">
-                <textarea id="" placeholder="Escribe un mensaje para tu solicitud de colaboración"></textarea>
+                <textarea id="" placeholder="Escribe un mensaje para tu solicitud de colaboración" rows="1"></textarea>
 
                 <div class="previewAreaArchivos" id="previewColab" style="display: block;">Arrastra tu música
                     <label></label>
