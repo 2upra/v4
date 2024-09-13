@@ -217,11 +217,11 @@ if (!defined('ABSPATH')) {
             <div id="modalprueba" class="modal">
                 <textarea id="" placeholder="Escribe un mensaje para tu solicitud de colaboración"></textarea>
                 
-                <div class="previewAreaArchivos" id="previewAreaColab">Arrastra tu música
+                <div class="previewAreaArchivos" id="previewColab" style="display: block;">Arrastra tu música
                     <label></label>
                 </div>
-                
-                <input type="file" id="postAudio1" name="post_audio1" accept="audio/*">
+
+                <input type="file" id="postAudio1" name="post_audio1" accept="audio/*" style="display:none;">
                 <button id="">Prueba</button>
             </div>
 
