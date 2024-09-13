@@ -1,32 +1,21 @@
 
-//tengo esto, en todos los post hay un boton con la clase .ZYSVVV que contiene el id del post, ya no necesito empezar el colab directamente desde el boton, ahora se tiene que abrir un modal con la id correspondiente, con un formulario, y al enviar empieza el colab con el boton enviando la id correcta
-
 /*
-
-    boton en todos los los 
-
-    function botonColab($post_id, $colab)
-{
-    return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$post_id'>{$GLOBALS['iconocolab']}</button></div>" : '';
-}
-
-el modal que debe renderizar 
-
-    <div id="modalcolab" class="modal gap-4">
-        <textarea id="" placeholder="Escribe un mensaje para tu solicitud de colaboración" rows="1"></textarea>
-        <div class="previewAreaArchivos" id="previewColab" style="display: block;">Arrastra tu música
-            <label></label>
-        </div>
-        <input type="file" id="postArchivoColab" name="postArchivoColab" style="display:none;">
-        <div class="flex gap-3 justify-end">
-            <button>Cancelar</button>
-            <button id="empezarColab" class="botonprincipal">Enviar</button>
-        </div>
-    </div>
+ajaxPage.js?ver=5.0.11.1146385149:9  Error al ejecutar empezarcolab: TypeError: Cannot read properties of null (reading 'addEventListener')
+    at empezarcolab (colab.js?ver=1.0.2.840723177:52:20)
+    at ajaxPage.js?ver=5.0.11.1146385149:7:29
+    at Array.forEach (<anonymous>)
+    at inicializarScripts (ajaxPage.js?ver=5.0.11.1146385149:4:1014)
+    at reinicializar (ajaxPage.js?ver=5.0.11.1146385149:22:5)
+    at HTMLDocument.<anonymous> (ajaxPage.js?ver=5.0.11.1146385149:95:9)
+(anónimo) @ ajaxPage.js?ver=5.0.11.1146385149:9
+inicializarScripts @ ajaxPage.js?ver=5.0.11.1146385149:4
+reinicializar @ ajaxPage.js?ver=5.0.11.1146385149:22
+(anónimo) @ ajaxPage.js?ver=5.0.11.1146385149:95
+2colab.js?ver=1.0.2.840723177:49  Uncaught TypeError: Cannot read properties of null (reading 'style')
+    at HTMLButtonElement.<anonymous> (colab.js?ver=1.0.2.840723177:49:19)
 */
 
 function empezarcolab() {
-    subidaArchivoColab();
     const buttons = document.querySelectorAll('.ZYSVVV');
     const modal = document.getElementById('modalcolab');
     const modalEnviarBtn = document.getElementById('empezarColab');
@@ -45,10 +34,15 @@ function empezarcolab() {
                 console.error('El post ID no se encontró en el botón.');
                 return;
             }
+
             console.log('Post ID:', postId);
+
+            // Mostrar el modal
             modal.style.display = 'block';
         });
     });
+
+    // Manejar el envío del formulario del modal
     modalEnviarBtn.addEventListener('click', async () => {
         const mensaje = document.querySelector('#modalcolab textarea').value;
 
@@ -56,20 +50,25 @@ function empezarcolab() {
             alert('Por favor, escribe un mensaje antes de enviar.');
             return;
         }
+
+        // Confirmación antes de enviar la colaboración
         if (confirm('¿Estás seguro de que quieres empezar la colaboración?')) {
             const data = await enviarAjax('empezarColab', { postId, mensaje });
             if (data?.success) {
                 alert('Colaboración iniciada con éxito');
-                modal.style.display = 'none'; 
+                modal.style.display = 'none'; // Cerrar modal
             } else {
                 alert(`Error al iniciar la colaboración: ${data?.message || 'Desconocido'}`);
             }
         }
     });
+
+    // Cerrar el modal al hacer clic en el botón de cancelar
     document.querySelector('#modalcolab button').addEventListener('click', () => {
         modal.style.display = 'none';
     });
 }
+
 
 function subidaArchivoColab() {
     const previewArchivo = document.getElementById('previewColab');
@@ -172,5 +171,6 @@ function updatePreviewArea(file) {
     previewArea.innerHTML = `<div id="${progressBarId}" class="progress-bar" style="width: 0%;"></div>`;
     return progressBarId;
 }
+
 
 

@@ -215,6 +215,20 @@ if (!defined('ABSPATH')) {
 
             </div>
 
+            <!-- colab modal -->
+            <div id="modalcolab" class="modal gap-4" style="display: none;">
+                <textarea placeholder="Escribe un mensaje para tu solicitud de colaboración" rows="1"></textarea>
+                <div class="previewAreaArchivos" id="previewColab" style="display: block;">Arrastra tu música
+                    <label></label>
+                </div>
+                <input type="file" id="postArchivoColab" name="postArchivoColab" style="display:none;">
+                <div class="flex gap-3 justify-end">
+                    <button type="button">Cancelar</button>
+                    <button id="empezarColab" class="botonprincipal">Enviar</button>
+                </div>
+            </div>
+
+
             <!-- Configuración -->
 
 
