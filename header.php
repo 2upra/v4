@@ -216,7 +216,7 @@ if (!defined('ABSPATH')) {
             </div>
 
             <!-- Modal generico -->
-            <div id="modalprueba" class="modal gap-3">
+            <div id="modalprueba" class="modal gap-4">
                 <textarea id="" placeholder="Escribe un mensaje para tu solicitud de colaboración" rows="1"></textarea>
 
                 <div class="previewAreaArchivos" id="previewColab" style="display: block;">Arrastra tu música
