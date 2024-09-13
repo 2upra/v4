@@ -3,7 +3,12 @@ function meta() {
     const recaudado = 612;
     const porcentaje = (recaudado / meta) * 100;
 
-    document.querySelector('.progress-barA1').style.width = porcentaje + '%';
-}
+    const progressBar = document.querySelector('.progress-barA1');
 
+    if (!progressBar) {
+        return;
+    }
+
+    progressBar.style.width = porcentaje + '%';
+}
 
