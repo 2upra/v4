@@ -44,9 +44,7 @@ function subidaArchivoColab() {
     const previewArchivo = document.getElementById('previewColab');
     const postArchivoColab = document.getElementById('postArchivoColab');
     if (!previewArchivo || !postArchivoColab) return;
-
-    let fileSelected = false;  // Bandera para evitar múltiples aperturas
-
+    let fileSelected = false;  
     async function handleFileSelect(event) {
         event.preventDefault();
         const file = event.dataTransfer?.files[0] || event.target.files[0];
@@ -64,7 +62,6 @@ function subidaArchivoColab() {
             previewArchivo.innerHTML = `Archivo subido: ${file.name} (${file.type})`;
             window.formColab = fileUrl;
             console.log('Archivo subido a:', fileUrl);
-
             // Si el archivo es de audio, manejar el preview aquí
             if (file.type.startsWith('audio')) {
                 // Agrega lógica si necesitas mostrar un preview de audio
@@ -76,16 +73,12 @@ function subidaArchivoColab() {
             alert('Hubo un problema al cargar el archivo. Inténtalo de nuevo.');
         }
     }
-
     previewArchivo.addEventListener('click', () => {
         if (!fileSelected) {
-            postArchivoColab.click();  // Solo abrir si no hay un archivo seleccionado
+            postArchivoColab.click();
         }
     });
-
     postArchivoColab.addEventListener('change', handleFileSelect);
-
-    // Eventos de drag and drop
     ['dragover', 'dragleave', 'drop'].forEach(eventName => {
         previewArchivo.addEventListener(eventName, e => {
             e.preventDefault();
@@ -143,10 +136,9 @@ async function subirArchivoColab(file, progressBarId) {
     });
 }
 
-
 function updatePreviewArea(file) {
     const progressBarId = 'progressBar_' + Math.random().toString(36).substr(2, 9);
     const previewArea = document.getElementById('previewColab');
-    previewArea.innerHTML = `<div id="${progressBarId}" class="progress-bar" style="width: 0%;"></div>`;
+    previewArea.innerHTML = `<div id="${progressBarId}" class="progress-bar" style="width: 0%; height: 2px; background-color: #4CAF50;"></div>`;
     return progressBarId;
 }
