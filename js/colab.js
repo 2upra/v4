@@ -3,7 +3,6 @@ function empezarcolab() {
     const modal = document.getElementById('modalcolab');
     const modalEnviarBtn = document.getElementById('empezarColab');
     let postId = null;
-
     if (!buttons.length) {
         console.log('No se encontraron botones con la clase .ZYSVVV');
         return;
@@ -12,29 +11,26 @@ function empezarcolab() {
     buttons.forEach(button => {
         button.addEventListener('click', event => {
             postId = event.currentTarget?.dataset.postId;
-
             if (!postId) {
                 console.error('El post ID no se encontró en el botón.');
                 return;
             }
             console.log('Post ID:', postId);
             subidaArchivoColab(); 
-            modal.style.display = 'block';
+            modal.style.display = 'flex';
         });
     });
 
     modalEnviarBtn.addEventListener('click', async () => {
         const mensaje = document.querySelector('#modalcolab textarea').value;
-
         if (!mensaje.trim()) {
             alert('Por favor, escribe un mensaje antes de enviar.');
             return;
         }
-
         const data = await enviarAjax('empezarColab', {postId, mensaje});
         if (data?.success) {
             alert('Colaboración iniciada con éxito');
-            modal.style.display = 'none'; // Cerrar modal
+            modal.style.display = 'none'; 
         } else {
             alert(`Error al iniciar la colaboración: ${data?.message || 'Desconocido'}`);
         }
@@ -55,8 +51,6 @@ function subidaArchivoColab() {
         event.preventDefault();
         const file = event.dataTransfer?.files[0] || event.target.files[0];
         if (!file) return;
-
-        // Evitar múltiples selecciones
         if (fileSelected) {
             console.log('Archivo ya seleccionado');
             return;
