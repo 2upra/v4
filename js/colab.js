@@ -1,7 +1,17 @@
 
-//tengo esto, en todos los post hay un boton con la clase .ZYSVVV que contiene el id del post, ya no necesito empezar el colab directamente desde el boton, ahora se tiene que abrir un modal, con un formulario, y al enviar empieza el colab
+//tengo esto, en todos los post hay un boton con la clase .ZYSVVV que contiene el id del post, ya no necesito empezar el colab directamente desde el boton, ahora se tiene que abrir un modal con la id correspondiente, con un formulario, y al enviar empieza el colab con el boton enviando la id correcta
 
 /*
+
+    boton en todos los los 
+
+    function botonColab($post_id, $colab)
+{
+    return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$post_id'>{$GLOBALS['iconocolab']}</button></div>" : '';
+}
+
+el modal que debe renderizar 
+
     <div id="modalcolab" class="modal gap-4">
         <textarea id="" placeholder="Escribe un mensaje para tu solicitud de colaboración" rows="1"></textarea>
         <div class="previewAreaArchivos" id="previewColab" style="display: block;">Arrastra tu música
@@ -9,13 +19,18 @@
         </div>
         <input type="file" id="postArchivoColab" name="postArchivoColab" style="display:none;">
         <div class="flex gap-3 justify-end">
-            <button id="">Cancelar</button>
-            <button id="" class="botonprincipal">Enviar</button>
+            <button>Cancelar</button>
+            <button id="empezarColab" class="botonprincipal">Enviar</button>
         </div>
     </div>
 */
+
 function empezarcolab() {
+    subidaArchivoColab();
     const buttons = document.querySelectorAll('.ZYSVVV');
+    const modal = document.getElementById('modalcolab');
+    const modalEnviarBtn = document.getElementById('empezarColab');
+    let postId = null;
 
     if (!buttons.length) {
         console.log('No se encontraron botones con la clase .ZYSVVV');
@@ -23,30 +38,36 @@ function empezarcolab() {
     }
 
     buttons.forEach(button => {
-        button.addEventListener('click', async event => {
-            console.log('Button clicked:', event.currentTarget);
-            const postId = event.currentTarget?.dataset.postId;
+        button.addEventListener('click', event => {
+            postId = event.currentTarget?.dataset.postId;
 
             if (!postId) {
                 console.error('El post ID no se encontró en el botón.');
                 return;
             }
-
             console.log('Post ID:', postId);
-
-            if (await confirm('¿Estás seguro de que quieres empezar la colaboración?')) {
-                const data = await enviarAjax('empezarColab', postId);
-                if (data?.success) {
-                    alert('Colaboración iniciada con éxito');
-                } else if (typeof data === 'string') {
-                    alert(data.includes('Colaboración iniciada correctamente, te avisaremos cuando sea aceptada :)') ? 'Colaboración iniciada con éxito' : `Error al iniciar la colaboración: ${data}`);
-                } else {
-                    alert(`Error al iniciar la colaboración: ${data?.message || 'Desconocido'}`);
-                }
-            } else {
-                alert('Inicio de colaboración cancelado');
-            }
+            modal.style.display = 'block';
         });
+    });
+    modalEnviarBtn.addEventListener('click', async () => {
+        const mensaje = document.querySelector('#modalcolab textarea').value;
+
+        if (!mensaje.trim()) {
+            alert('Por favor, escribe un mensaje antes de enviar.');
+            return;
+        }
+        if (confirm('¿Estás seguro de que quieres empezar la colaboración?')) {
+            const data = await enviarAjax('empezarColab', { postId, mensaje });
+            if (data?.success) {
+                alert('Colaboración iniciada con éxito');
+                modal.style.display = 'none'; 
+            } else {
+                alert(`Error al iniciar la colaboración: ${data?.message || 'Desconocido'}`);
+            }
+        }
+    });
+    document.querySelector('#modalcolab button').addEventListener('click', () => {
+        modal.style.display = 'none';
     });
 }
 
