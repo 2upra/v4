@@ -224,9 +224,12 @@ if (!defined('ABSPATH')) {
                 </div>
 
                 <input type="file" id="postAudio1" name="post_audio1" accept="audio/*" style="display:none;">
-                <div class="flex justify-end">
+
+                <div class="flex gap-3 justify-end">
+                    <button id="">Cancelar</button>
                     <button id="">Prueba</button>
                 </div>
+                
             </div>
 
             <!-- Configuración -->
