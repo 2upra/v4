@@ -1,16 +1,20 @@
 <?php
 
 //Boton en todos los post
-function botonColab($post_id, $colab) {
+function botonColab($post_id, $colab)
+{
     return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$post_id'>{$GLOBALS['iconocolab']}</button></div>" : '';
 }
 
 // Función para manejar la colaboración
-function empezarColab() {
+
+function empezarColab()
+{
     if (!is_user_logged_in() || !isset($_POST['post_id'])) {
         guardarLog('No autorizado o sin ID de publicación');
         wp_send_json_error(['message' => 'No autorizado o sin ID de publicación']);
     }
+
 
     $post_id = intval($_POST['post_id']);
     guardarLog("Intentando buscar post con ID $post_id");
@@ -38,9 +42,13 @@ function empezarColab() {
         wp_send_json_error(['message' => 'Ya existe una colaboración entre el autor y el colaborador para esta publicación']);
     }
 
-    // Crear la nueva colaboración
+    // Obtener los nombres de los usuarios
+    $author_name = get_the_author_meta('display_name', $original_post->post_author);
+    $collaborator_name = get_the_author_meta('display_name', $current_user_id);
+
+    // Crear la nueva colaboración con el título basado en los nombres de los usuarios
     $new_post_id = wp_insert_post([
-        'post_title' => 'Colaboración iniciada en ' . get_the_title($post_id),
+        'post_title' => 'Colab entre ' . $author_name . ' y ' . $collaborator_name,
         'post_type' => 'colab',
         'post_status' => 'pending',
         'meta_input' => [
@@ -68,3 +76,23 @@ function empezarColab() {
     wp_die();
 }
 add_action('wp_ajax_empezarColab', 'empezarColab');
+
+
+function actualizarEstadoColab($post_id, $post_after, $post_before)
+{
+    if ($post_after->post_type === 'colab') {
+
+        $post_origen_id = get_post_meta($post_id, 'colabPostOrigen', true);
+        $colaborador_id = get_post_meta($post_id, 'colabColaborador', true);
+
+        if ($post_after->post_status !== 'publish' && $post_after->post_status !== 'pending') {
+            $existing_colabs_meta = get_post_meta($post_origen_id, 'colabs', true);
+
+            if (($key = array_search($colaborador_id, $existing_colabs_meta)) !== false) {
+                unset($existing_colabs_meta[$key]);
+                update_post_meta($post_origen_id, 'colabs', $existing_colabs_meta);
+            }
+        }
+    }
+}
+add_action('post_updated', 'actualizarEstadoColab', 10, 3);

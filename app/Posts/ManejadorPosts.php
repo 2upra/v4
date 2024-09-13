@@ -2,113 +2,63 @@
 
 define('ENABLE_LOGS', true);
 
-function mostrar_publicaciones_sociales($atts, $is_ajax = false, $paged = 1)
-{
-    $log_file_path = $is_ajax
-        ? '/var/www/wordpress/wp-content/themes/wanlogAjax.txt'
-        : '/var/www/wordpress/wp-content/themes/wanlog.txt';
+function mostrar_publicaciones_sociales($atts, $is_ajax = false, $paged = 1) {
+    $log_file_path = '/var/www/wordpress/wp-content/themes/wanlog' . ($is_ajax ? 'Ajax' : '') . '.txt';
+    $log = function($message) use ($log_file_path) {
+        if (ENABLE_LOGS) error_log($message . "\n", 3, $log_file_path);
+    };
 
-    if (ENABLE_LOGS) {
-        error_log("---------------------------------------\n", 3, $log_file_path);
-        error_log("mostrar_publicaciones_sociales\n", 3, $log_file_path);
-        error_log("is_ajax: " . ($is_ajax ? 'true' : 'false') . ", paged: $paged\n", 3, $log_file_path);
-        error_log("Datos recibidos (atts): " . print_r($atts, true) . "\n", 3, $log_file_path);
-    }
+    $log("---------------------------------------\nmostrar_publicaciones_sociales\nis_ajax: " . ($is_ajax ? 'true' : 'false') . ", paged: $paged\nDatos recibidos (atts): " . print_r($atts, true));
+
     $user_id = null;
-    $filtro = isset($_POST['filtro']) ? sanitize_text_field($_POST['filtro']) : '';
-    $identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : '';
+    $filtro = $_POST['filtro'] ?? '';
+    $identifier = $_POST['identifier'] ?? '';
+
     if ($is_ajax && isset($_POST['user_id'])) {
         $user_id = sanitize_text_field($_POST['user_id']);
     } else {
-        $url_path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $url_segments = explode('/', trim($url_path, '/'));
-        $perfil_index = array_search('perfil', $url_segments);
-        $music_index = array_search('music', $url_segments);
-        $author_index = array_search('author', $url_segments);
-        $sello_index = array_search('sello', $url_segments); // Nueva condición para /sello
-
-        if ($sello_index !== false) {
-            // Usar el ID del usuario actual
-            $user_id = get_current_user_id();
-        } elseif ($perfil_index !== false && isset($url_segments[$perfil_index + 1])) {
-            $nombre_usuario = $url_segments[$perfil_index + 1];
-        } elseif ($music_index !== false && isset($url_segments[$music_index + 1])) {
-            $nombre_usuario = $url_segments[$music_index + 1];
-        } elseif ($author_index !== false && isset($url_segments[$author_index + 1])) {
-            $nombre_usuario = $url_segments[$author_index + 1];
-        }
-
-        if (isset($nombre_usuario)) {
-            $usuario = get_user_by('slug', $nombre_usuario);
-            if ($usuario) {
-                $user_id = $usuario->ID;
+        $url_segments = explode('/', trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/'));
+        $indices = ['perfil', 'music', 'author', 'sello'];
+        foreach ($indices as $index) {
+            $pos = array_search($index, $url_segments);
+            if ($pos !== false) {
+                if ($index === 'sello') {
+                    $user_id = get_current_user_id();
+                } elseif (isset($url_segments[$pos + 1])) {
+                    $usuario = get_user_by('slug', $url_segments[$pos + 1]);
+                    if ($usuario) $user_id = $usuario->ID;
+                }
+                break;
             }
         }
     }
 
+    $log("Filtro: $filtro\nIdentifier: $identifier\nUser ID: $user_id");
 
-    if (ENABLE_LOGS) {
-        error_log("Filtro: $filtro\n", 3, $log_file_path);
-        error_log("Identifier: $identifier\n", 3, $log_file_path);
-        error_log("User ID: $user_id\n", 3, $log_file_path);
-    }
-
-    $meta_query = array();
-
-    if (!empty($identifier)) {
-        $meta_query[] = array(
-            'key' => 'additional_search_data',
-            'value' => $identifier,
-            'compare' => 'LIKE'
-        );
-
-        if (ENABLE_LOGS) {
-            error_log("Se añadió un meta_query con identifier: $identifier\n", 3, $log_file_path);
-        }
-    }
     $current_user_id = get_current_user_id();
+    $log("current_user_id: $current_user_id, user_id: $user_id");
 
-    if (ENABLE_LOGS) {
-        error_log("current_user_id: $current_user_id, user_id: $user_id\n", 3, $log_file_path);
-    }
-
-    $args = shortcode_atts(
-        array(
-            'filtro' => '',
-            'tab_id' => '',
-        ),
-        $atts
-    );
-
-    if (ENABLE_LOGS) {
-        error_log("shortcode_atts: " . print_r($args, true) . "\n", 3, $log_file_path);
-    }
+    $args = shortcode_atts(['filtro' => '', 'tab_id' => ''], $atts);
+    $log("shortcode_atts: " . print_r($args, true));
 
     $posts_per_page = isset($atts['posts']) ? intval($atts['posts']) : 12;
 
-    $query_args = array(
+    $query_args = [
         'post_type' => 'social_post',
         'posts_per_page' => $posts_per_page,
         'paged' => $paged,
-        'meta_query' => $meta_query,
+        'meta_query' => !empty($identifier) ? [['key' => 'additional_search_data', 'value' => $identifier, 'compare' => 'LIKE']] : [],
         'meta_key' => '_post_puntuacion_final',
-        'orderby' => array(
-            'meta_value_num' => 'DESC',
-            'date' => 'DESC'
-        ),
-    );
-    if (ENABLE_LOGS) {
-        error_log("query_args: " . print_r($query_args, true) . "\n", 3, $log_file_path);
-    }
+        'orderby' => ['meta_value_num' => 'DESC', 'date' => 'DESC'],
+    ];
+
+    $log("query_args: " . print_r($query_args, true));
 
     $filtro = !empty($args['identifier']) ? $args['identifier'] : $args['filtro'];
 
-    // $query_args['meta_query'] = [];
-
     $meta_query_conditions = [
-        'siguiendo' => function () use ($current_user_id, &$query_args) {
-            $siguiendo = array_filter((array) get_user_meta($current_user_id, 'siguiendo', true));
-            $query_args['author__in'] = $siguiendo;
+        'siguiendo' => function() use ($current_user_id, &$query_args) {
+            $query_args['author__in'] = array_filter((array) get_user_meta($current_user_id, 'siguiendo', true));
             return ['key' => 'rola', 'value' => '1', 'compare' => '!='];
         },
         'con_imagen_sin_audio' => [
@@ -116,22 +66,21 @@ function mostrar_publicaciones_sociales($atts, $is_ajax = false, $paged = 1)
             ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
         ],
         'solo_colab' => ['key' => 'para_colab', 'value' => '1', 'compare' => '='],
-        'rolastatus' => function () use (&$query_args) {
+        'rolastatus' => function() use (&$query_args) {
             $query_args['author'] = get_current_user_id();
             $query_args['post_status'] = ['publish', 'pending'];
             return ['key' => 'rola', 'value' => '1', 'compare' => '='];
         },
-        'nada' => function () use (&$query_args) {
-
+        'nada' => function() use (&$query_args) {
             $query_args['post_status'] = 'publish';
             return [];
         },
-        'rolasEliminadas' => function () use (&$query_args) {
+        'rolasEliminadas' => function() use (&$query_args) {
             $query_args['author'] = get_current_user_id();
             $query_args['post_status'] = ['pending_deletion'];
             return ['key' => 'rola', 'value' => '1', 'compare' => '='];
         },
-        'rolasRechazadas' => function () use (&$query_args) {
+        'rolasRechazadas' => function() use (&$query_args) {
             $query_args['author'] = get_current_user_id();
             $query_args['post_status'] = ['rejected'];
             return ['key' => 'rola', 'value' => '1', 'compare' => '='];
@@ -141,7 +90,7 @@ function mostrar_publicaciones_sociales($atts, $is_ajax = false, $paged = 1)
             ['key' => 'post_price', 'compare' => 'NOT EXISTS'],
             ['key' => 'rola', 'value' => '1', 'compare' => '!=']
         ],
-        'likes' => function () use ($current_user_id, &$query_args) {
+        'likes' => function() use ($current_user_id, &$query_args) {
             $user_liked_post_ids = get_user_liked_post_ids($current_user_id);
             if (empty($user_liked_post_ids)) {
                 $query_args['posts_per_page'] = 0;
@@ -153,7 +102,7 @@ function mostrar_publicaciones_sociales($atts, $is_ajax = false, $paged = 1)
         'bloqueado' => ['key' => 'content-block', 'value' => '1', 'compare' => '='],
         'sample' => ['key' => 'allow_download', 'value' => '1', 'compare' => '='],
         'venta' => ['key' => 'post_price', 'value' => '0', 'compare' => '>', 'type' => 'NUMERIC'],
-        'rola' => function () use (&$query_args) {
+        'rola' => function() use (&$query_args) {
             $query_args['post_status'] = 'publish';
             return [
                 ['key' => 'rola', 'value' => '1', 'compare' => '='],
@@ -172,13 +121,8 @@ function mostrar_publicaciones_sociales($atts, $is_ajax = false, $paged = 1)
         $query_args['meta_query'][] = is_callable($condition) ? $condition() : $condition;
     }
 
-    if ($user_id !== null) {
-        $query_args['author'] = $user_id;
-    }
-
-    if (!empty($args['exclude'])) {
-        $query_args['post__not_in'] = $args['exclude'];
-    }
+    if ($user_id !== null) $query_args['author'] = $user_id;
+    if (!empty($args['exclude'])) $query_args['post__not_in'] = $args['exclude'];
 
     ob_start();
 
