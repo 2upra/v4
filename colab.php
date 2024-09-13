@@ -1,32 +1,31 @@
 <?php
 /*
-Template Name: colab
+Template Name: Colab
 */
-//PRUEBA
+
 get_header();
+$user_id = get_current_user_id();
+$acciones = get_user_meta($user_id, 'acciones', true);
+$nologin_class = !is_user_logged_in() ? ' nologin' : ''; 
 ?>
 
 <div id="main">
-    <div id="content">
+    <div id="content" class="<?php echo esc_attr($nologin_class); ?>">
+        <input type="hidden" id="pagina_actual" name="pagina_actual" value="<?php echo esc_attr(get_the_title()); ?>">
         <?php if (!is_user_logged_in()): ?>
-            <?php echo do_shortcode('[inicio]'); ?>
-        <?php else:?>
+            <?php echo dev(); ?>
+        <?php else: ?>
 
-            <div id="menuData" style="display:none;">
-                <div data-tab="inicio"></div>
+            <div id="menuData" style="display:none;" pestanaActual="">
+                <div data-tab="Colab"></div>
             </div>
-            <div class="ZPJXRG">
-                <div class="GEIMKY">
-                    <?php echo do_shortcode('[colab]'); ?>
-                </div>
-                <div class="FPIAHK">
-                    <?php // echo do_shortcode('[lateral]'); ?>
-                </div>
-            </div>
+
+            <?php echo colab(); ?>
 
         <?php endif; ?>
     </div>
 </div>
+
 <?php
 get_footer();
 ?>

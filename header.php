@@ -213,6 +213,12 @@ if (!defined('ABSPATH')) {
                 <button id="enviarError">Enviar</button>
             </div>
 
+            <!-- Modal de prueba -->
+             <div id="modalprueba" class="modal">
+                <textarea id="" placeholder="Escribe un mensaje de colaboracion"></textarea>
+                <button id=""></button>
+             </div>
+
             <!-- Configuración -->
 
 

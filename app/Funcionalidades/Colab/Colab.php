@@ -43,7 +43,7 @@ function empezarColab()
     }
 
     // Obtener los nombres de los usuarios
-    $author_name = get_the_author_meta('display_name', $original_post->post_author);
+    $author_name = get_the_author_meta('dis  play_name', $original_post->post_author);
     $collaborator_name = get_the_author_meta('display_name', $current_user_id);
 
     // Crear la nueva colaboración con el título basado en los nombres de los usuarios
@@ -96,3 +96,18 @@ function actualizarEstadoColab($post_id, $post_after, $post_before)
     }
 }
 add_action('post_updated', 'actualizarEstadoColab', 10, 3);
+
+function colab() {
+
+    ob_start()
+    // Aqui tiene que aparecer los colas pendientes
+    // Tambien tiene que aparecer los colabs en cursos
+    ?>
+
+    
+
+
+    <?php
+    return ob_get_clean();
+}
+
