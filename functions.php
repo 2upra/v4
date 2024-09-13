@@ -27,6 +27,7 @@ function guardarLog($log)
 }
 
 //Script principal
+function scriptsOrdenados()
 {
     $dev_mode = true;
     $error_log = [];
