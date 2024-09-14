@@ -157,7 +157,7 @@ function TagEnTexto(options = {}) {
     
         words.forEach(word => {
             if (word.startsWith('#') && word.length > 1) {
-                const tag = word.slice(1); // Remove the '#'
+                const tag = word.slice(1); 
                 if (isValidTag(tag) && !tags.includes(tag)) {
                     tags.push(tag);
                     const tagSpan = document.createElement('span');
