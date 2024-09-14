@@ -34,7 +34,7 @@ function formRs()
 
         <div class="bloque flex-row"" id="opciones" style="display: none">
             <p>Opciones de post</p>
-            <div class="flex flex-row" id="botonesOpcionesRs">
+            <div class="flex flex-row gap-2">
                 <label class="custom-checkbox">
                     <input type="checkbox" id="allowDownload" name="allow_download" value="1">
                     <span class="checkmark"></span>
