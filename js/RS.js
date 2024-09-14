@@ -57,25 +57,52 @@ function subidaRs() {
     const inicialSubida = event => {
         event.preventDefault();
         const file = event.dataTransfer?.files[0] || event.target.files[0];
-        if (!file) return;
-        if (file.size > 200 * 1024 * 1024) return alert('El archivo no puede superar los 200 MB.');
-        file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
+        logRS('Archivo seleccionado para la subida', { fileName: file?.name, fileSize: file?.size, fileType: file?.type });
+    
+        if (!file) {
+            logRS('No se seleccionó ningún archivo');
+            return;
+        }
+    
+        if (file.size > 200 * 1024 * 1024) {
+            logRS('El archivo supera el límite de 200 MB', { fileSize: file.size });
+            return alert('El archivo no puede superar los 200 MB.');
+        }
+    
+        if (file.type.startsWith('audio/')) {
+            logRS('El archivo es un audio');
+            subidaAudio(file);
+        } else if (file.type.startsWith('image/')) {
+            logRS('El archivo es una imagen');
+            subidaImagen(file);
+        } else {
+            logRS('El archivo es de otro tipo');
+            subidaArchivo(file);
+        }
     };
-
+    
     const subidaAudio = async file => {
-        logRS('subidaAudio fue llamado');
+        logRS('subidaAudio fue llamado', { fileName: file.name, fileType: file.type });
         alert(`Audio subido: ${file.name}`);
+    
         previewAudio.style.display = 'block';
         opciones.style.display = 'flex';
+    
         const progressBarId = waveAudio(file);
+        logRS('waveAudio fue llamado', { progressBarId });
+    
         try {
             const subidaAudioRecibida = await subidaRsBackend(file, progressBarId);
+            logRS('subidaRsBackend completado con éxito', { audioUrl: subidaAudioRecibida.fileUrl, audioId: subidaAudioRecibida.fileId });
+    
             audioUrl = subidaAudioRecibida.fileUrl;
             audioId = subidaAudioRecibida.fileId;
-        } catch {
+        } catch (error) {
+            logRS('Error al cargar el audio', { error });
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
         }
     };
+    
 
     const subidaArchivo = async file => {
         alert(`Archivo subido: ${file.name}`);
