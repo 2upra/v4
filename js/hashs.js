@@ -1,7 +1,6 @@
 let enablelogHash = true;
 const logHash = enablelogHash ? console.log : function () {};
 
-
 // Genera un hash SHA-256 del archivo
 window.generateFileHash = async function(file) {
     logHash("Iniciando generación de hash para el archivo:", file.name);
