@@ -1,8 +1,10 @@
+let globalFileUrl; 
+
 function empezarcolab() {
     const buttons = document.querySelectorAll('.ZYSVVV');
     const modal = document.getElementById('modalcolab');
     const modalEnviarBtn = document.getElementById('empezarColab');
-    let postId, fileUrl;
+    let postId;
 
     if (!buttons.length) return; 
 
@@ -23,12 +25,13 @@ function empezarcolab() {
     addEventListeners([modalEnviarBtn], 'click', async () => {
         const mensaje = document.querySelector('#modalcolab textarea').value.trim();
         if (!mensaje) return alert('Por favor, escribe un mensaje antes de enviar.');
-        if (!fileUrl) return alert('Por favor, sube un archivo antes de enviar.'); 
-        console.log('Enviando datos:', {postId, mensaje, fileUrl});
-        const data = await enviarAjax('empezarColab', {postId, mensaje, fileUrl});
+        if (!globalFileUrl) return alert('Por favor, sube un archivo antes de enviar.'); 
+        console.log('Enviando datos:', {postId, mensaje, fileUrl: globalFileUrl});
+        const data = await enviarAjax('empezarColab', {postId, mensaje, fileUrl: globalFileUrl});
         if (data?.success) {
             alert('Colaboración iniciada con éxito');
             modal.style.display = 'none';
+            globalFileUrl = null; 
         } else {
             alert(`Error al iniciar la colaboración: ${data?.message || 'Desconocido'}`);
         }
@@ -43,6 +46,21 @@ function subidaArchivoColab() {
     const modalEnviarBtn = document.getElementById('empezarColab');
     let fileSelected = false;
 
+    function resetState() {
+        fileSelected = false;
+        globalFileUrl = null;
+        previewArchivo.innerHTML = 'Haz clic o arrastra un archivo aquí';
+        previewArchivo.style.backgroundColor = '';
+        modalEnviarBtn.disabled = false;
+        previewArchivo.removeEventListener('click', handlePreviewClick);
+        postArchivoColab.removeEventListener('change', handleFileSelect);
+        ['dragover', 'dragleave', 'drop'].forEach(eventName => 
+            previewArchivo.removeEventListener(eventName, handleDragDropEvents)
+        );
+    }
+
+    resetState();
+
     const handleFileSelect = async event => {
         event.preventDefault();
         event.stopPropagation();
@@ -51,17 +69,17 @@ function subidaArchivoColab() {
         fileSelected = true;
 
         const progressBarId = updatePreviewArea(file);
-        modalEnviarBtn.disabled = true; // Desactiva el botón mientras se carga el archivo.
+        modalEnviarBtn.disabled = true; 
         try {
             const uploadedFileUrl = await subirArchivoColab(file, progressBarId);
             previewArchivo.innerHTML = `Archivo subido: ${file.name} (${file.type})`;
-            fileUrl = uploadedFileUrl; // Asigna la URL del archivo subido.
-            console.log('Archivo subido a:', fileUrl);
-            modalEnviarBtn.disabled = false; // Reactiva el botón después de la carga.
+            globalFileUrl = uploadedFileUrl; 
+            console.log('Archivo subido a:', globalFileUrl);
+            modalEnviarBtn.disabled = false;
         } catch (error) {
             console.error('Error al cargar el archivo:', error);
             alert('Hubo un problema al cargar el archivo. Inténtalo de nuevo.');
-            modalEnviarBtn.disabled = false;
+            resetState();
         }
     };
 
@@ -71,11 +89,12 @@ function subidaArchivoColab() {
         if (event.type === 'drop') handleFileSelect(event);
     };
 
-    previewArchivo.addEventListener('click', e => {
+    const handlePreviewClick = e => {
         e.stopPropagation();
         if (!fileSelected) postArchivoColab.click();
-    });
+    };
 
+    previewArchivo.addEventListener('click', handlePreviewClick);
     postArchivoColab.addEventListener('change', handleFileSelect);
     ['dragover', 'dragleave', 'drop'].forEach(eventName => 
         previewArchivo.addEventListener(eventName, handleDragDropEvents)
