@@ -32,7 +32,7 @@ function formRs()
             </div>
         </div>
 
-        <div class="bloque flex-row"" id=" opciones" style="display: none">
+        <div class="bloque flex-row"" id="opciones" style="display: none">
             <p>Opciones de post</p>
             <div class="flex flex-row">
                 <label class="custom-checkbox">
