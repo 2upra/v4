@@ -24,7 +24,7 @@ function iniciarRS() {
 //Esto debe capturar todo lo que esta dentro del elemento "id="formRs", los tags y el normaltext en window.Tags, window.NormalText
 
 function envioRs() {
-    const button = document.getElementById('enviarRS');
+    const button = document.getElementById('enviarRs');
     button.addEventListener('click', () => {});
 }
 
@@ -37,7 +37,7 @@ function elementosPorID(ids) {
 }
 
 function subidaRs() {
-    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRS'];
+    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs'];
     const elements = ids.reduce((acc, id) => {
         const el = document.getElementById(id);
         if (!el) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
@@ -50,7 +50,7 @@ function subidaRs() {
         return; 
     }
 
-    const { formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRS } = elements;
+    const { formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs } = elements;
 
     const inicialSubida = event => {
         event.preventDefault();
@@ -64,7 +64,7 @@ function subidaRs() {
     };
 
     const subidaAudio = async file => {
-        enviarRS.disabled = true; 
+        enviarRs.disabled = true; 
         try {
             alert(`Audio subido: ${file.name}`);
             previewAudio.style.display = 'block';
@@ -73,14 +73,14 @@ function subidaRs() {
             const { fileUrl, fileId } = await subidaRsBackend(file, progressBarId);
             audioUrl = fileUrl;
             audioId = fileId;
-            enviarRS.disabled = false; 
+            enviarRs.disabled = false; 
         } catch (error) {
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
         }
     };
 
     const subidaArchivo = async file => {
-        enviarRS.disabled = true; 
+        enviarRs.disabled = true; 
         previewArchivo.style.display = 'block';
         previewArchivo.innerHTML = `<div class="file-name">${file.name}</div><div id="barraProgresoFile" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>`;
         try {
@@ -88,14 +88,14 @@ function subidaRs() {
             const { fileUrl, fileId } = await subidaRsBackend(file, 'barraProgresoFile');
             archivoUrl = fileUrl;
             archivoId = fileId;
-            enviarRS.disabled = false; 
+            enviarRs.disabled = false; 
         } catch {
             alert('Hubo un problema al cargar el Archivo. Inténtalo de nuevo.');
         }
     };
 
     const subidaImagen = async file => {
-        enviarRS.disabled = true; 
+        enviarRs.disabled = true; 
         opciones.style.display = 'flex';
         updatePreviewImagen(file);
         imagenSelecionada = file;
@@ -104,7 +104,7 @@ function subidaRs() {
             const { fileUrl, fileId } = await subidaRsBackend(file, 'barraProgresoImagen');
             imagenUrl = fileUrl;
             imagenId = fileId;
-            enviarRS.disabled = false; 
+            enviarRs.disabled = false; 
         } catch {
             alert('Hubo un problema al cargar la Imagen. Inténtalo de nuevo.');
         }
