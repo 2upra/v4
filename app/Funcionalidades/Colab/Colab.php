@@ -6,42 +6,11 @@ function botonColab($postId, $colab)
     return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$postId'>{$GLOBALS['iconocolab']}</button></div>" : '';
 }
 
-
-
-function modalColab()
-{
-    ob_start()
-?>
-    <div id="modalprueba" class="modal gap-4">
-        <textarea id="" placeholder="Escribe un mensaje para tu solicitud de colaboración" rows="1"></textarea>
-        <div class="previewAreaArchivos" id="previewColab" style="display: block;">Arrastra tu música
-            <label></label>
-        </div>
-        <input type="file" id="postAudio1" name="post_audio1" accept="audio/*" style="display:none;">
-        <div class="flex gap-3 justify-end">
-            <button id="">Cancelar</button>
-            <button id="" class="botonprincipal">Enviar</button>
-        </div>
-    </div>
-<?php
-    return ob_get_clean();
-}
-
-
-
-
-
-
-
-
-
-
-// Función para manejar la colaboración
-
+// Función inicial para empezar un colab
 function empezarColab()
 {
     guardarLog("Datos recibidos vía POST: " . print_r($_POST, true));
-    
+
     if (!is_user_logged_in()) {
         guardarLog('No autorizado. Debes estar logueado para enviar una solicitud de colaboración');
         wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
@@ -108,20 +77,38 @@ add_action('wp_ajax_empezarColab', 'empezarColab');
 
 function actualizarEstadoColab($postId, $post_after, $post_before)
 {
+    guardarLog("Iniciando actualizarEstadoColab para post ID: $postId");
+
     if ($post_after->post_type === 'colab') {
+        guardarLog("El post es de tipo 'colab'");
 
         $post_origen_id = get_post_meta($postId, 'colabPostOrigen', true);
         $colaborador_id = get_post_meta($postId, 'colabColaborador', true);
 
+        guardarLog("Post origen ID: $post_origen_id, Colaborador ID: $colaborador_id");
+
         if ($post_after->post_status !== 'publish' && $post_after->post_status !== 'pending') {
+            guardarLog("Estado del post no es 'publish' ni 'pending'. Estado actual: " . $post_after->post_status);
+
             $existing_colabs_meta = get_post_meta($post_origen_id, 'colabs', true);
+            guardarLog("Colabs existentes: " . print_r($existing_colabs_meta, true));
 
             if (($key = array_search($colaborador_id, $existing_colabs_meta)) !== false) {
+                guardarLog("Colaborador encontrado en la posición: $key");
                 unset($existing_colabs_meta[$key]);
-                update_post_meta($post_origen_id, 'colabs', $existing_colabs_meta);
+                $result = update_post_meta($post_origen_id, 'colabs', $existing_colabs_meta);
+                guardarLog("Resultado de la actualización de meta: " . ($result ? "éxito" : "fallo"));
+            } else {
+                guardarLog("Colaborador no encontrado en las colabs existentes");
             }
+        } else {
+            guardarLog("Estado del post es 'publish' o 'pending'. No se requiere acción.");
         }
+    } else {
+        guardarLog("El post no es de tipo 'colab'. Tipo actual: " . $post_after->post_type);
     }
+
+    guardarLog("Finalizando actualizarEstadoColab");
 }
 add_action('post_updated', 'actualizarEstadoColab', 10, 3);
 
@@ -132,9 +119,6 @@ function colab()
     // Aqui tiene que aparecer los colas pendientes
     // Tambien tiene que aparecer los colabs en cursos
 ?>
-
-
-
 
 <?php
     return ob_get_clean();
