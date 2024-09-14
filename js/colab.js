@@ -8,55 +8,82 @@ function empezarcolab() {
         console.log('No se encontraron botones con la clase .ZYSVVV');
         return;
     }
+
+    // Prevenir múltiples asignaciones de eventos
     buttons.forEach(button => {
-        button.addEventListener('click', event => {
-            postId = event.currentTarget?.dataset.postId;
-            if (!postId) {
-                console.error('El post ID no se encontró en el botón.');
-                return;
-            }
-            console.log('Post ID:', postId);
-            subidaArchivoColab();
-            modal.style.display = 'flex';
-        });
+        button.removeEventListener('click', handleButtonClick);
+        button.addEventListener('click', handleButtonClick);
     });
-    modalEnviarBtn.addEventListener('click', async () => {
+
+    modalEnviarBtn.removeEventListener('click', handleModalEnviar);
+    modalEnviarBtn.addEventListener('click', handleModalEnviar);
+
+    document.querySelector('#modalcolab button').removeEventListener('click', handleModalClose);
+    document.querySelector('#modalcolab button').addEventListener('click', handleModalClose);
+
+    function handleButtonClick(event) {
+        postId = event.currentTarget?.dataset.postId;
+        if (!postId) {
+            console.error('El post ID no se encontró en el botón.');
+            return;
+        }
+        console.log('Post ID:', postId);
+        subidaArchivoColab();
+        modal.style.display = 'flex';
+    }
+
+    async function handleModalEnviar() {
         const mensaje = document.querySelector('#modalcolab textarea').value;
         if (!mensaje.trim()) {
             alert('Por favor, escribe un mensaje antes de enviar.');
             return;
         }
-        console.log('Enviando datos:', {postId, mensaje, fileUrl});
-        const data = await enviarAjax('empezarColab', {postId, mensaje, fileUrl});
+        console.log('Enviando datos:', { postId, mensaje, fileUrl });
+        const data = await enviarAjax('empezarColab', { postId, mensaje, fileUrl });
         if (data?.success) {
             alert('Colaboración iniciada con éxito');
             modal.style.display = 'none';
         } else {
             alert(`Error al iniciar la colaboración: ${data?.message || 'Desconocido'}`);
         }
-    });
+    }
 
-    document.querySelector('#modalcolab button').addEventListener('click', () => {
+    function handleModalClose() {
         modal.style.display = 'none';
-    });
+    }
 }
 
 function subidaArchivoColab() {
     const previewArchivo = document.getElementById('previewColab');
     const postArchivoColab = document.getElementById('postArchivoColab');
     const modalEnviarBtn = document.getElementById('empezarColab');
-    if (!previewArchivo || !postArchivoColab) return;
     let fileSelected = false;
+
+    // Evitar eventos duplicados
+    previewArchivo.removeEventListener('click', handlePreviewClick);
+    previewArchivo.addEventListener('click', handlePreviewClick);
+    postArchivoColab.removeEventListener('change', handleFileSelect);
+    postArchivoColab.addEventListener('change', handleFileSelect);
+
+    ['dragover', 'dragleave', 'drop'].forEach(eventName => {
+        previewArchivo.removeEventListener(eventName, handleDragDropEvents);
+        previewArchivo.addEventListener(eventName, handleDragDropEvents);
+    });
+
+    function handlePreviewClick(event) {
+        event.stopPropagation(); // Evitar propagación del evento
+        if (!fileSelected) {
+            postArchivoColab.click();
+        }
+    }
 
     async function handleFileSelect(event) {
         event.preventDefault();
+        event.stopPropagation(); // Prevenir eventos múltiples
         const file = event.dataTransfer?.files[0] || event.target.files[0];
-        if (!file) return;
-        if (fileSelected) {
-            console.log('Archivo ya seleccionado');
-            return;
-        }
+        if (!file || fileSelected) return;
         fileSelected = true;
+
         const progressBarId = updatePreviewArea(file);
         modalEnviarBtn.disabled = true;
         try {
@@ -72,23 +99,16 @@ function subidaArchivoColab() {
             modalEnviarBtn.disabled = false;
         }
     }
-    previewArchivo.addEventListener('click', () => {
-        if (!fileSelected) {
-            postArchivoColab.click();
+
+    function handleDragDropEvents(event) {
+        event.preventDefault();
+        if (event.type === 'dragover') {
+            previewArchivo.style.backgroundColor = '#e9e9e9';
+        } else {
+            previewArchivo.style.backgroundColor = '';
+            if (event.type === 'drop') handleFileSelect(event);
         }
-    });
-    postArchivoColab.addEventListener('change', handleFileSelect);
-    ['dragover', 'dragleave', 'drop'].forEach(eventName => {
-        previewArchivo.addEventListener(eventName, e => {
-            e.preventDefault();
-            if (eventName === 'dragover') {
-                previewArchivo.style.backgroundColor = '#e9e9e9';
-            } else {
-                previewArchivo.style.backgroundColor = '';
-                if (eventName === 'drop') handleFileSelect(e);
-            }
-        });
-    });
+    }
 }
 
 async function subirArchivoColab(file, progressBarId) {

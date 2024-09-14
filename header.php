@@ -218,7 +218,7 @@ if (!defined('ABSPATH')) {
             <!-- colab modal -->
             <div id="modalcolab" class="modal gap-4" style="display: none;">
                 <textarea id="textareaColab" placeholder="Escribe un mensaje para tu solicitud de colaboración" rows="1"></textarea>
-                <div class="previewAreaArchivos" id="previewColab" style="display: block;">Arrastra tu música
+                <div class="previewAreaArchivos" id="previewColab" style="display: block;">Puedes enviar un archivo audio para la colaboración
                     <label></label>
                 </div>
                 <input type="file" id="postArchivoColab" name="postArchivoColab" style="display:none;">
