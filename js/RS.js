@@ -35,85 +35,60 @@ function elementosPorID(ids) {
 }
 
 function subidaRs() {
-    const elementos = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen'];
-    const elementosEncontrados = elementos.reduce((acc, id) => {
-        const elemento = document.getElementById(id);
-        if (!elemento) {
-            console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
-        }
-        acc[id] = elemento;
+    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen'];
+    const elements = ids.reduce((acc, id) => {
+        const el = document.getElementById(id);
+        if (!el) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
+        acc[id] = el;
         return acc;
     }, {});
-    logRS('Elementos detectados:', elementosEncontrados);
-    const elementosFaltantes = Object.entries(elementosEncontrados)
-        .filter(([id, el]) => !el)
-        .map(([id]) => id);
-    if (elementosFaltantes.length > 0) {
-        console.error(`No se encontraron los siguientes elementos en el DOM: ${elementosFaltantes.join(', ')}`);
+    logRS('Elementos detectados:', elements);
+
+    const missingElements = Object.entries(elements).filter(([_, el]) => !el).map(([id]) => id);
+    if (missingElements.length) {
+        console.error(`No se encontraron los siguientes elementos en el DOM: ${missingElements.join(', ')}`);
         return;
     }
-    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen} = elementosEncontrados;
+
+    const { formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen } = elements;
 
     const inicialSubida = event => {
         event.preventDefault();
         const file = event.dataTransfer?.files[0] || event.target.files[0];
         logRS('Archivo seleccionado para la subida', { fileName: file?.name, fileSize: file?.size, fileType: file?.type });
-    
-        if (!file) {
-            logRS('No se seleccionó ningún archivo');
-            return;
-        }
-    
-        if (file.size > 200 * 1024 * 1024) {
-            logRS('El archivo supera el límite de 200 MB', { fileSize: file.size });
-            return alert('El archivo no puede superar los 200 MB.');
-        }
-    
-        if (file.type.startsWith('audio/')) {
-            logRS('El archivo es un audio');
-            subidaAudio(file);
-        } else if (file.type.startsWith('image/')) {
-            logRS('El archivo es una imagen');
-            subidaImagen(file);
-        } else {
-            logRS('El archivo es de otro tipo');
-            subidaArchivo(file);
-        }
+
+        if (!file) return logRS('No se seleccionó ningún archivo');
+        if (file.size > 200 * 1024 * 1024) return alert('El archivo no puede superar los 200 MB.');
+
+        file.type.startsWith('audio/') ? subidaAudio(file) :
+        file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
     };
-    
+
     const subidaAudio = async file => {
         logRS('subidaAudio fue llamado', { fileName: file.name, fileType: file.type });
-    
-        alert(`Audio subido: ${file.name}`);
-        
         try {
+            alert(`Audio subido: ${file.name}`);
             previewAudio.style.display = 'block';
             opciones.style.display = 'flex';
-    
             const progressBarId = waveAudio(file);
-            logRS('waveAudio fue llamado', { progressBarId });
-    
-            const subidaAudioRecibida = await subidaRsBackend(file, progressBarId);
-            logRS('subidaRsBackend completado con éxito', { audioUrl: subidaAudioRecibida.fileUrl, audioId: subidaAudioRecibida.fileId });
-    
-            audioUrl = subidaAudioRecibida.fileUrl;
-            audioId = subidaAudioRecibida.fileId;
-    
+            const { fileUrl, fileId } = await subidaRsBackend(file, progressBarId);
+            logRS('subidaRsBackend completado con éxito', { audioUrl: fileUrl, audioId: fileId });
+            audioUrl = fileUrl;
+            audioId = fileId;
         } catch (error) {
             logRS('Error en subidaAudio', { errorMessage: error.message, stack: error.stack });
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
         }
     };
-    
 
     const subidaArchivo = async file => {
         alert(`Archivo subido: ${file.name}`);
         previewArchivo.style.display = 'block';
         previewArchivo.innerHTML = `<div class="file-name">${file.name}</div><div id="barraProgresoFile" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>`;
         try {
-            const subidaArchivoRecibida = await subidaRsBackend(file, 'barraProgresoFile');
-            archivoUrl = subidaArchivoRecibida.fileUrl;
-            archivoId = subidaArchivoRecibida.fileId;
+            const { fileUrl, fileId } = await subidaRsBackend(file, 'barraProgresoFile');
+            archivoUrl = fileUrl;
+            archivoId = fileId;
         } catch {
             alert('Hubo un problema al cargar el Archivo. Inténtalo de nuevo.');
         }
@@ -130,17 +105,17 @@ function subidaRs() {
         const reader = new FileReader(),
             audioContainerId = `waveform-container-${Date.now()}`,
             progressBarId = `progress-${Date.now()}`;
-        reader.onload = function (e) {
+        reader.onload = e => {
             previewAudio.innerHTML = `
                 <div id="${audioContainerId}" class="waveform-container without-image" data-audio-url="${e.target.result}">
-                  <div class="waveform-background"></div>
-                  <div class="waveform-message"></div>
-                  <div class="waveform-loading" style="display: none;">Cargando...</div>
-                  <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
-                  <div class="file-name">${file.name}</div>
+                    <div class="waveform-background"></div>
+                    <div class="waveform-message"></div>
+                    <div class="waveform-loading" style="display: none;">Cargando...</div>
+                    <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
+                    <div class="file-name">${file.name}</div>
                 </div>
                 <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
-                  <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
+                    <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
                 </div>`;
             inicializarWaveform(audioContainerId, e.target.result);
         };
@@ -158,17 +133,17 @@ function subidaRs() {
     };
 
     formRs.addEventListener('click', event => {
-        const clickedElement = event.target;
-        clickedElement.closest.previewAudio ? abrirSelectorArchivos('audio/*') : clickedElement.closest.previewImagen && abrirSelectorArchivos('image/*');
+        const clickedElement = event.target.closest('.previewAudio, .previewImagen');
+        clickedElement && abrirSelectorArchivos(clickedElement.classList.contains('previewAudio') ? 'audio/*' : 'image/*');
     });
 
-    function abrirSelectorArchivos(tipoArchivo) {
+    const abrirSelectorArchivos = tipoArchivo => {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = tipoArchivo;
-        input.onchange = e => inicialSubida(e);
+        input.onchange = inicialSubida;
         input.click();
-    }
+    };
 
     botonArchivo.addEventListener('click', () => abrirSelectorArchivos('*'));
     botonAudio.addEventListener('click', () => abrirSelectorArchivos('audio/*'));
