@@ -56,20 +56,11 @@ window.uploadFile = async function (file, progressBarId, formNumber) {
     });
 };
 
+*/
 
-async function generateFileHash(file) {
-    console.log("Iniciando generación de hash para el archivo:", file.name);
-    const buffer = await file.arrayBuffer();
-    console.log("ArrayBuffer generado:", buffer);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
-    console.log("Hash buffer generado:", hashBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    console.log("Array convertido a Uint8Array:", hashArray);
-    const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    console.log("Hash final generado:", hash);
-    return hash;
-}
+ 
 
+/*
 function checkAllFilesUploaded() {
     const allUploaded = Object.values(window.formState.uploadedFiles).every(Boolean);
     console.log('Estado inicial de uploadedFiles:', window.formState.uploadedFiles);
@@ -81,6 +72,5 @@ function checkAllFilesUploaded() {
     console.log('Estado final de uploadedFiles:', window.formState.uploadedFiles); 
     console.log('Estado final de uploadedFileUrls:', window.formState.uploadedFileUrls); 
 }
-
-
 */
+
