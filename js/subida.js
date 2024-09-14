@@ -35,7 +35,6 @@ window.uploadFile = async function (file, progressBarId, formNumber) {
                             console.log('Archivo subido (' + file.type + '):', result.data.fileUrl);
                             window.formState.archivo[formNumber] = true;
                         }
-        
                         console.log('Estado actual de uploadedFiles:', window.formState.uploadedFiles);
                         checkAllFilesUploaded();
                         window.ChequearFormRola();

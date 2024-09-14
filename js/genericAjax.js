@@ -1,5 +1,5 @@
-//Generic Ajax, no se si puedes reuisarlo para este caso sin dañar sus funciones genericas que uso para toods los ajax mi pagina
-async function enviarAjax(action, postId, additionalData = {}) {
+
+async function enviarAjax(action, data = {}) {
     try {
         const response = await fetch(ajaxUrl, {
             method: 'POST',
@@ -8,17 +8,16 @@ async function enviarAjax(action, postId, additionalData = {}) {
             },
             body: new URLSearchParams({
                 action: action,
-                post_id: postId,
-                ...additionalData
+                ...data
             })
         });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         try {
-            const data = await response.json();
-            console.log('Respuesta del servidor (JSON):', data);
-            return data;
+            const responseData = await response.json();
+            console.log('Respuesta del servidor (JSON):', responseData);
+            return responseData;
         } catch (error) {
             const text = await response.text();
             console.log('Respuesta del servidor (Texto):', text);
@@ -42,7 +41,7 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
 
             const confirmed = await confirm(confirmMessage);
             if (confirmed) {
-                const data = await enviarAjax(action, postId);
+                const data = await enviarAjax(action, { postId }); 
 
                 if (data.success) {
                     successCallback(statusElement, data);
@@ -83,7 +82,6 @@ async function handleAllRequests() {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }
 }
-
 
 async function requestDeletion() {
     await accionClick(

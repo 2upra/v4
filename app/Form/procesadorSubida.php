@@ -16,7 +16,6 @@ function subidaArchivo()
     
     if ($existing_file_url && !$is_admin) { 
         $existing_file_path = str_replace(wp_get_upload_dir()['baseurl'], wp_get_upload_dir()['basedir'], $existing_file_url);
-        
         if (file_exists($existing_file_path)) {
             unlink($existing_file_path);
             guardarLog("Archivo anterior eliminado: $existing_file_path");

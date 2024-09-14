@@ -217,7 +217,7 @@ if (!defined('ABSPATH')) {
 
             <!-- colab modal -->
             <div id="modalcolab" class="modal gap-4" style="display: none;">
-                <textarea placeholder="Escribe un mensaje para tu solicitud de colaboración" rows="1"></textarea>
+                <textarea id="textareaColab" placeholder="Escribe un mensaje para tu solicitud de colaboración" rows="1"></textarea>
                 <div class="previewAreaArchivos" id="previewColab" style="display: block;">Arrastra tu música
                     <label></label>
                 </div>

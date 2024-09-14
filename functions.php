@@ -54,7 +54,7 @@ function scriptsOrdenados()
         'formSubirRola' => '4.1.56',
         'ajax-submit' => '2.1.38',
         'formscript' => '1.1.11',
-        'estados' => '2.1.13',
+        'genericAjax' => '2.1.13',
         'wavejs' => ['2.0.12', ['jquery', 'wavesurfer']],
         'inversores' => '1.0.4',
         'likes' => '2.0.1',

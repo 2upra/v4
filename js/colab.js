@@ -1,13 +1,14 @@
+
 function empezarcolab() {
     const buttons = document.querySelectorAll('.ZYSVVV');
     const modal = document.getElementById('modalcolab');
     const modalEnviarBtn = document.getElementById('empezarColab');
     let postId = null;
+    let fileUrl = null; 
     if (!buttons.length) {
         console.log('No se encontraron botones con la clase .ZYSVVV');
         return;
     }
-
     buttons.forEach(button => {
         button.addEventListener('click', event => {
             postId = event.currentTarget?.dataset.postId;
@@ -16,25 +17,25 @@ function empezarcolab() {
                 return;
             }
             console.log('Post ID:', postId);
-            subidaArchivoColab(); 
+            subidaArchivoColab();
             modal.style.display = 'flex';
         });
     });
-
     modalEnviarBtn.addEventListener('click', async () => {
         const mensaje = document.querySelector('#modalcolab textarea').value;
         if (!mensaje.trim()) {
             alert('Por favor, escribe un mensaje antes de enviar.');
             return;
         }
-        const data = await enviarAjax('empezarColab', {postId, mensaje});
+        const data = await enviarAjax('empezarColab', {postId, mensaje, fileUrl});
         if (data?.success) {
             alert('Colaboración iniciada con éxito');
-            modal.style.display = 'none'; 
+            modal.style.display = 'none';
         } else {
             alert(`Error al iniciar la colaboración: ${data?.message || 'Desconocido'}`);
         }
     });
+
     document.querySelector('#modalcolab button').addEventListener('click', () => {
         modal.style.display = 'none';
     });
@@ -43,8 +44,10 @@ function empezarcolab() {
 function subidaArchivoColab() {
     const previewArchivo = document.getElementById('previewColab');
     const postArchivoColab = document.getElementById('postArchivoColab');
+    const modalEnviarBtn = document.getElementById('empezarColab');
     if (!previewArchivo || !postArchivoColab) return;
-    let fileSelected = false;  
+    let fileSelected = false;
+
     async function handleFileSelect(event) {
         event.preventDefault();
         const file = event.dataTransfer?.files[0] || event.target.files[0];
@@ -54,23 +57,25 @@ function subidaArchivoColab() {
             return;
         }
         fileSelected = true;
-
         const progressBarId = updatePreviewArea(file);
-
+        modalEnviarBtn.disabled = true;
         try {
-            const fileUrl = await subirArchivoColab(file, progressBarId);
+            const uploadedFileUrl = await subirArchivoColab(file, progressBarId);
             previewArchivo.innerHTML = `Archivo subido: ${file.name} (${file.type})`;
-            window.formColab = fileUrl;
-            console.log('Archivo subido a:', fileUrl);
-            // Si el archivo es de audio, manejar el preview aquí
+            window.formColab = uploadedFileUrl;
+            console.log('Archivo subido a:', uploadedFileUrl);
+            fileUrl = uploadedFileUrl;
+            modalEnviarBtn.disabled = false;
+            // Manejar preview de audio si es necesario
             if (file.type.startsWith('audio')) {
-                // Agrega lógica si necesitas mostrar un preview de audio
+                // Agregar lógica para preview de audio
             } else {
-                // Agrega lógica para otros tipos de archivos
+                // Agregar lógica para otros tipos de archivos
             }
         } catch (error) {
             console.error('Error al cargar el archivo:', error);
             alert('Hubo un problema al cargar el archivo. Inténtalo de nuevo.');
+            modalEnviarBtn.disabled = false;
         }
     }
     previewArchivo.addEventListener('click', () => {
