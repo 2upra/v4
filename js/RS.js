@@ -101,7 +101,7 @@ function subidaRs() {
             audioContainerId = `waveform-container-${Date.now()}`,
             progressBarId = `progress-${Date.now()}`;
         reader.onload = function (e) {
-            previewAreaRola.innerHTML = `
+            previewAudio.innerHTML = `
                 <div id="${audioContainerId}" class="waveform-container without-image" data-audio-url="${e.target.result}">
                   <div class="waveform-background"></div>
                   <div class="waveform-message"></div>
@@ -150,6 +150,39 @@ function subidaRs() {
             formRs.style.backgroundColor = eventName === 'dragover' ? '#e9e9e9' : '';
             eventName === 'drop' && inicialSubida(e);
         });
+    });
+}
+
+async function subidaRsBackend(file, progressBarId) {
+    const formData = new FormData();
+    formData.append('action', 'file_upload');
+    formData.append('file', file);
+    formData.append('file_hash', await generateFileHash(file));
+
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', my_ajax_object.ajax_url, true);
+
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+                const progressBar = document.getElementById(progressBarId);
+                if (progressBar) progressBar.style.width = `${(e.loaded / e.total) * 100}%`;
+            }
+        };
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                try {
+                    const result = JSON.parse(xhr.responseText);
+                    result.success ? resolve(result.data) : reject(new Error('Error en la respuesta del servidor'));
+                } catch (error) {
+                    reject(error);
+                }
+            } else {
+                reject(new Error('Error en la carga del archivo'));
+            }
+        };
+        xhr.onerror = () => reject(new Error('Error en la conexión con el servidor'));
+        xhr.send(formData);
     });
 }
 

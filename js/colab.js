@@ -113,7 +113,6 @@ async function subidaArchivoColabBackend(file, progressBarId) {
                 if (progressBar) progressBar.style.width = `${(e.loaded / e.total) * 100}%`;
             }
         };
-
         xhr.onload = () => {
             if (xhr.status === 200) {
                 try {
