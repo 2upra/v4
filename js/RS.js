@@ -1,5 +1,5 @@
 // Variables globales
-let imagenUrl, imagenId, audioUrl, audioId, archivoUrl, archivoId, imagenSelecionada;
+let audioUrl, audioId, archivoUrl, archivoId, imagenSelecionada;
 // Logs
 const enableLogs = true;
 const logRS = enableLogs ? console.log : function () {};
@@ -59,13 +59,7 @@ function subidaRs() {
         const file = event.dataTransfer?.files[0] || event.target.files[0];
         if (!file) return;
         if (file.size > 200 * 1024 * 1024) return alert('El archivo no puede superar los 200 MB.');
-        file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) :         try {
-            const subidaImagenRecibida = await subidaRsBackend(file, 'barraProgresoFile');
-            ImagenUrl = subidaImagenRecibida.fileUrl;
-            ImagenId = subidaImagenRecibida.fileId;
-        } catch {
-            alert('Hubo un problema al cargar el Archivo. Inténtalo de nuevo.');
-        }
+        file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
     };
 
     const subidaAudio = async file => {
