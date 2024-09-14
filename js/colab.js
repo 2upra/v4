@@ -1,33 +1,55 @@
-function empezarColab() {
+function empezarcolab() {
     const buttons = document.querySelectorAll('.ZYSVVV');
     const modal = document.getElementById('modalcolab');
     const modalEnviarBtn = document.getElementById('empezarColab');
-    const cerrarModalBtn = document.querySelector('#modalcolab button');
     let postId = null;
-    let fileUrl = null;
+    let fileUrl = null; 
+    if (!buttons.length) {
+        console.log('No se encontraron botones con la clase .ZYSVVV');
+        return;
+    }
 
-    if (!buttons.length) return console.log('No se encontraron botones con la clase .ZYSVVV');
+    // Prevenir múltiples asignaciones de eventos
+    buttons.forEach(button => {
+        button.removeEventListener('click', handleButtonClick);
+        button.addEventListener('click', handleButtonClick);
+    });
 
-    buttons.forEach(button => button.addEventListener('click', handleButtonClick));
+    modalEnviarBtn.removeEventListener('click', handleModalEnviar);
     modalEnviarBtn.addEventListener('click', handleModalEnviar);
-    cerrarModalBtn.addEventListener('click', () => modal.style.display = 'none');
+
+    document.querySelector('#modalcolab button').removeEventListener('click', handleModalClose);
+    document.querySelector('#modalcolab button').addEventListener('click', handleModalClose);
 
     function handleButtonClick(event) {
         postId = event.currentTarget?.dataset.postId;
-        if (!postId) return console.error('El post ID no se encontró en el botón.');
+        if (!postId) {
+            console.error('El post ID no se encontró en el botón.');
+            return;
+        }
         console.log('Post ID:', postId);
         subidaArchivoColab();
         modal.style.display = 'flex';
     }
 
     async function handleModalEnviar() {
-        const mensaje = document.querySelector('#modalcolab textarea').value.trim();
-        if (!mensaje) return alert('Por favor, escribe un mensaje antes de enviar.');
-
+        const mensaje = document.querySelector('#modalcolab textarea').value;
+        if (!mensaje.trim()) {
+            alert('Por favor, escribe un mensaje antes de enviar.');
+            return;
+        }
         console.log('Enviando datos:', { postId, mensaje, fileUrl });
         const data = await enviarAjax('empezarColab', { postId, mensaje, fileUrl });
-        alert(data?.success ? 'Colaboración iniciada con éxito' : `Error al iniciar la colaboración: ${data?.message || 'Desconocido'}`);
-        if (data?.success) modal.style.display = 'none';
+        if (data?.success) {
+            alert('Colaboración iniciada con éxito');
+            modal.style.display = 'none';
+        } else {
+            alert(`Error al iniciar la colaboración: ${data?.message || 'Desconocido'}`);
+        }
+    }
+
+    function handleModalClose() {
+        modal.style.display = 'none';
     }
 }
 
@@ -37,15 +59,27 @@ function subidaArchivoColab() {
     const modalEnviarBtn = document.getElementById('empezarColab');
     let fileSelected = false;
 
-    // Asignar eventos
-    previewArchivo.addEventListener('click', () => !fileSelected && postArchivoColab.click());
+    // Evitar eventos duplicados
+    previewArchivo.removeEventListener('click', handlePreviewClick);
+    previewArchivo.addEventListener('click', handlePreviewClick);
+    postArchivoColab.removeEventListener('change', handleFileSelect);
     postArchivoColab.addEventListener('change', handleFileSelect);
+
     ['dragover', 'dragleave', 'drop'].forEach(eventName => {
+        previewArchivo.removeEventListener(eventName, handleDragDropEvents);
         previewArchivo.addEventListener(eventName, handleDragDropEvents);
     });
 
+    function handlePreviewClick(event) {
+        event.stopPropagation(); // Evitar propagación del evento
+        if (!fileSelected) {
+            postArchivoColab.click();
+        }
+    }
+
     async function handleFileSelect(event) {
         event.preventDefault();
+        event.stopPropagation(); // Prevenir eventos múltiples
         const file = event.dataTransfer?.files[0] || event.target.files[0];
         if (!file || fileSelected) return;
         fileSelected = true;
@@ -56,22 +90,26 @@ function subidaArchivoColab() {
             const uploadedFileUrl = await subirArchivoColab(file, progressBarId);
             previewArchivo.innerHTML = `Archivo subido: ${file.name} (${file.type})`;
             window.formColab = uploadedFileUrl;
+            console.log('Archivo subido a:', uploadedFileUrl);
             fileUrl = uploadedFileUrl;
+            modalEnviarBtn.disabled = false;
         } catch (error) {
             console.error('Error al cargar el archivo:', error);
             alert('Hubo un problema al cargar el archivo. Inténtalo de nuevo.');
-        } finally {
             modalEnviarBtn.disabled = false;
         }
     }
 
     function handleDragDropEvents(event) {
         event.preventDefault();
-        previewArchivo.style.backgroundColor = event.type === 'dragover' ? '#e9e9e9' : '';
-        if (event.type === 'drop') handleFileSelect(event);
+        if (event.type === 'dragover') {
+            previewArchivo.style.backgroundColor = '#e9e9e9';
+        } else {
+            previewArchivo.style.backgroundColor = '';
+            if (event.type === 'drop') handleFileSelect(event);
+        }
     }
 }
-
 
 async function subirArchivoColab(file, progressBarId) {
     const formData = new FormData();
