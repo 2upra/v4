@@ -1,9 +1,9 @@
 <?php
 
 //Boton en todos los post
-function botonColab($post_id, $colab)
+function botonColab($postId, $colab)
 {
-    return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$post_id'>{$GLOBALS['iconocolab']}</button></div>" : '';
+    return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$postId'>{$GLOBALS['iconocolab']}</button></div>" : '';
 }
 
 
@@ -41,20 +41,21 @@ function modalColab()
 function empezarColab()
 {
     guardarLog("Datos recibidos vía POST: " . print_r($_POST, true));
+    
     if (!is_user_logged_in()) {
         guardarLog('No autorizado. Debes estar logueado para enviar una solicitud de colaboración');
         wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
     }
-    if (!isset($_POST['post_id'])) {
+    if (!isset($_POST['postId'])) {
         guardarLog('No se ha proporcionado el ID de la publicación');
         wp_send_json_error(['message' => 'No se ha proporcionado el ID de la publicación']);
     }
-    $post_id = intval($_POST['post_id']);
+    $postId = intval($_POST['postId']);
     $mensaje = sanitize_textarea_field($_POST['mensaje']);
     $fileUrl = isset($_POST['fileUrl']) ? esc_url_raw($_POST['fileUrl']) : '';
 
-    guardarLog("Intentando buscar post con ID $post_id");
-    $original_post = get_post($post_id);
+    guardarLog("Intentando buscar post con ID $postId");
+    $original_post = get_post($postId);
     if (!$original_post) {
         guardarLog('Publicación no encontrada');
         wp_send_json_error(['message' => 'Publicación no encontrada']);
@@ -64,7 +65,7 @@ function empezarColab()
         guardarLog('No puedes colaborar contigo mismo.');
         wp_send_json_error(['message' => 'No puedes colaborar contigo mismo.']);
     }
-    $existing_colabs_meta = get_post_meta($post_id, 'colabs', true);
+    $existing_colabs_meta = get_post_meta($postId, 'colabs', true);
     if (!$existing_colabs_meta) {
         $existing_colabs_meta = [];
     }
@@ -79,7 +80,7 @@ function empezarColab()
         'post_type' => 'colab',
         'post_status' => 'pending',
         'meta_input' => [
-            'colabPostOrigen' => $post_id,
+            'colabPostOrigen' => $postId,
             'colabAutor' => $original_post->post_author,
             'colabColaborador' => $current_user_id,
             'colabMensaje' => $mensaje,
@@ -88,7 +89,7 @@ function empezarColab()
     ]);
     if ($new_post_id) {
         $existing_colabs_meta[] = $current_user_id;
-        update_post_meta($post_id, 'colabs', $existing_colabs_meta);
+        update_post_meta($postId, 'colabs', $existing_colabs_meta);
 
         guardarLog('Colaboración iniciada correctamente');
         wp_send_json([
@@ -105,12 +106,12 @@ function empezarColab()
 add_action('wp_ajax_empezarColab', 'empezarColab');
 
 
-function actualizarEstadoColab($post_id, $post_after, $post_before)
+function actualizarEstadoColab($postId, $post_after, $post_before)
 {
     if ($post_after->post_type === 'colab') {
 
-        $post_origen_id = get_post_meta($post_id, 'colabPostOrigen', true);
-        $colaborador_id = get_post_meta($post_id, 'colabColaborador', true);
+        $post_origen_id = get_post_meta($postId, 'colabPostOrigen', true);
+        $colaborador_id = get_post_meta($postId, 'colabColaborador', true);
 
         if ($post_after->post_status !== 'publish' && $post_after->post_status !== 'pending') {
             $existing_colabs_meta = get_post_meta($post_origen_id, 'colabs', true);
