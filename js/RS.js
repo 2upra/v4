@@ -27,11 +27,10 @@ function iniciarRS() {
 function verificarCamposRs() {
     const textoRsDiv = document.getElementById('textoRs');
     textoRsDiv.setAttribute('placeholder', 'Puedes agregar tags agregando un #');
-    textoRsDiv.addEventListener('input', verificarCampos);
-
+    
     function verificarCampos() {
+        const normalText = textoRsDiv.innerText.trim();
         const tags = Array.isArray(window.Tags) ? window.Tags : [];
-        const normalText = typeof window.NormalText === 'string' ? window.NormalText : '';
         
         if (normalText.length < 3) {
             alert('El texto debe tener al menos 3 caracteres');
@@ -54,20 +53,23 @@ function verificarCamposRs() {
         return true; 
     }
     
-    return verificarCampos();
+    return verificarCampos;
 }
 
 async function envioRs() {
     const button = document.getElementById('enviarRs');
+    const verificarCampos = verificarCamposRs();
+
     button.addEventListener('click', async () => {
         button.disabled = true;
-        const valid = verificarCamposRs();
+        const valid = verificarCampos();
         if (!valid) {
             button.disabled = false; 
             return;
         }
+
         const tags = window.Tags || [];
-        const textoNormal = window.NormalText || '';
+        const textoNormal = document.getElementById('textoRs').innerText.trim();
         const data = {
             imagenUrl: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
             imagenId: typeof imagenId !== 'undefined' ? imagenId : null,
@@ -79,6 +81,7 @@ async function envioRs() {
             tags,
             textoNormal
         };
+        
         try {
             const response = await enviarAjax('subidaRs', data);
             if (response?.success) {
@@ -95,6 +98,7 @@ async function envioRs() {
         }
     });
 }
+
 
 function subidaRs() {
     const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs'];
