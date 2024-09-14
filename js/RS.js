@@ -15,7 +15,6 @@ function iniciarRS() {
         imagenSelecionada = null;
         subidaRs();
         placeholderRs();
-        verificarCamposPost();
     } else {
         logRS('formRs no existe');
     }
