@@ -36,7 +36,7 @@ function elementosPorID(ids) {
 }
 
 function subidaRs() {
-    const elementos = ['formularioRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen'];
+    const elementos = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen'];
     const elementosEncontrados = elementos.reduce((acc, id) => {
         const elemento = document.getElementById(id);
         if (!elemento) {
@@ -45,20 +45,15 @@ function subidaRs() {
         acc[id] = elemento;
         return acc;
     }, {});
-
     logRS('Elementos detectados:', elementosEncontrados);
-
-    // Identificar los elementos que faltan
     const elementosFaltantes = Object.entries(elementosEncontrados)
         .filter(([id, el]) => !el)
         .map(([id]) => id);
-
     if (elementosFaltantes.length > 0) {
         console.error(`No se encontraron los siguientes elementos en el DOM: ${elementosFaltantes.join(', ')}`);
         return;
     }
-
-    const {formularioRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen} = elementosEncontrados;
+    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen} = elementosEncontrados;
 
     const inicialSubida = event => {
         event.preventDefault();
@@ -130,7 +125,7 @@ function subidaRs() {
         reader.readAsDataURL(file);
     };
 
-    formularioRs.addEventListener('click', (event) => {
+    formRs.addEventListener('click', (event) => {
         const clickedElement = event.target;
         clickedElement.closest.previewAudio ? abrirSelectorArchivos('audio/*') : clickedElement.closest.previewImagen && abrirSelectorArchivos('image/*');
     });
@@ -148,9 +143,9 @@ function subidaRs() {
     botonImagen.addEventListener('click', () => abrirSelectorArchivos('image/*'));
 
     ['dragover', 'dragleave', 'drop'].forEach(eventName => {
-        formularioRs.addEventListener(eventName, e => {
+        formRs.addEventListener(eventName, e => {
             e.preventDefault();
-            formularioRs.style.backgroundColor = eventName === 'dragover' ? '#e9e9e9' : '';
+            formRs.style.backgroundColor = eventName === 'dragover' ? '#e9e9e9' : '';
             eventName === 'drop' && inicialSubida(e);
         });
     });
