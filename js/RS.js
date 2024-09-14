@@ -63,6 +63,7 @@ function subidaRs() {
     };
 
     const subidaAudio = async file => {
+        logRS('subidaAudio fue llamado');
         alert(`Audio subido: ${file.name}`);
         previewAudio.style.display = 'block';
         opciones.style.display = 'flex';
@@ -154,6 +155,8 @@ function subidaRs() {
 }
 
 async function subidaRsBackend(file, progressBarId) {
+    logRS('Iniciando subida de archivo', { fileName: file.name, fileSize: file.size });
+
     const formData = new FormData();
     formData.append('action', 'file_upload');
     formData.append('file', file);
@@ -163,28 +166,51 @@ async function subidaRsBackend(file, progressBarId) {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', my_ajax_object.ajax_url, true);
 
+        logRS('Preparando solicitud AJAX', { url: my_ajax_object.ajax_url });
+
         xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) {
                 const progressBar = document.getElementById(progressBarId);
-                if (progressBar) progressBar.style.width = `${(e.loaded / e.total) * 100}%`;
+                const progressPercent = (e.loaded / e.total) * 100;
+                if (progressBar) progressBar.style.width = `${progressPercent}%`;
+
+                logRS('Actualizando barra de progreso', { loaded: e.loaded, total: e.total, progressPercent });
             }
         };
+
         xhr.onload = () => {
+            logRS('Respuesta recibida', { status: xhr.status, response: xhr.responseText });
+
             if (xhr.status === 200) {
                 try {
                     const result = JSON.parse(xhr.responseText);
-                    result.success ? resolve(result.data) : reject(new Error('Error en la respuesta del servidor'));
+                    if (result.success) {
+                        logRS('Archivo subido exitosamente', { data: result.data });
+                        resolve(result.data);
+                    } else {
+                        logRS('Error en la respuesta del servidor', result);
+                        reject(new Error('Error en la respuesta del servidor'));
+                    }
                 } catch (error) {
+                    logRS('Error al parsear la respuesta', { error: error.message });
                     reject(error);
                 }
             } else {
+                logRS('Error en la carga del archivo', { status: xhr.status });
                 reject(new Error('Error en la carga del archivo'));
             }
         };
-        xhr.onerror = () => reject(new Error('Error en la conexión con el servidor'));
+
+        xhr.onerror = () => {
+            logRS('Error en la conexión con el servidor', { status: xhr.status });
+            reject(new Error('Error en la conexión con el servidor'));
+        };
+
+        logRS('Enviando solicitud AJAX', { formData });
         xhr.send(formData);
     });
 }
+
 
 function verificarCamposPost() {
     const textoRsDiv = document.getElementById('textoRs');
