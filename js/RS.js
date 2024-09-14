@@ -4,7 +4,7 @@ let audioUrl, audioId, archivoUrl, archivoId, imagenSelecionada;
 const enableLogs = true
 const logRS = enableLogs ? console.log : function () {};
 
-function comienzoFormRS() {
+function iniciarRS() {
     logRS('comienzoFormRS fue llamado');
     if (document.getElementById('formRs')) {
         logRS('formRs existe');
