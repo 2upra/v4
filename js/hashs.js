@@ -1,4 +1,3 @@
-// Logs
 let enableLogs = true;
 const logHash = enableLogs ? console.log : function () {};
 
