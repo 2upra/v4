@@ -1,8 +1,8 @@
 // Variables globales
 let audioUrl, audioId, archivoUrl, archivoId, imagenSelecionada;
 // Logs
-let enableLogs = true;
-const logRS = enableLogs ? console.log : function () {};
+let enablelogRS = true;
+const logRS = enablelogRS ? console.log : function () {};
 
 function iniciarRS() {
     logRS('comienzoFormRS fue llamado');

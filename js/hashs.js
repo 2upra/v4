@@ -1,5 +1,5 @@
-let enableLogs = true;
-const logHash = enableLogs ? console.log : function () {};
+let enablelogHash = true;
+const logHash = enablelogHash ? console.log : function () {};
 
 
 // Genera un hash SHA-256 del archivo
