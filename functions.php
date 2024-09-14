@@ -52,6 +52,7 @@ function scriptsOrdenados()
         'grained' => '1.0.3',
         'subida' => '1.1.21',
         'RS' => '1.0.1',
+        'Hast' => '1.0.1',
         //'formSubida' => '4.1.56',
         'ajax-submit' => '2.1.38',
         'formscript' => '1.1.11',
