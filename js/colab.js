@@ -1,4 +1,5 @@
-let globalFileUrl; 
+let fileUrl;
+let fileId;
 
 function empezarcolab() {
     const buttons = document.querySelectorAll('.ZYSVVV');
@@ -25,13 +26,14 @@ function empezarcolab() {
     addEventListeners([modalEnviarBtn], 'click', async () => {
         const mensaje = document.querySelector('#modalcolab textarea').value.trim();
         if (!mensaje) return alert('Por favor, escribe un mensaje antes de enviar.');
-        if (!globalFileUrl) return alert('Por favor, sube un archivo antes de enviar.'); 
-        console.log('Enviando datos:', {postId, mensaje, fileUrl: globalFileUrl});
-        const data = await enviarAjax('empezarColab', {postId, mensaje, fileUrl: globalFileUrl});
+        if (!fileUrl) return alert('Por favor, sube un archivo antes de enviar.'); 
+        if (!fileId) return alert('Por favor, sube un archivo antes de enviar (id).'); 
+        console.log('Enviando datos:', {postId, mensaje, fileUrl, fileId});
+        const data = await enviarAjax('empezarColab', {postId, mensaje, fileUrl, fileId});
         if (data?.success) {
             alert('Colaboración iniciada con éxito');
             modal.style.display = 'none';
-            globalFileUrl = null; 
+            fileUrl = null; 
         } else {
             alert(`Error al iniciar la colaboración: ${data?.message || 'Desconocido'}`);
         }
@@ -46,7 +48,6 @@ function subidaArchivoColab() {
     const modalEnviarBtn = document.getElementById('empezarColab');
     let fileSelected = false;
 
-    // Definir todas las funciones primero
     const handleFileSelect = async event => {
         event.preventDefault();
         event.stopPropagation();
@@ -59,8 +60,8 @@ function subidaArchivoColab() {
         try {
             const uploadedFileUrl = await subirArchivoColab(file, progressBarId);
             previewArchivo.innerHTML = `Archivo subido: ${file.name} (${file.type})`;
-            globalFileUrl = uploadedFileUrl; 
-            console.log('Archivo subido a:', globalFileUrl);
+            fileUrl = uploadedFileUrl; 
+            console.log('Archivo subido a:', fileUrl);
             modalEnviarBtn.disabled = false;
         } catch (error) {
             console.error('Error al cargar el archivo:', error);
@@ -83,11 +84,10 @@ function subidaArchivoColab() {
     // Función para limpiar el estado y los listeners
     function resetState() {
         fileSelected = false;
-        globalFileUrl = null;
+        fileUrl = null;
         previewArchivo.innerHTML = 'Haz clic o arrastra un archivo aquí';
         previewArchivo.style.backgroundColor = '';
         modalEnviarBtn.disabled = false;
-        
         // Remover listeners anteriores
         previewArchivo.removeEventListener('click', handlePreviewClick);
         postArchivoColab.removeEventListener('change', handleFileSelect);
@@ -132,7 +132,11 @@ async function subirArchivoColab(file, progressBarId) {
                     const result = JSON.parse(xhr.responseText);
                     if (result.success) {
                         console.log('Archivo subido:', result.data.fileUrl);
-                        resolve(result.data.fileUrl);
+                        console.log('ID del archivo:', result.data.fileId);
+                        resolve({
+                            fileUrl: result.data.fileUrl,
+                            fileId: result.data.fileId
+                        });
                     } else {
                         reject(new Error('Error en la respuesta del servidor'));
                     }

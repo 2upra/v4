@@ -12,31 +12,39 @@ function subidaArchivo()
         return;
     }
     guardarLog("Hash recibido: $file_hash");
-    $existing_file_url = get_file_url_by_hash($file_hash);
-    
-    if ($existing_file_url && !$is_admin) { 
-        $existing_file_path = str_replace(wp_get_upload_dir()['baseurl'], wp_get_upload_dir()['basedir'], $existing_file_url);
-        if (file_exists($existing_file_path)) {
-            unlink($existing_file_path);
-            guardarLog("Archivo anterior eliminado: $existing_file_path");
-        } else {
-            guardarLog("El archivo no existe físicamente en el servidor.");
-        }
-        delete_file_hash($file_hash);
-        guardarLog("Registro del hash anterior eliminado.");
-    } else {
-        if ($existing_file_url) {
+    $existing_file = obtenerHash($file_hash);
+
+    if ($existing_file) {
+        if ($existing_file['status'] === 'pending' && !$is_admin) {
+            $existing_file_path = str_replace(wp_get_upload_dir()['baseurl'], wp_get_upload_dir()['basedir'], $existing_file['file_url']);
+            if (file_exists($existing_file_path)) {
+                unlink($existing_file_path);
+                guardarLog("Archivo pendiente anterior eliminado: $existing_file_path");
+            }
+            eliminarHash($file_hash);
+        } elseif ($existing_file['status'] === 'confirmed' && !$is_admin) {
+            $existing_file_path = str_replace(wp_get_upload_dir()['baseurl'], wp_get_upload_dir()['basedir'], $existing_file['file_url']);
+            if (file_exists($existing_file_path)) {
+                unlink($existing_file_path);
+                guardarLog("Archivo confirmado anterior eliminado: $existing_file_path");
+            }
+            eliminarHash($file_hash);
+            guardarLog("Registro del hash anterior eliminado.");
+        } elseif ($is_admin) {
             guardarLog("El usuario es admin, no se elimina el archivo duplicado.");
-        } else {
-            guardarLog("No se encontró un archivo existente con este hash.");
+            wp_send_json_success(array('fileUrl' => $existing_file['file_url']));
+            return;
         }
+    } else {
+        guardarLog("No se encontró un archivo existente con este hash.");
     }
-    $movefile = wp_handle_upload($file, array('test_form' => false, 'unique_filename_callback' => 'custom_unique_filename'));
+
+    $movefile = wp_handle_upload($file, array('test_form' => false, 'unique_filename_callback' => 'nombreUnicoFile'));
     guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
     if ($movefile && !isset($movefile['error'])) {
-        save_file_hash($file_hash, $movefile['url']);
-        guardarLog("Carga exitosa. Hash guardado: $file_hash. URL del nuevo archivo: " . $movefile['url']);
-        wp_send_json_success(array('fileUrl' => $movefile['url']));
+        $file_id = guardarHash($file_hash, $movefile['url'], 'pending');
+        guardarLog("Carga temporal exitosa. Hash guardado: $file_hash. URL del nuevo archivo: " . $movefile['url']);
+        wp_send_json_success(array('fileUrl' => $movefile['url'], 'fileId' => $file_id));
     } else {
         guardarLog("Error en la carga: " . ($movefile['error'] ?? 'Error desconocido'));
         wp_send_json_error($movefile['error'] ?? 'Error desconocido');
@@ -44,36 +52,80 @@ function subidaArchivo()
     guardarLog("FIN subidaArchivo");
 }
 
-
-function custom_unique_filename($dir, $name, $ext)
+function nombreUnicoFile($dir, $name, $ext)
 {
     return basename($name, $ext) . $ext;
 }
 
 add_action('wp_ajax_file_upload', 'subidaArchivo');
-// add_action('wp_ajax_nopriv_file_upload', 'subidaArchivo');
 
-function get_file_url_by_hash($file_hash)
+function obtenerHash($file_hash)
 {
     global $wpdb;
-    return $wpdb->get_var($wpdb->prepare(
-        "SELECT file_url FROM {$wpdb->prefix}file_hashes WHERE file_hash = %s LIMIT 1",
+    return $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM {$wpdb->prefix}file_hashes WHERE file_hash = %s LIMIT 1",
         $file_hash
-    ));
+    ), ARRAY_A);
 }
 
-function save_file_hash($hash, $url)
+function guardarHash($hash, $url, $status = 'pending')
 {
     global $wpdb;
     $wpdb->insert(
         "{$wpdb->prefix}file_hashes",
-        array('file_hash' => $hash, 'file_url' => $url, 'upload_date' => current_time('mysql')),
-        array('%s', '%s', '%s')
+        array(
+            'file_hash' => $hash, 
+            'file_url' => $url, 
+            'status' => $status,
+            'upload_date' => current_time('mysql')
+        ),
+        array('%s', '%s', '%s', '%s')
     );
+    return $wpdb->insert_id;
 }
 
-function delete_file_hash($file_hash)
+function eliminarHash($file_hash)
 {
     global $wpdb;
     return (bool) $wpdb->delete("{$wpdb->prefix}file_hashes", array('file_hash' => $file_hash), array('%s'));
 }
+
+function confirmarArchivo($file_id)
+{
+    global $wpdb;
+    return $wpdb->update(
+        "{$wpdb->prefix}file_hashes",
+        array('status' => 'confirmed'),
+        array('id' => $file_id),
+        array('%s'),
+        array('%d')
+    );
+}
+
+function limpiarArchivosPendientes()
+{
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'file_hashes';
+    
+    $archivos_pendientes = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT * FROM $table_name WHERE status = 'pending' AND upload_date < %s",
+            date('Y-m-d H:i:s', strtotime('-24 hours'))
+        ),
+        ARRAY_A
+    );
+
+    foreach ($archivos_pendientes as $archivo) {
+        $file_path = str_replace(wp_get_upload_dir()['baseurl'], wp_get_upload_dir()['basedir'], $archivo['file_url']);
+        if (file_exists($file_path)) {
+            unlink($file_path);
+        }
+        $wpdb->delete($table_name, array('id' => $archivo['id']));
+        guardarLog("Archivo pendiente eliminado: " . $archivo['file_url']);
+    }
+}
+
+if (!wp_next_scheduled('limpiar_archivos_pendientes')) {
+    wp_schedule_event(time(), 'daily', 'limpiar_archivos_pendientes');
+}
+add_action('limpiar_archivos_pendientes', 'limpiarArchivosPendientes');

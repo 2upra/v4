@@ -6,7 +6,8 @@ function botonColab($postId, $colab)
     return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$postId'>{$GLOBALS['iconocolab']}</button></div>" : '';
 }
 
-// Función inicial para empezar un colab
+// Aqui esto cuando recibe un archivo, debe confirmarlo, llega un file_id, y debe usar esta funcion confirmarArchivo($file_id), si todo se procesa correctamente. 
+
 function empezarColab()
 {
     if (!is_user_logged_in()) {
@@ -17,6 +18,7 @@ function empezarColab()
         wp_send_json_error(['message' => 'No se ha proporcionado el ID de la publicación']);
     }
     $postId = intval($_POST['postId']);
+    $file_id =intval($_POST['fileId']);
     $mensaje = sanitize_textarea_field($_POST['mensaje']);
     $fileUrl = isset($_POST['fileUrl']) ? esc_url_raw($_POST['fileUrl']) : '';
 
@@ -58,6 +60,9 @@ function empezarColab()
             'success' => true,
             'message' => 'Colaboración iniciada correctamente'
         ]);
+        confirmarArchivo($file_id);
+        guardarLog('Archivo ' . $file_id . ' confirmado');
+
     } else {
         guardarLog('Error al crear la colaboración');
         wp_send_json_error(['message' => 'Error al crear la colaboración']);
