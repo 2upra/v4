@@ -2,7 +2,7 @@
 let audioUrl, audioId, archivoUrl, archivoId, imagenSelecionada;
 
 function comienzoFormRS() {
-    if (!document.getElementById('formularioRs')) {
+    if (!document.getElementById('formRs')) {
         audioUrl = null;
         audioId = {};
         archivoUrl = null;
