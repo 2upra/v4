@@ -34,7 +34,7 @@ function formRs()
 
         <div class="bloque flex-row"" id="opciones" style="display: none">
             <p>Opciones de post</p>
-            <div class="flex flex-row">
+            <div class="flex flex-row" id="botonesOpcionesRs">
                 <label class="custom-checkbox">
                     <input type="checkbox" id="allowDownload" name="allow_download" value="1">
                     <span class="checkmark"></span>
@@ -60,8 +60,11 @@ function formRs()
 
         <div class="botonesForm R0A915">
             <button class="botonicono" id="botonAudio"><?php echo $GLOBALS['subiraudio']; ?></button>
+
             <button class="botonicono" id="botonImagen"><?php echo $GLOBALS['subirimagen']; ?></button>
+
             <button class="botonicono" id="botonArchivo"><?php echo $GLOBALS['subirarchivo']; ?></button>
+
             <button id="enviarRs">Publicar</button>
         </div>
     </div>
