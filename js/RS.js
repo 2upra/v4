@@ -83,22 +83,24 @@ function subidaRs() {
     
     const subidaAudio = async file => {
         logRS('subidaAudio fue llamado', { fileName: file.name, fileType: file.type });
+    
         alert(`Audio subido: ${file.name}`);
-    
-        previewAudio.style.display = 'block';
-        opciones.style.display = 'flex';
-    
-        const progressBarId = waveAudio(file);
-        logRS('waveAudio fue llamado', { progressBarId });
-    
+        
         try {
+            previewAudio.style.display = 'block';
+            opciones.style.display = 'flex';
+    
+            const progressBarId = waveAudio(file);
+            logRS('waveAudio fue llamado', { progressBarId });
+    
             const subidaAudioRecibida = await subidaRsBackend(file, progressBarId);
             logRS('subidaRsBackend completado con éxito', { audioUrl: subidaAudioRecibida.fileUrl, audioId: subidaAudioRecibida.fileId });
     
             audioUrl = subidaAudioRecibida.fileUrl;
             audioId = subidaAudioRecibida.fileId;
+    
         } catch (error) {
-            logRS('Error al cargar el audio', { error });
+            logRS('Error en subidaAudio', { errorMessage: error.message, stack: error.stack });
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
         }
     };
@@ -215,16 +217,16 @@ async function subidaRsBackend(file, progressBarId) {
                         logRS('Archivo subido exitosamente', { data: result.data });
                         resolve(result.data);
                     } else {
-                        logRS('Error en la respuesta del servidor', result);
+                        logRS('Error en la respuesta del servidor (No éxito)', { response: result });
                         reject(new Error('Error en la respuesta del servidor'));
                     }
                 } catch (error) {
-                    logRS('Error al parsear la respuesta', { error: error.message });
+                    logRS('Error al parsear la respuesta', { errorMessage: error.message, response: xhr.responseText });
                     reject(error);
                 }
             } else {
-                logRS('Error en la carga del archivo', { status: xhr.status });
-                reject(new Error('Error en la carga del archivo'));
+                logRS('Error en la carga del archivo', { status: xhr.status, response: xhr.responseText });
+                reject(new Error(`Error en la carga del archivo. Status: ${xhr.status}`));
             }
         };
 
@@ -233,8 +235,13 @@ async function subidaRsBackend(file, progressBarId) {
             reject(new Error('Error en la conexión con el servidor'));
         };
 
-        logRS('Enviando solicitud AJAX', { formData });
-        xhr.send(formData);
+        try {
+            logRS('Enviando solicitud AJAX', { formData });
+            xhr.send(formData);
+        } catch (error) {
+            logRS('Error al enviar la solicitud AJAX', { errorMessage: error.message });
+            reject(new Error('Error al enviar la solicitud AJAX'));
+        }
     });
 }
 
