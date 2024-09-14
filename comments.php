@@ -33,7 +33,7 @@ $post_id = get_the_ID();
 if (comments_open()) {
     $commenter = wp_get_current_commenter();
     // Aquí usamos la función personalizada para obtener la URL de la imagen de perfil
-    $avatar_url = obtener_url_imagen_perfil_o_defecto(get_current_user_id()); 
+    $avatar_url = imagenPerfil(get_current_user_id()); 
 
     ?>
     <div id="respond" class="comment-respond">

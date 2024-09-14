@@ -81,7 +81,7 @@ function recomendarUsuarios() {
     foreach ($users as $user) {
         $user_id = $user->ID;
         $user_url = esc_url(get_author_posts_url($user_id));
-        $avatar_url = esc_url(obtener_url_imagen_perfil_o_defecto($user_id));
+        $avatar_url = esc_url(imagenPerfil($user_id));
         $display_name = esc_html($user->display_name);
         $is_following = in_array($user_id, $following);
         $btn_class = $is_following ? 'RQZEWL' : 'MBTHLA';

@@ -1,3 +1,4 @@
+/*
 window.uploadFile = async function (file, progressBarId, formNumber) {
     const formData = new FormData();
     formData.append('action', 'file_upload');
@@ -82,3 +83,4 @@ function checkAllFilesUploaded() {
 }
 
 
+*/

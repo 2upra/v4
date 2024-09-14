@@ -103,7 +103,7 @@ function show_user_conversations()
     $output .= "<div class='user-conversations' style='display:none;'>";
     foreach ($conversations as $conversation_id => $conversation) {
         $with_user = $conversation['with_user'];
-        $imagen_url = obtener_url_imagen_perfil_o_defecto($conversation['other_user_id']);
+        $imagen_url = imagenPerfil($conversation['other_user_id']);
         $output .= "<div class='conversation-item' data-conversation-id='" . esc_attr($conversation_id) . "' data-chat-user-login='" . esc_attr($conversation['with_user']) . "'>";
         $output .= "<img src='" . esc_url($imagen_url) . "' alt='Imagen de perfil' class='perfil-conversacion'/>";
         $output .= "<div class='mensajes-conversacion'>";
@@ -373,7 +373,7 @@ function combined_conversations_shortcode()
     $conversations_output = "<div class='user-conversations-block' style='display: flex;flex-direction: column;'>";
     foreach ($conversations as $conversation_id => $conversation) {
         $with_user = $conversation['with_user'];
-        $imagen_url = obtener_url_imagen_perfil_o_defecto($conversation['other_user_id']);
+        $imagen_url = imagenPerfil($conversation['other_user_id']);
         $conversations_output .= "<div class='conversation-item' data-conversation-id='" . esc_attr($conversation_id) . "' data-chat-user-login='" . esc_attr($conversation['with_user']) . "'>";
         $conversations_output .= "<img src='" . esc_url($imagen_url) . "' alt='Imagen de perfil' class='perfil-conversacion'/>";
         $conversations_output .= "<div class='mensajes-conversacion'>";

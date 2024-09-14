@@ -1,6 +1,7 @@
 let fileUrl;
 let fileId;
 
+//Abre el modal y envía la solicitud
 function empezarcolab() {
     const buttons = document.querySelectorAll('.ZYSVVV');
     const modal = document.getElementById('modalcolab');
@@ -19,7 +20,7 @@ function empezarcolab() {
         postId = e.currentTarget?.dataset.postId;
         if (!postId) return console.error('El post ID no se encontró en el botón.');
         console.log('Post ID:', postId);
-        subidaArchivoColab(); 
+        subidaFrontalArchivoColab(); 
         modal.style.display = 'flex';
     });
 
@@ -40,7 +41,8 @@ function empezarcolab() {
     addEventListeners([document.querySelector('#modalcolab button')], 'click', () => (modal.style.display = 'none'));
 }
 
-function subidaArchivoColab() {
+//Procesamiento del archivo frontal
+function subidaFrontalArchivoColab() {
     const previewArchivo = document.getElementById('previewColab');
     const postArchivoColab = document.getElementById('postArchivoColab');
     const modalEnviarBtn = document.getElementById('empezarColab');
@@ -52,10 +54,10 @@ function subidaArchivoColab() {
         if (!file || fileSelected) return;
         fileSelected = true;
     
-        const progressBarId = updatePreviewArea(file);
+        const progressBarId = barradeProgreso(file);
         modalEnviarBtn.disabled = true; 
         try {
-            const archivoRecibido = await subirArchivoColab(file, progressBarId);
+            const archivoRecibido = await subidaArchivoColabBackend(file, progressBarId);
             fileUrl = archivoRecibido.fileUrl;
             fileId = archivoRecibido.fileId;
             previewArchivo.innerHTML = `Archivo subido: ${file.name} (${file.type})`;
@@ -94,7 +96,8 @@ function subidaArchivoColab() {
     );
 }
 
-async function subirArchivoColab(file, progressBarId) {
+//Subida del archivo backend
+async function subidaArchivoColabBackend(file, progressBarId) {
     const formData = new FormData();
     formData.append('action', 'file_upload');
     formData.append('file', file);
@@ -128,8 +131,8 @@ async function subirArchivoColab(file, progressBarId) {
         xhr.send(formData);
     });
 }
-
-function updatePreviewArea(file) {
+//Barra de progreso
+function barradeProgreso(file) {
     const progressBarId = 'progressBar_' + Math.random().toString(36).substr(2, 9);
     const previewArea = document.getElementById('previewColab');
     previewArea.innerHTML = `<div id="${progressBarId}" class="progress-bar" style="width: 0%; height: 2px; background-color: #4CAF50;"></div>`;

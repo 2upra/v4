@@ -17,9 +17,9 @@ function custom_user_profile_shortcode_music() {
         $subscription_price_id = 'price_1OqGjlCdHJpmDkrryMzL0BCK';
         $profile_description = get_user_meta($user_id, 'profile_description', true);
 
-        $imagen_perfil_id = get_user_meta($user_id, 'imagen_perfil_id', true);
-        if ($imagen_perfil_id) {
-            $image_attributes = wp_get_attachment_image_src($imagen_perfil_id, 'medium'); 
+        $imagenPerfilId = get_user_meta($user_id, 'imagen_perfil_id', true);
+        if ($imagenPerfilId) {
+            $image_attributes = wp_get_attachment_image_src($imagenPerfilId, 'medium'); 
             if ($image_attributes) {
                 $imagen_perfil_url = $image_attributes[0]; 
                 $imagen_html = '<img src="' . esc_url($imagen_perfil_url) . '" alt="Imagen de perfil" class="gravatar avatar avatar-96 um-avatar um-avatar-default" width="' . $image_attributes[1] . '" height="' . $image_attributes[2] . '" onerror="if ( ! this.getAttribute(\'data-load-error\') ){ this.setAttribute(\'data-load-error\', \'1\');this.setAttribute(\'src\', this.getAttribute(\'data-default\'));}" loading="lazy">';

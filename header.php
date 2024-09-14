@@ -4,7 +4,7 @@ if (!is_user_logged_in()) {
     $usuario = wp_get_current_user();
     $user_id = get_current_user_id();
     $nombre_usuario = $usuario->display_name;
-    $url_imagen_perfil = obtener_url_imagen_perfil_o_defecto($usuario->ID);
+    $url_imagen_perfil = imagenPerfil($usuario->ID);
     if (function_exists('jetpack_photon_url')) {
         $url_imagen_perfil = jetpack_photon_url($url_imagen_perfil, array('quality' => 40, 'strip' => 'all'));
     }

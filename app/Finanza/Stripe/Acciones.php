@@ -111,7 +111,7 @@ function generate_transactions_table() {
         if ($user = get_user_by('email', $transaction['user_email'])) {
             $output .= sprintf(
                 '<tr class="XXDD"><td><img src="%s" alt="%s" /></td><td>%s</td><td>$%s</td><td>%s</td></tr>',
-                esc_url(obtener_url_imagen_perfil_o_defecto($user->ID)),
+                esc_url(imagenPerfil($user->ID)),
                 esc_attr($user->user_login),
                 esc_html($user->user_login),
                 esc_html($transaction['cantidad']),

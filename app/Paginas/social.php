@@ -19,7 +19,7 @@ function social()
                             </div>
                         </div>
                         <div class="M0883I">
-                            <?php echo do_shortcode('[formSocial]');
+                            <?php echo formRs()
                             ?>
                         </div>
                         <div class="FEDAG5">
@@ -45,98 +45,6 @@ function social()
 }
 
 
-
-function formSocial()
-{
-    ob_start();
-    $nonce = wp_create_nonce('social-post-nonce');
-    $user = wp_get_current_user();
-    $nombre_usuario = $user->display_name;
-    $url_imagen_perfil = obtener_url_imagen_perfil_o_defecto($user->ID);
-    if (function_exists('jetpack_photon_url')) {
-        $url_imagen_perfil = jetpack_photon_url($url_imagen_perfil, array('quality' => 40, 'strip' => 'all'));
-    }
-
-?>
-    <div class="X522YA" id="FormSubidaRs">
-        <form id="postFormRs" method="post" enctype="multipart/form-data">
-
-            <div class="RE5840">
-                <div class="W8DK25">
-                    <img id="perfil-imagen" src="<?php echo esc_url($url_imagen_perfil); ?>" alt="Perfil"
-                        style="max-width: 50px; max-height: 50px; border-radius: 50%;">
-                    <p><?php echo $nombre_usuario ?></p>
-                </div>
-                <div>
-                    <div class="postTags DABVYT" id="textoRs" contenteditable="true" data-placeholder="Puedes agregar tags usando #"></div>
-                    <input type="hidden" id="postTagsHidden" name="post_tags">
-                    <textarea id="postContent" name="post_content" rows="2" required placeholder="Escribe aquí" style="display: none;"></textarea>
-                </div>
-            </div>
-
-            <div class="previewsForm NGEESM">
-
-                <div class="previewAreaArchivos" id="previewAreaImagen" style="display: none;">
-                    <label></label>
-                </div>
-
-                <input type="file" id="postImage" name="post_image" accept="image/*" style="display:none;">
-
-                <div class="previewAreaArchivos" id="previewAreaRola1" style="display: none;">
-                    <label></label>
-                </div>
-
-                <input type="file" id="postAudio1" name="post_audio1" accept="audio/*" style="display:none;">
-
-
-                <div class="previewAreaArchivos" id="previewAreaflp" style="display: none;">
-                    <label>Archivo adicional para colab (flp, zip, rar, midi, etc)</label>
-                </div>
-
-                <input type="file" id="flp" name="flp" style="display: none;" accept=".flp,.zip,.rar,.cubase,.proj,.aiff,.midi,.ptx,.sng,.aup,.omg,.rpp,.xpm,.tst">
-
-            </div>
-
-            <div class="opcionesform2" id="SABTJC" style="display: none;">
-                <label class="custom-checkbox">
-                    <input type="checkbox" id="allowDownload" name="allow_download" value="1">
-                    <span class="checkmark"></span>
-                    Permitir descargas
-                </label>
-                <label class="custom-checkbox">
-                    <input type="checkbox" id="content-block" name="content-block" value="1">
-                    <span class="checkmark"></span>
-                    Para suscriptores
-                </label>
-                <label class="custom-checkbox">
-                    <input type="checkbox" id="para_colab" name="para_colab" value="1">
-                    <span class="checkmark"></span>
-                    Permitir colabs
-                </label>
-                <label class="custom-checkbox">
-                    <input type="checkbox" id="momento" name="momento" value="1">
-                    <span class="checkmark"></span>
-                    Momento
-                </label>
-            </div>
-
-            <div class="botonesForm R0A915">
-                <button type="button" id="U74C2P">Audio</button>
-                <button type="button" id="41076K">Imagen</button>
-                <button type="button" id="SGGDAS">Archivo</button>
-                <button type="submit" id="submitBtnRs">Publicar</button>
-            </div>
-
-            <input type="hidden" name="action" value="submit_social_post">
-            <input type="hidden" name="socialpost" value="1">
-            <input type="hidden" name="social_post_nonce" value="<?php echo $nonce; ?>" />
-
-        </form>
-    </div>
-<?php
-    return ob_get_clean();
-}
-add_shortcode('formSocial', 'formSocial');
 
 function momentosfijos()
 {

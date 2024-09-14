@@ -129,7 +129,7 @@ function generar_html_notificaciones($usuario_id) {
         $clase_leida = $notificacion->leida ? 'notificacion-leida' : 'notificacion-no-leida';
         $texto_notificacion = wp_kses($notificacion->texto, array('a' => array('href' => array())));
 
-        $imagen_perfil_url = obtener_url_imagen_perfil_o_defecto($notificacion->actor_id);
+        $imagen_perfil_url = imagenPerfil($notificacion->actor_id);
         $perfil_url = "/perfil/" . $notificacion->actor_id; 
         
         $html_notificaciones .= sprintf(

@@ -128,40 +128,25 @@ function TagEnTexto(options) {
         whitelist = [],
         tagClass = 'tagRs'
     } = options;
-    log03('inicio TagEnTexto');
-    log03('Valores de const al inicio', {
-        containerId,
-        maxTags,
-        minLength,
-        maxLength,
-        whitelist,
-        tagClass
-    });
     const container = document.getElementById(containerId);
     const hiddenTagsInput = document.getElementById('postTagsHidden');
     const hiddenContentTextarea = document.getElementById('postContent');
-
     if (!container || !hiddenTagsInput || !hiddenContentTextarea) {
         return;
     }
-
     let tags = [];
     let normalText = "";
-
     container.addEventListener('input', handleInput);
     container.addEventListener('keydown', handleKeyDown);
-
     function handleInput(event) {
         processTags();
     }
-
     function handleKeyDown(event) {
         if (event.key === 'Enter') {
             event.preventDefault();
             processTags();
         }
     }
-
     function processTags() {
         const content = container.innerText;
         const words = content.split(/(\s+)/);
@@ -188,69 +173,30 @@ function TagEnTexto(options) {
                 container.appendChild(document.createTextNode(word));
             }
         });
-    
         normalText = normalText.trim();
-    
         updateHiddenInputs();
-    
-        // Set cursor position at the end
         const selection = window.getSelection();
         const range = document.createRange();
-        
         if (container.childNodes.length > 0) {
             range.selectNodeContents(container);
             range.collapse(false);
             selection.removeAllRanges();
             selection.addRange(range);
         }
-    
-        // Mostrar tags procesados y texto normal en la consola
         log03('Tags procesados:', tags);
         log03('Texto normal:', normalText);
     }
-
     function updateHiddenInputs() {
         hiddenTagsInput.value = tags.join(',');
         hiddenContentTextarea.value = normalText;
     }
-
     function isValidTag(tag) {
         return tag.length >= minLength && tag.length <= maxLength && tags.length < maxTags && (whitelist.length === 0 || whitelist.includes(tag));
     }
-
-    // Función para obtener los tags y el texto normal
     function getContent() {
-        return { tags, normalText };
+        return { tags: window.Tags, normalText: window.NormalText };
     }
-
-    // Retorna la función getContent para que pueda ser utilizada externamente
     return getContent;
-}
-
-// Función para procesar tags al enviar el formulario
-function procesarTagsSiExistenRs() {
-    var tagsElement = document.getElementById('textoRs');
-    var hiddenInput = document.getElementById('postTagsHidden');
-    var contentTextarea = document.getElementById('postContent');
-
-    if (tagsElement && hiddenInput && contentTextarea) {
-        var content = tagsElement.innerText;
-        var words = content.split(/\s+/);
-        var tags = [];
-        var fullText = "";
-
-        words.forEach(word => {
-            if (word.startsWith('#') && word.length > 1) {
-                tags.push(word.slice(1));
-            }
-            fullText += word + " ";
-        });
-
-        hiddenInput.value = tags.join(',');
-        contentTextarea.value = fullText.trim();
-        log03('Tags procesados:', hiddenInput.value);
-        log03('Contenido completo:', contentTextarea.value);
-    }
 }
 
 

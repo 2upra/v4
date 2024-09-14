@@ -94,7 +94,7 @@ function forms_submit(form, submitBtnId) {
 
         postAudios.forEach((postAudio, index) => {
             const key = `post_audio${index + 1}`;
-            const uploadedUrl = window.formState.uploadedFileUrls[index + 1];
+            const uploadedUrl = window.formState.urlAudio[index + 1];
 
             if (uploadedUrl) {
                 formData.set(key, uploadedUrl);

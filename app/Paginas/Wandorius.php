@@ -4,7 +4,7 @@ function freelancer_pestanas() {
     ob_start();
     $user = wp_get_current_user();
     $nombre_usuario = $user->display_name; 
-    $url_imagen_perfil = obtener_url_imagen_perfil_o_defecto($user->ID); 
+    $url_imagen_perfil = imagenPerfil($user->ID); 
     ?>
     <div class="tabs inicio">
         <ul class="tab-links freelancer">

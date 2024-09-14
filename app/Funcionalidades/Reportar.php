@@ -37,7 +37,7 @@ function reportes() {
         <tbody>
             <?php foreach ($reports as $report): ?>
                 <tr class="XXDD">
-                    <td><img src="<?= esc_url(obtener_url_imagen_perfil_o_defecto($report['user_id'])) ?>" alt="<?= esc_attr($report['user_login']) ?>" /></td>
+                    <td><img src="<?= esc_url(imagenPerfil($report['user_id'])) ?>" alt="<?= esc_attr($report['user_login']) ?>" /></td>
                     <td><?= esc_html($report['user_login']) ?></td>
                     <td><?= esc_html($report['mensaje']) ?></td>
                     <td><?= esc_html($report['fecha']) ?></td>

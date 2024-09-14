@@ -11,7 +11,7 @@ function postMomento()
     $audio_id_lite = get_post_meta(get_the_ID(), 'post_audio_lite', true);
     $author_username = $user->user_login;
     $music_profile_url = esc_url(home_url('/music/' . $author_username));
-    $url_imagen_perfil = obtener_url_imagen_perfil_o_defecto($user->ID);
+    $url_imagen_perfil = imagenPerfil($user->ID);
     if (function_exists('jetpack_photon_url')) {
         $url_imagen_perfil = jetpack_photon_url($url_imagen_perfil, array('quality' => 40, 'strip' => 'all'));
     }

@@ -108,7 +108,7 @@ function calcularAccionPorUsuario($mostrarTodos = true)
         $acciones = get_user_meta($user->ID, 'acciones', true);
         $valor = $acciones * $valAcc;
         $participacion = ($acciones / $totalAcciones) * 100;
-        $imagen = obtener_url_imagen_perfil_o_defecto($user->ID);
+        $imagen = imagenPerfil($user->ID);
         $output .= sprintf(
             '<tr class="XXDD"><td><img src="%s" alt="%s" /></td><td>%s</td><td>%s</td><td>%s</td><td>$%s</td><td>%s%%</td></tr>',
             esc_url($imagen),

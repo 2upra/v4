@@ -54,7 +54,7 @@ get_header();
 
 					if (is_user_logged_in()) :
 						$user = wp_get_current_user();
-						$profile_picture = obtener_url_imagen_perfil_o_defecto($user->ID);
+						$profile_picture = imagenPerfil($user->ID);
 						$acc = get_user_meta($user->ID, 'acciones', true);
 						$totalAcciones = 800000;
 						$res = calc_ing(48, false);

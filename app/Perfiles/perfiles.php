@@ -13,15 +13,16 @@ function restablecer_imagenes_perfil_a_defecto() {
 }
 restablecer_imagenes_perfil_a_defecto(); */
 
-function obtener_url_imagen_perfil_o_defecto($user_id)
+
+function imagenPerfil($user_id)
 {
-    $imagen_perfil_id = get_user_meta($user_id, 'imagen_perfil_id', true);
-    if (!empty($imagen_perfil_id)) {
-        $url = wp_get_attachment_url($imagen_perfil_id);
+    $imagenPerfilId = get_user_meta($user_id, 'imagen_perfil_id', true);
+    if (!empty($imagenPerfilId)) {
+        $url = wp_get_attachment_url($imagenPerfilId);
     } else {
         $url = 'https://2upra.com/wp-content/uploads/2024/05/perfildefault.jpg';
     }
-    return $url;
+    return img($url);
 }
 
 function obtener_seguidores_o_siguiendo($user_id, $metadato)
@@ -75,7 +76,7 @@ function perfilBanner($user_id)
     $esta_suscrito = in_array($user_id, $suscripciones_a);
 
     $subscription_price_id = 'price_1PBgGfCdHJpmDkrrHorFUNaV';
-    $imagen_perfil = obtener_url_imagen_perfil_o_defecto($user_id);
+    $imagen_perfil = imagenPerfil($user_id);
     $user_info = get_userdata($user_id);
 
     // Verifica si $user_info es un objeto válido antes de acceder a sus propiedades
@@ -169,9 +170,9 @@ add_shortcode('editar_perfil_usuario', 'editar_perfil_usuario_shortcode');
 function mostrar_imagen_perfil_usuario()
 {
     $current_user = wp_get_current_user();
-    $imagen_perfil_id = get_user_meta($current_user->ID, 'imagen_perfil_id', true);
-    if ($imagen_perfil_id) {
-        $imagen_perfil_url = wp_get_attachment_url($imagen_perfil_id);
+    $imagenPerfilId = get_user_meta($current_user->ID, 'imagen_perfil_id', true);
+    if ($imagenPerfilId) {
+        $imagen_perfil_url = wp_get_attachment_url($imagenPerfilId);
         echo '<img src="' . esc_url($imagen_perfil_url) . '" alt="Imagen de perfil">';
     }
 }
@@ -197,9 +198,9 @@ function my_custom_avatar($avatar, $id_or_email, $size, $default, $alt)
     }
 
     if ($user) {
-        $imagen_perfil_id = get_user_meta($user->ID, 'imagen_perfil_id', true);
-        if (!empty($imagen_perfil_id)) {
-            $avatar_url = wp_get_attachment_url($imagen_perfil_id);
+        $imagenPerfilId = get_user_meta($user->ID, 'imagen_perfil_id', true);
+        if (!empty($imagenPerfilId)) {
+            $avatar_url = wp_get_attachment_url($imagenPerfilId);
             $avatar = "<img src='" . esc_url($avatar_url) . "' class='avatar avatar-{$size} photo' height='{$size}' width='{$size}' alt='{$alt}' />";
         } else {
             $avatar = "<img src='" . esc_url($default_avatar_url) . "' class='avatar avatar-{$size} photo' height='{$size}' width='{$size}' alt='{$alt}' />";

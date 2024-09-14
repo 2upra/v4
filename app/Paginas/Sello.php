@@ -5,7 +5,7 @@ function panel()
     ob_start();
     $user = wp_get_current_user();
     $nombre_usuario = $user->display_name;
-    $url_imagen_perfil = obtener_url_imagen_perfil_o_defecto($user->ID);
+    $url_imagen_perfil = imagenPerfil($user->ID);
 
     // Aplicar Jetpack Photon para optimizar la imagen de perfil
     if (function_exists('jetpack_photon_url')) {
