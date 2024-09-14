@@ -1,7 +1,7 @@
 // Variables globales
 let audioUrl, audioId, archivoUrl, archivoId, imagenSelecionada;
 // Logs
-const enableLogs = true
+const enableLogs = true;
 const logRS = enableLogs ? console.log : function () {};
 
 function iniciarRS() {
@@ -100,15 +100,18 @@ function subidaRs() {
         const reader = new FileReader(),
             audioContainerId = `waveform-container-${Date.now()}`,
             progressBarId = `progress-${Date.now()}`;
-        reader.onload = e => {
-            previewAudio.innerHTML = `
-            <div id="${audioContainerId}" class="waveform-container without-image" data-audio-url="${e.target.result}">
-              <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
-              <div class="file-name">${file.name}</div>
-            </div>
-            <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
-              <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
-            </div>`;
+        reader.onload = function (e) {
+            previewAreaRola.innerHTML = `
+                <div id="${audioContainerId}" class="waveform-container without-image" data-audio-url="${e.target.result}">
+                  <div class="waveform-background"></div>
+                  <div class="waveform-message"></div>
+                  <div class="waveform-loading" style="display: none;">Cargando...</div>
+                  <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
+                  <div class="file-name">${file.name}</div>
+                </div>
+                <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
+                  <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
+                </div>`;
             inicializarWaveform(audioContainerId, e.target.result);
         };
         reader.readAsDataURL(file);
@@ -124,7 +127,7 @@ function subidaRs() {
         reader.readAsDataURL(file);
     };
 
-    formRs.addEventListener('click', (event) => {
+    formRs.addEventListener('click', event => {
         const clickedElement = event.target;
         clickedElement.closest.previewAudio ? abrirSelectorArchivos('audio/*') : clickedElement.closest.previewImagen && abrirSelectorArchivos('image/*');
     });
@@ -133,7 +136,7 @@ function subidaRs() {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = tipoArchivo;
-        input.onchange = (e) => inicialSubida(e);
+        input.onchange = e => inicialSubida(e);
         input.click();
     }
 
@@ -178,7 +181,6 @@ function verificarCamposPost() {
     }
     verificarCampos();
 }
-
 
 //Función auxiliar para el placeholder
 function placeholderRs() {
@@ -226,4 +228,3 @@ function inicializarWaveform(containerId, audioSrc) {
         });
     }
 }
-
