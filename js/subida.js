@@ -25,8 +25,7 @@ window.uploadFile = async function (file, progressBarId, formNumber) {
                 try {
                     const result = JSON.parse(xhr.responseText);
                     if (result.success) {
-                        // Diferenciar entre audio y otros tipos de archivo
-                        const fileType = file.type.split('/')[0]; // Obtener el tipo principal del archivo (e.g., "audio", "image", etc.)
+                        const fileType = file.type.split('/')[0]; 
                         if (fileType === 'audio') {
                             console.log('Audio subido:', result.data.fileUrl);
                             window.formState.uploadedFiles[formNumber] = true;

@@ -45,7 +45,6 @@ function subidaArchivoColab() {
     const postArchivoColab = document.getElementById('postArchivoColab');
     const modalEnviarBtn = document.getElementById('empezarColab');
     let fileSelected = false;
-
     const handleFileSelect = async event => {
         event.preventDefault();
         event.stopPropagation();
@@ -57,51 +56,37 @@ function subidaArchivoColab() {
         modalEnviarBtn.disabled = true; 
         try {
             const archivoRecibido = await subirArchivoColab(file, progressBarId);
-            
             fileUrl = archivoRecibido.fileUrl;
             fileId = archivoRecibido.fileId;
-    
             previewArchivo.innerHTML = `Archivo subido: ${file.name} (${file.type})`;
-            console.log('URL del archivo:', fileUrl);
-            console.log('ID del archivo:', fileId);
             modalEnviarBtn.disabled = false;
         } catch (error) {
-            console.error('Error al cargar el archivo:', error);
             alert('Hubo un problema al cargar el archivo. Inténtalo de nuevo.');
             resetState();
         }
     };
-
     const handleDragDropEvents = event => {
         event.preventDefault();
         previewArchivo.style.backgroundColor = event.type === 'dragover' ? '#e9e9e9' : '';
         if (event.type === 'drop') handleFileSelect(event);
     };
-
     const handlePreviewClick = e => {
         e.stopPropagation();
         if (!fileSelected) postArchivoColab.click();
     };
-
-    // Función para limpiar el estado y los listeners
     function resetState() {
         fileSelected = false;
         fileUrl = null;
         previewArchivo.innerHTML = 'Haz clic o arrastra un archivo aquí';
         previewArchivo.style.backgroundColor = '';
         modalEnviarBtn.disabled = false;
-        // Remover listeners anteriores
         previewArchivo.removeEventListener('click', handlePreviewClick);
         postArchivoColab.removeEventListener('change', handleFileSelect);
         ['dragover', 'dragleave', 'drop'].forEach(eventName => 
             previewArchivo.removeEventListener(eventName, handleDragDropEvents)
         );
     }
-
-    // Llamar a resetState al inicio para limpiar cualquier estado anterior
     resetState();
-
-    // Agregar nuevos listeners
     previewArchivo.addEventListener('click', handlePreviewClick);
     postArchivoColab.addEventListener('change', handleFileSelect);
     ['dragover', 'dragleave', 'drop'].forEach(eventName => 
