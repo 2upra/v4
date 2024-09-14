@@ -2,55 +2,38 @@ function empezarcolab() {
     const buttons = document.querySelectorAll('.ZYSVVV');
     const modal = document.getElementById('modalcolab');
     const modalEnviarBtn = document.getElementById('empezarColab');
-    let postId = null;
-    let fileUrl = null; 
-    if (!buttons.length) {
-        console.log('No se encontraron botones con la clase .ZYSVVV');
-        return;
-    }
+    let postId, fileUrl;
 
-    // Prevenir múltiples asignaciones de eventos
-    buttons.forEach(button => {
-        button.removeEventListener('click', handleButtonClick);
-        button.addEventListener('click', handleButtonClick);
-    });
+    if (!buttons.length);
 
-    modalEnviarBtn.removeEventListener('click', handleModalEnviar);
-    modalEnviarBtn.addEventListener('click', handleModalEnviar);
+    const addEventListeners = (elements, event, handler) =>
+        elements.forEach(el => {
+            el.removeEventListener(event, handler);
+            el.addEventListener(event, handler);
+        });
 
-    document.querySelector('#modalcolab button').removeEventListener('click', handleModalClose);
-    document.querySelector('#modalcolab button').addEventListener('click', handleModalClose);
-
-    function handleButtonClick(event) {
-        postId = event.currentTarget?.dataset.postId;
-        if (!postId) {
-            console.error('El post ID no se encontró en el botón.');
-            return;
-        }
+    addEventListeners(buttons, 'click', e => {
+        postId = e.currentTarget?.dataset.postId;
+        if (!postId) return console.error('El post ID no se encontró en el botón.');
         console.log('Post ID:', postId);
         subidaArchivoColab();
         modal.style.display = 'flex';
-    }
+    });
 
-    async function handleModalEnviar() {
-        const mensaje = document.querySelector('#modalcolab textarea').value;
-        if (!mensaje.trim()) {
-            alert('Por favor, escribe un mensaje antes de enviar.');
-            return;
-        }
-        console.log('Enviando datos:', { postId, mensaje, fileUrl });
-        const data = await enviarAjax('empezarColab', { postId, mensaje, fileUrl });
+    addEventListeners([modalEnviarBtn], 'click', async () => {
+        const mensaje = document.querySelector('#modalcolab textarea').value.trim();
+        if (!mensaje) return alert('Por favor, escribe un mensaje antes de enviar.');
+        console.log('Enviando datos:', {postId, mensaje, fileUrl});
+        const data = await enviarAjax('empezarColab', {postId, mensaje, fileUrl});
         if (data?.success) {
             alert('Colaboración iniciada con éxito');
             modal.style.display = 'none';
         } else {
             alert(`Error al iniciar la colaboración: ${data?.message || 'Desconocido'}`);
         }
-    }
+    });
 
-    function handleModalClose() {
-        modal.style.display = 'none';
-    }
+    addEventListeners([document.querySelector('#modalcolab button')], 'click', () => (modal.style.display = 'none'));
 }
 
 function subidaArchivoColab() {
@@ -59,27 +42,9 @@ function subidaArchivoColab() {
     const modalEnviarBtn = document.getElementById('empezarColab');
     let fileSelected = false;
 
-    // Evitar eventos duplicados
-    previewArchivo.removeEventListener('click', handlePreviewClick);
-    previewArchivo.addEventListener('click', handlePreviewClick);
-    postArchivoColab.removeEventListener('change', handleFileSelect);
-    postArchivoColab.addEventListener('change', handleFileSelect);
-
-    ['dragover', 'dragleave', 'drop'].forEach(eventName => {
-        previewArchivo.removeEventListener(eventName, handleDragDropEvents);
-        previewArchivo.addEventListener(eventName, handleDragDropEvents);
-    });
-
-    function handlePreviewClick(event) {
-        event.stopPropagation(); // Evitar propagación del evento
-        if (!fileSelected) {
-            postArchivoColab.click();
-        }
-    }
-
-    async function handleFileSelect(event) {
+    const handleFileSelect = async event => {
         event.preventDefault();
-        event.stopPropagation(); // Prevenir eventos múltiples
+        event.stopPropagation();
         const file = event.dataTransfer?.files[0] || event.target.files[0];
         if (!file || fileSelected) return;
         fileSelected = true;
@@ -98,17 +63,18 @@ function subidaArchivoColab() {
             alert('Hubo un problema al cargar el archivo. Inténtalo de nuevo.');
             modalEnviarBtn.disabled = false;
         }
-    }
-
-    function handleDragDropEvents(event) {
+    };
+    const handleDragDropEvents = event => {
         event.preventDefault();
-        if (event.type === 'dragover') {
-            previewArchivo.style.backgroundColor = '#e9e9e9';
-        } else {
-            previewArchivo.style.backgroundColor = '';
-            if (event.type === 'drop') handleFileSelect(event);
-        }
-    }
+        previewArchivo.style.backgroundColor = event.type === 'dragover' ? '#e9e9e9' : '';
+        if (event.type === 'drop') handleFileSelect(event);
+    };
+    previewArchivo.addEventListener('click', e => {
+        e.stopPropagation();
+        if (!fileSelected) postArchivoColab.click();
+    });
+    postArchivoColab.addEventListener('change', handleFileSelect);
+    ['dragover', 'dragleave', 'drop'].forEach(eventName => previewArchivo.addEventListener(eventName, handleDragDropEvents));
 }
 
 async function subirArchivoColab(file, progressBarId) {
