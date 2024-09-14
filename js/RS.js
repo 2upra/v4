@@ -24,11 +24,48 @@ function iniciarRS() {
     }
 }
 
+function verificarCamposRs() {
+    const textoRsDiv = document.getElementById('textoRs');
+    textoRsDiv.setAttribute('placeholder', 'Puedes agregar tags agregando un #');
+    textoRsDiv.addEventListener('input', verificarCampos);
+
+    function verificarCampos() {
+        const tags = Array.isArray(window.Tags) ? window.Tags : [];
+        const normalText = typeof window.NormalText === 'string' ? window.NormalText : '';
+        
+        if (normalText.length < 3) {
+            alert('El texto debe tener al menos 3 caracteres');
+            return false; 
+        }
+        if (normalText.length > 800) {
+            alert('El texto no puede exceder los 800 caracteres');
+            textoRsDiv.innerText = normalText.substring(0, 800);
+            return false; 
+        }
+        if (tags.length === 0) {
+            alert('Debe incluir al menos un tag');
+            return false; 
+        }
+        if (tags.some(tag => tag.length < 3)) {
+            alert('Cada tag debe tener al menos 3 caracteres');
+            return false; 
+        }
+        
+        return true; 
+    }
+    
+    return verificarCampos();
+}
 
 async function envioRs() {
     const button = document.getElementById('enviarRs');
     button.addEventListener('click', async () => {
-        enviarRs.disabled = true;
+        button.disabled = true;
+        const valid = verificarCamposRs();
+        if (!valid) {
+            button.disabled = false; 
+            return;
+        }
         const tags = window.Tags || [];
         const textoNormal = window.NormalText || '';
         const data = {
@@ -42,7 +79,6 @@ async function envioRs() {
             tags,
             textoNormal
         };
-        verificarCamposRs();
         try {
             const response = await enviarAjax('subidaRs', data);
             if (response?.success) {
@@ -55,7 +91,7 @@ async function envioRs() {
             console.error('Error al enviar los datos:', error);
             alert('Ocurrió un error durante la publicación. Por favor, inténtelo de nuevo.');
         } finally {
-            enviarRs.disabled = false;
+            button.disabled = false; 
         }
     });
 }
@@ -251,36 +287,6 @@ async function subidaRsBackend(file, progressBarId) {
             reject(new Error('Error al enviar la solicitud AJAX'));
         }
     });
-}
-
-
-function verificarCamposRs() {
-    const textoRsDiv = document.getElementById('textoRs');
-    textoRsDiv.setAttribute('placeholder', 'Puedes agregar tags agregando un #');
-    textoRsDiv.addEventListener('input', verificarCampos);
-
-    function verificarCampos() {
-        const tags = Array.isArray(window.Tags) ? window.Tags : [];
-        const normalText = typeof window.NormalText === 'string' ? window.NormalText : '';
-        if (normalText.length < 3) {
-            alert('El texto debe tener al menos 3 caracteres');
-            return;
-        }
-        if (normalText.length > 800) {
-            alert('El texto no puede exceder los 800 caracteres');
-            textoRsDiv.innerText = normalText.substring(0, 800);
-            return;
-        }
-        if (tags.length === 0) {
-            alert('Debe incluir al menos un tag');
-            return;
-        }
-        if (tags.some(tag => tag.length < 3)) {
-            alert('Cada tag debe tener al menos 3 caracteres');
-            return;
-        }
-    }
-    verificarCampos();
 }
 
 //Función auxiliar para el placeholder
