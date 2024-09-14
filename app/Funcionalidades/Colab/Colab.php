@@ -40,9 +40,13 @@ function modalColab()
 
 function empezarColab()
 {
-    if (!is_user_logged_in() || !isset($_POST['post_id'])) {
-        guardarLog('No autorizado o sin ID de publicación');
-        wp_send_json_error(['message' => 'No autorizado o sin ID de publicación']);
+    if (!is_user_logged_in()) {
+        guardarLog('No autorizado. Debes estar logueado para enviar una solicitud de colaboración');
+        wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
+    }
+    if (!isset($_POST['post_id'])) {
+        guardarLog('No se ha proporcionado el ID de la publicación');
+        wp_send_json_error(['message' => 'No se ha proporcionado el ID de la publicación']);
     }
     $post_id = intval($_POST['post_id']);
     $mensaje = sanitize_textarea_field($_POST['mensaje']);
