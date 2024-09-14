@@ -1,5 +1,5 @@
 <?php
-/*
+
 function subidaDePost()
 {
     guardarLog("---------------------------------------------");
@@ -439,9 +439,7 @@ function subidaDePost()
 
 
 add_action('wp_ajax_submit_social_post', 'subidaDePost');
-add_action('wp_ajax_nopriv_submit_social_post', 'subidaDePost');
 
-*/
 
 
 
