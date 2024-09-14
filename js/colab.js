@@ -4,7 +4,7 @@ function empezarcolab() {
     const modalEnviarBtn = document.getElementById('empezarColab');
     let postId, fileUrl;
 
-    if (!buttons.length);
+    if (!buttons.length) return; 
 
     const addEventListeners = (elements, event, handler) =>
         elements.forEach(el => {
@@ -16,13 +16,14 @@ function empezarcolab() {
         postId = e.currentTarget?.dataset.postId;
         if (!postId) return console.error('El post ID no se encontró en el botón.');
         console.log('Post ID:', postId);
-        subidaArchivoColab();
+        subidaArchivoColab(); 
         modal.style.display = 'flex';
     });
 
     addEventListeners([modalEnviarBtn], 'click', async () => {
         const mensaje = document.querySelector('#modalcolab textarea').value.trim();
         if (!mensaje) return alert('Por favor, escribe un mensaje antes de enviar.');
+        if (!fileUrl) return alert('Por favor, sube un archivo antes de enviar.'); 
         console.log('Enviando datos:', {postId, mensaje, fileUrl});
         const data = await enviarAjax('empezarColab', {postId, mensaje, fileUrl});
         if (data?.success) {
@@ -50,31 +51,35 @@ function subidaArchivoColab() {
         fileSelected = true;
 
         const progressBarId = updatePreviewArea(file);
-        modalEnviarBtn.disabled = true;
+        modalEnviarBtn.disabled = true; // Desactiva el botón mientras se carga el archivo.
         try {
             const uploadedFileUrl = await subirArchivoColab(file, progressBarId);
             previewArchivo.innerHTML = `Archivo subido: ${file.name} (${file.type})`;
-            window.formColab = uploadedFileUrl;
-            console.log('Archivo subido a:', uploadedFileUrl);
-            fileUrl = uploadedFileUrl;
-            modalEnviarBtn.disabled = false;
+            fileUrl = uploadedFileUrl; // Asigna la URL del archivo subido.
+            console.log('Archivo subido a:', fileUrl);
+            modalEnviarBtn.disabled = false; // Reactiva el botón después de la carga.
         } catch (error) {
             console.error('Error al cargar el archivo:', error);
             alert('Hubo un problema al cargar el archivo. Inténtalo de nuevo.');
             modalEnviarBtn.disabled = false;
         }
     };
+
     const handleDragDropEvents = event => {
         event.preventDefault();
         previewArchivo.style.backgroundColor = event.type === 'dragover' ? '#e9e9e9' : '';
         if (event.type === 'drop') handleFileSelect(event);
     };
+
     previewArchivo.addEventListener('click', e => {
         e.stopPropagation();
         if (!fileSelected) postArchivoColab.click();
     });
+
     postArchivoColab.addEventListener('change', handleFileSelect);
-    ['dragover', 'dragleave', 'drop'].forEach(eventName => previewArchivo.addEventListener(eventName, handleDragDropEvents));
+    ['dragover', 'dragleave', 'drop'].forEach(eventName => 
+        previewArchivo.addEventListener(eventName, handleDragDropEvents)
+    );
 }
 
 async function subirArchivoColab(file, progressBarId) {
