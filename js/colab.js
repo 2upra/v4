@@ -54,14 +54,18 @@ function subidaArchivoColab() {
         const file = event.dataTransfer?.files[0] || event.target.files[0];
         if (!file || fileSelected) return;
         fileSelected = true;
-
+    
         const progressBarId = updatePreviewArea(file);
         modalEnviarBtn.disabled = true; 
         try {
-            const uploadedFileUrl = await subirArchivoColab(file, progressBarId);
+            const archivoRecibido = await subirArchivoColab(file, progressBarId);
+            
+            fileUrl = archivoRecibido.fileUrl;
+            fileId = archivoRecibido.fileId;
+    
             previewArchivo.innerHTML = `Archivo subido: ${file.name} (${file.type})`;
-            fileUrl = uploadedFileUrl; 
-            console.log('Archivo subido a:', fileUrl);
+            console.log('URL del archivo:', fileUrl);
+            console.log('ID del archivo:', fileId);
             modalEnviarBtn.disabled = false;
         } catch (error) {
             console.error('Error al cargar el archivo:', error);
