@@ -16,6 +16,7 @@ function iniciarRS() {
         archivoId = null;
         imagenSelecionada = null;
         subidaRs();
+        envioRs()
         placeholderRs();
         TagEnTexto();
     } else {
