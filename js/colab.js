@@ -1,3 +1,13 @@
+/*
+el boton que hay en todos los post es este, y contiene una id, esa id tiene que enviarla al servidor, no parece que este enviado ese dato cuando se da click enviar modal
+function botonColab($post_id, $colab)
+{
+    return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$post_id'>{$GLOBALS['iconocolab']}</button></div>" : '';
+}
+
+
+*/
+
 
 function empezarcolab() {
     const buttons = document.querySelectorAll('.ZYSVVV');
@@ -27,6 +37,7 @@ function empezarcolab() {
             alert('Por favor, escribe un mensaje antes de enviar.');
             return;
         }
+        console.log('Enviando datos:', {postId, mensaje, fileUrl});
         const data = await enviarAjax('empezarColab', {postId, mensaje, fileUrl});
         if (data?.success) {
             alert('Colaboración iniciada con éxito');
