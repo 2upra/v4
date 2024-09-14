@@ -1,8 +1,13 @@
 // Variables globales
 let audioUrl, audioId, archivoUrl, archivoId, imagenSelecionada;
+// Logs
+const enableLogs = true
+const logRS = enableLogs ? console.log : function () {};
 
 function comienzoFormRS() {
+    logRS('comienzoFormRS fue llamado');
     if (document.getElementById('formRs')) {
+        logRS('formRs existe');
         audioUrl = null;
         audioId = {};
         archivoUrl = null;
@@ -11,9 +16,10 @@ function comienzoFormRS() {
         subidaRs();
         placeholderRs();
         verificarCamposPost();
+    } else {
+        logRS('formRs no existe');
     }
 }
-
 //Esto debe capturar todo lo que esta dentro del elemento "id="formRs", los tags y el normaltext en window.Tags, window.NormalText
 
 function envioRs() {
@@ -37,7 +43,7 @@ function subidaRs() {
         acc[id] = elemento;
         return acc;
     }, {});
-    console.log('Elementos detectados:', elementosEncontrados);
+    logRS('Elementos detectados:', elementosEncontrados);
     if (Object.values(elementosEncontrados).some(el => !el)) {
         console.error('No se encontraron todos los elementos necesarios en el DOM.');
         return;
