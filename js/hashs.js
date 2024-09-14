@@ -1,8 +1,7 @@
 // Logs
-const enableLogs = true;
+let enableLogs = true;
 const logHash = enableLogs ? console.log : function () {};
 
-// Uncaught SyntaxError: Identifier 'enableLogs' has already been declared (at Hast.js?ver=1.0.1.804423676:1:1)
 
 // Genera un hash SHA-256 del archivo
 window.generateFileHash = async function(file) {
