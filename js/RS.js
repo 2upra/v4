@@ -148,12 +148,11 @@ function subidaRs() {
 
 function verificarCamposPost() {
     const textoRsDiv = document.getElementById('textoRs');
-    const getContent = TagEnTexto({containerId: 'textoRs'});
-
     textoRsDiv.setAttribute('placeholder', 'Puedes agregar tags agregando un #');
     textoRsDiv.addEventListener('input', verificarCampos);
     function verificarCampos() {
-        const {tags, normalText} = getContent();
+        const tags = window.Tags;
+        const normalText = window.NormalText;
         if (normalText.length < 3) {
             alert('El texto debe tener al menos 3 caracteres');
             return;
