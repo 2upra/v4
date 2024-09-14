@@ -1,5 +1,5 @@
 // Variables globales
-let audioUrl, audioId, archivoUrl, archivoId, imagenSelecionada;
+let imagenUrl, imagenId, audioUrl, audioId, archivoUrl, archivoId, imagenSelecionada;
 // Logs
 const enableLogs = true;
 const logRS = enableLogs ? console.log : function () {};
@@ -59,7 +59,13 @@ function subidaRs() {
         const file = event.dataTransfer?.files[0] || event.target.files[0];
         if (!file) return;
         if (file.size > 200 * 1024 * 1024) return alert('El archivo no puede superar los 200 MB.');
-        file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
+        file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) :         try {
+            const subidaImagenRecibida = await subidaRsBackend(file, 'barraProgresoFile');
+            ImagenUrl = subidaImagenRecibida.fileUrl;
+            ImagenId = subidaImagenRecibida.fileId;
+        } catch {
+            alert('Hubo un problema al cargar el Archivo. Inténtalo de nuevo.');
+        }
     };
 
     const subidaAudio = async file => {
@@ -68,9 +74,9 @@ function subidaRs() {
         opciones.style.display = 'flex';
         const progressBarId = waveAudio(file);
         try {
-            const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
-            audioUrl = fileUrl;
-            audioId = fileId;
+            const subidaAudioRecibida = await subidaRsBackend(file, progressBarId);
+            audioUrl = subidaAudioRecibida.fileUrl;
+            audioId = subidaAudioRecibida.fileId;
         } catch {
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
         }
@@ -81,9 +87,9 @@ function subidaRs() {
         previewArchivo.style.display = 'block';
         previewArchivo.innerHTML = `<div class="file-name">${file.name}</div><div id="barraProgresoFile" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>`;
         try {
-            const {fileUrl, fileId} = await subidaRsBackend(file, 'barraProgresoFile');
-            archivoUrl = fileUrl;
-            archivoId = fileId;
+            const subidaArchivoRecibida = await subidaRsBackend(file, 'barraProgresoFile');
+            archivoUrl = subidaArchivoRecibida.fileUrl;
+            archivoId = subidaArchivoRecibida.fileId;
         } catch {
             alert('Hubo un problema al cargar el Archivo. Inténtalo de nuevo.');
         }
