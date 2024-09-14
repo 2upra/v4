@@ -40,6 +40,7 @@ function modalColab()
 
 function empezarColab()
 {
+    guardarLog("Datos recibidos vía POST: " . print_r($_POST, true));
     if (!is_user_logged_in()) {
         guardarLog('No autorizado. Debes estar logueado para enviar una solicitud de colaboración');
         wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
