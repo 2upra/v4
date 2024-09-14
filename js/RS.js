@@ -17,7 +17,7 @@ function iniciarRS() {
         imagenSelecionada = null;
         subidaRs();
         placeholderRs();
-        iniciarRS();
+        TagEnTexto();
     } else {
         logRS('formRs no existe');
     }
