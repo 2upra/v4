@@ -26,8 +26,6 @@ function empezarcolab() {
     addEventListeners([modalEnviarBtn], 'click', async () => {
         const mensaje = document.querySelector('#modalcolab textarea').value.trim();
         if (!mensaje) return alert('Por favor, escribe un mensaje antes de enviar.');
-        if (!fileUrl) return alert('Por favor, sube un archivo antes de enviar.'); 
-        if (!fileId) return alert('Por favor, sube un archivo antes de enviar (id).'); 
         console.log('Enviando datos:', {postId, mensaje, fileUrl, fileId});
         const data = await enviarAjax('empezarColab', {postId, mensaje, fileUrl, fileId});
         if (data?.success) {
@@ -115,35 +113,24 @@ async function subirArchivoColab(file, progressBarId) {
     const formData = new FormData();
     formData.append('action', 'file_upload');
     formData.append('file', file);
-    const fileHash = await generateFileHash(file);
-    formData.append('file_hash', fileHash);
+    formData.append('file_hash', await generateFileHash(file));
 
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', my_ajax_object.ajax_url, true);
-        xhr.upload.onprogress = function (e) {
+
+        xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) {
-                const percentComplete = (e.loaded / e.total) * 100;
                 const progressBar = document.getElementById(progressBarId);
-                if (progressBar) {
-                    progressBar.style.width = percentComplete + '%';
-                }
+                if (progressBar) progressBar.style.width = `${(e.loaded / e.total) * 100}%`;
             }
         };
-        xhr.onload = function () {
+
+        xhr.onload = () => {
             if (xhr.status === 200) {
                 try {
                     const result = JSON.parse(xhr.responseText);
-                    if (result.success) {
-                        console.log('Archivo subido:', result.data.fileUrl);
-                        console.log('ID del archivo:', result.data.fileId);
-                        resolve({
-                            fileUrl: result.data.fileUrl,
-                            fileId: result.data.fileId
-                        });
-                    } else {
-                        reject(new Error('Error en la respuesta del servidor'));
-                    }
+                    result.success ? resolve(result.data) : reject(new Error('Error en la respuesta del servidor'));
                 } catch (error) {
                     reject(error);
                 }
@@ -151,9 +138,8 @@ async function subirArchivoColab(file, progressBarId) {
                 reject(new Error('Error en la carga del archivo'));
             }
         };
-        xhr.onerror = function () {
-            reject(new Error('Error en la conexión con el servidor'));
-        };
+
+        xhr.onerror = () => reject(new Error('Error en la conexión con el servidor'));
         xhr.send(formData);
     });
 }
