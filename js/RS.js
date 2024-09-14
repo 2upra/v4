@@ -39,15 +39,25 @@ function subidaRs() {
     const elementos = ['formularioRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen'];
     const elementosEncontrados = elementos.reduce((acc, id) => {
         const elemento = document.getElementById(id);
-        if (!elemento) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
+        if (!elemento) {
+            console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
+        }
         acc[id] = elemento;
         return acc;
     }, {});
+
     logRS('Elementos detectados:', elementosEncontrados);
-    if (Object.values(elementosEncontrados).some(el => !el)) {
-        console.error('No se encontraron todos los elementos necesarios en el DOM.');
+
+    // Identificar los elementos que faltan
+    const elementosFaltantes = Object.entries(elementosEncontrados)
+        .filter(([id, el]) => !el)
+        .map(([id]) => id);
+
+    if (elementosFaltantes.length > 0) {
+        console.error(`No se encontraron los siguientes elementos en el DOM: ${elementosFaltantes.join(', ')}`);
         return;
     }
+
     const {formularioRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen} = elementosEncontrados;
 
     const inicialSubida = event => {
@@ -150,9 +160,10 @@ function verificarCamposPost() {
     const textoRsDiv = document.getElementById('textoRs');
     textoRsDiv.setAttribute('placeholder', 'Puedes agregar tags agregando un #');
     textoRsDiv.addEventListener('input', verificarCampos);
+
     function verificarCampos() {
-        const tags = window.Tags;
-        const normalText = window.NormalText;
+        const tags = Array.isArray(window.Tags) ? window.Tags : [];
+        const normalText = typeof window.NormalText === 'string' ? window.NormalText : '';
         if (normalText.length < 3) {
             alert('El texto debe tener al menos 3 caracteres');
             return;
@@ -173,6 +184,7 @@ function verificarCamposPost() {
     }
     verificarCampos();
 }
+
 
 //Función auxiliar para el placeholder
 function placeholderRs() {
