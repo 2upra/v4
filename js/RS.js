@@ -30,7 +30,19 @@ function elementosPorID(ids) {
 }
 
 function subidaRs() {
-    const {formularioRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen} = elementosPorID(['formularioRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen']);
+    const elementos = ['formularioRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen'];
+    const elementosEncontrados = elementos.reduce((acc, id) => {
+        const elemento = document.getElementById(id);
+        if (!elemento) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
+        acc[id] = elemento;
+        return acc;
+    }, {});
+    console.log('Elementos detectados:', elementosEncontrados);
+    if (Object.values(elementosEncontrados).some(el => !el)) {
+        console.error('No se encontraron todos los elementos necesarios en el DOM.');
+        return;
+    }
+    const {formularioRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen} = elementosEncontrados;
 
     const inicialSubida = event => {
         event.preventDefault();
