@@ -17,23 +17,46 @@ function iniciarRS() {
         imagenSelecionada = null;
         subidaRs();
         placeholderRs();
+        iniciarRS();
     } else {
         logRS('formRs no existe');
     }
 }
-//Esto debe capturar todo lo que esta dentro del elemento "id="formRs", los tags y el normaltext en window.Tags, window.NormalText
 
-function envioRs() {
+
+async function envioRs() {
     const button = document.getElementById('enviarRs');
-    button.addEventListener('click', () => {});
-}
-
-//Auxilair
-function elementosPorID(ids) {
-    return ids.reduce((acc, id) => {
-        acc[id] = document.getElementById(id);
-        return acc;
-    }, {});
+    button.addEventListener('click', async () => {
+        enviarRs.disabled = true;
+        const tags = window.Tags || [];
+        const textoNormal = window.NormalText || '';
+        const data = {
+            imagenUrl: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
+            imagenId: typeof imagenId !== 'undefined' ? imagenId : null,
+            audioUrl: typeof audioUrl !== 'undefined' ? audioUrl : null,
+            audioId: typeof audioId !== 'undefined' ? audioId : null,
+            archivoUrl: typeof archivoUrl !== 'undefined' ? archivoUrl : null,
+            archivoId: typeof archivoId !== 'undefined' ? archivoId : null,
+            imagenSelecionada: typeof imagenSelecionada !== 'undefined' ? imagenSelecionada : null,
+            tags,
+            textoNormal
+        };
+        verificarCamposRs();
+        try {
+            const response = await enviarAjax('subidaRs', data);
+            if (response?.success) {
+                alert('Publicación realizada con éxito');
+                limpiarCampos();
+            } else {
+                alert(`Error al publicar post: ${response?.message || 'Desconocido'}`);
+            }
+        } catch (error) {
+            console.error('Error al enviar los datos:', error);
+            alert('Ocurrió un error durante la publicación. Por favor, inténtelo de nuevo.');
+        } finally {
+            enviarRs.disabled = false;
+        }
+    });
 }
 
 function subidaRs() {
@@ -230,7 +253,7 @@ async function subidaRsBackend(file, progressBarId) {
 }
 
 
-function verificarCamposPost() {
+function verificarCamposRs() {
     const textoRsDiv = document.getElementById('textoRs');
     textoRsDiv.setAttribute('placeholder', 'Puedes agregar tags agregando un #');
     textoRsDiv.addEventListener('input', verificarCampos);
@@ -274,3 +297,16 @@ function placeholderRs() {
     });
 }
 
+function limpiarCampos() {
+    document.getElementById('formRs').reset();
+    imagenUrl = null;
+    imagenId = null;
+    audioUrl = null;
+    audioId = null;
+    archivoUrl = null;
+    archivoId = null;
+    imagenSelecionada = null;
+    document.getElementById('previewAudio').style.display = 'none';
+    document.getElementById('previewArchivo').style.display = 'none';
+    document.getElementById('previewImagen').style.display = 'none';
+}

@@ -18,6 +18,10 @@ function formRs()
 
         <div>
             <div class="postTags DABVYT" id="textoRs" contenteditable="true" data-placeholder="Puedes agregar tags usando #"></div>
+
+            <input type="hidden" id="postTagsHidden" name="post_tags">
+            
+            <textarea id="postContent" name="post_content" rows="2" required placeholder="Escribe aquí" style="display: none;"></textarea>
         </div>
 
         <div class="previewsForm NGEESM">

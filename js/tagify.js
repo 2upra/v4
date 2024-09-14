@@ -1,5 +1,5 @@
 const A03 = false;
-const log03 = A03 ? console.log : function () {};
+const logTags = A03 ? console.log : function () {};
 
 function initializeFormFunctions() {
 
@@ -26,7 +26,7 @@ function setupTagSystem(options) {
         tagClass = 'tag'
     } = options;
 
-    log03(`Procesando containerId: ${containerId}, maxTags: ${maxTags}, minLength: ${minLength}, maxLength: ${maxLength}, whitelist: ${whitelist}, tagClass: ${tagClass}`);
+    logTags(`Procesando containerId: ${containerId}, maxTags: ${maxTags}, minLength: ${minLength}, maxLength: ${maxLength}, whitelist: ${whitelist}, tagClass: ${tagClass}`);
 
     const container = document.getElementById(containerId);
     if (!container) {
@@ -119,7 +119,7 @@ function setupTagSystem(options) {
     }
 }
 
-function TagEnTexto(options) {
+function TagEnTexto(options = {}) {
     const {
         containerId = 'textoRs',
         maxTags = 20,
@@ -183,8 +183,8 @@ function TagEnTexto(options) {
             selection.removeAllRanges();
             selection.addRange(range);
         }
-        log03('Tags procesados:', tags);
-        log03('Texto normal:', normalText);
+        logTags('Tags procesados:', tags);
+        logTags('Texto normal:', normalText);
     }
     function updateHiddenInputs() {
         hiddenTagsInput.value = tags.join(',');
