@@ -71,7 +71,6 @@ async function generateFileHash(file) {
     return hash;
 }
 
-
 function checkAllFilesUploaded() {
     const allUploaded = Object.values(window.formState.uploadedFiles).every(Boolean);
     console.log('Estado inicial de uploadedFiles:', window.formState.uploadedFiles);

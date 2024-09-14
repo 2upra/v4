@@ -96,11 +96,12 @@ async function subirArchivoColab(file, progressBarId) {
     const formData = new FormData();
     formData.append('action', 'file_upload');
     formData.append('file', file);
+    const fileHash = await generateFileHash(file);
+    formData.append('file_hash', fileHash);
 
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', my_ajax_object.ajax_url, true);
-
         xhr.upload.onprogress = function (e) {
             if (e.lengthComputable) {
                 const percentComplete = (e.loaded / e.total) * 100;
@@ -110,12 +111,12 @@ async function subirArchivoColab(file, progressBarId) {
                 }
             }
         };
-
         xhr.onload = function () {
             if (xhr.status === 200) {
                 try {
                     const result = JSON.parse(xhr.responseText);
                     if (result.success) {
+                        console.log('Archivo subido:', result.data.fileUrl);
                         resolve(result.data.fileUrl);
                     } else {
                         reject(new Error('Error en la respuesta del servidor'));
@@ -127,11 +128,9 @@ async function subirArchivoColab(file, progressBarId) {
                 reject(new Error('Error en la carga del archivo'));
             }
         };
-
         xhr.onerror = function () {
             reject(new Error('Error en la conexión con el servidor'));
         };
-
         xhr.send(formData);
     });
 }
