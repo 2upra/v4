@@ -9,10 +9,7 @@ function botonColab($postId, $colab)
 // Función inicial para empezar un colab
 function empezarColab()
 {
-    guardarLog("Datos recibidos vía POST: " . print_r($_POST, true));
-
     if (!is_user_logged_in()) {
-        guardarLog('No autorizado. Debes estar logueado para enviar una solicitud de colaboración');
         wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
     }
     if (!isset($_POST['postId'])) {
@@ -23,7 +20,6 @@ function empezarColab()
     $mensaje = sanitize_textarea_field($_POST['mensaje']);
     $fileUrl = isset($_POST['fileUrl']) ? esc_url_raw($_POST['fileUrl']) : '';
 
-    guardarLog("Intentando buscar post con ID $postId");
     $original_post = get_post($postId);
     if (!$original_post) {
         guardarLog('Publicación no encontrada');
@@ -31,7 +27,6 @@ function empezarColab()
     }
     $current_user_id = get_current_user_id();
     if ($current_user_id === $original_post->post_author) {
-        guardarLog('No puedes colaborar contigo mismo.');
         wp_send_json_error(['message' => 'No puedes colaborar contigo mismo.']);
     }
     $existing_colabs_meta = get_post_meta($postId, 'colabs', true);
@@ -39,7 +34,6 @@ function empezarColab()
         $existing_colabs_meta = [];
     }
     if (in_array($current_user_id, $existing_colabs_meta)) {
-        guardarLog('Ya existe una colaboración entre el autor y el colaborador para esta publicación');
         wp_send_json_error(['message' => 'Ya existe una colaboración entre el autor y el colaborador para esta publicación']);
     }
     $author_name = get_the_author_meta('display_name', $original_post->post_author);
@@ -60,7 +54,6 @@ function empezarColab()
         $existing_colabs_meta[] = $current_user_id;
         update_post_meta($postId, 'colabs', $existing_colabs_meta);
 
-        guardarLog('Colaboración iniciada correctamente');
         wp_send_json([
             'success' => true,
             'message' => 'Colaboración iniciada correctamente'
@@ -77,38 +70,22 @@ add_action('wp_ajax_empezarColab', 'empezarColab');
 
 function actualizarEstadoColab($postId, $post_after, $post_before)
 {
-    guardarLog("Iniciando actualizarEstadoColab para post ID: $postId");
-
     if ($post_after->post_type === 'colab') {
-        guardarLog("El post es de tipo 'colab'");
-
         $post_origen_id = get_post_meta($postId, 'colabPostOrigen', true);
         $colaborador_id = get_post_meta($postId, 'colabColaborador', true);
 
-        guardarLog("Post origen ID: $post_origen_id, Colaborador ID: $colaborador_id");
-
         if ($post_after->post_status !== 'publish' && $post_after->post_status !== 'pending') {
-            guardarLog("Estado del post no es 'publish' ni 'pending'. Estado actual: " . $post_after->post_status);
-
             $existing_colabs_meta = get_post_meta($post_origen_id, 'colabs', true);
-            guardarLog("Colabs existentes: " . print_r($existing_colabs_meta, true));
 
             if (($key = array_search($colaborador_id, $existing_colabs_meta)) !== false) {
-                guardarLog("Colaborador encontrado en la posición: $key");
                 unset($existing_colabs_meta[$key]);
                 $result = update_post_meta($post_origen_id, 'colabs', $existing_colabs_meta);
-                guardarLog("Resultado de la actualización de meta: " . ($result ? "éxito" : "fallo"));
-            } else {
-                guardarLog("Colaborador no encontrado en las colabs existentes");
+                if (!$result) {
+                    guardarLog("Error al actualizar los metadatos de colaboración para el post origen ID: $post_origen_id");
+                }
             }
-        } else {
-            guardarLog("Estado del post es 'publish' o 'pending'. No se requiere acción.");
         }
-    } else {
-        guardarLog("El post no es de tipo 'colab'. Tipo actual: " . $post_after->post_type);
     }
-
-    guardarLog("Finalizando actualizarEstadoColab");
 }
 add_action('post_updated', 'actualizarEstadoColab', 10, 3);
 

@@ -1,14 +1,3 @@
-/*
-el boton que hay en todos los post es este, y contiene una id, esa id tiene que enviarla al servidor, no parece que este enviado ese dato cuando se da click enviar modal
-function botonColab($post_id, $colab)
-{
-    return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$post_id'>{$GLOBALS['iconocolab']}</button></div>" : '';
-}
-
-
-*/
-
-
 function empezarcolab() {
     const buttons = document.querySelectorAll('.ZYSVVV');
     const modal = document.getElementById('modalcolab');
@@ -77,12 +66,6 @@ function subidaArchivoColab() {
             console.log('Archivo subido a:', uploadedFileUrl);
             fileUrl = uploadedFileUrl;
             modalEnviarBtn.disabled = false;
-            // Manejar preview de audio si es necesario
-            if (file.type.startsWith('audio')) {
-                // Agregar lógica para preview de audio
-            } else {
-                // Agregar lógica para otros tipos de archivos
-            }
         } catch (error) {
             console.error('Error al cargar el archivo:', error);
             alert('Hubo un problema al cargar el archivo. Inténtalo de nuevo.');
