@@ -46,6 +46,7 @@ function scriptsOrdenados()
         'submenu' => '1.2.15',
         'pestanas' => '1.1.10',
         'tagify' => '2.0.1',
+        'wavesEnforms' => '1.0.1',
         'configPerfil' => '1.0.14',
         'registro' => '1.0.12',
         'colab' => '1.0.2',

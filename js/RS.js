@@ -1,5 +1,5 @@
 // Variables globales
-let audioUrl, audioId, archivoUrl, archivoId, imagenSelecionada;
+let imagenUrl, imagenId, audioUrl, audioId, archivoUrl, archivoId, imagenSelecionada;
 // Logs
 let enablelogRS = true;
 const logRS = enablelogRS ? console.log : function () {};
@@ -8,10 +8,12 @@ function iniciarRS() {
     logRS('comienzoFormRS fue llamado');
     if (document.getElementById('formRs')) {
         logRS('formRs existe');
+        imagenUrl = null;
+        imagenId = null;
         audioUrl = null;
-        audioId = {};
+        audioId = null;
         archivoUrl = null;
-        archivoId = {};
+        archivoId = null;
         imagenSelecionada = null;
         subidaRs();
         placeholderRs();
@@ -35,70 +37,77 @@ function elementosPorID(ids) {
 }
 
 function subidaRs() {
-    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen'];
+    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRS'];
     const elements = ids.reduce((acc, id) => {
         const el = document.getElementById(id);
         if (!el) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
         acc[id] = el;
         return acc;
     }, {});
-    logRS('Elementos detectados:', elements);
 
     const missingElements = Object.entries(elements).filter(([_, el]) => !el).map(([id]) => id);
     if (missingElements.length) {
-        console.error(`No se encontraron los siguientes elementos en el DOM: ${missingElements.join(', ')}`);
-        return;
+        return; 
     }
 
-    const { formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen } = elements;
+    const { formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRS } = elements;
 
     const inicialSubida = event => {
         event.preventDefault();
         const file = event.dataTransfer?.files[0] || event.target.files[0];
-        logRS('Archivo seleccionado para la subida', { fileName: file?.name, fileSize: file?.size, fileType: file?.type });
 
-        if (!file) return logRS('No se seleccionó ningún archivo');
-        if (file.size > 200 * 1024 * 1024) return alert('El archivo no puede superar los 200 MB.');
+        if (!file) return;
+        if (file.size > 50 * 1024 * 1024) return alert('El archivo no puede superar los 50 MB.');
 
         file.type.startsWith('audio/') ? subidaAudio(file) :
         file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
     };
 
     const subidaAudio = async file => {
-        logRS('subidaAudio fue llamado', { fileName: file.name, fileType: file.type });
+        enviarRS.disabled = true; 
         try {
             alert(`Audio subido: ${file.name}`);
             previewAudio.style.display = 'block';
             opciones.style.display = 'flex';
             const progressBarId = waveAudio(file);
             const { fileUrl, fileId } = await subidaRsBackend(file, progressBarId);
-            logRS('subidaRsBackend completado con éxito', { audioUrl: fileUrl, audioId: fileId });
             audioUrl = fileUrl;
             audioId = fileId;
+            enviarRS.disabled = false; 
         } catch (error) {
-            logRS('Error en subidaAudio', { errorMessage: error.message, stack: error.stack });
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
         }
     };
 
     const subidaArchivo = async file => {
-        alert(`Archivo subido: ${file.name}`);
+        enviarRS.disabled = true; 
         previewArchivo.style.display = 'block';
         previewArchivo.innerHTML = `<div class="file-name">${file.name}</div><div id="barraProgresoFile" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>`;
         try {
+            alert(`Archivo subido: ${file.name}`);
             const { fileUrl, fileId } = await subidaRsBackend(file, 'barraProgresoFile');
             archivoUrl = fileUrl;
             archivoId = fileId;
+            enviarRS.disabled = false; 
         } catch {
             alert('Hubo un problema al cargar el Archivo. Inténtalo de nuevo.');
         }
     };
 
-    const subidaImagen = file => {
-        alert(`Imagen subida: ${file.name}`);
+    const subidaImagen = async file => {
+        enviarRS.disabled = true; 
         opciones.style.display = 'flex';
         updatePreviewImagen(file);
         imagenSelecionada = file;
+        try {
+            alert(`Imagen subida: ${file.name}`);
+            const { fileUrl, fileId } = await subidaRsBackend(file, 'barraProgresoImagen');
+            imagenUrl = fileUrl;
+            imagenId = fileId;
+            enviarRS.disabled = false; 
+        } catch {
+            alert('Hubo un problema al cargar la Imagen. Inténtalo de nuevo.');
+        }
     };
 
     const waveAudio = file => {
@@ -265,34 +274,3 @@ function placeholderRs() {
     });
 }
 
-function inicializarWaveform(containerId, audioSrc) {
-    const container = document.getElementById(containerId);
-    if (container && audioSrc) {
-        let loadingElement = container.querySelector('.waveform-loading');
-        let messageElement = container.querySelector('.waveform-message');
-        let backgroundElement = container.querySelector('.waveform-background');
-        messageElement.style.display = 'none';
-        loadingElement.style.display = 'block';
-        backgroundElement.style.display = 'block';
-
-        const options = {
-            container: container,
-            waveColor: '#d9dcff',
-            progressColor: '#4353ff',
-            backend: 'WebAudio',
-            height: 60,
-            barWidth: 2,
-            responsive: true
-        };
-
-        let wavesurfer = WaveSurfer.create(options);
-        wavesurfer.load(audioSrc);
-        wavesurfer.on('ready', function () {
-            loadingElement.style.display = 'none';
-            backgroundElement.style.display = 'none';
-        });
-        container.addEventListener('click', function () {
-            wavesurfer.playPause();
-        });
-    }
-}
