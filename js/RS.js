@@ -55,6 +55,22 @@ function verificarCamposRs() {
     return verificarCampos;
 }
 
+function selectorformtipo() {
+    document.addEventListener('change', function (event) {
+        if (event.target.matches('.custom-checkbox input[type="checkbox"]')) {
+            const label = event.target.closest('label');
+            if (event.target.checked) {
+                label.style.color = '#ffffff';
+                label.style.background = '#131313';
+            } else {
+                label.style.color = '#6b6b6b';
+                label.style.background = '';
+            }
+        }
+    });
+}
+
+
 async function envioRs() {
     const button = document.getElementById('enviarRs');
     const verificarCampos = verificarCamposRs();
@@ -89,6 +105,8 @@ async function envioRs() {
             colab
         };
 
+        console.table(data);
+
         try {
             const response = await enviarAjax('subidaRs', data);
             if (response?.success) {
@@ -102,21 +120,6 @@ async function envioRs() {
             alert('Ocurrió un error durante la publicación. Por favor, inténtelo de nuevo.');
         } finally {
             button.disabled = false;
-        }
-    });
-}
-
-function selectorformtipo() {
-    document.addEventListener('change', function (event) {
-        if (event.target.matches('.custom-checkbox input[type="checkbox"]')) {
-            const label = event.target.closest('label');
-            if (event.target.checked) {
-                label.style.color = '#ffffff';
-                label.style.background = '#131313';
-            } else {
-                label.style.color = '#6b6b6b';
-                label.style.background = '';
-            }
         }
     });
 }
