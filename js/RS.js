@@ -95,10 +95,11 @@ No registra bien los checkbox, siempre se envian en 0 aunque marque uno igual es
 
 async function envioRs() {
     const button = document.getElementById('enviarRs');
-    const verificarCampos = verificarCamposRs();
 
-    button.addEventListener('click', async () => {
+    button.addEventListener('click', async (event) => {
         button.disabled = true;
+        
+        const verificarCampos = verificarCamposRs();
         const valid = verificarCampos();
         if (!valid) {
             button.disabled = false;
@@ -107,11 +108,12 @@ async function envioRs() {
 
         const tags = window.Tags || [];
         const textoNormal = window.NormalText || '';
+        
         const descarga = document.getElementById('descarga').checked ? 1 : 0;
         const exclusivo = document.getElementById('exclusivo').checked ? 1 : 0;
         const colab = document.getElementById('colab').checked ? 1 : 0;
-        
-        logRS(
+
+        console.log(
             'descarga:', descarga, 
             'exclusivo:', exclusivo, 
             'colab:', colab, 
@@ -121,6 +123,7 @@ async function envioRs() {
 
         // suelta 0 descarga: 0 exclusivo: 0 colab: 0 independiemente de que marque uno no, cabe destacar que los
 
+        //codigo de envio omitido
         const data = {
             imagenUrl: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
             imagenId: typeof imagenId !== 'undefined' ? imagenId : null,
