@@ -1,34 +1,26 @@
 <?php
 
-function likeFuncion() {
-    // Comprueba si el usuario ha iniciado sesión
+function handle_post_like()
+{
+    //recibe esto ejemplo {post_id: 231781, nonce: 'bcbdec374b', like_state: true}
     if (!is_user_logged_in()) {
         echo 'not_logged_in';
         wp_die();
     }
-
     $user_id = get_current_user_id();
     $post_id = $_POST['post_id'] ?? '';
     $nonce = $_POST['nonce'] ?? '';
     $like_state = $_POST['like_state'] ?? false;
-
-    // Verifica el nonce
     if (!wp_verify_nonce($nonce, 'ajax-nonce')) {
-        echo 'invalid_nonce';
+        echo 'error';
         wp_die();
     }
-
-    // Verifica si el post_id está presente
     if (empty($post_id)) {
-        echo 'missing_post_id';
+        echo 'error';
         wp_die();
     }
-
-    // Realiza la acción de "likeFuncion" o "unlike"
-    $action = $like_state ? 'likeFuncion' : 'unlike';
+    $action = $like_state ? 'like' : 'unlike';
     likeAccion($post_id, $user_id, $action);
-
-    // Devuelve el número de "likes"
     echo get_like_count($post_id);
     wp_die();
 }
@@ -38,7 +30,7 @@ function likeAccion($post_id, $user_id, $action)
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';
 
-    if ($action === 'likeFuncion') {
+    if ($action === 'like') {
         if (check_user_liked_post($post_id, $user_id)) {
             $action = 'unlike';
         } else {
@@ -130,15 +122,15 @@ function like($post_id)
     ob_start();
 ?>
     <div class="TJKQGJ">
-        <button class="post-likeFuncion-button <?= esc_attr($liked_class) ?>" data-post_id="<?= esc_attr($post_id) ?>" data-nonce="<?= wp_create_nonce('like_post_nonce') ?>">
+        <button class="post-like-button <?= esc_attr($liked_class) ?>" data-post_id="<?= esc_attr($post_id) ?>" data-nonce="<?= wp_create_nonce('like_post_nonce') ?>">
             <?php echo $GLOBALS['iconoCorazon']; ?>
         </button>
-        <span class="likeFuncion-count"><?= esc_html($like_count) ?></span>
+        <span class="like-count"><?= esc_html($like_count) ?></span>
     </div>
 <?php
     $output = ob_get_clean();
     return $output;
 }
 
-add_action('wp_ajax_nopriv_handle_post_like', 'likeFuncion');
-add_action('wp_ajax_handle_post_like', 'likeFuncion');
+add_action('wp_ajax_nopriv_handle_post_like', 'handle_post_like');
+add_action('wp_ajax_handle_post_like', 'handle_post_like');
