@@ -78,7 +78,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id) {
             ['key' => 'rola', 'value' => '1', 'compare' => '!=']
         ],
         'likes' => function() use ($current_user_id, &$query_args) {
-            $user_liked_post_ids = get_user_liked_post_ids($current_user_id);
+            $user_liked_post_ids = obtenerLikesDelUsuario($current_user_id);
             if (empty($user_liked_post_ids)) {
                 $query_args['posts_per_page'] = 0;
                 return null;

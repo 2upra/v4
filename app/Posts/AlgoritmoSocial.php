@@ -1,17 +1,151 @@
 <?php
 
 
-/*
-Me proposiste este  algoritmo pero no tengo la meta de intereses
-entiendo que esto regresa una lista de post, pero aun no entiendo como se relaciona los post entre los usuarios, etc
-*/
+define('INTERES_TABLE', $wpdb->prefix . 'interes');
+define('BATCH_SIZE', 1000);
+
+function generarMetaDeIntereses($user_id) {
+    global $wpdb;
+
+    // Obtener todos los posts con likes del usuario
+    $liked_posts = obtenerLikesDelUsuario($user_id);
+
+    // Obtener los intereses actuales del usuario
+    $current_interests = $wpdb->get_results($wpdb->prepare(
+        "SELECT interest, intensity FROM " . INTERES_TABLE . " WHERE user_id = %d",
+        $user_id
+    ), OBJECT_K);
+
+    $tag_intensidad = [];
+
+    if (!empty($liked_posts)) {
+        // Obtener metadatos y contenido del post en una sola consulta
+        $post_data = $wpdb->get_results($wpdb->prepare(
+            "SELECT p.ID, p.post_content, pm.meta_value 
+             FROM $wpdb->posts p
+             LEFT JOIN $wpdb->postmeta pm ON p.ID = pm.post_id AND pm.meta_key = 'datosAlgoritmo'
+             WHERE p.ID IN (" . implode(',', array_fill(0, count($liked_posts), '%d')) . ")",
+            $liked_posts
+        ));
+
+        foreach ($post_data as $post) {
+            $datosAlgoritmo = json_decode($post->meta_value, true);
+
+            // Procesar tags
+            if (isset($datosAlgoritmo['tags'])) {
+                foreach ($datosAlgoritmo['tags'] as $tag) {
+                    $tag_intensidad[$tag] = ($tag_intensidad[$tag] ?? 0) + 1;
+                }
+            }
+
+            // Procesar autor
+            if (isset($datosAlgoritmo['autor']['usuario'])) {
+                $autor = $datosAlgoritmo['autor']['usuario'];
+                $tag_intensidad[$autor] = ($tag_intensidad[$autor] ?? 0) + 1;
+            }
+
+            // Procesar texto
+            $palabras = array_filter(explode(' ', strtolower(trim($post->post_content))));
+            foreach ($palabras as $palabra) {
+                $palabra = preg_replace('/[^a-z0-9]+/', '', $palabra);
+                if (!empty($palabra)) {
+                    $tag_intensidad[$palabra] = ($tag_intensidad[$palabra] ?? 0) + 1;
+                }
+            }
+        }
+    }
+
+    // Actualizar intereses en lotes
+    $wpdb->query('START TRANSACTION');
+
+    try {
+        $batch = [];
+        foreach ($tag_intensidad as $interest => $intensity) {
+            $current_intensity = $current_interests[$interest]->intensity ?? 0;
+            $intensity_change = $intensity - $current_intensity;
+
+            $batch[] = $wpdb->prepare(
+                "(%d, %s, %d)",
+                $user_id, $interest, $intensity
+            );
+
+            if (count($batch) >= BATCH_SIZE) {
+                actualizarInteresesEnLote($batch);
+                $batch = [];
+            }
+        }
+
+        if (!empty($batch)) {
+            actualizarInteresesEnLote($batch);
+        }
+
+        // Eliminar intereses que ya no existen
+        $intereses_a_eliminar = array_diff_key($current_interests, $tag_intensidad);
+        if (!empty($intereses_a_eliminar)) {
+            $wpdb->query($wpdb->prepare(
+                "DELETE FROM " . INTERES_TABLE . " 
+                 WHERE user_id = %d AND interest IN (" . implode(',', array_fill(0, count($intereses_a_eliminar), '%s')) . ")",
+                array_merge([$user_id], array_keys($intereses_a_eliminar))
+            ));
+        }
+
+        $wpdb->query('COMMIT');
+    } catch (Exception $e) {
+        $wpdb->query('ROLLBACK');
+        error_log('Error al actualizar intereses: ' . $e->getMessage());
+        return false;
+    }
+
+    return $tag_intensidad;
+}
+
+function actualizarInteresesEnLote($batch) {
+    global $wpdb;
+
+    $wpdb->query("INSERT INTO " . INTERES_TABLE . " (user_id, interest, intensity) 
+                  VALUES " . implode(', ', $batch) . "
+                  ON DUPLICATE KEY UPDATE intensity = VALUES(intensity)");
+}
+
+function crearTablaUserInterests() {
+    global $wpdb;
+
+    $table_name = $wpdb->prefix . 'interes'; 
+
+    // Verifica si la tabla ya existe
+    if($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE $table_name (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id bigint(20) UNSIGNED NOT NULL,
+            interest varchar(255) NOT NULL,
+            intensity int(11) NOT NULL DEFAULT 1,
+            PRIMARY KEY (id),
+            UNIQUE KEY user_interest_unique (user_id, interest),
+            KEY user_id (user_id),
+            KEY interest (interest)
+        ) $charset_collate;";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
+    }
+}
+crearTablaUserInterests();
 
 function calcularFeedPersonalizado($userId) {
     global $wpdb;
 
-    $table_name = $wpdb->prefix . 'post_likes';
+    $table_name_likes = $wpdb->prefix . 'post_likes';
+    $table_name_intereses = $wpdb->prefix . 'interes';
     $siguiendo = (array) get_user_meta($userId, 'siguiendo', true);
     $seguidores = (array) get_user_meta($userId, 'seguidores', true);
+
+    // Obtener los intereses del usuario desde la tabla
+    $interesesUsuario = $wpdb->get_results($wpdb->prepare(
+        "SELECT interest, intensity FROM $table_name_intereses WHERE user_id = %d",
+        $userId
+    ), OBJECT_K);
 
     $query = new WP_Query([
         'post_type' => 'social_post',
@@ -37,30 +171,29 @@ function calcularFeedPersonalizado($userId) {
         $puntosIntereses = 0;
         $puntosFinal = 0;
 
-        // 1. **Priorizar publicaciones de usuarios que el usuario sigue**
+        // 1. Priorizar publicaciones de usuarios que el usuario sigue
         if (in_array($autor_id, $siguiendo)) {
-            $puntosUsuario += 50; // Asignar puntos altos por seguir al autor
+            $puntosUsuario += 50;
         }
 
-        // 2. **Verificar si los intereses (tags) coinciden**
-        $interesesUsuario = get_user_meta($userId, 'intereses', true); // Los intereses del usuario
+        // 2. Verificar si los intereses (tags) coinciden
         $tagsPost = $datosAlgoritmo['tags'];
 
         foreach ($tagsPost as $tag) {
-            if (in_array($tag, $interesesUsuario)) {
-                $puntosIntereses += 10; // Puntos por cada coincidencia en intereses
+            if (isset($interesesUsuario[$tag])) {
+                $puntosIntereses += 10 * $interesesUsuario[$tag]->intensity;
             }
         }
 
-        // 3. **Número de likes en la publicación**
-        $likes = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_name WHERE post_id = %d", $post_id));
-        $puntosLikes = $likes * 5; // Cada "me gusta" aumenta la relevancia
+        // 3. Número de likes en la publicación
+        $likes = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_name_likes WHERE post_id = %d", $post_id));
+        $puntosLikes = $likes * 5;
 
-        // 4. **Tiempo de publicación (decay factor)**
+        // 4. Tiempo de publicación (decay factor)
         $horasDesdePublicacion = (current_time('timestamp') - get_post_time('U', true, $post_id)) / 3600;
-        $factorTiempo = pow(0.9, floor($horasDesdePublicacion / 24)); // Decae un 10% por día
+        $factorTiempo = pow(0.9, floor($horasDesdePublicacion / 24));
 
-        // 5. **Calcular puntuación final**
+        // 5. Calcular puntuación final
         $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * $factorTiempo;
 
         // Guardar la puntuación final para este post

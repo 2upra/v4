@@ -220,8 +220,8 @@ function postrolaresumen() {
 
     // Obtener información de 'likes' NUEVO
     $current_post_id = get_the_ID();
-    $like_count = get_like_count($current_post_id);
-    $user_has_liked = check_user_liked_post($current_post_id, $current_user_id);
+    $like_count = contarLike($current_post_id);
+    $user_has_liked = chequearLike($current_post_id, $current_user_id);
     $liked_class = $user_has_liked ? 'liked' : 'not-liked';
 
     $post_content = get_the_content();
@@ -261,7 +261,7 @@ function postrolaresumen() {
         <?php
         $current_post_id = get_the_ID();
         $nonce = wp_create_nonce('like_post_nonce');
-        $like_count = get_like_count($current_post_id);
+        $like_count = contarLike($current_post_id);
         like($current_post_id);
         ?>          
     </div>

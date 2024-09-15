@@ -17,7 +17,7 @@ function postMomento()
     }
     // Obtener información de 'likes'
     $current_post_id = get_the_ID();
-    $user_has_liked = check_user_liked_post($current_post_id, $current_user_id);
+    $user_has_liked = chequearLike($current_post_id, $current_user_id);
 
     ob_start();
     $post_content = get_the_content();
