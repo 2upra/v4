@@ -63,13 +63,13 @@ function formRs()
         </div>
 
         <div class="botonesForm R0A915">
-            <button class="botonicono" id="botonAudio"><?php echo $GLOBALS['subiraudio']; ?></button>
+            <button class="botonicono borde" id="botonAudio"><?php echo $GLOBALS['subiraudio']; ?></button>
 
-            <button class="botonicono" id="botonImagen"><?php echo $GLOBALS['subirimagen']; ?></button>
+            <button class="botonicono borde" id="botonImagen"><?php echo $GLOBALS['subirimagen']; ?></button>
 
-            <button class="botonicono" id="botonArchivo"><?php echo $GLOBALS['subirarchivo']; ?></button>
+            <button class="botonicono borde" id="botonArchivo"><?php echo $GLOBALS['subirarchivo']; ?></button>
 
-            <button id="enviarRs">Publicar</button>
+            <button class="borde" id="enviarRs">Publicar</button>
         </div>
     </div>
 
