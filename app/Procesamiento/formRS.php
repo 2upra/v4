@@ -20,7 +20,7 @@ function formRs()
             <div class="postTags DABVYT" id="textoRs" contenteditable="true" data-placeholder="Puedes agregar tags usando #"></div>
 
             <input type="hidden" id="postTagsHidden" name="post_tags">
-            
+
             <textarea id="postContent" name="post_content" rows="2" required placeholder="Escribe aquí" style="display: none;"></textarea>
         </div>
 
@@ -40,7 +40,7 @@ function formRs()
             <p>Opciones de post</p>
             <div class="flex flex-row gap-2">
                 <label class="custom-checkbox">
-                    <input type="checkbox" id="descarga" name="descarga"" value="1">
+                    <input type="checkbox" id="descarga" name="descarga" value="1">
                     <span class="checkmark"></span>
                     <?php echo $GLOBALS['descargaicono']; ?>
                 </label>
