@@ -60,22 +60,30 @@ async function eliminarPost() {
 }
 
 //GENERIC AJAX
+//GENERIC AJAX
 async function enviarAjax(action, data = {}) {
     try {
+        // Construimos el cuerpo de la solicitud
+        const body = new URLSearchParams({
+            action: action,
+            ...data
+        });
+
+        console.log('Cuerpo de la solicitud que se enviará:', body.toString()); // Log para ver el cuerpo de la solicitud
+
+        // Enviamos la solicitud
         const response = await fetch(ajaxUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: new URLSearchParams({
-                action: action,
-                ...data
-            })
+            body: body
         });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+
         let responseData;
         const responseText = await response.text();
 
