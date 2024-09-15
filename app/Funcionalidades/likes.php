@@ -1,6 +1,6 @@
 <?php
 
-function like() {
+function likeFuncion() {
     // Comprueba si el usuario ha iniciado sesión
     if (!is_user_logged_in()) {
         echo 'not_logged_in';
@@ -24,8 +24,8 @@ function like() {
         wp_die();
     }
 
-    // Realiza la acción de "like" o "unlike"
-    $action = $like_state ? 'like' : 'unlike';
+    // Realiza la acción de "likeFuncion" o "unlike"
+    $action = $like_state ? 'likeFuncion' : 'unlike';
     likeAccion($post_id, $user_id, $action);
 
     // Devuelve el número de "likes"
@@ -38,7 +38,7 @@ function likeAccion($post_id, $user_id, $action)
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';
 
-    if ($action === 'like') {
+    if ($action === 'likeFuncion') {
         if (check_user_liked_post($post_id, $user_id)) {
             $action = 'unlike';
         } else {
@@ -130,15 +130,15 @@ function like($post_id)
     ob_start();
 ?>
     <div class="TJKQGJ">
-        <button class="post-like-button <?= esc_attr($liked_class) ?>" data-post_id="<?= esc_attr($post_id) ?>" data-nonce="<?= wp_create_nonce('like_post_nonce') ?>">
+        <button class="post-likeFuncion-button <?= esc_attr($liked_class) ?>" data-post_id="<?= esc_attr($post_id) ?>" data-nonce="<?= wp_create_nonce('like_post_nonce') ?>">
             <?php echo $GLOBALS['iconoCorazon']; ?>
         </button>
-        <span class="like-count"><?= esc_html($like_count) ?></span>
+        <span class="likeFuncion-count"><?= esc_html($like_count) ?></span>
     </div>
 <?php
     $output = ob_get_clean();
     return $output;
 }
 
-add_action('wp_ajax_nopriv_handle_post_like', 'like');
-add_action('wp_ajax_handle_post_like', 'like');
+add_action('wp_ajax_nopriv_handle_post_like', 'likeFuncion');
+add_action('wp_ajax_handle_post_like', 'likeFuncion');
