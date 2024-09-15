@@ -4,11 +4,23 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
 {
     // Saneamiento de datos
     $contenido = sanitize_textarea_field($_POST['textoNormal'] ?? '');
+    $tags = sanitize_text_field($_POST['tags'] ?? '');
+
     // Validación del contenido
     if (empty($contenido)) {
         guardarLog('empty_content: El contenido no puede estar vacío.');
         return new WP_Error('empty_content', 'El contenido no puede estar vacío.');
     }
+
+    // Convertir los tags en hashtags
+    if (!empty($tags)) {
+        $tagsArray = explode(',', $tags);
+        $hashtags = array_map(function($tag) {
+            return '#' . trim($tag);
+        }, $tagsArray);
+        $contenido .= ' ' . implode(' ', $hashtags);
+    }
+
     // Generar el título
     $titulo = wp_trim_words($contenido, 15, '...');
     $autor = get_current_user_id();
