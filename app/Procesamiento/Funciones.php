@@ -23,8 +23,7 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
     ]);
 
     if (is_wp_error($post_id)) {
-        return $post_id; // Manejar errores correctamente
-    }
+        return $post_id; 
 
     return $post_id;
 }
@@ -59,6 +58,16 @@ function confirmarArchivos($postId)
     }
 }
 
+
+function asignarTags($postId)
+{
+    if (!empty($_POST['Tags'])) {
+        $tags = sanitize_text_field($_POST['Tags']);
+        $tags_array = explode(',', $tags);
+        wp_set_post_tags($postId, $tags_array, false);
+    }
+}
+
 function procesarURLs($postId)
 {
     $procesarURLs = [
@@ -76,15 +85,6 @@ function procesarURLs($postId)
                     : $callback($postId, $field);
             }
         }
-    }
-}
-
-function asignarTags($postId)
-{
-    if (!empty($_POST['Tags'])) {
-        $tags = sanitize_text_field($_POST['Tags']);
-        $tags_array = explode(',', $tags);
-        wp_set_post_tags($postId, $tags_array, false);
     }
 }
 
@@ -124,7 +124,15 @@ function obtenerArchivoId($url, $postId)
 
 function actualizarMetaConArchivo($postId, $campo, $archivoId)
 {
-    update_post_meta($postId, $campo, $archivoId);
+    $meta_mapping = [
+        'imagenUrl' => 'imagenID',
+        'audioUrl' => 'post_audio',
+        'archivoUrl' => 'archivoID'
+    ];
+
+    $meta_key = isset($meta_mapping[$campo]) ? $meta_mapping[$campo] : $campo;
+    update_post_meta($postId, $meta_key, $archivoId);
+
     if ($campo === 'imagenUrl') {
         set_post_thumbnail($postId, $archivoId);
     }

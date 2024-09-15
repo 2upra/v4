@@ -30,6 +30,7 @@ function subidaRs()
     //FUNCIONA
     procesarURLs($postId);
     guardarLog('URLs procesadas.');
+    //FUNCIONA
     asignarTags($postId);
     guardarLog('Tags asignadas.');
 
