@@ -12,7 +12,7 @@ function generarMetaDeIntereses($user_id) {
     // Obtener todos los posts con likes del usuario
     $liked_posts = obtenerLikesDelUsuario($user_id);
     if (empty($liked_posts)) {
-        guardarLog("No hay posts con likes para el usuario: $user_id");
+        logAlgoritmo("No hay posts con likes para el usuario: $user_id");
         return false;
     }
 
@@ -33,7 +33,7 @@ function generarMetaDeIntereses($user_id) {
     ));
 
     if (empty($post_data)) {
-        guardarLog("No se encontraron datos para los posts con likes del usuario: $user_id");
+        logAlgoritmo("No se encontraron datos para los posts con likes del usuario: $user_id");
         return false;
     }
 
@@ -106,12 +106,12 @@ function actualizarIntereses($user_id, $tag_intensidad, $current_interests) {
         }
 
         $wpdb->query('COMMIT');
-        guardarLog("Intereses actualizados exitosamente para el usuario: $user_id");
+        logAlgoritmo("Intereses actualizados exitosamente para el usuario: $user_id");
         return true;
     } catch (Exception $e) {
         $wpdb->query('ROLLBACK');
         error_log('Error al actualizar intereses: ' . $e->getMessage());
-        guardarLog("Error al actualizar intereses: " . $e->getMessage());
+        logAlgoritmo("Error al actualizar intereses: " . $e->getMessage());
         return false;
     }
 }
@@ -139,7 +139,7 @@ function calcularFeedPersonalizado($userId) {
 
     // Generar o actualizar los intereses del usuario
     generarMetaDeIntereses($userId);
-    guardarLog("Intereses del usuario generados para el usuario ID: $userId");
+    logAlgoritmo("Intereses del usuario generados para el usuario ID: $userId");
 
     // Obtener intereses del usuario
     $interesesUsuario = $wpdb->get_results($wpdb->prepare(
@@ -147,7 +147,7 @@ function calcularFeedPersonalizado($userId) {
         $userId
     ), OBJECT_K);
 
-    guardarLog("Intereses del usuario obtenidos: " . json_encode($interesesUsuario));
+    logAlgoritmo("Intereses del usuario obtenidos: " . json_encode($interesesUsuario));
 
     // Consultar los posts en los últimos 100 días
     $query = new WP_Query([
@@ -158,7 +158,7 @@ function calcularFeedPersonalizado($userId) {
         ]
     ]);
 
-    guardarLog("Consulta de posts realizada, total de posts: " . $query->found_posts);
+    logAlgoritmo("Consulta de posts realizada, total de posts: " . $query->found_posts);
 
     $posts_personalizados = [];
 
@@ -209,85 +209,10 @@ function calcularFeedPersonalizado($userId) {
     wp_reset_postdata();
 
     // Log final del proceso
-    guardarLog("Feed personalizado calculado para el usuario ID: $userId. Total de posts: " . count($posts_personalizados));
+    logAlgoritmo("Feed personalizado calculado para el usuario ID: $userId. Total de posts: " . count($posts_personalizados));
 
     return $posts_personalizados;
 }
 
 
 
-/*
-function updateUserScore($post_id) {
-    $author_id = get_post_field('post_author', $post_id);
-    $user_scores = get_user_meta($author_id, '_user_scores', true);
-    
-    if (is_array($user_scores)) {
-        $user_scores = array_column(array_filter($user_scores, function($score) use ($post_id) {
-            return $score['post_id'] != $post_id;
-        }), 'score');
-
-        if ($user_scores) {
-            update_user_meta($author_id, '_average_user_score', array_sum($user_scores) / count($user_scores));
-        } else {
-            delete_user_meta($author_id, '_average_user_score');
-        }
-    }
-}
-add_action('delete_post', 'updateUserScore');
-
-function reset_scores_and_recalculate() {
-    global $wpdb;
-
-    $wpdb->query("DELETE FROM $wpdb->postmeta WHERE meta_key = '_post_puntuacion_final'");
-    $wpdb->query("DELETE FROM $wpdb->usermeta WHERE meta_key IN ('_average_user_score', '_user_scores')");
-
-    postTop();
-}
-
-if (!wp_next_scheduled('postTop_hook')) {
-    wp_schedule_event(time(), 'hourly', 'postTop_hook');
-}
-add_action('postTop_hook', 'reset_scores_and_recalculate');
-
-function recomendarUsuarios() {
-    ob_start();
-    $current_user_id = get_current_user_id();
-    $following = get_user_meta($current_user_id, 'siguiendo', true) ?: [];
-
-    $users = (new WP_User_Query([
-        'exclude' => $following,
-        'meta_key' => '_average_user_score',
-        'orderby' => 'meta_value_num',
-        'order' => 'DESC',
-        'number' => 3
-    ]))->get_results();
-
-    echo "<div class='LKIRWH'>";
-    foreach ($users as $user) {
-        $user_id = $user->ID;
-        $user_url = esc_url(get_author_posts_url($user_id));
-        $avatar_url = esc_url(imagenPerfil($user_id));
-        $display_name = esc_html($user->display_name);
-        $is_following = in_array($user_id, $following);
-        $btn_class = $is_following ? 'RQZEWL' : 'MBTHLA';
-        $btn_text = $is_following ? 'Dejar de seguir' : 'Seguir';
-
-        echo "<div class='GDZTMT'>
-                <a href='$user_url' class='IRBSEZ'>
-                    <img src='$avatar_url' alt='Avatar' class='LOQTXE'>
-                </a>
-                <div class='PEZRWX'>
-                    <a href='$user_url' class='XJHTRG'>
-                        <span class='WZKLVN'>$display_name</span>
-                    </a>
-                    <button class='$btn_class' data-seguidor-id='$current_user_id' data-seguido-id='$user_id'>$btn_text</button>
-                    <span class='YGCWFT' style='display:none;'>" . get_user_meta($user_id, '_average_user_score', true) . "</span>
-                </div>
-            </div>";
-    }
-    echo "</div>";
-
-    return ob_get_clean();
-}
-
-*/

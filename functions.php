@@ -5,26 +5,27 @@ require_once __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-function guardarLog($log)
-{
-    $log_option_name = 'wanlog_logs';
-    $logs = get_option($log_option_name, []);
-    $timestamped_log = date('Y-m-d H:i:s') . ' - ' . $log;
+function escribirLog($mensaje, $archivo) {
+    $timestamped_log = date('Y-m-d H:i:s') . ' - ' . $mensaje;
+    file_put_contents($archivo, $timestamped_log . PHP_EOL, FILE_APPEND);
 
-    array_unshift($logs, $timestamped_log);
-    $logs = array_slice($logs, 0, 100);
-    update_option($log_option_name, $logs);
-
-    $log_file = '/var/www/wordpress/wp-content/themes/logsw.txt';
-    file_put_contents($log_file, $timestamped_log . PHP_EOL, FILE_APPEND);
-
-    $line_count = count(file($log_file));
+    $line_count = count(file($archivo));
     if ($line_count > 400) {
-        $lines = file($log_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $lines = file($archivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         $new_lines = array_slice($lines, -400);
-        file_put_contents($log_file, implode(PHP_EOL, $new_lines) . PHP_EOL);
+        file_put_contents($archivo, implode(PHP_EOL, $new_lines) . PHP_EOL);
     }
 }
+
+function guardarLog($log) {
+    escribirLog($log, '/var/www/wordpress/wp-content/themes/logsw.txt');
+}
+
+function logAlgoritmo($log) {
+    escribirLog($log, '/var/www/wordpress/wp-content/themes/logAlgoritmo.log');
+}
+
+
 
 //Script principal
 function scriptsOrdenados()
