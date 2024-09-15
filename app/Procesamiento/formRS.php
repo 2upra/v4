@@ -45,7 +45,7 @@ function formRs()
                     <?php echo $GLOBALS['descargaicono']; ?>
                 </label>
                 <label class="custom-checkbox">
-                    <input type="checkbox" id="esExclusivo" name="esExclusivo" value="1">
+                    <input type="checkbox" id="exclusivo" name="exclusivo" value="1">
                     <span class="checkmark"></span>
                     <?php echo $GLOBALS['estrella']; ?>
                 </label>
