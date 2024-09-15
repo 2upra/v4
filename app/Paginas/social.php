@@ -13,9 +13,9 @@ function social()
                 <div class="OXMGLZ">
                     <div class="OAXRVB">
                         <div class="K51M22">
-                            <?php echo do_shortcode('[mostrar_publicaciones_sociales filtro="momento" tab_id="tab1-posts"]'); ?>
+
                             <div class="PODOVV">
-                                <?php echo momentosfijos() ?>
+                                <?php // echo momentosfijos() ?>
                             </div>
                         </div>
                         <div class="M0883I">
