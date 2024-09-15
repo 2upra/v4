@@ -26,7 +26,7 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
     $autor = get_current_user_id();
 
     // Insertar el post
-    $post_id = wp_insert_post([
+    $postId = wp_insert_post([
         'post_title'   => $titulo,
         'post_content' => $contenido,
         'post_status'  => $estadoPost,
@@ -34,11 +34,40 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
         'post_type'    => $tipoPost,
     ]);
 
-    if (is_wp_error($post_id)) {
-        return $post_id; 
+    if (is_wp_error($postId)) {
+        return $postId;
     }
 
-    return $post_id;
+    return $postId;
+}
+
+function datosParaAlgoritmo($postId) {
+
+    // Obtener el texto normal desde la solicitud POST
+    $textoNormal = isset($_POST['textoNormal']) ? trim($_POST['textoNormal']) : '';
+    
+    // Procesar los tags, eliminando espacios y creando un array
+    $tags = isset($_POST['tags']) ? array_map('trim', explode(',', $_POST['tags'])) : [];
+
+    $autorId = get_post_field('post_author', $postId);
+
+    // Preparar los datos para el algoritmo 
+    $datosAlgoritmo = [
+        'tags' => $tags,
+        'texto' => $textoNormal,
+        'autor' => $autorId,
+    ];
+
+    // Guardar log de los datos compilados
+    guardarLog("Datos para algoritmo compilados para postId: {$postId}");
+
+    // Codificar los datos en JSON y actualizar metadatos
+    if ($datosAlgoritmoJson = json_encode($datosAlgoritmo)) {
+        update_post_meta($postId, 'datosAlgoritmo', $datosAlgoritmoJson);
+        guardarLog("Metadatos de datosAlgoritmo actualizados para postId: {$postId}");
+    } else {
+        guardarLog("Error al codificar datosAlgoritmo a JSON para postId: {$postId}");
+    }
 }
 
 function actualizarMetaDatos($postId)

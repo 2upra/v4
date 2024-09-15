@@ -1,5 +1,8 @@
 <?php
 
+
+/* esto es una forma vieja de algoritmo para el feed social, pero ahora es necesario hacer algo util, y personalizado
+
 function postTop() {
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';

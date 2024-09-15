@@ -33,10 +33,13 @@ function subidaRs()
     //FUNCIONA
     asignarTags($postId);
     guardarLog('Tags asignadas.');
+    
+    datosParaAlgoritmo($postId);
+    guardarLog('Datos para algoritmo procesados.');
 
     guardarLog('Post RS creado con ID: ' . $postId);
 
-    update_post_meta($postId, '_post_puntuacion_final', 100);
+    // update_post_meta($postId, '_post_puntuacion_final', 100);
     guardarLog('Final completado');
 
     wp_send_json_success(['message' => 'Post creado exitosamente']);

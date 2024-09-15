@@ -415,6 +415,11 @@ function limpiarCamposRs() {
         if (labelAudio) labelAudio.textContent = '';
     }
 
+    const opciones = document.getElementById('opciones');
+    if (opciones) {
+        opciones.style.display = 'none';
+    }
+
     const previewArchivo = document.getElementById('previewArchivo');
     if (previewArchivo) {
         previewArchivo.style.display = 'none';
