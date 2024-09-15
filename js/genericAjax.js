@@ -1,3 +1,92 @@
+// Logs
+let enablelogAjax = false;
+const logAjax = enablelogAjax ? console.log : function () {};
+
+//GENERIC AJAX
+async function enviarAjax(action, data = {}) {
+    try {
+        const body = new URLSearchParams({
+            action: action,
+            ...data
+        });
+
+        logAjax('Cuerpo de la solicitud que se enviará:', body.toString()); 
+
+        const response = await fetch(ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: body
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        let responseData;
+        const responseText = await response.text();
+
+        try {
+            responseData = JSON.parse(responseText); 
+        } catch (jsonError) {
+            console.warn('No se pudo interpretar la respuesta como JSON:', jsonError);
+            responseData = responseText; 
+        }
+
+        logAjax('Respuesta del servidor:', responseData);
+        return responseData;
+
+    } catch (error) {
+        console.error('Error en la solicitud:', error);
+        return { success: false, message: error.message };
+    }
+}
+
+//GENERIC CLICK
+async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
+    const buttons = document.querySelectorAll(selector);
+
+    buttons.forEach(button => {
+        button.addEventListener('click', async event => {
+            const postId = event.currentTarget.dataset.postId;
+            logAjax(`Botón clicado. postId encontrado: ${postId}`);
+
+            if (!postId) {
+                console.error('No se encontró postId en el botón');
+                return;
+            }
+
+            const socialPost = event.currentTarget.closest('.social-post');
+            const statusElement = socialPost?.querySelector('.post-status');
+
+            const confirmed = await confirm(confirmMessage);
+            logAjax(`Confirmación de usuario: ${confirmed ? 'Sí' : 'No'}`);
+
+            if (confirmed) {
+                logAjax(`Enviando solicitud AJAX para la acción: ${action} con postId: ${postId}`);
+                const data = await enviarAjax(action, { post_id: postId }); // Cambiar a post_id
+                
+                logAjax('Respuesta AJAX recibida:', data);
+
+                if (data.success) {
+                    logAjax(`Acción ${action} exitosa. Ejecutando callback de éxito.`);
+                    successCallback(statusElement, data);
+                    
+                    if (elementToRemoveSelector) {
+                        logAjax(`Removiendo elemento con selector: ${elementToRemoveSelector} y postId: ${postId}`);
+                        removerPost(elementToRemoveSelector, postId);
+                    }
+                } else {
+                    console.error(`Error al realizar la acción: ${action}. Mensaje: ${data.message}`);
+                }
+            } else {
+                logAjax('Acción cancelada por el usuario.');
+            }
+        });
+    });
+}
+
 async function handleAllRequests() {
     try {
         await requestDeletion();
@@ -59,93 +148,7 @@ async function eliminarPost() {
     );
 }
 
-//GENERIC AJAX
-//GENERIC AJAX
-async function enviarAjax(action, data = {}) {
-    try {
-        // Construimos el cuerpo de la solicitud
-        const body = new URLSearchParams({
-            action: action,
-            ...data
-        });
 
-        console.log('Cuerpo de la solicitud que se enviará:', body.toString()); // Log para ver el cuerpo de la solicitud
-
-        // Enviamos la solicitud
-        const response = await fetch(ajaxUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: body
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        let responseData;
-        const responseText = await response.text();
-
-        try {
-            responseData = JSON.parse(responseText); 
-        } catch (jsonError) {
-            console.warn('No se pudo interpretar la respuesta como JSON:', jsonError);
-            responseData = responseText; 
-        }
-
-        console.log('Respuesta del servidor:', responseData);
-        return responseData;
-
-    } catch (error) {
-        console.error('Error en la solicitud:', error);
-        return { success: false, message: error.message };
-    }
-}
-
-//GENERIC CLICK
-async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
-    const buttons = document.querySelectorAll(selector);
-
-    buttons.forEach(button => {
-        button.addEventListener('click', async event => {
-            const postId = event.currentTarget.dataset.postId;
-            console.log(`Botón clicado. postId encontrado: ${postId}`);
-
-            if (!postId) {
-                console.error('No se encontró postId en el botón');
-                return;
-            }
-
-            const socialPost = event.currentTarget.closest('.social-post');
-            const statusElement = socialPost?.querySelector('.post-status');
-
-            const confirmed = await confirm(confirmMessage);
-            console.log(`Confirmación de usuario: ${confirmed ? 'Sí' : 'No'}`);
-
-            if (confirmed) {
-                console.log(`Enviando solicitud AJAX para la acción: ${action} con postId: ${postId}`);
-                const data = await enviarAjax(action, { post_id: postId }); // Cambiar a post_id
-                
-                console.log('Respuesta AJAX recibida:', data);
-
-                if (data.success) {
-                    console.log(`Acción ${action} exitosa. Ejecutando callback de éxito.`);
-                    successCallback(statusElement, data);
-                    
-                    if (elementToRemoveSelector) {
-                        console.log(`Removiendo elemento con selector: ${elementToRemoveSelector} y postId: ${postId}`);
-                        removerPost(elementToRemoveSelector, postId);
-                    }
-                } else {
-                    console.error(`Error al realizar la acción: ${action}. Mensaje: ${data.message}`);
-                }
-            } else {
-                console.log('Acción cancelada por el usuario.');
-            }
-        });
-    });
-}
 //GENERIC CAMBIAR DOM
 function actualizarElemento(element, newStatus) {
     if (element) {
