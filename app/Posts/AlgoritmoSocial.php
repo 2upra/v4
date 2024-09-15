@@ -134,6 +134,7 @@ function crearTablaUserInterests() {
 }
 crearTablaUserInterests();
 
+
 function calcularFeedPersonalizado($userId) {
     global $wpdb;
 
@@ -178,11 +179,14 @@ function calcularFeedPersonalizado($userId) {
         }
 
         // 2. Verificar si los intereses (tags) coinciden
-        $tagsPost = $datosAlgoritmo['tags'];
+        $tagsPost = isset($datosAlgoritmo['tags']) ? $datosAlgoritmo['tags'] : [];
 
-        foreach ($tagsPost as $tag) {
-            if (isset($interesesUsuario[$tag])) {
-                $puntosIntereses += 10 * $interesesUsuario[$tag]->intensity;
+        // Solo ejecutar el foreach si $tagsPost es un array
+        if (is_array($tagsPost)) {
+            foreach ($tagsPost as $tag) {
+                if (isset($interesesUsuario[$tag])) {
+                    $puntosIntereses += 10 * $interesesUsuario[$tag]->intensity;
+                }
             }
         }
 
@@ -205,6 +209,7 @@ function calcularFeedPersonalizado($userId) {
     wp_reset_postdata();
     return $posts_personalizados;
 }
+
 
 /*
 function updateUserScore($post_id) {
