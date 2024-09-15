@@ -67,7 +67,7 @@ function calcularFeedPersonalizado($userId) {
     return $posts_personalizados;
 }
 
-
+/*
 function updateUserScore($post_id) {
     $author_id = get_post_field('post_author', $post_id);
     $user_scores = get_user_meta($author_id, '_user_scores', true);
