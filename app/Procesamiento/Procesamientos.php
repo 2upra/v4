@@ -21,16 +21,16 @@ function subidaRs()
     }
 
     guardarLog('Post creado con ID: ' . $postId . '. Actualizando meta datos.');
-    //FUNCIONA
+
     actualizarMetaDatos($postId);
     guardarLog('Meta datos actualizados.');
-    //FUNCIONA
+
     confirmarArchivos($postId);
     guardarLog('Archivos confirmados.');
-    //FUNCIONA
+
     procesarURLs($postId);
     guardarLog('URLs procesadas.');
-    //FUNCIONA
+
     asignarTags($postId);
     guardarLog('Tags asignadas.');
     
@@ -39,7 +39,6 @@ function subidaRs()
 
     guardarLog('Post RS creado con ID: ' . $postId);
 
-    // update_post_meta($postId, '_post_puntuacion_final', 100);
     guardarLog('Final completado');
 
     wp_send_json_success(['message' => 'Post creado exitosamente']);
