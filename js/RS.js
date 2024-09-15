@@ -1,5 +1,5 @@
 // Variables globales
-let imagenUrl, imagenId, audioUrl, audioId, archivoUrl, archivoId, imagenSelecionada;
+let imagenUrl, imagenId, audioUrl, audioId, archivoUrl, archivoId;
 // Logs
 let enablelogRS = true;
 const logRS = enablelogRS ? console.log : function () {};
@@ -15,7 +15,7 @@ function iniciarRS() {
         archivoUrl = null;
         archivoId = null;
         subidaRs();
-        envioRs()
+        envioRs();
         placeholderRs();
         TagEnTexto();
     } else {
@@ -26,32 +26,32 @@ function iniciarRS() {
 function verificarCamposRs() {
     const textoRsDiv = document.getElementById('textoRs');
     textoRsDiv.setAttribute('placeholder', 'Puedes agregar tags agregando un #');
-    
+
     function verificarCampos() {
         const tags = window.Tags || [];
         const textoNormal = window.NormalText || '';
-        
+
         if (textoNormal.length < 3) {
             alert('El texto debe tener al menos 3 caracteres');
-            return false; 
+            return false;
         }
         if (textoNormal.length > 800) {
             alert('El texto no puede exceder los 800 caracteres');
             textoRsDiv.innerText = textoNormal.substring(0, 800);
-            return false; 
+            return false;
         }
         if (tags.length === 0) {
             alert('Debe incluir al menos un tag');
-            return false; 
+            return false;
         }
         if (tags.some(tag => tag.length < 3)) {
             alert('Cada tag debe tener al menos 3 caracteres');
-            return false; 
+            return false;
         }
-        
-        return true; 
+
+        return true;
     }
-    
+
     return verificarCampos;
 }
 
@@ -63,7 +63,7 @@ async function envioRs() {
         button.disabled = true;
         const valid = verificarCampos();
         if (!valid) {
-            button.disabled = false; 
+            button.disabled = false;
             return;
         }
 
@@ -85,15 +85,15 @@ async function envioRs() {
             tags,
             textoNormal,
             descarga,
-            exclusivo, 
-            colab      
+            exclusivo,
+            colab
         };
-        
+
         try {
             const response = await enviarAjax('subidaRs', data);
             if (response?.success) {
                 alert('Publicación realizada con éxito');
-                limpiarCampos();
+                limpiarCamposRs();
             } else {
                 alert(`Error al publicar post: ${response?.message || 'Desconocido'}`);
             }
@@ -101,7 +101,7 @@ async function envioRs() {
             console.error('Error al enviar los datos:', error);
             alert('Ocurrió un error durante la publicación. Por favor, inténtelo de nuevo.');
         } finally {
-            button.disabled = false; 
+            button.disabled = false;
         }
     });
 }
@@ -130,12 +130,14 @@ function subidaRs() {
         return acc;
     }, {});
 
-    const missingElements = Object.entries(elements).filter(([_, el]) => !el).map(([id]) => id);
+    const missingElements = Object.entries(elements)
+        .filter(([_, el]) => !el)
+        .map(([id]) => id);
     if (missingElements.length) {
-        return; 
+        return;
     }
 
-    const { formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs } = elements;
+    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs} = elements;
 
     const inicialSubida = event => {
         event.preventDefault();
@@ -144,52 +146,51 @@ function subidaRs() {
         if (!file) return;
         if (file.size > 50 * 1024 * 1024) return alert('El archivo no puede superar los 50 MB.');
 
-        file.type.startsWith('audio/') ? subidaAudio(file) :
-        file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
+        file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
     };
 
     const subidaAudio = async file => {
-        enviarRs.disabled = true; 
+        enviarRs.disabled = true;
         try {
             alert(`Audio subido: ${file.name}`);
             previewAudio.style.display = 'block';
             opciones.style.display = 'flex';
             const progressBarId = waveAudio(file);
-            const { fileUrl, fileId } = await subidaRsBackend(file, progressBarId);
+            const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
             audioUrl = fileUrl;
             audioId = fileId;
-            enviarRs.disabled = false; 
+            enviarRs.disabled = false;
         } catch (error) {
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
         }
     };
 
     const subidaArchivo = async file => {
-        enviarRs.disabled = true; 
+        enviarRs.disabled = true;
         previewArchivo.style.display = 'block';
         previewArchivo.innerHTML = `<div class="file-name">${file.name}</div><div id="barraProgresoFile" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>`;
         try {
             alert(`Archivo subido: ${file.name}`);
-            const { fileUrl, fileId } = await subidaRsBackend(file, 'barraProgresoFile');
+            const {fileUrl, fileId} = await subidaRsBackend(file, 'barraProgresoFile');
             archivoUrl = fileUrl;
             archivoId = fileId;
-            enviarRs.disabled = false; 
+            enviarRs.disabled = false;
         } catch {
             alert('Hubo un problema al cargar el Archivo. Inténtalo de nuevo.');
         }
     };
 
     const subidaImagen = async file => {
-        enviarRs.disabled = true; 
+        enviarRs.disabled = true;
         opciones.style.display = 'flex';
         updatePreviewImagen(file);
         imagenSelecionada = file;
         try {
             alert(`Imagen subida: ${file.name}`);
-            const { fileUrl, fileId } = await subidaRsBackend(file, 'barraProgresoImagen');
+            const {fileUrl, fileId} = await subidaRsBackend(file, 'barraProgresoImagen');
             imagenUrl = fileUrl;
             imagenId = fileId;
-            enviarRs.disabled = false; 
+            enviarRs.disabled = false;
         } catch {
             alert('Hubo un problema al cargar la Imagen. Inténtalo de nuevo.');
         }
@@ -253,7 +254,7 @@ function subidaRs() {
 }
 
 async function subidaRsBackend(file, progressBarId) {
-    logRS('Iniciando subida de archivo', { fileName: file.name, fileSize: file.size });
+    logRS('Iniciando subida de archivo', {fileName: file.name, fileSize: file.size});
 
     const formData = new FormData();
     formData.append('action', 'file_upload');
@@ -264,51 +265,51 @@ async function subidaRsBackend(file, progressBarId) {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', my_ajax_object.ajax_url, true);
 
-        logRS('Preparando solicitud AJAX', { url: my_ajax_object.ajax_url });
+        logRS('Preparando solicitud AJAX', {url: my_ajax_object.ajax_url});
 
-        xhr.upload.onprogress = (e) => {
+        xhr.upload.onprogress = e => {
             if (e.lengthComputable) {
                 const progressBar = document.getElementById(progressBarId);
                 const progressPercent = (e.loaded / e.total) * 100;
                 if (progressBar) progressBar.style.width = `${progressPercent}%`;
 
-                logRS('Actualizando barra de progreso', { loaded: e.loaded, total: e.total, progressPercent });
+                logRS('Actualizando barra de progreso', {loaded: e.loaded, total: e.total, progressPercent});
             }
         };
 
         xhr.onload = () => {
-            logRS('Respuesta recibida', { status: xhr.status, response: xhr.responseText });
+            logRS('Respuesta recibida', {status: xhr.status, response: xhr.responseText});
 
             if (xhr.status === 200) {
                 try {
                     const result = JSON.parse(xhr.responseText);
                     if (result.success) {
-                        logRS('Archivo subido exitosamente', { data: result.data });
+                        logRS('Archivo subido exitosamente', {data: result.data});
                         resolve(result.data);
                     } else {
-                        logRS('Error en la respuesta del servidor (No éxito)', { response: result });
+                        logRS('Error en la respuesta del servidor (No éxito)', {response: result});
                         reject(new Error('Error en la respuesta del servidor'));
                     }
                 } catch (error) {
-                    logRS('Error al parsear la respuesta', { errorMessage: error.message, response: xhr.responseText });
+                    logRS('Error al parsear la respuesta', {errorMessage: error.message, response: xhr.responseText});
                     reject(error);
                 }
             } else {
-                logRS('Error en la carga del archivo', { status: xhr.status, response: xhr.responseText });
+                logRS('Error en la carga del archivo', {status: xhr.status, response: xhr.responseText});
                 reject(new Error(`Error en la carga del archivo. Status: ${xhr.status}`));
             }
         };
 
         xhr.onerror = () => {
-            logRS('Error en la conexión con el servidor', { status: xhr.status });
+            logRS('Error en la conexión con el servidor', {status: xhr.status});
             reject(new Error('Error en la conexión con el servidor'));
         };
 
         try {
-            logRS('Enviando solicitud AJAX', { formData });
+            logRS('Enviando solicitud AJAX', {formData});
             xhr.send(formData);
         } catch (error) {
-            logRS('Error al enviar la solicitud AJAX', { errorMessage: error.message });
+            logRS('Error al enviar la solicitud AJAX', {errorMessage: error.message});
             reject(new Error('Error al enviar la solicitud AJAX'));
         }
     });
@@ -329,16 +330,36 @@ function placeholderRs() {
     });
 }
 
-function limpiarCampos() {
-    document.getElementById('formRs').reset();
+function limpiarCamposRs() {
+    // Limpiar variables globales
     imagenUrl = null;
     imagenId = null;
     audioUrl = null;
     audioId = null;
     archivoUrl = null;
     archivoId = null;
-    imagenSelecionada = null;
+
+    // Ocultar y limpiar los contenidos de las áreas de previsualización
     document.getElementById('previewAudio').style.display = 'none';
     document.getElementById('previewArchivo').style.display = 'none';
     document.getElementById('previewImagen').style.display = 'none';
+
+    document.getElementById('previewAudio').querySelector('label').textContent = '';
+    document.getElementById('previewArchivo').querySelector('label').textContent = 'Archivo adicional para colab (flp, zip, rar, midi, etc)';
+    document.getElementById('previewImagen').querySelector('label').textContent = '';
+
+    // Limpiar el texto de la sección de tags
+    const textoRs = document.getElementById('textoRs');
+    if (textoRs) {
+        textoRs.textContent = '';
+    }
+
+    window.Tags = [];
+    window.NormalText = '';
+
+    // Desmarcar los checkboxes
+    document.getElementById('descarga').checked = false;
+    document.getElementById('exclusivo').checked = false;
+    document.getElementById('colab').checked = false;
+
 }
