@@ -46,23 +46,35 @@ function datosParaAlgoritmo($postId) {
     // Obtener el texto normal desde la solicitud POST
     $textoNormal = isset($_POST['textoNormal']) ? trim($_POST['textoNormal']) : '';
     
+    // Solución al problema de codificación del texto
+    $textoNormal = htmlspecialchars_decode($textoNormal, ENT_QUOTES);
+
     // Procesar los tags, eliminando espacios y creando un array
     $tags = isset($_POST['tags']) ? array_map('trim', explode(',', $_POST['tags'])) : [];
 
+    // Obtener la ID del autor
     $autorId = get_post_field('post_author', $postId);
+
+    // Obtener el nombre de usuario y el nombre para mostrar
+    $nombreUsuario = get_the_author_meta('user_login', $autorId);
+    $nombreMostrar = get_the_author_meta('display_name', $autorId);
 
     // Preparar los datos para el algoritmo 
     $datosAlgoritmo = [
         'tags' => $tags,
         'texto' => $textoNormal,
-        'autor' => $autorId,
+        'autor' => [
+            'id' => $autorId,
+            'usuario' => $nombreUsuario,
+            'nombre' => $nombreMostrar,
+        ],
     ];
 
     // Guardar log de los datos compilados
     guardarLog("Datos para algoritmo compilados para postId: {$postId}");
 
     // Codificar los datos en JSON y actualizar metadatos
-    if ($datosAlgoritmoJson = json_encode($datosAlgoritmo)) {
+    if ($datosAlgoritmoJson = json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE)) {
         update_post_meta($postId, 'datosAlgoritmo', $datosAlgoritmoJson);
         guardarLog("Metadatos de datosAlgoritmo actualizados para postId: {$postId}");
     } else {
