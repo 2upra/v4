@@ -11,16 +11,10 @@ function handle_post_like() {
 
     $user_id = get_current_user_id();
     $post_id = $_POST['post_id'] ?? '';
-    $nonce = $_POST['nonce'] ?? '';
+    // $nonce = $_POST['nonce'] ?? '';
     $like_state = $_POST['like_state'] ?? false;
 
     guardarLog("Datos recibidos: user_id = $user_id, post_id = $post_id, nonce = $nonce, like_state = $like_state");
-
-    if (!wp_verify_nonce($nonce, 'ajax-nonce')) {
-        guardarLog("Nonce inválido");
-        echo 'error';
-        wp_die();
-    }
 
     if (empty($post_id)) {
         guardarLog("post_id está vacío");
