@@ -1,37 +1,54 @@
 <?php
 
-function handle_post_like()
-{
-    //recibe esto ejemplo {post_id: 231781, nonce: 'bcbdec374b', like_state: true}
+function handle_post_like() {
+    guardarLog("handle_post_like() llamada");
+
     if (!is_user_logged_in()) {
+        guardarLog("Usuario no está logueado");
         echo 'not_logged_in';
         wp_die();
     }
+
     $user_id = get_current_user_id();
     $post_id = $_POST['post_id'] ?? '';
     $nonce = $_POST['nonce'] ?? '';
     $like_state = $_POST['like_state'] ?? false;
+
+    guardarLog("Datos recibidos: user_id = $user_id, post_id = $post_id, nonce = $nonce, like_state = $like_state");
+
     if (!wp_verify_nonce($nonce, 'ajax-nonce')) {
+        guardarLog("Nonce inválido");
         echo 'error';
         wp_die();
     }
+
     if (empty($post_id)) {
+        guardarLog("post_id está vacío");
         echo 'error';
         wp_die();
     }
+
     $action = $like_state ? 'like' : 'unlike';
+    guardarLog("Acción determinada: $action");
+
     likeAccion($post_id, $user_id, $action);
-    echo get_like_count($post_id);
+
+    $like_count = get_like_count($post_id);
+    guardarLog("Cantidad de likes después de la acción: $like_count");
+
+    echo $like_count;
     wp_die();
 }
 
-function likeAccion($post_id, $user_id, $action)
-{
+function likeAccion($post_id, $user_id, $action) {
+    guardarLog("likeAccion() llamada con action = $action");
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';
 
     if ($action === 'like') {
         if (check_user_liked_post($post_id, $user_id)) {
+            guardarLog("Usuario ya ha dado 'me gusta', se cambiará a 'unlike'");
             $action = 'unlike';
         } else {
             $result = $wpdb->insert(
@@ -43,17 +60,20 @@ function likeAccion($post_id, $user_id, $action)
             );
 
             if ($result) {
+                guardarLog("Inserción de 'me gusta' exitosa para user_id = $user_id y post_id = $post_id");
                 $autor_id = get_post_field('post_author', $post_id);
                 $usuario = get_userdata($user_id);
                 $nombre_usuario = $usuario->display_name;
                 $texto = "$nombre_usuario le gustó tu publicación.";
                 $enlace = get_permalink($post_id);
                 insertar_notificacion($autor_id, $texto, $enlace, $user_id);
+                guardarLog("Notificación insertada para autor_id = $autor_id");
             } else {
-                error_log("Error al insertar 'me gusta': " . $wpdb->last_error);
+                guardarLog("Error al insertar 'me gusta': " . $wpdb->last_error);
             }
         }
     }
+
     if ($action === 'unlike') {
         $result = $wpdb->delete(
             $table_name,
@@ -62,8 +82,11 @@ function likeAccion($post_id, $user_id, $action)
                 'post_id' => $post_id,
             )
         );
-        if (!$result) {
-            error_log("Error al eliminar 'me gusta': " . $wpdb->last_error);
+
+        if ($result) {
+            guardarLog("'Me gusta' eliminado para user_id = $user_id y post_id = $post_id");
+        } else {
+            guardarLog("Error al eliminar 'me gusta': " . $wpdb->last_error);
         }
     }
 }
