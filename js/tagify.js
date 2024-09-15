@@ -207,7 +207,7 @@ function TagEnTexto(options = {}) {
     }
     
     function getContent() {
-        return { tags: window.Tags, normalText: window.NormalText };
+        return { tags: window.Tags, normalText: window.textoNormal };
     }
     
     return getContent;

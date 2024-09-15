@@ -68,7 +68,7 @@ async function envioRs() {
         }
 
         const tags = window.Tags || [];
-        const textoNormal = document.getElementById('textoRs').innerText.trim();
+        const textoNormal = window.textoNormal || '';
 
         // Capturar los estados de los checkboxes
         const descarga = document.getElementById('descarga').checked ? 1 : 0;
