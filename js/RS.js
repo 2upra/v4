@@ -28,16 +28,16 @@ function verificarCamposRs() {
     textoRsDiv.setAttribute('placeholder', 'Puedes agregar tags agregando un #');
     
     function verificarCampos() {
-        const normalText = textoRsDiv.innerText.trim();
-        const tags = Array.isArray(window.Tags) ? window.Tags : [];
+        const tags = window.Tags || [];
+        const textoNormal = window.textoNormal || '';
         
-        if (normalText.length < 3) {
+        if (textoNormal.length < 3) {
             alert('El texto debe tener al menos 3 caracteres');
             return false; 
         }
-        if (normalText.length > 800) {
+        if (textoNormal.length > 800) {
             alert('El texto no puede exceder los 800 caracteres');
-            textoRsDiv.innerText = normalText.substring(0, 800);
+            textoRsDiv.innerText = textoNormal.substring(0, 800);
             return false; 
         }
         if (tags.length === 0) {
