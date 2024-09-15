@@ -110,8 +110,8 @@ async function envioRs() {
         const textoNormal = window.NormalText || '';
         
         const descargaCheckbox = document.getElementById('descarga');
-        const exclusivoCheckbox = document.getElementById('exclusivo');
-        const colabCheckbox = document.getElementById('colab');
+        const exclusivoCheckbox = document.getElementById('exclusivocheck');
+        const colabCheckbox = document.getElementById('colabcheck');
 
         console.log('Checkbox states:', 
             'descarga:', descargaCheckbox.checked, 
@@ -131,7 +131,7 @@ async function envioRs() {
             'tags:', tags,
             'textoNormal:', textoNormal,
         );
-        
+
         //codigo de envio omitido
         const data = {
             imagenUrl: typeof imagenUrl !== 'undefined' ? imagenUrl : null,

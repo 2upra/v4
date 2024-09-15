@@ -40,17 +40,17 @@ function formRs()
             <p>Opciones de post</p>
             <div class="flex flex-row gap-2">
                 <label class="custom-checkbox">
-                    <input type="checkbox" id="descarga" name="descarga" value="1">
+                    <input type="checkbox" id="descarga" name="descargacheck" value="1">
                     <span class="checkmark"></span>
                     <?php echo $GLOBALS['descargaicono']; ?>
                 </label>
                 <label class="custom-checkbox">
-                    <input type="checkbox" id="exclusivo" name="exclusivo" value="1">
+                    <input type="checkbox" id="exclusivocheck" name="exclusivocheck" value="1">
                     <span class="checkmark"></span>
                     <?php echo $GLOBALS['estrella']; ?>
                 </label>
                 <label class="custom-checkbox">
-                    <input type="checkbox" id="colab" name="colab" value="1">
+                    <input type="checkbox" id="colabcheck" name="colabcheck" value="1">
                     <span class="checkmark"></span>
                     <?php echo $GLOBALS['iconocolab']; ?>
                 </label>
