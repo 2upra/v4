@@ -142,6 +142,7 @@ function calcularFeedPersonalizado($userId) {
     $table_name_intereses = $wpdb->prefix . 'interes';
     $siguiendo = (array) get_user_meta($userId, 'siguiendo', true);
     $seguidores = (array) get_user_meta($userId, 'seguidores', true);
+    generarMetaDeIntereses($userId);
 
     // Obtener los intereses del usuario desde la tabla
     $interesesUsuario = $wpdb->get_results($wpdb->prepare(
