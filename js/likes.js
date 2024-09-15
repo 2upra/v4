@@ -1,31 +1,28 @@
 function like() {
-    const likeButtonContainer = document.querySelector('.like-button-container');
+    const likeButtons = document.querySelectorAll('.post-like-button');
 
-    if (!likeButtonContainer) return;
-
-    likeButtonContainer.addEventListener('click', handleLike);
+    likeButtons.forEach(button => {
+        button.addEventListener('click', handleLike);
+    });
 
     async function handleLike(event) {
-        const button = event.target.closest('.post-like-button');
-
-        if (!button) return; // Ignora clics que no sean en botones de "like"
-        
+        const button = event.currentTarget;
         const post_id = parseInt(button.dataset.post_id, 10);
-
-        if (!post_id || button.disabled) {
+        
+        if (!post_id || button.dataset.requestRunning === 'true') {
             return;
         }
-
-        button.disabled = true; // Deshabilitar el botón temporalmente
-
+    
+        button.dataset.requestRunning = 'true';
+    
         const data = {
             post_id: post_id,
             like_state: !button.classList.contains('liked')
         };
-
+    
         try {
             const response = await enviarAjax('handle_post_like', data);
-
+    
             if (response === 'not_logged_in') {
                 alert('Debes estar logueado para dar like.');
                 return;
@@ -39,7 +36,7 @@ function like() {
                 alert('Hubo un error al procesar tu solicitud.');
                 return;
             }
-
+    
             const likes = parseInt(response, 10);
             if (!isNaN(likes)) {
                 updateLikeUI(button, likes);
@@ -48,7 +45,7 @@ function like() {
         } catch (error) {
             // Manejar errores si es necesario
         } finally {
-            button.disabled = false; // Rehabilitar el botón después de la solicitud
+            button.dataset.requestRunning = 'false';
         }
     }
 
