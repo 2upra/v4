@@ -34,7 +34,6 @@ function like() {
 
             const data = {
                 post_id: post_id,
-                nonce: ajax_var_likes.nonce,
                 like_state: !button.classList.contains('liked')
             };
 
