@@ -1,84 +1,3 @@
-//GENERIC AJAX
-async function enviarAjax(action, data = {}) {
-    try {
-        const response = await fetch(ajaxUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams({
-                action: action,
-                ...data
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        // Intenta leer la respuesta como JSON primero
-        let responseData;
-        const responseText = await response.text(); // Lee el cuerpo de la respuesta
-
-        try {
-            responseData = JSON.parse(responseText); // Intenta parsear el texto como JSON
-        } catch (jsonError) {
-            console.warn('No se pudo interpretar la respuesta como JSON:', jsonError);
-            responseData = responseText; // Si falla, usa el texto original
-        }
-
-        console.log('Respuesta del servidor:', responseData);
-        return responseData;
-
-    } catch (error) {
-        console.error('Error en la solicitud:', error);
-        return { success: false, message: error.message };
-    }
-}
-
-//GENERIC CLICK
-async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
-    const buttons = document.querySelectorAll(selector);
-
-    buttons.forEach(button => {
-        button.addEventListener('click', async event => {
-            const postId = event.target.dataset.postId;
-            const socialPost = event.target.closest('.social-post');
-            const statusElement = socialPost?.querySelector('.post-status');
-
-            const confirmed = await confirm(confirmMessage);
-            if (confirmed) {
-                const data = await enviarAjax(action, { postId }); 
-
-                if (data.success) {
-                    successCallback(statusElement, data);
-                    if (elementToRemoveSelector) {
-                        removerPost(elementToRemoveSelector, postId);
-                    }
-                } else {
-                    console.log(`Error al realizar la acción: ${action}`);
-                }
-            } else {
-                console.log('Cancelado');
-            }
-        });
-    });
-}
-
-//GENERIC CAMBIAR DOM
-function actualizarElemento(element, newStatus) {
-    if (element) {
-        element.textContent = newStatus;
-    }
-}
-
-function removerPost(selector, postId) {
-    const element = document.querySelector(`${selector}[id-post="${postId}"]`);
-    if (element) {
-        element.remove();
-    }
-}
-
 async function handleAllRequests() {
     try {
         await requestDeletion();
@@ -138,6 +57,89 @@ async function eliminarPost() {
         },
         '.EDYQHV'
     );
+}
+
+//GENERIC AJAX
+async function enviarAjax(action, data = {}) {
+    try {
+        const response = await fetch(ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                action: action,
+                ...data
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        let responseData;
+        const responseText = await response.text();
+
+        try {
+            responseData = JSON.parse(responseText); 
+        } catch (jsonError) {
+            console.warn('No se pudo interpretar la respuesta como JSON:', jsonError);
+            responseData = responseText; 
+        }
+
+        console.log('Respuesta del servidor:', responseData);
+        return responseData;
+
+    } catch (error) {
+        console.error('Error en la solicitud:', error);
+        return { success: false, message: error.message };
+    }
+}
+
+//GENERIC CLICK
+async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
+    const buttons = document.querySelectorAll(selector);
+
+    buttons.forEach(button => {
+        button.addEventListener('click', async event => {
+            const postId = event.currentTarget.dataset.postId;
+            if (!postId) {
+                console.error('No se encontró postId en el botón');
+                return;
+            }
+            const socialPost = event.currentTarget.closest('.social-post');
+            const statusElement = socialPost?.querySelector('.post-status');
+
+            const confirmed = await confirm(confirmMessage);
+            if (confirmed) {
+                const data = await enviarAjax(action, { postId }); 
+
+                if (data.success) {
+                    successCallback(statusElement, data);
+                    if (elementToRemoveSelector) {
+                        removerPost(elementToRemoveSelector, postId);
+                    }
+                } else {
+                    console.log(`Error al realizar la acción: ${action}`);
+                }
+            } else {
+                console.log('Cancelado');
+            }
+        });
+    });
+}
+
+//GENERIC CAMBIAR DOM
+function actualizarElemento(element, newStatus) {
+    if (element) {
+        element.textContent = newStatus;
+    }
+}
+
+function removerPost(selector, postId) {
+    const element = document.querySelector(`${selector}[id-post="${postId}"]`);
+    if (element) {
+        element.remove();
+    }
 }
 
 function inicializarDescargas() {
