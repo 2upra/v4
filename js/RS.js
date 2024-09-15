@@ -29,7 +29,7 @@ function verificarCamposRs() {
     
     function verificarCampos() {
         const tags = window.Tags || [];
-        const textoNormal = window.textoNormal || '';
+        const textoNormal = window.NormalText || '';
         
         if (textoNormal.length < 3) {
             alert('El texto debe tener al menos 3 caracteres');
@@ -68,7 +68,7 @@ async function envioRs() {
         }
 
         const tags = window.Tags || [];
-        const textoNormal = window.textoNormal || '';
+        const textoNormal = window.NormalText || '';
 
         // Capturar los estados de los checkboxes
         const descarga = document.getElementById('descarga').checked ? 1 : 0;
