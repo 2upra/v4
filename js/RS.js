@@ -1,5 +1,8 @@
 // Variables globales
 let imagenUrl, imagenId, audioUrl, audioId, archivoUrl, archivoId;
+let subidaAudioEnProgreso = false;
+let subidaImagenEnProgreso = false;
+let subidaArchivoEnProgreso = false;
 // Logs
 let enablelogRS = true;
 const logRS = enablelogRS ? console.log : function () {};
@@ -14,6 +17,9 @@ function iniciarRS() {
         audioId = null;
         archivoUrl = null;
         archivoId = null;
+        subidaAudioEnProgreso = false;
+        subidaImagenEnProgreso = false;
+        subidaArchivoEnProgreso = false;
         subidaRs();
         envioRs();
         placeholderRs();
@@ -27,7 +33,27 @@ function verificarCamposRs() {
     const textoRsDiv = document.getElementById('textoRs');
     textoRsDiv.setAttribute('placeholder', 'Puedes agregar tags agregando un #');
 
+    // Variables que representan si hay subidas en progreso
+    const subidaAudioEnProgreso = window.subidaAudioEnProgreso || false;
+    const subidaImagenEnProgreso = window.subidaImagenEnProgreso || false;
+    const subidaArchivoEnProgreso = window.subidaArchivoEnProgreso || false;
+
     function verificarCampos() {
+        // Verificar si hay alguna subida en progreso
+        if (subidaAudioEnProgreso) {
+            alert('Espera que se suba tu archivo de audio.');
+            return false;
+        }
+        if (subidaImagenEnProgreso) {
+            alert('Espera que se suba tu imagen.');
+            return false;
+        }
+        if (subidaArchivoEnProgreso) {
+            alert('Espera que se suba tu archivo.');
+            return false;
+        }
+
+        // Verificación de texto y tags
         const tags = window.Tags || [];
         const textoNormal = window.NormalText || '';
 
@@ -156,7 +182,7 @@ async function envioRs() {
         } finally {
             button.disabled = false;
         }
-        
+
     });
 }
 
@@ -189,7 +215,7 @@ function subidaRs() {
     };
 
     const subidaAudio = async file => {
-        enviarRs.disabled = true;
+        subidaAudioEnProgreso = true;
         try {
             alert(`Audio subido: ${file.name}`);
             previewAudio.style.display = 'block';
@@ -198,14 +224,15 @@ function subidaRs() {
             const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
             audioUrl = fileUrl;
             audioId = fileId;
-            enviarRs.disabled = false;
+            subidaAudioEnProgreso = false;
         } catch (error) {
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
+            subidaAudioEnProgreso = false;
         }
     };
 
     const subidaArchivo = async file => {
-        enviarRs.disabled = true;
+        subidaArchivoEnProgreso = true;
         previewArchivo.style.display = 'block';
         previewArchivo.innerHTML = `<div class="file-name">${file.name}</div><div id="barraProgresoFile" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>`;
         try {
@@ -213,14 +240,15 @@ function subidaRs() {
             const {fileUrl, fileId} = await subidaRsBackend(file, 'barraProgresoFile');
             archivoUrl = fileUrl;
             archivoId = fileId;
-            enviarRs.disabled = false;
+            subidaArchivoEnProgreso = false;
         } catch {
             alert('Hubo un problema al cargar el Archivo. Inténtalo de nuevo.');
+            subidaArchivoEnProgreso = false;
         }
     };
 
     const subidaImagen = async file => {
-        enviarRs.disabled = true;
+        subidaImagenEnProgreso = true;
         opciones.style.display = 'flex';
         updatePreviewImagen(file);
         imagenSelecionada = file;
@@ -229,9 +257,10 @@ function subidaRs() {
             const {fileUrl, fileId} = await subidaRsBackend(file, 'barraProgresoImagen');
             imagenUrl = fileUrl;
             imagenId = fileId;
-            enviarRs.disabled = false;
+            subidaImagenEnProgreso = false;
         } catch {
             alert('Hubo un problema al cargar la Imagen. Inténtalo de nuevo.');
+            subidaImagenEnProgreso = false;
         }
     };
 

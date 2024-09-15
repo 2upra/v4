@@ -32,13 +32,17 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
 function actualizarMetaDatos($postId)
 {
     $meta_fields = [
-        'paraColab'   => 'colab',
-        'esExclusivo' => 'exclusivo',
+        'paraColab'    => 'colab',
+        'esExclusivo'  => 'exclusivo',
         'paraDescarga' => 'descarga'
     ];
 
     foreach ($meta_fields as $meta_key => $post_key) {
-        $value = isset($_POST[$post_key]) ? 1 : 0;
+        if (isset($_POST[$post_key])) {
+            $value = $_POST[$post_key] == '1' ? 1 : 0;
+        } else {
+            $value = 0; 
+        }
         update_post_meta($postId, $meta_key, $value);
     }
 }
