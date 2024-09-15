@@ -23,19 +23,17 @@ function obtenerLikesDelUsuario($user_id)
     return $liked_posts;
 }
 
-function contarLike($post_id)
-{
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'post_likes';
-    $like_count = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM $table_name WHERE post_id = %d",
-        $post_id
-    ));
+mysql> DESCRIBE wpsg_post_likes;
++-----------+-----------------+------+-----+-------------------+-------------------+
+| Field     | Type            | Null | Key | Default           | Extra             |
++-----------+-----------------+------+-----+-------------------+-------------------+
+| like_id   | bigint unsigned | NO   | PRI | NULL              | auto_increment    |
+| user_id   | bigint unsigned | NO   |     | NULL              |                   |
+| post_id   | bigint unsigned | NO   | MUL | NULL              |                   |
+| like_date | datetime        | NO   |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
++-----------+-----------------+------+-----+-------------------+-------------------+
 
-    return $like_count ? $like_count : 0;
-}
-
-
+la tabla si tiene datos y existe, y el usuario que estoy comprobando si tiene likes por esto dice que no hay likes para el usuario
 
 */
 

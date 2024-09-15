@@ -66,20 +66,27 @@ function likeAccion($post_id, $user_id, $action) {
     }
 }
 
-function obtenerLikesDelUsuario($user_id) {
+function obtenerLikesDelUsuario($user_id)
+{
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';
 
-    // Consulta para obtener los IDs de los posts que el usuario ha dado like
-    $liked_posts = $wpdb->get_col($wpdb->prepare(
+    guardarLog("Buscando likes para el usuario: $user_id");
+    guardarLog("Nombre de la tabla: $table_name");
+
+    $query = $wpdb->prepare(
         "SELECT post_id FROM $table_name WHERE user_id = %d",
         $user_id
-    ));
+    );
+    guardarLog("Query: $query");
 
-    guardarLog("Posts con likes para el usuario $user_id: " . json_encode($liked_posts));
+    $liked_posts = $wpdb->get_col($query);
+
+    guardarLog("Resultados: " . print_r($liked_posts, true));
 
     if (empty($liked_posts)) {
-        return array();  // Retorna un array vacío si no hay likes
+        guardarLog("No se encontraron likes para el usuario: $user_id");
+        return array();
     }
 
     return $liked_posts;
