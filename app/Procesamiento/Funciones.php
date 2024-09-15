@@ -9,8 +9,6 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
         guardarLog('empty_content: El contenido no puede estar vacío.');
         return new WP_Error('empty_content', 'El contenido no puede estar vacío.');
     }
-        
-    }
     // Generar el título
     $titulo = wp_trim_words($contenido, 15, '...');
     $autor = get_current_user_id();
