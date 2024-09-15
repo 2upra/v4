@@ -1,15 +1,34 @@
 function like() {
-    const likeButtons = document.querySelectorAll('.post-like-button');
+    let lastClickTime = 0;
+    const clickDelay = 500; // 500 ms de retraso
 
-    likeButtons.forEach(button => {
-        button.addEventListener('click', handleLike);
+    // Usar delegación de eventos
+    document.addEventListener('click', function(event) {
+        const likeButton = event.target.closest('.post-like-button');
+        if (likeButton) {
+            handleLike(event, likeButton);
+        }
     });
 
-    async function handleLike(event) {
-        const button = event.currentTarget;
+    async function handleLike(event, button) {
+        event.preventDefault();
+
+        // Prevención de clics múltiples
+        const now = Date.now();
+        if (now - lastClickTime < clickDelay) {
+            return;
+        }
+        lastClickTime = now;
+
         const post_id = parseInt(button.dataset.post_id, 10);
         
         if (!post_id || button.dataset.requestRunning === 'true') {
+            return;
+        }
+
+        // Comprobación de conexión
+        if (!navigator.onLine) {
+            alert('No hay conexión a internet. Por favor, verifica tu conexión e inténtalo de nuevo.');
             return;
         }
     
@@ -19,21 +38,29 @@ function like() {
             post_id: post_id,
             like_state: !button.classList.contains('liked')
         };
+
+        // Feedback visual inmediato
+        button.classList.toggle('liked');
     
         try {
             const response = await enviarAjax('handle_post_like', data);
+            console.log('Respuesta del servidor:', response);
     
             if (response === 'not_logged_in') {
                 alert('Debes estar logueado para dar like.');
+                button.classList.toggle('liked'); // Revertir cambio visual
                 return;
             } else if (response === 'invalid_nonce') {
                 alert('Nonce inválido. Por favor, recarga la página e inténtalo de nuevo.');
+                button.classList.toggle('liked'); // Revertir cambio visual
                 return;
             } else if (response === 'missing_post_id') {
                 alert('Error: no se recibió el ID del post.');
+                button.classList.toggle('liked'); // Revertir cambio visual
                 return;
             } else if (response === 'error') {
                 alert('Hubo un error al procesar tu solicitud.');
+                button.classList.toggle('liked'); // Revertir cambio visual
                 return;
             }
     
@@ -41,9 +68,14 @@ function like() {
             if (!isNaN(likes)) {
                 updateLikeUI(button, likes);
                 showHeartAnimation(button.closest('.EDYQHV'));
+            } else {
+                console.error('Respuesta del servidor no es un número válido:', response);
+                button.classList.toggle('liked'); // Revertir cambio visual
             }
         } catch (error) {
-            // Manejar errores si es necesario
+            console.error('Error en la solicitud AJAX:', error);
+            alert('Hubo un error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
+            button.classList.toggle('liked'); // Revertir cambio visual
         } finally {
             button.dataset.requestRunning = 'false';
         }
@@ -51,15 +83,25 @@ function like() {
 
     function updateLikeUI(button, likes) {
         const post = button.closest('.TJKQGJ');
-        const likeCount = post.querySelector('.like-count');
-
-        button.classList.toggle('liked');
-        if (likeCount) {
-            likeCount.textContent = likes;
+        if (!post) {
+            console.error('No se encontró el elemento post');
+            return;
         }
+        const likeCount = post.querySelector('.like-count');
+        if (!likeCount) {
+            console.error('No se encontró el elemento like-count');
+            return;
+        }
+
+        likeCount.textContent = likes;
     }
 
     function showHeartAnimation(postContent) {
+        if (!postContent) {
+            console.error('No se encontró el contenido del post para la animación');
+            return;
+        }
+
         const heart = document.createElement('div');
         heart.className = 'heart-animation';
         heart.textContent = '❤';
