@@ -33,7 +33,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     $posts = $args['posts'];
 
     // Obtener el feed personalizado del usuario
-    $posts_personalizados = calcularFeedPersonalizado($user_id);
+    $posts_personalizados = calcularFeedPersonalizado($current_user_id);
 
     // Obtener solo los IDs de los posts, ordenados por puntuación
     $post_ids = array_keys($posts_personalizados);

@@ -5,37 +5,6 @@ global $wpdb;
 define('INTERES_TABLE', $wpdb->prefix . 'interes');
 define('BATCH_SIZE', 1000);
 
-/*
-function obtenerLikesDelUsuario($user_id)
-{
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'post_likes';
-
-    $liked_posts = $wpdb->get_col($wpdb->prepare(
-        "SELECT post_id FROM $table_name WHERE user_id = %d",
-        $user_id
-    ));
-
-    if (empty($liked_posts)) {
-        return array();
-    }
-
-    return $liked_posts;
-}
-
-mysql> DESCRIBE wpsg_post_likes;
-+-----------+-----------------+------+-----+-------------------+-------------------+
-| Field     | Type            | Null | Key | Default           | Extra             |
-+-----------+-----------------+------+-----+-------------------+-------------------+
-| like_id   | bigint unsigned | NO   | PRI | NULL              | auto_increment    |
-| user_id   | bigint unsigned | NO   |     | NULL              |                   |
-| post_id   | bigint unsigned | NO   | MUL | NULL              |                   |
-| like_date | datetime        | NO   |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
-+-----------+-----------------+------+-----+-------------------+-------------------+
-
-la tabla si tiene datos y existe, y el usuario que estoy comprobando si tiene likes por esto dice que no hay likes para el usuario
-
-*/
 
 function generarMetaDeIntereses($user_id) {
     global $wpdb;

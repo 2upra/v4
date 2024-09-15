@@ -66,6 +66,8 @@ function likeAccion($post_id, $user_id, $action) {
     }
 }
 
+
+
 function obtenerLikesDelUsuario($user_id)
 {
     global $wpdb;
