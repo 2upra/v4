@@ -1,39 +1,72 @@
 <?php
 
 
-/* esto es una forma vieja de algoritmo para el feed social, pero ahora es necesario hacer algo util, y personalizado
-
-function postTop() {
+function calcularFeedPersonalizado($userId) {
     global $wpdb;
+
     $table_name = $wpdb->prefix . 'post_likes';
+    $siguiendo = (array) get_user_meta($userId, 'siguiendo', true);
+    $seguidores = (array) get_user_meta($userId, 'seguidores', true);
 
     $query = new WP_Query([
         'post_type' => 'social_post',
         'posts_per_page' => -1,
-        'date_query' => ['after' => date('Y-m-d', strtotime('-100 days'))]
+        'date_query' => [
+            'after' => date('Y-m-d', strtotime('-100 days'))
+        ]
     ]);
 
-    $user_scores = [];
+    $posts_personalizados = [];
 
     while ($query->have_posts()) {
         $query->the_post();
         $post_id = get_the_ID();
-        $author_id = get_post_field('post_author', $post_id);
+        $autor_id = get_post_field('post_author', $post_id);
+
+        // Obtener los datos del algoritmo de la publicación
+        $datosAlgoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
+        $datosAlgoritmo = json_decode($datosAlgoritmo, true);
+
+        // Inicializar variables de puntuación
+        $puntosUsuario = 0;
+        $puntosIntereses = 0;
+        $puntosFinal = 0;
+
+        // 1. **Priorizar publicaciones de usuarios que el usuario sigue**
+        if (in_array($autor_id, $siguiendo)) {
+            $puntosUsuario += 50; // Asignar puntos altos por seguir al autor
+        }
+
+        // 2. **Verificar si los intereses (tags) coinciden**
+        $interesesUsuario = get_user_meta($userId, 'intereses', true); // Los intereses del usuario
+        $tagsPost = $datosAlgoritmo['tags'];
+
+        foreach ($tagsPost as $tag) {
+            if (in_array($tag, $interesesUsuario)) {
+                $puntosIntereses += 10; // Puntos por cada coincidencia en intereses
+            }
+        }
+
+        // 3. **Número de likes en la publicación**
         $likes = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_name WHERE post_id = %d", $post_id));
-        
-        $hours_since_publication = (current_time('timestamp') - get_post_time('U', true, $post_id)) / 3600;
-        $puntuacion_final = (100 + ($likes * 10)) * pow(0.75, floor($hours_since_publication));
+        $puntosLikes = $likes * 5; // Cada "me gusta" aumenta la relevancia
 
-        update_post_meta($post_id, '_post_puntuacion_final', $puntuacion_final);
-        $user_scores[$author_id][] = $puntuacion_final;
+        // 4. **Tiempo de publicación (decay factor)**
+        $horasDesdePublicacion = (current_time('timestamp') - get_post_time('U', true, $post_id)) / 3600;
+        $factorTiempo = pow(0.9, floor($horasDesdePublicacion / 24)); // Decae un 10% por día
+
+        // 5. **Calcular puntuación final**
+        $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * $factorTiempo;
+
+        // Guardar la puntuación final para este post
+        $posts_personalizados[$post_id] = $puntosFinal;
     }
 
-    foreach ($user_scores as $user_id => $scores) {
-        update_user_meta($user_id, '_average_user_score', array_sum($scores) / count($scores));
-    }
-
+    arsort($posts_personalizados);
     wp_reset_postdata();
+    return $posts_personalizados;
 }
+
 
 function updateUserScore($post_id) {
     $author_id = get_post_field('post_author', $post_id);
