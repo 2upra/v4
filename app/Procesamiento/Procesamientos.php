@@ -21,12 +21,13 @@ function subidaRs()
     }
 
     guardarLog('Post creado con ID: ' . $postId . '. Actualizando meta datos.');
-
+    //FUNCIONA
     actualizarMetaDatos($postId);
     guardarLog('Meta datos actualizados.');
-
+    //FUNCIONA
     confirmarArchivos($postId);
     guardarLog('Archivos confirmados.');
+    //FUNCIONA
     procesarURLs($postId);
     guardarLog('URLs procesadas.');
     asignarTags($postId);

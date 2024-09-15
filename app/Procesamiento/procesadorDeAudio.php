@@ -1,5 +1,6 @@
 <?php
 
+
 function procesarAudioLigero($post_id, $audio_id, $index)
 {
     guardarLog("INICIO procesarAudioLigero");
@@ -39,7 +40,10 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     guardarLog("ID de adjunto ligero: {$attach_id_lite}");
     $attach_data_lite = wp_generate_attachment_metadata($attach_id_lite, $nuevo_archivo_path_lite);
     wp_update_attachment_metadata($attach_id_lite, $attach_data_lite);
-    update_post_meta($post_id, "post_audio_lite_{$index}", $attach_id_lite);
+    
+    // Determinar la clave meta a usar
+    $meta_key = ($index == 1) ? "post_audio_lite" : "post_audio_lite_{$index}";
+    update_post_meta($post_id, $meta_key, $attach_id_lite);
 
     // Extraer y guardar la duración del audio
     $duration_command = "/usr/bin/ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {$nuevo_archivo_path_lite}";
