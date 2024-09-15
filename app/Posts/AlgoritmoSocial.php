@@ -1,6 +1,7 @@
 <?php
 
 
+global $wpdb;  
 define('INTERES_TABLE', $wpdb->prefix . 'interes');
 define('BATCH_SIZE', 1000);
 
