@@ -1,4 +1,5 @@
 //GENERIC AJAX
+//GENERIC AJAX
 async function enviarAjax(action, data = {}) {
     try {
         const response = await fetch(ajaxUrl, {
@@ -11,21 +12,26 @@ async function enviarAjax(action, data = {}) {
                 ...data
             })
         });
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+
+        // Intentamos leer la respuesta como JSON primero
         try {
             const responseData = await response.json();
             console.log('Respuesta del servidor (JSON):', responseData);
             return responseData;
-        } catch (error) {
+        } catch (jsonError) {
+            // Si falla, intentamos leerla como texto
+            console.log('No se pudo interpretar la respuesta como JSON:', jsonError);
             const text = await response.text();
             console.log('Respuesta del servidor (Texto):', text);
-            return text;
+            return { success: false, message: text };
         }
     } catch (error) {
         console.error('Error en la solicitud:', error);
-        return {success: false, message: error.message};
+        return { success: false, message: error.message };
     }
 }
 
