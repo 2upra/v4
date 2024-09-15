@@ -13,7 +13,7 @@ function handle_post_like() {
     $post_id = $_POST['post_id'] ?? '';
     $like_state = $_POST['like_state'] ?? false;
 
-    guardarLog("Datos recibidos: user_id = $user_id, post_id = $post_id, nonce = $nonce, like_state = $like_state");
+    guardarLog("Datos recibidos: user_id = $user_id, post_id = $post_id, like_state = $like_state");
 
     if (empty($post_id)) {
         guardarLog("post_id está vacío");
@@ -26,6 +26,7 @@ function handle_post_like() {
 
     likeAccion($post_id, $user_id, $action);
 
+    // Contar los likes después de la acción
     $like_count = contarLike($post_id);
     guardarLog("Cantidad de likes después de la acción: $like_count");
 
@@ -39,9 +40,15 @@ function likeAccion($post_id, $user_id, $action) {
 
     if ($action === 'like') {
         if (chequearLike($post_id, $user_id)) {
-            $action = 'unlike';
+            guardarLog("El usuario $user_id ya ha dado like al post $post_id.");
+            $action = 'unlike';  // Si ya le gustó, se cambia a "unlike"
         } else {
-            if ($wpdb->insert($table_name, ['user_id' => $user_id, 'post_id' => $post_id])) {
+            $insert_result = $wpdb->insert($table_name, ['user_id' => $user_id, 'post_id' => $post_id]);
+            if ($insert_result === false) {
+                guardarLog("Error al insertar el like en la base de datos para el post $post_id y el usuario $user_id.");
+            } else {
+                guardarLog("Like insertado correctamente en la base de datos.");
+                // Enviar notificación al autor del post
                 $autor_id = get_post_field('post_author', $post_id);
                 $usuario = get_userdata($user_id);
                 insertar_notificacion($autor_id, "{$usuario->display_name} le gustó tu publicación.", get_permalink($post_id), $user_id);
@@ -50,31 +57,39 @@ function likeAccion($post_id, $user_id, $action) {
     }
 
     if ($action === 'unlike') {
-        $wpdb->delete($table_name, ['user_id' => $user_id, 'post_id' => $post_id]);
+        $delete_result = $wpdb->delete($table_name, ['user_id' => $user_id, 'post_id' => $post_id]);
+        if ($delete_result === false) {
+            guardarLog("Error al eliminar el like en la base de datos para el post $post_id y el usuario $user_id.");
+        } else {
+            guardarLog("Like eliminado correctamente.");
+        }
     }
 }
 
-function obtenerLikesDelUsuario($user_id)
-{
+function obtenerLikesDelUsuario($user_id) {
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';
 
+    // Consulta para obtener los IDs de los posts que el usuario ha dado like
     $liked_posts = $wpdb->get_col($wpdb->prepare(
         "SELECT post_id FROM $table_name WHERE user_id = %d",
         $user_id
     ));
 
+    guardarLog("Posts con likes para el usuario $user_id: " . json_encode($liked_posts));
+
     if (empty($liked_posts)) {
-        return array();
+        return array();  // Retorna un array vacío si no hay likes
     }
 
     return $liked_posts;
 }
 
-function contarLike($post_id)
-{
+function contarLike($post_id) {
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';
+    
+    // Contar el número de likes para el post
     $like_count = $wpdb->get_var($wpdb->prepare(
         "SELECT COUNT(*) FROM $table_name WHERE post_id = %d",
         $post_id
@@ -83,12 +98,11 @@ function contarLike($post_id)
     return $like_count ? $like_count : 0;
 }
 
-
-function chequearLike($post_id, $user_id)
-{
+function chequearLike($post_id, $user_id) {
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';
 
+    // Verificar si el usuario ya ha dado like al post
     $results = $wpdb->get_var($wpdb->prepare(
         "SELECT COUNT(1) FROM $table_name WHERE post_id = %d AND user_id = %d",
         $post_id,
@@ -97,6 +111,7 @@ function chequearLike($post_id, $user_id)
 
     return $results > 0;
 }
+
 
 
 

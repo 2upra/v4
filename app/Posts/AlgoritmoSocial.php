@@ -5,6 +5,40 @@ global $wpdb;
 define('INTERES_TABLE', $wpdb->prefix . 'interes');
 define('BATCH_SIZE', 1000);
 
+/*
+function obtenerLikesDelUsuario($user_id)
+{
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'post_likes';
+
+    $liked_posts = $wpdb->get_col($wpdb->prepare(
+        "SELECT post_id FROM $table_name WHERE user_id = %d",
+        $user_id
+    ));
+
+    if (empty($liked_posts)) {
+        return array();
+    }
+
+    return $liked_posts;
+}
+
+function contarLike($post_id)
+{
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'post_likes';
+    $like_count = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM $table_name WHERE post_id = %d",
+        $post_id
+    ));
+
+    return $like_count ? $like_count : 0;
+}
+
+
+
+*/
+
 function generarMetaDeIntereses($user_id) {
     global $wpdb;
 
@@ -201,8 +235,6 @@ function calcularFeedPersonalizado($userId) {
         // Guardar la puntuación del post
         $posts_personalizados[$post_id] = $puntosFinal;
 
-        // Log de cada post procesado
-        guardarLog("Post ID: $post_id procesado. Puntuación final: $puntosFinal");
     }
 
     // Ordenar los posts por puntuación descendente
