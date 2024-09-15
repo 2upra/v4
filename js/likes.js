@@ -8,12 +8,8 @@ function like() {
     async function handleLike(event) {
         const button = event.currentTarget;
         const post_id = parseInt(button.dataset.post_id, 10);
-        const nonce = button.dataset.nonce;
-    
-        console.log('Button clicked for post ID:', post_id);
-    
+        
         if (!post_id || button.dataset.requestRunning === 'true') {
-            console.error('Invalid Post ID or request already running');
             return;
         }
     
@@ -21,14 +17,11 @@ function like() {
     
         const data = {
             post_id: post_id,
-            nonce: nonce,
             like_state: !button.classList.contains('liked')
         };
     
         try {
-            console.log('Sending AJAX request with data:', data);
             const response = await enviarAjax('handle_post_like', data);
-            console.log('Response received:', response);
     
             if (response === 'not_logged_in') {
                 alert('Debes estar logueado para dar like.');
@@ -48,11 +41,9 @@ function like() {
             if (!isNaN(likes)) {
                 updateLikeUI(button, likes);
                 showHeartAnimation(button.closest('.EDYQHV'));
-            } else {
-                console.error('Unexpected response:', response);
             }
         } catch (error) {
-            console.error('AJAX Error:', error);
+            // Manejar errores si es necesario
         } finally {
             button.dataset.requestRunning = 'false';
         }
@@ -66,8 +57,6 @@ function like() {
         if (likeCount) {
             likeCount.textContent = likes;
         }
-
-        console.log('Updated UI for post ID:', button.dataset.post_id, 'New likes count:', likes);
     }
 
     function showHeartAnimation(postContent) {
