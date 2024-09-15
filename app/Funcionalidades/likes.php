@@ -1,30 +1,39 @@
 <?php
 
-function handle_post_like()
-{
+function like() {
+    // Comprueba si el usuario ha iniciado sesión
     if (!is_user_logged_in()) {
         echo 'not_logged_in';
         wp_die();
     }
+
     $user_id = get_current_user_id();
     $post_id = $_POST['post_id'] ?? '';
     $nonce = $_POST['nonce'] ?? '';
     $like_state = $_POST['like_state'] ?? false;
+
+    // Verifica el nonce
     if (!wp_verify_nonce($nonce, 'ajax-nonce')) {
-        echo 'error';
+        echo 'invalid_nonce';
         wp_die();
     }
+
+    // Verifica si el post_id está presente
     if (empty($post_id)) {
-        echo 'error';
+        echo 'missing_post_id';
         wp_die();
     }
+
+    // Realiza la acción de "like" o "unlike"
     $action = $like_state ? 'like' : 'unlike';
-    handle_like_action($post_id, $user_id, $action);
+    likeAccion($post_id, $user_id, $action);
+
+    // Devuelve el número de "likes"
     echo get_like_count($post_id);
     wp_die();
 }
 
-function handle_like_action($post_id, $user_id, $action)
+function likeAccion($post_id, $user_id, $action)
 {
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';
@@ -131,5 +140,5 @@ function like($post_id)
     return $output;
 }
 
-add_action('wp_ajax_nopriv_handle_post_like', 'handle_post_like');
-add_action('wp_ajax_handle_post_like', 'handle_post_like');
+add_action('wp_ajax_nopriv_handle_post_like', 'like');
+add_action('wp_ajax_handle_post_like', 'like');
