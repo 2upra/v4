@@ -109,35 +109,32 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
 
     buttons.forEach(button => {
         button.addEventListener('click', async event => {
-            // Obtener el postId
             const postId = event.currentTarget.dataset.postId;
-            console.log(`Botón clicado. postId encontrado: ${postId}`); // Log para verificar el postId
+            console.log(`Botón clicado. postId encontrado: ${postId}`);
 
             if (!postId) {
                 console.error('No se encontró postId en el botón');
-                return; // Salir si no hay postId
+                return;
             }
 
-            // Encontrar el elemento de la publicación en el DOM
             const socialPost = event.currentTarget.closest('.social-post');
             const statusElement = socialPost?.querySelector('.post-status');
 
-            // Confirmar la acción
             const confirmed = await confirm(confirmMessage);
-            console.log(`Confirmación de usuario: ${confirmed ? 'Sí' : 'No'}`); // Log para ver la confirmación
+            console.log(`Confirmación de usuario: ${confirmed ? 'Sí' : 'No'}`);
 
             if (confirmed) {
-                console.log(`Enviando solicitud AJAX para la acción: ${action} con postId: ${postId}`); // Log antes de enviar AJAX
-                const data = await enviarAjax(action, { postId }); 
+                console.log(`Enviando solicitud AJAX para la acción: ${action} con postId: ${postId}`);
+                const data = await enviarAjax(action, { post_id: postId }); // Cambiar a post_id
                 
-                console.log('Respuesta AJAX recibida:', data); // Log para ver la respuesta AJAX
+                console.log('Respuesta AJAX recibida:', data);
 
                 if (data.success) {
-                    console.log(`Acción ${action} exitosa. Ejecutando callback de éxito.`); // Log para éxito
+                    console.log(`Acción ${action} exitosa. Ejecutando callback de éxito.`);
                     successCallback(statusElement, data);
                     
                     if (elementToRemoveSelector) {
-                        console.log(`Removiendo elemento con selector: ${elementToRemoveSelector} y postId: ${postId}`); // Log para remover
+                        console.log(`Removiendo elemento con selector: ${elementToRemoveSelector} y postId: ${postId}`);
                         removerPost(elementToRemoveSelector, postId);
                     }
                 } else {
