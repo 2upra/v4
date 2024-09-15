@@ -26,7 +26,7 @@ function process_album_post($post_id)
         'post_status' => 'publish',
     ));
 
-    $meta_keys_to_copy = array('_post_puntuacion_final', 'allow_download', 'content-block', 'para_colab', 'real_name', 'artistic_name', 'email', 'public', 'genre_tags', 'instrument_tags');
+    $meta_keys_to_copy = array('_post_puntuacion_final', 'paraDescarga', 'esExclusivo', 'paraColab', 'real_name', 'artistic_name', 'email', 'public', 'genre_tags', 'instrument_tags');
     foreach ($meta_keys_to_copy as $key) {
         $value = get_post_meta($post_id, $key, true);
         if ($value) {

@@ -6,7 +6,7 @@ function botonColab($postId, $colab)
     return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$postId'>{$GLOBALS['iconocolab']}</button></div>" : '';
 }
 
-//verifica si file_id se procesa correctamente
+//verifica si fileId se procesa correctamente
 
 function empezarColab()
 {
@@ -19,11 +19,11 @@ function empezarColab()
     }
 
     $postId = intval($_POST['postId']);
-    $file_id = intval($_POST['fileId']);
+    $fileId = intval($_POST['fileId']);
     $mensaje = sanitize_textarea_field($_POST['mensaje']);
     $fileUrl = isset($_POST['fileUrl']) ? esc_url_raw($_POST['fileUrl']) : '';
 
-    guardarLog('postId: ' . $postId . ', fileId: ' . $file_id . ', mensaje: ' . $mensaje . ', fileUrl: ' . $fileUrl);
+    guardarLog('postId: ' . $postId . ', fileId: ' . $fileId . ', mensaje: ' . $mensaje . ', fileUrl: ' . $fileUrl);
 
     $original_post = get_post($postId);
     if (!$original_post) {
@@ -48,7 +48,7 @@ function empezarColab()
     $author_name = get_the_author_meta('display_name', $original_post->post_author);
     $collaborator_name = get_the_author_meta('display_name', $current_user_id);
 
-    $new_post_id = wp_insert_post([
+    $newPostId = wp_insert_post([
         'post_title' => 'Colab entre ' . $author_name . ' y ' . $collaborator_name,
         'post_type' => 'colab',
         'post_status' => 'pending',
@@ -61,16 +61,17 @@ function empezarColab()
         ],
     ]);
 
-    if ($new_post_id) {
-        guardarLog('Colaboración creada con ID: ' . $new_post_id);
+    if ($newPostId) {
+        guardarLog('Colaboración creada con ID: ' . $newPostId);
         
         $existing_colabs_meta[] = $current_user_id;
         update_post_meta($postId, 'colabs', $existing_colabs_meta);
 
-        // Confirmar archivo
-        guardarLog('Confirmando archivo con ID: ' . $file_id);
-        confirmarArchivo($file_id);
-        guardarLog('Archivo ' . $file_id . ' confirmado');
+        guardarLog('Confirmando archivo con ID: ' . $fileId);
+        if (!empty($fileId)) {
+            confirmarArchivo($fileId);
+        }
+        guardarLog('Archivo ' . $fileId . ' confirmado');
 
         wp_send_json([
             'success' => true,

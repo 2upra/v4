@@ -1,5 +1,5 @@
 <?php
-/*
+
 function subidaDePost()
 {
     guardarLog("---------------------------------------------");
@@ -30,7 +30,6 @@ function subidaDePost()
     // Sanitizar y preparar datos de la publicación
     $post_content = sanitize_textarea_field($_POST['post_content'] ?? '');
 
-    // Verificar, post o momento si es un sample
     $is_rola = isset($_POST['rola']) && $_POST['rola'] == 1;
     $is_sample = isset($_POST['sample']) && $_POST['sample'] == 1;
     $is_post = isset($_POST['socialpost']) && $_POST['socialpost'] == 1;
@@ -68,13 +67,13 @@ function subidaDePost()
 
     // Actualizar metadatos de la publicación
     update_post_meta($post_id, '_post_puntuacion_final', 100);
-    update_post_meta($post_id, 'allow_download', isset($_POST['allow_download']) ? 1 : 0);
+    update_post_meta($post_id, 'paraDescarga', isset($_POST['paraDescarga']) ? 1 : 0);
     update_post_meta($post_id, 'momento', $isMomento ? 1 : 0);
     update_post_meta($post_id, 'sample', $is_sample ? 1 : 0);
     update_post_meta($post_id, 'isPost', $is_post ? 1 : 0);
     update_post_meta($post_id, 'rola', $is_rola ? 1 : 0);
-    update_post_meta($post_id, 'content-block', isset($_POST['content-block']) ? 1 : 0);
-    update_post_meta($post_id, 'para_colab', isset($_POST['para_colab']) ? 1 : 0);
+    update_post_meta($post_id, 'esExclusivo', isset($_POST['esExclusivo']) ? 1 : 0);
+    update_post_meta($post_id, 'paraColab', isset($_POST['paraColab']) ? 1 : 0);
     update_post_meta($post_id, 'real_name', sanitize_textarea_field($_POST['real_name'] ?? ''));
     update_post_meta($post_id, 'artistic_name', $artistic_name);
     update_post_meta($post_id, 'album', sanitize_textarea_field($_POST['album'] ?? ''));
@@ -84,7 +83,7 @@ function subidaDePost()
     // Procesar y guardar los tags
     $tags = sanitize_text_field($_POST['post_tags'] ?? '');
     if (!empty($tags)) {
-        $tags_array = explode(',', $tags); // Asumiendo que los tags están separados por comas
+        $tags_array = explode(',', $tags); 
         wp_set_post_tags($post_id, $tags_array, false);
     }
 
@@ -121,21 +120,12 @@ function subidaDePost()
         return $attachment_id;
     };
 
+    //Procesar URL
     function procesarArchivoURL($post_id, $field_name)
     {
-        guardarLog("+-----------------------------------------------+");
-        guardarLog("Procesando archivo para {$field_name} en el post {$post_id}");
-
         $archivo_id = false;
-        // Log para depuración
-        guardarLog("Contenido de \$_POST[$field_name]: " . (isset($_POST[$field_name]) ? $_POST[$field_name] : 'No definido'));
-
-        // Comprobar si se ha proporcionado una URL directamente en el campo
         if (isset($_POST[$field_name]) && !empty($_POST[$field_name])) {
             $url = esc_url_raw($_POST[$field_name]);
-            guardarLog("URL del archivo proporcionada directamente en POST: {$url}");
-
-            // Procesar la URL
             $parsed_url = wp_parse_url($url);
             $upload_dir = wp_upload_dir();
             $file_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $url);
@@ -149,30 +139,22 @@ function subidaDePost()
                     );
                     $archivo_id = media_handle_sideload($file_array, $post_id);
                 }
-                guardarLog("Archivo encontrado en el servidor: {$file_path}, ID de adjunto: {$archivo_id}");
             } else {
-                guardarLog("El archivo no se encuentra en el servidor: {$file_path}");
                 return false;
             }
         } else {
-            guardarLog("No se proporcionó URL para {$field_name}");
             return false;
         }
 
         if ($archivo_id && !is_wp_error($archivo_id)) {
             update_post_meta($post_id, $field_name, $archivo_id);
-            guardarLog("Archivo procesado y guardado con éxito, ID de adjunto: {$archivo_id}");
             return true;
         }
 
-        guardarLog("Error procesando el archivo para {$field_name}");
         return false;
     }
-
     if (isset($_POST['archivo_url']) && !empty($_POST['archivo_url'])) {
         procesarArchivoURL($post_id, 'archivo_url');
-    } else {
-        guardarLog("No se proporcionó un archivo_url en el formulario.");
     }
 
     if (isset($_FILES['post_image']) && $_FILES['post_image']['error'] != 4) {

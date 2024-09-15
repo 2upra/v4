@@ -25,8 +25,8 @@ function variablesPosts($post_id = null)
         'audio_lite' => wp_get_attachment_url(get_post_meta($post_id, 'post_audio_lite', true)),
         'wave' => get_post_meta($post_id, 'waveform_image_url', true),
         'post_date' => get_the_date('', $post_id),
-        'block' => get_post_meta($post_id, 'content-block', true),
-        'colab' => get_post_meta($post_id, 'para_colab', true),
+        'block' => get_post_meta($post_id, 'esExclusivo', true),
+        'colab' => get_post_meta($post_id, 'paraColab', true),
         'post_status' => get_post_status($post_id)
     ];
 }

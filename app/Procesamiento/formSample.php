@@ -38,17 +38,17 @@ function sample_form()
 
                         <div class="opcionesform2 ">
                             <label class="custom-checkbox">
-                                <input type="checkbox" id="allowDownload" name="allow_download" value="1">
+                                <input type="checkbox" id="allowDownload" name="paraDescarga" value="1">
                                 <span class="checkmark"></span>
                                 Permitir descargas
                             </label>
                             <label class="custom-checkbox">
-                                <input type="checkbox" id="content-block" name="content-block" value="1">
+                                <input type="checkbox" id="esExclusivo" name="esExclusivo" value="1">
                                 <span class="checkmark"></span>
                                 Privado para suscriptores
                             </label>
                             <label class="custom-checkbox">
-                                <input type="checkbox" id="para_colab" name="para_colab" value="1">
+                                <input type="checkbox" id="paraColab" name="paraColab" value="1">
                                 <span class="checkmark"></span>
                                 Permitir colabs
                             </label>

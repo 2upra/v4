@@ -66,11 +66,11 @@ function botonDescarga($post_id)
 {
     ob_start();
 
-    $allow_download = get_post_meta($post_id, 'allow_download', true);
+    $paraDescarga = get_post_meta($post_id, 'paraDescarga', true);
     $usuario_id = get_current_user_id();
     $pinky = get_user_meta($usuario_id, 'pinky', true);
 
-    if ($allow_download == '1') {
+    if ($paraDescarga == '1') {
         $audio_id = get_post_meta(get_the_ID(), 'post_audio', true);
         $audio_url = wp_get_attachment_url($audio_id);
 

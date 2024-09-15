@@ -71,18 +71,3 @@ function minimizarform() {
     });
 }
 
-function selectorformtipo() {
-    jQuery(document).on('change', '.custom-checkbox input[type="checkbox"]', function () {
-        if (this.checked) {
-            jQuery(this).closest('label').css({
-                'color': '#ffffff',
-                'background': '#131313'
-            });
-        } else {
-            jQuery(this).closest('label').css({
-                'color': '#6b6b6b',
-                'background': ''
-            });
-        }
-    });
-}

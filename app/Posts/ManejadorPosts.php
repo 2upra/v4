@@ -65,7 +65,7 @@ function mostrar_publicaciones_sociales($atts, $is_ajax = false, $paged = 1) {
             ['key' => 'post_audio', 'compare' => 'NOT EXISTS'],
             ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
         ],
-        'solo_colab' => ['key' => 'para_colab', 'value' => '1', 'compare' => '='],
+        'solo_colab' => ['key' => 'paraColab', 'value' => '1', 'compare' => '='],
         'rolastatus' => function() use (&$query_args) {
             $query_args['author'] = get_current_user_id();
             $query_args['post_status'] = ['publish', 'pending'];
@@ -86,7 +86,7 @@ function mostrar_publicaciones_sociales($atts, $is_ajax = false, $paged = 1) {
             return ['key' => 'rola', 'value' => '1', 'compare' => '='];
         },
         'no_bloqueado' => [
-            ['key' => 'content-block', 'value' => '0', 'compare' => '='],
+            ['key' => 'esExclusivo', 'value' => '0', 'compare' => '='],
             ['key' => 'post_price', 'compare' => 'NOT EXISTS'],
             ['key' => 'rola', 'value' => '1', 'compare' => '!=']
         ],
@@ -99,8 +99,8 @@ function mostrar_publicaciones_sociales($atts, $is_ajax = false, $paged = 1) {
             $query_args['post__in'] = $user_liked_post_ids;
             return ['key' => 'rola', 'value' => '1', 'compare' => '='];
         },
-        'bloqueado' => ['key' => 'content-block', 'value' => '1', 'compare' => '='],
-        'sample' => ['key' => 'allow_download', 'value' => '1', 'compare' => '='],
+        'bloqueado' => ['key' => 'esExclusivo', 'value' => '1', 'compare' => '='],
+        'sample' => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
         'venta' => ['key' => 'post_price', 'value' => '0', 'compare' => '>', 'type' => 'NUMERIC'],
         'rola' => function() use (&$query_args) {
             $query_args['post_status'] = 'publish';

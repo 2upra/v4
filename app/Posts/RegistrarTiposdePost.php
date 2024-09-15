@@ -57,7 +57,7 @@ add_action('init', 'register_custom_post_types');
 
 // Registrar meta para publicaciones de Colaboración
 function register_colab_meta() {
-    register_post_meta('colab', 'para_colab', [
+    register_post_meta('colab', 'paraColab', [
         'show_in_rest' => true,
         'single' => true,
         'type' => 'boolean',

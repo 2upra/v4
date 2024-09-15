@@ -14,7 +14,6 @@ function iniciarRS() {
         audioId = null;
         archivoUrl = null;
         archivoId = null;
-        imagenSelecionada = null;
         subidaRs();
         envioRs()
         placeholderRs();
@@ -70,6 +69,12 @@ async function envioRs() {
 
         const tags = window.Tags || [];
         const textoNormal = document.getElementById('textoRs').innerText.trim();
+
+        // Capturar los estados de los checkboxes
+        const descarga = document.getElementById('descarga').checked ? 1 : 0;
+        const exclusivo = document.getElementById('exclusivo').checked ? 1 : 0;
+        const colab = document.getElementById('colab').checked ? 1 : 0;
+
         const data = {
             imagenUrl: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
             imagenId: typeof imagenId !== 'undefined' ? imagenId : null,
@@ -77,9 +82,11 @@ async function envioRs() {
             audioId: typeof audioId !== 'undefined' ? audioId : null,
             archivoUrl: typeof archivoUrl !== 'undefined' ? archivoUrl : null,
             archivoId: typeof archivoId !== 'undefined' ? archivoId : null,
-            imagenSelecionada: typeof imagenSelecionada !== 'undefined' ? imagenSelecionada : null,
             tags,
-            textoNormal
+            textoNormal,
+            descarga,
+            exclusivo, 
+            colab      
         };
         
         try {
@@ -99,6 +106,20 @@ async function envioRs() {
     });
 }
 
+function selectorformtipo() {
+    document.addEventListener('change', function (event) {
+        if (event.target.matches('.custom-checkbox input[type="checkbox"]')) {
+            const label = event.target.closest('label');
+            if (event.target.checked) {
+                label.style.color = '#ffffff';
+                label.style.background = '#131313';
+            } else {
+                label.style.color = '#6b6b6b';
+                label.style.background = '';
+            }
+        }
+    });
+}
 
 function subidaRs() {
     const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs'];
