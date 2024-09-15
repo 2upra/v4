@@ -1,6 +1,11 @@
 <?php
 
 
+/*
+Me proposiste este  algoritmo pero no tengo la meta de intereses
+entiendo que esto regresa una lista de post, pero aun no entiendo como se relaciona los post entre los usuarios, etc
+*/
+
 function calcularFeedPersonalizado($userId) {
     global $wpdb;
 

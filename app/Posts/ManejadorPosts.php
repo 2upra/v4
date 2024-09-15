@@ -3,19 +3,8 @@
 define('ENABLE_LOGS', true);
 
 function publicaciones($args = [], $is_ajax = false, $paged = 1) {
-    $log_file_path = '/var/www/wordpress/wp-content/themes/wanlog' . ($is_ajax ? 'Ajax' : '') . '.txt';
-    
-    $log = function($message) use ($log_file_path) {
-        if (ENABLE_LOGS) error_log($message . "\n", 3, $log_file_path);
-    };
-
-    $log("---------------------------------------\npublicaciones\nis_ajax: " . ($is_ajax ? 'true' : 'false') . ", paged: $paged\nDatos recibidos (args): " . print_r($args, true));
-
     $user_id = obtenerUserId($is_ajax);
-    $log("User ID: $user_id");
-
     $current_user_id = get_current_user_id();
-    $log("current_user_id: $current_user_id, user_id: $user_id");
 
     $defaults = [
         'filtro' => '',
@@ -23,16 +12,15 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1) {
         'posts' => 12,
         'exclude' => [],
     ];
-
     $args = array_merge($defaults, $args);
-    $log("args (después de merge): " . print_r($args, true));
 
-    $query_args = configuracionPost($args, $paged, $user_id, $current_user_id);
-    $log("query_args: " . print_r($query_args, true));
+    // Configuramos los argumentos de la consulta.
+    $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
 
+    // Procesamos las publicaciones
     $output = procesarPublicaciones($query_args, $args, $is_ajax);
-    $log("Output generado");
 
+    // Retornamos o mostramos el resultado dependiendo de si es una solicitud AJAX.
     if ($is_ajax) {
         echo $output;
         die();
@@ -41,20 +29,40 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1) {
     }
 }
 
-function configuracionPost($args, $paged, $user_id, $current_user_id) {
+function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     $posts = $args['posts'];
+
+    // Obtener el feed personalizado del usuario
+    $posts_personalizados = calcularFeedPersonalizado($user_id);
+
+    // Obtener solo los IDs de los posts, ordenados por puntuación
+    $post_ids = array_keys($posts_personalizados);
+
+    // Si es la primera página, limitamos a $posts publicaciones
+    if ($paged == 1) {
+        $post_ids = array_slice($post_ids, 0, $posts);
+    }
 
     $query_args = [
         'post_type' => 'social_post',
         'posts_per_page' => $posts,
         'paged' => $paged,
-        'meta_query' => [],
-        'orderby' => 'date',
-        'order' => 'DESC',
+        'post__in' => $post_ids,
+        'orderby' => 'post__in', // Ordenar según el orden de los IDs
     ];
 
+    // Excluimos publicaciones si es necesario
+    if (!empty($args['exclude'])) {
+        $query_args['post__not_in'] = $args['exclude'];
+    }
+
+    return $query_args;
+}
+
+function aplicarFiltros($query_args, $args, $user_id, $current_user_id) {
     $filtro = !empty($args['identifier']) ? $args['identifier'] : $args['filtro'];
 
+    // Definimos las condiciones de los filtros.
     $meta_query_conditions = [
         'siguiendo' => function() use ($current_user_id, &$query_args) {
             $query_args['author__in'] = array_filter((array) get_user_meta($current_user_id, 'siguiendo', true));
@@ -87,16 +95,20 @@ function configuracionPost($args, $paged, $user_id, $current_user_id) {
         },
     ];
 
+    // Si el filtro existe, aplicamos la condición correspondiente.
     if (isset($meta_query_conditions[$filtro])) {
         $condition = $meta_query_conditions[$filtro];
         $query_args['meta_query'][] = is_callable($condition) ? $condition() : $condition;
     }
 
-    if ($user_id !== null) $query_args['author'] = $user_id;
-    if (!empty($args['exclude'])) $query_args['post__not_in'] = $args['exclude'];
+    // Aplicamos el filtro por autor si existe un $user_id
+    if ($user_id !== null) {
+        $query_args['author'] = $user_id;
+    }
 
     return $query_args;
 }
+
 
 function procesarPublicaciones($query_args, $args, $is_ajax) {
     ob_start();
