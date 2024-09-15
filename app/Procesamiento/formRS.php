@@ -40,7 +40,7 @@ function formRs()
             <p>Opciones de post</p>
             <div class="flex flex-row gap-2">
                 <label class="custom-checkbox">
-                    <input type="checkbox" id="descarga" name="descargacheck" value="1">
+                    <input type="checkbox" id="descargacheck" name="descargacheck" value="1">
                     <span class="checkmark"></span>
                     <?php echo $GLOBALS['descargaicono']; ?>
                 </label>

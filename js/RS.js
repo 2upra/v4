@@ -109,16 +109,9 @@ async function envioRs() {
         const tags = window.Tags || [];
         const textoNormal = window.NormalText || '';
         
-        const descargaCheckbox = document.getElementById('descarga');
+        const descargaCheckbox = document.getElementById('descargacheck');
         const exclusivoCheckbox = document.getElementById('exclusivocheck');
         const colabCheckbox = document.getElementById('colabcheck');
-
-        console.log('Checkbox states:', 
-            'descarga:', descargaCheckbox.checked, 
-            'exclusivo:', exclusivoCheckbox.checked, 
-            'colab:', colabCheckbox.checked
-        );
-
         const descarga = descargaCheckbox.checked ? descargaCheckbox.value : 0;
         const exclusivo = exclusivoCheckbox.checked ? exclusivoCheckbox.value : 0;
         const colab = colabCheckbox.checked ? colabCheckbox.value : 0;
@@ -148,7 +141,7 @@ async function envioRs() {
         };
 
         console.table(data); // Verificar la tabla de datos antes de enviar
-        /*
+
         try {
             const response = await enviarAjax('subidaRs', data);
             if (response?.success) {
@@ -163,7 +156,7 @@ async function envioRs() {
         } finally {
             button.disabled = false;
         }
-        */
+        
     });
 }
 
