@@ -26,10 +26,6 @@ function social()
                             <?php echo do_shortcode('[mostrar_publicaciones_sociales filtro="no_bloqueado" tab_id="tab1-posts"]'); ?>
                         </div>
                     </div>
-                    <div class="SUPMPQ">
-                        <p>Sugerencia de seguimiento</p>
-                        <?php echo RecomendarUsuarios() ?>
-                    </div>
                 </div>
             </div>
 
