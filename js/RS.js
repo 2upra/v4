@@ -340,13 +340,26 @@ function limpiarCamposRs() {
     archivoId = null;
 
     // Ocultar y limpiar los contenidos de las áreas de previsualización
-    document.getElementById('previewAudio').style.display = 'none';
-    document.getElementById('previewArchivo').style.display = 'none';
-    document.getElementById('previewImagen').style.display = 'none';
+    const previewAudio = document.getElementById('previewAudio');
+    if (previewAudio) {
+        previewAudio.style.display = 'none';
+        const labelAudio = previewAudio.querySelector('label');
+        if (labelAudio) labelAudio.textContent = '';
+    }
 
-    document.getElementById('previewAudio').querySelector('label').textContent = '';
-    document.getElementById('previewArchivo').querySelector('label').textContent = 'Archivo adicional para colab (flp, zip, rar, midi, etc)';
-    document.getElementById('previewImagen').querySelector('label').textContent = '';
+    const previewArchivo = document.getElementById('previewArchivo');
+    if (previewArchivo) {
+        previewArchivo.style.display = 'none';
+        const labelArchivo = previewArchivo.querySelector('label');
+        if (labelArchivo) labelArchivo.textContent = 'Archivo adicional para colab (flp, zip, rar, midi, etc)';
+    }
+
+    const previewImagen = document.getElementById('previewImagen');
+    if (previewImagen) {
+        previewImagen.style.display = 'none';
+        const labelImagen = previewImagen.querySelector('label');
+        if (labelImagen) labelImagen.textContent = '';
+    }
 
     // Limpiar el texto de la sección de tags
     const textoRs = document.getElementById('textoRs');
@@ -354,12 +367,18 @@ function limpiarCamposRs() {
         textoRs.textContent = '';
     }
 
+    // Restablecer los valores de window (si es necesario)
     window.Tags = [];
     window.NormalText = '';
 
     // Desmarcar los checkboxes
-    document.getElementById('descarga').checked = false;
-    document.getElementById('exclusivo').checked = false;
-    document.getElementById('colab').checked = false;
+    const descargaCheckbox = document.getElementById('descarga');
+    if (descargaCheckbox) descargaCheckbox.checked = false;
+
+    const exclusivoCheckbox = document.getElementById('exclusivo');
+    if (exclusivoCheckbox) exclusivoCheckbox.checked = false;
+
+    const colabCheckbox = document.getElementById('colab');
+    if (colabCheckbox) colabCheckbox.checked = false;
 
 }
