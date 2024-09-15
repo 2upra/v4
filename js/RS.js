@@ -109,20 +109,29 @@ async function envioRs() {
         const tags = window.Tags || [];
         const textoNormal = window.NormalText || '';
         
-        const descarga = document.getElementById('descarga').checked ? 1 : 0;
-        const exclusivo = document.getElementById('exclusivo').checked ? 1 : 0;
-        const colab = document.getElementById('colab').checked ? 1 : 0;
+        const descargaCheckbox = document.getElementById('descarga');
+        const exclusivoCheckbox = document.getElementById('exclusivo');
+        const colabCheckbox = document.getElementById('colab');
+
+        console.log('Checkbox states:', 
+            'descarga:', descargaCheckbox.checked, 
+            'exclusivo:', exclusivoCheckbox.checked, 
+            'colab:', colabCheckbox.checked
+        );
+
+        const descarga = descargaCheckbox.checked ? descargaCheckbox.value : 0;
+        const exclusivo = exclusivoCheckbox.checked ? exclusivoCheckbox.value : 0;
+        const colab = colabCheckbox.checked ? colabCheckbox.value : 0;
 
         console.log(
+            'Valores finales:',
             'descarga:', descarga, 
             'exclusivo:', exclusivo, 
             'colab:', colab, 
             'tags:', tags,
             'textoNormal:', textoNormal,
         );
-
-        // suelta 0 descarga: 0 exclusivo: 0 colab: 0 independiemente de que marque uno no, cabe destacar que los
-
+        
         //codigo de envio omitido
         const data = {
             imagenUrl: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
