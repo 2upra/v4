@@ -110,7 +110,7 @@ async function envioRs() {
         const colab = document.getElementById('colab').checked ? 1 : 0;
 
         // Debugging: Verificar los valores en la consola
-        console.log('descarga:', descarga, 'exclusivo:', exclusivo, 'colab:', colab);
+        logRS('descarga:', descarga, 'exclusivo:', exclusivo, 'colab:', colab);
 
         const data = {
             imagenUrl: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
