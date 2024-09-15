@@ -101,33 +101,46 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
 
     buttons.forEach(button => {
         button.addEventListener('click', async event => {
+            // Obtener el postId
             const postId = event.currentTarget.dataset.postId;
+            console.log(`Botón clicado. postId encontrado: ${postId}`); // Log para verificar el postId
+
             if (!postId) {
                 console.error('No se encontró postId en el botón');
-                return;
+                return; // Salir si no hay postId
             }
+
+            // Encontrar el elemento de la publicación en el DOM
             const socialPost = event.currentTarget.closest('.social-post');
             const statusElement = socialPost?.querySelector('.post-status');
 
+            // Confirmar la acción
             const confirmed = await confirm(confirmMessage);
+            console.log(`Confirmación de usuario: ${confirmed ? 'Sí' : 'No'}`); // Log para ver la confirmación
+
             if (confirmed) {
+                console.log(`Enviando solicitud AJAX para la acción: ${action} con postId: ${postId}`); // Log antes de enviar AJAX
                 const data = await enviarAjax(action, { postId }); 
+                
+                console.log('Respuesta AJAX recibida:', data); // Log para ver la respuesta AJAX
 
                 if (data.success) {
+                    console.log(`Acción ${action} exitosa. Ejecutando callback de éxito.`); // Log para éxito
                     successCallback(statusElement, data);
+                    
                     if (elementToRemoveSelector) {
+                        console.log(`Removiendo elemento con selector: ${elementToRemoveSelector} y postId: ${postId}`); // Log para remover
                         removerPost(elementToRemoveSelector, postId);
                     }
                 } else {
-                    console.log(`Error al realizar la acción: ${action}`);
+                    console.error(`Error al realizar la acción: ${action}. Mensaje: ${data.message}`);
                 }
             } else {
-                console.log('Cancelado');
+                console.log('Acción cancelada por el usuario.');
             }
         });
     });
 }
-
 //GENERIC CAMBIAR DOM
 function actualizarElemento(element, newStatus) {
     if (element) {
