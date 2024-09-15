@@ -24,6 +24,7 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
 
     if (is_wp_error($post_id)) {
         return $post_id; 
+    }
 
     return $post_id;
 }
