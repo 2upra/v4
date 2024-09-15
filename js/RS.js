@@ -110,7 +110,13 @@ async function envioRs() {
         const colab = document.getElementById('colab').checked ? 1 : 0;
 
         // Debugging: Verificar los valores en la consola
-        logRS('descarga:', descarga, 'exclusivo:', exclusivo, 'colab:', colab);
+        logRS(
+            'descarga:', descarga, 
+            'exclusivo:', exclusivo, 
+            'colab:', colab, 
+            'tags:', tags,
+            'textoNormal:', textoNormal,
+        );
 
         const data = {
             imagenUrl: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
@@ -127,7 +133,7 @@ async function envioRs() {
         };
 
         console.table(data); // Verificar la tabla de datos antes de enviar
-
+        /*
         try {
             const response = await enviarAjax('subidaRs', data);
             if (response?.success) {
@@ -142,6 +148,7 @@ async function envioRs() {
         } finally {
             button.disabled = false;
         }
+        */
     });
 }
 
