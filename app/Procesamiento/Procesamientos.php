@@ -19,7 +19,10 @@ function subidaRs()
     procesarURLs($postId);
     asignarTags($postId);
     guardarLog('Post RS creado con ID: ' . $postId);
+    //Falta update_post_meta($post_id, 'additional_search_data', $additional_data_json);
+    update_post_meta($postId, '_post_puntuacion_final', 100);
     wp_send_json_success(['message' => 'Post creado exitosamente']);
+    wp_die();
 }
 
 add_action('wp_ajax_subidaRs', 'subidaRs');

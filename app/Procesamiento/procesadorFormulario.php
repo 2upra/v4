@@ -1,5 +1,5 @@
 <?php
-
+/*
 function subidaDePost()
 {
     guardarLog("---------------------------------------------");

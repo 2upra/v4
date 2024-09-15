@@ -1,20 +1,34 @@
 <?php
 
-
-//ESTAS SON MIS FUNCIONES GENERICAS PARA PROCESAR FORMULARIO
 function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
 {
+    // Saneamiento de datos
     $contenido = sanitize_textarea_field($_POST['textoNormal'] ?? '');
+    // Validación del contenido
+    if (empty($contenido)) {
+        guardarLog('empty_content: El contenido no puede estar vacío.');
+        return new WP_Error('empty_content', 'El contenido no puede estar vacío.');
+    }
+        
+    }
+    // Generar el título
     $titulo = wp_trim_words($contenido, 15, '...');
     $autor = get_current_user_id();
 
-    return wp_insert_post([
+    // Insertar el post
+    $post_id = wp_insert_post([
         'post_title'   => $titulo,
         'post_content' => $contenido,
         'post_status'  => $estadoPost,
         'post_author'  => $autor,
         'post_type'    => $tipoPost,
     ]);
+
+    if (is_wp_error($post_id)) {
+        return $post_id; // Manejar errores correctamente
+    }
+
+    return $post_id;
 }
 
 function actualizarMetaDatos($postId)
@@ -26,7 +40,8 @@ function actualizarMetaDatos($postId)
     ];
 
     foreach ($meta_fields as $meta_key => $post_key) {
-        update_post_meta($postId, $meta_key, isset($_POST[$post_key]) ? 1 : 0);
+        $value = isset($_POST[$post_key]) ? 1 : 0;
+        update_post_meta($postId, $meta_key, $value);
     }
 }
 
@@ -34,7 +49,10 @@ function confirmarArchivos($postId)
 {
     foreach (['archivoId', 'audioId', 'imagenId'] as $campo) {
         if (!empty($_POST[$campo])) {
-            confirmarArchivo(intval($_POST[$campo]));
+            $file_id = intval($_POST[$campo]);
+            if ($file_id > 0) {
+                confirmarArchivo($file_id);
+            }
         }
     }
 }
@@ -49,9 +67,12 @@ function procesarURLs($postId)
 
     foreach ($procesarURLs as $field => $callback) {
         if (!empty($_POST[$field])) {
-            is_array($callback)
-                ? $callback[0]($postId, $field, $callback[1])
-                : $callback($postId, $field);
+            $url = esc_url_raw($_POST[$field]);
+            if (filter_var($url, FILTER_VALIDATE_URL)) {
+                is_array($callback)
+                    ? $callback[0]($postId, $field, $callback[1])
+                    : $callback($postId, $field);
+            }
         }
     }
 }
@@ -59,7 +80,9 @@ function procesarURLs($postId)
 function asignarTags($postId)
 {
     if (!empty($_POST['Tags'])) {
-        wp_set_post_tags($postId, explode(',', sanitize_text_field($_POST['Tags'])), false);
+        $tags = sanitize_text_field($_POST['Tags']);
+        $tags_array = explode(',', $tags);
+        wp_set_post_tags($postId, $tags_array, false);
     }
 }
 
@@ -86,10 +109,12 @@ function obtenerArchivoId($url, $postId)
     $archivoId = attachment_url_to_postid($url);
     if (!$archivoId) {
         $file_path = str_replace(wp_upload_dir()['baseurl'], wp_upload_dir()['basedir'], $url);
-        $archivoId = media_handle_sideload([
-            'name'     => basename($file_path),
-            'tmp_name' => $file_path
-        ], $postId);
+        if (file_exists($file_path)) {
+            $archivoId = media_handle_sideload([
+                'name'     => basename($file_path),
+                'tmp_name' => $file_path
+            ], $postId);
+        }
     }
 
     return $archivoId;
@@ -107,7 +132,8 @@ function renombrarArchivoAdjunto($postId, $archivoId)
 {
     $post = get_post($postId);
     $author = get_userdata($post->post_author);
-    $info = pathinfo($file_path = get_attached_file($archivoId));
+    $file_path = get_attached_file($archivoId);
+    $info = pathinfo($file_path);
 
     $new_filename = sprintf(
         '2upra_%s_%s.%s',
@@ -116,9 +142,14 @@ function renombrarArchivoAdjunto($postId, $archivoId)
         $info['extension']
     );
 
-    if (rename($file_path, $info['dirname'] . DIRECTORY_SEPARATOR . $new_filename)) {
-        update_attached_file($archivoId, $new_filename);
+    $new_file_path = $info['dirname'] . DIRECTORY_SEPARATOR . $new_filename;
+    if (rename($file_path, $new_file_path)) {
+        update_attached_file($archivoId, $new_file_path);
         update_post_meta($postId, 'sample', true);
         procesarAudioLigero($postId, $archivoId, 1);
+    } else {
+        // Manejar error en el renombrado
+        guardarLog('rename_failed:No se pudo renombrar el archivo adjunto.');
+        return new WP_Error('rename_failed', 'No se pudo renombrar el archivo adjunto.');
     }
 }
