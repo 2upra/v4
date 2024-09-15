@@ -128,53 +128,62 @@ function TagEnTexto(options = {}) {
         whitelist = [],
         tagClass = 'tagRs'
     } = options;
+    
     const container = document.getElementById(containerId);
     const hiddenTagsInput = document.getElementById('postTagsHidden');
     const hiddenContentTextarea = document.getElementById('postContent');
+    
     if (!container || !hiddenTagsInput || !hiddenContentTextarea) {
         return;
     }
-    let tags = [];
-    let normalText = "";
+    
+    // Exponemos las variables globalmente
+    window.Tags = [];
+    window.NormalText = "";
+    
     container.addEventListener('input', handleInput);
     container.addEventListener('keydown', handleKeyDown);
+    
     function handleInput(event) {
         processTags();
     }
+    
     function handleKeyDown(event) {
         if (event.key === 'Enter') {
             event.preventDefault();
             processTags();
         }
     }
+    
     function processTags() {
         const content = container.innerText;
         const words = content.split(/(\s+)/);
         
-        tags = [];
-        normalText = "";
+        window.Tags = [];
+        window.NormalText = "";
         container.innerHTML = '';
     
         words.forEach(word => {
             if (word.startsWith('#') && word.length > 1) {
                 const tag = word.slice(1); 
-                if (isValidTag(tag) && !tags.includes(tag)) {
-                    tags.push(tag);
+                if (isValidTag(tag) && !window.Tags.includes(tag)) {
+                    window.Tags.push(tag);
                     const tagSpan = document.createElement('span');
                     tagSpan.className = tagClass;
                     tagSpan.textContent = word;
                     container.appendChild(tagSpan);
                 } else {
-                    normalText += word;
+                    window.NormalText += word;
                     container.appendChild(document.createTextNode(word));
                 }
             } else {
-                normalText += word;
+                window.NormalText += word;
                 container.appendChild(document.createTextNode(word));
             }
         });
-        normalText = normalText.trim();
+        window.NormalText = window.NormalText.trim();
         updateHiddenInputs();
+        
         const selection = window.getSelection();
         const range = document.createRange();
         if (container.childNodes.length > 0) {
@@ -183,21 +192,25 @@ function TagEnTexto(options = {}) {
             selection.removeAllRanges();
             selection.addRange(range);
         }
-        logTags('Tags procesados:', tags);
-        logTags('Texto normal:', normalText);
+        
+        logTags('Tags procesados:', window.Tags);
+        logTags('Texto normal:', window.NormalText);
     }
+    
     function updateHiddenInputs() {
-        hiddenTagsInput.value = tags.join(',');
-        hiddenContentTextarea.value = normalText;
+        hiddenTagsInput.value = window.Tags.join(',');
+        hiddenContentTextarea.value = window.NormalText;
     }
+    
     function isValidTag(tag) {
-        return tag.length >= minLength && tag.length <= maxLength && tags.length < maxTags && (whitelist.length === 0 || whitelist.includes(tag));
+        return tag.length >= minLength && tag.length <= maxLength && window.Tags.length < maxTags && (whitelist.length === 0 || whitelist.includes(tag));
     }
+    
     function getContent() {
         return { tags: window.Tags, normalText: window.NormalText };
     }
+    
     return getContent;
 }
-
 
 
