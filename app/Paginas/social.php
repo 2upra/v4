@@ -23,7 +23,7 @@ function social()
                             ?>
                         </div>
                         <div class="FEDAG5">
-                            <?php echo do_shortcode('[mostrar_publicaciones_sociales filtro="no_bloqueado" tab_id="tab1-posts"]'); ?>
+                            <?php echo publicaciones(['filtro' => 'nada', 'posts' => 10]); ?>
                         </div>
                     </div>
                 </div>
