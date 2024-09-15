@@ -1,105 +1,94 @@
 function like() {
-    document.addEventListener('DOMContentLoaded', function() {
-        const likeButtons = document.querySelectorAll('.post-like-button, .like-count, .TJKQGJ');
-        const posts = document.querySelectorAll('.EDYQHV');
+    const likeButtons = document.querySelectorAll('.post-like-button');
 
-        likeButtons.forEach(button => {
-            button.addEventListener('click', handleLike);
-        });
+    likeButtons.forEach(button => {
+        button.addEventListener('click', handleLike);
+    });
 
-        posts.forEach(post => {
-            post.addEventListener('dblclick', handleLike);
-        });
+    async function handleLike(event) {
+        const button = event.currentTarget;
+        const post_id = parseInt(button.dataset.post_id, 10);
+        const nonce = button.dataset.nonce;
 
-        async function handleLike(event) {
-            let button;
-            if (event.type === 'click') {
-                button = event.target.classList.contains('post-like-button') 
-                    ? event.target 
-                    : event.target.closest('.post-like-button');
-            } else if (event.type === 'dblclick') {
-                button = event.currentTarget.querySelector('.post-like-button');
-            }
+        console.log('Button clicked for post ID:', post_id);
 
-            if (!button) return;
-
-            const post_id = parseInt(button.getAttribute('data-post_id'), 10);
-            if (!post_id) {
-                console.error("Post ID not found in button data");
-                return;
-            }
-
-            if (button.dataset.requestRunning === "true") return;
-            button.dataset.requestRunning = "true";
-
-            const data = {
-                post_id: post_id,
-                like_state: !button.classList.contains('liked')
-            };
-
-            try {
-                const response = await enviarAjax("handle_post_like", data);
-                const likes = parseInt(response, 10);
-
-                if (!isNaN(likes)) {
-                    document.querySelectorAll(`.post-like-button[data-post_id="${post_id}"]`).forEach(button => {
-                        const likeCount = button.closest('.social-post').querySelector('.like-count');
-                        if (likeCount) {
-                            likeCount.textContent = likes;
-                        }
-                        button.classList.toggle('liked');
-                        const audioContainer = button.closest('.social-post').querySelector('.audio-container');
-                        if (audioContainer) {
-                            audioContainer.setAttribute('data-liked', button.classList.contains('liked'));
-                        }
-                    });
-                    showHeartAnimation(button.closest('.EDYQHV'));
-                } else {
-                    console.error('Unexpected response from server:', response);
-                }
-            } catch (error) {
-                console.error("AJAX Error:", error);
-            } finally {
-                button.dataset.requestRunning = "false";
-                button.dataset.canToggleLike = !button.classList.contains('liked');
-                if (button.classList.contains('liked')) {
-                    setTimeout(() => {
-                        button.dataset.canToggleLike = "true";
-                    }, 500);
-                }
-            }
+        if (!post_id || button.dataset.requestRunning === 'true') {
+            console.error('Invalid Post ID or request already running');
+            return;
         }
 
-        function showHeartAnimation(postContent) {
-            const heart = document.createElement('div');
-            heart.className = 'heart-animation';
-            heart.textContent = '❤';
-            Object.assign(heart.style, {
-                position: 'absolute',
-                zIndex: '999',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%) scale(1)',
-                fontSize: '4rem',
-                color: 'red',
-                opacity: 0,
-                pointerEvents: 'none'
-            });
-            postContent.style.position = 'relative';
-            postContent.appendChild(heart);
+        button.dataset.requestRunning = 'true';
 
-            const animationDuration = 500;
+        const data = {
+            post_id: post_id,
+            nonce: nonce,
+            like_state: !button.classList.contains('liked')
+        };
 
-            heart.animate([
-                { opacity: 1, fontSize: '6rem' },
-                { opacity: 0, fontSize: '4rem' }
-            ], {
+        try {
+            console.log('Sending AJAX request with data:', data);
+            const response = await enviarAjax('handle_post_like', data);
+            console.log('Response received:', response);
+
+            const likes = parseInt(response, 10);
+            if (!isNaN(likes)) {
+                updateLikeUI(button, likes);
+                showHeartAnimation(button.closest('.EDYQHV'));
+            } else {
+                console.error('Unexpected response:', response);
+            }
+        } catch (error) {
+            console.error('AJAX Error:', error);
+        } finally {
+            button.dataset.requestRunning = 'false';
+        }
+    }
+
+    function updateLikeUI(button, likes) {
+        const post = button.closest('.TJKQGJ');
+        const likeCount = post.querySelector('.like-count');
+
+        button.classList.toggle('liked');
+        if (likeCount) {
+            likeCount.textContent = likes;
+        }
+
+        console.log('Updated UI for post ID:', button.dataset.post_id, 'New likes count:', likes);
+    }
+
+    function showHeartAnimation(postContent) {
+        const heart = document.createElement('div');
+        heart.className = 'heart-animation';
+        heart.textContent = '❤';
+        Object.assign(heart.style, {
+            position: 'absolute',
+            zIndex: '999',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%) scale(1)',
+            fontSize: '4rem',
+            color: 'red',
+            opacity: 0,
+            pointerEvents: 'none'
+        });
+
+        postContent.style.position = 'relative';
+        postContent.appendChild(heart);
+
+        const animationDuration = 500;
+
+        heart.animate(
+            [
+                {opacity: 1, fontSize: '6rem'},
+                {opacity: 0, fontSize: '4rem'}
+            ],
+            {
                 duration: animationDuration,
                 easing: 'ease-out',
                 fill: 'forwards'
-            }).onfinish = function() {
-                heart.remove();
-            };
-        }
-    });
+            }
+        ).onfinish = function () {
+            heart.remove();
+        };
+    }
 }
