@@ -84,7 +84,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 
         while ($query->have_posts()) {
             $query->the_post();
-            echo obtener_html_publicacion($filtro);
+            echo htmlPost($filtro);
         }
 
         if (!wp_doing_ajax()) {

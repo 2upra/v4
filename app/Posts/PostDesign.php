@@ -1,5 +1,5 @@
 <?php
-function obtener_html_publicacion($filtro)
+function htmlPost($filtro)
 {
     $post_id = get_the_ID();
     $vars = variablesPosts($post_id);
@@ -66,7 +66,8 @@ function obtener_html_publicacion($filtro)
                         </div>
                     <?php else: ?>
                         <div class="NERWFB">
-                            <?php if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])): ?>
+                            <?php //POST GENERICO DE RS
+                            if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])): ?>
                                 <div class="ZQHOQY">
                                     <?php wave($audio_url, $audio_id_lite, $post_id); ?>
                                 </div>
@@ -75,8 +76,14 @@ function obtener_html_publicacion($filtro)
                                     <?php echo audioPost($post_id) ?>
                                 </div>
                             <?php endif; ?>
-
-                            <?php the_content(); ?>
+                            <div class="FBKMJD">
+                                <div>
+                                    <?php the_content(); ?>
+                                </div>
+                                <div>
+                                    <p><?php echo $key; ?> - <?php echo $scale; ?> - <?php echo $bpm; ?> </p>
+                                </div>
+                            </div>
                         </div>
                     <?php endif; ?>
                 </div>

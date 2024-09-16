@@ -1,6 +1,7 @@
 <?php
 
-//VARIABLES 
+//VARIABLES
+
 function variablesPosts($post_id = null)
 {
     if ($post_id === null) {
@@ -27,11 +28,14 @@ function variablesPosts($post_id = null)
         'post_date' => get_the_date('', $post_id),
         'block' => get_post_meta($post_id, 'esExclusivo', true),
         'colab' => get_post_meta($post_id, 'paraColab', true),
-        'post_status' => get_post_status($post_id)
+        'post_status' => get_post_status($post_id),
+        'bpm' => get_post_meta($post_id, 'audio_bpm', true),
+        'key ' => get_post_meta($post_id, 'audio_key', true),
+        'scale' => get_post_meta($post_id, 'audio_scale', true),
     ];
 }
 
-//BOTON DE SEGUIR 
+//BOTON DE SEGUIR
 
 function botonseguir($author_id)
 {
