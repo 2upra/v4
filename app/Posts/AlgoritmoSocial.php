@@ -18,7 +18,7 @@ define('BATCH_SIZE', 1000);
  */
 
 
-/function generarMetaDeIntereses($user_id)
+function generarMetaDeIntereses($user_id)
 {
     global $wpdb;
 
