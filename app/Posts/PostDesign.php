@@ -81,7 +81,12 @@ function htmlPost($filtro)
                                     <?php the_content(); ?>
                                 </div>
                                 <div>
-                                    <p><?php echo $key; ?> - <?php echo $scale; ?> - <?php echo $bpm; ?> </p>
+                                    <?php
+                                    $info = array_filter([$key, $scale, $bpm]);
+                                    if (!empty($info)) {
+                                        echo '<p class="TRZPQD">' . implode(' - ', $info) . '</p>';
+                                    }
+                                    ?>
                                 </div>
                             </div>
                         </div>
