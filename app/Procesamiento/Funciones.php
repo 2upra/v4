@@ -279,8 +279,9 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         guardarLog("Duración del audio no válida para el archivo {$audio_path}");
     }
 
-    guardarLog("datos para sacar meta post id: {$post_id} audio id: {$audio_id} index: {$index}");
-    // analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
+    guardarLog("datos para sacar meta post id: {$post_id} path_lite: {$nuevo_archivo_path_lite} index: {$index}");
+    /* log: datos para sacar meta post id: 231804 audio id: 231805 index: 1 */
+    analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
 }
 
 function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
