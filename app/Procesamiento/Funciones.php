@@ -280,9 +280,6 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     }
 
     guardarLog("datos para sacar meta post id: {$post_id} path_lite: {$nuevo_archivo_path_lite} index: {$index}");
-    /* 2024-09-16 16:26:49 - datos para sacar meta post id: 231807 path_lite: /var/www/wordpress/wp-content/uploads/2024/09/2upra_66e85c490773d_128k.mp3 index: 1
-    2024-09-16 16:26:49 - Ejecutando comando de Python: python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py "/var/www/wordpress/wp-content/uploads/2024/09/2upra_66e85c490773d_128k.mp3"
-    2024-09-16 16:26:53 - Salida del script de Python: */
     analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
 }
 
@@ -292,20 +289,20 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     $python_command = "python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py \"{$nuevo_archivo_path_lite}\"";
 
     guardarLog("Ejecutando comando de Python: {$python_command}");
-    $output_python = shell_exec($python_command);
-    guardarLog("Salida del script de Python: {$output_python}");
 
     // Leer los resultados del archivo JSON
     $resultados_path = $nuevo_archivo_path_lite . '_resultados.json';
     if (file_exists($resultados_path)) {
         $resultados = json_decode(file_get_contents($resultados_path), true);
         if ($resultados) {
-            update_post_meta($post_id, "audio_bpm_{$index}", $resultados['bpm']);
-            update_post_meta($post_id, "audio_pitch_{$index}", $resultados['pitch']);
-            update_post_meta($post_id, "audio_emotion_{$index}", $resultados['emotion']);
-            update_post_meta($post_id, "audio_key_{$index}", $resultados['key']);
-            update_post_meta($post_id, "audio_scale_{$index}", $resultados['scale']);
-            update_post_meta($post_id, "audio_strength_{$index}", $resultados['strength']);
+            $suffix = ($index == 1) ? '' : "_{$index}";
+            
+            update_post_meta($post_id, "audio_bpm{$suffix}", $resultados['bpm']);
+            update_post_meta($post_id, "audio_pitch{$suffix}", $resultados['pitch']);
+            update_post_meta($post_id, "audio_emotion{$suffix}", $resultados['emotion']);
+            update_post_meta($post_id, "audio_key{$suffix}", $resultados['key']);
+            update_post_meta($post_id, "audio_scale{$suffix}", $resultados['scale']);
+            update_post_meta($post_id, "audio_strength{$suffix}", $resultados['strength']);
         }
     } else {
         guardarLog("No se encontró el archivo de resultados en {$resultados_path}");
