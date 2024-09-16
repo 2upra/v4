@@ -279,14 +279,15 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         guardarLog("Duración del audio no válida para el archivo {$audio_path}");
     }
 
-    // Separar la lógica del análisis de audio y guardar metas
+    guardarLog("datos para sacar meta post id: {$post_id} audio id: {$audio_id} index: {$index}");
     // analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
 }
 
 function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 {
     // Ejecutar el script de análisis de audio
-    $python_command = "python3 /ruta/al/script/analizar_audio.py {$nuevo_archivo_path_lite}";
+    $python_command = "python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py \"{$nuevo_archivo_path_lite}\"";
+
     guardarLog("Ejecutando comando de Python: {$python_command}");
     $output_python = shell_exec($python_command);
     guardarLog("Salida del script de Python: {$output_python}");
