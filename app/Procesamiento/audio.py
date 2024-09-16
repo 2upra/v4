@@ -2,35 +2,50 @@ import essentia.standard as es
 import json
 
 def analizar_audio(audio_path):
-    # Cargar el archivo de audio
-    audio = es.MonoLoader(filename=audio_path)()
+    try:
+        # Cargar el archivo de audio
+        audio = es.MonoLoader(filename=audio_path)()
+        print(f"Audio cargado correctamente. Longitud: {len(audio)} muestras.")
 
-    # Extraer BPM
-    rhythm_extractor = es.RhythmExtractor2013(method="multifeature")
-    bpm, _, _, _, _ = rhythm_extractor(audio)
+        # Extraer BPM
+        rhythm_extractor = es.RhythmExtractor2013(method="multifeature")
+        bpm, _, _, _, _ = rhythm_extractor(audio)
+        print(f"BPM detectado: {bpm}")
 
-    # Extraer tono
-    pitch_extractor = es.PredominantPitchMelodia()
-    pitch, _ = pitch_extractor(audio)
+        # Extraer tono
+        pitch_extractor = es.PredominantPitchMelodia()
+        pitch, _ = pitch_extractor(audio)
+        print(f"Pitch (tono) detectado: {pitch[:10]}")
 
-    # Extraer tonalidad y escala
-    key_extractor = es.KeyExtractor()
-    key, scale, strength = key_extractor(audio)
+        # Extraer emoción (ejemplo simplificado)
+        emotion_extractor = es.EmotionExtractor()
+        emotion = emotion_extractor(audio)
+        print(f"Emoción detectada: {emotion}")
 
-    # Crear un diccionario con los resultados
-    resultados = {
-        "bpm": bpm,
-        "pitch": pitch,
-        "key": key,
-        "scale": scale,
-        "strength": strength
-    }
+        # Otros datos relevantes
+        key_extractor = es.KeyExtractor()
+        key, scale, strength = key_extractor(audio)
+        print(f"Clave detectada: {key}, Escala: {scale}, Fuerza: {strength}")
 
-    # Guardar los resultados en un archivo JSON
-    with open(audio_path + '_resultados.json', 'w') as f:
-        json.dump(resultados, f)
+        # Crear un diccionario con los resultados
+        resultados = {
+            "bpm": bpm,
+            "pitch": pitch.tolist(),
+            "emotion": emotion,
+            "key": key,
+            "scale": scale,
+            "strength": strength
+        }
 
-    return resultados
+        # Guardar los resultados en un archivo JSON
+        with open(audio_path + '_resultados.json', 'w') as f:
+            json.dump(resultados, f)
+        print("Archivo JSON guardado correctamente.")
+
+        return resultados
+
+    except Exception as e:
+        print(f"Error durante el análisis del audio: {e}")
 
 # Ejemplo de uso
 if __name__ == "__main__":

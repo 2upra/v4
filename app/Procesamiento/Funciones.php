@@ -280,7 +280,9 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     }
 
     guardarLog("datos para sacar meta post id: {$post_id} path_lite: {$nuevo_archivo_path_lite} index: {$index}");
-    /* log: datos para sacar meta post id: 231804 audio id: 231805 index: 1 */
+    /* 2024-09-16 16:26:49 - datos para sacar meta post id: 231807 path_lite: /var/www/wordpress/wp-content/uploads/2024/09/2upra_66e85c490773d_128k.mp3 index: 1
+    2024-09-16 16:26:49 - Ejecutando comando de Python: python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py "/var/www/wordpress/wp-content/uploads/2024/09/2upra_66e85c490773d_128k.mp3"
+    2024-09-16 16:26:53 - Salida del script de Python: */
     analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
 }
 
