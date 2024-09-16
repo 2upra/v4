@@ -18,11 +18,12 @@ define('BATCH_SIZE', 1000);
  */
 
 
-function generarMetaDeIntereses($user_id)
+/function generarMetaDeIntereses($user_id)
 {
     global $wpdb;
-    // Obtener posts con likes del usuario
-    $likePost = obtenerLikesDelUsuario($user_id);
+
+    // Obtener posts con likes del usuario, limitando a 500.
+    $likePost = obtenerLikesDelUsuario($user_id, 500);
     if (empty($likePost)) {
         return false;
     }
@@ -50,7 +51,11 @@ function generarMetaDeIntereses($user_id)
 
     // Analizar y acumular intereses basados en tags, autores y contenido
     $tag_intensidad = array_reduce($post_data, function ($acc, $post) {
-        $datosAlgoritmo = json_decode($post->meta_value, true);
+        if (!is_null($post->meta_value)) {
+            $datosAlgoritmo = json_decode($post->meta_value, true);
+        } else {
+            $datosAlgoritmo = null;
+        }
 
         // Procesar tags
         if (!empty($datosAlgoritmo['tags'])) {
@@ -66,7 +71,7 @@ function generarMetaDeIntereses($user_id)
         }
 
         // Analizar palabras del contenido del post
-        $palabras = array_filter(explode(' ', strtolower(trim($post->post_content))));
+        $palabras = array_filter(preg_split('/\s+/', strtolower(trim($post->post_content))));
         foreach ($palabras as $palabra) {
             $palabra = preg_replace('/[^a-z0-9]+/', '', $palabra);
             if (!empty($palabra)) {

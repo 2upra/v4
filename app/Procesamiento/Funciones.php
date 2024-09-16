@@ -80,11 +80,6 @@ function datosParaAlgoritmo($postId) {
     } else {
         guardarLog("Error al codificar datosAlgoritmo a JSON para postId: {$postId}");
     }
-
-    /*
-    Ejemplo de resultado
-    {"tags":["hola","algoritmo","hola1"],"texto":"hola ultima prueba","autor":{"id":"1","usuario":"1ndoryu","nombre":"Wandorius"}} 
-    */
 }
 
 function actualizarMetaDatos($postId)

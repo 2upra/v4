@@ -68,18 +68,25 @@ function likeAccion($post_id, $user_id, $action) {
 
 
 
-function obtenerLikesDelUsuario($user_id)
+function obtenerLikesDelUsuario($user_id, $limit = 500)
 {
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';
+    
+    // Prepara la consulta SQL con un límite opcional
     $query = $wpdb->prepare(
-        "SELECT post_id FROM $table_name WHERE user_id = %d",
-        $user_id
+        "SELECT post_id FROM $table_name WHERE user_id = %d ORDER BY like_date DESC LIMIT %d",
+        $user_id, $limit
     );
+    
+    // Obtener los IDs de los posts con like
     $liked_posts = $wpdb->get_col($query);
+    
+    // Si no hay resultados, devuelve un array vacío
     if (empty($liked_posts)) {
-        return array();
+        return [];
     }
+    
     return $liked_posts;
 }
 
