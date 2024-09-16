@@ -240,7 +240,7 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         guardarLog("Error al procesar audio ligero: " . implode("\n", $output_lite));
     }
 
-    // Insertar archivos en la biblioteca de medios
+    // Insertar archivo en la biblioteca de medios
     require_once(ABSPATH . 'wp-admin/includes/image.php');
     require_once(ABSPATH . 'wp-admin/includes/file.php');
     require_once(ABSPATH . 'wp-admin/includes/media.php');
@@ -278,4 +278,34 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     } else {
         guardarLog("Duración del audio no válida para el archivo {$audio_path}");
     }
+
+    // Separar la lógica del análisis de audio y guardar metas
+    // analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
 }
+
+function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
+{
+    // Ejecutar el script de análisis de audio
+    $python_command = "python3 /ruta/al/script/analizar_audio.py {$nuevo_archivo_path_lite}";
+    guardarLog("Ejecutando comando de Python: {$python_command}");
+    $output_python = shell_exec($python_command);
+    guardarLog("Salida del script de Python: {$output_python}");
+
+    // Leer los resultados del archivo JSON
+    $resultados_path = $nuevo_archivo_path_lite . '_resultados.json';
+    if (file_exists($resultados_path)) {
+        $resultados = json_decode(file_get_contents($resultados_path), true);
+        if ($resultados) {
+            update_post_meta($post_id, "audio_bpm_{$index}", $resultados['bpm']);
+            update_post_meta($post_id, "audio_pitch_{$index}", $resultados['pitch']);
+            update_post_meta($post_id, "audio_emotion_{$index}", $resultados['emotion']);
+            update_post_meta($post_id, "audio_key_{$index}", $resultados['key']);
+            update_post_meta($post_id, "audio_scale_{$index}", $resultados['scale']);
+            update_post_meta($post_id, "audio_strength_{$index}", $resultados['strength']);
+        }
+    } else {
+        guardarLog("No se encontró el archivo de resultados en {$resultados_path}");
+    }
+}
+
+
