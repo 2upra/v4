@@ -184,7 +184,7 @@ function actualizarInteresesEnLote($batch)
  *    - 5 puntos base + número total de likes del post
  *
  * 4. Factor de Decaimiento Temporal:
- *    - Calculado como: 0.30^(horas transcurridas desde la publicación)
+ *    - Calculado como: 0.98^(horas transcurridas desde la publicación)
  *    - Reduce la relevancia de posts más antiguos
  *
  * 5. Puntuación Final:
@@ -265,7 +265,7 @@ function calcularFeedPersonalizado($userId)
 
         // 4. Factor de tiempo (decay) basado en horas
         $horasDesdePublicacion = (current_time('timestamp') - get_post_time('U', true)) / 3600;
-        $factorTiempo = pow(0.30, $horasDesdePublicacion); 
+        $factorTiempo = pow(0.98, $horasDesdePublicacion); 
 
         // 5. Puntuación final
         $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * $factorTiempo;
