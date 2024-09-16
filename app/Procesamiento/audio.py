@@ -17,11 +17,6 @@ def analizar_audio(audio_path):
         pitch, _ = pitch_extractor(audio)
         print(f"Pitch (tono) detectado: {pitch[:10]}")
 
-        # Extraer emoción (ejemplo simplificado)
-        emotion_extractor = es.EmotionExtractor()
-        emotion = emotion_extractor(audio)
-        print(f"Emoción detectada: {emotion}")
-
         # Otros datos relevantes
         key_extractor = es.KeyExtractor()
         key, scale, strength = key_extractor(audio)
@@ -31,7 +26,6 @@ def analizar_audio(audio_path):
         resultados = {
             "bpm": bpm,
             "pitch": pitch.tolist(),
-            "emotion": emotion,
             "key": key,
             "scale": scale,
             "strength": strength
@@ -48,7 +42,7 @@ def analizar_audio(audio_path):
         print(f"Error durante el análisis del audio: {e}")
 
 # Ejemplo de uso
-if __name__ == "__main__":
+if __name__ == "__main__":  
     import sys
     audio_path = sys.argv[1]
     resultados = analizar_audio(audio_path)
