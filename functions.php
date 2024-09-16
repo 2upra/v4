@@ -25,6 +25,11 @@ function logAlgoritmo($log) {
     escribirLog($log, '/var/www/wordpress/wp-content/themes/logAlgoritmo.log');
 }
 
+function ajaxPostLog($log) {
+    escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlogAjax.txt');
+}
+
+
 
 
 //Script principal

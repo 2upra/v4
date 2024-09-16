@@ -1,9 +1,10 @@
 <?php
 
-define('ENABLE_LOGS', true);
+
 
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
+    
     $user_id = obtenerUserId($is_ajax);
     $current_user_id = get_current_user_id();
 
@@ -14,14 +15,11 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         'exclude' => [],
     ];
     $args = array_merge($defaults, $args);
-
-    // Configuramos los argumentos de la consulta.
+    if ($is_ajax) {
+        guardarLog("Publicaciones AJAX: " . print_r($args, true));
+    }
     $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
-
-    // Procesamos las publicaciones
     $output = procesarPublicaciones($query_args, $args, $is_ajax);
-
-    // Retornamos o mostramos el resultado dependiendo de si es una solicitud AJAX.
     if ($is_ajax) {
         echo $output;
         die();
@@ -133,7 +131,7 @@ function publicacionAjax()
     $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
     $search_term = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
     $filtro = isset($_POST['filtro']) ? sanitize_text_field($_POST['filtro']) : '';
-    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : ''; // Obtener data-identifier
+    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : ''; 
     $tab_id = isset($_POST['tab_id']) ? sanitize_text_field($_POST['tab_id']) : '';
     $user_id = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
 
