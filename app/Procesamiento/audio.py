@@ -1,7 +1,3 @@
-import essentia.standard as es
-import json
-import numpy as np
-
 # Lista de géneros (ejemplo con los primeros 10)
 GENRES = [
         "Abstract", "Acid", "Acid House", "Acid Jazz", "Ambient", "Bassline", "Beatdown", "Berlin-School", "Big Beat", "Bleep", "Breakbeat", "Breakcore", "Breaks", "Broken Beat", "Chillwave", "Chiptune", "Dance-pop", "Dark Ambient", "Darkwave", "Deep House", "Deep Techno", "Disco", "Disco Polo", "Donk", "Downtempo", "Drone", "Drum n Bass", "Dub", "Dub Techno", "Dubstep", "Dungeon Synth", "EBM", "Electro", "Electro House", "Electroclash", "Euro House", "Euro-Disco", "Eurobeat", "Eurodance", "Experimental", "Freestyle", "Future Jazz", "Gabber", "Garage House", "Ghetto", "Ghetto House", "Glitch", "Goa Trance", "Grime", "Halftime", "Hands Up", "Happy Hardcore", "Hard House", "Hard Techno", "Hard Trance", "Hardcore", "Hardstyle", "Hi NRG", "Hip Hop", "Hip-House", "House", "IDM", "Illbient", "Industrial", "Italo House", "Italo-Disco", "Italodance", "Jazzdance", "Juke", "Jumpstyle", "Jungle", "Latin", "Leftfield", "Makina", "Minimal", "Minimal Techno", "Modern Classical", "Musique Concrète", "Neofolk", "New Age", "New Beat", "New Wave", "Noise", "Nu-Disco", "Power Electronics", "Progressive Breaks", "Progressive House", "Progressive Trance", "Psy-Trance", "Rhythmic Noise", "Schranz", "Sound Collage", "Speed Garage", "Speedcore", "Synth-pop", "Synthwave", "Tech House", "Tech Trance", "Techno", "Trance", "Tribal", "Tribal House", "Trip Hop", "Tropical House", "UK Garage", "Vaporwave"
@@ -17,57 +13,79 @@ GENRES = [
         "Stage & Screen", "Musical", "Score", "Soundtrack", "Theme"
 ]
 
+import essentia.standard as es
+import json
+import numpy as np
+
+def cargar_modelos():
+    # Especifica las rutas correctas a los modelos
+    modelo_discogs = "/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/discogs-effnet-bs64-1.pb"
+    modelo_genero = "/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/genre_discogs400-discogs-effnet-1.pb"
+    
+    # Cargar los modelos usando TensorflowPredictEffnetDiscogs
+    try:
+        modelo_discogs_extractor = es.TensorflowPredictEffnetDiscogs(graphFilename=modelo_discogs)
+        modelo_genero_extractor = es.TensorflowPredictEffnetDiscogs(graphFilename=modelo_genero)
+        print("Modelos cargados correctamente.")
+    except Exception as e:
+        print(f"Error al cargar los modelos: {e}")
+        return None
+
+    return modelo_discogs_extractor, modelo_genero_extractor
+
 def analizar_audio(audio_path):
     try:
-        # Cargar el audio a 16kHz como requiere el modelo
-        audio = es.MonoLoader(filename=audio_path, sampleRate=16000, resampleQuality=4)()
+        # Cargar el audio
+        audio = es.MonoLoader(filename=audio_path, sampleRate=44100)()
         print(f"Audio cargado correctamente. Longitud: {len(audio)} muestras.")
 
-        # Aplicar TensorflowPredictEffnetDiscogs para obtener embeddings
-        embedding_model = es.TensorflowPredictEffnetDiscogs(graphFilename="discogs-effnet-bs64-1.pb", output="PartitionedCall:1")
-        embeddings = embedding_model(audio)
-
-        # Aplicar el modelo de género
-        genre_model = es.TensorflowPredict2D(graphFilename="genre_discogs400-discogs-effnet-1.pb", 
-                                             input="serving_default_model_Placeholder", 
-                                             output="PartitionedCall:0")
-        genre_predictions = genre_model(embeddings)
-
-        # Calcular el promedio de las predicciones de género
-        avg_genre_predictions = np.mean(genre_predictions, axis=0)
-
-        # Obtener los 5 géneros más probables
-        top_5_indices = np.argsort(avg_genre_predictions)[-5:][::-1]
-        top_5_genres = [GENRES[i] for i in top_5_indices]
-        top_5_probs = avg_genre_predictions[top_5_indices]
-
-        print("Top 5 géneros detectados:")
-        for genre, prob in zip(top_5_genres, top_5_probs):
-            print(f"{genre}: {prob:.4f}")
+        # Cargar modelos de predicción de discogs
+        modelos = cargar_modelos()
+        if modelos is None:
+            print("No se pudieron cargar los modelos de Discogs. Continuando con el análisis sin ellos.")
+        else:
+            modelo_discogs_extractor, modelo_genero_extractor = modelos
 
         # Extraer BPM
         rhythm_extractor = es.RhythmExtractor2013(method="multifeature")
-        bpm, _, _, _, _ = rhythm_extractor(audio)
+        bpm, beats, beats_confidence, _, beats_intervals = rhythm_extractor(audio)
         print(f"BPM detectado: {bpm}")
 
         # Extraer tono
         pitch_extractor = es.PredominantPitchMelodia()
-        pitch, _ = pitch_extractor(audio)
-        print(f"Pitch (tono) detectado: {pitch[:10]}")
+        pitch, pitch_confidence = pitch_extractor(audio)
+        print(f"Pitch (tono) detectado: {np.mean(pitch)}")
 
-        # Otros datos relevantes
+        # Extraer clave y escala
         key_extractor = es.KeyExtractor()
         key, scale, strength = key_extractor(audio)
         print(f"Clave detectada: {key}, Escala: {scale}, Fuerza: {strength}")
 
+        # Extraer características espectrales
+        spectral_extractor = es.Spectrum()
+        mfcc = es.MFCC()
+        spectral_features = []
+        mfcc_features = []
+
+        for frame in es.FrameGenerator(audio, frameSize=2048, hopSize=1024):
+            spec = spectral_extractor(frame)
+            mfcc_bands, mfcc_coeffs = mfcc(spec)
+            spectral_features.append(spec)
+            mfcc_features.append(mfcc_coeffs)
+
+        # Calcular promedio de características espectrales y MFCC
+        avg_spectrum = np.mean(spectral_features, axis=0)
+        avg_mfcc = np.mean(mfcc_features, axis=0)
+
         # Crear un diccionario con los resultados
         resultados = {
-            "bpm": bpm,
-            "pitch": pitch.tolist(),
+            "bpm": float(bpm),
+            "pitch_mean": float(np.mean(pitch)),
             "key": key,
             "scale": scale,
-            "strength": strength,
-            "top_5_genres": [{"genre": g, "probability": float(p)} for g, p in zip(top_5_genres, top_5_probs)]
+            "key_strength": float(strength),
+            "avg_spectrum": avg_spectrum.tolist()[:10],  # Primeros 10 valores del espectro promedio
+            "avg_mfcc": avg_mfcc.tolist(),
         }
 
         # Guardar los resultados en un archivo JSON
@@ -77,8 +95,13 @@ def analizar_audio(audio_path):
 
         return resultados
 
+    except AttributeError as e:
+        print(f"Error durante el análisis del audio: {e}")
+        return None
+
     except Exception as e:
         print(f"Error durante el análisis del audio: {e}")
+        return None
 
 # Ejemplo de uso
 if __name__ == "__main__":  
