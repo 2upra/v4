@@ -1,91 +1,59 @@
-# Lista de géneros (ejemplo con los primeros 10)
-GENRES = [
-        "Abstract", "Acid", "Acid House", "Acid Jazz", "Ambient", "Bassline", "Beatdown", "Berlin-School", "Big Beat", "Bleep", "Breakbeat", "Breakcore", "Breaks", "Broken Beat", "Chillwave", "Chiptune", "Dance-pop", "Dark Ambient", "Darkwave", "Deep House", "Deep Techno", "Disco", "Disco Polo", "Donk", "Downtempo", "Drone", "Drum n Bass", "Dub", "Dub Techno", "Dubstep", "Dungeon Synth", "EBM", "Electro", "Electro House", "Electroclash", "Euro House", "Euro-Disco", "Eurobeat", "Eurodance", "Experimental", "Freestyle", "Future Jazz", "Gabber", "Garage House", "Ghetto", "Ghetto House", "Glitch", "Goa Trance", "Grime", "Halftime", "Hands Up", "Happy Hardcore", "Hard House", "Hard Techno", "Hard Trance", "Hardcore", "Hardstyle", "Hi NRG", "Hip Hop", "Hip-House", "House", "IDM", "Illbient", "Industrial", "Italo House", "Italo-Disco", "Italodance", "Jazzdance", "Juke", "Jumpstyle", "Jungle", "Latin", "Leftfield", "Makina", "Minimal", "Minimal Techno", "Modern Classical", "Musique Concrète", "Neofolk", "New Age", "New Beat", "New Wave", "Noise", "Nu-Disco", "Power Electronics", "Progressive Breaks", "Progressive House", "Progressive Trance", "Psy-Trance", "Rhythmic Noise", "Schranz", "Sound Collage", "Speed Garage", "Speedcore", "Synth-pop", "Synthwave", "Tech House", "Tech Trance", "Techno", "Trance", "Tribal", "Tribal House", "Trip Hop", "Tropical House", "UK Garage", "Vaporwave"
-        "Folk, World, & Country", "African", "Bluegrass", "Cajun", "Canzone Napoletana", "Catalan Music", "Celtic", "Country", "Fado", "Flamenco", "Folk", "Gospel", "Highlife", "Hillbilly", "Hindustani", "Honky Tonk", "Indian Classical", "Laïkó", "Nordic", "Pacific", "Polka", "Raï", "Romani", "Soukous", "Séga", "Volksmusik", "Zouk", "Éntekhno"
-        "Funk / Soul", "Afrobeat", "Boogie", "Contemporary R&B", "Disco", "Free Funk", "Funk", "Gospel", "Neo Soul", "New Jack Swing", "P.Funk", "Psychedelic", "Rhythm & Blues", "Soul", "Swingbeat", "UK Street Soul"
-        "Hip Hop", "Bass Music", "Boom Bap", "Bounce", "Britcore", "Cloud Rap", "Conscious", "Crunk", "Cut-up/DJ", "DJ Battle Tool", "Electro", "G-Funk", "Gangsta", "Grime", "Hardcore Hip-Hop", "Horrorcore", "Instrumental", "Jazzy Hip-Hop", "Miami Bass", "Pop Rap", "Ragga HipHop", "RnB/Swing", "Screw", "Thug Rap", "Trap", "Trip Hop", "Turntablism"
-        "Jazz", "Afro-Cuban Jazz", "Afrobeat", "Avant-garde Jazz", "Big Band", "Bop", "Bossa Nova", "Contemporary Jazz", "Cool Jazz", "Dixieland", "Easy Listening", "Free Improvisation", "Free Jazz", "Fusion", "Gypsy Jazz", "Hard Bop", "Jazz-Funk", "Jazz-Rock", "Latin Jazz", "Modal", "Post Bop", "Ragtime", "Smooth Jazz", "Soul-Jazz", "Space-Age", "Swing"
-        "Latin", "Afro-Cuban", "Baião", "Batucada", "Beguine", "Bolero", "Boogaloo", "Bossanova", "Cha-Cha", "Charanga", "Compas", "Cubano", "Cumbia", "Descarga", "Forró", "Guaguancó", "Guajira", "Guaracha", "MPB", "Mambo", "Mariachi", "Merengue", "Norteño", "Nueva Cancion", "Pachanga", "Porro", "Ranchera", "Reggaeton", "Rumba", "Salsa", "Samba", "Son", "Son Montuno", "Tango", "Tejano", "Vallenato"
-        "Non-Music", "Audiobook", "Comedy", "Dialogue", "Education", "Field Recording", "Interview", "Monolog", "Poetry", "Political", "Promotional", "Radioplay", "Religious", "Spoken Word"
-        "Pop", "Ballad", "Bollywood", "Bubblegum", "Chanson", "City Pop", "Europop", "Indie Pop", "J-pop", "K-pop", "Kayōkyoku", "Light Music", "Music Hall", "Novelty", "Parody", "Schlager", "Vocal"
-        "Reggae", "Calypso", "Dancehall", "Dub", "Lovers Rock", "Ragga", "Reggae", "Reggae-Pop", "Rocksteady", "Roots Reggae", "Ska", "Soca"
-        "Rock", "AOR", "Acid Rock", "Acoustic", "Alternative Rock", "Arena Rock", "Art Rock", "Atmospheric Black Metal", "Avantgarde", "Beat", "Black Metal", "Blues Rock", "Brit Pop", "Classic Rock", "Coldwave", "Country Rock", "Crust", "Death Metal", "Deathcore", "Deathrock", "Depressive Black Metal", "Doo Wop", "Doom Metal", "Dream Pop", "Emo", "Ethereal", "Experimental", "Folk Metal", "Folk Rock", "Funeral Doom Metal", "Funk Metal", "Garage Rock", "Glam", "Goregrind", "Goth Rock", "Gothic Metal", "Grindcore", "Grunge", "Hard Rock", "Hardcore", "Heavy Metal", "Indie Rock", "Industrial", "Krautrock", "Lo-Fi", "Lounge", "Math Rock", "Melodic Death Metal", "Melodic Hardcore", "Metalcore", "Mod", "Neofolk", "New Wave", "No Wave", "Noise", "Noisecore", "Nu Metal", "Oi", "Parody", "Pop Punk", "Pop Rock", "Pornogrind", "Post Rock", "Post-Hardcore", "Post-Metal", "Post-Punk", "Power Metal", "Power Pop", "Power Violence", "Prog Rock", "Progressive Metal", "Psychedelic Rock", "Psychobilly", "Pub Rock", "Punk", "Rock & Roll", "Rockabilly", "Shoegaze", "Ska", "Sludge Metal", "Soft Rock", "Southern Rock", "Space Rock", "Speed Metal", "Stoner Rock", "Surf", "Symphonic Rock", "Technical Death Metal", "Thrash", "Twist", "Viking Metal", "Yé-Yé"
-        "Stage & Screen", "Musical", "Score", "Soundtrack", "Theme"
-]
-
 import essentia.standard as es
 import json
 import numpy as np
 
-def cargar_modelos():
-    # Especifica las rutas correctas a los modelos
-    modelo_discogs = "/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/discogs-effnet-bs64-1.pb"
-    modelo_genero = "/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/genre_discogs400-discogs-effnet-1.pb"
-    
-    # Cargar los modelos usando TensorflowPredictEffnetDiscogs
-    try:
-        modelo_discogs_extractor = es.TensorflowPredictEffnetDiscogs(graphFilename=modelo_discogs)
-        modelo_genero_extractor = es.TensorflowPredictEffnetDiscogs(graphFilename=modelo_genero)
-        print("Modelos cargados correctamente.")
-    except Exception as e:
-        print(f"Error al cargar los modelos: {e}")
-        return None
-
-    return modelo_discogs_extractor, modelo_genero_extractor
-
 def analizar_audio(audio_path):
     try:
-        # Cargar el audio
-        audio = es.MonoLoader(filename=audio_path, sampleRate=44100)()
+        # Cargar el audio a 16kHz como requiere el modelo
+        audio = es.MonoLoader(filename=audio_path, sampleRate=16000)()
         print(f"Audio cargado correctamente. Longitud: {len(audio)} muestras.")
+        
+        # Extraer embeddings usando TensorflowPredictEffnetDiscogs
+        effnet_discogs = es.TensorflowPredictEffnetDiscogs(
+            graphFilename='/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/discogs-effnet-bs64-1.pb',
+            output='PartitionedCall:1',  # Asegúrate de que el nombre del tensor es correcto
+            patchHopSize=62,
+            patchSize=128,
+            batchSize=1,  # Usar batch size de 1 para optimizar memoria
+            lastBatchMode='same'
+        )
+        
+        embeddings = effnet_discogs(audio)
+        print(f"Embeddings extraídos: {embeddings.shape}")
 
-        # Cargar modelos de predicción de discogs
-        modelos = cargar_modelos()
-        if modelos is None:
-            print("No se pudieron cargar los modelos de Discogs. Continuando con el análisis sin ellos.")
-        else:
-            modelo_discogs_extractor, modelo_genero_extractor = modelos
+        # Usar embeddings para predecir el género musical
+        genre_model = es.TensorflowPredict2D(
+            graphFilename='/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/genre_discogs400-discogs-effnet-1.pb',
+            input="serving_default_model_Placeholder",  # Asegúrate de que el nombre del tensor es correcto
+            output="PartitionedCall:0"
+        )
+        
+        predictions = genre_model(embeddings)
+        print(f"Predicciones de género: {predictions[:5]}")  # Mostrar las primeras 5 predicciones
 
-        # Extraer BPM
+        # Extraer BPM (mantenemos el método original por ahora)
         rhythm_extractor = es.RhythmExtractor2013(method="multifeature")
-        bpm, beats, beats_confidence, _, beats_intervals = rhythm_extractor(audio)
+        bpm, _, _, _, _ = rhythm_extractor(audio)
         print(f"BPM detectado: {bpm}")
 
-        # Extraer tono
+        # Extraer tono (mantenemos el método original por ahora)
         pitch_extractor = es.PredominantPitchMelodia()
-        pitch, pitch_confidence = pitch_extractor(audio)
-        print(f"Pitch (tono) detectado: {np.mean(pitch)}")
+        pitch, _ = pitch_extractor(audio)
+        print(f"Pitch (tono) detectado: {pitch[:10]}")
 
-        # Extraer clave y escala
+        # Otros datos relevantes (mantenemos el método original por ahora)
         key_extractor = es.KeyExtractor()
         key, scale, strength = key_extractor(audio)
         print(f"Clave detectada: {key}, Escala: {scale}, Fuerza: {strength}")
 
-        # Extraer características espectrales
-        spectral_extractor = es.Spectrum()
-        mfcc = es.MFCC()
-        spectral_features = []
-        mfcc_features = []
-
-        for frame in es.FrameGenerator(audio, frameSize=2048, hopSize=1024):
-            spec = spectral_extractor(frame)
-            mfcc_bands, mfcc_coeffs = mfcc(spec)
-            spectral_features.append(spec)
-            mfcc_features.append(mfcc_coeffs)
-
-        # Calcular promedio de características espectrales y MFCC
-        avg_spectrum = np.mean(spectral_features, axis=0)
-        avg_mfcc = np.mean(mfcc_features, axis=0)
-
         # Crear un diccionario con los resultados
         resultados = {
-            "bpm": float(bpm),
-            "pitch_mean": float(np.mean(pitch)),
+            "bpm": bpm,
+            "pitch": pitch.tolist(),
             "key": key,
             "scale": scale,
-            "key_strength": float(strength),
-            "avg_spectrum": avg_spectrum.tolist()[:10],  # Primeros 10 valores del espectro promedio
-            "avg_mfcc": avg_mfcc.tolist(),
+            "strength": strength,
+            "genre_predictions": predictions.tolist()
         }
 
         # Guardar los resultados en un archivo JSON
@@ -95,16 +63,11 @@ def analizar_audio(audio_path):
 
         return resultados
 
-    except AttributeError as e:
-        print(f"Error durante el análisis del audio: {e}")
-        return None
-
     except Exception as e:
         print(f"Error durante el análisis del audio: {e}")
-        return None
 
 # Ejemplo de uso
-if __name__ == "__main__":  
+if __name__ == "__main__":
     import sys
     audio_path = sys.argv[1]
     resultados = analizar_audio(audio_path)
