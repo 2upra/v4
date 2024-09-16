@@ -231,6 +231,7 @@ function calcularFeedPersonalizado($userId)
     $posts_personalizados = [];
     $resumenPuntos = [];
 
+
     // Procesar cada post en el query
     while ($query->have_posts()) {
         $query->the_post();
