@@ -30,7 +30,7 @@ function variablesPosts($post_id = null)
         'colab' => get_post_meta($post_id, 'paraColab', true),
         'post_status' => get_post_status($post_id),
         'bpm' => get_post_meta($post_id, 'audio_bpm', true),
-        'key ' => get_post_meta($post_id, 'audio_key', true),
+        'key' => get_post_meta($post_id, 'audio_key', true),
         'scale' => get_post_meta($post_id, 'audio_scale', true),
     ];
 }
