@@ -1,113 +1,147 @@
 <?php
-function obtener_html_publicacion($filtro)
-{
+function obtener_html_publicacion($filtro) {
     $post_id = get_the_ID();
     $vars = variablesPosts($post_id);
     extract($vars);
-    $music = ($filtro === 'rola' || $filtro === 'likes');
-    if ($filtro === 'rolasEliminadas' || $filtro === 'rolasRechazadas' || $filtro === 'rola' || $filtro === 'likes') {
+    
+    $is_music_post = ($filtro === 'rola' || $filtro === 'likes');
+    
+    if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
         $filtro = 'rolastatus';
     }
+    
     ob_start();
-?>
+    
+    echo generar_estructura_base($filtro, $post_id, $author_id);
+    
+    if ($is_music_post) {
+        echo generar_contenido_musica($post_id, $post_status, $audio_url, $author_name);
+    } else {
+        echo generar_contenido_general($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $post_status, $audio_url, $es_suscriptor, $audio_id_lite);
+    }
+    
+    echo generar_seccion_comentarios();
+    
+    return ob_get_clean();
+}
+// Función para la estructura base:
 
+function generar_estructura_base($filtro, $post_id, $author_id) {
+    ob_start();
+    ?>
     <li class="POST-<?php echo esc_attr($filtro); ?> EDYQHV"
         filtro="<?php echo esc_attr($filtro); ?>"
-        id-post="<?php echo get_the_ID(); ?>"
+        id-post="<?php echo $post_id; ?>"
         autor="<?php echo esc_attr($author_id); ?>">
-
         <?php echo fondoPost($filtro, $block, $es_suscriptor, $post_id);  ?>
+    <?php
+    return ob_get_clean();
+}
+// Función para el contenido de música:
 
-        <?php if ($music): ?>
-            <div class="post-content">
-                <div class="MFQOYC">
-                    <?php echo like($post_id) ?>
+function generar_contenido_musica($post_id, $post_status, $audio_url, $author_name) {
+    ob_start();
+    ?>
+    <div class="post-content">
+        <div class="MFQOYC">
+            <?php echo like($post_id) ?>
+            <?php echo opcionesRola($post_id, $post_status, $audio_url); ?>
+        </div>
+        <div class="KLYJBY">
+            <?php echo audioPost($post_id) ?>
+        </div>
+        <div class="LRKHLC">
+            <div class="XOKALG">
+                <p><?php echo $author_name ?></p>
+                <p>-</p>
+                <?php the_content(); ?>
+            </div>
+        </div>
+        <div class="CPQBEN" style="display: none;">
+            <div class="CPQBAU"><?php echo $author_name ?></div>
+            <div class="CPQBCO"><?php the_content(); ?></div>
+        </div>
+    </div>
+    <?php
+    return ob_get_clean();
+}
+// Función para el contenido general:
+
+function generar_contenido_general($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $post_status, $audio_url, $es_suscriptor, $audio_id_lite) {
+    ob_start();
+    ?>
+    <div class="post-content">
+        <div class="JNUZCN">
+            <?php if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])): ?>
+                <?php echo infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id, $block, $colab); ?>
+            <?php else: ?>
+                <div class="XABLJI">
+                    <?php echo $post_status; ?>
                     <?php echo opcionesRola($post_id, $post_status, $audio_url); ?>
-                </div>
-                <div class="KLYJBY">
-                    <?php echo audioPost($post_id) ?>
-                </div>
-                <div class="LRKHLC">
-                    <div class="XOKALG">
-                        <p>
-                            <?php echo $author_name ?>
-                        </p>
-                        <p>-</p>
-                        <?php the_content(); ?>
+                    <div class="CPQBEN" style="display: none;">
+                        <div class="CPQBAU"><?php echo $author_name ?></div>
+                        <div class="CPQBCO"><?php the_content(); ?></div>
                     </div>
                 </div>
-                <div class="CPQBEN" style="display: none;">
-                    <div class="CPQBAU"><?php echo $author_name ?></div>
-                    <div class="CPQBCO"><?php the_content(); ?></div>
+            <?php endif; ?>
+        </div>
+
+        <div class="YGWCKC">
+            <?php if ($block && !$es_suscriptor): ?>
+                <div class="ZHNDDD">
+                    <p>Suscríbete a <?php echo esc_html($author_name); ?> para ver el contenido de este post</p>
+                    <?php echo botonSuscribir($author_id, $author_name); ?>
                 </div>
-            </div>
-        <?php else: ?>
-            <div class="post-content">
-                <div class="JNUZCN">
+            <?php else: ?>
+                <div class="NERWFB">
                     <?php if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])): ?>
-                        <?php echo infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id, $block, $colab); ?>
-                    <?php else: ?>
-                        <div class="XABLJI">
-                            <?php echo $post_status; ?>
-                            <?php echo opcionesRola($post_id, $post_status, $audio_url); ?>
-                            <div class="CPQBEN" style="display: none;">
-                                <div class="CPQBAU"><?php echo $author_name ?></div>
-                                <div class="CPQBCO"><?php the_content(); ?></div>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                </div>
-
-                <div class="YGWCKC">
-                    <?php if ($block && !$es_suscriptor): ?>
-                        <div class="ZHNDDD">
-                            <p>Suscríbete a <?php echo esc_html($author_name); ?> para ver el contenido de este post</p>
-                            <?php echo botonSuscribir($author_id, $author_name); ?>
+                        <div class="ZQHOQY">
+                            <?php wave($audio_url, $audio_id_lite, $post_id); ?>
                         </div>
                     <?php else: ?>
-                        <div class="NERWFB">
-                            <?php if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])): ?>
-                                <div class="ZQHOQY">
-                                    <?php wave($audio_url, $audio_id_lite, $post_id); ?>
-                                </div>
-                            <?php else: ?>
-                                <div class="KLYJBY">
-                                    <?php echo audioPost($post_id) ?>
-                                </div>
-                            <?php endif; ?>
-
-                            <?php the_content(); ?>
+                        <div class="KLYJBY">
+                            <?php echo audioPost($post_id) ?>
                         </div>
                     <?php endif; ?>
+
+                    <?php the_content(); ?>
                 </div>
+            <?php endif; ?>
+        </div>
 
-                <div class="IZXEPH">
-                    <div class="QSORIW">
-                        <?php echo like($post_id) ?>
-                        <?php echo botonComentar($post_id, $colab) ?>
-                        <?php echo botonDescarga($post_id) ?>
-                        <?php echo botonColab($post_id, $colab) ?>
-                    </div>
+        <div class="IZXEPH">
+            <div class="QSORIW">
+                <?php echo like($post_id) ?>
+                <?php echo botonComentar($post_id, $colab) ?>
+                <?php echo botonDescarga($post_id) ?>
+                <?php echo botonColab($post_id, $colab) ?>
+            </div>
 
-                    <div id="soliColab" class="soliColab" style="display:none;" post-id="<?php echo get_the_ID(); ?>">
-                        <textarea id="mensajeColab" placeholder="Escribe un mensaje para colaborar"></textarea>
-                        <div class="previewsFormColab">
-                            <div class="previewAreaArchivosColab" id="previewAreaRolaColab">Arrastra tu sample
-                                <label></label>
-                            </div>
-                            <input type="file" id="postAudioColab" name="post_audioColab" style="display:none;">
-                        </div>
+            <div id="soliColab" class="soliColab" style="display:none;" post-id="<?php echo get_the_ID(); ?>">
+                <textarea id="mensajeColab" placeholder="Escribe un mensaje para colaborar"></textarea>
+                <div class="previewsFormColab">
+                    <div class="previewAreaArchivosColab" id="previewAreaRolaColab">Arrastra tu sample
+                        <label></label>
                     </div>
+                    <input type="file" id="postAudioColab" name="post_audioColab" style="display:none;">
                 </div>
             </div>
-        <?php endif; ?>
-    </li>
+        </div>
+    </div>
+    <?php
+    return ob_get_clean();
+}
 
+// Función para la sección de comentarios:
+
+function generar_seccion_comentarios() {
+    ob_start();
+    ?>
     <li class="comentarios">
         <?php if (comments_open() || get_comments_number()) : comments_template();
         endif; ?>
     </li>
-<?php
+    <?php
     return ob_get_clean();
 }
 
