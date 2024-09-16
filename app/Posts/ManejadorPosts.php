@@ -4,7 +4,12 @@
 
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
-    
+    /* Cuando se hace una busqueda recibe un valor asi data_identifier = Valor de busqueda
+    ese valor se puede usar para filtrar las publicaciones buscando en su meta, los post tienen una meta que se llama datosAlgoritmo que se ve asi
+    {"tags":["test4, test3, test 2"],"texto":"texto de ejemplo","autor":{"id":"1","usuario":"1ndoryu","nombre":"Wandorius"}}
+    todos esos datos sirven para filtrar por la busqueda, pero exactametne no se como aplicarlo aca
+    */
+
     $user_id = obtenerUserId($is_ajax);
     $current_user_id = get_current_user_id();
 
@@ -30,15 +35,10 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
+    $identifier = $_POST['identifier'] ?? '';
     $posts = $args['posts'];
-
-    // Obtener el feed personalizado del usuario
     $posts_personalizados = calcularFeedPersonalizado($current_user_id);
-
-    // Obtener solo los IDs de los posts, ordenados por puntuación
     $post_ids = array_keys($posts_personalizados);
-
-    // Si es la primera página, limitamos a $posts publicaciones
     if ($paged == 1) {
         $post_ids = array_slice($post_ids, 0, $posts);
     }
@@ -48,19 +48,96 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         'posts_per_page' => $posts,
         'paged' => $paged,
         'post__in' => $post_ids,
-        'orderby' => 'post__in', // Ordenar según el orden de los IDs
+        'orderby' => 'post__in', 
+        'meta_query' => !empty($identifier) ? [['key' => 'datosAlgoritmo', 'value' => $identifier, 'compare' => 'LIKE']] : [],
     ];
-
-    // Excluimos publicaciones si es necesario
     if (!empty($args['exclude'])) {
         $query_args['post__not_in'] = $args['exclude'];
     }
 
+    $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
+
     return $query_args;
 }
 
+function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
+{
+    $filtro = !empty($args['identifier']) ? $args['identifier'] : $args['filtro'];
 
+    // Definimos las condiciones de los filtros.
+    $meta_query_conditions = [
+        'siguiendo' => function () use ($current_user_id, &$query_args) {
+            $query_args['author__in'] = array_filter((array) get_user_meta($current_user_id, 'siguiendo', true));
+            return ['key' => 'rola', 'value' => '1', 'compare' => '!='];
+        },
+        'con_imagen_sin_audio' => [
+            ['key' => 'post_audio', 'compare' => 'NOT EXISTS'],
+            ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
+        ],
+        'solo_colab' => ['key' => 'paraColab', 'value' => '1', 'compare' => '='],
+        'rolastatus' => function () use (&$query_args) {
+            $query_args['author'] = get_current_user_id();
+            $query_args['post_status'] = ['publish', 'pending'];
+            return ['key' => 'rola', 'value' => '1', 'compare' => '='];
+        },
+        'nada' => function () use (&$query_args) {
+            $query_args['post_status'] = 'publish';
+            return [];
+        },
+        'rolasEliminadas' => function () use (&$query_args) {
+            $query_args['author'] = get_current_user_id();
+            $query_args['post_status'] = ['pending_deletion'];
+            return ['key' => 'rola', 'value' => '1', 'compare' => '='];
+        },
+        'rolasRechazadas' => function () use (&$query_args) {
+            $query_args['author'] = get_current_user_id();
+            $query_args['post_status'] = ['rejected'];
+            return ['key' => 'rola', 'value' => '1', 'compare' => '='];
+        },
+        'no_bloqueado' => [
+            ['key' => 'esExclusivo', 'value' => '0', 'compare' => '='],
+            ['key' => 'post_price', 'compare' => 'NOT EXISTS'],
+            ['key' => 'rola', 'value' => '1', 'compare' => '!=']
+        ],
+        'likes' => function () use ($current_user_id, &$query_args) {
+            $user_liked_post_ids = obtenerLikesDelUsuario($current_user_id);
+            if (empty($user_liked_post_ids)) {
+                $query_args['posts_per_page'] = 0;
+                return null;
+            }
+            $query_args['post__in'] = $user_liked_post_ids;
+            return ['key' => 'rola', 'value' => '1', 'compare' => '='];
+        },
+        'bloqueado' => ['key' => 'esExclusivo', 'value' => '1', 'compare' => '='],
+        'sample' => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+        'venta' => ['key' => 'post_price', 'value' => '0', 'compare' => '>', 'type' => 'NUMERIC'],
+        'rola' => function () use (&$query_args) {
+            $query_args['post_status'] = 'publish';
+            return [
+                ['key' => 'rola', 'value' => '1', 'compare' => '='],
+                ['key' => 'post_audio', 'compare' => 'EXISTS']
+            ];
+        },
+        'momento' => [
+            ['key' => 'momento', 'value' => '1', 'compare' => '='],
+            ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
+        ],
+        'presentacion' => ['key' => 'additional_search_data', 'value' => 'presentacion010101', 'compare' => 'LIKE'],
+    ];
 
+    // Si el filtro existe, aplicamos la condición correspondiente.
+    if (isset($meta_query_conditions[$filtro])) {
+        $condition = $meta_query_conditions[$filtro];
+        $query_args['meta_query'][] = is_callable($condition) ? $condition() : $condition;
+    }
+
+    // Aplicamos el filtro por autor si existe un $user_id
+    if ($user_id !== null) {
+        $query_args['author'] = $user_id;
+    }
+
+    return $query_args;
+}
 
 function procesarPublicaciones($query_args, $args, $is_ajax)
 {
