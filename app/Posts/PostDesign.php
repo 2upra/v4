@@ -82,7 +82,12 @@ function htmlPost($filtro)
                                 </div>
                                 <div>
                                     <?php
-                                    $info = array_filter([$key, $scale, $bpm]);
+                                    //Información bpm - escala- nota
+                                    $key_info = $key ? $key : null;
+                                    $scale_info = $scale ? $scale : null;
+                                    $bpm_info = $bpm ? round($bpm) : null;
+
+                                    $info = array_filter([$key_info, $scale_info, $bpm_info]);
                                     if (!empty($info)) {
                                         echo '<p class="TRZPQD">' . implode(' - ', $info) . '</p>';
                                     }
