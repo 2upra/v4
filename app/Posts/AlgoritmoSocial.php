@@ -6,19 +6,33 @@ define('INTERES_TABLE', $wpdb->prefix . 'interes');
 define('BATCH_SIZE', 1000);
 
 
+/**
+ * Genera y actualiza los intereses de un usuario basado en sus likes.
+ * 
+ * Esta función analiza los posts que el usuario ha marcado como "me gusta",
+ * extrae información relevante (tags, autores, contenido) y actualiza
+ * la tabla de intereses del usuario en consecuencia.
+ *
+ * @param int $user_id ID del usuario
+ * @return bool True si la actualización fue exitosa, False en caso contrario
+ */
+
+
 function generarMetaDeIntereses($user_id)
 {
     global $wpdb;
-    // Obtener todos los posts con likes del usuario
+    // Obtener posts con likes del usuario
     $likePost = obtenerLikesDelUsuario($user_id);
     if (empty($likePost)) {
         return false;
     }
-    // Obtener intereses actuales del usuario
+
+    // Recuperar intereses actuales del usuario
     $interesesActuales = $wpdb->get_results($wpdb->prepare(
         "SELECT interest, intensity FROM " . INTERES_TABLE . " WHERE user_id = %d",
         $user_id
     ), OBJECT_K);
+
     // Obtener metadatos y contenido de los posts con likes
     $placeholders = implode(',', array_fill(0, count($likePost), '%d'));
     $post_data = $wpdb->get_results($wpdb->prepare(
@@ -28,11 +42,13 @@ function generarMetaDeIntereses($user_id)
          WHERE p.ID IN ($placeholders)",
         ...$likePost
     ));
+
     if (empty($post_data)) {
         logAlgoritmo("No se encontraron datos para los posts con likes del usuario: $user_id");
         return false;
     }
-    // Procesar los intereses del usuario
+
+    // Analizar y acumular intereses basados en tags, autores y contenido
     $tag_intensidad = array_reduce($post_data, function ($acc, $post) {
         $datosAlgoritmo = json_decode($post->meta_value, true);
 
@@ -42,12 +58,14 @@ function generarMetaDeIntereses($user_id)
                 $acc[$tag] = ($acc[$tag] ?? 0) + 1;
             }
         }
+
         // Procesar autor
         if (!empty($datosAlgoritmo['autor']['usuario'])) {
             $autor = $datosAlgoritmo['autor']['usuario'];
             $acc[$autor] = ($acc[$autor] ?? 0) + 1;
         }
-        // Procesar palabras del contenido del post
+
+        // Analizar palabras del contenido del post
         $palabras = array_filter(explode(' ', strtolower(trim($post->post_content))));
         foreach ($palabras as $palabra) {
             $palabra = preg_replace('/[^a-z0-9]+/', '', $palabra);
@@ -57,8 +75,22 @@ function generarMetaDeIntereses($user_id)
         }
         return $acc;
     }, []);
+
     return actualizarIntereses($user_id, $tag_intensidad, $interesesActuales);
 }
+
+/**
+ * Actualiza la tabla de intereses del usuario.
+ * 
+ * Esta función gestiona la transacción para actualizar los intereses del usuario,
+ * incluyendo la inserción de nuevos intereses, la actualización de los existentes
+ * y la eliminación de los obsoletos.
+ *
+ * @param int $user_id ID del usuario
+ * @param array $tag_intensidad Array asociativo de intereses y sus intensidades
+ * @param array $interesesActuales Intereses actuales del usuario en la base de datos
+ * @return bool True si la actualización fue exitosa, False en caso de error
+ */
 
 function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
 {
@@ -68,10 +100,8 @@ function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
     try {
         $batch = [];
 
+        // Preparar lotes de intereses para actualización
         foreach ($tag_intensidad as $interest => $intensity) {
-            $current_intensity = $interesesActuales[$interest]->intensity ?? 0;
-            $intensity_change = $intensity - $current_intensity;
-
             $batch[] = $wpdb->prepare(
                 "(%d, %s, %d)",
                 $user_id,
@@ -85,10 +115,12 @@ function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
             }
         }
 
+        // Procesar el último lote si existe
         if (!empty($batch)) {
             actualizarInteresesEnLote($batch);
         }
-        // Eliminar intereses que ya no existen
+
+        // Eliminar intereses obsoletos
         $intereses_a_eliminar = array_diff_key($interesesActuales, $tag_intensidad);
         if (!empty($intereses_a_eliminar)) {
             $wpdb->query($wpdb->prepare(
@@ -109,9 +141,20 @@ function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
     }
 }
 
+
+/**
+ * Actualiza o inserta un lote de intereses en la base de datos.
+ * 
+ * Esta función ejecuta una consulta SQL para insertar o actualizar
+ * múltiples registros de intereses en una sola operación.
+ *
+ * @param array $batch Array de strings SQL preparados para inserción/actualización
+ */
+
 function actualizarInteresesEnLote($batch)
 {
     global $wpdb;
+    // Actualizar o insertar intereses en lote
     $wpdb->query(
         "INSERT INTO " . INTERES_TABLE . " (user_id, interest, intensity) 
         VALUES " . implode(', ', $batch) . "
@@ -119,19 +162,32 @@ function actualizarInteresesEnLote($batch)
     );
 }
 
-/* 
-
-Resumen de cálculos:
-
-Puntos por seguimiento: 50 si sigue al autor, 0 si no.
-Puntos por intereses: 10 + intensidad del interés por cada tag coincidente.
-Puntos por likes: 5 + número de likes del post.
-Factor de tiempo: 0.30^(horas desde publicación).
-Puntuación final: (Puntos seguimiento + Puntos intereses + Puntos likes) * Factor de tiempo.
-Ordenación de posts por puntuación final de mayor a menor.
-
-
-*/
+/**
+ * Algoritmo de Cálculo del Feed Personalizado
+ *
+ * Este algoritmo determina la relevancia de los posts para un usuario específico
+ * basándose en múltiples factores. A continuación se detalla el proceso de cálculo:
+ *
+ * 1. Puntuación por Seguimiento:
+ *    - 50 puntos si el usuario sigue al autor del post
+ *    - 0 puntos en caso contrario
+ *
+ * 2. Puntuación por Intereses:
+ *    - Por cada tag coincidente: 10 puntos + intensidad del interés del usuario
+ *
+ * 3. Puntuación por Engagement:
+ *    - 5 puntos base + número total de likes del post
+ *
+ * 4. Factor de Decaimiento Temporal:
+ *    - Calculado como: 0.30^(horas transcurridas desde la publicación)
+ *    - Reduce la relevancia de posts más antiguos
+ *
+ * 5. Puntuación Final:
+ *    (Puntos Seguimiento + Puntos Intereses + Puntos Engagement) * Factor de Decaimiento
+ *
+ * Los posts se ordenan de mayor a menor según su puntuación final,
+ * priorizando así el contenido más relevante y reciente para el usuario.
+ */
 
 function calcularFeedPersonalizado($userId)
 {
