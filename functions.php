@@ -49,6 +49,7 @@ function scriptsOrdenados()
         'tagify' => '2.0.1',
         'wavesDos' => '1.0.1',
         'configPerfil' => '1.0.14',
+        'diferido-post' => '4.0.0',
         'registro' => '1.0.12',
         'colab' => '1.0.2',
         'grained' => '1.0.3',
