@@ -71,9 +71,29 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
             $query_args['author__in'] = array_filter((array) get_user_meta($current_user_id, 'siguiendo', true));
             return ['key' => 'rola', 'value' => '1', 'compare' => '!='];
         },
+        'con_imagen_sin_audio' => [
+            ['key' => 'post_audio', 'compare' => 'NOT EXISTS'],
+            ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
+        ],
+        'solo_colab' => ['key' => 'paraColab', 'value' => '1', 'compare' => '='],
+        'rolastatus' => function () use (&$query_args) {
+            $query_args['author'] = get_current_user_id();
+            $query_args['post_status'] = ['publish', 'pending'];
+            return ['key' => 'rola', 'value' => '1', 'compare' => '='];
+        },
         'nada' => function () use (&$query_args) {
             $query_args['post_status'] = 'publish';
             return [];
+        },
+        'rolasEliminadas' => function () use (&$query_args) {
+            $query_args['author'] = get_current_user_id();
+            $query_args['post_status'] = ['pending_deletion'];
+            return ['key' => 'rola', 'value' => '1', 'compare' => '='];
+        },
+        'rolasRechazadas' => function () use (&$query_args) {
+            $query_args['author'] = get_current_user_id();
+            $query_args['post_status'] = ['rejected'];
+            return ['key' => 'rola', 'value' => '1', 'compare' => '='];
         },
         'no_bloqueado' => [
             ['key' => 'esExclusivo', 'value' => '0', 'compare' => '='],
@@ -89,6 +109,9 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
             $query_args['post__in'] = $user_liked_post_ids;
             return ['key' => 'rola', 'value' => '1', 'compare' => '='];
         },
+        'bloqueado' => ['key' => 'esExclusivo', 'value' => '1', 'compare' => '='],
+        'sample' => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+        'venta' => ['key' => 'post_price', 'value' => '0', 'compare' => '>', 'type' => 'NUMERIC'],
         'rola' => function () use (&$query_args) {
             $query_args['post_status'] = 'publish';
             return [
@@ -96,6 +119,11 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
                 ['key' => 'post_audio', 'compare' => 'EXISTS']
             ];
         },
+        'momento' => [
+            ['key' => 'momento', 'value' => '1', 'compare' => '='],
+            ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
+        ],
+        'presentacion' => ['key' => 'additional_search_data', 'value' => 'presentacion010101', 'compare' => 'LIKE'],
     ];
 
     // Si el filtro existe, aplicamos la condición correspondiente.
