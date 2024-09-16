@@ -4,11 +4,6 @@
 
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
-    /* Cuando se hace una busqueda recibe un valor asi data_identifier = Valor de busqueda
-    ese valor se puede usar para filtrar las publicaciones buscando en su meta, los post tienen una meta que se llama datosAlgoritmo que se ve asi
-    {"tags":["test4, test3, test 2"],"texto":"texto de ejemplo","autor":{"id":"1","usuario":"1ndoryu","nombre":"Wandorius"}}
-    todos esos datos sirven para filtrar por la busqueda, pero exactametne no se como aplicarlo aca
-    */
 
     $user_id = obtenerUserId($is_ajax);
     $current_user_id = get_current_user_id();
