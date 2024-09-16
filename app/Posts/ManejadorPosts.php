@@ -2,7 +2,8 @@
 
 define('ENABLE_LOGS', true);
 
-function publicaciones($args = [], $is_ajax = false, $paged = 1) {
+function publicaciones($args = [], $is_ajax = false, $paged = 1)
+{
     $user_id = obtenerUserId($is_ajax);
     $current_user_id = get_current_user_id();
 
@@ -29,7 +30,8 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1) {
     }
 }
 
-function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
+function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
+{
     $posts = $args['posts'];
 
     // Obtener el feed personalizado del usuario
@@ -59,16 +61,17 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     return $query_args;
 }
 
-function aplicarFiltros($query_args, $args, $user_id, $current_user_id) {
+function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
+{
     $filtro = !empty($args['identifier']) ? $args['identifier'] : $args['filtro'];
 
     // Definimos las condiciones de los filtros.
     $meta_query_conditions = [
-        'siguiendo' => function() use ($current_user_id, &$query_args) {
+        'siguiendo' => function () use ($current_user_id, &$query_args) {
             $query_args['author__in'] = array_filter((array) get_user_meta($current_user_id, 'siguiendo', true));
             return ['key' => 'rola', 'value' => '1', 'compare' => '!='];
         },
-        'nada' => function() use (&$query_args) {
+        'nada' => function () use (&$query_args) {
             $query_args['post_status'] = 'publish';
             return [];
         },
@@ -77,7 +80,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id) {
             ['key' => 'post_price', 'compare' => 'NOT EXISTS'],
             ['key' => 'rola', 'value' => '1', 'compare' => '!=']
         ],
-        'likes' => function() use ($current_user_id, &$query_args) {
+        'likes' => function () use ($current_user_id, &$query_args) {
             $user_liked_post_ids = obtenerLikesDelUsuario($current_user_id);
             if (empty($user_liked_post_ids)) {
                 $query_args['posts_per_page'] = 0;
@@ -86,7 +89,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id) {
             $query_args['post__in'] = $user_liked_post_ids;
             return ['key' => 'rola', 'value' => '1', 'compare' => '='];
         },
-        'rola' => function() use (&$query_args) {
+        'rola' => function () use (&$query_args) {
             $query_args['post_status'] = 'publish';
             return [
                 ['key' => 'rola', 'value' => '1', 'compare' => '='],
@@ -110,7 +113,8 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id) {
 }
 
 
-function procesarPublicaciones($query_args, $args, $is_ajax) {
+function procesarPublicaciones($query_args, $args, $is_ajax)
+{
     ob_start();
 
     $query = new WP_Query($query_args);
@@ -144,7 +148,8 @@ function procesarPublicaciones($query_args, $args, $is_ajax) {
     return ob_get_clean();
 }
 
-function obtenerUserId($is_ajax) {
+function obtenerUserId($is_ajax)
+{
     if ($is_ajax && isset($_POST['user_id'])) {
         return sanitize_text_field($_POST['user_id']);
     }
@@ -182,8 +187,8 @@ function cargar_mas_publicaciones_ajax()
     $user_id = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
 
     // Verificar si 'cargadas' es un array
-    $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas']) 
-        ? array_map('intval', $_POST['cargadas']) 
+    $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas'])
+        ? array_map('intval', $_POST['cargadas'])
         : array();
 
     // Registrar logs
@@ -228,4 +233,4 @@ function enqueue_diferido_post_script()
         )
     );
 }
-add_action('wp_enqueue_scripts', 'enqueue_diferido_post_script'); 
+add_action('wp_enqueue_scripts', 'enqueue_diferido_post_script');
