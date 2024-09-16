@@ -119,6 +119,19 @@ function actualizarInteresesEnLote($batch)
     );
 }
 
+/* 
+
+Resumen de cálculos:
+
+Puntos por seguimiento: 50 si sigue al autor, 0 si no.
+Puntos por intereses: 10 + intensidad del interés por cada tag coincidente.
+Puntos por likes: 5 + número de likes del post.
+Factor de tiempo: 0.30^(horas desde publicación).
+Puntuación final: (Puntos seguimiento + Puntos intereses + Puntos likes) * Factor de tiempo.
+Ordenación de posts por puntuación final de mayor a menor.
+
+
+*/
 
 function calcularFeedPersonalizado($userId)
 {
@@ -126,12 +139,15 @@ function calcularFeedPersonalizado($userId)
     // Tablas necesarias
     $table_likes = $wpdb->prefix . 'post_likes';
     $table_intereses = $wpdb->prefix . 'interes';
+    
     // Obtener listas de seguimiento y seguidores del usuario
     $siguiendo = (array) get_user_meta($userId, 'siguiendo', true);
     $seguidores = (array) get_user_meta($userId, 'seguidores', true);
+    
     // Generar o actualizar los intereses del usuario
     generarMetaDeIntereses($userId);
     logAlgoritmo("Intereses del usuario generados para el usuario ID: $userId");
+    
     // Obtener intereses del usuario
     $interesesUsuario = $wpdb->get_results($wpdb->prepare(
         "SELECT interest, intensity FROM $table_intereses WHERE user_id = %d",
@@ -139,6 +155,7 @@ function calcularFeedPersonalizado($userId)
     ), OBJECT_K);
 
     logAlgoritmo("Intereses del usuario obtenidos: " . json_encode($interesesUsuario));
+
     // Consultar los posts en los últimos 100 días
     $query = new WP_Query([
         'post_type' => 'social_post',
@@ -147,39 +164,51 @@ function calcularFeedPersonalizado($userId)
             'after' => date('Y-m-d', strtotime('-100 days'))
         ]
     ]);
+
     logAlgoritmo("Consulta de posts realizada, total de posts: " . $query->found_posts);
+
     $posts_personalizados = [];
     $resumenPuntos = [];
+
     // Procesar cada post en el query
     while ($query->have_posts()) {
         $query->the_post();
         $post_id = get_the_ID();
         $autor_id = get_post_field('post_author', $post_id);
+        
+        // Inicializar puntos finales
         $puntosFinal = 0;
+
         // Obtener datos del post
         $datosAlgoritmo = json_decode(get_post_meta($post_id, 'datosAlgoritmo', true), true) ?? [];
+
         // 1. Puntuación por seguimiento
         $puntosUsuario = in_array($autor_id, $siguiendo) ? 50 : 0;
+
         // 2. Puntuación por intereses (tags)
         $puntosIntereses = 0;
         if (!empty($datosAlgoritmo['tags'])) {
             foreach ($datosAlgoritmo['tags'] as $tag) {
                 if (isset($interesesUsuario[$tag])) {
-                    $puntosIntereses += 10 * $interesesUsuario[$tag]->intensity;
+                    $puntosIntereses += 10 + $interesesUsuario[$tag]->intensity;
                 }
             }
         }
+
         // 3. Puntuación por likes
         $likes = (int) $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM $table_likes WHERE post_id = %d",
             $post_id
         ));
-        $puntosLikes = $likes * 5;
-        // 4. Factor de tiempo (decay)
+        $puntosLikes = 5 + $likes;
+
+        // 4. Factor de tiempo (decay) basado en horas
         $horasDesdePublicacion = (current_time('timestamp') - get_post_time('U', true)) / 3600;
-        $factorTiempo = pow(0.9, floor($horasDesdePublicacion / 24)); // Factor de decaimiento diario
+        $factorTiempo = pow(0.30, $horasDesdePublicacion); 
+
         // 5. Puntuación final
         $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * $factorTiempo;
+
         // Guardar la puntuación del post
         $posts_personalizados[$post_id] = $puntosFinal;
         $resumenPuntos[] = $post_id . ':' . round($puntosFinal, 2);
@@ -188,9 +217,13 @@ function calcularFeedPersonalizado($userId)
     // Ordenar los posts por puntuación descendente
     arsort($posts_personalizados);
     wp_reset_postdata();
+
     // Log final del proceso
     logAlgoritmo("Feed personalizado calculado para el usuario ID: $userId. Total de posts: " . count($posts_personalizados));
+
     // Log de resumen de puntos en una sola línea
     logAlgoritmo("Resumen de puntos - " . implode(', ', $resumenPuntos));
+
     return $posts_personalizados;
 }
+
