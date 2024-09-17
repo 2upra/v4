@@ -17,10 +17,17 @@ function inicializarWaveforms() {
             container.dataset.audioLoaded = 'true';
             container.querySelector('.waveform-loading').style.display = 'none';
 
+            wavesurfer.setPlaybackRate(1.2); // Ajusta la velocidad a 1.2x
+
+            // Cambiar el tono utilizando el plugin pitchShift
+            if (wavesurfer.pitchShift) {
+                wavesurfer.pitchShift.setPitch(3); // Cambia el tono 3 semitonos hacia arriba
+            }
+        
+
             const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
 
             if (!waveCargada) {
-                // Retrasar la exportación de la imagen solo si no está ya guardada
                 setTimeout(() => {
                     const image = generateWaveformImage(wavesurfer);
                     const postId = container.getAttribute('postIDWave');
@@ -28,7 +35,6 @@ function inicializarWaveforms() {
                 }, 1);
             }
         });
-
         wavesurfer.on('error', () => {
             setTimeout(() => loadAndPlayAudio(container, wavesurfer, src), 3000);
         });

@@ -1,9 +1,5 @@
-//////////////////////////////////////////////
-//ACTIVAR O DESACTIVAR LOGS
-const A07 = false; // Cambia a true para activar los logs
+const A07 = false;
 const log07 = A07 ? console.log : function () {};
-//////////////////////////////////////////////
-
 let cargando = false;
 let paged = 2;
 let publicacionesCargadas = [];
@@ -11,9 +7,7 @@ let identifier = '';
 let ultimoLog = 0;
 const intervaloLog = 1000;
 let eventoBusquedaConfigurado = false;
-const ajaxUrl = (typeof ajax_params !== 'undefined' && ajax_params.ajax_url) 
-                ? ajax_params.ajax_url 
-                : '/wp-admin/admin-ajax.php';
+const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
 //FUNCION REINICIADORA CADA VEZ QUE SE CAMBIA DE PAGINA MEDIANTE AJAX
 function reiniciarDiferidoPost() {
     log07('Reiniciando diferidopost');
@@ -55,8 +49,6 @@ function establecerUserIdDesdeInput() {
     }
 }
 
-
-
 function manejarScroll() {
     const ahora = Date.now();
 
@@ -91,10 +83,8 @@ function cargarMasContenido() {
     cargando = true;
     log07('Iniciando carga de más contenido');
 
-    // Primero, encontrar la pestaña activa
     const activeTabElement = document.querySelector('.tab.active');
 
-    // Verificar si la pestaña activa tiene ajax="no"
     if (activeTabElement && activeTabElement.getAttribute('ajax') === 'no') {
         log07('La pestaña activa tiene ajax="no". No se cargará más contenido.');
         cargando = false;
@@ -113,7 +103,7 @@ function cargarMasContenido() {
     const tabIdActual = activeTab.dataset.tabId;
     const userProfileContainer = document.querySelector('.custom-uprofile-container');
 
-    let user_id = ''; // Declare user_id here
+    let user_id = '';
     if (window.currentUserId) {
         user_id = window.currentUserId;
     } else if (userProfileContainer) {
@@ -164,11 +154,10 @@ function procesarRespuesta(response) {
             activeTab.insertAdjacentHTML('beforeend', response);
             log07('Contenido añadido');
             paged++;
-            if (typeof window.inicializarWaveforms === 'function') {
-                window.inicializarWaveforms();
-            } else {
-                log07('La función inicializarWaveforms no está definida');
-            }
+            window.inicializarWaveforms();
+            window.empezarcolab();
+            window.submenu();
+            window.seguir();
         } else {
             log07('No más publicaciones o respuesta vacía');
             detenerCarga();
