@@ -19,7 +19,6 @@ function social()
                             </div>
                         </div>
                         <div class="M0883I">
-                            <?php echo add_ai_chat_button() ?>
                             <?php echo formRs()
                             ?>
                         </div>

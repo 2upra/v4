@@ -281,11 +281,11 @@ function procesarAudioLigero($post_id, $audio_id, $index)
 
     guardarLog("datos para sacar meta post id: {$post_id} path_lite: {$nuevo_archivo_path_lite} index: {$index}");
     analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
+    generarMetaIA($post_id, $nuevo_archivo_path_lite, $index);
 }
 
 function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 {
-    // Ejecutar el script de análisis de audio
     $python_command = "python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py \"{$nuevo_archivo_path_lite}\"";
 
     guardarLog("Ejecutando comando de Python: {$python_command}");
