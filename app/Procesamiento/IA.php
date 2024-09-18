@@ -5,24 +5,44 @@ use GuzzleHttp\Client;
 /*
 
 
-2024-09-18 17:14:49 - Index: 1
-2024-09-18 17:14:49 - Inicio de generarDescripcionIA con prompt: Genera una descripción detallada del audio.
-2024-09-18 17:14:49 - Archivo de audio: /var/www/wordpress/wp-content/uploads/2024/09/2upra_66eb0a884ae1a_128k.mp3
-2024-09-18 17:14:49 - Archivo de audio cargado con éxito.
-2024-09-18 17:14:50 - Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
+2024-09-18 17:54:42 - Inicio de la función generarMetaIA
+2024-09-18 17:54:42 - Post ID: 231868
+2024-09-18 17:54:42 - Ruta del archivo: /var/www/wordpress/wp-content/uploads/2024/09/2upra_66eb13e1b7904_128k.mp3
+2024-09-18 17:54:42 - Index: 1
+2024-09-18 17:54:42 - Inicio de generarDescripcionIA con prompt: Genera una descripción detallada del audio.
+2024-09-18 17:54:42 - Archivo de audio: /var/www/wordpress/wp-content/uploads/2024/09/2upra_66eb13e1b7904_128k.mp3
+2024-09-18 17:54:42 - Archivo de audio cargado con éxito.
+2024-09-18 17:54:43 - Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
 {
   "error": {
     "code": 400,
-    "message": "Invalid JSON payload received. Unknown name \"prompt\": Cannot find fiel (truncated...)
-2024-09-18 17:14:50 - Descripción detallada generada: Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
+    "message": "Invalid JSON payload received. Unknown name \"generateContentRequest\":  (truncated...)
+2024-09-18 17:54:43 - Descripción detallada generada: Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
 {
   "error": {
     "code": 400,
-    "message": "Invalid JSON payload received. Unknown name \"prompt\": Cannot find fiel (truncated...)
-2024-09-18 17:14:50 - Inicio de generarDescripcionIA con prompt: Describe brevemente los instrumentos usados.
-2024-09-18 17:14:50 - Archivo de audio: /var/www/wordpress/wp-content/uploads/2024/09/2upra_66eb0a884ae1a_128k.mp3
-2024-09-18 17:14:50 - Archivo de audio cargado con éxito.
-2024-09-18 17:14:51 - Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
+    "message": "Invalid JSON payload received. Unknown name \"generateContentRequest\":  (truncated...)
+2024-09-18 17:54:43 - Inicio de generarDescripcionIA con prompt: Describe brevemente los instrumentos usados.
+2024-09-18 17:54:43 - Archivo de audio: /var/www/wordpress/wp-content/uploads/2024/09/2upra_66eb13e1b7904_128k.mp3
+2024-09-18 17:54:43 - Archivo de audio cargado con éxito.
+2024-09-18 17:54:44 - Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
+{
+  "error": {
+    "code": 400,
+    "message": "Invalid JSON payload received. Unknown name \"generateContentRequest\":  (truncated...)
+2024-09-18 17:54:44 - Descripción corta generada: Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
+{
+  "error": {
+    "code": 400,
+    "message": "Invalid JSON payload received. Unknown name \"generateContentRequest\":  (truncated...)
+2024-09-18 17:54:44 - Inicio de generarDescripcionIA con prompt: Sugiere algunos tags relevantes.
+2024-09-18 17:54:44 - Archivo de audio: /var/www/wordpress/wp-content/uploads/2024/09/2upra_66eb13e1b7904_128k.mp3
+2024-09-18 17:54:44 - Archivo de audio cargado con éxito.
+2024-09-18 17:54:45 - Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
+{
+  "error": {
+    "code": 400,
+    "message": "Invalid JSON payload received. Unknown name \"generateContentRequest\":  (truncated...)
 
 */
 
@@ -56,8 +76,8 @@ function generarMetaIA($post_id, $nuevo_archivo_path_lite, $index) {
 }
 
 function generarDescripcionIA($archivo_path, $prompt) {
-    guardarLog("Inicio de generarDescripcionIA con prompt: " . $prompt); // Log inicial
-    guardarLog("Archivo de audio: " . $archivo_path); // Verificar la ruta del archivo
+    guardarLog("Inicio de generarDescripcionIA con prompt: " . $prompt);
+    guardarLog("Archivo de audio: " . $archivo_path);
 
     // Aquí llamamos a la API de Google Gemini
     $client = new Client();
@@ -68,20 +88,19 @@ function generarDescripcionIA($archivo_path, $prompt) {
         $audio_data = file_get_contents($archivo_path);  // Cargar el archivo de audio como bytes
         guardarLog("Archivo de audio cargado con éxito.");
 
+        // Solicitud sin 'generateContentRequest'
         $response = $client->post($url, [
             'headers' => [
                 'Content-Type' => 'application/json',
                 'x-goog-api-key' => $apiKey
             ],
             'json' => [
-                'generateContentRequest' => [ // Ajustar la estructura JSON
-                    'prompt' => [
-                        'text' => $prompt 
-                    ],
-                    'audioInput' => [ // Cambiar a audioInput
-                        'mimeType' => 'audio/mp3', // Cambiar a mimeType
-                        'data' => base64_encode($audio_data)
-                    ]
+                'prompt' => [
+                    'text' => $prompt 
+                ],
+                'audioInput' => [
+                    'mimeType' => 'audio/mp3',
+                    'data' => base64_encode($audio_data)
                 ]
             ]
         ]);
