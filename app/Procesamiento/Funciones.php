@@ -144,21 +144,38 @@ function procesarURLs($postId)
 
 function procesarArchivo($postId, $campo, $renombrar = false)
 {
+    guardarLog("Inicio de procesarArchivo para Post ID: $postId y Campo: $campo"); // Log inicial
+    
+    // Obtener la URL del archivo desde el campo proporcionado
     $url = esc_url_raw($_POST[$campo]);
+    guardarLog("URL del archivo obtenida: $url");
+
+    // Obtener el ID del archivo asociado con la URL y el Post ID
     $archivoId = obtenerArchivoId($url, $postId);
+    guardarLog("Resultado de obtenerArchivoId: " . (is_wp_error($archivoId) ? "Error - " . $archivoId->get_error_message() : "Archivo ID: $archivoId"));
 
+    // Verificar si se obtuvo correctamente el archivoId y no es un error
     if ($archivoId && !is_wp_error($archivoId)) {
+        // Actualizar los metadatos con el archivo adjunto
         actualizarMetaConArchivo($postId, $campo, $archivoId);
+        guardarLog("Metadatos actualizados para Post ID: $postId con Archivo ID: $archivoId en el campo: $campo");
 
+        // Si se requiere renombrar el archivo, se ejecuta la función correspondiente
         if ($renombrar) {
+            guardarLog("Renombrar archivo activado para Post ID: $postId y Archivo ID: $archivoId");
             renombrarArchivoAdjunto($postId, $archivoId);
         }
 
+        guardarLog("Fin de procesarArchivo - operación exitosa para Post ID: $postId y Campo: $campo"); // Log final exitoso
         return true;
+    } else {
+        guardarLog("Error: No se pudo procesar el archivo para Post ID: $postId y Campo: $campo"); // Log de error
     }
 
+    guardarLog("Fin de procesarArchivo - operación fallida para Post ID: $postId y Campo: $campo"); // Log final fallido
     return false;
 }
+
 
 function obtenerArchivoId($url, $postId)
 {
