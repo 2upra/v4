@@ -17,26 +17,13 @@ function inicializarWaveforms() {
             container.dataset.audioLoaded = 'true';
             container.querySelector('.waveform-loading').style.display = 'none';
 
-            // Desactivar la preservación del tono
-            if (wavesurfer.backend && wavesurfer.backend.media) {
-                wavesurfer.backend.media.mozPreservePitch = false;
-                wavesurfer.backend.media.webkitPreservePitch = false;
-                wavesurfer.backend.media.preservesPitch = false;
-                console.log("Preserve pitch desactivado");
+            wavesurfer.setPlaybackRate(1.2); // Ajusta la velocidad a 1.2x
+
+            // Cambiar el tono utilizando el plugin pitchShift
+            if (wavesurfer.pitchShift) {
+                wavesurfer.pitchShift.setPitch(3); // Cambia el tono 3 semitonos hacia arriba
             }
-
-            wavesurfer.setPlaybackRate(1); // Restablecer tasa de reproducción por defecto
-
-            // Manejar cambio de tono desde los botones
-            const allButtons = document.querySelectorAll('[data-semitones]');
-            allButtons.forEach(button => {
-                const semitones = button.getAttribute('data-semitones');
-                button.addEventListener('click', () => {
-                    const playbackRate = Math.pow(2, semitones / 12);
-                    wavesurfer.setPlaybackRate(playbackRate);
-                    console.log(`Cambiando playbackRate a: ${playbackRate}`);
-                });
-            });
+        
 
             const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
 
@@ -48,12 +35,10 @@ function inicializarWaveforms() {
                 }, 1);
             }
         });
-
         wavesurfer.on('error', () => {
             setTimeout(() => loadAndPlayAudio(container, wavesurfer, src), 3000);
         });
     };
-
 
     function generateWaveformImage(wavesurfer) {
         const canvas = wavesurfer.getWrapper().querySelector('canvas');
