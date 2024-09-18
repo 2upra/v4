@@ -426,6 +426,7 @@ if __name__ == "__main__":
 
 function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 {
+
     // Ejecutar el script de Python para análisis de audio
     $python_command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py \"{$nuevo_archivo_path_lite}\"");
     guardarLog("Ejecutando comando de Python: {$python_command}");

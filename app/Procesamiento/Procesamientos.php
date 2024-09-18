@@ -24,6 +24,8 @@ function subidaRs()
 
     actualizarMetaDatos($postId);
     guardarLog('Meta datos actualizados.');
+    datosParaAlgoritmo($post_id);
+    guardarLog('Datos para algoritmo procesados.');
 
     confirmarArchivos($postId);
     guardarLog('Archivos confirmados.');
@@ -33,9 +35,6 @@ function subidaRs()
 
     asignarTags($postId);
     guardarLog('Tags asignadas.');
-    
-    datosParaAlgoritmo($postId);
-    guardarLog('Datos para algoritmo procesados.');
 
     guardarLog('Post RS creado con ID: ' . $postId);
 
