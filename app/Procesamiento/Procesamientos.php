@@ -24,7 +24,7 @@ function subidaRs()
 
     actualizarMetaDatos($postId);
     guardarLog('Meta datos actualizados.');
-    datosParaAlgoritmo($post_id);
+    datosParaAlgoritmo($postId);
     guardarLog('Datos para algoritmo procesados.');
 
     confirmarArchivos($postId);

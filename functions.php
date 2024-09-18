@@ -29,6 +29,10 @@ function ajaxPostLog($log) {
     escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlogAjax.txt');
 }
 
+function iaLog($log) {
+    escribirLog($log, '/var/www/wordpress/wp-content/themes/iaLog.log');
+}
+
 
 
 

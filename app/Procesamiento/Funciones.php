@@ -457,7 +457,6 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         }
     } else {
         guardarLog("No se encontró el archivo de resultados en {$resultados_path}");
-        return;
     }
 
     // Obtener el contenido del post para incluirlo en el prompt
