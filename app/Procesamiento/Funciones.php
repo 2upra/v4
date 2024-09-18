@@ -246,7 +246,14 @@ function renombrarArchivoAdjunto($postId, $archivoId)
     if (rename($file_path, $new_file_path)) {
         guardarLog("Archivo renombrado con éxito de $file_path a $new_file_path");
 
-        actualizarUrlArchivo($file_id, $new_file_path);
+        // Convertir la ruta de archivo del servidor a la URL pública
+        $upload_dir = wp_upload_dir(); // Obtener directorio de uploads
+        $public_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $new_file_path);
+        guardarLog("URL pública generada: $public_url");
+
+        // Actualizar la URL pública en la base de datos
+        actualizarUrlArchivo($file_id, $public_url);
+
         // Actualizar la ruta del archivo adjunto en la base de datos
         update_attached_file($archivoId, $new_file_path);
         guardarLog("Ruta del archivo actualizada en la base de datos para Archivo ID: $archivoId");
@@ -267,6 +274,7 @@ function renombrarArchivoAdjunto($postId, $archivoId)
 
     guardarLog("Fin de renombrarArchivoAdjunto para Post ID: $postId y Archivo ID: $archivoId"); // Log final
 }
+
 
 
 function procesarAudioLigero($post_id, $audio_id, $index)
