@@ -279,7 +279,30 @@ function renombrarArchivoAdjunto($postId, $archivoId)
 
 function procesarAudioLigero($post_id, $audio_id, $index)
 {
-    guardarLog("INICIO procesarAudioLigero");
+    guardarLog("INICIO procesarAudioLigero para Post ID: $post_id y Audio ID: $audio_id");
+
+    // Verificar si ya existe un archivo de audio ligero asociado a este audio_id
+    $existing_lite_audio = get_posts(array(
+        'post_type' => 'attachment',
+        'meta_query' => array(
+            array(
+                'key' => "post_audio_lite", // Reemplazar con la clave meta adecuada si es diferente
+                'value' => $audio_id,
+                'compare' => '='
+            )
+        ),
+        'posts_per_page' => 1
+    ));
+
+    // Si ya existe un archivo ligero, asociarlo al nuevo post
+    if ($existing_lite_audio) {
+        $existing_lite_audio_id = $existing_lite_audio[0]->ID;
+        guardarLog("Archivo ligero ya existente encontrado: ID $existing_lite_audio_id, asociando al nuevo post.");
+        $meta_key = ($index == 1) ? "post_audio_lite" : "post_audio_lite_{$index}";
+        update_post_meta($post_id, $meta_key, $existing_lite_audio_id);
+        update_post_meta($post_id, 'AudioDuplicado', true)
+        return;
+    }
 
     // Obtener el archivo de audio original
     $audio_path = get_attached_file($audio_id);
@@ -316,8 +339,8 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     guardarLog("ID de adjunto ligero: {$attach_id_lite}");
     $attach_data_lite = wp_generate_attachment_metadata($attach_id_lite, $nuevo_archivo_path_lite);
     wp_update_attachment_metadata($attach_id_lite, $attach_data_lite);
-    
-    // Determinar la clave meta a usar
+
+    // Actualizar el nuevo post con el archivo ligero generado
     $meta_key = ($index == 1) ? "post_audio_lite" : "post_audio_lite_{$index}";
     update_post_meta($post_id, $meta_key, $attach_id_lite);
 
@@ -340,7 +363,7 @@ function procesarAudioLigero($post_id, $audio_id, $index)
 
     guardarLog("datos para sacar meta post id: {$post_id} path_lite: {$nuevo_archivo_path_lite} index: {$index}");
     analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
-    //generarMetaIA($post_id, $nuevo_archivo_path_lite, $index);
+    generarMetaIA($post_id, $nuevo_archivo_path_lite, $index);
 }
 
 function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
