@@ -61,6 +61,34 @@ function subidaArchivo()
     guardarLog("FIN subidaArchivo");
 }
 
+function actualizarUrlArchivo($file_id, $new_url)
+{
+    global $wpdb;
+    
+    // Log del inicio de la operación
+    guardarLog("Inicio de actualizarUrlArchivo para File ID: $file_id con nueva URL: $new_url");
+    
+    // Intentar actualizar la URL del archivo en la base de datos
+    $resultado = $wpdb->update(
+        "{$wpdb->prefix}file_hashes",
+        array('file_url' => $new_url),  // Campos a actualizar
+        array('id' => $file_id),        // Condición: ID del archivo
+        array('%s'),                    // Formato del campo a actualizar
+        array('%d')                     // Formato del campo condicional
+    );
+
+    if ($resultado !== false) {
+        guardarLog("URL actualizada correctamente para File ID: $file_id");
+    } else {
+        guardarLog("Error al actualizar la URL para File ID: $file_id");
+    }
+
+    // Devolver el resultado de la actualización
+    return $resultado;
+}
+
+
+
 function nombreUnicoFile($dir, $name, $ext)
 {
     return basename($name, $ext) . $ext;

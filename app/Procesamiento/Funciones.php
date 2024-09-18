@@ -211,6 +211,7 @@ function actualizarMetaConArchivo($postId, $campo, $archivoId)
 
 function renombrarArchivoAdjunto($postId, $archivoId)
 {
+    $file_id = intval($_POST['audioId']);
     guardarLog("Inicio de renombrarArchivoAdjunto para Post ID: $postId y Archivo ID: $archivoId"); // Log inicial
     
     // Obtener información del post y del autor
@@ -245,6 +246,7 @@ function renombrarArchivoAdjunto($postId, $archivoId)
     if (rename($file_path, $new_file_path)) {
         guardarLog("Archivo renombrado con éxito de $file_path a $new_file_path");
 
+        actualizarUrlArchivo($file_id, $new_file_path);
         // Actualizar la ruta del archivo adjunto en la base de datos
         update_attached_file($archivoId, $new_file_path);
         guardarLog("Ruta del archivo actualizada en la base de datos para Archivo ID: $archivoId");
