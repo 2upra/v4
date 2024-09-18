@@ -79,27 +79,25 @@ function generarDescripcionIA($archivo_path, $prompt) {
     guardarLog("Inicio de generarDescripcionIA con prompt: " . $prompt);
     guardarLog("Archivo de audio: " . $archivo_path);
 
-    // Aquí llamamos a la API de Google Gemini
     $client = new Client();
     $apiKey = $_ENV['API_KEY'];
     $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
     try {
-        $audio_data = file_get_contents($archivo_path);  // Cargar el archivo de audio como bytes
+        $audio_data = file_get_contents($archivo_path);
         guardarLog("Archivo de audio cargado con éxito.");
 
-        // Solicitud sin 'generateContentRequest'
         $response = $client->post($url, [
             'headers' => [
                 'Content-Type' => 'application/json',
                 'x-goog-api-key' => $apiKey
             ],
             'json' => [
-                'prompt' => [
-                    'text' => $prompt 
+                'prompt' => [ // Cambiar a 'prompt' directamente en lugar de 'generateContentRequest'
+                    'text' => $prompt
                 ],
-                'audioInput' => [
-                    'mimeType' => 'audio/mp3',
+                'audio' => [ // Cambiar a 'audio' en lugar de 'audioInput'
+                    'mimeType' => 'audio/mp3', 
                     'data' => base64_encode($audio_data)
                 ]
             ]
@@ -108,13 +106,14 @@ function generarDescripcionIA($archivo_path, $prompt) {
         $body = json_decode($response->getBody(), true);
         guardarLog("Respuesta de la API obtenida correctamente.");
 
-        return $body['candidates'][0]['content']['parts'][0]['text']; 
+        return $body['candidates'][0]['content']['parts'][0]['text'];
     } catch (Exception $e) {
         $error_message = "Error: " . $e->getMessage();
-        guardarLog($error_message); // Log de error
+        guardarLog($error_message);
         return $error_message;
     }
 }
+
 
 // Función AJAX para manejar la solicitud desde el frontend
 function iaSend() {
