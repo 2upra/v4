@@ -2,6 +2,8 @@
 
 use GuzzleHttp\Client;
 
+
+
 function generarMetaIA($post_id, $nuevo_archivo_path_lite, $index) {
     guardarLog("Inicio de la función generarMetaIA"); // Log inicial
     
@@ -49,7 +51,7 @@ function generarDescripcionIA($archivo_path, $prompt) {
             ],
             'json' => [
                 'prompt' => $prompt,
-                'audio' => [
+                'audio_input' => [
                     'mime_type' => 'audio/mp3',
                     'data' => base64_encode($audio_data)
                 ]
