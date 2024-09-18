@@ -467,6 +467,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         return;
     }
 
+    // Crear el prompt para la IA
     $prompt = "Un usuario acaba de subir un audio con la siguiente descripción: {$post_content}. "
             . "Por favor, determina una descripción del audio utilizando el siguiente formato (estos son datos de ejemplo): "
             . '{"descripcion":"Descripción del audio generada por IA", "Instrumentos posibles":["Piano, guitarra, batería"], "estado de animo":"triste", "genero posible":"Phonk, ambient, electronic, sample" "tags posbiles":"sample, kick, fx, cinematografico"}. '
@@ -477,12 +478,16 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 
     // Guardar la descripción generada como meta del post
     if ($descripcion) {
-        // Conversión a UTF-8 para evitar problemas de caracteres especiales
-        $descripcion_utf8 = utf8_encode($descripcion);
+        // Limpiar la descripción generada (remover caracteres innecesarios como '```json' y asegurarnos de que esté en UTF-8)
+        $descripcion_limpia = json_decode(trim($descripcion, "```json \n"), true);
         
-        $suffix = ($index == 1) ? '' : "_{$index}";
-        update_post_meta($post_id, "audio_descripcion{$suffix}", $descripcion_utf8);
-        guardarLog("Descripción del audio guardada para el post ID: {$post_id}");
+        if ($descripcion_limpia) {
+            $suffix = ($index == 1) ? '' : "_{$index}";
+            update_post_meta($post_id, "audio_descripcion{$suffix}", json_encode($descripcion_limpia, JSON_UNESCAPED_UNICODE));
+            guardarLog("Descripción del audio guardada para el post ID: {$post_id}");
+        } else {
+            guardarLog("Error al procesar el JSON de la descripción generada por IA.");
+        }
     } else {
         guardarLog("No se pudo generar la descripción del audio para el post ID: {$post_id}");
     }
@@ -505,7 +510,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         'emotion' => $resultados['emotion'] ?? '',
         'key' => $resultados['key'] ?? '',
         'scale' => $resultados['scale'] ?? '',
-        'descripcion_ia' => $descripcion_utf8 ?? '' // Asegurarse de que la descripción esté en UTF-8
+        'descripcion_ia' => json_encode($descripcion_limpia, JSON_UNESCAPED_UNICODE) ?? '' // Asegurarse de que la descripción esté en UTF-8
     ];
     
     guardarLog("Datos nuevos a agregar: " . json_encode($nuevos_datos));
