@@ -396,12 +396,12 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     $descripcion = generarDescripcionIA($nuevo_archivo_path_lite, $prompt);
 
     // Guardar la descripción generada como meta del post
-    if ($descripcion && strpos($descripcion, 'Error') === false) {
+    if ($descripcion) {
+        $suffix = ($index == 1) ? '' : "_{$index}";
         update_post_meta($post_id, "audio_descripcion{$suffix}", $descripcion);
         guardarLog("Descripción del audio guardada para el post ID: {$post_id}");
     } else {
-        guardarLog("Error al generar la descripción del audio para el post ID: {$post_id}. Error: {$descripcion}");
+        guardarLog("No se pudo generar la descripción del audio para el post ID: {$post_id}");
     }
 }
-
 

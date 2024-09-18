@@ -181,8 +181,8 @@ function generarDescripcionIA($archivo_path, $prompt) {
         guardarLog("Respuesta completa de la API: " . json_encode($bodyGenerate));
 
         // Verificar si la respuesta contiene los datos esperados
-        if (isset($bodyGenerate['contents'][0]['parts'][0]['text'])) {
-            $generated_text = $bodyGenerate['contents'][0]['parts'][0]['text'];
+        if (isset($bodyGenerate['candidates'][0]['content']['parts'][0]['text'])) {
+            $generated_text = $bodyGenerate['candidates'][0]['content']['parts'][0]['text'];
             guardarLog("Contenido generado: " . $generated_text);
             return $generated_text;
         } else {
