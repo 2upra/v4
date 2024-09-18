@@ -194,29 +194,61 @@ function actualizarMetaConArchivo($postId, $campo, $archivoId)
 
 function renombrarArchivoAdjunto($postId, $archivoId)
 {
+    guardarLog("Inicio de renombrarArchivoAdjunto para Post ID: $postId y Archivo ID: $archivoId"); // Log inicial
+    
+    // Obtener información del post y del autor
     $post = get_post($postId);
     $author = get_userdata($post->post_author);
+    
+    if (!$post || !$author) {
+        guardarLog("Error: No se pudo obtener el post o el autor.");
+        return new WP_Error('post_or_author_not_found', 'No se pudo obtener el post o el autor.');
+    }
+    
+    // Obtener la ruta del archivo adjunto
     $file_path = get_attached_file($archivoId);
-    $info = pathinfo($file_path);
+    guardarLog("Ruta del archivo actual: $file_path");
 
+    $info = pathinfo($file_path);
+    
+    // Generar el nuevo nombre de archivo
     $new_filename = sprintf(
         '2upra_%s_%s.%s',
         sanitize_file_name(mb_substr($author->user_login, 0, 20)),
         sanitize_file_name(mb_substr($post->post_content, 0, 40)),
         $info['extension']
     );
+    guardarLog("Nuevo nombre de archivo generado: $new_filename");
 
+    // Definir la nueva ruta del archivo
     $new_file_path = $info['dirname'] . DIRECTORY_SEPARATOR . $new_filename;
+    guardarLog("Nueva ruta de archivo: $new_file_path");
+
+    // Intentar renombrar el archivo
     if (rename($file_path, $new_file_path)) {
+        guardarLog("Archivo renombrado con éxito de $file_path a $new_file_path");
+
+        // Actualizar la ruta del archivo adjunto en la base de datos
         update_attached_file($archivoId, $new_file_path);
+        guardarLog("Ruta del archivo actualizada en la base de datos para Archivo ID: $archivoId");
+
+        // Actualizar los metadatos del post
         update_post_meta($postId, 'sample', true);
+        guardarLog("Metadato 'sample' actualizado para Post ID: $postId");
+
+        // Procesar el audio ligero
         procesarAudioLigero($postId, $archivoId, 1);
+        guardarLog("procesarAudioLigero ejecutado para Post ID: $postId y Archivo ID: $archivoId");
     } else {
         // Manejar error en el renombrado
-        guardarLog('rename_failed:No se pudo renombrar el archivo adjunto.');
+        $error_message = "Error: No se pudo renombrar el archivo adjunto de $file_path a $new_file_path.";
+        guardarLog($error_message);
         return new WP_Error('rename_failed', 'No se pudo renombrar el archivo adjunto.');
     }
+
+    guardarLog("Fin de renombrarArchivoAdjunto para Post ID: $postId y Archivo ID: $archivoId"); // Log final
 }
+
 
 function procesarAudioLigero($post_id, $audio_id, $index)
 {
