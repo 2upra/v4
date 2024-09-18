@@ -2,6 +2,30 @@
 
 use GuzzleHttp\Client;
 
+/*
+
+
+2024-09-18 17:14:49 - Index: 1
+2024-09-18 17:14:49 - Inicio de generarDescripcionIA con prompt: Genera una descripción detallada del audio.
+2024-09-18 17:14:49 - Archivo de audio: /var/www/wordpress/wp-content/uploads/2024/09/2upra_66eb0a884ae1a_128k.mp3
+2024-09-18 17:14:49 - Archivo de audio cargado con éxito.
+2024-09-18 17:14:50 - Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
+{
+  "error": {
+    "code": 400,
+    "message": "Invalid JSON payload received. Unknown name \"prompt\": Cannot find fiel (truncated...)
+2024-09-18 17:14:50 - Descripción detallada generada: Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
+{
+  "error": {
+    "code": 400,
+    "message": "Invalid JSON payload received. Unknown name \"prompt\": Cannot find fiel (truncated...)
+2024-09-18 17:14:50 - Inicio de generarDescripcionIA con prompt: Describe brevemente los instrumentos usados.
+2024-09-18 17:14:50 - Archivo de audio: /var/www/wordpress/wp-content/uploads/2024/09/2upra_66eb0a884ae1a_128k.mp3
+2024-09-18 17:14:50 - Archivo de audio cargado con éxito.
+2024-09-18 17:14:51 - Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
+
+*/
+
 
 
 function generarMetaIA($post_id, $nuevo_archivo_path_lite, $index) {
@@ -50,10 +74,14 @@ function generarDescripcionIA($archivo_path, $prompt) {
                 'x-goog-api-key' => $apiKey
             ],
             'json' => [
-                'prompt' => $prompt,
-                'audio_input' => [
-                    'mime_type' => 'audio/mp3',
-                    'data' => base64_encode($audio_data)
+                'generateContentRequest' => [ // Ajustar la estructura JSON
+                    'prompt' => [
+                        'text' => $prompt 
+                    ],
+                    'audioInput' => [ // Cambiar a audioInput
+                        'mimeType' => 'audio/mp3', // Cambiar a mimeType
+                        'data' => base64_encode($audio_data)
+                    ]
                 ]
             ]
         ]);
@@ -61,7 +89,7 @@ function generarDescripcionIA($archivo_path, $prompt) {
         $body = json_decode($response->getBody(), true);
         guardarLog("Respuesta de la API obtenida correctamente.");
 
-        return $body['candidates'][0]['content']['parts'][0]['text'];
+        return $body['candidates'][0]['content']['parts'][0]['text']; 
     } catch (Exception $e) {
         $error_message = "Error: " . $e->getMessage();
         guardarLog($error_message); // Log de error
