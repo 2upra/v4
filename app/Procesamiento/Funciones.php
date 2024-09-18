@@ -363,14 +363,14 @@ function procesarAudioLigero($post_id, $audio_id, $index)
 
     guardarLog("datos para sacar meta post id: {$post_id} path_lite: {$nuevo_archivo_path_lite} index: {$index}");
     analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
-    generarMetaIA($post_id, $nuevo_archivo_path_lite, $index);
 }
 
 function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 {
+    // Ejecutar el script de Python para análisis de audio
     $python_command = "python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py \"{$nuevo_archivo_path_lite}\"";
-
     guardarLog("Ejecutando comando de Python: {$python_command}");
+    exec($python_command);
 
     // Leer los resultados del archivo JSON
     $resultados_path = $nuevo_archivo_path_lite . '_resultados.json';
@@ -388,6 +388,18 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         }
     } else {
         guardarLog("No se encontró el archivo de resultados en {$resultados_path}");
+    }
+
+    // Generar descripción del audio usando la API de Gemini
+    $prompt = "Describe el contenido de este audio en español. Incluye detalles sobre el género musical, instrumentos, ritmo, y cualquier característica distintiva que notes.";
+    $descripcion = generarDescripcionIA($nuevo_archivo_path_lite, $prompt);
+
+    // Guardar la descripción generada como meta del post
+    if ($descripcion && strpos($descripcion, 'Error') === false) {
+        update_post_meta($post_id, "audio_descripcion{$suffix}", $descripcion);
+        guardarLog("Descripción del audio guardada para el post ID: {$post_id}");
+    } else {
+        guardarLog("Error al generar la descripción del audio para el post ID: {$post_id}. Error: {$descripcion}");
     }
 }
 

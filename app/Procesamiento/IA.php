@@ -2,119 +2,199 @@
 
 use GuzzleHttp\Client;
 
-/*
 
 
-024-09-18 18:02:21 - Descripción detallada generada: Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
-{
-  "error": {
-    "code": 400,
-    "message": "Invalid JSON payload received. Unknown name \"prompt\": Cannot find fiel (truncated...)
+function generarDescripcionIAConURI($audio_uri, $prompt) {
+    guardarLog("Generando descripción IA con prompt: " . $prompt . " y URI: " . $audio_uri);
 
-*/
+    try {
+        // Construir el cuerpo de la solicitud
+        $data = [
+            "contents" => [
+                [
+                    "parts" => [
+                        [
+                            "text" => $prompt
+                        ],
+                        [
+                            "inline_data" => [
+                                "mime_type" => "audio/mp3",
+                                "uri" => $audio_uri
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        // Hacer la solicitud POST usando CURL
+        $apiKey = $_ENV['API_KEY'];
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey";
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+        ]);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+
+        $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            $error_message = "Error en CURL: " . curl_error($ch);
+            guardarLog($error_message);
+            return $error_message;
+        }
+
+        curl_close($ch);
+        $bodyGenerate = json_decode($response, true);
+
+        // Verificar si la respuesta contiene los datos esperados
+        if (isset($bodyGenerate['contents'][0]['parts'][0]['text'])) {
+            $generated_text = $bodyGenerate['contents'][0]['parts'][0]['text'];
+            guardarLog("Contenido generado: " . $generated_text);
+
+            return $generated_text;
+        } else {
+            $error_message = "Error: Respuesta inesperada de la API.";
+            guardarLog($error_message);
+            return $error_message;
+        }
+
+    } catch (Exception $e) {
+        $error_message = "Error: " . $e->getMessage();
+        guardarLog($error_message);
+        return $error_message;
+    }
+}
 
 
 
-function generarMetaIA($post_id, $nuevo_archivo_path_lite, $index) {
-    guardarLog("Inicio de la función generarMetaIA");
+function subirArchivo($archivo_path) {
+    guardarLog("Subiendo archivo: " . $archivo_path);
 
-    // Verificar que los parámetros están correctos
-    guardarLog("Post ID: " . $post_id);
-    guardarLog("Ruta del archivo: " . $nuevo_archivo_path_lite);
-    guardarLog("Index: " . $index);
+    try {
+        // Leer el archivo de audio y convertirlo a base64
+        $audio_data = file_get_contents($archivo_path);
+        guardarLog("Archivo de audio cargado con éxito.");
 
-    // Generar las descripciones y tags usando la API de Google Gemini
-    $descripcion_detallada = generarDescripcionIA($nuevo_archivo_path_lite, "Genera una descripción detallada del audio.");
-    guardarLog("Descripción detallada generada: " . $descripcion_detallada);
+        // Construir el cuerpo de la solicitud para subir el archivo
+        $data = [
+            "file" => [
+                "mimeType" => "audio/mp3", 
+                "data" => base64_encode($audio_data)
+            ]
+        ];
 
-    $descripcion_corta = generarDescripcionIA($nuevo_archivo_path_lite, "Describe brevemente los instrumentos usados.");
-    guardarLog("Descripción corta generada: " . $descripcion_corta);
+        // Hacer la solicitud POST usando CURL para subir el archivo
+        $apiKey = $_ENV['API_KEY'];
+        $urlUpload = "https://generativelanguage.googleapis.com/v1beta/media:upload?key=$apiKey";
 
-    $tags_sugeridos = generarDescripcionIA($nuevo_archivo_path_lite, "Sugiere algunos tags relevantes.");
-    guardarLog("Tags sugeridos generados: " . $tags_sugeridos);
+        $ch = curl_init($urlUpload);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+        ]);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 
-    // Actualizar los metadatos del post con los resultados generados
-    update_post_meta($post_id, "descripcionIA", $descripcion_detallada);
-    update_post_meta($post_id, "descripcionCortaIA", $descripcion_corta);
-    update_post_meta($post_id, "TagsSugeridosIA", $tags_sugeridos);
+        $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            $error_message = "Error en CURL: " . curl_error($ch);
+            guardarLog($error_message);
+            return $error_message;
+        }
 
-    guardarLog("Metadatos actualizados en el post ID: " . $post_id);
-    guardarLog("Fin de la función generarMetaIA");
+        curl_close($ch);
+        $bodyUpload = json_decode($response, true);
+
+        // Verificar si la respuesta contiene el URI del archivo subido
+        if (isset($bodyUpload['uri'])) {
+            $audio_uri = $bodyUpload['uri'];
+            guardarLog("Archivo subido exitosamente. URI: " . $audio_uri);
+            return $audio_uri;
+        } else {
+            $error_message = "Error: Respuesta inesperada durante la subida del archivo.";
+            guardarLog($error_message);
+            return $error_message;
+        }
+
+    } catch (Exception $e) {
+        $error_message = "Error: " . $e->getMessage();
+        guardarLog($error_message);
+        return $error_message;
+    }
 }
 
 function generarDescripcionIA($archivo_path, $prompt) {
     guardarLog("Inicio de generarDescripcionIA con prompt: " . $prompt);
     guardarLog("Archivo de audio: " . $archivo_path);
 
-    $client = new Client();
-    $apiKey = $_ENV['API_KEY'];
-    $urlUpload = 'https://generativelanguage.googleapis.com/v1beta/media:upload';
-    $urlGenerate = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-
     try {
-        // Leer el archivo de audio
+        // Leer el archivo de audio y convertirlo a base64
         $audio_data = file_get_contents($archivo_path);
-        if ($audio_data === false) {
-            throw new Exception("No se pudo leer el archivo de audio.");
-        }
-        guardarLog("Archivo de audio cargado con éxito.");
+        $audio_base64 = base64_encode($audio_data);
+        guardarLog("Archivo de audio cargado y convertido a base64 con éxito.");
 
-        // Subir el archivo a la API de File
-        $uploadRequest = [
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'x-goog-api-key' => $apiKey
-            ],
-            'json' => [
-                'file' => [
-                    'mimeType' => 'audio/mp3', 
-                    'data' => base64_encode($audio_data)
+        // Construir el cuerpo de la solicitud
+        $data = [
+            "contents" => [
+                [
+                    "parts" => [
+                        [
+                            "text" => $prompt
+                        ],
+                        [
+                            "inline_data" => [
+                                "mime_type" => "audio/mp3",
+                                "data" => $audio_base64
+                            ]
+                        ]
+                    ]
                 ]
             ]
         ];
-        guardarLog("Enviando solicitud de carga: " . json_encode($uploadRequest));
 
-        $responseUpload = $client->post($urlUpload, $uploadRequest);
-        $bodyUpload = json_decode($responseUpload->getBody(), true);
-        guardarLog("Respuesta de carga: " . json_encode($bodyUpload));
+        // Hacer la solicitud POST usando CURL
+        $apiKey = $_ENV['API_KEY'];
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey";
 
-        if (!isset($bodyUpload['uri'])) {
-            throw new Exception("No se recibió URI del archivo subido.");
-        }
-        $audio_uri = $bodyUpload['uri'];
-        guardarLog("URI del archivo subido: " . $audio_uri);
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+        ]);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
 
-        // Generar contenido usando el archivo subido
-        $generateRequest = [
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'x-goog-api-key' => $apiKey
-            ],
-            'json' => [
-                'prompt' => $prompt,
-                'audio' => [
-                    'uri' => $audio_uri
-                ]
-            ]
-        ];
-        guardarLog("Enviando solicitud de generación: " . json_encode($generateRequest));
-
-        $responseGenerate = $client->post($urlGenerate, $generateRequest);
-        $bodyGenerate = json_decode($responseGenerate->getBody(), true);
-        guardarLog("Respuesta de generación: " . json_encode($bodyGenerate));
-
-        if (!isset($bodyGenerate['candidates'][0]['content']['parts'][0]['text'])) {
-            throw new Exception("La respuesta no contiene el texto generado esperado.");
+        $response = curl_exec($ch);
+        if (curl_errno($ch)) {
+            $error_message = "Error en CURL: " . curl_error($ch);
+            guardarLog($error_message);
+            return $error_message;
         }
 
-        return $bodyGenerate['candidates'][0]['content']['parts'][0]['text'];
+        curl_close($ch);
+        $bodyGenerate = json_decode($response, true);
+
+        // Verificar si la respuesta contiene los datos esperados
+        if (isset($bodyGenerate['contents'][0]['parts'][0]['text'])) {
+            $generated_text = $bodyGenerate['contents'][0]['parts'][0]['text'];
+            guardarLog("Contenido generado: " . $generated_text);
+
+            return $generated_text;
+        } else {
+            $error_message = "Error: Respuesta inesperada de la API.";
+            guardarLog($error_message);
+            return $error_message;
+        }
+
     } catch (Exception $e) {
-        $error_message = "Error en generarDescripcionIA: " . $e->getMessage();
+        $error_message = "Error: " . $e->getMessage();
         guardarLog($error_message);
-        throw new Exception($error_message);
+        return $error_message;
     }
 }
-
 
 // Función AJAX para manejar la solicitud desde el frontend
 function iaSend() {
