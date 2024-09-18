@@ -281,7 +281,7 @@ function procesarAudioLigero($post_id, $audio_id, $index)
 
     guardarLog("datos para sacar meta post id: {$post_id} path_lite: {$nuevo_archivo_path_lite} index: {$index}");
     analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
-    generarMetaIA($post_id, $nuevo_archivo_path_lite, $index);
+    //generarMetaIA($post_id, $nuevo_archivo_path_lite, $index);
 }
 
 function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
