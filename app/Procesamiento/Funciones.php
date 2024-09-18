@@ -300,7 +300,7 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         guardarLog("Archivo ligero ya existente encontrado: ID $existing_lite_audio_id, asociando al nuevo post.");
         $meta_key = ($index == 1) ? "post_audio_lite" : "post_audio_lite_{$index}";
         update_post_meta($post_id, $meta_key, $existing_lite_audio_id);
-        update_post_meta($post_id, 'AudioDuplicado', true)
+        update_post_meta($post_id, 'AudioDuplicado', true);
         return;
     }
 
