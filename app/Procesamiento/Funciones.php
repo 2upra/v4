@@ -426,7 +426,6 @@ if __name__ == "__main__":
 
 function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 {
-
     // Ejecutar el script de Python para análisis de audio
     $python_command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py \"{$nuevo_archivo_path_lite}\"");
     guardarLog("Ejecutando comando de Python: {$python_command}");
@@ -468,7 +467,6 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         return;
     }
 
-    // Mejorar el prompt agregando el contenido del post
     $prompt = "Un usuario acaba de subir un audio con la siguiente descripción: {$post_content}. "
             . "Por favor, determina una descripción del audio utilizando el siguiente formato (estos son datos de ejemplo): "
             . '{"descripcion":"Descripción del audio generada por IA", "Instrumentos posibles":["Piano, guitarra, batería"], "estado de animo":"triste", "genero posible":"Phonk, ambient, electronic, sample" "tags posbiles":"sample, kick, fx, cinematografico"}. '
@@ -479,8 +477,11 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 
     // Guardar la descripción generada como meta del post
     if ($descripcion) {
+        // Conversión a UTF-8 para evitar problemas de caracteres especiales
+        $descripcion_utf8 = utf8_encode($descripcion);
+        
         $suffix = ($index == 1) ? '' : "_{$index}";
-        update_post_meta($post_id, "audio_descripcion{$suffix}", $descripcion);
+        update_post_meta($post_id, "audio_descripcion{$suffix}", $descripcion_utf8);
         guardarLog("Descripción del audio guardada para el post ID: {$post_id}");
     } else {
         guardarLog("No se pudo generar la descripción del audio para el post ID: {$post_id}");
@@ -488,7 +489,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 
     // Actualizar el metadato 'datosAlgoritmo' sumando la nueva información
     $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
-    
+
     if (!$datos_algoritmo) {
         $datos_algoritmo = [];
     } else {
@@ -501,20 +502,21 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     // Concatenar la información del script de Python y la IA
     $nuevos_datos = [
         'bpm' => $resultados['bpm'] ?? '',
-        'pitch' => $resultados['pitch'] ?? '',
         'emotion' => $resultados['emotion'] ?? '',
         'key' => $resultados['key'] ?? '',
         'scale' => $resultados['scale'] ?? '',
-        'strength' => $resultados['strength'] ?? '',
-        'descripcion_ia' => $descripcion ?? ''
+        'descripcion_ia' => $descripcion_utf8 ?? '' // Asegurarse de que la descripción esté en UTF-8
     ];
+    
+    guardarLog("Datos nuevos a agregar: " . json_encode($nuevos_datos));
 
     // Agregar los nuevos datos al metadato existente
     $datos_algoritmo = array_merge($datos_algoritmo, $nuevos_datos);
 
+    guardarLog("Metadatos actuales para 'datosAlgoritmo' antes de guardar: " . json_encode($datos_algoritmo));
+
     // Guardar nuevamente el metadato actualizado
-    update_post_meta($post_id, 'datosAlgoritmo', json_encode($datos_algoritmo));
+    update_post_meta($post_id, 'datosAlgoritmo', json_encode($datos_algoritmo, JSON_UNESCAPED_UNICODE));
 
     guardarLog("Metadatos de 'datosAlgoritmo' actualizados para el post ID: {$post_id}");
 }
-
