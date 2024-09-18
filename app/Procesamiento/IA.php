@@ -5,64 +5,31 @@ use GuzzleHttp\Client;
 /*
 
 
-2024-09-18 17:54:42 - Inicio de la función generarMetaIA
-2024-09-18 17:54:42 - Post ID: 231868
-2024-09-18 17:54:42 - Ruta del archivo: /var/www/wordpress/wp-content/uploads/2024/09/2upra_66eb13e1b7904_128k.mp3
-2024-09-18 17:54:42 - Index: 1
-2024-09-18 17:54:42 - Inicio de generarDescripcionIA con prompt: Genera una descripción detallada del audio.
-2024-09-18 17:54:42 - Archivo de audio: /var/www/wordpress/wp-content/uploads/2024/09/2upra_66eb13e1b7904_128k.mp3
-2024-09-18 17:54:42 - Archivo de audio cargado con éxito.
-2024-09-18 17:54:43 - Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
+024-09-18 18:02:21 - Descripción detallada generada: Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
 {
   "error": {
     "code": 400,
-    "message": "Invalid JSON payload received. Unknown name \"generateContentRequest\":  (truncated...)
-2024-09-18 17:54:43 - Descripción detallada generada: Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
-{
-  "error": {
-    "code": 400,
-    "message": "Invalid JSON payload received. Unknown name \"generateContentRequest\":  (truncated...)
-2024-09-18 17:54:43 - Inicio de generarDescripcionIA con prompt: Describe brevemente los instrumentos usados.
-2024-09-18 17:54:43 - Archivo de audio: /var/www/wordpress/wp-content/uploads/2024/09/2upra_66eb13e1b7904_128k.mp3
-2024-09-18 17:54:43 - Archivo de audio cargado con éxito.
-2024-09-18 17:54:44 - Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
-{
-  "error": {
-    "code": 400,
-    "message": "Invalid JSON payload received. Unknown name \"generateContentRequest\":  (truncated...)
-2024-09-18 17:54:44 - Descripción corta generada: Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
-{
-  "error": {
-    "code": 400,
-    "message": "Invalid JSON payload received. Unknown name \"generateContentRequest\":  (truncated...)
-2024-09-18 17:54:44 - Inicio de generarDescripcionIA con prompt: Sugiere algunos tags relevantes.
-2024-09-18 17:54:44 - Archivo de audio: /var/www/wordpress/wp-content/uploads/2024/09/2upra_66eb13e1b7904_128k.mp3
-2024-09-18 17:54:44 - Archivo de audio cargado con éxito.
-2024-09-18 17:54:45 - Error: Client error: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent` resulted in a `400 Bad Request` response:
-{
-  "error": {
-    "code": 400,
-    "message": "Invalid JSON payload received. Unknown name \"generateContentRequest\":  (truncated...)
+    "message": "Invalid JSON payload received. Unknown name \"prompt\": Cannot find fiel (truncated...)
 
 */
 
 
 
 function generarMetaIA($post_id, $nuevo_archivo_path_lite, $index) {
-    guardarLog("Inicio de la función generarMetaIA"); // Log inicial
-    
+    guardarLog("Inicio de la función generarMetaIA");
+
     // Verificar que los parámetros están correctos
     guardarLog("Post ID: " . $post_id);
     guardarLog("Ruta del archivo: " . $nuevo_archivo_path_lite);
     guardarLog("Index: " . $index);
-    
+
     // Generar las descripciones y tags usando la API de Google Gemini
     $descripcion_detallada = generarDescripcionIA($nuevo_archivo_path_lite, "Genera una descripción detallada del audio.");
     guardarLog("Descripción detallada generada: " . $descripcion_detallada);
-    
+
     $descripcion_corta = generarDescripcionIA($nuevo_archivo_path_lite, "Describe brevemente los instrumentos usados.");
     guardarLog("Descripción corta generada: " . $descripcion_corta);
-    
+
     $tags_sugeridos = generarDescripcionIA($nuevo_archivo_path_lite, "Sugiere algunos tags relevantes.");
     guardarLog("Tags sugeridos generados: " . $tags_sugeridos);
 
@@ -70,7 +37,7 @@ function generarMetaIA($post_id, $nuevo_archivo_path_lite, $index) {
     update_post_meta($post_id, "descripcionIA", $descripcion_detallada);
     update_post_meta($post_id, "descripcionCortaIA", $descripcion_corta);
     update_post_meta($post_id, "TagsSugeridosIA", $tags_sugeridos);
-    
+
     guardarLog("Metadatos actualizados en el post ID: " . $post_id);
     guardarLog("Fin de la función generarMetaIA");
 }
@@ -81,32 +48,54 @@ function generarDescripcionIA($archivo_path, $prompt) {
 
     $client = new Client();
     $apiKey = $_ENV['API_KEY'];
-    $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+    $urlUpload = 'https://generativelanguage.googleapis.com/v1beta/media:upload'; // URL para subir archivos
+    $urlGenerate = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'; // URL para generar contenido
 
     try {
+        // Leer el archivo de audio
         $audio_data = file_get_contents($archivo_path);
         guardarLog("Archivo de audio cargado con éxito.");
 
-        $response = $client->post($url, [
+        // Subir el archivo a la API de File
+        $responseUpload = $client->post($urlUpload, [
             'headers' => [
                 'Content-Type' => 'application/json',
                 'x-goog-api-key' => $apiKey
             ],
             'json' => [
-                'prompt' => [ // Cambiar a 'prompt' directamente en lugar de 'generateContentRequest'
-                    'text' => $prompt
-                ],
-                'audio' => [ // Cambiar a 'audio' en lugar de 'audioInput'
+                'file' => [
                     'mimeType' => 'audio/mp3', 
                     'data' => base64_encode($audio_data)
                 ]
             ]
         ]);
 
-        $body = json_decode($response->getBody(), true);
+        $bodyUpload = json_decode($responseUpload->getBody(), true);
+        guardarLog("Archivo subido a la API correctamente.");
+
+        // Obtener el URI del archivo subido
+        $audio_uri = $bodyUpload['uri'];
+        guardarLog("URI del archivo subido: " . $audio_uri);
+
+        // Generar contenido usando el archivo subido
+        $responseGenerate = $client->post($urlGenerate, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'x-goog-api-key' => $apiKey
+            ],
+            'json' => [
+                'prompt' => $prompt,
+                'audio' => [
+                    'uri' => $audio_uri // Usar el URI del archivo subido
+                ]
+            ]
+        ]);
+
+        $bodyGenerate = json_decode($responseGenerate->getBody(), true);
         guardarLog("Respuesta de la API obtenida correctamente.");
 
-        return $body['candidates'][0]['content']['parts'][0]['text'];
+        // Devolver el contenido generado
+        return $bodyGenerate['candidates'][0]['content']['parts'][0]['text'];
     } catch (Exception $e) {
         $error_message = "Error: " . $e->getMessage();
         guardarLog($error_message);
