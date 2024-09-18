@@ -471,7 +471,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     // Mejorar el prompt agregando el contenido del post
     $prompt = "Un usuario acaba de subir un audio con la siguiente descripción: {$post_content}. "
             . "Por favor, determina una descripción del audio utilizando el siguiente formato (estos son datos de ejemplo): "
-            . '{"descripcion":"Descripción del audio generada por IA", "Instrumentos posibles":["Piano, guitarra, batería"], "estado de animo":"triste", "genero posible":"Phonk, ambient, electronic, sample"}. '
+            . '{"descripcion":"Descripción del audio generada por IA", "Instrumentos posibles":["Piano, guitarra, batería"], "estado de animo":"triste", "genero posible":"Phonk, ambient, electronic, sample" "tags posbiles":"sample, kick, fx, cinematografico"}. '
             . "Puedes agregar información adicional si parece relevante.";
 
     // Generar la descripción con la IA
