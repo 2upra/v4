@@ -301,6 +301,7 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         $meta_key = ($index == 1) ? "post_audio_lite" : "post_audio_lite_{$index}";
         update_post_meta($post_id, $meta_key, $existing_lite_audio_id);
         update_post_meta($post_id, 'AudioDuplicado', true);
+        analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index); //TEMPORAL
         return;
     }
 

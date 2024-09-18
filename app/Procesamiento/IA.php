@@ -177,14 +177,16 @@ function generarDescripcionIA($archivo_path, $prompt) {
         curl_close($ch);
         $bodyGenerate = json_decode($response, true);
 
+        // Registrar la respuesta completa para depuración
+        guardarLog("Respuesta completa de la API: " . json_encode($bodyGenerate));
+
         // Verificar si la respuesta contiene los datos esperados
         if (isset($bodyGenerate['contents'][0]['parts'][0]['text'])) {
             $generated_text = $bodyGenerate['contents'][0]['parts'][0]['text'];
             guardarLog("Contenido generado: " . $generated_text);
-
             return $generated_text;
         } else {
-            $error_message = "Error: Respuesta inesperada de la API.";
+            $error_message = "Error: Respuesta inesperada de la API. Detalles: " . json_encode($bodyGenerate);
             guardarLog($error_message);
             return $error_message;
         }
@@ -194,20 +196,6 @@ function generarDescripcionIA($archivo_path, $prompt) {
         guardarLog($error_message);
         return $error_message;
     }
-}
-
-// Función AJAX para manejar la solicitud desde el frontend
-function iaSend() {
-    if (isset($_POST['post_id']) && isset($_POST['audio_path'])) {
-        $post_id = intval($_POST['post_id']);
-        $audio_path = sanitize_text_field($_POST['audio_path']);
-        generarMetaIA($post_id, $audio_path, 0);
-
-        echo 'Metadatos IA generados y actualizados correctamente.';
-    } else {
-        echo 'Datos insuficientes.';
-    }
-    wp_die();
 }
 
 add_action('wp_ajax_ai_request', 'iaSend');
