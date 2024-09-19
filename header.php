@@ -175,6 +175,15 @@ if (!defined('ABSPATH')) {
             <!-- Fondo oscuro para los submenus -->
             <div id="modalBackground2" class="modal-background submenu modalBackground2" style="display: none;"></div>
 
+            <!-- Modal y fondo -->
+            <div id="modalDetallesIA" class="DetallesIA modal" style="display: none; z-index: 1000; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                <div class="modalContent">
+                    <p id="modalDetallesContent"></p> 
+                </div>
+            </div>
+            <div id="backgroundDetallesIA" class="modalBackground" style="display: none; z-index: 999; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);"></div>
+
+
             <!-- submenu de subir rola o sample -->
             <div class="A1806241" id="submenusubir-subiricono">
                 <div class="A1806242">

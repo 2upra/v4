@@ -1,41 +1,44 @@
 
 function modalDetallesIA() {
-    document.querySelectorAll('.infoIA-btn').forEach(button => {
-        button.addEventListener('click', function () {
-            const modal = this.closest('.UKVPJI').querySelector('.DetallesIA');
-            const modalBackground = this.closest('.UKVPJI').querySelector('.modalBackground5');
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('modalDetallesIA');
+        const modalBackground = document.getElementById('backgroundDetallesIA');
+        const modalContent = document.getElementById('modalDetallesContent');
+        
+        // Evento para abrir el modal
+        document.querySelectorAll('.infoIA-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // Obtener el ID del post desde el atributo data-post-id
+                const postId = this.getAttribute('data-post-id');
+                
+                // Buscar el párrafo invisible que tiene el id-post con el mismo valor
+                const postDetalles = document.querySelector(`p[id-post="${postId}"]`);
+                
+                // Asegurarse de que existe el elemento y mostrar el contenido en el modal
+                if (postDetalles) {
+                    modalContent.textContent = postDetalles.textContent;
+    
+                    // Mostrar el modal y el fondo
+                    modal.style.display = 'block';
+                    modalBackground.style.display = 'block';
 
-            // Mostrar modal y fondo oscuro
-            modal.style.display = 'block';
-            modalBackground.style.display = 'block';
-            modalBackground.style.setProperty('display', 'block', 'important'); // Forzar el display
-
-            document.body.style.overflow = 'hidden'; // Bloquear scroll
-
-            // Función para cerrar modal
-            const closeModal = () => {
-                modal.style.display = 'none';
-                modalBackground.style.display = 'none';
-                document.body.style.overflow = 'auto'; // Restaurar scroll
-            };
-
-            // Cerrar al hacer clic en el fondo oscuro
-            modalBackground.addEventListener('click', (e) => {
-                if (e.target === modalBackground) {
-                    closeModal();
+                    // Bloquear el scroll del fondo
+                    document.body.style.overflow = 'hidden';
                 }
             });
+        });
 
-            // Cerrar al hacer clic en el botón de cierre
-            const closeButton = modal.querySelector('.close-modal');
-            if (closeButton) {
-                closeButton.addEventListener('click', () => {
-                    closeModal();
-                });
-            }
+        // Cerrar el modal al hacer clic en el fondo oscuro
+        modalBackground.addEventListener('click', function() {
+            modal.style.display = 'none';
+            modalBackground.style.display = 'none';
+
+            // Restablecer el scroll del fondo
+            document.body.style.overflow = 'auto';
         });
     });
 }
+
 
 
 
