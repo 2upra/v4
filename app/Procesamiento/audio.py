@@ -1,16 +1,15 @@
 import essentia.standard as es
 import json
 
-
 def analizar_audio(audio_path):
     try:
-
         audio = es.MonoLoader(filename=audio_path)()
         print(f"Audio cargado correctamente. Longitud: {len(audio)} muestras.")
 
         # Extraer BPM
         rhythm_extractor = es.RhythmExtractor2013(method="multifeature")
         bpm, _, _, _, _ = rhythm_extractor(audio)
+        bpm = round(bpm)  # Redondear el BPM al entero más cercano
         print(f"BPM detectado: {bpm}")
 
         # Extraer tono
