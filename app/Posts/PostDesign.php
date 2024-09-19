@@ -104,14 +104,10 @@ function htmlPost($filtro)
                         <?php echo botonComentar($post_id, $colab) ?>
                         <?php echo botonDescarga($post_id) ?>
                         <?php echo botonColab($post_id, $colab) ?>
-                        <button data-semitones="-1">-1 semitone</button>
-                        <button data-semitones="0">original</button>
-                        <button data-semitones="1">+1 semitone</button>
-                        <button data-semitones="2">+2 semitones</button
-                            </div>
                     </div>
                 </div>
-            <?php endif; ?>
+            </div>
+        <?php endif; ?>
     </li>
 
     <li class="comentarios">
