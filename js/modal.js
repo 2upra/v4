@@ -1,5 +1,5 @@
 function modalDetallesIA() {
-    const modalBackground = document.getElementById('modalBackground4');
+    const modalBackground = document.getElementById('modalBackground5');
     console.log('Modal background element:', modalBackground); // Verifica si se selecciona correctamente el fondo
 
     document.querySelectorAll('.infoIA-btn').forEach(button => {
