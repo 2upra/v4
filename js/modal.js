@@ -1,9 +1,20 @@
+
 function modalDetallesIA() {
-    const detailButtons = document.querySelectorAll('.infoIA-btn');
-    detailButtons.forEach(button => {
+    document.querySelectorAll('.infoIA-btn').forEach(button => {
         button.addEventListener('click', function () {
             const modal = this.closest('.UKVPJI').querySelector('.DetallesIA');
-            modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+            const modalBackground = document.getElementById('modalBackground2');
+            
+            modal.style.display = modalBackground.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+
+            const closeModal = () => {
+                modal.style.display = modalBackground.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            };
+
+            modalBackground.addEventListener('click', (e) => { if (e.target === modalBackground) closeModal(); });
+            modal.querySelector('.close-modal')?.addEventListener('click', closeModal);
         });
     });
 }
