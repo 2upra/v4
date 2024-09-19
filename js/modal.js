@@ -1,49 +1,37 @@
+
 function modalDetallesIA() {
-    // Crear el modal background si no existe
-    let modalBackground = document.getElementById('modalBackground5');
-    if (!modalBackground) {
-        modalBackground = document.createElement('div');
-        modalBackground.id = 'modalBackground5';
-        modalBackground.classList.add('modal-background', 'submenu', 'modalBackground2');
+    const modalBackground = document.getElementById('modalBackground5');
+    console.log('Modal background element:', modalBackground); // Verifica si se selecciona correctamente el fondo
 
-        // Estilos de fondo oscuro
-        modalBackground.style.position = 'fixed'; // Fijar el fondo en la pantalla
-        modalBackground.style.top = '0';
-        modalBackground.style.left = '0';
-        modalBackground.style.width = '100%';
-        modalBackground.style.height = '100%';
-        modalBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'; // Fondo semi-transparente
-        modalBackground.style.zIndex = '10'; // Z-index más bajo que el modal
-        modalBackground.style.display = 'none'; // Oculto por defecto
-
-        document.body.appendChild(modalBackground); // Agregar al body
-    }
 
     document.querySelectorAll('.infoIA-btn').forEach(button => {
+        console.log('Button detected:', button); // Verifica si los botones se detectan
         button.addEventListener('click', function () {
             const modal = this.closest('.UKVPJI').querySelector('.DetallesIA');
-
-            // Ajustar el z-index del modal para que esté por encima del fondo
-            modal.style.position = 'relative';
-            modal.style.zIndex = '20'; // Z-index más alto que el background
+            console.log('Modal detected:', modal); // Verifica si se selecciona correctamente el modal
 
             // Mostrar modal y fondo oscuro
             modal.style.display = 'block';
-            modalBackground.style.display = 'block';
+            modalBackground.style.display = 'block'; 
             modalBackground.style.setProperty('display', 'block', 'important'); // Forzar el display
 
             document.body.style.overflow = 'hidden'; // Bloquear scroll
+            console.log('Modal and background displayed, scroll blocked.');
+            console.log('Background display:', window.getComputedStyle(modalBackground).display); // Verifica el estilo aplicado
 
             // Función para cerrar modal
             const closeModal = () => {
                 modal.style.display = 'none';
                 modalBackground.style.display = 'none';
                 document.body.style.overflow = 'auto'; // Restaurar scroll
+                console.log('Modal and background hidden, scroll restored.');
             };
 
             // Cerrar al hacer clic en el fondo oscuro
             modalBackground.addEventListener('click', (e) => {
+                console.log('Background clicked', e.target);
                 if (e.target === modalBackground) {
+                    console.log('Closing modal because background was clicked.');
                     closeModal();
                 }
             });
@@ -51,12 +39,17 @@ function modalDetallesIA() {
             // Cerrar al hacer clic en el botón de cierre
             const closeButton = modal.querySelector('.close-modal');
             if (closeButton) {
-                closeButton.addEventListener('click', closeModal);
+                console.log('Close button detected:', closeButton);
+                closeButton.addEventListener('click', () => {
+                    console.log('Close button clicked.');
+                    closeModal();
+                });
+            } else {
+                console.log('No close button found inside modal.');
             }
         });
     });
 }
-
 
 
 
