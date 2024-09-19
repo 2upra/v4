@@ -48,8 +48,7 @@ function modalDetallesIA() {
         });
     });
 }
-});
-}
+
 
 
 
