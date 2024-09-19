@@ -1,6 +1,6 @@
 <?php
 
-function social()
+function socialTabs()
 {
     ob_start();
 

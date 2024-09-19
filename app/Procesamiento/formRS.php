@@ -17,7 +17,7 @@ function formRs()
         </div>
 
         <div>
-            <div class="postTags DABVYT" id="textoRs" contenteditable="true" data-placeholder="Puedes agregar tags usando #"></div>
+            <div class="postTags DABVYT" id="textoRs" contenteditable="true" data-placeholder="Puedes agregar tags usando #, los samples con imagenes tienen mayor relevancia"></div>
 
             <input type="hidden" id="postTagsHidden" name="post_tags">
 
