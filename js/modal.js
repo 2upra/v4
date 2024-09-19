@@ -1,42 +1,32 @@
 
 function modalDetallesIA() {
-    const detailButtons = document.querySelectorAll('.infoIA-btn');
     const modalBackground = document.getElementById('modalBackground2');
-
-    detailButtons.forEach(button => {
+    
+    document.querySelectorAll('.infoIA-btn').forEach(button => {
         button.addEventListener('click', function () {
             const modal = this.closest('.UKVPJI').querySelector('.DetallesIA');
-
+            
             // Mostrar modal y fondo oscuro
             modal.style.display = 'block';
             modalBackground.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Bloquear scroll
+            
+            // Función para cerrar modal
+            const closeModal = () => {
+                modal.style.display = 'none';
+                modalBackground.style.display = 'none';
+                document.body.style.overflow = 'auto'; // Restaurar scroll
+            };
 
-            // Bloquear scroll
-            document.body.style.overflow = 'hidden';
-
-            // Cerrar modal al hacer clic fuera del cuadro o en el background
-            modalBackground.addEventListener('click', function (event) {
-                if (event.target === modalBackground) {
-                    closeModal(modal);
-                }
+            // Cerrar al hacer clic en el fondo oscuro
+            modalBackground.addEventListener('click', (e) => {
+                if (e.target === modalBackground) closeModal();
             });
 
-            // Cerrar modal al hacer clic en el botón de cierre si existe
-            const closeModalButton = modal.querySelector('.close-modal');
-            if (closeModalButton) {
-                closeModalButton.addEventListener('click', function () {
-                    closeModal(modal);
-                });
-            }
+            // Cerrar al hacer clic en el botón de cierre
+            modal.querySelector('.close-modal')?.addEventListener('click', closeModal);
         });
     });
-
-    // Función para cerrar el modal y restaurar el scroll
-    function closeModal(modal) {
-        modal.style.display = 'none';
-        modalBackground.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
 }
 
 
