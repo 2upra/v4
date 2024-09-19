@@ -84,7 +84,7 @@ function htmlPost($filtro)
                                     <div class="DetallesIA modal gap-4" style="display: none; z-index: 1000;">
                                         <p><?php echo esc_html($detallesIA); ?></p>
                                     </div>
-                                    <div class="modalBackground5" style="display: none; z-index: 1001;"></div>
+                                    <div class="modalBackground5" style="display: none;"></div>
 
                                 </div>
 
