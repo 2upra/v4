@@ -32,6 +32,7 @@ function variablesPosts($post_id = null)
         'bpm' => get_post_meta($post_id, 'audio_bpm', true),
         'key' => get_post_meta($post_id, 'audio_key', true),
         'scale' => get_post_meta($post_id, 'audio_scale', true),
+        'detallesIA' => get_post_meta($post_id, 'audio_descripcion', true),
     ];
 }
 

@@ -78,7 +78,10 @@ function htmlPost($filtro)
                             <?php endif; ?>
                             <div class="FBKMJD">
                                 <div>
-                                    <?php the_content(); ?>
+                                    <?php the_content(); ?> <span id="infoIA">- Detalles por IA</span>
+                                    <div id="DatallesIA" class="modal gap-4" style="display: none;">
+                                        <p><?php echo  esc_html($detallesIA) ?></p>
+                                    </div>
                                 </div>
                                 <div>
                                     <?php
