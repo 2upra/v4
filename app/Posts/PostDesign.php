@@ -79,10 +79,12 @@ function htmlPost($filtro)
                             <div class="FBKMJD">
                                 <div class="UKVPJI">
                                     <?php the_content(); ?>
-                                    <span class="infoIA-btn">Detalles</span>
+                                    <span class="infoIA-btn" id-post="<?php echo get_the_ID(); ?>">Detalles</span>
+                                    
                                     <div class="DetallesIA modal gap-4" style="display: none;">
                                         <p><?php echo esc_html($detallesIA); ?></p>
                                     </div>
+
                                 </div>
 
                                 <div>
