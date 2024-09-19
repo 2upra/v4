@@ -1,4 +1,3 @@
-
 function modalDetallesIA() {
     // Crear el modal background si no existe
     let modalBackground = document.getElementById('modalBackground5');
@@ -6,13 +5,27 @@ function modalDetallesIA() {
         modalBackground = document.createElement('div');
         modalBackground.id = 'modalBackground5';
         modalBackground.classList.add('modal-background', 'submenu', 'modalBackground2');
-        modalBackground.style.display = 'none';
+
+        // Estilos de fondo oscuro
+        modalBackground.style.position = 'fixed'; // Fijar el fondo en la pantalla
+        modalBackground.style.top = '0';
+        modalBackground.style.left = '0';
+        modalBackground.style.width = '100%';
+        modalBackground.style.height = '100%';
+        modalBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'; // Fondo semi-transparente
+        modalBackground.style.zIndex = '10'; // Z-index más bajo que el modal
+        modalBackground.style.display = 'none'; // Oculto por defecto
+
         document.body.appendChild(modalBackground); // Agregar al body
     }
 
     document.querySelectorAll('.infoIA-btn').forEach(button => {
         button.addEventListener('click', function () {
             const modal = this.closest('.UKVPJI').querySelector('.DetallesIA');
+
+            // Ajustar el z-index del modal para que esté por encima del fondo
+            modal.style.position = 'relative';
+            modal.style.zIndex = '20'; // Z-index más alto que el background
 
             // Mostrar modal y fondo oscuro
             modal.style.display = 'block';
