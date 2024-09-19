@@ -1,23 +1,44 @@
 
 function modalDetallesIA() {
-    document.querySelectorAll('.infoIA-btn').forEach(button => {
+    const detailButtons = document.querySelectorAll('.infoIA-btn');
+    const modalBackground = document.getElementById('modalBackground2');
+
+    detailButtons.forEach(button => {
         button.addEventListener('click', function () {
             const modal = this.closest('.UKVPJI').querySelector('.DetallesIA');
-            const modalBackground = document.getElementById('modalBackground2');
-            
-            modal.style.display = modalBackground.style.display = 'block';
+
+            // Mostrar modal y fondo oscuro
+            modal.style.display = 'block';
+            modalBackground.style.display = 'block';
+
+            // Bloquear scroll
             document.body.style.overflow = 'hidden';
 
-            const closeModal = () => {
-                modal.style.display = modalBackground.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            };
+            // Cerrar modal al hacer clic fuera del cuadro o en el background
+            modalBackground.addEventListener('click', function (event) {
+                if (event.target === modalBackground) {
+                    closeModal(modal);
+                }
+            });
 
-            modalBackground.addEventListener('click', (e) => { if (e.target === modalBackground) closeModal(); });
-            modal.querySelector('.close-modal')?.addEventListener('click', closeModal);
+            // Cerrar modal al hacer clic en el botón de cierre si existe
+            const closeModalButton = modal.querySelector('.close-modal');
+            if (closeModalButton) {
+                closeModalButton.addEventListener('click', function () {
+                    closeModal(modal);
+                });
+            }
         });
     });
+
+    // Función para cerrar el modal y restaurar el scroll
+    function closeModal(modal) {
+        modal.style.display = 'none';
+        modalBackground.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
 }
+
 
 class ModalManager {
     constructor(modalBackgroundSelector) {
