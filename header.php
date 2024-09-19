@@ -170,12 +170,11 @@ if (!defined('ABSPATH')) {
     </header>
     <main class="clearfix ">
 
-
         <div id="submenusyinfos">
-
 
             <!-- Fondo oscuro para los submenus -->
             <div id="modalBackground2" class="modal-background submenu modalBackground2" style="display: none;"></div>
+            <div id="modalBackground5" class="modal-background submenu modalBackground2" style="display: none;"></div>
 
             <!-- submenu de subir rola o sample -->
             <div class="A1806241" id="submenusubir-subiricono">
