@@ -80,9 +80,11 @@ function htmlPost($filtro)
                                 <div class="UKVPJI">
                                     <?php the_content(); ?>
 
-                                <span class="infoIA-btn" data-post-id="<?php echo get_the_ID(); ?>">Detalles</span>
-                                <!-- Párrafo invisible con detalles -->
-                                <p id-post="<?php echo get_the_ID(); ?>" style="display:none;"><?php echo esc_html($detallesIA); ?></p>
+                                    <span class="infoIA-btn" data-post-id="<?php echo get_the_ID(); ?>">Detalles</span>
+
+                                    <p id-post="<?php echo get_the_ID(); ?>" style="display:none;"><?php echo esc_html($detallesIA); ?></p>
+
+                                    
 
                                 </div>
 

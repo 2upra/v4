@@ -1,3 +1,5 @@
+
+//SCRIP PRINCIPAL
 function modalDetallesIA() {
     const modal = document.getElementById('modalDetallesIA');
     const modalBackground = document.getElementById('backgroundDetallesIA');
@@ -14,7 +16,51 @@ function modalDetallesIA() {
 
             // Asegurarse de que existe el elemento y mostrar el contenido en el modal
             if (postDetalles) {
-                modalContent.textContent = postDetalles.textContent;
+                let detallesIA;
+
+                // Intentar parsear el contenido JSON
+                try {
+                    detallesIA = JSON.parse(postDetalles.textContent);
+                } catch (e) {
+                    console.error('Error al parsear el JSON:', e);
+                    modalContent.textContent = "Error al mostrar los detalles.";
+                    return;
+                }
+
+                // Limpiar el contenido previo del modal
+                modalContent.innerHTML = '';
+
+                // Función para formatear y mostrar las claves y valores del JSON
+                function mostrarDetalles(obj, parentElement) {
+                    for (let key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                            let value = obj[key];
+                            let detailElement = document.createElement('p');
+
+                            // Si el valor es un array, mostrarlo como una lista
+                            if (Array.isArray(value)) {
+                                detailElement.innerHTML = `<strong>${key}:</strong> ${value.join(', ')}`;
+                            }
+                            // Si el valor es un objeto, llamada recursiva para mostrar objetos anidados
+                            else if (typeof value === 'object' && value !== null) {
+                                let subContainer = document.createElement('div');
+                                subContainer.innerHTML = `<strong>${key}:</strong>`;
+                                mostrarDetalles(value, subContainer);
+                                parentElement.appendChild(subContainer);
+                                continue;
+                            }
+                            // Mostrar valores simples directamente
+                            else {
+                                detailElement.innerHTML = `<strong>${key}:</strong> ${value}`;
+                            }
+
+                            parentElement.appendChild(detailElement);
+                        }
+                    }
+                }
+
+                // Llamada a la función para mostrar los detalles
+                mostrarDetalles(detallesIA, modalContent);
 
                 // Mostrar el modal y el fondo
                 modal.style.display = 'block';
@@ -35,6 +81,8 @@ function modalDetallesIA() {
         document.body.style.overflow = 'auto';
     });
 }
+
+
 
 class ModalManager {
     constructor(modalBackgroundSelector) {
