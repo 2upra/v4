@@ -10,6 +10,14 @@ function modalDetallesIA() {
             modalBackground.style.display = 'block';
             modalBackground.style.setProperty('display', 'block', 'important'); // Forzar el display
 
+            // Asegurar que el fondo esté correctamente posicionado
+            modalBackground.style.position = 'fixed';
+            modalBackground.style.top = '0';
+            modalBackground.style.left = '0';
+            modalBackground.style.right = '0';
+            modalBackground.style.bottom = '0';
+            modalBackground.style.zIndex = '1000'; // Ajusta según sea necesario
+
             document.body.style.overflow = 'hidden'; // Bloquear scroll
 
             // Función para cerrar modal
