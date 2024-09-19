@@ -41,5 +41,12 @@ add_action('wp_ajax_reject_post', 'manejarCambioEstadoPublicacion');
 add_action('wp_ajax_request_post_deletion', 'manejarCambioEstadoPublicacion');
 add_action('wp_ajax_eliminarPostRs', 'manejarCambioEstadoPublicacion');
 
-
+// Eliminar adjuntos cuando se borre un post
+function eliminar_adjuntos_cuando_post_se_borre($post_id) {
+    $adjuntos = get_attached_media('', $post_id);
+    foreach ($adjuntos as $adjunto) {
+        wp_delete_attachment($adjunto->ID, true);
+    }
+}
+add_action('before_delete_post', 'eliminar_adjuntos_cuando_post_se_borre');
 

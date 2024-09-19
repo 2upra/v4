@@ -102,16 +102,48 @@ function actualizarMetaDatos($postId)
 
 function confirmarArchivos($postId)
 {
-    foreach (['archivoId', 'audioId', 'imagenId'] as $campo) {
+    // Campos que contendrán los IDs de los archivos
+    $campos = ['archivoId', 'audioId', 'imagenId'];
+
+    foreach ($campos as $campo) {
         if (!empty($_POST[$campo])) {
             $file_id = intval($_POST[$campo]);
+
             if ($file_id > 0) {
-                confirmarArchivo($file_id);
+                // Guardar el ID del archivo en una meta del post
+                update_post_meta($postId, 'idHash_' . $campo, $file_id);
+                
+                // Confirmar hash del archivo si hay una función específica para ello
+                confirmarHashId($file_id);
             }
         }
     }
 }
 
+function eliminarAdjuntosPost($post_id) {
+    // Obtener los adjuntos de la publicación
+    $adjuntos = get_attached_media('', $post_id);
+
+    // Recorrer y eliminar cada adjunto
+    foreach ($adjuntos as $adjunto) {
+        // Eliminar el adjunto físicamente
+        wp_delete_attachment($adjunto->ID, true);
+
+        // Obtener el hash del archivo desde la meta (si es que habías guardado un hash)
+        $file_hash = get_post_meta($post_id, 'idHash_archivoId', true);
+
+        if ($file_hash) {
+            // Eliminar el hash del archivo
+            eliminarHash($file_hash);
+
+            // Eliminar la meta del hash (opcional, pero recomendable)
+            delete_post_meta($post_id, 'idHash_archivoId');
+        }
+    }
+}
+
+// Hook para ejecutar la función antes de que se borre un post
+add_action('before_delete_post', 'eliminarAdjuntosPost');
 
 function asignarTags($postId)
 {
@@ -468,8 +500,8 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 
     // Crear el prompt para la IA
     $prompt = "Un usuario acaba de subir un audio con la siguiente descripción: {$post_content}. "
-            . "Por favor, determina una descripción del audio utilizando el siguiente formato (estos son datos de ejemplo): "
-            . '{"descripcion":"Descripción del audio generada por IA", "Instrumentos posibles":["Piano, guitarra, batería"], "estado de animo":"triste", "genero posible":"Phonk, ambient, electronic, sample" "tags posbiles":"sample, kick, fx, cinematografico"}. '
+            . "Por favor, determina una descripción del audio utilizando el siguiente formato (ESTOS SON DATOS DE EJEMPLO): "
+            . '{"descripcion":"Descripción del audio generada por IA", "Instrumentos posibles":["Piano, guitarra, batería"], "estado de animo":"triste", "genero posible":"Phonk, ambient, electronic, sample", "tags posibles":"sample, kick, fx, cinematografico", "Sugerencia de busqueda: samples de estilo ambiente, sonidos metalicos, sonidos de guitarra, sonido de explosion BUN!, sonido de gente hablando" }. '
             . "Puedes agregar información adicional si parece relevante.";
 
     // Generar la descripción con la IA

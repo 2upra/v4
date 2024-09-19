@@ -127,7 +127,7 @@ function eliminarHash($file_hash)
     return (bool) $wpdb->delete("{$wpdb->prefix}file_hashes", array('file_hash' => $file_hash), array('%s'));
 }
 
-function confirmarArchivo($file_id)
+function confirmarHashId($file_id)
 {
     global $wpdb;
     return $wpdb->update(

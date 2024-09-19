@@ -24,16 +24,6 @@ function desactivar_barra_admin_para_admin() {
     }
 }
 add_action('after_setup_theme', 'desactivar_barra_admin_para_admin');
-
-// Eliminar adjuntos cuando se borre un post
-function eliminar_adjuntos_cuando_post_se_borre($post_id) {
-    $adjuntos = get_attached_media('', $post_id);
-    foreach ($adjuntos as $adjunto) {
-        wp_delete_attachment($adjunto->ID, true);
-    }
-}
-add_action('before_delete_post', 'eliminar_adjuntos_cuando_post_se_borre');
-
 // Ocultar elementos de la barra de admin
 function ocultar_elementos_barra_admin() {
     echo '<style type="text/css">

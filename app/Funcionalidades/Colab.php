@@ -62,7 +62,7 @@ function empezarColab() {
         update_post_meta($postId, 'colabs', $existing_colabs);
 
         if ($fileId) {
-            confirmarArchivo($fileId);
+            confirmarHashId($fileId);
             guardarLog("Archivo $fileId confirmado");
         }
 
