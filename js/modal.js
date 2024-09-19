@@ -3,7 +3,7 @@ function modalDetallesIA() {
     document.querySelectorAll('.infoIA-btn').forEach(button => {
         button.addEventListener('click', function () {
             const modal = this.closest('.UKVPJI').querySelector('.DetallesIA');
-            const modalBackground = this.closest('.UKVPJI').querySelector('.modalBackground');
+            const modalBackground = this.closest('.UKVPJI').querySelector('.modalBackground5');
 
             // Mostrar modal y fondo oscuro
             modal.style.display = 'block';
