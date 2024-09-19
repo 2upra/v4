@@ -158,6 +158,7 @@ function procesarRespuesta(response) {
             window.empezarcolab();
             window.submenu();
             window.seguir();
+            window.modalDetallesIA();
         } else {
             log07('No más publicaciones o respuesta vacía');
             detenerCarga();

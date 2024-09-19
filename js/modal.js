@@ -1,3 +1,13 @@
+function modalDetallesIA() {
+    const detailButtons = document.querySelectorAll('.infoIA-btn');
+    detailButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const modal = this.closest('.UKVPJI').querySelector('.DetallesIA');
+            modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+        });
+    });
+}
+
 class ModalManager {
     constructor(modalBackgroundSelector) {
         this.modalBackground = document.querySelector(modalBackgroundSelector);
@@ -8,7 +18,7 @@ class ModalManager {
             console.warn('No se encontra el background del modal');
             return;
         }
-        
+
         this.setupBackgroundListener();
         this.setupBodyListener();
     }
@@ -48,11 +58,11 @@ class ModalManager {
     }
 
     setupTriggers(modalId) {
-        const { triggers } = this.modals[modalId];
+        const {triggers} = this.modals[modalId];
         if (!triggers || triggers.length === 0) return;
 
         triggers.forEach(trigger => {
-            trigger.addEventListener('click', (event) => {
+            trigger.addEventListener('click', event => {
                 event.stopPropagation();
                 this.toggleModal(modalId, true);
             });
@@ -60,12 +70,12 @@ class ModalManager {
     }
 
     setupCloseButton(modalId) {
-        const { closeButton } = this.modals[modalId];
+        const {closeButton} = this.modals[modalId];
         if (!closeButton) return;
 
         const closeButtonElement = document.querySelector(closeButton);
         if (closeButtonElement) {
-            closeButtonElement.addEventListener('click', (event) => {
+            closeButtonElement.addEventListener('click', event => {
                 event.stopPropagation();
                 this.toggleModal(modalId, false);
             });
@@ -75,7 +85,7 @@ class ModalManager {
     }
 
     setupModalListener(modal) {
-        modal.addEventListener('click', (event) => event.stopPropagation());
+        modal.addEventListener('click', event => event.stopPropagation());
     }
 
     setupBackgroundListener() {
@@ -85,7 +95,7 @@ class ModalManager {
     }
 
     setupBodyListener() {
-        document.body.addEventListener('click', (event) => {
+        document.body.addEventListener('click', event => {
             if (this.currentOpenModal && !this.modals[this.currentOpenModal].modal.contains(event.target)) {
                 this.closeAllModals();
             }
@@ -120,9 +130,10 @@ class ModalManager {
 const modalManager = new ModalManager('.modalBackground2');
 
 function smooth() {
-    modalManager.añadirModal('modalinvertir', '#modalinvertir', ['.donar'], '.cerrardonar'); 
-    modalManager.añadirModal('modalproyecto', '#modalproyecto', ['.unirteproyecto'], '.DGFDRDC'); 
+    modalManager.añadirModal('modalinvertir', '#modalinvertir', ['.donar'], '.cerrardonar');
+    modalManager.añadirModal('modalproyecto', '#modalproyecto', ['.unirteproyecto'], '.DGFDRDC');
     modalManager.añadirModal('proPro', '#propro', ['.prostatus0']);
     modalManager.añadirModal('proProAcciones', '#proproacciones', ['.subpro']);
     modalManager.añadirModal('W0512KN', '#a84J76WY', ['#W0512KN'], '#MkzIeq');
+    modalDetallesIA();
 }
