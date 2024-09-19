@@ -1,33 +1,52 @@
 
 function modalDetallesIA() {
     const modalBackground = document.getElementById('modalBackground2');
-    
+    console.log('Modal background element:', modalBackground); // Verifica si se selecciona correctamente el fondo
+
     document.querySelectorAll('.infoIA-btn').forEach(button => {
+        console.log('Button detected:', button); // Verifica si los botones se detectan
         button.addEventListener('click', function () {
             const modal = this.closest('.UKVPJI').querySelector('.DetallesIA');
-            
+            console.log('Modal detected:', modal); // Verifica si se selecciona correctamente el modal
+
             // Mostrar modal y fondo oscuro
             modal.style.display = 'block';
             modalBackground.style.display = 'block';
             document.body.style.overflow = 'hidden'; // Bloquear scroll
-            
+            console.log('Modal and background displayed, scroll blocked.');
+
             // Función para cerrar modal
             const closeModal = () => {
                 modal.style.display = 'none';
                 modalBackground.style.display = 'none';
                 document.body.style.overflow = 'auto'; // Restaurar scroll
+                console.log('Modal and background hidden, scroll restored.');
             };
 
             // Cerrar al hacer clic en el fondo oscuro
             modalBackground.addEventListener('click', (e) => {
-                if (e.target === modalBackground) closeModal();
+                console.log('Background clicked', e.target);
+                if (e.target === modalBackground) {
+                    console.log('Closing modal because background was clicked.');
+                    closeModal();
+                }
             });
 
             // Cerrar al hacer clic en el botón de cierre
-            modal.querySelector('.close-modal')?.addEventListener('click', closeModal);
+            const closeButton = modal.querySelector('.close-modal');
+            if (closeButton) {
+                console.log('Close button detected:', closeButton);
+                closeButton.addEventListener('click', () => {
+                    console.log('Close button clicked.');
+                    closeModal();
+                });
+            } else {
+                console.log('No close button found inside modal.');
+            }
         });
     });
 }
+
 
 
 class ModalManager {
