@@ -1,4 +1,3 @@
-
 function modalDetallesIA() {
     const modalBackground = document.getElementById('modalBackground2');
     console.log('Modal background element:', modalBackground); // Verifica si se selecciona correctamente el fondo
@@ -11,9 +10,12 @@ function modalDetallesIA() {
 
             // Mostrar modal y fondo oscuro
             modal.style.display = 'block';
-            modalBackground.style.display = 'block';
+            modalBackground.style.display = 'block'; 
+            modalBackground.style.setProperty('display', 'block', 'important'); // Forzar el display
+
             document.body.style.overflow = 'hidden'; // Bloquear scroll
             console.log('Modal and background displayed, scroll blocked.');
+            console.log('Background display:', window.getComputedStyle(modalBackground).display); // Verifica el estilo aplicado
 
             // Función para cerrar modal
             const closeModal = () => {
@@ -46,6 +48,9 @@ function modalDetallesIA() {
         });
     });
 }
+});
+}
+
 
 
 
