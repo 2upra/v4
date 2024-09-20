@@ -374,7 +374,7 @@ function devlogin()
                     </div>
                 </div>
 
-                <?php modalComprarAcciones() ?>
+                <?php echo modalComprarAcciones() ?>
 
 
 
