@@ -477,16 +477,15 @@ function formularioProgramador()
     <?php return ob_get_clean();
 }
 
+<?php
+
 function redirect_non_admin_users()
 {
-    // Verifica si el usuario está logueado y no tiene el rol de administrador
-    if (is_user_logged_in() && !current_user_can('administrator')) {
-        // Redirige a la página específica
+    if (is_user_logged_in() && !current_user_can('administrator') && !is_page('2upra.com')) {
         wp_redirect('https://2upra.com/');
-        exit; // Asegura que el script se detenga después de la redirección
+        exit;
     }
 }
-
-// Hook para ejecutar la función en todas las páginas
 add_action('template_redirect', 'redirect_non_admin_users');
+
 
