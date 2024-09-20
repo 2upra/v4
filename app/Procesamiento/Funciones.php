@@ -15,7 +15,7 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
     // Convertir los tags en hashtags
     if (!empty($tags)) {
         $tagsArray = explode(',', $tags);
-        $hashtags = array_map(function($tag) {
+        $hashtags = array_map(function ($tag) {
             return '#' . trim($tag);
         }, $tagsArray);
         $contenido .= ' ' . implode(' ', $hashtags);
@@ -41,11 +41,12 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
     return $postId;
 }
 
-function datosParaAlgoritmo($postId) {
+function datosParaAlgoritmo($postId)
+{
 
     // Obtener el texto normal desde la solicitud POST
     $textoNormal = isset($_POST['textoNormal']) ? trim($_POST['textoNormal']) : '';
-    
+
     // Solución al problema de codificación del texto
     $textoNormal = htmlspecialchars_decode($textoNormal, ENT_QUOTES);
 
@@ -94,7 +95,7 @@ function actualizarMetaDatos($postId)
         if (isset($_POST[$post_key])) {
             $value = $_POST[$post_key] == '1' ? 1 : 0;
         } else {
-            $value = 0; 
+            $value = 0;
         }
         update_post_meta($postId, $meta_key, $value);
     }
@@ -112,7 +113,7 @@ function confirmarArchivos($postId)
             if ($file_id > 0) {
                 // Guardar el ID del archivo en una meta del post
                 update_post_meta($postId, 'idHash_' . $campo, $file_id);
-                
+
                 // Confirmar hash del archivo si hay una función específica para ello
                 confirmarHashId($file_id);
             }
@@ -120,7 +121,8 @@ function confirmarArchivos($postId)
     }
 }
 
-function eliminarAdjuntosPost($post_id) {
+function eliminarAdjuntosPost($post_id)
+{
     // Obtener los adjuntos de la publicación
     $adjuntos = get_attached_media('', $post_id);
 
@@ -177,7 +179,7 @@ function procesarURLs($postId)
 function procesarArchivo($postId, $campo, $renombrar = false)
 {
     guardarLog("Inicio de procesarArchivo para Post ID: $postId y Campo: $campo"); // Log inicial
-    
+
     // Obtener la URL del archivo desde el campo proporcionado
     $url = esc_url_raw($_POST[$campo]);
     guardarLog("URL del archivo obtenida: $url");
@@ -245,22 +247,22 @@ function renombrarArchivoAdjunto($postId, $archivoId)
 {
     $file_id = intval($_POST['audioId']);
     guardarLog("Inicio de renombrarArchivoAdjunto para Post ID: $postId y Archivo ID: $archivoId"); // Log inicial
-    
+
     // Obtener información del post y del autor
     $post = get_post($postId);
     $author = get_userdata($post->post_author);
-    
+
     if (!$post || !$author) {
         guardarLog("Error: No se pudo obtener el post o el autor.");
         return new WP_Error('post_or_author_not_found', 'No se pudo obtener el post o el autor.');
     }
-    
+
     // Obtener la ruta del archivo adjunto
     $file_path = get_attached_file($archivoId);
     guardarLog("Ruta del archivo actual: $file_path");
 
     $info = pathinfo($file_path);
-    
+
     // Generar el nuevo nombre de archivo
     $new_filename = sprintf(
         '2upra_%s_%s.%s',
@@ -500,9 +502,9 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 
     // Crear el prompt para la IA
     $prompt = "Un usuario acaba de subir un audio con la siguiente descripción: {$post_content}. "
-            . "Por favor, determina una descripción del audio utilizando el siguiente formato (ESTOS SON DATOS DE EJEMPLO): "
-            . '{"descripcion":"Descripción del audio generada por IA", "Instrumentos posibles":["Piano, guitarra, batería"], "estado de animo":"triste", "genero posible":"Phonk, ambient, electronic, sample", "tags posibles":"sample, kick, fx, cinematografico", "Sugerencia de busqueda: samples de estilo ambiente, sonidos metalicos, sonidos de guitarra, sonido de explosion BUN!, sonido de gente hablando" }. '
-            . "Puedes agregar información adicional si parece relevante.";
+        . "Por favor, determina una descripción del audio utilizando el siguiente formato (ESTOS SON DATOS DE EJEMPLO): "
+        . '{"Descripcion":"Descripción del audio generada por IA", "Instrumentos posibles":["Piano", "Guitarra", "Batería"], "Estado de animo":["Tranquilo", "Suave"], "Genero posible":["Hip hop", "Electrónica"], "Tipo de audio":["Sample"], "Tags posibles":["Naturaleza", "Percusión", "Relajación"], "Sugerencia de busqueda":["Sonido relajante", "percusión suave", "baterías para hip hop", "efectos cinematograficos"]}. '
+        . "Nota adicional: solo responde con la estructura, no digas nada adicional al usuario, el audio se esta subiendo a una biblioteca de samples por eso es importante determinar los datos sabiendo que son para que sea mas facil encontrarlos en base a las descripciones y busqueda, la descripcion tiene que ser corta y breve, agrega solo datos en español, los tipos de audios hay muchos tipos, pueden ser samples, efectos, vocales, kicks, percusiones, intenta determinar que tipo de audio, habrá ocaciones que no se pueda determinar un genero porque un kick o un efecto de explosion no tiene genero ni un estado de animo como tal, se puede omitir cosas, las sugerencias de busqueda piensa en como el usuario puede buscar el audio y encontrarlo";
 
     // Generar la descripción con la IA
     $descripcion = generarDescripcionIA($nuevo_archivo_path_lite, $prompt);
@@ -511,7 +513,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     if ($descripcion) {
         // Limpiar la descripción generada (remover caracteres innecesarios como '```json' y asegurarnos de que esté en UTF-8)
         $descripcion_limpia = json_decode(trim($descripcion, "```json \n"), true);
-        
+
         if ($descripcion_limpia) {
             $suffix = ($index == 1) ? '' : "_{$index}";
             update_post_meta($post_id, "audio_descripcion{$suffix}", json_encode($descripcion_limpia, JSON_UNESCAPED_UNICODE));
@@ -543,7 +545,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         'scale' => $resultados['scale'] ?? '',
         'descripcion_ia' => json_encode($descripcion_limpia, JSON_UNESCAPED_UNICODE) ?? '' // Asegurarse de que la descripción esté en UTF-8
     ];
-    
+
     guardarLog("Datos nuevos a agregar: " . json_encode($nuevos_datos));
 
     // Agregar los nuevos datos al metadato existente
