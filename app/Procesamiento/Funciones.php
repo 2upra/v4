@@ -458,7 +458,7 @@ if __name__ == "__main__":
 
 */
 
-function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
+function analizarAudioObtenerMetadata($nuevo_archivo_path_lite, $index)
 {
     // Ejecutar el script de Python para análisis de audio
     $python_command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py \"{$nuevo_archivo_path_lite}\"");
@@ -468,7 +468,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     // Verificar si el script de Python se ejecutó correctamente
     if ($return_var !== 0) {
         guardarLog("Error al ejecutar el script de Python. Código de retorno: {$return_var}. Salida: " . implode("\n", $output));
-        return;
+        return null;
     }
 
     // Leer los resultados del archivo JSON generado por el script de Python
@@ -477,15 +477,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         $resultados = json_decode(file_get_contents($resultados_path), true);
 
         if ($resultados && is_array($resultados)) {
-            $suffix = ($index == 1) ? '' : "_{$index}";
-
-            // Guardar los metadatos del audio generados por Python
-            update_post_meta($post_id, "audio_bpm{$suffix}", $resultados['bpm'] ?? '');
-            update_post_meta($post_id, "audio_pitch{$suffix}", $resultados['pitch'] ?? '');
-            update_post_meta($post_id, "audio_emotion{$suffix}", $resultados['emotion'] ?? '');
-            update_post_meta($post_id, "audio_key{$suffix}", $resultados['key'] ?? '');
-            update_post_meta($post_id, "audio_scale{$suffix}", $resultados['scale'] ?? '');
-            update_post_meta($post_id, "audio_strength{$suffix}", $resultados['strength'] ?? '');
+            return $resultados;
         } else {
             guardarLog("El archivo de resultados JSON no contiene datos válidos.");
         }
@@ -493,6 +485,11 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         guardarLog("No se encontró el archivo de resultados en {$resultados_path}");
     }
 
+    return null;
+}
+
+function generarDescripcionGuardarMetadatos($post_id, $nuevo_archivo_path_lite, $resultados, $index)
+{
     // Obtener el contenido del post para incluirlo en el prompt
     $post_content = get_post_field('post_content', $post_id);
     if (!$post_content) {
@@ -509,7 +506,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     // Generar la descripción con la IA
     $descripcion = generarDescripcionIA($nuevo_archivo_path_lite, $prompt);
 
-    // Guardar la descripción generada como meta del post
+    // Guardar la descripción generada como meta del post y otros metadatos del audio
     if ($descripcion) {
         // Limpiar la descripción generada (remover caracteres innecesarios como '```json' y asegurarnos de que esté en UTF-8)
         $descripcion_limpia = json_decode(trim($descripcion, "```json \n"), true);
@@ -517,13 +514,20 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         if ($descripcion_limpia) {
             $suffix = ($index == 1) ? '' : "_{$index}";
             update_post_meta($post_id, "audio_descripcion{$suffix}", json_encode($descripcion_limpia, JSON_UNESCAPED_UNICODE));
-            guardarLog("Descripción del audio guardada para el post ID: {$post_id}");
+            update_post_meta($post_id, "audio_bpm{$suffix}", $resultados['bpm'] ?? '');
+            update_post_meta($post_id, "audio_pitch{$suffix}", $resultados['pitch'] ?? '');
+            update_post_meta($post_id, "audio_emotion{$suffix}", $resultados['emotion'] ?? '');
+            update_post_meta($post_id, "audio_key{$suffix}", $resultados['key'] ?? '');
+            update_post_meta($post_id, "audio_scale{$suffix}", $resultados['scale'] ?? '');
+            update_post_meta($post_id, "audio_strength{$suffix}", $resultados['strength'] ?? '');
+            guardarLog("Descripción del audio y metadatos guardados para el post ID: {$post_id}");
         } else {
             guardarLog("Error al procesar el JSON de la descripción generada por IA.");
         }
     } else {
         guardarLog("No se pudo generar la descripción del audio para el post ID: {$post_id}");
     }
+
 
     // Actualizar el metadato 'datosAlgoritmo' sumando la nueva información
     $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
