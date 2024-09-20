@@ -477,8 +477,6 @@ function formularioProgramador()
     <?php return ob_get_clean();
 }
 
-<?php
-
 function redirect_non_admin_users()
 {
     if (is_user_logged_in() && !current_user_can('administrator') && !is_page('2upra.com')) {
