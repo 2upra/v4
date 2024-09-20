@@ -103,7 +103,6 @@ function actualizarMetaDatos($postId)
 
 function confirmarArchivos($postId)
 {
-    // Campos que contendrán los IDs de los archivos
     $campos = ['archivoId', 'audioId', 'imagenId'];
 
     foreach ($campos as $campo) {
@@ -111,10 +110,8 @@ function confirmarArchivos($postId)
             $file_id = intval($_POST[$campo]);
 
             if ($file_id > 0) {
-                // Guardar el ID del archivo en una meta del post
                 update_post_meta($postId, 'idHash_' . $campo, $file_id);
-
-                // Confirmar hash del archivo si hay una función específica para ello
+                guardarLog("idHash_{$campo} actualizado para postId: {$postId}");
                 confirmarHashId($file_id);
             }
         }
@@ -123,22 +120,18 @@ function confirmarArchivos($postId)
 
 function eliminarAdjuntosPost($post_id)
 {
-    // Obtener los adjuntos de la publicación
     $adjuntos = get_attached_media('', $post_id);
 
-    // Recorrer y eliminar cada adjunto
     foreach ($adjuntos as $adjunto) {
-        // Eliminar el adjunto físicamente
         wp_delete_attachment($adjunto->ID, true);
+        guardarLog("Adjunto eliminado: {$adjunto->ID} para postId: {$post_id}");
 
-        // Obtener el hash del archivo desde la meta (si es que habías guardado un hash)
         $file_hash = get_post_meta($post_id, 'idHash_archivoId', true);
 
         if ($file_hash) {
-            // Eliminar el hash del archivo
             eliminarHash($file_hash);
+            guardarLog("Hash eliminado: {$file_hash} para postId: {$post_id}");
 
-            // Eliminar la meta del hash (opcional, pero recomendable)
             delete_post_meta($post_id, 'idHash_archivoId');
         }
     }

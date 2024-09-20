@@ -124,8 +124,17 @@ function guardarHash($hash, $url, $status = 'pending')
 function eliminarHash($file_hash)
 {
     global $wpdb;
-    return (bool) $wpdb->delete("{$wpdb->prefix}file_hashes", array('file_hash' => $file_hash), array('%s'));
+    $resultado = (bool) $wpdb->delete("{$wpdb->prefix}file_hashes", array('file_hash' => $file_hash), array('%s'));
+    
+    if ($resultado) {
+        guardarLog("Hash eliminado: $file_hash");
+    } else {
+        guardarLog("Error al eliminar el hash: $file_hash");
+    }
+    
+    return $resultado;
 }
+
 
 function confirmarHashId($file_id)
 {
