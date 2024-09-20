@@ -458,16 +458,18 @@ if __name__ == "__main__":
 
 */
 
+// Cambia los guardarLog por iaLog
+
 function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 {
     // Ejecutar el script de Python para análisis de audio
     $python_command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py \"{$nuevo_archivo_path_lite}\"");
-    guardarLog("Ejecutando comando de Python: {$python_command}");
+    iaLog("Ejecutando comando de Python: {$python_command}");
     exec($python_command, $output, $return_var);
 
     // Verificar si el script de Python se ejecutó correctamente
     if ($return_var !== 0) {
-        guardarLog("Error al ejecutar el script de Python. Código de retorno: {$return_var}. Salida: " . implode("\n", $output));
+        iaLog("Error al ejecutar el script de Python. Código de retorno: {$return_var}. Salida: " . implode("\n", $output));
         return;
     }
 
@@ -487,16 +489,16 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
             update_post_meta($post_id, "audio_scale{$suffix}", $resultados['scale'] ?? '');
             update_post_meta($post_id, "audio_strength{$suffix}", $resultados['strength'] ?? '');
         } else {
-            guardarLog("El archivo de resultados JSON no contiene datos válidos.");
+            iaLog("El archivo de resultados JSON no contiene datos válidos.");
         }
     } else {
-        guardarLog("No se encontró el archivo de resultados en {$resultados_path}");
+        iaLog("No se encontró el archivo de resultados en {$resultados_path}");
     }
 
     // Obtener el contenido del post para incluirlo en el prompt
     $post_content = get_post_field('post_content', $post_id);
     if (!$post_content) {
-        guardarLog("No se pudo obtener el contenido del post ID: {$post_id}");
+        iaLog("No se pudo obtener el contenido del post ID: {$post_id}");
         return;
     }
 
@@ -517,12 +519,12 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         if ($descripcion_limpia) {
             $suffix = ($index == 1) ? '' : "_{$index}";
             update_post_meta($post_id, "audio_descripcion{$suffix}", json_encode($descripcion_limpia, JSON_UNESCAPED_UNICODE));
-            guardarLog("Descripción del audio guardada para el post ID: {$post_id}");
+            iaLog("Descripción del audio guardada para el post ID: {$post_id}");
         } else {
-            guardarLog("Error al procesar el JSON de la descripción generada por IA.");
+            iaLog("Error al procesar el JSON de la descripción generada por IA.");
         }
     } else {
-        guardarLog("No se pudo generar la descripción del audio para el post ID: {$post_id}");
+        iaLog("No se pudo generar la descripción del audio para el post ID: {$post_id}");
     }
 
     // Actualizar el metadato 'datosAlgoritmo' sumando la nueva información
@@ -546,15 +548,15 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         'descripcion_ia' => json_encode($descripcion_limpia, JSON_UNESCAPED_UNICODE) ?? '' // Asegurarse de que la descripción esté en UTF-8
     ];
 
-    guardarLog("Datos nuevos a agregar: " . json_encode($nuevos_datos));
+    iaLog("Datos nuevos a agregar: " . json_encode($nuevos_datos));
 
     // Agregar los nuevos datos al metadato existente
     $datos_algoritmo = array_merge($datos_algoritmo, $nuevos_datos);
 
-    guardarLog("Metadatos actuales para 'datosAlgoritmo' antes de guardar: " . json_encode($datos_algoritmo));
+    iaLog("Metadatos actuales para 'datosAlgoritmo' antes de guardar: " . json_encode($datos_algoritmo));
 
     // Guardar nuevamente el metadato actualizado
     update_post_meta($post_id, 'datosAlgoritmo', json_encode($datos_algoritmo, JSON_UNESCAPED_UNICODE));
 
-    guardarLog("Metadatos de 'datosAlgoritmo' actualizados para el post ID: {$post_id}");
+    iaLog("Metadatos de 'datosAlgoritmo' actualizados para el post ID: {$post_id}");
 }
