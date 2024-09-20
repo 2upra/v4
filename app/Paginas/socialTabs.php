@@ -3,32 +3,40 @@
 function socialTabs()
 {
     ob_start();
-
 ?>
+
+    <div id="menuData" style="display:none;" pestanaActual="">
+        esta data inicio no debe mostrarse
+        <div data-tab="inicio"></div>
+        <div data-tab="Proyecto"></div>
+    </div>
 
     <div class="tabs">
         <div class="tab-content">
+            <?php if (current_user_can('administrator')) : ?>
+                <!-- Solo visible para administradores -->
+                <div class="tab INICIO S4K7I3" id="inicio">
+                    <div class="OXMGLZ">
+                        <div class="OAXRVB">
+                            <div class="K51M22">
 
-            <div class="tab INICIO S4K7I3" id="inicio">
-                <div class="OXMGLZ">
-                    <div class="OAXRVB">
-                        <div class="K51M22">
-
-                            <div class="PODOVV">
-                                <?php // echo momentosfijos() ?>
+                                <div class="PODOVV">
+                                    <?php // echo momentosfijos() ?>
+                                </div>
                             </div>
-                        </div>
-                        <div class="M0883I">
-                            <?php echo formRs()
-                            ?>
-                        </div>
-                        <div class="FEDAG5">
-                            <?php echo publicaciones(['filtro' => 'nada', 'posts' => 10]); ?>
+                            <div class="M0883I">
+                                <?php echo formRs(); ?>
+                            </div>
+                            
+                            <div class="FEDAG5">
+                                <?php echo publicaciones(['filtro' => 'nada', 'posts' => 10]); ?>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            <?php endif; ?>
 
+            <!-- Contenido visible para todos los usuarios -->
             <div class="tab S4K7I3" id="Proyecto">
                 <?php echo devlogin(); ?>
             </div>

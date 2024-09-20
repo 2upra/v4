@@ -16,11 +16,6 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
             <?php echo dev(); ?>
         <?php else: ?>
 
-            <div id="menuData" style="display:none;" pestanaActual="">
-                <div data-tab="inicio"></div>
-                <div data-tab="Proyecto"></div>
-            </div>
-
             <?php echo socialTabs(); ?>
 
         <?php endif; ?>
