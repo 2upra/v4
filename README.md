@@ -1,6 +1,6 @@
 # 2upraV4 Taks
 
-# Notas
+## Notas
 Por favor si vas a trabajar en una tarea marcala con tu nombre #
 
 🔴 Urgente
@@ -8,17 +8,17 @@ Por favor si vas a trabajar en una tarea marcala con tu nombre #
 
 link del proyecto en [2upra](https://2upra.com)
 
-# Chat
+## Chat
 
 - [ ] Página de chats
 - [ ] Lista de contactos
 - [ ] Ventana de chats 
 
-# **Tareas de IA y Algoritmos**
+## **Tareas de IA y Algoritmos**
 
 - [ ] Generar tag visualmente en el front con la información que genero la IA
 
-# **Gestión de Contenido y formularios**
+## **Gestión de Contenido y formularios**
 
 - [ ] Botón de editar post 🟡
 - [ ] Botón de permitir o bloquear descarga (una vez ya subido el post)
@@ -36,7 +36,7 @@ link del proyecto en [2upra](https://2upra.com)
   - [ ] Necesita cambios (Admin)
     - [ ] Interfaz para hacer esos cambios (usuario)
 
-# **Interfaz de Usuario y Experiencia**
+## **Interfaz de Usuario y Experiencia**
 
 - [ ] Submenu en la foto de perfil con las siguientes opciones 🟡
   - [ ] desloguearse
@@ -44,7 +44,7 @@ link del proyecto en [2upra](https://2upra.com)
   - [ ] reportar un problema
 - [ ] Cambiar vistas en el feed
 
-# **Optimización y Mantenimiento**
+## **Optimización y Mantenimiento**
 
 - [ ] Optimizar y mejorar algoritmo principal de publicaciones (depurar profundamente) 🟡
 - [ ] Depuración de logs de stripe
@@ -54,7 +54,7 @@ link del proyecto en [2upra](https://2upra.com)
 - [ ] Eliminar bash de archivo al eliminarse
 - [ ] Retraso reproducción api
 
-# Tareas completadas 
+## Tareas completadas 
 
 - [x] Vista de detalles rolas
 - [x] Boton rechazar rola
