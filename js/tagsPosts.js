@@ -1,17 +1,8 @@
-function repararJson(jsonStr) {
-    return jsonStr.replace(/\"([^\":,{]+?)\"(?=:)/g, (match, p1) => {.
-        return `"${p1}"`; 
-    }).replace(/:(\s*?)\"((?:\\.|[^\"])*)\"(?=\s*[},])/g, (match, p1, p2) => {
-        return `:${p1}"${p2.replace(/\"/g, '\\"')}"`;
-    });
-}
-
 document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll('p[id-post-algoritmo]').forEach(function(pElement) {
         const postId = pElement.getAttribute('id-post-algoritmo');
         let jsonData = null;
         let rawJson = pElement.textContent;
-        rawJson = repararJson(rawJson);
 
         try {
             jsonData = JSON.parse(rawJson);
