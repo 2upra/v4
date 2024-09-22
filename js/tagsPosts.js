@@ -1,16 +1,12 @@
-// Función para intentar reparar JSON
 function repararJson(jsonString) {
     try {
-        // Reemplaza comas antes de corchetes cerrados o corchetes abiertos mal colocados
-        jsonString = jsonString
-            .replace(/,\s*([}\]])/g, '$1')  // Eliminar comas finales antes de } o ]
-            .replace(/([{,]\s*)['"]?([a-zA-Z0-9_]+)['"]?\s*:/g, '$1"$2":')  // Asegurar que todas las claves estén entre comillas dobles
-            .replace(/['"]?([a-zA-Z0-9_]+)['"]?\s*:/g, '"$1":');  // Asegurar claves con comillas
+        // Intenta corregir el JSON anidado escapando comillas en los valores de propiedades mal formadas
+        jsonString = jsonString.replace(/"descripcion_ia":"({.*?})"/g, function(match, p1) {
+            return `"descripcion_ia":"${p1.replace(/"/g, '\\"')}"`;
+        });
 
-        // Intenta devolver el JSON ya parseado
         return JSON.parse(jsonString);
     } catch (e) {
-        // Si hay un error, devolver el string original para su análisis
         return null;
     }
 }
@@ -70,6 +66,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
+
 
 
 function modalDetallesIA() {
