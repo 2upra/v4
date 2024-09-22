@@ -80,12 +80,10 @@ function htmlPost($filtro)
                                 <div class="UKVPJI">
                                     <?php the_content(); ?>
 
-                                    <div class="tags-container" id="tags-<?php echo get_the_ID(); ?>"></div>
 
-                                    <p id-post="<?php echo get_the_ID(); ?>" style="display:none;"><?php echo esc_html($datosAlgoritmo); ?></p>
 
                                     <span class="infoIA-btn" data-post-id="<?php echo get_the_ID(); ?>">Detalles</span>
-                                    
+                                    <p id-post="<?php echo get_the_ID(); ?>" style="display:none;"><?php echo esc_html($detallesIA); ?></p>
                                 </div>
 
                                 <div>
