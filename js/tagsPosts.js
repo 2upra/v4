@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", function() {
             jsonData = JSON.parse(pElement.textContent);
         } catch (e) {
             console.error(`Error al parsear el JSON para el post ${postId}:`, e);
+            console.log(`Contenido del JSON malformado: ${pElement.textContent}`);
             return;  // Si el JSON está malformado, saltamos este post
         }
 
