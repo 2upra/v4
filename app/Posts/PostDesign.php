@@ -85,12 +85,12 @@ function htmlPost($filtro)
                                     <p id-post="<?php echo get_the_ID(); ?>" style="display:none;"><?php echo esc_html($datosAlgoritmo); ?></p>
 
                                     <span class="infoIA-btn" data-post-id="<?php echo get_the_ID(); ?>">Detalles</span>
-                                    <p id-post="<?php echo get_the_ID(); ?>" style="display:none;"><?php echo esc_html($detallesIA); ?></p>
+                                    
                                 </div>
 
                                 <div>
                                     <?php
-                                    //Información bpm - escala- nota
+                                    //Información bpm - escala- nota 
                                     $key_info = $key ? $key : null;
                                     $scale_info = $scale ? $scale : null;
                                     $bpm_info = $bpm ? round($bpm) : null;
