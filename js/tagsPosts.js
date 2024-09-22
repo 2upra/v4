@@ -1,13 +1,31 @@
+// Función para intentar reparar JSON
+function repararJson(jsonString) {
+    try {
+        // Reemplaza comas antes de corchetes cerrados o corchetes abiertos mal colocados
+        jsonString = jsonString
+            .replace(/,\s*([}\]])/g, '$1')  // Eliminar comas finales antes de } o ]
+            .replace(/([{,]\s*)['"]?([a-zA-Z0-9_]+)['"]?\s*:/g, '$1"$2":')  // Asegurar que todas las claves estén entre comillas dobles
+            .replace(/['"]?([a-zA-Z0-9_]+)['"]?\s*:/g, '"$1":');  // Asegurar claves con comillas
+
+        // Intenta devolver el JSON ya parseado
+        return JSON.parse(jsonString);
+    } catch (e) {
+        // Si hay un error, devolver el string original para su análisis
+        return null;
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll('p[id-post-algoritmo]').forEach(function(pElement) {
         const postId = pElement.getAttribute('id-post-algoritmo');
         let jsonData = null;
         let rawJson = pElement.textContent;
 
-        try {
-            jsonData = JSON.parse(rawJson);
-        } catch (e) {
-            console.error(`Error al parsear el JSON para el post ${postId}:`, e);
+        // Aplicar la función para intentar reparar el JSON
+        jsonData = repararJson(rawJson);
+
+        if (!jsonData) {
+            console.error(`Error al parsear el JSON para el post ${postId}.`);
             console.log(`Contenido del JSON malformado después de la reparación: ${rawJson}`);
             return;
         }
@@ -19,6 +37,7 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
+        // Agregar los tags si existen
         if (jsonData.tags && Array.isArray(jsonData.tags)) {
             jsonData.tags.forEach(function(tag) {
                 const tagElement = document.createElement('span');
@@ -28,6 +47,7 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
 
+        // Categoría de BPM
         if (jsonData.bpm && typeof jsonData.bpm === 'number') {
             let bpmCategory = '';
             if (jsonData.bpm < 90) bpmCategory = 'Lento';
@@ -35,14 +55,13 @@ document.addEventListener("DOMContentLoaded", function() {
             else if (jsonData.bpm >= 120 && jsonData.bpm < 150) bpmCategory = 'Rápido';
             else if (jsonData.bpm >= 150) bpmCategory = 'Muy Rápido';
 
-            if (bpmCategory) {
-                const bpmElement = document.createElement('span');
-                bpmElement.classList.add('tag');
-                bpmElement.textContent = bpmCategory + ' (' + jsonData.bpm + ' BPM)';
-                tagsContainer.appendChild(bpmElement);
-            }
+            const bpmElement = document.createElement('span');
+            bpmElement.classList.add('tag');
+            bpmElement.textContent = bpmCategory + ' (' + jsonData.bpm + ' BPM)';
+            tagsContainer.appendChild(bpmElement);
         }
 
+        // Tonalidad y escala
         if (jsonData.key && jsonData.scale) {
             const keyScaleElement = document.createElement('span');
             keyScaleElement.classList.add('tag');
