@@ -1,36 +1,26 @@
-// Función para reparar JSON malformados, escapando comillas dobles dentro de los valores de las claves
 function repararJson(jsonStr) {
-    // Buscar claves del JSON y evitar reemplazarlas
-    return jsonStr.replace(/\"([^\":,{]+?)\"(?=:)/g, (match, p1) => {
-        // Mantener las claves con comillas dobles intactas.
+    return jsonStr.replace(/\"([^\":,{]+?)\"(?=:)/g, (match, p1) => {.
         return `"${p1}"`; 
     }).replace(/:(\s*?)\"((?:\\.|[^\"])*)\"(?=\s*[},])/g, (match, p1, p2) => {
-        // Escapar las comillas dobles dentro de los valores que contienen JSON malformados.
         return `:${p1}"${p2.replace(/\"/g, '\\"')}"`;
     });
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    // Seleccionamos todos los posts
-    document.querySelectorAll('p[id-post]').forEach(function(pElement) {
-        const postId = pElement.getAttribute('id-post');
+    document.querySelectorAll('p[id-post-algoritmo]').forEach(function(pElement) {
+        const postId = pElement.getAttribute('id-post-algoritmo');
         let jsonData = null;
-
-        // Intentamos reparar el JSON malformado
         let rawJson = pElement.textContent;
-
-        // Aplicamos la reparación del JSON
         rawJson = repararJson(rawJson);
 
-        // Intentamos parsear el JSON reparado
         try {
             jsonData = JSON.parse(rawJson);
         } catch (e) {
             console.error(`Error al parsear el JSON para el post ${postId}:`, e);
             console.log(`Contenido del JSON malformado después de la reparación: ${rawJson}`);
-            return;  // Si el JSON aún está malformado, saltamos este post
+            return;
         }
-        // Seleccionamos el contenedor donde se agregarán los tags
+
         const tagsContainer = document.getElementById('tags-' + postId);
 
         if (!tagsContainer) {
@@ -38,7 +28,6 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
-        // Agregamos los tags del JSON, si existen
         if (jsonData.tags && Array.isArray(jsonData.tags)) {
             jsonData.tags.forEach(function(tag) {
                 const tagElement = document.createElement('span');
@@ -48,18 +37,12 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
 
-        // Agregar la categoría de BPM, si existe
         if (jsonData.bpm && typeof jsonData.bpm === 'number') {
             let bpmCategory = '';
-            if (jsonData.bpm < 90) {
-                bpmCategory = 'Lento';
-            } else if (jsonData.bpm >= 90 && jsonData.bpm < 120) {
-                bpmCategory = 'Moderado';
-            } else if (jsonData.bpm >= 120 && jsonData.bpm < 150) {
-                bpmCategory = 'Rápido';
-            } else if (jsonData.bpm >= 150) {
-                bpmCategory = 'Muy Rápido';
-            }
+            if (jsonData.bpm < 90) bpmCategory = 'Lento';
+            else if (jsonData.bpm >= 90 && jsonData.bpm < 120) bpmCategory = 'Moderado';
+            else if (jsonData.bpm >= 120 && jsonData.bpm < 150) bpmCategory = 'Rápido';
+            else if (jsonData.bpm >= 150) bpmCategory = 'Muy Rápido';
 
             if (bpmCategory) {
                 const bpmElement = document.createElement('span');
@@ -69,7 +52,6 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
-        // Agregar la tonalidad (key) y la escala (scale), si existen
         if (jsonData.key && jsonData.scale) {
             const keyScaleElement = document.createElement('span');
             keyScaleElement.classList.add('tag');
@@ -78,3 +60,66 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
+
+
+function modalDetallesIA() {
+    const modal = document.getElementById('modalDetallesIA');
+    const modalBackground = document.getElementById('backgroundDetallesIA');
+    const modalContent = document.getElementById('modalDetallesContent');
+
+    document.querySelectorAll('.infoIA-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const postId = this.getAttribute('data-post-id');
+            const postDetalles = document.querySelector(`p[id-post-detalles-ia="${postId}"]`);
+
+            if (postDetalles) {
+                let detallesIA;
+
+                try {
+                    detallesIA = JSON.parse(postDetalles.textContent);
+                } catch (e) {
+                    console.error('Error al parsear el JSON:', e);
+                    modalContent.textContent = "Error al mostrar los detalles.";
+                    return;
+                }
+
+                modalContent.innerHTML = '';
+
+                function mostrarDetalles(obj, parentElement) {
+                    for (let key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                            let value = obj[key];
+                            let detailElement = document.createElement('p');
+
+                            if (Array.isArray(value)) {
+                                detailElement.innerHTML = `<strong>${key}:</strong> ${value.join(', ')}`;
+                            } else if (typeof value === 'object' && value !== null) {
+                                let subContainer = document.createElement('div');
+                                subContainer.innerHTML = `<strong>${key}:</strong>`;
+                                mostrarDetalles(value, subContainer);
+                                parentElement.appendChild(subContainer);
+                                continue;
+                            } else {
+                                detailElement.innerHTML = `<strong>${key}:</strong> ${value}`;
+                            }
+
+                            parentElement.appendChild(detailElement);
+                        }
+                    }
+                }
+
+                mostrarDetalles(detallesIA, modalContent);
+
+                modal.style.display = 'block';
+                modalBackground.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            }
+        });
+    });
+
+    modalBackground.addEventListener('click', function () {
+        modal.style.display = 'none';
+        modalBackground.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    });
+}
