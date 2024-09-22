@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (jsonData.tags && Array.isArray(jsonData.tags)) {
             jsonData.tags.forEach(function(tag) {
                 const tagElement = document.createElement('span');
-                tagElement.classList.add('tag');
+                tagElement.classList.add('postTag');
                 tagElement.textContent = tag;
                 tagsContainer.appendChild(tagElement);
             });
@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", function() {
             else if (jsonData.bpm >= 150) bpmCategory = 'Muy Rápido';
 
             const bpmElement = document.createElement('span');
-            bpmElement.classList.add('tag');
+            bpmElement.classList.add('postTag');
             bpmElement.textContent = bpmCategory + ' (' + jsonData.bpm + ' BPM)';
             tagsContainer.appendChild(bpmElement);
         }
@@ -60,12 +60,43 @@ document.addEventListener("DOMContentLoaded", function() {
         // Tonalidad y escala
         if (jsonData.key && jsonData.scale) {
             const keyScaleElement = document.createElement('span');
-            keyScaleElement.classList.add('tag');
+            keyScaleElement.classList.add('postTag');
             keyScaleElement.textContent = jsonData.key + ' ' + jsonData.scale;
             tagsContainer.appendChild(keyScaleElement);
         }
+
+        // Agregar instrumentos posibles
+        if (jsonData.descripcion_ia && jsonData.descripcion_ia.Instrumentos posibles) {
+            jsonData.descripcion_ia["Instrumentos posibles"].forEach(function(instrument) {
+                const instrumentElement = document.createElement('span');
+                instrumentElement.classList.add('postTag');
+                instrumentElement.textContent = instrument;
+                tagsContainer.appendChild(instrumentElement);
+            });
+        }
+
+        // Agregar estados de ánimo
+        if (jsonData.descripcion_ia && jsonData.descripcion_ia["Estado de animo"]) {
+            jsonData.descripcion_ia["Estado de animo"].forEach(function(estado) {
+                const estadoElement = document.createElement('span');
+                estadoElement.classList.add('postTag');
+                estadoElement.textContent = estado;
+                tagsContainer.appendChild(estadoElement);
+            });
+        }
+
+        // Agregar géneros posibles
+        if (jsonData.descripcion_ia && jsonData.descripcion_ia["Genero posible"]) {
+            jsonData.descripcion_ia["Genero posible"].forEach(function(genero) {
+                const generoElement = document.createElement('span');
+                generoElement.classList.add('postTag');
+                generoElement.textContent = genero;
+                tagsContainer.appendChild(generoElement);
+            });
+        }
     });
 });
+
 
 
 

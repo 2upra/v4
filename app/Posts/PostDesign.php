@@ -80,6 +80,7 @@ function htmlPost($filtro)
                                 <div class="UKVPJI">
                                     <?php the_content(); ?>
 
+                                    <div class="tags-container" id="tags-<?php echo get_the_ID(); ?>"></div>
                                     <!-- Datos del algoritmo -->
                                     <p id-post-algoritmo="<?php echo get_the_ID(); ?>" style="display:none;"><?php echo esc_html($datosAlgoritmo); ?></p>
 
