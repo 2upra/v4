@@ -2,13 +2,26 @@ document.addEventListener("DOMContentLoaded", function() {
     // Seleccionamos todos los posts
     document.querySelectorAll('p[id-post]').forEach(function(pElement) {
         const postId = pElement.getAttribute('id-post');
-        const jsonData = JSON.parse(pElement.textContent); // Convertimos el JSON
+        let jsonData = null;
+
+        // Intentamos parsear el JSON, y si falla, mostramos un mensaje en la consola y continuamos
+        try {
+            jsonData = JSON.parse(pElement.textContent);
+        } catch (e) {
+            console.error(`Error al parsear el JSON para el post ${postId}:`, e);
+            return;  // Si el JSON está malformado, saltamos este post
+        }
 
         // Seleccionamos el contenedor donde se agregarán los tags
         const tagsContainer = document.getElementById('tags-' + postId);
 
-        // Agregamos los tags del JSON
-        if (jsonData.tags && jsonData.tags.length > 0) {
+        if (!tagsContainer) {
+            console.warn(`No se encontró el contenedor de tags para el post ${postId}`);
+            return;
+        }
+
+        // Agregamos los tags del JSON, si existen
+        if (jsonData.tags && Array.isArray(jsonData.tags)) {
             jsonData.tags.forEach(function(tag) {
                 const tagElement = document.createElement('span');
                 tagElement.classList.add('tag');
@@ -17,8 +30,8 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
 
-        // Agregar la categoría de BPM
-        if (jsonData.bpm) {
+        // Agregar la categoría de BPM, si existe
+        if (jsonData.bpm && typeof jsonData.bpm === 'number') {
             let bpmCategory = '';
             if (jsonData.bpm < 90) {
                 bpmCategory = 'Lento';
@@ -38,7 +51,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
-        // Agregar la tonalidad (key) y la escala (scale)
+        // Agregar la tonalidad (key) y la escala (scale), si existen
         if (jsonData.key && jsonData.scale) {
             const keyScaleElement = document.createElement('span');
             keyScaleElement.classList.add('tag');
