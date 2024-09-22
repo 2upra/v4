@@ -1,17 +1,13 @@
-// Función para arreglar JSON malformados
+// Función para reparar JSON malformados, escapando comillas dobles dentro de los valores de las claves
 function repararJson(jsonStr) {
-    // Reemplazar comillas dobles internas dentro de strings JSON por comillas simples
-    jsonStr = jsonStr.replace(/\"([^\":,{]+?)\"(?=:)/g, (match, p1) => {
-        // Esta regex encuentra comillas dobles dentro de los valores JSON anidados.
-        return `"${p1}"`; // Mantener las claves con comillas dobles intactas.
+    // Buscar claves del JSON y evitar reemplazarlas
+    return jsonStr.replace(/\"([^\":,{]+?)\"(?=:)/g, (match, p1) => {
+        // Mantener las claves con comillas dobles intactas.
+        return `"${p1}"`; 
+    }).replace(/:(\s*?)\"((?:\\.|[^\"])*)\"(?=\s*[},])/g, (match, p1, p2) => {
+        // Escapar las comillas dobles dentro de los valores que contienen JSON malformados.
+        return `:${p1}"${p2.replace(/\"/g, '\\"')}"`;
     });
-    
-    // Reemplazar comillas dobles que están dentro de valores con comillas simples
-    jsonStr = jsonStr.replace(/"({|[^\\]*?)"/g, (match, p1) => {
-        return `"${p1.replace(/"/g, "'")}"`;
-    });
-
-    return jsonStr;
 }
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -34,7 +30,6 @@ document.addEventListener("DOMContentLoaded", function() {
             console.log(`Contenido del JSON malformado después de la reparación: ${rawJson}`);
             return;  // Si el JSON aún está malformado, saltamos este post
         }
-
         // Seleccionamos el contenedor donde se agregarán los tags
         const tagsContainer = document.getElementById('tags-' + postId);
 
