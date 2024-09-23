@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         // Agregar instrumentos posibles
-        if (jsonData.descripcion_ia && jsonData.descripcion_ia.Instrumentos posibles) {
+        if (jsonData.descripcion_ia && jsonData.descripcion_ia["Instrumentos posibles"]) {
             jsonData.descripcion_ia["Instrumentos posibles"].forEach(function(instrument) {
                 const instrumentElement = document.createElement('span');
                 instrumentElement.classList.add('postTag');
@@ -96,6 +96,8 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
+
+
 
 
 
