@@ -8,7 +8,8 @@ function botonColab($postId, $colab)
 
 //verifica si fileId se procesa correctamente
 
-function empezarColab() {
+function empezarColab()
+{
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
     }
@@ -104,7 +105,9 @@ function colab()
     // Aqui tiene que aparecer los colas pendientes
     // Tambien tiene que aparecer los colabs en cursos
 ?>
-
+    <div class="IBPDFF">
+        <?php echo publicaciones(['post_type' => 'colab', 'filtro' => 'colabPendientes', 'posts' => 20]); ?>
+    </div>
 <?php
     return ob_get_clean();
 }
