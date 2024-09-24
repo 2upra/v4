@@ -47,25 +47,38 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
     $identifier = $_POST['identifier'] ?? '';
     $posts = $args['posts'];
-    $posts_personalizados = calcularFeedPersonalizado($current_user_id);
-    $post_ids = array_keys($posts_personalizados);
 
-    if ($paged == 1) {
-        $post_ids = array_slice($post_ids, 0, $posts);
+    // Si el post_type es 'social_post', usar el feed personalizado, de lo contrario usar el orden por fecha.
+    if ($args['post_type'] === 'social_post') {
+        $posts_personalizados = calcularFeedPersonalizado($current_user_id);
+        $post_ids = array_keys($posts_personalizados);
+
+        if ($paged == 1) {
+            $post_ids = array_slice($post_ids, 0, $posts);
+        }
+
+        // Log para depurar el estado de los posts personalizados y post_ids
+        postLog("Posts personalizados: " . print_r($posts_personalizados, true));
+        postLog("Post IDs seleccionados: " . print_r($post_ids, true));
+
+        $query_args = [
+            'post_type' => $args['post_type'],
+            'posts_per_page' => $posts,
+            'paged' => $paged,
+            'post__in' => $post_ids,
+            'orderby' => 'post__in',
+            'meta_query' => !empty($identifier) ? [['key' => 'datosAlgoritmo', 'value' => $identifier, 'compare' => 'LIKE']] : [],
+        ];
+    } else {
+        // Ordenar por fecha si no es 'social_post'
+        $query_args = [
+            'post_type' => $args['post_type'],
+            'posts_per_page' => $posts,
+            'paged' => $paged,
+            'orderby' => 'date',
+            'order' => 'DESC', // Ordenar por fecha más reciente primero
+        ];
     }
-
-    // Log para depurar el estado de los posts personalizados y post_ids
-    postLog("Posts personalizados: " . print_r($posts_personalizados, true));
-    postLog("Post IDs seleccionados: " . print_r($post_ids, true));
-
-    $query_args = [
-        'post_type' => $args['post_type'],
-        'posts_per_page' => $posts,
-        'paged' => $paged,
-        'post__in' => $post_ids,
-        'orderby' => 'post__in',
-        'meta_query' => !empty($identifier) ? [['key' => 'datosAlgoritmo', 'value' => $identifier, 'compare' => 'LIKE']] : [],
-    ];
 
     if (!empty($args['exclude'])) {
         $query_args['post__not_in'] = $args['exclude'];
@@ -73,7 +86,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
     // Log para depurar el estado del identifier y la meta_query
     postLog("Identifier: $identifier");
-    postLog("Meta query: " . print_r($query_args['meta_query'], true));
+    postLog("Meta query: " . print_r($query_args['meta_query'] ?? [], true));
 
     $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
 
@@ -82,7 +95,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
     return $query_args;
 }
-
 
 
 function procesarPublicaciones($query_args, $args, $is_ajax)
