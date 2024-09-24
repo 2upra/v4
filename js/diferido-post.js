@@ -2,11 +2,25 @@ const A07 = false, log07 = A07 ? console.log : () => {};
 let cargando = false, paged = 2, publicacionesCargadas = [], identifier = '', ultimoLog = 0, eventoBusquedaConfigurado = false;
 const intervaloLog = 1000, ajaxUrl = (typeof ajax_params !== 'undefined' && ajax_params.ajax_url) ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
 
+// Manejador de evento de búsqueda, ahora está definido globalmente
+function manejadorEventoBusqueda(e) {
+    log07('Evento keypress detectado en searchInput', e);
+    if (e.key === 'Enter') {
+        publicacionesCargadas = [];
+        e.preventDefault();
+        identifier = e.target.value;
+        log07('Enter presionado, valor de identifier:', identifier);
+        resetearCarga();
+        cargarMasContenido();
+        paged = 1;
+    }
+}
+
 function reiniciarDiferidoPost() {
     log07('Reiniciando diferidopost');
     window.removeEventListener('scroll', manejarScroll);
     cargando = false; paged = 2; publicacionesCargadas = []; identifier = ''; window.currentUserId = null;
-    if (!eventoBusquedaConfigurado) configurarEventoBusqueda();
+    if (!eventoBusquedaConfigurado) configurarEventoBusqueda(); // Evento ahora configurado correctamente
     ajustarAlturaMaxima(); cargarContenidoPorScroll(); establecerUserIdDesdeInput();
 }
 
@@ -98,16 +112,11 @@ function configurarEventoBusqueda() {
     const searchInput = document.getElementById('identifier');
     if (!searchInput) return log07('No se encontró el elemento searchInput');
 
+    // Remueve el evento anterior si es necesario
     searchInput.removeEventListener('keypress', manejadorEventoBusqueda);
-    searchInput.addEventListener('keypress', function manejadorEventoBusqueda(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            publicacionesCargadas = [];
-            identifier = this.value;
-            log07('Enter presionado, valor de identifier:', identifier);
-            resetearCarga(); cargarMasContenido(); paged = 1;
-        }
-    });
+
+    // Agrega el evento de nuevo con la función manejadorEventoBusqueda
+    searchInput.addEventListener('keypress', manejadorEventoBusqueda);
 }
 
 function resetearCarga() {
