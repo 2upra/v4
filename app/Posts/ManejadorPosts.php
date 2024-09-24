@@ -4,21 +4,22 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
     $user_id = obtenerUserId($is_ajax);
     $current_user_id = get_current_user_id();
 
-    // Agregamos 'post_type' a los valores por defecto
+    // Mezclamos los argumentos recibidos con los valores por defecto
     $defaults = [
         'filtro' => '',
         'tab_id' => '',
         'posts' => 12,
         'exclude' => [],
-        'post_type' => 'social_post',
+        'post_type' => 'social_post',  // Valor por defecto
     ];
-
-    // Mezclamos los argumentos recibidos con los valores por defecto
     $args = array_merge($defaults, $args);
 
     // Log para depurar los argumentos iniciales
     postLog("Publicaciones args iniciales: " . print_r($args, true));
     postLog("user_id: $user_id, current_user_id: $current_user_id, paged: $paged");
+
+    // Asegurarte de que el 'post_type' es el esperado
+    postLog("Post type recibido: " . $args['post_type']);  // Verifica que el 'post_type' sea 'colab' como esperas
 
     if ($is_ajax) {
         ajaxPostLog("Publicaciones AJAX: " . print_r($args, true));
@@ -32,8 +33,10 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
     $output = procesarPublicaciones($query_args, $args, $is_ajax);
 
-    // Log para depurar el resultado de la función procesarPublicaciones
-    postLog("Resultado de procesarPublicaciones: " . print_r($output, true));
+    // Añadir log para depurar si hay posts devueltos por la consulta
+    if (empty($output)) {
+        postLog("No se encontraron publicaciones para los query args: " . print_r($query_args, true));
+    }
 
     if ($is_ajax) {
         echo $output;
@@ -42,6 +45,8 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         return $output;
     }
 }
+
+
 
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
@@ -78,6 +83,9 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             'orderby' => 'date',
             'order' => 'DESC', // Ordenar por fecha más reciente primero
         ];
+
+        // Log para verificar que la consulta para post_type 'colab' se está generando correctamente
+        postLog("Query args para post_type '" . $args['post_type'] . "': " . print_r($query_args, true));
     }
 
     if (!empty($args['exclude'])) {
@@ -90,11 +98,12 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
     $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
 
-    // Log para depurar el query_args después de aplicar los filtros
-    postLog("Query args después de aplicarFiltros: " . print_r($query_args, true));
+    // Log final para depurar el query_args después de aplicar los filtros
+    postLog("Query args finales después de aplicarFiltros: " . print_r($query_args, true));
 
     return $query_args;
 }
+
 
 
 function procesarPublicaciones($query_args, $args, $is_ajax)
