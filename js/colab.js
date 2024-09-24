@@ -79,7 +79,7 @@ function subidaFrontalArchivoColab() {
     function resetState() {
         fileSelected = false;
         fileUrl = null;
-        previewArchivo.innerHTML = 'Haz clic o arrastra un archivo aquí';
+        previewArchivo.innerHTML = 'Puedes enviar un archivo para la colaboración';
         previewArchivo.style.backgroundColor = '';
         modalEnviarBtn.disabled = false;
         previewArchivo.removeEventListener('click', handlePreviewClick);
