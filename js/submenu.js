@@ -1,13 +1,14 @@
-function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundSelector, adjustTop = 0, adjustLeft = 0) {
+function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundClass, adjustTop = 0, adjustLeft = 0) {
     const triggers = document.querySelectorAll(triggerSelector);
 
     function toggleSubmenu(event) {
         const trigger = event.target.closest(triggerSelector);
         const submenuId = `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || "default"}`;
         const submenu = document.getElementById(submenuId);
-        const modalBackground = trigger.closest(modalBackgroundSelector); // Encontrar el modal más cercano al trigger
+        if (!submenu) return;
 
-        if (!submenu || !modalBackground) return;
+        const modalBackground = trigger.closest(modalBackgroundClass);
+        if (!modalBackground) return;
 
         submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
         submenu.style.display === "block" ? hideSubmenu(submenu, modalBackground) : showSubmenu(event, submenu, modalBackground);
@@ -31,12 +32,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundSelector
 
     function hideSubmenu(submenu, modalBackground) {
         submenu.style.display = "none";
-        
-        // Validar si modalBackground existe antes de intentar acceder a sus propiedades
-        if (modalBackground) {
-            modalBackground.style.display = "none";
-        }
-        
+        modalBackground.style.display = "none";
         document.body.classList.remove('no-scroll');  // Habilitar scroll
     }
 
@@ -44,7 +40,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundSelector
 
     document.addEventListener("click", (event) => {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
-            const modalBackground = submenu.closest(modalBackgroundSelector); // Encontrar el modal más cercano al submenu
+            const modalBackground = submenu.closest(modalBackgroundClass);
             if (!submenu.contains(event.target) && !event.target.matches(triggerSelector)) {
                 hideSubmenu(submenu, modalBackground);
             }
@@ -68,8 +64,6 @@ function submenu() {
     createSubmenu(".HR695R8", "opcionespost", ".modal-background", 60, 0);
     initializeSubirSample("#subirsample", "#formulariosubirsample", "#social-post-container");
 }
-
-
 
 document.addEventListener('DOMContentLoaded', initializeStaticMenus);
 
