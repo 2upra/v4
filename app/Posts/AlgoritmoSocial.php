@@ -128,7 +128,6 @@ function calcularFeedPersonalizado($userId)
     $table_intereses = INTERES_TABLE;
 
     $siguiendo = (array) get_user_meta($userId, 'siguiendo', true);
-    $seguidores = (array) get_user_meta($userId, 'seguidores', true);
 
     generarMetaDeIntereses($userId);
     logAlgoritmo("Intereses del usuario generados para el usuario ID: $userId");
@@ -143,13 +142,13 @@ function calcularFeedPersonalizado($userId)
 
     // Obtener IDs de los posts relevantes
     $args = [
-        'post_type' => 'social_post',
+        'post_type'      => 'social_post',
         'posts_per_page' => 1000,
-        'date_query' => [
+        'date_query'     => [
             'after' => date('Y-m-d', strtotime('-100 days'))
         ],
-        'fields' => 'ids',
-        'no_found_rows' => true,
+        'fields'         => 'ids',
+        'no_found_rows'  => true,
     ];
     $posts_ids = get_posts($args);
 
@@ -218,13 +217,26 @@ function calcularFeedPersonalizado($userId)
         $horasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / 3600;
         $factorTiempo = pow(0.98, $horasDesdePublicacion);
 
-        $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * $factorTiempo;
+        // Introducir aleatoriedad controlada en los puntos finales
+        $aleatoriedad = mt_rand(0, 20); // Número aleatorio entre 0 y 20
+
+        $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes + $aleatoriedad) * $factorTiempo;
+
+        // Evitar que el factor de aleatoriedad supere cierto porcentaje
+        $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100));
 
         $posts_personalizados[$post_id] = $puntosFinal;
         $resumenPuntos[] = $post_id . ':' . round($puntosFinal, 2);
     }
 
-    arsort($posts_personalizados);
+    // Mezclar los posts ligeramente para introducir aleatoriedad
+    uasort($posts_personalizados, function($a, $b) {
+        // Comparar los puntos con una variación aleatoria
+        $random_factor = mt_rand(-10, 10) / 100; // Variación entre -10% y +10%
+        $a_adjusted = $a * (1 + $random_factor);
+        $b_adjusted = $b * (1 + $random_factor);
+        return $b_adjusted <=> $a_adjusted;
+    });
 
     logAlgoritmo("Feed personalizado calculado para el usuario ID: $userId. Total de posts: " . count($posts_personalizados));
     logAlgoritmo("Resumen de puntos - " . implode(', ', $resumenPuntos));
