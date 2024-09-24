@@ -41,15 +41,12 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
-        // Agregar los tags si existen, capitalizando y eliminando duplicados
+        // Crear un array para almacenar todas las etiquetas unificadas
+        let allTags = [];
+
+        // Recopilar todos los tags existentes en el JSON
         if (jsonData.tags && Array.isArray(jsonData.tags)) {
-            let uniqueTags = removeDuplicates(jsonData.tags.map(tag => capitalize(tag)));
-            uniqueTags.forEach(function(tag) {
-                const tagElement = document.createElement('span');
-                tagElement.classList.add('postTag');
-                tagElement.textContent = tag;
-                tagsContainer.appendChild(tagElement);
-            });
+            allTags = allTags.concat(jsonData.tags.map(tag => capitalize(tag)));
         }
 
         // Categoría de BPM
@@ -60,77 +57,49 @@ document.addEventListener("DOMContentLoaded", function() {
             else if (jsonData.bpm >= 120 && jsonData.bpm < 150) bpmCategory = 'Rápido';
             else if (jsonData.bpm >= 150) bpmCategory = 'Muy Rápido';
 
-            const bpmElement = document.createElement('span');
-            bpmElement.classList.add('postTag');
-            bpmElement.textContent = bpmCategory + ' (' + jsonData.bpm + ' BPM)';
-            tagsContainer.appendChild(bpmElement);
+            allTags.push(bpmCategory + ' (' + jsonData.bpm + ' BPM)');
         }
 
         // Tonalidad y escala
         if (jsonData.key && jsonData.scale) {
-            const keyScaleElement = document.createElement('span');
-            keyScaleElement.classList.add('postTag');
-            keyScaleElement.textContent = capitalize(jsonData.key) + ' ' + capitalize(jsonData.scale);
-            tagsContainer.appendChild(keyScaleElement);
+            allTags.push(capitalize(jsonData.key) + ' ' + capitalize(jsonData.scale));
         }
 
-        // Agregar instrumentos posibles, capitalizando y eliminando duplicados
+        // Agregar instrumentos posibles
         if (jsonData.descripcion_ia && jsonData.descripcion_ia["Instrumentos posibles"]) {
-            let uniqueInstruments = removeDuplicates(jsonData.descripcion_ia["Instrumentos posibles"].map(capitalize));
-            uniqueInstruments.forEach(function(instrument) {
-                const instrumentElement = document.createElement('span');
-                instrumentElement.classList.add('postTag');
-                instrumentElement.textContent = instrument;
-                tagsContainer.appendChild(instrumentElement);
-            });
+            allTags = allTags.concat(jsonData.descripcion_ia["Instrumentos posibles"].map(capitalize));
         }
 
-        // Agregar estados de ánimo, capitalizando y eliminando duplicados
+        // Agregar estados de ánimo
         if (jsonData.descripcion_ia && jsonData.descripcion_ia["Estado de animo"]) {
-            let uniqueEstados = removeDuplicates(jsonData.descripcion_ia["Estado de animo"].map(capitalize));
-            uniqueEstados.forEach(function(estado) {
-                const estadoElement = document.createElement('span');
-                estadoElement.classList.add('postTag');
-                estadoElement.textContent = estado;
-                tagsContainer.appendChild(estadoElement);
-            });
+            allTags = allTags.concat(jsonData.descripcion_ia["Estado de animo"].map(capitalize));
         }
 
-        // Agregar géneros posibles, capitalizando y eliminando duplicados
+        // Agregar géneros posibles
         if (jsonData.descripcion_ia && jsonData.descripcion_ia["Genero posible"]) {
-            let uniqueGeneros = removeDuplicates(jsonData.descripcion_ia["Genero posible"].map(capitalize));
-            uniqueGeneros.forEach(function(genero) {
-                const generoElement = document.createElement('span');
-                generoElement.classList.add('postTag');
-                generoElement.textContent = genero;
-                tagsContainer.appendChild(generoElement);
-            });
+            allTags = allTags.concat(jsonData.descripcion_ia["Genero posible"].map(capitalize));
         }
 
-        // Agregar tipo de audio, capitalizando y eliminando duplicados
+        // Agregar tipo de audio
         if (jsonData.descripcion_ia && jsonData.descripcion_ia["Tipo de audio"]) {
-            let uniqueTiposAudio = removeDuplicates(jsonData.descripcion_ia["Tipo de audio"].map(capitalize));
-            uniqueTiposAudio.forEach(function(tipoAudio) {
-                const tipoAudioElement = document.createElement('span');
-                tipoAudioElement.classList.add('postTag');
-                tipoAudioElement.textContent = tipoAudio;
-                tagsContainer.appendChild(tipoAudioElement);
-            });
+            allTags = allTags.concat(jsonData.descripcion_ia["Tipo de audio"].map(capitalize));
         }
 
-        // Agregar los tags posibles, capitalizando y eliminando duplicados
+        // Agregar tags posibles
         if (jsonData.descripcion_ia && jsonData.descripcion_ia["Tags posibles"]) {
-            let uniqueTagsPosibles = removeDuplicates(jsonData.descripcion_ia["Tags posibles"].map(capitalize));
-            uniqueTagsPosibles.forEach(function(tagPosible) {
-                const tagPosibleElement = document.createElement('span');
-                tagPosibleElement.classList.add('postTag');
-                tagPosibleElement.textContent = tagPosible;
-                tagsContainer.appendChild(tagPosibleElement);
-            });
+            allTags = allTags.concat(jsonData.descripcion_ia["Tags posibles"].map(capitalize));
         }
+
+        // Eliminar duplicados globalmente y agregar al contenedor de tags
+        let uniqueTags = removeDuplicates(allTags);
+        uniqueTags.forEach(function(tag) {
+            const tagElement = document.createElement('span');
+            tagElement.classList.add('postTag');
+            tagElement.textContent = tag;
+            tagsContainer.appendChild(tagElement);
+        });
     });
 });
-
 
 
 
