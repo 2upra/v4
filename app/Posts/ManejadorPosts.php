@@ -1,5 +1,4 @@
 <?php
-
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
     $user_id = obtenerUserId($is_ajax);
@@ -17,13 +16,24 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
     // Mezclamos los argumentos recibidos con los valores por defecto
     $args = array_merge($defaults, $args);
 
+    // Log para depurar los argumentos iniciales
+    postLog("Publicaciones args iniciales: " . print_r($args, true));
+    postLog("user_id: $user_id, current_user_id: $current_user_id, paged: $paged");
+
     if ($is_ajax) {
-        guardarLog("Publicaciones AJAX: " . print_r($args, true));
+        ajaxPostLog("Publicaciones AJAX: " . print_r($args, true));
     }
 
     // Pasamos los argumentos a configuracionQueryArgs
     $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
+
+    // Log para depurar los argumentos de la query
+    postLog("Query args generados: " . print_r($query_args, true));
+
     $output = procesarPublicaciones($query_args, $args, $is_ajax);
+
+    // Log para depurar el resultado de la función procesarPublicaciones
+    postLog("Resultado de procesarPublicaciones: " . print_r($output, true));
 
     if ($is_ajax) {
         echo $output;
@@ -44,6 +54,10 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         $post_ids = array_slice($post_ids, 0, $posts);
     }
 
+    // Log para depurar el estado de los posts personalizados y post_ids
+    postLog("Posts personalizados: " . print_r($posts_personalizados, true));
+    postLog("Post IDs seleccionados: " . print_r($post_ids, true));
+
     $query_args = [
         'post_type' => $args['post_type'],
         'posts_per_page' => $posts,
@@ -57,10 +71,18 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         $query_args['post__not_in'] = $args['exclude'];
     }
 
+    // Log para depurar el estado del identifier y la meta_query
+    postLog("Identifier: $identifier");
+    postLog("Meta query: " . print_r($query_args['meta_query'], true));
+
     $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
+
+    // Log para depurar el query_args después de aplicar los filtros
+    postLog("Query args después de aplicarFiltros: " . print_r($query_args, true));
 
     return $query_args;
 }
+
 
 
 function procesarPublicaciones($query_args, $args, $is_ajax)

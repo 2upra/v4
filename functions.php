@@ -33,6 +33,10 @@ function iaLog($log) {
     escribirLog($log, '/var/www/wordpress/wp-content/themes/iaLog.log');
 }
 
+function postLog($log) {
+    escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt')
+}
+
 
 
 
