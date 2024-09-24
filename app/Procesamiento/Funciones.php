@@ -12,15 +12,6 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
         return new WP_Error('empty_content', 'El contenido no puede estar vacío.');
     }
 
-    // Convertir los tags en hashtags
-    if (!empty($tags)) {
-        $tagsArray = explode(',', $tags);
-        $hashtags = array_map(function ($tag) {
-            return '#' . trim($tag);
-        }, $tagsArray);
-        $contenido .= ' ' . implode(' ', $hashtags);
-    }
-
     // Generar el título
     $titulo = wp_trim_words($contenido, 15, '...');
     $autor = get_current_user_id();
@@ -38,9 +29,13 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
         return $postId;
     }
 
+    // Guardar los tags en el meta campo 'tagsUsuario'
+    if (!empty($tags)) {
+        update_post_meta($postId, 'tagsUsuario', $tags);
+    }
+
     return $postId;
 }
-
 function datosParaAlgoritmo($postId)
 {
 
@@ -393,66 +388,6 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
 }
 
-/*
-2024-09-18 18:52:23 - Ejecutando comando de Python: python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py "/var/www/wordpress/wp-content/uploads/2024/09/2upra_66eb21677ba70_128k.mp3"
-2024-09-18 18:52:24 - No se encontró el archivo de resultados en /var/www/wordpress/wp-content/uploads/2024/09/2upra_66eb21677ba70_128k.mp3_resultados.json
-
-import essentia.standard as es
-import json
-
-
-def analizar_audio(audio_path):
-    try:
-
-        audio = es.MonoLoader(filename=audio_path)()
-        print(f"Audio cargado correctamente. Longitud: {len(audio)} muestras.")
-
-        # Extraer BPM
-        rhythm_extractor = es.RhythmExtractor2013(method="multifeature")
-        bpm, _, _, _, _ = rhythm_extractor(audio)
-        print(f"BPM detectado: {bpm}")
-
-        # Extraer tono
-        pitch_extractor = es.PredominantPitchMelodia()
-        pitch, _ = pitch_extractor(audio)
-        print(f"Pitch (tono) detectado: {pitch[:10]}")
-
-        # Otros datos relevantes
-        key_extractor = es.KeyExtractor()
-        key, scale, strength = key_extractor(audio)
-        print(f"Clave detectada: {key}, Escala: {scale}, Fuerza: {strength}")
-
-        # Crear un diccionario con los resultados
-        resultados = {
-            "bpm": bpm,
-            "pitch": pitch.tolist(),
-            "key": key,
-            "scale": scale,
-            "strength": strength
-        }
-
-        # Guardar los resultados en un archivo JSON
-        with open(audio_path + '_resultados.json', 'w') as f:
-            json.dump(resultados, f)
-        print("Archivo JSON guardado correctamente.")
-
-        return resultados
-
-    except Exception as e:
-        print(f"Error durante el análisis del audio: {e}")
-
-# Ejemplo de uso
-if __name__ == "__main__":  
-    import sys
-    audio_path = sys.argv[1]
-    resultados = analizar_audio(audio_path)
-    print(resultados)
-
-
-*/
-
-// Cambia los guardarLog por iaLog
-
 function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 {
     // Ejecutar el script de Python para análisis de audio
@@ -488,15 +423,23 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         iaLog("No se encontró el archivo de resultados en {$resultados_path}");
     }
 
-    // Obtener el contenido del post para incluirlo en el prompt
+    // Obtener el contenido del post
     $post_content = get_post_field('post_content', $post_id);
     if (!$post_content) {
         iaLog("No se pudo obtener el contenido del post ID: {$post_id}");
         return;
     }
 
-    // Crear el prompt para la IA
-    $prompt = "Un usuario acaba de subir un audio con la siguiente descripción: {$post_content}. "
+    // Obtener los tagsUsuario del post
+    $tags_usuario = get_post_meta($post_id, 'tagsUsuario', true);
+    if ($tags_usuario) {
+        $tags_usuario_texto = is_array($tags_usuario) ? implode(', ', $tags_usuario) : $tags_usuario;
+    } else {
+        $tags_usuario_texto = 'Sin etiquetas';
+    }
+
+    // Crear el prompt para la IA, incluyendo el contenido del post y los tags del usuario
+    $prompt = "Un usuario acaba de subir un audio con la siguiente descripción: {$post_content}. Los tags asociados son: {$tags_usuario_texto}."
         . "Por favor, determina una descripción del audio utilizando el siguiente formato (ESTOS SON DATOS DE EJEMPLO): "
         . '{"Descripcion":"Descripción del audio generada por IA", "Instrumentos posibles":["Piano", "Guitarra", "Batería"], "Estado de animo":["Tranquilo", "Suave"], "Genero posible":["Hip hop", "Electrónica"], "Tipo de audio":["Sample"], "Tags posibles":["Naturaleza", "Percusión", "Relajación"], "Sugerencia de busqueda":["Sonido relajante", "percusión suave", "baterías para hip hop", "efectos cinematograficos"]}. '
         . "Nota adicional: solo responde con la estructura, no digas nada adicional al usuario, el audio se esta subiendo a una biblioteca de samples por eso es importante determinar los datos sabiendo que son para que sea mas facil encontrarlos en base a las descripciones y busqueda, la descripcion tiene que ser corta y breve, agrega solo datos en español, los tipos de audios hay muchos tipos, pueden ser samples, efectos, vocales, kicks, percusiones, intenta determinar que tipo de audio, habrá ocaciones que no se pueda determinar un genero porque un kick o un efecto de explosion no tiene genero ni un estado de animo como tal, se puede omitir cosas, las sugerencias de busqueda piensa en como el usuario puede buscar el audio y encontrarlo";
