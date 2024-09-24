@@ -65,49 +65,75 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
 {
     $filtro = $args['identifier'] ?? $args['filtro'];
+
+    $rolaEstado = function($status) use (&$query_args) {
+        $query_args += [
+            'author' => get_current_user_id(),
+            'post_status' => [$status]
+        ];
+        $query_args['meta_query'][] = ['key' => 'rola', 'value' => '1', 'compare' => '='];
+    };
+
     $meta_query_conditions = [
 
         /*
         FILTROS PARA PAGINA SELLO
         */
-
-        'rolasEliminadas' => fn() => $query_args += ['author' => get_current_user_id(), 'post_status' => ['pending_deletion']] ?: ['key' => 'rola', 'value' => '1', 'compare' => '='],
-        'rolasRechazadas' => fn() => $query_args += ['author' => get_current_user_id(), 'post_status' => ['rejected']] ?: ['key' => 'rola', 'value' => '1', 'compare' => '='],
-        'rolasPendiente' => fn() => $query_args += ['author' => get_current_user_id(), 'post_status' => ['pending']] ?: ['key' => 'rola', 'value' => '1', 'compare' => '='],
+        'rolasEliminadas'  => fn() => $rolaEstado('pending_deletion'),
+        'rolasRechazadas'  => fn() => $rolaEstado('rejected'),
+        'rolasPendiente'   => fn() => $rolaEstado('pending'),
 
         /*
         FILTROS PAGINA DE MUSICA
         */
+        'rola' => fn() => $query_args['meta_query'][] = [
+            ['key' => 'rola', 'value' => '1', 'compare' => '='],
+            ['key' => 'post_audio', 'compare' => 'EXISTS']
+        ],
 
-        'rola' => fn() => $query_args['post_status'] = 'publish' ?: [['key' => 'rola', 'value' => '1', 'compare' => '='], ['key' => 'post_audio', 'compare' => 'EXISTS']],
-        'likesRolas' => fn() => ($user_liked_post_ids = obtenerLikesDelUsuario($current_user_id)) ? $query_args['post__in'] = $user_liked_post_ids ?: ['key' => 'rola', 'value' => '1', 'compare' => '='] : $query_args['posts_per_page'] = 0,
+        'likesRolas' => fn() => ($user_liked_post_ids = obtenerLikesDelUsuario($current_user_id)) 
+            ? $query_args['post__in'] = $user_liked_post_ids 
+            : $query_args['posts_per_page'] = 0,
 
         /*
         FILTROS INICIO
         */
-
-        'nada' => fn() => $query_args['post_status'] = 'publish',
-        'colabs' => ['key' => 'paraColab', 'value' => '1', 'compare' => '='],
-        'libres' => [['key' => 'esExclusivo', 'value' => '0', 'compare' => '='], ['key' => 'post_price', 'compare' => 'NOT EXISTS'], ['key' => 'rola', 'value' => '1', 'compare' => '!=']],
-        'momento' => [['key' => 'momento', 'value' => '1', 'compare' => '='], ['key' => '_thumbnail_id', 'compare' => 'EXISTS']],
+        'nada'     => fn() => $query_args['post_status'] = 'publish',
+        'colabs'   => ['key' => 'paraColab', 'value' => '1', 'compare' => '='],
+        'libres'   => [
+            ['key' => 'esExclusivo', 'value' => '0', 'compare' => '='],
+            ['key' => 'post_price', 'compare' => 'NOT EXISTS'],
+            ['key' => 'rola', 'value' => '1', 'compare' => '!=']
+        ],
+        'momento'  => [
+            ['key' => 'momento', 'value' => '1', 'compare' => '='],
+            ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
+        ],
 
         /*
         FILTROS SAMPLES
         */
-
-        'sample' => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+        'sample'   => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
 
         /*
         FILTROS COLAB
         */
 
+        'colab' => ['key' => 'colabMensaje', 'compare' => 'EXISTS'],
+
     ];
 
+    // Aplica el filtro si existe
     if (isset($meta_query_conditions[$filtro])) {
-        $query_args['meta_query'][] = is_callable($meta_query_conditions[$filtro]) ? $meta_query_conditions[$filtro]() : $meta_query_conditions[$filtro];
+        $query_args['meta_query'][] = is_callable($meta_query_conditions[$filtro]) 
+            ? $meta_query_conditions[$filtro]() 
+            : $meta_query_conditions[$filtro];
     }
 
-    if ($user_id !== null) $query_args['author'] = $user_id;
+    // Si se proporciona un user_id, se filtra por autor
+    if ($user_id !== null) {
+        $query_args['author'] = $user_id;
+    }
 
     return $query_args;
 }
