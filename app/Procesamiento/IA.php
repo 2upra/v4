@@ -5,7 +5,7 @@ use GuzzleHttp\Client;
 
 
 function generarDescripcionIAConURI($audio_uri, $prompt) {
-    guardarLog("Generando descripción IA con prompt: " . $prompt . " y URI: " . $audio_uri);
+    iaLog("Generando descripción IA con prompt: " . $prompt . " y URI: " . $audio_uri);
 
     try {
         // Construir el cuerpo de la solicitud
@@ -42,7 +42,7 @@ function generarDescripcionIAConURI($audio_uri, $prompt) {
         $response = curl_exec($ch);
         if (curl_errno($ch)) {
             $error_message = "Error en CURL: " . curl_error($ch);
-            guardarLog($error_message);
+            iaLog($error_message);
             return $error_message;
         }
 
@@ -52,18 +52,18 @@ function generarDescripcionIAConURI($audio_uri, $prompt) {
         // Verificar si la respuesta contiene los datos esperados
         if (isset($bodyGenerate['contents'][0]['parts'][0]['text'])) {
             $generated_text = $bodyGenerate['contents'][0]['parts'][0]['text'];
-            guardarLog("Contenido generado: " . $generated_text);
+            iaLog("Contenido generado: " . $generated_text);
 
             return $generated_text;
         } else {
             $error_message = "Error: Respuesta inesperada de la API.";
-            guardarLog($error_message);
+            iaLog($error_message);
             return $error_message;
         }
 
     } catch (Exception $e) {
         $error_message = "Error: " . $e->getMessage();
-        guardarLog($error_message);
+        iaLog($error_message);
         return $error_message;
     }
 }
@@ -71,12 +71,12 @@ function generarDescripcionIAConURI($audio_uri, $prompt) {
 
 
 function subirArchivo($archivo_path) {
-    guardarLog("Subiendo archivo: " . $archivo_path);
+    iaLog("Subiendo archivo: " . $archivo_path);
 
     try {
         // Leer el archivo de audio y convertirlo a base64
         $audio_data = file_get_contents($archivo_path);
-        guardarLog("Archivo de audio cargado con éxito.");
+        iaLog("Archivo de audio cargado con éxito.");
 
         // Construir el cuerpo de la solicitud para subir el archivo
         $data = [
@@ -101,7 +101,7 @@ function subirArchivo($archivo_path) {
         $response = curl_exec($ch);
         if (curl_errno($ch)) {
             $error_message = "Error en CURL: " . curl_error($ch);
-            guardarLog($error_message);
+            iaLog($error_message);
             return $error_message;
         }
 
@@ -111,30 +111,30 @@ function subirArchivo($archivo_path) {
         // Verificar si la respuesta contiene el URI del archivo subido
         if (isset($bodyUpload['uri'])) {
             $audio_uri = $bodyUpload['uri'];
-            guardarLog("Archivo subido exitosamente. URI: " . $audio_uri);
+            iaLog("Archivo subido exitosamente. URI: " . $audio_uri);
             return $audio_uri;
         } else {
             $error_message = "Error: Respuesta inesperada durante la subida del archivo.";
-            guardarLog($error_message);
+            iaLog($error_message);
             return $error_message;
         }
 
     } catch (Exception $e) {
         $error_message = "Error: " . $e->getMessage();
-        guardarLog($error_message);
+        iaLog($error_message);
         return $error_message;
     }
 }
 
 function generarDescripcionIA($archivo_path, $prompt) {
-    guardarLog("Inicio de generarDescripcionIA con prompt: " . $prompt);
-    guardarLog("Archivo de audio: " . $archivo_path);
+    iaLog("Inicio de generarDescripcionIA con prompt: " . $prompt);
+    iaLog("Archivo de audio: " . $archivo_path);
 
     try {
         // Leer el archivo de audio y convertirlo a base64
         $audio_data = file_get_contents($archivo_path);
         $audio_base64 = base64_encode($audio_data);
-        guardarLog("Archivo de audio cargado y convertido a base64 con éxito.");
+        iaLog("Archivo de audio cargado y convertido a base64 con éxito.");
 
         // Construir el cuerpo de la solicitud
         $data = [
@@ -170,7 +170,7 @@ function generarDescripcionIA($archivo_path, $prompt) {
         $response = curl_exec($ch);
         if (curl_errno($ch)) {
             $error_message = "Error en CURL: " . curl_error($ch);
-            guardarLog($error_message);
+            iaLog($error_message);
             return $error_message;
         }
 
@@ -178,22 +178,22 @@ function generarDescripcionIA($archivo_path, $prompt) {
         $bodyGenerate = json_decode($response, true);
 
         // Registrar la respuesta completa para depuración
-        guardarLog("Respuesta completa de la API: " . json_encode($bodyGenerate));
+        iaLog("Respuesta completa de la API: " . json_encode($bodyGenerate));
 
         // Verificar si la respuesta contiene los datos esperados
         if (isset($bodyGenerate['candidates'][0]['content']['parts'][0]['text'])) {
             $generated_text = $bodyGenerate['candidates'][0]['content']['parts'][0]['text'];
-            guardarLog("Contenido generado: " . $generated_text);
+            iaLog("Contenido generado: " . $generated_text);
             return $generated_text;
         } else {
             $error_message = "Error: Respuesta inesperada de la API. Detalles: " . json_encode($bodyGenerate);
-            guardarLog($error_message);
+            iaLog($error_message);
             return $error_message;
         }
 
     } catch (Exception $e) {
         $error_message = "Error: " . $e->getMessage();
-        guardarLog($error_message);
+        iaLog($error_message);
         return $error_message;
     }
 }
