@@ -66,30 +66,8 @@ function htmlPost($filtro)
                         </div>
                     <?php else: ?>
                         <div class="NERWFB">
-                            <?php //POST GENERICO DE RS
-                            if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])): ?>
-                                <div class="ZQHOQY">
-                                    <?php wave($audio_url, $audio_id_lite, $post_id); ?>
-                                </div>
-                            <?php else: ?>
-                                <div class="KLYJBY">
-                                    <?php echo audioPost($post_id) ?>
-                                </div>
-                            <?php endif; ?>
-                            <div class="FBKMJD">
-                                <div class="UKVPJI">
-                                    <?php the_content(); ?>
-
-                                    <div class="tags-container" id="tags-<?php echo get_the_ID(); ?>"></div>
-                                    <!-- Datos del algoritmo -->
-                                    <p id-post-algoritmo="<?php echo get_the_ID(); ?>" style="display:none;"><?php echo esc_html($datosAlgoritmo); ?></p>
-
-                                    <span class="infoIA-btn" data-post-id="<?php echo get_the_ID(); ?>">Detalles</span>
-
-                                    <!-- Detalles IA -->
-                                    <p id-post-detalles-ia="<?php echo get_the_ID(); ?>" style="display:none;"><?php echo esc_html($detallesIA); ?></p>
-                                </div>
-
+                            <div class="YWBIBG">
+                                <?php the_content(); ?>
                                 <div>
                                     <?php
                                     //Información bpm - escala- nota 
@@ -102,6 +80,30 @@ function htmlPost($filtro)
                                         echo '<p class="TRZPQD">' . implode(' - ', $info) . '</p>';
                                     }
                                     ?>
+                                </div>
+                            </div>
+                            <?php //POST GENERICO DE RS
+                            if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])): ?>
+                                <div class="ZQHOQY">
+                                    <?php wave($audio_url, $audio_id_lite, $post_id); ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="KLYJBY">
+                                    <?php echo audioPost($post_id) ?>
+                                </div>
+                            <?php endif; ?>
+                            <div class="FBKMJD">
+                                <div class="UKVPJI">
+
+
+                                    <div class="tags-container" id="tags-<?php echo get_the_ID(); ?>"></div>
+                                    <!-- Datos del algoritmo -->
+                                    <p id-post-algoritmo="<?php echo get_the_ID(); ?>" style="display:none;"><?php echo esc_html($datosAlgoritmo); ?></p>
+
+                                    <span class="infoIA-btn" data-post-id="<?php echo get_the_ID(); ?>">Detalles</span>
+
+                                    <!-- Detalles IA -->
+                                    <p id-post-detalles-ia="<?php echo get_the_ID(); ?>" style="display:none;"><?php echo esc_html($detallesIA); ?></p>
                                 </div>
                             </div>
                         </div>
