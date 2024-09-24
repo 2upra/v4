@@ -106,7 +106,7 @@ function colab()
     // Tambien tiene que aparecer los colabs en cursos
 ?>
     <div class="IBPDFF">
-        <?php echo publicaciones(['post_type' => 'colab', 'filtro' => 'colabPendientes', 'posts' => 20]); ?>
+        <?php echo publicaciones(['post_type' => 'colab', 'filtro' => 'colab', 'posts' => 20]); ?>
     </div>
 <?php
     return ob_get_clean();
