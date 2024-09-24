@@ -34,7 +34,7 @@ function iaLog($log) {
 }
 
 function postLog($log) {
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt')
+    escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt');
 }
 
 
