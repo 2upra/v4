@@ -1,217 +1,122 @@
-const A07 = false;
-const log07 = A07 ? console.log : function () {};
-let cargando = false;
-let paged = 2;
-let publicacionesCargadas = [];
-let identifier = '';
-let ultimoLog = 0;
-const intervaloLog = 1000;
-let eventoBusquedaConfigurado = false;
-const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
-//FUNCION REINICIADORA CADA VEZ QUE SE CAMBIA DE PAGINA MEDIANTE AJAX
+const A07 = false, log07 = A07 ? console.log : () => {};
+let cargando = false, paged = 2, publicacionesCargadas = [], identifier = '', ultimoLog = 0, eventoBusquedaConfigurado = false;
+const intervaloLog = 1000, ajaxUrl = (typeof ajax_params !== 'undefined' && ajax_params.ajax_url) ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
+
 function reiniciarDiferidoPost() {
     log07('Reiniciando diferidopost');
     window.removeEventListener('scroll', manejarScroll);
-    cargando = false;
-    paged = 2;
-    publicacionesCargadas = [];
-    identifier = '';
-    window.currentUserId = null;
-
-    if (!eventoBusquedaConfigurado) {
-        configurarEventoBusqueda();
-        eventoBusquedaConfigurado = true; // Marca como configurado
-    }
-    ajustarAlturaMaxima();
-    cargarContenidoPorScroll();
-    establecerUserIdDesdeInput();
+    cargando = false; paged = 2; publicacionesCargadas = []; identifier = ''; window.currentUserId = null;
+    if (!eventoBusquedaConfigurado) configurarEventoBusqueda();
+    ajustarAlturaMaxima(); cargarContenidoPorScroll(); establecerUserIdDesdeInput();
 }
 
 function establecerUserIdDesdeInput() {
     const paginaActualInput = document.getElementById('pagina_actual');
-
-    if (paginaActualInput && paginaActualInput.value.toLowerCase() === 'sello') {
-        const userIdInput = document.getElementById('user_id');
-
-        if (userIdInput) {
-            const userId = userIdInput.value;
-            const userProfileContainer = document.querySelector('.custom-uprofile-container');
-            if (userProfileContainer) {
-                userProfileContainer.dataset.authorId = userId;
-            }
+    if (paginaActualInput?.value.toLowerCase() === 'sello') {
+        const userId = document.getElementById('user_id')?.value;
+        if (userId) {
+            document.querySelector('.custom-uprofile-container')?.setAttribute('data-author-id', userId);
             window.currentUserId = userId;
             log07('User ID establecido:', userId);
-        } else {
-            log07('No se encontró el input de user_id');
-        }
-    } else {
-        log07('La página actual no es "sello"');
-    }
+        } else log07('No se encontró el input de user_id');
+    } else log07('La página actual no es "sello"');
 }
 
 function manejarScroll() {
     const ahora = Date.now();
+    if (ahora - ultimoLog < intervaloLog) return;
 
-    if (ahora - ultimoLog >= intervaloLog) {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const windowHeight = window.innerHeight;
-        const documentHeight = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
-        // const noMorePostsExists = document.getElementById('no-more-posts');
+    const { scrollTop, innerHeight: windowHeight } = window;
+    const documentHeight = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.scrollHeight);
+    log07('Evento de scroll detectado:', { scrollTop, windowHeight, documentHeight, cargando });
 
-        log07('Evento de scroll detectado:', {
-            scrollTop,
-            windowHeight,
-            documentHeight,
-            cargando
-            //noMorePostsExists: !!noMorePostsExists
-        });
-
-        if (scrollTop + windowHeight > documentHeight - 100 && !cargando) {
-            log07('Condiciones para cargar más contenido cumplidas');
-            cargarMasContenido();
-        } else {
-            log07('Condiciones para cargar más contenido no cumplidas');
-        }
-
-        ultimoLog = ahora;
+    if (scrollTop + windowHeight > documentHeight - 100 && !cargando) {
+        log07('Condiciones para cargar más contenido cumplidas');
+        cargarMasContenido();
     }
+    ultimoLog = ahora;
 }
-
-//de alguna forma, tiene que evitar cargar mas contenido si <div id="no-more-posts-two" no-more="<?php echo esc_attr($filtro);?>"></div> si no-more contiene el filtro que se intenta cargar, te muestro la parte relavante del codigo
 
 function cargarMasContenido() {
     cargando = true;
     log07('Iniciando carga de más contenido');
-
+    
     const activeTabElement = document.querySelector('.tab.active');
+    if (activeTabElement?.getAttribute('ajax') === 'no') return detenerCarga();
+    
+    const activeTab = activeTabElement.querySelector('.social-post-list');
+    if (!activeTab) return detenerCarga();
 
-    if (activeTabElement && activeTabElement.getAttribute('ajax') === 'no') {
-        log07('La pestaña activa tiene ajax="no". No se cargará más contenido.');
-        cargando = false;
-        return;
-    }
-
-    // Si no tiene ajax="no", proceder con la búsqueda del contenedor de posts
-    const activeTab = document.querySelector('.tab.active .social-post-list');
-    if (!activeTab) {
-        log07('No se encontró una pestaña activa');
-        cargando = false;
-        return;
-    }
-
-    const filtroActual = activeTab.dataset.filtro;
-    const tabIdActual = activeTab.dataset.tabId;
-    const userProfileContainer = document.querySelector('.custom-uprofile-container');
-
-    let user_id = '';
-    if (window.currentUserId) {
-        user_id = window.currentUserId;
-    } else if (userProfileContainer) {
-        user_id = userProfileContainer.dataset.authorId;
-    }
-
-    log07('Parámetros de carga:', {
-        filtroActual,
-        tabIdActual,
-        identifier,
-        user_id,
-        paged
-    });
+    const filtroActual = activeTab.dataset.filtro, tabIdActual = activeTab.dataset.tabId;
+    const user_id = window.currentUserId || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
+    
+    log07('Parámetros de carga:', { filtroActual, tabIdActual, identifier, user_id, paged });
 
     fetch(ajaxUrl, {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: `action=cargar_mas_publicaciones&paged=${paged}&filtro=${filtroActual}&identifier=${identifier}&tab_id=${tabIdActual}&user_id=${user_id}&cargadas=${publicacionesCargadas.join(',')}`
     })
-        .then(response => response.text())
-        .then(procesarRespuesta)
-        .catch(error => {
-            log07('Error AJAX:', error);
-            cargando = false;
-        });
+    .then(res => res.text())
+    .then(procesarRespuesta)
+    .catch(err => log07('Error AJAX:', err))
+    .finally(() => cargando = false);
 }
 
 function procesarRespuesta(response) {
     log07('Respuesta recibida:', response.substring(0, 100) + '...');
-    if (response.trim() === '<div id="no-more-posts"></div>') {
-        log07('No hay más publicaciones');
-        detenerCarga();
-    } else {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(response, 'text/html');
+    if (response.trim() === '') return detenerCarga();
 
-        // Buscar todos los elementos con la clase EDYQHV
-        doc.querySelectorAll('.EDYQHV').forEach(post => {
-            const postId = post.getAttribute('id-post');
-            if (postId && !publicacionesCargadas.includes(postId)) {
-                publicacionesCargadas.push(postId);
-                log07('Post añadido:', postId);
-            }
-        });
-
-        const activeTab = document.querySelector('.tab.active .social-post-list');
-        if (response.trim() !== '' && !doc.querySelector('#no-more-posts')) {
-            activeTab.insertAdjacentHTML('beforeend', response);
-            log07('Contenido añadido');
-            paged++;
-            window.inicializarWaveforms();
-            window.empezarcolab();
-            window.submenu();
-            window.seguir();
-            window.modalDetallesIA();
-        } else {
-            log07('No más publicaciones o respuesta vacía');
-            detenerCarga();
+    const doc = new DOMParser().parseFromString(response, 'text/html');
+    doc.querySelectorAll('.EDYQHV').forEach(post => {
+        const postId = post.getAttribute('id-post');
+        if (postId && !publicacionesCargadas.includes(postId)) {
+            publicacionesCargadas.push(postId);
+            log07('Post añadido:', postId);
         }
-    }
-    cargando = false;
+    });
+
+    const activeTab = document.querySelector('.tab.active .social-post-list');
+    if (response.trim() && !doc.querySelector('#no-more-posts')) {
+        activeTab.insertAdjacentHTML('beforeend', response);
+        log07('Contenido añadido');
+        paged++;
+        window.inicializarWaveforms?.();
+        window.empezarcolab?.();
+        window.submenu?.();
+        window.seguir?.();
+        window.modalDetallesIA?.();
+    } else detenerCarga();
 }
 
 function cargarContenidoPorScroll() {
     log07('Configurando evento de scroll');
     window.addEventListener('scroll', manejarScroll);
-    log07('Evento de scroll configurado');
 }
 
-// Agregar evento para el campo de búsqueda
 function configurarEventoBusqueda() {
     const searchInput = document.getElementById('identifier');
+    if (!searchInput) return log07('No se encontró el elemento searchInput');
 
-    if (searchInput) {
-        searchInput.removeEventListener('keypress', manejadorEventoBusqueda);
-
-        function manejadorEventoBusqueda(e) {
-            log07('Evento keypress detectado en searchInput', e);
-            if (e.key === 'Enter') {
-                publicacionesCargadas = [];
-                e.preventDefault();
-                identifier = this.value;
-                log07('Enter presionado, valor de identifier:', identifier);
-                resetearCarga();
-                cargarMasContenido();
-                paged = 1;
-            }
+    searchInput.removeEventListener('keypress', manejadorEventoBusqueda);
+    searchInput.addEventListener('keypress', function manejadorEventoBusqueda(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            publicacionesCargadas = [];
+            identifier = this.value;
+            log07('Enter presionado, valor de identifier:', identifier);
+            resetearCarga(); cargarMasContenido(); paged = 1;
         }
-
-        searchInput.addEventListener('keypress', manejadorEventoBusqueda);
-    } else {
-        log07('No se encontró el elemento searchInput');
-    }
+    });
 }
 
 function resetearCarga() {
-    paged = 1;
-    publicacionesCargadas = [];
+    paged = 1; publicacionesCargadas = [];
     window.removeEventListener('scroll', manejarScroll);
     cargarContenidoPorScroll();
     log07('Ejecutando resetearCarga');
     const activeTab = document.querySelector('.tab.active .social-post-list');
-    if (activeTab) {
-        log07('Encontrado activeTab, reseteando contenido');
-        activeTab.innerHTML = '';
-    } else {
-        log07('No se encontró el elemento activeTab');
-    }
+    if (activeTab) activeTab.innerHTML = '';
 }
 
 function detenerCarga() {
@@ -225,10 +130,8 @@ function ajustarAlturaMaxima() {
     if (!contenedor) return;
 
     const elementos = contenedor.querySelectorAll('li[filtro="rolastatus"]');
-    if (elementos.length > 0) {
-        const alturaElemento = elementos[0].offsetHeight;
-        const alturaMaxima = alturaElemento + 40;
-        contenedor.style.maxHeight = `${alturaMaxima}px`;
+    if (elementos.length) {
+        contenedor.style.maxHeight = `${elementos[0].offsetHeight + 40}px`;
     }
 }
 
