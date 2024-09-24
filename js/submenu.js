@@ -31,7 +31,12 @@ function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundSelector
 
     function hideSubmenu(submenu, modalBackground) {
         submenu.style.display = "none";
-        modalBackground.style.display = "none";
+        
+        // Validar si modalBackground existe antes de intentar acceder a sus propiedades
+        if (modalBackground) {
+            modalBackground.style.display = "none";
+        }
+        
         document.body.classList.remove('no-scroll');  // Habilitar scroll
     }
 
@@ -63,6 +68,7 @@ function submenu() {
     createSubmenu(".HR695R8", "opcionespost", ".modal-background", 60, 0);
     initializeSubirSample("#subirsample", "#formulariosubirsample", "#social-post-container");
 }
+
 
 
 document.addEventListener('DOMContentLoaded', initializeStaticMenus);
