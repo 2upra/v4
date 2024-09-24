@@ -1,11 +1,12 @@
 let fileUrl;
 let fileId;
 
-//Abre el modal y envía la solicitud
+//Abre el modal y añade el evento para envair la solicitud 
 function empezarcolab() {
     const buttons = document.querySelectorAll('.ZYSVVV');
     const modal = document.getElementById('modalcolab');
     const modalEnviarBtn = document.getElementById('empezarColab');
+    const modalBackground = document.getElementById('modalBackground2'); // Fondo del modal
     let postId;
 
     if (!buttons.length) return; 
@@ -16,14 +17,18 @@ function empezarcolab() {
             el.addEventListener(event, handler);
         });
 
+    // Mostrar el modal y el fondo, y bloquear el scroll
     addEventListeners(buttons, 'click', e => {
         postId = e.currentTarget?.dataset.postId;
         if (!postId) return console.error('El post ID no se encontró en el botón.');
         console.log('Post ID:', postId);
         subidaFrontalArchivoColab(); 
         modal.style.display = 'flex';
+        modalBackground.style.display = 'block'; // Mostrar el fondo del modal
+        document.body.style.overflow = 'hidden'; // Bloquear el scroll
     });
 
+    // Enviar la colaboración
     addEventListeners([modalEnviarBtn], 'click', async () => {
         const mensaje = document.querySelector('#modalcolab textarea').value.trim();
         if (!mensaje) return alert('Por favor, escribe un mensaje antes de enviar.');
@@ -32,14 +37,22 @@ function empezarcolab() {
         if (data?.success) {
             alert('Colaboración iniciada con éxito');
             modal.style.display = 'none';
+            modalBackground.style.display = 'none'; // Ocultar el fondo del modal
+            document.body.style.overflow = 'auto'; // Restaurar el scroll
             fileUrl = null; 
         } else {
             alert(`Error al iniciar la colaboración: ${data?.message || 'Desconocido'}`);
         }
     });
 
-    addEventListeners([document.querySelector('#modalcolab button')], 'click', () => (modal.style.display = 'none'));
+    // Cerrar el modal y restaurar el scroll
+    addEventListeners([document.querySelector('#modalcolab button')], 'click', () => {
+        modal.style.display = 'none';
+        modalBackground.style.display = 'none'; // Ocultar el fondo del modal
+        document.body.style.overflow = 'auto'; // Restaurar el scroll
+    });
 }
+
 
 //Procesamiento del archivo frontal
 function subidaFrontalArchivoColab() {
