@@ -1,20 +1,20 @@
-function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundId, adjustTop = 0, adjustLeft = 0) {
+function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundSelector, adjustTop = 0, adjustLeft = 0) {
     const triggers = document.querySelectorAll(triggerSelector);
-    const modalBackground = document.getElementById(modalBackgroundId);
-    if (!modalBackground) return;
 
     function toggleSubmenu(event) {
         const trigger = event.target.closest(triggerSelector);
         const submenuId = `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || "default"}`;
         const submenu = document.getElementById(submenuId);
-        if (!submenu) return;
+        const modalBackground = trigger.closest(modalBackgroundSelector); // Encontrar el modal más cercano al trigger
+
+        if (!submenu || !modalBackground) return;
 
         submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
-        submenu.style.display === "block" ? hideSubmenu(submenu) : showSubmenu(event, submenu);
+        submenu.style.display === "block" ? hideSubmenu(submenu, modalBackground) : showSubmenu(event, submenu, modalBackground);
         event.stopPropagation();
     }
 
-    function showSubmenu(event, submenu) {
+    function showSubmenu(event, submenu, modalBackground) {
         const rect = event.target.getBoundingClientRect();
         const { innerWidth: vw, innerHeight: vh } = window;
 
@@ -29,7 +29,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundId, adju
         document.body.classList.add('no-scroll');  // Bloquear scroll
     }
 
-    function hideSubmenu(submenu) {
+    function hideSubmenu(submenu, modalBackground) {
         submenu.style.display = "none";
         modalBackground.style.display = "none";
         document.body.classList.remove('no-scroll');  // Habilitar scroll
@@ -39,8 +39,9 @@ function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundId, adju
 
     document.addEventListener("click", (event) => {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
+            const modalBackground = submenu.closest(modalBackgroundSelector); // Encontrar el modal más cercano al submenu
             if (!submenu.contains(event.target) && !event.target.matches(triggerSelector)) {
-                hideSubmenu(submenu);
+                hideSubmenu(submenu, modalBackground);
             }
         });
     });
@@ -53,15 +54,16 @@ function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundId, adju
 }
 
 function initializeStaticMenus() {
-    createSubmenu(".subiricono", "submenusubir", "modalBackground2", 0, 120);
+    createSubmenu(".subiricono", "submenusubir", ".modal-background", 0, 120);
 }
 
 function submenu() {
-    createSubmenu(".mipsubmenu", "submenuperfil", "modalBackground2", 0, 120);
-    createSubmenu(".HR695R7", "opcionesrola", "modalBackground3", 100, 0);
-    createSubmenu(".HR695R8", "opcionespost", "modalBackground4", 60, 0);
+    createSubmenu(".mipsubmenu", "submenuperfil", ".modal-background", 0, 120);
+    createSubmenu(".HR695R7", "opcionesrola", ".modal-background", 100, 0);
+    createSubmenu(".HR695R8", "opcionespost", ".modal-background", 60, 0);
     initializeSubirSample("#subirsample", "#formulariosubirsample", "#social-post-container");
 }
+
 
 document.addEventListener('DOMContentLoaded', initializeStaticMenus);
 
