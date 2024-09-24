@@ -57,7 +57,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
         FILTROS COLAB
         */
 
-        'colab' => ['key' => 'colabMensaje', 'compare' => 'EXISTS'],
+        'colab' => fn() => $query_args['post_status'] = 'pending',
         'colabPendientes' => fn() => $query_args['meta_query'][] = [
             'author' => get_current_user_id(),
             'post_status' => ['pending']
