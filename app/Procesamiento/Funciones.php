@@ -481,7 +481,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         'emotion' => $resultados['emotion'] ?? '',
         'key' => $resultados['key'] ?? '',
         'scale' => $resultados['scale'] ?? '',
-        'descripcion_ia' => $descripcion_limpia ?? [] // Guardar como array, no como string JSON
+        'descripcion_ia' => $descripcion_limpia ?? [] 
     ];
 
     iaLog("Datos nuevos a agregar: " . json_encode($nuevos_datos));
