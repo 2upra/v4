@@ -17,14 +17,14 @@ function empezarcolab() {
             el.addEventListener(event, handler);
         });
 
-    // Mostrar el modal y el fondo, y bloquear el scroll
+    // Mostrar el modal, el fondo y bloquear el scroll
     addEventListeners(buttons, 'click', e => {
         postId = e.currentTarget?.dataset.postId;
         if (!postId) return console.error('El post ID no se encontró en el botón.');
         console.log('Post ID:', postId);
         subidaFrontalArchivoColab(); 
         modal.style.display = 'flex';
-        modalBackground.style.display = 'block'; // Mostrar el fondo del modal
+        modalBackground.classList.add('active'); // Agregar clase activa para mostrar el fondo
         document.body.style.overflow = 'hidden'; // Bloquear el scroll
     });
 
@@ -37,7 +37,7 @@ function empezarcolab() {
         if (data?.success) {
             alert('Colaboración iniciada con éxito');
             modal.style.display = 'none';
-            modalBackground.style.display = 'none'; // Ocultar el fondo del modal
+            modalBackground.classList.remove('active'); // Remover clase activa para ocultar el fondo
             document.body.style.overflow = 'auto'; // Restaurar el scroll
             fileUrl = null; 
         } else {
@@ -48,10 +48,11 @@ function empezarcolab() {
     // Cerrar el modal y restaurar el scroll
     addEventListeners([document.querySelector('#modalcolab button')], 'click', () => {
         modal.style.display = 'none';
-        modalBackground.style.display = 'none'; // Ocultar el fondo del modal
+        modalBackground.classList.remove('active'); // Remover clase activa para ocultar el fondo
         document.body.style.overflow = 'auto'; // Restaurar el scroll
     });
 }
+
 
 
 //Procesamiento del archivo frontal
