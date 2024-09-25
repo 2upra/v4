@@ -51,8 +51,7 @@ function empezarColab()
             'colabPostOrigen' => $postId,
             'colabAutor' => $original_post->post_author,
             'colabColaborador' => $current_user_id,
-            'colabMensaje' => $mensaje,
-            'colabFileUrl' => $fileUrl
+            'colabMensaje' => $mensaje
         ],
     ]);
 
@@ -61,6 +60,26 @@ function empezarColab()
 
         $existing_colabs[] = $current_user_id;
         update_post_meta($postId, 'colabs', $existing_colabs);
+
+        // Asociar el archivo desde el URL si ya existe
+        if (!empty($fileUrl)) {
+            global $wpdb;
+            
+            // Obtener el ID del adjunto basado en la URL del archivo
+            $attachment_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT ID FROM {$wpdb->posts} WHERE guid = %s",
+                $fileUrl
+            ));
+
+            if ($attachment_id) {
+                // Asociar el adjunto al post
+                update_post_meta($newPostId, '_thumbnail_id', $attachment_id); // Esto hace que sea el archivo destacado
+                guardarLog("Archivo adjuntado con ID: $attachment_id");
+            } else {
+                guardarLog("No se encontró el archivo para adjuntar al post.");
+                wp_send_json_error(['message' => 'No se encontró el archivo para adjuntar al post.']);
+            }
+        }
 
         if ($fileId) {
             confirmarHashId($fileId);
