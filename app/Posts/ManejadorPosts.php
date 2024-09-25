@@ -145,12 +145,6 @@ function publicacionAjax()
     ];
 
     $output = publicaciones($args, true, $paged);
-
-    if ($output) {
-        wp_send_json_success($output);
-    } else {
-        wp_send_json_error('No se encontraron publicaciones');
-    }
 }
 
 add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
