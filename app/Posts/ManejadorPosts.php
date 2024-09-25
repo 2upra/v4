@@ -144,7 +144,7 @@ function publicacionAjax()
         'exclude'    => $cargadas,
     ];
 
-    $output = publicaciones($args, true, $paged);
+    publicaciones($args, true, $paged);
 }
 
 add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
