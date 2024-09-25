@@ -129,23 +129,33 @@ function obtenerUserId($is_ajax)
 function publicacionAjax()
 {
 
-    $paged       = isset($_POST['paged']) ? intval($_POST['paged']) : 1;
-    $filtro      = isset($_POST['filtro']) ? sanitize_text_field($_POST['filtro']) : '';
-    $identifier  = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : '';
-    $tab_id      = isset($_POST['tab_id']) ? sanitize_text_field($_POST['tab_id']) : '';
-    $user_id     = isset($_POST['user_id']) ? intval($_POST['user_id']) : get_current_user_id();
-    $cargadas    = !empty($_POST['cargadas']) ? array_map('intval', explode(',', $_POST['cargadas'])) : [];
+    // Obtener los parámetros de la solicitud POST
+    $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
+    $filtro = isset($_POST['filtro']) ? sanitize_text_field($_POST['filtro']) : '';
+    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : '';
+    $tab_id = isset($_POST['tab_id']) ? sanitize_text_field($_POST['tab_id']) : '';
+    $user_id = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
 
-    $args = [
-        'filtro'     => $filtro,
-        'tab_id'     => $tab_id,
-        'user_id'    => $user_id,
-        'identifier' => $identifier,
-        'exclude'    => $cargadas,
-    ];
+    // Verificar si 'cargadas' es un array
+    $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas'])
+        ? array_map('intval', $_POST['cargadas'])
+        : array();
 
-    publicaciones($args, true, $paged);
+    publicaciones(
+        array(
+            'filtro' => $filtro,
+            'tab_id' => $tab_id,
+            'user_id' => $user_id,
+            'identifier' => $data_identifier,
+            'exclude' => $publicacionesCargadas
+        ),
+        true,
+        $paged
+    );
 }
 
 add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
 add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
+
+
+
