@@ -348,10 +348,3 @@ function fileColab($post_id, $colabFileUrl)
     return ob_get_clean();
 }
 
-function obtenerArchivoId($url, $postId)
-{
-    global $wpdb;
-    $attachment = $wpdb->get_col($wpdb->prepare("SELECT ID FROM $wpdb->posts WHERE guid='%s';", $url));
-    return $attachment ? $attachment[0] : 0;
-}
-
