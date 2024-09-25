@@ -6,10 +6,33 @@ function botonColab($postId, $colab)
     return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$postId'>{$GLOBALS['iconocolab']}</button></div>" : '';
 }
 
-//verifica si fileId se procesa correctamente
+/*
 
-function empezarColab()
-{
+2024-09-25 22:09:35 - Resultado de wp_handle_upload: Array
+(
+    [file] => /var/www/wordpress/wp-content/uploads/2024/09/DRUM-FILL-11.wav
+    [url] => https://2upra.com/wp-content/uploads/2024/09/DRUM-FILL-11.wav
+    [type] => audio/wav
+)
+2024-09-25 22:09:35 - Carga exitosa. Hash guardado: 073f39259941ebdbfb32a677fc9182476db036dd10d046f5cf1fe6ac07c43fc6. URL del nuevo archivo: https://2upra.com/wp-content/uploads/2024/09/DRUM-FILL-11.wav
+2024-09-25 22:09:39 - Colaboración creada con ID: 232055
+2024-09-25 22:09:39 - No se encontró el archivo para adjuntar al post.
+2024-09-25 22:12:37 - INICIO subidaArchivo
+2024-09-25 22:12:37 - Hash recibido: 5152dc1c537df630bf409cae5be5d6e720ce4d540461c6fbc028fd06842b6d36
+2024-09-25 22:12:37 - No se encontró un archivo existente con este hash o el archivo está pendiente.
+2024-09-25 22:12:37 - Resultado de wp_handle_upload: Array
+(
+    [file] => /var/www/wordpress/wp-content/uploads/2024/09/DRUM-FILL-10.wav
+    [url] => https://2upra.com/wp-content/uploads/2024/09/DRUM-FILL-10.wav
+    [type] => audio/wav
+)
+2024-09-25 22:12:37 - Carga exitosa. Hash guardado: 5152dc1c537df630bf409cae5be5d6e720ce4d540461c6fbc028fd06842b6d36. URL del nuevo archivo: https://2upra.com/wp-content/uploads/2024/09/DRUM-FILL-10.wav
+2024-09-25 22:12:39 - Colaboración creada con ID: 232056
+2024-09-25 22:12:39 - No se encontró el archivo para adjuntar al post.
+
+*/
+
+function empezarColab() {
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
     }
@@ -63,21 +86,9 @@ function empezarColab()
 
         // Asociar el archivo desde el URL si ya existe
         if (!empty($fileUrl)) {
-            global $wpdb;
-            
-            // Obtener el ID del adjunto basado en la URL del archivo
-            $attachment_id = $wpdb->get_var($wpdb->prepare(
-                "SELECT ID FROM {$wpdb->posts} WHERE guid = %s",
-                $fileUrl
-            ));
-
-            if ($attachment_id) {
-                // Asociar el adjunto al post
-                update_post_meta($newPostId, '_thumbnail_id', $attachment_id); // Esto hace que sea el archivo destacado
-                guardarLog("Archivo adjuntado con ID: $attachment_id");
-            } else {
-                guardarLog("No se encontró el archivo para adjuntar al post.");
-                wp_send_json_error(['message' => 'No se encontró el archivo para adjuntar al post.']);
+            $attached = handle_and_attach_file($newPostId, $fileUrl);
+            if (!$attached) {
+                wp_send_json_error(['message' => 'No se pudo adjuntar el archivo correctamente.']);
             }
         }
 
@@ -94,6 +105,54 @@ function empezarColab()
 
     wp_die();
 }
+
+function handle_and_attach_file($newPostId, $fileUrl) {
+    global $wpdb;
+
+    // Revisa si el archivo ya está registrado por la URL.
+    $attachment_id = $wpdb->get_var($wpdb->prepare(
+        "SELECT ID FROM {$wpdb->posts} WHERE guid = %s",
+        $fileUrl
+    ));
+
+    if (!$attachment_id) {
+        // Si no se encuentra el adjunto, intenta crear uno.
+        $uploads_dir = wp_upload_dir();
+        $file_path = str_replace($uploads_dir['baseurl'], $uploads_dir['basedir'], $fileUrl);
+
+        if (file_exists($file_path)) {
+            // Crea el adjunto
+            $data = [
+                'guid'           => $fileUrl,
+                'post_mime_type' => mime_content_type($file_path),
+                'post_title'     => wp_basename($file_path),
+                'post_content'   => '',
+                'post_status'    => 'inherit'
+            ];
+
+            $attachment_id = wp_insert_attachment($data, $file_path, $newPostId);
+
+            if (!is_wp_error($attachment_id)) {
+                require_once(ABSPATH . 'wp-admin/includes/image.php');
+                $attach_data = wp_generate_attachment_metadata($attachment_id, $file_path);
+                wp_update_attachment_metadata($attachment_id, $attach_data);
+            }
+        } else {
+            guardarLog("Archivo físico no encontrado para adjuntar.");
+            return false;
+        }
+    }
+
+    if ($attachment_id) {
+        // Asocia el adjunto al post, como un archivo destacado o cualquier meta deseada
+        update_post_meta($newPostId, '_thumbnail_id', $attachment_id);
+        guardarLog("Archivo adjuntado con ID: $attachment_id");
+        return true;
+    }
+
+    return false;
+}
+
 add_action('wp_ajax_empezarColab', 'empezarColab');
 
 function actualizarEstadoColab($postId, $post_after, $post_before)
