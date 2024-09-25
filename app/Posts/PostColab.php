@@ -34,7 +34,8 @@ function htmlColab($filtro)
                     </div>
                 </div>
 
-                <button>Test</button>
+                <button class="botonsecundario">Test</button>
+                <button class="botonprimario">Test</button>
 
             </div>
         </div>
