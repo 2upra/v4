@@ -34,7 +34,7 @@ function htmlColab($filtro)
                     </div>
                 </div>
 
-                <div style="margin-left: auto;">
+                <div class="flex gap-3 justify-end">
                     <button class="botonsecundario">Test</button>
                     <button class="botonprincipal">Test</button>
                 </div>
