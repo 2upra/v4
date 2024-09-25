@@ -1,10 +1,13 @@
 function inicializarWaveforms() {
-    const maxRetryAttempts = 5; // Máximo número de reintentos para cargar el audio
+    const maxRetries = 3; // Número máximo de reintentos
+    const retryDelay = 3000; // Retraso entre reintentos en milisegundos
 
-    const loadAndPlayAudio = (container, wavesurfer, src, retries = 0) => {
-        if (retries > maxRetryAttempts) {
-            console.error(`Error: No se pudo cargar el audio tras ${maxRetryAttempts} intentos.`);
+    const loadAndPlayAudio = (container, wavesurfer, src, attempt = 1) => {
+        if (attempt > maxRetries) {
+            // Mostrar mensaje de error al usuario
+            container.querySelector('.waveform-loading').style.display = 'none';
             container.querySelector('.waveform-message').style.display = 'block';
+            console.error(`No se pudo cargar el audio después de ${maxRetries} intentos.`);
             return;
         }
 
@@ -12,6 +15,7 @@ function inicializarWaveforms() {
         container.querySelector('.waveform-loading').style.display = 'block';
         container.querySelector('.waveform-message').style.display = 'none';
 
+        // Ocultar el fondo de waveform
         const waveformBackground = container.querySelector('.waveform-background');
         if (waveformBackground) {
             waveformBackground.style.display = 'none';
@@ -19,49 +23,58 @@ function inicializarWaveforms() {
 
         wavesurfer.load(src);
 
-        wavesurfer.on('ready', () => {
+        const onReady = () => {
             window.audioLoading = false;
             container.dataset.audioLoaded = 'true';
             container.querySelector('.waveform-loading').style.display = 'none';
 
-            wavesurfer.setPlaybackRate(1.2);
+            const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
 
-            if (wavesurfer.pitchShift) {
-                wavesurfer.pitchShift.setPitch(3);
-            }
-
-            if (!container.dataset.waveCargada) {
-                requestAnimationFrame(() => {
-                    const image = generateWaveformImage(wavesurfer);
+            if (!waveCargada) {
+                const image = generateWaveformImage(wavesurfer);
+                if (image) {
                     const postId = container.getAttribute('postIDWave');
                     sendImageToServer(image, postId);
-                });
+                } else {
+                    console.error('No se pudo generar la imagen del waveform.');
+                }
             }
-        });
 
-        wavesurfer.on('error', () => {
+            wavesurfer.un('ready', onReady);
+            wavesurfer.un('error', onError);
+        };
+
+        const onError = (e) => {
+            console.error(`Error al cargar el audio: ${e}`);
+            wavesurfer.un('ready', onReady);
+            wavesurfer.un('error', onError);
+
+            // Intentar recargar después de un retraso
             setTimeout(() => {
-                loadAndPlayAudio(container, wavesurfer, src, retries + 1);
-            }, 3000); // Retraso de 3 segundos antes del reintento
-        });
+                loadAndPlayAudio(container, wavesurfer, src, attempt + 1);
+            }, retryDelay);
+        };
+
+        wavesurfer.on('ready', onReady);
+        wavesurfer.on('error', onError);
     };
 
-    function generateWaveformImage(wavesurfer) {
-        const canvas = wavesurfer.getWrapper().querySelector('canvas');
-        return canvas.toDataURL('image/png');
-    }
+    const generateWaveformImage = (wavesurfer) => {
+        if (wavesurfer.drawer && wavesurfer.drawer.canvases && wavesurfer.drawer.canvases[0]) {
+            const canvas = wavesurfer.drawer.canvases[0].wave;
+            return canvas.toDataURL('image/png');
+        } else {
+            console.error('Cannot generate waveform image. Canvases are not properly initialized.');
+            return null;
+        }
+    };
 
-    async function sendImageToServer(imageData, postId) {
+    const sendImageToServer = async (imageData, postId) => {
         if (imageData.length < 100) return;
 
-        const byteString = atob(imageData.split(',')[1]);
-        const mimeString = imageData.split(',')[0].split(':')[1].split(';')[0];
-        const ab = new ArrayBuffer(byteString.length);
-        const ia = new Uint8Array(ab);
-        for (let i = 0; i < byteString.length; i++) {
-            ia[i] = byteString.charCodeAt(i);
-        }
-        const blob = new Blob([ab], {type: mimeString});
+        // Convertir la cadena base64 a Blob
+        const response = await fetch(imageData);
+        const blob = await response.blob();
 
         const formData = new FormData();
         formData.append('action', 'save_waveform_image');
@@ -69,11 +82,12 @@ function inicializarWaveforms() {
         formData.append('post_id', postId);
 
         try {
-            const response = await fetch(ajaxUrl, {
+            const res = await fetch(ajaxUrl, {
                 method: 'POST',
                 body: formData
             });
-            const data = await response.json();
+
+            const data = await res.json();
 
             if (!data.success) {
                 console.error('Error al guardar la imagen:', data.message);
@@ -81,11 +95,11 @@ function inicializarWaveforms() {
         } catch (error) {
             console.error('Error en la solicitud:', error);
         }
-    }
+    };
 
     const observer = new IntersectionObserver(
-        entries => {
-            entries.forEach(entry => {
+        (entries) => {
+            entries.forEach((entry) => {
                 if (entry.isIntersecting && entry.target.dataset.initialized !== 'true') {
                     const container = entry.target;
                     const audioSrc = container.getAttribute('data-audio-url');
@@ -102,7 +116,7 @@ function inicializarWaveforms() {
                                 if (container.dataset.audioLoaded === 'false') {
                                     loadAndPlayAudio(container, wavesurfer, audioSrc);
                                 }
-                            }, 5000); // Retraso de 5 segundos solo si no está cargado
+                            }, 5000);
                         }
 
                         container.addEventListener('click', () => {
@@ -111,33 +125,21 @@ function inicializarWaveforms() {
                             } else {
                                 wavesurfer.playPause();
                             }
-                        }, { once: true });
-
-                        container.dataset.initialized = 'true';
-                        observer.unobserve(container);
+                        });
                     }
+
+                    container.dataset.initialized = 'true';
+                    observer.unobserve(container);
                 }
             });
         },
         { rootMargin: '0px', threshold: 0.1 }
     );
 
-    document.querySelectorAll('div[id^="waveform-"]').forEach(container => {
-        if (container.dataset.initialized !== 'true') {
-            observer.observe(container);
-        }
-    });
-
     const initWavesurfer = (container) => {
         const containerHeight = container.classList.contains('waveform-container-venta') ? 60 : 102;
-        const ctx = document.createElement('canvas').getContext('2d');
-        const gradient = ctx.createLinearGradient(0, 0, 0, 500);
-        const progressGradient = ctx.createLinearGradient(0, 0, 0, 500);
-        [gradient, progressGradient].forEach(g => {
-            ['0', '0.55', '0.551', '0.552', '0.553', '1'].forEach(stop => {
-                g.addColorStop(parseFloat(stop), g === gradient ? '#FFFFFF' : '#d43333');
-            });
-        });
+        const gradient = getGradient('#FFFFFF');
+        const progressGradient = getGradient('#d43333');
 
         return WaveSurfer.create({
             container: container,
@@ -150,4 +152,21 @@ function inicializarWaveforms() {
             partialRender: true
         });
     };
+
+    const getGradient = (color) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 500);
+
+        gradient.addColorStop(0, color);
+        gradient.addColorStop(1, color);
+
+        return gradient;
+    };
+
+    document.querySelectorAll('div[id^="waveform-"]').forEach((container) => {
+        if (container.dataset.initialized !== 'true') {
+            observer.observe(container);
+        }
+    });
 }
