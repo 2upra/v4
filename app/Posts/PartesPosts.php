@@ -323,6 +323,8 @@ function fileColab($post_id, $colabFileUrl)
     $fileExt = pathinfo($colabFileUrl, PATHINFO_EXTENSION);
     $isAudio = in_array(strtolower($fileExt), $audioExts);
     
+    // Depuración: Imprimir la URL del archivo
+    error_log('URL del archivo colaborativo: ' . $colabFileUrl);
 
     if ($isAudio) {
         $audioColab = obtenerArchivoIdAlt($colabFileUrl, $post_id);
@@ -330,6 +332,9 @@ function fileColab($post_id, $colabFileUrl)
         if ($audioColab && !is_wp_error($audioColab)) {
             update_post_meta($post_id, 'audioColab', $audioColab);
         }
+        
+        // Depuración: Imprimir el ID del audioColab
+        error_log('ID del audioColab: ' . $audioColab);
     ?>
         <div id="waveform-<?php echo esc_attr($post_id); ?>"
              class="waveform-container without-image"
@@ -351,6 +356,14 @@ function fileColab($post_id, $colabFileUrl)
 
 function obtenerArchivoIdAlt($url, $postId)
 {
-    return attachment_url_to_postid($url);
+    global $wpdb;
+    // Preparar la consulta incluyendo la verificación del tipo de post 'attachment'
+    $sql = $wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE guid = %s AND post_type = 'attachment';", $url);
+    $attachment = $wpdb->get_col($sql);
+    
+    // Depuración: Imprimir el resultado de la consulta
+    error_log('Resultado de la consulta de archivo: ' . print_r($attachment, true));
+
+    return !empty($attachment) ? $attachment[0] : 0;
 }
 
