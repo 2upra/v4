@@ -32,8 +32,12 @@ function inicializarWaveforms() {
 
             if (!waveCargada) {
                 const image = generateWaveformImage(wavesurfer);
-                const postId = container.getAttribute('postIDWave');
-                sendImageToServer(image, postId);
+                if (image) {
+                    const postId = container.getAttribute('postIDWave');
+                    sendImageToServer(image, postId);
+                } else {
+                    console.error('No se pudo generar la imagen del waveform.');
+                }
             }
 
             wavesurfer.un('ready', onReady);
@@ -56,8 +60,13 @@ function inicializarWaveforms() {
     };
 
     const generateWaveformImage = (wavesurfer) => {
-        const canvas = wavesurfer.drawer.canvases[0].wave;
-        return canvas.toDataURL('image/png');
+        if (wavesurfer.drawer && wavesurfer.drawer.canvases && wavesurfer.drawer.canvases[0]) {
+            const canvas = wavesurfer.drawer.canvases[0].wave;
+            return canvas.toDataURL('image/png');
+        } else {
+            console.error('Cannot generate waveform image. Canvases are not properly initialized.');
+            return null;
+        }
     };
 
     const sendImageToServer = async (imageData, postId) => {
@@ -103,7 +112,6 @@ function inicializarWaveforms() {
                         if (waveCargada) {
                             wavesurfer.load(audioSrc);
                         } else {
-                            // Intentar cargar el audio
                             setTimeout(() => {
                                 if (container.dataset.audioLoaded === 'false') {
                                     loadAndPlayAudio(container, wavesurfer, audioSrc);
