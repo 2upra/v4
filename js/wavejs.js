@@ -1,10 +1,13 @@
 function inicializarWaveforms() {
-    const loadAndPlayAudio = (container, wavesurfer, src) => {
-        if (!src) {
-            console.error('No se ha proporcionado una fuente de audio');
+    const maxRetryAttempts = 5; // Máximo número de reintentos para cargar el audio
+
+    const loadAndPlayAudio = (container, wavesurfer, src, retries = 0) => {
+        if (retries > maxRetryAttempts) {
+            console.error(`Error: No se pudo cargar el audio tras ${maxRetryAttempts} intentos.`);
+            container.querySelector('.waveform-message').style.display = 'block';
             return;
         }
-        
+
         window.audioLoading = true;
         container.querySelector('.waveform-loading').style.display = 'block';
         container.querySelector('.waveform-message').style.display = 'none';
@@ -16,30 +19,30 @@ function inicializarWaveforms() {
 
         wavesurfer.load(src);
 
-        // Utiliza una función anónima para eliminar el oyente después de la ejecución
-        const onReady = () => {
+        wavesurfer.on('ready', () => {
             window.audioLoading = false;
-            container.dataset.audioLoaded = true;
+            container.dataset.audioLoaded = 'true';
             container.querySelector('.waveform-loading').style.display = 'none';
 
-            const waveCargada = container.dataset.waveCargada === 'true';
-            if (!waveCargada) {
-                setTimeout(() => {
+            wavesurfer.setPlaybackRate(1.2);
+
+            if (wavesurfer.pitchShift) {
+                wavesurfer.pitchShift.setPitch(3);
+            }
+
+            if (!container.dataset.waveCargada) {
+                requestAnimationFrame(() => {
                     const image = generateWaveformImage(wavesurfer);
                     const postId = container.getAttribute('postIDWave');
                     sendImageToServer(image, postId);
-                }, 1);
+                });
             }
-            // Remove the listener after it's done
-            wavesurfer.un('ready', onReady);
-        };
+        });
 
-        wavesurfer.once('ready', onReady);
-
-        wavesurfer.once('error', () => {
-            console.error('Error al cargar el audio'); // Añade un mensaje de error para visibilidad
-            window.audioLoading = false; // Resetea el estado de carga para evitar bucles infinitos
-            setTimeout(() => loadAndPlayAudio(container, wavesurfer, src), 3000);
+        wavesurfer.on('error', () => {
+            setTimeout(() => {
+                loadAndPlayAudio(container, wavesurfer, src, retries + 1);
+            }, 3000); // Retraso de 3 segundos antes del reintento
         });
     };
 
@@ -58,7 +61,7 @@ function inicializarWaveforms() {
         for (let i = 0; i < byteString.length; i++) {
             ia[i] = byteString.charCodeAt(i);
         }
-        const blob = new Blob([ab], { type: mimeString });
+        const blob = new Blob([ab], {type: mimeString});
 
         const formData = new FormData();
         formData.append('action', 'save_waveform_image');
@@ -70,8 +73,8 @@ function inicializarWaveforms() {
                 method: 'POST',
                 body: formData
             });
-
             const data = await response.json();
+
             if (!data.success) {
                 console.error('Error al guardar la imagen:', data.message);
             }
@@ -86,33 +89,10 @@ function inicializarWaveforms() {
                 if (entry.isIntersecting && entry.target.dataset.initialized !== 'true') {
                     const container = entry.target;
                     const audioSrc = container.getAttribute('data-audio-url');
-                    const waveCargada = container.dataset.waveCargada === 'true';
-
-                    const initWavesurfer = () => {
-                        const containerHeight = container.classList.contains('waveform-container-venta') ? 60 : 102;
-                        const ctx = document.createElement('canvas').getContext('2d');
-                        const gradient = ctx.createLinearGradient(0, 0, 0, 500);
-                        const progressGradient = ctx.createLinearGradient(0, 0, 0, 500);
-                        [gradient, progressGradient].forEach(g => {
-                            ['0', '0.55', '0.551', '0.552', '0.553', '1'].forEach(stop => {
-                                g.addColorStop(parseFloat(stop), g === gradient ? '#FFFFFF' : '#d43333');
-                            });
-                        });
-
-                        return WaveSurfer.create({
-                            container: container,
-                            waveColor: gradient,
-                            progressColor: progressGradient,
-                            backend: 'WebAudio',
-                            interact: true,
-                            barWidth: 2,
-                            height: containerHeight,
-                            partialRender: true
-                        });
-                    };
+                    const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
 
                     if (audioSrc && !window.audioLoading) {
-                        const wavesurfer = initWavesurfer();
+                        const wavesurfer = initWavesurfer(container);
                         container.dataset.audioLoaded = 'false';
 
                         if (waveCargada) {
@@ -122,7 +102,7 @@ function inicializarWaveforms() {
                                 if (container.dataset.audioLoaded === 'false') {
                                     loadAndPlayAudio(container, wavesurfer, audioSrc);
                                 }
-                            }, 5000);
+                            }, 5000); // Retraso de 5 segundos solo si no está cargado
                         }
 
                         container.addEventListener('click', () => {
@@ -131,10 +111,11 @@ function inicializarWaveforms() {
                             } else {
                                 wavesurfer.playPause();
                             }
-                        });
+                        }, { once: true });
+
+                        container.dataset.initialized = 'true';
+                        observer.unobserve(container);
                     }
-                    container.dataset.initialized = 'true';
-                    observer.unobserve(container);
                 }
             });
         },
@@ -146,4 +127,27 @@ function inicializarWaveforms() {
             observer.observe(container);
         }
     });
+
+    const initWavesurfer = (container) => {
+        const containerHeight = container.classList.contains('waveform-container-venta') ? 60 : 102;
+        const ctx = document.createElement('canvas').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 500);
+        const progressGradient = ctx.createLinearGradient(0, 0, 0, 500);
+        [gradient, progressGradient].forEach(g => {
+            ['0', '0.55', '0.551', '0.552', '0.553', '1'].forEach(stop => {
+                g.addColorStop(parseFloat(stop), g === gradient ? '#FFFFFF' : '#d43333');
+            });
+        });
+
+        return WaveSurfer.create({
+            container: container,
+            waveColor: gradient,
+            progressColor: progressGradient,
+            backend: 'WebAudio',
+            interact: true,
+            barWidth: 2,
+            height: containerHeight,
+            partialRender: true
+        });
+    };
 }
