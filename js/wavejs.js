@@ -1,10 +1,14 @@
 function inicializarWaveforms() {
     const loadAndPlayAudio = (container, wavesurfer, src) => {
+        if (!src) {
+            console.error('No se ha proporcionado una fuente de audio');
+            return;
+        }
+        
         window.audioLoading = true;
         container.querySelector('.waveform-loading').style.display = 'block';
         container.querySelector('.waveform-message').style.display = 'none';
 
-        // Ocultar el fondo de waveform
         const waveformBackground = container.querySelector('.waveform-background');
         if (waveformBackground) {
             waveformBackground.style.display = 'none';
@@ -12,21 +16,13 @@ function inicializarWaveforms() {
 
         wavesurfer.load(src);
 
-        wavesurfer.on('ready', () => {
+        // Utiliza una función anónima para eliminar el oyente después de la ejecución
+        const onReady = () => {
             window.audioLoading = false;
-            container.dataset.audioLoaded = 'true';
+            container.dataset.audioLoaded = true;
             container.querySelector('.waveform-loading').style.display = 'none';
 
-            wavesurfer.setPlaybackRate(1.2); // Ajusta la velocidad a 1.2x
-
-            // Cambiar el tono utilizando el plugin pitchShift
-            if (wavesurfer.pitchShift) {
-                wavesurfer.pitchShift.setPitch(3); // Cambia el tono 3 semitonos hacia arriba
-            }
-        
-
-            const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
-
+            const waveCargada = container.dataset.waveCargada === 'true';
             if (!waveCargada) {
                 setTimeout(() => {
                     const image = generateWaveformImage(wavesurfer);
@@ -34,8 +30,15 @@ function inicializarWaveforms() {
                     sendImageToServer(image, postId);
                 }, 1);
             }
-        });
-        wavesurfer.on('error', () => {
+            // Remove the listener after it's done
+            wavesurfer.un('ready', onReady);
+        };
+
+        wavesurfer.once('ready', onReady);
+
+        wavesurfer.once('error', () => {
+            console.error('Error al cargar el audio'); // Añade un mensaje de error para visibilidad
+            window.audioLoading = false; // Resetea el estado de carga para evitar bucles infinitos
             setTimeout(() => loadAndPlayAudio(container, wavesurfer, src), 3000);
         });
     };
@@ -46,11 +49,8 @@ function inicializarWaveforms() {
     }
 
     async function sendImageToServer(imageData, postId) {
-        if (imageData.length < 100) {
-            return;
-        }
+        if (imageData.length < 100) return;
 
-        // Convertir la cadena base64 a Blob
         const byteString = atob(imageData.split(',')[1]);
         const mimeString = imageData.split(',')[0].split(':')[1].split(';')[0];
         const ab = new ArrayBuffer(byteString.length);
@@ -58,7 +58,7 @@ function inicializarWaveforms() {
         for (let i = 0; i < byteString.length; i++) {
             ia[i] = byteString.charCodeAt(i);
         }
-        const blob = new Blob([ab], {type: mimeString});
+        const blob = new Blob([ab], { type: mimeString });
 
         const formData = new FormData();
         formData.append('action', 'save_waveform_image');
@@ -72,7 +72,6 @@ function inicializarWaveforms() {
             });
 
             const data = await response.json();
-
             if (!data.success) {
                 console.error('Error al guardar la imagen:', data.message);
             }
@@ -87,9 +86,7 @@ function inicializarWaveforms() {
                 if (entry.isIntersecting && entry.target.dataset.initialized !== 'true') {
                     const container = entry.target;
                     const audioSrc = container.getAttribute('data-audio-url');
-                    const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
-
-                    let wavesurfer;
+                    const waveCargada = container.dataset.waveCargada === 'true';
 
                     const initWavesurfer = () => {
                         const containerHeight = container.classList.contains('waveform-container-venta') ? 60 : 102;
@@ -115,23 +112,19 @@ function inicializarWaveforms() {
                     };
 
                     if (audioSrc && !window.audioLoading) {
-                        wavesurfer = initWavesurfer();
+                        const wavesurfer = initWavesurfer();
                         container.dataset.audioLoaded = 'false';
 
                         if (waveCargada) {
-                            // Si la waveform ya está cargada, simplemente cargar el audio
                             wavesurfer.load(audioSrc);
                         } else {
-                            // Si no está cargada, usar loadAndPlayAudio
-                            const loadTimer = setTimeout(() => {
+                            setTimeout(() => {
                                 if (container.dataset.audioLoaded === 'false') {
                                     loadAndPlayAudio(container, wavesurfer, audioSrc);
                                 }
                             }, 5000);
                         }
-                    }
 
-                    if (wavesurfer) {
                         container.addEventListener('click', () => {
                             if (container.dataset.audioLoaded === 'false') {
                                 loadAndPlayAudio(container, wavesurfer, audioSrc);
@@ -140,13 +133,12 @@ function inicializarWaveforms() {
                             }
                         });
                     }
-
                     container.dataset.initialized = 'true';
                     observer.unobserve(container);
                 }
             });
         },
-        {rootMargin: '0px', threshold: 0.1}
+        { rootMargin: '0px', threshold: 0.1 }
     );
 
     document.querySelectorAll('div[id^="waveform-"]').forEach(container => {
@@ -155,5 +147,3 @@ function inicializarWaveforms() {
         }
     });
 }
-
-
