@@ -16,7 +16,16 @@ function htmlColab($filtro)
 
         <div class="colab-content">
             <div class="BMGCLT">
-                test
+                
+                <div>
+
+                </div>
+
+                <div>
+                    <p></p>
+                    <p></p>
+                </div>
+                
             </div>
         </div>
     </li>

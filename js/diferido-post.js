@@ -1,14 +1,17 @@
 const A07 = false;
-const log07 = A07 ? console.log : function () {};
-let cargando = false;
-let paged = 2;
-let publicacionesCargadas = [];
-let identifier = '';
-let ultimoLog = 0;
-const intervaloLog = 1000;
-let eventoBusquedaConfigurado = false;
-const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
-//FUNCION REINICIADORA CADA VEZ QUE SE CAMBIA DE PAGINA MEDIANTE AJAX
+const log07 = A07 ? console.log : () => {};
+
+let cargando = false,
+    paged = 2,
+    publicacionesCargadas = [],
+    identifier = '',
+    eventoBusquedaConfigurado = false,
+    ultimoLog = 0,
+    intervaloLog = 1000;
+
+const ajaxUrl = (typeof ajax_params !== 'undefined' && ajax_params.ajax_url) ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
+
+// Función que se llama cada vez que se cambia de página mediante AJAX
 function reiniciarDiferidoPost() {
     log07('Reiniciando diferidopost');
     window.removeEventListener('scroll', manejarScroll);
@@ -20,7 +23,7 @@ function reiniciarDiferidoPost() {
 
     if (!eventoBusquedaConfigurado) {
         configurarEventoBusqueda();
-        eventoBusquedaConfigurado = true; // Marca como configurado
+        eventoBusquedaConfigurado = true;
     }
     ajustarAlturaMaxima();
     cargarContenidoPorScroll();
@@ -29,16 +32,11 @@ function reiniciarDiferidoPost() {
 
 function establecerUserIdDesdeInput() {
     const paginaActualInput = document.getElementById('pagina_actual');
-
-    if (paginaActualInput && paginaActualInput.value.toLowerCase() === 'sello') {
+    if (paginaActualInput?.value.toLowerCase() === 'sello') {
         const userIdInput = document.getElementById('user_id');
-
         if (userIdInput) {
             const userId = userIdInput.value;
-            const userProfileContainer = document.querySelector('.custom-uprofile-container');
-            if (userProfileContainer) {
-                userProfileContainer.dataset.authorId = userId;
-            }
+            document.querySelector('.custom-uprofile-container')?.setAttribute('data-author-id', userId);
             window.currentUserId = userId;
             log07('User ID establecido:', userId);
         } else {
@@ -51,20 +49,15 @@ function establecerUserIdDesdeInput() {
 
 function manejarScroll() {
     const ahora = Date.now();
-
     if (ahora - ultimoLog >= intervaloLog) {
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         const windowHeight = window.innerHeight;
-        const documentHeight = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
-        // const noMorePostsExists = document.getElementById('no-more-posts');
+        const documentHeight = Math.max(
+            document.body.scrollHeight, document.body.offsetHeight,
+            document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight
+        );
 
-        log07('Evento de scroll detectado:', {
-            scrollTop,
-            windowHeight,
-            documentHeight,
-            cargando
-            //noMorePostsExists: !!noMorePostsExists
-        });
+        log07('Evento de scroll detectado:', { scrollTop, windowHeight, documentHeight, cargando });
 
         if (scrollTop + windowHeight > documentHeight - 100 && !cargando) {
             log07('Condiciones para cargar más contenido cumplidas');
@@ -72,26 +65,21 @@ function manejarScroll() {
         } else {
             log07('Condiciones para cargar más contenido no cumplidas');
         }
-
         ultimoLog = ahora;
     }
 }
-
-//de alguna forma, tiene que evitar cargar mas contenido si <div id="no-more-posts-two" no-more="<?php echo esc_attr($filtro);?>"></div> si no-more contiene el filtro que se intenta cargar, te muestro la parte relavante del codigo
 
 function cargarMasContenido() {
     cargando = true;
     log07('Iniciando carga de más contenido');
 
     const activeTabElement = document.querySelector('.tab.active');
-
-    if (activeTabElement && activeTabElement.getAttribute('ajax') === 'no') {
+    if (activeTabElement?.getAttribute('ajax') === 'no') {
         log07('La pestaña activa tiene ajax="no". No se cargará más contenido.');
         cargando = false;
         return;
     }
 
-    // Si no tiene ajax="no", proceder con la búsqueda del contenedor de posts
     const activeTab = document.querySelector('.tab.active .social-post-list');
     if (!activeTab) {
         log07('No se encontró una pestaña activa');
@@ -99,29 +87,23 @@ function cargarMasContenido() {
         return;
     }
 
-    const filtroActual = activeTab.dataset.filtro;
-    const tabIdActual = activeTab.dataset.tabId;
-    const userProfileContainer = document.querySelector('.custom-uprofile-container');
+    const { filtro: filtroActual, tabId: tabIdActual } = activeTab.dataset;
+    const user_id = window.currentUserId || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
 
-    let user_id = '';
-    if (window.currentUserId) {
-        user_id = window.currentUserId;
-    } else if (userProfileContainer) {
-        user_id = userProfileContainer.dataset.authorId;
-    }
-
-    log07('Parámetros de carga:', {
-        filtroActual,
-        tabIdActual,
-        identifier,
-        user_id,
-        paged
-    });
+    log07('Parámetros de carga:', { filtroActual, tabIdActual, identifier, user_id, paged });
 
     fetch(ajaxUrl, {
         method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: `action=cargar_mas_publicaciones&paged=${paged}&filtro=${filtroActual}&identifier=${identifier}&tab_id=${tabIdActual}&user_id=${user_id}&cargadas=${publicacionesCargadas.join(',')}`
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            action: 'cargar_mas_publicaciones',
+            paged,
+            filtro: filtroActual,
+            identifier,
+            tab_id: tabIdActual,
+            user_id,
+            cargadas: publicacionesCargadas.join(',')
+        })
     })
         .then(response => response.text())
         .then(procesarRespuesta)
@@ -140,7 +122,6 @@ function procesarRespuesta(response) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(response, 'text/html');
 
-        // Buscar todos los elementos con la clase EDYQHV
         doc.querySelectorAll('.EDYQHV').forEach(post => {
             const postId = post.getAttribute('id-post');
             if (postId && !publicacionesCargadas.includes(postId)) {
@@ -150,15 +131,11 @@ function procesarRespuesta(response) {
         });
 
         const activeTab = document.querySelector('.tab.active .social-post-list');
-        if (response.trim() !== '' && !doc.querySelector('#no-more-posts')) {
+        if (response.trim() && !doc.querySelector('#no-more-posts')) {
             activeTab.insertAdjacentHTML('beforeend', response);
             log07('Contenido añadido');
             paged++;
-            window.inicializarWaveforms();
-            window.empezarcolab();
-            window.submenu();
-            window.seguir();
-            window.modalDetallesIA();
+            ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA'].forEach(fn => window[fn]?.());
         } else {
             log07('No más publicaciones o respuesta vacía');
             detenerCarga();
@@ -170,32 +147,25 @@ function procesarRespuesta(response) {
 function cargarContenidoPorScroll() {
     log07('Configurando evento de scroll');
     window.addEventListener('scroll', manejarScroll);
-    log07('Evento de scroll configurado');
 }
 
-// Agregar evento para el campo de búsqueda
 function configurarEventoBusqueda() {
     const searchInput = document.getElementById('identifier');
-
     if (searchInput) {
         searchInput.removeEventListener('keypress', manejadorEventoBusqueda);
-
-        function manejadorEventoBusqueda(e) {
-            log07('Evento keypress detectado en searchInput', e);
-            if (e.key === 'Enter') {
-                publicacionesCargadas = [];
-                e.preventDefault();
-                identifier = this.value;
-                log07('Enter presionado, valor de identifier:', identifier);
-                resetearCarga();
-                cargarMasContenido();
-                paged = 1;
-            }
-        }
-
         searchInput.addEventListener('keypress', manejadorEventoBusqueda);
     } else {
         log07('No se encontró el elemento searchInput');
+    }
+
+    function manejadorEventoBusqueda(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            identifier = e.target.value;
+            log07('Enter presionado, valor de identifier:', identifier);
+            resetearCarga();
+            cargarMasContenido();
+        }
     }
 }
 
@@ -205,13 +175,7 @@ function resetearCarga() {
     window.removeEventListener('scroll', manejarScroll);
     cargarContenidoPorScroll();
     log07('Ejecutando resetearCarga');
-    const activeTab = document.querySelector('.tab.active .social-post-list');
-    if (activeTab) {
-        log07('Encontrado activeTab, reseteando contenido');
-        activeTab.innerHTML = '';
-    } else {
-        log07('No se encontró el elemento activeTab');
-    }
+    document.querySelector('.tab.active .social-post-list')?.innerHTML = '';
 }
 
 function detenerCarga() {
@@ -222,13 +186,11 @@ function detenerCarga() {
 
 function ajustarAlturaMaxima() {
     const contenedor = document.querySelector('.SAOEXP .clase-rolastatus');
-    if (!contenedor) return;
-
-    const elementos = contenedor.querySelectorAll('li[filtro="rolastatus"]');
-    if (elementos.length > 0) {
-        const alturaElemento = elementos[0].offsetHeight;
-        const alturaMaxima = alturaElemento + 40;
-        contenedor.style.maxHeight = `${alturaMaxima}px`;
+    if (contenedor) {
+        const elemento = contenedor.querySelector('li[filtro="rolastatus"]');
+        if (elemento) {
+            contenedor.style.maxHeight = `${elemento.offsetHeight + 40}px`;
+        }
     }
 }
 
