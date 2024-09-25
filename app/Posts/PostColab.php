@@ -12,20 +12,29 @@ function htmlColab($filtro)
     <li class="POST-<?php echo esc_attr($filtro); ?> EDYQHV"
         filtro="<?php echo esc_attr($filtro); ?>"
         id-post="<?php echo get_the_ID(); ?>"
-        autor="<?php echo esc_attr($author_id); ?>">
+        autor="<?php echo esc_attr($colabAutor); ?>">
 
         <div class="colab-content">
+
             <div class="BMGCLT">
-                
-                <div>
 
+                <div class="CBZNGK">
+                    <a href="<?php echo esc_url(get_author_posts_url($colabAutor)); ?>"></a>
+                    <img src="<?php echo esc_url($author_avatar); ?>">
                 </div>
 
-                <div>
-                    <p></p>
-                    <p></p>
+                <div class="ZVJVZA">
+                    <div class="JHVSFW">
+                        <a href="<?php echo esc_url(get_author_posts_url($colabAutor)); ?>" class="profile-link">
+                            <?php echo esc_html($colabAutorName); ?></a>
+                    </div>
+                    <div class="HQLXWD">
+                        <a href="<?php echo esc_url(get_permalink()); ?>" class="post-link"><?php echo esc_html($post_date); ?></a>
+                    </div>
                 </div>
-                
+
+                <button>Test</button>
+
             </div>
         </div>
     </li>
