@@ -1,6 +1,5 @@
 <?php
 
-//Falta update_post_meta($post_id, 'additional_search_data', $additional_data_json);
 // Formulario principal
 
 function subidaRs()

@@ -318,31 +318,40 @@ function wave($audio_url, $audio_id_lite, $post_id)
 function fileColab($post_id, $colabFileUrl)
 {
     $waveCargada = get_post_meta($post_id, 'waveCargada', true);
-    $wave = null;
-    ob_start();
     $audioExts = array('mp3', 'wav', 'ogg', 'aac');
     $fileExt = pathinfo($colabFileUrl, PATHINFO_EXTENSION);
     $isAudio = in_array(strtolower($fileExt), $audioExts);
+    
 
     if ($isAudio) {
-        $audioColab = attachment_url_to_postid($colabFileUrl);
-        if ($audioColab) {
+        $audioColab = obtenerArchivoId($colabFileUrl, $post_id);
+        
+        if ($audioColab && !is_wp_error($audioColab)) {
             update_post_meta($post_id, 'audioColab', $audioColab);
         }
     ?>
         <div id="waveform-<?php echo esc_attr($post_id); ?>"
-            class="waveform-container without-image"
-            postIDWave="<?php echo esc_attr($post_id); ?>"
-            data-audio-url="<?php echo esc_url(site_url('?custom-audio-stream=1&audio_id=' . $audioColab)); ?>"
-            data-wave-cargada="<?php echo esc_attr($waveCargada ? 'true' : 'false'); ?>">
-            <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
+             class="waveform-container without-image"
+             postIDWave="<?php echo esc_attr($post_id); ?>"
+             data-audio-url="<?php echo esc_url(site_url('?custom-audio-stream=1&audio_id=' . $audioColab)); ?>"
+             data-wave-cargada="<?php echo esc_attr($waveCargada ? 'true' : 'false'); ?>">
+            <div class="waveform-background"></div>
             <div class="waveform-message"></div>
             <div class="waveform-loading" style="display: none;">Cargando...</div>
         </div>
-<?php
+    <?php
     } else {
         $fileName = basename($colabFileUrl);
         echo '<p>Archivo: ' . esc_html($fileName) . '</p>';
     }
+
     return ob_get_clean();
 }
+
+function obtenerArchivoId($url, $postId)
+{
+    global $wpdb;
+    $attachment = $wpdb->get_col($wpdb->prepare("SELECT ID FROM $wpdb->posts WHERE guid='%s';", $url));
+    return $attachment ? $attachment[0] : 0;
+}
+
