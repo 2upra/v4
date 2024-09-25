@@ -34,8 +34,10 @@ function htmlColab($filtro)
                     </div>
                 </div>
 
-                <button class="botonsecundario">Test</button>
-                <button class="botonprincipal">Test</button>
+                <div style="margin-left: auto;">
+                    <button class="botonsecundario">Test</button>
+                    <button class="botonprincipal">Test</button>
+                </div>
 
             </div>
         </div>
