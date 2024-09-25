@@ -25,7 +25,7 @@ function setupRs() {
     handleSubida();
     handleEnvio();
     setupPlaceholder();
-    setupTagEnTexto();
+    TagEnTexto();
 }
 
 function verificarCamposRs() {
