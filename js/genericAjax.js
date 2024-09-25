@@ -1,6 +1,6 @@
-// Logs
 let enablelogAjax = false;
 const logAjax = enablelogAjax ? console.log : function () {};
+const ajaxUrl = (typeof ajax_params !== 'undefined' && ajax_params.ajax_url) ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
 
 //GENERIC AJAX
 async function enviarAjax(action, data = {}) {

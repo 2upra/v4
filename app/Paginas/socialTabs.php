@@ -6,7 +6,6 @@ function socialTabs()
 ?>
 
     <div id="menuData" style="display:none;" pestanaActual="">
-        esta data inicio no debe mostrarse
         <div data-tab="inicio"></div>
         <div data-tab="Proyecto"></div>
     </div>

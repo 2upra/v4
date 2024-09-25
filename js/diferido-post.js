@@ -11,7 +11,7 @@
     let eventoBusquedaConfigurado = false;
     let scrollTimeout = null;
 
-    const ajaxUrl = (typeof ajax_params !== 'undefined' && ajax_params.ajax_url) ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
+
 
     // Función que se llama cada vez que se cambia de página mediante AJAX
     function reiniciarDiferidoPost() {
