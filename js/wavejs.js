@@ -1,10 +1,18 @@
 function inicializarWaveforms() {
-    const loadAndPlayAudio = (container, wavesurfer, src) => {
+    const MAX_RETRIES = 3; // Límite de reintentos
+
+    const loadAndPlayAudio = (container, wavesurfer, src, retryCount = 0) => {
+        if (retryCount >= MAX_RETRIES) {
+            console.error('No se pudo cargar el audio después de varios intentos');
+            container.querySelector('.waveform-loading').style.display = 'none';
+            container.querySelector('.waveform-message').style.display = 'block';
+            container.querySelector('.waveform-message').textContent = 'Error al cargar el audio.';
+            return;
+        }
+
         window.audioLoading = true;
         container.querySelector('.waveform-loading').style.display = 'block';
         container.querySelector('.waveform-message').style.display = 'none';
-
-        // Ocultar el fondo de waveform
         const waveformBackground = container.querySelector('.waveform-background');
         if (waveformBackground) {
             waveformBackground.style.display = 'none';
@@ -26,8 +34,10 @@ function inicializarWaveforms() {
                 }, 1);
             }
         });
+
         wavesurfer.on('error', () => {
-            setTimeout(() => loadAndPlayAudio(container, wavesurfer, src), 3000);
+            console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`);
+            setTimeout(() => loadAndPlayAudio(container, wavesurfer, src, retryCount + 1), 3000);
         });
     };
 
@@ -49,7 +59,7 @@ function inicializarWaveforms() {
         for (let i = 0; i < byteString.length; i++) {
             ia[i] = byteString.charCodeAt(i);
         }
-        const blob = new Blob([ab], {type: mimeString});
+        const blob = new Blob([ab], { type: mimeString });
 
         const formData = new FormData();
         formData.append('action', 'save_waveform_image');
@@ -110,10 +120,8 @@ function inicializarWaveforms() {
                         container.dataset.audioLoaded = 'false';
 
                         if (waveCargada) {
-                            // Si la waveform ya está cargada, simplemente cargar el audio
                             wavesurfer.load(audioSrc);
                         } else {
-                            // Si no está cargada, usar loadAndPlayAudio
                             const loadTimer = setTimeout(() => {
                                 if (container.dataset.audioLoaded === 'false') {
                                     loadAndPlayAudio(container, wavesurfer, audioSrc);
@@ -137,7 +145,7 @@ function inicializarWaveforms() {
                 }
             });
         },
-        {rootMargin: '0px', threshold: 0.1}
+        { rootMargin: '0px', threshold: 0.1 }
     );
 
     document.querySelectorAll('div[id^="waveform-"]').forEach(container => {
@@ -146,5 +154,3 @@ function inicializarWaveforms() {
         }
     });
 }
-
-
