@@ -315,6 +315,7 @@ function wave($audio_url, $audio_id_lite, $post_id)
     <?php endif;
 }
 
+//en el post hay un meta que contiene una url de un archivo, que generalmente se ve asi https://2upra.com/wp-content/uploads/2024/09/looperman-l-4329379-0312964-cowbell-5admin-4elensh.wav y debo poner su id en $audioColab pero no esta funcionando, en este caso da 0 la id, no se que esta pasando, es wordpress 
 function fileColab($post_id, $colabFileUrl)
 {
     $waveCargada = get_post_meta($post_id, 'waveCargada', true);
@@ -350,8 +351,6 @@ function fileColab($post_id, $colabFileUrl)
 
 function obtenerArchivoIdAlt($url, $postId)
 {
-    global $wpdb;
-    $attachment = $wpdb->get_col($wpdb->prepare("SELECT ID FROM $wpdb->posts WHERE guid='%s';", $url));
-    return $attachment ? $attachment[0] : 0;
+    return attachment_url_to_postid($url);
 }
 
