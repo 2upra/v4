@@ -24,7 +24,9 @@ function variablesColab($post_id = null)
         'colabMensaje' => $colabMensaje,
         'colabFileUrl' => $colabFileUrl,
         'colabAutorName' => get_the_author_meta('display_name', $colabAutor),
-        'author_avatar' => imagenPerfil($colabAutor),
+        'colabColaboradorName' => get_the_author_meta('display_name', $colabColaborador),
+        'colabColaboradorAvatar' => imagenPerfil($colabColaborador),
+        'colabAutorAvatar' => imagenPerfil($colabAutor),
         'colab_date' => get_the_date('', $post_id),
         'colab_status' => get_post_status($post_id),
     ];

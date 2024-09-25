@@ -19,17 +19,17 @@ function htmlColab($filtro)
             <div class="BMGCLT">
 
                 <div class="CBZNGK">
-                    <a href="<?php echo esc_url(get_author_posts_url($colabAutor)); ?>"></a>
-                    <img src="<?php echo esc_url($author_avatar); ?>">
+                    <a href="<?php echo esc_url(get_author_posts_url($colabColaborador)); ?>"></a>
+                    <img src="<?php echo esc_url($colabColaboradorAvatar); ?>">
                 </div>
 
                 <div class="ZVJVZA">
                     <div class="JHVSFW">
-                        <a href="<?php echo esc_url(get_author_posts_url($colabAutor)); ?>" class="profile-link">
-                            <?php echo esc_html($colabAutorName); ?></a>
+                        <a href="<?php echo esc_url(get_author_posts_url($colabColaborador)); ?>" class="profile-link">
+                            <?php echo esc_html($colabColaboradorName); ?></a>
                     </div>
                     <div class="HQLXWD">
-                        <a href="<?php echo esc_url(get_permalink()); ?>" class="post-link"><?php echo esc_html($post_date); ?></a>
+                        <a href="<?php echo esc_url(get_permalink()); ?>" class="post-link"><?php echo esc_html($colab_date); ?></a>
                     </div>
                 </div>
 
