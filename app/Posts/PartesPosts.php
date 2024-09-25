@@ -315,6 +315,7 @@ function wave($audio_url, $audio_id_lite, $post_id)
     <?php endif;
 }
 
+// Tengo esto pero tengo un problema, no saca la id del audio, por ejemplo, en un post existe este audio
 function fileColab($post_id, $colabFileUrl)
 {
     $waveCargada = get_post_meta($post_id, 'waveCargada', true);
@@ -348,3 +349,21 @@ function fileColab($post_id, $colabFileUrl)
     return ob_get_clean();
 }
 
+/*
+funcion generica que se usa para muchas cosas otras funciones:
+function obtenerArchivoId($url, $postId)
+{
+    $archivoId = attachment_url_to_postid($url);
+    if (!$archivoId) {
+        $file_path = str_replace(wp_upload_dir()['baseurl'], wp_upload_dir()['basedir'], $url);
+        if (file_exists($file_path)) {
+            $archivoId = media_handle_sideload([
+                'name'     => basename($file_path),
+                'tmp_name' => $file_path
+            ], $postId);
+        }
+    }
+
+    return $archivoId;
+}
+*/
