@@ -1,77 +1,116 @@
 <?php
 
 add_action('template_redirect', 'custom_audio_streaming_handler');
+
 function custom_audio_streaming_handler() {
-    if (isset($_GET['custom-audio-stream']) && $_GET['custom-audio-stream'] == '1' && isset($_GET['audio_id'])) {
+    if (isset($_GET['custom-audio-stream'], $_GET['audio_id']) && $_GET['custom-audio-stream'] == '1') {
         $audio_id = intval($_GET['audio_id']);
+
+        // Verificar que el ID de audio corresponde a un adjunto válido
+        $attachment = get_post($audio_id);
+        if (!$attachment || $attachment->post_type !== 'attachment') {
+            status_header(404);
+            die('ID de audio inválido.');
+        }
+
         $audio_path = get_attached_file($audio_id);
 
-        if (file_exists($audio_path)) {
-            $file_extension = strtolower(pathinfo($audio_path, PATHINFO_EXTENSION));
-            $content_type = 'audio/mpeg'; // Default to mp3
-            
-            if ($file_extension == 'wav') {
-                $content_type = 'audio/wav';
-            }
+        if (!$audio_path || !file_exists($audio_path)) {
+            status_header(404);
+            die('Archivo no encontrado.');
+        }
+
+        // Verificar que el usuario tenga permiso para acceder al archivo
+        // Puedes personalizar esta parte según tus necesidades de seguridad
+        /*
+        if (!current_user_can('read_private_posts')) {
+            status_header(403);
+            die('No tienes permiso para acceder a este archivo.');
+        }
+        */
+
+        // Obtener el tipo MIME correcto
+        $file_info = wp_check_filetype($audio_path);
+        $content_type = $file_info['type'];
+
+        if (!$content_type) {
+            status_header(403);
+            die('Tipo de archivo no permitido.');
+        }
 
         $last_modified_time = filemtime($audio_path);
-        $etag = md5_file($audio_path);
+        $etag = '"' . md5_file($audio_path) . '"';
 
-        // 30 días expresados en segundos
+        // 30 días en segundos
         $max_age = 30 * 24 * 60 * 60;
 
-        header("Expires: " . gmdate("D, d M Y H:i:s", time() + $max_age) . " GMT"); 
-        header("Pragma: cache"); 
-        header("Cache-Control: max-age=$max_age"); 
-        header("ETag: \"$etag\"");
-        header("Last-Modified: " . gmdate("D, d M Y H:i:s", $last_modified_time) . " GMT");
+        // Establecer encabezados de cacheo
+        header('Content-Type: ' . $content_type);
+        header('Content-Disposition: inline; filename="' . basename($audio_path) . '"');
+        header('Accept-Ranges: bytes');
+        header('Cache-Control: public, max-age=' . $max_age);
+        header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $max_age) . ' GMT');
+        header('Etag: ' . $etag);
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $last_modified_time) . ' GMT');
 
-        if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
-            strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) == $last_modified_time ||
-            isset($_SERVER['HTTP_IF_NONE_MATCH']) &&
-            trim($_SERVER['HTTP_IF_NONE_MATCH']) == $etag) {
-            header("HTTP/1.1 304 Not Modified");
+        // Manejar solicitudes condicionales
+        if ((isset($_SERVER['HTTP_IF_NONE_MATCH']) && stripslashes($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) ||
+            (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && @strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) == $last_modified_time)) {
+            header('HTTP/1.1 304 Not Modified');
             exit;
         }
 
-            header('Content-Type: ' . $content_type);
-            header('Accept-Ranges: bytes');
+        // Manejar solicitudes de rango
+        $filesize = filesize($audio_path);
+        $offset = 0;
+        $length = $filesize;
 
-            $size = filesize($audio_path);
-            $length = $size;
-            $start = 0;
-            $end = $size - 1;
+        if (isset($_SERVER['HTTP_RANGE']) && preg_match('/bytes=(\d+)-(\d*)/', $_SERVER['HTTP_RANGE'], $matches)) {
+            $offset = (int)$matches[1];
+            $end = isset($matches[2]) && $matches[2] !== '' ? (int)$matches[2] : $filesize - 1;
+            $length = $end - $offset + 1;
 
-            if (isset($_SERVER['HTTP_RANGE'])) {
-                list(, $range) = explode('=', $_SERVER['HTTP_RANGE'], 2);
-                $range = explode('-', $range);
-                $start = $range[0];
-                $end = (isset($range[1]) && is_numeric($range[1])) ? $range[1] : $end;
-                $length = $end - $start + 1;
-
-                header('HTTP/1.1 206 Partial Content');
-                header("Content-Range: bytes $start-$end/$size");
-                header("Content-Length: $length");
-            } else {
-                header("Content-Length: $size");
+            if ($offset > $end || $end >= $filesize) {
+                header('HTTP/1.1 416 Requested Range Not Satisfiable');
+                header('Content-Range: bytes */' . $filesize);
+                exit;
             }
 
-            $file = fopen($audio_path, 'rb');
-            fseek($file, $start);
-            while (!feof($file) && ($p = ftell($file)) <= $end) {
-                if ($p + 1024 * 16 > $end) {
-                    echo fread($file, $end - $p + 1);
-                } else {
-                    echo fread($file, 1024 * 16);
-                }
+            header('HTTP/1.1 206 Partial Content');
+            header('Content-Range: bytes ' . $offset . '-' . $end . '/' . $filesize);
+        }
+
+        header('Content-Length: ' . $length);
+
+        // Limitar el script para que solo sirva el archivo y no cargue todo WordPress en la memoria
+        if (!ini_get('safe_mode')) {
+            set_time_limit(0);
+        }
+
+        // Abrir el archivo
+        $file = @fopen($audio_path, 'rb');
+        if ($file) {
+            // Mover el puntero al punto de inicio
+            fseek($file, $offset);
+
+            // Enviar el contenido en partes para manejar archivos grandes
+            $buffer_size = 8192;
+            $bytes_sent = 0;
+
+            while (!feof($file) && ($bytes_sent < $length)) {
+                $remaining_bytes = $length - $bytes_sent;
+                $read_size = ($remaining_bytes > $buffer_size) ? $buffer_size : $remaining_bytes;
+                $data = fread($file, $read_size);
+                echo $data;
                 flush();
+                $bytes_sent += strlen($data);
             }
 
             fclose($file);
             exit;
         } else {
-            status_header(404);
-            die('Archivo no encontrado.');
+            status_header(500);
+            die('No se pudo abrir el archivo.');
         }
     }
 }
