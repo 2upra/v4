@@ -17,23 +17,16 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
     // Log para depurar los argumentos iniciales
     postLog("Publicaciones args iniciales: " . print_r($args, true));
     postLog("user_id: $user_id, current_user_id: $current_user_id, paged: $paged");
-
-    // Asegurarte de que el 'post_type' es el esperado
-    postLog("Post type recibido: " . $args['post_type']);  // Verifica que el 'post_type' sea 'colab' como esperas
+    postLog("Post type recibido: " . $args['post_type']);  
 
     if ($is_ajax) {
         ajaxPostLog("Publicaciones AJAX: " . print_r($args, true));
     }
 
-    // Pasamos los argumentos a configuracionQueryArgs
     $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
-
-    // Log para depurar los argumentos de la query
     postLog("Query args generados: " . print_r($query_args, true));
 
     $output = procesarPublicaciones($query_args, $args, $is_ajax);
-
-    // Añadir log para depurar si hay posts devueltos por la consulta
     if (empty($output)) {
         postLog("No se encontraron publicaciones para los query args: " . print_r($query_args, true));
     }
@@ -108,38 +101,66 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
 function procesarPublicaciones($query_args, $args, $is_ajax)
 {
+    // Inicia el almacenamiento en búfer de salida
     ob_start();
 
+    // Consulta de publicaciones basada en los argumentos proporcionados
     $query = new WP_Query($query_args);
-
     if ($query->have_posts()) {
-        $filtro = !empty($args['identifier']) ? $args['identifier'] : $args['filtro'];
 
+        // Establece el filtro a partir del identificador o el filtro proporcionado
+        $filtro = !empty($args['identifier']) ? $args['identifier'] : $args['filtro'];
+        $tipoPost = $args['post_type'];
+
+        // Si no es una solicitud AJAX, establece las clases y construye el contenedor HTML
         if (!wp_doing_ajax()) {
-            $clase_extra = 'clase-' . $filtro;
+            $clase_extra = 'clase-' . esc_attr($filtro);
+
+            // Define una clase especial para ciertos filtros
             if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
                 $clase_extra = 'clase-rolastatus';
             }
 
-            echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" data-filtro="' . esc_attr($filtro) . '" data-tab-id="' . esc_attr($args['tab_id']) . '">';
+            // Genera la lista de publicaciones con atributos 'data'
+            echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
+                  data-filtro="' . esc_attr($filtro) . '" 
+                  data-post-type="' . esc_attr($tipoPost) . '" 
+                  data-tab-id="' . esc_attr($args['tab_id']) . '">';
         }
 
+        // Itera sobre los resultados de la consulta
         while ($query->have_posts()) {
             $query->the_post();
-            echo htmlPost($filtro);
+
+
+            if ($tipoPost === 'social_post') {
+                echo htmlPost($filtro);
+            } 
+
+            elseif ($tipoPost === 'colab') {
+                echo htmlColab($filtro);
+            }
+            else {
+                echo '<p>Tipo de publicación no reconocido.</p>';
+            }
         }
 
+        // Cierra el contenedor si no es una solicitud AJAX
         if (!wp_doing_ajax()) {
             echo '</ul>';
         }
     } else {
+        // Muestra un mensaje si no hay publicaciones, diferenciando por tipo de post
         echo nohayPost($filtro, $is_ajax);
     }
 
+    // Restaura el estado global de publicaciones después de la consulta
     wp_reset_postdata();
 
+    // Devuelve el contenido generado
     return ob_get_clean();
 }
+
 
 function obtenerUserId($is_ajax)
 {

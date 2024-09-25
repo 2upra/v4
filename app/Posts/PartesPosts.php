@@ -1,7 +1,36 @@
 <?php
 
-//VARIABLES
+//VARIABLES COLAB
+// VARIABLES COLAB
+function variablesColab($post_id = null)
+{
+    if ($post_id === null) {
+        global $post;
+        $post_id = $post->ID;
+    }
 
+    $current_user_id = get_current_user_id();
+    $colabPostOrigen = get_post_meta($post_id, 'colabPostOrigen', true);
+    $colabAutor = get_post_meta($post_id, 'colabAutor', true);
+    $colabColaborador = get_post_meta($post_id, 'colabColaborador', true);
+    $colabMensaje = get_post_meta($post_id, 'colabMensaje', true);
+    $colabFileUrl = get_post_meta($post_id, 'colabFileUrl', true);
+    
+    return [
+        'current_user_id' => $current_user_id,
+        'colabPostOrigen' => $colabPostOrigen,
+        'colabAutor' => $colabAutor,
+        'colabColaborador' => $colabColaborador,
+        'colabMensaje' => $colabMensaje,
+        'colabFileUrl' => $colabFileUrl,
+        'author_name' => get_the_author_meta('display_name', $colabAutor),
+        'author_avatar' => imagenPerfil($colabAutor),
+        'colab_date' => get_the_date('', $post_id),
+        'colab_status' => get_post_status($post_id),
+    ];
+}
+
+//VARIABLES POSTS
 function variablesPosts($post_id = null)
 {
     if ($post_id === null) {
@@ -209,7 +238,7 @@ function botonSuscribir($author_id, $author_name, $subscription_price_id = 'pric
         Suscribirse
     </button>
 
-    <?php
+<?php
 
     return ob_get_clean();
 }
@@ -217,7 +246,7 @@ function botonSuscribir($author_id, $author_name, $subscription_price_id = 'pric
 function botonComentar($post_id)
 {
     ob_start();
-    ?>
+?>
 
     <div class="RTAWOD">
         <button class="WNLOFT" data-post-id="<?php echo $post_id; ?>">
@@ -265,4 +294,3 @@ function audioPost($post_id)
 <?php
     return ob_get_clean();
 }
-
