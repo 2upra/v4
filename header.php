@@ -230,7 +230,7 @@ if (!defined('ABSPATH')) {
                 </div>
                 <input type="file" id="postArchivoColab" name="postArchivoColab" style="display:none;">
                 <div class="flex gap-3 justify-end">
-                    <button type="button">Cancelar</button>
+                    <button class="botonsecundario" type="button">Cancelar</button>
                     <button id="empezarColab" class="botonprincipal">Enviar</button>
                 </div>
             </div>

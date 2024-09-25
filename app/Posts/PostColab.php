@@ -6,6 +6,7 @@ function htmlColab($filtro)
     $var = variablesColab($post_id);
     extract($var);
     ob_start();
+    // GFOPNU DNPHZG JMLZBN JWTUQY QKEUKJ
 ?>
 
 
@@ -16,7 +17,7 @@ function htmlColab($filtro)
 
         <div class="colab-content">
 
-            <div class="BMGCLT">
+            <div class="GFOPNU">
 
                 <div class="CBZNGK">
                     <a href="<?php echo esc_url(get_author_posts_url($colabColaborador)); ?>"></a>
