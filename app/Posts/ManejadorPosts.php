@@ -136,7 +136,7 @@ function obtenerUserId($is_ajax)
         }
     }
 
-    return ull;
+    return null;
 }
 
 
