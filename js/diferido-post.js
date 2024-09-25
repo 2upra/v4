@@ -9,7 +9,7 @@ let cargando = false,
     ultimoLog = 0,
     intervaloLog = 1000;
 
-const ajaxUrl = (typeof ajax_params !== 'undefined' && ajax_params.ajax_url) ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
+const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
 
 // Función que se llama cada vez que se cambia de página mediante AJAX
 function reiniciarDiferidoPost() {
@@ -52,12 +52,9 @@ function manejarScroll() {
     if (ahora - ultimoLog >= intervaloLog) {
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         const windowHeight = window.innerHeight;
-        const documentHeight = Math.max(
-            document.body.scrollHeight, document.body.offsetHeight,
-            document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight
-        );
+        const documentHeight = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
 
-        log07('Evento de scroll detectado:', { scrollTop, windowHeight, documentHeight, cargando });
+        log07('Evento de scroll detectado:', {scrollTop, windowHeight, documentHeight, cargando});
 
         if (scrollTop + windowHeight > documentHeight - 100 && !cargando) {
             log07('Condiciones para cargar más contenido cumplidas');
@@ -87,14 +84,14 @@ function cargarMasContenido() {
         return;
     }
 
-    const { filtro: filtroActual, tabId: tabIdActual } = activeTab.dataset;
+    const {filtro: filtroActual, tabId: tabIdActual} = activeTab.dataset;
     const user_id = window.currentUserId || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
 
-    log07('Parámetros de carga:', { filtroActual, tabIdActual, identifier, user_id, paged });
+    log07('Parámetros de carga:', {filtroActual, tabIdActual, identifier, user_id, paged});
 
     fetch(ajaxUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: new URLSearchParams({
             action: 'cargar_mas_publicaciones',
             paged,
@@ -175,7 +172,10 @@ function resetearCarga() {
     window.removeEventListener('scroll', manejarScroll);
     cargarContenidoPorScroll();
     log07('Ejecutando resetearCarga');
-    document.querySelector('.tab.active .social-post-list')?.innerHTML = '';
+    const socialPostList = document.querySelector('.tab.active .social-post-list');
+    if (socialPostList) {
+        socialPostList.innerHTML = '';
+    }
 }
 
 function detenerCarga() {
