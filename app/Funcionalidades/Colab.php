@@ -6,32 +6,6 @@ function botonColab($postId, $colab)
     return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$postId'>{$GLOBALS['iconocolab']}</button></div>" : '';
 }
 
-/*
-
-2024-09-25 22:09:35 - Resultado de wp_handle_upload: Array
-(
-    [file] => /var/www/wordpress/wp-content/uploads/2024/09/DRUM-FILL-11.wav
-    [url] => https://2upra.com/wp-content/uploads/2024/09/DRUM-FILL-11.wav
-    [type] => audio/wav
-)
-2024-09-25 22:09:35 - Carga exitosa. Hash guardado: 073f39259941ebdbfb32a677fc9182476db036dd10d046f5cf1fe6ac07c43fc6. URL del nuevo archivo: https://2upra.com/wp-content/uploads/2024/09/DRUM-FILL-11.wav
-2024-09-25 22:09:39 - Colaboración creada con ID: 232055
-2024-09-25 22:09:39 - No se encontró el archivo para adjuntar al post.
-2024-09-25 22:12:37 - INICIO subidaArchivo
-2024-09-25 22:12:37 - Hash recibido: 5152dc1c537df630bf409cae5be5d6e720ce4d540461c6fbc028fd06842b6d36
-2024-09-25 22:12:37 - No se encontró un archivo existente con este hash o el archivo está pendiente.
-2024-09-25 22:12:37 - Resultado de wp_handle_upload: Array
-(
-    [file] => /var/www/wordpress/wp-content/uploads/2024/09/DRUM-FILL-10.wav
-    [url] => https://2upra.com/wp-content/uploads/2024/09/DRUM-FILL-10.wav
-    [type] => audio/wav
-)
-2024-09-25 22:12:37 - Carga exitosa. Hash guardado: 5152dc1c537df630bf409cae5be5d6e720ce4d540461c6fbc028fd06842b6d36. URL del nuevo archivo: https://2upra.com/wp-content/uploads/2024/09/DRUM-FILL-10.wav
-2024-09-25 22:12:39 - Colaboración creada con ID: 232056
-2024-09-25 22:12:39 - No se encontró el archivo para adjuntar al post.
-
-*/
-
 function empezarColab() {
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
@@ -144,8 +118,10 @@ function handle_and_attach_file($newPostId, $fileUrl) {
     }
 
     if ($attachment_id) {
-        // Asocia el adjunto al post, como un archivo destacado o cualquier meta deseada
-        update_post_meta($newPostId, '_thumbnail_id', $attachment_id);
+        // Guarda la información del archivo adjunto en el post de colaboración
+        update_post_meta($newPostId, 'colabFileId', $attachment_id);
+        update_post_meta($newPostId, 'colabFileUrl', $fileUrl);
+
         guardarLog("Archivo adjuntado con ID: $attachment_id");
         return true;
     }
@@ -154,6 +130,7 @@ function handle_and_attach_file($newPostId, $fileUrl) {
 }
 
 add_action('wp_ajax_empezarColab', 'empezarColab');
+
 
 function actualizarEstadoColab($postId, $post_after, $post_before)
 {
