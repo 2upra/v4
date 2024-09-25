@@ -15,7 +15,7 @@ function variablesColab($post_id = null)
     $colabColaborador = get_post_meta($post_id, 'colabColaborador', true);
     $colabMensaje = get_post_meta($post_id, 'colabMensaje', true);
     $colabFileUrl = get_post_meta($post_id, 'colabFileUrl', true);
-    
+
     return [
         'current_user_id' => $current_user_id,
         'colabPostOrigen' => $colabPostOrigen,
@@ -293,6 +293,56 @@ function audioPost($post_id)
 
         <audio id="audio-<?php echo $post_id; ?>" src="<?php echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"></audio>
     </div>
+    <?php
+    return ob_get_clean();
+}
+
+function wave($audio_url, $audio_id_lite, $post_id)
+{
+    if ($audio_url) :
+        $wave = get_post_meta($post_id, 'waveform_image_url', true);
+        $waveCargada = get_post_meta($post_id, 'waveCargada', true);
+    ?>
+        <div id="waveform-<?php echo $post_id; ?>"
+            class="waveform-container without-image"
+            postIDWave="<?php echo $post_id; ?>"
+            data-audio-url="<?php echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"
+            data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>">
+            <div class="waveform-background" style="background-image: url('<?php echo $wave; ?>');"></div>
+            <div class="waveform-message"></div>
+            <div class="waveform-loading" style="display: none;">Cargando...</div>
+        </div>
+    <?php endif;
+}
+
+function fileColab($post_id, $colabFileUrl)
+{
+    $waveCargada = get_post_meta($post_id, 'waveCargada', true);
+    $wave = null;
+    ob_start();
+    $audioExts = array('mp3', 'wav', 'ogg', 'aac');
+    $fileExt = pathinfo($colabFileUrl, PATHINFO_EXTENSION);
+    $isAudio = in_array(strtolower($fileExt), $audioExts);
+
+    if ($isAudio) {
+        $audioColab = attachment_url_to_postid($colabFileUrl);
+        if ($audioColab) {
+            update_post_meta($post_id, 'audioColab', $audioColab);
+        }
+    ?>
+        <div id="waveform-<?php echo esc_attr($post_id); ?>"
+            class="waveform-container without-image"
+            postIDWave="<?php echo esc_attr($post_id); ?>"
+            data-audio-url="<?php echo esc_url(site_url('?custom-audio-stream=1&audio_id=' . $audioColab)); ?>"
+            data-wave-cargada="<?php echo esc_attr($waveCargada ? 'true' : 'false'); ?>">
+            <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
+            <div class="waveform-message"></div>
+            <div class="waveform-loading" style="display: none;">Cargando...</div>
+        </div>
 <?php
+    } else {
+        $fileName = basename($colabFileUrl);
+        echo '<p>Archivo: ' . esc_html($fileName) . '</p>';
+    }
     return ob_get_clean();
 }

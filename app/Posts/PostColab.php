@@ -6,7 +6,7 @@ function htmlColab($filtro)
     $var = variablesColab($post_id);
     extract($var);
     ob_start();
-    // DNPHZG JMLZBN JWTUQY QKEUKJ
+    //  JMLZBN JWTUQY QKEUKJ
 ?>
 
 
@@ -35,10 +35,14 @@ function htmlColab($filtro)
                 </div>
 
                 <div class="flex gap-3 justify-end ml-auto">
-                    <button class="botonsecundario">Test</button>
-                    <button class="botonprincipal">Test</button>
+                    <button class="botonsecundario">Rechazar</button>
+                    <button class="botonprincipal">Aceptar</button>
                 </div>
 
+            </div>
+
+            <div class="DNPHZG">
+                <?php echo fileColab($post_id, $colabFileUrl); ?>
             </div>
         </div>
     </li>

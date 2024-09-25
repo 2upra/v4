@@ -1,23 +1,4 @@
 <?php
-
-function wave($audio_url, $audio_id_lite, $post_id)
-{
-    if ($audio_url) :
-        $wave = get_post_meta($post_id, 'waveform_image_url', true);
-        $waveCargada = get_post_meta($post_id, 'waveCargada', true);
-?>
-        <div id="waveform-<?php echo $post_id; ?>"
-            class="waveform-container without-image"
-            postIDWave="<?php echo $post_id; ?>"
-            data-audio-url="<?php echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"
-            data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>">
-            <div class="waveform-background" style="background-image: url('<?php echo $wave; ?>');"></div>
-            <div class="waveform-message"></div>
-            <div class="waveform-loading" style="display: none;">Cargando...</div>
-        </div>
-<?php endif;
-}
-
 function save_waveform_image()
 {
     guardarLog('Iniciando la función save_waveform_image.');
