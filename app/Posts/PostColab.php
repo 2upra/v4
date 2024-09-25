@@ -6,7 +6,7 @@ function htmlColab($filtro)
     $var = variablesColab($post_id);
     extract($var);
     ob_start();
-    // GFOPNU DNPHZG JMLZBN JWTUQY QKEUKJ
+    // DNPHZG JMLZBN JWTUQY QKEUKJ
 ?>
 
 
