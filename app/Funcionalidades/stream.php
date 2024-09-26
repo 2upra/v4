@@ -2,13 +2,14 @@
 
 // Función para obtener la URL segura del audio
 function tokenAudio($audio_id) {
-    // Validar el formato del audio_id (opcional, dependiendo del tipo de datos)
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
         return false;
     }
 
-    $expiration = time() + 450; // 7 m
-    $data = $audio_id . '|' . $expiration;
+    $expiration = time() + 60; // 1 minuto
+    $user_ip = $_SERVER['REMOTE_ADDR'];
+    $unique_id = uniqid();
+    $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
     $signature = hash_hmac('sha256', $data, ($_ENV['AUDIOCLAVE']));
     return base64_encode($data . '|' . $signature);
 }
@@ -16,24 +17,43 @@ function tokenAudio($audio_id) {
 // Función para verificar el token
 function verificarAudio($token) {
     $parts = explode('|', base64_decode($token));
-    if (count($parts) !== 3) return false;
-    list($audio_id, $expiration, $signature) = $parts;
+    if (count($parts) !== 5) return false; // Asegurarse de que haya 5 partes
+    list($audio_id, $expiration, $user_ip, $unique_id, $signature) = $parts;
 
-    // Verificar expiración del token
+    if ($_SERVER['REMOTE_ADDR'] !== $user_ip) {
+        return false;
+    }
     if (time() > $expiration) return false;
-
-    // Validar el formato del audio_id
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
         return false;
     }
+    if (tokenYaUsado($unique_id)) return false;
 
-    // Verificar la firma
-    $data = $audio_id . '|' . $expiration;
+    $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
     $expected_signature = hash_hmac('sha256', $data, ($_ENV['AUDIOCLAVE']));
-    return hash_equals($expected_signature, $signature);
+    
+    if (hash_equals($expected_signature, $signature)) {
+        marcarTokenComoUsado($unique_id);
+        return true;
+    }
+    return false;
 }
 
-// Modificar la función audioUrlSegura
+// Función para marcar un token como usado
+function marcarTokenComoUsado($unique_id) {
+    // Implementa esto usando una base de datos o un sistema de caché
+    // Por ejemplo, usando WordPress transients:
+    set_transient('audio_token_' . $unique_id, true, 3600); // Guarda por 1 hora
+}
+
+// Función para verificar si un token ya ha sido usado
+function tokenYaUsado($unique_id) {
+    // Implementa esto usando una base de datos o un sistema de caché
+    // Por ejemplo, usando WordPress transients:
+    return get_transient('audio_token_' . $unique_id) !== false;
+}
+
+// Función para obtener la URL segura del audio
 function audioUrlSegura($audio_id) {
     $token = tokenAudio($audio_id);
     if (!$token) {
@@ -42,7 +62,7 @@ function audioUrlSegura($audio_id) {
     return site_url("/wp-json/1/v1/2?token=" . urlencode($token));
 }
 
-// Modificar el endpoint REST
+// Registrar el endpoint REST
 add_action('rest_api_init', function () {
     register_rest_route('1/v1', '/2', array(
         'methods' => 'GET',
@@ -57,6 +77,7 @@ add_action('rest_api_init', function () {
         }
     ));
 });
+
 
 // Modificar la función audioStreamEnd para implementar streaming
 function audioStreamEnd($data) {
@@ -73,8 +94,8 @@ function audioStreamEnd($data) {
 
     $cache_file = $cache_dir . '/audio_' . $audio_id . '.cache';
 
-    // Verifica si el archivo de caché existe y no ha expirado (1 semana)
-    if (file_exists($cache_file) && (time() - filemtime($cache_file) < 7 * 24 * 60 * 60)) {
+    // Verifica si el archivo de caché existe y no ha expirado (1 día)
+    if (file_exists($cache_file) && (time() - filemtime($cache_file) < 24 * 60 * 60)) {
         $file = $cache_file;
     } else {
         // El audio no está en caché o ha expirado, copia el archivo original
@@ -103,6 +124,9 @@ function audioStreamEnd($data) {
 
     header('Content-Type: ' . get_post_mime_type($audio_id));
     header("Accept-Ranges: bytes");
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
 
     // Manejar Ranges HTTP para streaming parcial
     if (isset($_SERVER['HTTP_RANGE'])) {
@@ -137,19 +161,27 @@ function audioStreamEnd($data) {
     header("Content-Range: bytes $start-$end/$size");
     header("Content-Length: " . $length);
 
-    // Aumentar el tamaño del buffer para mejorar el rendimiento del streaming
-    $buffer = 1024 * 64; // 64 KB
+    // Streaming con rate limiting
+    $buffer = 1024 * 8; // 8 KB
+    $sleep = 1000; // Microsegundos de espera entre cada envío de buffer
+    $sent = 0;
     while (!feof($fp) && ($p = ftell($fp)) <= $end) {
         if ($p + $buffer > $end) {
             $buffer = $end - $p + 1;
         }
         echo fread($fp, $buffer);
+        $sent += $buffer;
         flush();
+        if ($sent >= 64 * 1024) { // Cada 64 KB
+            usleep($sleep);
+            $sent = 0;
+        }
     }
 
     fclose($fp);
     exit();
 }
+
 
 // Registra el cron job
 add_action('wp', 'schedule_audio_cache_cleanup');
@@ -190,132 +222,3 @@ register_deactivation_hook(__FILE__, 'unschedule_audio_cache_cleanup');
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-/* funcion vieja
-add_action('template_redirect', 'custom_audio_streaming_handler');
-
-
-
-function custom_audio_streaming_handler() {
-    if (isset($_GET['custom-audio-stream'], $_GET['audio_id']) && $_GET['custom-audio-stream'] == '1') {
-        $audio_id = intval($_GET['audio_id']);
-
-        // Verificar que el ID de audio corresponde a un adjunto válido
-        $attachment = get_post($audio_id);
-        if (!$attachment || $attachment->post_type !== 'attachment') {
-            status_header(404);
-            die('ID de audio inválido.');
-        }
-
-        $audio_path = get_attached_file($audio_id);
-
-        if (!$audio_path || !file_exists($audio_path)) {
-            status_header(404);
-            die('Archivo no encontrado.');
-        }
-
-        // Verificar que el usuario tenga permiso para acceder al archivo
-        // Puedes personalizar esta parte según tus necesidades de seguridad
-        /*
-        if (!current_user_can('read_private_posts')) {
-            status_header(403);
-            die('No tienes permiso para acceder a este archivo.');
-        }
-
-
-        // Obtener el tipo MIME correcto
-        $file_info = wp_check_filetype($audio_path);
-        $content_type = $file_info['type'];
-
-        if (!$content_type) {
-            status_header(403);
-            die('Tipo de archivo no permitido.');
-        }
-
-        $last_modified_time = filemtime($audio_path);
-        $etag = '"' . md5_file($audio_path) . '"';
-
-        // 30 días en segundos
-        $max_age = 30 * 24 * 60 * 60;
-
-        // Establecer encabezados de cacheo
-        header('Content-Type: ' . $content_type);
-        header('Content-Disposition: inline; filename="' . basename($audio_path) . '"');
-        header('Accept-Ranges: bytes');
-        header('Cache-Control: public, max-age=' . $max_age);
-        header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $max_age) . ' GMT');
-        header('Etag: ' . $etag);
-        header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $last_modified_time) . ' GMT');
-
-        // Manejar solicitudes condicionales
-        if ((isset($_SERVER['HTTP_IF_NONE_MATCH']) && stripslashes($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) ||
-            (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && @strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) == $last_modified_time)) {
-            header('HTTP/1.1 304 Not Modified');
-            exit;
-        }
-
-        // Manejar solicitudes de rango
-        $filesize = filesize($audio_path);
-        $offset = 0;
-        $length = $filesize;
-
-        if (isset($_SERVER['HTTP_RANGE']) && preg_match('/bytes=(\d+)-(\d*)/', $_SERVER['HTTP_RANGE'], $matches)) {
-            $offset = (int)$matches[1];
-            $end = isset($matches[2]) && $matches[2] !== '' ? (int)$matches[2] : $filesize - 1;
-            $length = $end - $offset + 1;
-
-            if ($offset > $end || $end >= $filesize) {
-                header('HTTP/1.1 416 Requested Range Not Satisfiable');
-                header('Content-Range: bytes /' . $filesize);
-                exit;
-            }
-
-            header('HTTP/1.1 206 Partial Content');
-            header('Content-Range: bytes ' . $offset . '-' . $end . '/' . $filesize);
-        }
-
-        header('Content-Length: ' . $length);
-
-        // Limitar el script para que solo sirva el archivo y no cargue todo WordPress en la memoria
-        if (!ini_get('safe_mode')) {
-            set_time_limit(0);
-        }
-
-        // Abrir el archivo
-        $file = @fopen($audio_path, 'rb');
-        if ($file) {
-            // Mover el puntero al punto de inicio
-            fseek($file, $offset);
-
-            // Enviar el contenido en partes para manejar archivos grandes
-            $buffer_size = 8192;
-            $bytes_sent = 0;
-
-            while (!feof($file) && ($bytes_sent < $length)) {
-                $remaining_bytes = $length - $bytes_sent;
-                $read_size = ($remaining_bytes > $buffer_size) ? $buffer_size : $remaining_bytes;
-                $data = fread($file, $read_size);
-                echo $data;
-                flush();
-                $bytes_sent += strlen($data);
-            }
-
-            fclose($file);
-            exit;
-        } else {
-            status_header(500);
-            die('No se pudo abrir el archivo.');
-        }
-    }
-}
-*/
