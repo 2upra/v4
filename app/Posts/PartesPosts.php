@@ -297,60 +297,114 @@ function audioPost($post_id)
     return ob_get_clean();
 }
 
+// Función para obtener la URL segura del audio
+function generate_audio_token($audio_id) {
+    $expiration = time() + 10; // Token válido por 1 hora
+    $data = $audio_id . '|' . $expiration;
+    $signature = hash_hmac('sha256', $data, 'tu_clave_secreta');
+    return base64_encode($data . '|' . $signature);
+}
 
-// Registro del endpoint REST
+// Función para verificar el token
+function verify_audio_token($token) {
+    $parts = explode('|', base64_decode($token));
+    if (count($parts) !== 3) return false;
+    
+    list($audio_id, $expiration, $signature) = $parts;
+    if (time() > $expiration) return false;
+    
+    $data = $audio_id . '|' . $expiration;
+    $expected_signature = hash_hmac('sha256', $data, 'tu_clave_secreta');
+    return hash_equals($expected_signature, $signature);
+}
+
+// Modificar la función get_secure_audio_url
+function get_secure_audio_url($audio_id) {
+    $token = generate_audio_token($audio_id);
+    return site_url("/wp-json/custom/v1/get-audio?token=" . urlencode($token));
+}
+
+// Modificar el endpoint REST
 add_action('rest_api_init', function () {
     register_rest_route('custom/v1', '/get-audio', array(
         'methods' => 'GET',
         'callback' => 'serve_audio_endpoint',
         'args' => array(
-            'audio_id' => array(
+            'token' => array(
                 'required' => true,
-                'validate_callback' => function ($param) {
-                    return is_numeric($param);
-                }
             ),
         ),
-        'permission_callback' => '__return_true' // No requiere autenticación
+        'permission_callback' => function($request) {
+            return verify_audio_token($request->get_param('token'));
+        }
     ));
 });
 
-// Función para servir el audio de manera segura
-function get_secure_audio_url($audio_id) {
-    $token = bin2hex(random_bytes(16));
-    $expiry = time() + 10; 
-    set_transient('audio_' . $token, $audio_id, 10);
-    return site_url('/wp-json/custom/v1/get-audio?token=' . $token . '&expiry=' . $expiry);
-}
-
+// Modificar la función serve_audio_endpoint para implementar streaming
 function serve_audio_endpoint($data) {
     $token = $data['token'];
-    $expiry = $data['expiry'];
-
-    if (time() > $expiry) {
-        return new WP_Error('token_expired', 'El token ha expirado.', array('status' => 403));
-    }
-
-    $audio_id = get_transient('audio_' . $token);
-    if (!$audio_id) {
-        return new WP_Error('invalid_token', 'Token inválido.', array('status' => 403));
-    }
-
-    delete_transient('audio_' . $token);  // Elimina el token después de su uso
-    $audio_url = wp_get_attachment_url($audio_id);
-
-    if ($audio_url && file_exists(get_attached_file($audio_id))) {
-        header('Cache-Control: no-store, no-cache, must-revalidate');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-        header('Content-Type: ' . get_post_mime_type($audio_id));
-        header('Content-Disposition: inline; filename="' . basename($audio_url) . '"');
-        readfile(get_attached_file($audio_id));
-        exit;
-    } else {
+    $parts = explode('|', base64_decode($token));
+    $audio_id = $parts[0];
+    
+    $file = get_attached_file($audio_id);
+    if (!file_exists($file)) {
         return new WP_Error('no_audio', 'Archivo de audio no encontrado.', array('status' => 404));
     }
+
+    $fp = @fopen($file, 'rb');
+    $size = filesize($file);
+    $length = $size;
+    $start = 0;
+    $end = $size - 1;
+
+    header('Content-Type: ' . get_post_mime_type($audio_id));
+    header("Accept-Ranges: 0-$length");
+    
+    if (isset($_SERVER['HTTP_RANGE'])) {
+        $c_start = $start;
+        $c_end = $end;
+        list(, $range) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+        if (strpos($range, ',') !== false) {
+            header('HTTP/1.1 416 Requested Range Not Satisfiable');
+            header("Content-Range: bytes $start-$end/$size");
+            exit;
+        }
+        if ($range == '-') {
+            $c_start = $size - substr($range, 1);
+        } else {
+            $range = explode('-', $range);
+            $c_start = $range[0];
+            $c_end = (isset($range[1]) && is_numeric($range[1])) ? $range[1] : $size;
+        }
+        $c_end = ($c_end > $end) ? $end : $c_end;
+        if ($c_start > $c_end || $c_start > $size - 1 || $c_end >= $size) {
+            header('HTTP/1.1 416 Requested Range Not Satisfiable');
+            header("Content-Range: bytes $start-$end/$size");
+            exit;
+        }
+        $start = $c_start;
+        $end = $c_end;
+        $length = $end - $start + 1;
+        fseek($fp, $start);
+        header('HTTP/1.1 206 Partial Content');
+    }
+    
+    header("Content-Range: bytes $start-$end/$size");
+    header("Content-Length: " . $length);
+    
+    $buffer = 1024 * 8;
+    while(!feof($fp) && ($p = ftell($fp)) <= $end) {
+        if ($p + $buffer > $end) {
+            $buffer = $end - $p + 1;
+        }
+        echo fread($fp, $buffer);
+        flush();
+    }
+    
+    fclose($fp);
+    exit();
 }
+
 // Función para cargar el audio en el frontend
 function wave($audio_url, $audio_id_lite, $post_id)
 {
