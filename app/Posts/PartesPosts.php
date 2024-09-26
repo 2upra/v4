@@ -298,15 +298,15 @@ function audioPost($post_id)
 }
 
 // Función para obtener la URL segura del audio
-function generate_audio_token($audio_id) {
-    $expiration = time() + 10; // Token válido por 1 hora
+function tokenAudio($audio_id) {
+    $expiration = time() + 20; 
     $data = $audio_id . '|' . $expiration;
-    $signature = hash_hmac('sha256', $data, 'tu_clave_secreta');
+    $signature = hash_hmac('sha256', $data, ($_ENV['AUDIOCLAVE']));
     return base64_encode($data . '|' . $signature);
 }
 
 // Función para verificar el token
-function verify_audio_token($token) {
+function verificarAudio($token) {
     $parts = explode('|', base64_decode($token));
     if (count($parts) !== 3) return false;
     
@@ -314,19 +314,19 @@ function verify_audio_token($token) {
     if (time() > $expiration) return false;
     
     $data = $audio_id . '|' . $expiration;
-    $expected_signature = hash_hmac('sha256', $data, 'tu_clave_secreta');
+    $expected_signature = hash_hmac('sha256', $data, ($_ENV['AUDIOCLAVE']));
     return hash_equals($expected_signature, $signature);
 }
 
-// Modificar la función get_secure_audio_url
-function get_secure_audio_url($audio_id) {
-    $token = generate_audio_token($audio_id);
-    return site_url("/wp-json/custom/v1/get-audio?token=" . urlencode($token));
+// Modificar la función audioUrlSegura
+function audioUrlSegura($audio_id) {
+    $token = tokenAudio($audio_id);
+    return site_url("/wp-json/1/v1/2?token=" . urlencode($token));
 }
 
 // Modificar el endpoint REST
 add_action('rest_api_init', function () {
-    register_rest_route('custom/v1', '/get-audio', array(
+    register_rest_route('1/v1', '/2', array(
         'methods' => 'GET',
         'callback' => 'serve_audio_endpoint',
         'args' => array(
@@ -335,7 +335,7 @@ add_action('rest_api_init', function () {
             ),
         ),
         'permission_callback' => function($request) {
-            return verify_audio_token($request->get_param('token'));
+            return verificarAudio($request->get_param('token'));
         }
     ));
 });
@@ -411,7 +411,7 @@ function wave($audio_url, $audio_id_lite, $post_id)
     if ($audio_url) :
         $wave = get_post_meta($post_id, 'waveform_image_url', true);
         $waveCargada = get_post_meta($post_id, 'waveCargada', true);
-        $secure_audio_url = get_secure_audio_url($audio_id_lite); // Usando la URL segura
+        $secure_audio_url = audioUrlSegura($audio_id_lite); // Usando la URL segura
     ?>
         <div id="waveform-<?php echo $post_id; ?>"
              class="waveform-container without-image"
