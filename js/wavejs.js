@@ -9,43 +9,40 @@ function initializeAllAudioPlayers() {
     });
 }
 
-// Observador que detecta cuando el contenedor de la forma de onda está en el viewport
 function observeWaveform(container, postId, audioUrl) {
     let loadTimeout = null;
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                // Si el contenedor está visible, iniciar el temporizador para cargar el audio.
                 loadTimeout = setTimeout(() => {
                     if (!container.dataset.audioLoaded) {
                         loadAudio(postId, audioUrl, container);
                     }
-                }, 5000); // Cambia 5000 por el tiempo que quieras esperar (en milisegundos)
+                }, 10000); 
             } else {
-                // Si el contenedor deja de estar visible antes del tiempo definido, cancelar la carga.
+
                 clearTimeout(loadTimeout);
             }
         });
-    }, { threshold: 0.1 }); // El 10% del contenedor debe estar visible para que cuente como "intersecting".
+    }, { threshold: 0.5 }); 
 
-    // Observar el contenedor
+
     observer.observe(container);
 
-    // También cargamos el audio si el usuario hace clic en la forma de onda
     container.addEventListener('click', () => {
         if (!container.dataset.audioLoaded) {
-            clearTimeout(loadTimeout); // Cancelar el temporizador en caso de que el usuario haga clic antes
+            clearTimeout(loadTimeout); 
             loadAudio(postId, audioUrl, container);
         }
     });
 }
 
-// Función para cargar el audio cuando se cumplan las condiciones de visibilidad o interacción
+
 function loadAudio(postId, audioUrl, container) {
     if (!container.dataset.audioLoaded) {
-        window.we(postId, audioUrl); // Llamar a la función que carga el audio
-        container.dataset.audioLoaded = 'true'; // Marcar como cargado para evitar recargas innecesarias
+        window.we(postId, audioUrl); 
+        container.dataset.audioLoaded = 'true'; 
     }
 }
 

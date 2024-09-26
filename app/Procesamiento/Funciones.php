@@ -308,13 +308,17 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         'post_type' => 'attachment',
         'meta_query' => array(
             array(
-                'key' => "post_audio_lite", // Reemplazar con la clave meta adecuada si es diferente
+                'key' => "post_audio_lite",
                 'value' => $audio_id,
                 'compare' => '='
             )
         ),
         'posts_per_page' => 1
     ));
+
+    // Obtener el archivo de audio original
+    $audio_path = get_attached_file($audio_id);
+    guardarLog("Ruta del archivo de audio original: {$audio_path}");
 
     // Si ya existe un archivo ligero, asociarlo al nuevo post
     if ($existing_lite_audio) {
@@ -323,13 +327,9 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         $meta_key = ($index == 1) ? "post_audio_lite" : "post_audio_lite_{$index}";
         update_post_meta($post_id, $meta_key, $existing_lite_audio_id);
         update_post_meta($post_id, 'AudioDuplicado', true);
-        analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index); //TEMPORAL
+        analizarYGuardarMetasAudio($post_id, $audio_path, $index);
         return;
     }
-
-    // Obtener el archivo de audio original
-    $audio_path = get_attached_file($audio_id);
-    guardarLog("Ruta del archivo de audio original: {$audio_path}");
 
     // Obtener las partes del camino del archivo
     $path_parts = pathinfo($audio_path);
@@ -481,7 +481,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         'emotion' => $resultados['emotion'] ?? '',
         'key' => $resultados['key'] ?? '',
         'scale' => $resultados['scale'] ?? '',
-        'descripcion_ia' => $descripcion_limpia ?? [] 
+        'descripcion_ia' => $descripcion_limpia ?? []
     ];
 
     iaLog("Datos nuevos a agregar: " . json_encode($nuevos_datos));

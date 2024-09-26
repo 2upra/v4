@@ -60,7 +60,7 @@ function empezarColab() {
 
         // Asociar el archivo desde el URL si ya existe
         if (!empty($fileUrl)) {
-            $attached = handle_and_attach_file($newPostId, $fileUrl);
+            $attached = adjuntarArchivo($newPostId, $fileUrl);
             if (!$attached) {
                 wp_send_json_error(['message' => 'No se pudo adjuntar el archivo correctamente.']);
             }
@@ -80,25 +80,22 @@ function empezarColab() {
     wp_die();
 }
 
-function handle_and_attach_file($newPostId, $fileUrl) {
+function adjuntarArchivo($newPostId, $fileUrl) {
     global $wpdb;
-
-    // Revisa si el archivo ya está registrado por la URL.
     $attachment_id = $wpdb->get_var($wpdb->prepare(
         "SELECT ID FROM {$wpdb->posts} WHERE guid = %s",
         $fileUrl
     ));
 
     if (!$attachment_id) {
-        // Si no se encuentra el adjunto, intenta crear uno.
         $uploads_dir = wp_upload_dir();
         $file_path = str_replace($uploads_dir['baseurl'], $uploads_dir['basedir'], $fileUrl);
 
         if (file_exists($file_path)) {
-            // Crea el adjunto
+            $mime_type = mime_content_type($file_path);
             $data = [
                 'guid'           => $fileUrl,
-                'post_mime_type' => mime_content_type($file_path),
+                'post_mime_type' => $mime_type,
                 'post_title'     => wp_basename($file_path),
                 'post_content'   => '',
                 'post_status'    => 'inherit'
@@ -118,9 +115,14 @@ function handle_and_attach_file($newPostId, $fileUrl) {
     }
 
     if ($attachment_id) {
-        // Guarda la información del archivo adjunto en el post de colaboración
         update_post_meta($newPostId, 'colabFileId', $attachment_id);
         update_post_meta($newPostId, 'colabFileUrl', $fileUrl);
+        $mime_type = get_post_mime_type($attachment_id); // Obtenemos el tipo MIME
+        if (strpos($mime_type, 'audio') !== false) {
+            $audio_id = $attachment_id; // Usa el attachment_id como el audio_id
+            $index = 1; // Usamos el índice 1 según la solicitud
+            procesarAudioLigero($newPostId, $audio_id, $index);
+        }
 
         guardarLog("Archivo adjuntado con ID: $attachment_id");
         return true;
@@ -128,6 +130,7 @@ function handle_and_attach_file($newPostId, $fileUrl) {
 
     return false;
 }
+
 
 add_action('wp_ajax_empezarColab', 'empezarColab');
 
