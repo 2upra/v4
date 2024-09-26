@@ -5,10 +5,9 @@ function htmlColab($filtro)
     $post_id = get_the_ID();
     $var = variablesColab($post_id);
     extract($var);
-    ob_start();
-    //  JMLZBN JWTUQY QKEUKJ
-?>
 
+    ob_start();
+    ?>
 
     <li class="POST-<?php echo esc_attr($filtro); ?> EDYQHV"
         filtro="<?php echo esc_attr($filtro); ?>"
@@ -41,13 +40,17 @@ function htmlColab($filtro)
 
             </div>
 
-            <div class="DNPHZG">
-                <?php echo audioColab($post_id, $post_audio_lite); ?>
-            </div>
+            <?php if (!empty($post_audio_lite)) : ?>
+                <div class="DNPHZG">
+                    <?php echo audioColab($post_id, $post_audio_lite); ?>
+                </div>
+            <?php endif; ?>
+
         </div>
     </li>
 
-<?php
+    <?php
 
     return ob_get_clean();
 }
+

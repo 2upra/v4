@@ -1,39 +1,5 @@
 <?php
 
-//VARIABLES COLAB
-// VARIABLES COLAB
-function variablesColab($post_id = null)
-{
-    if ($post_id === null) {
-        global $post;
-        $post_id = $post->ID;
-    }
-
-    $current_user_id = get_current_user_id();
-    $colabPostOrigen = get_post_meta($post_id, 'colabPostOrigen', true);
-    $colabAutor = get_post_meta($post_id, 'colabAutor', true);
-    $colabColaborador = get_post_meta($post_id, 'colabColaborador', true);
-    $colabMensaje = get_post_meta($post_id, 'colabMensaje', true);
-    $colabFileUrl = get_post_meta($post_id, 'colabFileUrl', true);
-    $post_audio_lite = get_post_meta($post_id, 'post_audio_lite', true);
-
-    return [
-        'post_audio_lite' => $post_audio_lite,
-        'current_user_id' => $current_user_id,
-        'colabPostOrigen' => $colabPostOrigen,
-        'colabAutor' => $colabAutor,
-        'colabColaborador' => $colabColaborador,
-        'colabMensaje' => $colabMensaje,
-        'colabFileUrl' => $colabFileUrl,
-        'colabAutorName' => get_the_author_meta('display_name', $colabAutor),
-        'colabColaboradorName' => get_the_author_meta('display_name', $colabColaborador),
-        'colabColaboradorAvatar' => imagenPerfil($colabColaborador),
-        'colabAutorAvatar' => imagenPerfil($colabAutor),
-        'colab_date' => get_the_date('', $post_id),
-        'colab_status' => get_post_status($post_id),
-    ];
-}
-
 //VARIABLES POSTS
 function variablesPosts($post_id = null)
 {
@@ -319,70 +285,5 @@ function wave($audio_url, $audio_id_lite, $post_id)
     <?php endif;
 }
 
-function audioColab($post_id, $audio_id_lite) {
-    $wave = get_post_meta($post_id, 'waveform_image_url', true);
-    $waveCargada = get_post_meta($post_id, 'waveCargada', true);
-    $urlAudioSegura = audioUrlSegura($audio_id_lite)
-    ?>
-        <div id="waveform-<?php echo $post_id; ?>"
-             class="waveform-container without-image"
-             postIDWave="<?php echo $post_id; ?>"
-             data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
-             data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
-            <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
-            <div class="waveform-message"></div>
-            <div class="waveform-loading" style="display: none;">Cargando...</div>
-        </div>
-        <?php
-}
 
 
-/*
-function fileColab($post_id, $colabFileUrl)
-{
-    $waveCargada = get_post_meta($post_id, 'waveCargada', true);
-    $audioExts = array('mp3', 'wav', 'ogg', 'aac');
-    $fileExt = pathinfo($colabFileUrl, PATHINFO_EXTENSION);
-    $isAudio = in_array(strtolower($fileExt), $audioExts);
-
-    if ($isAudio) {
-        $audioColab = obtenerArchivoIdAlt($colabFileUrl, $post_id);
-
-        if ($audioColab && !is_wp_error($audioColab)) {
-            update_post_meta($post_id, 'audioColab', $audioColab);
-        }
-
-        // Depuración: Imprimir el ID del audioColab
-        error_log('ID del audioColab: ' . $audioColab);
-    ?>
-        <div id="waveform-<?php echo esc_attr($post_id); ?>"
-            class="waveform-container without-image"
-            postIDWave="<?php echo esc_attr($post_id); ?>"
-            data-audio-url="<?php echo esc_url(site_url('?custom-audio-stream=1&audio_id=' . $audioColab)); ?>"
-            data-wave-cargada="<?php echo esc_attr($waveCargada ? 'true' : 'false'); ?>">
-            <div class="waveform-background"></div>
-            <div class="waveform-message"></div>
-            <div class="waveform-loading" style="display: none;">Cargando...</div>
-        </div>
-<?php
-    } else {
-        $fileName = basename($colabFileUrl);
-        echo '<p>Archivo: ' . esc_html($fileName) . '</p>';
-    }
-
-    return ob_get_clean();
-}
-
-function obtenerArchivoIdAlt($url, $postId)
-{
-    global $wpdb;
-    // Preparar la consulta incluyendo la verificación del tipo de post 'attachment'
-    $sql = $wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE guid = %s AND post_type = 'attachment';", $url);
-    $attachment = $wpdb->get_col($sql);
-
-    // Depuración: Imprimir el resultado de la consulta
-    error_log('Resultado de la consulta de archivo: ' . print_r($attachment, true));
-
-    return !empty($attachment) ? $attachment[0] : 0;
-}
-*/
