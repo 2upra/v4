@@ -1,4 +1,4 @@
-function loadAudio(postId, audioUrl) {
+window.loadAudio = function(postId, audioUrl) {
     fetch(audioUrl)
         .then(response => {
             if (!response.ok) {
@@ -20,7 +20,8 @@ function loadAudio(postId, audioUrl) {
             wavesurfer.load(audioUrl); // Cargar la URL del Blob en WaveSurfer
         })
         .catch(error => console.error('Error al cargar el audio:', error));
-}
+};
+
 
 
 function inicializarWaveforms() {

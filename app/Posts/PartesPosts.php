@@ -358,15 +358,17 @@ function wave($audio_url, $audio_id_lite, $post_id)
         $secure_audio_url = get_secure_audio_url($audio_id_lite); // Usando la URL segura
     ?>
         <div id="waveform-<?php echo $post_id; ?>"
-            class="waveform-container without-image"
-            postIDWave="<?php echo $post_id; ?>"
-            data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>">
+             class="waveform-container without-image"
+             postIDWave="<?php echo $post_id; ?>"
+             data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>">
             <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
             <div class="waveform-message"></div>
             <div class="waveform-loading" style="display: none;">Cargando...</div>
         </div>
         <script>
-            loadAudio('<?php echo esc_js($post_id); ?>', '<?php echo esc_url($secure_audio_url); ?>');
+            document.addEventListener('DOMContentLoaded', function () {
+                loadAudio('<?php echo esc_js($post_id); ?>', '<?php echo esc_url($secure_audio_url); ?>');
+            });
         </script>
     <?php endif;
 }
