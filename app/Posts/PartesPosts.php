@@ -15,8 +15,10 @@ function variablesColab($post_id = null)
     $colabColaborador = get_post_meta($post_id, 'colabColaborador', true);
     $colabMensaje = get_post_meta($post_id, 'colabMensaje', true);
     $colabFileUrl = get_post_meta($post_id, 'colabFileUrl', true);
+    $post_audio_lite = get_post_meta($post_id, 'post_audio_lite', true)
 
     return [
+        'post_audio_lite' = $post_audio_lite,
         'current_user_id' => $current_user_id,
         'colabPostOrigen' => $colabPostOrigen,
         'colabAutor' => $colabAutor,
@@ -297,7 +299,7 @@ function audioPost($post_id)
     return ob_get_clean();
 }
 
-// Función para cargar el audio en el frontend
+// funcion de ejemplo que uso en otra parte, el sistema reconoce la wave para generarla y reproducirla cuando el audio se estructura de esta manera:
 function wave($audio_url, $audio_id_lite, $post_id)
 {
     if ($audio_url) :
@@ -317,39 +319,31 @@ function wave($audio_url, $audio_id_lite, $post_id)
     <?php endif;
 }
 
+function audioColab($post_id, $audio_id_lite) {
+    $wave = get_post_meta($post_id, 'waveform_image_url', true);
+    $waveCargada = get_post_meta($post_id, 'waveCargada', true);
+    $urlAudioSegura = audioUrlSegura($audio_id_lite)
+    ?>
+        <div id="waveform-<?php echo $post_id; ?>"
+             class="waveform-container without-image"
+             postIDWave="<?php echo $post_id; ?>"
+             data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
+             data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
+            <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
+            <div class="waveform-message"></div>
+            <div class="waveform-loading" style="display: none;">Cargando...</div>
+        </div>
+        <?php
+}
 
 
 /*
-luego hay un script que hace esto
-function loadAudio(postId, audioUrl) {
-    fetch(audioUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.blob(); // Convierto el audio a un Blob
-        })
-        .then(blob => {
-            const audioUrl = URL.createObjectURL(blob); // Creo una URL de objeto
-            const audioElement = document.createElement('audio');
-            audioElement.src = audioUrl; // Asigno la URL del Blob al elemento de audio
-            audioElement.controls = true; // Añade controles para que el usuario reproduzca el audio
-            document.getElementById(`waveform-${postId}`).appendChild(audioElement);
-        })
-        .catch(error => console.error('Error al cargar el audio:', error));
-}
-*/
-
-
 function fileColab($post_id, $colabFileUrl)
 {
     $waveCargada = get_post_meta($post_id, 'waveCargada', true);
     $audioExts = array('mp3', 'wav', 'ogg', 'aac');
     $fileExt = pathinfo($colabFileUrl, PATHINFO_EXTENSION);
     $isAudio = in_array(strtolower($fileExt), $audioExts);
-
-    // Depuración: Imprimir la URL del archivo
-    error_log('URL del archivo colaborativo: ' . $colabFileUrl);
 
     if ($isAudio) {
         $audioColab = obtenerArchivoIdAlt($colabFileUrl, $post_id);
@@ -391,3 +385,4 @@ function obtenerArchivoIdAlt($url, $postId)
 
     return !empty($attachment) ? $attachment[0] : 0;
 }
+*/

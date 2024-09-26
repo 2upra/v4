@@ -42,7 +42,7 @@ function htmlColab($filtro)
             </div>
 
             <div class="DNPHZG">
-                <?php echo fileColab($post_id, $colabFileUrl); ?>
+                <?php echo audioColab($post_id, $audio_id_lite); ?>
             </div>
         </div>
     </li>
