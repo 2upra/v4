@@ -316,15 +316,7 @@ add_action('rest_api_init', function () {
                 }
             ),
         ),
-        'permission_callback' => function() {
-            // Verificar que el usuario está logeado
-            if (is_user_logged_in()) {
-                return true;
-            } else {
-                // Retorna error 401 si el usuario no está logeado
-                return new WP_Error('rest_forbidden', 'Necesitas estar logeado para acceder a este recurso.', array('status' => 401));
-            }
-        }
+        'permission_callback' => '__return_true' // No requiere autenticación
     ));
 });
 
