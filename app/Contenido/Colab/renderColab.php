@@ -5,9 +5,8 @@ function htmlColab($filtro)
     $post_id = get_the_ID();
     $var = variablesColab($post_id);
     extract($var);
-
     ob_start();
-    ?>
+?>
 
     <li class="POST-<?php echo esc_attr($filtro); ?> EDYQHV"
         filtro="<?php echo esc_attr($filtro); ?>"
@@ -40,17 +39,31 @@ function htmlColab($filtro)
 
             </div>
 
-            <?php if (!empty($post_audio_lite)) : ?>
-                <div class="DNPHZG">
-                    <?php echo audioColab($post_id, $post_audio_lite); ?>
-                </div>
-            <?php endif; ?>
-
+            <div class="XZAKCB">
+                <p><?php echo esc_html($colabMensaje); ?></p>
+                <?php if (!empty($post_audio_lite)) : ?>
+                    <div class="DNPHZG">
+                        <?php echo audioColab($post_id, $post_audio_lite); ?>
+                    </div>
+                <?php else : ?>
+                    <div class="AIWZKN">
+                        <?php if (!empty($colabFileUrl)) : ?>
+                            <?php
+                                $file_name = basename($colabFileUrl);
+                            ?>
+                            <a href="<?php echo esc_url($colabFileUrl); ?>" download class="file-download">
+                                <?php echo esc_html($file_name); ?>
+                            </a>
+                        <?php else : ?>
+                            <p>No hay archivo adjunto.</p>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </li>
 
-    <?php
+<?php
 
     return ob_get_clean();
 }
-
