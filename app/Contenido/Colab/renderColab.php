@@ -52,7 +52,7 @@ function htmlColab($filtro)
                             $file_name = basename($colabFileUrl);
                             ?>
                             <a href="<?php echo esc_url($colabFileUrl); ?>" download class="file-download no-ajax">
-                                <?php echo $GLOBALS['pro']; ?>
+                                <?php echo $GLOBALS['fileGrande']; ?>
                                 <?php echo esc_html($file_name); ?>
                             </a>
                             <p class="textoMuyPequeno">
