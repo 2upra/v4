@@ -10,14 +10,6 @@ function inicializarScripts() {
             }
         }
     });
-
-    // 'IniciadorSample', 'inicialRsForm',
-
-    ['manageSeparatorsAndOrder', 'updateDaysElapsed'].forEach(func => {
-        if (typeof window[func] === 'function') {
-            window[func](func === 'manageSeparatorsAndOrder' ? ['.spaceprogreso', '#toggleOrderButton'] : '2024-01-01');
-        }
-    });
 }
 
 function reinicializar() {

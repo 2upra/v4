@@ -87,8 +87,13 @@ function subidaArchivo()
     guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
 
     if ($movefile && !isset($movefile['error'])) {
-        $file_id = guardarHash($file_hash, $movefile['url'], 'pending', $current_user_id); // Guardar también el user_id
+        $file_id = guardarHash($file_hash, $movefile['url'], 'pending', $current_user_id);
         guardarLog("Carga exitosa. Hash guardado: $file_hash. URL del nuevo archivo: " . $movefile['url']);
+        
+        // Escaneo antivirus en segundo plano
+        $file_path = $movefile['file']; // Ruta del archivo
+        wp_schedule_single_event(time() + 5, 'antivirus', array($file_path, $file_id, $current_user_id)); 
+
         wp_send_json_success(array('fileUrl' => $movefile['url'], 'fileId' => $file_id));
     } else {
         guardarLog("Error en la carga: " . ($movefile['error'] ?? 'Error desconocido'));
@@ -98,24 +103,26 @@ function subidaArchivo()
     guardarLog("FIN subidaArchivo");
 }
 
-function escanear_archivo_antivirus($file_path, $file_id) {
+function antivirus($file_path, $file_id, $current_user_id) {
     $command = escapeshellcmd("clamscan --infected --quiet " . $file_path);
     $output = shell_exec($command);
 
     if ($output) {
-        // Si se detectó malware, eliminar el archivo y actualizar el estado
-        unlink($file_path); // Elimina el archivo
+        unlink($file_path); // Elimina el archivo infectado
         actualizarEstadoArchivo($file_id, 'infectado'); // Actualizar estado en la BD
         guardarLog("Archivo infectado eliminado: $file_path");
+
+        // Restringir al usuario que subió el archivo infectado
+        restringir_usuario(array($current_user_id));
     } else {
-        // Archivo limpio
         actualizarEstadoArchivo($file_id, 'confirmed'); // Actualizar estado en la BD
         guardarLog("Archivo limpio confirmado: $file_path");
     }
 }
 
+
 // Programar la acción de WordPress
-add_action('escanear_archivo_antivirus', 'escanear_archivo_antivirus', 10, 2);
+add_action('antivirus', 'antivirus', 10, 2);
 
 
 

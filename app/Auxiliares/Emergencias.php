@@ -51,6 +51,53 @@ function bloquear_y_eliminar_usuarios($usuarios) {
     }
 }
 
+function restringir_usuario($usuarios) {
+    foreach ($usuarios as $usuario) {
+        $user = null;
+
+        // Determinar el tipo de identificación del usuario
+        if (is_numeric($usuario)) {
+            $user = get_user_by('id', $usuario);
+        } elseif (filter_var($usuario, FILTER_VALIDATE_IP)) {
+            $user = get_user_by('ip', $usuario);
+        } elseif (is_email($usuario)) {
+            $user = get_user_by('email', $usuario);
+        } else {
+            $user = get_user_by('login', $usuario);
+        }
+
+        if ($user) {
+            // Cambiar el rol del usuario a uno personalizado que tenga permisos limitados
+            wp_update_user(array('ID' => $user->ID, 'role' => 'restringido'));
+
+            wp_update_user(array('ID' => $user->ID, 'user_status' => 1));
+
+            // Si se proporciona una IP válida, se puede bloquear la IP
+            if (filter_var($usuario, FILTER_VALIDATE_IP)) {
+                bloquear_ip($usuario); // Si es necesario bloquear la IP, puedes usar la función bloquear_ip()
+            }
+        } else {
+            // Si no se encuentra el usuario pero es una IP válida, bloquearla
+            if (filter_var($usuario, FILTER_VALIDATE_IP)) {
+                bloquear_ip($usuario);
+            } else {
+                error_log("No se pudo encontrar o restringir al usuario: $usuario");
+            }
+        }
+    }
+}
+
+function agregar_rol_restringido() {
+    add_role('restringido', 'Usuario Restringido', array(
+        'read' => true, // Solo puede leer
+        'edit_posts' => false, // No puede crear o editar publicaciones
+        'upload_files' => false, // No puede subir archivos
+        'delete_posts' => false, // No puede eliminar publicaciones
+    ));
+}
+add_action('init', 'agregar_rol_restringido');
+
+
 function bloquear_ip($ip) {
     $htaccess = ABSPATH . '/.htaccess';
     $deny = "\n# Bloqueo de IP\nDeny from $ip\n";
