@@ -1,8 +1,20 @@
+function initializeAllAudioPlayers() {
+    document.querySelectorAll('.waveform-container').forEach(container => {
+        const postId = container.getAttribute('postIDWave');
+        const audioUrl = container.getAttribute('data-audio-url');
+        if (postId && audioUrl && !container.dataset.initialized) {
+            we(postId, audioUrl);
+            container.dataset.initialized = 'true';
+        }
+    });
+}
+
+
 window.we = function (postId, audioUrl) {
     const container = document.getElementById(`waveform-${postId}`);
-    const MAX_RETRIES = 3; // Límite de reintentos
+    const MAX_RETRIES = 3; 
 
-    let wavesurfer; // Declarar wavesurfer para tener acceso global dentro de esta función
+    let wavesurfer; 
 
     const loadAndPlayAudioStream = (retryCount = 0) => {
         if (retryCount >= MAX_RETRIES) {
@@ -202,13 +214,3 @@ function inicializarWaveforms() {
     });
 }
 
-function initializeAllAudioPlayers() {
-    document.querySelectorAll('.waveform-container').forEach(container => {
-        const postId = container.getAttribute('postIDWave');
-        const audioUrl = container.getAttribute('data-audio-url');
-        if (postId && audioUrl && !container.dataset.initialized) {
-            we(postId, audioUrl);
-            container.dataset.initialized = 'true';
-        }
-    });
-}
