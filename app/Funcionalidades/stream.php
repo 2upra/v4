@@ -123,7 +123,6 @@ add_action('rest_api_init', function () {
 
 
 // Modificar la función audioStreamEnd para implementar streaming
-// Modificar la función audioStreamEnd para implementar streaming con caché
 function audioStreamEnd($data) {
     $token = $data['token'];
     $parts = explode('|', base64_decode($token));
@@ -162,15 +161,11 @@ function audioStreamEnd($data) {
     $start = 0;
     $end = $size - 1;
 
-    // Generar ETag
-    $etag = md5($audio_id . filemtime($file));
-    header("ETag: \"$etag\"");
-    
-    // Agregar encabezados de caché
     header('Content-Type: ' . get_post_mime_type($audio_id));
     header("Accept-Ranges: bytes");
-    header("Cache-Control: public, max-age=3600, must-revalidate");
-    header("Pragma: public");
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
 
     // Manejar Ranges HTTP para streaming parcial
     if (isset($_SERVER['HTTP_RANGE'])) {
