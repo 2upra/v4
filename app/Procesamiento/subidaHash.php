@@ -98,6 +98,25 @@ function subidaArchivo()
     guardarLog("FIN subidaArchivo");
 }
 
+function escanear_archivo_antivirus($file_path, $file_id) {
+    $command = escapeshellcmd("clamscan --infected --quiet " . $file_path);
+    $output = shell_exec($command);
+
+    if ($output) {
+        // Si se detectó malware, eliminar el archivo y actualizar el estado
+        unlink($file_path); // Elimina el archivo
+        actualizarEstadoArchivo($file_id, 'infectado'); // Actualizar estado en la BD
+        guardarLog("Archivo infectado eliminado: $file_path");
+    } else {
+        // Archivo limpio
+        actualizarEstadoArchivo($file_id, 'confirmed'); // Actualizar estado en la BD
+        guardarLog("Archivo limpio confirmado: $file_path");
+    }
+}
+
+// Programar la acción de WordPress
+add_action('escanear_archivo_antivirus', 'escanear_archivo_antivirus', 10, 2);
+
 
 
 function actualizarUrlArchivo($file_id, $new_url)
