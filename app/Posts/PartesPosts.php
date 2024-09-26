@@ -297,11 +297,6 @@ function audioPost($post_id)
     return ob_get_clean();
 }
 
-// Función para obtener la URL segura del audio
-function get_secure_audio_url($audio_id)
-{
-    return site_url('/wp-json/custom/v1/get-audio?audio_id=' . urlencode($audio_id));
-}
 
 // Registro del endpoint REST
 add_action('rest_api_init', function () {
@@ -321,31 +316,41 @@ add_action('rest_api_init', function () {
 });
 
 // Función para servir el audio de manera segura
-function serve_audio_endpoint($data)
-{
-    $audio_id = $data['audio_id'];
+function get_secure_audio_url($audio_id) {
+    $token = bin2hex(random_bytes(16));
+    $expiry = time() + 10; /
+    set_transient('audio_' . $token, $audio_id, 10);
+    return site_url('/wp-json/custom/v1/get-audio?token=' . $token . '&expiry=' . $expiry);
+}
+
+function serve_audio_endpoint($data) {
+    $token = $data['token'];
+    $expiry = $data['expiry'];
+
+    if (time() > $expiry) {
+        return new WP_Error('token_expired', 'El token ha expirado.', array('status' => 403));
+    }
+
+    $audio_id = get_transient('audio_' . $token);
+    if (!$audio_id) {
+        return new WP_Error('invalid_token', 'Token inválido.', array('status' => 403));
+    }
+
+    delete_transient('audio_' . $token);  // Elimina el token después de su uso
     $audio_url = wp_get_attachment_url($audio_id);
 
-    // Verificar que el archivo existe y es accesible
     if ($audio_url && file_exists(get_attached_file($audio_id))) {
-
-        // Evitar la cacheación del archivo de audio
         header('Cache-Control: no-store, no-cache, must-revalidate');
         header('Pragma: no-cache');
         header('Expires: 0');
-        
-        // Configurar encabezados para la descarga del archivo
         header('Content-Type: ' . get_post_mime_type($audio_id));
         header('Content-Disposition: inline; filename="' . basename($audio_url) . '"');
-
-        // Leer y enviar el archivo al cliente
         readfile(get_attached_file($audio_id));
         exit;
     } else {
         return new WP_Error('no_audio', 'Archivo de audio no encontrado.', array('status' => 404));
     }
 }
-
 // Función para cargar el audio en el frontend
 function wave($audio_url, $audio_id_lite, $post_id)
 {
