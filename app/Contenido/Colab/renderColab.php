@@ -52,8 +52,10 @@ function htmlColab($filtro)
                             $file_name = basename($colabFileUrl);
                             ?>
                             <a href="<?php echo esc_url($colabFileUrl); ?>" download class="file-download no-ajax">
-                                <?php echo $GLOBALS['fileGrande']; ?>
-                                <?php echo esc_html($file_name); ?>
+                                <div class="XQGSAN">
+                                    <?php echo $GLOBALS['fileGrande']; ?>
+                                    <?php echo esc_html($file_name); ?>
+                                </div>
                             </a>
                             <p class="textoMuyPequeno">
                                 El archivo ha sido analizado y no se encontraron virus. Sin embargo, si no confías en la persona que realizó la solicitud, no descargues archivos. Asegúrate de mantener siempre tu sistema operativo actualizado y reporta cualquier abuso.
