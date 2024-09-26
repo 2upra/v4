@@ -318,7 +318,7 @@ add_action('rest_api_init', function () {
 // Función para servir el audio de manera segura
 function get_secure_audio_url($audio_id) {
     $token = bin2hex(random_bytes(16));
-    $expiry = time() + 10; /
+    $expiry = time() + 10; 
     set_transient('audio_' . $token, $audio_id, 10);
     return site_url('/wp-json/custom/v1/get-audio?token=' . $token . '&expiry=' . $expiry);
 }
