@@ -2,6 +2,8 @@ window.loadAudio = function (postId, audioUrl) {
     const container = document.getElementById(`waveform-${postId}`);
     const MAX_RETRIES = 3; // Límite de reintentos
 
+    let wavesurfer; // Declarar wavesurfer para tener acceso global dentro de esta función
+
     const loadAndPlayAudioBlob = (retryCount = 0) => {
         if (retryCount >= MAX_RETRIES) {
             console.error('No se pudo cargar el audio después de varios intentos');
@@ -31,7 +33,7 @@ window.loadAudio = function (postId, audioUrl) {
             .then((blob) => {
                 const audioBlobUrl = URL.createObjectURL(blob); // Crear una URL de objeto para el Blob
 
-                const wavesurfer = initWavesurfer(container); // Inicializar WaveSurfer con los estilos deseados
+                wavesurfer = initWavesurfer(container); // Inicializar WaveSurfer con los estilos deseados
 
                 wavesurfer.load(audioBlobUrl); // Cargar la URL del Blob en WaveSurfer
 
@@ -48,6 +50,15 @@ window.loadAudio = function (postId, audioUrl) {
                             sendImageToServer(image, postId);
                         }, 1);
                     }
+
+                    // Permitir reproducir/pausar el audio al hacer clic en el contenedor
+                    container.addEventListener('click', () => {
+                        if (wavesurfer.isPlaying()) {
+                            wavesurfer.pause();
+                        } else {
+                            wavesurfer.play();
+                        }
+                    });
                 });
 
                 wavesurfer.on('error', () => {
