@@ -54,7 +54,7 @@ function htmlColab($filtro)
                             <a href="<?php echo esc_url($colabFileUrl); ?>" download class="file-download">
                                 <?php echo esc_html($file_name); ?>
                             </a>
-                            <p class="text-xs">
+                            <p class="textoMuyPequeno">
                                 El archivo ha sido analizado y no se encontraron virus. Sin embargo, si no confías en la persona que realizó la solicitud, no descargues archivos. Asegúrate de mantener siempre tu sistema operativo actualizado y reporta cualquier abuso.
                             </p>
                         <?php else : ?>
