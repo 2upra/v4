@@ -1,29 +1,75 @@
-window.loadAudio = function(postId, audioUrl) {
-    fetch(audioUrl, {
-        credentials: 'include'  // Incluir las cookies de sesión en la solicitud
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.blob(); // Convertir el audio en un Blob
-    })
-    .then(blob => {
-        const audioUrl = URL.createObjectURL(blob); // Crear una URL de objeto para el Blob
-        const container = document.getElementById(`waveform-${postId}`);
-        const wavesurfer = WaveSurfer.create({
-            container: container,
-            waveColor: '#D9DCFF',
-            progressColor: '#4353FF',
-            backend: 'MediaElement',
-            barWidth: 3,
-            height: 128,
-        });
-        wavesurfer.load(audioUrl); // Cargar la URL del Blob en WaveSurfer
-    })
-    .catch(error => console.error('Error al cargar el audio:', error));
-};
+window.loadAudio = function (postId, audioUrl) {
+    const container = document.getElementById(`waveform-${postId}`);
+    const MAX_RETRIES = 3; // Límite de reintentos
 
+    const loadAndPlayAudioBlob = (retryCount = 0) => {
+        if (retryCount >= MAX_RETRIES) {
+            console.error('No se pudo cargar el audio después de varios intentos');
+            container.querySelector('.waveform-loading').style.display = 'none';
+            container.querySelector('.waveform-message').style.display = 'block';
+            container.querySelector('.waveform-message').textContent = 'Error al cargar el audio.';
+            return;
+        }
+
+        window.audioLoading = true;
+        container.querySelector('.waveform-loading').style.display = 'block';
+        container.querySelector('.waveform-message').style.display = 'none';
+        const waveformBackground = container.querySelector('.waveform-background');
+        if (waveformBackground) {
+            waveformBackground.style.display = 'none';
+        }
+
+        fetch(audioUrl, {
+            credentials: 'include' // Incluye las cookies de sesión en la solicitud
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob(); // Convertir el audio en un Blob
+        })
+        .then(blob => {
+            const audioBlobUrl = URL.createObjectURL(blob); // Crear una URL de objeto para el Blob
+
+            const wavesurfer = WaveSurfer.create({
+                container: container,
+                waveColor: '#D9DCFF',
+                progressColor: '#4353FF',
+                backend: 'MediaElement',
+                barWidth: 3,
+                height: 128,
+            });
+
+            wavesurfer.load(audioBlobUrl); // Cargar la URL del Blob en WaveSurfer
+
+            wavesurfer.on('ready', () => {
+                window.audioLoading = false;
+                container.dataset.audioLoaded = 'true';
+                container.querySelector('.waveform-loading').style.display = 'none';
+                const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
+
+                if (!waveCargada) {
+                    setTimeout(() => {
+                        const image = generateWaveformImage(wavesurfer);
+                        const postId = container.getAttribute('postIDWave');
+                        sendImageToServer(image, postId);
+                    }, 1);
+                }
+            });
+
+            wavesurfer.on('error', () => {
+                console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`);
+                setTimeout(() => loadAndPlayAudioBlob(retryCount + 1), 3000);
+            });
+        })
+        .catch(error => {
+            console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`);
+            setTimeout(() => loadAndPlayAudioBlob(retryCount + 1), 3000);
+        });
+    };
+
+    loadAndPlayAudioBlob();
+};
 
 
 
