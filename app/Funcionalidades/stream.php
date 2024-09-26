@@ -2,6 +2,51 @@
 
 /*
 Los audios no se cachean, vuelven a cargar todos cuando el usuario carga la pagina, hay alguna forma de que se cacheen mantiendo su seguridad estricta
+
+en la ventana de red veo que las solicitudes asi ninguna se cachea
+
+URL de la solicitud:
+https://2upra.com/wp-json/1/v1/2?token=MjMyMDI3fDE3MjczMjM0NTd8MTkwLjIwNy4xMjEuMTMzfDY2ZjRkZDA1NTE4OTd8ZDdjM2NlODBkM2ViMDczNTljZmIxZjczNmI3MGMxODE4MDVlMzA4ZDM4Zjg5NGVkMGZmYmQ1ZTI5NWFlZDY3Yw%3D%3D
+Método de solicitud:
+GET
+Código de estado:
+200 OK
+Dirección remota:
+167.86.117.147:443
+Directiva de sitio de referencia:
+strict-origin-when-cross-origin
+accept-ranges:
+bytes
+access-control-allow-headers:
+Authorization, X-WP-Nonce, Content-Disposition, Content-MD5, Content-Type
+access-control-expose-headers:
+X-WP-Total, X-WP-TotalPages, Link
+cache-control:
+no-store, no-cache, must-revalidate, max-age=0
+cache-control:
+post-check=0, pre-check=0
+connection:
+keep-alive
+content-length:
+366594
+content-range:
+bytes 0-366593/366594
+content-type:
+audio/mpeg
+date:
+Thu, 26 Sep 2024 04:03:20 GMT
+link:
+<https://2upra.com/wp-json/>; rel="https://api.w.org/"
+pragma:
+no-cache
+server:
+nginx
+x-content-type-options:
+nosniff
+x-robots-tag:
+noindex
+
+necesito que se cheeen los audios sin que pierdan su estricta seguridad 
 */
 
 // Función para obtener la URL segura del audio
@@ -78,6 +123,7 @@ add_action('rest_api_init', function () {
 
 
 // Modificar la función audioStreamEnd para implementar streaming
+// Modificar la función audioStreamEnd para implementar streaming con caché
 function audioStreamEnd($data) {
     $token = $data['token'];
     $parts = explode('|', base64_decode($token));
@@ -116,11 +162,15 @@ function audioStreamEnd($data) {
     $start = 0;
     $end = $size - 1;
 
+    // Generar ETag
+    $etag = md5($audio_id . filemtime($file));
+    header("ETag: \"$etag\"");
+    
+    // Agregar encabezados de caché
     header('Content-Type: ' . get_post_mime_type($audio_id));
     header("Accept-Ranges: bytes");
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Cache-Control: post-check=0, pre-check=0", false);
-    header("Pragma: no-cache");
+    header("Cache-Control: public, max-age=3600, must-revalidate");
+    header("Pragma: public");
 
     // Manejar Ranges HTTP para streaming parcial
     if (isset($_SERVER['HTTP_RANGE'])) {
