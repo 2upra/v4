@@ -297,7 +297,7 @@ function audioPost($post_id)
     return ob_get_clean();
 }
 
-// Función para generar una URL segura para el audio
+// Función para obtener la URL segura del audio
 function get_secure_audio_url($audio_id)
 {
     return site_url('/wp-json/custom/v1/get-audio?audio_id=' . urlencode($audio_id));
@@ -318,7 +318,12 @@ add_action('rest_api_init', function () {
         ),
         'permission_callback' => function() {
             // Verificar que el usuario está logeado
-            return is_user_logged_in();
+            if (is_user_logged_in()) {
+                return true;
+            } else {
+                // Retorna error 401 si el usuario no está logeado
+                return new WP_Error('rest_forbidden', 'Necesitas estar logeado para acceder a este recurso.', array('status' => 401));
+            }
         }
     ));
 });
@@ -337,7 +342,7 @@ function serve_audio_endpoint($data)
         header('Pragma: no-cache');
         header('Expires: 0');
         
-        // Set headers for file download
+        // Configurar encabezados para la descarga del archivo
         header('Content-Type: ' . get_post_mime_type($audio_id));
         header('Content-Disposition: inline; filename="' . basename($audio_url) . '"');
 
@@ -372,6 +377,7 @@ function wave($audio_url, $audio_id_lite, $post_id)
         </script>
     <?php endif;
 }
+
 
 
 /*
