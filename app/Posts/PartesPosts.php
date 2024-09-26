@@ -309,10 +309,8 @@ function tokenAudio($audio_id) {
 function verificarAudio($token) {
     $parts = explode('|', base64_decode($token));
     if (count($parts) !== 3) return false;
-    
     list($audio_id, $expiration, $signature) = $parts;
     if (time() > $expiration) return false;
-    
     $data = $audio_id . '|' . $expiration;
     $expected_signature = hash_hmac('sha256', $data, ($_ENV['AUDIOCLAVE']));
     return hash_equals($expected_signature, $signature);
@@ -328,7 +326,7 @@ function audioUrlSegura($audio_id) {
 add_action('rest_api_init', function () {
     register_rest_route('1/v1', '/2', array(
         'methods' => 'GET',
-        'callback' => 'serve_audio_endpoint',
+        'callback' => 'audioStreamEnd',
         'args' => array(
             'token' => array(
                 'required' => true,
@@ -340,8 +338,8 @@ add_action('rest_api_init', function () {
     ));
 });
 
-// Modificar la función serve_audio_endpoint para implementar streaming
-function serve_audio_endpoint($data) {
+// Modificar la función audioStreamEnd para implementar streaming
+function audioStreamEnd($data) {
     $token = $data['token'];
     $parts = explode('|', base64_decode($token));
     $audio_id = $parts[0];
@@ -411,21 +409,17 @@ function wave($audio_url, $audio_id_lite, $post_id)
     if ($audio_url) :
         $wave = get_post_meta($post_id, 'waveform_image_url', true);
         $waveCargada = get_post_meta($post_id, 'waveCargada', true);
-        $secure_audio_url = audioUrlSegura($audio_id_lite); // Usando la URL segura
+        $urlAudioSegura = audioUrlSegura($audio_id_lite); // Usando la URL segura
     ?>
         <div id="waveform-<?php echo $post_id; ?>"
              class="waveform-container without-image"
              postIDWave="<?php echo $post_id; ?>"
-             data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>">
+             data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
+             data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
             <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
             <div class="waveform-message"></div>
             <div class="waveform-loading" style="display: none;">Cargando...</div>
         </div>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                loadAudio('<?php echo esc_js($post_id); ?>', '<?php echo esc_url($secure_audio_url); ?>');
-            });
-        </script>
     <?php endif;
 }
 

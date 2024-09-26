@@ -1,4 +1,4 @@
-window.loadAudio = function (postId, audioUrl) {
+window.we = function (postId, audioUrl) {
     const container = document.getElementById(`waveform-${postId}`);
     const MAX_RETRIES = 3; // Límite de reintentos
 
@@ -164,6 +164,7 @@ async function sendImageToServer(imageData, postId) {
 
 // Observador para cargar el audio cuando el contenedor de la forma de onda está en el viewport
 function inicializarWaveforms() {
+    initializeAllAudioPlayers();
     const observer = new IntersectionObserver(
         (entries) => {
             entries.forEach((entry) => {
@@ -197,6 +198,17 @@ function inicializarWaveforms() {
     document.querySelectorAll('div[id^="waveform-"]').forEach((container) => {
         if (container.dataset.initialized !== 'true') {
             observer.observe(container);
+        }
+    });
+}
+
+function initializeAllAudioPlayers() {
+    document.querySelectorAll('.waveform-container').forEach(container => {
+        const postId = container.getAttribute('postIDWave');
+        const audioUrl = container.getAttribute('data-audio-url');
+        if (postId && audioUrl && !container.dataset.initialized) {
+            we(postId, audioUrl);
+            container.dataset.initialized = 'true';
         }
     });
 }
