@@ -1,6 +1,8 @@
 <?php
-
+/*
 add_action('template_redirect', 'custom_audio_streaming_handler');
+
+
 
 function custom_audio_streaming_handler() {
     if (isset($_GET['custom-audio-stream'], $_GET['audio_id']) && $_GET['custom-audio-stream'] == '1') {
@@ -27,7 +29,7 @@ function custom_audio_streaming_handler() {
             status_header(403);
             die('No tienes permiso para acceder a este archivo.');
         }
-        */
+
 
         // Obtener el tipo MIME correcto
         $file_info = wp_check_filetype($audio_path);
@@ -72,7 +74,7 @@ function custom_audio_streaming_handler() {
 
             if ($offset > $end || $end >= $filesize) {
                 header('HTTP/1.1 416 Requested Range Not Satisfiable');
-                header('Content-Range: bytes */' . $filesize);
+                header('Content-Range: bytes /' . $filesize);
                 exit;
             }
 
@@ -114,3 +116,4 @@ function custom_audio_streaming_handler() {
         }
     }
 }
+*/

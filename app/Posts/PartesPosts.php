@@ -297,55 +297,133 @@ function audioPost($post_id)
     return ob_get_clean();
 }
 
+// Función para generar una URL segura para el audio
+function get_secure_audio_url($audio_id)
+{
+    return site_url('/wp-json/custom/v1/get-audio?audio_id=' . urlencode($audio_id));
+}
+
+// Registro del endpoint REST
+add_action('rest_api_init', function () {
+    register_rest_route('custom/v1', '/get-audio', array(
+        'methods' => 'GET',
+        'callback' => 'serve_audio_endpoint',
+        'args' => array(
+            'audio_id' => array(
+                'required' => true,
+                'validate_callback' => function ($param) {
+                    return is_numeric($param);
+                }
+            ),
+        ),
+        'permission_callback' => function() {
+            // Verificar que el usuario está logeado
+            return is_user_logged_in();
+        }
+    ));
+});
+
+// Función para servir el audio de manera segura
+function serve_audio_endpoint($data)
+{
+    $audio_id = $data['audio_id'];
+    $audio_url = wp_get_attachment_url($audio_id);
+
+    // Verificar que el archivo existe y es accesible
+    if ($audio_url && file_exists(get_attached_file($audio_id))) {
+
+        // Evitar la cacheación del archivo de audio
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
+        // Set headers for file download
+        header('Content-Type: ' . get_post_mime_type($audio_id));
+        header('Content-Disposition: inline; filename="' . basename($audio_url) . '"');
+
+        // Leer y enviar el archivo al cliente
+        readfile(get_attached_file($audio_id));
+        exit;
+    } else {
+        return new WP_Error('no_audio', 'Archivo de audio no encontrado.', array('status' => 404));
+    }
+}
+
+// Función para cargar el audio en el frontend
 function wave($audio_url, $audio_id_lite, $post_id)
 {
     if ($audio_url) :
         $wave = get_post_meta($post_id, 'waveform_image_url', true);
         $waveCargada = get_post_meta($post_id, 'waveCargada', true);
+        $secure_audio_url = get_secure_audio_url($audio_id_lite); // Usando la URL segura
     ?>
         <div id="waveform-<?php echo $post_id; ?>"
             class="waveform-container without-image"
             postIDWave="<?php echo $post_id; ?>"
-            data-audio-url="<?php echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"
             data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>">
-            <div class="waveform-background" style="background-image: url('<?php echo $wave; ?>');"></div>
+            <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
             <div class="waveform-message"></div>
             <div class="waveform-loading" style="display: none;">Cargando...</div>
         </div>
+        <script>
+            loadAudio('<?php echo esc_js($post_id); ?>', '<?php echo esc_url($secure_audio_url); ?>');
+        </script>
     <?php endif;
 }
 
-//en el post hay un meta que contiene una url de un archivo, que generalmente se ve asi https://2upra.com/wp-content/uploads/2024/09/looperman-l-4329379-0312964-cowbell-5admin-4elensh.wav y debo poner su id en $audioColab pero no esta funcionando, en este caso da 0 la id, no se que esta pasando, es wordpress 
+
+/*
+luego hay un script que hace esto
+function loadAudio(postId, audioUrl) {
+    fetch(audioUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob(); // Convierto el audio a un Blob
+        })
+        .then(blob => {
+            const audioUrl = URL.createObjectURL(blob); // Creo una URL de objeto
+            const audioElement = document.createElement('audio');
+            audioElement.src = audioUrl; // Asigno la URL del Blob al elemento de audio
+            audioElement.controls = true; // Añade controles para que el usuario reproduzca el audio
+            document.getElementById(`waveform-${postId}`).appendChild(audioElement);
+        })
+        .catch(error => console.error('Error al cargar el audio:', error));
+}
+*/
+
+
 function fileColab($post_id, $colabFileUrl)
 {
     $waveCargada = get_post_meta($post_id, 'waveCargada', true);
     $audioExts = array('mp3', 'wav', 'ogg', 'aac');
     $fileExt = pathinfo($colabFileUrl, PATHINFO_EXTENSION);
     $isAudio = in_array(strtolower($fileExt), $audioExts);
-    
+
     // Depuración: Imprimir la URL del archivo
     error_log('URL del archivo colaborativo: ' . $colabFileUrl);
 
     if ($isAudio) {
         $audioColab = obtenerArchivoIdAlt($colabFileUrl, $post_id);
-        
+
         if ($audioColab && !is_wp_error($audioColab)) {
             update_post_meta($post_id, 'audioColab', $audioColab);
         }
-        
+
         // Depuración: Imprimir el ID del audioColab
         error_log('ID del audioColab: ' . $audioColab);
     ?>
         <div id="waveform-<?php echo esc_attr($post_id); ?>"
-             class="waveform-container without-image"
-             postIDWave="<?php echo esc_attr($post_id); ?>"
-             data-audio-url="<?php echo esc_url(site_url('?custom-audio-stream=1&audio_id=' . $audioColab)); ?>"
-             data-wave-cargada="<?php echo esc_attr($waveCargada ? 'true' : 'false'); ?>">
+            class="waveform-container without-image"
+            postIDWave="<?php echo esc_attr($post_id); ?>"
+            data-audio-url="<?php echo esc_url(site_url('?custom-audio-stream=1&audio_id=' . $audioColab)); ?>"
+            data-wave-cargada="<?php echo esc_attr($waveCargada ? 'true' : 'false'); ?>">
             <div class="waveform-background"></div>
             <div class="waveform-message"></div>
             <div class="waveform-loading" style="display: none;">Cargando...</div>
         </div>
-    <?php
+<?php
     } else {
         $fileName = basename($colabFileUrl);
         echo '<p>Archivo: ' . esc_html($fileName) . '</p>';
@@ -360,10 +438,9 @@ function obtenerArchivoIdAlt($url, $postId)
     // Preparar la consulta incluyendo la verificación del tipo de post 'attachment'
     $sql = $wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE guid = %s AND post_type = 'attachment';", $url);
     $attachment = $wpdb->get_col($sql);
-    
+
     // Depuración: Imprimir el resultado de la consulta
     error_log('Resultado de la consulta de archivo: ' . print_r($attachment, true));
 
     return !empty($attachment) ? $attachment[0] : 0;
 }
-

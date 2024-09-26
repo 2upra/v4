@@ -1,3 +1,28 @@
+function loadAudio(postId, audioUrl) {
+    fetch(audioUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.blob(); // Convierto el audio a un Blob
+        })
+        .then(blob => {
+            const audioUrl = URL.createObjectURL(blob); // Creo una URL de objeto para el Blob
+            const container = document.getElementById(`waveform-${postId}`);
+            const wavesurfer = WaveSurfer.create({
+                container: container,
+                waveColor: '#D9DCFF',
+                progressColor: '#4353FF',
+                backend: 'MediaElement',
+                barWidth: 3,
+                height: 128,
+            });
+            wavesurfer.load(audioUrl); // Cargar la URL del Blob en WaveSurfer
+        })
+        .catch(error => console.error('Error al cargar el audio:', error));
+}
+
+
 function inicializarWaveforms() {
     const MAX_RETRIES = 3; // Límite de reintentos
 
