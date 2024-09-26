@@ -1,5 +1,9 @@
 <?php
 
+/*
+Los audios no se cachean, vuelven a cargar todos cuando el usuario carga la pagina, hay alguna forma de que se cacheen mantiendo su seguridad estricta
+*/
+
 // Función para obtener la URL segura del audio
 function tokenAudio($audio_id) {
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
@@ -39,17 +43,11 @@ function verificarAudio($token) {
     return false;
 }
 
-// Función para marcar un token como usado
 function marcarTokenComoUsado($unique_id) {
-    // Implementa esto usando una base de datos o un sistema de caché
-    // Por ejemplo, usando WordPress transients:
-    set_transient('audio_token_' . $unique_id, true, 3600); // Guarda por 1 hora
+    set_transient('audio_token_' . $unique_id, true, 3600);
 }
 
-// Función para verificar si un token ya ha sido usado
 function tokenYaUsado($unique_id) {
-    // Implementa esto usando una base de datos o un sistema de caché
-    // Por ejemplo, usando WordPress transients:
     return get_transient('audio_token_' . $unique_id) !== false;
 }
 
@@ -80,6 +78,7 @@ add_action('rest_api_init', function () {
 
 
 // Modificar la función audioStreamEnd para implementar streaming
+// Modificar la función audioStreamEnd para implementar streaming
 function audioStreamEnd($data) {
     $token = $data['token'];
     $parts = explode('|', base64_decode($token));
@@ -94,17 +93,13 @@ function audioStreamEnd($data) {
 
     $cache_file = $cache_dir . '/audio_' . $audio_id . '.cache';
 
-    // Verifica si el archivo de caché existe y no ha expirado (1 día)
     if (file_exists($cache_file) && (time() - filemtime($cache_file) < 24 * 60 * 60)) {
         $file = $cache_file;
     } else {
-        // El audio no está en caché o ha expirado, copia el archivo original
         $original_file = get_attached_file($audio_id);
         if (!file_exists($original_file)) {
             return new WP_Error('no_audio', 'Archivo de audio no encontrado.', array('status' => 404));
         }
-
-        // Intentar copiar el archivo al caché
         if (!@copy($original_file, $cache_file)) {
             return new WP_Error('copy_failed', 'Error al copiar el archivo de audio al caché.', array('status' => 500));
         }
@@ -122,11 +117,10 @@ function audioStreamEnd($data) {
     $start = 0;
     $end = $size - 1;
 
+    // Cambiar los encabezados de caché
     header('Content-Type: ' . get_post_mime_type($audio_id));
     header("Accept-Ranges: bytes");
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Cache-Control: post-check=0, pre-check=0", false);
-    header("Pragma: no-cache");
+    header("Cache-Control: private, max-age=908800, must-revalidate");
 
     // Manejar Ranges HTTP para streaming parcial
     if (isset($_SERVER['HTTP_RANGE'])) {
