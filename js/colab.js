@@ -3,6 +3,7 @@ let fileId;
 
 //Abre el modal y añade el evento para envair la solicitud 
 function empezarcolab() {
+    contenidoColab();
     const buttons = document.querySelectorAll('.ZYSVVV');
     const modal = document.getElementById('modalcolab');
     const modalEnviarBtn = document.getElementById('empezarColab');
@@ -150,4 +151,31 @@ function barradeProgreso(file) {
     const previewArea = document.getElementById('previewColab');
     previewArea.innerHTML = `<div id="${progressBarId}" class="progress-bar" style="width: 0%; height: 2px; background-color: #4CAF50;"></div>`;
     return progressBarId;
+}
+
+function contenidoColab() {
+    const botonesVerContenido = document.querySelectorAll('.ver-contenido');
+    
+    // Verificar si hay botones con la clase 'ver-contenido'
+    if (botonesVerContenido.length > 0) {
+        botonesVerContenido.forEach(boton => {
+            boton.addEventListener('click', function () {
+                const postId = this.getAttribute('data-post-id');
+                const colabFiles = document.getElementById('colabfiles-' + postId);
+                
+                // Verificar si el contenido colabFiles existe
+                if (colabFiles) {
+                    if (colabFiles.style.display === 'none' || colabFiles.style.display === '') {
+                        colabFiles.style.display = 'block';
+                    } else {
+                        colabFiles.style.display = 'none';
+                    }
+                } else {
+                    console.warn(`Contenido de colaboración no encontrado para el post ID: ${postId}`);
+                }
+            });
+        });
+    } else {
+        console.warn('No se encontraron botones con la clase "ver-contenido".');
+    }
 }

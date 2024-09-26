@@ -67,6 +67,12 @@ function restringir_usuario($usuarios) {
         }
 
         if ($user) {
+            // Evitar bloquear a administradores o al usuario con ID 1
+            if (in_array('administrator', $user->roles) || $user->ID == 1) {
+                error_log("No se puede restringir al administrador o al usuario con ID 1: {$user->user_login}");
+                continue;
+            }
+
             // Cambiar el rol del usuario a uno personalizado que tenga permisos limitados
             wp_update_user(array('ID' => $user->ID, 'role' => 'restringido'));
 
@@ -86,6 +92,7 @@ function restringir_usuario($usuarios) {
         }
     }
 }
+
 
 function agregar_rol_restringido() {
     add_role('restringido', 'Usuario Restringido', array(
