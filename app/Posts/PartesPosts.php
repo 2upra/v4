@@ -15,10 +15,10 @@ function variablesColab($post_id = null)
     $colabColaborador = get_post_meta($post_id, 'colabColaborador', true);
     $colabMensaje = get_post_meta($post_id, 'colabMensaje', true);
     $colabFileUrl = get_post_meta($post_id, 'colabFileUrl', true);
-    $post_audio_lite = get_post_meta($post_id, 'post_audio_lite', true)
+    $post_audio_lite = get_post_meta($post_id, 'post_audio_lite', true);
 
     return [
-        'post_audio_lite' = $post_audio_lite,
+        'post_audio_lite' => $post_audio_lite,
         'current_user_id' => $current_user_id,
         'colabPostOrigen' => $colabPostOrigen,
         'colabAutor' => $colabAutor,
