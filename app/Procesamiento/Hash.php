@@ -4,6 +4,7 @@ function subidaArchivo()
 {
     guardarLog("INICIO subidaArchivo");
     $is_admin = current_user_can('administrator');
+    $current_user_id = get_current_user_id(); // Obtener ID del usuario actual
     $file = $_FILES['file'] ?? null;
     $file_hash = sanitize_text_field($_POST['file_hash'] ?? '');
 
@@ -17,28 +18,64 @@ function subidaArchivo()
     guardarLog("Hash recibido: $file_hash");
     $existing_file = obtenerHash($file_hash);
 
-    // Si el archivo ya existe
+    // Si el archivo ya existe en la base de datos
     if ($existing_file) {
         $file_id = $existing_file['id']; // Asumiendo que el ID está en el array de $existing_file
+        $file_url = $existing_file['file_url'];
+        $owner_id = $existing_file['user_id']; // ID del usuario que subió el archivo
+
+        // Verificar si el archivo realmente existe en el servidor
+        $file_path = str_replace(get_site_url(), ABSPATH, $file_url); // Convertir URL a ruta absoluta
+        if (!file_exists($file_path)) {
+            guardarLog("El archivo no existe en el servidor: $file_url");
+
+            // Si el archivo no existe en el servidor, permitir que se suba el archivo normalmente
+            $movefile = wp_handle_upload($file, array('test_form' => false, 'unique_filename_callback' => 'nombreUnicoFile'));
+            guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
+
+            if ($movefile && !isset($movefile['error'])) {
+                // Si el archivo estaba registrado con user_id = 0, actualizarlo con el user_id actual
+                if ($owner_id == 0) {
+                    guardarLog("Actualizando el user_id de $owner_id a $current_user_id para el archivo $file_id");
+                    actualizarUrlArchivo($file_id, $movefile['url']); // Actualizar URL
+                    confirmarHashId($file_id); // Confirmar el hash
+                }
+
+                guardarLog("Carga exitosa. URL del nuevo archivo: " . $movefile['url']);
+                wp_send_json_success(array('fileUrl' => $movefile['url'], 'fileId' => $file_id));
+            } else {
+                guardarLog("Error en la carga: " . ($movefile['error'] ?? 'Error desconocido'));
+                wp_send_json_error($movefile['error'] ?? 'Error desconocido');
+            }
+
+            return;
+        }
+
+        // Verificar si el archivo pertenece al usuario actual o si es administrador
+        if ($owner_id != $current_user_id && !$is_admin) {
+            guardarLog("El archivo no pertenece al usuario actual.");
+            wp_send_json_error('No tienes permiso para reutilizar este archivo');
+            return;
+        }
 
         // Si el archivo está pendiente y el usuario no es administrador
         if ($existing_file['status'] === 'pending' && !$is_admin) {
             guardarLog("El archivo ya está pendiente, reutilizando: " . $existing_file['file_url']);
-            wp_send_json_success(array('fileUrl' => $existing_file['file_url'], 'fileId' => $file_id));
+            wp_send_json_success(array('fileUrl' => $file_url, 'fileId' => $file_id));
             return;
         }
 
-        // Si el archivo está confirmado, no es necesario volver a subirlo
+        // Si el archivo ya está confirmado, no es necesario volver a subirlo
         if ($existing_file['status'] === 'confirmed') {
-            guardarLog("El archivo ya está confirmado, reutilizando: " . $existing_file['file_url']);
-            wp_send_json_success(array('fileUrl' => $existing_file['file_url'], 'fileId' => $file_id));
+            guardarLog("El archivo ya está confirmado, reutilizando: " . $file_url);
+            wp_send_json_success(array('fileUrl' => $file_url, 'fileId' => $file_id));
             return;
         }
 
         // Si es administrador, permitir el uso del archivo sin eliminarlo
         if ($is_admin) {
-            guardarLog("El usuario es administrador, reutilizando archivo existente: " . $existing_file['file_url']);
-            wp_send_json_success(array('fileUrl' => $existing_file['file_url'], 'fileId' => $file_id));
+            guardarLog("El usuario es administrador, reutilizando archivo existente: " . $file_url);
+            wp_send_json_success(array('fileUrl' => $file_url, 'fileId' => $file_id));
             return;
         }
     }
@@ -50,7 +87,7 @@ function subidaArchivo()
     guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
 
     if ($movefile && !isset($movefile['error'])) {
-        $file_id = guardarHash($file_hash, $movefile['url'], 'pending');
+        $file_id = guardarHash($file_hash, $movefile['url'], 'pending', $current_user_id); // Guardar también el user_id
         guardarLog("Carga exitosa. Hash guardado: $file_hash. URL del nuevo archivo: " . $movefile['url']);
         wp_send_json_success(array('fileUrl' => $movefile['url'], 'fileId' => $file_id));
     } else {
@@ -60,6 +97,8 @@ function subidaArchivo()
 
     guardarLog("FIN subidaArchivo");
 }
+
+
 
 function actualizarUrlArchivo($file_id, $new_url)
 {
@@ -105,7 +144,7 @@ function obtenerHash($file_hash)
     ), ARRAY_A);
 }
 
-function guardarHash($hash, $url, $status = 'pending')
+function guardarHash($hash, $url, $status = 'pending', $user_id)
 {
     global $wpdb;
     $wpdb->insert(
@@ -114,12 +153,14 @@ function guardarHash($hash, $url, $status = 'pending')
             'file_hash' => $hash, 
             'file_url' => $url, 
             'status' => $status,
+            'user_id' => $user_id,  // Guardar el ID del usuario
             'upload_date' => current_time('mysql')
         ),
-        array('%s', '%s', '%s', '%s')
+        array('%s', '%s', '%s', '%d', '%s')  // Añadir el formato de user_id
     );
     return $wpdb->insert_id;
 }
+
 
 function eliminarHash($file_hash)
 {
