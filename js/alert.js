@@ -40,18 +40,21 @@ window.inicializarAlerta = function () {
 
                 const confirmButton = document.createElement('button');
                 confirmButton.textContent = 'Confirmar';
+                confirmButton.className = 'botonprincipal'; 
                 confirmButton.onclick = () => {
                     closeNotification(true);
                 };
 
                 const cancelButton = document.createElement('button');
                 cancelButton.textContent = 'Cancelar';
+                confirmButton.className = 'botonsecundario'; 
                 cancelButton.onclick = () => {
                     closeNotification(false);
                 };
 
-                buttonsDiv.appendChild(confirmButton);
-                buttonsDiv.appendChild(cancelButton);
+                buttonsDiv.appendChild(cancelButton); // Append cancel button
+                buttonsDiv.appendChild(confirmButton); // Append confirm button
+
                 notificationDiv.appendChild(buttonsDiv);
             } else {
                 setTimeout(() => {
