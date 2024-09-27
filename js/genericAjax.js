@@ -111,6 +111,19 @@ async function requestDeletion() {
     );
 }
 
+async function rechazarColab() {
+    await accionClick(
+        '.rechazarcolab',
+        'rechazarcolab',
+        '¿Estás seguro que quieres rechazar este colab',
+        async (statusElement, data) => {
+            actualizarElemento(statusElement, data.new_status);
+            await alert('Rechazando colab.');
+        },
+        '.EDYQHV'
+    );
+}
+
 async function estadorola() {
     await accionClick(
         '.toggle-status-rola', 
