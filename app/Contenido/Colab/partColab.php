@@ -32,26 +32,28 @@ function variablesColab($post_id = null)
     ];
 }
 
-function audioColab($post_id, $audio_id_lite) {
+function audioColab($post_id, $audio_id_lite)
+{
     $wave = get_post_meta($post_id, 'waveform_image_url', true);
     $waveCargada = get_post_meta($post_id, 'waveCargada', true);
     $urlAudioSegura = audioUrlSegura($audio_id_lite)
-    ?>
-        <div id="waveform-<?php echo $post_id; ?>"
-             class="waveform-container without-image"
-             postIDWave="<?php echo $post_id; ?>"
-             data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
-             data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
-            <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
-            <div class="waveform-message"></div>
-            <div class="waveform-loading" style="display: none;">Cargando...</div>
-        </div>
-        <?php
+?>
+    <div id="waveform-<?php echo $post_id; ?>"
+        class="waveform-container without-image"
+        postIDWave="<?php echo $post_id; ?>"
+        data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
+        data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
+        <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
+        <div class="waveform-message"></div>
+        <div class="waveform-loading" style="display: none;">Cargando...</div>
+    </div>
+<?php
 }
 
-function opcionesColab($post_id, $colabColaborador, $colabColaboradorAvatar, $colabColaboradorName, $colab_date) {
+function opcionesColab($post_id, $colabColaborador, $colabColaboradorAvatar, $colabColaboradorName, $colab_date)
+{
     ob_start();
-    ?>
+?>
     <div class="GFOPNU">
         <div class="CBZNGK">
             <a href="<?php echo esc_url(get_author_posts_url($colabColaborador)); ?>"></a>
@@ -69,17 +71,30 @@ function opcionesColab($post_id, $colabColaborador, $colabColaboradorAvatar, $co
         </div>
 
         <div class="flex gap-3 justify-end ml-auto">
-            <button class="botonsecundario">Rechazar</button>
-            <button class="botonprincipal">Aceptar</button>
+            <button data-post-id="<?php echo $post_id; ?>" class="botonsecundario submenucolab"><?php echo $GLOBALS['iconotrespuntos']; ?></button>
+            <button data-post-id="<?php echo $post_id; ?>" class="botonsecundario rechazarcolab">Rechazar</button>
+            <button data-post-id="<?php echo $post_id; ?>" class="botonprincipal aceptarcolab">Aceptar</button>
+        </div>
+
+        <div class="A1806241" id="opcionescolab-<?php echo $post_id; ?>">
+            <div class="A1806242">
+
+                <button class="reportarColab" data-post-id="<?php echo $post_id; ?>">Reportar</button>
+                <button class="bloquearColab" data-post-id="<?php echo $post_id; ?>">Bloquear</button>
+                <button class="enviarMensajeColab" data-post-id="<?php echo $post_id; ?>">Enviar Mensaje</button>
+
+
+            </div>
         </div>
     </div>
-    <?php
+<?php
     return ob_get_clean();
 }
 
-function contenidoColab($post_id, $colabMensaje, $post_audio_lite, $colabFileUrl) {
+function contenidoColab($post_id, $colabMensaje, $post_audio_lite, $colabFileUrl)
+{
     ob_start();
-    ?>
+?>
     <div class="XZAKCB">
         <p>Mensaje de solicitud: <?php echo esc_html($colabMensaje); ?></p>
         <div class="BCGWEY">
@@ -110,6 +125,6 @@ function contenidoColab($post_id, $colabMensaje, $post_audio_lite, $colabFileUrl
             <?php endif; ?>
         </div>
     </div>
-    <?php
+<?php
     return ob_get_clean();
 }
