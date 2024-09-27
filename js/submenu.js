@@ -4,33 +4,40 @@ function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundClass, a
     
     function toggleSubmenu(event) {
         const trigger = event.target.closest(triggerSelector);
-        console.log('Trigger clicked:', trigger);
+        console.log('Trigger clicado:', trigger);
         if (!trigger) return; // Verificación adicional para evitar null
         
         const submenuId = `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || "default"}`;
-        console.log('Submenu ID:', submenuId);
+        console.log('ID del submenu:', submenuId);
         
         const submenu = document.getElementById(submenuId);
         console.log('Submenu:', submenu);
         if (!submenu) return; // Verificación para evitar null
 
         const modalBackground = trigger.closest(modalBackgroundClass);
-        console.log('Modal Background:', modalBackground);
+        console.log('Fondo Modal:', modalBackground);
         if (!modalBackground) return; // Verificación para evitar null
 
         submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
-        console.log('Submenu classes:', submenu.className);
+        console.log('Clases del submenu:', submenu.className);
         
-        submenu.style.display === "block" ? hideSubmenu(submenu, modalBackground) : showSubmenu(event, submenu, modalBackground);
+        if (submenu.style.display === "block") {
+            console.log('Ocultando el submenu');
+            hideSubmenu(submenu, modalBackground);
+        } else {
+            console.log('Mostrando el submenu');
+            showSubmenu(event, submenu, modalBackground);
+        }
+
         event.stopPropagation();
     }
 
     function showSubmenu(event, submenu, modalBackground) {
         const rect = event.target.getBoundingClientRect();
-        console.log('Element rect:', rect);
+        console.log('Rectángulo del elemento:', rect);
         
         const { innerWidth: vw, innerHeight: vh } = window;
-        console.log(`Viewport dimensions: ${vw}x${vh}`);
+        console.log(`Dimensiones del viewport: ${vw}x${vh}`);
 
         if (vw > 640) {
             submenu.style.position = "fixed";
@@ -38,7 +45,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundClass, a
             submenu.style.left = `${Math.min(rect.left + adjustLeft, vw - submenu.offsetWidth)}px`;
         }
 
-        console.log('Submenu display style set to block');
+        console.log('Estilo de display del submenu configurado a block');
         submenu.style.display = "block";
         modalBackground.style.display = "block";
         document.body.classList.add('no-scroll');  // Bloquear scroll
@@ -69,12 +76,12 @@ function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundClass, a
 }
 
 function initializeStaticMenus() {
-    console.log('Initializing static menus');
+    console.log('Inicializando menús estáticos');
     createSubmenu(".subiricono", "submenusubir", ".modal-background", 0, 120);
 }
 
 function submenu() {
-    console.log('Initializing dynamic submenus');
+    console.log('Inicializando submenús dinámicos');
     createSubmenu(".mipsubmenu", "submenuperfil", ".modal-background", 0, 120);
     createSubmenu(".HR695R7", "opcionesrola", ".modal-background", 100, 0);
     createSubmenu(".HR695R8", "opcionespost", ".modal-background", 60, 0);
