@@ -34,7 +34,12 @@ jobs:
         run: composer install --no-progress
 
       - name: Run PHPUnit tests
-        run: vendor/bin/phpunit --coverage-clover=coverage.xml
+        run: |
+          if [ -f "phpunit.xml" ]; then
+            vendor/bin/phpunit --coverage-clover=coverage.xml
+          else
+            vendor/bin/phpunit --no-configuration --coverage-clover=coverage.xml
+          fi
 
       - name: Analyze with SonarCloud
         uses: SonarSource/sonarcloud-github-action@v1.6
