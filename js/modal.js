@@ -1,133 +1,249 @@
-
-//SCRIP PRINCIPAL
-
-
-class ModalManager {
-    constructor(modalBackgroundSelector) {
-        this.modalBackground = document.querySelector(modalBackgroundSelector);
-        this.modals = {};
-        this.currentOpenModal = null;
-
-        if (!this.modalBackground) {
-            console.warn('No se encontra el background del modal');
-            return;
-        }
-
-        this.setupBackgroundListener();
+class OverlayManager {
+    constructor() {
+        this.overlays = {};
+        this.currentOpenOverlay = null;
         this.setupBodyListener();
+
+        window.addEventListener('resize', () => {
+            Object.values(this.overlays).forEach(overlayInfo => {
+                const {element, options} = overlayInfo;
+                if (options.mobileClass) {
+                    element.classList.toggle(options.mobileClass, window.innerWidth <= 640);
+                }
+            });
+        });
     }
 
-    añadirModal(id, modalSelector, triggerSelectors, closeButtonSelector = null) {
-        const modal = document.querySelector(modalSelector);
-        if (!modal) {
-            console.warn(`Modal elemento id:: ${id}`);
+    addOverlay(id, elementSelector, triggers, options = {}) {
+        const element = document.querySelector(elementSelector);
+        if (!element) {
+            console.warn(Overlay element not found: ${id});
             return;
         }
 
-        const triggers = triggerSelectors
-            .map(selector => {
-                try {
-                    return document.querySelector(selector);
-                } catch (error) {
-                    console.warn(`Selector fallo:: ${selector}`);
-                    return null;
-                }
-            })
-            .filter(Boolean);
+        const triggerElements = triggers.map(trigger => {
+            if (typeof trigger === 'string') {
+                return document.querySelector(trigger);
+            } else {
+                return trigger;
+            }
+        }).filter(Boolean);
 
-        if (triggers.length === 0) {
-            console.warn(`Fail triggers modal id: ${id}`);
+        if (triggerElements.length === 0) {
+            console.warn(No triggers found for overlay id: ${id});
             return;
         }
 
-        this.modals[id] = {
-            modal,
-            triggers,
-            closeButton: closeButtonSelector
+        this.overlays[id] = {
+            element,
+            triggers: triggerElements,
+            options
         };
 
         this.setupTriggers(id);
-        this.setupCloseButton(id);
-        this.setupModalListener(modal);
+        if (options.closeButtonSelector) {
+            this.setupCloseButton(id);
+        }
+        this.setupElementListener(element);
     }
 
-    setupTriggers(modalId) {
-        const {triggers} = this.modals[modalId];
+    setupTriggers(overlayId) {
+        const {triggers} = this.overlays[overlayId];
         if (!triggers || triggers.length === 0) return;
 
         triggers.forEach(trigger => {
             trigger.addEventListener('click', event => {
                 event.stopPropagation();
-                this.toggleModal(modalId, true);
+                this.toggleOverlay(overlayId, true, event, trigger);
             });
         });
     }
 
-    setupCloseButton(modalId) {
-        const {closeButton} = this.modals[modalId];
-        if (!closeButton) return;
+    setupCloseButton(overlayId) {
+        const {options} = this.overlays[overlayId];
+        const closeButtonSelector = options.closeButtonSelector;
+        if (!closeButtonSelector) return;
 
-        const closeButtonElement = document.querySelector(closeButton);
+        const closeButtonElement = document.querySelector(closeButtonSelector);
         if (closeButtonElement) {
             closeButtonElement.addEventListener('click', event => {
                 event.stopPropagation();
-                this.toggleModal(modalId, false);
+                this.toggleOverlay(overlayId, false);
             });
         } else {
-            console.warn(`Close button element not found for modal id: ${modalId}`);
+            console.warn(Close button element not found for overlay id: ${overlayId});
         }
     }
 
-    setupModalListener(modal) {
-        modal.addEventListener('click', event => event.stopPropagation());
-    }
-
-    setupBackgroundListener() {
-        if (!this.modalBackground) return;
-
-        this.modalBackground.addEventListener('click', () => this.closeAllModals());
+    setupElementListener(element) {
+        element.addEventListener('click', event => event.stopPropagation());
     }
 
     setupBodyListener() {
         document.body.addEventListener('click', event => {
-            if (this.currentOpenModal && !this.modals[this.currentOpenModal].modal.contains(event.target)) {
-                this.closeAllModals();
+            if (this.currentOpenOverlay) {
+                const overlayInfo = this.overlays[this.currentOpenOverlay];
+                if (!overlayInfo.element.contains(event.target)) {
+                    this.closeAllOverlays();
+                }
             }
         });
     }
 
-    toggleModal(modalId, show) {
-        const modalInfo = this.modals[modalId];
-        if (!modalInfo) {
-            console.warn(`Modal info not found for id: ${modalId}`);
+    toggleOverlay(overlayId, show, event = null, triggerElement = null) {
+        const overlayInfo = this.overlays[overlayId];
+        if (!overlayInfo) {
+            console.warn(Overlay info not found for id: ${overlayId});
             return;
         }
 
-        if (this.currentOpenModal && this.currentOpenModal !== modalId) {
-            this.toggleModal(this.currentOpenModal, false);
+        if (this.currentOpenOverlay && this.currentOpenOverlay !== overlayId) {
+            this.toggleOverlay(this.currentOpenOverlay, false);
         }
 
-        modalInfo.modal.style.display = show ? 'flex' : 'none';
-        if (this.modalBackground) {
-            this.modalBackground.style.display = show ? 'block' : 'none';
+        const {element, options} = overlayInfo;
+
+        if (show) {
+            if (options.isModal) {
+                element.style.display = 'flex';
+            } else {
+                this.positionElement(element, triggerElement, options);
+                element.style.display = 'block';
+            }
+
+            if (options.generateBackground) {
+                this.createBackgroundOverlay(element, options.mobileClass);
+            }
+
+            this.currentOpenOverlay = overlayId;
+        } else {
+            element.style.display = 'none';
+            this.removeBackgroundOverlay(element);
+            this.currentOpenOverlay = null;
         }
-        this.currentOpenModal = show ? modalId : null;
     }
 
-    closeAllModals() {
-        Object.keys(this.modals).forEach(modalId => this.toggleModal(modalId, false));
-        this.currentOpenModal = null;
+    positionElement(element, triggerElement, options) {
+        if (!triggerElement) return;
+
+        const rect = triggerElement.getBoundingClientRect();
+        const { innerWidth: vw, innerHeight: vh } = window;
+
+        const adjustTop = options.positionAdjust && options.positionAdjust.top || 0;
+        const adjustLeft = options.positionAdjust && options.positionAdjust.left || 0;
+
+        if (vw > 640) {
+            element.style.position = "fixed";
+            element.style.top = ${Math.min(rect.bottom + adjustTop, vh - element.offsetHeight)}px;
+            element.style.left = ${Math.min(rect.left + adjustLeft, vw - element.offsetWidth)}px;
+        }
+
+        if (options.mobileClass && vw <= 640) {
+            element.classList.add(options.mobileClass);
+        } else if (options.mobileClass) {
+            element.classList.remove(options.mobileClass);
+        }
+    }
+
+    createBackgroundOverlay(element, mobileClass = null) {
+        const backgroundOverlay = document.createElement('div');
+        backgroundOverlay.classList.add('overlay-background');
+        backgroundOverlay.style.position = 'fixed';
+        backgroundOverlay.style.top = 0;
+        backgroundOverlay.style.left = 0;
+        backgroundOverlay.style.width = '100vw';
+        backgroundOverlay.style.height = '100vh';
+        backgroundOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        backgroundOverlay.style.zIndex = 999;
+        backgroundOverlay.style.pointerEvents = 'none';
+
+        element.parentElement.appendChild(backgroundOverlay);
+
+        element._backgroundOverlay = backgroundOverlay;
+        element.style.zIndex = 1000;
+
+        document.body.classList.add('no-scroll');
+
+        if (mobileClass && window.innerWidth <= 640) {
+            element.classList.add(mobileClass);
+        }
+    }
+
+    removeBackgroundOverlay(element) {
+        if (element._backgroundOverlay) {
+            element._backgroundOverlay.remove();
+            element._backgroundOverlay = null;
+        }
+
+        // Check if any other overlay is open
+        const activeOverlays = Object.values(this.overlays).filter(overlayInfo => overlayInfo.element.style.display !== 'none');
+
+        if (activeOverlays.length === 0) {
+            document.body.classList.remove('no-scroll');
+        }
+    }
+
+    closeAllOverlays() {
+        Object.keys(this.overlays).forEach(overlayId => this.toggleOverlay(overlayId, false));
+        this.currentOpenOverlay = null;
     }
 }
 
-// Example usage
-const modalManager = new ModalManager('.modalBackground2');
+const overlayManager = new OverlayManager();
 
 function smooth() {
-    modalManager.añadirModal('modalinvertir', '#modalinvertir', ['.donar'], '.cerrardonar');
-    modalManager.añadirModal('modalproyecto', '#modalproyecto', ['.unirteproyecto'], '.DGFDRDC');
-    modalManager.añadirModal('proPro', '#propro', ['.prostatus0']);
-    modalManager.añadirModal('proProAcciones', '#proproacciones', ['.subpro']);
-    modalManager.añadirModal('W0512KN', '#a84J76WY', ['#W0512KN'], '#MkzIeq');
-    modalDetallesIA();
+    overlayManager.addOverlay('modalinvertir', '#modalinvertir', ['.donar'], {
+        closeButtonSelector: '.cerrardonar',
+        isModal: true,
+        generateBackground: true
+    });
+    overlayManager.addOverlay('modalproyecto', '#modalproyecto', ['.unirteproyecto'], {
+        closeButtonSelector: '.DGFDRDC',
+        isModal: true,
+        generateBackground: true
+    });
+    overlayManager.addOverlay('proPro', '#propro', ['.prostatus0'], {
+        isModal: true,
+        generateBackground: true
+    });
+    overlayManager.addOverlay('proProAcciones', '#proproacciones', ['.subpro'], {
+        isModal: true,
+        generateBackground: true
+    });
+    overlayManager.addOverlay('W0512KN', '#a84J76WY', ['#W0512KN'], {
+        closeButtonSelector: '#MkzIeq',
+        isModal: true,
+        generateBackground: true
+    });
 }
+
+function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLeft = 0) {
+    const triggers = document.querySelectorAll(triggerSelector);
+    
+    triggers.forEach(trigger => {
+        const submenuId = ${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || "default"};
+        const submenuSelector = #${submenuId};
+        
+        overlayManager.addOverlay(submenuId, submenuSelector, [trigger], {
+            isModal: false,
+            generateBackground: true,
+            positionAdjust: { top: adjustTop, left: adjustLeft },
+            mobileClass: 'mobile-submenu'
+        });
+    });
+}
+
+function initializeStaticMenus() {
+    createSubmenu(".subiricono", "submenusubir", 0, 120);
+}
+
+function submenu() {
+    createSubmenu(".mipsubmenu", "submenuperfil", 0, 120);
+    createSubmenu(".HR695R7", "opcionesrola", 100, 0);
+    createSubmenu(".HR695R8", "opcionespost", 60, 0);
+    createSubmenu(".submenucolab", "opcionescolab", 60, 0);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initializeStaticMenus();
+});
