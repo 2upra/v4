@@ -1,5 +1,5 @@
-async function procesarDescarga(audioUrl, usuarioId) {
-    console.log("Iniciando procesarDescarga", audioUrl, usuarioId);
+async function procesarDescarga(postId, usuarioId) {
+    console.log("Iniciando procesarDescarga", postId, usuarioId);
 
     // Confirmar con el usuario
     const confirmed = await new Promise((resolve) => {
@@ -13,7 +13,7 @@ async function procesarDescarga(audioUrl, usuarioId) {
 
     try {
         const data = {
-            audio_id: audioId,
+            postId: postId,
         };
 
         const responseData = await enviarAjax("procesarDescarga", data);

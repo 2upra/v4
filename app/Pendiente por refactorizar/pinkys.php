@@ -30,19 +30,26 @@ function restarPinkysEliminacion($post_id)
 
 // Handler AJAX para procesar la descarga
 add_action('wp_ajax_procesarDescarga', 'procesarDescarga');
+
 function procesarDescarga()
 {
-
     $usuario_id = get_current_user_id();
     if (!$usuario_id) {
         wp_send_json_error(['message' => 'No autorizado.']);
     }
 
-    $audio_id = isset($_POST['audio_id']) ? intval($_POST['audio_id']) : 0;
+    $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
 
-    if (!$audio_id || get_post_status($audio_id) != 'publish') {
-        wp_send_json_error(['message' => 'Audio no válido.']);
+    if (!$post_id || get_post_status($post_id) != 'publish') {
+        wp_send_json_error(['message' => 'Post no válido.']);
     }
+
+    $audio_id = get_post_meta($post_id, 'post_audio', true);
+
+    if (!$audio_id) {
+        wp_send_json_error(['message' => 'Audio no encontrado.']);
+    }
+
     $pinky = (int)get_user_meta($usuario_id, 'pinky', true);
 
     if ($pinky >= 1) {
@@ -65,12 +72,10 @@ function botonDescarga($post_id)
     $usuario_id = get_current_user_id();
 
     if ($paraDescarga == '1') {
-        $audio_id = get_post_meta(get_the_ID(), 'post_audio', true);
-
         if ($usuario_id) {
             ?>
             <div class="ZAQIBB">
-                <button onclick="return procesarDescarga('<?php echo esc_js($audio_id); ?>')">
+                <button onclick="return procesarDescarga('<?php echo esc_js($post_id); ?>', '<?php echo esc_js($usuario_id); ?>')">
                     <?php echo $GLOBALS['descargaicono']; ?>
                 </button>
             </div>
@@ -85,7 +90,6 @@ function botonDescarga($post_id)
             <?php
         }
     }
-
     return ob_get_clean();
 }
 
@@ -105,7 +109,7 @@ function generarEnlaceDescarga($usuario_id, $audio_id) {
     return $enlaceDescarga;
 }
 
-// Procesar la descarga del audio
+
 function descargaAudio() {
     if (isset($_GET['descarga_token'])) {
         $token = sanitize_text_field($_GET['descarga_token']);
@@ -116,12 +120,9 @@ function descargaAudio() {
                 wp_die('No tienes permiso para descargar este archivo.');
             }
             $audio_id = $token_data['audio_id'];
-
-            // Obtener la URL del audio
             $audio_url = wp_get_attachment_url($audio_id);
 
             if ($audio_url) {
-                // Forzar la descarga del archivo
                 header('Content-Type: application/octet-stream');
                 header('Content-Disposition: attachment; filename="' . basename($audio_url) . '"');
                 readfile($audio_url);
