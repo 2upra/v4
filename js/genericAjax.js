@@ -163,32 +163,3 @@ function removerPost(selector, postId) {
     }
 }
 
-function inicializarDescargas() {
-    document.addEventListener('click', async function (e) {
-        if (e.target && e.target.classList.contains('download-button')) {
-            e.preventDefault();
-            const url = e.target.getAttribute('data-audio-url');
-            const filename = e.target.getAttribute('data-filename');
-
-            if (!url || !filename) return;
-
-            try {
-                const blob = await fetch(url).then(resp => {
-                    if (!resp.ok) throw new Error('Error al descargar el archivo');
-                    return resp.blob();
-                });
-
-                const downloadUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = downloadUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(downloadUrl);
-            } catch (error) {
-                alert('Error al descargar el archivo');
-            }
-        }
-    });
-}

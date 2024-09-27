@@ -37,9 +37,6 @@ function postLog($log) {
     escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt');
 }
 
-
-
-
 //Script principal
 function scriptsOrdenados()
 {
@@ -58,6 +55,7 @@ function scriptsOrdenados()
         'modal' => '1.0.22',
         'alert' => '1.0.4',
         'submenu' => '1.2.15',
+        'descargas' => '2.0.1',
         'pestanas' => '1.1.10',
         'tagify' => '2.0.1',
         'wavesDos' => '1.0.1',
