@@ -28,10 +28,21 @@ function crear_sesion_pro(WP_REST_Request $request)
 
 function stripe_webhook_pro(WP_REST_Request $request)
 {
-    if (!isset($_ENV['STRIPEKEY'])) return new WP_Error('stripe_key_missing', 'La clave de Stripe no está configurada', ['status' => 500]);
+    if (!isset($_ENV['STRIPEKEY'])) {
+        return new WP_Error('stripe_key_missing', 'La clave de Stripe no está configurada', ['status' => 500]);
+    }
     \Stripe\Stripe::setApiKey($_ENV['STRIPEKEY']);
+
     try {
-        $event = \Stripe\Webhook::constructEvent($request->get_body(), $request->get_header('stripe-signature'), 'whsec_KqmYRMCJDpxcEBy9npv5XGNVcoii7lN1');
+        if (!isset($_ENV['HOOKPRO'])) {
+            return new WP_Error('hookpro_missing', 'La clave de webhook no está configurada', ['status' => 500]);
+        }
+        $event = \Stripe\Webhook::constructEvent(
+            $request->get_body(),
+            $request->get_header('stripe-signature'),
+            $_ENV['HOOKPRO']
+        );
+
         if ($event['type'] === 'checkout.session.completed') {
             $session = $event['data']['object'];
             if ($session['mode'] === 'subscription') {
@@ -53,7 +64,12 @@ function stripe_webhook_pro(WP_REST_Request $request)
         return new WP_REST_Response(['status' => 'success'], 200);
     } catch (Exception $e) {
         error_log('Error en el webhook: ' . $e->getMessage());
-        return new WP_REST_Response(['error' => $e instanceof \Stripe\Exception\SignatureVerificationException ? 'Firma de webhook inválida' : 'Error interno'], $e instanceof \UnexpectedValueException ? 400 : 500);
+        return new WP_REST_Response(
+            [
+                'error' => $e instanceof \Stripe\Exception\SignatureVerificationException ? 'Firma de webhook inválida' : 'Error interno'
+            ],
+            $e instanceof \UnexpectedValueException ? 400 : 500
+        );
     }
 }
 

@@ -57,8 +57,8 @@ function crear_sesion_acciones(WP_REST_Request $request) {
 }
 
 function manejador_webhook_acciones(WP_REST_Request $request) {
-    $stripe = new \Stripe\StripeClient('sk_test_51M9uLoCdHJpmDkrrkRjNxoLxfT4Xm9blOJj8NMQZ5cTWkZzDvU3jFQKnMYfUsv3MuFIu2pACQrrdMtc5NGlkWW4n00IWqZAMFC');
-    $endpoint_secret = 'whsec_RAfNkxkUWDq2DSw2KrJl7ekXmCquGQpO';
+    $stripe = new \Stripe\StripeClient($_ENV['STRIPEKEY']);
+    $endpoint_secret = ($_ENV['HOOKACCIONES']);
     $payload = @file_get_contents('php://input');
     $sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'];
 
