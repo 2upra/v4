@@ -22,9 +22,10 @@ async function procesarDescarga(postId, usuarioId) {
 
         // Verificar si la respuesta fue exitosa
         if (responseData.success) {
-            if (responseData.download_url) {
+            // Acceder a la propiedad download_url dentro de responseData.data
+            if (responseData.data && responseData.data.download_url) {
                 console.log('Descarga autorizada, iniciando descarga');
-                window.location.href = responseData.download_url;  // Redirige a la URL de descarga
+                window.location.href = responseData.data.download_url;  // Redirige a la URL de descarga
             } else {
                 console.error('Error: download_url no está definido en la respuesta.');
                 alert('Hubo un problema obteniendo el enlace de descarga.');
