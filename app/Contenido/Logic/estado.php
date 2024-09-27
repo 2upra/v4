@@ -25,6 +25,7 @@ function manejarCambioEstadoPublicacion()
         'request_post_deletion' => 'pending_deletion',
         'eliminarPostRs' => 'pending_deletion',
         'rechazarcolab' => 'pending_deletiom',
+        'aceptarcolab' => 'publish',
     ];
     if (isset($estados[$action])) {
         $new_status = $estados[$action];
@@ -37,6 +38,7 @@ function manejarCambioEstadoPublicacion()
 }
 
 // Registrar las acciones AJAX
+add_action('wp_ajax_aceptarcolab', 'manejarCambioEstadoPublicacion');
 add_action('wp_ajax_rechazarcolab', 'manejarCambioEstadoPublicacion');
 add_action('wp_ajax_toggle_post_status', 'manejarCambioEstadoPublicacion');
 add_action('wp_ajax_reject_post', 'manejarCambioEstadoPublicacion');

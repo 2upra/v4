@@ -94,6 +94,7 @@ async function handleAllRequests() {
         await rejectPost();
         await eliminarPost();
         await rechazarColab();
+        await aceptarcolab();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }
@@ -116,10 +117,23 @@ async function rechazarColab() {
     await accionClick(
         '.rechazarcolab',
         'rechazarcolab',
-        '¿Estás seguro que quieres rechazar este colab',
+        '¿Estás seguro que quieres rechazar la solicitud?',
         async (statusElement, data) => {
             actualizarElemento(statusElement, data.new_status);
             await alert('Rechazando colab.');
+        },
+        '.EDYQHV'
+    );
+}
+
+async function aceptarcolab() {
+    await accionClick(
+        '.aceptarcolab',
+        'aceptarcolab',
+        '¿Estas seguro de empezar la colaboración?',
+        async (statusElement, data) => {
+            actualizarElemento(statusElement, data.new_status);
+            await alert('Empezando colaboración');
         },
         '.EDYQHV'
     );
@@ -161,7 +175,6 @@ async function eliminarPost() {
         '.EDYQHV'
     );
 }
-
 
 //GENERIC CAMBIAR DOM
 function actualizarElemento(element, newStatus) {
