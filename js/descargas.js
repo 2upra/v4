@@ -16,7 +16,7 @@ async function procesarDescarga(audioUrl, usuarioId) {
             audio_id: audioId,
         };
 
-        const responseData = await enviarAjax("procesar_descarga", data);
+        const responseData = await enviarAjax("procesarDescarga", data);
         console.log("Datos de respuesta:", responseData);
 
         if (responseData.success) {

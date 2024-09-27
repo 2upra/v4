@@ -1,7 +1,7 @@
 <?php
 
 // Función para agregar pinkys al usuario
-function agregar_pinkys_al_usuario($usuario_id, $cantidad)
+function agregarPinkys($usuario_id, $cantidad)
 {
     $monedas_actuales = (int) get_user_meta($usuario_id, 'pinky', true);
     $nuevas_monedas = $monedas_actuales + $cantidad;
@@ -9,7 +9,7 @@ function agregar_pinkys_al_usuario($usuario_id, $cantidad)
 }
 
 // Función para restar pinkys al usuario
-function restar_pinkys_al_usuario($usuario_id, $cantidad)
+function restarPinkys($usuario_id, $cantidad)
 {
     $monedas_actuales = (int) get_user_meta($usuario_id, 'pinky', true);
     $nuevas_monedas = $monedas_actuales - $cantidad;
@@ -17,22 +17,21 @@ function restar_pinkys_al_usuario($usuario_id, $cantidad)
 }
 
 // Acción para restar pinkys al eliminar un post
-add_action('before_delete_post', 'restar_pinkys_al_usuario_por_eliminacion');
-function restar_pinkys_al_usuario_por_eliminacion($post_id)
+add_action('before_delete_post', 'restarPinkysEliminacion');
+function restarPinkysEliminacion($post_id)
 {
     $post = get_post($post_id);
     $usuario_id = $post->post_author;
 
     if ($usuario_id) {
-        restar_pinkys_al_usuario($usuario_id, 1);
+        restarPinkys($usuario_id, 1);
     }
 }
 
 // Handler AJAX para procesar la descarga
-add_action('wp_ajax_procesar_descarga', 'procesar_descarga_ajax_handler');
-function procesar_descarga_ajax_handler()
+add_action('wp_ajax_procesarDescarga', 'procesarDescarga');
+function procesarDescarga()
 {
-    check_ajax_referer('procesar_descarga_nonce', 'nonce');
 
     $usuario_id = get_current_user_id();
     if (!$usuario_id) {
@@ -44,22 +43,15 @@ function procesar_descarga_ajax_handler()
     if (!$audio_id || get_post_status($audio_id) != 'publish') {
         wp_send_json_error(['message' => 'Audio no válido.']);
     }
-
     $pinky = (int)get_user_meta($usuario_id, 'pinky', true);
 
     if ($pinky >= 1) {
-        restar_pinkys_al_usuario($usuario_id, 1);
-
-        // Generar enlace de descarga
-        $download_url = generar_enlace_descarga($usuario_id, $audio_id);
-
-        // Puedes insertar una notificación si lo deseas
-        // insertar_notificacion($usuario_id, 'Descarga disponible', $download_url, $usuario_id);
-
+        restarPinkys($usuario_id, 1);
+        $download_url = generarEnlaceDescarga($usuario_id, $audio_id);
+        insertar_notificacion($usuario_id, 'Descarga disponible', $download_url, $usuario_id);
         wp_send_json_success(['download_url' => $download_url]);
     } else {
-        // inserta una notificación si es necesario
-        // insertar_notificacion($usuario_id, 'No tienes suficientes Pinkys para esta descarga.', 'https://2upra.com', $usuario_id);
+        insertar_notificacion($usuario_id, 'No tienes suficientes Pinkys para esta descarga.', 'https://2upra.com', $usuario_id);
         wp_send_json_error(['message' => 'No tienes suficientes Pinkys para esta descarga.']);
     }
 }
@@ -98,7 +90,7 @@ function botonDescarga($post_id)
 }
 
 // Función para generar el enlace de descarga seguro
-function generar_enlace_descarga($usuario_id, $audio_id) {
+function generarEnlaceDescarga($usuario_id, $audio_id) {
     $token = bin2hex(random_bytes(16));
     $token_data = array(
         'user_id' => $usuario_id,
@@ -114,7 +106,7 @@ function generar_enlace_descarga($usuario_id, $audio_id) {
 }
 
 // Procesar la descarga del audio
-function procesar_descarga_audio() {
+function descargaAudio() {
     if (isset($_GET['descarga_token'])) {
         $token = sanitize_text_field($_GET['descarga_token']);
         $token_data = get_transient('descarga_token_' . $token);
@@ -143,18 +135,18 @@ function procesar_descarga_audio() {
         }
     }
 }
-add_action('template_redirect', 'procesar_descarga_audio');
+add_action('template_redirect', 'descargaAudio');
 
 // Agregar pinkys al registrarse un nuevo usuario
-function agregar_pinkys_al_registrarse($user_id)
+function pinkysRegistro($user_id)
 {
     $pinkys_iniciales = 10;
     update_user_meta($user_id, 'pinky', $pinkys_iniciales);
 }
-add_action('user_register', 'agregar_pinkys_al_registrarse');
+add_action('user_register', 'pinkysRegistro');
 
 // Función para restablecer los pinkys semanalmente
-function restablecer_pinkys_todos_usuarios()
+function restablecerPinkys()
 {
     $usuarios_query = new WP_User_Query(array(
         'fields' => 'ID',
@@ -169,7 +161,7 @@ function restablecer_pinkys_todos_usuarios()
         }
     }
 }
-add_action('restablecer_pinkys_semanal', 'restablecer_pinkys_todos_usuarios');
+add_action('restablecer_pinkys_semanal', 'restablecerPinkys');
 
 // Programar el evento semanal para restablecer los pinkys
 if (!wp_next_scheduled('restablecer_pinkys_semanal')) {
