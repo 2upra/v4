@@ -205,8 +205,6 @@ function removerPost(selector, postId) {
 }
 
 async function reporte() {
-    const modalManager = new ModalManager('.modalBackground2');
-    
     modalManager.añadirModal('formularioError', '#formularioError', ['.reporte'], '#cerrarModalReporte');
     const reportButtons = document.querySelectorAll('.reporte');
     if (reportButtons.length === 0) {
