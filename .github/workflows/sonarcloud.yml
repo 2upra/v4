@@ -28,12 +28,16 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2.23'
+          coverage: xdebug
 
       - name: Install dependencies
         run: composer install --no-progress --no-suggest
 
+      - name: Run PHPUnit tests
+        run: vendor/bin/phpunit --coverage-clover=coverage.xml
+
       - name: Analyze with SonarCloud
-        uses: SonarSource/sonarcloud-github-action@4006f663ecaf1f8093e8e4abb9227f6041f52216
+        uses: SonarSource/sonarcloud-github-action@v1.6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
@@ -41,5 +45,6 @@ jobs:
             -Dsonar.projectKey=2upra_v4
             -Dsonar.organization=2upra
             -Dsonar.sources=.
+            -Dsonar.php.coverage.reportPaths=coverage.xml
             -Dsonar.verbose=true
           projectBaseDir: .
