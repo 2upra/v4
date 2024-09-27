@@ -71,9 +71,10 @@ function opcionesColab($post_id, $colabColaborador, $colabColaboradorAvatar, $co
         </div>
 
         <div class="flex gap-3 justify-end ml-auto">
-            <button data-post-id="<?php echo $post_id; ?>" class="botonsecundario submenucolab"><?php echo $GLOBALS['iconotrespuntos']; ?></button>
+            
             <button data-post-id="<?php echo $post_id; ?>" class="botonsecundario rechazarcolab">Rechazar</button>
             <button data-post-id="<?php echo $post_id; ?>" class="botonprincipal aceptarcolab">Aceptar</button>
+            <button data-post-id="<?php echo $post_id; ?>" class="botonsecundario submenucolab"><?php echo $GLOBALS['iconotrespuntos']; ?></button>
         </div>
 
         <div class="A1806241" id="opcionescolab-<?php echo $post_id; ?>">
