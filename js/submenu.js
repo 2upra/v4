@@ -36,6 +36,14 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
         submenu.style.zIndex = 1000;
 
         document.body.classList.add('no-scroll');
+
+        // Agregar evento click a los botones dentro del submenu
+        const buttons = submenu.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                hideSubmenu(submenu); // Cierra el submenu al hacer clic en un botón
+            });
+        });
     }
 
     function hideSubmenu(submenu) {
@@ -61,21 +69,12 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
         });
     });
 
-    // Nuevo event listener para cerrar el submenú al hacer clic en cualquier elemento dentro de él
-    document.addEventListener("click", (event) => {
-        const clickedSubmenu = event.target.closest(`[id^="${submenuIdPrefix}-"]`);
-        if (clickedSubmenu && !event.target.matches(triggerSelector)) {
-            hideSubmenu(clickedSubmenu);
-        }
-    });
-
     window.addEventListener('resize', () => {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
             submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
         });
     });
 }
-
 
 function initializeStaticMenus() {
     createSubmenu(".subiricono", "submenusubir", 0, 120);
