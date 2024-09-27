@@ -63,6 +63,9 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
 
         // Aumentar el índice z del submenú para que esté sobre el fondo semioscuro
         submenu.style.zIndex = 1000;
+
+        // Bloquear el scroll del body
+        document.body.classList.add('no-scroll');
     }
 
     function hideSubmenu(submenu) {
@@ -70,6 +73,13 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
         if (submenu._darkBackground) {
             submenu._darkBackground.remove();  // Eliminar el fondo semioscuro
             submenu._darkBackground = null;    // Limpiar la referencia
+        }
+
+        // Verificar si todavía hay submenús visibles
+        const activeSubmenus = document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).filter(menu => menu.style.display === "block");
+        if (activeSubmenus.length === 0) {
+            // Si no hay submenús visibles, habilitar el scroll del body
+            document.body.classList.remove('no-scroll');
         }
     }
 
