@@ -14,7 +14,6 @@ async function procesarDescarga(audioUrl, usuarioId) {
     try {
         const data = {
             audio_id: audioId,
-            nonce: pinkyCobro.nonce
         };
 
         const responseData = await enviarAjax("procesar_descarga", data);
