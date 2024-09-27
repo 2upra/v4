@@ -48,3 +48,68 @@ function audioColab($post_id, $audio_id_lite) {
         </div>
         <?php
 }
+
+function opcionesColab($post_id, $colabColaborador, $colabColaboradorAvatar, $colabColaboradorName, $colab_date) {
+    ob_start();
+    ?>
+    <div class="GFOPNU">
+        <div class="CBZNGK">
+            <a href="<?php echo esc_url(get_author_posts_url($colabColaborador)); ?>"></a>
+            <img src="<?php echo esc_url($colabColaboradorAvatar); ?>">
+        </div>
+
+        <div class="ZVJVZA">
+            <div class="JHVSFW">
+                <a href="<?php echo esc_url(get_author_posts_url($colabColaborador)); ?>" class="profile-link">
+                    <?php echo esc_html($colabColaboradorName); ?></a>
+            </div>
+            <div class="HQLXWD">
+                <a href="<?php echo esc_url(get_permalink()); ?>" class="post-link"><?php echo esc_html($colab_date); ?></a>
+            </div>
+        </div>
+
+        <div class="flex gap-3 justify-end ml-auto">
+            <button class="botonsecundario">Rechazar</button>
+            <button class="botonprincipal">Aceptar</button>
+        </div>
+    </div>
+    <?php
+    return ob_get_clean();
+}
+
+function contenidoColab($post_id, $colabMensaje, $post_audio_lite, $colabFileUrl) {
+    ob_start();
+    ?>
+    <div class="XZAKCB">
+        <p>Mensaje de solicitud: <?php echo esc_html($colabMensaje); ?></p>
+        <div class="BCGWEY">
+            <span class="badge ver-contenido" data-post-id="<?php echo esc_attr($post_id); ?>">Ver contenido</span>
+        </div>
+        <div class="colabfiles" id="colabfiles-<?php echo esc_attr($post_id); ?>" style="display: none;">
+            <?php if (!empty($post_audio_lite)) : ?>
+                <div class="DNPHZG">
+                    <?php echo audioColab($post_id, $post_audio_lite); ?>
+                </div>
+            <?php else : ?>
+                <div class="AIWZKN">
+                    <?php if (!empty($colabFileUrl)) : ?>
+                        <?php $file_name = basename($colabFileUrl); ?>
+                        <a href="<?php echo esc_url($colabFileUrl); ?>" download class="file-download no-ajax">
+                            <div class="XQGSAN">
+                                <?php echo $GLOBALS['fileGrande']; ?>
+                                <?php echo esc_html($file_name); ?>
+                            </div>
+                        </a>
+                        <p class="textoMuyPequeno">
+                            El archivo ha sido analizado y no se encontraron virus. Sin embargo, si no confías en la persona que realizó la solicitud, no descargues archivos. Asegúrate de mantener siempre tu sistema operativo actualizado y reporta cualquier abuso.
+                        </p>
+                    <?php else : ?>
+                        <p>No hay archivo adjunto.</p>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php
+    return ob_get_clean();
+}

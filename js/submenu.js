@@ -3,12 +3,13 @@ function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundClass, a
 
     function toggleSubmenu(event) {
         const trigger = event.target.closest(triggerSelector);
+        if (!trigger) return; // Verificación adicional para evitar null
         const submenuId = `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || "default"}`;
         const submenu = document.getElementById(submenuId);
-        if (!submenu) return;
+        if (!submenu) return; // Verificación para evitar null
 
         const modalBackground = trigger.closest(modalBackgroundClass);
-        if (!modalBackground) return;
+        if (!modalBackground) return; // Verificación para evitar null
 
         submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
         submenu.style.display === "block" ? hideSubmenu(submenu, modalBackground) : showSubmenu(event, submenu, modalBackground);
@@ -31,8 +32,8 @@ function createSubmenu(triggerSelector, submenuIdPrefix, modalBackgroundClass, a
     }
 
     function hideSubmenu(submenu, modalBackground) {
-        submenu.style.display = "none";
-        modalBackground.style.display = "none";
+        if (submenu) submenu.style.display = "none"; // Verificación adicional
+        if (modalBackground) modalBackground.style.display = "none"; // Verificación adicional
         document.body.classList.remove('no-scroll');  // Habilitar scroll
     }
 
@@ -71,7 +72,7 @@ function initializeSubirSample(triggerSelector, formSelector, containerSelector)
     const trigger = document.querySelector(triggerSelector);
     const form = document.querySelector(formSelector);
     const container = document.querySelector(containerSelector);
-    if (!trigger || !form || !container) return;
+    if (!trigger || !form || !container) return; // Verificación adicional para evitar null
 
     trigger.addEventListener("click", (event) => {
         form.style.display = "block";
