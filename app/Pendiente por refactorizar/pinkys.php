@@ -34,13 +34,17 @@ add_action('wp_ajax_procesarDescarga', 'procesarDescarga');
 function procesarDescarga()
 {
     $usuario_id = get_current_user_id();
+    
     if (!$usuario_id) {
         wp_send_json_error(['message' => 'No autorizado.']);
     }
 
     $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
-
-    if (!$post_id || get_post_status($post_id) != 'publish') {
+    
+    // Comprobación actualizada del post
+    $post = get_post($post_id);
+    if (!$post || $post->post_status !== 'publish') {
+        error_log('Post no válido: ' . print_r($post_id, true)); // Depurar ID de post
         wp_send_json_error(['message' => 'Post no válido.']);
     }
 
@@ -62,7 +66,6 @@ function procesarDescarga()
         wp_send_json_error(['message' => 'No tienes suficientes Pinkys para esta descarga.']);
     }
 }
-
 // Función para generar el botón de descarga
 function botonDescarga($post_id)
 {
