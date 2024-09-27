@@ -1,4 +1,3 @@
-
 function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLeft = 0) {
     const triggers = document.querySelectorAll(triggerSelector);
     
@@ -62,6 +61,14 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
         });
     });
 
+    // Nuevo event listener para cerrar el submenú al hacer clic en cualquier elemento dentro de él
+    document.addEventListener("click", (event) => {
+        const clickedSubmenu = event.target.closest(`[id^="${submenuIdPrefix}-"]`);
+        if (clickedSubmenu && !event.target.matches(triggerSelector)) {
+            hideSubmenu(clickedSubmenu);
+        }
+    });
+
     window.addEventListener('resize', () => {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
             submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
@@ -69,7 +76,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
     });
 }
 
-// El resto de tu código permanece igual
+
 function initializeStaticMenus() {
     createSubmenu(".subiricono", "submenusubir", 0, 120);
 }
