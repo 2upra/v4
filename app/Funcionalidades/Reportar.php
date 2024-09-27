@@ -1,29 +1,40 @@
 <?php
 
 // Crear la tabla si no existe (ya está en tu código)
-function tablaReportes() {
+function crear_tabla_reportes() {
     global $wpdb;
     $nombre_tabla = $wpdb->prefix . 'tablaReportes';
-    
-    if($wpdb->get_var("SHOW TABLES LIKE '$nombre_tabla'") != $nombre_tabla) {
-        $charset_collate = $wpdb->get_charset_collate();
 
-        $sql = "CREATE TABLE $nombre_tabla (
-            idReporte BIGINT(20) NOT NULL AUTO_INCREMENT,
-            idUser BIGINT(20) NOT NULL,
-            idContenido BIGINT(20) NOT NULL,
-            tipoContenido VARCHAR(255) NOT NULL, 
-            detalles TEXT NOT NULL,
-            fecha DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-            metadatos LONGTEXT,
-            PRIMARY KEY (idReporte)
-        ) $charset_collate;";
+    // Registrar un mensaje de log
+    error_log("Intentando crear la tabla: " . $nombre_tabla);
 
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        dbDelta($sql);
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE $nombre_tabla (
+        idReporte BIGINT(20) NOT NULL AUTO_INCREMENT,
+        idUser BIGINT(20) NOT NULL,
+        idContenido BIGINT(20) NOT NULL,
+        tipoContenido VARCHAR(255) NOT NULL, 
+        detalles TEXT NOT NULL,
+        fecha DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        metadatos LONGTEXT,
+        PRIMARY KEY (idReporte)
+    ) $charset_collate;";
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    $resultado = dbDelta($sql);
+
+    // Registrar el resultado
+    error_log("Resultado de dbDelta: " . print_r($resultado, true));
+
+    // Verificar si la tabla se creó correctamente
+    if ($wpdb->get_var("SHOW TABLES LIKE '$nombre_tabla'") != $nombre_tabla) {
+        error_log("Error: La tabla no se creó correctamente.");
+    } else {
+        error_log("Éxito: La tabla se creó correctamente.");
     }
 }
-tablaReportes();
+crear_tabla_reportes();
 
 // Función para guardar reporte
 function guardarReporte() {
