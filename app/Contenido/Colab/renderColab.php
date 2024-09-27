@@ -14,7 +14,7 @@ function htmlColab($filtro)
         autor="<?php echo esc_attr($colabAutor); ?>">
 
         <div class="colab-content">
-            <?php echo opcionesColab($colabColaborador, $colabColaboradorAvatar, $colabColaboradorName, $colab_date); ?>
+            <?php echo opcionesColab($post_id, $colabColaborador, $colabColaboradorAvatar, $colabColaboradorName, $colab_date); ?>
             <?php echo contenidoColab($post_id, $colabMensaje, $post_audio_lite, $colabFileUrl); ?>
         </div>
     </li>
