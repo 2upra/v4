@@ -162,5 +162,3 @@ function initializeUI() {
     uiManager.addElement('opcionespost', '.A1806241', ['.opcionespost']);
     uiManager.addElement('opcionescolab', '#opcionescolab', ['.submenucolab']);
 }
-
-document.addEventListener('DOMContentLoaded', initializeUI);
