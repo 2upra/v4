@@ -205,7 +205,7 @@ function removerPost(selector, postId) {
 }
 
 async function reporte() {
-    modalManager.añadirModal('formularioError', '#formularioError', ['.reporte'], '#cerrarModalReporte');
+    modalManager.añadirModal('formularioError', '#formularioError', ['.reporte']);
     const reportButtons = document.querySelectorAll('.reporte');
     if (reportButtons.length === 0) {
         console.log('No se encontraron botones de reporte');
