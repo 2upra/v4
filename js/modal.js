@@ -11,21 +11,21 @@ class UIManager {
             console.warn(`Elementos no encontrados: ${id}`);
             return;
         }
-
+    
         elements.forEach((element, index) => {
             const uniqueId = `${id}-${index}`;
             const triggers = triggerSelectors
-                .map(selector => document.querySelectorAll(selector))
+                .map(selector => Array.from(document.querySelectorAll(selector)))
                 .flat()
-                .filter(Boolean);
-
+                .filter(el => el instanceof Element);
+    
             if (triggers.length === 0) {
-                console.warn(`No se encontraron triggers para: ${uniqueId}`);
+                console.warn(`No se encontraron triggers válidos para: ${uniqueId}`);
                 return;
             }
-
+    
             this.elements[uniqueId] = { element, triggers, closeButton: closeButtonSelector, isModal };
-
+    
             this.setupTriggers(uniqueId);
             this.setupCloseButton(uniqueId);
             this.setupElementListener(element);
@@ -35,13 +35,19 @@ class UIManager {
     setupTriggers(id) {
         const { triggers, element, isModal } = this.elements[id];
         triggers.forEach(trigger => {
-            trigger.addEventListener('click', event => {
-                event.stopPropagation();
-                // Asegúrate de que el trigger está asociado con este elemento específico
-                if (trigger.closest(element.tagName) === element || trigger.getAttribute('data-post-id') === element.id.split('-')[1]) {
-                    this.toggleElement(id, true, event, isModal);
-                }
-            });
+            if (trigger && trigger instanceof Element) {
+                trigger.addEventListener('click', event => {
+                    event.stopPropagation();
+                    // Asegúrate de que el trigger está asociado con este elemento específico
+                    if (trigger.closest(element.tagName) === element || 
+                        (trigger.getAttribute('data-post-id') && 
+                         element.id === `opcionespost-${trigger.getAttribute('data-post-id')}`)) {
+                        this.toggleElement(id, true, event, isModal);
+                    }
+                });
+            } else {
+                console.warn(`Trigger inválido para ${id}:`, trigger);
+            }
         });
     }
 
@@ -161,4 +167,6 @@ function initializeUI() {
     uiManager.addElement('opcionesrola', '#opcionesrola', ['.HR695R7']);
     uiManager.addElement('opcionespost', '.A1806241', ['.opcionespost']);
     uiManager.addElement('opcionescolab', '#opcionescolab', ['.submenucolab']);
+
+    console.log('UI initialized');
 }
