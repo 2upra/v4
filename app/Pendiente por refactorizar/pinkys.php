@@ -47,6 +47,7 @@ function procesarDescarga()
         error_log('Post no válido: ' . print_r($post_id, true)); // Depurar ID de post
         wp_send_json_error(['message' => 'Post no válido.']);
     }
+    // [27-Sep-2024 07:18:44 UTC] Post no válido: 0
 
     $audio_id = get_post_meta($post_id, 'post_audio', true);
 
