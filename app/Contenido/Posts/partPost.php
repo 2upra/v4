@@ -106,7 +106,7 @@ function opcionesPost($post_id, $author_id)
     $current_user_id = get_current_user_id();
     ob_start();
 ?>
-    <button class="opcionespost" data-post-id="<?php echo $post_id; ?>"><?php echo $GLOBALS['iconotrespuntos']; ?></button>
+    <button class="HR695R8" data-post-id="<?php echo $post_id; ?>"><?php echo $GLOBALS['iconotrespuntos']; ?></button>
 
     <div class="A1806241" id="opcionespost-<?php echo $post_id; ?>">
         <div class="A1806242">
