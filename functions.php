@@ -49,7 +49,6 @@ function scriptsOrdenados()
         'fan' => '1.0.36',
         'stripeAccion' => '1.0.6',
         'reproductor' => '2.1.2',
-        'reporte' => '1.0.17',
         'stripepro' => '1.0.8',
         'progreso' => '1.0.23',
         'modal' => '1.0.22',

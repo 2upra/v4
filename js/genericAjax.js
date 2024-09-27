@@ -50,35 +50,36 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
     buttons.forEach(button => {
         button.addEventListener('click', async event => {
             const postId = event.currentTarget.dataset.postId;
-            logAjax(`Botón clicado. postId encontrado: ${postId}`);
+            const tipoContenido = event.currentTarget.dataset.tipoContenido;
+            logAjax(`Botón clicado. postId encontrado: ${postId}, tipoContenido: ${tipoContenido}`);
 
             if (!postId) {
                 console.error('No se encontró postId en el botón');
                 return;
             }
 
-            const socialPost = event.currentTarget.closest('.social-post');
-            const statusElement = socialPost?.querySelector('.post-status');
-
             const confirmed = await confirm(confirmMessage);
             logAjax(`Confirmación de usuario: ${confirmed ? 'Sí' : 'No'}`);
 
             if (confirmed) {
+                const mensajeErrorInput = document.getElementById('mensajeError');
+                const detalles = mensajeErrorInput ? mensajeErrorInput.value : '';
+
                 logAjax(`Enviando solicitud AJAX para la acción: ${action} con postId: ${postId}`);
-                const data = await enviarAjax(action, { post_id: postId }); // Cambiar a post_id
+                const data = await enviarAjax(action, { 
+                    idContenido: postId,
+                    tipoContenido: tipoContenido,
+                    detalles: detalles
+                });
                 
                 logAjax('Respuesta AJAX recibida:', data);
 
                 if (data.success) {
                     logAjax(`Acción ${action} exitosa. Ejecutando callback de éxito.`);
-                    successCallback(statusElement, data);
-                    
-                    if (elementToRemoveSelector) {
-                        logAjax(`Removiendo elemento con selector: ${elementToRemoveSelector} y postId: ${postId}`);
-                        removerPost(elementToRemoveSelector, postId);
-                    }
+                    successCallback(null, data);
                 } else {
                     console.error(`Error al realizar la acción: ${action}. Mensaje: ${data.message}`);
+                    alert('Error al enviar el reporte: ' + (data.message || 'Error desconocido'));
                 }
             } else {
                 logAjax('Acción cancelada por el usuario.');
@@ -139,6 +140,18 @@ async function aceptarcolab() {
     );
 }
 
+async function reportarcolab() {
+    await accionClick(
+        '.reportarcolab',
+        'reportarcolab',
+        '¿Estas seguro de reportar esta solicitud?',
+        async (statusElement, data) => {
+            actualizarElemento(statusElement, data.new_status);
+            await alert('Enviando reporte');
+        },
+        '.EDYQHV'
+    );
+}
 async function estadorola() {
     await accionClick(
         '.toggle-status-rola', 

@@ -1,51 +1,71 @@
 <?php
 
-add_action('wp_ajax_enviar_reporte_error', function() {
-    if (empty($_POST['mensaje'])) wp_send_json_error(['message' => 'El mensaje no puede estar vacío.']);
-    $user = wp_get_current_user();
-    $mensaje = sanitize_text_field($_POST['mensaje']);
-    wp_mail(get_option('admin_email'), 'Reporte de Error de ' . $user->user_login, 
-        "Usuario: {$user->user_login} ({$user->user_email})\r\n\r\nMensaje: $mensaje");
+// Crear la tabla si no existe (ya está en tu código)
+function tablaReportes() {
     global $wpdb;
-    $wpdb->insert($wpdb->prefix . 'reportes_errores', 
-        ['user_id' => $user->ID, 'mensaje' => $mensaje, 'fecha' => current_time('mysql')]);
-    wp_send_json_success(['message' => 'Mensaje enviado. Gracias por reportar el error.']);
-});
+    $nombre_tabla = $wpdb->prefix . 'tablaReportes';
+    
+    if($wpdb->get_var("SHOW TABLES LIKE '$nombre_tabla'") != $nombre_tabla) {
+        $charset_collate = $wpdb->get_charset_collate();
 
-function get_all_error_reports() {
-    global $wpdb;
-    return $wpdb->get_results("SELECT r.*, u.ID as user_id, u.user_login, u.user_email 
-        FROM {$wpdb->prefix}reportes_errores r 
-        LEFT JOIN {$wpdb->users} u ON r.user_id = u.ID 
-        ORDER BY r.fecha DESC", ARRAY_A);
+        $sql = "CREATE TABLE $nombre_tabla (
+            idReporte BIGINT(20) NOT NULL AUTO_INCREMENT,
+            idUser BIGINT(20) NOT NULL,
+            idContenido BIGINT(20) NOT NULL,
+            tipoContenido VARCHAR(255) NOT NULL, 
+            detalles TEXT NOT NULL,
+            fecha DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            metadatos LONGTEXT,
+            PRIMARY KEY (idReporte)
+        ) $charset_collate;";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
+    }
 }
+tablaReportes();
 
-add_action('wp_ajax_delete_error_report', function() {
-    if (!current_user_can('manage_options')) wp_die('No tienes permiso para realizar esta acción.');
+// Función para guardar reporte
+function guardarReporte() {
     global $wpdb;
-    $wpdb->delete($wpdb->prefix . 'reportes_errores', ['id' => intval($_POST['report_id'])], ['%d']) 
-        ? wp_send_json_success() : wp_send_json_error();
-});
+    $tabla = $wpdb->prefix . 'tablaReportes';
 
-function reportes() {
-    $reports = get_all_error_reports();
-    if (empty($reports)) return '<p>No hay reporte de errores</p>';
-    ob_start(); 
-    ?>
-    <table class="error-reports-table">
-        <thead><tr><th>Perfil</th><th>Usuario</th><th>Mensaje</th><th>Fecha</th><th>Acción</th></tr></thead>
-        <tbody>
-            <?php foreach ($reports as $report): ?>
-                <tr class="XXDD">
-                    <td><img src="<?= esc_url(imagenPerfil($report['user_id'])) ?>" alt="<?= esc_attr($report['user_login']) ?>" /></td>
-                    <td><?= esc_html($report['user_login']) ?></td>
-                    <td><?= esc_html($report['mensaje']) ?></td>
-                    <td><?= esc_html($report['fecha']) ?></td>
-                    <td><button class="delete-error-report" data-report-id="<?= esc_attr($report['id']) ?>"><?= $GLOBALS['iconocheck'] ?></button></td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-    <?php
-    return ob_get_clean(); 
+    $idUser = get_current_user_id();
+    $idContenido = intval($_POST['idContenido']);
+    $tipoContenido = sanitize_text_field($_POST['tipoContenido']);
+    $detalles = sanitize_textarea_field($_POST['detalles']);
+
+    $wpdb->insert($tabla, [
+        'idUser' => $idUser,
+        'idContenido' => $idContenido,
+        'tipoContenido' => $tipoContenido,
+        'detalles' => $detalles,
+        'metadatos' => maybe_serialize($_SERVER) 
+    ]);
+
+    wp_send_json_success('Reporte guardado');
 }
+add_action('wp_ajax_guardarReporte', 'guardarReporte');
+
+
+function eliminarReporte() {
+    global $wpdb;
+    $tabla = $wpdb->prefix . 'tablaReportes';
+    $idReporte = intval($_POST['idReporte']);
+
+    $wpdb->delete($tabla, ['idReporte' => $idReporte]);
+
+    wp_send_json_success('Reporte eliminado');
+}
+add_action('wp_ajax_eliminarReport', 'eliminarReporte');
+
+
+function verReportes() {
+    global $wpdb;
+    $tabla = $wpdb->prefix . 'tablaReportes';
+    $reportes = $wpdb->get_results("SELECT * FROM $tabla");
+
+    wp_send_json_success($reportes);
+}
+add_action('wp_ajax_verReportes', 'verReportes');
+

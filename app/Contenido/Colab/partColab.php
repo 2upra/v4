@@ -80,9 +80,9 @@ function opcionesColab($post_id, $colabColaborador, $colabColaboradorAvatar, $co
         <div class="A1806241" id="opcionescolab-<?php echo $post_id; ?>">
             <div class="A1806242">
 
-                <button class="reportarColab" data-post-id="<?php echo $post_id; ?>">Reportar</button>
-                <button class="bloquearColab" data-post-id="<?php echo $post_id; ?>">Bloquear</button>
-                <button class="enviarMensajeColab" data-post-id="<?php echo $post_id; ?>">Enviar Mensaje</button>
+                <button class="reporte" data-post-id="<?php echo $post_id; ?>" tipoContenido="colab">Reportar</button>
+                <button class="bloquearcolab" data-post-id="<?php echo $post_id; ?>">Bloquear</button>
+                <button class="enviarmensajecolab" data-post-id="<?php echo $post_id; ?>">Enviar Mensaje</button>
 
 
             </div>
