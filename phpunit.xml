@@ -7,7 +7,7 @@
             <directory>tests/</directory>
         </testsuite>
     </testsuites>
-    <coverage>
+    <coverage processUncoveredFiles="true">
         <include>
             <directory>src/</directory>
         </include>
