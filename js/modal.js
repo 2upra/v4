@@ -1,172 +1,129 @@
-class UIManager {
+class ModalManager {
     constructor() {
-        this.elements = {};
-        this.currentOpenElement = null;
+        this.modals = {};
+        this.currentOpenModal = null;
+        this.darkBackground = null;
+
         this.setupBodyListener();
     }
 
-    addElement(id, elementSelector, triggerSelectors, closeButtonSelector = null, isModal = false) {
-        const elements = document.querySelectorAll(elementSelector);
-        if (elements.length === 0) {
-            console.warn(`Elementos no encontrados: ${id}`);
+    añadirModal(id, modalSelector, triggerSelectors, closeButtonSelector = null) {
+        const modal = document.querySelector(modalSelector);
+        if (!modal) {
+            console.warn(`Modal elemento id:: ${id}`);
             return;
         }
-    
-        elements.forEach((element, index) => {
-            const uniqueId = `${id}-${index}`;
-            const triggers = triggerSelectors
-                .map(selector => Array.from(document.querySelectorAll(selector)))
-                .flat()
-                .filter(el => el instanceof Element);
-    
-            if (triggers.length === 0) {
-                console.warn(`No se encontraron triggers válidos para: ${uniqueId}`);
-                return;
-            }
-    
-            this.elements[uniqueId] = { element, triggers, closeButton: closeButtonSelector, isModal };
-    
-            this.setupTriggers(uniqueId);
-            this.setupCloseButton(uniqueId);
-            this.setupElementListener(element);
-        });
+
+        const triggers = triggerSelectors
+            .map(selector => {
+                try {
+                    return document.querySelector(selector);
+                } catch (error) {
+                    console.warn(`Selector fallo:: ${selector}`);
+                    return null;
+                }
+            })
+            .filter(Boolean);
+
+        if (triggers.length === 0) {
+            console.warn(`Fail triggers modal id: ${id}`);
+            return;
+        }
+
+        this.modals[id] = {
+            modal,
+            triggers,
+            closeButton: closeButtonSelector
+        };
+
+        this.setupTriggers(id);
+        this.setupCloseButton(id);
+        this.setupModalListener(modal);
     }
 
-    setupTriggers(id) {
-        const { triggers, element, isModal } = this.elements[id];
+    setupTriggers(modalId) {
+        const {triggers} = this.modals[modalId];
+        if (!triggers || triggers.length === 0) return;
+
         triggers.forEach(trigger => {
-            if (trigger && trigger instanceof Element) {
-                trigger.addEventListener('click', event => {
-                    event.stopPropagation();
-                    // Asegúrate de que el trigger está asociado con este elemento específico
-                    if (trigger.closest(element.tagName) === element || 
-                        (trigger.getAttribute('data-post-id') && 
-                         element.id === `opcionespost-${trigger.getAttribute('data-post-id')}`)) {
-                        this.toggleElement(id, true, event, isModal);
-                    }
-                });
-            } else {
-                console.warn(`Trigger inválido para ${id}:`, trigger);
-            }
+            trigger.addEventListener('click', event => {
+                event.stopPropagation();
+                this.toggleModal(modalId, true);
+            });
         });
     }
 
-    setupCloseButton(id) {
-        const { closeButton, element } = this.elements[id];
+    setupCloseButton(modalId) {
+        const {closeButton} = this.modals[modalId];
         if (!closeButton) return;
 
-        const closeButtonElement = element.querySelector(closeButton);
+        const closeButtonElement = document.querySelector(closeButton);
         if (closeButtonElement) {
-            closeButtonElement.addEventListener('click', () => this.toggleElement(id, false));
+            closeButtonElement.addEventListener('click', event => {
+                event.stopPropagation();
+                this.toggleModal(modalId, false);
+            });
+        } else {
+            console.warn(`Close button element not found for modal id: ${modalId}`);
         }
     }
 
-    setupElementListener(element) {
-        element.addEventListener('click', event => event.stopPropagation());
+    setupModalListener(modal) {
+        modal.addEventListener('click', event => event.stopPropagation());
     }
 
     setupBodyListener() {
-        document.body.addEventListener('click', () => {
-            if (this.currentOpenElement) {
-                this.toggleElement(this.currentOpenElement, false);
+        document.body.addEventListener('click', event => {
+            if (this.currentOpenModal && !this.modals[this.currentOpenModal].modal.contains(event.target)) {
+                this.closeAllModals();
             }
         });
     }
 
-    toggleElement(id, show, event = null, isModal = false) {
-        const elementInfo = this.elements[id];
-        if (!elementInfo) return;
-
-        if (this.currentOpenElement && this.currentOpenElement !== id) {
-            this.toggleElement(this.currentOpenElement, false);
+    toggleModal(modalId, show) {
+        const modalInfo = this.modals[modalId];
+        if (!modalInfo) {
+            console.warn(`Modal info not found for id: ${modalId}`);
+            return;
         }
 
-        const { element } = elementInfo;
+        if (this.currentOpenModal && this.currentOpenModal !== modalId) {
+            this.toggleModal(this.currentOpenModal, false);
+        }
 
+        modalInfo.modal.style.display = show ? 'flex' : 'none';
+        
         if (show) {
-            if (isModal) {
-                element.style.display = 'flex';
-                this.showModalBackground();
-            } else {
-                this.positionSubmenu(element, event);
-                element.style.display = 'block';
-                this.showDarkBackground(element);
+            if (!this.darkBackground) {
+                this.darkBackground = createDarkBackground();
+                this.darkBackground.addEventListener('click', () => this.closeAllModals());
             }
-            this.currentOpenElement = id;
-        } else {
-            element.style.display = 'none';
-            this.hideBackgrounds();
-            this.currentOpenElement = null;
+            this.darkBackground.style.display = 'block';
+        } else if (this.darkBackground) {
+            this.darkBackground.style.display = 'none';
         }
 
-        document.body.classList.toggle('no-scroll', show);
+        this.currentOpenModal = show ? modalId : null;
     }
 
-    positionSubmenu(submenu, event) {
-        if (!event || window.innerWidth <= 640) return;
-
-        const trigger = event.target.closest('.opcionespost');
-        if (!trigger) return;
-
-        const rect = trigger.getBoundingClientRect();
-        const { innerWidth: vw, innerHeight: vh } = window;
-
-        submenu.style.position = "absolute";
-        submenu.style.top = `${Math.min(rect.bottom - rect.top, vh - submenu.offsetHeight)}px`;
-        submenu.style.left = `${Math.min(rect.left - submenu.offsetWidth / 2 + rect.width / 2, vw - submenu.offsetWidth)}px`;
-    }
-
-    showModalBackground() {
-        let background = document.querySelector('.modalBackground');
-        if (!background) {
-            background = document.createElement('div');
-            background.className = 'modalBackground';
-            document.body.appendChild(background);
+    closeAllModals() {
+        Object.keys(this.modals).forEach(modalId => this.toggleModal(modalId, false));
+        this.currentOpenModal = null;
+        if (this.darkBackground) {
+            removeDarkBackground(this.darkBackground);
+            this.darkBackground = null;
         }
-        background.style.display = 'block';
-    }
-
-    showDarkBackground(element) {
-        const darkBackground = document.createElement('div');
-        darkBackground.className = 'submenu-background';
-        darkBackground.style.position = 'fixed';
-        darkBackground.style.top = '0';
-        darkBackground.style.left = '0';
-        darkBackground.style.width = '100vw';
-        darkBackground.style.height = '100vh';
-        darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-        darkBackground.style.zIndex = '999';
-        document.body.appendChild(darkBackground);
-
-        element._darkBackground = darkBackground;
-        element.style.zIndex = '1000';
-    }
-
-    hideBackgrounds() {
-        const modalBackground = document.querySelector('.modalBackground');
-        if (modalBackground) modalBackground.style.display = 'none';
-
-        const darkBackgrounds = document.querySelectorAll('.submenu-background');
-        darkBackgrounds.forEach(bg => bg.remove());
     }
 }
 
-const uiManager = new UIManager();
+// Example usage
+const modalManager = new ModalManager();
 
-function initializeUI() {
-    // Modales
-    uiManager.addElement('modalinvertir', '#modalinvertir', ['.donar'], '.cerrardonar', true);
-    uiManager.addElement('modalproyecto', '#modalproyecto', ['.unirteproyecto'], '.DGFDRDC', true);
-    uiManager.addElement('proPro', '#propro', ['.prostatus0'], null, true);
-    uiManager.addElement('proProAcciones', '#proproacciones', ['.subpro'], null, true);
-    uiManager.addElement('W0512KN', '#a84J76WY', ['#W0512KN'], '#MkzIeq', true);
-
-    // Submenús
-    uiManager.addElement('submenusubir', '#submenusubir', ['.subiricono']);
-    uiManager.addElement('submenuperfil', '#submenuperfil', ['.mipsubmenu']);
-    uiManager.addElement('opcionesrola', '#opcionesrola', ['.HR695R7']);
-    uiManager.addElement('opcionespost', '.A1806241', ['.opcionespost']);
-    uiManager.addElement('opcionescolab', '#opcionescolab', ['.submenucolab']);
-
-    console.log('UI initialized');
+function smooth() {
+    modalManager.añadirModal('modalinvertir', '#modalinvertir', ['.donar'], '.cerrardonar');
+    modalManager.añadirModal('modalproyecto', '#modalproyecto', ['.unirteproyecto'], '.DGFDRDC');
+    modalManager.añadirModal('proPro', '#propro', ['.prostatus0']);
+    modalManager.añadirModal('proProAcciones', '#proproacciones', ['.subpro']);
+    modalManager.añadirModal('W0512KN', '#a84J76WY', ['#W0512KN'], '#MkzIeq');
+    modalDetallesIA();
 }

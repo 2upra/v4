@@ -67,6 +67,7 @@ function scriptsOrdenados()
         'RS' => '1.0.1',
         'tagsPosts' => '1.0.1',
         'hashs' => '1.0.1',
+        'background' => '1.0.1',
         //'formSubida' => '4.1.56',
         'ajax-submit' => '2.1.38',
         'formscript' => '1.1.11',
