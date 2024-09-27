@@ -2,13 +2,19 @@ name: SonarCloud analysis
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+      - develop
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+      - develop
   workflow_dispatch:
 
 permissions:
   pull-requests: read
+  contents: read
+  actions: write
 
 jobs:
   analysis:
@@ -21,7 +27,7 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2.23' 
+          php-version: '8.2.23'
 
       - name: Install dependencies
         run: composer install --no-progress --no-suggest
@@ -34,5 +40,6 @@ jobs:
           args: >
             -Dsonar.projectKey=2upra_v4
             -Dsonar.organization=2upra
+            -Dsonar.sources=.
             -Dsonar.verbose=true
           projectBaseDir: .
