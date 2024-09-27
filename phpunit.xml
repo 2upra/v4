@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<!--  <?xml version="1.0" encoding="UTF-8"?>
 <phpunit colors="true" stopOnFailure="false">
-   <!-- <testsuites>
+<testsuites>
          <testsuite name="My Test Suite">
             <directory>tests/</directory>  
         </testsuite>
-    </testsuites>-->
+    </testsuites>
     <coverage processUncoveredFiles="true">
         <include>
             <directory>src/</directory>
@@ -14,3 +14,4 @@
         </report>
     </coverage>
 </phpunit>
+-->
