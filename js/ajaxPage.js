@@ -38,8 +38,9 @@ function initializeStripeFunctions() {
 }
 
 function shouldCache(url) {
-    return !['https://2upra.com/nocache'].some(noCacheUrl => new RegExp(noCacheUrl.replace('*', '.*')).test(url));
+    return !['https://2upra.com/nocache'].some(noCacheUrl => new RegExp(noCacheUrl.replace(/\*/g, '.*')).test(url));
 }
+
 
 function loadContent(enlace, isPushState) {
     console.log('Iniciando carga de contenido:', enlace);
