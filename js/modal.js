@@ -1,77 +1,50 @@
-class OverlayManager {
+class UIManager {
     constructor() {
-        this.overlays = {};
-        this.currentOpenOverlay = null;
+        this.elements = {};
+        this.currentOpenElement = null;
         this.setupBodyListener();
-
-        window.addEventListener('resize', () => {
-            Object.values(this.overlays).forEach(overlayInfo => {
-                const {element, options} = overlayInfo;
-                if (options.mobileClass) {
-                    element.classList.toggle(options.mobileClass, window.innerWidth <= 640);
-                }
-            });
-        });
     }
 
-    addOverlay(id, elementSelector, triggers, options = {}) {
+    addElement(id, elementSelector, triggerSelectors, closeButtonSelector = null, isModal = false) {
         const element = document.querySelector(elementSelector);
         if (!element) {
-            console.warn(Overlay element not found: ${id});
+            console.warn(`Elemento no encontrado: ${id}`);
             return;
         }
 
-        const triggerElements = triggers.map(trigger => {
-            if (typeof trigger === 'string') {
-                return document.querySelector(trigger);
-            } else {
-                return trigger;
-            }
-        }).filter(Boolean);
+        const triggers = triggerSelectors
+            .map(selector => document.querySelector(selector))
+            .filter(Boolean);
 
-        if (triggerElements.length === 0) {
-            console.warn(No triggers found for overlay id: ${id});
+        if (triggers.length === 0) {
+            console.warn(`No se encontraron triggers para: ${id}`);
             return;
         }
 
-        this.overlays[id] = {
-            element,
-            triggers: triggerElements,
-            options
-        };
+        this.elements[id] = { element, triggers, closeButton: closeButtonSelector, isModal };
 
         this.setupTriggers(id);
-        if (options.closeButtonSelector) {
-            this.setupCloseButton(id);
-        }
+        this.setupCloseButton(id);
         this.setupElementListener(element);
     }
 
-    setupTriggers(overlayId) {
-        const {triggers} = this.overlays[overlayId];
-        if (!triggers || triggers.length === 0) return;
-
+    setupTriggers(id) {
+        const { triggers, isModal } = this.elements[id];
         triggers.forEach(trigger => {
             trigger.addEventListener('click', event => {
                 event.stopPropagation();
-                this.toggleOverlay(overlayId, true, event, trigger);
+                this.toggleElement(id, true, event, isModal);
             });
         });
     }
 
-    setupCloseButton(overlayId) {
-        const {options} = this.overlays[overlayId];
-        const closeButtonSelector = options.closeButtonSelector;
-        if (!closeButtonSelector) return;
+    setupCloseButton(id) {
+        const { closeButton } = this.elements[id];
+        if (!closeButton) return;
 
-        const closeButtonElement = document.querySelector(closeButtonSelector);
+        const closeButtonElement = document.querySelector(closeButton);
         if (closeButtonElement) {
-            closeButtonElement.addEventListener('click', event => {
-                event.stopPropagation();
-                this.toggleOverlay(overlayId, false);
-            });
-        } else {
-            console.warn(Close button element not found for overlay id: ${overlayId});
+            closeButtonElement.addEventListener('click', () => this.toggleElement(id, false));
         }
     }
 
@@ -80,170 +53,104 @@ class OverlayManager {
     }
 
     setupBodyListener() {
-        document.body.addEventListener('click', event => {
-            if (this.currentOpenOverlay) {
-                const overlayInfo = this.overlays[this.currentOpenOverlay];
-                if (!overlayInfo.element.contains(event.target)) {
-                    this.closeAllOverlays();
-                }
+        document.body.addEventListener('click', () => {
+            if (this.currentOpenElement) {
+                this.toggleElement(this.currentOpenElement, false);
             }
         });
     }
 
-    toggleOverlay(overlayId, show, event = null, triggerElement = null) {
-        const overlayInfo = this.overlays[overlayId];
-        if (!overlayInfo) {
-            console.warn(Overlay info not found for id: ${overlayId});
-            return;
+    toggleElement(id, show, event = null, isModal = false) {
+        const elementInfo = this.elements[id];
+        if (!elementInfo) return;
+
+        if (this.currentOpenElement && this.currentOpenElement !== id) {
+            this.toggleElement(this.currentOpenElement, false);
         }
 
-        if (this.currentOpenOverlay && this.currentOpenOverlay !== overlayId) {
-            this.toggleOverlay(this.currentOpenOverlay, false);
-        }
-
-        const {element, options} = overlayInfo;
+        const { element } = elementInfo;
 
         if (show) {
-            if (options.isModal) {
+            if (isModal) {
                 element.style.display = 'flex';
+                this.showModalBackground();
             } else {
-                this.positionElement(element, triggerElement, options);
+                this.positionSubmenu(element, event);
                 element.style.display = 'block';
+                this.showDarkBackground(element);
             }
-
-            if (options.generateBackground) {
-                this.createBackgroundOverlay(element, options.mobileClass);
-            }
-
-            this.currentOpenOverlay = overlayId;
+            this.currentOpenElement = id;
         } else {
             element.style.display = 'none';
-            this.removeBackgroundOverlay(element);
-            this.currentOpenOverlay = null;
+            this.hideBackgrounds();
+            this.currentOpenElement = null;
         }
+
+        document.body.classList.toggle('no-scroll', show);
     }
 
-    positionElement(element, triggerElement, options) {
-        if (!triggerElement) return;
+    positionSubmenu(submenu, event) {
+        if (!event || window.innerWidth <= 640) return;
 
-        const rect = triggerElement.getBoundingClientRect();
+        const rect = event.target.getBoundingClientRect();
         const { innerWidth: vw, innerHeight: vh } = window;
 
-        const adjustTop = options.positionAdjust && options.positionAdjust.top || 0;
-        const adjustLeft = options.positionAdjust && options.positionAdjust.left || 0;
-
-        if (vw > 640) {
-            element.style.position = "fixed";
-            element.style.top = ${Math.min(rect.bottom + adjustTop, vh - element.offsetHeight)}px;
-            element.style.left = ${Math.min(rect.left + adjustLeft, vw - element.offsetWidth)}px;
-        }
-
-        if (options.mobileClass && vw <= 640) {
-            element.classList.add(options.mobileClass);
-        } else if (options.mobileClass) {
-            element.classList.remove(options.mobileClass);
-        }
+        submenu.style.position = "fixed";
+        submenu.style.top = `${Math.min(rect.bottom, vh - submenu.offsetHeight)}px`;
+        submenu.style.left = `${Math.min(rect.left, vw - submenu.offsetWidth)}px`;
     }
 
-    createBackgroundOverlay(element, mobileClass = null) {
-        const backgroundOverlay = document.createElement('div');
-        backgroundOverlay.classList.add('overlay-background');
-        backgroundOverlay.style.position = 'fixed';
-        backgroundOverlay.style.top = 0;
-        backgroundOverlay.style.left = 0;
-        backgroundOverlay.style.width = '100vw';
-        backgroundOverlay.style.height = '100vh';
-        backgroundOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-        backgroundOverlay.style.zIndex = 999;
-        backgroundOverlay.style.pointerEvents = 'none';
-
-        element.parentElement.appendChild(backgroundOverlay);
-
-        element._backgroundOverlay = backgroundOverlay;
-        element.style.zIndex = 1000;
-
-        document.body.classList.add('no-scroll');
-
-        if (mobileClass && window.innerWidth <= 640) {
-            element.classList.add(mobileClass);
+    showModalBackground() {
+        let background = document.querySelector('.modalBackground');
+        if (!background) {
+            background = document.createElement('div');
+            background.className = 'modalBackground';
+            document.body.appendChild(background);
         }
+        background.style.display = 'block';
     }
 
-    removeBackgroundOverlay(element) {
-        if (element._backgroundOverlay) {
-            element._backgroundOverlay.remove();
-            element._backgroundOverlay = null;
-        }
+    showDarkBackground(element) {
+        const darkBackground = document.createElement('div');
+        darkBackground.className = 'submenu-background';
+        darkBackground.style.position = 'fixed';
+        darkBackground.style.top = '0';
+        darkBackground.style.left = '0';
+        darkBackground.style.width = '100vw';
+        darkBackground.style.height = '100vh';
+        darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        darkBackground.style.zIndex = '999';
+        document.body.appendChild(darkBackground);
 
-        // Check if any other overlay is open
-        const activeOverlays = Object.values(this.overlays).filter(overlayInfo => overlayInfo.element.style.display !== 'none');
-
-        if (activeOverlays.length === 0) {
-            document.body.classList.remove('no-scroll');
-        }
+        element._darkBackground = darkBackground;
+        element.style.zIndex = '1000';
     }
 
-    closeAllOverlays() {
-        Object.keys(this.overlays).forEach(overlayId => this.toggleOverlay(overlayId, false));
-        this.currentOpenOverlay = null;
+    hideBackgrounds() {
+        const modalBackground = document.querySelector('.modalBackground');
+        if (modalBackground) modalBackground.style.display = 'none';
+
+        const darkBackgrounds = document.querySelectorAll('.submenu-background');
+        darkBackgrounds.forEach(bg => bg.remove());
     }
 }
 
-const overlayManager = new OverlayManager();
+const uiManager = new UIManager();
 
-function smooth() {
-    overlayManager.addOverlay('modalinvertir', '#modalinvertir', ['.donar'], {
-        closeButtonSelector: '.cerrardonar',
-        isModal: true,
-        generateBackground: true
-    });
-    overlayManager.addOverlay('modalproyecto', '#modalproyecto', ['.unirteproyecto'], {
-        closeButtonSelector: '.DGFDRDC',
-        isModal: true,
-        generateBackground: true
-    });
-    overlayManager.addOverlay('proPro', '#propro', ['.prostatus0'], {
-        isModal: true,
-        generateBackground: true
-    });
-    overlayManager.addOverlay('proProAcciones', '#proproacciones', ['.subpro'], {
-        isModal: true,
-        generateBackground: true
-    });
-    overlayManager.addOverlay('W0512KN', '#a84J76WY', ['#W0512KN'], {
-        closeButtonSelector: '#MkzIeq',
-        isModal: true,
-        generateBackground: true
-    });
+function initializeUI() {
+    // Modales
+    uiManager.addElement('modalinvertir', '#modalinvertir', ['.donar'], '.cerrardonar', true);
+    uiManager.addElement('modalproyecto', '#modalproyecto', ['.unirteproyecto'], '.DGFDRDC', true);
+    uiManager.addElement('proPro', '#propro', ['.prostatus0'], null, true);
+    uiManager.addElement('proProAcciones', '#proproacciones', ['.subpro'], null, true);
+    uiManager.addElement('W0512KN', '#a84J76WY', ['#W0512KN'], '#MkzIeq', true);
+
+    // Submenús
+    uiManager.addElement('submenusubir', '#submenusubir', ['.subiricono']);
+    uiManager.addElement('submenuperfil', '#submenuperfil', ['.mipsubmenu']);
+    uiManager.addElement('opcionesrola', '#opcionesrola', ['.HR695R7']);
+    uiManager.addElement('opcionespost', '#opcionespost', ['.HR695R8']);
+    uiManager.addElement('opcionescolab', '#opcionescolab', ['.submenucolab']);
 }
 
-function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLeft = 0) {
-    const triggers = document.querySelectorAll(triggerSelector);
-    
-    triggers.forEach(trigger => {
-        const submenuId = ${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || "default"};
-        const submenuSelector = #${submenuId};
-        
-        overlayManager.addOverlay(submenuId, submenuSelector, [trigger], {
-            isModal: false,
-            generateBackground: true,
-            positionAdjust: { top: adjustTop, left: adjustLeft },
-            mobileClass: 'mobile-submenu'
-        });
-    });
-}
-
-function initializeStaticMenus() {
-    createSubmenu(".subiricono", "submenusubir", 0, 120);
-}
-
-function submenu() {
-    createSubmenu(".mipsubmenu", "submenuperfil", 0, 120);
-    createSubmenu(".HR695R7", "opcionesrola", 100, 0);
-    createSubmenu(".HR695R8", "opcionespost", 60, 0);
-    createSubmenu(".submenucolab", "opcionescolab", 60, 0);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    initializeStaticMenus();
-});
+document.addEventListener('DOMContentLoaded', initializeUI);
