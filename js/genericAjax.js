@@ -96,6 +96,7 @@ async function handleAllRequests() {
         await eliminarPost();
         await rechazarColab();
         await aceptarcolab();
+        await reporte();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }
