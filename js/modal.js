@@ -6,43 +6,50 @@ class UIManager {
     }
 
     addElement(id, elementSelector, triggerSelectors, closeButtonSelector = null, isModal = false) {
-        const element = document.querySelector(elementSelector);
-        if (!element) {
-            console.warn(`Elemento no encontrado: ${id}`);
+        const elements = document.querySelectorAll(elementSelector);
+        if (elements.length === 0) {
+            console.warn(`Elementos no encontrados: ${id}`);
             return;
         }
 
-        const triggers = triggerSelectors
-            .map(selector => document.querySelector(selector))
-            .filter(Boolean);
+        elements.forEach((element, index) => {
+            const uniqueId = `${id}-${index}`;
+            const triggers = triggerSelectors
+                .map(selector => document.querySelectorAll(selector))
+                .flat()
+                .filter(Boolean);
 
-        if (triggers.length === 0) {
-            console.warn(`No se encontraron triggers para: ${id}`);
-            return;
-        }
+            if (triggers.length === 0) {
+                console.warn(`No se encontraron triggers para: ${uniqueId}`);
+                return;
+            }
 
-        this.elements[id] = { element, triggers, closeButton: closeButtonSelector, isModal };
+            this.elements[uniqueId] = { element, triggers, closeButton: closeButtonSelector, isModal };
 
-        this.setupTriggers(id);
-        this.setupCloseButton(id);
-        this.setupElementListener(element);
+            this.setupTriggers(uniqueId);
+            this.setupCloseButton(uniqueId);
+            this.setupElementListener(element);
+        });
     }
 
     setupTriggers(id) {
-        const { triggers, isModal } = this.elements[id];
+        const { triggers, element, isModal } = this.elements[id];
         triggers.forEach(trigger => {
             trigger.addEventListener('click', event => {
                 event.stopPropagation();
-                this.toggleElement(id, true, event, isModal);
+                // Asegúrate de que el trigger está asociado con este elemento específico
+                if (trigger.closest(element.tagName) === element || trigger.getAttribute('data-post-id') === element.id.split('-')[1]) {
+                    this.toggleElement(id, true, event, isModal);
+                }
             });
         });
     }
 
     setupCloseButton(id) {
-        const { closeButton } = this.elements[id];
+        const { closeButton, element } = this.elements[id];
         if (!closeButton) return;
 
-        const closeButtonElement = document.querySelector(closeButton);
+        const closeButtonElement = element.querySelector(closeButton);
         if (closeButtonElement) {
             closeButtonElement.addEventListener('click', () => this.toggleElement(id, false));
         }
@@ -92,12 +99,15 @@ class UIManager {
     positionSubmenu(submenu, event) {
         if (!event || window.innerWidth <= 640) return;
 
-        const rect = event.target.getBoundingClientRect();
+        const trigger = event.target.closest('.opcionespost');
+        if (!trigger) return;
+
+        const rect = trigger.getBoundingClientRect();
         const { innerWidth: vw, innerHeight: vh } = window;
 
-        submenu.style.position = "fixed";
-        submenu.style.top = `${Math.min(rect.bottom, vh - submenu.offsetHeight)}px`;
-        submenu.style.left = `${Math.min(rect.left, vw - submenu.offsetWidth)}px`;
+        submenu.style.position = "absolute";
+        submenu.style.top = `${Math.min(rect.bottom - rect.top, vh - submenu.offsetHeight)}px`;
+        submenu.style.left = `${Math.min(rect.left - submenu.offsetWidth / 2 + rect.width / 2, vw - submenu.offsetWidth)}px`;
     }
 
     showModalBackground() {
@@ -149,7 +159,7 @@ function initializeUI() {
     uiManager.addElement('submenusubir', '#submenusubir', ['.subiricono']);
     uiManager.addElement('submenuperfil', '#submenuperfil', ['.mipsubmenu']);
     uiManager.addElement('opcionesrola', '#opcionesrola', ['.HR695R7']);
-    uiManager.addElement('opcionespost', '#opcionespost', ['.HR695R8']);
+    uiManager.addElement('opcionespost', '.A1806241', ['.opcionespost']);
     uiManager.addElement('opcionescolab', '#opcionescolab', ['.submenucolab']);
 }
 
