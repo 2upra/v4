@@ -87,9 +87,11 @@ function initializeStaticMenus() {
 }
 
 function submenu() {
+    //boton - menu - posición ajuste
     createSubmenu(".mipsubmenu", "submenuperfil", 0, 120);
     createSubmenu(".HR695R7", "opcionesrola", 100, 0);
     createSubmenu(".HR695R8", "opcionespost", 60, 0);
+    createSubmenu(".submenucolab", "opcionescolab", 60, 0);
 }
 
 document.addEventListener('DOMContentLoaded', initializeStaticMenus);
