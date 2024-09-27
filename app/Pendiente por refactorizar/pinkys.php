@@ -175,3 +175,17 @@ add_action('restablecer_pinkys_semanal', 'restablecer_pinkys_todos_usuarios');
 if (!wp_next_scheduled('restablecer_pinkys_semanal')) {
     wp_schedule_event(time(), 'weekly', 'restablecer_pinkys_semanal');
 }
+
+
+function botonDescargaPrueba()
+{
+    ob_start();
+    ?>
+    <div class="ZAQIBB ASDGD8">
+        <button>
+            <?php echo $GLOBALS['descargaicono']; ?>
+        </button>
+    </div>
+<?php
+    return ob_get_clean();
+}
