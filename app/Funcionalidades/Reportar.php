@@ -15,10 +15,14 @@ function guardarReporte() {
         'idContenido' => $idContenido,
         'tipoContenido' => $tipoContenido,
         'detalles' => $detalles,
-        'metadatos' => maybe_serialize($_SERVER) 
+        'metadatos' => null
     ]);
 
-    wp_send_json_success('Reporte guardado');
+    if ($wpdb->last_error) {
+        wp_send_json_error('Error al guardar el reporte: ' . $wpdb->last_error);
+    } else {
+        wp_send_json_success('Reporte guardado');
+    }
 }
 add_action('wp_ajax_guardarReporte', 'guardarReporte');
 
@@ -33,7 +37,6 @@ function eliminarReporte() {
     wp_send_json_success('Reporte eliminado');
 }
 add_action('wp_ajax_eliminarReport', 'eliminarReporte');
-
 
 function verReportes() {
     global $wpdb;
