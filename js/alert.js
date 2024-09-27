@@ -47,7 +47,7 @@ window.inicializarAlerta = function () {
 
                 const cancelButton = document.createElement('button');
                 cancelButton.textContent = 'Cancelar';
-                confirmButton.className = 'botonsecundario'; 
+                cancelButton.className = 'botonsecundario'; 
                 cancelButton.onclick = () => {
                     closeNotification(false);
                 };
