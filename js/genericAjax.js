@@ -96,7 +96,7 @@ async function handleAllRequests() {
         await eliminarPost();
         await rechazarColab();
         await aceptarcolab();
-        await reporte();
+       // await reporte();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }
@@ -203,7 +203,7 @@ function removerPost(selector, postId) {
         element.remove();
     }
 }
-
+/*
 async function reporte() {
     modalManager.añadirModal('formularioError', '#formularioError', ['.reporte']);
     const reportButtons = document.querySelectorAll('.reporte');
@@ -241,3 +241,4 @@ async function reporte() {
         }
     }
 }
+*/
