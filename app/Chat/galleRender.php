@@ -49,7 +49,7 @@ function renderConversaciones($conversaciones, $usuarioId)
 {
     global $wpdb;
     $tablaMensajes = $wpdb->prefix . 'mensajes';
-    $clave = $_ENV['GALLEKEY'];  
+    $clave = $_ENV['GALLEKEY'];
 
     ob_start();  // Iniciar el buffer de salida
 
@@ -58,12 +58,11 @@ function renderConversaciones($conversaciones, $usuarioId)
         <div class="modal modalConversaciones">
             <ul class="mensajes">
                 <?php 
-                // Iterar sobre cada conversación
                 foreach ($conversaciones as $conversacion):
                     $participantes = json_decode($conversacion->participantes);
                     $otrosParticipantes = array_diff($participantes, [$usuarioId]);
                     $otroParticipanteId = reset($otrosParticipantes);
-                    $imagenPerfil = imagenPerfil($otroParticipanteId);  // Se asume que esta función existe
+                    $imagenPerfil = imagenPerfil($otroParticipanteId);
 
                     // Obtener el último mensaje de la conversación
                     $ultimoMensaje = $wpdb->get_row($wpdb->prepare("
@@ -118,9 +117,11 @@ function renderConversaciones($conversaciones, $usuarioId)
 <?php
     }
 
-    return ob_get_clean();  // Devolver el contenido del buffer de salida
-}
+    $htmlGenerado = ob_get_clean();  // Capturar el HTML generado
+    chatLog("HTML generado", $htmlGenerado);  // Log del HTML generado
 
+    return $htmlGenerado;  // Devolver el contenido del buffer de salida
+}
 function tiempoRelativo($fecha)
 {
     $timestamp = strtotime($fecha);
