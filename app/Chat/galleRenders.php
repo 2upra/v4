@@ -59,32 +59,6 @@ function descifrarMensaje($mensajeCifrado, $clave, $iv)
     }
 }
 
-function conversacionesUsuario($usuarioId)
-{
-    global $wpdb;
-    $tablaConversacion = $wpdb->prefix . 'conversacion';
-    $tablaMensajes = $wpdb->prefix . 'mensajes';
-
-    // Obtener conversaciones que incluyan al usuario
-    $query = $wpdb->prepare("
-        SELECT id, participantes, fecha 
-        FROM $tablaConversacion 
-        WHERE JSON_CONTAINS(participantes, %s)
-    ", json_encode($usuarioId));
-
-    chatLog("Consulta de conversaciones ejecutada: " . $query);
-
-    $conversaciones = $wpdb->get_results($query);
-
-    if ($conversaciones) {
-        chatLog("Conversaciones obtenidas: " . print_r($conversaciones, true));
-    } else {
-        chatLog("No se encontraron conversaciones para el usuario con ID: " . $usuarioId);
-    }
-
-    return renderConversaciones($conversaciones, $usuarioId);
-}
-
 function renderConversaciones($conversaciones, $usuarioId)
 {
     global $wpdb;
@@ -120,13 +94,14 @@ function renderConversaciones($conversaciones, $usuarioId)
 
                     if ($ultimoMensaje) {
                         if (!empty($ultimoMensaje->mensaje) && !empty($ultimoMensaje->iv)) {
+                            // Intentar descifrar el mensaje
                             $mensajeDescifrado = descifrarMensaje($ultimoMensaje->mensaje, $clave, $ultimoMensaje->iv);
                             if ($mensajeDescifrado === false) {
                                 $mensajeDescifrado = "[Error al descifrar el mensaje]";
                                 chatLog("Error al descifrar el mensaje para la conversación con ID: " . $conversacion->id);
                             } else {
                                 // Limpiar caracteres no imprimibles
-                                $mensajeDescifrado = preg_replace('/[\x00-\x1F\x7F-\xFF]/', '', $mensajeDescifrado);
+                                $mensajeDescifrado = preg_replace('/[^\P{C}\n]+/u', '', $mensajeDescifrado);
                                 chatLog("Mensaje descifrado y limpiado: " . $mensajeDescifrado);
                             }
                         } else {
@@ -143,7 +118,7 @@ function renderConversaciones($conversaciones, $usuarioId)
                         </div>
                         <div class="vistaPrevia">
                             <p><?= esc_html($mensajeDescifrado); ?></p>
-                            <p>Mensaje sin escapar: <?= $mensajeDescifrado; ?></p>
+                            <p>Mensaje sin escapar: <?= htmlspecialchars($mensajeDescifrado, ENT_QUOTES, 'UTF-8'); ?></p>
                             <p>Longitud del mensaje: <?= strlen($mensajeDescifrado); ?></p>
                             <p>Codificación: <?= mb_detect_encoding($mensajeDescifrado); ?></p>
                         </div>
