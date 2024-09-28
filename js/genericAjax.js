@@ -216,13 +216,16 @@ async function enviarAjax(action, data = {}) {
         return {success: false, message: error.message};
     }
 }
+
 // GENERIC CLICK - DEBE SER FLEXIBLE PORQUE TODA LA LOGICA DE CLICK PASA POR AQUI
 async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
     const buttons = document.querySelectorAll(selector);
+    console.log(`Botones encontrados: ${buttons.length}`);
 
     buttons.forEach(button => {
+        console.log('Datos del botón:', button.dataset);
         button.addEventListener('click', async event => {
-            const post_id = event.currentTarget.dataset.post_id;
+            const post_id = event.currentTarget.dataset.postId || event.currentTarget.getAttribute('data-post-id');
             const tipoContenido = event.currentTarget.dataset.tipoContenido;
             logAjax(`Botón clicado. post_id encontrado: ${post_id}, tipoContenido: ${tipoContenido}`);
 
@@ -259,3 +262,4 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
         });
     });
 }
+
