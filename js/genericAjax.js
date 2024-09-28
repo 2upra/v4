@@ -91,11 +91,13 @@ async function eliminarPost() {
         '.eliminarPost',
         'eliminarPostRs',
         '¿Estás seguro que quieres eliminar este post?',
-        async (statusElement, data) => {
+        async (statusElement, data, postId) => {
             console.log('Respuesta del servidor:', data);
             if (data.success) {
-                console.log('Intentando remover post con ID:', data.post_id);
-                removerPost('.EDYQHV', data.post_id);
+                // Usa data.post_id si existe, de lo contrario usa postId
+                const idToRemove = data.post_id || postId;
+                console.log('Intentando remover post con ID:', idToRemove);
+                removerPost('.EDYQHV', idToRemove);
                 console.log('¿Se removió el post?');
                 await alert('El post ha sido eliminado');
             } else {
@@ -238,7 +240,7 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
                 });
 
                 if (data.success) {
-                    successCallback(null, data);
+                    successCallback(null, data, post_id); 
                 } else {
                     console.error(`Error al realizar la acción: ${action}. Mensaje: ${data.message}`);
                     alert('Error al enviar el reporte: ' + (data.message || 'Error desconocido'));
