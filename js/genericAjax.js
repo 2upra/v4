@@ -11,8 +11,7 @@ async function handleAllRequests() {
         await rechazarColab();
         await aceptarcolab();
         await reporte();
-        // await bloquearUsuario();
-        // await desbloquearUsuario();
+        await bloqueos();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }
@@ -95,25 +94,16 @@ async function eliminarPost() {
         'eliminarPostRs',
         '¿Estás seguro que quieres eliminar este post?',
         async (statusElement, data) => {
-            actualizarElemento(statusElement, data.new_status);
-            await alert('El post ha sido eliminado');
+            if (data.success) {
+                removerPost('.EDYQHV', data.post_id);
+                await alert('El post ha sido eliminado');
+            } else {
+                actualizarElemento(statusElement, data.new_status);
+                await alert('Hubo un error al eliminar el post');
+            }
         },
         '.EDYQHV'
     );
-}
-
-//GENERIC CAMBIAR DOM
-function actualizarElemento(element, newStatus) {
-    if (element) {
-        element.textContent = newStatus;
-    }
-}
-
-function removerPost(selector, postId) {
-    const element = document.querySelector(`${selector}[id-post="${postId}"]`);
-    if (element) {
-        element.remove();
-    }
 }
 
 async function reporte() {
@@ -149,39 +139,25 @@ async function reporte() {
     }
 }
 
-/*
-tengo este problema 
+async function bloqueos() {
+    async function bloquearUsuario(event, response) {
+        const button = event.currentTarget;
+        alert('Usuario bloqueado.');
+        button.textContent = 'Desbloquear';
+        button.classList.remove('bloquear');
+        button.classList.add('desbloquear');
+    }
+    accionClick('.bloquear', 'guardarBloqueo', '¿Estás seguro de bloquear este usuario?', bloquearUsuario);
 
-Ocurrió un error al procesar las solicitudes: TypeError: Cannot read properties of undefined (reading 'currentTarget')
-    at bloquearUsuario (genericAjax.js?ver=2.1.13.903105013:238:26)
-    at handleAllRequests (genericAjax.js?ver=2.1.13.903105013:99:15)
-handleAllRequests @ genericAjax.js?ver=2.1.13.903105013:102
-genericAjax.js?ver=2.1.13.903105013:56  No se encontró postId en el botón
-(anónimo) @ genericAjax.js?ver=2.1.13.903105013:56
-
-*/
-
-/*
-async function bloquearUsuario(event, response) {
-    const button = event.currentTarget;
-    alert('Usuario bloqueado.');
-    button.textContent = 'Desbloquear';
-    button.classList.remove('bloquear');
-    button.classList.add('desbloquear');
+    async function desbloquearUsuario(event, response) {
+        const button = event.currentTarget;
+        alert('Usuario desbloqueado.');
+        button.textContent = 'Bloquear';
+        button.classList.remove('desbloquear');
+        button.classList.add('bloquear');
+    }
+    accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
 }
-accionClick('.bloquear', 'guardarBloqueo', '¿Estás seguro de bloquear este usuario?', bloquearUsuario);
-
-// Cambia desbloquearUsuario
-async function desbloquearUsuario(event, response) {
-    const button = event.currentTarget;
-    alert('Usuario desbloqueado.');
-    button.textContent = 'Bloquear';
-    button.classList.remove('desbloquear');
-    button.classList.add('bloquear');
-}
-accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
-
-*/
 
 //GENERIC AJAX - DEBE SER FLEXIBLE PORQUE TODA LA LOGICA DE AJAX PASA POR AQUI
 async function enviarAjax(action, data = {}) {
@@ -190,7 +166,6 @@ async function enviarAjax(action, data = {}) {
             action: action,
             ...data
         });
-        logAjax('Cuerpo de la solicitud que se enviará:', body.toString());
         const response = await fetch(ajaxUrl, {
             method: 'POST',
             headers: {
@@ -206,10 +181,9 @@ async function enviarAjax(action, data = {}) {
         try {
             responseData = JSON.parse(responseText);
         } catch (jsonError) {
-            console.warn('No se pudo interpretar la respuesta como JSON:', jsonError);
+            console.error('No se pudo interpretar la respuesta como JSON:', jsonError);
             responseData = responseText;
         }
-        logAjax('Respuesta del servidor:', responseData);
         return responseData;
     } catch (error) {
         console.error('Error en la solicitud:', error);
@@ -220,14 +194,11 @@ async function enviarAjax(action, data = {}) {
 // GENERIC CLICK - DEBE SER FLEXIBLE PORQUE TODA LA LOGICA DE CLICK PASA POR AQUI
 async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
     const buttons = document.querySelectorAll(selector);
-    console.log(`Botones encontrados: ${buttons.length}`);
 
     buttons.forEach(button => {
-        console.log('Datos del botón:', button.dataset);
         button.addEventListener('click', async event => {
             const post_id = event.currentTarget.dataset.postId || event.currentTarget.getAttribute('data-post-id');
             const tipoContenido = event.currentTarget.dataset.tipoContenido;
-            logAjax(`Botón clicado. post_id encontrado: ${post_id}, tipoContenido: ${tipoContenido}`);
 
             if (!post_id) {
                 console.error('No se encontró post_id en el botón');
@@ -235,31 +206,37 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
             }
 
             const confirmed = await confirm(confirmMessage);
-            logAjax(`Confirmación de usuario: ${confirmed ? 'Sí' : 'No'}`);
 
             if (confirmed) {
                 const mensajeErrorInput = document.getElementById('mensajeError');
                 const detalles = mensajeErrorInput ? mensajeErrorInput.value : '';
-                logAjax(`Enviando solicitud AJAX para la acción: ${action} con postId: ${post_id}`);
                 const data = await enviarAjax(action, {
                     post_id: post_id,
                     tipoContenido: tipoContenido,
                     detalles: detalles
                 });
 
-                logAjax('Respuesta AJAX recibida:', data);
-
                 if (data.success) {
-                    logAjax(`Acción ${action} exitosa. Ejecutando callback de éxito.`);
                     successCallback(null, data);
                 } else {
                     console.error(`Error al realizar la acción: ${action}. Mensaje: ${data.message}`);
                     alert('Error al enviar el reporte: ' + (data.message || 'Error desconocido'));
                 }
-            } else {
-                logAjax('Acción cancelada por el usuario.');
             }
         });
     });
 }
 
+//GENERIC CAMBIAR DOM
+function actualizarElemento(element, newStatus) {
+    if (element) {
+        element.textContent = newStatus;
+    }
+}
+
+function removerPost(selector, postId) {
+    const element = document.querySelector(`${selector}[id-post="${postId}"]`);
+    if (element) {
+        element.remove();
+    }
+}
