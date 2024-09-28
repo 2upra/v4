@@ -17,6 +17,10 @@ function escribirLog($mensaje, $archivo) {
     }
 }
 
+function chatLog($log) {
+    escribirLog($log, '/var/www/wordpress/wp-content/themes/chat.log');
+}
+
 function guardarLog($log) {
     escribirLog($log, '/var/www/wordpress/wp-content/themes/logsw.txt');
 }
@@ -37,9 +41,6 @@ function postLog($log) {
     escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt');
 }
 
-function chatLog($log) {
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/chat.log');
-}
 
 //Script principal
 function scriptsOrdenados()

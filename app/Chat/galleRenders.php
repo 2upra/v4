@@ -5,30 +5,60 @@ define('CIPHER', 'AES-256-CBC');
 // Función para cifrar un mensaje
 function cifrarMensaje($mensaje, $clave, $iv)
 {
-    $cifrado = openssl_encrypt($mensaje, CIPHER, $clave, 0, $iv);
-    return base64_encode($cifrado);
+    chatLog("Iniciando cifrado de mensaje");
+    
+    if (empty($mensaje) || empty($clave) || empty($iv)) {
+        chatLog("Error: Mensaje, clave o IV vacíos");
+        return false;
+    }
+
+    try {
+        $cifrado = openssl_encrypt($mensaje, CIPHER, $clave, 0, $iv);
+        if ($cifrado === false) {
+            chatLog("Error en openssl_encrypt: " . openssl_error_string());
+            return false;
+        }
+        
+        $resultado = base64_encode($cifrado);
+        chatLog("Mensaje cifrado exitosamente");
+        return $resultado;
+    } catch (Exception $e) {
+        chatLog("Excepción durante el cifrado: " . $e->getMessage());
+        return false;
+    }
 }
 
 // Función para descifrar un mensaje
 function descifrarMensaje($mensajeCifrado, $clave, $iv)
 {
-    $mensajeCifrado = base64_decode($mensajeCifrado);
-    return openssl_decrypt($mensajeCifrado, CIPHER, $clave, 0, $iv);
+    chatLog("Iniciando descifrado de mensaje");
+    
+    if (empty($mensajeCifrado) || empty($clave) || empty($iv)) {
+        chatLog("Error: Mensaje cifrado, clave o IV vacíos");
+        return false;
+    }
+
+    try {
+        $mensajeDecodificado = base64_decode($mensajeCifrado);
+        if ($mensajeDecodificado === false) {
+            chatLog("Error: No se pudo decodificar el mensaje base64");
+            return false;
+        }
+
+        $mensajeDescifrado = openssl_decrypt($mensajeDecodificado, CIPHER, $clave, 0, $iv);
+        if ($mensajeDescifrado === false) {
+            chatLog("Error en openssl_decrypt: " . openssl_error_string());
+            return false;
+        }
+
+        chatLog("Mensaje descifrado exitosamente");
+        return $mensajeDescifrado;
+    } catch (Exception $e) {
+        chatLog("Excepción durante el descifrado: " . $e->getMessage());
+        return false;
+    }
 }
 
-/*
-
-2024-09-28 21:00:02 - Consulta de conversaciones ejecutada
-2024-09-28 21:00:02 - Conversaciones obtenidas
-2024-09-28 21:00:02 - Último mensaje obtenido
-2024-09-28 21:00:02 - Mensaje descifrado correctamente
-2024-09-28 21:00:02 - HTML generado
-
-son los unicos logs que muestra, el problema es que mensaje no se renderiza en la conversacion, las conversacion si pero el mensaje no, dame el codigo depurado o arreglado completo
-
-*/
-
-// Función para obtener las conversaciones del usuario
 function conversacionesUsuario($usuarioId)
 {
     global $wpdb;
@@ -42,14 +72,14 @@ function conversacionesUsuario($usuarioId)
         WHERE JSON_CONTAINS(participantes, %s)
     ", json_encode($usuarioId));
 
-    chatLog("Consulta de conversaciones ejecutada", $query);
+    chatLog("Consulta de conversaciones ejecutada: " . $query);
 
     $conversaciones = $wpdb->get_results($query);
 
     if ($conversaciones) {
-        chatLog("Conversaciones obtenidas", $conversaciones);
+        chatLog("Conversaciones obtenidas: " . print_r($conversaciones, true));
     } else {
-        chatLog("No se encontraron conversaciones para el usuario con ID", $usuarioId);
+        chatLog("No se encontraron conversaciones para el usuario con ID: " . $usuarioId);
     }
 
     return renderConversaciones($conversaciones, $usuarioId);
@@ -65,10 +95,10 @@ function renderConversaciones($conversaciones, $usuarioId)
     ob_start();
 
     if ($conversaciones) {
-        ?>
+?>
         <div class="modal modalConversaciones">
             <ul class="mensajes">
-                <?php 
+                <?php
                 foreach ($conversaciones as $conversacion):
                     $participantes = json_decode($conversacion->participantes);
                     $otrosParticipantes = array_diff($participantes, [$usuarioId]);
@@ -84,7 +114,7 @@ function renderConversaciones($conversaciones, $usuarioId)
                         LIMIT 1
                     ", $conversacion->id));
 
-                    chatLog("Último mensaje obtenido", $ultimoMensaje);
+                    chatLog("Último mensaje obtenido: " . print_r($ultimoMensaje, true));
 
                     $mensajeDescifrado = "[No hay mensajes]";
                     $fechaRelativa = "[Fecha desconocida]";
@@ -94,17 +124,17 @@ function renderConversaciones($conversaciones, $usuarioId)
                             $mensajeDescifrado = descifrarMensaje($ultimoMensaje->mensaje, $clave, $ultimoMensaje->iv);
                             if ($mensajeDescifrado === false) {
                                 $mensajeDescifrado = "[Error al descifrar el mensaje]";
-                                chatLog("Error al descifrar el mensaje para la conversación con ID", $conversacion->id);
+                                chatLog("Error al descifrar el mensaje para la conversación con ID: " . $conversacion->id);
                             } else {
-                                chatLog("Mensaje descifrado correctamente", $mensajeDescifrado);
+                                chatLog("Mensaje descifrado correctamente: " . $mensajeDescifrado);
                             }
                         } else {
                             $mensajeDescifrado = "[Mensaje o IV faltante]";
-                            chatLog("Error: Mensaje o IV faltante para la conversación con ID", $conversacion->id);
+                            chatLog("Error: Mensaje o IV faltante para la conversación con ID: " . $conversacion->id);
                         }
                         $fechaRelativa = tiempoRelativo($ultimoMensaje->fecha);
                     }
-                    ?>
+                ?>
                     <li class="mensaje">
                         <div class="imagenMensaje">
                             <img src="<?= esc_url($imagenPerfil); ?>" alt="Imagen de perfil">
@@ -121,13 +151,13 @@ function renderConversaciones($conversaciones, $usuarioId)
         </div>
     <?php
     } else {
-        ?>
+    ?>
         <p>No tienes conversaciones activas.</p>
-        <?php
+<?php
     }
 
     $htmlGenerado = ob_get_clean();
-    chatLog("HTML generado", $htmlGenerado);
+    chatLog("HTML generado: " . $htmlGenerado);
 
     return $htmlGenerado;
 }
