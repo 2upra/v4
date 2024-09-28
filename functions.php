@@ -37,6 +37,10 @@ function postLog($log) {
     escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt');
 }
 
+function chatLog($log) {
+    escribirLog($log, '/var/www/wordpress/wp-content/themes/chat.log');
+}
+
 //Script principal
 function scriptsOrdenados()
 {
@@ -75,6 +79,7 @@ function scriptsOrdenados()
         'wavejs' => ['2.0.12', ['jquery', 'wavesurfer']],
         'inversores' => '1.0.4',
         'likes' => '2.0.1',
+        'galle' => '2.0.1',
     ];
 
     foreach ($script_handles as $handle => $data) {
@@ -96,6 +101,12 @@ function scriptsOrdenados()
             true
         );
     }
+
+    $nonce = wp_create_nonce('wp_rest');
+    wp_localize_script('galle2v', 'galle2v', array(
+        'nonce' => $nonce,
+        'apiUrl' => esc_url_raw(rest_url('galle/v2/guardarMensaje/')),
+    ));
 
     // Scripts externos
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);

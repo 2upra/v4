@@ -1,0 +1,181 @@
+<?php
+if (!function_exists('tablasMensaje')) {
+    function tablasMensaje() {
+        global $wpdb;
+        $charset_collate = $wpdb->get_charset_collate();
+        $tablaMensajes = $wpdb->prefix . 'mensajes';
+        $tablaConversacion = $wpdb->prefix . 'conversacion';
+
+        // Verifica si las tablas ya existen
+        $tablas_existentes = $wpdb->get_results("
+            SHOW TABLES LIKE '$tablaMensajes' OR 
+            SHOW TABLES LIKE '$tablaConversacion'
+        ");
+        if (count($tablas_existentes) === 2) {
+            return;
+        }
+
+        // SQL para crear la tabla de conversaciones
+        $sql_conversacion = "CREATE TABLE $tablaConversacion (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            tipo TINYINT(1) NOT NULL,  -- Tipo de conversación (unouno o grupo)
+            participantes LONGTEXT NOT NULL,  -- Almacena los participantes en formato JSON
+            fecha DATETIME NOT NULL,  -- Fecha de creación de la conversación
+            PRIMARY KEY (id)
+        ) $charset_collate;";
+
+        // SQL para crear la tabla de mensajes
+        $sql_mensajes = "CREATE TABLE $tablaMensajes (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            conversacion BIGINT(20) UNSIGNED NOT NULL,  -- Relación con la tabla de conversaciones
+            emisor BIGINT(20) UNSIGNED NOT NULL,  -- ID del usuario que envía el mensaje
+            mensaje TEXT NOT NULL,  -- Contenido del mensaje
+            fecha DATETIME NOT NULL,  -- Fecha de envío del mensaje
+            adjunto LONGTEXT DEFAULT NULL,  -- Almacena múltiples ID de adjuntos en formato JSON
+            metadata LONGTEXT DEFAULT NULL,  -- Metadatos adicionales
+            iv BINARY(16) NOT NULL,
+            PRIMARY KEY (id),
+            KEY conversacion (conversacion),
+            KEY emisor (emisor),
+            CONSTRAINT fk_mensajes_conversacion FOREIGN KEY (conversacion) REFERENCES $tablaConversacion(id) ON DELETE CASCADE
+        ) $charset_collate;";
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+        // Ejecuta la creación de las tablas
+        dbDelta($sql_conversacion);
+        dbDelta($sql_mensajes);
+    }
+}
+
+tablasMensaje();
+
+add_action('rest_api_init', function () {
+    register_rest_route('mi-chat/v1', '/procesarMensaje', array(
+        'methods' => 'POST',
+        'callback' => 'procesarMensaje',
+        'permission_callback' => function () {
+            return is_user_logged_in();
+        }
+
+    ));
+});
+
+define('CIPHER', 'AES-256-CBC');
+
+function procesarMensaje($request) {
+    $emisor = get_current_user_id();
+    $params = $request->get_json_params();
+    chatLog($params);
+
+    $receptor = $params['receptor'];
+    $mensaje = $params['mensaje'];
+    $adjunto = isset($params['adjunto']) ? $params['adjunto'] : null;
+    $metadata = isset($params['metadata']) ? $params['metadata'] : null;
+
+    if (!$emisor || !$receptor || !$mensaje) {
+        return;
+    }
+    guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata);
+}
+
+function cifrarMensaje($mensaje, $clave, $iv) {
+    $cifrado = openssl_encrypt($mensaje, CIPHER, $clave, 0, $iv);
+    return base64_encode($cifrado);
+}
+
+function descifrarMensaje($mensajeCifrado, $clave, $iv) {
+    $mensajeCifrado = base64_decode($mensajeCifrado);
+    return openssl_decrypt($mensajeCifrado, CIPHER, $clave, 0, $iv);
+}
+
+function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata = null) {
+    global $wpdb;
+    $tablaMensajes = $wpdb->prefix . 'mensajes';
+    $tablaConversacion = $wpdb->prefix . 'conversacion';
+    $clave = $_ENV['GALLEKEY'];
+    $iv = openssl_random_pseudo_bytes(16);
+    $mensajeCifrado = cifrarMensaje($mensaje, $clave, $iv);
+
+    // Iniciar la transacción
+    $wpdb->query('START TRANSACTION');
+
+    try {
+        // Intentar obtener la conversación
+        $query = $wpdb->prepare("
+            SELECT id FROM $tablaConversacion
+            WHERE tipo = 1
+            AND JSON_CONTAINS(participantes, %s)
+            AND JSON_CONTAINS(participantes, %s)
+        ", json_encode($emisor), json_encode($receptor));
+
+        $conversacionID = $wpdb->get_var($query);
+
+        if (!$conversacionID) {
+            $participantes = json_encode([$emisor, $receptor]);
+            $wpdb->insert($tablaConversacion, [
+                'tipo' => 1,
+                'participantes' => $participantes,
+                'fecha' => current_time('mysql')
+            ]);
+            $conversacionID = $wpdb->insert_id;
+            chatLog("Nueva conversación creada con ID: $conversacionID");
+        } else {
+            chatLog("Conversación existente encontrada con ID: $conversacionID");
+        }
+
+        $wpdb->insert($tablaMensajes, [
+            'conversacion' => $conversacionID,
+            'emisor' => $emisor,
+            'contenido' => $mensajeCifrado,
+            'fecha' => current_time('mysql'),
+            'adjunto' => isset($adjunto) ? json_encode($adjunto) : null,
+            'metadata' => isset($metadata) ? json_encode($metadata) : null,
+            'iv' => base64_encode($iv)
+        ]);
+
+        // Confirmar la transacción
+        $wpdb->query('COMMIT');
+        $mensajeID = $wpdb->insert_id;
+        chatLog("Mensaje cifrado guardado con ID: $mensajeID en la conversación: $conversacionID");
+    } catch (Exception $e) {
+        $wpdb->query('ROLLBACK');
+        error_log($e->getMessage());
+    }
+}
+
+function conversacionesUsuario($usuarioId) {
+    global $wpdb;
+    $tablaConversacion = $wpdb->prefix . 'conversacion';
+
+    // Iniciar la captura de salida
+    ob_start();
+
+    $query = $wpdb->prepare("
+        SELECT id, participantes, fecha 
+        FROM $tablaConversacion 
+        WHERE JSON_CONTAINS(participantes, %s)
+    ", json_encode($usuarioId));
+
+    $conversaciones = $wpdb->get_results($query);
+
+    if ($conversaciones) {
+        echo '<h2>Mis Conversaciones</h2>';
+        echo '<ul>';
+
+        foreach ($conversaciones as $conversacion) {
+            $participantes = json_decode($conversacion->participantes);
+            $otrosParticipantes = array_diff($participantes, [$usuarioId]);
+            echo '<li>';
+            echo 'Conversación ID: ' . esc_html($conversacion->id) . ' - Participantes: ' . esc_html(implode(', ', $otrosParticipantes)) . ' - Fecha: ' . esc_html($conversacion->fecha);
+            echo '</li>';
+        }
+
+        echo '</ul>';
+    } else {
+        echo '<p>No tienes conversaciones activas.</p>';
+    }
+
+    $contenido = ob_get_clean();
+
+    return $contenido;
+}

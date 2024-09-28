@@ -1,7 +1,7 @@
 <?php
 
 //ESTO ESTA PENDIENTE POR REFACTORIZAR
-
+/*
 function save_message($sender_id, $receiver_id, $message_text)
 {
     global $wpdb;
@@ -48,6 +48,7 @@ function guardar_mensaje_handler($request)
     save_message($sender_id, $receiver_id, $message_text);
     return new WP_REST_Response('Mensaje guardado con éxito', 200);
 }
+*/
 
 function get_user_conversations($user_id, $page = 1, $per_page = 20)
 {
@@ -145,7 +146,7 @@ function show_user_conversations()
 
     return $output;
 }
-add_shortcode('user_conversations', 'show_user_conversations');
+
 
 function get_user_conversations_messages($user_id, $conversation_id, $page = 1, $per_page = 20)
 {
@@ -347,7 +348,7 @@ function galle_chat_scripts()
 }
 
 add_action('wp_enqueue_scripts', 'galle_chat_scripts');
-
+/*
 add_action('rest_api_init', function () {
     register_rest_route('mi-chat/v1', '/guardar-mensaje/', array(
         'methods' => 'POST',
@@ -358,6 +359,7 @@ add_action('rest_api_init', function () {
 
     ));
 });
+*/
 
 function combined_conversations_shortcode()
 {
