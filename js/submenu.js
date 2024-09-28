@@ -32,8 +32,8 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
 
         submenu.style.display = "block";
 
-        submenu._darkBackground = createDarkBackground();
-        submenu.style.zIndex = 1000;
+        submenu._darkBackground = createDarkBackground(submenu);
+        submenu.style.zIndex = 999; // Siempre por encima del fondo oscuro
 
         document.body.classList.add('no-scroll');
 

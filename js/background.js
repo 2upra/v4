@@ -1,5 +1,5 @@
-// Función para crear y mostrar el fondo oscuro
-window.createDarkBackground = function() {
+// Función para crear y mostrar el fondo oscuro al mismo nivel que el submenú
+window.createDarkBackground = function(submenu) {
     const darkBackground = document.createElement('div');
     darkBackground.classList.add('submenu-background');
     darkBackground.style.position = 'fixed';
@@ -8,9 +8,12 @@ window.createDarkBackground = function() {
     darkBackground.style.width = '100vw';
     darkBackground.style.height = '100vh';
     darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    darkBackground.style.zIndex = 999;
+    darkBackground.style.zIndex = 998; // Debe estar por debajo del submenú
     darkBackground.style.pointerEvents = 'auto';
-    document.body.appendChild(darkBackground);
+    
+    // Insertar el background justo antes del submenu, como hermano
+    submenu.parentNode.insertBefore(darkBackground, submenu);
+    
     return darkBackground;
 };
 
