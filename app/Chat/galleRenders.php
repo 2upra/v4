@@ -65,22 +65,13 @@ function conversacionesUsuario($usuarioId)
     $tablaConversacion = $wpdb->prefix . 'conversacion';
     $tablaMensajes = $wpdb->prefix . 'mensajes';
 
-    // Obtener conversaciones que incluyan al usuario
     $query = $wpdb->prepare("
         SELECT id, participantes, fecha 
         FROM $tablaConversacion 
         WHERE JSON_CONTAINS(participantes, %s)
     ", json_encode($usuarioId));
 
-    chatLog("Consulta de conversaciones ejecutada: " . $query);
-
     $conversaciones = $wpdb->get_results($query);
-
-    if ($conversaciones) {
-        chatLog("Conversaciones obtenidas: " . print_r($conversaciones, true));
-    } else {
-        chatLog("No se encontraron conversaciones para el usuario con ID: " . $usuarioId);
-    }
 
     return renderConversaciones($conversaciones, $usuarioId);
 }
@@ -104,7 +95,6 @@ function renderConversaciones($conversaciones, $usuarioId)
                     $otroParticipanteId = reset($otrosParticipantes);
                     $imagenPerfil = imagenPerfil($otroParticipanteId);
 
-                    // Obtener el último mensaje de la conversación
                     $ultimoMensaje = $wpdb->get_row($wpdb->prepare("
                         SELECT mensaje, fecha, iv 
                         FROM $tablaMensajes 
@@ -113,29 +103,13 @@ function renderConversaciones($conversaciones, $usuarioId)
                         LIMIT 1
                     ", $conversacion->id));
 
-                    chatLog("Último mensaje obtenido: " . print_r($ultimoMensaje, true));
-
                     $mensajeDescifrado = "[No hay mensajes]";
                     $fechaRelativa = "[Fecha desconocida]";
 
-                    if ($ultimoMensaje) {
-                        if (!empty($ultimoMensaje->mensaje) && !empty($ultimoMensaje->iv)) {
-                            $mensajeDescifrado = descifrarMensaje($ultimoMensaje->mensaje, $clave, $ultimoMensaje->iv);
-                            if ($mensajeDescifrado === false) {
-                                $mensajeDescifrado = "[Error al descifrar el mensaje]";
-                                chatLog("Error al descifrar el mensaje para la conversación con ID: " . $conversacion->id);
-                            } else {
-                                // Limpiar caracteres no imprimibles
-                                $mensajeDescifrado = preg_replace('/[\x00-\x1F\x7F-\xFF]/', '', $mensajeDescifrado);
-                                chatLog("Mensaje descifrado y limpiado: " . $mensajeDescifrado);
-                            }
-                        } else {
-                            $mensajeDescifrado = "[Mensaje o IV faltante]";
-                            chatLog("Error: Mensaje o IV faltante para la conversación con ID: " . $conversacion->id);
-                        }
+                    if ($ultimoMensaje && !empty($ultimoMensaje->mensaje) && !empty($ultimoMensaje->iv)) {
+                        $mensajeDescifrado = descifrarMensaje($ultimoMensaje->mensaje, $clave, $ultimoMensaje->iv);
                         $fechaRelativa = tiempoRelativo($ultimoMensaje->fecha);
                     }
-
                 ?>
                     <li class="mensaje">
                         <div class="imagenMensaje">
@@ -143,9 +117,6 @@ function renderConversaciones($conversaciones, $usuarioId)
                         </div>
                         <div class="vistaPrevia">
                             <p><?= esc_html($mensajeDescifrado); ?></p>
-                            <p>Mensaje sin escapar: <?= $mensajeDescifrado; ?></p>
-                            <p>Longitud del mensaje: <?= strlen($mensajeDescifrado); ?></p>
-                            <p>Codificación: <?= mb_detect_encoding($mensajeDescifrado); ?></p>
                         </div>
                         <div class="tiempoMensaje">
                             <span><?= esc_html($fechaRelativa); ?></span>
@@ -161,10 +132,7 @@ function renderConversaciones($conversaciones, $usuarioId)
 <?php
     }
 
-    $htmlGenerado = ob_get_clean();
-    chatLog("HTML generado: " . $htmlGenerado);
-
-    return $htmlGenerado;
+    return ob_get_clean();
 }
 
 function tiempoRelativo($fecha)
