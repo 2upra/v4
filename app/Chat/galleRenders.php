@@ -85,7 +85,6 @@ function conversacionesUsuario($usuarioId)
     return renderConversaciones($conversaciones, $usuarioId);
 }
 
-// Función para renderizar las conversaciones
 function renderConversaciones($conversaciones, $usuarioId)
 {
     global $wpdb;
@@ -126,16 +125,15 @@ function renderConversaciones($conversaciones, $usuarioId)
                                 $mensajeDescifrado = "[Error al descifrar el mensaje]";
                                 chatLog("Error al descifrar el mensaje para la conversación con ID: " . $conversacion->id);
                             } else {
-                                chatLog("Mensaje descifrado correctamente: " . $mensajeDescifrado);
+                                // Limpiar caracteres no imprimibles
+                                $mensajeDescifrado = preg_replace('/[\x00-\x1F\x7F-\xFF]/', '', $mensajeDescifrado);
+                                chatLog("Mensaje descifrado y limpiado: " . $mensajeDescifrado);
                             }
                         } else {
                             $mensajeDescifrado = "[Mensaje o IV faltante]";
                             chatLog("Error: Mensaje o IV faltante para la conversación con ID: " . $conversacion->id);
                         }
                         $fechaRelativa = tiempoRelativo($ultimoMensaje->fecha);
-                    } else {
-                        $mensajeDescifrado = "[No hay mensajes]";
-                        $fechaRelativa = "[Fecha desconocida]";
                     }
 
                 ?>
@@ -145,6 +143,9 @@ function renderConversaciones($conversaciones, $usuarioId)
                         </div>
                         <div class="vistaPrevia">
                             <p><?= esc_html($mensajeDescifrado); ?></p>
+                            <p>Mensaje sin escapar: <?= $mensajeDescifrado; ?></p>
+                            <p>Longitud del mensaje: <?= strlen($mensajeDescifrado); ?></p>
+                            <p>Codificación: <?= mb_detect_encoding($mensajeDescifrado); ?></p>
                         </div>
                         <div class="tiempoMensaje">
                             <span><?= esc_html($fechaRelativa); ?></span>
