@@ -234,6 +234,7 @@ async function reporte() {
     }
 }
 
+// Cambia bloquearUsuario
 async function bloquearUsuario(event, response) {
     const button = event.currentTarget;
     alert('Usuario bloqueado.');
@@ -243,7 +244,7 @@ async function bloquearUsuario(event, response) {
 }
 accionClick('.bloquear', 'guardarBloqueo', '¿Estás seguro de bloquear este usuario?', bloquearUsuario);
 
-
+// Cambia desbloquearUsuario
 async function desbloquearUsuario(event, response) {
     const button = event.currentTarget;
     alert('Usuario desbloqueado.');
