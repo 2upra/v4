@@ -1,7 +1,7 @@
 <?php
 
 
-function conversacionesUsuario($usuarioId)
+function obtenerConversaciones($usuarioId)
 {
     global $wpdb;
     $tablaConversacion = $wpdb->prefix . 'conversacion';
@@ -20,18 +20,26 @@ function conversacionesUsuario($usuarioId)
 
     if ($conversaciones) {
         chatLog("Conversaciones obtenidas: " . print_r($conversaciones, true));
+        foreach ($conversaciones as &$conversacion) {
+            $ultimoMensaje = $wpdb->get_row($wpdb->prepare("
+                SELECT mensaje, fecha 
+                FROM $tablaMensajes 
+                WHERE conversacion = %d 
+                ORDER BY fecha DESC
+                LIMIT 1
+            ", $conversacion->id));
+
+            $conversacion->ultimoMensaje = $ultimoMensaje ?: null;
+        }
     } else {
         chatLog("No se encontraron conversaciones para el usuario con ID: " . $usuarioId);
     }
 
-    return renderConversaciones($conversaciones, $usuarioId);
+    return $conversaciones;
 }
 
 function renderConversaciones($conversaciones, $usuarioId)
 {
-    global $wpdb;
-    $tablaMensajes = $wpdb->prefix . 'mensajes';
-
     ob_start();
 
     if ($conversaciones) {
@@ -45,30 +53,20 @@ function renderConversaciones($conversaciones, $usuarioId)
                     $otroParticipanteId = reset($otrosParticipantes);
                     $imagenPerfil = imagenPerfil($otroParticipanteId);
 
-                    // Obtener el último mensaje de la conversación
-                    $ultimoMensaje = $wpdb->get_row($wpdb->prepare("
-                        SELECT mensaje, fecha 
-                        FROM $tablaMensajes 
-                        WHERE conversacion = %d 
-                        ORDER BY fecha DESC
-                        LIMIT 1
-                    ", $conversacion->id));
-
-                    chatLog("Último mensaje obtenido: " . print_r($ultimoMensaje, true));
-
                     $mensajeMostrado = "[No hay mensajes]";
                     $fechaRelativa = "[Fecha desconocida]";
 
-                    if ($ultimoMensaje) {
-                        if (!empty($ultimoMensaje->mensaje)) {
+                    // Obtener el último mensaje y su fecha
+                    if ($conversacion->ultimoMensaje) {
+                        if (!empty($conversacion->ultimoMensaje->mensaje)) {
                             // Mostrar mensaje tal cual (sin descifrar)
-                            $mensajeMostrado = $ultimoMensaje->mensaje;
+                            $mensajeMostrado = $conversacion->ultimoMensaje->mensaje;
                             chatLog("Mensaje mostrado: " . $mensajeMostrado);
                         } else {
                             $mensajeMostrado = "[Mensaje faltante]";
                             chatLog("Error: Mensaje faltante para la conversación con ID: " . $conversacion->id);
                         }
-                        $fechaRelativa = tiempoRelativo($ultimoMensaje->fecha);
+                        $fechaRelativa = tiempoRelativo($conversacion->ultimoMensaje->fecha);
                     }
 
                 ?>
