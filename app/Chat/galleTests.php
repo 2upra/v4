@@ -5,7 +5,7 @@ function procesarMensajeTest() {
     $receptor = 2; // ID del receptor
     $mensaje_id = get_option('mensaje_test_id', 0);
     $mensaje_id++;
-    $mensaje = "Este es un mensaje de prueba #" . $mensaje_id;
+    $mensaje = "Este es un mensaje de prueba con un texto muy largo porque como es una prueba hay que verificar ciertas cosas blablabla #" . $mensaje_id;
     $adjunto = null; // Sin adjunto
     $metadata = null; // Sin metadata
     chatLog("Enviando mensaje: $mensaje de $emisor a $receptor");
