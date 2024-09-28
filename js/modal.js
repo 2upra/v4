@@ -2,7 +2,6 @@ class ModalManager {
     constructor() {
         this.modals = {};
         this.currentOpenModal = null;
-        this.darkBackground = null;
 
         this.setupBodyListener();
     }
@@ -10,7 +9,7 @@ class ModalManager {
     añadirModal(id, modalSelector, triggerSelectors, closeButtonSelector = null) {
         const modal = document.querySelector(modalSelector);
         if (!modal) {
-            console.warn(`Modal elemento id:: ${id}`);
+            console.warn(`Modal elemento id:: ${id} no encontrado.`);
             return;
         }
 
@@ -33,7 +32,8 @@ class ModalManager {
         this.modals[id] = {
             modal,
             triggers,
-            closeButton: closeButtonSelector
+            closeButton: closeButtonSelector,
+            darkBackground: null // Guardaremos el fondo oscuro aquí
         };
 
         this.setupTriggers(id);
@@ -42,7 +42,7 @@ class ModalManager {
     }
 
     setupTriggers(modalId) {
-        const {triggers} = this.modals[modalId];
+        const { triggers } = this.modals[modalId];
         if (!triggers || triggers.length === 0) return;
 
         triggers.forEach(trigger => {
@@ -54,7 +54,7 @@ class ModalManager {
     }
 
     setupCloseButton(modalId) {
-        const {closeButton} = this.modals[modalId];
+        const { closeButton } = this.modals[modalId];
         if (!closeButton) return;
 
         const closeButtonElement = document.querySelector(closeButton);
@@ -94,13 +94,14 @@ class ModalManager {
         modalInfo.modal.style.display = show ? 'flex' : 'none';
         
         if (show) {
-            if (!this.darkBackground) {
-                this.darkBackground = createDarkBackground();
-                this.darkBackground.addEventListener('click', () => this.closeAllModals());
+            if (!modalInfo.darkBackground) {
+                // Crear el fondo oscuro como hermano del modal
+                modalInfo.darkBackground = createDarkBackground(modalInfo.modal);
+                modalInfo.darkBackground.addEventListener('click', () => this.closeAllModals());
             }
-            this.darkBackground.style.display = 'block';
-        } else if (this.darkBackground) {
-            this.darkBackground.style.display = 'none';
+            modalInfo.darkBackground.style.display = 'block';
+        } else if (modalInfo.darkBackground) {
+            modalInfo.darkBackground.style.display = 'none';
         }
 
         this.currentOpenModal = show ? modalId : null;
@@ -109,10 +110,6 @@ class ModalManager {
     closeAllModals() {
         Object.keys(this.modals).forEach(modalId => this.toggleModal(modalId, false));
         this.currentOpenModal = null;
-        if (this.darkBackground) {
-            removeDarkBackground(this.darkBackground);
-            this.darkBackground = null;
-        }
     }
 }
 
