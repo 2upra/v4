@@ -6,7 +6,7 @@ function guardarReporte() {
     $tabla = $wpdb->prefix . 'tablaReportes';
 
     $idUser = get_current_user_id();
-    $idContenido = intval($_POST['id_post']);
+    $idContenido = intval($_POST['post_id']);
     $tipoContenido = sanitize_text_field($_POST['tipoContenido']);
     $detalles = sanitize_textarea_field($_POST['detalles']);
 
