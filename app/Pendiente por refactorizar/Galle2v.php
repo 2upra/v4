@@ -60,6 +60,7 @@ add_action('rest_api_init', function () {
     ));
 });
 
+
 define('CIPHER', 'AES-256-CBC');
 
 function procesarMensaje($request) {
@@ -123,7 +124,7 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
             chatLog("Conversación existente encontrada con ID: $conversacionID");
         }
 
-        $wpdb->insert($tablaMensajes, [
+        $resultado = $wpdb->insert($tablaMensajes, [
             'conversacion' => $conversacionID,
             'emisor' => $emisor,
             'contenido' => $mensajeCifrado,
@@ -133,13 +134,22 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
             'iv' => base64_encode($iv)
         ]);
 
+        if ($resultado === false) {
+            throw new Exception("Error al insertar el mensaje: " . $wpdb->last_error);
+        }
+
+        $mensajeID = $wpdb->insert_id;
+
         // Confirmar la transacción
         $wpdb->query('COMMIT');
-        $mensajeID = $wpdb->insert_id;
         chatLog("Mensaje cifrado guardado con ID: $mensajeID en la conversación: $conversacionID");
+        
+        return $mensajeID;
     } catch (Exception $e) {
         $wpdb->query('ROLLBACK');
         error_log($e->getMessage());
+        chatLog("Error al guardar el mensaje: " . $e->getMessage());
+        return false;
     }
 }
 

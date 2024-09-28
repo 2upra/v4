@@ -13,10 +13,15 @@ function procesarMensajeTest() {
     $metadata = null; // Sin metadata
 
     chatLog("Enviando mensaje: $mensaje de $emisor a $receptor");
-    guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata);
+    $mensajeGuardadoID = guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata);
     
-    // Actualizar la ID del mensaje
-    update_option('mensaje_test_id', $mensaje_id);
+    if ($mensajeGuardadoID !== false) {
+        chatLog("Mensaje guardado exitosamente con ID: $mensajeGuardadoID");
+        // Actualizar la ID del mensaje
+        update_option('mensaje_test_id', $mensaje_id);
+    } else {
+        chatLog("Error al guardar el mensaje");
+    }
 }
 
 function programar_mensaje_test() {
