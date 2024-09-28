@@ -96,7 +96,7 @@ class ModalManager {
         if (show) {
             if (!modalInfo.darkBackground) {
                 // Crear el fondo oscuro como hermano del modal
-                modalInfo.darkBackground = createDarkBackground(modalInfo.modal);
+                modalInfo.darkBackground = createModalDarkBackground(modalInfo.modal);
                 modalInfo.darkBackground.addEventListener('click', () => this.closeAllModals());
             }
             modalInfo.darkBackground.style.display = 'block';

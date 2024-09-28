@@ -32,7 +32,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
 
         submenu.style.display = "block";
 
-        submenu._darkBackground = createDarkBackground(submenu);
+        submenu._darkBackground = createSubmenuDarkBackground(submenu);
         submenu.style.zIndex = 999; // Siempre por encima del fondo oscuro
 
         document.body.classList.add('no-scroll');
@@ -48,10 +48,9 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
 
     function hideSubmenu(submenu) {
         if (submenu) submenu.style.display = "none";
-        removeDarkBackground(submenu._darkBackground);
+        removeSubmenuDarkBackground(submenu._darkBackground);
         submenu._darkBackground = null;
 
-        // Convierte NodeList a array antes de usar filter
         const activeSubmenus = Array.from(document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`)).filter(menu => menu.style.display === "block");
 
         if (activeSubmenus.length === 0) {
