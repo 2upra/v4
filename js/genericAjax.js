@@ -94,10 +94,14 @@ async function eliminarPost() {
         'eliminarPostRs',
         '¿Estás seguro que quieres eliminar este post?',
         async (statusElement, data) => {
+            console.log('Respuesta del servidor:', data);
             if (data.success) {
+                console.log('Intentando remover post con ID:', data.post_id);
                 removerPost('.EDYQHV', data.post_id);
+                console.log('¿Se removió el post?');
                 await alert('El post ha sido eliminado');
             } else {
+                console.log('Error al eliminar post');
                 actualizarElemento(statusElement, data.new_status);
                 await alert('Hubo un error al eliminar el post');
             }
@@ -105,6 +109,25 @@ async function eliminarPost() {
         '.EDYQHV'
     );
 }
+
+function removerPost(selector, postId) {
+    console.log('Buscando elemento para remover:', selector, postId);
+    const element = document.querySelector(`${selector}[id-post="${postId}"]`);
+    if (element) {
+        console.log('Elemento encontrado, removiendo...');
+        element.remove();
+    } else {
+        console.log('No se encontró el elemento para remover');
+    }
+}
+
+//GENERIC CAMBIAR DOM
+function actualizarElemento(element, newStatus) {
+    if (element) {
+        element.textContent = newStatus;
+    }
+}
+
 
 async function reporte() {
     modalManager.añadirModal('formularioError', '#formularioError', ['.reporte']);
@@ -227,16 +250,3 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
     });
 }
 
-//GENERIC CAMBIAR DOM
-function actualizarElemento(element, newStatus) {
-    if (element) {
-        element.textContent = newStatus;
-    }
-}
-
-function removerPost(selector, postId) {
-    const element = document.querySelector(`${selector}[id-post="${postId}"]`);
-    if (element) {
-        element.remove();
-    }
-}
