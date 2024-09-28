@@ -2,18 +2,21 @@
 
 define('CIPHER', 'AES-256-CBC');
 
+// Función para cifrar un mensaje
 function cifrarMensaje($mensaje, $clave, $iv)
 {
     $cifrado = openssl_encrypt($mensaje, CIPHER, $clave, 0, $iv);
     return base64_encode($cifrado);
 }
 
+// Función para descifrar un mensaje
 function descifrarMensaje($mensajeCifrado, $clave, $iv)
 {
     $mensajeCifrado = base64_decode($mensajeCifrado);
     return openssl_decrypt($mensajeCifrado, CIPHER, $clave, 0, $iv);
 }
 
+// Función para obtener las conversaciones del usuario
 function conversacionesUsuario($usuarioId)
 {
     global $wpdb;
@@ -31,28 +34,36 @@ function conversacionesUsuario($usuarioId)
 
     $conversaciones = $wpdb->get_results($query);
 
-    chatLog("Conversaciones obtenidas", $conversaciones);
+    // Verificar si se obtuvieron conversaciones
+    if ($conversaciones) {
+        chatLog("Conversaciones obtenidas", $conversaciones);
+    } else {
+        chatLog("No se encontraron conversaciones para el usuario con ID", $usuarioId);
+    }
 
     return renderConversaciones($conversaciones, $usuarioId);
 }
 
+// Función para renderizar las conversaciones
 function renderConversaciones($conversaciones, $usuarioId)
 {
     global $wpdb;
     $tablaMensajes = $wpdb->prefix . 'mensajes';
-    $clave = $_ENV['GALLEKEY'];
+    $clave = $_ENV['GALLEKEY'];  
 
-    ob_start();
+    ob_start();  // Iniciar el buffer de salida
 
     if ($conversaciones) {
 ?>
         <div class="modal modalConversaciones">
             <ul class="mensajes">
-                <?php foreach ($conversaciones as $conversacion):
+                <?php 
+                // Iterar sobre cada conversación
+                foreach ($conversaciones as $conversacion):
                     $participantes = json_decode($conversacion->participantes);
                     $otrosParticipantes = array_diff($participantes, [$usuarioId]);
                     $otroParticipanteId = reset($otrosParticipantes);
-                    $imagenPerfil = imagenPerfil($otroParticipanteId);
+                    $imagenPerfil = imagenPerfil($otroParticipanteId);  // Se asume que esta función existe
 
                     // Obtener el último mensaje de la conversación
                     $ultimoMensaje = $wpdb->get_row($wpdb->prepare("
@@ -66,18 +77,29 @@ function renderConversaciones($conversaciones, $usuarioId)
                     chatLog("Último mensaje obtenido", $ultimoMensaje);
 
                     if ($ultimoMensaje) {
-                        $mensajeDescifrado = descifrarMensaje($ultimoMensaje->mensaje, $clave, $ultimoMensaje->iv);
-                        chatLog("Mensaje descifrado", $mensajeDescifrado);
+                        // Verificar si el mensaje y el IV están presentes antes de descifrar
+                        if (!empty($ultimoMensaje->mensaje) && !empty($ultimoMensaje->iv)) {
+                            $mensajeDescifrado = descifrarMensaje($ultimoMensaje->mensaje, $clave, $ultimoMensaje->iv);
+                            if ($mensajeDescifrado !== false) {
+                                chatLog("Mensaje descifrado correctamente", $mensajeDescifrado);
+                            } else {
+                                $mensajeDescifrado = "[Error al descifrar el mensaje]";
+                                chatLog("Error al descifrar el mensaje para la conversación con ID", $conversacion->id);
+                            }
+                        } else {
+                            $mensajeDescifrado = "[Mensaje o IV faltante]";
+                            chatLog("Error: Mensaje o IV faltante para la conversación con ID", $conversacion->id);
+                        }
                     } else {
                         $mensajeDescifrado = "[No hay mensajes]";
                         chatLog("No se encontró ningún mensaje para la conversación con ID", $conversacion->id);
                     }
 
-                    $fechaRelativa = tiempoRelativo($ultimoMensaje->fecha);
+                    $fechaRelativa = $ultimoMensaje ? tiempoRelativo($ultimoMensaje->fecha) : "[Fecha desconocida]";
                 ?>
                     <li class="mensaje">
                         <div class="imagenMensaje">
-                            <img src="<?= $imagenPerfil; ?>">
+                            <img src="<?= esc_attr($imagenPerfil); ?>" alt="Imagen de perfil">
                         </div>
                         <div class="vistaPrevia">
                             <p><?= esc_html($mensajeDescifrado); ?></p>
@@ -96,9 +118,8 @@ function renderConversaciones($conversaciones, $usuarioId)
 <?php
     }
 
-    return ob_get_clean();
+    return ob_get_clean();  // Devolver el contenido del buffer de salida
 }
-
 
 function tiempoRelativo($fecha)
 {
