@@ -110,25 +110,6 @@ async function eliminarPost() {
     );
 }
 
-function removerPost(selector, postId) {
-    console.log('Buscando elemento para remover:', selector, postId);
-    const element = document.querySelector(`${selector}[id-post="${postId}"]`);
-    if (element) {
-        console.log('Elemento encontrado, removiendo...');
-        element.remove();
-    } else {
-        console.log('No se encontró el elemento para remover');
-    }
-}
-
-//GENERIC CAMBIAR DOM
-function actualizarElemento(element, newStatus) {
-    if (element) {
-        element.textContent = newStatus;
-    }
-}
-
-
 async function reporte() {
     modalManager.añadirModal('formularioError', '#formularioError', ['.reporte']);
     const reportButtons = document.querySelectorAll('.reporte');
@@ -249,4 +230,24 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
         });
     });
 }
+
+//REMOVER POST
+function removerPost(selector, postId) {
+    console.log('Buscando elemento para remover:', selector, postId);
+    const element = document.querySelector(`${selector}[id-post="${postId}"]`);
+    if (element) {
+        console.log('Elemento encontrado, removiendo...');
+        element.remove();
+    } else {
+        console.log('No se encontró el elemento para remover');
+    }
+}
+
+//GENERIC CAMBIAR DOM
+function actualizarElemento(element, newStatus) {
+    if (element) {
+        element.textContent = newStatus;
+    }
+}
+
 
