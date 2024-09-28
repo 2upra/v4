@@ -35,7 +35,17 @@ function obtenerConversaciones($usuarioId)
                 LIMIT 1
             ", $conversacion->id));
 
-            $conversacion->ultimoMensaje = $ultimoMensaje ?: null;
+            if ($ultimoMensaje) {
+                // Verificar si el mensaje es más largo de 32 caracteres
+                if (mb_strlen($ultimoMensaje->mensaje) > 32) {
+                    // Cortar el mensaje a 32 caracteres y añadir "..."
+                    $ultimoMensaje->mensaje = mb_substr($ultimoMensaje->mensaje, 0, 32) . '...';
+                }
+
+                $conversacion->ultimoMensaje = $ultimoMensaje;
+            } else {
+                $conversacion->ultimoMensaje = null;
+            }
         }
     } else {
         chatLog("No se encontraron conversaciones para el usuario con ID: " . $usuarioId);
