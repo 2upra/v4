@@ -22,40 +22,39 @@ function renderConversaciones($conversaciones, $usuarioId)
 {
     global $wpdb;
     $tablaMensajes = $wpdb->prefix . 'mensajes';
+    $clave = $_ENV['GALLEKEY'];
 
     ob_start();
 
     if ($conversaciones) {
-        ?>
+?>
         <div class="modal modalConversaciones">
             <ul class="mensajes">
                 <?php foreach ($conversaciones as $conversacion):
                     $participantes = json_decode($conversacion->participantes);
-                    // Obtener al otro participante (asumiendo conversación uno a uno)
                     $otrosParticipantes = array_diff($participantes, [$usuarioId]);
-                    $otroParticipanteId = reset($otrosParticipantes); // Primer participante que no es el usuario actual
-
-                    // Obtener la imagen de perfil del otro participante
+                    $otroParticipanteId = reset($otrosParticipantes);
                     $imagenPerfil = imagenPerfil($otroParticipanteId);
 
                     // Obtener el último mensaje de la conversación
                     $ultimoMensaje = $wpdb->get_row($wpdb->prepare("
-                        SELECT mensaje, fecha 
+                        SELECT mensaje, fecha, iv 
                         FROM $tablaMensajes 
                         WHERE conversacion = %d 
                         ORDER BY fecha DESC
                         LIMIT 1
                     ", $conversacion->id));
 
-                    // Formatear la fecha a un formato relativo
+                    $mensajeDescifrado = descifrarMensaje($ultimoMensaje->mensaje, $clave, $ultimoMensaje->iv);
+
                     $fechaRelativa = tiempoRelativo($ultimoMensaje->fecha);
                 ?>
                     <li class="mensaje">
                         <div class="imagenMensaje">
-                            <?= $imagenPerfil; ?>
+                            <img src="<?= $imagenPerfil; ?>">
                         </div>
                         <div class="vistaPrevia">
-                            <p><?= esc_html($ultimoMensaje->mensaje); ?></p>
+                            <p><?= esc_html($mensajeDescifrado); ?></p>
                         </div>
                         <div class="tiempoMensaje">
                             <span><?= esc_html($fechaRelativa); ?></span>
@@ -64,17 +63,17 @@ function renderConversaciones($conversaciones, $usuarioId)
                 <?php endforeach; ?>
             </ul>
         </div>
-        <?php
+    <?php
     } else {
-        ?>
+    ?>
         <p>No tienes conversaciones activas.</p>
-        <?php
+<?php
     }
 
     return ob_get_clean();
 }
 
-// Función para calcular el tiempo relativo (ej: "hace 3 horas", "hace 2 días")
+
 function tiempoRelativo($fecha)
 {
     $timestamp = strtotime($fecha);
