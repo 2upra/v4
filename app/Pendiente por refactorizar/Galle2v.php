@@ -1,4 +1,5 @@
 <?php
+
 if (!function_exists('tablasMensaje')) {
     function tablasMensaje()
     {
@@ -7,13 +8,12 @@ if (!function_exists('tablasMensaje')) {
         $tablaMensajes = $wpdb->prefix . 'mensajes';
         $tablaConversacion = $wpdb->prefix . 'conversacion';
 
-        // Verifica si las tablas ya existen
-        $tablas_existentes = $wpdb->get_results("
-            SHOW TABLES LIKE '$tablaMensajes' OR 
-            SHOW TABLES LIKE '$tablaConversacion'
-        ");
-        if (count($tablas_existentes) === 2) {
-            return;
+        // Verifica si las tablas ya existen correctamente
+        $existeMensajes = $wpdb->get_var("SHOW TABLES LIKE '$tablaMensajes'") === $tablaMensajes;
+        $existeConversacion = $wpdb->get_var("SHOW TABLES LIKE '$tablaConversacion'") === $tablaConversacion;
+
+        if ($existeMensajes && $existeConversacion) {
+            return; // Si ambas tablas existen, no hacemos nada
         }
 
         // SQL para crear la tabla de conversaciones
@@ -34,21 +34,34 @@ if (!function_exists('tablasMensaje')) {
             fecha DATETIME NOT NULL,  -- Fecha de envío del mensaje
             adjunto LONGTEXT DEFAULT NULL,  -- Almacena múltiples ID de adjuntos en formato JSON
             metadata LONGTEXT DEFAULT NULL,  -- Metadatos adicionales
-            iv BINARY(16) NOT NULL,
+            iv BINARY(16) NOT NULL,  -- IV para cifrado (posiblemente)
             PRIMARY KEY (id),
             KEY conversacion (conversacion),
-            KEY emisor (emisor),
-            CONSTRAINT fk_mensajes_conversacion FOREIGN KEY (conversacion) REFERENCES $tablaConversacion(id) ON DELETE CASCADE
+            KEY emisor (emisor)
         ) $charset_collate;";
+
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
         // Ejecuta la creación de las tablas
         dbDelta($sql_conversacion);
         dbDelta($sql_mensajes);
+
+        // Si la tabla de mensajes fue creada pero no tiene la clave foránea, la añadimos
+        if (!$existeMensajes) {
+            // Asegúrate de que la tabla 'conversacion' existe antes de añadir la clave foránea
+            $wpdb->query("
+                ALTER TABLE $tablaMensajes 
+                ADD CONSTRAINT fk_mensajes_conversacion 
+                FOREIGN KEY (conversacion) 
+                REFERENCES $tablaConversacion(id) 
+                ON DELETE CASCADE;
+            ");
+        }
     }
 }
 
 tablasMensaje();
+
 
 add_action('rest_api_init', function () {
     register_rest_route('mi-chat/v1', '/procesarMensaje', array(
@@ -158,6 +171,7 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
     }
 }
 
+// usa chatLog para depurar 
 function conversacionesUsuario($usuarioId)
 {
     global $wpdb;
