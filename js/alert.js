@@ -52,8 +52,8 @@ window.inicializarAlerta = function () {
                     closeNotification(false);
                 };
 
-                buttonsDiv.appendChild(cancelButton); // Append cancel button
-                buttonsDiv.appendChild(confirmButton); // Append confirm button
+                buttonsDiv.appendChild(cancelButton); 
+                buttonsDiv.appendChild(confirmButton);
 
                 notificationDiv.appendChild(buttonsDiv);
             } else {

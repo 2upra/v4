@@ -1,6 +1,6 @@
 let enablelogAjax = false;
 const logAjax = enablelogAjax ? console.log : function () {};
-const ajaxUrl = (typeof ajax_params !== 'undefined' && ajax_params.ajax_url) ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
+const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
 
 //GENERIC AJAX
 async function enviarAjax(action, data = {}) {
@@ -10,7 +10,7 @@ async function enviarAjax(action, data = {}) {
             ...data
         });
 
-        logAjax('Cuerpo de la solicitud que se enviará:', body.toString()); 
+        logAjax('Cuerpo de la solicitud que se enviará:', body.toString());
 
         const response = await fetch(ajaxUrl, {
             method: 'POST',
@@ -28,18 +28,17 @@ async function enviarAjax(action, data = {}) {
         const responseText = await response.text();
 
         try {
-            responseData = JSON.parse(responseText); 
+            responseData = JSON.parse(responseText);
         } catch (jsonError) {
             console.warn('No se pudo interpretar la respuesta como JSON:', jsonError);
-            responseData = responseText; 
+            responseData = responseText;
         }
 
         logAjax('Respuesta del servidor:', responseData);
         return responseData;
-
     } catch (error) {
         console.error('Error en la solicitud:', error);
-        return { success: false, message: error.message };
+        return {success: false, message: error.message};
     }
 }
 
@@ -66,12 +65,12 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
                 const detalles = mensajeErrorInput ? mensajeErrorInput.value : '';
 
                 logAjax(`Enviando solicitud AJAX para la acción: ${action} con postId: ${postId}`);
-                const data = await enviarAjax(action, { 
+                const data = await enviarAjax(action, {
                     idContenido: postId,
                     tipoContenido: tipoContenido,
                     detalles: detalles
                 });
-                
+
                 logAjax('Respuesta AJAX recibida:', data);
 
                 if (data.success) {
@@ -97,6 +96,8 @@ async function handleAllRequests() {
         await rechazarColab();
         await aceptarcolab();
         await reporte();
+        await bloquearUsuario();
+        await desbloquearUsuario();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }
@@ -154,11 +155,7 @@ async function reportarcolab() {
     );
 }
 async function estadorola() {
-    await accionClick(
-        '.toggle-status-rola', 
-        'toggle_post_status', 
-        '¿Estás seguro de cambiar el estado de la rola?', 
-        async (statusElement, data) => {
+    await accionClick('.toggle-status-rola', 'toggle_post_status', '¿Estás seguro de cambiar el estado de la rola?', async (statusElement, data) => {
         actualizarElemento(statusElement, data.new_status);
         await alert('El estado ha sido cambiado');
     });
@@ -212,8 +209,8 @@ async function reporte() {
         return;
     }
 
-    reportButtons.forEach(function(button) {
-        button.addEventListener('click', function() {
+    reportButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
             const postId = this.getAttribute('data-post-id');
             const tipoContenido = this.getAttribute('tipoContenido');
             abrirModal(postId, tipoContenido);
@@ -223,16 +220,11 @@ async function reporte() {
     function abrirModal(idContenido, tipoContenido) {
         modalManager.toggleModal('formularioError', true);
 
-        accionClick(
-            '#enviarError',
-            'guardarReporte',
-            '¿Estás seguro de que quieres enviar este reporte?',
-            (statusElement, data) => {
-                alert('Reporte enviado correctamente');
-                modalManager.toggleModal('formularioError', false);
-                document.getElementById('mensajeError').value = ''; 
-            }
-        );
+        accionClick('#enviarError', 'guardarReporte', '¿Estás seguro de que quieres enviar este reporte?', (statusElement, data) => {
+            alert('Reporte enviado correctamente');
+            modalManager.toggleModal('formularioError', false);
+            document.getElementById('mensajeError').value = '';
+        });
 
         const enviarErrorBtn = document.getElementById('enviarError');
         if (enviarErrorBtn) {
@@ -241,3 +233,23 @@ async function reporte() {
         }
     }
 }
+
+async function bloquearUsuario(event, response) {
+    const button = event.currentTarget;
+    alert('Usuario bloqueado.');
+    button.textContent = 'Desbloquear';
+    button.classList.remove('bloquear');
+    button.classList.add('desbloquear');
+}
+accionClick('.bloquear', 'guardarBloqueo', '¿Estás seguro de bloquear este usuario?', bloquearUsuario);
+
+
+async function desbloquearUsuario(event, response) {
+    const button = event.currentTarget;
+    alert('Usuario desbloqueado.');
+    button.textContent = 'Bloquear';
+    button.classList.remove('desbloquear');
+    button.classList.add('bloquear');
+}
+accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
+
