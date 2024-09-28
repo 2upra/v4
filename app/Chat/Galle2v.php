@@ -33,9 +33,6 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
     global $wpdb;
     $tablaMensajes = $wpdb->prefix . 'mensajes';
     $tablaConversacion = $wpdb->prefix . 'conversacion';
-    $clave = $_ENV['GALLEKEY'];
-    $iv = openssl_random_pseudo_bytes(16);
-    $mensajeCifrado = cifrarMensaje($mensaje, $clave, $iv);
 
     // Iniciar la transacción
     $wpdb->query('START TRANSACTION');
@@ -67,11 +64,10 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
         $resultado = $wpdb->insert($tablaMensajes, [
             'conversacion' => $conversacionID,
             'emisor' => $emisor,
-            'mensaje' => $mensajeCifrado,
+            'mensaje' => $mensaje, // Mensaje sin cifrado
             'fecha' => current_time('mysql'),
             'adjunto' => isset($adjunto) ? json_encode($adjunto) : null,
             'metadata' => isset($metadata) ? json_encode($metadata) : null,
-            'iv' => base64_encode($iv)
         ]);
 
         if ($resultado === false) {
@@ -82,7 +78,7 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
 
         // Confirmar la transacción
         $wpdb->query('COMMIT');
-        chatLog("Mensaje cifrado guardado con ID: $mensajeID en la conversación: $conversacionID");
+        chatLog("Mensaje guardado con ID: $mensajeID en la conversación: $conversacionID");
 
         return $mensajeID;
     } catch (Exception $e) {
