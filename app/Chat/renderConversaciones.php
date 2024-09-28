@@ -1,6 +1,12 @@
 <?php
 
 
+function conversacionesUsuario($usuarioId)
+{
+    $conversaciones = obtenerConversaciones($usuarioId);
+    return renderConversaciones($conversaciones, $usuarioId);
+}
+
 function obtenerConversaciones($usuarioId)
 {
     global $wpdb;
