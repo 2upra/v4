@@ -59,6 +59,37 @@ function descifrarMensaje($mensajeCifrado, $clave, $iv)
     }
 }
 
+/*
+
+
+*/
+
+function conversacionesUsuario($usuarioId)
+{
+    global $wpdb;
+    $tablaConversacion = $wpdb->prefix . 'conversacion';
+    $tablaMensajes = $wpdb->prefix . 'mensajes';
+
+    // Obtener conversaciones que incluyan al usuario
+    $query = $wpdb->prepare("
+        SELECT id, participantes, fecha 
+        FROM $tablaConversacion 
+        WHERE JSON_CONTAINS(participantes, %s)
+    ", json_encode($usuarioId));
+
+    chatLog("Consulta de conversaciones ejecutada: " . $query);
+
+    $conversaciones = $wpdb->get_results($query);
+
+    if ($conversaciones) {
+        chatLog("Conversaciones obtenidas: " . print_r($conversaciones, true));
+    } else {
+        chatLog("No se encontraron conversaciones para el usuario con ID: " . $usuarioId);
+    }
+
+    return renderConversaciones($conversaciones, $usuarioId);
+}
+
 function renderConversaciones($conversaciones, $usuarioId)
 {
     global $wpdb;
