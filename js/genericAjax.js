@@ -2,91 +2,6 @@ let enablelogAjax = false;
 const logAjax = enablelogAjax ? console.log : function () {};
 const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
 
-//GENERIC AJAX
-async function enviarAjax(action, data = {}) {
-    try {
-        const body = new URLSearchParams({
-            action: action,
-            ...data
-        });
-
-        logAjax('Cuerpo de la solicitud que se enviará:', body.toString());
-
-        const response = await fetch(ajaxUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: body
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        let responseData;
-        const responseText = await response.text();
-
-        try {
-            responseData = JSON.parse(responseText);
-        } catch (jsonError) {
-            console.warn('No se pudo interpretar la respuesta como JSON:', jsonError);
-            responseData = responseText;
-        }
-
-        logAjax('Respuesta del servidor:', responseData);
-        return responseData;
-    } catch (error) {
-        console.error('Error en la solicitud:', error);
-        return {success: false, message: error.message};
-    }
-}
-
-//GENERIC CLICK
-async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
-    const buttons = document.querySelectorAll(selector);
-
-    buttons.forEach(button => {
-        button.addEventListener('click', async event => {
-            const postId = event.currentTarget.dataset.postId;
-            const tipoContenido = event.currentTarget.dataset.tipoContenido;
-            logAjax(`Botón clicado. postId encontrado: ${postId}, tipoContenido: ${tipoContenido}`);
-
-            if (!postId) {
-                console.error('No se encontró postId en el botón');
-                return;
-            }
-
-            const confirmed = await confirm(confirmMessage);
-            logAjax(`Confirmación de usuario: ${confirmed ? 'Sí' : 'No'}`);
-
-            if (confirmed) {
-                const mensajeErrorInput = document.getElementById('mensajeError');
-                const detalles = mensajeErrorInput ? mensajeErrorInput.value : '';
-
-                logAjax(`Enviando solicitud AJAX para la acción: ${action} con postId: ${postId}`);
-                const data = await enviarAjax(action, {
-                    idContenido: postId,
-                    tipoContenido: tipoContenido,
-                    detalles: detalles
-                });
-
-                logAjax('Respuesta AJAX recibida:', data);
-
-                if (data.success) {
-                    logAjax(`Acción ${action} exitosa. Ejecutando callback de éxito.`);
-                    successCallback(null, data);
-                } else {
-                    console.error(`Error al realizar la acción: ${action}. Mensaje: ${data.message}`);
-                    alert('Error al enviar el reporte: ' + (data.message || 'Error desconocido'));
-                }
-            } else {
-                logAjax('Acción cancelada por el usuario.');
-            }
-        });
-    });
-}
-
 async function handleAllRequests() {
     try {
         await requestDeletion();
@@ -234,6 +149,18 @@ async function reporte() {
     }
 }
 
+/*
+tengo este problema 
+
+Ocurrió un error al procesar las solicitudes: TypeError: Cannot read properties of undefined (reading 'currentTarget')
+    at bloquearUsuario (genericAjax.js?ver=2.1.13.903105013:238:26)
+    at handleAllRequests (genericAjax.js?ver=2.1.13.903105013:99:15)
+handleAllRequests @ genericAjax.js?ver=2.1.13.903105013:102
+genericAjax.js?ver=2.1.13.903105013:56  No se encontró postId en el botón
+(anónimo) @ genericAjax.js?ver=2.1.13.903105013:56
+
+*/
+
 // Cambia bloquearUsuario
 async function bloquearUsuario(event, response) {
     const button = event.currentTarget;
@@ -254,3 +181,79 @@ async function desbloquearUsuario(event, response) {
 }
 accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
 
+//GENERIC AJAX - DEBE SER FLEXIBLE PORQUE TODA LA LOGICA DE AJAX PASA POR AQUI
+async function enviarAjax(action, data = {}) {
+    try {
+        const body = new URLSearchParams({
+            action: action,
+            ...data
+        });
+        logAjax('Cuerpo de la solicitud que se enviará:', body.toString());
+        const response = await fetch(ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: body
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        let responseData;
+        const responseText = await response.text();
+        try {
+            responseData = JSON.parse(responseText);
+        } catch (jsonError) {
+            console.warn('No se pudo interpretar la respuesta como JSON:', jsonError);
+            responseData = responseText;
+        }
+        logAjax('Respuesta del servidor:', responseData);
+        return responseData;
+    } catch (error) {
+        console.error('Error en la solicitud:', error);
+        return {success: false, message: error.message};
+    }
+}
+// GENERIC CLICK - DEBE SER FLEXIBLE PORQUE TODA LA LOGICA DE CLICK PASA POR AQUI
+async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
+    const buttons = document.querySelectorAll(selector);
+
+    buttons.forEach(button => {
+        button.addEventListener('click', async event => {
+            const post_id = event.currentTarget.dataset.post_id;
+            const tipoContenido = event.currentTarget.dataset.tipoContenido;
+            logAjax(`Botón clicado. post_id encontrado: ${post_id}, tipoContenido: ${tipoContenido}`);
+
+            if (!post_id) {
+                console.error('No se encontró post_id en el botón');
+                return;
+            }
+
+            const confirmed = await confirm(confirmMessage);
+            logAjax(`Confirmación de usuario: ${confirmed ? 'Sí' : 'No'}`);
+
+            if (confirmed) {
+                const mensajeErrorInput = document.getElementById('mensajeError');
+                const detalles = mensajeErrorInput ? mensajeErrorInput.value : '';
+                logAjax(`Enviando solicitud AJAX para la acción: ${action} con postId: ${post_id}`);
+                const data = await enviarAjax(action, {
+                    post_id: post_id,
+                    tipoContenido: tipoContenido,
+                    detalles: detalles
+                });
+
+                logAjax('Respuesta AJAX recibida:', data);
+
+                if (data.success) {
+                    logAjax(`Acción ${action} exitosa. Ejecutando callback de éxito.`);
+                    successCallback(null, data);
+                } else {
+                    console.error(`Error al realizar la acción: ${action}. Mensaje: ${data.message}`);
+                    alert('Error al enviar el reporte: ' + (data.message || 'Error desconocido'));
+                }
+            } else {
+                logAjax('Acción cancelada por el usuario.');
+            }
+        });
+    });
+}
