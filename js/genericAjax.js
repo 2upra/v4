@@ -11,8 +11,8 @@ async function handleAllRequests() {
         await rechazarColab();
         await aceptarcolab();
         await reporte();
-        await bloquearUsuario();
-        await desbloquearUsuario();
+        // await bloquearUsuario();
+        // await desbloquearUsuario();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }
@@ -161,7 +161,7 @@ genericAjax.js?ver=2.1.13.903105013:56  No se encontró postId en el botón
 
 */
 
-// Cambia bloquearUsuario
+/*
 async function bloquearUsuario(event, response) {
     const button = event.currentTarget;
     alert('Usuario bloqueado.');
@@ -180,6 +180,8 @@ async function desbloquearUsuario(event, response) {
     button.classList.add('bloquear');
 }
 accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
+
+*/
 
 //GENERIC AJAX - DEBE SER FLEXIBLE PORQUE TODA LA LOGICA DE AJAX PASA POR AQUI
 async function enviarAjax(action, data = {}) {
