@@ -24,5 +24,4 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 
 <?php
 get_footer();
-//ENCOLADORES EN PANEL.PHP
 ?>

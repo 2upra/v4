@@ -1,6 +1,7 @@
 <?php
 if (!function_exists('tablasMensaje')) {
-    function tablasMensaje() {
+    function tablasMensaje()
+    {
         global $wpdb;
         $charset_collate = $wpdb->get_charset_collate();
         $tablaMensajes = $wpdb->prefix . 'mensajes';
@@ -63,7 +64,8 @@ add_action('rest_api_init', function () {
 
 define('CIPHER', 'AES-256-CBC');
 
-function procesarMensaje($request) {
+function procesarMensaje($request)
+{
     $emisor = get_current_user_id();
     $params = $request->get_json_params();
     chatLog($params);
@@ -79,17 +81,20 @@ function procesarMensaje($request) {
     guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata);
 }
 
-function cifrarMensaje($mensaje, $clave, $iv) {
+function cifrarMensaje($mensaje, $clave, $iv)
+{
     $cifrado = openssl_encrypt($mensaje, CIPHER, $clave, 0, $iv);
     return base64_encode($cifrado);
 }
 
-function descifrarMensaje($mensajeCifrado, $clave, $iv) {
+function descifrarMensaje($mensajeCifrado, $clave, $iv)
+{
     $mensajeCifrado = base64_decode($mensajeCifrado);
     return openssl_decrypt($mensajeCifrado, CIPHER, $clave, 0, $iv);
 }
 
-function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata = null) {
+function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata = null)
+{
     global $wpdb;
     $tablaMensajes = $wpdb->prefix . 'mensajes';
     $tablaConversacion = $wpdb->prefix . 'conversacion';
@@ -143,7 +148,7 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
         // Confirmar la transacción
         $wpdb->query('COMMIT');
         chatLog("Mensaje cifrado guardado con ID: $mensajeID en la conversación: $conversacionID");
-        
+
         return $mensajeID;
     } catch (Exception $e) {
         $wpdb->query('ROLLBACK');
@@ -153,13 +158,10 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
     }
 }
 
-function conversacionesUsuario($usuarioId) {
+function conversacionesUsuario($usuarioId)
+{
     global $wpdb;
     $tablaConversacion = $wpdb->prefix . 'conversacion';
-
-    // Iniciar la captura de salida
-    ob_start();
-
     $query = $wpdb->prepare("
         SELECT id, participantes, fecha 
         FROM $tablaConversacion 
@@ -167,25 +169,34 @@ function conversacionesUsuario($usuarioId) {
     ", json_encode($usuarioId));
 
     $conversaciones = $wpdb->get_results($query);
+    return renderConversaciones($conversaciones, $usuarioId);
+}
+
+function renderConversaciones($conversaciones, $usuarioId)
+{
+    ob_start();
 
     if ($conversaciones) {
-        echo '<h2>Mis Conversaciones</h2>';
-        echo '<ul>';
-
-        foreach ($conversaciones as $conversacion) {
-            $participantes = json_decode($conversacion->participantes);
-            $otrosParticipantes = array_diff($participantes, [$usuarioId]);
-            echo '<li>';
-            echo 'Conversación ID: ' . esc_html($conversacion->id) . ' - Participantes: ' . esc_html(implode(', ', $otrosParticipantes)) . ' - Fecha: ' . esc_html($conversacion->fecha);
-            echo '</li>';
-        }
-
-        echo '</ul>';
+?>
+        <div class="modal">
+            <ul>
+                <?php foreach ($conversaciones as $conversacion):
+                    $participantes = json_decode($conversacion->participantes);
+                    $otrosParticipantes = array_diff($participantes, [$usuarioId]);
+                ?>
+                    <li>
+                        Conversación ID: <?= esc_html($conversacion->id); ?> -
+                        Participantes: <?= esc_html(implode(', ', $otrosParticipantes)); ?> -
+                        Fecha: <?= esc_html($conversacion->fecha); ?>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    <?php
     } else {
-        echo '<p>No tienes conversaciones activas.</p>';
+    ?>
+        <p>No tienes conversaciones activas.</p>
+<?php
     }
-
-    $contenido = ob_get_clean();
-
-    return $contenido;
+    return ob_get_clean();
 }
