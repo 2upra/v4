@@ -42,13 +42,10 @@ if (!function_exists('tablasMensaje')) {
 
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
-        // Ejecuta la creación de las tablas
         dbDelta($sql_conversacion);
         dbDelta($sql_mensajes);
 
-        // Si la tabla de mensajes fue creada pero no tiene la clave foránea, la añadimos
         if (!$existeMensajes) {
-            // Asegúrate de que la tabla 'conversacion' existe antes de añadir la clave foránea
             $wpdb->query("
                 ALTER TABLE $tablaMensajes 
                 ADD CONSTRAINT fk_mensajes_conversacion 
@@ -59,8 +56,6 @@ if (!function_exists('tablasMensaje')) {
         }
     }
 }
-
-tablasMensaje();
 
 
 add_action('rest_api_init', function () {
