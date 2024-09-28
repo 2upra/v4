@@ -65,17 +65,54 @@ function conversacionesUsuario($usuarioId)
     $tablaConversacion = $wpdb->prefix . 'conversacion';
     $tablaMensajes = $wpdb->prefix . 'mensajes';
 
+    // Obtener conversaciones que incluyan al usuario
     $query = $wpdb->prepare("
         SELECT id, participantes, fecha 
         FROM $tablaConversacion 
         WHERE JSON_CONTAINS(participantes, %s)
     ", json_encode($usuarioId));
 
+    chatLog("Consulta de conversaciones ejecutada: " . $query);
+
     $conversaciones = $wpdb->get_results($query);
+
+    if ($conversaciones) {
+        chatLog("Conversaciones obtenidas: " . print_r($conversaciones, true));
+    } else {
+        chatLog("No se encontraron conversaciones para el usuario con ID: " . $usuarioId);
+    }
 
     return renderConversaciones($conversaciones, $usuarioId);
 }
 
+/*
+
+2024-09-28 21:17:15 - Último mensaje obtenido: stdClass Object
+(
+    [mensaje] => bW5HaCs1T0VnY2ZqaENpMW9GUVRWMWhpT1BTNFZrVW9HRkdORVE2NFMya05qalNGODdwZHp1dUl0SFlXbCtEYw==
+    [fecha] => 2024-09-28 17:16:51
+    [iv] => up67rH2Q37N6+z1y
+)
+2024-09-28 21:17:15 - Iniciando descifrado de mensaje
+2024-09-28 21:17:15 - Mensaje descifrado exitosamente
+2024-09-28 21:17:15 - Mensaje descifrado correctamente: ����/���<�S)¸�je de prueba #124
+2024-09-28 21:17:15 - HTML generado:         <div class="modal modalConversaciones">
+            <ul class="mensajes">
+                                    <li class="mensaje">
+                        <div class="imagenMensaje">
+                            <img src="https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&#038;strip=all" alt="Imagen de perfil">
+                        </div>
+                        <div class="vistaPrevia">
+                            <p></p>
+                        </div>
+                        <div class="tiempoMensaje">
+                            <span>hace 4 horas</span>
+                        </div>
+                    </li>
+                            </ul>
+        </div>
+
+*/
 function renderConversaciones($conversaciones, $usuarioId)
 {
     global $wpdb;
@@ -95,6 +132,7 @@ function renderConversaciones($conversaciones, $usuarioId)
                     $otroParticipanteId = reset($otrosParticipantes);
                     $imagenPerfil = imagenPerfil($otroParticipanteId);
 
+                    // Obtener el último mensaje de la conversación
                     $ultimoMensaje = $wpdb->get_row($wpdb->prepare("
                         SELECT mensaje, fecha, iv 
                         FROM $tablaMensajes 
@@ -103,13 +141,30 @@ function renderConversaciones($conversaciones, $usuarioId)
                         LIMIT 1
                     ", $conversacion->id));
 
+                    chatLog("Último mensaje obtenido: " . print_r($ultimoMensaje, true));
+
                     $mensajeDescifrado = "[No hay mensajes]";
                     $fechaRelativa = "[Fecha desconocida]";
 
-                    if ($ultimoMensaje && !empty($ultimoMensaje->mensaje) && !empty($ultimoMensaje->iv)) {
-                        $mensajeDescifrado = descifrarMensaje($ultimoMensaje->mensaje, $clave, $ultimoMensaje->iv);
+                    if ($ultimoMensaje) {
+                        if (!empty($ultimoMensaje->mensaje) && !empty($ultimoMensaje->iv)) {
+                            $mensajeDescifrado = descifrarMensaje($ultimoMensaje->mensaje, $clave, $ultimoMensaje->iv);
+                            if ($mensajeDescifrado === false) {
+                                $mensajeDescifrado = "[Error al descifrar el mensaje]";
+                                chatLog("Error al descifrar el mensaje para la conversación con ID: " . $conversacion->id);
+                            } else {
+                                chatLog("Mensaje descifrado correctamente: " . $mensajeDescifrado);
+                            }
+                        } else {
+                            $mensajeDescifrado = "[Mensaje o IV faltante]";
+                            chatLog("Error: Mensaje o IV faltante para la conversación con ID: " . $conversacion->id);
+                        }
                         $fechaRelativa = tiempoRelativo($ultimoMensaje->fecha);
+                    } else {
+                        $mensajeDescifrado = "[No hay mensajes]";
+                        $fechaRelativa = "[Fecha desconocida]";
                     }
+
                 ?>
                     <li class="mensaje">
                         <div class="imagenMensaje">
@@ -132,7 +187,10 @@ function renderConversaciones($conversaciones, $usuarioId)
 <?php
     }
 
-    return ob_get_clean();
+    $htmlGenerado = ob_get_clean();
+    chatLog("HTML generado: " . $htmlGenerado);
+
+    return $htmlGenerado;
 }
 
 function tiempoRelativo($fecha)
