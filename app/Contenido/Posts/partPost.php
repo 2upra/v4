@@ -115,8 +115,10 @@ function opcionesPost($post_id, $author_id)
             <?php elseif ($current_user_id == $author_id) : ?>
                 <button class="eliminarPost" data-post-id="<?php echo $post_id; ?>">Eliminar</button>
             <?php endif; ?>
-
+            
             <button class="reporte" data-post-id="<?php echo $post_id; ?>" tipoContenido="social_post" >Reportar</button>
+
+            <button class="bloquear" data-post-id="<?php echo $post_id; ?>">Bloquear</button>
 
             <?php if (current_user_can('administrator')) : ?>
                 <button class="banearUsuario" data-post-id="<?php echo $post_id; ?>">Banear</button>
