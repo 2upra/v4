@@ -2,7 +2,7 @@
 
 function procesarMensajeTest() {
     $emisor = 1; // ID del emisor
-    $receptor = 44; // ID del receptor
+    $receptor = 2; // ID del receptor
     $mensaje_id = get_option('mensaje_test_id', 0);
     $mensaje_id++;
     $mensaje = "Este es un mensaje de prueba #" . $mensaje_id;
