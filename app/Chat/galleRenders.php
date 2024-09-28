@@ -6,7 +6,7 @@ define('CIPHER', 'AES-256-CBC');
 function cifrarMensaje($mensaje, $clave, $iv)
 {
     chatLog("Iniciando cifrado de mensaje");
-    
+
     if (empty($mensaje) || empty($clave) || empty($iv)) {
         chatLog("Error: Mensaje, clave o IV vacíos");
         return false;
@@ -18,7 +18,7 @@ function cifrarMensaje($mensaje, $clave, $iv)
             chatLog("Error en openssl_encrypt: " . openssl_error_string());
             return false;
         }
-        
+
         $resultado = base64_encode($cifrado);
         chatLog("Mensaje cifrado exitosamente");
         return $resultado;
@@ -32,7 +32,7 @@ function cifrarMensaje($mensaje, $clave, $iv)
 function descifrarMensaje($mensajeCifrado, $clave, $iv)
 {
     chatLog("Iniciando descifrado de mensaje");
-    
+
     if (empty($mensajeCifrado) || empty($clave) || empty($iv)) {
         chatLog("Error: Mensaje cifrado, clave o IV vacíos");
         return false;
@@ -133,7 +133,11 @@ function renderConversaciones($conversaciones, $usuarioId)
                             chatLog("Error: Mensaje o IV faltante para la conversación con ID: " . $conversacion->id);
                         }
                         $fechaRelativa = tiempoRelativo($ultimoMensaje->fecha);
+                    } else {
+                        $mensajeDescifrado = "[No hay mensajes]";
+                        $fechaRelativa = "[Fecha desconocida]";
                     }
+
                 ?>
                     <li class="mensaje">
                         <div class="imagenMensaje">
