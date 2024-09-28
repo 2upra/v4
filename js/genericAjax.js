@@ -143,56 +143,40 @@ async function reporte() {
     }
 }
 
+/*
+
+<button class="bloquear" data-post-id="232082">Bloquear</button>
+genericAjax.js?ver=2.1.13.454380745:148  Uncaught (in promise) TypeError: Cannot read properties of null (reading 'currentTarget')
+    at bloquearUsuario (genericAjax.js?ver=2.1.13.454380745:148:30)
+    at HTMLButtonElement.<anonymous> (genericAjax.js?ver=2.1.13.454380745:224:21)
+*/
+
 async function bloqueos() {
-    async function bloquearUsuario(event, response) {
-        const button = event.currentTarget;
-        alert('Usuario bloqueado.');
-        button.textContent = 'Desbloquear';
-        button.classList.remove('bloquear');
-        button.classList.add('desbloquear');
+    async function bloquearUsuario(event, response, post_id) {
+        const button = document.querySelector(`.bloquear[data-post-id="${post_id}"]`);
+        if (button) {
+            alert('Usuario bloqueado.');
+            button.textContent = 'Desbloquear';
+            button.classList.remove('bloquear');
+            button.classList.add('desbloquear');
+        } else {
+            return; 
+        }
     }
     accionClick('.bloquear', 'guardarBloqueo', '¿Estás seguro de bloquear este usuario?', bloquearUsuario);
 
-    async function desbloquearUsuario(event, response) {
-        const button = event.currentTarget;
-        alert('Usuario desbloqueado.');
-        button.textContent = 'Bloquear';
-        button.classList.remove('desbloquear');
-        button.classList.add('bloquear');
+    async function desbloquearUsuario(event, response, post_id) {
+        const button = document.querySelector(`.desbloquear[data-post-id="${post_id}"]`);
+        if (button) {
+            alert('Usuario desbloqueado.');
+            button.textContent = 'Bloquear';
+            button.classList.remove('desbloquear');
+            button.classList.add('bloquear');
+        } else {
+            return; 
+        }
     }
     accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
-}
-
-//GENERIC AJAX - DEBE SER FLEXIBLE PORQUE TODA LA LOGICA DE AJAX PASA POR AQUI
-async function enviarAjax(action, data = {}) {
-    try {
-        const body = new URLSearchParams({
-            action: action,
-            ...data
-        });
-        const response = await fetch(ajaxUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: body
-        });
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        let responseData;
-        const responseText = await response.text();
-        try {
-            responseData = JSON.parse(responseText);
-        } catch (jsonError) {
-            console.error('No se pudo interpretar la respuesta como JSON:', jsonError);
-            responseData = responseText;
-        }
-        return responseData;
-    } catch (error) {
-        console.error('Error en la solicitud:', error);
-        return {success: false, message: error.message};
-    }
 }
 
 // GENERIC CLICK - DEBE SER FLEXIBLE PORQUE TODA LA LOGICA DE CLICK PASA POR AQUI
@@ -229,6 +213,38 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
             }
         });
     });
+}
+
+//GENERIC AJAX - DEBE SER FLEXIBLE PORQUE TODA LA LOGICA DE AJAX PASA POR AQUI
+async function enviarAjax(action, data = {}) {
+    try {
+        const body = new URLSearchParams({
+            action: action,
+            ...data
+        });
+        const response = await fetch(ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: body
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        let responseData;
+        const responseText = await response.text();
+        try {
+            responseData = JSON.parse(responseText);
+        } catch (jsonError) {
+            console.error('No se pudo interpretar la respuesta como JSON:', jsonError);
+            responseData = responseText;
+        }
+        return responseData;
+    } catch (error) {
+        console.error('Error en la solicitud:', error);
+        return {success: false, message: error.message};
+    }
 }
 
 //REMOVER POST
