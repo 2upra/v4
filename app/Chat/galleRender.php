@@ -1,5 +1,19 @@
 <?php
 
+define('CIPHER', 'AES-256-CBC');
+
+function cifrarMensaje($mensaje, $clave, $iv)
+{
+    $cifrado = openssl_encrypt($mensaje, CIPHER, $clave, 0, $iv);
+    return base64_encode($cifrado);
+}
+
+function descifrarMensaje($mensajeCifrado, $clave, $iv)
+{
+    $mensajeCifrado = base64_decode($mensajeCifrado);
+    return openssl_decrypt($mensajeCifrado, CIPHER, $clave, 0, $iv);
+}
+
 function conversacionesUsuario($usuarioId)
 {
     global $wpdb;
@@ -13,7 +27,11 @@ function conversacionesUsuario($usuarioId)
         WHERE JSON_CONTAINS(participantes, %s)
     ", json_encode($usuarioId));
 
+    chatLog("Consulta de conversaciones ejecutada", $query);
+
     $conversaciones = $wpdb->get_results($query);
+
+    chatLog("Conversaciones obtenidas", $conversaciones);
 
     return renderConversaciones($conversaciones, $usuarioId);
 }
@@ -45,7 +63,15 @@ function renderConversaciones($conversaciones, $usuarioId)
                         LIMIT 1
                     ", $conversacion->id));
 
-                    $mensajeDescifrado = descifrarMensaje($ultimoMensaje->mensaje, $clave, $ultimoMensaje->iv);
+                    chatLog("Último mensaje obtenido", $ultimoMensaje);
+
+                    if ($ultimoMensaje) {
+                        $mensajeDescifrado = descifrarMensaje($ultimoMensaje->mensaje, $clave, $ultimoMensaje->iv);
+                        chatLog("Mensaje descifrado", $mensajeDescifrado);
+                    } else {
+                        $mensajeDescifrado = "[No hay mensajes]";
+                        chatLog("No se encontró ningún mensaje para la conversación con ID", $conversacion->id);
+                    }
 
                     $fechaRelativa = tiempoRelativo($ultimoMensaje->fecha);
                 ?>

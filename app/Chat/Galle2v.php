@@ -11,9 +11,6 @@ add_action('rest_api_init', function () {
     ));
 });
 
-
-define('CIPHER', 'AES-256-CBC');
-
 function procesarMensaje($request)
 {
     $emisor = get_current_user_id();
@@ -29,18 +26,6 @@ function procesarMensaje($request)
         return;
     }
     guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata);
-}
-
-function cifrarMensaje($mensaje, $clave, $iv)
-{
-    $cifrado = openssl_encrypt($mensaje, CIPHER, $clave, 0, $iv);
-    return base64_encode($cifrado);
-}
-
-function descifrarMensaje($mensajeCifrado, $clave, $iv)
-{
-    $mensajeCifrado = base64_decode($mensajeCifrado);
-    return openssl_decrypt($mensajeCifrado, CIPHER, $clave, 0, $iv);
 }
 
 function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata = null)
