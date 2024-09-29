@@ -44,7 +44,6 @@ function galle() {
                         conversacion: conversacion,
                         page: currentPage
                     });
-    
                     console.log(data);
     
                     if (data && data.success) {
@@ -58,11 +57,10 @@ function galle() {
     
                             if (!fechaAnterior || fechaMensaje - fechaAnterior >= 3 * 60 * 1000) {
                                 const divFecha = document.createElement('div');
-                                divFecha.textContent = formatearTiempoRelativo(mensaje.fecha); // Formatear la fecha
+                                divFecha.textContent = formatearTiempoRelativo(mensaje.fecha);
                                 divFecha.classList.add('fechaSeparador');
                                 listaMensajes.appendChild(divFecha);
                             }
-                            // Crear el mensaje
                             const li = document.createElement('li');
                             li.textContent = mensaje.mensaje;
                             li.classList.add(mensaje.clase);
@@ -71,7 +69,6 @@ function galle() {
                         });
     
                         bloqueChat.style.display = 'block';
-    
                         manejarScroll();
                         listaMensajes.scrollTop = listaMensajes.scrollHeight;
     
@@ -99,21 +96,40 @@ function galle() {
             console.error('Error en WebSocket:', error);
         };
         ws.onmessage = ({data}) => {
-            const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje, adjunto, metadata} = JSON.parse(data);
-            console.log('Mensaje recibido de', msgEmisor, ':', msgMensaje);
+            console.log('Datos recibidos:', data);
+            
+            try {
+                const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje, adjunto, metadata} = JSON.parse(data);
+                console.log('Mensaje desestructurado:', msgEmisor, msgReceptor, msgMensaje, adjunto, metadata);
         
-            // Verificar si el mensaje pertenece a la conversación actual
-            if ((msgEmisor == emisor && msgReceptor == receptor) || (msgEmisor == receptor && msgReceptor == emisor)) {
-                const listaMensajes = document.querySelector('.listaMensajes');
-                if (listaMensajes) {
-                    const li = document.createElement('li');
-                    li.textContent = msgMensaje;
-                    li.classList.add(msgEmisor === emisor ? 'mensajeEnviado' : 'mensajeRecibido');
-                    listaMensajes.appendChild(li);
+                // Verificar si los emisor y receptor coinciden con nuestra lógica
+                if ((msgEmisor == emisor && msgReceptor == receptor) || (msgEmisor == receptor && msgReceptor == emisor)) {
+                    console.log('El mensaje es relevante para la conversación actual.');
         
-                    // Hacer scroll hacia abajo para mostrar el nuevo mensaje
-                    listaMensajes.scrollTop = listaMensajes.scrollHeight;
+                    const listaMensajes = document.querySelector('.listaMensajes');
+        
+                    // Verificar que el elemento existe
+                    if (listaMensajes) {
+                        console.log('Elemento .listaMensajes encontrado.');
+        
+                        const li = document.createElement('li');
+                        li.textContent = msgMensaje;
+                        li.classList.add(msgEmisor === emisor ? 'mensajeEnviado' : 'mensajeRecibido');
+        
+                        // Verificar si la clase correcta se añade al elemento
+                        console.log('Clase añadida al mensaje:', li.className);
+        
+                        listaMensajes.appendChild(li);
+                        listaMensajes.scrollTop = listaMensajes.scrollHeight;
+                        console.log('Mensaje añadido a la lista y desplazamiento ajustado.');
+                    } else {
+                        console.log('Elemento .listaMensajes no encontrado. Asegúrate de que el DOM está correctamente estructurado.');
+                    }
+                } else {
+                    console.log('El mensaje no es relevante para la conversación actual. Emisor y receptor no coinciden.');
                 }
+            } catch (error) {
+                console.error('Error al analizar el mensaje JSON o desestructurar:', error);
             }
         };
     };
