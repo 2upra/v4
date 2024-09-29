@@ -84,7 +84,8 @@ function galle() {
             });
         });
     }
-
+    //const emisor = galleV2.emisor;
+    //const wsUrl = 'wss://2upra.com/ws';
     // WebSocket Connection
     const connectWebSocket = () => {
         ws = new WebSocket(wsUrl);
@@ -129,6 +130,10 @@ function galle() {
     };
 
     /*
+
+    el mensaje no se esta enviando al websocket y luego llegando al servidor, no hay mensajes de error, no se que pasa
+
+    //WebSocket está abierto. Enviando mensaje...
 
     */
 
