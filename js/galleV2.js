@@ -115,30 +115,36 @@ function galle() {
     }
 
     function manejarMensajeWebSocket(data) {
+        console.log('Iniciando manejo de mensaje WebSocket');
         try {
+            console.log('Datos recibidos:', data);
+            
             const { emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje } = JSON.parse(data);
-
+            console.log('Mensaje parseado:', { msgEmisor, msgReceptor, msgMensaje });
+    
             if (msgReceptor == emisor) {
-                // Mensaje recibido por el usuario actual
+                console.log('El mensaje es para este emisor:', emisor);
                 if (msgEmisor == receptor) {
-                    // La conversación con el emisor está abierta
+                    console.log('El mensaje proviene del receptor actual:', receptor);
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', new Date());
+                    console.log('Mensaje agregado al chat como "mensajeIzquierda".');
                 } else {
-                    // La conversación no está abierta, actualizar la lista o notificar al usuario
+                    console.log('El mensaje proviene de un nuevo emisor:', msgEmisor);
                     actualizarListaConversaciones(msgEmisor, msgMensaje);
+                    console.log('Lista de conversaciones actualizada.');
                 }
             } else if (msgEmisor == emisor && msgReceptor == receptor) {
-                // Mensaje enviado por el usuario actual
+                console.log('El mensaje es una respuesta para el receptor actual:', receptor);
                 agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', new Date());
+                console.log('Mensaje agregado al chat como "mensajeDerecha".');
             }
         } catch (error) {
             console.error('Error al manejar el mensaje de WebSocket:', error);
         }
+        console.log('Finalizando manejo de mensaje WebSocket');
     }
 
     function actualizarListaConversaciones(emisorMensaje, ultimoMensaje) {
-        // Implementar lógica para actualizar la lista de conversaciones
-        // Por ejemplo, mostrar una notificación o agregar la conversación a la lista
         alert(`Nuevo mensaje de ${emisorMensaje}: ${ultimoMensaje}`);
     }
 
