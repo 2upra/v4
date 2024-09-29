@@ -10,40 +10,52 @@ function galle() {
     abrirConversacion();
     manejarScroll();
 
-    /*
-    No se pudieron obtener los mensajes: undefined
-    (anónimo) @ galleV2.js?ver=2.0.1.933530379:30
-
-    */
     function abrirConversacion() {
+        // Agregamos un log para verificar que se están obteniendo los elementos correctamente
+        console.log('Iniciando abrirConversacion');
+
         document.querySelectorAll('.mensaje').forEach(item => {
+            // Agregamos un log para cada item encontrado
+            console.log('Elemento .mensaje encontrado:', item);
+
             item.addEventListener('click', async () => {
                 const conversacion = item.getAttribute('data-conversacion');
+                console.log('Conversación seleccionada:', conversacion); // Log para verificar que se obtiene el atributo correctamente
+
                 currentPage = 1;
                 try {
+                    console.log('Enviando solicitud AJAX para obtener el chat con la conversación:', conversacion);
+
                     const data = await enviarAjax('obtenerChat', {
                         conversacion: conversacion,
                         page: currentPage
                     });
-    
+
+                    // Log para verificar la respuesta del servidor
+                    console.log('Respuesta del servidor:', data);
+
                     if (data && data.success) {
+                        console.log('Mensajes obtenidos con éxito:', data.mensajes);
+
                         const chatHtml = renderChat(data.mensajes, emisor);
                         const chatContainer = document.querySelector('.bloqueChat');
                         chatContainer.innerHTML = chatHtml;
                         chatContainer.style.display = 'block';
                     } else {
+                        // Si no se obtuvo éxito en la respuesta, mostramos el mensaje de error
                         const errorMessage = data.message || 'Error desconocido al obtener los mensajes.';
                         console.error('No se pudieron obtener los mensajes:', errorMessage);
                         alert(errorMessage); // Para una mejor retroalimentación al usuario
                     }
                 } catch (error) {
+                    // Capturamos cualquier error en la solicitud AJAX
                     console.error('Error en la solicitud AJAX:', error);
                     alert('Ha ocurrido un error al intentar abrir la conversación.');
                 }
             });
         });
     }
-    
+
     function manejarScroll() {
         const listaMensajes = document.querySelector('.listaMensajes');
         if (listaMensajes) {
