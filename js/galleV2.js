@@ -1,3 +1,5 @@
+//Inicialmente cuando cargan los mensajes aprecen con el tiempo correcto pero cuando se actualizan aparece siempre con "hace 2856 semanas"
+
 function formatearTiempoRelativo(fecha) {
     const ahora = new Date();
     const diferenciaSegundos = Math.floor((ahora - new Date(fecha)) / 1000);
@@ -111,6 +113,7 @@ function galle() {
             const divFecha = document.createElement('div');
             divFecha.textContent = formatearTiempoRelativo(fecha);
             divFecha.classList.add('fechaSeparador');
+            divFecha.setAttribute('data-fecha', fechaMensaje.toISOString()); // Establecer 'data-fecha' correctamente
 
             if (insertAtTop) {
                 listaMensajes.insertBefore(divFecha, listaMensajes.firstChild);
