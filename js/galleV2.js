@@ -176,6 +176,7 @@ function galle() {
             if (msgReceptor == emisor) {
                 if (msgEmisor == receptor) {
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', new Date());
+                    actualizarListaConversaciones(msgEmisor, msgMensaje);
                 } else {
                     actualizarListaConversaciones(msgEmisor, msgMensaje);
                 }
