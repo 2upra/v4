@@ -122,7 +122,7 @@ function renderChat()
                 aqui debe mostrar los mensajes 
             </ul>
             <div class="chatEnvio">
-                <textarea class="mensajeContenido"></textarea>
+                <textarea class="mensajeContenido" rows="1"></textarea>
                 <button class="enviarMensaje"><?php echo $GLOBALS['enviarMensaje']; ?></button>
             </div>
         </div>
