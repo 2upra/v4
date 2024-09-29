@@ -49,7 +49,7 @@ function galle() {
                 currentPage = 1;
 
                 try {
-                    const data = await enviarAjax('obtenerChat', { conversacion, page: currentPage });
+                    const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
                     if (data?.success) {
                         mostrarMensajes(data.data.mensajes);
                         document.querySelector('.bloqueChat').style.display = 'block';
@@ -108,21 +108,63 @@ function galle() {
         }
     }
 
+    let pingInterval;
+
+    init();
+
+    function init() {
+        abrirConversacion();
+        manejarScroll();
+        connectWebSocket();
+        setupEnviarMensajeHandler();
+    }
+
     function connectWebSocket() {
         ws = new WebSocket(wsUrl);
-        ws.onopen = () => console.log('WebSocket conectado');
-        ws.onclose = () => setTimeout(connectWebSocket, 5000);
+
+        ws.onopen = () => {
+            console.log('WebSocket conectado');
+
+            // Enviar el identificador del emisor al servidor
+            ws.send(JSON.stringify({emisor}));
+
+            // Iniciar el ping
+            pingInterval = setInterval(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({type: 'ping'}));
+                    console.log('Ping enviado al servidor');
+                }
+            }, 30000); // cada 30 segundos
+        };
+
+        ws.onclose = event => {
+            console.log('WebSocket cerrado:', event);
+            clearInterval(pingInterval);
+            setTimeout(connectWebSocket, 5000);
+        };
+
         ws.onerror = error => console.error('Error en WebSocket:', error);
-        ws.onmessage = ({ data }) => manejarMensajeWebSocket(data);
+
+        ws.onmessage = ({data}) => {
+            const message = JSON.parse(data);
+            if (message.type === 'pong') {
+                console.log('Pong recibido del servidor');
+            } else if (message.type === 'set_emisor') {
+                // El servidor solicita el identificador del emisor
+                ws.send(JSON.stringify({emisor}));
+            } else {
+                manejarMensajeWebSocket(JSON.stringify(message));
+            }
+        };
     }
 
     function manejarMensajeWebSocket(data) {
         try {
-            const { emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje } = JSON.parse(data);
-    
+            const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
+
             console.log('Emisor actual:', emisor);
             console.log('Mensaje recibido - Emisor:', msgEmisor, 'Receptor:', msgReceptor, 'Mensaje:', msgMensaje);
-    
+
             if (msgReceptor == emisor) {
                 if (msgEmisor == receptor) {
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', new Date());
@@ -142,7 +184,7 @@ function galle() {
     }
 
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null) {
-        const messageData = { emisor, receptor, mensaje, adjunto, metadata };
+        const messageData = {emisor, receptor, mensaje, adjunto, metadata};
 
         if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(messageData));
@@ -173,7 +215,7 @@ function galle() {
         listaMensajes?.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0) {
                 currentPage++;
-                const data = await enviarAjax('obtenerChat', { conversacion, page: currentPage });
+                const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
                 if (data?.success) {
                     const mensajes = data.data.mensajes;
                     let fechaAnterior = null;
