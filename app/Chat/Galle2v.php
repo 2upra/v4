@@ -21,18 +21,19 @@ add_action('rest_api_init', function () {
         'methods' => 'POST',
         'callback' => 'procesarMensaje',
         'permission_callback' => function () {
-            return true; 
+            return true;
         }
     ));
 });
 
-function procesarMensaje($request) {
+function procesarMensaje($request)
+{
     //esto realmente parece que nunca se inicia
     chatLog($request, 'Iniciando procesarMensaje');
-    
+
     $params = $request->get_json_params();
     chatLog($request, 'Parámetros recibidos: ' . json_encode($params));
-    
+
     $emisor = isset($params['emisor']) ? $params['emisor'] : null;
     $receptor = isset($params['receptor']) ? $params['receptor'] : null;
     $mensaje = isset($params['mensaje']) ? $params['mensaje'] : null;
@@ -43,12 +44,12 @@ function procesarMensaje($request) {
         chatLog($request, 'Error: Datos incompletos');
         return new WP_Error('datos_incompletos', 'Faltan datos requeridos', array('status' => 400));
     }
-    
+
     chatLog($request, 'Intentando guardar mensaje');
-    
+
     try {
         $resultado = guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata);
-        
+
         if ($resultado) {
             chatLog($request, 'Mensaje guardado con éxito');
             return new WP_REST_Response(['success' => true], 200);
@@ -62,6 +63,7 @@ function procesarMensaje($request) {
     }
 }
 
+//tengo la duda de como se debería guardar los participandtes, porque cambie algunas cosas y ahora hay 2 versiones, una en donde los participantes se guardan asi ["1","44"] y anteriormente era asi [1,44] en la base datos, tengo la duda de cual es la diferencia es mejor 
 function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata = null)
 {
     global $wpdb;
@@ -74,11 +76,11 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
     try {
         // Intentar obtener la conversación
         $query = $wpdb->prepare("
-            SELECT id FROM $tablaConversacion
-            WHERE tipo = 1
-            AND JSON_CONTAINS(participantes, %s)
-            AND JSON_CONTAINS(participantes, %s)
-        ", json_encode($emisor), json_encode($receptor));
+        SELECT id FROM $tablaConversacion
+        WHERE tipo = 1
+        AND JSON_CONTAINS(participantes, %s)
+        AND JSON_CONTAINS(participantes, %s)
+    ", json_encode((int)$emisor), json_encode((int)$receptor));
 
         $conversacionID = $wpdb->get_var($query);
 
@@ -98,7 +100,7 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
         $resultado = $wpdb->insert($tablaMensajes, [
             'conversacion' => $conversacionID,
             'emisor' => $emisor,
-            'mensaje' => $mensaje, // Mensaje sin cifrado
+            'mensaje' => $mensaje,
             'fecha' => current_time('mysql'),
             'adjunto' => isset($adjunto) ? json_encode($adjunto) : null,
             'metadata' => isset($metadata) ? json_encode($metadata) : null,
@@ -122,5 +124,3 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
         return false;
     }
 }
-
-
