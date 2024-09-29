@@ -170,6 +170,7 @@ function galle() {
         };
     }
 
+    /
     function manejarMensajeWebSocket(data) {
         try {
             const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
@@ -182,6 +183,7 @@ function galle() {
                 }
             } else if (msgEmisor == emisor && msgReceptor == receptor) {
                 agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', new Date());
+                actualizarListaConversaciones(msgEmisor, msgMensaje);
             }
         } catch (error) {
             console.error('Error al manejar el mensaje de WebSocket:', error);
