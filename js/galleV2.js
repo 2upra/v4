@@ -71,7 +71,6 @@ function galle() {
                             li.textContent = mensaje.mensaje; 
                             li.classList.add(mensaje.clase); 
                             listaMensajes.appendChild(li);
-    r
                             fechaAnterior = fechaMensaje;
                         });
     
