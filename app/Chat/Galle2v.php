@@ -11,25 +11,37 @@ add_action('rest_api_init', function () {
 });
 
 function procesarMensaje($request) {
-    $params = $request->get_json_params();
-    chatLog($request);
+    chatLog($request, 'Iniciando procesarMensaje');
     
-    $emisor = $params['emisor'];
-    $receptor = $params['receptor'];
-    $mensaje = $params['mensaje'];
+    $params = $request->get_json_params();
+    chatLog($request, 'Parámetros recibidos: ' . json_encode($params));
+    
+    $emisor = isset($params['emisor']) ? $params['emisor'] : null;
+    $receptor = isset($params['receptor']) ? $params['receptor'] : null;
+    $mensaje = isset($params['mensaje']) ? $params['mensaje'] : null;
     $adjunto = isset($params['adjunto']) ? $params['adjunto'] : null;
     $metadata = isset($params['metadata']) ? $params['metadata'] : null;
 
     if (!$emisor || !$receptor || !$mensaje) {
+        chatLog($request, 'Error: Datos incompletos');
         return new WP_Error('datos_incompletos', 'Faltan datos requeridos', array('status' => 400));
     }
     
-    $resultado = guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata);
+    chatLog($request, 'Intentando guardar mensaje');
     
-    if ($resultado) {
-        return new WP_REST_Response(['success' => true], 200);
-    } else {
-        return new WP_Error('error_guardado', 'No se pudo guardar el mensaje', array('status' => 500));
+    try {
+        $resultado = guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata);
+        
+        if ($resultado) {
+            chatLog($request, 'Mensaje guardado con éxito');
+            return new WP_REST_Response(['success' => true], 200);
+        } else {
+            chatLog($request, 'Error: No se pudo guardar el mensaje');
+            return new WP_Error('error_guardado', 'No se pudo guardar el mensaje', array('status' => 500));
+        }
+    } catch (Exception $e) {
+        chatLog($request, 'Excepción al guardar mensaje: ' . $e->getMessage());
+        return new WP_Error('error_interno', 'Se produjo un error interno', array('status' => 500));
     }
 }
 
