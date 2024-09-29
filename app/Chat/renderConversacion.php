@@ -1,35 +1,5 @@
 <?php
 
-
-
-/*
-
-    function abrirConversacion() {
-        document.querySelectorAll('.mensaje').forEach(item => {
-            item.addEventListener('click', async () => {
-                // const receptor = item.getAttribute('data-receptor');
-                const conversacion = item.getAttribute('data-conversacion');
-                currentPage = 1;
-                const data = await enviarAjax('obtenerChat', {
-                    conversacion: conversacion,
-                    page: currentPage
-                });
-
-                if (data && data.success) {
-                    const chatHtml = renderChat(data.mensajes, emisor);
-                    const chatContainer = document.querySelector('.bloqueChat');
-                    chatContainer.innerHTML = chatHtml;
-                    chatContainer.style.display = 'block';
-                } else {
-                    console.error('No se pudieron obtener los mensajes:', data.message);
-                }
-            });
-        });
-    }
-
-*/
-
-
 function obtenerChat() {
     if (!is_user_logged_in()) {
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));

@@ -104,7 +104,7 @@ function galle() {
 
         ws.onclose = () => {
             console.log('WebSocket cerrado, reconectando...');
-            setTimeout(connectWebSocket, 5000); /
+            setTimeout(connectWebSocket, 5000);
         };
 
         ws.onerror = error => {
