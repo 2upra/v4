@@ -171,26 +171,38 @@ function galle() {
     }
 
     function manejarMensajeWebSocket(data) {
+        console.log('Mensaje recibido a través de WebSocket:', data);
+    
         try {
-            const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
-
+            const { emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje } = JSON.parse(data);
+            console.log('Datos del mensaje parseado:', { msgEmisor, msgReceptor, msgMensaje });
+    
             // Si eres el receptor del mensaje
             if (msgReceptor === emisor) {
+                console.log('El mensaje es para este emisor:', emisor);
+    
                 if (msgEmisor === receptor) {
+                    console.log('Receptor coincide, agregando mensaje al chat (izquierda).');
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', new Date());
                 }
-                actualizarListaConversaciones(msgEmisor, msgMensaje); // Actualizar usando emisor
-
-                // Si eres el emisor del mensaje
+    
+                console.log('Actualizando lista de conversaciones para emisor:', msgEmisor);
+                actualizarListaConversaciones(msgEmisor, msgMensaje);
+    
+            // Si eres el emisor del mensaje
             } else if (msgEmisor === emisor && msgReceptor === receptor) {
+                console.log('El mensaje es de este emisor y receptor coincide, agregando mensaje al chat (derecha).');
                 agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', new Date());
-                actualizarListaConversaciones(msgReceptor, msgMensaje); // Actualizar usando receptor
+    
+                console.log('Actualizando lista de conversaciones para receptor:', msgReceptor);
+                actualizarListaConversaciones(msgReceptor, msgMensaje);
+            } else {
+                console.log('El mensaje recibido no se ajusta a ninguna de las condiciones manejadas.');
             }
         } catch (error) {
             console.error('Error al manejar el mensaje de WebSocket:', error);
         }
     }
-
     // Función para actualizar la lista de conversaciones
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
         console.log('Función actualizarListaConversaciones llamada con:', {usuarioId, ultimoMensaje});
