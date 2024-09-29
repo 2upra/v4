@@ -174,7 +174,7 @@ function galle() {
                 enviarMensaje();
             }
         });
-
+        
         const mensajeInput = document.querySelector('.mensajeContenido');
         mensajeInput.addEventListener('keydown', event => {
             if (event.key === 'Enter') {
@@ -197,48 +197,34 @@ function galle() {
         }
     }
 
-    function throttle(func, delay) {
-        let lastCall = 0;
-        return function(...args) {
-            const now = new Date().getTime();
-            if (now - lastCall < delay) {
-                return;
-            }
-            lastCall = now;
-            return func(...args);
-        };
-    }
-    
     function manejarScroll() {
         const listaMensajes = document.querySelector('.listaMensajes');
-        
-        const cargarMensajes = throttle(async () => {
-            currentPage++;
-            const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
-            if (data?.success) {
-                const mensajes = data.data.mensajes;
-                let fechaAnterior = null;
-                mensajes.reverse().forEach(mensaje => {
-                    agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true);
-                    fechaAnterior = new Date(mensaje.fecha);
-                });
+        let puedeDesplazar = true;
     
-                // Desplazar al primer mensaje suavemente
-                const primerMensaje = listaMensajes.querySelector('li');
-                if (primerMensaje) {
-                    primerMensaje.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            }
-        }, 2000); // Esperar 2 segundos antes de permitir otro scroll
-    
-        listaMensajes?.addEventListener('scroll', e => {
+        listaMensajes?.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0) {
-                cargarMensajes();
+                if (!puedeDesplazar) {
+                    return;
+                }
+    
+                puedeDesplazar = false;
+                setTimeout(() => {
+                    puedeDesplazar = true;
+                }, 2000);
+    
+                currentPage++;
+                const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
+                if (data?.success) {
+                    const mensajes = data.data.mensajes;
+                    let fechaAnterior = null;
+                    mensajes.reverse().forEach(mensaje => {
+                        agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true);
+                        fechaAnterior = new Date(mensaje.fecha);
+                    });
+                    const primerMensaje = listaMensajes.querySelector('li');
+                    primerMensaje && primerMensaje.scrollIntoView();
+                }
             }
         });
     }
-
 }
