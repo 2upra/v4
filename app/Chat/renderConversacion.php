@@ -6,9 +6,11 @@ function obtenerChat()
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));
         wp_die();
     }
+
     $conversacion = isset($_POST['conversacion']) ? intval($_POST['conversacion']) : 0;
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
     $mensajesPorPagina = 10;
+
     if ($conversacion <= 0) {
         wp_send_json_error(array('message' => 'ID de conversación inválido.'));
         wp_die();
@@ -18,19 +20,26 @@ function obtenerChat()
     $tablaMensajes = $wpdb->prefix . 'mensajes';
     $offset = ($page - 1) * $mensajesPorPagina;
     $usuarioActual = get_current_user_id();
+
+    // Cambiamos el orden a DESC para obtener los mensajes más recientes
     $query = $wpdb->prepare("
         SELECT mensaje, emisor AS remitente, fecha
-        FROM $tablaMensajes 
+        FROM $tablaMensajes
         WHERE conversacion = %d
-        ORDER BY fecha ASC
+        ORDER BY fecha DESC
         LIMIT %d OFFSET %d
     ", $conversacion, $mensajesPorPagina, $offset);
 
     $mensajes = $wpdb->get_results($query);
+    
     if ($mensajes === null) {
         wp_send_json_error(array('message' => 'Error en la consulta a la base de datos.'));
         wp_die();
     }
+
+    // Cambiamos el orden de los mensajes para que se muestren en el orden correcto
+    $mensajes = array_reverse($mensajes);
+
     foreach ($mensajes as $mensaje) {
         $mensaje->clase = ($mensaje->remitente == $usuarioActual) ? 'mensajeDerecha' : 'mensajeIzquierda';
     }
@@ -57,7 +66,7 @@ function renderChat()
 
                 </div>
                 <div>
-                    
+
                 </div>
             </div>
             <ul class="listaMensajes">
