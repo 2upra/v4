@@ -103,7 +103,7 @@ function renderchats($conversaciones, $usuarioId)
     return $htmlGenerado;
 }
 ?>
-<?php 
+<?php
 
 function tiempoRelativo($fecha)
 {

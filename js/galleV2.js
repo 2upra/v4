@@ -193,30 +193,50 @@ function galle() {
 
     // Función para actualizar la lista de conversaciones
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
+        console.log('Función actualizarListaConversaciones llamada con:', {usuarioId, ultimoMensaje});
+
         const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
+        console.log('Elementos seleccionados con querySelectorAll:', listaMensajes);
+
         let conversacionActualizada = false;
 
         listaMensajes.forEach(mensaje => {
+            console.log('Revisando mensaje:', mensaje);
+
             const receptorId = mensaje.getAttribute('data-receptor');
+            console.log('Receptor ID del mensaje:', receptorId);
 
             // Verifica si el receptor o emisor coincide con el id del usuario
             if (receptorId == usuarioId) {
+                console.log('Receptor ID coincide con Usuario ID:', receptorId);
+
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
+                    console.log('Vista previa encontrada:', vistaPrevia);
                     vistaPrevia.textContent = ultimoMensaje;
+                } else {
+                    console.log('No se encontró vista previa en el mensaje.');
                 }
+
                 const fechaRelativa = formatearTiempoRelativo(new Date());
+                console.log('Fecha relativa calculada:', fechaRelativa);
+
                 const tiempoMensaje = mensaje.querySelector('.tiempoMensaje span');
                 if (tiempoMensaje) {
+                    console.log('Elemento tiempo encontrado:', tiempoMensaje);
                     tiempoMensaje.textContent = fechaRelativa;
+                } else {
+                    console.log('No se encontró el elemento de tiempo en el mensaje.');
                 }
 
                 conversacionActualizada = true;
+            } else {
+                console.log('Receptor ID no coincide con Usuario ID:', receptorId);
             }
         });
 
         if (!conversacionActualizada) {
-        
+            console.log('No se actualizó ninguna conversación existente, agregando nueva conversación.');
             agregarNuevaConversacionALaLista(usuarioId, ultimoMensaje);
         }
     }
@@ -233,7 +253,7 @@ function galle() {
         const imagenMensaje = document.createElement('div');
         imagenMensaje.classList.add('imagenMensaje');
         const img = document.createElement('img');
-        img.src = obtenerImagenPerfil(usuarioId); 
+        img.src = obtenerImagenPerfil(usuarioId);
         img.alt = 'Imagen de perfil';
         imagenMensaje.appendChild(img);
 
