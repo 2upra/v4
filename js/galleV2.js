@@ -17,7 +17,7 @@ function galle() {
     
             item.addEventListener('click', async () => {
                 const conversacion = item.getAttribute('data-conversacion');
-                console.log('Conversación seleccionada:', conversacion); 
+                console.log('Conversación seleccionada:', conversacion);
                 currentPage = 1;
                 try {
                     console.log('Enviando solicitud AJAX para obtener el chat con la conversación:', conversacion);
@@ -28,19 +28,34 @@ function galle() {
                     });
                     console.log('Respuesta del servidor:', data);
     
-                    // Accede a los mensajes correctamente
                     if (data && data.success) {
-                        const mensajes = data.data.mensajes;  // Acceder a los mensajes correctamente
+                        const mensajes = data.data.mensajes;
                         console.log('Mensajes obtenidos con éxito:', mensajes);
     
-                        const chatHtml = renderChat(mensajes, emisor);
-                        const chatContainer = document.querySelector('.bloqueChat');
-                        chatContainer.innerHTML = chatHtml;
-                        chatContainer.style.display = 'block';
+                        // Seleccionamos el bloque de chat y la lista de mensajes
+                        const bloqueChat = document.querySelector('.bloqueChat');
+                        const listaMensajes = document.querySelector('.listaMensajes');
+                        
+                        // Borramos el contenido anterior de la lista de mensajes
+                        listaMensajes.innerHTML = '';
+    
+                        // Renderizamos los nuevos mensajes
+                        mensajes.forEach(mensaje => {
+                            const li = document.createElement('li');
+                            li.textContent = mensaje.contenido; // Asumiendo que 'contenido' es el campo del mensaje
+                            listaMensajes.appendChild(li);
+                        });
+    
+                        // Hacemos visible el bloque del chat
+                        bloqueChat.style.display = 'block';
+    
+                        // Asegurarnos de que el bloque de chat esté visible
+                        console.log('Mostrando el bloque del chat y los mensajes.');
+    
                     } else {
                         const errorMessage = data.message || 'Error desconocido al obtener los mensajes.';
                         console.error('No se pudieron obtener los mensajes:', errorMessage);
-                        alert(errorMessage); 
+                        alert(errorMessage);
                     }
                 } catch (error) {
                     console.error('Error en la solicitud AJAX:', error);
@@ -48,51 +63,6 @@ function galle() {
                 }
             });
         });
-    }
-
-    /*
-
-    */
-
-    function renderChat(mensajes, usuarioId) {
-        let html = '';
-    
-        if (mensajes && mensajes.length > 0) {
-            html += '<ul class="listaMensajes">';
-            mensajes.forEach(mensaje => {
-                const esRemitente = mensaje.remitente == usuarioId;
-                const claseMensaje = esRemitente ? 'mensajeDerecha' : 'mensajeIzquierda';
-                const imagenPerfil = !esRemitente ? imagenPerfil(mensaje.remitente) : null;
-                const fechaRelativa = tiempoRelativo(mensaje.fecha);
-    
-                html += `<li class="mensaje ${claseMensaje}">`;
-                if (!esRemitente) {
-                    html += `
-                        <div class="imagenMensaje">
-                            <img src="${imagenPerfil}" alt="Imagen de perfil">
-                        </div>`;
-                }
-                html += `
-                    <div class="contenidoMensaje">
-                        <p>${mensaje.mensaje}</p>
-                        <span class="fechaMensaje">${fechaRelativa}</span>
-                    </div>
-                </li>`;
-            });
-            html += '</ul>';
-            // Añadir el campo de texto y botón para enviar un mensaje
-            html += `
-                <div>
-                    <textarea class="mensajeContenido"></textarea>
-                    <button class="enviarMensaje">Enviar</button>
-                </div>
-            `;
-        } else {
-            // Si no hay mensajes, mostrar el mensaje correspondiente
-            html += '<p>No hay mensajes en esta conversación.</p>';
-        }
-    
-        return html;
     }
 
     function manejarScroll() {
@@ -116,8 +86,6 @@ function galle() {
             });
         }
     }
-
-
 
     // WebSocket Connection
     const connectWebSocket = () => {

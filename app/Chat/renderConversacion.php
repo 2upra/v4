@@ -112,48 +112,21 @@ function obtenerChat()
 add_action('wp_ajax_obtenerChat', 'obtenerChat');
 
 
-/*
-function renderChat($mensajes, $usuarioId)
+
+function renderChat()
 {
     ob_start();
-
-    if ($mensajes) {
 ?>
         <div class="bloque bloqueChat" style="display: none;">
             <ul class="listaMensajes">
-                <?php
-                foreach ($mensajes as $mensaje):
-                    $esRemitente = ($mensaje->remitente == $usuarioId); 
-                    $claseMensaje = $esRemitente ? 'mensajeDerecha' : 'mensajeIzquierda';
-                    $imagenPerfil = !$esRemitente ? imagenPerfil($mensaje->remitente) : null;
-                    $fechaRelativa = tiempoRelativo($mensaje->fecha);
-                ?>
-                    <li class="mensaje <?= esc_attr($claseMensaje); ?>">
-                        <?php if (!$esRemitente): ?>
-                            <div class="imagenMensaje">
-                                <img src="<?= esc_url($imagenPerfil); ?>" alt="Imagen de perfil">
-                            </div>
-                        <?php endif; ?>
-                        <div class="contenidoMensaje">
-                            <p><?= esc_html($mensaje->mensaje); ?></p>
-                            <span class="fechaMensaje"><?= esc_html($fechaRelativa); ?></span>
-                        </div>
-                    </li>
-                <?php endforeach; ?>
+                aqui debe mostrar los mensajes 
             </ul>
             <div>
                 <textarea class="mensajeContenido"></textarea>
                 <button class="enviarMensaje"></button>
             </div>
         </div>
-    <?php
-    } else {
-    ?>
-        <p>No hay mensajes en esta conversación.</p>
 <?php
-    }
-
     $htmlGenerado = ob_get_clean();
     return $htmlGenerado;
 }
-    */
