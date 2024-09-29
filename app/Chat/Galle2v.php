@@ -12,6 +12,7 @@ add_action('rest_api_init', function () {
 
 function procesarMensaje($request) {
     $params = $request->get_json_params();
+    chatLog($request);
     
     $emisor = $params['emisor'];
     $receptor = $params['receptor'];
