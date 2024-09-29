@@ -169,40 +169,37 @@ function galle() {
             }
         };
     }
-    
+
     function manejarMensajeWebSocket(data) {
         try {
             const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
 
-            // Para el receptor del mensaje
+            // Si eres el receptor del mensaje
             if (msgReceptor === emisor) {
                 if (msgEmisor === receptor) {
-                    // Mensaje recibido de la persona con la que está chateando
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', new Date());
                 }
-                // Actualizar siempre la lista de conversaciones para el receptor
-                actualizarListaConversaciones(msgEmisor, msgMensaje);
+                actualizarListaConversaciones(msgEmisor, msgMensaje); // Actualizar usando emisor
 
-                // Para el emisor del mensaje (quien lo envía)
+                // Si eres el emisor del mensaje
             } else if (msgEmisor === emisor && msgReceptor === receptor) {
-                // El mensaje fue enviado por el emisor al receptor actual
                 agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', new Date());
-                actualizarListaConversaciones(msgReceptor, msgMensaje); // Actualiza usando el receptor como referencia
+                actualizarListaConversaciones(msgReceptor, msgMensaje); // Actualizar usando receptor
             }
         } catch (error) {
             console.error('Error al manejar el mensaje de WebSocket:', error);
         }
     }
 
-    function actualizarListaConversaciones(emisorMensaje, ultimoMensaje) {
+    function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
         const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
         let conversacionActualizada = false;
 
         listaMensajes.forEach(mensaje => {
             const receptorId = mensaje.getAttribute('data-receptor');
 
-            // Verifica si el emisor o el receptor es el actual
-            if (receptorId === emisorMensaje) {
+            // Verifica si el receptor o emisor coincide con el id del usuario
+            if (receptorId == usuarioId) {
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
                     vistaPrevia.textContent = ultimoMensaje;
@@ -218,7 +215,7 @@ function galle() {
         });
 
         if (!conversacionActualizada) {
-            console.warn(`No se encontró una conversación con el receptor: ${emisorMensaje}`);
+            console.warn(`No se encontró una conversación con el receptor/emisor: ${usuarioId}`);
         }
     }
 
