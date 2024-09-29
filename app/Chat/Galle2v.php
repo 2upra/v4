@@ -21,44 +21,31 @@ add_action('rest_api_init', function () {
         'methods' => 'POST',
         'callback' => 'procesarMensaje',
         'permission_callback' => function () {
-            return is_user_logged_in(); 
+            return true; 
         }
     ));
 });
 
 function procesarMensaje($request) {
-    // Log para saber que la función fue iniciada
+    //esto realmente parece que nunca se inicia
     chatLog($request, 'Iniciando procesarMensaje');
-
-    // Obtener los parámetros del cuerpo de la solicitud
+    //aqui necesito una medida de seguridad que verifique si el emisor es el mismo que el usuario actual, en caso de que no lo sea, no permite 
     $params = $request->get_json_params();
     chatLog($request, 'Parámetros recibidos: ' . json_encode($params));
-
-    // Extraer los parámetros
+    
     $emisor = isset($params['emisor']) ? $params['emisor'] : null;
     $receptor = isset($params['receptor']) ? $params['receptor'] : null;
     $mensaje = isset($params['mensaje']) ? $params['mensaje'] : null;
     $adjunto = isset($params['adjunto']) ? $params['adjunto'] : null;
     $metadata = isset($params['metadata']) ? $params['metadata'] : null;
 
-    // Validar que los parámetros requeridos estén presentes
     if (!$emisor || !$receptor || !$mensaje) {
         chatLog($request, 'Error: Datos incompletos');
         return new WP_Error('datos_incompletos', 'Faltan datos requeridos', array('status' => 400));
     }
-
-    // Verificar si el usuario autenticado es el emisor
-    $current_user_id = get_current_user_id();
-    chatLog($request, 'Emisor ID: ' . $emisor . ' - Usuario autenticado ID: ' . $current_user_id);
-
-    if ($emisor != $current_user_id) {
-        chatLog($request, 'Error: Usuario no autorizado');
-        return new WP_Error('no_autorizado', 'No estás autorizado para enviar este mensaje', array('status' => 403));
-    }
-
-    // Intentar guardar el mensaje
+    
     chatLog($request, 'Intentando guardar mensaje');
-
+    
     try {
         $resultado = guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata);
         
