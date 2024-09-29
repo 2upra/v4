@@ -47,20 +47,13 @@ function obtenerChat()
         wp_die();
     }
 
-    // Registrar log para comprobar si se está ejecutando la función
-    chatLog("Iniciando obtenerChat");
-
     // Obtener valores POST
     $conversacion = isset($_POST['conversacion']) ? intval($_POST['conversacion']) : 0;
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
     $mensajesPorPagina = 10;
 
-    // Registrar log con los datos recibidos
-    chatLog("Datos recibidos - Conversación: $conversacion, Página: $page");
-
     // Validar ID de conversación
     if ($conversacion <= 0) {
-        chatLog("ID de conversación inválido: $conversacion");
         wp_send_json_error(array('message' => 'ID de conversación inválido.'));
         wp_die();
     }
@@ -69,8 +62,8 @@ function obtenerChat()
     $tablaMensajes = $wpdb->prefix . 'mensajes';
     $offset = ($page - 1) * $mensajesPorPagina;
 
-    // Registrar log con la información sobre la consulta que se va a ejecutar
-    chatLog("Preparando consulta. Conversación: $conversacion, Mensajes por página: $mensajesPorPagina, Offset: $offset");
+    // Obtener el ID del usuario actual (emisor)
+    $usuarioActual = get_current_user_id();
 
     // Preparar y ejecutar la consulta
     $query = $wpdb->prepare("
@@ -80,30 +73,23 @@ function obtenerChat()
         ORDER BY fecha ASC
         LIMIT %d OFFSET %d
     ", $conversacion, $mensajesPorPagina, $offset);
-    // Registrar la consulta ejecutada para depurar
-    chatLog("Consulta SQL: $query");
 
     $mensajes = $wpdb->get_results($query);
 
-    // Comprobar si la consulta devolvió un error o no se recuperaron mensajes
+    // Comprobar si hay mensajes
     if ($mensajes === null) {
-        chatLog("Error en la consulta a la base de datos.");
         wp_send_json_error(array('message' => 'Error en la consulta a la base de datos.'));
         wp_die();
     }
 
-    // Registrar el número de mensajes encontrados
-    $numMensajes = count($mensajes);
-    chatLog("Número de mensajes encontrados: $numMensajes");
+    // Añadir una clase según el remitente (emisor)
+    foreach ($mensajes as $mensaje) {
+        $mensaje->clase = ($mensaje->remitente == $usuarioActual) ? 'mensajeDerecha' : 'mensajeIzquierda';
+    }
 
-    // Comprobar si hay mensajes
     if ($mensajes) {
-        // Registrar log para indicar que se devuelve una respuesta exitosa
-        chatLog("Mensajes devueltos correctamente.");
         wp_send_json_success(array('mensajes' => $mensajes));
     } else {
-        // Registrar log si no se encontraron mensajes
-        chatLog("No se encontraron más mensajes.");
         wp_send_json_error(array('message' => 'No se encontraron más mensajes.'));
     }
 

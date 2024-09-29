@@ -11,49 +11,40 @@ function galle() {
     manejarScroll();
 
     function abrirConversacion() {
-        console.log('Iniciando abrirConversacion');
         document.querySelectorAll('.mensaje').forEach(item => {
-            console.log('Elemento .mensaje encontrado:', item);
-    
             item.addEventListener('click', async () => {
                 const conversacion = item.getAttribute('data-conversacion');
-                console.log('Conversación seleccionada:', conversacion);
                 currentPage = 1;
-                try {
-                    console.log('Enviando solicitud AJAX para obtener el chat con la conversación:', conversacion);
     
+                try {
                     const data = await enviarAjax('obtenerChat', {
                         conversacion: conversacion,
                         page: currentPage
                     });
-                    console.log('Respuesta del servidor:', data);
     
                     if (data && data.success) {
                         const mensajes = data.data.mensajes;
-                        console.log('Mensajes obtenidos con éxito:', mensajes);
     
                         const bloqueChat = document.querySelector('.bloqueChat');
                         const listaMensajes = document.querySelector('.listaMensajes');
                     
                         listaMensajes.innerHTML = '';
     
-                        // Renderizamos los nuevos mensajes
+                        // Renderizamos los nuevos mensajes con sus respectivas clases
                         mensajes.forEach(mensaje => {
                             const li = document.createElement('li');
                             li.textContent = mensaje.mensaje; 
+                            li.classList.add(mensaje.clase);  
                             listaMensajes.appendChild(li);
                         });
     
                         bloqueChat.style.display = 'block';
-                        console.log('Mostrando el bloque del chat y los mensajes.');
     
                     } else {
                         const errorMessage = data.message || 'Error desconocido al obtener los mensajes.';
-                        console.error('No se pudieron obtener los mensajes:', errorMessage);
                         alert(errorMessage);
                     }
                 } catch (error) {
-                    console.error('Error en la solicitud AJAX:', error);
                     alert('Ha ocurrido un error al intentar abrir la conversación.');
                 }
             });
