@@ -123,7 +123,7 @@ function renderChat()
             </ul>
             <div class="chatEnvio">
                 <textarea class="mensajeContenido"></textarea>
-                <button class="enviarMensaje"></button>
+                <button class="enviarMensaje"><?php echo $GLOBALS['enviarMensaje']; ?></button>
             </div>
         </div>
 <?php
