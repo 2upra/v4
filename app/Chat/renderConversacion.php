@@ -53,7 +53,7 @@ function obtenerChat()
     // Obtener valores POST
     $conversacion = isset($_POST['conversacion']) ? intval($_POST['conversacion']) : 0;
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
-    $mensajesPorPagina = 20;
+    $mensajesPorPagina = 10;
 
     // Registrar log con los datos recibidos
     chatLog("Datos recibidos - Conversación: $conversacion, Página: $page");
@@ -121,7 +121,7 @@ function renderChat()
             <ul class="listaMensajes">
                 aqui debe mostrar los mensajes 
             </ul>
-            <div>
+            <div class="chatEnvio">
                 <textarea class="mensajeContenido"></textarea>
                 <button class="enviarMensaje"></button>
             </div>
