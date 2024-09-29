@@ -170,7 +170,6 @@ function galle() {
         };
     }
 
-    /
     function manejarMensajeWebSocket(data) {
         try {
             const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
