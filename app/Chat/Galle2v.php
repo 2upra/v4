@@ -1,5 +1,21 @@
 <?php
 
+/*
+curl -X POST https://2upra.com/wp-json/mi-chat/v1/procesarMensaje \
+-H "Content-Type: application/json" \
+-d '{"emisor":"1","receptor":"44","mensaje":"Hola"}'
+
+{
+    "code": "internal_server_error",
+    "message": "<p>Ha habido un error cr\u00edtico en esta web.<\/p><p><a href=\"https:\/\/wordpress.org\/documentation\/article\/faq-troubleshooting\/\">Aprende m\u00e1s sobre el diagn\u00f3stico de WordPress.<\/a><\/p>",
+    "data": {
+        "status": 500
+    },
+    "additional_errors": []
+}
+
+*/
+
 add_action('rest_api_init', function () {
     register_rest_route('mi-chat/v1', '/procesarMensaje', array(
         'methods' => 'POST',
@@ -11,6 +27,7 @@ add_action('rest_api_init', function () {
 });
 
 function procesarMensaje($request) {
+    //esto realmente parece que nunca se inicia
     chatLog($request, 'Iniciando procesarMensaje');
     
     $params = $request->get_json_params();

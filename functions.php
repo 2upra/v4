@@ -6,9 +6,14 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
 function escribirLog($mensaje, $archivo) {
+    if (is_object($mensaje) || is_array($mensaje)) {
+        $mensaje = json_encode($mensaje);
+    }
+    
     $timestamped_log = date('Y-m-d H:i:s') . ' - ' . $mensaje;
     file_put_contents($archivo, $timestamped_log . PHP_EOL, FILE_APPEND);
 
+    // Limitar el tamaño del archivo de log a 400 líneas
     $line_count = count(file($archivo));
     if ($line_count > 400) {
         $lines = file($archivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -16,6 +21,7 @@ function escribirLog($mensaje, $archivo) {
         file_put_contents($archivo, implode(PHP_EOL, $new_lines) . PHP_EOL);
     }
 }
+
 
 function chatLog($log) {
     escribirLog($log, '/var/www/wordpress/wp-content/themes/chat.log');
