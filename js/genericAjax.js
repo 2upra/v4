@@ -218,10 +218,13 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
 //GENERIC AJAX - DEBE SER FLEXIBLE PORQUE TODA LA LOGICA DE AJAX PASA POR AQUI
 async function enviarAjax(action, data = {}) {
     try {
+        // Crear el cuerpo de la solicitud
         const body = new URLSearchParams({
             action: action,
             ...data
         });
+
+        // Realizar la solicitud fetch
         const response = await fetch(ajaxUrl, {
             method: 'POST',
             headers: {
@@ -229,21 +232,39 @@ async function enviarAjax(action, data = {}) {
             },
             body: body
         });
+
+        // Verificar si la respuesta HTTP fue exitosa
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
         }
+
+        // Leer la respuesta como texto
         let responseData;
         const responseText = await response.text();
+
+        // Intentar parsear la respuesta como JSON
         try {
             responseData = JSON.parse(responseText);
         } catch (jsonError) {
-            console.error('No se pudo interpretar la respuesta como JSON:', jsonError);
-            responseData = responseText;
+            console.error('No se pudo interpretar la respuesta como JSON:', {
+                error: jsonError,
+                responseText: responseText,
+                action: action,
+                requestData: data
+            });
+            responseData = responseText; // En caso de error, devolver el texto sin parsear
         }
-        return responseData;
+
+        return responseData; // Devolver la respuesta (parseada o no)
     } catch (error) {
-        console.error('Error en la solicitud:', error);
-        return {success: false, message: error.message};
+        // Manejo de errores generales de la solicitud
+        console.error('Error en la solicitud AJAX:', {
+            error: error,
+            action: action,
+            requestData: data,
+            ajaxUrl: ajaxUrl
+        });
+        return { success: false, message: error.message }; // Devolver un objeto de error
     }
 }
 
