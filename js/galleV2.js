@@ -62,7 +62,7 @@ function galle() {
     }
 
     // Actualizar cada minuto
-    setInterval(actualizarTiemposRelativos, 60000);
+    setInterval(actualizarTiemposRelativos, 4000);
 
     function mostrarMensajes(mensajes) {
         const listaMensajes = document.querySelector('.listaMensajes');
