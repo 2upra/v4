@@ -32,24 +32,19 @@ function galle() {
                         const mensajes = data.data.mensajes;
                         console.log('Mensajes obtenidos con éxito:', mensajes);
     
-                        // Seleccionamos el bloque de chat y la lista de mensajes
                         const bloqueChat = document.querySelector('.bloqueChat');
                         const listaMensajes = document.querySelector('.listaMensajes');
-                        
-                        // Borramos el contenido anterior de la lista de mensajes
+                    
                         listaMensajes.innerHTML = '';
     
                         // Renderizamos los nuevos mensajes
                         mensajes.forEach(mensaje => {
                             const li = document.createElement('li');
-                            li.textContent = mensaje.contenido; // Asumiendo que 'contenido' es el campo del mensaje
+                            li.textContent = mensaje.mensaje; 
                             listaMensajes.appendChild(li);
                         });
     
-                        // Hacemos visible el bloque del chat
                         bloqueChat.style.display = 'block';
-    
-                        // Asegurarnos de que el bloque de chat esté visible
                         console.log('Mostrando el bloque del chat y los mensajes.');
     
                     } else {
