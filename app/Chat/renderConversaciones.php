@@ -57,29 +57,27 @@ function renderchats($conversaciones, $usuarioId)
     ob_start();
 
     if ($conversaciones) {
-?>
+        ?>
         <div class="bloque bloqueConversaciones">
             <ul class="mensajes">
                 <?php
                 foreach ($conversaciones as $conversacion):
                     $participantes = json_decode($conversacion->participantes);
                     $otrosParticipantes = array_diff($participantes, [$usuarioId]);
-                    $otroParticipanteId = reset($otrosParticipantes); 
-                    $imagenPerfil = imagenPerfil($otroParticipanteId); 
+                    $otroParticipanteId = reset($otrosParticipantes);
+                    $imagenPerfil = imagenPerfil($otroParticipanteId);
 
                     $mensajeMostrado = "[No hay mensajes]";
+                    $fechaRelativa = "";
                     if ($conversacion->ultimoMensaje) {
                         if (!empty($conversacion->ultimoMensaje->mensaje)) {
                             $mensajeMostrado = $conversacion->ultimoMensaje->mensaje;
-                            chatLog("Mensaje mostrado: " . $mensajeMostrado);
                         } else {
                             $mensajeMostrado = "[Mensaje faltante]";
-                            chatLog("Error: Mensaje faltante para la conversación con ID: " . $conversacion->id);
                         }
                         $fechaRelativa = tiempoRelativo($conversacion->ultimoMensaje->fecha);
                     }
-
-                ?>
+                    ?>
                     <li class="mensaje" data-receptor="<?= esc_attr($otroParticipanteId); ?>" data-conversacion="<?= esc_attr($conversacion->id); ?>">
                         <div class="imagenMensaje">
                             <img src="<?= esc_url($imagenPerfil); ?>" alt="Imagen de perfil">
@@ -94,16 +92,18 @@ function renderchats($conversaciones, $usuarioId)
                 <?php endforeach; ?>
             </ul>
         </div>
-    <?php
+        <?php
     } else {
-    ?>
+        ?>
         <p>No tienes conversaciones activas.</p>
-<?php
+        <?php
     }
 
     $htmlGenerado = ob_get_clean();
     return $htmlGenerado;
 }
+?>
+<?php 
 
 function tiempoRelativo($fecha)
 {

@@ -191,6 +191,7 @@ function galle() {
         }
     }
 
+    // Función para actualizar la lista de conversaciones
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
         const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
         let conversacionActualizada = false;
@@ -215,8 +216,52 @@ function galle() {
         });
 
         if (!conversacionActualizada) {
-            console.warn(`No se encontró una conversación con el receptor/emisor: ${usuarioId}`);
+        
+            agregarNuevaConversacionALaLista(usuarioId, ultimoMensaje);
         }
+    }
+
+    function agregarNuevaConversacionALaLista(usuarioId, ultimoMensaje) {
+        const listaMensajes = document.querySelector('.mensajes');
+
+        // Crear los elementos necesarios
+        const nuevoMensajeElemento = document.createElement('li');
+        nuevoMensajeElemento.classList.add('mensaje');
+        nuevoMensajeElemento.setAttribute('data-receptor', usuarioId);
+        nuevoMensajeElemento.setAttribute('data-conversacion', '');
+
+        const imagenMensaje = document.createElement('div');
+        imagenMensaje.classList.add('imagenMensaje');
+        const img = document.createElement('img');
+        img.src = obtenerImagenPerfil(usuarioId); 
+        img.alt = 'Imagen de perfil';
+        imagenMensaje.appendChild(img);
+
+        const vistaPrevia = document.createElement('div');
+        vistaPrevia.classList.add('vistaPrevia');
+        const pMensaje = document.createElement('p');
+        pMensaje.textContent = ultimoMensaje;
+        vistaPrevia.appendChild(pMensaje);
+
+        const tiempoMensaje = document.createElement('div');
+        tiempoMensaje.classList.add('tiempoMensaje');
+        const spanTiempo = document.createElement('span');
+        spanTiempo.textContent = formatearTiempoRelativo(new Date());
+        tiempoMensaje.appendChild(spanTiempo);
+
+        // Agregar todos los elementos al mensaje
+        nuevoMensajeElemento.appendChild(imagenMensaje);
+        nuevoMensajeElemento.appendChild(vistaPrevia);
+        nuevoMensajeElemento.appendChild(tiempoMensaje);
+
+        // Agregar el nuevo mensaje al principio de la lista
+        if (listaMensajes) {
+            listaMensajes.insertBefore(nuevoMensajeElemento, listaMensajes.firstChild);
+        }
+    }
+
+    function obtenerImagenPerfil(usuarioId) {
+        return;
     }
 
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null) {
