@@ -114,7 +114,7 @@ function galle() {
         
                         const li = document.createElement('li');
                         li.textContent = msgMensaje;
-                        li.classList.add(msgEmisor === emisor ? 'mensajeEnviado' : 'mensajeRecibido');
+                        li.classList.add(msgEmisor === emisor ? 'mensajeDerecha' : 'mensajeIzquierda');
         
                         // Verificar si la clase correcta se añade al elemento
                         console.log('Clase añadida al mensaje:', li.className);
