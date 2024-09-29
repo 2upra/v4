@@ -20,6 +20,7 @@ function formatearTiempoRelativo(fecha) {
     }
 }
 
+
 function galle() {
     const wsUrl = 'wss://2upra.com/ws';
     const emisor = galleV2.emisor;
@@ -50,7 +51,9 @@ function galle() {
                         mostrarMensajes(data.data.mensajes);
                         document.querySelector('.bloqueChat').style.display = 'block';
                         manejarScroll();
-                        document.querySelector('.listaMensajes').scrollTop = document.querySelector('.listaMensajes').scrollHeight;
+                        // Ajustar el scroll al final de la lista de mensajes
+                        const listaMensajes = document.querySelector('.listaMensajes');
+                        listaMensajes.scrollTop = listaMensajes.scrollHeight;
                     } else {
                         alert(data.message || 'Error desconocido al obtener los mensajes.');
                     }
@@ -67,27 +70,40 @@ function galle() {
         let fechaAnterior = null;
 
         mensajes.forEach(mensaje => {
-            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior);
+            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false);
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
 
-    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null) {
+    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false) {
         const fechaMensaje = new Date(fecha);
 
         if (!fechaAnterior || fechaMensaje - fechaAnterior >= 3 * 60 * 1000) {
             const divFecha = document.createElement('div');
             divFecha.textContent = formatearTiempoRelativo(fecha);
             divFecha.classList.add('fechaSeparador');
-            listaMensajes.appendChild(divFecha);
+
+            if (insertAtTop) {
+                listaMensajes.insertBefore(divFecha, listaMensajes.firstChild);
+            } else {
+                listaMensajes.appendChild(divFecha);
+            }
         }
 
         const li = document.createElement('li');
         li.textContent = mensajeTexto;
         li.classList.add(clase);
         li.setAttribute('data-fecha', fechaMensaje.toISOString());
-        listaMensajes.appendChild(li);
-        listaMensajes.scrollTop = listaMensajes.scrollHeight;
+
+        if (insertAtTop) {
+            listaMensajes.insertBefore(li, listaMensajes.firstChild);
+        } else {
+            listaMensajes.appendChild(li);
+        }
+
+        if (!insertAtTop) {
+            listaMensajes.scrollTop = listaMensajes.scrollHeight;
+        }
     }
 
     function connectWebSocket() {
@@ -102,13 +118,28 @@ function galle() {
         try {
             const { emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje } = JSON.parse(data);
 
-            if ((msgEmisor == emisor && msgReceptor == receptor) || (msgEmisor == receptor && msgReceptor == emisor)) {
-                const claseMensaje = msgEmisor === emisor ? 'mensajeDerecha' : 'mensajeIzquierda';
-                agregarMensajeAlChat(msgMensaje, claseMensaje, new Date());
+            if (msgReceptor == emisor) {
+                // Mensaje recibido por el usuario actual
+                if (msgEmisor == receptor) {
+                    // La conversación con el emisor está abierta
+                    agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', new Date());
+                } else {
+                    // La conversación no está abierta, actualizar la lista o notificar al usuario
+                    actualizarListaConversaciones(msgEmisor, msgMensaje);
+                }
+            } else if (msgEmisor == emisor && msgReceptor == receptor) {
+                // Mensaje enviado por el usuario actual
+                agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', new Date());
             }
         } catch (error) {
             console.error('Error al manejar el mensaje de WebSocket:', error);
         }
+    }
+
+    function actualizarListaConversaciones(emisorMensaje, ultimoMensaje) {
+        // Implementar lógica para actualizar la lista de conversaciones
+        // Por ejemplo, mostrar una notificación o agregar la conversación a la lista
+        console.log(`Nuevo mensaje de ${emisorMensaje}: ${ultimoMensaje}`);
     }
 
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null) {
@@ -148,10 +179,12 @@ function galle() {
                     const mensajes = data.data.mensajes;
                     let fechaAnterior = null;
                     mensajes.reverse().forEach(mensaje => {
-                        agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior);
+                        agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true);
                         fechaAnterior = new Date(mensaje.fecha);
                     });
-                    listaMensajes.scrollTop = listaMensajes.scrollHeight / currentPage;
+                    // Mantener la posición del scroll después de agregar mensajes al principio
+                    const primerMensaje = listaMensajes.querySelector('li');
+                    primerMensaje && primerMensaje.scrollIntoView();
                 }
             }
         });
