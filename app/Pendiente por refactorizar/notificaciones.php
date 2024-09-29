@@ -7,7 +7,7 @@ function zonaHoraria() {
     wp_die();
 }
  
-function tiempoRelativo($fecha) {
+function tiempoRelativoNotificaciones($fecha) {
     $zona_horaria_usuario = isset($_COOKIE['usuario_zona_horaria']) ? $_COOKIE['usuario_zona_horaria'] : 'UTC';
     $fechaNotificacionUTC = new DateTime($fecha, new DateTimeZone('UTC'));
     $fechaNotificacion = $fechaNotificacionUTC->setTimezone(new DateTimeZone($zona_horaria_usuario));
@@ -145,7 +145,7 @@ function generar_html_notificaciones($usuario_id) {
             esc_url($imagen_perfil_url),
             esc_url($notificacion->enlace),
             $texto_notificacion,
-            tiempoRelativo($notificacion->fecha)
+            tiempoRelativoNotificaciones($notificacion->fecha)
         );
     }
     return $html_notificaciones;
