@@ -38,15 +38,15 @@ function galle() {
                 conversacion = item.getAttribute('data-conversacion');
                 currentPage = 1;
                 receptor = item.getAttribute('data-receptor');
-
+    
                 try {
                     const data = await enviarAjax('obtenerChat', {
                         conversacion: conversacion,
                         page: currentPage
                     });
-
+    
                     console.log(data);
-
+    
                     if (data && data.success) {
                         const mensajes = data.data.mensajes;
                         const bloqueChat = document.querySelector('.bloqueChat');
@@ -55,7 +55,7 @@ function galle() {
                         let fechaAnterior = null;
                         mensajes.forEach(mensaje => {
                             const fechaMensaje = new Date(mensaje.fecha);
-
+    
                             if (!fechaAnterior || fechaMensaje - fechaAnterior >= 3 * 60 * 1000) {
                                 const divFecha = document.createElement('div');
                                 divFecha.textContent = formatearTiempoRelativo(mensaje.fecha); // Formatear la fecha
@@ -69,8 +69,12 @@ function galle() {
                             listaMensajes.appendChild(li);
                             fechaAnterior = fechaMensaje;
                         });
-
+    
                         bloqueChat.style.display = 'block';
+    
+                        manejarScroll();
+                        listaMensajes.scrollTop = listaMensajes.scrollHeight;
+    
                     } else {
                         const errorMessage = data.message || 'Error desconocido al obtener los mensajes.';
                         alert(errorMessage);
@@ -95,8 +99,22 @@ function galle() {
             console.error('Error en WebSocket:', error);
         };
         ws.onmessage = ({data}) => {
-            const {emisor, receptor, mensaje, adjunto, metadata} = JSON.parse(data);
-            console.log('Mensaje recibido de', emisor, ':', mensaje);
+            const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje, adjunto, metadata} = JSON.parse(data);
+            console.log('Mensaje recibido de', msgEmisor, ':', msgMensaje);
+        
+            // Verificar si el mensaje pertenece a la conversación actual
+            if ((msgEmisor == emisor && msgReceptor == receptor) || (msgEmisor == receptor && msgReceptor == emisor)) {
+                const listaMensajes = document.querySelector('.listaMensajes');
+                if (listaMensajes) {
+                    const li = document.createElement('li');
+                    li.textContent = msgMensaje;
+                    li.classList.add(msgEmisor === emisor ? 'mensajeEnviado' : 'mensajeRecibido');
+                    listaMensajes.appendChild(li);
+        
+                    // Hacer scroll hacia abajo para mostrar el nuevo mensaje
+                    listaMensajes.scrollTop = listaMensajes.scrollHeight;
+                }
+            }
         };
     };
     connectWebSocket();
@@ -126,9 +144,11 @@ function galle() {
 
     document.addEventListener('click', event => {
         if (event.target.matches('.enviarMensaje')) {
-            const mensaje = document.querySelector('.mensajeContenido').value;
+            const mensajeInput = document.querySelector('.mensajeContenido');
+            const mensaje = mensajeInput.value;
             if (mensaje.trim() !== '') {
                 enviarMensajeWs(receptor, mensaje);
+                mensajeInput.value = ''; // Limpiar el campo de entrada
             } else {
                 console.warn('El mensaje está vacío y no será enviado');
             }
@@ -147,8 +167,26 @@ function galle() {
                         page: currentPage
                     });
                     if (data && data.success) {
-                        const chatHtml = renderChat(data.mensajes, emisor);
-                        listaMensajes.innerHTML = chatHtml + listaMensajes.innerHTML;
+                        const mensajes = data.data.mensajes;
+                        let fechaAnterior = null;
+                        mensajes.reverse().forEach(mensaje => { // Invertir para mantener el orden correcto
+                            const fechaMensaje = new Date(mensaje.fecha);
+                            if (!fechaAnterior || fechaMensaje - fechaAnterior >= 3 * 60 * 1000) {
+                                const divFecha = document.createElement('div');
+                                divFecha.textContent = formatearTiempoRelativo(mensaje.fecha); // Formatear la fecha
+                                divFecha.classList.add('fechaSeparador');
+                                listaMensajes.insertBefore(divFecha, listaMensajes.firstChild);
+                            }
+                            // Crear el mensaje
+                            const li = document.createElement('li');
+                            li.textContent = mensaje.mensaje;
+                            li.classList.add(mensaje.clase);
+                            listaMensajes.insertBefore(li, listaMensajes.firstChild);
+                            fechaAnterior = fechaMensaje;
+                        });
+    
+                        // Opcional: Ajustar el scroll para mantener la posición después de cargar más mensajes
+                        listaMensajes.scrollTop = listaMensajes.scrollHeight / currentPage;
                     }
                 }
             });
