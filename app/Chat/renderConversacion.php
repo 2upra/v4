@@ -1,58 +1,14 @@
 <?php
 
-/*
-
-asi es la tabla 
-
-        $sql_conversacion = "CREATE TABLE $tablaConversacion (
-            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-            tipo TINYINT(1) NOT NULL,  -- Tipo de conversación (unouno o grupo)
-            participantes LONGTEXT NOT NULL,  -- Almacena los participantes en formato JSON
-            fecha DATETIME NOT NULL,  -- Fecha de creación de la conversación
-            PRIMARY KEY (id)
-        ) $charset_collate;";
-
-        $sql_mensajes = "CREATE TABLE $tablaMensajes (
-            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-            conversacion BIGINT(20) UNSIGNED NOT NULL,  -- Relación con la tabla de conversaciones
-            emisor BIGINT(20) UNSIGNED NOT NULL,  -- ID del usuario que envía el mensaje
-            mensaje TEXT NOT NULL,  -- Contenido del mensaje
-            fecha DATETIME NOT NULL,  -- Fecha de envío del mensaje
-            adjunto LONGTEXT DEFAULT NULL,  -- Almacena múltiples ID de adjuntos en formato JSON
-            metadata LONGTEXT DEFAULT NULL,  -- Metadatos adicionales
-            iv BINARY(16) NOT NULL,  -- IV para cifrado (ya no se va a usar)
-            PRIMARY KEY (id),
-            KEY conversacion (conversacion),
-            KEY emisor (emisor)
-        ) $charset_collate;";
-
-2024-09-29 00:40:27 - Preparando consulta. Conversación: 2, Mensajes por página: 20, Offset: 0
-2024-09-29 00:40:27 - Consulta SQL: 
-        SELECT mensaje, remitente, fecha
-        FROM wpsg_mensajes 
-        WHERE conversacion = 2
-        ORDER BY fecha ASC
-        LIMIT 20 OFFSET 0
-    
-2024-09-29 00:40:27 - Número de mensajes encontrados: 0
-2024-09-29 00:40:27 - No se encontraron más mensajes.
-
-*/
-
 function obtenerChat()
 {
-    // Verifica si el usuario está autenticado
     if (!is_user_logged_in()) {
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));
         wp_die();
     }
-
-    // Obtener valores POST
     $conversacion = isset($_POST['conversacion']) ? intval($_POST['conversacion']) : 0;
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
     $mensajesPorPagina = 10;
-
-    // Validar ID de conversación
     if ($conversacion <= 0) {
         wp_send_json_error(array('message' => 'ID de conversación inválido.'));
         wp_die();
@@ -61,11 +17,7 @@ function obtenerChat()
     global $wpdb;
     $tablaMensajes = $wpdb->prefix . 'mensajes';
     $offset = ($page - 1) * $mensajesPorPagina;
-
-    // Obtener el ID del usuario actual (emisor)
     $usuarioActual = get_current_user_id();
-
-    // Preparar y ejecutar la consulta
     $query = $wpdb->prepare("
         SELECT mensaje, emisor AS remitente, fecha
         FROM $tablaMensajes 
@@ -75,14 +27,10 @@ function obtenerChat()
     ", $conversacion, $mensajesPorPagina, $offset);
 
     $mensajes = $wpdb->get_results($query);
-
-    // Comprobar si hay mensajes
     if ($mensajes === null) {
         wp_send_json_error(array('message' => 'Error en la consulta a la base de datos.'));
         wp_die();
     }
-
-    // Añadir una clase según el remitente (emisor)
     foreach ($mensajes as $mensaje) {
         $mensaje->clase = ($mensaje->remitente == $usuarioActual) ? 'mensajeDerecha' : 'mensajeIzquierda';
     }

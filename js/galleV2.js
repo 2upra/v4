@@ -15,31 +15,31 @@ function galle() {
             item.addEventListener('click', async () => {
                 const conversacion = item.getAttribute('data-conversacion');
                 currentPage = 1;
-    
                 try {
                     const data = await enviarAjax('obtenerChat', {
                         conversacion: conversacion,
                         page: currentPage
                     });
-    
+                    console.log(data);
+
                     if (data && data.success) {
                         const mensajes = data.data.mensajes;
-    
                         const bloqueChat = document.querySelector('.bloqueChat');
                         const listaMensajes = document.querySelector('.listaMensajes');
-                    
-                        listaMensajes.innerHTML = '';
-    
-                        // Renderizamos los nuevos mensajes con sus respectivas clases
+                        listaMensajes.innerHTML = ''; // Limpiar la lista de mensajes
+
                         mensajes.forEach(mensaje => {
                             const li = document.createElement('li');
-                            li.textContent = mensaje.mensaje; 
-                            li.classList.add(mensaje.clase);  
+                            li.textContent = mensaje.mensaje; // Texto del mensaje
+                            li.classList.add(mensaje.clase); 
+                            const spanFecha = document.createElement('span');
+                            spanFecha.textContent = mensaje.fecha; 
+                            spanFecha.classList.add('fechaMensaje');
+                            li.appendChild(spanFecha);
                             listaMensajes.appendChild(li);
                         });
-    
-                        bloqueChat.style.display = 'block';
-    
+
+                        bloqueChat.style.display = 'block'; // Mostrar el bloque del chat
                     } else {
                         const errorMessage = data.message || 'Error desconocido al obtener los mensajes.';
                         alert(errorMessage);
