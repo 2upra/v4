@@ -20,6 +20,9 @@ function formatearTiempoRelativo(fecha) {
     }
 }
 
+/*
+No entiendo porque la alerta no le aparece al usuario que esta recibiendo un mensaje nuevo cuando no tiene ninguna conversacion abierta o que haya comenzado
+*/
 
 function galle() {
     const wsUrl = 'wss://2upra.com/ws';
@@ -51,7 +54,6 @@ function galle() {
                         mostrarMensajes(data.data.mensajes);
                         document.querySelector('.bloqueChat').style.display = 'block';
                         manejarScroll();
-                        // Ajustar el scroll al final de la lista de mensajes
                         const listaMensajes = document.querySelector('.listaMensajes');
                         listaMensajes.scrollTop = listaMensajes.scrollHeight;
                     } else {
@@ -115,33 +117,24 @@ function galle() {
     }
 
     function manejarMensajeWebSocket(data) {
-        console.log('Iniciando manejo de mensaje WebSocket');
         try {
-            console.log('Datos recibidos:', data);
-            
             const { emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje } = JSON.parse(data);
-            console.log('Mensaje parseado:', { msgEmisor, msgReceptor, msgMensaje });
+    
+            console.log('Emisor actual:', emisor);
+            console.log('Mensaje recibido - Emisor:', msgEmisor, 'Receptor:', msgReceptor, 'Mensaje:', msgMensaje);
     
             if (msgReceptor == emisor) {
-                console.log('El mensaje es para este emisor:', emisor);
                 if (msgEmisor == receptor) {
-                    console.log('El mensaje proviene del receptor actual:', receptor);
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', new Date());
-                    console.log('Mensaje agregado al chat como "mensajeIzquierda".');
                 } else {
-                    console.log('El mensaje proviene de un nuevo emisor:', msgEmisor);
                     actualizarListaConversaciones(msgEmisor, msgMensaje);
-                    console.log('Lista de conversaciones actualizada.');
                 }
             } else if (msgEmisor == emisor && msgReceptor == receptor) {
-                console.log('El mensaje es una respuesta para el receptor actual:', receptor);
                 agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', new Date());
-                console.log('Mensaje agregado al chat como "mensajeDerecha".');
             }
         } catch (error) {
             console.error('Error al manejar el mensaje de WebSocket:', error);
         }
-        console.log('Finalizando manejo de mensaje WebSocket');
     }
 
     function actualizarListaConversaciones(emisorMensaje, ultimoMensaje) {
@@ -188,7 +181,6 @@ function galle() {
                         agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true);
                         fechaAnterior = new Date(mensaje.fecha);
                     });
-                    // Mantener la posición del scroll después de agregar mensajes al principio
                     const primerMensaje = listaMensajes.querySelector('li');
                     primerMensaje && primerMensaje.scrollIntoView();
                 }
