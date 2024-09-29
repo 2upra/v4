@@ -1,5 +1,5 @@
 <?php
-
+/*
 function procesarMensajeTest() {
     $emisor = 1; // ID del emisor
     $receptor = 2; // ID del receptor
@@ -49,3 +49,5 @@ function desactivarTestMensaje() {
     $timestamp = wp_next_scheduled('enviarMensajeTest');
     wp_unschedule_event($timestamp, 'enviarMensajeTest');
 }
+
+*/

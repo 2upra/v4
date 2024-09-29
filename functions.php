@@ -80,7 +80,7 @@ function scriptsOrdenados()
         'wavejs' => ['2.0.12', ['jquery', 'wavesurfer']],
         'inversores' => '1.0.4',
         'likes' => '2.0.1',
-        'galle' => '2.0.1',
+        'galleV2' => '2.0.1',
     ];
 
     foreach ($script_handles as $handle => $data) {
@@ -104,9 +104,10 @@ function scriptsOrdenados()
     }
 
     $nonce = wp_create_nonce('wp_rest');
-    wp_localize_script('galle2v', 'galle2v', array(
+    wp_localize_script('galleV2', 'galleV2', array(
         'nonce' => $nonce,
         'apiUrl' => esc_url_raw(rest_url('galle/v2/guardarMensaje/')),
+        'emisor' => get_current_user_id()
     ));
 
     // Scripts externos

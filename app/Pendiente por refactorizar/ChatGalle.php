@@ -334,20 +334,6 @@ function add_global_chat_to_footer()
 }
 add_action('wp_footer', 'add_global_chat_to_footer');
 
-
-function galle_chat_scripts()
-{
-
-    wp_enqueue_script('galle-chat-js', get_template_directory_uri() . '/js/galle.js', array(), '2.0.8', true);
-
-    $nonce = wp_create_nonce('wp_rest');
-    wp_localize_script('galle-chat-js', 'galleChat', array(
-        'nonce' => $nonce,
-        'apiUrl' => esc_url_raw(rest_url('mi-chat/v1/guardar-mensaje/')),
-    ));
-}
-
-add_action('wp_enqueue_scripts', 'galle_chat_scripts');
 /*
 add_action('rest_api_init', function () {
     register_rest_route('mi-chat/v1', '/guardar-mensaje/', array(

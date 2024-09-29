@@ -1,4 +1,4 @@
-function galle() {
+function galleout() {
     const wsUrl = 'wss://2upra.com/ws';
     let ws, currentPage = 1, isLoadingMessages = false, currentConversationId, selectedUser = "";
   

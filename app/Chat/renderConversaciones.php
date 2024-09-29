@@ -3,11 +3,11 @@
 
 function conversacionesUsuario($usuarioId)
 {
-    $conversaciones = obtenerConversaciones($usuarioId);
-    return renderConversaciones($conversaciones, $usuarioId);
+    $conversaciones = obtenerChats($usuarioId);
+    return renderchats($conversaciones, $usuarioId);
 }
 
-function obtenerConversaciones($usuarioId)
+function obtenerChats($usuarioId)
 {
     global $wpdb;
     $tablaConversacion = $wpdb->prefix . 'conversacion';
@@ -36,9 +36,7 @@ function obtenerConversaciones($usuarioId)
             ", $conversacion->id));
 
             if ($ultimoMensaje) {
-                // Verificar si el mensaje es más largo de 32 caracteres
                 if (mb_strlen($ultimoMensaje->mensaje) > 32) {
-                    // Cortar el mensaje a 32 caracteres y añadir "..."
                     $ultimoMensaje->mensaje = mb_substr($ultimoMensaje->mensaje, 0, 32) . '...';
                 }
 
@@ -54,28 +52,24 @@ function obtenerConversaciones($usuarioId)
     return $conversaciones;
 }
 
-function renderConversaciones($conversaciones, $usuarioId)
+function renderchats($conversaciones, $usuarioId)
 {
     ob_start();
 
     if ($conversaciones) {
 ?>
-        <div class="modal modalConversaciones">
+        <div class="bloque bloqueConversaciones">
             <ul class="mensajes">
                 <?php
                 foreach ($conversaciones as $conversacion):
                     $participantes = json_decode($conversacion->participantes);
                     $otrosParticipantes = array_diff($participantes, [$usuarioId]);
-                    $otroParticipanteId = reset($otrosParticipantes);
-                    $imagenPerfil = imagenPerfil($otroParticipanteId);
+                    $otroParticipanteId = reset($otrosParticipantes); 
+                    $imagenPerfil = imagenPerfil($otroParticipanteId); 
 
                     $mensajeMostrado = "[No hay mensajes]";
-                    $fechaRelativa = "[Fecha desconocida]";
-
-                    // Obtener el último mensaje y su fecha
                     if ($conversacion->ultimoMensaje) {
                         if (!empty($conversacion->ultimoMensaje->mensaje)) {
-                            // Mostrar mensaje tal cual (sin descifrar)
                             $mensajeMostrado = $conversacion->ultimoMensaje->mensaje;
                             chatLog("Mensaje mostrado: " . $mensajeMostrado);
                         } else {
@@ -86,7 +80,7 @@ function renderConversaciones($conversaciones, $usuarioId)
                     }
 
                 ?>
-                    <li class="mensaje">
+                    <li class="mensaje" data-receptor="<?= esc_attr($otroParticipanteId); ?>" data-conversacion="<?= esc_attr($conversacion->id); ?>">
                         <div class="imagenMensaje">
                             <img src="<?= esc_url($imagenPerfil); ?>" alt="Imagen de perfil">
                         </div>
@@ -108,8 +102,6 @@ function renderConversaciones($conversaciones, $usuarioId)
     }
 
     $htmlGenerado = ob_get_clean();
-    chatLog("HTML generado: " . $htmlGenerado);
-
     return $htmlGenerado;
 }
 

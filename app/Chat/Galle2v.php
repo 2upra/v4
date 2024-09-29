@@ -7,12 +7,10 @@ add_action('rest_api_init', function () {
         'permission_callback' => function () {
             return is_user_logged_in();
         }
-
     ));
 });
 
-function procesarMensaje($request)
-{
+function procesarMensaje($request) {
     $emisor = get_current_user_id();
     $params = $request->get_json_params();
     chatLog($params);
@@ -25,7 +23,11 @@ function procesarMensaje($request)
     if (!$emisor || !$receptor || !$mensaje) {
         return;
     }
+
+    // Guardar el mensaje en la base de datos o realizar acciones adicionales
     guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata);
+
+    // Aquí podrías notificar al receptor a través de WebSocket si está conectado
 }
 
 function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata = null)
