@@ -20,10 +20,6 @@ function formatearTiempoRelativo(fecha) {
     }
 }
 
-/*
-
-*/
-
 function galle() {
     const wsUrl = 'wss://2upra.com/ws';
     const emisor = galleV2.emisor;
@@ -57,6 +53,17 @@ function galle() {
         });
     }
 
+    function actualizarTiemposRelativos() {
+        const separadoresDeFecha = document.querySelectorAll('.fechaSeparador');
+        separadoresDeFecha.forEach(separador => {
+            const fechaMensaje = new Date(separador.getAttribute('data-fecha'));
+            separador.textContent = formatearTiempoRelativo(fechaMensaje);
+        });
+    }
+
+    // Actualizar cada minuto
+    setInterval(actualizarTiemposRelativos, 60000);
+
     function mostrarMensajes(mensajes) {
         const listaMensajes = document.querySelector('.listaMensajes');
         listaMensajes.innerHTML = '';
@@ -70,6 +77,35 @@ function galle() {
 
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false) {
         const fechaMensaje = new Date(fecha);
+
+        if (!fechaAnterior) {
+            // Intentar obtener 'fechaAnterior' del último mensaje en la lista
+            let lastElement = null;
+            if (insertAtTop) {
+                // Si se inserta al principio, obtener la fecha del primer mensaje después de los separadores de fecha
+                for (let i = 0; i < listaMensajes.children.length; i++) {
+                    const child = listaMensajes.children[i];
+                    if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
+                        lastElement = child;
+                        break;
+                    }
+                }
+            } else {
+                // Obtener el último elemento desde abajo
+                for (let i = listaMensajes.children.length - 1; i >= 0; i--) {
+                    const child = listaMensajes.children[i];
+                    if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
+                        lastElement = child;
+                        break;
+                    }
+                }
+            }
+            if (lastElement) {
+                fechaAnterior = new Date(lastElement.getAttribute('data-fecha'));
+            } else {
+                fechaAnterior = null;
+            }
+        }
 
         if (!fechaAnterior || fechaMensaje - fechaAnterior >= 3 * 60 * 1000) {
             const divFecha = document.createElement('div');
@@ -174,7 +210,7 @@ function galle() {
                 enviarMensaje();
             }
         });
-        
+
         const mensajeInput = document.querySelector('.mensajeContenido');
         mensajeInput.addEventListener('keydown', event => {
             if (event.key === 'Enter') {
@@ -200,18 +236,18 @@ function galle() {
     function manejarScroll() {
         const listaMensajes = document.querySelector('.listaMensajes');
         let puedeDesplazar = true;
-    
+
         listaMensajes?.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0) {
                 if (!puedeDesplazar) {
                     return;
                 }
-    
+
                 puedeDesplazar = false;
                 setTimeout(() => {
                     puedeDesplazar = true;
                 }, 2000);
-    
+
                 currentPage++;
                 const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
                 if (data?.success) {
