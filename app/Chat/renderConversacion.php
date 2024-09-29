@@ -52,6 +52,14 @@ function renderChat()
     ob_start();
 ?>
         <div class="bloque bloqueChat" style="display: none;">
+            <div class="infoChat">
+                <div>
+
+                </div>
+                <div>
+                    
+                </div>
+            </div>
             <ul class="listaMensajes">
                 aqui debe mostrar los mensajes 
             </ul>
