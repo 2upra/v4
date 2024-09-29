@@ -85,28 +85,6 @@ function galle() {
         });
     }
 
-    function manejarScroll() {
-        const listaMensajes = document.querySelector('.listaMensajes');
-        if (listaMensajes) {
-            listaMensajes.addEventListener('scroll', async e => {
-                const {scrollTop} = e.target;
-                if (scrollTop === 0) {
-                    currentPage++;
-                    const conversacionId = document.querySelector('.bloqueChat').getAttribute('data-conversacion');
-                    const data = await enviarAjax('obtenerChat', {
-                        conversacionId: conversacionId,
-                        page: currentPage
-                    });
-
-                    if (data && data.success) {
-                        const chatHtml = renderChat(data.mensajes, emisor);
-                        listaMensajes.innerHTML = chatHtml + listaMensajes.innerHTML;
-                    }
-                }
-            });
-        }
-    }
-
     // WebSocket Connection
     const connectWebSocket = () => {
         ws = new WebSocket(wsUrl);
@@ -130,7 +108,7 @@ function galle() {
 
     // Función para enviar un mensaje
     const enviarMensajeWs = (receptor, mensaje, adjunto = null, metadata = null) => {
-        console.log('Preparando para enviar un mensaje...'); 
+        console.log('Preparando para enviar un mensaje...');
         console.log('Datos del mensaje:', {receptor, mensaje, adjunto, metadata});
 
         const messageData = {
@@ -150,19 +128,45 @@ function galle() {
         }
     };
 
+    /*
+
+    */
+
     document.addEventListener('click', event => {
         if (event.target.matches('.enviarMensaje')) {
             console.log('Botón de enviar mensaje clicado'); // Log de clic en el botón
             const mensaje = document.querySelector('.mensajeContenido').value;
             if (mensaje.trim() !== '') {
-                console.log('Contenido del mensaje:', mensaje); 
+                console.log('Contenido del mensaje:', mensaje);
                 console.log('Receptor ID:', receptor); // Log del receptor ID
                 enviarMensajeWs(receptor, mensaje);
                 document.querySelector('.mensajeContenido').value = '';
-                console.log('Campo de entrada de mensaje limpiado'); 
+                console.log('Campo de entrada de mensaje limpiado');
             } else {
                 console.warn('El mensaje está vacío y no será enviado');
             }
         }
     });
+
+    function manejarScroll() {
+        const listaMensajes = document.querySelector('.listaMensajes');
+        if (listaMensajes) {
+            listaMensajes.addEventListener('scroll', async e => {
+                const {scrollTop} = e.target;
+                if (scrollTop === 0) {
+                    currentPage++;
+                    const conversacionId = document.querySelector('.bloqueChat').getAttribute('data-conversacion');
+                    const data = await enviarAjax('obtenerChat', {
+                        conversacionId: conversacionId,
+                        page: currentPage
+                    });
+
+                    if (data && data.success) {
+                        const chatHtml = renderChat(data.mensajes, emisor);
+                        listaMensajes.innerHTML = chatHtml + listaMensajes.innerHTML;
+                    }
+                }
+            });
+        }
+    }
 }

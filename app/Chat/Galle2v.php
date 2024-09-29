@@ -5,29 +5,31 @@ add_action('rest_api_init', function () {
         'methods' => 'POST',
         'callback' => 'procesarMensaje',
         'permission_callback' => function () {
-            return is_user_logged_in();
+            return true; 
         }
     ));
 });
 
 function procesarMensaje($request) {
-    $emisor = get_current_user_id();
     $params = $request->get_json_params();
-    chatLog($params);
-
+    
+    $emisor = $params['emisor'];
     $receptor = $params['receptor'];
     $mensaje = $params['mensaje'];
     $adjunto = isset($params['adjunto']) ? $params['adjunto'] : null;
     $metadata = isset($params['metadata']) ? $params['metadata'] : null;
 
     if (!$emisor || !$receptor || !$mensaje) {
-        return;
+        return new WP_Error('datos_incompletos', 'Faltan datos requeridos', array('status' => 400));
     }
-
-    // Guardar el mensaje en la base de datos o realizar acciones adicionales
-    guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata);
-
-    // Aquí podrías notificar al receptor a través de WebSocket si está conectado
+    
+    $resultado = guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata);
+    
+    if ($resultado) {
+        return new WP_REST_Response(['success' => true], 200);
+    } else {
+        return new WP_Error('error_guardado', 'No se pudo guardar el mensaje', array('status' => 500));
+    }
 }
 
 function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata = null)
