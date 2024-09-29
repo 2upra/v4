@@ -11,17 +11,13 @@ function galle() {
     manejarScroll();
 
     function abrirConversacion() {
-        // Agregamos un log para verificar que se están obteniendo los elementos correctamente
         console.log('Iniciando abrirConversacion');
-
         document.querySelectorAll('.mensaje').forEach(item => {
-            // Agregamos un log para cada item encontrado
             console.log('Elemento .mensaje encontrado:', item);
 
             item.addEventListener('click', async () => {
                 const conversacion = item.getAttribute('data-conversacion');
-                console.log('Conversación seleccionada:', conversacion); // Log para verificar que se obtiene el atributo correctamente
-
+                console.log('Conversación seleccionada:', conversacion); 
                 currentPage = 1;
                 try {
                     console.log('Enviando solicitud AJAX para obtener el chat con la conversación:', conversacion);
@@ -30,30 +26,67 @@ function galle() {
                         conversacion: conversacion,
                         page: currentPage
                     });
-
-                    // Log para verificar la respuesta del servidor
                     console.log('Respuesta del servidor:', data);
-
                     if (data && data.success) {
                         console.log('Mensajes obtenidos con éxito:', data.mensajes);
-
                         const chatHtml = renderChat(data.mensajes, emisor);
                         const chatContainer = document.querySelector('.bloqueChat');
                         chatContainer.innerHTML = chatHtml;
                         chatContainer.style.display = 'block';
                     } else {
-                        // Si no se obtuvo éxito en la respuesta, mostramos el mensaje de error
+
                         const errorMessage = data.message || 'Error desconocido al obtener los mensajes.';
                         console.error('No se pudieron obtener los mensajes:', errorMessage);
-                        alert(errorMessage); // Para una mejor retroalimentación al usuario
+                        alert(errorMessage); 
                     }
                 } catch (error) {
-                    // Capturamos cualquier error en la solicitud AJAX
                     console.error('Error en la solicitud AJAX:', error);
                     alert('Ha ocurrido un error al intentar abrir la conversación.');
                 }
             });
         });
+    }
+
+    function renderChat(mensajes, usuarioId) {
+        let html = '';
+    
+        // Verificar si hay mensajes y si el array tiene al menos un elemento
+        if (mensajes && mensajes.length > 0) {
+            html += '<ul class="listaMensajes">';
+            mensajes.forEach(mensaje => {
+                const esRemitente = mensaje.remitente == usuarioId;
+                const claseMensaje = esRemitente ? 'mensajeDerecha' : 'mensajeIzquierda';
+                const imagenPerfil = !esRemitente ? imagenPerfil(mensaje.remitente) : null;
+                const fechaRelativa = tiempoRelativo(mensaje.fecha);
+    
+                html += `<li class="mensaje ${claseMensaje}">`;
+                if (!esRemitente) {
+                    html += `
+                        <div class="imagenMensaje">
+                            <img src="${imagenPerfil}" alt="Imagen de perfil">
+                        </div>`;
+                }
+                html += `
+                    <div class="contenidoMensaje">
+                        <p>${mensaje.mensaje}</p>
+                        <span class="fechaMensaje">${fechaRelativa}</span>
+                    </div>
+                </li>`;
+            });
+            html += '</ul>';
+            // Añadir el campo de texto y botón para enviar un mensaje
+            html += `
+                <div>
+                    <textarea class="mensajeContenido"></textarea>
+                    <button class="enviarMensaje">Enviar</button>
+                </div>
+            `;
+        } else {
+            // Si no hay mensajes, mostrar el mensaje correspondiente
+            html += '<p>No hay mensajes en esta conversación.</p>';
+        }
+    
+        return html;
     }
 
     function manejarScroll() {
@@ -78,44 +111,7 @@ function galle() {
         }
     }
 
-    function renderChat(mensajes, usuarioId) {
-        let html = '';
 
-        if (mensajes) {
-            html += '<ul class="listaMensajes">';
-            mensajes.forEach(mensaje => {
-                const esRemitente = mensaje.remitente == usuarioId;
-                const claseMensaje = esRemitente ? 'mensajeDerecha' : 'mensajeIzquierda';
-                const imagenPerfil = !esRemitente ? imagenPerfil(mensaje.remitente) : null;
-                const fechaRelativa = tiempoRelativo(mensaje.fecha);
-
-                html += `<li class="mensaje ${claseMensaje}">`;
-                if (!esRemitente) {
-                    html += `
-                        <div class="imagenMensaje">
-                            <img src="${imagenPerfil}" alt="Imagen de perfil">
-                        </div>`;
-                }
-                html += `
-                    <div class="contenidoMensaje">
-                        <p>${mensaje.mensaje}</p>
-                        <span class="fechaMensaje">${fechaRelativa}</span>
-                    </div>
-                </li>`;
-            });
-            html += '</ul>';
-            html += `
-                <div>
-                    <textarea class="mensajeContenido"></textarea>
-                    <button class="enviarMensaje">Enviar</button>
-                </div>
-            `;
-        } else {
-            html += '<p>No hay mensajes en esta conversación.</p>';
-        }
-
-        return html;
-    }
 
     // WebSocket Connection
     const connectWebSocket = () => {
