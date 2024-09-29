@@ -21,7 +21,7 @@ function formatearTiempoRelativo(fecha) {
 }
 
 /*
-No entiendo porque la alerta no le aparece al usuario que esta recibiendo un mensaje nuevo cuando no tiene ninguna conversacion abierta o que haya comenzado
+
 */
 
 function galle() {
@@ -31,15 +31,6 @@ function galle() {
     let conversacion = null;
     let ws;
     let currentPage = 1;
-
-    init();
-
-    function init() {
-        abrirConversacion();
-        manejarScroll();
-        connectWebSocket();
-        setupEnviarMensajeHandler();
-    }
 
     function abrirConversacion() {
         document.querySelectorAll('.mensaje').forEach(item => {
@@ -110,9 +101,9 @@ function galle() {
 
     let pingInterval;
 
-    init();
+    galle();
 
-    function init() {
+    function galle() {
         abrirConversacion();
         manejarScroll();
         connectWebSocket();
@@ -121,36 +112,24 @@ function galle() {
 
     function connectWebSocket() {
         ws = new WebSocket(wsUrl);
-
         ws.onopen = () => {
-            console.log('WebSocket conectado');
-
-            // Enviar el identificador del emisor al servidor
             ws.send(JSON.stringify({emisor}));
-
-            // Iniciar el ping
             pingInterval = setInterval(() => {
                 if (ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({type: 'ping'}));
-                    console.log('Ping enviado al servidor');
                 }
-            }, 30000); // cada 30 segundos
+            }, 30000);
         };
-
         ws.onclose = event => {
-            console.log('WebSocket cerrado:', event);
             clearInterval(pingInterval);
             setTimeout(connectWebSocket, 5000);
         };
-
         ws.onerror = error => console.error('Error en WebSocket:', error);
-
         ws.onmessage = ({data}) => {
             const message = JSON.parse(data);
             if (message.type === 'pong') {
                 console.log('Pong recibido del servidor');
             } else if (message.type === 'set_emisor') {
-                // El servidor solicita el identificador del emisor
                 ws.send(JSON.stringify({emisor}));
             } else {
                 manejarMensajeWebSocket(JSON.stringify(message));
@@ -161,10 +140,6 @@ function galle() {
     function manejarMensajeWebSocket(data) {
         try {
             const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
-
-            console.log('Emisor actual:', emisor);
-            console.log('Mensaje recibido - Emisor:', msgEmisor, 'Receptor:', msgReceptor, 'Mensaje:', msgMensaje);
-
             if (msgReceptor == emisor) {
                 if (msgEmisor == receptor) {
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', new Date());
@@ -196,37 +171,74 @@ function galle() {
     function setupEnviarMensajeHandler() {
         document.addEventListener('click', event => {
             if (event.target.matches('.enviarMensaje')) {
-                const mensajeInput = document.querySelector('.mensajeContenido');
-                const mensaje = mensajeInput.value;
+                enviarMensaje();
+            }
+        });
 
-                if (mensaje.trim() !== '') {
-                    enviarMensajeWs(receptor, mensaje);
-                    agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date());
-                    mensajeInput.value = '';
-                } else {
-                    console.warn('El mensaje está vacío y no será enviado');
+        const mensajeInput = document.querySelector('.mensajeContenido');
+        mensajeInput.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                if (!event.altKey) {
+                    event.preventDefault();
+                    enviarMensaje();
                 }
             }
         });
+
+        function enviarMensaje() {
+            const mensaje = mensajeInput.value;
+            if (mensaje.trim() !== '') {
+                enviarMensajeWs(receptor, mensaje);
+                agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date());
+                mensajeInput.value = '';
+            } else {
+                console.warn('El mensaje está vacío y no será enviado');
+            }
+        }
     }
 
+    function throttle(func, delay) {
+        let lastCall = 0;
+        return function(...args) {
+            const now = new Date().getTime();
+            if (now - lastCall < delay) {
+                return;
+            }
+            lastCall = now;
+            return func(...args);
+        };
+    }
+    
     function manejarScroll() {
         const listaMensajes = document.querySelector('.listaMensajes');
-        listaMensajes?.addEventListener('scroll', async e => {
-            if (e.target.scrollTop === 0) {
-                currentPage++;
-                const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
-                if (data?.success) {
-                    const mensajes = data.data.mensajes;
-                    let fechaAnterior = null;
-                    mensajes.reverse().forEach(mensaje => {
-                        agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true);
-                        fechaAnterior = new Date(mensaje.fecha);
+        
+        const cargarMensajes = throttle(async () => {
+            currentPage++;
+            const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
+            if (data?.success) {
+                const mensajes = data.data.mensajes;
+                let fechaAnterior = null;
+                mensajes.reverse().forEach(mensaje => {
+                    agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true);
+                    fechaAnterior = new Date(mensaje.fecha);
+                });
+    
+                // Desplazar al primer mensaje suavemente
+                const primerMensaje = listaMensajes.querySelector('li');
+                if (primerMensaje) {
+                    primerMensaje.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
                     });
-                    const primerMensaje = listaMensajes.querySelector('li');
-                    primerMensaje && primerMensaje.scrollIntoView();
                 }
+            }
+        }, 2000); // Esperar 2 segundos antes de permitir otro scroll
+    
+        listaMensajes?.addEventListener('scroll', e => {
+            if (e.target.scrollTop === 0) {
+                cargarMensajes();
             }
         });
     }
+
 }
