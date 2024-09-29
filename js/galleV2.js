@@ -139,7 +139,7 @@ function galle() {
     function actualizarListaConversaciones(emisorMensaje, ultimoMensaje) {
         // Implementar lógica para actualizar la lista de conversaciones
         // Por ejemplo, mostrar una notificación o agregar la conversación a la lista
-        console.log(`Nuevo mensaje de ${emisorMensaje}: ${ultimoMensaje}`);
+        alert(`Nuevo mensaje de ${emisorMensaje}: ${ultimoMensaje}`);
     }
 
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null) {
