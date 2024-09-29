@@ -1,5 +1,3 @@
-//Inicialmente cuando cargan los mensajes aprecen con el tiempo correcto pero cuando se actualizan aparece siempre con "hace 2856 semanas"
-
 function formatearTiempoRelativo(fecha) {
     const ahora = new Date();
     const diferenciaSegundos = Math.floor((ahora - new Date(fecha)) / 1000);
@@ -81,10 +79,8 @@ function galle() {
         const fechaMensaje = new Date(fecha);
 
         if (!fechaAnterior) {
-            // Intentar obtener 'fechaAnterior' del último mensaje en la lista
             let lastElement = null;
             if (insertAtTop) {
-                // Si se inserta al principio, obtener la fecha del primer mensaje después de los separadores de fecha
                 for (let i = 0; i < listaMensajes.children.length; i++) {
                     const child = listaMensajes.children[i];
                     if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
@@ -93,7 +89,6 @@ function galle() {
                     }
                 }
             } else {
-                // Obtener el último elemento desde abajo
                 for (let i = listaMensajes.children.length - 1; i >= 0; i--) {
                     const child = listaMensajes.children[i];
                     if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
@@ -108,12 +103,11 @@ function galle() {
                 fechaAnterior = null;
             }
         }
-
         if (!fechaAnterior || fechaMensaje - fechaAnterior >= 3 * 60 * 1000) {
             const divFecha = document.createElement('div');
             divFecha.textContent = formatearTiempoRelativo(fecha);
             divFecha.classList.add('fechaSeparador');
-            divFecha.setAttribute('data-fecha', fechaMensaje.toISOString()); // Establecer 'data-fecha' correctamente
+            divFecha.setAttribute('data-fecha', fechaMensaje.toISOString()); 
 
             if (insertAtTop) {
                 listaMensajes.insertBefore(divFecha, listaMensajes.firstChild);
@@ -193,7 +187,31 @@ function galle() {
         }
     }
 
-    function actualizarListaConversaciones(emisorMensaje, ultimoMensaje) {
+    function actualizarListaConversaciones(emisorMensaje, ultimoMensaje, fechaMensaje) {
+        const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
+        let conversacionActualizada = false;
+    
+        listaMensajes.forEach((mensaje) => {
+            const receptorId = mensaje.getAttribute('data-receptor');
+    
+            if (receptorId === emisorMensaje) {
+                const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
+                if (vistaPrevia) {
+                    vistaPrevia.textContent = ultimoMensaje;
+                }
+                const fechaRelativa = formatearTiempoRelativo(fechaMensaje);  
+                const tiempoMensaje = mensaje.querySelector('.tiempoMensaje span');
+                if (tiempoMensaje) {
+                    tiempoMensaje.textContent = fechaRelativa;
+                }
+    
+                conversacionActualizada = true;
+            }
+        });
+    
+        if (!conversacionActualizada) {
+            console.warn(`No se encontró una conversación con el receptor: ${emisorMensaje}`);
+        }
         alert(`Nuevo mensaje de ${emisorMensaje}: ${ultimoMensaje}`);
     }
 
