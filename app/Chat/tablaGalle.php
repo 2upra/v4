@@ -33,7 +33,7 @@ if (!function_exists('tablasMensaje')) {
             fecha DATETIME NOT NULL,  -- Fecha de envío del mensaje
             adjunto LONGTEXT DEFAULT NULL,  -- Almacena múltiples ID de adjuntos en formato JSON
             metadata LONGTEXT DEFAULT NULL,  -- Metadatos adicionales
-            iv BINARY(16) NOT NULL,  -- IV para cifrado (posiblemente)
+            iv BINARY(16) NOT NULL,  -- IV para cifrado (no se va a usar mientras tanto)
             PRIMARY KEY (id),
             KEY conversacion (conversacion),
             KEY emisor (emisor)

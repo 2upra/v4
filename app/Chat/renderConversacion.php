@@ -2,35 +2,45 @@
 
 /*
 
-dice error desconocido 
-galleV2.js?ver=2.0.1.1904606246:36  No se pudieron obtener los mensajes: Error desconocido al obtener los mensajes.
+asi es la tabla 
 
+        $sql_conversacion = "CREATE TABLE $tablaConversacion (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            tipo TINYINT(1) NOT NULL,  -- Tipo de conversación (unouno o grupo)
+            participantes LONGTEXT NOT NULL,  -- Almacena los participantes en formato JSON
+            fecha DATETIME NOT NULL,  -- Fecha de creación de la conversación
+            PRIMARY KEY (id)
+        ) $charset_collate;";
 
-    function abrirConversacion() {
-        document.querySelectorAll('.mensaje').forEach(item => {
-            item.addEventListener('click', async () => {
-                const conversacion = item.getAttribute('data-conversacion');
-                currentPage = 1;
-                const data = await enviarAjax('obtenerChat', {
-                    conversacion: conversacion,
-                    page: currentPage
-                });
+        $sql_mensajes = "CREATE TABLE $tablaMensajes (
+            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            conversacion BIGINT(20) UNSIGNED NOT NULL,  -- Relación con la tabla de conversaciones
+            emisor BIGINT(20) UNSIGNED NOT NULL,  -- ID del usuario que envía el mensaje
+            mensaje TEXT NOT NULL,  -- Contenido del mensaje
+            fecha DATETIME NOT NULL,  -- Fecha de envío del mensaje
+            adjunto LONGTEXT DEFAULT NULL,  -- Almacena múltiples ID de adjuntos en formato JSON
+            metadata LONGTEXT DEFAULT NULL,  -- Metadatos adicionales
+            iv BINARY(16) NOT NULL,  -- IV para cifrado (ya no se va a usar)
+            PRIMARY KEY (id),
+            KEY conversacion (conversacion),
+            KEY emisor (emisor)
+        ) $charset_collate;";
 
-                if (data && data.success) {
-                    const chatHtml = renderChat(data.mensajes, emisor);
-                    const chatContainer = document.querySelector('.bloqueChat');
-                    chatContainer.innerHTML = chatHtml;
-                    chatContainer.style.display = 'block';
-                } else {
-                    console.error('No se pudieron obtener los mensajes:', data.message);
-                }
-            });
-        });
-    }
+2024-09-29 00:40:27 - Preparando consulta. Conversación: 2, Mensajes por página: 20, Offset: 0
+2024-09-29 00:40:27 - Consulta SQL: 
+        SELECT mensaje, remitente, fecha
+        FROM wpsg_mensajes 
+        WHERE conversacion = 2
+        ORDER BY fecha ASC
+        LIMIT 20 OFFSET 0
+    
+2024-09-29 00:40:27 - Número de mensajes encontrados: 0
+2024-09-29 00:40:27 - No se encontraron más mensajes.
 
 */
 
-function obtenerChat() {
+function obtenerChat()
+{
     // Verifica si el usuario está autenticado
     if (!is_user_logged_in()) {
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));
@@ -64,13 +74,12 @@ function obtenerChat() {
 
     // Preparar y ejecutar la consulta
     $query = $wpdb->prepare("
-        SELECT mensaje, remitente, fecha
+        SELECT mensaje, emisor AS remitente, fecha
         FROM $tablaMensajes 
         WHERE conversacion = %d
         ORDER BY fecha ASC
         LIMIT %d OFFSET %d
     ", $conversacion, $mensajesPorPagina, $offset);
-
     // Registrar la consulta ejecutada para depurar
     chatLog("Consulta SQL: $query");
 
