@@ -76,11 +76,15 @@ function galle() {
     }
 
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false) {
+        console.log('AGREGARMENSAJEALCHAT: Inicio de la función');
         const fechaMensaje = new Date(fecha);
-
+        console.log('AGREGARMENSAJEALCHAT: Fecha del mensaje', fechaMensaje);
+    
         if (!fechaAnterior) {
+            console.log('AGREGARMENSAJEALCHAT: No hay fecha anterior proporcionada');
             let lastElement = null;
             if (insertAtTop) {
+                console.log('AGREGARMENSAJEALCHAT: Insertando en la parte superior');
                 for (let i = 0; i < listaMensajes.children.length; i++) {
                     const child = listaMensajes.children[i];
                     if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
@@ -89,6 +93,7 @@ function galle() {
                     }
                 }
             } else {
+                console.log('AGREGARMENSAJEALCHAT: Insertando en la parte inferior');
                 for (let i = listaMensajes.children.length - 1; i >= 0; i--) {
                     const child = listaMensajes.children[i];
                     if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
@@ -99,39 +104,47 @@ function galle() {
             }
             if (lastElement) {
                 fechaAnterior = new Date(lastElement.getAttribute('data-fecha'));
+                console.log('AGREGARMENSAJEALCHAT: Fecha del último elemento encontrado', fechaAnterior);
             } else {
                 fechaAnterior = null;
+                console.log('AGREGARMENSAJEALCHAT: No se encontró un elemento anterior');
             }
         }
+    
         if (!fechaAnterior || fechaMensaje - fechaAnterior >= 3 * 60 * 1000) {
+            console.log('AGREGARMENSAJEALCHAT: Agregando separador de fecha');
             const divFecha = document.createElement('div');
             divFecha.textContent = formatearTiempoRelativo(fecha);
             divFecha.classList.add('fechaSeparador');
             divFecha.setAttribute('data-fecha', fechaMensaje.toISOString());
-
+    
             if (insertAtTop) {
                 listaMensajes.insertBefore(divFecha, listaMensajes.firstChild);
             } else {
                 listaMensajes.appendChild(divFecha);
             }
         }
-
+    
         const li = document.createElement('li');
         li.textContent = mensajeTexto;
         li.classList.add(clase);
         li.setAttribute('data-fecha', fechaMensaje.toISOString());
-
+        console.log('AGREGARMENSAJEALCHAT: Creado elemento de lista', li);
+    
         if (insertAtTop) {
             listaMensajes.insertBefore(li, listaMensajes.firstChild);
         } else {
             listaMensajes.appendChild(li);
         }
-
+    
         if (!insertAtTop) {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
+            console.log('AGREGARMENSAJEALCHAT: Desplazamiento ajustado al final');
         }
+    
+        console.log('AGREGARMENSAJEALCHAT: Fin de la función');
     }
-
+    
     let pingInterval;
 
     galle();
@@ -170,85 +183,86 @@ function galle() {
         };
     }
 
+    // Estas funciones solo se activan para el usuario que reciban el mensaje.
     function manejarMensajeWebSocket(data) {
-        console.log('Mensaje recibido a través de WebSocket:', data);
+        console.log('MANEJARMENSAJEWEBSOCKET: Mensaje recibido a través de WebSocket:', data);
     
         try {
             const { emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje } = JSON.parse(data);
-            console.log('Datos del mensaje parseado:', { msgEmisor, msgReceptor, msgMensaje });
+            console.log('MANEJARMENSAJEWEBSOCKET: Datos del mensaje parseado:', { msgEmisor, msgReceptor, msgMensaje });
     
             // Si eres el receptor del mensaje
             if (msgReceptor === emisor) {
-                console.log('El mensaje es para este emisor:', emisor);
+                console.log('MANEJARMENSAJEWEBSOCKET: El mensaje es para este emisor:', emisor);
     
                 if (msgEmisor === receptor) {
-                    console.log('Receptor coincide, agregando mensaje al chat (izquierda).');
+                    console.log('MANEJARMENSAJEWEBSOCKET: Receptor coincide, agregando mensaje al chat (izquierda).');
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', new Date());
                 }
     
-                console.log('Actualizando lista de conversaciones para emisor:', msgEmisor);
+                console.log('MANEJARMENSAJEWEBSOCKET: Actualizando lista de conversaciones para emisor:', msgEmisor);
                 actualizarListaConversaciones(msgEmisor, msgMensaje);
     
             // Si eres el emisor del mensaje
             } else if (msgEmisor === emisor && msgReceptor === receptor) {
-                console.log('El mensaje es de este emisor y receptor coincide, agregando mensaje al chat (derecha).');
+                console.log('MANEJARMENSAJEWEBSOCKET: El mensaje es de este emisor y receptor coincide, agregando mensaje al chat (derecha).');
                 agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', new Date());
     
-                console.log('Actualizando lista de conversaciones para receptor:', msgReceptor);
+                console.log('MANEJARMENSAJEWEBSOCKET: Actualizando lista de conversaciones para receptor:', msgReceptor);
                 actualizarListaConversaciones(msgReceptor, msgMensaje);
             } else {
-                console.log('El mensaje recibido no se ajusta a ninguna de las condiciones manejadas.');
+                console.log('MANEJARMENSAJEWEBSOCKET: El mensaje recibido no se ajusta a ninguna de las condiciones manejadas.');
             }
         } catch (error) {
-            console.error('Error al manejar el mensaje de WebSocket:', error);
+            console.error('MANEJARMENSAJEWEBSOCKET: Error al manejar el mensaje de WebSocket:', error);
         }
     }
-    // Función para actualizar la lista de conversaciones
+    
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
-        console.log('Función actualizarListaConversaciones llamada con:', {usuarioId, ultimoMensaje});
-
+        console.log('ACTUALIZARLISTACONVERSACIONES: Función llamada con:', { usuarioId, ultimoMensaje });
+    
         const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
-        console.log('Elementos seleccionados con querySelectorAll:', listaMensajes);
-
+        console.log('ACTUALIZARLISTACONVERSACIONES: Elementos seleccionados con querySelectorAll:', listaMensajes);
+    
         let conversacionActualizada = false;
-
+    
         listaMensajes.forEach(mensaje => {
-            console.log('Revisando mensaje:', mensaje);
-
+            console.log('ACTUALIZARLISTACONVERSACIONES: Revisando mensaje:', mensaje);
+    
             const receptorId = mensaje.getAttribute('data-receptor');
-            console.log('Receptor ID del mensaje:', receptorId);
-
+            console.log('ACTUALIZARLISTACONVERSACIONES: Receptor ID del mensaje:', receptorId);
+    
             // Verifica si el receptor o emisor coincide con el id del usuario
             if (receptorId == usuarioId) {
-                console.log('Receptor ID coincide con Usuario ID:', receptorId);
-
+                console.log('ACTUALIZARLISTACONVERSACIONES: Receptor ID coincide con Usuario ID:', receptorId);
+    
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
-                    console.log('Vista previa encontrada:', vistaPrevia);
+                    console.log('ACTUALIZARLISTACONVERSACIONES: Vista previa encontrada:', vistaPrevia);
                     vistaPrevia.textContent = ultimoMensaje;
                 } else {
-                    console.log('No se encontró vista previa en el mensaje.');
+                    console.log('ACTUALIZARLISTACONVERSACIONES: No se encontró vista previa en el mensaje.');
                 }
-
+    
                 const fechaRelativa = formatearTiempoRelativo(new Date());
-                console.log('Fecha relativa calculada:', fechaRelativa);
-
+                console.log('ACTUALIZARLISTACONVERSACIONES: Fecha relativa calculada:', fechaRelativa);
+    
                 const tiempoMensaje = mensaje.querySelector('.tiempoMensaje span');
                 if (tiempoMensaje) {
-                    console.log('Elemento tiempo encontrado:', tiempoMensaje);
+                    console.log('ACTUALIZARLISTACONVERSACIONES: Elemento tiempo encontrado:', tiempoMensaje);
                     tiempoMensaje.textContent = fechaRelativa;
                 } else {
-                    console.log('No se encontró el elemento de tiempo en el mensaje.');
+                    console.log('ACTUALIZARLISTACONVERSACIONES: No se encontró el elemento de tiempo en el mensaje.');
                 }
-
+    
                 conversacionActualizada = true;
             } else {
-                console.log('Receptor ID no coincide con Usuario ID:', receptorId);
+                console.log('ACTUALIZARLISTACONVERSACIONES: Receptor ID no coincide con Usuario ID:', receptorId);
             }
         });
-
+    
         if (!conversacionActualizada) {
-            console.log('No se actualizó ninguna conversación existente, agregando nueva conversación.');
+            console.log('ACTUALIZARLISTACONVERSACIONES: No se actualizó ninguna conversación existente, agregando nueva conversación.');
             agregarNuevaConversacionALaLista(usuarioId, ultimoMensaje);
         }
     }
@@ -291,7 +305,6 @@ function galle() {
             listaMensajes.insertBefore(nuevoMensajeElemento, listaMensajes.firstChild);
         }
     }
-
     function obtenerImagenPerfil(usuarioId) {
         return;
     }
