@@ -10,29 +10,40 @@ function galle() {
     abrirConversacion();
     manejarScroll();
 
-    // Función para abrir una conversación al hacer click en un elemento <li>
+    /*
+    No se pudieron obtener los mensajes: undefined
+    (anónimo) @ galleV2.js?ver=2.0.1.933530379:30
+
+    */
     function abrirConversacion() {
         document.querySelectorAll('.mensaje').forEach(item => {
             item.addEventListener('click', async () => {
                 const conversacion = item.getAttribute('data-conversacion');
                 currentPage = 1;
-                const data = await enviarAjax('obtenerChat', {
-                    conversacion: conversacion,
-                    page: currentPage
-                });
-
-                if (data && data.success) {
-                    const chatHtml = renderChat(data.mensajes, emisor);
-                    const chatContainer = document.querySelector('.bloqueChat');
-                    chatContainer.innerHTML = chatHtml;
-                    chatContainer.style.display = 'block';
-                } else {
-                    console.error('No se pudieron obtener los mensajes:', data.message);
+                try {
+                    const data = await enviarAjax('obtenerChat', {
+                        conversacion: conversacion,
+                        page: currentPage
+                    });
+    
+                    if (data && data.success) {
+                        const chatHtml = renderChat(data.mensajes, emisor);
+                        const chatContainer = document.querySelector('.bloqueChat');
+                        chatContainer.innerHTML = chatHtml;
+                        chatContainer.style.display = 'block';
+                    } else {
+                        const errorMessage = data.message || 'Error desconocido al obtener los mensajes.';
+                        console.error('No se pudieron obtener los mensajes:', errorMessage);
+                        alert(errorMessage); // Para una mejor retroalimentación al usuario
+                    }
+                } catch (error) {
+                    console.error('Error en la solicitud AJAX:', error);
+                    alert('Ha ocurrido un error al intentar abrir la conversación.');
                 }
             });
         });
     }
-
+    
     function manejarScroll() {
         const listaMensajes = document.querySelector('.listaMensajes');
         if (listaMensajes) {
@@ -114,8 +125,6 @@ function galle() {
         ws.onmessage = ({data}) => {
             const {emisor, receptor, mensaje, adjunto, metadata} = JSON.parse(data);
             console.log('Mensaje recibido de', emisor, ':', mensaje);
-
-    
         };
     };
     connectWebSocket();
@@ -138,7 +147,6 @@ function galle() {
         }
     };
 
-
     document.addEventListener('click', event => {
         if (event.target.matches('.enviarMensaje')) {
             const mensaje = document.querySelector('.mensajeContenido').value;
@@ -149,5 +157,4 @@ function galle() {
             }
         }
     });
-
 }

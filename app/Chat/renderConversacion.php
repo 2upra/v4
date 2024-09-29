@@ -1,13 +1,45 @@
 <?php
 
+/*
+
+    No se pudieron obtener los mensajes: undefined
+    (anónimo) @ galleV2.js?ver=2.0.1.933530379:30
+
+
+    function abrirConversacion() {
+        document.querySelectorAll('.mensaje').forEach(item => {
+            item.addEventListener('click', async () => {
+                const conversacion = item.getAttribute('data-conversacion');
+                currentPage = 1;
+                const data = await enviarAjax('obtenerChat', {
+                    conversacion: conversacion,
+                    page: currentPage
+                });
+
+                if (data && data.success) {
+                    const chatHtml = renderChat(data.mensajes, emisor);
+                    const chatContainer = document.querySelector('.bloqueChat');
+                    chatContainer.innerHTML = chatHtml;
+                    chatContainer.style.display = 'block';
+                } else {
+                    console.error('No se pudieron obtener los mensajes:', data.message);
+                }
+            });
+        });
+    }
+
+*/
+
 function obtenerChat() {
     if (!is_user_logged_in()) {
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));
         wp_die();
     }
+
     $conversacion = isset($_POST['conversacion']) ? intval($_POST['conversacion']) : 0;
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
     $mensajesPorPagina = 20;
+
     if ($conversacion <= 0) {
         wp_send_json_error(array('message' => 'ID de conversación inválido.'));
         wp_die();
@@ -16,6 +48,8 @@ function obtenerChat() {
     global $wpdb;
     $tablaMensajes = $wpdb->prefix . 'mensajes';
     $offset = ($page - 1) * $mensajesPorPagina;
+
+    // Agregar depuración de la consulta
     $query = $wpdb->prepare("
         SELECT mensaje, remitente, fecha
         FROM $tablaMensajes 
@@ -26,11 +60,17 @@ function obtenerChat() {
 
     $mensajes = $wpdb->get_results($query);
 
+    if ($mensajes === null) {
+        wp_send_json_error(array('message' => 'Error en la consulta a la base de datos.'));
+        wp_die();
+    }
+
     if ($mensajes) {
         wp_send_json_success(array('mensajes' => $mensajes));
     } else {
         wp_send_json_error(array('message' => 'No se encontraron más mensajes.'));
     }
+
     wp_die();
 }
 add_action('wp_ajax_obtenerChat', 'obtenerChat');
