@@ -14,27 +14,30 @@ function galle() {
         console.log('Iniciando abrirConversacion');
         document.querySelectorAll('.mensaje').forEach(item => {
             console.log('Elemento .mensaje encontrado:', item);
-
+    
             item.addEventListener('click', async () => {
                 const conversacion = item.getAttribute('data-conversacion');
                 console.log('Conversación seleccionada:', conversacion); 
                 currentPage = 1;
                 try {
                     console.log('Enviando solicitud AJAX para obtener el chat con la conversación:', conversacion);
-
+    
                     const data = await enviarAjax('obtenerChat', {
                         conversacion: conversacion,
                         page: currentPage
                     });
                     console.log('Respuesta del servidor:', data);
+    
+                    // Accede a los mensajes correctamente
                     if (data && data.success) {
-                        console.log('Mensajes obtenidos con éxito:', data.mensajes);
-                        const chatHtml = renderChat(data.mensajes, emisor);
+                        const mensajes = data.data.mensajes;  // Acceder a los mensajes correctamente
+                        console.log('Mensajes obtenidos con éxito:', mensajes);
+    
+                        const chatHtml = renderChat(mensajes, emisor);
                         const chatContainer = document.querySelector('.bloqueChat');
                         chatContainer.innerHTML = chatHtml;
                         chatContainer.style.display = 'block';
                     } else {
-
                         const errorMessage = data.message || 'Error desconocido al obtener los mensajes.';
                         console.error('No se pudieron obtener los mensajes:', errorMessage);
                         alert(errorMessage); 
@@ -47,10 +50,13 @@ function galle() {
         });
     }
 
+    /*
+
+    */
+
     function renderChat(mensajes, usuarioId) {
         let html = '';
     
-        // Verificar si hay mensajes y si el array tiene al menos un elemento
         if (mensajes && mensajes.length > 0) {
             html += '<ul class="listaMensajes">';
             mensajes.forEach(mensaje => {
