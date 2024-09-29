@@ -1,15 +1,13 @@
 <?php 
 
-add_action('wp_ajax_ajustar_zona_horaria', 'ajustar_zona_horaria');
-add_action('wp_ajax_nopriv_ajustar_zona_horaria', 'ajustar_zona_horaria'); 
-
-function ajustar_zona_horaria() {
+add_action('wp_ajax_ajustar_zona_horaria', 'zonaHoraria');
+function zonaHoraria() {
     $zona_horaria = isset($_POST['timezone']) ? $_POST['timezone'] : 'UTC';
     setcookie('usuario_zona_horaria', $zona_horaria, time() + 86400, '/');
     wp_die();
 }
  
-function tiempo_relativo($fecha) {
+function tiempoRelativo($fecha) {
     $zona_horaria_usuario = isset($_COOKIE['usuario_zona_horaria']) ? $_COOKIE['usuario_zona_horaria'] : 'UTC';
     $fechaNotificacionUTC = new DateTime($fecha, new DateTimeZone('UTC'));
     $fechaNotificacion = $fechaNotificacionUTC->setTimezone(new DateTimeZone($zona_horaria_usuario));
@@ -147,7 +145,7 @@ function generar_html_notificaciones($usuario_id) {
             esc_url($imagen_perfil_url),
             esc_url($notificacion->enlace),
             $texto_notificacion,
-            tiempo_relativo($notificacion->fecha)
+            tiempoRelativo($notificacion->fecha)
         );
     }
     return $html_notificaciones;
