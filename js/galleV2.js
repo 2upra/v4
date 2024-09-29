@@ -10,36 +10,72 @@ function galle() {
     abrirConversacion();
     manejarScroll();
 
+
+    function formatearTiempoRelativo(fecha) {
+        const ahora = new Date();
+        const diferenciaSegundos = Math.floor((ahora - new Date(fecha)) / 1000);
+    
+        const minutos = Math.floor(diferenciaSegundos / 60);
+        const horas = Math.floor(minutos / 60);
+        const dias = Math.floor(horas / 24);
+        const semanas = Math.floor(dias / 7);
+    
+        if (semanas > 0) {
+            return semanas === 1 ? "hace 1 semana" : `hace ${semanas} semanas`;
+        } else if (dias > 0) {
+            return dias === 1 ? "hace 1 día" : `hace ${dias} días`;
+        } else if (horas > 0) {
+            return horas === 1 ? "hace 1 hora" : `hace ${horas} horas`;
+        } else if (minutos > 0) {
+            return minutos === 1 ? "hace 1 minuto" : `hace ${minutos} minutos`;
+        } else {
+            return "hace unos segundos";
+        }
+    }
+    
     function abrirConversacion() {
         document.querySelectorAll('.mensaje').forEach(item => {
             item.addEventListener('click', async () => {
                 const conversacion = item.getAttribute('data-conversacion');
                 currentPage = 1;
+    
                 try {
                     const data = await enviarAjax('obtenerChat', {
                         conversacion: conversacion,
                         page: currentPage
                     });
+    
                     console.log(data);
-
+    
                     if (data && data.success) {
                         const mensajes = data.data.mensajes;
                         const bloqueChat = document.querySelector('.bloqueChat');
                         const listaMensajes = document.querySelector('.listaMensajes');
-                        listaMensajes.innerHTML = ''; // Limpiar la lista de mensajes
-
+                        listaMensajes.innerHTML = '';
+    
+                        let fechaAnterior = null;
+    
                         mensajes.forEach(mensaje => {
-                            const li = document.createElement('li');
-                            li.textContent = mensaje.mensaje; // Texto del mensaje
-                            li.classList.add(mensaje.clase); 
-                            const spanFecha = document.createElement('span');
-                            spanFecha.textContent = mensaje.fecha; 
-                            spanFecha.classList.add('fechaMensaje');
-                            li.appendChild(spanFecha);
-                            listaMensajes.appendChild(li);
-                        });
+                            const fechaMensaje = new Date(mensaje.fecha);
+    
 
-                        bloqueChat.style.display = 'block'; // Mostrar el bloque del chat
+                            if (!fechaAnterior || (fechaMensaje - fechaAnterior) >= 3 * 60 * 1000) {
+                                const divFecha = document.createElement('div');
+                                divFecha.textContent = formatearTiempoRelativo(mensaje.fecha); // Formatear la fecha
+                                divFecha.classList.add('fechaSeparador');
+                                listaMensajes.appendChild(divFecha);
+                            }
+    
+                            // Crear el mensaje
+                            const li = document.createElement('li');
+                            li.textContent = mensaje.mensaje; 
+                            li.classList.add(mensaje.clase); 
+                            listaMensajes.appendChild(li);
+    r
+                            fechaAnterior = fechaMensaje;
+                        });
+    
+                        bloqueChat.style.display = 'block';
                     } else {
                         const errorMessage = data.message || 'Error desconocido al obtener los mensajes.';
                         alert(errorMessage);
