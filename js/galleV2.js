@@ -36,18 +36,29 @@ function galle() {
         setupEnviarMensajeHandler();
     }
 
+
     function abrirConversacion() {
         document.querySelectorAll('.mensaje').forEach(item => {
             item.addEventListener('click', async () => {
                 conversacion = item.getAttribute('data-conversacion');
                 receptor = item.getAttribute('data-receptor');
                 currentPage = 1;
-
+    
+                // Obtener la imagen de perfil y el nombre del elemento clickeado
+                const imagenPerfil = item.querySelector('.imagenMensaje img').src;
+                const nombreUsuario = item.querySelector('.nombreUsuario strong').textContent;
+    
                 try {
                     const data = await enviarAjax('obtenerChat', { conversacion, page: currentPage });
                     if (data?.success) {
                         mostrarMensajes(data.data.mensajes);
-                        document.querySelector('.bloqueChat').style.display = 'block';
+                        
+                        // Actualizar la imagen de perfil y el nombre en el bloque de chat
+                        const bloqueChat = document.querySelector('.bloqueChat');
+                        bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
+                        bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
+                        
+                        bloqueChat.style.display = 'block';
                         manejarScroll();
                         const listaMensajes = document.querySelector('.listaMensajes');
                         listaMensajes.scrollTop = listaMensajes.scrollHeight;
@@ -60,6 +71,7 @@ function galle() {
             });
         });
     }
+    
     actualizarTiemposRelativos();
     function actualizarTiemposRelativos() {
         const actualizarElementosFecha = (selector) => {

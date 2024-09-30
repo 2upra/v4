@@ -31,7 +31,7 @@ function obtenerChat()
     ", $conversacion, $mensajesPorPagina, $offset);
 
     $mensajes = $wpdb->get_results($query);
-    
+
     if ($mensajes === null) {
         wp_send_json_error(array('message' => 'Error en la consulta a la base de datos.'));
         wp_die();
@@ -60,23 +60,23 @@ function renderChat()
 {
     ob_start();
 ?>
-        <div class="bloque bloqueChat" style="display: none;">
-            <div class="infoChat">
-                <div>
-
-                </div>
-                <div>
-
-                </div>
+    <div class="bloque bloqueChat" style="display: none;">
+        <div class="infoChat">
+            <div class="imagenMensaje">
+                <img src="" alt="Imagen de perfil">
             </div>
-            <ul class="listaMensajes">
-                aqui debe mostrar los mensajes 
-            </ul>
-            <div class="chatEnvio">
-                <textarea class="mensajeContenido" rows="1"></textarea>
-                <button class="enviarMensaje"><?php echo $GLOBALS['enviarMensaje']; ?></button>
+            <div class="nombreConversacion">
+                <p></p>
             </div>
         </div>
+        <ul class="listaMensajes">
+
+        </ul>
+        <div class="chatEnvio">
+            <textarea class="mensajeContenido" rows="1"></textarea>
+            <button class="enviarMensaje"><?php echo $GLOBALS['enviarMensaje']; ?></button>
+        </div>
+    </div>
 <?php
     $htmlGenerado = ob_get_clean();
     return $htmlGenerado;

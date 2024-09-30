@@ -16,7 +16,7 @@ function reiniciarChats()
 function conversacionesUsuario($usuarioId)
 {
     $conversaciones = obtenerChats($usuarioId);
-    return renderchats($conversaciones, $usuarioId);
+    return renderListaChats($conversaciones, $usuarioId);
 }
 
 function obtenerChats($usuarioId)
@@ -69,7 +69,7 @@ function obtenerNombreUsuario($usuarioId) {
     return $usuario ? $usuario->display_name : '[Usuario desconocido]';
 }
 
-function renderchats($conversaciones, $usuarioId)
+function renderListaChats($conversaciones, $usuarioId)
 {
     ob_start();
 
@@ -89,8 +89,7 @@ function renderchats($conversaciones, $usuarioId)
                     $fechaOriginal = "";
                     
                     if ($conversacion->ultimoMensaje) {
-                        if (!empty($conversacion->ultimoMensaje->mensaje)) {
-                            // Agregar lógica para mostrar "Tú: " si el emisor es el usuario actual
+                        if (!empty($conversacion->ultimoMensaje->mensaje)) 
                             $mensajeMostrado = ($conversacion->ultimoMensaje->emisor == $usuarioId ? "Tú: " : "") . $conversacion->ultimoMensaje->mensaje;
                         } else {
                             $mensajeMostrado = "[Mensaje faltante]";
