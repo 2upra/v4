@@ -153,6 +153,47 @@ function galle() {
         };
     }
 
+    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false) {
+        const fechaMensaje = new Date(fecha);
+
+        if (!fechaAnterior) {
+            let lastElement = null;
+            const children = Array.from(listaMensajes.children);
+            const searchOrder = insertAtTop ? 1 : -1;
+            const startIndex = insertAtTop ? 0 : children.length - 1;
+
+            for (let i = startIndex; (insertAtTop ? i < children.length : i >= 0); i += searchOrder) {
+                const child = children[i];
+                if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
+                    lastElement = child;
+                    break;
+                }
+            }
+
+            fechaAnterior = lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
+        }
+
+        if (!fechaAnterior || fechaMensaje - fechaAnterior >= 3 * 60 * 1000) {
+            const divFecha = document.createElement('div');
+            divFecha.textContent = formatearTiempoRelativo(fechaMensaje);
+            divFecha.classList.add('fechaSeparador');
+            divFecha.setAttribute('data-fecha', fechaMensaje.toISOString());
+
+            insertAtTop ? listaMensajes.insertBefore(divFecha, listaMensajes.firstChild) : listaMensajes.appendChild(divFecha);
+        }
+
+        const li = document.createElement('li');
+        li.textContent = mensajeTexto;
+        li.classList.add(clase);
+        li.setAttribute('data-fecha', fechaMensaje.toISOString());
+
+        insertAtTop ? listaMensajes.insertBefore(li, listaMensajes.firstChild) : listaMensajes.appendChild(li);
+
+        if (!insertAtTop) {
+            listaMensajes.scrollTop = listaMensajes.scrollHeight;
+        }
+    }
+
     function manejarMensajeWebSocket(data) {
         try {
             const { emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje } = JSON.parse(data);
@@ -174,16 +215,16 @@ function galle() {
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
         const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
         let conversacionActualizada = false;
-
+    
         listaMensajes.forEach(mensaje => {
             const receptorId = mensaje.getAttribute('data-receptor');
-
+    
             if (receptorId == usuarioId) {
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
                     vistaPrevia.textContent = ultimoMensaje;
                 }
-
+    
                 const tiempoMensaje = mensaje.querySelector('.tiempoMensaje span');
                 if (tiempoMensaje) {
                     tiempoMensaje.textContent = formatearTiempoRelativo(new Date());
@@ -191,50 +232,31 @@ function galle() {
                 conversacionActualizada = true;
             }
         });
-
+    
         if (!conversacionActualizada) {
-            agregarNuevaConversacionALaLista(usuarioId, ultimoMensaje);
+            reiniciarChats();
         }
     }
 
-    function agregarNuevaConversacionALaLista(usuarioId, ultimoMensaje) {
-        const listaMensajes = document.querySelector('.mensajes');
-
-        const nuevoMensajeElemento = document.createElement('li');
-        nuevoMensajeElemento.classList.add('mensaje');
-        nuevoMensajeElemento.setAttribute('data-receptor', usuarioId);
-        nuevoMensajeElemento.setAttribute('data-conversacion', '');
-
-        const imagenMensaje = document.createElement('div');
-        imagenMensaje.classList.add('imagenMensaje');
-        const img = document.createElement('img');
-        img.src = obtenerImagenPerfil(usuarioId);
-        img.alt = 'Imagen de perfil';
-        imagenMensaje.appendChild(img);
-
-        const vistaPrevia = document.createElement('div');
-        vistaPrevia.classList.add('vistaPrevia');
-        const pMensaje = document.createElement('p');
-        pMensaje.textContent = ultimoMensaje;
-        vistaPrevia.appendChild(pMensaje);
-
-        const tiempoMensaje = document.createElement('div');
-        tiempoMensaje.classList.add('tiempoMensaje');
-        const spanTiempo = document.createElement('span');
-        spanTiempo.textContent = formatearTiempoRelativo(new Date());
-        tiempoMensaje.appendChild(spanTiempo);
-
-        nuevoMensajeElemento.append(imagenMensaje, vistaPrevia, tiempoMensaje);
-
-        if (listaMensajes) {
-            listaMensajes.insertBefore(nuevoMensajeElemento, listaMensajes.firstChild);
-        }
+    function reiniciarChats() {
+        enviarAjax('reiniciarChats', {})
+            .then(response => {
+                if (response.success && response.data.html) {
+                    // Selecciona el contenedor donde se muestran las conversaciones
+                    const chatListContainer = document.querySelector('.mensajes');
+                    if (chatListContainer) {
+                        // Actualiza el contenido HTML con las nuevas conversaciones
+                        chatListContainer.innerHTML = response.data.html;
+                    }
+                } else {
+                    console.error('Error al reiniciar los chats:', response);
+                }
+            })
+            .catch(error => {
+                console.error('Error al reiniciar los chats:', error);
+            });
     }
 
-    function obtenerImagenPerfil(usuarioId) {
-        // Implementar lógica para obtener la URL de la imagen de perfil del usuario
-        return '';
-    }
 
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null) {
         const messageData = { emisor, receptor, mensaje, adjunto, metadata };
