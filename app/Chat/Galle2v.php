@@ -16,14 +16,13 @@ add_action('rest_api_init', function () {
 });
 
 /*
-no entiendo porque dice que el token es incorrecto o que pasa
-2024-09-30 20:33:24 - Usuario autenticado con ID: 1
-2024-09-30 20:33:24 - Token generado exitosamente para el usuario ID: 1. Token: 2c244ca0b0
-2024-09-30 20:33:26 - Registrando la ruta /procesarmensaje en la API REST.
-2024-09-30 20:33:26 - Registrando la ruta /verificartoken en la API REST.
-2024-09-30 20:33:26 - Verificando token recibido: 2c244ca0b0
-2024-09-30 20:33:26 - Error: Token inválido. Token proporcionado: 2c244ca0b0
-24-09-30 20:33:26 - Token proporcionado parece ser incorrecto o alterado.
+2024-09-30 20:45:11 - Usuario autenticado con ID: 44
+2024-09-30 20:45:11 - Token generado exitosamente para el usuario ID: 44. Token: 810e8fb11c
+2024-09-30 20:45:12 - Registrando la ruta /procesarmensaje en la API REST.
+2024-09-30 20:45:12 - Registrando la ruta /verificartoken en la API REST.
+2024-09-30 20:45:12 - Iniciando verificación del token. Token recibido: 810e8fb11c
+2024-09-30 20:45:12 - Resultado de wp_verify_nonce: Token inválido
+2024-09-30 20:45:12 - Error: Token inválido. Token proporcionado: 810e8fb11c
 
 */
 
@@ -66,6 +65,9 @@ function verificarToken($request) {
         return new WP_REST_Response(['valid' => false], 401);
     }
 
+    $nonce_life = wp_nonce_tick(); // Verifica el tiempo actual del nonce
+    chatLog('Valor actual del nonce_tick: ' . $nonce_life);
+
     $user_id = wp_verify_nonce($token, 'mi_chat_nonce');
     chatLog('Resultado de wp_verify_nonce: ' . ($user_id ? 'Token válido' : 'Token inválido'));
 
@@ -74,13 +76,15 @@ function verificarToken($request) {
         return new WP_REST_Response(['valid' => true, 'user_id' => $user_id], 200);
     } else {
         chatLog('Error: Token inválido. Token proporcionado: ' . $token);
-        
+
         // Adicional: Investigar posibles errores de contexto o expiración
-        chatLog('Considerando posible error de contexto o expiración.');
-        
+        $nonce_tick_current = wp_nonce_tick();
+        chatLog('Posible error: Token expirado o contexto incorrecto. Valor actual del nonce_tick: ' . $nonce_tick_current);
+
         return new WP_REST_Response(['valid' => false], 401);
     }
 }
+
 
 /*
 websocket
