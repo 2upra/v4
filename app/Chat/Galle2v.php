@@ -3,25 +3,14 @@
 
 
 /*
+tengo que ajustar a la nueva forma de generar el nonce supongo al como se guardan los mensajes o quitar la seguridad en esta parte, lo que hice fue generar nonce manulamente, ya no uso wp verify nonce y necesito ajustar la funcion de procesar y guardar el mensaje
 
-estoy segura que falla porque el contexto es diferente en la creancion y la verificación supongo, o no tengoni la mejor idea de lo que pasa, pero no me queda de otra que simplificarlo, o si tiene uan forma de arreglarlo, pero lo unico que se me ocurre es no usar wp_verify_nonce en la verificacion, y usar una forma manual 
+da este error 
+{"code":"rest_cookie_invalid_nonce","message":"Ha fallado la comprobaci\u00f3n de la cookie","data":{"status":403}}
 
-2024-09-30 21:03:42 - Usuario autenticado con ID: 44
-2024-09-30 21:03:42 - Token generado exitosamente para el usuario ID: 44. Token: 810e8fb11c
-2024-09-30 21:03:42 - Token generado. Nonce tick en el momento de generación: 39994
-2024-09-30 21:03:43 - Registrando la ruta /procesarmensaje en la API REST.
-2024-09-30 21:03:43 - Registrando la ruta /verificartoken en la API REST.
-2024-09-30 21:03:43 - Iniciando verificación del token. Token recibido: 810e8fb11c
-2024-09-30 21:03:43 - Valor actual del nonce_tick: 39994
-2024-09-30 21:03:43 - Resultado de wp_verify_nonce: Token inválido
-2024-09-30 21:03:43 - Error: Token inválido. Token proporcionado: 810e8fb11c
-2024-09-30 21:03:43 - Posible error: Token expirado o contexto incorrecto. Valor actual del nonce_tick: 39994
+te muestro el contexto
 
 */
-
-add_filter('nonce_life', function() {
-    return 24 * HOUR_IN_SECONDS; // Nonce válido por 24 horas
-});
 
 
 add_action('rest_api_init', function () {
@@ -30,10 +19,24 @@ add_action('rest_api_init', function () {
         'methods' => 'POST',
         'callback' => 'procesarMensaje',
         'permission_callback' => function ($request) {
-            $token = $request->get_header('X-WP-Nonce');
-            $is_valid = wp_verify_nonce($token, 'mi_chat_nonce');
-            chatLog('Verificación del token en /procesarmensaje: ' . ($is_valid ? 'Válido' : 'Inválido'));
-            return $is_valid;
+            // Obtener el token y user_id desde los headers o los parámetros de la solicitud
+            $token = $request->get_header('X-WP-Token');  // Asegúrate de enviar este encabezado en tu solicitud
+            $user_id = $request->get_header('X-User-ID'); // O puedes obtenerlo de los parámetros del cuerpo de la solicitud
+
+            if (!$token || !$user_id) {
+                chatLog('Error: Token o User ID no proporcionados');
+                return false;
+            }
+
+            // Reutilizamos la función verificarToken para validar el token
+            $is_valid = verificarToken(new WP_REST_Request('POST', '/galle/v2/verificartoken', [
+                'token' => $token,
+                'user_id' => $user_id
+            ]));
+
+            chatLog('Verificación del token en /procesarmensaje: ' . (is_wp_error($is_valid) || !$is_valid['valid'] ? 'Inválido' : 'Válido'));
+
+            return (is_wp_error($is_valid) || !$is_valid['valid']) ? false : true;
         }
     ));
 });
@@ -68,125 +71,35 @@ function generarToken() {
     wp_send_json_success(['token' => $token, 'user_id' => $user_id]);
 }
 
-/*
-FALLA! PORQUE 
-2024-09-30 21:23:14 - Usuario autenticado con ID: 1
-2024-09-30 21:23:14 - Token generado manualmente para el usuario ID: 1. Token: 51d43f773ebb29bb6900ba10ac8149accf6d29c4d2da0874123643478e02afc4
-2024-09-30 21:23:15 - Registrando la ruta /procesarmensaje en la API REST.
-2024-09-30 21:23:15 - Registrando la ruta /verificartoken en la API REST.
-2024-09-30 21:23:15 - Parámetros recibidos en la solicitud: {"token":"51d43f773ebb29bb6900ba10ac8149accf6d29c4d2da0874123643478e02afc4","user_id":"1"}
-2024-09-30 21:23:15 - Iniciando verificación del token. Token recibido: 51d43f773ebb29bb6900ba10ac8149accf6d29c4d2da0874123643478e02afc4 para el usuario ID: 1
-2024-09-30 21:23:15 - Clave secreta usada para la verificación: bf084... (oculta por seguridad)
-2024-09-30 21:23:15 - Generando token esperado con el timestamp actual: 1727731395
-2024-09-30 21:23:15 - Token esperado generado: 3a5157ec4634787ae99c0ad5d38017925ab173da9092c86e494914d95a8347fa
-2024-09-30 21:23:15 - Error: Token inválido. Token esperado: 3a5157ec4634787ae99c0ad5d38017925ab173da9092c86e494914d95a8347fa, Token recibido: 51d43f773ebb29bb6900ba10ac8149accf6d29c4d2da0874123643478e02afc4
-*/
 
 function verificarToken($request) {
-    // Obtener todos los parámetros recibidos en la solicitud y loguearlos
-    $all_params = $request->get_params();
-    chatLog('Parámetros recibidos en la solicitud: ' . json_encode($all_params));
-
-    // Obtener parámetros específicos (token y user_id)
-    $token = $request->get_param('token');
-    $user_id = $request->get_param('user_id');
+    // Obtener el token y user_id desde los parámetros o los headers
+    $token = $request->get_param('token') ?: $request->get_header('X-WP-Token');
+    $user_id = $request->get_param('user_id') ?: $request->get_header('X-User-ID');
 
     chatLog('Iniciando verificación del token. Token recibido: ' . ($token ? $token : 'No proporcionado') . ' para el usuario ID: ' . ($user_id ? $user_id : 'No proporcionado'));
 
-    // Verificar si el token o user_id están vacíos
     if (empty($token) || empty($user_id)) {
         chatLog('Error: No se proporcionó token o el token/ID de usuario está vacío.');
         return new WP_REST_Response(['valid' => false], 401);
     }
 
-    // Log para verificar la clave secreta para mayor seguridad
     $secret_key = ($_ENV['GALLEKEY']);
-    chatLog('Clave secreta usada para la verificación: ' . substr($secret_key, 0, 5) . '... (oculta por seguridad)');
-
-    // Validar el token en una ventana de tiempo de 5 minutos (300 segundos)
     $current_time = time();
-    $rounded_time = floor($current_time / 300); // Redondear el tiempo a intervalos de 5 minutos
-    chatLog('Generando token esperado con el tiempo redondeado: ' . $rounded_time);
-
-    // Generar el token esperado con el valor de tiempo redondeado
+    $rounded_time = floor($current_time / 300);
+    
     $expected_token = hash_hmac('sha256', $user_id . $rounded_time, $secret_key);
-    chatLog('Token esperado generado: ' . $expected_token);
-
-    // Comparar el token recibido con el token esperado
-    // También verificar el token con el tiempo anterior por si el timestamp cambió en el último segundo
     $previous_rounded_time = $rounded_time - 1;
     $previous_expected_token = hash_hmac('sha256', $user_id . $previous_rounded_time, $secret_key);
-    chatLog('Token esperado (tiempo anterior): ' . $previous_expected_token);
 
     if (hash_equals($expected_token, $token) || hash_equals($previous_expected_token, $token)) {
         chatLog('Token válido para el usuario ID: ' . $user_id);
-        return new WP_REST_Response(['valid' => true, 'user_id' => $user_id], 200);
+        return ['valid' => true, 'user_id' => $user_id];
     } else {
         chatLog('Error: Token inválido. Token esperado: ' . $expected_token . ', Token recibido: ' . $token);
         return new WP_REST_Response(['valid' => false], 401);
     }
 }
-
-/*
-websocket
-
- private function verificarToken(ConnectionInterface $conn, $token, $emisor)
-    {
-        // Log para ver el token y el emisor que se están verificando
-        echo "Iniciando verificación del token para el emisor: {$emisor} en la conexión {$conn->resourceId}\n";
-        echo "Token recibido: {$token}\n";
-    
-        // URL del endpoint de verificación de token
-        $url = 'https://2upra.com/wp-json/galle/v1/verificarToken';
-    
-        // Opciones de la solicitud HTTP para verificar el token
-        $options = [
-            'http' => [
-                'header'  => "Content-type: application/json\r\n",
-                'method'  => 'POST',
-                'content' => json_encode(['token' => $token])
-            ]
-        ];
-    
-        // Log para mostrar las opciones enviadas en la solicitud
-        echo "Enviando solicitud de verificación a WordPress con las siguientes opciones:\n";
-        echo "URL: {$url}\n";
-        echo "Contenido: " . json_encode(['token' => $token]) . "\n";
-    
-        // Enviar la solicitud y obtener el resultado
-        $context  = stream_context_create($options);
-        $result = @file_get_contents($url, false, $context);  // Usa @ para suprimir errores visibles
-    
-        // Si la solicitud falla
-        if ($result === FALSE) {
-            echo "Error: No se pudo contactar con el servidor de autenticación de WordPress.\n";
-            $conn->send(json_encode(['type' => 'auth', 'status' => 'error', 'message' => 'No se pudo contactar con el servidor de autenticación.']));
-            return;
-        }
-    
-        // Log para mostrar la respuesta recibida de WordPress
-        echo "Respuesta recibida de WordPress: {$result}\n";
-    
-        // Decodificar la respuesta de WordPress
-        $response = json_decode($result, true);
-    
-        // Verificar si la respuesta es válida y correcta
-        if ($response && isset($response['valid']) && $response['valid']) {
-            // Asociar el emisor y el token con la conexión
-            $this->users[$conn->resourceId] = $emisor; 
-            $this->autenticados[$conn->resourceId] = $token;
-    
-            // Enviar respuesta de éxito al cliente
-            $conn->send(json_encode(['type' => 'auth', 'status' => 'success']));
-            echo "Autenticación exitosa para el emisor: {$emisor} en la conexión {$conn->resourceId}\n";
-        } else {
-            // Si el token es inválido
-            echo "Error: Token inválido para el emisor: {$emisor} en la conexión {$conn->resourceId}\n";
-            $conn->send(json_encode(['type' => 'auth', 'status' => 'failed', 'message' => 'Token inválido.']));
-        }
-    }
-
-*/
 
 function procesarMensaje($request) {
     chatLog($request, 'Iniciando procesarMensaje');
