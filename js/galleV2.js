@@ -188,6 +188,9 @@ function galle() {
         }
     }
 
+
+    const token = generarToken();
+
     function connectWebSocket() {
         ws = new WebSocket(wsUrl);
         
@@ -196,7 +199,11 @@ function galle() {
             console.log('Conexión WebSocket abierta');
             
             // Envía el emisor inmediatamente después de establecer la conexión
-            ws.send(JSON.stringify({ emisor }));
+            ws.send(JSON.stringify({ 
+                emisor,
+                type: 'auth', 
+                token: token 
+            }));
     
             // Mantén la conexión activa con pings
             pingInterval = setInterval(() => {

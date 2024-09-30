@@ -3,14 +3,33 @@
 
 
 add_action('rest_api_init', function () {
-    register_rest_route('mi-chat/v1', '/procesarMensaje', array(
+    register_rest_route('galle/v1', '/procesarMensaje', array(
         'methods' => 'POST',
         'callback' => 'procesarMensaje',
-        'permission_callback' => function () {
-            return is_user_logged_in();
+        'permission_callback' => function ($request) {
+            $token = $request->get_header('X-WP-Nonce');
+            return wp_verify_nonce($token, 'mi_chat_nonce');
         }
     ));
 });
+
+add_action('rest_api_init', function () {
+    register_rest_route('galle/v1', '/verificarToken', array(
+        'methods' => 'POST',
+        'callback' => 'verificarToken',
+        'permission_callback' => '__return_true'
+    ));
+});
+
+function verificarToken($request) {
+    $token = $request->get_param('token');
+    $user_id = wp_verify_nonce($token, 'mi_chat_nonce');
+    if ($user_id) {
+        return new WP_REST_Response(['valid' => true, 'user_id' => $user_id], 200);
+    } else {
+        return new WP_REST_Response(['valid' => false], 401);
+    }
+}
 
 function procesarMensaje($request) {
     chatLog($request, 'Iniciando procesarMensaje');
