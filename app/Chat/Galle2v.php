@@ -3,7 +3,15 @@
 
 
 /*
-[30-Sep-2024 21:55:01 UTC] PHP Fatal error:  Uncaught Error: Cannot use object of type WP_REST_Response as array in /var/www/wordpress/wp-content/themes/2upra3v/app/Chat/Galle2v.php:47
+Datos a enviar a WordPress: {"emisor":"44","receptor":"1","mensaje":"hola","adjunto":null,"metadata":null}
+Token usado para autenticar en WordPress: 119b220657952abb48cffa53778c1d7447bf54aaf93e6efb4581133c9f15c633
+User ID usado para autenticar en WordPress: 44
+Respuesta de WordPress: 
+
+
+{"code":"internal_server_error","message":"<p>Ha habido un error cr\u00edtico en esta web.<\/p><p><a href=\"https:\/\/wordpress.org\/documentation\/article\/faq-troubleshooting\/\">Aprende m\u00e1s sobre el diagn\u00f3stico de WordPress.<\/a><\/p>","data":{"status":500},"additional_errors":[]}
+
+[30-Sep-2024 21:57:14 UTC] PHP Fatal error:  Uncaught Error: Cannot use object of type WP_REST_Response as array in /var/www/wordpress/wp-content/themes/2upra3v/app/Chat/Galle2v.php:47
 Stack trace:
 #0 /var/www/wordpress/wp-includes/rest-api/class-wp-rest-server.php(1197): {closure}()
 #1 /var/www/wordpress/wp-includes/rest-api/class-wp-rest-server.php(1063): WP_REST_Server->respond_to_request()
@@ -19,6 +27,42 @@ Stack trace:
 #11 /var/www/wordpress/index.php(17): require('...')
 #12 {main}
   thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Chat/Galle2v.php on line 47
+
+  private function guardarMensajeEnWordPress($data, $token, $user_id)
+    {
+        echo "Datos a enviar a WordPress: " . json_encode($data) . "\n";
+        echo "Token usado para autenticar en WordPress: $token\n";
+        echo "User ID usado para autenticar en WordPress: $user_id\n";
+
+        $url = 'https://2upra.com/wp-json/galle/v2/procesarmensaje';
+
+        // Iniciar cURL
+        $ch = curl_init($url);
+
+        // Configurar opciones de cURL
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            "X-WP-Token: $token",   // Cambia a X-WP-Token o cualquier nombre adecuado
+            "X-User-ID: $user_id"   // Envía el user_id en los encabezados
+        ]);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+
+        // Ejecutar la solicitud cURL
+        $result = curl_exec($ch);
+        $error = curl_error($ch);
+
+        // Si cURL falla
+        if ($result === FALSE) {
+            echo "Error de cURL: No se pudo guardar el mensaje en WordPress. Detalles: {$error}\n";
+            print_r(curl_getinfo($ch)); // Muestra información de depuración sobre la solicitud cURL
+        } else {
+            echo "Respuesta de WordPress: {$result}\n";
+        }
+
+        curl_close($ch);
+    }
 
 */
 
@@ -39,14 +83,25 @@ add_action('rest_api_init', function () {
             }
 
             // Verificar el token personalizado
-            $is_valid = verificarToken(new WP_REST_Request('POST', '/galle/v2/verificartoken', [
-                'token' => $token,
-                'user_id' => $user_id
-            ]));
+            $response = verificarToken($request); // Obtener el objeto WP_REST_Response
 
-            chatLog('Verificación del token en /procesarmensaje: ' . ($is_valid['valid'] ? 'Válido' : 'Inválido'));
+            // Asegúrate de que la respuesta es un WP_REST_Response válido
+            if (is_wp_error($response)) {
+                chatLog('Error en la verificación del token: ' . $response->get_error_message());
+                return false;
+            }
 
-            return $is_valid['valid']; // Devuelve true si el token es válido, false si no lo es
+            // Decodificar el contenido del cuerpo de la respuesta
+            $response_data = json_decode(wp_json_encode($response->get_data()), true);
+
+            // Verificar si el token es válido
+            if (isset($response_data['valid']) && $response_data['valid']) {
+                chatLog('Verificación del token en /procesarmensaje: Válido');
+                return true;
+            } else {
+                chatLog('Verificación del token en /procesarmensaje: Inválido');
+                return false;
+            }
         }
     ));
 });
