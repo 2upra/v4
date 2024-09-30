@@ -3,12 +3,22 @@
 
 
 /*
-tengo que ajustar a la nueva forma de generar el nonce supongo al como se guardan los mensajes o quitar la seguridad en esta parte, lo que hice fue generar nonce manulamente, ya no uso wp verify nonce y necesito ajustar la funcion de procesar y guardar el mensaje
-
-da este error 
-{"code":"rest_cookie_invalid_nonce","message":"Ha fallado la comprobaci\u00f3n de la cookie","data":{"status":403}}
-
-te muestro el contexto
+[30-Sep-2024 21:45:42 UTC] PHP Fatal error:  Uncaught Error: Cannot use object of type WP_REST_Response as array in /var/www/wordpress/wp-content/themes/2upra3v/app/Chat/Galle2v.php:37
+Stack trace:
+#0 /var/www/wordpress/wp-includes/rest-api/class-wp-rest-server.php(1197): {closure}()
+#1 /var/www/wordpress/wp-includes/rest-api/class-wp-rest-server.php(1063): WP_REST_Server->respond_to_request()
+#2 /var/www/wordpress/wp-includes/rest-api/class-wp-rest-server.php(439): WP_REST_Server->dispatch()
+#3 /var/www/wordpress/wp-includes/rest-api.php(420): WP_REST_Server->serve_request()
+#4 /var/www/wordpress/wp-includes/class-wp-hook.php(324): rest_api_loaded()
+#5 /var/www/wordpress/wp-includes/class-wp-hook.php(348): WP_Hook->apply_filters()
+#6 /var/www/wordpress/wp-includes/plugin.php(565): WP_Hook->do_action()
+#7 /var/www/wordpress/wp-includes/class-wp.php(418): do_action_ref_array()
+#8 /var/www/wordpress/wp-includes/class-wp.php(813): WP->parse_request()
+#9 /var/www/wordpress/wp-includes/functions.php(1336): WP->main()
+#10 /var/www/wordpress/wp-blog-header.php(16): wp()
+#11 /var/www/wordpress/index.php(17): require('...')
+#12 {main}
+  thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Chat/Galle2v.php on line 37
 
 */
 
@@ -81,7 +91,7 @@ function verificarToken($request) {
 
     if (empty($token) || empty($user_id)) {
         chatLog('Error: No se proporcionó token o el token/ID de usuario está vacío.');
-        return new WP_REST_Response(['valid' => false], 401);
+        return false; // Devuelve false si no se proporcionó el token o el user_id
     }
 
     $secret_key = ($_ENV['GALLEKEY']);
@@ -94,13 +104,12 @@ function verificarToken($request) {
 
     if (hash_equals($expected_token, $token) || hash_equals($previous_expected_token, $token)) {
         chatLog('Token válido para el usuario ID: ' . $user_id);
-        return ['valid' => true, 'user_id' => $user_id];
+        return true; // Devuelve true si el token es válido
     } else {
         chatLog('Error: Token inválido. Token esperado: ' . $expected_token . ', Token recibido: ' . $token);
-        return new WP_REST_Response(['valid' => false], 401);
+        return false; // Devuelve false si el token es inválido
     }
 }
-
 function procesarMensaje($request) {
     chatLog($request, 'Iniciando procesarMensaje');
     
