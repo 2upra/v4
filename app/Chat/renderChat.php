@@ -57,10 +57,15 @@ add_action('wp_ajax_obtenerChat', 'obtenerChat');
 
 
 function verificarConexion() {
-
+    // Verificamos que se pase un ID de usuario por POST
     if (isset($_POST['user_id'])) {
         $user_id = intval($_POST['user_id']);
         
+        // Guardar logs para depuración
+        guardarLog("User ID POST: " . $user_id);
+        guardarLog("Current User ID: " . get_current_user_id());
+
+        // Verificar si el usuario está conectado y su ID coincide
         if (is_user_logged_in() && get_current_user_id() === $user_id) {
             wp_send_json_success('conectado');
         } else {
