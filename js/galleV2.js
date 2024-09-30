@@ -217,7 +217,6 @@ function galle() {
             console.error('MANEJARMENSAJEWEBSOCKET: Error al manejar el mensaje de WebSocket:', error);
         }
     }
-    
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
         console.log('ACTUALIZARLISTACONVERSACIONES: Función llamada con:', { usuarioId, ultimoMensaje });
     
@@ -266,7 +265,6 @@ function galle() {
             agregarNuevaConversacionALaLista(usuarioId, ultimoMensaje);
         }
     }
-
     function agregarNuevaConversacionALaLista(usuarioId, ultimoMensaje) {
         const listaMensajes = document.querySelector('.mensajes');
 
@@ -342,6 +340,7 @@ function galle() {
                 enviarMensajeWs(receptor, mensaje);
                 agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date());
                 mensajeInput.value = '';
+                actualizarListaConversaciones(receptor, ultimoMensaje)
             } else {
                 console.warn('El mensaje está vacío y no será enviado');
             }
@@ -357,7 +356,6 @@ function galle() {
                 if (!puedeDesplazar) {
                     return;
                 }
-
                 puedeDesplazar = false;
                 setTimeout(() => {
                     puedeDesplazar = true;
