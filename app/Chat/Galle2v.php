@@ -44,9 +44,9 @@ add_action('rest_api_init', function () {
                 'user_id' => $user_id
             ]));
 
-            chatLog('Verificación del token en /procesarmensaje: ' . (is_wp_error($is_valid) || !$is_valid['valid'] ? 'Inválido' : 'Válido'));
+            chatLog('Verificación del token en /procesarmensaje: ' . ($is_valid['valid'] ? 'Válido' : 'Inválido'));
 
-            return (is_wp_error($is_valid) || !$is_valid['valid']) ? false : true;
+            return $is_valid['valid']; // Devuelve true si el token es válido, false si no lo es
         }
     ));
 });
@@ -91,25 +91,37 @@ function verificarToken($request) {
 
     if (empty($token) || empty($user_id)) {
         chatLog('Error: No se proporcionó token o el token/ID de usuario está vacío.');
-        return false; // Devuelve false si no se proporcionó el token o el user_id
+        return new WP_REST_Response([
+            'valid' => false,
+            'message' => 'Token o ID de usuario faltante'
+        ], 400); // Devuelve un error 400 si faltan parámetros
     }
 
     $secret_key = ($_ENV['GALLEKEY']);
     $current_time = time();
-    $rounded_time = floor($current_time / 300);
+    $rounded_time = floor($current_time / 300); // Redondea el tiempo a intervalos de 5 minutos
     
+    // Genera el token esperado para el tiempo actual y el anterior
     $expected_token = hash_hmac('sha256', $user_id . $rounded_time, $secret_key);
     $previous_rounded_time = $rounded_time - 1;
     $previous_expected_token = hash_hmac('sha256', $user_id . $previous_rounded_time, $secret_key);
 
+    // Verificar si el token recibido coincide con el token esperado o el anterior
     if (hash_equals($expected_token, $token) || hash_equals($previous_expected_token, $token)) {
         chatLog('Token válido para el usuario ID: ' . $user_id);
-        return true; // Devuelve true si el token es válido
+        return new WP_REST_Response([
+            'valid' => true,
+            'user_id' => $user_id
+        ], 200); // Devuelve 200 si el token es válido
     } else {
         chatLog('Error: Token inválido. Token esperado: ' . $expected_token . ', Token recibido: ' . $token);
-        return false; // Devuelve false si el token es inválido
+        return new WP_REST_Response([
+            'valid' => false,
+            'message' => 'Token inválido'
+        ], 401); // Devuelve 401 si el token es inválido
     }
 }
+
 function procesarMensaje($request) {
     chatLog($request, 'Iniciando procesarMensaje');
     
