@@ -102,7 +102,6 @@ function galle() {
                     break;
                 }
             }
-
             fechaAnterior = lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
         }
 
@@ -228,9 +227,19 @@ function galle() {
                     vistaPrevia.textContent = ultimoMensaje;
                 }
     
-                const tiempoMensaje = mensaje.querySelector('.tiempoMensaje span');
-                if (tiempoMensaje) {
-                    tiempoMensaje.textContent = formatearTiempoRelativo(new Date());
+                const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
+                if (tiempoMensajeDiv) {
+                    // Crear una nueva fecha para el momento actual
+                    const fechaActual = new Date();
+    
+                    // Actualizar el atributo data-fecha
+                    tiempoMensajeDiv.setAttribute('data-fecha', fechaActual.toISOString());
+    
+                    // Formatear la fecha relativa y actualizar el texto del span
+                    const tiempoMensajeSpan = tiempoMensajeDiv.querySelector('span');
+                    if (tiempoMensajeSpan) {
+                        tiempoMensajeSpan.textContent = formatearTiempoRelativo(fechaActual);
+                    }
                 }
                 conversacionActualizada = true;
             }
@@ -240,6 +249,7 @@ function galle() {
             reiniciarChats();
         }
     }
+    
 
     function reiniciarChats() {
         enviarAjax('reiniciarChats', {})
