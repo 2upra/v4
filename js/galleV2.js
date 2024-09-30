@@ -55,6 +55,7 @@ function galle() {
     function abrirConversacion() {
         document.querySelectorAll('.mensaje').forEach(item => {
             item.addEventListener('click', async () => {
+                actualizarConexionEmisor();
                 conversacion = item.getAttribute('data-conversacion');
                 receptor = item.getAttribute('data-receptor');
                 currentPage = 1;
