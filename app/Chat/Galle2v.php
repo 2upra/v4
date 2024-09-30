@@ -3,16 +3,19 @@
 
 
 /*
-2024-09-30 20:58:54 - Usuario autenticado con ID: 44
-2024-09-30 20:58:54 - Token generado exitosamente para el usuario ID: 44. Token: 810e8fb11c
-2024-09-30 20:58:54 - Token generado. Nonce tick en el momento de generación: 39994
-2024-09-30 20:58:55 - Registrando la ruta /procesarmensaje en la API REST.
-2024-09-30 20:58:55 - Registrando la ruta /verificartoken en la API REST.
-2024-09-30 20:58:55 - Iniciando verificación del token. Token recibido: 810e8fb11c
-2024-09-30 20:58:55 - Valor actual del nonce_tick: 39994
-2024-09-30 20:58:55 - Resultado de wp_verify_nonce: Token inválido
-2024-09-30 20:58:55 - Error: Token inválido. Token proporcionado: 810e8fb11c
-2024-09-30 20:58:55 - Posible error: Token expirado o contexto incorrecto. Valor actual del nonce_tick: 39994
+
+estoy segura que falla porque el contexto es diferente en la creancion y la verificación supongo, o no tengoni la mejor idea de lo que pasa, pero no me queda de otra que simplificarlo, o si tiene uan forma de arreglarlo, pero lo unico que se me ocurre es no usar wp_verify_nonce en la verificacion, y usar una forma manual 
+
+2024-09-30 21:03:42 - Usuario autenticado con ID: 44
+2024-09-30 21:03:42 - Token generado exitosamente para el usuario ID: 44. Token: 810e8fb11c
+2024-09-30 21:03:42 - Token generado. Nonce tick en el momento de generación: 39994
+2024-09-30 21:03:43 - Registrando la ruta /procesarmensaje en la API REST.
+2024-09-30 21:03:43 - Registrando la ruta /verificartoken en la API REST.
+2024-09-30 21:03:43 - Iniciando verificación del token. Token recibido: 810e8fb11c
+2024-09-30 21:03:43 - Valor actual del nonce_tick: 39994
+2024-09-30 21:03:43 - Resultado de wp_verify_nonce: Token inválido
+2024-09-30 21:03:43 - Error: Token inválido. Token proporcionado: 810e8fb11c
+2024-09-30 21:03:43 - Posible error: Token expirado o contexto incorrecto. Valor actual del nonce_tick: 39994
 
 */
 
@@ -55,50 +58,38 @@ function generarToken() {
     $user_id = get_current_user_id();
     chatLog('Usuario autenticado con ID: ' . $user_id);
 
-    $token = wp_create_nonce('mi_chat_nonce');
-    if ($token) {
-        chatLog('Token generado exitosamente para el usuario ID: ' . $user_id . '. Token: ' . $token);
-    } else {
-        chatLog('Error al generar el token para el usuario ID: ' . $user_id);
-    }
+    // Generar un token manualmente usando el ID del usuario
+    $secret_key = ($_ENV['GALLEKEY']); // Cambia esta clave secreta a algo más seguro
+    $token = hash_hmac('sha256', $user_id . time(), $secret_key);
+
+    chatLog('Token generado manualmente para el usuario ID: ' . $user_id . '. Token: ' . $token);
     
-    // Añadir logs sobre el valor del nonce_tick
-    $nonce_life = wp_nonce_tick(); 
-    chatLog('Token generado. Nonce tick en el momento de generación: ' . $nonce_life);
-    wp_send_json_success(['token' => $token]);
+    wp_send_json_success(['token' => $token, 'user_id' => $user_id]);
 }
 
 function verificarToken($request) {
     $token = $request->get_param('token');
-    chatLog('Iniciando verificación del token. Token recibido: ' . $token);
+    $user_id = $request->get_param('user_id');
 
-    if (!isset($token) || empty($token)) {
-        chatLog('Error: No se proporcionó token o el token está vacío.');
+    chatLog('Iniciando verificación del token. Token recibido: ' . $token . ' para el usuario ID: ' . $user_id);
+
+    if (!isset($token) || empty($token) || !isset($user_id) || empty($user_id)) {
+        chatLog('Error: No se proporcionó token o el token/ID de usuario está vacío.');
         return new WP_REST_Response(['valid' => false], 401);
     }
 
-    // Añadir logs sobre el valor del nonce_tick
-    $nonce_life = wp_nonce_tick(); 
-    chatLog('Valor actual del nonce_tick: ' . $nonce_life);
+    // Re-generar el token con la clave secreta y comparar
+    $secret_key = ($_ENV['GALLEKEY']); // La misma clave que usaste para generar el token
+    $expected_token = hash_hmac('sha256', $user_id . time(), $secret_key);
 
-    // Verificación del token
-    $user_id = wp_verify_nonce($token, 'mi_chat_nonce');
-    chatLog('Resultado de wp_verify_nonce: ' . ($user_id ? 'Token válido' : 'Token inválido'));
-
-    if ($user_id) {
-        chatLog('Token válido. Usuario ID: ' . $user_id);
+    if (hash_equals($expected_token, $token)) {
+        chatLog('Token válido para el usuario ID: ' . $user_id);
         return new WP_REST_Response(['valid' => true, 'user_id' => $user_id], 200);
     } else {
-        chatLog('Error: Token inválido. Token proporcionado: ' . $token);
-        
-        // Añadir más información sobre el posible error
-        $nonce_tick_current = wp_nonce_tick();
-        chatLog('Posible error: Token expirado o contexto incorrecto. Valor actual del nonce_tick: ' . $nonce_tick_current);
-
+        chatLog('Error: Token inválido para el usuario ID: ' . $user_id);
         return new WP_REST_Response(['valid' => false], 401);
     }
 }
-
 
 /*
 websocket
