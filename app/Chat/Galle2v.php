@@ -19,16 +19,16 @@ add_action('rest_api_init', function () {
         'methods' => 'POST',
         'callback' => 'procesarMensaje',
         'permission_callback' => function ($request) {
-            // Obtener el token y user_id desde los headers o los parámetros de la solicitud
-            $token = $request->get_header('X-WP-Token');  // Asegúrate de enviar este encabezado en tu solicitud
-            $user_id = $request->get_header('X-User-ID'); // O puedes obtenerlo de los parámetros del cuerpo de la solicitud
+            // Obtener el token y user_id desde los headers
+            $token = $request->get_header('X-WP-Token');
+            $user_id = $request->get_header('X-User-ID');
 
             if (!$token || !$user_id) {
                 chatLog('Error: Token o User ID no proporcionados');
                 return false;
             }
 
-            // Reutilizamos la función verificarToken para validar el token
+            // Verificar el token personalizado
             $is_valid = verificarToken(new WP_REST_Request('POST', '/galle/v2/verificartoken', [
                 'token' => $token,
                 'user_id' => $user_id
