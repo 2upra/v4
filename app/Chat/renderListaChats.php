@@ -89,7 +89,7 @@ function renderListaChats($conversaciones, $usuarioId)
                     $fechaOriginal = "";
                     
                     if ($conversacion->ultimoMensaje) {
-                        if (!empty($conversacion->ultimoMensaje->mensaje)) 
+                        if (!empty($conversacion->ultimoMensaje->mensaje)) {
                             $mensajeMostrado = ($conversacion->ultimoMensaje->emisor == $usuarioId ? "Tú: " : "") . $conversacion->ultimoMensaje->mensaje;
                         } else {
                             $mensajeMostrado = "[Mensaje faltante]";
