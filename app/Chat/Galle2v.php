@@ -7,7 +7,7 @@ add_action('rest_api_init', function () {
         'methods' => 'POST',
         'callback' => 'procesarMensaje',
         'permission_callback' => function () {
-            return is_user_logged_in(); // Asegura que el usuario esté autenticado
+            return is_user_logged_in();
         }
     ));
 });

@@ -190,27 +190,45 @@ function galle() {
 
     function connectWebSocket() {
         ws = new WebSocket(wsUrl);
+        
+        // Cuando se abre la conexión
         ws.onopen = () => {
-            ws.send(JSON.stringify({emisor}));
+            console.log('Conexión WebSocket abierta');
+            
+            // Envía el emisor inmediatamente después de establecer la conexión
+            ws.send(JSON.stringify({ emisor }));
+    
+            // Mantén la conexión activa con pings
             pingInterval = setInterval(() => {
                 if (ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({type: 'ping'}));
+                    ws.send(JSON.stringify({ type: 'ping' }));
                 }
-            }, 30000);
+            }, 30000); // 30 segundos
         };
+    
+        // Cuando la conexión se cierra
         ws.onclose = () => {
             clearInterval(pingInterval);
-            setTimeout(connectWebSocket, 5000);
+            console.log('Conexión cerrada. Reintentando en 5 segundos...');
+            setTimeout(connectWebSocket, 5000); // Reintenta la conexión en 5 segundos
         };
+    
+        // Manejo de errores
         ws.onerror = error => {
             console.error('Error en WebSocket:', error);
         };
-        ws.onmessage = ({data}) => {
+    
+        // Cuando se recibe un mensaje
+        ws.onmessage = ({ data }) => {
             const message = JSON.parse(data);
+            
             if (message.type === 'pong') {
+                console.log('Pong recibido');
             } else if (message.type === 'set_emisor') {
-                ws.send(JSON.stringify({emisor}));
+                // El servidor solicita el emisor nuevamente
+                ws.send(JSON.stringify({ emisor }));
             } else {
+                // Manejar otros tipos de mensajes
                 manejarMensajeWebSocket(JSON.stringify(message));
             }
         };
