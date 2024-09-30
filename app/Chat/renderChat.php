@@ -82,6 +82,8 @@ function actualizarConexion() {
     }
 }
 
+add_action('wp_ajax_actualizarConexion', 'actualizarConexion');
+
 
 
 
