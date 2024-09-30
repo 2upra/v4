@@ -67,6 +67,66 @@ function generarToken() {
     wp_send_json_success(['token' => $token, 'user_id' => $user_id]);
 }
 
+/*
+
+private function verificarToken(ConnectionInterface $conn, $token, $emisor)
+    {
+        // Log para ver el token y el emisor que se están verificando
+        echo "Iniciando verificación del token para el emisor: {$emisor} en la conexión {$conn->resourceId}\n";
+        echo "Token recibido: {$token}\n";
+
+        // URL del endpoint de verificación de token
+        $url = 'https://2upra.com/wp-json/galle/v2/verificartoken';
+
+        // Iniciar cURL
+        $ch = curl_init($url);
+
+        // Configurar opciones de cURL
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+        ]);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['token' => $token]));
+
+        // Ejecutar la solicitud cURL
+        $result = curl_exec($ch);
+        $error = curl_error($ch);
+
+        curl_close($ch);
+
+        // Si cURL falla
+        if ($result === FALSE) {
+            echo "Error de cURL: No se pudo contactar con el servidor de autenticación de WordPress. Detalles: {$error}\n";
+            $conn->send(json_encode(['type' => 'auth', 'status' => 'error', 'message' => 'No se pudo contactar con el servidor de autenticación.']));
+            return;
+        }
+
+        // Log para mostrar la respuesta recibida de WordPress
+        echo "Respuesta recibida de WordPress: {$result}\n";
+
+        // Decodificar la respuesta de WordPress
+        $response = json_decode($result, true);
+
+        // Verificar si la respuesta es válida y correcta
+        if ($response && isset($response['valid']) && $response['valid']) {
+            // Asociar el emisor y el token con la conexión
+            $this->users[$conn->resourceId] = $emisor;
+            $this->autenticados[$conn->resourceId] = $token;
+
+            // Enviar respuesta de éxito al cliente
+            $conn->send(json_encode(['type' => 'auth', 'status' => 'success']));
+            echo "Autenticación exitosa para el emisor: {$emisor} en la conexión {$conn->resourceId}\n";
+        } else {
+            // Si el token es inválido
+            echo "Error: Token inválido para el emisor: {$emisor} en la conexión {$conn->resourceId}\n";
+            $conn->send(json_encode(['type' => 'auth', 'status' => 'failed', 'message' => 'Token inválido.']));
+        }
+    }
+
+    para que la verifique aqui:
+*/
+
 function verificarToken($request) {
     // Obtener todos los parámetros recibidos en la solicitud y loguearlos
     $all_params = $request->get_params();
