@@ -56,6 +56,22 @@ add_action('wp_ajax_obtenerChat', 'obtenerChat');
 
 
 
+function verificarConexion() {
+    // Verificamos que se pase un ID de usuario por POST
+    if (isset($_POST['user_id'])) {
+        $user_id = intval($_POST['user_id']);
+        if (is_user_logged_in() && get_current_user_id() === $user_id) {
+            wp_send_json_success('conectado');
+        } else {
+            wp_send_json_success('desconectado');
+        }
+    } else {
+        wp_send_json_error('No se proporcionó un ID de usuario.');
+    }
+}
+
+add_action('wp_ajax_verificarConexion', 'verificarConexion');
+
 function renderChat()
 {
     ob_start();
@@ -67,6 +83,7 @@ function renderChat()
             </div>
             <div class="nombreConversacion">
                 <p></p>
+                <span class="estadoConexion">Desconectado</span>
             </div>
         </div>
         <ul class="listaMensajes">
