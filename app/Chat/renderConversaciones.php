@@ -6,10 +6,6 @@ add_action('reiniciarChats', 'reiniciarChats');
 
 function reiniciarChats()
 {
-    if (!is_user_logged_in()) {
-        wp_send_json_error('No autorizado');
-        exit;
-    }
     $usuarioId = get_current_user_id();
     $htmlConversaciones = conversacionesUsuario($usuarioId);
     wp_send_json_success(['html' => $htmlConversaciones]);
