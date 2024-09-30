@@ -52,46 +52,50 @@ function galle() {
             });
     }
 
-    function abrirConversacion() {
-        document.querySelectorAll('.mensaje').forEach(item => {
-            item.addEventListener('click', async () => {
-                conversacion = item.getAttribute('data-conversacion');
-                receptor = item.getAttribute('data-receptor');
-                currentPage = 1;
-                const imagenPerfil = item.querySelector('.imagenMensaje img').src;
-                const nombreUsuario = item.querySelector('.nombreUsuario strong').textContent;
+function abrirConversacion() {
+    document.querySelectorAll('.mensaje').forEach(item => {
+        item.addEventListener('click', async () => {
+            conversacion = item.getAttribute('data-conversacion');
+            receptor = item.getAttribute('data-receptor');
+            currentPage = 1;
+            const imagenPerfil = item.querySelector('.imagenMensaje img').src;
+            const nombreUsuario = item.querySelector('.nombreUsuario strong').textContent;
 
-                try {
-                    const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
-                    if (data?.success) {
-                        mostrarMensajes(data.data.mensajes);
-                        const bloqueChat = document.querySelector('.bloqueChat');
-                        bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
-                        bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
+            try {
+                const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
+                if (data?.success) {
+                    mostrarMensajes(data.data.mensajes);
+                    const bloqueChat = document.querySelector('.bloqueChat');
+                    bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
+                    bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
 
-                        bloqueChat.style.display = 'block';
-                        manejarScroll();
-                        const listaMensajes = document.querySelector('.listaMensajes');
-                        listaMensajes.scrollTop = listaMensajes.scrollHeight;
+                    bloqueChat.style.display = 'block';
+                    manejarScroll();
+                    const listaMensajes = document.querySelector('.listaMensajes');
+                    listaMensajes.scrollTop = listaMensajes.scrollHeight;
 
-                        // Verificar si el receptor está en línea
-                        const onlineStatus = await verificarConexionReceptor(receptor);
-                        if (onlineStatus?.online) {
-                            alert('El receptor está en línea.');
-                            // Aquí podrías mostrar un indicador de "en línea" en la UI
-                        } else {
-                            alert('El receptor no está en línea.');
-                            // Aquí podrías mostrar un indicador de "desconectado" en la UI
-                        }
+                    // Verificar el estado de conexión del receptor 
+                    const onlineStatus = await verificarConexionReceptor(receptor);
+                    const estadoConexion = bloqueChat.querySelector('.estadoConexion');
+
+                    if (onlineStatus?.online) {
+                        estadoConexion.textContent = 'Conectado';
+                        estadoConexion.classList.remove('desconectado');
+                        estadoConexion.classList.add('conectado');
                     } else {
-                        alert(data.message || 'Error desconocido al obtener los mensajes.');
+                        estadoConexion.textContent = 'Desconectado';
+                        estadoConexion.classList.remove('conectado');
+                        estadoConexion.classList.add('desconectado');
                     }
-                } catch (error) {
-                    alert('Ha ocurrido un error al intentar abrir la conversación.');
+                } else {
+                    alert(data.message || 'Error desconocido al obtener los mensajes.');
                 }
-            });
+            } catch (error) {
+                alert('Ha ocurrido un error al intentar abrir la conversación.');
+            }
         });
-    }
+    });
+}
 
     function verificarConexionReceptor(receptorId) {
         return enviarAjax('verificarConexionReceptor', {receptor_id: receptorId})
