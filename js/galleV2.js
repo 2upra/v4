@@ -340,7 +340,7 @@ function galle() {
                 enviarMensajeWs(receptor, mensaje);
                 agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date());
                 mensajeInput.value = '';
-                actualizarListaConversaciones(receptor, ultimoMensaje)
+                actualizarListaConversaciones(receptor, mensaje)
             } else {
                 console.warn('El mensaje está vacío y no será enviado');
             }
