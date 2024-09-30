@@ -68,7 +68,6 @@ function obtenerNombreUsuario($usuarioId) {
     $usuario = get_userdata($usuarioId);
     return $usuario ? $usuario->display_name : '[Usuario desconocido]';
 }
-
 function renderchats($conversaciones, $usuarioId)
 {
     ob_start();
@@ -93,14 +92,14 @@ function renderchats($conversaciones, $usuarioId)
 
                     // Obtener el último mensaje y la fecha
                     $mensajeMostrado = "[No hay mensajes]";
-                    $fechaRelativa = "";
+                    $fechaOriginal = "";
                     if ($conversacion->ultimoMensaje) {
                         if (!empty($conversacion->ultimoMensaje->mensaje)) {
                             $mensajeMostrado = $conversacion->ultimoMensaje->mensaje;
                         } else {
                             $mensajeMostrado = "[Mensaje faltante]";
                         }
-                        $fechaRelativa = tiempoRelativo($conversacion->ultimoMensaje->fecha);
+                        $fechaOriginal = $conversacion->ultimoMensaje->fecha;
                     }
                     ?>
                     <li class="mensaje" data-receptor="<?= esc_attr($otroParticipanteId); ?>" data-conversacion="<?= esc_attr($conversacion->id); ?>">
@@ -116,8 +115,8 @@ function renderchats($conversaciones, $usuarioId)
                                 <p><?= esc_html($mensajeMostrado); ?></p>
                             </div>
                         </div>
-                        <div class="tiempoMensaje">
-                            <span><?= esc_html($fechaRelativa); ?></span>
+                        <div class="tiempoMensaje" data-fecha="<?= esc_attr($fechaOriginal); ?>">
+                            <span></span>
                         </div>
                     </li>
                 <?php endforeach; ?>
