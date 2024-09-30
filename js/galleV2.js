@@ -34,27 +34,39 @@ function galle() {
         manejarScroll();
         connectWebSocket();
         setupEnviarMensajeHandler();
+        actualizarConexionEmisor()
     }
+
+    function actualizarConexionEmisor() {
+        const emisorId = galleV2.emisor; 
+        enviarAjax('actualizarConexion', { user_id: emisorId })
+            .then(response => {
+                if (response.success) {
+                    console.log('Emisor actualizado como conectado.');
+                } else {
+                    console.error('No se pudo actualizar la conexión del emisor:', response.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error al actualizar la conexión del emisor:', error);
+            });
+    }
+
 
 
     function abrirConversacion() {
         document.querySelectorAll('.mensaje').forEach(item => {
             item.addEventListener('click', async () => {
                 conversacion = item.getAttribute('data-conversacion');
-                receptor = item.getAttribute('data-receptor'); // ID del usuario receptor
+                receptor = item.getAttribute('data-receptor');
                 currentPage = 1;
-    
-                // Obtener la imagen de perfil y el nombre del elemento clickeado
                 const imagenPerfil = item.querySelector('.imagenMensaje img').src;
                 const nombreUsuario = item.querySelector('.nombreUsuario strong').textContent;
     
-                // Llamada AJAX para obtener los mensajes
                 try {
                     const data = await enviarAjax('obtenerChat', { conversacion, page: currentPage });
                     if (data?.success) {
                         mostrarMensajes(data.data.mensajes);
-    
-                        // Actualizar la imagen de perfil y el nombre en el bloque de chat
                         const bloqueChat = document.querySelector('.bloqueChat');
                         bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                         bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
@@ -64,7 +76,15 @@ function galle() {
                         const listaMensajes = document.querySelector('.listaMensajes');
                         listaMensajes.scrollTop = listaMensajes.scrollHeight;
     
-                        verificarConexionUsuario(receptor);
+                        // Verificar si el receptor está en línea
+                        const onlineStatus = await verificarConexionReceptor(receptor);
+                        if (onlineStatus?.online) {
+                            alert('El receptor está en línea.');
+                            // Aquí podrías mostrar un indicador de "en línea" en la UI
+                        } else {
+                            alert('El receptor no está en línea.');
+                            // Aquí podrías mostrar un indicador de "desconectado" en la UI
+                        }
                     } else {
                         alert(data.message || 'Error desconocido al obtener los mensajes.');
                     }
@@ -73,6 +93,22 @@ function galle() {
                 }
             });
         });
+    }
+    
+    function verificarConexionReceptor(receptorId) {
+        return enviarAjax('verificarConexionReceptor', { receptor_id: receptorId })
+            .then(response => {
+                if (response.success) {
+                    return response.data;  // Retorna el estado 'online'
+                } else {
+                    console.error('Error al verificar la conexión del receptor:', response.message);
+                    return null;
+                }
+            })
+            .catch(error => {
+                console.error('Error en la solicitud para verificar la conexión del receptor:', error);
+                return null;
+            });
     }
     
     actualizarTiemposRelativos();
@@ -139,26 +175,7 @@ function galle() {
         if (!insertAtTop) {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
         }
-    }
-
-
-    async function verificarConexionUsuario(userId) {
-        try {
-            const data = await enviarAjax('actualizarConexion', { user_id: userId });
     
-            if (data.success) {
-                const estadoConexion = 'conectado'; 
-                const bloqueChat = document.querySelector('.bloqueChat');
-                if (bloqueChat) {
-                    bloqueChat.querySelector('.estadoConexion').textContent = estadoConexion;
-                }
-            } else {
-                console.error('Error en la respuesta:', data.message || 'Error desconocido.');
-            }
-        } catch (error) {
-            console.error('Error al verificar el estado de conexión:', error);
-        }
-    }
     
 
     function connectWebSocket() {
