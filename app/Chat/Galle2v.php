@@ -15,7 +15,7 @@ Error: No se pudo contactar con el servidor de autenticación de WordPress.
 */
 
 add_action('rest_api_init', function () {
-    register_rest_route('galle/v2', '/procesartensaje', array(
+    register_rest_route('galle/v2', '/procesartmensaje', array(
         'methods' => 'POST',
         'callback' => 'procesarMensaje',
         'permission_callback' => function ($request) {
@@ -24,6 +24,17 @@ add_action('rest_api_init', function () {
         }
     ));
 });
+
+/*
+
+curl -I https://2upra.com/wp-json/galle/v2/verificartoken
+Status:
+404 (Not Found)
+Time:
+428 ms
+Size:
+0.00 kb
+*/
 
 add_action('rest_api_init', function () {
     register_rest_route('galle/v2', '/verificartoken', array(
