@@ -124,8 +124,6 @@ function renderchats($conversaciones, $usuarioId)
 }
 
 
-<?php
-
 function tiempoRelativo($fecha)
 {
     $timestamp = strtotime($fecha);
