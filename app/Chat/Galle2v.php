@@ -68,25 +68,39 @@ function generarToken() {
 }
 
 function verificarToken($request) {
+    // Obtener todos los parámetros recibidos en la solicitud y loguearlos
+    $all_params = $request->get_params();
+    chatLog('Parámetros recibidos en la solicitud: ' . json_encode($all_params));
+
+    // Obtener parámetros específicos (token y user_id)
     $token = $request->get_param('token');
     $user_id = $request->get_param('user_id');
 
-    chatLog('Iniciando verificación del token. Token recibido: ' . $token . ' para el usuario ID: ' . $user_id);
+    chatLog('Iniciando verificación del token. Token recibido: ' . ($token ? $token : 'No proporcionado') . ' para el usuario ID: ' . ($user_id ? $user_id : 'No proporcionado'));
 
-    if (!isset($token) || empty($token) || !isset($user_id) || empty($user_id)) {
+    // Verificar si el token o user_id están vacíos
+    if (empty($token) || empty($user_id)) {
         chatLog('Error: No se proporcionó token o el token/ID de usuario está vacío.');
         return new WP_REST_Response(['valid' => false], 401);
     }
 
-    // Re-generar el token con la clave secreta y comparar
-    $secret_key = ($_ENV['GALLEKEY']); // La misma clave que usaste para generar el token
-    $expected_token = hash_hmac('sha256', $user_id . time(), $secret_key);
+    // Log para verificar la clave secreta para mayor seguridad
+    $secret_key = ($_ENV['GALLEKEY']); 
+    chatLog('Clave secreta usada para la verificación: ' . substr($secret_key, 0, 5) . '... (oculta por seguridad)');
 
+    // Generar el token esperado usando user_id y la clave secreta
+    $current_time = time();
+    chatLog('Generando token esperado con el timestamp actual: ' . $current_time);
+
+    $expected_token = hash_hmac('sha256', $user_id . $current_time, $secret_key);
+    chatLog('Token esperado generado: ' . $expected_token);
+
+    // Comparar el token recibido con el token esperado
     if (hash_equals($expected_token, $token)) {
         chatLog('Token válido para el usuario ID: ' . $user_id);
         return new WP_REST_Response(['valid' => true, 'user_id' => $user_id], 200);
     } else {
-        chatLog('Error: Token inválido para el usuario ID: ' . $user_id);
+        chatLog('Error: Token inválido. Token esperado: ' . $expected_token . ', Token recibido: ' . $token);
         return new WP_REST_Response(['valid' => false], 401);
     }
 }
