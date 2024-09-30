@@ -52,50 +52,58 @@ function galle() {
             });
     }
 
-function abrirConversacion() {
-    document.querySelectorAll('.mensaje').forEach(item => {
-        item.addEventListener('click', async () => {
-            conversacion = item.getAttribute('data-conversacion');
-            receptor = item.getAttribute('data-receptor');
-            currentPage = 1;
-            const imagenPerfil = item.querySelector('.imagenMensaje img').src;
-            const nombreUsuario = item.querySelector('.nombreUsuario strong').textContent;
+    function abrirConversacion() {
+        document.querySelectorAll('.mensaje').forEach(item => {
+            item.addEventListener('click', async () => {
+                conversacion = item.getAttribute('data-conversacion');
+                receptor = item.getAttribute('data-receptor');
+                currentPage = 1;
+                const imagenPerfil = item.querySelector('.imagenMensaje img').src;
+                const nombreUsuario = item.querySelector('.nombreUsuario strong').textContent;
 
-            try {
-                const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
-                if (data?.success) {
-                    mostrarMensajes(data.data.mensajes);
-                    const bloqueChat = document.querySelector('.bloqueChat');
-                    bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
-                    bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
+                try {
+                    const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
+                    if (data?.success) {
+                        mostrarMensajes(data.data.mensajes);
+                        const bloqueChat = document.querySelector('.bloqueChat');
+                        bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
+                        bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
 
-                    bloqueChat.style.display = 'block';
-                    manejarScroll();
-                    const listaMensajes = document.querySelector('.listaMensajes');
-                    listaMensajes.scrollTop = listaMensajes.scrollHeight;
+                        bloqueChat.style.display = 'block';
+                        manejarScroll();
+                        const listaMensajes = document.querySelector('.listaMensajes');
+                        listaMensajes.scrollTop = listaMensajes.scrollHeight;
 
-                    // Verificar el estado de conexión del receptor 
-                    const onlineStatus = await verificarConexionReceptor(receptor);
-                    const estadoConexion = bloqueChat.querySelector('.estadoConexion');
+                        // Función para actualizar el estado de conexión del receptor
+                        async function actualizarEstadoConexion() {
+                            const onlineStatus = await verificarConexionReceptor(receptor);
+                            const estadoConexion = bloqueChat.querySelector('.estadoConexion');
 
-                    if (onlineStatus?.online) {
-                        estadoConexion.textContent = 'Conectado';
-                        estadoConexion.classList.remove('desconectado');
-                        estadoConexion.classList.add('conectado');
+                            if (onlineStatus?.online) {
+                                estadoConexion.textContent = 'Conectado';
+                                estadoConexion.classList.remove('desconectado');
+                                estadoConexion.classList.add('conectado');
+                            } else {
+                                estadoConexion.textContent = 'Desconectado';
+                                estadoConexion.classList.remove('conectado');
+                                estadoConexion.classList.add('desconectado');
+                            }
+                        }
+
+                        // Llamar a la función inmediatamente al abrir la conversación
+                        await actualizarEstadoConexion();
+
+                        // Verificar el estado de conexión cada minuto (60000 milisegundos)
+                        setInterval(actualizarEstadoConexion, 60000);
                     } else {
-                        estadoConexion.textContent = 'Desconectado';
-                        estadoConexion.classList.remove('conectado');
-                        estadoConexion.classList.add('desconectado');
+                        alert(data.message || 'Error desconocido al obtener los mensajes.');
                     }
-                } else {
-                    alert(data.message || 'Error desconocido al obtener los mensajes.');
+                } catch (error) {
+                    alert('Ha ocurrido un error al intentar abrir la conversación.');
                 }
-            } catch (error) {
-                alert('Ha ocurrido un error al intentar abrir la conversación.');
-            }
+            });
         });
-    });
-}
+    }
 
     function verificarConexionReceptor(receptorId) {
         return enviarAjax('verificarConexionReceptor', {receptor_id: receptorId})
