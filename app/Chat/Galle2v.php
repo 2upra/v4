@@ -28,24 +28,41 @@ add_action('wp_ajax_generarToken', 'generarToken');
 
 function generarToken() {
     if (!is_user_logged_in()) {
-        chatLog('Intento de generación de token sin usuario autenticado.');
+        chatLog('Error: Intento de generación de token sin usuario autenticado. Usuario no ha iniciado sesión.');
         wp_send_json_error('Usuario no autenticado');
     }
+
     $user_id = get_current_user_id();
-    chatLog('Generando token para el usuario ID: ' . $user_id);
+    chatLog('Usuario autenticado con ID: ' . $user_id);
+
     $token = wp_create_nonce('mi_chat_nonce');
+    if ($token) {
+        chatLog('Token generado exitosamente para el usuario ID: ' . $user_id . '. Token: ' . $token);
+    } else {
+        chatLog('Error al generar el token para el usuario ID: ' . $user_id);
+    }
+
     wp_send_json_success(['token' => $token]);
 }
 
 function verificarToken($request) {
     $token = $request->get_param('token');
     chatLog('Verificando token recibido: ' . $token);
+
     $user_id = wp_verify_nonce($token, 'mi_chat_nonce');
     if ($user_id) {
         chatLog('Token válido. Usuario ID: ' . $user_id);
         return new WP_REST_Response(['valid' => true, 'user_id' => $user_id], 200);
     } else {
-        chatLog('Token inválido.');
+        chatLog('Error: Token inválido. Token proporcionado: ' . $token);
+        
+        // Verificación adicional del posible problema: ¿Está expirado el token?
+        if (!isset($token) || empty($token)) {
+            chatLog('Error: No se proporcionó token o el token está vacío.');
+        } else {
+            chatLog('Token proporcionado parece ser incorrecto o alterado.');
+        }
+
         return new WP_REST_Response(['valid' => false], 401);
     }
 }
