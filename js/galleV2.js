@@ -60,17 +60,20 @@ function galle() {
             });
         });
     }
-
+    actualizarTiemposRelativos();
     function actualizarTiemposRelativos() {
-        const separadoresDeFecha = document.querySelectorAll('.fechaSeparador');
-        separadoresDeFecha.forEach(separador => {
-            const fechaMensaje = new Date(separador.getAttribute('data-fecha'));
-            separador.textContent = formatearTiempoRelativo(fechaMensaje);
-        });
+        const actualizarElementosFecha = (selector) => {
+            const elementos = document.querySelectorAll(selector);
+            elementos.forEach(elemento => {
+                const fechaMensaje = new Date(elemento.getAttribute('data-fecha'));
+                elemento.textContent = formatearTiempoRelativo(fechaMensaje);
+            });
+        };
+        actualizarElementosFecha('.fechaSeparador');
+        actualizarElementosFecha('.tiempoMensaje');
     }
 
-    // Actualizar cada minuto
-    setInterval(actualizarTiemposRelativos, 60000);
+    setInterval(actualizarTiemposRelativos, 4000);
 
     function mostrarMensajes(mensajes) {
         const listaMensajes = document.querySelector('.listaMensajes');
