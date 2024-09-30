@@ -86,7 +86,7 @@ function verificarConexionReceptor() {
         if ($usuario) {
             $ultimaActividad = get_user_meta($receptor_id, 'ultimaActividad', true);
             $tiempoActual = current_time('timestamp');
-            if ($tiempoActual - $ultimaActividad <= 60) {
+            if ($tiempoActual - $ultimaActividad <= 180) {
                 wp_send_json_success(['online' => true]);
             } else {
                 wp_send_json_success(['online' => false]);
