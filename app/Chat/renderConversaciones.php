@@ -12,7 +12,7 @@ function reiniciarChats()
     exit;
 }
 
-//funcion principal para renderizar lista de chats
+
 function conversacionesUsuario($usuarioId)
 {
     $conversaciones = obtenerChats($usuarioId);
@@ -40,7 +40,7 @@ function obtenerChats($usuarioId)
         chatLog("Conversaciones obtenidas: " . print_r($conversaciones, true));
         foreach ($conversaciones as &$conversacion) {
             $ultimoMensaje = $wpdb->get_row($wpdb->prepare("
-                SELECT mensaje, fecha 
+                SELECT mensaje, fecha, emisor 
                 FROM $tablaMensajes 
                 WHERE conversacion = %d 
                 ORDER BY fecha DESC
@@ -68,6 +68,7 @@ function obtenerNombreUsuario($usuarioId) {
     $usuario = get_userdata($usuarioId);
     return $usuario ? $usuario->display_name : '[Usuario desconocido]';
 }
+
 function renderchats($conversaciones, $usuarioId)
 {
     ob_start();
@@ -78,24 +79,19 @@ function renderchats($conversaciones, $usuarioId)
             <ul class="mensajes">
                 <?php
                 foreach ($conversaciones as $conversacion):
-                    // Decodificar los participantes de la conversación
                     $participantes = json_decode($conversacion->participantes);
-                    // Obtener los otros participantes excluyendo al usuario actual
                     $otrosParticipantes = array_diff($participantes, [$usuarioId]);
-                    // Obtener el ID del otro participante (el primero)
                     $otroParticipanteId = reset($otrosParticipantes);
-                    // Obtener la imagen de perfil del otro participante
                     $imagenPerfil = imagenPerfil($otroParticipanteId);
-
-                    // Obtener el nombre del otro participante usando get_userdata()
                     $nombreUsuario = obtenerNombreUsuario($otroParticipanteId);
 
-                    // Obtener el último mensaje y la fecha
                     $mensajeMostrado = "[No hay mensajes]";
                     $fechaOriginal = "";
+                    
                     if ($conversacion->ultimoMensaje) {
                         if (!empty($conversacion->ultimoMensaje->mensaje)) {
-                            $mensajeMostrado = $conversacion->ultimoMensaje->mensaje;
+                            // Agregar lógica para mostrar "Tú: " si el emisor es el usuario actual
+                            $mensajeMostrado = ($conversacion->ultimoMensaje->emisor == $usuarioId ? "Tú: " : "") . $conversacion->ultimoMensaje->mensaje;
                         } else {
                             $mensajeMostrado = "[Mensaje faltante]";
                         }
@@ -107,7 +103,6 @@ function renderchats($conversaciones, $usuarioId)
                             <img src="<?= esc_url($imagenPerfil); ?>" alt="Imagen de perfil">
                         </div>
                         <div class="infoMensaje">
-                            <!-- Mostrar el nombre de usuario -->
                             <div class="nombreUsuario">
                                 <strong><?= esc_html($nombreUsuario); ?></strong>
                             </div>
