@@ -15,6 +15,18 @@ add_action('rest_api_init', function () {
     ));
 });
 
+/*
+no entiendo porque dice que el token es incorrecto o que pasa
+2024-09-30 20:33:24 - Usuario autenticado con ID: 1
+2024-09-30 20:33:24 - Token generado exitosamente para el usuario ID: 1. Token: 2c244ca0b0
+2024-09-30 20:33:26 - Registrando la ruta /procesarmensaje en la API REST.
+2024-09-30 20:33:26 - Registrando la ruta /verificartoken en la API REST.
+2024-09-30 20:33:26 - Verificando token recibido: 2c244ca0b0
+2024-09-30 20:33:26 - Error: Token inválido. Token proporcionado: 2c244ca0b0
+24-09-30 20:33:26 - Token proporcionado parece ser incorrecto o alterado.
+
+*/
+
 add_action('rest_api_init', function () {
     chatLog('Registrando la ruta /verificartoken en la API REST.');
     register_rest_route('galle/v2', '/verificartoken', array(
@@ -47,22 +59,25 @@ function generarToken() {
 
 function verificarToken($request) {
     $token = $request->get_param('token');
-    chatLog('Verificando token recibido: ' . $token);
+    chatLog('Iniciando verificación del token. Token recibido: ' . $token);
+
+    if (!isset($token) || empty($token)) {
+        chatLog('Error: No se proporcionó token o el token está vacío.');
+        return new WP_REST_Response(['valid' => false], 401);
+    }
 
     $user_id = wp_verify_nonce($token, 'mi_chat_nonce');
+    chatLog('Resultado de wp_verify_nonce: ' . ($user_id ? 'Token válido' : 'Token inválido'));
+
     if ($user_id) {
         chatLog('Token válido. Usuario ID: ' . $user_id);
         return new WP_REST_Response(['valid' => true, 'user_id' => $user_id], 200);
     } else {
         chatLog('Error: Token inválido. Token proporcionado: ' . $token);
         
-        // Verificación adicional del posible problema: ¿Está expirado el token?
-        if (!isset($token) || empty($token)) {
-            chatLog('Error: No se proporcionó token o el token está vacío.');
-        } else {
-            chatLog('Token proporcionado parece ser incorrecto o alterado.');
-        }
-
+        // Adicional: Investigar posibles errores de contexto o expiración
+        chatLog('Considerando posible error de contexto o expiración.');
+        
         return new WP_REST_Response(['valid' => false], 401);
     }
 }
