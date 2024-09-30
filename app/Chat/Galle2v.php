@@ -1,35 +1,29 @@
 <?php
 
-/*
-curl -X POST https://2upra.com/wp-json/mi-chat/v1/procesarMensaje \
--H "Content-Type: application/json" \
--d '{"emisor":"1","receptor":"44","mensaje":"Hola"}'
 
-{
-    "code": "internal_server_error",
-    "message": "<p>Ha habido un error cr\u00edtico en esta web.<\/p><p><a href=\"https:\/\/wordpress.org\/documentation\/article\/faq-troubleshooting\/\">Aprende m\u00e1s sobre el diagn\u00f3stico de WordPress.<\/a><\/p>",
-    "data": {
-        "status": 500
-    },
-    "additional_errors": []
-}
-
-*/
 
 add_action('rest_api_init', function () {
     register_rest_route('mi-chat/v1', '/procesarMensaje', array(
         'methods' => 'POST',
         'callback' => 'procesarMensaje',
         'permission_callback' => function () {
-            return true; 
+            return is_user_logged_in(); // Asegura que el usuario esté autenticado
         }
     ));
 });
 
 function procesarMensaje($request) {
-    //esto realmente parece que nunca se inicia
     chatLog($request, 'Iniciando procesarMensaje');
-    //aqui necesito una medida de seguridad que verifique si el emisor es el mismo que el usuario actual, en caso de que no lo sea, no permite
+    
+    // Obtener el usuario actual autenticado
+    $usuario_actual = wp_get_current_user();
+    
+    // Si no hay usuario autenticado o ID no es válido
+    if (!$usuario_actual->exists()) {
+        chatLog($request, 'Error: Usuario no autenticado');
+        return new WP_Error('usuario_no_autenticado', 'Usuario no autenticado', array('status' => 403));
+    }
+
     $params = $request->get_json_params();
     chatLog($request, 'Parámetros recibidos: ' . json_encode($params));
     
@@ -39,14 +33,22 @@ function procesarMensaje($request) {
     $adjunto = isset($params['adjunto']) ? $params['adjunto'] : null;
     $metadata = isset($params['metadata']) ? $params['metadata'] : null;
 
+    // Verificar si los parámetros requeridos están presentes
     if (!$emisor || !$receptor || !$mensaje) {
         chatLog($request, 'Error: Datos incompletos');
         return new WP_Error('datos_incompletos', 'Faltan datos requeridos', array('status' => 400));
     }
-    
+
+    // Verificar si el emisor es el mismo que el usuario autenticado
+    if ($emisor != $usuario_actual->ID) {
+        chatLog($request, 'Error: El emisor no coincide con el usuario autenticado. Emisor: ' . $emisor . ', Usuario autenticado: ' . $usuario_actual->ID);
+        return new WP_Error('emisor_no_autorizado', 'El emisor no coincide con el usuario autenticado', array('status' => 403));
+    }
+
     chatLog($request, 'Intentando guardar mensaje');
     
     try {
+        // Intentar guardar el mensaje
         $resultado = guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata);
         
         if ($resultado) {
@@ -61,7 +63,6 @@ function procesarMensaje($request) {
         return new WP_Error('error_interno', 'Se produjo un error interno', array('status' => 500));
     }
 }
-
 
 function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata = null)
 {
