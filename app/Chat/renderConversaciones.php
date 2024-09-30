@@ -53,12 +53,17 @@ function obtenerChats($usuarioId)
     return $conversaciones;
 }
 
+function obtenerNombreUsuario($usuarioId) {
+    $usuario = get_userdata($usuarioId);
+    return $usuario ? $usuario->display_name : '[Usuario desconocido]';
+}
+
 function renderchats($conversaciones, $usuarioId)
 {
     ob_start();
 
     if ($conversaciones) {
-?>
+        ?>
         <div class="bloque bloqueConversaciones">
             <ul class="mensajes">
                 <?php
@@ -72,7 +77,7 @@ function renderchats($conversaciones, $usuarioId)
                     // Obtener la imagen de perfil del otro participante
                     $imagenPerfil = imagenPerfil($otroParticipanteId);
 
-                    // Obtener el nombre del otro participante
+                    // Obtener el nombre del otro participante usando get_userdata()
                     $nombreUsuario = obtenerNombreUsuario($otroParticipanteId);
 
                     // Obtener el último mensaje y la fecha
@@ -86,7 +91,7 @@ function renderchats($conversaciones, $usuarioId)
                         }
                         $fechaRelativa = tiempoRelativo($conversacion->ultimoMensaje->fecha);
                     }
-                ?>
+                    ?>
                     <li class="mensaje" data-receptor="<?= esc_attr($otroParticipanteId); ?>" data-conversacion="<?= esc_attr($conversacion->id); ?>">
                         <div class="imagenMensaje">
                             <img src="<?= esc_url($imagenPerfil); ?>" alt="Imagen de perfil">
@@ -111,7 +116,7 @@ function renderchats($conversaciones, $usuarioId)
     } else {
     ?>
         <p>No tienes conversaciones activas.</p>
-<?php
+    <?php
     }
 
     $htmlGenerado = ob_get_clean();
