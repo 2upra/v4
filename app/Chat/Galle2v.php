@@ -3,7 +3,7 @@
 
 
 /*
-[30-Sep-2024 21:45:42 UTC] PHP Fatal error:  Uncaught Error: Cannot use object of type WP_REST_Response as array in /var/www/wordpress/wp-content/themes/2upra3v/app/Chat/Galle2v.php:37
+[30-Sep-2024 21:55:01 UTC] PHP Fatal error:  Uncaught Error: Cannot use object of type WP_REST_Response as array in /var/www/wordpress/wp-content/themes/2upra3v/app/Chat/Galle2v.php:47
 Stack trace:
 #0 /var/www/wordpress/wp-includes/rest-api/class-wp-rest-server.php(1197): {closure}()
 #1 /var/www/wordpress/wp-includes/rest-api/class-wp-rest-server.php(1063): WP_REST_Server->respond_to_request()
@@ -18,7 +18,7 @@ Stack trace:
 #10 /var/www/wordpress/wp-blog-header.php(16): wp()
 #11 /var/www/wordpress/index.php(17): require('...')
 #12 {main}
-  thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Chat/Galle2v.php on line 37
+  thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Chat/Galle2v.php on line 47
 
 */
 
