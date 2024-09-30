@@ -190,17 +190,15 @@ function galle() {
 
     let token = null;
 
+    // Nueva función obtenerToken usando enviarAjax
     async function obtenerToken() {
         try {
-            const response = await fetch('/wp-admin/admin-ajax.php?action=get_chat_token', {
-                method: 'GET',
-                credentials: 'same-origin' 
-            });
-            const data = await response.json();
-            if (data.success) {
-                return data.data.token;
+            const response = await enviarAjax('generarToken', {});
+            if (response.success) {
+                return response.data.token;
             } else {
-                throw new Error('No se pudo obtener el token');
+                console.error('No se pudo obtener el token:', response.message);
+                return null;
             }
         } catch (error) {
             console.error('Error al obtener el token:', error);
@@ -219,12 +217,8 @@ function galle() {
 
     function connectWebSocket() {
         ws = new WebSocket(wsUrl);
-
-        // Cuando se abre la conexión
         ws.onopen = () => {
             console.log('Conexión WebSocket abierta');
-
-            // Envía el emisor inmediatamente después de establecer la conexión
             ws.send(
                 JSON.stringify({
                     emisor,
@@ -232,38 +226,27 @@ function galle() {
                     token: token
                 })
             );
-
-            // Mantén la conexión activa con pings
             pingInterval = setInterval(() => {
                 if (ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({type: 'ping'}));
                 }
-            }, 30000); // 30 segundos
+            }, 30000); 
         };
-
-        // Cuando la conexión se cierra
         ws.onclose = () => {
             clearInterval(pingInterval);
             console.log('Conexión cerrada. Reintentando en 5 segundos...');
-            setTimeout(connectWebSocket, 5000); // Reintenta la conexión en 5 segundos
+            setTimeout(connectWebSocket, 5000); 
         };
-
-        // Manejo de errores
         ws.onerror = error => {
             console.error('Error en WebSocket:', error);
         };
-
-        // Cuando se recibe un mensaje
         ws.onmessage = ({data}) => {
             const message = JSON.parse(data);
-
             if (message.type === 'pong') {
                 console.log('Pong recibido');
             } else if (message.type === 'set_emisor') {
-                // El servidor solicita el emisor nuevamente
                 ws.send(JSON.stringify({emisor}));
             } else {
-                // Manejar otros tipos de mensajes
                 manejarMensajeWebSocket(JSON.stringify(message));
             }
         };

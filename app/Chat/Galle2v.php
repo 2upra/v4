@@ -1,6 +1,7 @@
 <?php
 
 
+// No se que estoy haciendo exactamente, solo quiero que el chat sea seguro y que solo el usuario que corresponde envie el guardarMensaje
 
 add_action('rest_api_init', function () {
     register_rest_route('galle/v1', '/procesarMensaje', array(
@@ -21,6 +22,17 @@ add_action('rest_api_init', function () {
     ));
 });
 
+add_action('wp_ajax_generarToken', 'generarToken');
+//esto envia un token al cliente
+function generarToken() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error('Usuario no autenticado');
+    }
+    $user_id = get_current_user_id();
+    $token = wp_create_nonce('mi_chat_nonce');
+    wp_send_json_success(['token' => $token]);
+}
+
 function verificarToken($request) {
     $token = $request->get_param('token');
     $user_id = wp_verify_nonce($token, 'mi_chat_nonce');
@@ -30,6 +42,198 @@ function verificarToken($request) {
         return new WP_REST_Response(['valid' => false], 401);
     }
 }
+
+/*
+cliente
+
+    function connectWebSocket() {
+        ws = new WebSocket(wsUrl);
+        ws.onopen = () => {
+            console.log('Conexión WebSocket abierta');
+            ws.send(
+                JSON.stringify({
+                    emisor,
+                    type: 'auth',
+                    token: token
+                })
+            );
+            pingInterval = setInterval(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({type: 'ping'}));
+                }
+            }, 30000); 
+        };
+        ws.onclose = () => {
+            clearInterval(pingInterval);
+            console.log('Conexión cerrada. Reintentando en 5 segundos...');
+            setTimeout(connectWebSocket, 5000); 
+        };
+        ws.onerror = error => {
+            console.error('Error en WebSocket:', error);
+        };
+        ws.onmessage = ({data}) => {
+            const message = JSON.parse(data);
+            if (message.type === 'pong') {
+                console.log('Pong recibido');
+            } else if (message.type === 'set_emisor') {
+                ws.send(JSON.stringify({emisor}));
+            } else {
+                manejarMensajeWebSocket(JSON.stringify(message));
+            }
+        };
+    }
+
+    parte del websocket
+
+    public function __construct()
+    {
+        $this->clients = new \SplObjectStorage();
+        $this->users = [];
+        $this->autenticados = [];
+        echo "Chat instance created\n";
+    }
+
+    public function onOpen(ConnectionInterface $conn)
+    {
+        $this->clients->attach($conn);
+        echo "New connection! ({$conn->resourceId})\n";
+
+        // Envía una instrucción para que el cliente establezca el emisor
+        $conn->send(json_encode(['type' => 'set_emisor']));
+    }
+
+    public function onMessage(ConnectionInterface $from, $msg)
+    {
+        echo "Mensaje recibido de {$from->resourceId}: " . $msg . "\n";
+
+        $data = json_decode($msg, true);
+
+        if (!$data) {
+            echo "Error: Mensaje no es JSON válido\n";
+            return;
+        }
+
+        if (isset($data['type']) && $data['type'] === 'auth') {
+            $this->verificarToken($from, $data['token']);
+            return;
+        }
+
+        if (!isset($this->autenticados[$from->resourceId])) {
+            $from->send(json_encode(['error' => 'No autenticado']));
+            return;
+        }
+
+        if (isset($data['type']) && $data['type'] === 'ping') {
+            // Responder con un pong
+            $from->send(json_encode(['type' => 'pong']));
+            echo "Pong enviado a {$from->resourceId}\n";
+            return;
+        }
+
+        // Si el mensaje tiene un emisor y aún no se ha asociado con la conexión
+        if (isset($data['emisor']) && !isset($this->users[$from->resourceId])) {
+            $this->users[$from->resourceId] = $data['emisor'];
+            echo "Emisor {$data['emisor']} asociado con conexión {$from->resourceId}\n";
+        }
+
+        // Verificar si el emisor está correctamente asociado
+        if (!isset($this->users[$from->resourceId])) {
+            echo "Error: Emisor no está asociado a la conexión {$from->resourceId}\n";
+            return;
+        }
+
+        // Enviar el mensaje al receptor si está especificado
+        if (isset($data['receptor'])) {
+            $receptorId = $data['receptor'];
+            echo "Buscando receptor con ID: {$receptorId}\n";
+
+            $receptorEncontrado = false;
+            foreach ($this->clients as $client) {
+                if (isset($this->users[$client->resourceId]) && $this->users[$client->resourceId] == $receptorId) {
+                    $client->send($msg);
+                    echo "Mensaje enviado al receptor {$receptorId} (conexión {$client->resourceId})\n";
+                    $receptorEncontrado = true;
+                    break;
+                }
+            }
+
+            if (!$receptorEncontrado) {
+                echo "Receptor {$receptorId} no encontrado o no conectado\n";
+            }
+        } else {
+            echo "Mensaje sin receptor\n";
+        }
+
+        // Guardar el mensaje en WordPress
+        echo "Intentando guardar mensaje en WordPress...\n";
+        $this->guardarMensajeEnWordPress($data, $this->autenticados[$from->resourceId]);
+    }
+
+    private function verificarToken(ConnectionInterface $conn, $token)
+    {
+        $url = 'https://2upra.com/wp-json/galle/v1/verificarToken';
+        $options = [
+            'http' => [
+                'header'  => "Content-type: application/json\r\n",
+                'method'  => 'POST',
+                'content' => json_encode(['token' => $token])
+            ]
+        ];
+        $context  = stream_context_create($options);
+        $result = file_get_contents($url, false, $context);
+
+        if ($result === FALSE) {
+            $conn->send(json_encode(['type' => 'auth', 'status' => 'error']));
+        } else {
+            $response = json_decode($result, true);
+            if ($response['valid']) {
+                $this->autenticados[$conn->resourceId] = $token;
+                $conn->send(json_encode(['type' => 'auth', 'status' => 'success']));
+            } else {
+                $conn->send(json_encode(['type' => 'auth', 'status' => 'failed']));
+            }
+        }
+    }
+
+    public function onClose(ConnectionInterface $conn)
+    {
+        $this->clients->detach($conn);
+        unset($this->users[$conn->resourceId]);
+        unset($this->autenticados[$conn->resourceId]);
+        echo "Connection {$conn->resourceId} has disconnected\n";
+    }
+
+    public function onError(ConnectionInterface $conn, \Exception $e)
+    {
+        echo "Error en la conexión {$conn->resourceId}: {$e->getMessage()}\n";
+        $conn->close();
+    }
+
+    private function guardarMensajeEnWordPress($data, $token)
+    {
+        $url = 'https://2upra.com/wp-json/galle/v1/procesarMensaje';
+
+        $options = [
+            'http' => [
+                'header'  => "Content-type: application/json\r\n" .
+                             "X-WP-Nonce: $token\r\n",
+                'method'  => 'POST',
+                'content' => json_encode($data)
+            ]
+        ];
+
+        $context  = stream_context_create($options);
+        $result = file_get_contents($url, false, $context);
+
+        if ($result === FALSE) {
+            echo "Error al guardar el mensaje en WordPress. Detalles del error:\n";
+            print_r(error_get_last());
+        } else {
+            echo "Respuesta de WordPress: " . $result . "\n";
+        }
+    }
+
+*/
 
 function procesarMensaje($request) {
     chatLog($request, 'Iniciando procesarMensaje');
