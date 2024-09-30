@@ -7,6 +7,7 @@ function conversacionesUsuario($usuarioId)
     return renderchats($conversaciones, $usuarioId);
 }
 
+falta en nombre de usuario en en el render, puede conseguir por la id de usuario que corresponde 
 function obtenerChats($usuarioId)
 {
     global $wpdb;
@@ -57,16 +58,24 @@ function renderchats($conversaciones, $usuarioId)
     ob_start();
 
     if ($conversaciones) {
-        ?>
+?>
         <div class="bloque bloqueConversaciones">
             <ul class="mensajes">
                 <?php
                 foreach ($conversaciones as $conversacion):
+                    // Decodificar los participantes de la conversación
                     $participantes = json_decode($conversacion->participantes);
+                    // Obtener los otros participantes excluyendo al usuario actual
                     $otrosParticipantes = array_diff($participantes, [$usuarioId]);
+                    // Obtener el ID del otro participante (el primero)
                     $otroParticipanteId = reset($otrosParticipantes);
+                    // Obtener la imagen de perfil del otro participante
                     $imagenPerfil = imagenPerfil($otroParticipanteId);
 
+                    // Obtener el nombre del otro participante
+                    $nombreUsuario = obtenerNombreUsuario($otroParticipanteId);
+
+                    // Obtener el último mensaje y la fecha
                     $mensajeMostrado = "[No hay mensajes]";
                     $fechaRelativa = "";
                     if ($conversacion->ultimoMensaje) {
@@ -77,13 +86,19 @@ function renderchats($conversaciones, $usuarioId)
                         }
                         $fechaRelativa = tiempoRelativo($conversacion->ultimoMensaje->fecha);
                     }
-                    ?>
+                ?>
                     <li class="mensaje" data-receptor="<?= esc_attr($otroParticipanteId); ?>" data-conversacion="<?= esc_attr($conversacion->id); ?>">
                         <div class="imagenMensaje">
                             <img src="<?= esc_url($imagenPerfil); ?>" alt="Imagen de perfil">
                         </div>
-                        <div class="vistaPrevia">
-                            <p><?= esc_html($mensajeMostrado); ?></p>
+                        <div class="infoMensaje">
+                            <!-- Mostrar el nombre de usuario -->
+                            <div class="nombreUsuario">
+                                <strong><?= esc_html($nombreUsuario); ?></strong>
+                            </div>
+                            <div class="vistaPrevia">
+                                <p><?= esc_html($mensajeMostrado); ?></p>
+                            </div>
                         </div>
                         <div class="tiempoMensaje">
                             <span><?= esc_html($fechaRelativa); ?></span>
@@ -92,17 +107,18 @@ function renderchats($conversaciones, $usuarioId)
                 <?php endforeach; ?>
             </ul>
         </div>
-        <?php
+    <?php
     } else {
-        ?>
+    ?>
         <p>No tienes conversaciones activas.</p>
-        <?php
+<?php
     }
 
     $htmlGenerado = ob_get_clean();
     return $htmlGenerado;
 }
-?>
+
+
 <?php
 
 function tiempoRelativo($fecha)

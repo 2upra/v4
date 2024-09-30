@@ -29,7 +29,7 @@ add_action('rest_api_init', function () {
 function procesarMensaje($request) {
     //esto realmente parece que nunca se inicia
     chatLog($request, 'Iniciando procesarMensaje');
-    //aqui necesito una medida de seguridad que verifique si el emisor es el mismo que el usuario actual, en caso de que no lo sea, no permite 
+    //aqui necesito una medida de seguridad que verifique si el emisor es el mismo que el usuario actual, en caso de que no lo sea, no permite
     $params = $request->get_json_params();
     chatLog($request, 'Parámetros recibidos: ' . json_encode($params));
     
