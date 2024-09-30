@@ -229,13 +229,8 @@ function galle() {
     
                 const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
                 if (tiempoMensajeDiv) {
-                    // Crear una nueva fecha para el momento actual
                     const fechaActual = new Date();
-    
-                    // Actualizar el atributo data-fecha
                     tiempoMensajeDiv.setAttribute('data-fecha', fechaActual.toISOString());
-    
-                    // Formatear la fecha relativa y actualizar el texto del span
                     const tiempoMensajeSpan = tiempoMensajeDiv.querySelector('span');
                     if (tiempoMensajeSpan) {
                         tiempoMensajeSpan.textContent = formatearTiempoRelativo(fechaActual);
@@ -287,7 +282,7 @@ function galle() {
                 enviarMensaje();
             }
         });
-
+    
         const mensajeInput = document.querySelector('.mensajeContenido');
         mensajeInput.addEventListener('keydown', event => {
             if (event.key === 'Enter' && !event.altKey) {
@@ -295,18 +290,18 @@ function galle() {
                 enviarMensaje();
             }
         });
-
+    
         function enviarMensaje() {
             const mensaje = mensajeInput.value;
             if (mensaje.trim() !== '') {
                 enviarMensajeWs(receptor, mensaje);
                 agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date());
                 mensajeInput.value = '';
-                actualizarListaConversaciones(receptor, mensaje);
+                const mensajeVistaPrevia = `Tu: ${mensaje}`;
+                actualizarListaConversaciones(receptor, mensajeVistaPrevia);
             }
         }
     }
-
     function manejarScroll() {
         const listaMensajes = document.querySelector('.listaMensajes');
         let puedeDesplazar = true;
