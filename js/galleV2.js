@@ -64,7 +64,6 @@ function galle() {
                         const listaMensajes = document.querySelector('.listaMensajes');
                         listaMensajes.scrollTop = listaMensajes.scrollHeight;
     
-                        // Verificar el estado de conexión del usuario receptor
                         verificarConexionUsuario(receptor);
                     } else {
                         alert(data.message || 'Error desconocido al obtener los mensajes.');
@@ -74,22 +73,6 @@ function galle() {
                 }
             });
         });
-    }
-
-    async function verificarConexionUsuario(userId) {
-        try {
-            const data = await enviarAjax('verificarConexion', { user_id: userId });
-    
-            if (data.success) {
-                const estadoConexion = data.data;
-                const bloqueChat = document.querySelector('.bloqueChat');
-                bloqueChat.querySelector('.estadoConexion').textContent = estadoConexion;
-            } else {
-                console.error('Error en la respuesta:', data.message || 'Error desconocido.');
-            }
-        } catch (error) {
-            console.error('Error al verificar el estado de conexión:', error);
-        }
     }
     
     actualizarTiemposRelativos();
@@ -158,6 +141,26 @@ function galle() {
         }
     }
 
+
+    async function verificarConexionUsuario(userId) {
+        try {
+            const data = await enviarAjax('actualizarConexion', { user_id: userId });
+    
+            if (data.success) {
+                const estadoConexion = 'conectado'; 
+                const bloqueChat = document.querySelector('.bloqueChat');
+                if (bloqueChat) {
+                    bloqueChat.querySelector('.estadoConexion').textContent = estadoConexion;
+                }
+            } else {
+                console.error('Error en la respuesta:', data.message || 'Error desconocido.');
+            }
+        } catch (error) {
+            console.error('Error al verificar el estado de conexión:', error);
+        }
+    }
+    
+
     function connectWebSocket() {
         ws = new WebSocket(wsUrl);
         ws.onopen = () => {
@@ -178,7 +181,6 @@ function galle() {
         ws.onmessage = ({ data }) => {
             const message = JSON.parse(data);
             if (message.type === 'pong') {
-                // Respuesta al ping, no se requiere acción
             } else if (message.type === 'set_emisor') {
                 ws.send(JSON.stringify({ emisor }));
             } else {

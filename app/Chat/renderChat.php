@@ -56,27 +56,32 @@ add_action('wp_ajax_obtenerChat', 'obtenerChat');
 
 
 
-function verificarConexion() {
-    // Verificamos que se pase un ID de usuario por POST
+function actualizarConexion() {
     if (isset($_POST['user_id'])) {
         $user_id = intval($_POST['user_id']);
-        
-        // Guardar logs para depuración
-        guardarLog("User ID POST: " . $user_id);
-        guardarLog("Current User ID: " . get_current_user_id());
+        $usuario = get_user_by('ID', $user_id);
 
-        // Verificar si el usuario está conectado y su ID coincide
-        if (is_user_logged_in() && get_current_user_id() === $user_id) {
-            wp_send_json_success('conectado');
+        if ($usuario) {
+            // Actualiza el estado de conexión del usuario
+            update_user_meta($user_id, 'onlineStatus', 'conectado');
+            update_user_meta($user_id, 'ultimaActividad', current_time('timestamp'));
+            
+            // Envía la respuesta de éxito en formato JSON
+            wp_send_json_success('Usuario actualizado como conectado.');
         } else {
-            wp_send_json_error('desconectado');
+            wp_send_json_error('Usuario no encontrado.');
         }
     } else {
         wp_send_json_error('No se proporcionó un ID de usuario.');
     }
 }
 
-add_action('wp_ajax_verificarConexion', 'verificarConexion');
+// Registra la acción AJAX
+add_action('wp_ajax_actualizarConexion', 'actualizarConexion');
+
+
+
+
 
 
 function renderChat()
