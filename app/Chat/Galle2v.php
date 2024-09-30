@@ -1,6 +1,25 @@
 <?php
 
 
+
+/*
+2024-09-30 20:48:36 - Usuario autenticado con ID: 44
+2024-09-30 20:48:36 - Token generado exitosamente para el usuario ID: 44. Token: 810e8fb11c
+2024-09-30 20:48:37 - Registrando la ruta /procesarmensaje en la API REST.
+2024-09-30 20:48:37 - Registrando la ruta /verificartoken en la API REST.
+2024-09-30 20:48:37 - Iniciando verificación del token. Token recibido: 810e8fb11c
+2024-09-30 20:48:37 - Valor actual del nonce_tick: 39994
+2024-09-30 20:48:37 - Resultado de wp_verify_nonce: Token inválido
+2024-09-30 20:48:37 - Error: Token inválido. Token proporcionado: 810e8fb11c
+2024-09-30 20:48:37 - Posible error: Token expirado o contexto incorrecto. Valor actual del nonce_tick: 39994
+
+*/
+
+add_filter('nonce_life', function() {
+    return 24 * HOUR_IN_SECONDS; // Nonce válido por 24 horas
+});
+
+
 add_action('rest_api_init', function () {
     chatLog('Registrando la ruta /procesarmensaje en la API REST.');
     register_rest_route('galle/v2', '/procesarmensaje', array(
@@ -14,17 +33,6 @@ add_action('rest_api_init', function () {
         }
     ));
 });
-
-/*
-2024-09-30 20:45:11 - Usuario autenticado con ID: 44
-2024-09-30 20:45:11 - Token generado exitosamente para el usuario ID: 44. Token: 810e8fb11c
-2024-09-30 20:45:12 - Registrando la ruta /procesarmensaje en la API REST.
-2024-09-30 20:45:12 - Registrando la ruta /verificartoken en la API REST.
-2024-09-30 20:45:12 - Iniciando verificación del token. Token recibido: 810e8fb11c
-2024-09-30 20:45:12 - Resultado de wp_verify_nonce: Token inválido
-2024-09-30 20:45:12 - Error: Token inválido. Token proporcionado: 810e8fb11c
-
-*/
 
 add_action('rest_api_init', function () {
     chatLog('Registrando la ruta /verificartoken en la API REST.');
@@ -52,7 +60,8 @@ function generarToken() {
     } else {
         chatLog('Error al generar el token para el usuario ID: ' . $user_id);
     }
-
+    $nonce_life = wp_nonce_tick(); 
+    chatLog('Token generado. Nonce tick en el momento de generación: ' . $nonce_life);
     wp_send_json_success(['token' => $token]);
 }
 
