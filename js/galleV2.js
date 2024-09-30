@@ -34,12 +34,12 @@ function galle() {
         manejarScroll();
         connectWebSocket();
         setupEnviarMensajeHandler();
-        actualizarConexionEmisor()
+        actualizarConexionEmisor();
     }
 
     function actualizarConexionEmisor() {
-        const emisorId = galleV2.emisor; 
-        enviarAjax('actualizarConexion', { user_id: emisorId })
+        const emisorId = galleV2.emisor;
+        enviarAjax('actualizarConexion', {user_id: emisorId})
             .then(response => {
                 if (response.success) {
                     console.log('Emisor actualizado como conectado.');
@@ -52,8 +52,6 @@ function galle() {
             });
     }
 
-
-
     function abrirConversacion() {
         document.querySelectorAll('.mensaje').forEach(item => {
             item.addEventListener('click', async () => {
@@ -62,20 +60,20 @@ function galle() {
                 currentPage = 1;
                 const imagenPerfil = item.querySelector('.imagenMensaje img').src;
                 const nombreUsuario = item.querySelector('.nombreUsuario strong').textContent;
-    
+
                 try {
-                    const data = await enviarAjax('obtenerChat', { conversacion, page: currentPage });
+                    const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
                     if (data?.success) {
                         mostrarMensajes(data.data.mensajes);
                         const bloqueChat = document.querySelector('.bloqueChat');
                         bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                         bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
-    
+
                         bloqueChat.style.display = 'block';
                         manejarScroll();
                         const listaMensajes = document.querySelector('.listaMensajes');
                         listaMensajes.scrollTop = listaMensajes.scrollHeight;
-    
+
                         // Verificar si el receptor está en línea
                         const onlineStatus = await verificarConexionReceptor(receptor);
                         if (onlineStatus?.online) {
@@ -94,12 +92,12 @@ function galle() {
             });
         });
     }
-    
+
     function verificarConexionReceptor(receptorId) {
-        return enviarAjax('verificarConexionReceptor', { receptor_id: receptorId })
+        return enviarAjax('verificarConexionReceptor', {receptor_id: receptorId})
             .then(response => {
                 if (response.success) {
-                    return response.data;  // Retorna el estado 'online'
+                    return response.data; // Retorna el estado 'online'
                 } else {
                     console.error('Error al verificar la conexión del receptor:', response.message);
                     return null;
@@ -110,10 +108,10 @@ function galle() {
                 return null;
             });
     }
-    
+
     actualizarTiemposRelativos();
     function actualizarTiemposRelativos() {
-        const actualizarElementosFecha = (selector) => {
+        const actualizarElementosFecha = selector => {
             const elementos = document.querySelectorAll(selector);
             elementos.forEach(elemento => {
                 const fechaMensaje = new Date(elemento.getAttribute('data-fecha'));
@@ -146,7 +144,7 @@ function galle() {
             const searchOrder = insertAtTop ? 1 : -1;
             const startIndex = insertAtTop ? 0 : children.length - 1;
 
-            for (let i = startIndex; (insertAtTop ? i < children.length : i >= 0); i += searchOrder) {
+            for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
                 const child = children[i];
                 if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
                     lastElement = child;
@@ -175,16 +173,15 @@ function galle() {
         if (!insertAtTop) {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
         }
-    
-    
+    }
 
     function connectWebSocket() {
         ws = new WebSocket(wsUrl);
         ws.onopen = () => {
-            ws.send(JSON.stringify({ emisor }));
+            ws.send(JSON.stringify({emisor}));
             pingInterval = setInterval(() => {
                 if (ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({ type: 'ping' }));
+                    ws.send(JSON.stringify({type: 'ping'}));
                 }
             }, 30000);
         };
@@ -195,11 +192,11 @@ function galle() {
         ws.onerror = error => {
             console.error('Error en WebSocket:', error);
         };
-        ws.onmessage = ({ data }) => {
+        ws.onmessage = ({data}) => {
             const message = JSON.parse(data);
             if (message.type === 'pong') {
             } else if (message.type === 'set_emisor') {
-                ws.send(JSON.stringify({ emisor }));
+                ws.send(JSON.stringify({emisor}));
             } else {
                 manejarMensajeWebSocket(JSON.stringify(message));
             }
@@ -215,7 +212,7 @@ function galle() {
             const searchOrder = insertAtTop ? 1 : -1;
             const startIndex = insertAtTop ? 0 : children.length - 1;
 
-            for (let i = startIndex; (insertAtTop ? i < children.length : i >= 0); i += searchOrder) {
+            for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
                 const child = children[i];
                 if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
                     lastElement = child;
@@ -249,7 +246,7 @@ function galle() {
 
     function manejarMensajeWebSocket(data) {
         try {
-            const { emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje } = JSON.parse(data);
+            const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
 
             if (msgReceptor === emisor) {
                 if (msgEmisor === receptor) {
@@ -268,16 +265,16 @@ function galle() {
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
         const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
         let conversacionActualizada = false;
-    
+
         listaMensajes.forEach(mensaje => {
             const receptorId = mensaje.getAttribute('data-receptor');
-    
+
             if (receptorId == usuarioId) {
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
                     vistaPrevia.textContent = ultimoMensaje;
                 }
-    
+
                 const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
                 if (tiempoMensajeDiv) {
                     const fechaActual = new Date();
@@ -290,12 +287,11 @@ function galle() {
                 conversacionActualizada = true;
             }
         });
-    
+
         if (!conversacionActualizada) {
             reiniciarChats();
         }
     }
-    
 
     function reiniciarChats() {
         enviarAjax('reiniciarChats', {})
@@ -316,9 +312,8 @@ function galle() {
             });
     }
 
-
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null) {
-        const messageData = { emisor, receptor, mensaje, adjunto, metadata };
+        const messageData = {emisor, receptor, mensaje, adjunto, metadata};
 
         if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(messageData));
@@ -333,7 +328,7 @@ function galle() {
                 enviarMensaje();
             }
         });
-    
+
         const mensajeInput = document.querySelector('.mensajeContenido');
         mensajeInput.addEventListener('keydown', event => {
             if (event.key === 'Enter' && !event.altKey) {
@@ -341,7 +336,7 @@ function galle() {
                 enviarMensaje();
             }
         });
-    
+
         function enviarMensaje() {
             const mensaje = mensajeInput.value;
             if (mensaje.trim() !== '') {
@@ -365,7 +360,7 @@ function galle() {
                 }, 2000);
 
                 currentPage++;
-                const data = await enviarAjax('obtenerChat', { conversacion, page: currentPage });
+                const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
                 if (data?.success) {
                     const mensajes = data.data.mensajes;
                     let fechaAnterior = null;
