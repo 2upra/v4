@@ -7,7 +7,6 @@ function conversacionesUsuario($usuarioId)
     return renderchats($conversaciones, $usuarioId);
 }
 
-falta en nombre de usuario en en el render, puede conseguir por la id de usuario que corresponde 
 function obtenerChats($usuarioId)
 {
     global $wpdb;
