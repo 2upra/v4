@@ -1,42 +1,22 @@
 <?php
 
 
-/*
-
-Mensaje recibido de 89: {"emisor":"44","type":"auth","token":"810e8fb11c"}
-Mensaje de autenticación recibido. Verificando token...
-Iniciando verificación del token para el emisor: 44 en la conexión 89
-Token recibido: 810e8fb11c
-Enviando solicitud de verificación a WordPress con las siguientes opciones:
-URL: https://2upra.com/wp-json/galle/v1/verificarToken
-Contenido: {"token":"810e8fb11c"}
-Error: No se pudo contactar con el servidor de autenticación de WordPress.
-
-*/
-
 add_action('rest_api_init', function () {
-    register_rest_route('galle/v2', '/procesartmensaje', array(
+    chatLog('Registrando la ruta /procesarmensaje en la API REST.');
+    register_rest_route('galle/v2', '/procesarmensaje', array(
         'methods' => 'POST',
         'callback' => 'procesarMensaje',
         'permission_callback' => function ($request) {
             $token = $request->get_header('X-WP-Nonce');
-            return wp_verify_nonce($token, 'mi_chat_nonce');
+            $is_valid = wp_verify_nonce($token, 'mi_chat_nonce');
+            chatLog('Verificación del token en /procesarmensaje: ' . ($is_valid ? 'Válido' : 'Inválido'));
+            return $is_valid;
         }
     ));
 });
 
-/*
-
-curl -I https://2upra.com/wp-json/galle/v2/verificartoken
-Status:
-404 (Not Found)
-Time:
-428 ms
-Size:
-0.00 kb
-*/
-
 add_action('rest_api_init', function () {
+    chatLog('Registrando la ruta /verificartoken en la API REST.');
     register_rest_route('galle/v2', '/verificartoken', array(
         'methods' => 'POST',
         'callback' => 'verificarToken',
@@ -48,19 +28,24 @@ add_action('wp_ajax_generarToken', 'generarToken');
 
 function generarToken() {
     if (!is_user_logged_in()) {
+        chatLog('Intento de generación de token sin usuario autenticado.');
         wp_send_json_error('Usuario no autenticado');
     }
     $user_id = get_current_user_id();
+    chatLog('Generando token para el usuario ID: ' . $user_id);
     $token = wp_create_nonce('mi_chat_nonce');
     wp_send_json_success(['token' => $token]);
 }
 
 function verificarToken($request) {
     $token = $request->get_param('token');
+    chatLog('Verificando token recibido: ' . $token);
     $user_id = wp_verify_nonce($token, 'mi_chat_nonce');
     if ($user_id) {
+        chatLog('Token válido. Usuario ID: ' . $user_id);
         return new WP_REST_Response(['valid' => true, 'user_id' => $user_id], 200);
     } else {
+        chatLog('Token inválido.');
         return new WP_REST_Response(['valid' => false], 401);
     }
 }
