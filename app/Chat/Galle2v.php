@@ -58,9 +58,10 @@ function generarToken() {
     $user_id = get_current_user_id();
     chatLog('Usuario autenticado con ID: ' . $user_id);
 
-    // Generar un token manualmente usando el ID del usuario
+    // Generar un token manualmente usando el ID del usuario y el timestamp redondeado
     $secret_key = ($_ENV['GALLEKEY']); // Cambia esta clave secreta a algo más seguro
-    $token = hash_hmac('sha256', $user_id . time(), $secret_key);
+    $rounded_time = floor(time() / 300); // Redondear el tiempo a intervalos de 5 minutos
+    $token = hash_hmac('sha256', $user_id . $rounded_time, $secret_key);
 
     chatLog('Token generado manualmente para el usuario ID: ' . $user_id . '. Token: ' . $token);
     
@@ -68,63 +69,17 @@ function generarToken() {
 }
 
 /*
-
-private function verificarToken(ConnectionInterface $conn, $token, $emisor)
-    {
-        // Log para ver el token y el emisor que se están verificando
-        echo "Iniciando verificación del token para el emisor: {$emisor} en la conexión {$conn->resourceId}\n";
-        echo "Token recibido: {$token}\n";
-
-        // URL del endpoint de verificación de token
-        $url = 'https://2upra.com/wp-json/galle/v2/verificartoken';
-
-        // Iniciar cURL
-        $ch = curl_init($url);
-
-        // Configurar opciones de cURL
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-        ]);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['token' => $token]));
-
-        // Ejecutar la solicitud cURL
-        $result = curl_exec($ch);
-        $error = curl_error($ch);
-
-        curl_close($ch);
-
-        // Si cURL falla
-        if ($result === FALSE) {
-            echo "Error de cURL: No se pudo contactar con el servidor de autenticación de WordPress. Detalles: {$error}\n";
-            $conn->send(json_encode(['type' => 'auth', 'status' => 'error', 'message' => 'No se pudo contactar con el servidor de autenticación.']));
-            return;
-        }
-
-        // Log para mostrar la respuesta recibida de WordPress
-        echo "Respuesta recibida de WordPress: {$result}\n";
-
-        // Decodificar la respuesta de WordPress
-        $response = json_decode($result, true);
-
-        // Verificar si la respuesta es válida y correcta
-        if ($response && isset($response['valid']) && $response['valid']) {
-            // Asociar el emisor y el token con la conexión
-            $this->users[$conn->resourceId] = $emisor;
-            $this->autenticados[$conn->resourceId] = $token;
-
-            // Enviar respuesta de éxito al cliente
-            $conn->send(json_encode(['type' => 'auth', 'status' => 'success']));
-            echo "Autenticación exitosa para el emisor: {$emisor} en la conexión {$conn->resourceId}\n";
-        } else {
-            // Si el token es inválido
-            echo "Error: Token inválido para el emisor: {$emisor} en la conexión {$conn->resourceId}\n";
-            $conn->send(json_encode(['type' => 'auth', 'status' => 'failed', 'message' => 'Token inválido.']));
-        }
-    }
-
-    para que la verifique aqui:
+FALLA! PORQUE 
+2024-09-30 21:23:14 - Usuario autenticado con ID: 1
+2024-09-30 21:23:14 - Token generado manualmente para el usuario ID: 1. Token: 51d43f773ebb29bb6900ba10ac8149accf6d29c4d2da0874123643478e02afc4
+2024-09-30 21:23:15 - Registrando la ruta /procesarmensaje en la API REST.
+2024-09-30 21:23:15 - Registrando la ruta /verificartoken en la API REST.
+2024-09-30 21:23:15 - Parámetros recibidos en la solicitud: {"token":"51d43f773ebb29bb6900ba10ac8149accf6d29c4d2da0874123643478e02afc4","user_id":"1"}
+2024-09-30 21:23:15 - Iniciando verificación del token. Token recibido: 51d43f773ebb29bb6900ba10ac8149accf6d29c4d2da0874123643478e02afc4 para el usuario ID: 1
+2024-09-30 21:23:15 - Clave secreta usada para la verificación: bf084... (oculta por seguridad)
+2024-09-30 21:23:15 - Generando token esperado con el timestamp actual: 1727731395
+2024-09-30 21:23:15 - Token esperado generado: 3a5157ec4634787ae99c0ad5d38017925ab173da9092c86e494914d95a8347fa
+2024-09-30 21:23:15 - Error: Token inválido. Token esperado: 3a5157ec4634787ae99c0ad5d38017925ab173da9092c86e494914d95a8347fa, Token recibido: 51d43f773ebb29bb6900ba10ac8149accf6d29c4d2da0874123643478e02afc4
 */
 
 function verificarToken($request) {
@@ -145,18 +100,25 @@ function verificarToken($request) {
     }
 
     // Log para verificar la clave secreta para mayor seguridad
-    $secret_key = ($_ENV['GALLEKEY']); 
+    $secret_key = ($_ENV['GALLEKEY']);
     chatLog('Clave secreta usada para la verificación: ' . substr($secret_key, 0, 5) . '... (oculta por seguridad)');
 
-    // Generar el token esperado usando user_id y la clave secreta
+    // Validar el token en una ventana de tiempo de 5 minutos (300 segundos)
     $current_time = time();
-    chatLog('Generando token esperado con el timestamp actual: ' . $current_time);
+    $rounded_time = floor($current_time / 300); // Redondear el tiempo a intervalos de 5 minutos
+    chatLog('Generando token esperado con el tiempo redondeado: ' . $rounded_time);
 
-    $expected_token = hash_hmac('sha256', $user_id . $current_time, $secret_key);
+    // Generar el token esperado con el valor de tiempo redondeado
+    $expected_token = hash_hmac('sha256', $user_id . $rounded_time, $secret_key);
     chatLog('Token esperado generado: ' . $expected_token);
 
     // Comparar el token recibido con el token esperado
-    if (hash_equals($expected_token, $token)) {
+    // También verificar el token con el tiempo anterior por si el timestamp cambió en el último segundo
+    $previous_rounded_time = $rounded_time - 1;
+    $previous_expected_token = hash_hmac('sha256', $user_id . $previous_rounded_time, $secret_key);
+    chatLog('Token esperado (tiempo anterior): ' . $previous_expected_token);
+
+    if (hash_equals($expected_token, $token) || hash_equals($previous_expected_token, $token)) {
         chatLog('Token válido para el usuario ID: ' . $user_id);
         return new WP_REST_Response(['valid' => true, 'user_id' => $user_id], 200);
     } else {
