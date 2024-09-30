@@ -3,66 +3,41 @@
 
 
 /*
+2024-09-30 22:00:02 - Iniciando verificación del token. Token recibido: 131d7fe2270e17e1a4ed10f190cda533c5f53d688277163645457f5251aeff53 para el usuario ID: 44
+2024-09-30 22:00:02 - Token válido para el usuario ID: 44
+2024-09-30 22:00:16 - Registrando la ruta /procesarmensaje en la API REST.
+2024-09-30 22:00:16 - Registrando la ruta /verificartoken en la API REST.
+2024-09-30 22:00:16 - Iniciando verificación del token. Token recibido: 131d7fe2270e17e1a4ed10f190cda533c5f53d688277163645457f5251aeff53 para el usuario ID: 44
+2024-09-30 22:00:16 - Token válido para el usuario ID: 44
+2024-09-30 22:00:16 - Verificación del token en /procesarmensaje: Válido
+2024-09-30 22:00:16 - {}
+2024-09-30 22:00:16 - {}
+2024-09-30 22:00:16 - Iniciando verificación del token. Token recibido: 131d7fe2270e17e1a4ed10f190cda533c5f53d688277163645457f5251aeff53 para el usuario ID: 44
+2024-09-30 22:00:16 - Token válido para el usuario ID: 44
+2024-09-30 22:00:16 - Verificación del token en /procesarmensaje: Válido
+
+Mensaje de autenticación recibido. Verificando token...
+Iniciando verificación del token para el emisor: 44 en la conexión 94
+Token recibido: 131d7fe2270e17e1a4ed10f190cda533c5f53d688277163645457f5251aeff53
+Datos enviados a WordPress: {"token":"131d7fe2270e17e1a4ed10f190cda533c5f53d688277163645457f5251aeff53","user_id":"44"}
+Respuesta recibida de WordPress: 
+
+
+{"valid":true,"user_id":"44"}
+Autenticación exitosa para el emisor: 44 en la conexión 94
+Mensaje recibido de 94: {"emisor":"44","receptor":"1","mensaje":"hola","adjunto":null,"metadata":null}
+Buscando receptor con ID: 1
+Mensaje enviado al receptor 1 (conexión 88)
+Intentando guardar mensaje en WordPress...
+Token autenticado: 131d7fe2270e17e1a4ed10f190cda533c5f53d688277163645457f5251aeff53
 Datos a enviar a WordPress: {"emisor":"44","receptor":"1","mensaje":"hola","adjunto":null,"metadata":null}
-Token usado para autenticar en WordPress: 119b220657952abb48cffa53778c1d7447bf54aaf93e6efb4581133c9f15c633
+Token usado para autenticar en WordPress: 131d7fe2270e17e1a4ed10f190cda533c5f53d688277163645457f5251aeff53
 User ID usado para autenticar en WordPress: 44
 Respuesta de WordPress: 
 
 
-{"code":"internal_server_error","message":"<p>Ha habido un error cr\u00edtico en esta web.<\/p><p><a href=\"https:\/\/wordpress.org\/documentation\/article\/faq-troubleshooting\/\">Aprende m\u00e1s sobre el diagn\u00f3stico de WordPress.<\/a><\/p>","data":{"status":500},"additional_errors":[]}
+{"code":"usuario_no_autenticado","message":"Usuario no autenticado","data":{"status":403}}
 
-[30-Sep-2024 21:57:14 UTC] PHP Fatal error:  Uncaught Error: Cannot use object of type WP_REST_Response as array in /var/www/wordpress/wp-content/themes/2upra3v/app/Chat/Galle2v.php:47
-Stack trace:
-#0 /var/www/wordpress/wp-includes/rest-api/class-wp-rest-server.php(1197): {closure}()
-#1 /var/www/wordpress/wp-includes/rest-api/class-wp-rest-server.php(1063): WP_REST_Server->respond_to_request()
-#2 /var/www/wordpress/wp-includes/rest-api/class-wp-rest-server.php(439): WP_REST_Server->dispatch()
-#3 /var/www/wordpress/wp-includes/rest-api.php(420): WP_REST_Server->serve_request()
-#4 /var/www/wordpress/wp-includes/class-wp-hook.php(324): rest_api_loaded()
-#5 /var/www/wordpress/wp-includes/class-wp-hook.php(348): WP_Hook->apply_filters()
-#6 /var/www/wordpress/wp-includes/plugin.php(565): WP_Hook->do_action()
-#7 /var/www/wordpress/wp-includes/class-wp.php(418): do_action_ref_array()
-#8 /var/www/wordpress/wp-includes/class-wp.php(813): WP->parse_request()
-#9 /var/www/wordpress/wp-includes/functions.php(1336): WP->main()
-#10 /var/www/wordpress/wp-blog-header.php(16): wp()
-#11 /var/www/wordpress/index.php(17): require('...')
-#12 {main}
-  thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Chat/Galle2v.php on line 47
-
-  private function guardarMensajeEnWordPress($data, $token, $user_id)
-    {
-        echo "Datos a enviar a WordPress: " . json_encode($data) . "\n";
-        echo "Token usado para autenticar en WordPress: $token\n";
-        echo "User ID usado para autenticar en WordPress: $user_id\n";
-
-        $url = 'https://2upra.com/wp-json/galle/v2/procesarmensaje';
-
-        // Iniciar cURL
-        $ch = curl_init($url);
-
-        // Configurar opciones de cURL
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            "X-WP-Token: $token",   // Cambia a X-WP-Token o cualquier nombre adecuado
-            "X-User-ID: $user_id"   // Envía el user_id en los encabezados
-        ]);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-
-        // Ejecutar la solicitud cURL
-        $result = curl_exec($ch);
-        $error = curl_error($ch);
-
-        // Si cURL falla
-        if ($result === FALSE) {
-            echo "Error de cURL: No se pudo guardar el mensaje en WordPress. Detalles: {$error}\n";
-            print_r(curl_getinfo($ch)); // Muestra información de depuración sobre la solicitud cURL
-        } else {
-            echo "Respuesta de WordPress: {$result}\n";
-        }
-
-        curl_close($ch);
-    }
 
 */
 
@@ -106,37 +81,6 @@ add_action('rest_api_init', function () {
     ));
 });
 
-add_action('rest_api_init', function () {
-    chatLog('Registrando la ruta /verificartoken en la API REST.');
-    register_rest_route('galle/v2', '/verificartoken', array(
-        'methods' => 'POST',
-        'callback' => 'verificarToken',
-        'permission_callback' => '__return_true'
-    ));
-});
-
-add_action('wp_ajax_generarToken', 'generarToken');
-
-function generarToken() {
-    if (!is_user_logged_in()) {
-        chatLog('Error: Intento de generación de token sin usuario autenticado. Usuario no ha iniciado sesión.');
-        wp_send_json_error('Usuario no autenticado');
-    }
-
-    $user_id = get_current_user_id();
-    chatLog('Usuario autenticado con ID: ' . $user_id);
-
-    // Generar un token manualmente usando el ID del usuario y el timestamp redondeado
-    $secret_key = ($_ENV['GALLEKEY']); // Cambia esta clave secreta a algo más seguro
-    $rounded_time = floor(time() / 300); // Redondear el tiempo a intervalos de 5 minutos
-    $token = hash_hmac('sha256', $user_id . $rounded_time, $secret_key);
-
-    chatLog('Token generado manualmente para el usuario ID: ' . $user_id . '. Token: ' . $token);
-    
-    wp_send_json_success(['token' => $token, 'user_id' => $user_id]);
-}
-
-
 function verificarToken($request) {
     // Obtener el token y user_id desde los parámetros o los headers
     $token = $request->get_param('token') ?: $request->get_header('X-WP-Token');
@@ -177,21 +121,64 @@ function verificarToken($request) {
     }
 }
 
-function procesarMensaje($request) {
-    chatLog($request, 'Iniciando procesarMensaje');
+add_action('rest_api_init', function () {
+    chatLog('Registrando la ruta /verificartoken en la API REST.');
+    register_rest_route('galle/v2', '/verificartoken', array(
+        'methods' => 'POST',
+        'callback' => 'verificarToken',
+        'permission_callback' => '__return_true'
+    ));
+});
+
+add_action('wp_ajax_generarToken', 'generarToken');
+
+function generarToken() {
+    if (!is_user_logged_in()) {
+        chatLog('Error: Intento de generación de token sin usuario autenticado. Usuario no ha iniciado sesión.');
+        wp_send_json_error('Usuario no autenticado');
+    }
+
+    $user_id = get_current_user_id();
+    chatLog('Usuario autenticado con ID: ' . $user_id);
+
+    // Generar un token manualmente usando el ID del usuario y el timestamp redondeado
+    $secret_key = ($_ENV['GALLEKEY']); // Cambia esta clave secreta a algo más seguro
+    $rounded_time = floor(time() / 300); // Redondear el tiempo a intervalos de 5 minutos
+    $token = hash_hmac('sha256', $user_id . $rounded_time, $secret_key);
+
+    chatLog('Token generado manualmente para el usuario ID: ' . $user_id . '. Token: ' . $token);
     
+    wp_send_json_success(['token' => $token, 'user_id' => $user_id]);
+}
+
+
+
+
+function procesarMensaje($request) {
+    chatLog('Iniciando procesarMensaje');
+
     // Obtener el usuario actual autenticado
     $usuario_actual = wp_get_current_user();
-    
-    // Si no hay usuario autenticado o ID no es válido
+
+    // Si no hay usuario autenticado, intentar autenticación manual con el user_id
     if (!$usuario_actual->exists()) {
-        chatLog($request, 'Error: Usuario no autenticado');
-        return new WP_Error('usuario_no_autenticado', 'Usuario no autenticado', array('status' => 403));
+        $user_id = $request->get_header('X-User-ID');
+        if ($user_id) {
+            wp_set_current_user($user_id); // Forzar autenticación de usuario
+            $usuario_actual = wp_get_current_user();
+            if (!$usuario_actual->exists()) {
+                chatLog('Error: Usuario no autenticado después de intentar forzar autenticación');
+                return new WP_Error('usuario_no_autenticado', 'Usuario no autenticado', array('status' => 403));
+            }
+        } else {
+            chatLog('Error: Usuario no autenticado y no se pudo obtener el ID de usuario');
+            return new WP_Error('usuario_no_autenticado', 'Usuario no autenticado', array('status' => 403));
+        }
     }
 
     $params = $request->get_json_params();
-    chatLog($request, 'Parámetros recibidos: ' . json_encode($params));
-    
+    chatLog('Parámetros recibidos: ' . json_encode($params));
+
     $emisor = isset($params['emisor']) ? $params['emisor'] : null;
     $receptor = isset($params['receptor']) ? $params['receptor'] : null;
     $mensaje = isset($params['mensaje']) ? $params['mensaje'] : null;
@@ -200,31 +187,31 @@ function procesarMensaje($request) {
 
     // Verificar si los parámetros requeridos están presentes
     if (!$emisor || !$receptor || !$mensaje) {
-        chatLog($request, 'Error: Datos incompletos');
+        chatLog('Error: Datos incompletos');
         return new WP_Error('datos_incompletos', 'Faltan datos requeridos', array('status' => 400));
     }
 
     // Verificar si el emisor es el mismo que el usuario autenticado
     if ($emisor != $usuario_actual->ID) {
-        chatLog($request, 'Error: El emisor no coincide con el usuario autenticado. Emisor: ' . $emisor . ', Usuario autenticado: ' . $usuario_actual->ID);
+        chatLog('Error: El emisor no coincide con el usuario autenticado. Emisor: ' . $emisor . ', Usuario autenticado: ' . $usuario_actual->ID);
         return new WP_Error('emisor_no_autorizado', 'El emisor no coincide con el usuario autenticado', array('status' => 403));
     }
 
-    chatLog($request, 'Intentando guardar mensaje');
-    
+    chatLog('Intentando guardar mensaje');
+
     try {
         // Intentar guardar el mensaje
         $resultado = guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata);
-        
+
         if ($resultado) {
-            chatLog($request, 'Mensaje guardado con éxito');
+            chatLog('Mensaje guardado con éxito');
             return new WP_REST_Response(['success' => true], 200);
         } else {
-            chatLog($request, 'Error: No se pudo guardar el mensaje');
+            chatLog('Error: No se pudo guardar el mensaje');
             return new WP_Error('error_guardado', 'No se pudo guardar el mensaje', array('status' => 500));
         }
     } catch (Exception $e) {
-        chatLog($request, 'Excepción al guardar mensaje: ' . $e->getMessage());
+        chatLog('Excepción al guardar mensaje: ' . $e->getMessage());
         return new WP_Error('error_interno', 'Se produjo un error interno', array('status' => 500));
     }
 }
