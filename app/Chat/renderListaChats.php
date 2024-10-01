@@ -69,23 +69,43 @@ function obtenerNombreUsuario($usuarioId)
 }
 
 function infoUsuario() {
+    // Verificamos si el usuario está autenticado
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Usuario no autenticado.'));
+        wp_die();
+    }
+
+    // Obtenemos el ID del receptor desde la solicitud POST
     $receptor = isset($_POST['receptor']) ? intval($_POST['receptor']) : 0;
 
+    // Verificamos si hay un receptor válido
     if ($receptor <= 0) {
         wp_send_json_error(array('message' => 'ID del receptor inválido.'));
         wp_die();
     }
-    $imagenPerfil = imagenPerfil($receptor);
-    $nombreUsuario = obtenerNombreUsuario($receptor);
+
+    // Obtenemos la imagen de perfil y el nombre del usuario
+    $imagenPerfil = imagenPerfil($receptor); // Función personalizada que obtiene la URL de la imagen de perfil
+    $nombreUsuario = obtenerNombreUsuario($receptor); // Función personalizada que obtiene el nombre del usuario
+    
+    // Si no se encuentra la imagen o el nombre, puedes definir valores por defecto
+    if (!$imagenPerfil) {
+        $imagenPerfil = 'ruta_por_defecto.jpg'; // URL de una imagen por defecto
+    }
+
+    if (!$nombreUsuario) {
+        $nombreUsuario = 'Usuario Desconocido';
+    }
+
+    // Enviamos la respuesta con los datos obtenidos
     wp_send_json_success(array(
         'imagenPerfil' => $imagenPerfil,
         'nombreUsuario' => $nombreUsuario
     ));
 
-    wp_die();
+    wp_die(); // Finalizamos la ejecución
 }
 add_action('wp_ajax_infoUsuario', 'infoUsuario');
-
 function renderListaChats($conversaciones, $usuarioId)
 {
     ob_start();
