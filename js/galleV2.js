@@ -105,8 +105,6 @@ function galle() {
             alert('Ha ocurrido un error al intentar abrir la conversación.');
         }
     }
-
-
     async function manejarClickEnMensaje(item) {
         item.addEventListener('click', async () => {
             console.log('Evento click detectado.'); // Log para asegurar que el evento se dispara
@@ -114,23 +112,23 @@ function galle() {
             const receptor = item.getAttribute('data-receptor');
             let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
             let nombreUsuario = item.querySelector('.nombreUsuario strong')?.textContent || null;
-    
+
             console.log('Datos obtenidos antes de la solicitud AJAX:');
             console.log('Conversación:', conversacion);
             console.log('Receptor:', receptor);
             console.log('Imagen de Perfil:', imagenPerfil);
             console.log('Nombre de Usuario:', nombreUsuario);
-    
+
             // Si no tenemos la imagen de perfil o el nombre, pedimos la información al servidor
             if (!imagenPerfil || !nombreUsuario) {
                 console.log('No se tienen los datos, realizando solicitud AJAX para obtener información del servidor.');
                 try {
                     const data = await enviarAjax('infoUsuario', {receptor});
                     console.log('Respuesta del servidor:', data);
-    
+
                     if (data?.success) {
-                        imagenPerfil = data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
-                        nombreUsuario = data.nombreUsuario || 'Usuario Desconocido'; // Nombre por defecto si no se encuentra
+                        imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
+                        nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido'; // Nombre por defecto si no se encuentra
                         console.log('Datos obtenidos del servidor:');
                         console.log('Imagen de Perfil:', imagenPerfil);
                         console.log('Nombre de Usuario:', nombreUsuario);
@@ -145,17 +143,17 @@ function galle() {
                     return;
                 }
             }
-    
+
             // Si aún no tenemos imagenPerfil o nombreUsuario, asignar valores por defecto para evitar errores
             imagenPerfil = imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
             nombreUsuario = nombreUsuario || 'Usuario Desconocido';
-    
+
             console.log('Abrir conversación con los siguientes datos:');
             console.log('Conversación:', conversacion);
             console.log('Receptor:', receptor);
             console.log('Imagen de Perfil:', imagenPerfil);
             console.log('Nombre de Usuario:', nombreUsuario);
-    
+
             // Abrir la conversación
             abrirConversacion({
                 conversacion: conversacion || null,
@@ -165,7 +163,6 @@ function galle() {
             });
         });
     }
-    
 
     function clickMensaje() {
         const mensajes = document.querySelectorAll('.mensaje');
