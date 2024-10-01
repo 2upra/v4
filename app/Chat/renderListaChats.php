@@ -2,8 +2,7 @@
 
 
 // Función para manejar la solicitud AJAX
-add_action('reiniciarChats', 'reiniciarChats');
-
+add_action('wp_ajax_reiniciarChats', 'reiniciarChats');
 function reiniciarChats()
 {
     $usuarioId = get_current_user_id();
@@ -11,7 +10,6 @@ function reiniciarChats()
     wp_send_json_success(['html' => $htmlConversaciones]);
     exit;
 }
-
 
 function conversacionesUsuario($usuarioId)
 {
@@ -64,30 +62,49 @@ function obtenerChats($usuarioId)
     return $conversaciones;
 }
 
-function obtenerNombreUsuario($usuarioId) {
+function obtenerNombreUsuario($usuarioId)
+{
     $usuario = get_userdata($usuarioId);
     return $usuario ? $usuario->display_name : '[Usuario desconocido]';
 }
+
+function infoUsuario() {
+    $receptor = isset($_POST['receptor']) ? intval($_POST['receptor']) : 0;
+
+    if ($receptor <= 0) {
+        wp_send_json_error(array('message' => 'ID del receptor inválido.'));
+        wp_die();
+    }
+    $imagenPerfil = imagenPerfil($receptor);
+    $nombreUsuario = obtenerNombreUsuario($receptor);
+    wp_send_json_success(array(
+        'imagenPerfil' => $imagenPerfil,
+        'nombreUsuario' => $nombreUsuario
+    ));
+
+    wp_die();
+}
+add_action('wp_ajax_infoUsuario', 'infoUsuario');
 
 function renderListaChats($conversaciones, $usuarioId)
 {
     ob_start();
 
     if ($conversaciones) {
-        ?>
+?>
         <div class="bloque bloqueConversaciones">
             <ul class="mensajes">
                 <?php
                 foreach ($conversaciones as $conversacion):
                     $participantes = json_decode($conversacion->participantes);
                     $otrosParticipantes = array_diff($participantes, [$usuarioId]);
-                    $otroParticipanteId = reset($otrosParticipantes);
-                    $imagenPerfil = imagenPerfil($otroParticipanteId);
-                    $nombreUsuario = obtenerNombreUsuario($otroParticipanteId);
+                    $receptor = reset($otrosParticipantes);
+                    $imagenPerfil = imagenPerfil($receptor);
+                    $nombreUsuario = obtenerNombreUsuario($receptor);
 
                     $mensajeMostrado = "[No hay mensajes]";
                     $fechaOriginal = "";
-                    
+
                     if ($conversacion->ultimoMensaje) {
                         if (!empty($conversacion->ultimoMensaje->mensaje)) {
                             $mensajeMostrado = ($conversacion->ultimoMensaje->emisor == $usuarioId ? "Tú: " : "") . $conversacion->ultimoMensaje->mensaje;
@@ -96,8 +113,8 @@ function renderListaChats($conversaciones, $usuarioId)
                         }
                         $fechaOriginal = $conversacion->ultimoMensaje->fecha;
                     }
-                    ?>
-                    <li class="mensaje" data-receptor="<?= esc_attr($otroParticipanteId); ?>" data-conversacion="<?= esc_attr($conversacion->id); ?>">
+                ?>
+                    <li class="mensaje" data-receptor="<?= esc_attr($receptor); ?>" data-conversacion="<?= esc_attr($conversacion->id); ?>">
                         <div class="imagenMensaje">
                             <img src="<?= esc_url($imagenPerfil); ?>" alt="Imagen de perfil">
                         </div>
@@ -120,7 +137,7 @@ function renderListaChats($conversaciones, $usuarioId)
     } else {
     ?>
         <p>No tienes conversaciones activas.</p>
-    <?php
+<?php
     }
 
     $htmlGenerado = ob_get_clean();

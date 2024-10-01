@@ -1,5 +1,6 @@
 <?php
 
+
 function obtenerChat()
 {
     if (!is_user_logged_in()) {
@@ -7,21 +8,48 @@ function obtenerChat()
         wp_die();
     }
 
+    global $wpdb;
+    
+    $usuarioActual = get_current_user_id(); // Emisor
+    $receptor = isset($_POST['receptor']) ? intval($_POST['receptor']) : 0;
     $conversacion = isset($_POST['conversacion']) ? intval($_POST['conversacion']) : 0;
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
     $mensajesPorPagina = 10;
 
-    if ($conversacion <= 0) {
-        wp_send_json_error(array('message' => 'ID de conversación inválido.'));
+    // Validar si tenemos el ID del receptor si no se ha pasado una conversación
+    if ($conversacion <= 0 && $receptor <= 0) {
+        wp_send_json_error(array('message' => 'ID de conversación o receptor inválido.'));
         wp_die();
     }
 
-    global $wpdb;
+    // Si no hay ID de conversación, buscar una existente entre el emisor y receptor
+    if ($conversacion <= 0) {
+        $tablaConversaciones = $wpdb->prefix . 'conversacion'; // Tabla de conversaciones
+
+        // Buscar una conversación de tipo 1 (uno a uno) con ambos participantes
+        $conversacion = $wpdb->get_var($wpdb->prepare("
+            SELECT id 
+            FROM $tablaConversaciones 
+            WHERE tipo = 1
+            AND JSON_CONTAINS(participantes, %s)
+            AND JSON_CONTAINS(participantes, %s)
+            LIMIT 1
+        ", 
+        json_encode((string)$usuarioActual), 
+        json_encode((string)$receptor)));
+
+        // Si no existe conversación, devolver un resultado vacío
+        if (!$conversacion) {
+            wp_send_json_success(array('mensajes' => array()));
+            wp_die();
+        }
+    }
+
+    // Obtener los mensajes de la conversación
     $tablaMensajes = $wpdb->prefix . 'mensajes';
     $offset = ($page - 1) * $mensajesPorPagina;
-    $usuarioActual = get_current_user_id();
 
-    // Cambiamos el orden a DESC para obtener los mensajes más recientes
+    // Cambiar el orden a DESC para obtener los mensajes más recientes
     $query = $wpdb->prepare("
         SELECT mensaje, emisor AS remitente, fecha
         FROM $tablaMensajes
@@ -37,7 +65,6 @@ function obtenerChat()
         wp_die();
     }
 
-    // Cambiamos el orden de los mensajes para que se muestren en el orden correcto
     $mensajes = array_reverse($mensajes);
 
     foreach ($mensajes as $mensaje) {
@@ -47,7 +74,7 @@ function obtenerChat()
     if ($mensajes) {
         wp_send_json_success(array('mensajes' => $mensajes));
     } else {
-        wp_send_json_error(array('message' => 'No se encontraron más mensajes.'));
+        wp_send_json_success(array('mensajes' => array()));
     }
 
     wp_die();

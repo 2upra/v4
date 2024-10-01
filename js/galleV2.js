@@ -53,42 +53,52 @@ function galle() {
             });
     }
 
+    async function actualizarEstadoConexion(receptor, bloqueChat) {
+        actualizarConexionEmisor();
+        const onlineStatus = await verificarConexionReceptor(receptor);
+        const estadoConexion = bloqueChat.querySelector('.estadoConexion');
+
+        if (onlineStatus?.online) {
+            estadoConexion.textContent = 'Conectado';
+            estadoConexion.classList.remove('desconectado');
+            estadoConexion.classList.add('conectado');
+        } else {
+            estadoConexion.textContent = 'Desconectado';
+            estadoConexion.classList.remove('conectado');
+            estadoConexion.classList.add('desconectado');
+        }
+    }
+
     async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
         try {
+            let data = {success: true, data: {mensajes: []}}; // Inicialmente, datos vacíos para el caso de no tener conversación
             const currentPage = 1;
-            const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
 
+            if (conversacion) {
+                // Si se recibió un ID de conversación, hacemos la petición con él
+                data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
+            } else if (receptor) {
+                // Si no hay conversación, pero sí receptor, hacemos la petición solo con el receptor
+                data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
+            }
+
+            // Si la petición fue exitosa o si no hay mensajes simplemente mostramos el chat vacío
             if (data?.success) {
-                mostrarMensajes(data.data.mensajes);
+                mostrarMensajes(data.data.mensajes); // Mostrar los mensajes obtenidos, si no hay, mostrará un chat vacío
 
                 const bloqueChat = document.querySelector('.bloqueChat');
                 bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                 bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
-                bloqueChat.style.display = 'block';
+                bloqueChat.style.display = 'block'; // Mostrar la ventana del chat
 
                 manejarScroll();
 
                 const listaMensajes = document.querySelector('.listaMensajes');
-                listaMensajes.scrollTop = listaMensajes.scrollHeight;
+                listaMensajes.scrollTop = listaMensajes.scrollHeight; // Desplazar al final del chat
 
-                async function actualizarEstadoConexion() {
-                    actualizarConexionEmisor();
-                    const onlineStatus = await verificarConexionReceptor(receptor);
-                    const estadoConexion = bloqueChat.querySelector('.estadoConexion');
-
-                    if (onlineStatus?.online) {
-                        estadoConexion.textContent = 'Conectado';
-                        estadoConexion.classList.remove('desconectado');
-                        estadoConexion.classList.add('conectado');
-                    } else {
-                        estadoConexion.textContent = 'Desconectado';
-                        estadoConexion.classList.remove('conectado');
-                        estadoConexion.classList.add('desconectado');
-                    }
-                }
-
-                await actualizarEstadoConexion();
-                setInterval(actualizarEstadoConexion, 30000);
+                // Actualizar el estado de conexión del receptor
+                await actualizarEstadoConexion(receptor, bloqueChat);
+                setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000); // Actualizar cada 30 segundos
             } else {
                 alert(data.message || 'Error desconocido al obtener los mensajes.');
             }
@@ -97,17 +107,33 @@ function galle() {
         }
     }
 
-    // Función para manejar el evento de click en un mensaje
     function manejarClickEnMensaje(item) {
-        item.addEventListener('click', () => {
-            conversacion = item.getAttribute('data-conversacion');
-            receptor = item.getAttribute('data-receptor');
-            const imagenPerfil = item.querySelector('.imagenMensaje img').src;
-            const nombreUsuario = item.querySelector('.nombreUsuario strong').textContent;
-
-            actualizarConexionEmisor(); 
+        item.addEventListener('click', async () => {
+            let conversacion = item.getAttribute('data-conversacion');
+            const receptor = item.getAttribute('data-receptor');
+            let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
+            let nombreUsuario = item.querySelector('.nombreUsuario strong')?.textContent || null;
+    
+            if (!imagenPerfil || !nombreUsuario) {
+                try {
+                    const data = await enviarAjax('infoUsuario', { receptor });
+                    
+                    if (data?.success) {
+                        imagenPerfil = data.imagenPerfil;
+                        nombreUsuario = data.nombreUsuario;
+                    } else {
+                        alert(data.message || 'Error al obtener la información del usuario.');
+                        return; 
+                    }
+                } catch (error) {
+                    alert('Error al intentar obtener la información del usuario.');
+                    return; 
+                }
+            }
+    
+            actualizarConexionEmisor();
             abrirConversacion({
-                conversacion,
+                conversacion: conversacion || null,
                 receptor,
                 imagenPerfil,
                 nombreUsuario
@@ -116,16 +142,23 @@ function galle() {
     }
 
     function clickMensaje() {
-        document.querySelectorAll('.mensaje').forEach(item => {
-            manejarClickEnMensaje(item);
-        });
+        
+        const mensajes = document.querySelectorAll('.mensaje');
+        if (mensajes.length > 0) {
+            mensajes.forEach(item => manejarClickEnMensaje(item));
+        }
+
+        const botonesMensaje = document.querySelectorAll('.mensajeBoton');
+        if (botonesMensaje.length > 0) {
+            botonesMensaje.forEach(item => manejarClickEnMensaje(item));
+        }
     }
 
     function verificarConexionReceptor(receptorId) {
         return enviarAjax('verificarConexionReceptor', {receptor_id: receptorId})
             .then(response => {
                 if (response.success) {
-                    return response.data; 
+                    return response.data;
                 } else {
                     console.error('Error al verificar la conexión del receptor:', response.message);
                     return null;
