@@ -489,21 +489,21 @@ function galle() {
             previewChatImagen.style.display = 'none';
             previewChatArchivo.style.display = 'none';
         };
-        
+
         const subidaChatAudio = async file => {
             console.log('Iniciando subida de audio:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
             subidaChatProgreso = true;
             ocultarPreviews(); // Ocultar otros previews
-        
+
             try {
                 console.log('Cargando archivo de audio...');
                 previewChatAudio.style.display = 'block';
                 const progressBarId = waveAudio(file);
                 console.log('Barra de progreso creada con ID:', progressBarId);
-        
+
                 const {fileUrl, fileId} = await subidaChatBackend(file, progressBarId);
                 console.log('Audio cargado con éxito:', fileId, 'URL:', fileUrl);
-        
+
                 archivoChatId = fileId;
                 archivoChatUrl = fileUrl;
                 subidaChatProgreso = false;
@@ -512,32 +512,32 @@ function galle() {
                 subidaChatProgreso = false;
             }
         };
-        
+
         const subidaChatImagen = async file => {
             console.log('Iniciando subida de imagen:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
             subidaChatProgreso = true;
             ocultarPreviews(); // Ocultar otros previews
             updateChatPreviewImagen(file);
-        
+
             try {
                 console.log('Cargando archivo de imagen...');
                 previewChatImagen.style.display = 'block';
                 const progressBarId = `progress-${Date.now()}`;
                 console.log('Barra de progreso creada con ID:', progressBarId);
-        
+
                 const {fileUrl, fileId} = await subidaChatBackend(file, progressBarId);
                 console.log('Imagen cargada con éxito:', fileId, 'URL:', fileUrl);
-        
+
                 archivoChatId = fileId;
                 archivoChatUrl = fileUrl;
-        
+
                 subidaChatProgreso = false;
             } catch (error) {
                 console.error('Error al cargar la imagen:', error);
                 subidaChatProgreso = false;
             }
         };
-        
+
         const subidaChatArchivo = async file => {
             console.log('Iniciando subida de archivo:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
             subidaChatProgreso = true;
@@ -546,15 +546,15 @@ function galle() {
             previewChatArchivo.innerHTML = `
                 <div class="file-name">${file.name}</div>
                 <div id="barraProgresoFile" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>`;
-        
+
             try {
                 console.log('Cargando archivo...');
                 const progressBarId = `progress-${Date.now()}`;
                 console.log('Barra de progreso creada con ID:', progressBarId);
-        
+
                 const {fileUrl, fileId} = await subidaChatBackend(file, progressBarId);
                 console.log('Archivo cargado con éxito:', fileId, 'URL:', fileUrl);
-        
+
                 archivoChatId = fileId;
                 archivoChatUrl = fileUrl;
                 subidaChatProgreso = false;
@@ -580,6 +580,7 @@ function galle() {
                     <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
                         <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
                     </div>`;
+                inicializarWaveform(audioContainerId, e.target.result);
             };
             reader.readAsDataURL(file);
             return progressBarId;

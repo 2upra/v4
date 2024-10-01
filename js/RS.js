@@ -99,9 +99,9 @@ function selectorformtipo() {
 async function envioRs() {
     const button = document.getElementById('enviarRs');
 
-    button.addEventListener('click', async (event) => {
+    button.addEventListener('click', async event => {
         button.disabled = true;
-        
+
         const verificarCampos = verificarCamposRs();
         const valid = verificarCampos();
         if (!valid) {
@@ -111,7 +111,7 @@ async function envioRs() {
 
         const tags = window.Tags || [];
         const textoNormal = window.NormalText || '';
-        
+
         const descargaCheckbox = document.getElementById('descargacheck');
         const exclusivoCheckbox = document.getElementById('exclusivocheck');
         const colabCheckbox = document.getElementById('colabcheck');
@@ -119,15 +119,7 @@ async function envioRs() {
         const exclusivo = exclusivoCheckbox.checked ? exclusivoCheckbox.value : 0;
         const colab = colabCheckbox.checked ? colabCheckbox.value : 0;
 
-        console.log(
-            'Valores finales:',
-            'descarga:', descarga, 
-            'exclusivo:', exclusivo, 
-            'colab:', colab, 
-            'tags:', tags,
-            'textoNormal:', textoNormal,
-        );
-
+        console.log('Valores finales:', 'descarga:', descarga, 'exclusivo:', exclusivo, 'colab:', colab, 'tags:', tags, 'textoNormal:', textoNormal);
 
         const data = {
             imagenUrl: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
@@ -159,7 +151,6 @@ async function envioRs() {
         } finally {
             button.disabled = false;
         }
-
     });
 }
 
@@ -429,5 +420,4 @@ function limpiarCamposRs() {
 
     const colabCheckbox = document.getElementById('colab');
     if (colabCheckbox) colabCheckbox.checked = false;
-
 }
