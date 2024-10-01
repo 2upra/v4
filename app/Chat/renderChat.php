@@ -1,6 +1,7 @@
 <?php
 
 
+
 function obtenerChat()
 {
     chatLog('Iniciando función obtenerChat.');
@@ -38,6 +39,7 @@ function obtenerChat()
 
         $tablaConversaciones = $wpdb->prefix . 'conversacion';
 
+        // Asegurarse de que los IDs se tratan como enteros
         $conversacion = $wpdb->get_var($wpdb->prepare("
             SELECT id 
             FROM $tablaConversaciones 
@@ -46,8 +48,8 @@ function obtenerChat()
             AND JSON_CONTAINS(participantes, %s)
             LIMIT 1
         ", 
-        json_encode((string)$usuarioActual), 
-        json_encode((string)$receptor)));
+        json_encode($usuarioActual), // No convertir a string, mantenerlo como entero
+        json_encode($receptor)));
 
         if (!$conversacion) {
             chatLog('No se encontró una conversación, enviando resultados vacíos.');
@@ -99,6 +101,7 @@ function obtenerChat()
     wp_die();
 }
 add_action('wp_ajax_obtenerChat', 'obtenerChat');
+
 
 function renderChat()
 {
