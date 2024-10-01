@@ -72,6 +72,7 @@ function galle() {
                 listaMensajes.scrollTop = listaMensajes.scrollHeight;
 
                 async function actualizarEstadoConexion() {
+                    actualizarConexionEmisor();
                     const onlineStatus = await verificarConexionReceptor(receptor);
                     const estadoConexion = bloqueChat.querySelector('.estadoConexion');
 
@@ -87,7 +88,7 @@ function galle() {
                 }
 
                 await actualizarEstadoConexion();
-                setInterval(actualizarEstadoConexion, 60000);
+                setInterval(actualizarEstadoConexion, 30000);
             } else {
                 alert(data.message || 'Error desconocido al obtener los mensajes.');
             }
@@ -232,7 +233,6 @@ function galle() {
     function connectWebSocket() {
         ws = new WebSocket(wsUrl);
         ws.onopen = () => {
-            console.log('Conexión WebSocket abierta');
             ws.send(
                 JSON.stringify({
                     emisor,
@@ -319,10 +319,8 @@ function galle() {
         enviarAjax('reiniciarChats', {})
             .then(response => {
                 if (response.success && response.data.html) {
-                    // Selecciona el contenedor donde se muestran las conversaciones
                     const chatListContainer = document.querySelector('.mensajes');
                     if (chatListContainer) {
-                        // Actualiza el contenido HTML con las nuevas conversaciones
                         chatListContainer.innerHTML = response.data.html;
                     }
                 } else {
@@ -341,6 +339,7 @@ function galle() {
             ws.send(JSON.stringify(messageData));
         } else {
             console.error('WebSocket no está conectado, no se puede enviar el mensaje');
+            alert('No se puede enviar el mensaje, por favor, reinicia la pagina');
         }
     }
 
