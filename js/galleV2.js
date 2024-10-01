@@ -191,8 +191,7 @@ function galle() {
     }
 
     /*
-     *   FUNCIONES RELACIONADAS A CARGAN LOS MENSAJES DE UNA CONVERSACION
-     *   O CARGAN EN LA LISTA DE CONVERSACION
+     *   FUNCIONES RELACIONADAS CON LA CARGAN LOS MENSAJES DE UNA CONVERSACION
      */
 
     function mostrarMensajes(mensajes) {
@@ -216,47 +215,20 @@ function galle() {
         });
     }
 
-    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null) {
-        const fechaMensaje = new Date(fecha);
-    
-        // Asegúrate de que listaMensajes no sea null o undefined
-        if (!listaMensajes) {
-            console.error("listaMensajes no está definido, no se puede agregar el mensaje.");
-            return;
-        }
-    
-        if (!fechaAnterior) {
-            let lastElement = null;
-            const children = Array.from(listaMensajes.children || []); // Asegúrate de que children no sea undefined
-            const searchOrder = insertAtTop ? 1 : -1;
-            const startIndex = insertAtTop ? 0 : children.length - 1;
-    
-            for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
-                const child = children[i];
-                if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
-                    lastElement = child;
-                    break;
-                }
-            }
-    
-            fechaAnterior = lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
-        }
-    
+    function manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop) {
         if (!fechaAnterior || fechaMensaje - fechaAnterior >= 3 * 60 * 1000) {
             const divFecha = document.createElement('div');
             divFecha.textContent = formatearTiempoRelativo(fechaMensaje);
             divFecha.classList.add('fechaSeparador');
             divFecha.setAttribute('data-fecha', fechaMensaje.toISOString());
     
-            insertAtTop ? listaMensajes.insertBefore(divFecha, listaMensajes.firstChild) : listaMensajes.appendChild(divFecha);
+            insertAtTop
+                ? listaMensajes.insertBefore(divFecha, listaMensajes.firstChild)
+                : listaMensajes.appendChild(divFecha);
         }
-    
-        const li = document.createElement('li');
-        li.textContent = mensajeTexto;
-        li.classList.add(clase);
-        li.setAttribute('data-fecha', fechaMensaje.toISOString());
-    
-        // Si hay un adjunto, renderízalo dentro del mensaje
+    }
+
+    function manejarAdjunto(adjunto, li) {
         if (adjunto) {
             const adjuntoContainer = document.createElement('div');
             adjuntoContainer.classList.add('adjunto-container');
@@ -286,6 +258,44 @@ function galle() {
     
             li.appendChild(adjuntoContainer);
         }
+    }
+
+    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null) {
+        const fechaMensaje = new Date(fecha);
+    
+        // Asegúrate de que listaMensajes no sea null o undefined
+        if (!listaMensajes) {
+            console.error("listaMensajes no está definido, no se puede agregar el mensaje.");
+            return;
+        }
+    
+        if (!fechaAnterior) {
+            let lastElement = null;
+            const children = Array.from(listaMensajes.children || []);
+            const searchOrder = insertAtTop ? 1 : -1;
+            const startIndex = insertAtTop ? 0 : children.length - 1;
+    
+            for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
+                const child = children[i];
+                if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
+                    lastElement = child;
+                    break;
+                }
+            }
+    
+            fechaAnterior = lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
+        }
+    
+        // Manejar la lógica de la fecha usando la nueva función
+        manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
+    
+        const li = document.createElement('li');
+        li.textContent = mensajeTexto;
+        li.classList.add(clase);
+        li.setAttribute('data-fecha', fechaMensaje.toISOString());
+    
+        // Manejar la lógica del adjunto usando la nueva función
+        manejarAdjunto(adjunto, li);
     
         insertAtTop ? listaMensajes.insertBefore(li, listaMensajes.firstChild) : listaMensajes.appendChild(li);
     
