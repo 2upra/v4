@@ -1,7 +1,5 @@
 <?php
 
-
-
 function obtenerChat()
 {
     chatLog('Iniciando función obtenerChat.');
@@ -13,7 +11,7 @@ function obtenerChat()
     }
 
     global $wpdb;
-    
+
     $usuarioActual = get_current_user_id();
     chatLog('Usuario actual ID: ' . $usuarioActual);
 
@@ -39,7 +37,6 @@ function obtenerChat()
 
         $tablaConversaciones = $wpdb->prefix . 'conversacion';
 
-        // Asegurarse de que los IDs se tratan como enteros
         $conversacion = $wpdb->get_var($wpdb->prepare("
             SELECT id 
             FROM $tablaConversaciones 
@@ -48,7 +45,7 @@ function obtenerChat()
             AND JSON_CONTAINS(participantes, %s)
             LIMIT 1
         ", 
-        json_encode($usuarioActual), // No convertir a string, mantenerlo como entero
+        json_encode($usuarioActual),
         json_encode($receptor)));
 
         if (!$conversacion) {
@@ -64,8 +61,9 @@ function obtenerChat()
     $offset = ($page - 1) * $mensajesPorPagina;
     chatLog('Calculado offset de página: ' . $offset);
 
+    // Modificamos la consulta para incluir la columna "adjunto"
     $query = $wpdb->prepare("
-        SELECT mensaje, emisor AS remitente, fecha
+        SELECT mensaje, emisor AS remitente, fecha, adjunto
         FROM $tablaMensajes
         WHERE conversacion = %d
         ORDER BY fecha DESC
@@ -86,6 +84,13 @@ function obtenerChat()
 
     foreach ($mensajes as $mensaje) {
         $mensaje->clase = ($mensaje->remitente == $usuarioActual) ? 'mensajeDerecha' : 'mensajeIzquierda';
+        
+        // Si el mensaje tiene adjunto, procesarlo
+        if (!empty($mensaje->adjunto)) {
+            $mensaje->adjunto = json_decode($mensaje->adjunto, true); // Convertimos el JSON de adjunto a array
+            chatLog('Adjunto encontrado en mensaje: ' . json_encode($mensaje->adjunto));
+        }
+        
         chatLog('Mensaje procesado: ' . json_encode($mensaje));
     }
 
@@ -99,6 +104,7 @@ function obtenerChat()
     wp_die();
 }
 add_action('wp_ajax_obtenerChat', 'obtenerChat');
+
 
 
 
@@ -128,7 +134,7 @@ function renderChat()
                 <label></label>
             </div>
             <div class="previewAreaArchivos" id="previewChatArchivo" style="display: none;">
-                <label>Archivo adicional para colab (flp, zip, rar, midi, etc)</label>
+                <label></label>
             </div>
         </div>
 

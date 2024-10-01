@@ -116,7 +116,6 @@ function galle() {
             */
 
             if (data?.success) {
-                // Mostrar mensajes obtenidos
                 mostrarMensajes(data.data.mensajes);
 
                 const bloqueChat = document.querySelector('.bloqueChat');
@@ -202,12 +201,22 @@ function galle() {
         let fechaAnterior = null;
 
         mensajes.forEach(mensaje => {
-            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false);
+            // Mostrar el mensaje de texto junto con el adjunto si lo hay
+            agregarMensajeAlChat(
+                mensaje.mensaje,
+                mensaje.clase,
+                mensaje.fecha,
+                listaMensajes,
+                fechaAnterior,
+                false,
+                mensaje.adjunto // Pasamos el adjunto
+            );
+
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
 
-    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false) {
+    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null) {
         const fechaMensaje = new Date(fecha);
 
         if (!fechaAnterior) {
@@ -240,6 +249,38 @@ function galle() {
         li.textContent = mensajeTexto;
         li.classList.add(clase);
         li.setAttribute('data-fecha', fechaMensaje.toISOString());
+
+        // Si hay un adjunto, renderízalo dentro del mensaje
+        if (adjunto) {
+            const adjuntoContainer = document.createElement('div');
+            adjuntoContainer.classList.add('adjunto-container');
+
+            if (adjunto.archivoChatUrl) {
+                const ext = adjunto.archivoChatUrl.split('.').pop().toLowerCase();
+
+                // Si es una imagen
+                if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+                    adjuntoContainer.innerHTML = `<img src="${adjunto.archivoChatUrl}" alt="Imagen adjunta" style="width: 100%; height: auto; object-fit: cover;">`;
+                }
+                // Si es un archivo de audio
+                else if (['mp3', 'wav', 'ogg'].includes(ext)) {
+                    adjuntoContainer.innerHTML = `
+                        <div id="waveform-container" class="waveform-container without-image" data-audio-url="${adjunto.archivoChatUrl}">
+                            <div class="waveform-background"></div>
+                            <div class="waveform-message"></div>
+                            <div class="waveform-loading" style="display: none;">Cargando...</div>
+                            <audio controls style="width: 100%;"><source src="${adjunto.archivoChatUrl}" type="audio/${ext}"></audio>
+                            <div class="file-name">${adjunto.archivoChatId || 'Audio adjunto'}</div>
+                        </div>`;
+                }
+                // Si es otro tipo de archivo
+                else {
+                    adjuntoContainer.innerHTML = `<div class="file-name">Archivo: <a href="${adjunto.archivoChatUrl}" target="_blank">Descargar archivo</a></div>`;
+                }
+            }
+
+            li.appendChild(adjuntoContainer);
+        }
 
         insertAtTop ? listaMensajes.insertBefore(li, listaMensajes.firstChild) : listaMensajes.appendChild(li);
 
@@ -450,7 +491,7 @@ function galle() {
                 }
 
                 enviarMensajeWs(receptor, mensaje, adjunto);
-                agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date());
+                agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), adjunto);
                 mensajeInput.value = '';
                 const mensajeVistaPrevia = `Tu: ${mensaje}`;
                 actualizarListaConversaciones(receptor, mensajeVistaPrevia);
