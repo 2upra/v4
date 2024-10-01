@@ -39,34 +39,50 @@ function galle() {
 
     function actualizarConexionEmisor() {
         const emisorId = galleV2.emisor;
+        console.log('Emisor ID:', emisorId); // Log para ver el ID del emisor antes de la llamada AJAX
+    
         enviarAjax('actualizarConexion', {user_id: emisorId})
             .then(response => {
+                console.log('Respuesta de actualizarConexion:', response); // Log para ver la respuesta de la llamada AJAX
                 if (response.success) {
-                    console.log('Emisor actualizado como conectado.');
+                    console.log('Emisor actualizado como conectado.'); // Éxito
                 } else {
-                    console.error('No se pudo actualizar la conexión del emisor:', response.message);
+                    console.error('No se pudo actualizar la conexión del emisor:', response.message); // Error en la respuesta
                 }
             })
             .catch(error => {
-                console.error('Error al actualizar la conexión del emisor:', error);
+                console.error('Error al actualizar la conexión del emisor:', error); // Error en la llamada AJAX
             });
     }
-
+    
     async function actualizarEstadoConexion(receptor, bloqueChat) {
+        console.log('Iniciando actualización de conexión con receptor:', receptor); // Log para ver el receptor
+        
         actualizarConexionEmisor();
-        const onlineStatus = await verificarConexionReceptor(receptor);
-        const estadoConexion = bloqueChat.querySelector('.estadoConexion');
-
-        if (onlineStatus?.online) {
-            estadoConexion.textContent = 'Conectado';
-            estadoConexion.classList.remove('desconectado');
-            estadoConexion.classList.add('conectado');
-        } else {
-            estadoConexion.textContent = 'Desconectado';
-            estadoConexion.classList.remove('conectado');
-            estadoConexion.classList.add('desconectado');
+    
+        try {
+            const onlineStatus = await verificarConexionReceptor(receptor);
+            console.log('Estado de conexión del receptor:', onlineStatus); // Log para ver el estado de conexión del receptor
+    
+            const estadoConexion = bloqueChat.querySelector('.estadoConexion');
+            console.log('Bloque de chat seleccionado:', estadoConexion); // Log para ver el bloque de chat antes de modificarlo
+    
+            if (onlineStatus?.online) {
+                console.log('Receptor está conectado.');
+                estadoConexion.textContent = 'Conectado';
+                estadoConexion.classList.remove('desconectado');
+                estadoConexion.classList.add('conectado');
+            } else {
+                console.log('Receptor está desconectado.');
+                estadoConexion.textContent = 'Desconectado';
+                estadoConexion.classList.remove('conectado');
+                estadoConexion.classList.add('desconectado');
+            }
+        } catch (error) {
+            console.error('Error al verificar el estado de conexión del receptor:', error); // Error en la verificación de conexión
         }
     }
+    
 
     async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
         try {
