@@ -37,6 +37,7 @@ function galle() {
         actualizarConexionEmisor();
         iniciarChat();
         clickMensaje();
+        subidaArchivosChat();
     }
 
     /*
