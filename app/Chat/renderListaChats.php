@@ -68,6 +68,18 @@ function obtenerNombreUsuario($usuarioId)
     return $usuario ? $usuario->display_name : '[Usuario desconocido]';
 }
 
+/*
+
+2024-10-01 04:02:33 - Iniciando función infoUsuario.
+2024-10-01 04:02:33 - Receptor recibido: 44
+2024-10-01 04:02:33 - Obteniendo imagen de perfil para receptor: 44
+2024-10-01 04:02:33 - Imagen de perfil obtenida correctamente.
+2024-10-01 04:02:33 - Obteniendo nombre de usuario para receptor: 44
+2024-10-01 04:02:33 - Nombre de usuario obtenido correctamente.
+2024-10-01 04:02:33 - Imagen de perfil obtenida: https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all
+2024-10-01 04:02:33 - Nombre de usuario obtenido: 2upra
+
+*/
 
 
 function infoUsuario() {

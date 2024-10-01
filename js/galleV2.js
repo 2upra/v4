@@ -105,77 +105,35 @@ function galle() {
             alert('Ha ocurrido un error al intentar abrir la conversación.');
         }
     }
-    /*
-no funciona bien, no obtiene los datos a pesar de que la funcion si hace su trabajo al parecer
 
 
-2024-10-01 03:33:00 - Iniciando función infoUsuario.
-2024-10-01 03:33:00 - Receptor recibido: 44
-2024-10-01 03:33:00 - Imagen de perfil obtenida: https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all
-2024-10-01 03:33:00 - Nombre de usuario obtenido: 2upra
-
-parece que falla al mandar los datos porque no veo el log de respuesta enviada
-
-function infoUsuario() {
-    // Guardamos un log al iniciar la función
-    chatLog('Iniciando función infoUsuario.');
-
-    // Verificamos si el usuario está autenticado
-    if (!is_user_logged_in()) {
-        chatLog('Error: Usuario no autenticado.');
-        wp_send_json_error(array('message' => 'Usuario no autenticado.'));
-        wp_die(); // Finalizamos la ejecución
-    }
-
-    // Obtenemos el ID del receptor desde la solicitud POST
-    $receptor = isset($_POST['receptor']) ? intval($_POST['receptor']) : 0;
-    chatLog('Receptor recibido: ' . $receptor);
-
-    // Verificamos si hay un receptor válido
-    if ($receptor <= 0) {
-        chatLog('Error: ID del receptor inválido.');
-        wp_send_json_error(array('message' => 'ID del receptor inválido.'));
-        wp_die(); // Finalizamos la ejecución
-    }
-
-    // Obtenemos la imagen de perfil y el nombre del usuario
-    $imagenPerfil = imagenPerfil($receptor) ?: 'ruta_por_defecto.jpg'; // URL de una imagen por defecto
-    $nombreUsuario = obtenerNombreUsuario($receptor) ?: 'Usuario Desconocido'; // Nombre por defecto
-
-    // Guardamos los datos obtenidos en el log
-    chatLog('Imagen de perfil obtenida: ' . $imagenPerfil);
-    chatLog('Nombre de usuario obtenido: ' . $nombreUsuario);
-
-    // Enviamos la respuesta con los datos obtenidos
-    wp_send_json_success(array(
-        'imagenPerfil' => $imagenPerfil,
-        'nombreUsuario' => $nombreUsuario
-    ));
-
-    // Guardamos el log indicando que se envió la respuesta con éxito
-    chatLog('Respuesta enviada con éxito para el receptor ID: ' . $receptor);
-
-    wp_die(); // Finalizamos la ejecución
-}
-
-
-
-    */
     async function manejarClickEnMensaje(item) {
         item.addEventListener('click', async () => {
+            console.log('Evento click detectado.'); // Log para asegurar que el evento se dispara
             let conversacion = item.getAttribute('data-conversacion');
             const receptor = item.getAttribute('data-receptor');
             let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
             let nombreUsuario = item.querySelector('.nombreUsuario strong')?.textContent || null;
-
+    
+            console.log('Datos obtenidos antes de la solicitud AJAX:');
+            console.log('Conversación:', conversacion);
+            console.log('Receptor:', receptor);
+            console.log('Imagen de Perfil:', imagenPerfil);
+            console.log('Nombre de Usuario:', nombreUsuario);
+    
             // Si no tenemos la imagen de perfil o el nombre, pedimos la información al servidor
             if (!imagenPerfil || !nombreUsuario) {
+                console.log('No se tienen los datos, realizando solicitud AJAX para obtener información del servidor.');
                 try {
                     const data = await enviarAjax('infoUsuario', {receptor});
-
+                    console.log('Respuesta del servidor:', data);
+    
                     if (data?.success) {
                         imagenPerfil = data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
                         nombreUsuario = data.nombreUsuario || 'Usuario Desconocido'; // Nombre por defecto si no se encuentra
+                        console.log('Datos obtenidos del servidor:');
+                        console.log('Imagen de Perfil:', imagenPerfil);
+                        console.log('Nombre de Usuario:', nombreUsuario);
                     } else {
                         console.error('Error del servidor:', data.message);
                         alert(data.message || 'Error al obtener la información del usuario.');
@@ -187,13 +145,18 @@ function infoUsuario() {
                     return;
                 }
             }
-
+    
             // Si aún no tenemos imagenPerfil o nombreUsuario, asignar valores por defecto para evitar errores
             imagenPerfil = imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
             nombreUsuario = nombreUsuario || 'Usuario Desconocido';
-
+    
+            console.log('Abrir conversación con los siguientes datos:');
+            console.log('Conversación:', conversacion);
+            console.log('Receptor:', receptor);
+            console.log('Imagen de Perfil:', imagenPerfil);
+            console.log('Nombre de Usuario:', nombreUsuario);
+    
             // Abrir la conversación
-            //actualizarConexionEmisor();
             abrirConversacion({
                 conversacion: conversacion || null,
                 receptor,
@@ -202,6 +165,7 @@ function infoUsuario() {
             });
         });
     }
+    
 
     function clickMensaje() {
         const mensajes = document.querySelectorAll('.mensaje');
