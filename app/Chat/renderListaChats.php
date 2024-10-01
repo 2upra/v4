@@ -69,33 +69,34 @@ function obtenerNombreUsuario($usuarioId)
 }
 
 function infoUsuario() {
+    // Guardamos un log al iniciar la función
+    chatLog('Iniciando función infoUsuario.');
+
     // Verificamos si el usuario está autenticado
     if (!is_user_logged_in()) {
+        chatLog('Error: Usuario no autenticado.');
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));
-        wp_die();
+        wp_die(); // Finalizamos la ejecución
     }
 
     // Obtenemos el ID del receptor desde la solicitud POST
     $receptor = isset($_POST['receptor']) ? intval($_POST['receptor']) : 0;
+    chatLog('Receptor recibido: ' . $receptor);
 
     // Verificamos si hay un receptor válido
     if ($receptor <= 0) {
+        chatLog('Error: ID del receptor inválido.');
         wp_send_json_error(array('message' => 'ID del receptor inválido.'));
-        wp_die();
+        wp_die(); // Finalizamos la ejecución
     }
 
-    // Obtenemos la imagen de perfil y el nombre del usuario, puedes definir valores por defecto
-    $imagenPerfil = imagenPerfil($receptor);
-    $nombreUsuario = obtenerNombreUsuario($receptor);
+    // Obtenemos la imagen de perfil y el nombre del usuario
+    $imagenPerfil = imagenPerfil($receptor) ?: 'ruta_por_defecto.jpg'; // URL de una imagen por defecto
+    $nombreUsuario = obtenerNombreUsuario($receptor) ?: 'Usuario Desconocido'; // Nombre por defecto
 
-    // Si no se encuentra la imagen o el nombre, puedes definir valores por defecto
-    if (!$imagenPerfil) {
-        $imagenPerfil = 'ruta_por_defecto.jpg'; // URL de una imagen por defecto
-    }
-
-    if (!$nombreUsuario) {
-        $nombreUsuario = 'Usuario Desconocido';
-    }
+    // Guardamos los datos obtenidos en el log
+    chatLog('Imagen de perfil obtenida: ' . $imagenPerfil);
+    chatLog('Nombre de usuario obtenido: ' . $nombreUsuario);
 
     // Enviamos la respuesta con los datos obtenidos
     wp_send_json_success(array(
@@ -103,8 +104,13 @@ function infoUsuario() {
         'nombreUsuario' => $nombreUsuario
     ));
 
+    // Guardamos el log indicando que se envió la respuesta con éxito
+    chatLog('Respuesta enviada con éxito para el receptor ID: ' . $receptor);
+
     wp_die(); // Finalizamos la ejecución
 }
+
+
 add_action('wp_ajax_infoUsuario', 'infoUsuario');
 
 function renderListaChats($conversaciones, $usuarioId)

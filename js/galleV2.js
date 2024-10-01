@@ -68,15 +68,7 @@ function galle() {
         }
     }
 
-    /*
 
-    galleV2.js?ver=2.0.1.434619389:72  Uncaught (in promise) TypeError: Cannot destructure property 'conversacion' of 'undefined' as it is undefined.
-    at abrirConversacion (galleV2.js?ver=2.0.1.434619389:72:39)
-    at init (galleV2.js?ver=2.0.1.434619389:33:9)
-    at galle (galleV2.js?ver=2.0.1.434619389:434:5)
-    at HTMLDocument.<anonymous> (ajaxPage.js?ver=5.0.11.1335343801:87:20)
-
-    */
 
     async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
         try {
