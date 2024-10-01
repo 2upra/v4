@@ -454,29 +454,27 @@ function galle() {
             acc[id] = el;
             return acc;
         }, {});
-    
+
         const missingElements = Object.entries(elements)
             .filter(([_, el]) => !el)
             .map(([id]) => id);
         if (missingElements.length) {
             return;
         }
-    
-        const { enviarAdjunto, bloqueChat, previewChatArchivo, previewChatAudio, previewChatImagen } = elements;
-    
+
+        const {enviarAdjunto, bloqueChat, previewChatArchivo, previewChatAudio, previewChatImagen} = elements;
+
         enviarAdjunto.addEventListener('click', () => abrirSelectorArchivos('*/*'));
-    
+
         const inicialChatSubida = event => {
             event.preventDefault();
             const file = event.dataTransfer?.files[0] || event.target.files[0];
-    
+
             if (!file) return;
             if (file.size > 50 * 1024 * 1024) {
                 console.log('El archivo no puede superar los 50 MB.');
                 return;
             }
-    
-            // Determinar el tipo de archivo y ejecutar la subida correspondiente
             if (file.type.startsWith('audio/')) {
                 subidaChatAudio(file);
             } else if (file.type.startsWith('image/')) {
@@ -485,19 +483,27 @@ function galle() {
                 subidaChatArchivo(file);
             }
         };
-    
+
+        const ocultarPreviews = () => {
+            previewChatAudio.style.display = 'none';
+            previewChatImagen.style.display = 'none';
+            previewChatArchivo.style.display = 'none';
+        };
+        
         const subidaChatAudio = async file => {
             console.log('Iniciando subida de audio:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
             subidaChatProgreso = true;
+            ocultarPreviews(); // Ocultar otros previews
+        
             try {
                 console.log('Cargando archivo de audio...');
                 previewChatAudio.style.display = 'block';
                 const progressBarId = waveAudio(file);
                 console.log('Barra de progreso creada con ID:', progressBarId);
-                
-                const { fileUrl, fileId } = await subidaChatBackend(file, progressBarId);
+        
+                const {fileUrl, fileId} = await subidaChatBackend(file, progressBarId);
                 console.log('Audio cargado con éxito:', fileId, 'URL:', fileUrl);
-                
+        
                 archivoChatId = fileId;
                 archivoChatUrl = fileUrl;
                 subidaChatProgreso = false;
@@ -510,32 +516,32 @@ function galle() {
         const subidaChatImagen = async file => {
             console.log('Iniciando subida de imagen:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
             subidaChatProgreso = true;
+            ocultarPreviews(); // Ocultar otros previews
             updateChatPreviewImagen(file);
-            
+        
             try {
                 console.log('Cargando archivo de imagen...');
                 previewChatImagen.style.display = 'block';
                 const progressBarId = `progress-${Date.now()}`;
                 console.log('Barra de progreso creada con ID:', progressBarId);
-                
-                const { fileUrl, fileId } = await subidaChatBackend(file, progressBarId);
+        
+                const {fileUrl, fileId} = await subidaChatBackend(file, progressBarId);
                 console.log('Imagen cargada con éxito:', fileId, 'URL:', fileUrl);
-                
+        
                 archivoChatId = fileId;
                 archivoChatUrl = fileUrl;
-                console.log('Guardado archivoChatUrl:', archivoChatUrl);
-                
+        
                 subidaChatProgreso = false;
             } catch (error) {
                 console.error('Error al cargar la imagen:', error);
                 subidaChatProgreso = false;
             }
-            console.log('Finalizado el proceso de subida de imagen. Estado de subidaChatProgreso:', subidaChatProgreso);
-            console.log('Estado final archivoChatId:', archivoChatId, ', archivoChatUrl:', archivoChatUrl);
         };
+        
         const subidaChatArchivo = async file => {
             console.log('Iniciando subida de archivo:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
             subidaChatProgreso = true;
+            ocultarPreviews(); // Ocultar otros previews
             previewChatArchivo.style.display = 'block';
             previewChatArchivo.innerHTML = `
                 <div class="file-name">${file.name}</div>
@@ -545,10 +551,10 @@ function galle() {
                 console.log('Cargando archivo...');
                 const progressBarId = `progress-${Date.now()}`;
                 console.log('Barra de progreso creada con ID:', progressBarId);
-                
-                const { fileUrl, fileId } = await subidaChatBackend(file, progressBarId);
+        
+                const {fileUrl, fileId} = await subidaChatBackend(file, progressBarId);
                 console.log('Archivo cargado con éxito:', fileId, 'URL:', fileUrl);
-                
+        
                 archivoChatId = fileId;
                 archivoChatUrl = fileUrl;
                 subidaChatProgreso = false;
@@ -557,7 +563,7 @@ function galle() {
                 subidaChatProgreso = false;
             }
         };
-    
+
         const waveAudio = file => {
             const reader = new FileReader();
             const audioContainerId = `waveform-container-${Date.now()}`;
@@ -565,6 +571,9 @@ function galle() {
             reader.onload = e => {
                 previewChatAudio.innerHTML = `
                     <div id="${audioContainerId}" class="waveform-container without-image" data-audio-url="${e.target.result}">
+                        <div class="waveform-background"></div>
+                        <div class="waveform-message"></div>
+                        <div class="waveform-loading" style="display: none;">Cargando...</div>
                         <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
                         <div class="file-name">${file.name}</div>
                     </div>
@@ -575,7 +584,7 @@ function galle() {
             reader.readAsDataURL(file);
             return progressBarId;
         };
-    
+
         const updateChatPreviewImagen = file => {
             const reader = new FileReader();
             reader.onload = e => {
@@ -584,14 +593,14 @@ function galle() {
             };
             reader.readAsDataURL(file);
         };
-    
+
         bloqueChat.addEventListener('click', event => {
             const clickedElement = event.target.closest('.previewChatAudio, .previewChatImagen');
             if (clickedElement) {
                 abrirSelectorArchivos(clickedElement.classList.contains('previewChatAudio') ? 'audio/*' : 'image/*');
             }
         });
-    
+
         const abrirSelectorArchivos = tipoArchivo => {
             const input = document.createElement('input');
             input.type = 'file';
@@ -599,7 +608,7 @@ function galle() {
             input.onchange = inicialChatSubida;
             input.click();
         };
-    
+
         ['dragover', 'dragleave', 'drop'].forEach(eventName => {
             bloqueChat.addEventListener(eventName, e => {
                 e.preventDefault();
@@ -614,11 +623,11 @@ function galle() {
         formData.append('action', 'file_upload');
         formData.append('file', file);
         formData.append('file_hash', await generateFileHash(file)); // Asumiendo que ya tienes esta función
-    
+
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open('POST', my_ajax_object.ajax_url, true);
-    
+
             // Actualización de la barra de progreso
             xhr.upload.onprogress = e => {
                 if (e.lengthComputable) {
@@ -627,7 +636,7 @@ function galle() {
                     if (progressBar) progressBar.style.width = `${progressPercent}%`;
                 }
             };
-    
+
             // Manejo de la respuesta del servidor
             xhr.onload = () => {
                 if (xhr.status === 200) {
@@ -645,12 +654,12 @@ function galle() {
                     reject(new Error(`Error en la carga del archivo. Status: ${xhr.status}`));
                 }
             };
-    
+
             // Manejo de errores de conexión
             xhr.onerror = () => {
                 reject(new Error('Error en la conexión con el servidor'));
             };
-    
+
             // Enviar solicitud AJAX
             try {
                 xhr.send(formData);
@@ -659,8 +668,6 @@ function galle() {
             }
         });
     }
-    
-    
 
     /*
      *   FUNCION PARA CARGAR MAS MENSAJES
