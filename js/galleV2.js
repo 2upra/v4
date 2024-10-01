@@ -106,7 +106,7 @@ function galle() {
         item.addEventListener('click', async () => {
             console.log('Evento click detectado.'); 
             let conversacion = item.getAttribute('data-conversacion');
-            let receptor = item.getAttribute('data-receptor');
+            receptor = item.getAttribute('data-receptor');
             let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
             let nombreUsuario = item.querySelector('.nombreUsuario strong')?.textContent || null;
 
