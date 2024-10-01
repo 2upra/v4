@@ -68,6 +68,10 @@ function obtenerNombreUsuario($usuarioId)
     return $usuario ? $usuario->display_name : '[Usuario desconocido]';
 }
 
+/*
+
+*/
+
 function infoUsuario() {
     // Guardamos un log al iniciar la función
     chatLog('Iniciando función infoUsuario.');
@@ -76,7 +80,7 @@ function infoUsuario() {
     if (!is_user_logged_in()) {
         chatLog('Error: Usuario no autenticado.');
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));
-        wp_die(); // Finalizamos la ejecución
+        wp_die();
     }
 
     // Obtenemos el ID del receptor desde la solicitud POST
@@ -87,7 +91,7 @@ function infoUsuario() {
     if ($receptor <= 0) {
         chatLog('Error: ID del receptor inválido.');
         wp_send_json_error(array('message' => 'ID del receptor inválido.'));
-        wp_die(); // Finalizamos la ejecución
+        wp_die();
     }
 
     // Obtenemos la imagen de perfil y el nombre del usuario
@@ -98,6 +102,11 @@ function infoUsuario() {
     chatLog('Imagen de perfil obtenida: ' . $imagenPerfil);
     chatLog('Nombre de usuario obtenido: ' . $nombreUsuario);
 
+    // Limpiar cualquier buffer de salida antes de enviar la respuesta
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
     // Enviamos la respuesta con los datos obtenidos
     wp_send_json_success(array(
         'imagenPerfil' => $imagenPerfil,
@@ -107,7 +116,8 @@ function infoUsuario() {
     // Guardamos el log indicando que se envió la respuesta con éxito
     chatLog('Respuesta enviada con éxito para el receptor ID: ' . $receptor);
 
-    wp_die(); // Finalizamos la ejecución
+    // Aseguramos que la ejecución termine correctamente
+    wp_die();
 }
 
 
