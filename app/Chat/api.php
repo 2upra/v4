@@ -1,7 +1,6 @@
 <?php
 
 add_action('rest_api_init', function () {
-    chatLog('Registrando la ruta /verificartoken en la API REST.');
     register_rest_route('galle/v2', '/verificartoken', array(
         'methods' => 'POST',
         'callback' => 'verificarToken',
@@ -12,7 +11,6 @@ add_action('rest_api_init', function () {
 add_action('wp_ajax_generarToken', 'generarToken');
 
 add_action('rest_api_init', function () {
-    chatLog('Registrando la ruta /procesarmensaje en la API REST.');
     register_rest_route('galle/v2', '/procesarmensaje', array(
         'methods' => 'POST',
         'callback' => 'procesarMensaje',
@@ -35,10 +33,8 @@ add_action('rest_api_init', function () {
             $response_data = json_decode(wp_json_encode($response->get_data()), true);
 
             if (isset($response_data['valid']) && $response_data['valid']) {
-                chatLog('Verificación del token en /procesarmensaje: Válido');
                 return true;
             } else {
-                chatLog('Verificación del token en /procesarmensaje: Inválido');
                 return false;
             }
         }
@@ -50,19 +46,17 @@ function verificarToken($request) {
     $token = $request->get_param('token') ?: $request->get_header('X-WP-Token');
     $user_id = $request->get_param('user_id') ?: $request->get_header('X-User-ID');
 
-    chatLog('Iniciando verificación del token. Token recibido: ' . ($token ? $token : 'No proporcionado') . ' para el usuario ID: ' . ($user_id ? $user_id : 'No proporcionado'));
-
     if (empty($token) || empty($user_id)) {
         chatLog('Error: No se proporcionó token o el token/ID de usuario está vacío.');
         return new WP_REST_Response([
             'valid' => false,
             'message' => 'Token o ID de usuario faltante'
-        ], 400); // Devuelve un error 400 si faltan parámetros
+        ], 400);
     }
 
     $secret_key = ($_ENV['GALLEKEY']);
     $current_time = time();
-    $rounded_time = floor($current_time / 86400); 
+    $rounded_time = floor($current_time / 86400);
 
     // Generar el token esperado para el día actual y el día anterior
     $expected_token = hash_hmac('sha256', $user_id . $rounded_time, $secret_key);
@@ -71,34 +65,30 @@ function verificarToken($request) {
 
     // Verificar si el token recibido coincide con el token esperado o el del día anterior
     if (hash_equals($expected_token, $token) || hash_equals($previous_expected_token, $token)) {
-        chatLog('Token válido para el usuario ID: ' . $user_id);
         return new WP_REST_Response([
             'valid' => true,
             'user_id' => $user_id
-        ], 200); // Devuelve 200 si el token es válido
+        ], 200);
     } else {
         chatLog('Error: Token inválido. Token esperado: ' . $expected_token . ', Token recibido: ' . $token);
         return new WP_REST_Response([
             'valid' => false,
             'message' => 'Token inválido'
-        ], 401); // Devuelve 401 si el token es inválido
+        ], 401);
     }
 }
 
-
 function generarToken() {
     if (!is_user_logged_in()) {
-        chatLog('Error: Intento de generación de token sin usuario autenticado. Usuario no ha iniciado sesión.');
+        chatLog('Error: Intento de generación de token sin usuario autenticado.');
         wp_send_json_error('Usuario no autenticado');
     }
 
     $user_id = get_current_user_id();
-    chatLog('Usuario autenticado con ID: ' . $user_id);
-
-    $secret_key = ($_ENV['GALLEKEY']); 
-    $rounded_time = floor(time() / 86400); // Cambiamos a 86400 segundos (1 día)
+    $secret_key = ($_ENV['GALLEKEY']);
+    $rounded_time = floor(time() / 86400);
     $token = hash_hmac('sha256', $user_id . $rounded_time, $secret_key);
-    chatLog('Token generado manualmente para el usuario ID: ' . $user_id . '. Token: ' . $token);
-    
+
     wp_send_json_success(['token' => $token, 'user_id' => $user_id]);
 }
+
