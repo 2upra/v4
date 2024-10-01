@@ -64,9 +64,19 @@ function obtenerChats($usuarioId)
 
 function obtenerNombreUsuario($usuarioId)
 {
+    // Obtiene los datos del usuario
     $usuario = get_userdata($usuarioId);
-    return $usuario ? $usuario->display_name : '[Usuario desconocido]';
+
+    // Verifica si el usuario existe
+    if ($usuario) {
+        // Retorna el display_name si está disponible, de lo contrario retorna el user_login
+        return !empty($usuario->display_name) ? $usuario->display_name : $usuario->user_login;
+    } 
+
+    // Si no se encuentra el usuario, retorna un valor por defecto
+    return '[Usuario desconocido]';
 }
+
 
 
 function infoUsuario() {
