@@ -193,7 +193,7 @@ function infoUsuario() {
             nombreUsuario = nombreUsuario || 'Usuario Desconocido';
 
             // Abrir la conversación
-            actualizarConexionEmisor();
+            //actualizarConexionEmisor();
             abrirConversacion({
                 conversacion: conversacion || null,
                 receptor,
