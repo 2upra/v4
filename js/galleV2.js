@@ -448,6 +448,7 @@ function galle() {
     function manejarScroll(conversacion) {
         const listaMensajes = document.querySelector('.listaMensajes');
         let puedeDesplazar = true;
+        currentPage = 1;
     
         // Verificar si la conversación es válida (no null ni undefined)
         if (!conversacion) {
