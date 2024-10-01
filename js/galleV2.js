@@ -115,41 +115,73 @@ function galle() {
             alert('Ha ocurrido un error al intentar abrir la conversación.');
         }
     }
+    /*
+    cuando doy click a mensajeboton que solo contiene el receptor, pasa esto
 
-    function manejarClickEnMensaje(item) {
-        item.addEventListener('click', async () => {
-            let conversacion = item.getAttribute('data-conversacion');
-            const receptor = item.getAttribute('data-receptor');
-            let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
-            let nombreUsuario = item.querySelector('.nombreUsuario strong')?.textContent || null;
-    
-            if (!imagenPerfil || !nombreUsuario) {
-                try {
-                    const data = await enviarAjax('infoUsuario', { receptor });
-                    
-                    if (data?.success) {
-                        imagenPerfil = data.imagenPerfil;
-                        nombreUsuario = data.nombreUsuario;
-                    } else {
-                        alert(data.message || 'Error al obtener la información del usuario.');
-                        return; 
-                    }
-                } catch (error) {
-                    alert('Error al intentar obtener la información del usuario.');
-                    return; 
-                }
-            }
-    
-            actualizarConexionEmisor();
-            abrirConversacion({
-                conversacion: conversacion || null,
-                receptor,
-                imagenPerfil,
-                nombreUsuario
-            });
-        });
+    GET https://2upra.com/inicioprueba/undefined 404 (Not Found), del lado del servidor es asi
+
+    function infoUsuario() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Usuario no autenticado.'));
+        wp_die();
+    }
+    $receptor = isset($_POST['receptor']) ? intval($_POST['receptor']) : 0;
+    if ($receptor <= 0) {
+        wp_send_json_error(array('message' => 'ID del receptor inválido.'));
+        wp_die();
     }
 
+    $imagenPerfil = imagenPerfil($receptor);
+    $nombreUsuario = obtenerNombreUsuario($receptor);
+    wp_send_json_success(array(
+        'imagenPerfil' => $imagenPerfil,
+        'nombreUsuario' => $nombreUsuario
+    ));
+
+    wp_die(); 
+}
+add_action('wp_ajax_infoUsuario', 'infoUsuario');
+
+    */
+function manejarClickEnMensaje(item) {
+    item.addEventListener('click', async () => {
+        let conversacion = item.getAttribute('data-conversacion');
+        const receptor = item.getAttribute('data-receptor');
+        let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
+        let nombreUsuario = item.querySelector('.nombreUsuario strong')?.textContent || null;
+
+        // Si no tenemos la imagen de perfil o el nombre, pedimos la información al servidor
+        if (!imagenPerfil || !nombreUsuario) {
+            try {
+                const data = await enviarAjax('infoUsuario', { receptor });
+                
+                if (data?.success) {
+                    imagenPerfil = data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
+                    nombreUsuario = data.nombreUsuario || 'Usuario Desconocido'; // Nombre por defecto si no se encuentra
+                } else {
+                    alert(data.message || 'Error al obtener la información del usuario.');
+                    return; 
+                }
+            } catch (error) {
+                alert('Error al intentar obtener la información del usuario.');
+                return; 
+            }
+        }
+
+        // Si aún no tenemos imagenPerfil o nombreUsuario, asignar valores por defecto para evitar errores
+        imagenPerfil = imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
+        nombreUsuario = nombreUsuario || 'Usuario Desconocido';
+
+        // Abrir la conversación
+        actualizarConexionEmisor();
+        abrirConversacion({
+            conversacion: conversacion || null,
+            receptor,
+            imagenPerfil,
+            nombreUsuario
+        });
+    });
+}
     function clickMensaje() {
 
         const mensajes = document.querySelectorAll('.mensaje');

@@ -84,10 +84,10 @@ function infoUsuario() {
         wp_die();
     }
 
-    // Obtenemos la imagen de perfil y el nombre del usuario
-    $imagenPerfil = imagenPerfil($receptor); // Función personalizada que obtiene la URL de la imagen de perfil
-    $nombreUsuario = obtenerNombreUsuario($receptor); // Función personalizada que obtiene el nombre del usuario
-    
+    // Obtenemos la imagen de perfil y el nombre del usuario, puedes definir valores por defecto
+    $imagenPerfil = imagenPerfil($receptor);
+    $nombreUsuario = obtenerNombreUsuario($receptor);
+
     // Si no se encuentra la imagen o el nombre, puedes definir valores por defecto
     if (!$imagenPerfil) {
         $imagenPerfil = 'ruta_por_defecto.jpg'; // URL de una imagen por defecto
@@ -106,6 +106,7 @@ function infoUsuario() {
     wp_die(); // Finalizamos la ejecución
 }
 add_action('wp_ajax_infoUsuario', 'infoUsuario');
+
 function renderListaChats($conversaciones, $usuarioId)
 {
     ob_start();
