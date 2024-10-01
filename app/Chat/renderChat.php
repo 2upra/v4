@@ -53,7 +53,7 @@ function obtenerChat()
 
         if (!$conversacion) {
             chatLog('No se encontró una conversación, enviando resultados vacíos.');
-            wp_send_json_success(array('mensajes' => array()));
+            wp_send_json_success(array('mensajes' => array(), 'conversacion' => null));
             wp_die();
         } else {
             chatLog('ID de conversación encontrada: ' . $conversacion);
@@ -89,18 +89,17 @@ function obtenerChat()
         chatLog('Mensaje procesado: ' . json_encode($mensaje));
     }
 
-    if ($mensajes) {
-        chatLog('Enviando mensajes obtenidos.');
-        wp_send_json_success(array('mensajes' => $mensajes));
-    } else {
-        chatLog('No se encontraron mensajes, enviando lista vacía.');
-        wp_send_json_success(array('mensajes' => array()));
-    }
+    // Enviar la ID de la conversación junto con los mensajes
+    wp_send_json_success(array(
+        'mensajes' => $mensajes ? $mensajes : array(), 
+        'conversacion' => $conversacion
+    ));
 
     chatLog('Finalizando función obtenerChat.');
     wp_die();
 }
 add_action('wp_ajax_obtenerChat', 'obtenerChat');
+
 
 
 function renderChat()

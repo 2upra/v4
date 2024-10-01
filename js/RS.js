@@ -96,29 +96,6 @@ function selectorformtipo() {
     });
 }
 
-/*
-No registra bien los checkbox, siempre se envian en 0 aunque marque uno igual es cero
-
-<div class="bloque flex-row"" id="opciones" style="display: none">
-    <p>Opciones de post</p>
-    <div class="flex flex-row gap-2">
-        <label class="custom-checkbox">
-            <input type="checkbox" id="descarga" name="descarga" value="1">
-            <span class="checkmark"></span>
-            <?php echo $GLOBALS['descargaicono']; ?>
-        </label>
-        <label class="custom-checkbox">
-            <input type="checkbox" id="exclusivo" name="exclusivo" value="1">
-            <span class="checkmark"></span>
-            <?php echo $GLOBALS['estrella']; ?>
-        </label>
-        <label class="custom-checkbox">
-            <input type="checkbox" id="colab" name="colab" value="1">
-            <span class="checkmark"></span>
-            <?php echo $GLOBALS['iconocolab']; ?>
-        </label>
-*/
-
 async function envioRs() {
     const button = document.getElementById('enviarRs');
 
@@ -151,7 +128,7 @@ async function envioRs() {
             'textoNormal:', textoNormal,
         );
 
-        //codigo de envio omitido
+
         const data = {
             imagenUrl: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
             imagenId: typeof imagenId !== 'undefined' ? imagenId : null,

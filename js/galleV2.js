@@ -28,6 +28,8 @@ function galle() {
     let ws;
     let currentPage = 1;
     let pingInterval;
+    let subidaChatProgreso;
+    let imagenChatUrl, imagenChatId, audioChatUrl, audioChatId, archivoChatUrl, archivoChatId;
 
     function init() {
         manejarScroll();
@@ -37,57 +39,69 @@ function galle() {
         clickMensaje();
     }
 
+    /*
+     *   FUNCIONES RELACIONADAS A VERIFICAR EL STATUS ONLINE
+     */
+
     function actualizarConexionEmisor() {
         const emisorId = galleV2.emisor;
-        console.log('Emisor ID:', emisorId); // Log para ver el ID del emisor antes de la llamada AJAX
-    
         enviarAjax('actualizarConexion', {user_id: emisorId})
             .then(response => {
-                console.log('Respuesta de actualizarConexion:', response); // Log para ver la respuesta de la llamada AJAX
                 if (response.success) {
-                    console.log('Emisor actualizado como conectado.'); // Éxito
                 } else {
-                    console.error('No se pudo actualizar la conexión del emisor:', response.message); // Error en la respuesta
+                    console.error('No se pudo actualizar la conexión del emisor:', response.message);
                 }
             })
             .catch(error => {
-                console.error('Error al actualizar la conexión del emisor:', error); // Error en la llamada AJAX
+                console.error('Error al actualizar la conexión del emisor:', error);
             });
     }
-    
+
     async function actualizarEstadoConexion(receptor, bloqueChat) {
-        console.log('Iniciando actualización de conexión con receptor:', receptor); // Log para ver el receptor
-        
         actualizarConexionEmisor();
-    
+
         try {
             const onlineStatus = await verificarConexionReceptor(receptor);
-            console.log('Estado de conexión del receptor:', onlineStatus); // Log para ver el estado de conexión del receptor
-    
             const estadoConexion = bloqueChat.querySelector('.estadoConexion');
-            console.log('Bloque de chat seleccionado:', estadoConexion); // Log para ver el bloque de chat antes de modificarlo
-    
+
             if (onlineStatus?.online) {
-                console.log('Receptor está conectado.');
                 estadoConexion.textContent = 'Conectado';
                 estadoConexion.classList.remove('desconectado');
                 estadoConexion.classList.add('conectado');
             } else {
-                console.log('Receptor está desconectado.');
                 estadoConexion.textContent = 'Desconectado';
                 estadoConexion.classList.remove('conectado');
                 estadoConexion.classList.add('desconectado');
             }
         } catch (error) {
-            console.error('Error al verificar el estado de conexión del receptor:', error); // Error en la verificación de conexión
+            console.error('Error al verificar el estado de conexión del receptor:', error);
         }
     }
-    
+
+    function verificarConexionReceptor(receptorId) {
+        return enviarAjax('verificarConexionReceptor', {receptor_id: receptorId})
+            .then(response => {
+                if (response.success) {
+                    return response.data;
+                } else {
+                    console.error('Error al verificar la conexión del receptor:', response.message);
+                    return null;
+                }
+            })
+            .catch(error => {
+                console.error('Error en la solicitud para verificar la conexión del receptor:', error);
+                return null;
+            });
+    }
+
+    /*
+     *   FUNCIONES RELACIONADAS A ABRIR UNA CONVERSACION
+     */
 
     async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
         try {
-            let data = {success: true, data: {mensajes: []}};
-            const currentPage = 1;
+            let data = {success: true, data: {mensajes: [], conversacion: null}};
+            currentPage = 1;
 
             if (conversacion) {
                 data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
@@ -95,21 +109,27 @@ function galle() {
                 data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
             }
 
+            /*
+            Manejo de la respuesta que contiene 'mensajes' y 'conversacion' (ID de la conversación)
+            */
+
             if (data?.success) {
-                mostrarMensajes(data.data.mensajes); 
+                // Mostrar mensajes obtenidos
+                mostrarMensajes(data.data.mensajes);
 
                 const bloqueChat = document.querySelector('.bloqueChat');
                 bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                 bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
-                bloqueChat.style.display = 'block'; 
+                bloqueChat.style.display = 'block';
 
-                manejarScroll();
+                manejarScroll(data.data.conversacion);
 
                 const listaMensajes = document.querySelector('.listaMensajes');
-                listaMensajes.scrollTop = listaMensajes.scrollHeight; 
+                listaMensajes.scrollTop = listaMensajes.scrollHeight;
 
+                // Actualizar estado de conexión del receptor
                 await actualizarEstadoConexion(receptor, bloqueChat);
-                setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000); 
+                setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
             } else {
                 alert(data.message || 'Error desconocido al obtener los mensajes.');
             }
@@ -120,7 +140,7 @@ function galle() {
 
     async function manejarClickEnMensaje(item) {
         item.addEventListener('click', async () => {
-            console.log('Evento click detectado.'); 
+            console.log('Evento click detectado.');
             let conversacion = item.getAttribute('data-conversacion');
             receptor = item.getAttribute('data-receptor');
             let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
@@ -169,36 +189,10 @@ function galle() {
         }
     }
 
-    function verificarConexionReceptor(receptorId) {
-        return enviarAjax('verificarConexionReceptor', {receptor_id: receptorId})
-            .then(response => {
-                if (response.success) {
-                    return response.data;
-                } else {
-                    console.error('Error al verificar la conexión del receptor:', response.message);
-                    return null;
-                }
-            })
-            .catch(error => {
-                console.error('Error en la solicitud para verificar la conexión del receptor:', error);
-                return null;
-            });
-    }
-
-    actualizarTiemposRelativos();
-    function actualizarTiemposRelativos() {
-        const actualizarElementosFecha = selector => {
-            const elementos = document.querySelectorAll(selector);
-            elementos.forEach(elemento => {
-                const fechaMensaje = new Date(elemento.getAttribute('data-fecha'));
-                elemento.textContent = formatearTiempoRelativo(fechaMensaje);
-            });
-        };
-        actualizarElementosFecha('.fechaSeparador');
-        actualizarElementosFecha('.tiempoMensaje');
-    }
-
-    setInterval(actualizarTiemposRelativos, 4000);
+    /*
+     *   FUNCIONES RELACIONADAS A CARGAN LOS MENSAJES DE UNA CONVERSACION
+     *   O CARGAN EN LA LISTA DE CONVERSACION
+     */
 
     function mostrarMensajes(mensajes) {
         const listaMensajes = document.querySelector('.listaMensajes');
@@ -250,68 +244,6 @@ function galle() {
         if (!insertAtTop) {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
         }
-    }
-
-    let token = null;
-
-    async function obtenerToken() {
-        try {
-            const response = await enviarAjax('generarToken', {});
-            if (response.success) {
-                return response.data.token;
-            } else {
-                console.error('No se pudo obtener el token:', response.message);
-                return null;
-            }
-        } catch (error) {
-            console.error('Error al obtener el token:', error);
-            return null;
-        }
-    }
-
-    async function iniciarChat() {
-        token = await obtenerToken();
-        if (token) {
-            connectWebSocket();
-        } else {
-            console.error('No se pudo iniciar el chat sin un token válido');
-        }
-    }
-
-    function connectWebSocket() {
-        ws = new WebSocket(wsUrl);
-        ws.onopen = () => {
-            ws.send(
-                JSON.stringify({
-                    emisor,
-                    type: 'auth',
-                    token: token
-                })
-            );
-            pingInterval = setInterval(() => {
-                if (ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({type: 'ping'}));
-                }
-            }, 30000);
-        };
-        ws.onclose = () => {
-            clearInterval(pingInterval);
-            console.log('Conexión cerrada. Reintentando en 5 segundos...');
-            setTimeout(connectWebSocket, 5000);
-        };
-        ws.onerror = error => {
-            console.error('Error en WebSocket:', error);
-        };
-        ws.onmessage = ({data}) => {
-            const message = JSON.parse(data);
-            if (message.type === 'pong') {
-                console.log('Pong recibido');
-            } else if (message.type === 'set_emisor') {
-                ws.send(JSON.stringify({emisor}));
-            } else {
-                manejarMensajeWebSocket(JSON.stringify(message));
-            }
-        };
     }
 
     function manejarMensajeWebSocket(data) {
@@ -380,6 +312,97 @@ function galle() {
             });
     }
 
+    /*
+     *   FUNCIONES RELACIONADAS ACTUALIZAR EL TIEMPO CADA MINUTO
+     */
+
+    setInterval(actualizarTiemposRelativos, 4000);
+    actualizarTiemposRelativos();
+    function actualizarTiemposRelativos() {
+        const actualizarElementosFecha = selector => {
+            const elementos = document.querySelectorAll(selector);
+            elementos.forEach(elemento => {
+                const fechaMensaje = new Date(elemento.getAttribute('data-fecha'));
+                elemento.textContent = formatearTiempoRelativo(fechaMensaje);
+            });
+        };
+        actualizarElementosFecha('.fechaSeparador');
+        actualizarElementosFecha('.tiempoMensaje');
+    }
+
+    /*
+     *   FUNCION RELACIONADA VERIFICAR TOKEN
+     */
+
+    let token = null;
+    async function obtenerToken() {
+        try {
+            const response = await enviarAjax('generarToken', {});
+            if (response.success) {
+                return response.data.token;
+            } else {
+                console.error('No se pudo obtener el token:', response.message);
+                return null;
+            }
+        } catch (error) {
+            console.error('Error al obtener el token:', error);
+            return null;
+        }
+    }
+
+    /*
+     *   FUNCION PRINCIPAL PARA INICIAR CONEXION
+     */
+
+    async function iniciarChat() {
+        token = await obtenerToken();
+        if (token) {
+            connectWebSocket();
+        } else {
+            console.error('No se pudo iniciar el chat sin un token válido');
+        }
+    }
+
+    function connectWebSocket() {
+        ws = new WebSocket(wsUrl);
+        ws.onopen = () => {
+            ws.send(
+                JSON.stringify({
+                    emisor,
+                    type: 'auth',
+                    token: token
+                })
+            );
+            pingInterval = setInterval(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({type: 'ping'}));
+                }
+            }, 30000);
+        };
+        ws.onclose = () => {
+            clearInterval(pingInterval);
+            console.log('Conexión cerrada. Reintentando en 5 segundos...');
+            setTimeout(connectWebSocket, 5000);
+        };
+        ws.onerror = error => {
+            console.error('Error en WebSocket:', error);
+        };
+        ws.onmessage = ({data}) => {
+            const message = JSON.parse(data);
+            if (message.type === 'pong') {
+                console.log('Pong recibido');
+            } else if (message.type === 'set_emisor') {
+                ws.send(JSON.stringify({emisor}));
+            } else {
+                manejarMensajeWebSocket(JSON.stringify(message));
+            }
+        };
+    }
+
+    /*
+     *   FUNCIONES PARA ENVIAR MENSAJE
+     */
+
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null) {
         const messageData = {emisor, receptor, mensaje, adjunto, metadata};
 
@@ -417,34 +440,54 @@ function galle() {
             }
         }
     }
-    function manejarScroll() {
+
+    /*
+     *   FUNCION PARA CARGAR MAS MENSAJES
+     */
+
+    function manejarScroll(conversacion) {
         const listaMensajes = document.querySelector('.listaMensajes');
         let puedeDesplazar = true;
-
+    
+        // Verificar si la conversación es válida (no null ni undefined)
+        if (!conversacion) {
+            console.warn('ID de conversación no válida. No se cargará más historial.');
+            return; // Salir de la función si no hay una conversación válida
+        }
+    
         listaMensajes?.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
                 puedeDesplazar = false;
+    
                 setTimeout(() => {
                     puedeDesplazar = true;
                 }, 2000);
-
+    
                 currentPage++;
+                
+                // Realizar la solicitud AJAX solo si hay una conversación válida
                 const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
+                
                 if (data?.success) {
                     const mensajes = data.data.mensajes;
                     let fechaAnterior = null;
+    
                     mensajes.reverse().forEach(mensaje => {
                         agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true);
                         fechaAnterior = new Date(mensaje.fecha);
                     });
+    
                     const primerMensaje = listaMensajes.querySelector('li');
                     if (primerMensaje) {
                         primerMensaje.scrollIntoView();
                     }
+                } else {
+                    console.error('Error al obtener más mensajes.');
                 }
             }
         });
     }
+    
 
     init();
 }
