@@ -77,7 +77,6 @@ function galle() {
                 data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
             } else if (receptor) {
                 data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
-                let receptor;
             }
 
             if (data?.success) {
