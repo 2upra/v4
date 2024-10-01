@@ -120,7 +120,7 @@ function renderChat()
 
         </ul>
 
-        <div class="previewsForm NGEESM">
+        <div class="previewsForm NGEESM previewsChat">
             <div class="previewAreaArchivos" id="previewChatImagen" style="display: none;">
                 <label></label>
             </div>
