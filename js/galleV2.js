@@ -523,13 +523,16 @@ function galle() {
                 
                 archivoChatId = fileId;
                 archivoChatUrl = fileUrl;
+                console.log('Guardado archivoChatUrl:', archivoChatUrl);
+                
                 subidaChatProgreso = false;
             } catch (error) {
                 console.error('Error al cargar la imagen:', error);
                 subidaChatProgreso = false;
             }
+            console.log('Finalizado el proceso de subida de imagen. Estado de subidaChatProgreso:', subidaChatProgreso);
+            console.log('Estado final archivoChatId:', archivoChatId, ', archivoChatUrl:', archivoChatUrl);
         };
-        
         const subidaChatArchivo = async file => {
             console.log('Iniciando subida de archivo:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
             subidaChatProgreso = true;
