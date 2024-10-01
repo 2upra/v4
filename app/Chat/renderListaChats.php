@@ -68,9 +68,7 @@ function obtenerNombreUsuario($usuarioId)
     return $usuario ? $usuario->display_name : '[Usuario desconocido]';
 }
 
-/*
 
-*/
 
 function infoUsuario() {
     // Guardamos un log al iniciar la función
@@ -94,9 +92,13 @@ function infoUsuario() {
         wp_die();
     }
 
-    // Obtenemos la imagen de perfil y el nombre del usuario
-    $imagenPerfil = imagenPerfil($receptor) ?: 'ruta_por_defecto.jpg'; // URL de una imagen por defecto
-    $nombreUsuario = obtenerNombreUsuario($receptor) ?: 'Usuario Desconocido'; // Nombre por defecto
+    chatLog('Obteniendo imagen de perfil para receptor: ' . $receptor);
+    $imagenPerfil = imagenPerfil($receptor) ?: 'ruta_por_defecto.jpg';
+    chatLog('Imagen de perfil obtenida correctamente.');
+    
+    chatLog('Obteniendo nombre de usuario para receptor: ' . $receptor);
+    $nombreUsuario = obtenerNombreUsuario($receptor) ?: 'Usuario Desconocido';
+    chatLog('Nombre de usuario obtenido correctamente.');    
 
     // Guardamos los datos obtenidos en el log
     chatLog('Imagen de perfil obtenida: ' . $imagenPerfil);
@@ -107,13 +109,12 @@ function infoUsuario() {
         ob_end_clean();
     }
 
-    // Enviamos la respuesta con los datos obtenidos
+    
     wp_send_json_success(array(
         'imagenPerfil' => $imagenPerfil,
         'nombreUsuario' => $nombreUsuario
     ));
 
-    // Guardamos el log indicando que se envió la respuesta con éxito
     chatLog('Respuesta enviada con éxito para el receptor ID: ' . $receptor);
 
     // Aseguramos que la ejecución termine correctamente
