@@ -106,7 +106,7 @@ function renderChat()
 {
     ob_start();
 ?>
-    <div class="bloque bloqueChat" style="display: none;">
+    <div class="bloque bloqueChat" id="bloqueChat" style="display: none;">
         <div class="infoChat">
             <div class="imagenMensaje">
                 <img src="" alt="Imagen de perfil">
@@ -119,10 +119,23 @@ function renderChat()
         <ul class="listaMensajes">
 
         </ul>
+
+        <div class="previewsForm NGEESM">
+            <div class="previewAreaArchivos" id="previewChatImagen" style="display: none;">
+                <label></label>
+            </div>
+            <div class="previewAreaArchivos" id="previewChatAudio" style="display: none;">
+                <label></label>
+            </div>
+            <div class="previewAreaArchivos" id="previewChatArchivo" style="display: none;">
+                <label>Archivo adicional para colab (flp, zip, rar, midi, etc)</label>
+            </div>
+        </div>
+
         <div class="chatEnvio">
             <textarea class="mensajeContenido" rows="1"></textarea>
             <button class="enviarMensaje"><?php echo $GLOBALS['enviarMensaje']; ?></button>
-            <button class="enviarAdjunto"><?php echo $GLOBALS['enviarAdjunto']; ?></button>
+            <button class="enviarAdjunto" id="enviarAdjunto""><?php echo $GLOBALS['enviarAdjunto']; ?></button>
         </div>
     </div>
 <?php

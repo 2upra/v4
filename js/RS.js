@@ -228,7 +228,6 @@ function subidaRs() {
         subidaImagenEnProgreso = true;
         opciones.style.display = 'flex';
         updatePreviewImagen(file);
-        imagenSelecionada = file;
         try {
             alert(`Imagen subida: ${file.name}`);
             const {fileUrl, fileId} = await subidaRsBackend(file, 'barraProgresoImagen');

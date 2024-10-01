@@ -19,10 +19,6 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
                 <button class="mensajeBoton" data-receptor="1">Enviar a 3</button>
             </div>
         </div>
-
-
-
-
     </div>
 </div>
 

@@ -29,7 +29,7 @@ function galle() {
     let currentPage = 1;
     let pingInterval;
     let subidaChatProgreso;
-    let imagenChatUrl, imagenChatId, audioChatUrl, audioChatId, archivoChatUrl, archivoChatId;
+    let archivoChatUrl, archivoChatId;
 
     function init() {
         manejarScroll();
@@ -442,6 +442,205 @@ function galle() {
     }
 
     /*
+     *   FUNCIONES PARA CARGAR MAS ADJUNTAR ARCHIVOS
+     */
+
+    function subidaArchivosChat() {
+        const ids = ['enviarAdjunto', 'bloqueChat', 'previewChatAudio', 'previewChatArchivo', 'previewChatImagen'];
+        const elements = ids.reduce((acc, id) => {
+            const el = document.getElementById(id);
+            if (!el) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
+            acc[id] = el;
+            return acc;
+        }, {});
+    
+        const missingElements = Object.entries(elements)
+            .filter(([_, el]) => !el)
+            .map(([id]) => id);
+        if (missingElements.length) {
+            return;
+        }
+    
+        const { enviarAdjunto, bloqueChat, previewChatArchivo, previewChatAudio, previewChatImagen } = elements;
+    
+        // Abrir el selector de archivos al hacer clic en el botón `enviarAdjunto`
+        enviarAdjunto.addEventListener('click', () => abrirSelectorArchivos('*/*'));
+    
+        const inicialChatSubida = event => {
+            event.preventDefault();
+            const file = event.dataTransfer?.files[0] || event.target.files[0];
+    
+            if (!file) return;
+            if (file.size > 50 * 1024 * 1024) return alert('El archivo no puede superar los 50 MB.');
+    
+            // Determinar el tipo de archivo y ejecutar la subida correspondiente
+            if (file.type.startsWith('audio/')) {
+                subidaChatAudio(file);
+            } else if (file.type.startsWith('image/')) {
+                subidaChatImagen(file);
+            } else {
+                subidaChatArchivo(file);
+            }
+        };
+    
+        const subidaChatAudio = async file => {
+            subidaChatProgreso = true;
+            try {
+                alert('Cargando archivo...');
+                previewChatAudio.style.display = 'block';
+                const progressBarId = waveAudio(file); 
+                const { fileUrl, fileId } = await subidaChatBackend(file, progressBarId);
+                archivoChatId = fileId;
+                archivoChatUrl = fileUrl;
+                subidaChatProgreso = false;
+            } catch (error) {
+                alert('Hubo un problema al cargar el audio. Inténtalo de nuevo.');
+                subidaChatProgreso = false;
+            }
+        };
+    
+        const subidaChatImagen = async file => {
+            subidaChatProgreso = true;
+            updateChatPreviewImagen(file); 
+            try {
+                alert('Cargando archivo...');
+                previewChatImagen.style.display = 'block';
+                const progressBarId = `progress-${Date.now()}`; 
+                const { fileUrl, fileId } = await subidaChatBackend(file, progressBarId);
+                archivoChatId = fileId;
+                archivoChatUrl = fileUrl;
+                subidaChatProgreso = false;
+            } catch (error) {
+                alert('Hubo un problema al cargar la imagen. Inténtalo de nuevo.');
+                subidaChatProgreso = false;
+            }
+        };
+    
+        const subidaChatArchivo = async file => {
+            subidaChatProgreso = true;
+            previewChatArchivo.style.display = 'block';
+            previewChatArchivo.innerHTML = `
+                <div class="file-name">${file.name}</div>
+                <div id="barraProgresoFile" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>`;
+            try {
+                alert('Cargando archivo...');
+                const progressBarId = `progress-${Date.now()}`; 
+                const { fileUrl, fileId } = await subidaChatBackend(file, progressBarId);
+                archivoChatId = fileId;
+                archivoChatUrl = fileUrl;
+                subidaChatProgreso = false;
+            } catch (error) {
+                alert('Hubo un problema al cargar el archivo. Inténtalo de nuevo.');
+                subidaChatProgreso = false;
+            }
+        };
+    
+        const waveAudio = file => {
+            const reader = new FileReader();
+            const audioContainerId = `waveform-container-${Date.now()}`;
+            const progressBarId = `progress-${Date.now()}`;
+            reader.onload = e => {
+                previewChatAudio.innerHTML = `
+                    <div id="${audioContainerId}" class="waveform-container without-image" data-audio-url="${e.target.result}">
+                        <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
+                        <div class="file-name">${file.name}</div>
+                    </div>
+                    <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
+                        <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
+                    </div>`;
+            };
+            reader.readAsDataURL(file);
+            return progressBarId;
+        };
+    
+        const updateChatPreviewImagen = file => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                previewChatImagen.innerHTML = `<img src="${e.target.result}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">`;
+                previewChatImagen.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        };
+    
+        bloqueChat.addEventListener('click', event => {
+            const clickedElement = event.target.closest('.previewChatAudio, .previewChatImagen');
+            if (clickedElement) {
+                abrirSelectorArchivos(clickedElement.classList.contains('previewChatAudio') ? 'audio/*' : 'image/*');
+            }
+        });
+    
+        const abrirSelectorArchivos = tipoArchivo => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = tipoArchivo;
+            input.onchange = inicialChatSubida;
+            input.click();
+        };
+    
+        // Manejo de eventos de drag and drop
+        ['dragover', 'dragleave', 'drop'].forEach(eventName => {
+            bloqueChat.addEventListener(eventName, e => {
+                e.preventDefault();
+                bloqueChat.style.backgroundColor = eventName === 'dragover' ? '#e9e9e9' : '';
+                if (eventName === 'drop') inicialChatSubida(e);
+            });
+        });
+    }
+
+    async function subidaChatBackend(file, progressBarId) {
+        const formData = new FormData();
+        formData.append('action', 'file_upload');
+        formData.append('file', file);
+        formData.append('file_hash', await generateFileHash(file)); // Asumiendo que ya tienes esta función
+    
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', my_ajax_object.ajax_url, true);
+    
+            // Actualización de la barra de progreso
+            xhr.upload.onprogress = e => {
+                if (e.lengthComputable) {
+                    const progressBar = document.getElementById(progressBarId);
+                    const progressPercent = (e.loaded / e.total) * 100;
+                    if (progressBar) progressBar.style.width = `${progressPercent}%`;
+                }
+            };
+    
+            // Manejo de la respuesta del servidor
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    try {
+                        const result = JSON.parse(xhr.responseText);
+                        if (result.success) {
+                            resolve(result.data); // Devuelve la data en caso de éxito
+                        } else {
+                            reject(new Error('Error en la respuesta del servidor'));
+                        }
+                    } catch (error) {
+                        reject(error); // Error al parsear la respuesta
+                    }
+                } else {
+                    reject(new Error(`Error en la carga del archivo. Status: ${xhr.status}`));
+                }
+            };
+    
+            // Manejo de errores de conexión
+            xhr.onerror = () => {
+                reject(new Error('Error en la conexión con el servidor'));
+            };
+    
+            // Enviar solicitud AJAX
+            try {
+                xhr.send(formData);
+            } catch (error) {
+                reject(new Error('Error al enviar la solicitud AJAX'));
+            }
+        });
+    }
+    
+    
+
+    /*
      *   FUNCION PARA CARGAR MAS MENSAJES
      */
 
@@ -449,35 +648,35 @@ function galle() {
         const listaMensajes = document.querySelector('.listaMensajes');
         let puedeDesplazar = true;
         currentPage = 1;
-    
+
         // Verificar si la conversación es válida (no null ni undefined)
         if (!conversacion) {
             console.warn('ID de conversación no válida. No se cargará más historial.');
             return; // Salir de la función si no hay una conversación válida
         }
-    
+
         listaMensajes?.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
                 puedeDesplazar = false;
-    
+
                 setTimeout(() => {
                     puedeDesplazar = true;
                 }, 2000);
-    
+
                 currentPage++;
-                
+
                 // Realizar la solicitud AJAX solo si hay una conversación válida
                 const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
-                
+
                 if (data?.success) {
                     const mensajes = data.data.mensajes;
                     let fechaAnterior = null;
-    
+
                     mensajes.reverse().forEach(mensaje => {
                         agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true);
                         fechaAnterior = new Date(mensaje.fecha);
                     });
-    
+
                     const primerMensaje = listaMensajes.querySelector('li');
                     if (primerMensaje) {
                         primerMensaje.scrollIntoView();
@@ -488,7 +687,6 @@ function galle() {
             }
         });
     }
-    
 
     init();
 }
