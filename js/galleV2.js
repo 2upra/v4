@@ -29,7 +29,8 @@ function galle() {
     let currentPage = 1;
     let pingInterval;
     let subidaChatProgreso;
-    let archivoChatUrl, archivoChatId;
+    let archivoChatId = null;
+    let archivoChatUrl = null;
 
     function init() {
         manejarScroll();
@@ -404,6 +405,10 @@ function galle() {
      *   FUNCIONES PARA ENVIAR MENSAJE
      */
 
+    /* 
+
+    */
+
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null) {
         const messageData = {emisor, receptor, mensaje, adjunto, metadata};
 
@@ -411,7 +416,7 @@ function galle() {
             ws.send(JSON.stringify(messageData));
         } else {
             console.error('WebSocket no está conectado, no se puede enviar el mensaje');
-            alert('No se puede enviar el mensaje, por favor, reinicia la pagina');
+            alert('No se puede enviar el mensaje, por favor, reinicia la página');
         }
     }
 
@@ -433,7 +438,18 @@ function galle() {
         function enviarMensaje() {
             const mensaje = mensajeInput.value;
             if (mensaje.trim() !== '') {
-                enviarMensajeWs(receptor, mensaje);
+                ocultarPreviews();
+                let adjunto = null;
+                if (archivoChatId || archivoChatUrl) {
+                    adjunto = {
+                        archivoChatId: archivoChatId,
+                        archivoChatUrl: archivoChatUrl
+                    };
+                    archivoChatId = null;
+                    archivoChatUrl = null;
+                }
+
+                enviarMensajeWs(receptor, mensaje, adjunto);
                 agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date());
                 mensajeInput.value = '';
                 const mensajeVistaPrevia = `Tu: ${mensaje}`;
@@ -445,6 +461,15 @@ function galle() {
     /*
      *   FUNCIONES PARA CARGAR MAS ADJUNTAR ARCHIVOS
      */
+
+    function ocultarPreviews() {
+        const previewChatAudio = document.getElementById('previewChatAudio');
+        const previewChatImagen = document.getElementById('previewChatImagen');
+        const previewChatArchivo = document.getElementById('previewChatArchivo');
+        previewChatAudio.style.display = 'none';
+        previewChatImagen.style.display = 'none';
+        previewChatArchivo.style.display = 'none';
+    }
 
     function subidaArchivosChat() {
         const ids = ['enviarAdjunto', 'bloqueChat', 'previewChatAudio', 'previewChatArchivo', 'previewChatImagen'];
@@ -482,12 +507,6 @@ function galle() {
             } else {
                 subidaChatArchivo(file);
             }
-        };
-
-        const ocultarPreviews = () => {
-            previewChatAudio.style.display = 'none';
-            previewChatImagen.style.display = 'none';
-            previewChatArchivo.style.display = 'none';
         };
 
         const subidaChatAudio = async file => {
