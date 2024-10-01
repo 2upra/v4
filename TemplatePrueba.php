@@ -16,7 +16,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
             <?php echo renderChat() ?>
             <div>
                 <button class="mensajeBoton" data-receptor="44">Enviar a 44</button>
-                <button class="mensajeBoton" data-receptor="3">Enviar a 3</button>
+                <button class="mensajeBoton" data-receptor="1">Enviar a 3</button>
             </div>
         </div>
 
