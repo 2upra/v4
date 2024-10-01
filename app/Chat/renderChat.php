@@ -3,30 +3,41 @@
 
 function obtenerChat()
 {
+    chatLog('Iniciando función obtenerChat.');
+
     if (!is_user_logged_in()) {
+        chatLog('Error: Usuario no autenticado.');
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));
         wp_die();
     }
 
     global $wpdb;
     
-    $usuarioActual = get_current_user_id(); // Emisor
+    $usuarioActual = get_current_user_id();
+    chatLog('Usuario actual ID: ' . $usuarioActual);
+
     $receptor = isset($_POST['receptor']) ? intval($_POST['receptor']) : 0;
+    chatLog('Receptor ID recibido: ' . $receptor);
+
     $conversacion = isset($_POST['conversacion']) ? intval($_POST['conversacion']) : 0;
+    chatLog('Conversación ID recibido: ' . $conversacion);
+
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+    chatLog('Número de página recibido: ' . $page);
+
     $mensajesPorPagina = 10;
 
-    // Validar si tenemos el ID del receptor si no se ha pasado una conversación
     if ($conversacion <= 0 && $receptor <= 0) {
+        chatLog('Error: ID de conversación o receptor inválido.');
         wp_send_json_error(array('message' => 'ID de conversación o receptor inválido.'));
         wp_die();
     }
 
-    // Si no hay ID de conversación, buscar una existente entre el emisor y receptor
     if ($conversacion <= 0) {
-        $tablaConversaciones = $wpdb->prefix . 'conversacion'; // Tabla de conversaciones
+        chatLog('No se envió ID de conversación, buscando existente.');
 
-        // Buscar una conversación de tipo 1 (uno a uno) con ambos participantes
+        $tablaConversaciones = $wpdb->prefix . 'conversacion';
+
         $conversacion = $wpdb->get_var($wpdb->prepare("
             SELECT id 
             FROM $tablaConversaciones 
@@ -38,18 +49,19 @@ function obtenerChat()
         json_encode((string)$usuarioActual), 
         json_encode((string)$receptor)));
 
-        // Si no existe conversación, devolver un resultado vacío
         if (!$conversacion) {
+            chatLog('No se encontró una conversación, enviando resultados vacíos.');
             wp_send_json_success(array('mensajes' => array()));
             wp_die();
+        } else {
+            chatLog('ID de conversación encontrada: ' . $conversacion);
         }
     }
 
-    // Obtener los mensajes de la conversación
     $tablaMensajes = $wpdb->prefix . 'mensajes';
     $offset = ($page - 1) * $mensajesPorPagina;
+    chatLog('Calculado offset de página: ' . $offset);
 
-    // Cambiar el orden a DESC para obtener los mensajes más recientes
     $query = $wpdb->prepare("
         SELECT mensaje, emisor AS remitente, fecha
         FROM $tablaMensajes
@@ -61,22 +73,29 @@ function obtenerChat()
     $mensajes = $wpdb->get_results($query);
 
     if ($mensajes === null) {
+        chatLog('Error en la consulta a la base de datos.');
         wp_send_json_error(array('message' => 'Error en la consulta a la base de datos.'));
         wp_die();
     }
+
+    chatLog('Mensajes obtenidos, invirtiendo orden para enviar.');
 
     $mensajes = array_reverse($mensajes);
 
     foreach ($mensajes as $mensaje) {
         $mensaje->clase = ($mensaje->remitente == $usuarioActual) ? 'mensajeDerecha' : 'mensajeIzquierda';
+        chatLog('Mensaje procesado: ' . json_encode($mensaje));
     }
 
     if ($mensajes) {
+        chatLog('Enviando mensajes obtenidos.');
         wp_send_json_success(array('mensajes' => $mensajes));
     } else {
+        chatLog('No se encontraron mensajes, enviando lista vacía.');
         wp_send_json_success(array('mensajes' => array()));
     }
 
+    chatLog('Finalizando función obtenerChat.');
     wp_die();
 }
 add_action('wp_ajax_obtenerChat', 'obtenerChat');

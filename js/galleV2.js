@@ -70,34 +70,30 @@ function galle() {
 
     async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
         try {
-            let data = {success: true, data: {mensajes: []}}; // Inicialmente, datos vacíos para el caso de no tener conversación
+            let data = {success: true, data: {mensajes: []}};
             const currentPage = 1;
 
             if (conversacion) {
-                // Si se recibió un ID de conversación, hacemos la petición con él
                 data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
             } else if (receptor) {
-                // Si no hay conversación, pero sí receptor, hacemos la petición solo con el receptor
                 data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
             }
 
-            // Si la petición fue exitosa o si no hay mensajes simplemente mostramos el chat vacío
             if (data?.success) {
-                mostrarMensajes(data.data.mensajes); // Mostrar los mensajes obtenidos, si no hay, mostrará un chat vacío
+                mostrarMensajes(data.data.mensajes); 
 
                 const bloqueChat = document.querySelector('.bloqueChat');
                 bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                 bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
-                bloqueChat.style.display = 'block'; // Mostrar la ventana del chat
+                bloqueChat.style.display = 'block'; 
 
                 manejarScroll();
 
                 const listaMensajes = document.querySelector('.listaMensajes');
-                listaMensajes.scrollTop = listaMensajes.scrollHeight; // Desplazar al final del chat
+                listaMensajes.scrollTop = listaMensajes.scrollHeight; 
 
-                // Actualizar el estado de conexión del receptor
                 await actualizarEstadoConexion(receptor, bloqueChat);
-                setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000); // Actualizar cada 30 segundos
+                setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000); 
             } else {
                 alert(data.message || 'Error desconocido al obtener los mensajes.');
             }
@@ -105,6 +101,7 @@ function galle() {
             alert('Ha ocurrido un error al intentar abrir la conversación.');
         }
     }
+    
     async function manejarClickEnMensaje(item) {
         item.addEventListener('click', async () => {
             console.log('Evento click detectado.'); // Log para asegurar que el evento se dispara
@@ -113,13 +110,6 @@ function galle() {
             let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
             let nombreUsuario = item.querySelector('.nombreUsuario strong')?.textContent || null;
 
-            console.log('Datos obtenidos antes de la solicitud AJAX:');
-            console.log('Conversación:', conversacion);
-            console.log('Receptor:', receptor);
-            console.log('Imagen de Perfil:', imagenPerfil);
-            console.log('Nombre de Usuario:', nombreUsuario);
-
-            // Si no tenemos la imagen de perfil o el nombre, pedimos la información al servidor
             if (!imagenPerfil || !nombreUsuario) {
                 console.log('No se tienen los datos, realizando solicitud AJAX para obtener información del servidor.');
                 try {
@@ -143,16 +133,6 @@ function galle() {
                     return;
                 }
             }
-
-            // Si aún no tenemos imagenPerfil o nombreUsuario, asignar valores por defecto para evitar errores
-            imagenPerfil = imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
-            nombreUsuario = nombreUsuario || 'Usuario Desconocido';
-
-            console.log('Abrir conversación con los siguientes datos:');
-            console.log('Conversación:', conversacion);
-            console.log('Receptor:', receptor);
-            console.log('Imagen de Perfil:', imagenPerfil);
-            console.log('Nombre de Usuario:', nombreUsuario);
 
             // Abrir la conversación
             abrirConversacion({

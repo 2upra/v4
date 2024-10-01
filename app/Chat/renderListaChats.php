@@ -68,71 +68,34 @@ function obtenerNombreUsuario($usuarioId)
     return $usuario ? $usuario->display_name : '[Usuario desconocido]';
 }
 
-/*
-
-2024-10-01 04:02:33 - Iniciando función infoUsuario.
-2024-10-01 04:02:33 - Receptor recibido: 44
-2024-10-01 04:02:33 - Obteniendo imagen de perfil para receptor: 44
-2024-10-01 04:02:33 - Imagen de perfil obtenida correctamente.
-2024-10-01 04:02:33 - Obteniendo nombre de usuario para receptor: 44
-2024-10-01 04:02:33 - Nombre de usuario obtenido correctamente.
-2024-10-01 04:02:33 - Imagen de perfil obtenida: https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all
-2024-10-01 04:02:33 - Nombre de usuario obtenido: 2upra
-
-*/
-
 
 function infoUsuario() {
-    // Guardamos un log al iniciar la función
-    chatLog('Iniciando función infoUsuario.');
-
-    // Verificamos si el usuario está autenticado
     if (!is_user_logged_in()) {
-        chatLog('Error: Usuario no autenticado.');
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));
         wp_die();
     }
 
-    // Obtenemos el ID del receptor desde la solicitud POST
     $receptor = isset($_POST['receptor']) ? intval($_POST['receptor']) : 0;
-    chatLog('Receptor recibido: ' . $receptor);
 
-    // Verificamos si hay un receptor válido
     if ($receptor <= 0) {
-        chatLog('Error: ID del receptor inválido.');
         wp_send_json_error(array('message' => 'ID del receptor inválido.'));
         wp_die();
     }
 
-    chatLog('Obteniendo imagen de perfil para receptor: ' . $receptor);
     $imagenPerfil = imagenPerfil($receptor) ?: 'ruta_por_defecto.jpg';
-    chatLog('Imagen de perfil obtenida correctamente.');
-    
-    chatLog('Obteniendo nombre de usuario para receptor: ' . $receptor);
     $nombreUsuario = obtenerNombreUsuario($receptor) ?: 'Usuario Desconocido';
-    chatLog('Nombre de usuario obtenido correctamente.');    
 
-    // Guardamos los datos obtenidos en el log
-    chatLog('Imagen de perfil obtenida: ' . $imagenPerfil);
-    chatLog('Nombre de usuario obtenido: ' . $nombreUsuario);
-
-    // Limpiar cualquier buffer de salida antes de enviar la respuesta
     if (ob_get_length()) {
         ob_end_clean();
     }
 
-    
     wp_send_json_success(array(
         'imagenPerfil' => $imagenPerfil,
         'nombreUsuario' => $nombreUsuario
     ));
 
-    chatLog('Respuesta enviada con éxito para el receptor ID: ' . $receptor);
-
-    // Aseguramos que la ejecución termine correctamente
     wp_die();
 }
-
 
 add_action('wp_ajax_infoUsuario', 'infoUsuario');
 
