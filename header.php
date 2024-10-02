@@ -29,9 +29,7 @@ if (!defined('ABSPATH')) {
             width: 100%;
             height: 100%;
             background-color: #000;
-            /* Fondo negro */
             z-index: 99999;
-            /* Asegúrate de que esté por encima de todo el contenido */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -154,6 +152,12 @@ if (!defined('ABSPATH')) {
                             </a>
                         </div>
 
+                        <div class="xaxa1 menu-item iconoperfil chatIcono" id="chatIcono">
+                            <a>
+                                <?php echo $GLOBALS['chatIcono']; ?>
+                            </a>
+                        </div>
+
                         <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil">
                             <a href="https://2upra.com/perfil">
                                 <img src="<?php echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
@@ -178,7 +182,7 @@ if (!defined('ABSPATH')) {
             <!-- Modal y fondo -->
             <div id="modalDetallesIA" class="DetallesIA modal" style="display: none; z-index: 1000; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
                 <div class="modalContent">
-                    <p id="modalDetallesContent"></p> 
+                    <p id="modalDetallesContent"></p>
                 </div>
             </div>
             <div id="backgroundDetallesIA" class="modalBackground" style="display: none; z-index: 999; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);"></div>

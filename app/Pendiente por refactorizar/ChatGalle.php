@@ -49,7 +49,7 @@ function guardar_mensaje_handler($request)
     return new WP_REST_Response('Mensaje guardado con éxito', 200);
 }
 */
-
+/*
 function get_user_conversations($user_id, $page = 1, $per_page = 20)
 {
     global $wpdb;
@@ -346,7 +346,7 @@ add_action('rest_api_init', function () {
     ));
 });
 */
-
+/*
 function combined_conversations_shortcode()
 {
     $current_user_id = get_current_user_id();
@@ -407,3 +407,5 @@ add_action('wp_ajax_get_conversation_by_post_id', 'handle_get_conversation_by_po
 add_action('wp_ajax_nopriv_get_conversation_by_post_id', 'handle_get_conversation_by_post_id');
 add_action('wp_ajax_get_conversation_by_post_id', 'handle_get_conversation_by_post_id');
 add_action('wp_ajax_nopriv_get_conversation_by_post_id', 'handle_get_conversation_by_post_id');
+
+*/
