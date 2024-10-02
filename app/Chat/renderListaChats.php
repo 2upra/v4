@@ -55,6 +55,13 @@ function obtenerChats($usuarioId)
                 $conversacion->ultimoMensaje = null;
             }
         }
+
+        // Ordenar las conversaciones por la fecha del último mensaje
+        usort($conversaciones, function ($a, $b) {
+            $fechaA = isset($a->ultimoMensaje->fecha) ? strtotime($a->ultimoMensaje->fecha) : 0;
+            $fechaB = isset($b->ultimoMensaje->fecha) ? strtotime($b->ultimoMensaje->fecha) : 0;
+            return $fechaB - $fechaA; // Orden descendente, más reciente primero
+        });
     } else {
         chatLog("No se encontraron conversaciones para el usuario con ID: " . $usuarioId);
     }
