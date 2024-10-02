@@ -2,7 +2,7 @@ window.inicializarWaveform = function (containerId, audioSrc) {
     const container = document.getElementById(containerId);
     if (!container || !audioSrc) return;
 
-    const cacheKey = `waveform_buffer_${audioSrc}`;
+    const cacheKey = `waveform_buffer_${audioSrc}`; // Clave de caché basada solo en el audioSrc
     const cachedBuffer = localStorage.getItem(cacheKey);
 
     const options = {
@@ -20,7 +20,7 @@ window.inicializarWaveform = function (containerId, audioSrc) {
     // Función para decodificar el audio y cargarlo en WaveSurfer
     const loadAudioBuffer = (audioData) => {
         const audioContext = wavesurfer.backend.getAudioContext();
-        audioContext.decodeAudioData(audioData, function(buffer) {
+        audioContext.decodeAudioData(audioData, (buffer) => {
             if (buffer) {
                 console.log('Buffer decodificado correctamente.');
                 wavesurfer.loadDecodedBuffer(buffer); // Carga el buffer en WaveSurfer
@@ -28,7 +28,7 @@ window.inicializarWaveform = function (containerId, audioSrc) {
                 console.error('No se pudo decodificar el buffer de audio.');
                 wavesurfer.load(audioSrc); // Si falla, cargar el archivo de audio original
             }
-        }, function(error) {
+        }, (error) => {
             console.error('Error al decodificar el buffer de audio:', error);
             wavesurfer.load(audioSrc); // Cargar el archivo de audio si falla el buffer
         }).catch(err => {
@@ -40,7 +40,6 @@ window.inicializarWaveform = function (containerId, audioSrc) {
     if (cachedBuffer) {
         try {
             console.log('Buffer encontrado en caché.');
-            // Si el buffer está en caché, cárgalo
             const decodedData = new Uint8Array(JSON.parse(cachedBuffer)).buffer;
             loadAudioBuffer(decodedData);
         } catch (error) {
@@ -49,21 +48,18 @@ window.inicializarWaveform = function (containerId, audioSrc) {
         }
     } else {
         console.log('No se encontró buffer en caché, cargando audio desde la fuente.');
-        // Si no está en caché, carga el audio y guarda el buffer
         wavesurfer.load(audioSrc);
 
-        // Evento 'ready' se dispara cuando el archivo de audio ha sido cargado completamente
-        wavesurfer.on('ready', function () {
+        wavesurfer.on('ready', () => {
             console.log('WaveSurfer está listo.');
 
             try {
-                // Verificar que el backend y el buffer existan
                 if (wavesurfer.backend && wavesurfer.backend.buffer) {
                     const buffer = wavesurfer.backend.buffer;
                     console.log('El buffer está listo.');
 
                     // Convierte el buffer a Uint8Array para almacenarlo en localStorage
-                    const rawData = buffer.getChannelData(0); // Obtener el canal 0
+                    const rawData = buffer.getChannelData(0);
                     const uintArray = new Uint8Array(rawData.buffer);
 
                     // Guardar el buffer en caché

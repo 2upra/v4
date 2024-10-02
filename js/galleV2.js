@@ -242,9 +242,10 @@ function galle() {
                     
                     // Inicializar el waveform después de que el elemento se haya agregado al DOM
                     setTimeout(() => {
+                        // Utilizamos `adjunto.archivoChatUrl` como el identificador para el caché
                         inicializarWaveform(audioContainerId, adjunto.archivoChatUrl);
                     }, 0);
-                } 
+                }
                 // Si es otro tipo de archivo
                 else {
                     adjuntoContainer.innerHTML = `
