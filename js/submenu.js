@@ -23,26 +23,24 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
     function showSubmenu(event, submenu) {
         const rect = event.target.getBoundingClientRect();
         const { innerWidth: vw, innerHeight: vh } = window;
-
+    
         if (vw > 640) {
             submenu.style.position = "fixed";
             submenu.style.top = `${Math.min(rect.bottom + adjustTop, vh - submenu.offsetHeight)}px`;
             submenu.style.left = `${Math.min(rect.left + adjustLeft, vw - submenu.offsetWidth)}px`;
         }
-
+    
         submenu.style.display = "block";
-
+    
         submenu._darkBackground = createSubmenuDarkBackground(submenu);
         submenu.style.zIndex = 999; // Siempre por encima del fondo oscuro
-
+    
         document.body.classList.add('no-scroll');
-
-        // Agregar evento click a los botones dentro del submenu
-        const buttons = submenu.querySelectorAll('button');
-        buttons.forEach(button => {
-            button.addEventListener('click', () => {
-                hideSubmenu(submenu); // Cierra el submenu al hacer clic en un botón
-            });
+    
+        // Agregar evento clic a cualquier área dentro del submenu
+        submenu.addEventListener('click', (e) => {
+            e.stopPropagation(); // Evita que el evento de clic se propague y cierre inmediatamente el submenú
+            hideSubmenu(submenu); // Cierra el submenú al hacer clic en cualquier parte dentro de él
         });
     }
 
