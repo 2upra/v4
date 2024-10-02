@@ -11,7 +11,7 @@ function htmlColab($filtro)
     <li class="POST-<?php echo esc_attr($filtro); ?> EDYQHV"
         filtro="<?php echo esc_attr($filtro); ?>"
         id-post="<?php echo get_the_ID(); ?>"
-        autor="<?php echo esc_attr($colabAutor); ?>">
+        autor="<?php echo esc_attr($colabColaborador); ?>">
 
         <div class="colab-content">
             <?php echo opcionesColab($post_id, $colabColaborador, $colabColaboradorAvatar, $colabColaboradorName, $colab_date); ?>
