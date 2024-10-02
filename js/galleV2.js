@@ -139,15 +139,15 @@ function galle() {
         try {
             const bloqueChat = document.querySelector('.bloqueChat');
             const botonCerrar = document.getElementById('cerrarChat');
-    
+
             botonCerrar.addEventListener('click', () => {
                 bloqueChat.style.display = 'none';
                 bloqueChat.classList.remove('minimizado');
-                
+
                 // Resetear variables globales del chat
                 archivoChatId = null;
                 archivoChatUrl = null;
-    
+
                 // Borrar cualquier texto en el área de texto
                 const textareaMensaje = document.querySelector('.mensajeContenido');
                 textareaMensaje.value = '';
@@ -161,19 +161,19 @@ function galle() {
         try {
             const bloqueChat = document.getElementById('bloqueChat');
             const botonMinimizar = document.getElementById('minizarChat');
-    
-            botonMinimizar.addEventListener('click', (event) => {
+
+            botonMinimizar.addEventListener('click', event => {
                 event.stopPropagation(); // Evita que el evento se propague al contenedor padre
                 bloqueChat.classList.add('minimizado');
-                
+
                 // Oculta los elementos internos
                 const elementosAOcultar = bloqueChat.querySelectorAll('.listaMensajes, .previewsChat, .chatEnvio');
-                elementosAOcultar.forEach(elem => elem.style.display = 'none');
-    
+                elementosAOcultar.forEach(elem => (elem.style.display = 'none'));
+
                 // Resetear variables globales del chat
                 if (typeof archivoChatId !== 'undefined') archivoChatId = null;
                 if (typeof archivoChatUrl !== 'undefined') archivoChatUrl = null;
-    
+
                 // Borrar cualquier texto en el área de texto
                 const textareaMensaje = bloqueChat.querySelector('.mensajeContenido');
                 if (textareaMensaje) textareaMensaje.value = '';
@@ -183,18 +183,18 @@ function galle() {
             alert('Ha ocurrido un error al intentar minimizar el chat.');
         }
     }
-    
+
     async function maximizarChat() {
         try {
             const bloqueChat = document.getElementById('bloqueChat');
-    
-            bloqueChat.addEventListener('click', (event) => {
+
+            bloqueChat.addEventListener('click', event => {
                 if (bloqueChat.classList.contains('minimizado')) {
                     bloqueChat.classList.remove('minimizado');
-                    
+
                     // Muestra los elementos internos
                     const elementosAMostrar = bloqueChat.querySelectorAll('.listaMensajes, .previewsChat, .chatEnvio');
-                    elementosAMostrar.forEach(elem => elem.style.display = '');
+                    elementosAMostrar.forEach(elem => (elem.style.display = ''));
                 }
             });
         } catch (error) {
@@ -202,7 +202,7 @@ function galle() {
             alert('Ha ocurrido un error al intentar maximizar el chat.');
         }
     }
-    
+
     maximizarChat();
     cerrarChat();
     minimizarChat();
@@ -371,31 +371,30 @@ function galle() {
     }
 
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null) {
-
         // Log para verificar si listaMensajes se selecciona correctamente
         console.log('listaMensajes antes de validación:', listaMensajes);
-    
+
         // Verifica si listaMensajes es un nodo DOM válido
         if (!listaMensajes || !(listaMensajes instanceof Element)) {
             console.error('Error: listaMensajes no es un elemento DOM válido o no se encontró. Valor recibido:', listaMensajes);
             return;
         }
-    
+
         console.log('listaMensajes es un elemento DOM válido:', listaMensajes);
-    
+
         const fechaMensaje = new Date(fecha);
         console.log('fechaMensaje (convertido a Date):', fechaMensaje);
-    
+
         if (!fechaAnterior) {
             console.log('No se recibió fechaAnterior, buscando la última fecha en la lista de mensajes...');
             let lastElement = null;
             const children = Array.from(listaMensajes.children || []);
             const searchOrder = insertAtTop ? 1 : -1;
             const startIndex = insertAtTop ? 0 : children.length - 1;
-    
+
             console.log('Cantidad de hijos en listaMensajes:', children.length);
             console.log('Orden de búsqueda (1 = inicio, -1 = final):', searchOrder);
-    
+
             for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
                 const child = children[i];
                 console.log('Revisando hijo:', child);
@@ -405,25 +404,25 @@ function galle() {
                     break;
                 }
             }
-    
+
             fechaAnterior = lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
             console.log('Fecha anterior encontrada:', fechaAnterior);
         }
-    
+
         // Lógica para manejar la fecha
         console.log('Manejando la fecha del mensaje actual y la anterior...');
         manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
-    
+
         // Crear el nuevo mensaje
         const li = document.createElement('li');
         li.textContent = mensajeTexto;
         li.classList.add(clase);
         li.setAttribute('data-fecha', fechaMensaje.toISOString());
         console.log('Nuevo mensaje creado:', li);
-    
+
         // Lógica para manejar el adjunto
         manejarAdjunto(adjunto, li);
-    
+
         // Insertar el mensaje en la posición correcta
         if (insertAtTop) {
             console.log('Insertando mensaje al inicio de la lista');
@@ -432,67 +431,71 @@ function galle() {
             console.log('Insertando mensaje al final de la lista');
             listaMensajes.appendChild(li);
         }
-    
+
         // Si no se está insertando al inicio, desplázate hacia abajo
         if (!insertAtTop) {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
             console.log('Desplazando la lista de mensajes hacia abajo');
         }
-    
+
         console.log('*** Fin de la función agregarMensajeAlChat ***');
     }
 
     function manejarMensajeWebSocket(data) {
         try {
-            const { emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje } = JSON.parse(data);
+            const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
             const listaMensajes = document.querySelector('.listaMensajes');
             const fechaActual = new Date();
             const chatIconoSvg = document.querySelector('.chatIcono svg');
-            
+
             // Asegúrate de que emisor y receptor estén definidos
             if (msgReceptor === emisor) {
                 if (msgEmisor === receptor) {
                     // Agregar mensaje desde el receptor (mensaje a la izquierda)
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', fechaActual, listaMensajes);
-                    
+
                     // Cambiar el color del ícono cuando se recibe un mensaje
                     if (chatIconoSvg) {
                         chatIconoSvg.style.color = '#d43333'; // Cambia el color del ícono
                     }
+
+                    // Mostrar alerta para el mensaje recibido
+                    alert(`Nuevo mensaje de ${msgEmisor}: ${msgMensaje}`);
                 }
                 actualizarListaConversaciones(msgEmisor, msgMensaje);
             } else if (msgEmisor === emisor && msgReceptor === receptor) {
                 // Agregar mensaje desde el emisor (mensaje a la derecha)
                 agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes);
                 actualizarListaConversaciones(msgReceptor, msgMensaje);
+
+                // Mostrar alerta para el mensaje enviado
+                alert(`Mensaje enviado a ${msgReceptor}: ${msgMensaje}`);
             }
-    
+
             // Añadir un evento de clic para remover el color
             if (chatIconoSvg) {
-                chatIconoSvg.addEventListener('click', function() {
+                chatIconoSvg.addEventListener('click', function () {
                     chatIconoSvg.style.color = ''; // Remueve el color al hacer clic
                 });
             }
-    
         } catch (error) {
             console.error('Error al manejar el mensaje de WebSocket:', error);
         }
     }
-    
-    
+
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
         const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
         let conversacionActualizada = false;
-    
+
         listaMensajes.forEach(mensaje => {
             const receptorId = mensaje.getAttribute('data-receptor');
-    
+
             if (receptorId == usuarioId) {
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
                     vistaPrevia.textContent = ultimoMensaje;
                 }
-    
+
                 const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
                 if (tiempoMensajeDiv) {
                     const fechaActual = new Date();
@@ -505,12 +508,12 @@ function galle() {
                 conversacionActualizada = true;
             }
         });
-    
+
         if (!conversacionActualizada) {
             // Agregamos un pequeño retraso antes de reiniciar los chats
             setTimeout(() => {
                 reiniciarChats();
-            }, 1000); 
+            }, 1000);
         }
     }
 
@@ -524,14 +527,14 @@ function galle() {
                         chatListContainer.innerHTML = '';
                         // Reemplaza con el nuevo contenido
                         chatListContainer.innerHTML = response.data.html;
-    
+
                         // Selecciona el SVG y cambia su color
                         const chatIconoSvg = document.querySelector('.chatIcono svg');
                         if (chatIconoSvg) {
                             chatIconoSvg.style.color = '#d43333'; // Aplica el nuevo color
-                            
+
                             // Añade un evento de clic para remover el color
-                            chatIconoSvg.addEventListener('click', function() {
+                            chatIconoSvg.addEventListener('click', function () {
                                 chatIconoSvg.style.color = ''; // Remueve el color al hacer clic
                             });
                         }
@@ -544,7 +547,7 @@ function galle() {
                 console.error('Error al reiniciar los chats:', error);
             });
     }
-    
+
     /*
      *   FUNCIONES RELACIONADAS ACTUALIZAR EL TIEMPO CADA MINUTO
      */
@@ -652,7 +655,6 @@ function galle() {
     }
 
     function setupEnviarMensajeHandler() {
-        
         document.addEventListener('click', event => {
             if (event.target.matches('.enviarMensaje')) {
                 enviarMensaje();
