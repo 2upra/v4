@@ -446,37 +446,18 @@ function galle() {
             const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
             const listaMensajes = document.querySelector('.listaMensajes');
             const fechaActual = new Date();
-            const chatIconoSvg = document.querySelector('.chatIcono svg');
 
             // Asegúrate de que emisor y receptor estén definidos
             if (msgReceptor === emisor) {
                 if (msgEmisor === receptor) {
                     // Agregar mensaje desde el receptor (mensaje a la izquierda)
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', fechaActual, listaMensajes);
-
-                    // Cambiar el color del ícono cuando se recibe un mensaje
-                    if (chatIconoSvg) {
-                        chatIconoSvg.style.color = '#d43333'; // Cambia el color del ícono
-                    }
-
-                    // Mostrar alerta para el mensaje recibido
-                    alert(`Nuevo mensaje de ${msgEmisor}: ${msgMensaje}`);
                 }
                 actualizarListaConversaciones(msgEmisor, msgMensaje);
             } else if (msgEmisor === emisor && msgReceptor === receptor) {
                 // Agregar mensaje desde el emisor (mensaje a la derecha)
                 agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes);
                 actualizarListaConversaciones(msgReceptor, msgMensaje);
-
-                // Mostrar alerta para el mensaje enviado
-                alert(`Mensaje enviado a ${msgReceptor}: ${msgMensaje}`);
-            }
-
-            // Añadir un evento de clic para remover el color
-            if (chatIconoSvg) {
-                chatIconoSvg.addEventListener('click', function () {
-                    chatIconoSvg.style.color = ''; // Remueve el color al hacer clic
-                });
             }
         } catch (error) {
             console.error('Error al manejar el mensaje de WebSocket:', error);
@@ -491,6 +472,15 @@ function galle() {
             const receptorId = mensaje.getAttribute('data-receptor');
 
             if (receptorId == usuarioId) {
+                const chatIconoSvg = document.querySelector('.chatIcono svg');
+                if (chatIconoSvg) {
+                    chatIconoSvg.style.color = '#d43333'; // Aplica el nuevo color
+
+                    // Añade un evento de clic para remover el color
+                    chatIconoSvg.addEventListener('click', function () {
+                        chatIconoSvg.style.color = ''; // Remueve el color al hacer clic
+                    });
+                }
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
                     vistaPrevia.textContent = ultimoMensaje;
