@@ -46,20 +46,30 @@ window.inicializarWaveform = function (containerId, audioSrc) {
 
         wavesurfer.on('ready', function () {
             console.log('WaveSurfer está listo.');
-            const buffer = wavesurfer.backend.buffer;
 
-            if (buffer) {
-                console.log('El buffer está listo.');
-                // Convierte el buffer a Uint8Array para almacenarlo en localStorage
-                const rawData = buffer.getChannelData(0); // Obtener el canal 0
-                const uintArray = new Uint8Array(rawData.buffer);
+            try {
+                const buffer = wavesurfer.backend.buffer;
 
-                // Guardar el buffer en caché
-                localStorage.setItem(cacheKey, JSON.stringify(Array.from(uintArray)));
-                console.log('Buffer guardado en caché.');
-            } else {
-                console.error('El buffer no está disponible o es undefined.');
+                if (buffer) {
+                    console.log('El buffer está listo.');
+                    // Convierte el buffer a Uint8Array para almacenarlo en localStorage
+                    const rawData = buffer.getChannelData(0); // Obtener el canal 0
+                    const uintArray = new Uint8Array(rawData.buffer);
+
+                    // Guardar el buffer en caché
+                    localStorage.setItem(cacheKey, JSON.stringify(Array.from(uintArray)));
+                    console.log('Buffer guardado en caché.');
+                } else {
+                    console.error('El buffer no está disponible o es undefined.');
+                }
+            } catch (error) {
+                console.error('Error al intentar acceder al buffer:', error);
             }
+        });
+
+        // Evento 'decode' se dispara cuando el archivo de audio ha sido decodificado
+        wavesurfer.on('decode', function () {
+            console.log('Audio decodificado.');
         });
 
         // Manejo de errores durante la carga del audio
