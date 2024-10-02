@@ -229,24 +229,29 @@ function galle() {
                     adjuntoContainer.innerHTML = `<img src="${adjunto.archivoChatUrl}" alt="Imagen adjunta" style="width: 100%; height: auto; object-fit: cover;">`;
                 }
                 // Si es un archivo de audio
-                else if (['mp3', 'ogg'].includes(ext)) {
+                else if (['mp3', 'ogg', 'wav'].includes(ext)) {
+                    const audioContainerId = `waveform-container-${Date.now()}`;
                     adjuntoContainer.innerHTML = `
-                        <div id="waveform-container" class="waveform-container without-image" data-audio-url="${adjunto.archivoChatUrl}">
+                        <div id="${audioContainerId}" class="waveform-container without-image" data-audio-url="${adjunto.archivoChatUrl}">
                             <div class="waveform-background"></div>
                             <div class="waveform-message"></div>
                             <div class="waveform-loading" style="display: none;">Cargando...</div>
                             <audio controls style="width: 100%;"><source src="${adjunto.archivoChatUrl}" type="audio/${ext}"></audio>
                         </div>
                         <div class="file-name">Archivo: ${fileName}</div>`;
+                    
+                    // Inicializar el waveform después de que el elemento se haya agregado al DOM
+                    setTimeout(() => {
+                        inicializarWaveform(audioContainerId, adjunto.archivoChatUrl);
+                    }, 0);
                 } 
-                // Si es un archivo WAV u otro tipo de archivo
+                // Si es otro tipo de archivo
                 else {
                     adjuntoContainer.innerHTML = `
                         <div class="archivoChat">
                             <div class="file-name">${fileName}</div>
                             <a href="${adjunto.archivoChatUrl}" target="_blank">Descargar archivo</a>
                         </div>`;
-                        
                 }
             }
     
