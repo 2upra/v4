@@ -21,16 +21,18 @@ function obtenerChat()
 
     if ($conversacion <= 0) {
         $tablaConversaciones = $wpdb->prefix . 'conversacion';
-        $conversacion = $wpdb->get_var($wpdb->prepare("
+        $conversacion = $wpdb->get_var($wpdb->prepare(
+            "
             SELECT id 
             FROM $tablaConversaciones 
             WHERE tipo = 1
             AND JSON_CONTAINS(participantes, %s)
             AND JSON_CONTAINS(participantes, %s)
             LIMIT 1
-        ", 
-        json_encode($usuarioActual),
-        json_encode($receptor)));
+        ",
+            json_encode($usuarioActual),
+            json_encode($receptor)
+        ));
 
         if (!$conversacion) {
             wp_send_json_success(array('mensajes' => array(), 'conversacion' => null));
@@ -59,14 +61,14 @@ function obtenerChat()
 
     foreach ($mensajes as $mensaje) {
         $mensaje->clase = ($mensaje->remitente == $usuarioActual) ? 'mensajeDerecha' : 'mensajeIzquierda';
-        
+
         if (!empty($mensaje->adjunto)) {
             $mensaje->adjunto = json_decode($mensaje->adjunto, true);
         }
     }
 
     wp_send_json_success(array(
-        'mensajes' => $mensajes ? $mensajes : array(), 
+        'mensajes' => $mensajes ? $mensajes : array(),
         'conversacion' => $conversacion
     ));
     wp_die();
@@ -90,26 +92,30 @@ function renderChat()
                 <span class="estadoConexion">Desconectado</span>
             </div>
         </div>
-        <ul class="listaMensajes">
+        <ul class="listaMensajes"></ul>
 
-        </ul>
-
-        <div class="previewsForm NGEESM previewsChat">
+        <div class="previewsForm NGEESM previewsChat" style="position: relative;">
+            <!-- Vista previa de imagen -->
             <div class="previewAreaArchivos" id="previewChatImagen" style="display: none;">
-                <label></label>
+                <label>Imagen</label>
             </div>
+            <!-- Vista previa de audio -->
             <div class="previewAreaArchivos" id="previewChatAudio" style="display: none;">
-                <label></label>
+                <label>Audio</label>
             </div>
+            <!-- Vista previa de archivo -->
             <div class="previewAreaArchivos" id="previewChatArchivo" style="display: none;">
-                <label></label>
+                <label>Archivo</label>
             </div>
+
+            <!-- Botón de cancelar único, que aparecerá en cualquier vista previa -->
+            <button class="cancelButton" id="cancelUploadButton" style="display: none;">Cancelar</button>
         </div>
 
         <div class="chatEnvio">
             <textarea class="mensajeContenido" rows="1"></textarea>
             <button class="enviarMensaje"><?php echo $GLOBALS['enviarMensaje']; ?></button>
-            <button class="enviarAdjunto" id="enviarAdjunto""><?php echo $GLOBALS['enviarAdjunto']; ?></button>
+            <button class="enviarAdjunto" id="enviarAdjunto"><?php echo $GLOBALS['enviarAdjunto']; ?></button>
         </div>
     </div>
 <?php
