@@ -1,54 +1,52 @@
 (function () {
     'use strict';
 
-    const A07 = false;
-    const log07 = A07 ? console.log.bind(console) : () => {};
+    const DEPURAR = false;
+    const log = DEPURAR ? console.log.bind(console) : () => {};
 
-    let cargando = false;
-    let paged = 2;
+    let estaCargando = false;
+    let hayMasContenido = true;
+    let paginaActual = 2;
     const publicacionesCargadas = new Set();
-    let identifier = '';
+    let identificador = '';
     let eventoBusquedaConfigurado = false;
     let scrollTimeout = null;
 
-
-
     // Función que se llama cada vez que se cambia de página mediante AJAX
-    function reiniciarDiferidoPost() {
-        log07('Reiniciando diferidopost');
+    function reiniciarCargaDiferida() {
+        log('Reiniciando carga diferida');
         window.removeEventListener('scroll', manejarScroll);
-        cargando = false;
-        paged = 2;
+        estaCargando = false;
+        hayMasContenido = true;
+        paginaActual = 2;
         publicacionesCargadas.clear();
-        identifier = '';
-        window.currentUserId = null;
+        identificador = '';
+        window.idUsuarioActual = null;
 
         if (!eventoBusquedaConfigurado) {
             configurarEventoBusqueda();
             eventoBusquedaConfigurado = true;
         }
         ajustarAlturaMaxima();
-        cargarContenidoPorScroll();
-        establecerUserIdDesdeInput();
+        habilitarCargaPorScroll();
+        establecerIdUsuarioDesdeInput();
     }
 
-    function establecerUserIdDesdeInput() {
-        const paginaActualInput = document.getElementById('pagina_actual');
-        if (paginaActualInput?.value.toLowerCase() === 'sello') {
-            const userIdInput = document.getElementById('user_id');
-            if (userIdInput) {
-                const userId = userIdInput.value;
-                const profileContainer = document.querySelector('.custom-uprofile-container');
-                if (profileContainer) {
-                    profileContainer.setAttribute('data-author-id', userId);
-                }
-                window.currentUserId = userId;
-                log07('User ID establecido:', userId);
+    function establecerIdUsuarioDesdeInput() {
+        const inputPaginaActual = document.getElementById('pagina_actual');
+        if (inputPaginaActual?.value.toLowerCase() === 'sello') {
+            const inputIdUsuario = document.getElementById('user_id');
+            if (inputIdUsuario) {
+                const idUsuario = inputIdUsuario.value;
+                const contenedorPerfil = document.querySelector('.custom-uprofile-container');
+                contenedorPerfil?.setAttribute('data-author-id', idUsuario);
+                window.idUsuarioActual = idUsuario;
+                log('ID de usuario establecido:', idUsuario);
             } else {
-                log07('No se encontró el input de user_id');
+                log('No se encontró el input de user_id');
             }
         } else {
-            log07('La página actual no es "sello"');
+            log('La página actual no es "sello"');
         }
     }
 
@@ -57,8 +55,8 @@
         scrollTimeout = setTimeout(() => {
             scrollTimeout = null;
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            const windowHeight = window.innerHeight;
-            const documentHeight = Math.max(
+            const alturaVentana = window.innerHeight;
+            const alturaDocumento = Math.max(
                 document.body.scrollHeight,
                 document.body.offsetHeight,
                 document.documentElement.clientHeight,
@@ -66,151 +64,150 @@
                 document.documentElement.offsetHeight
             );
 
-            log07('Evento de scroll detectado:', { scrollTop, windowHeight, documentHeight, cargando });
+            log('Evento de scroll detectado:', { scrollTop, alturaVentana, alturaDocumento, estaCargando });
 
-            if (scrollTop + windowHeight > documentHeight - 100 && !cargando) {
-                log07('Condiciones para cargar más contenido cumplidas');
+            if (scrollTop + alturaVentana > alturaDocumento - 100 && !estaCargando && hayMasContenido) {
+                log('Condiciones para cargar más contenido cumplidas');
                 cargarMasContenido();
             } else {
-                log07('Condiciones para cargar más contenido no cumplidas');
+                log('Condiciones para cargar más contenido no cumplidas');
             }
         }, 200); // Ajusta el tiempo de espera según sea necesario
     }
 
     async function cargarMasContenido() {
-        cargando = true;
-        log07('Iniciando carga de más contenido');
+        estaCargando = true;
+        log('Iniciando carga de más contenido');
 
-        const activeTabElement = document.querySelector('.tab.active');
-        if (activeTabElement?.getAttribute('ajax') === 'no') {
-            log07('La pestaña activa tiene ajax="no". No se cargará más contenido.');
-            cargando = false;
+        const elementoPestañaActiva = document.querySelector('.tab.active');
+        if (elementoPestañaActiva?.getAttribute('ajax') === 'no') {
+            log('La pestaña activa tiene ajax="no". No se cargará más contenido.');
+            estaCargando = false;
             return;
         }
 
-        const activeTab = document.querySelector('.tab.active .social-post-list');
-        if (!activeTab) {
-            log07('No se encontró una pestaña activa');
-            cargando = false;
+        const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
+        if (!listaPublicaciones) {
+            log('No se encontró una pestaña activa');
+            estaCargando = false;
             return;
         }
 
-        const { filtro: filtroActual = '', tabId: tabIdActual = '' } = activeTab.dataset;
-        const user_id = window.currentUserId || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
+        const { filtro = '', tabId = '' } = listaPublicaciones.dataset;
+        const idUsuario = window.idUsuarioActual || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
 
-        log07('Parámetros de carga:', { filtroActual, tabIdActual, identifier, user_id, paged });
+        log('Parámetros de carga:', { filtro, tabId, identificador, idUsuario, paginaActual });
 
         try {
-            const response = await fetch(ajaxUrl, {
+            const respuesta = await fetch(ajaxUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({
                     action: 'cargar_mas_publicaciones',
-                    paged,
-                    filtro: filtroActual,
-                    identifier,
-                    tab_id: tabIdActual,
-                    user_id,
+                    paged: paginaActual,
+                    filtro,
+                    identifier: identificador,
+                    tab_id: tabId,
+                    user_id: idUsuario,
                     cargadas: Array.from(publicacionesCargadas).join(',')
                 })
             });
 
-            const textResponse = await response.text();
-            await procesarRespuesta(textResponse);
+            const textoRespuesta = await respuesta.text();
+            await procesarRespuesta(textoRespuesta);
         } catch (error) {
-            log07('Error AJAX:', error);
-            cargando = false;
+            log('Error en la petición AJAX:', error);
+        } finally {
+            estaCargando = false;
         }
     }
 
-    async function procesarRespuesta(response) {
-        log07('Respuesta recibida:', response.substring(0, 100) + '...');
-        if (response.trim() === '<div id="no-more-posts"></div>') {
-            log07('No hay más publicaciones');
+    async function procesarRespuesta(respuesta) {
+        log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
+        const respuestaLimpia = respuesta.trim();
+        if (respuestaLimpia === '<div id="no-more-posts"></div>') {
+            log('No hay más publicaciones');
             detenerCarga();
         } else {
             const parser = new DOMParser();
-            const doc = parser.parseFromString(response, 'text/html');
+            const doc = parser.parseFromString(respuesta, 'text/html');
 
-            doc.querySelectorAll('.EDYQHV').forEach(post => {
-                const postId = post.getAttribute('id-post');
-                if (postId && !publicacionesCargadas.has(postId)) {
-                    publicacionesCargadas.add(postId);
-                    log07('Post añadido:', postId);
+            doc.querySelectorAll('.EDYQHV').forEach(publicacion => {
+                const idPublicacion = publicacion.getAttribute('id-post');
+                if (idPublicacion && !publicacionesCargadas.has(idPublicacion)) {
+                    publicacionesCargadas.add(idPublicacion);
+                    log('Publicación añadida:', idPublicacion);
                 }
             });
 
-            const activeTab = document.querySelector('.tab.active .social-post-list');
-            if (response.trim() && !doc.querySelector('#no-more-posts')) {
-                activeTab.insertAdjacentHTML('beforeend', response);
-                log07('Contenido añadido');
-                paged++;
-                ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA'].forEach(fn => {
-                    if (typeof window[fn] === 'function') window[fn]();
+            const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
+            if (respuestaLimpia && !doc.querySelector('#no-more-posts')) {
+                listaPublicaciones.insertAdjacentHTML('beforeend', respuesta);
+                log('Contenido añadido');
+                paginaActual++;
+                ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA'].forEach(funcion => {
+                    if (typeof window[funcion] === 'function') window[funcion]();
                 });
             } else {
-                log07('No más publicaciones o respuesta vacía');
+                log('No más publicaciones o respuesta vacía');
                 detenerCarga();
             }
         }
-        cargando = false;
     }
 
-    function cargarContenidoPorScroll() {
-        log07('Configurando evento de scroll');
+    function habilitarCargaPorScroll() {
+        log('Configurando evento de scroll');
         window.addEventListener('scroll', manejarScroll);
     }
 
     function configurarEventoBusqueda() {
-        const searchInput = document.getElementById('identifier');
-        if (searchInput) {
-            searchInput.removeEventListener('keypress', manejadorEventoBusqueda);
-            searchInput.addEventListener('keypress', manejadorEventoBusqueda);
+        const inputBusqueda = document.getElementById('identifier');
+        if (inputBusqueda) {
+            inputBusqueda.removeEventListener('keypress', manejadorEventoBusqueda);
+            inputBusqueda.addEventListener('keypress', manejadorEventoBusqueda);
         } else {
-            log07('No se encontró el elemento searchInput');
+            log('No se encontró el elemento input de búsqueda');
         }
+    }
 
-        function manejadorEventoBusqueda(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                identifier = e.target.value.trim();
-                log07('Enter presionado, valor de identifier:', identifier);
-                resetearCarga();
-                cargarMasContenido();
-            }
+    function manejadorEventoBusqueda(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            identificador = e.target.value.trim();
+            log('Enter presionado, valor de identificador:', identificador);
+            resetearCarga();
+            cargarMasContenido();
         }
     }
 
     function resetearCarga() {
-        paged = 1;
+        paginaActual = 1;
         publicacionesCargadas.clear();
-        window.removeEventListener('scroll', manejarScroll);
-        cargarContenidoPorScroll();
-        log07('Ejecutando resetearCarga');
-        const socialPostList = document.querySelector('.tab.active .social-post-list');
-        if (socialPostList) {
-            socialPostList.innerHTML = '';
+        habilitarCargaPorScroll();
+        log('Ejecutando resetearCarga');
+        const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
+        if (listaPublicaciones) {
+            listaPublicaciones.innerHTML = '';
         }
+        hayMasContenido = true;
     }
 
     function detenerCarga() {
-        log07('Carga detenida');
-        cargando = true;
+        log('Carga detenida');
+        hayMasContenido = false;
         window.removeEventListener('scroll', manejarScroll);
     }
 
     function ajustarAlturaMaxima() {
         const contenedor = document.querySelector('.SAOEXP .clase-rolastatus');
-        if (contenedor) {
-            const elemento = contenedor.querySelector('li[filtro="rolastatus"]');
-            if (elemento) {
-                contenedor.style.maxHeight = `${elemento.offsetHeight + 40}px`;
-            }
+        const elemento = contenedor?.querySelector('li[filtro="rolastatus"]');
+        if (contenedor && elemento) {
+            contenedor.style.maxHeight = `${elemento.offsetHeight + 40}px`;
         }
     }
 
     window.addEventListener('resize', ajustarAlturaMaxima);
 
-    // Iniciar al cargar el script
-    reiniciarDiferidoPost();
+    // Inicializar al cargar el script
+    reiniciarCargaDiferida();
 })();

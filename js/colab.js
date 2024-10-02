@@ -62,15 +62,25 @@ function subidaFrontalArchivoColab() {
     const postArchivoColab = document.getElementById('postArchivoColab');
     const modalEnviarBtn = document.getElementById('empezarColab');
     let fileSelected = false;
+
+    const tiposDeImagen = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']; // Tipos de imágenes prohibidos
+
     const handleFileSelect = async event => {
         event.preventDefault();
         event.stopPropagation();
         const file = event.dataTransfer?.files[0] || event.target.files[0];
         if (!file || fileSelected) return;
         fileSelected = true;
-    
+
+        // Verificar si el archivo es una imagen
+        if (tiposDeImagen.includes(file.type)) {
+            alert('No se permiten imágenes. Por favor, selecciona otro tipo de archivo.');
+            resetState();
+            return;
+        }
+
         const progressBarId = barradeProgreso(file);
-        modalEnviarBtn.disabled = true; 
+        modalEnviarBtn.disabled = true;
         try {
             const archivoRecibido = await subidaArchivoColabBackend(file, progressBarId);
             fileUrl = archivoRecibido.fileUrl;
@@ -82,15 +92,18 @@ function subidaFrontalArchivoColab() {
             resetState();
         }
     };
+
     const handleDragDropEvents = event => {
         event.preventDefault();
         previewArchivo.style.backgroundColor = event.type === 'dragover' ? '#e9e9e9' : '';
         if (event.type === 'drop') handleFileSelect(event);
     };
+
     const handlePreviewClick = e => {
         e.stopPropagation();
         if (!fileSelected) postArchivoColab.click();
     };
+
     function resetState() {
         fileSelected = false;
         fileUrl = null;
@@ -99,18 +112,18 @@ function subidaFrontalArchivoColab() {
         modalEnviarBtn.disabled = false;
         previewArchivo.removeEventListener('click', handlePreviewClick);
         postArchivoColab.removeEventListener('change', handleFileSelect);
-        ['dragover', 'dragleave', 'drop'].forEach(eventName => 
+        ['dragover', 'dragleave', 'drop'].forEach(eventName =>
             previewArchivo.removeEventListener(eventName, handleDragDropEvents)
         );
     }
+
     resetState();
     previewArchivo.addEventListener('click', handlePreviewClick);
     postArchivoColab.addEventListener('change', handleFileSelect);
-    ['dragover', 'dragleave', 'drop'].forEach(eventName => 
+    ['dragover', 'dragleave', 'drop'].forEach(eventName =>
         previewArchivo.addEventListener(eventName, handleDragDropEvents)
     );
 }
-
 //Subida del archivo backend
 async function subidaArchivoColabBackend(file, progressBarId) {
     const formData = new FormData();
