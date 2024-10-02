@@ -2,41 +2,25 @@
 
 function obtenerChat()
 {
-    chatLog('Iniciando función obtenerChat.');
-
     if (!is_user_logged_in()) {
-        chatLog('Error: Usuario no autenticado.');
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));
         wp_die();
     }
 
     global $wpdb;
-
     $usuarioActual = get_current_user_id();
-    chatLog('Usuario actual ID: ' . $usuarioActual);
-
     $receptor = isset($_POST['receptor']) ? intval($_POST['receptor']) : 0;
-    chatLog('Receptor ID recibido: ' . $receptor);
-
     $conversacion = isset($_POST['conversacion']) ? intval($_POST['conversacion']) : 0;
-    chatLog('Conversación ID recibido: ' . $conversacion);
-
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
-    chatLog('Número de página recibido: ' . $page);
-
     $mensajesPorPagina = 10;
 
     if ($conversacion <= 0 && $receptor <= 0) {
-        chatLog('Error: ID de conversación o receptor inválido.');
         wp_send_json_error(array('message' => 'ID de conversación o receptor inválido.'));
         wp_die();
     }
 
     if ($conversacion <= 0) {
-        chatLog('No se envió ID de conversación, buscando existente.');
-
         $tablaConversaciones = $wpdb->prefix . 'conversacion';
-
         $conversacion = $wpdb->get_var($wpdb->prepare("
             SELECT id 
             FROM $tablaConversaciones 
@@ -49,19 +33,13 @@ function obtenerChat()
         json_encode($receptor)));
 
         if (!$conversacion) {
-            chatLog('No se encontró una conversación, enviando resultados vacíos.');
             wp_send_json_success(array('mensajes' => array(), 'conversacion' => null));
             wp_die();
-        } else {
-            chatLog('ID de conversación encontrada: ' . $conversacion);
         }
     }
 
     $tablaMensajes = $wpdb->prefix . 'mensajes';
     $offset = ($page - 1) * $mensajesPorPagina;
-    chatLog('Calculado offset de página: ' . $offset);
-
-    // Modificamos la consulta para incluir la columna "adjunto"
     $query = $wpdb->prepare("
         SELECT mensaje, emisor AS remitente, fecha, adjunto
         FROM $tablaMensajes
@@ -73,34 +51,24 @@ function obtenerChat()
     $mensajes = $wpdb->get_results($query);
 
     if ($mensajes === null) {
-        chatLog('Error en la consulta a la base de datos.');
         wp_send_json_error(array('message' => 'Error en la consulta a la base de datos.'));
         wp_die();
     }
-
-    chatLog('Mensajes obtenidos, invirtiendo orden para enviar.');
 
     $mensajes = array_reverse($mensajes);
 
     foreach ($mensajes as $mensaje) {
         $mensaje->clase = ($mensaje->remitente == $usuarioActual) ? 'mensajeDerecha' : 'mensajeIzquierda';
         
-        // Si el mensaje tiene adjunto, procesarlo
         if (!empty($mensaje->adjunto)) {
-            $mensaje->adjunto = json_decode($mensaje->adjunto, true); // Convertimos el JSON de adjunto a array
-            chatLog('Adjunto encontrado en mensaje: ' . json_encode($mensaje->adjunto));
+            $mensaje->adjunto = json_decode($mensaje->adjunto, true);
         }
-        
-        chatLog('Mensaje procesado: ' . json_encode($mensaje));
     }
 
-    // Enviar la ID de la conversación junto con los mensajes
     wp_send_json_success(array(
         'mensajes' => $mensajes ? $mensajes : array(), 
         'conversacion' => $conversacion
     ));
-
-    chatLog('Finalizando función obtenerChat.');
     wp_die();
 }
 add_action('wp_ajax_obtenerChat', 'obtenerChat');

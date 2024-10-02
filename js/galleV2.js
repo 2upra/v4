@@ -241,7 +241,7 @@ function galle() {
                     adjuntoContainer.innerHTML = `<img src="${adjunto.archivoChatUrl}" alt="Imagen adjunta" style="width: 100%; height: auto; object-fit: cover;">`;
                 }
                 // Si es un archivo de audio
-                else if (['mp3', 'wav', 'ogg'].includes(ext)) {
+                else if (['mp3', 'ogg'].includes(ext)) {
                     adjuntoContainer.innerHTML = `
                         <div id="waveform-container" class="waveform-container without-image" data-audio-url="${adjunto.archivoChatUrl}">
                             <div class="waveform-background"></div>
@@ -249,6 +249,12 @@ function galle() {
                             <div class="waveform-loading" style="display: none;">Cargando...</div>
                             <audio controls style="width: 100%;"><source src="${adjunto.archivoChatUrl}" type="audio/${ext}"></audio>
                         </div>`;
+                } else if (['wav'].includes(ext)) {
+                    adjuntoContainer.innerHTML = `
+                        <div>
+                            <div class="file-name">Archivo: <a href="${adjunto.archivoChatUrl}" target="_blank">Descargar archivo</a></div>
+                        </div>
+                    `;
                 }
                 // Si es otro tipo de archivo
                 else {

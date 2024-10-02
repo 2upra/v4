@@ -20,7 +20,7 @@ function subidaArchivo()
 
     // Si el archivo ya existe en la base de datos
     if ($existing_file) {
-        $file_id = $existing_file['id']; // Asumiendo que el ID está en el array de $existing_file
+        $file_id = $existing_file['id'];
         $file_url = $existing_file['file_url'];
         $owner_id = $existing_file['user_id']; // ID del usuario que subió el archivo
 
@@ -38,9 +38,7 @@ function subidaArchivo()
                 if ($owner_id == 0) {
                     guardarLog("Actualizando el user_id de $owner_id a $current_user_id para el archivo $file_id");
                     actualizarUrlArchivo($file_id, $movefile['url']); // Actualizar URL
-                    confirmarHashId($file_id); // Confirmar el hash
                 }
-
                 guardarLog("Carga exitosa. URL del nuevo archivo: " . $movefile['url']);
                 wp_send_json_success(array('fileUrl' => $movefile['url'], 'fileId' => $file_id));
             } else {
@@ -50,28 +48,24 @@ function subidaArchivo()
 
             return;
         }
-
         // Verificar si el archivo pertenece al usuario actual o si es administrador
         if ($owner_id != $current_user_id && !$is_admin) {
             guardarLog("El archivo no pertenece al usuario actual.");
             wp_send_json_error('No tienes permiso para reutilizar este archivo');
             return;
         }
-
         // Si el archivo está pendiente y el usuario no es administrador
         if ($existing_file['status'] === 'pending' && !$is_admin) {
             guardarLog("El archivo ya está pendiente, reutilizando: " . $existing_file['file_url']);
             wp_send_json_success(array('fileUrl' => $file_url, 'fileId' => $file_id));
             return;
         }
-
         // Si el archivo ya está confirmado, no es necesario volver a subirlo
         if ($existing_file['status'] === 'confirmed') {
             guardarLog("El archivo ya está confirmado, reutilizando: " . $file_url);
             wp_send_json_success(array('fileUrl' => $file_url, 'fileId' => $file_id));
             return;
         }
-
         // Si es administrador, permitir el uso del archivo sin eliminarlo
         if ($is_admin) {
             guardarLog("El usuario es administrador, reutilizando archivo existente: " . $file_url);
@@ -89,8 +83,6 @@ function subidaArchivo()
     if ($movefile && !isset($movefile['error'])) {
         $file_id = guardarHash($file_hash, $movefile['url'], 'pending', $current_user_id);
         guardarLog("Carga exitosa. Hash guardado: $file_hash. URL del nuevo archivo: " . $movefile['url']);
-        
-        // Escaneo antivirus en segundo plano
         $file_path = $movefile['file']; // Ruta del archivo
         wp_schedule_single_event(time() + 5, 'antivirus', array($file_path, $file_id, $current_user_id)); 
 
@@ -109,13 +101,10 @@ function antivirus($file_path, $file_id, $current_user_id) {
 
     if ($output) {
         unlink($file_path); // Elimina el archivo infectado
-        actualizarEstadoArchivo($file_id, 'infectado'); // Actualizar estado en la BD
         guardarLog("Archivo infectado eliminado: $file_path");
-
         // Restringir al usuario que subió el archivo infectado
         restringir_usuario(array($current_user_id));
     } else {
-        actualizarEstadoArchivo($file_id, 'confirmed'); // Actualizar estado en la BD
         guardarLog("Archivo limpio confirmado: $file_path");
     }
 }
