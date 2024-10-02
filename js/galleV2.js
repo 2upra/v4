@@ -215,18 +215,6 @@ function galle() {
         });
     }
 
-    function manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop) {
-        if (!fechaAnterior || fechaMensaje - fechaAnterior >= 3 * 60 * 1000) {
-            const divFecha = document.createElement('div');
-            divFecha.textContent = formatearTiempoRelativo(fechaMensaje);
-            divFecha.classList.add('fechaSeparador');
-            divFecha.setAttribute('data-fecha', fechaMensaje.toISOString());
-    
-            insertAtTop
-                ? listaMensajes.insertBefore(divFecha, listaMensajes.firstChild)
-                : listaMensajes.appendChild(divFecha);
-        }
-    }
     function manejarAdjunto(adjunto, li) {
         if (adjunto) {
             const adjuntoContainer = document.createElement('div');
@@ -255,7 +243,7 @@ function galle() {
                 else {
                     adjuntoContainer.innerHTML = `
                         <div class="archivoChat">
-                            <div class="file-name">Archivo: ${fileName}</div>
+                            <div class="file-name">${fileName}</div>
                             <a href="${adjunto.archivoChatUrl}" target="_blank">Descargar archivo</a>
                         </div>`;
                         
@@ -266,12 +254,51 @@ function galle() {
         }
     }
 
+    /*
+
+    galleV2.js?ver=2.0.1.973842807:227  Uncaught TypeError: listaMensajes.appendChild is not a function
+    at manejarFecha (galleV2.js?ver=2.0.1.973842807:227:33)
+    at agregarMensajeAlChat (galleV2.js?ver=2.0.1.973842807:296:9)
+    at enviarMensaje (galleV2.js?ver=2.0.1.973842807:515:17)
+    at HTMLTextAreaElement.<anonymous> (galleV2.js?ver=2.0.1.973842807:496:17)
+
+    */
+
+    function manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop) {
+        // Comprobar si listaMensajes es un elemento DOM válido
+        if (!listaMensajes || !(listaMensajes instanceof Element)) {
+            console.error("listaMensajes no es un elemento DOM válido");
+            return;
+        }
+    
+        if (!fechaAnterior || fechaMensaje - fechaAnterior >= 3 * 60 * 1000) {
+            const divFecha = document.createElement('div');
+            divFecha.textContent = formatearTiempoRelativo(fechaMensaje);
+            divFecha.classList.add('fechaSeparador');
+            divFecha.setAttribute('data-fecha', fechaMensaje.toISOString());
+    
+            try {
+                if (insertAtTop) {
+                    if (listaMensajes.firstChild) {
+                        listaMensajes.insertBefore(divFecha, listaMensajes.firstChild);
+                    } else {
+                        listaMensajes.appendChild(divFecha);
+                    }
+                } else {
+                    listaMensajes.appendChild(divFecha);
+                }
+            } catch (error) {
+                console.error("Error al insertar la fecha en listaMensajes:", error);
+            }
+        }
+    }
+
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null) {
         const fechaMensaje = new Date(fecha);
     
         // Asegúrate de que listaMensajes no sea null o undefined
-        if (!listaMensajes) {
-            console.error("listaMensajes no está definido, no se puede agregar el mensaje.");
+        if (!listaMensajes || !(listaMensajes instanceof Element)) {
+            console.error("listaMensajes no es un elemento DOM válido, no se puede agregar el mensaje.");
             return;
         }
     
