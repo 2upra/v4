@@ -109,7 +109,7 @@ function renderChat()
             </div>
 
             <!-- Botón de cancelar único, que aparecerá en cualquier vista previa -->
-            <button class="cancelButton" id="cancelUploadButton">Cancelar</button>
+            <button class="cancelButton borde" id="cancelUploadButton">Cancelar</button>
         </div>
 
         <div class="chatEnvio">
