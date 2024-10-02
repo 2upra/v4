@@ -93,7 +93,7 @@
             return;
         }
 
-        const { filtro = '', tabId = '' } = listaPublicaciones.dataset;
+        const { filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
         const idUsuario = window.idUsuarioActual || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
 
         log('Parámetros de carga:', { filtro, tabId, identificador, idUsuario, paginaActual });
@@ -106,6 +106,7 @@
                     action: 'cargar_mas_publicaciones',
                     paged: paginaActual,
                     filtro,
+                    posttype,
                     identifier: identificador,
                     tab_id: tabId,
                     user_id: idUsuario,

@@ -84,7 +84,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 
             echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
                   data-filtro="' . esc_attr($filtro) . '" 
-                  data-post-type="' . esc_attr($tipoPost) . '" 
+                  data-posttype="' . esc_attr($tipoPost) . '" 
                   data-tab-id="' . esc_attr($args['tab_id']) . '">';
         }
 
@@ -142,8 +142,10 @@ function obtenerUserId($is_ajax)
 
 function publicacionAjax()
 {
+    
     $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
     $filtro = isset($_POST['filtro']) ? sanitize_text_field($_POST['filtro']) : '';
+    $tipoPost = isset($_POST['posttype']) ? sanitize_text_field($_POST['posttype']) : '';
     $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : '';
     $tab_id = isset($_POST['tab_id']) ? sanitize_text_field($_POST['tab_id']) : '';
     $user_id = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
@@ -153,6 +155,7 @@ function publicacionAjax()
     publicaciones(
         array(
             'filtro' => $filtro,
+            'post_type' => $tipoPost,
             'tab_id' => $tab_id,
             'user_id' => $user_id,
             'identifier' => $data_identifier,
