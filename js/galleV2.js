@@ -190,7 +190,7 @@ function galle() {
             const listaMensajes = document.querySelector('.listaMensajes');
             const previewsChat = document.querySelector('.previewsChat');
             const chatEnvio = document.querySelector('.chatEnvio');
-            const infoChat = document.querySelector('.infochat');
+            const infoChat = document.querySelector('.nombreConversacion');
     
             bloqueChat.addEventListener('click', (event) => {
                 if (bloqueChat.classList.contains('minimizado')) {
