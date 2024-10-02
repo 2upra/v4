@@ -118,7 +118,7 @@ function renderListaChats($conversaciones, $usuarioId)
 
     if ($conversaciones) {
 ?>
-        <div class="bloqueConversaciones bloque" id="bloqueConversaciones" style="display: none;">
+        <div class="bloqueConversaciones bloque" id="bloqueConversaciones-chatIcono" style="display: none;">
             <ul class="mensajes">
                 <?php
                 foreach ($conversaciones as $conversacion):
