@@ -10,17 +10,6 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 <div id="main">
     <div id="content" class="<?php echo esc_attr($nologin_class); ?>">
         <input type="hidden" id="pagina_actual" name="pagina_actual" value="<?php echo esc_attr(get_the_title()); ?>">
-
-        <div class="bloquesChatTest">
-            <div class="bloqueChatReiniciar">
-            <?php echo conversacionesUsuario($user_id) ?>
-            </div>
-            <?php echo renderChat() ?>
-            <div>
-                <button class="mensajeBoton" data-receptor="44">Enviar a 44</button>
-                <button class="mensajeBoton" data-receptor="1">Enviar a 3</button>
-            </div>
-        </div>
     </div>
 </div>
 

@@ -179,6 +179,16 @@ if (!defined('ABSPATH')) {
             <!-- Fondo oscuro para los submenus -->
             <div id="modalBackground2" class="modal-background submenu modalBackground2" style="display: none;"></div>
 
+            <div class="bloquesChatTest">
+                <div class="bloqueChatReiniciar">
+                    <?php echo conversacionesUsuario($user_id) ?>
+                </div>
+                <?php echo renderChat() ?>
+                <div style="display: none;">
+                    <button class="mensajeBoton" data-receptor="1">Enviar a 1</button>
+                </div>
+            </div>
+
             <!-- Modal y fondo -->
             <div id="modalDetallesIA" class="DetallesIA modal" style="display: none; z-index: 1000; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
                 <div class="modalContent">
