@@ -604,7 +604,7 @@ function galle() {
 
                 enviarMensajeWs(receptor, mensaje, adjunto);
                 // agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true);
-                agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, adjunto);
+                agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto);
                 mensajeInput.value = '';
                 const mensajeVistaPrevia = `Tu: ${mensaje}`;
                 actualizarListaConversaciones(receptor, mensajeVistaPrevia);
