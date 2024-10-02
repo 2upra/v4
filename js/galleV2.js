@@ -161,13 +161,11 @@ function galle() {
         try {
             const bloqueChat = document.getElementById('bloqueChat');
             const botonMinimizar = document.getElementById('minizarChat');
-            const chatIcono = document.getElementById('chatIcono');
     
-            function minimizar(event) {
+            botonMinimizar.addEventListener('click', (event) => {
                 event.stopPropagation(); // Evita que el evento se propague al contenedor padre
                 bloqueChat.classList.add('minimizado');
-                bloqueChat.style.display = 'none'; // Oculta completamente el chat
-    
+                
                 // Oculta los elementos internos
                 const elementosAOcultar = bloqueChat.querySelectorAll('.listaMensajes, .previewsChat, .chatEnvio');
                 elementosAOcultar.forEach(elem => elem.style.display = 'none');
@@ -179,24 +177,7 @@ function galle() {
                 // Borrar cualquier texto en el área de texto
                 const textareaMensaje = bloqueChat.querySelector('.mensajeContenido');
                 if (textareaMensaje) textareaMensaje.value = '';
-            }
-    
-            // Evento para el botón de minimizar
-            botonMinimizar.addEventListener('click', minimizar);
-    
-            // Evento para el ícono del chat
-            chatIcono.addEventListener('click', (event) => {
-                if (bloqueChat.style.display !== 'none') {
-                    minimizar(event);
-                } else {
-                    // Si el chat está oculto, lo mostramos
-                    bloqueChat.style.display = 'block';
-                    bloqueChat.classList.remove('minimizado');
-                    const elementosAMostrar = bloqueChat.querySelectorAll('.listaMensajes, .previewsChat, .chatEnvio');
-                    elementosAMostrar.forEach(elem => elem.style.display = '');
-                }
             });
-    
         } catch (error) {
             console.error('Error al minimizar el chat:', error);
             alert('Ha ocurrido un error al intentar minimizar el chat.');
