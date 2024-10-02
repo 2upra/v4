@@ -14,30 +14,57 @@ function obtenerChat()
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
     $mensajesPorPagina = 10;
 
-    if ($conversacion <= 0 && $receptor <= 0) {
-        wp_send_json_error(array('message' => 'ID de conversación o receptor inválido.'));
-        wp_die();
-    }
+    // Redis client (usualmente viene con el plugin de Redis Cache)
+    $redis = new Redis();
+    
+    $redis->connect('127.0.0.1', 6379); // Asegúrate de que los detalles de conexión sean correctos
 
+    // Generar una clave única para la conversación
+    $cacheKeyConversacion = "conversacion_{$usuarioActual}_{$receptor}";
+    
     if ($conversacion <= 0) {
-        $tablaConversaciones = $wpdb->prefix . 'conversacion';
-        $conversacion = $wpdb->get_var($wpdb->prepare("
-            SELECT id 
-            FROM $tablaConversaciones 
-            WHERE tipo = 1
-            AND JSON_CONTAINS(participantes, %s)
-            AND JSON_CONTAINS(participantes, %s)
-            LIMIT 1
-        ", 
-        json_encode($usuarioActual),
-        json_encode($receptor)));
+        // Intenta obtener la conversación desde la caché de Redis
+        $conversacion = $redis->get($cacheKeyConversacion);
 
         if (!$conversacion) {
-            wp_send_json_success(array('mensajes' => array(), 'conversacion' => null));
-            wp_die();
+            $tablaConversaciones = $wpdb->prefix . 'conversacion';
+            $conversacion = $wpdb->get_var($wpdb->prepare("
+                SELECT id 
+                FROM $tablaConversaciones 
+                WHERE tipo = 1
+                AND JSON_CONTAINS(participantes, %s)
+                AND JSON_CONTAINS(participantes, %s)
+                LIMIT 1
+            ", 
+            json_encode($usuarioActual),
+            json_encode($receptor)));
+
+            if (!$conversacion) {
+                wp_send_json_success(array('mensajes' => array(), 'conversacion' => null));
+                wp_die();
+            }
+
+            // Almacena la conversación en la caché con una expiración de 10 minutos
+            $redis->set($cacheKeyConversacion, $conversacion, 600);
         }
     }
 
+    // Generar una clave única para los mensajes cacheados
+    $cacheKeyMensajes = "mensajes_{$conversacion}_{$page}";
+
+    // Intenta obtener los mensajes desde la caché de Redis
+    $mensajesCacheados = $redis->get($cacheKeyMensajes);
+
+    if ($mensajesCacheados) {
+        // Si los mensajes están cacheados, devolverlos directamente
+        wp_send_json_success(array(
+            'mensajes' => json_decode($mensajesCacheados, true),
+            'conversacion' => $conversacion
+        ));
+        wp_die();
+    }
+
+    // Si no están cacheados, hacemos la consulta a la base de datos
     $tablaMensajes = $wpdb->prefix . 'mensajes';
     $offset = ($page - 1) * $mensajesPorPagina;
     $query = $wpdb->prepare("
@@ -64,6 +91,9 @@ function obtenerChat()
             $mensaje->adjunto = json_decode($mensaje->adjunto, true);
         }
     }
+
+    // Cachear los mensajes obtenidos en Redis con una expiración de 5 minutos
+    $redis->set($cacheKeyMensajes, json_encode($mensajes), 300);
 
     wp_send_json_success(array(
         'mensajes' => $mensajes ? $mensajes : array(), 
