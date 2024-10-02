@@ -92,8 +92,8 @@ function renderChat()
                 <span class="estadoConexion">Desconectado</span>
             </div>
             <div class="botoneschat">
-                <button id="cerrarChat"><?php echo $GLOBALS['cancelicon']; ?></button>
                 <button id="minizarChat"><?php echo $GLOBALS['minus']; ?></button>
+                <button id="cerrarChat"><?php echo $GLOBALS['cancelicon']; ?></button>
             </div>
         </div>
         <ul class="listaMensajes"></ul>

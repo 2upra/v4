@@ -161,12 +161,16 @@ function galle() {
             const listaMensajes = document.querySelector('.listaMensajes');
             const previewsChat = document.querySelector('.previewsChat');
             const chatEnvio = document.querySelector('.chatEnvio');
+            const bloqueChat = document.querySelector('.bloqueChat');
             const botonMinimizar = document.getElementById('minizarChat');
     
             botonMinimizar.addEventListener('click', () => {
                 listaMensajes.style.display = 'none';
                 previewsChat.style.display = 'none';
                 chatEnvio.style.display = 'none';
+    
+                // Añadir clase minimizado al bloque de chat
+                bloqueChat.classList.add('minimizado');
     
                 // Resetear variables globales del chat
                 archivoChatId = null;
@@ -181,10 +185,32 @@ function galle() {
         }
     }
     
-    // Llamar a las funciones para adjuntar los manejadores de eventos
+    async function maximizarChat() {
+        try {
+            const listaMensajes = document.querySelector('.listaMensajes');
+            const previewsChat = document.querySelector('.previewsChat');
+            const chatEnvio = document.querySelector('.chatEnvio');
+            const bloqueChat = document.querySelector('.bloqueChat');
+    
+            bloqueChat.addEventListener('click', () => {
+                if (bloqueChat.classList.contains('minimizado')) {
+                    listaMensajes.style.display = 'block';
+                    previewsChat.style.display = 'block';
+                    chatEnvio.style.display = 'block';
+    
+                    // Remover clase minimizado del bloque de chat
+                    bloqueChat.classList.remove('minimizado');
+                }
+            });
+        } catch (error) {
+            alert('Ha ocurrido un error al intentar maximizar el chat.');
+        }
+    }
+    
+    maximizarChat();
     cerrarChat();
     minimizarChat();
-    
+
     async function manejarClickEnMensaje(item) {
         item.addEventListener('click', async () => {
             console.log('Evento click detectado.');
