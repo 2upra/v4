@@ -429,16 +429,19 @@ function galle() {
             // Agregamos un pequeño retraso antes de reiniciar los chats
             setTimeout(() => {
                 reiniciarChats();
-            }, 2000); // 2 segundos de retraso
+            }, 1000); 
         }
     }
-    
+
     function reiniciarChats() {
         enviarAjax('reiniciarChats', {})
             .then(response => {
                 if (response.success && response.data.html) {
                     const chatListContainer = document.querySelector('.bloqueConversaciones');
                     if (chatListContainer) {
+                        // Borra el contenido anterior
+                        chatListContainer.innerHTML = '';
+                        // Reemplaza con el nuevo contenido
                         chatListContainer.innerHTML = response.data.html;
                     }
                 } else {
