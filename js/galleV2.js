@@ -238,7 +238,10 @@ function galle() {
                             <div class="waveform-loading" style="display: none;">Cargando...</div>
                             <audio controls style="width: 100%;"><source src="${adjunto.archivoChatUrl}" type="audio/${ext}"></audio>
                         </div>
-                        <div class="file-name">Archivo: ${fileName}</div>`;
+                        <div class="archivoChat">
+                            <div class="file-name">${fileName}</div>
+                            <a href="${adjunto.archivoChatUrl}" target="_blank">Descargar archivo</a>
+                        </div>`;
                     
                     // Inicializar el waveform después de que el elemento se haya agregado al DOM
                     setTimeout(() => {
