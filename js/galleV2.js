@@ -303,49 +303,88 @@ function galle() {
         }
     }
 
+    //DEPURA PORQUE DICE QUE listaMensajes no es un elemento DOM válido, no se puede agregar el mensaje. REVISA QUE PARAMETROS RECIBE E INTENTAR FORZAR ENCONTRAR listaMENSAJE
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null) {
-        const fechaMensaje = new Date(fecha);
-
-        // Asegúrate de que listaMensajes no sea null o undefined
+        console.log('*** Iniciando función agregarMensajeAlChat ***');
+        console.log('Parámetros recibidos:');
+        console.log('mensajeTexto:', mensajeTexto);
+        console.log('clase:', clase);
+        console.log('fecha:', fecha);
+        console.log('fechaAnterior:', fechaAnterior);
+        console.log('insertAtTop:', insertAtTop);
+        console.log('adjunto:', adjunto);
+    
+        // Log para verificar si listaMensajes se selecciona correctamente
+        console.log('listaMensajes antes de validación:', listaMensajes);
+    
+        // Verifica si listaMensajes es un nodo DOM válido
         if (!listaMensajes || !(listaMensajes instanceof Element)) {
-            console.error('listaMensajes no es un elemento DOM válido, no se puede agregar el mensaje.');
+            console.error('Error: listaMensajes no es un elemento DOM válido o no se encontró. Valor recibido:', listaMensajes);
             return;
         }
-
+    
+        console.log('listaMensajes es un elemento DOM válido:', listaMensajes);
+    
+        const fechaMensaje = new Date(fecha);
+        console.log('fechaMensaje (convertido a Date):', fechaMensaje);
+    
         if (!fechaAnterior) {
+            console.log('No se recibió fechaAnterior, buscando la última fecha en la lista de mensajes...');
             let lastElement = null;
             const children = Array.from(listaMensajes.children || []);
             const searchOrder = insertAtTop ? 1 : -1;
             const startIndex = insertAtTop ? 0 : children.length - 1;
-
+    
+            console.log('Cantidad de hijos en listaMensajes:', children.length);
+            console.log('Orden de búsqueda (1 = inicio, -1 = final):', searchOrder);
+    
             for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
                 const child = children[i];
+                console.log('Revisando hijo:', child);
                 if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
+                    console.log('Último elemento con clase mensajeDerecha o mensajeIzquierda encontrado:', child);
                     lastElement = child;
                     break;
                 }
             }
-
+    
             fechaAnterior = lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
+            console.log('Fecha anterior encontrada:', fechaAnterior);
         }
-
-        // Manejar la lógica de la fecha usando la nueva función
+    
+        // Lógica para manejar la fecha
+        console.log('Manejando la fecha del mensaje actual y la anterior...');
         manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
-
+    
+        // Crear el nuevo mensaje
         const li = document.createElement('li');
         li.textContent = mensajeTexto;
         li.classList.add(clase);
         li.setAttribute('data-fecha', fechaMensaje.toISOString());
-
-        // Manejar la lógica del adjunto usando la nueva función
+        console.log('Nuevo mensaje creado:', li);
+    
+        // Lógica para manejar el adjunto
         manejarAdjunto(adjunto, li);
-
-        insertAtTop ? listaMensajes.insertBefore(li, listaMensajes.firstChild) : listaMensajes.appendChild(li);
-
+    
+        // Insertar el mensaje en la posición correcta
+        if (insertAtTop) {
+            console.log('Insertando mensaje al inicio de la lista');
+            listaMensajes.insertBefore(li, listaMensajes.firstChild);
+        } else {
+            console.log('Insertando mensaje al final de la lista');
+            listaMensajes.appendChild(li);
+        }
+    
+        // Si no se está insertando al inicio, desplázate hacia abajo
         if (!insertAtTop) {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
+            console.log('Desplazando la lista de mensajes hacia abajo');
         }
+    
+        console.log('*** Fin de la función agregarMensajeAlChat ***');
     }
+    
+
 
     function manejarMensajeWebSocket(data) {
         try {
