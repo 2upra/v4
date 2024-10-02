@@ -9,7 +9,7 @@ window.inicializarWaveform = function (containerId, audioSrc) {
         container: container,
         waveColor: '#d9dcff',
         progressColor: '#4353ff',
-        backend: 'WebAudio', // Necesario para usar buffers
+        backend: 'WebAudio',
         height: 60,
         barWidth: 2,
         responsive: true
@@ -17,36 +17,38 @@ window.inicializarWaveform = function (containerId, audioSrc) {
 
     let wavesurfer = WaveSurfer.create(options);
 
+    // Función para decodificar el audio y cargarlo en WaveSurfer
     const loadAudioBuffer = (audioData) => {
         const audioContext = wavesurfer.backend.getAudioContext();
-
-        // Decodificar el buffer de audio
         audioContext.decodeAudioData(audioData, function(buffer) {
             if (buffer) {
-                wavesurfer.loadDecodedBuffer(buffer); // Carga el buffer decodificado en WaveSurfer
+                wavesurfer.loadDecodedBuffer(buffer); // Carga el buffer en WaveSurfer
             } else {
                 console.error('No se pudo decodificar el buffer de audio.');
                 wavesurfer.load(audioSrc); // Si falla, cargar el archivo de audio original
             }
         }, function(error) {
             console.error('Error al decodificar el buffer de audio:', error);
-            wavesurfer.load(audioSrc); // Si hay un error, cargar el archivo de audio original
+            wavesurfer.load(audioSrc); // Cargar el archivo de audio si falla el buffer
         });
     };
 
     if (cachedBuffer) {
-        // Si el buffer de audio está en caché, cárgalo
+        // Si el buffer está en caché, cárgalo
         const decodedData = new Uint8Array(JSON.parse(cachedBuffer)).buffer;
         loadAudioBuffer(decodedData);
     } else {
         // Si no está en caché, carga el audio y guarda el buffer
         wavesurfer.load(audioSrc);
         wavesurfer.on('ready', function () {
-            if (wavesurfer.backend.buffer) {
-                const buffer = wavesurfer.backend.buffer;
-                const rawData = buffer.getChannelData(0); // Obtener datos de un canal (esto es un Float32Array)
-                const uintArray = new Uint8Array(rawData.buffer); // Convertir a Uint8Array para guardar en localStorage
+            const buffer = wavesurfer.backend.buffer;
 
+            if (buffer) {
+                // Convierte el buffer a Uint8Array para almacenarlo en localStorage
+                const rawData = buffer.getChannelData(0); // Obtener el canal 0
+                const uintArray = new Uint8Array(rawData.buffer);
+
+                // Guardar el buffer en caché
                 localStorage.setItem(cacheKey, JSON.stringify(Array.from(uintArray)));
             } else {
                 console.error('El buffer no está listo o es undefined.');
@@ -54,6 +56,7 @@ window.inicializarWaveform = function (containerId, audioSrc) {
         });
     }
 
+    // Reproduce o pausa el audio al hacer clic en el contenedor
     container.addEventListener('click', function () {
         wavesurfer.playPause();
     });
