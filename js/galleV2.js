@@ -139,76 +139,68 @@ function galle() {
         try {
             const bloqueChat = document.querySelector('.bloqueChat');
             const botonCerrar = document.getElementById('cerrarChat');
-    
+
             botonCerrar.addEventListener('click', () => {
                 bloqueChat.style.display = 'none';
                 bloqueChat.classList.remove('minimizado');
-                
+
                 // Resetear variables globales del chat
                 archivoChatId = null;
                 archivoChatUrl = null;
-    
+
                 // Borrar cualquier texto en el área de texto
                 const textareaMensaje = document.querySelector('.mensajeContenido');
                 textareaMensaje.value = '';
             });
         } catch (error) {
+            console.error('Error al cerrar el chat:', error);
             alert('Ha ocurrido un error al intentar cerrar el chat.');
         }
     }
-    
+
     async function minimizarChat() {
         try {
             const bloqueChat = document.querySelector('.bloqueChat');
-            const listaMensajes = document.querySelector('.listaMensajes');
-            const previewsChat = document.querySelector('.previewsChat');
-            const chatEnvio = document.querySelector('.chatEnvio');
             const botonMinimizar = document.getElementById('minizarChat');
-    
+
             botonMinimizar.addEventListener('click', () => {
                 bloqueChat.classList.add('minimizado');
-                listaMensajes.style.display = 'none';
-                previewsChat.style.display = 'none';
-                chatEnvio.style.display = 'none';
-    
+
                 // Resetear variables globales del chat
                 archivoChatId = null;
                 archivoChatUrl = null;
-    
+
                 // Borrar cualquier texto en el área de texto
                 const textareaMensaje = document.querySelector('.mensajeContenido');
                 textareaMensaje.value = '';
             });
         } catch (error) {
+            console.error('Error al minimizar el chat:', error);
             alert('Ha ocurrido un error al intentar minimizar el chat.');
         }
     }
-    
+
     async function maximizarChat() {
         try {
             const bloqueChat = document.querySelector('.bloqueChat');
-            const listaMensajes = document.querySelector('.listaMensajes');
-            const previewsChat = document.querySelector('.previewsChat');
-            const chatEnvio = document.querySelector('.chatEnvio');
             const infoChat = document.querySelector('.nombreConversacion');
-    
-            bloqueChat.addEventListener('click', (event) => {
+
+            bloqueChat.addEventListener('click', event => {
                 if (bloqueChat.classList.contains('minimizado')) {
                     // Verificar si el clic fue en bloqueChat o en alguno de sus hijos directos
                     if (event.target === bloqueChat || event.target === infoChat || bloqueChat.contains(event.target)) {
                         bloqueChat.classList.remove('minimizado');
-                        bloqueChat.style.display = 'block';
-                        listaMensajes.style.display = 'flex';
-                        previewsChat.style.display = 'flex';
-                        chatEnvio.style.display = 'flex';
                     }
                 }
             });
         } catch (error) {
+            console.error('Error al maximizar el chat:', error);
             alert('Ha ocurrido un error al intentar maximizar el chat.');
         }
     }
-    
+
+    // Asegúrate de que el DOM esté completamente cargado antes de ejecutar estas funciones
+
     maximizarChat();
     cerrarChat();
     minimizarChat();
@@ -385,31 +377,31 @@ function galle() {
         console.log('fechaAnterior:', fechaAnterior);
         console.log('insertAtTop:', insertAtTop);
         console.log('adjunto:', adjunto);
-    
+
         // Log para verificar si listaMensajes se selecciona correctamente
         console.log('listaMensajes antes de validación:', listaMensajes);
-    
+
         // Verifica si listaMensajes es un nodo DOM válido
         if (!listaMensajes || !(listaMensajes instanceof Element)) {
             console.error('Error: listaMensajes no es un elemento DOM válido o no se encontró. Valor recibido:', listaMensajes);
             return;
         }
-    
+
         console.log('listaMensajes es un elemento DOM válido:', listaMensajes);
-    
+
         const fechaMensaje = new Date(fecha);
         console.log('fechaMensaje (convertido a Date):', fechaMensaje);
-    
+
         if (!fechaAnterior) {
             console.log('No se recibió fechaAnterior, buscando la última fecha en la lista de mensajes...');
             let lastElement = null;
             const children = Array.from(listaMensajes.children || []);
             const searchOrder = insertAtTop ? 1 : -1;
             const startIndex = insertAtTop ? 0 : children.length - 1;
-    
+
             console.log('Cantidad de hijos en listaMensajes:', children.length);
             console.log('Orden de búsqueda (1 = inicio, -1 = final):', searchOrder);
-    
+
             for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
                 const child = children[i];
                 console.log('Revisando hijo:', child);
@@ -419,25 +411,25 @@ function galle() {
                     break;
                 }
             }
-    
+
             fechaAnterior = lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
             console.log('Fecha anterior encontrada:', fechaAnterior);
         }
-    
+
         // Lógica para manejar la fecha
         console.log('Manejando la fecha del mensaje actual y la anterior...');
         manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
-    
+
         // Crear el nuevo mensaje
         const li = document.createElement('li');
         li.textContent = mensajeTexto;
         li.classList.add(clase);
         li.setAttribute('data-fecha', fechaMensaje.toISOString());
         console.log('Nuevo mensaje creado:', li);
-    
+
         // Lógica para manejar el adjunto
         manejarAdjunto(adjunto, li);
-    
+
         // Insertar el mensaje en la posición correcta
         if (insertAtTop) {
             console.log('Insertando mensaje al inicio de la lista');
@@ -446,22 +438,22 @@ function galle() {
             console.log('Insertando mensaje al final de la lista');
             listaMensajes.appendChild(li);
         }
-    
+
         // Si no se está insertando al inicio, desplázate hacia abajo
         if (!insertAtTop) {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
             console.log('Desplazando la lista de mensajes hacia abajo');
         }
-    
+
         console.log('*** Fin de la función agregarMensajeAlChat ***');
     }
 
     function manejarMensajeWebSocket(data) {
         try {
-            const { emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje } = JSON.parse(data);
+            const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
             const listaMensajes = document.querySelector('.listaMensajes');
             const fechaActual = new Date();
-            
+
             // Asegúrate de que emisor y receptor estén definidos
             if (msgReceptor === emisor) {
                 if (msgEmisor === receptor) {
@@ -478,20 +470,20 @@ function galle() {
             console.error('Error al manejar el mensaje de WebSocket:', error);
         }
     }
-    
+
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
         const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
         let conversacionActualizada = false;
-    
+
         listaMensajes.forEach(mensaje => {
             const receptorId = mensaje.getAttribute('data-receptor');
-    
+
             if (receptorId == usuarioId) {
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
                     vistaPrevia.textContent = ultimoMensaje;
                 }
-    
+
                 const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
                 if (tiempoMensajeDiv) {
                     const fechaActual = new Date();
@@ -504,12 +496,12 @@ function galle() {
                 conversacionActualizada = true;
             }
         });
-    
+
         if (!conversacionActualizada) {
             // Agregamos un pequeño retraso antes de reiniciar los chats
             setTimeout(() => {
                 reiniciarChats();
-            }, 1000); 
+            }, 1000);
         }
     }
 
@@ -640,7 +632,6 @@ function galle() {
     }
 
     function setupEnviarMensajeHandler() {
-        
         document.addEventListener('click', event => {
             if (event.target.matches('.enviarMensaje')) {
                 enviarMensaje();
