@@ -305,29 +305,19 @@ function galle() {
 
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null) {
         const fechaMensaje = new Date(fecha);
-    
-        // Logs adicionales para diagnosticar problemas con listaMensajes
-        console.log('listaMensajes:', listaMensajes);
-        if (listaMensajes) {
-            console.log('listaMensajes tagName:', listaMensajes.tagName);
-            console.log('listaMensajes instanceof Element:', listaMensajes instanceof Element);
-            console.log('listaMensajes nodeType:', listaMensajes.nodeType); // Debería ser 1 para un elemento
-        } else {
-            console.error('listaMensajes es null o undefined.');
-        }
-    
-        // Asegúrate de que listaMensajes no sea null o undefined y sea un elemento válido
+
+        // Asegúrate de que listaMensajes no sea null o undefined
         if (!listaMensajes || !(listaMensajes instanceof Element)) {
             console.error('listaMensajes no es un elemento DOM válido, no se puede agregar el mensaje.');
             return;
         }
-    
+
         if (!fechaAnterior) {
             let lastElement = null;
             const children = Array.from(listaMensajes.children || []);
             const searchOrder = insertAtTop ? 1 : -1;
             const startIndex = insertAtTop ? 0 : children.length - 1;
-    
+
             for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
                 const child = children[i];
                 if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
@@ -335,46 +325,51 @@ function galle() {
                     break;
                 }
             }
-    
+
             fechaAnterior = lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
         }
-    
+
         // Manejar la lógica de la fecha usando la nueva función
         manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
-    
+
         const li = document.createElement('li');
         li.textContent = mensajeTexto;
         li.classList.add(clase);
         li.setAttribute('data-fecha', fechaMensaje.toISOString());
-    
+
         // Manejar la lógica del adjunto usando la nueva función
         manejarAdjunto(adjunto, li);
-    
+
         insertAtTop ? listaMensajes.insertBefore(li, listaMensajes.firstChild) : listaMensajes.appendChild(li);
-    
+
         if (!insertAtTop) {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
         }
     }
-    
 
     function manejarMensajeWebSocket(data) {
         try {
-            const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
-
+            const { emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje } = JSON.parse(data);
+            const listaMensajes = document.querySelector('.listaMensajes');
+            const fechaActual = new Date();
+            
+            // Asegúrate de que emisor y receptor estén definidos
             if (msgReceptor === emisor) {
                 if (msgEmisor === receptor) {
-                    agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', new Date());
+                    // Agregar mensaje desde el receptor (mensaje a la izquierda)
+                    agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', fechaActual, listaMensajes);
                 }
                 actualizarListaConversaciones(msgEmisor, msgMensaje);
             } else if (msgEmisor === emisor && msgReceptor === receptor) {
-                agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', new Date());
+                // Agregar mensaje desde el emisor (mensaje a la derecha)
+                agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes);
                 actualizarListaConversaciones(msgReceptor, msgMensaje);
             }
         } catch (error) {
             console.error('Error al manejar el mensaje de WebSocket:', error);
         }
     }
+    
 
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
         const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
