@@ -156,61 +156,18 @@ function galle() {
             alert('Ha ocurrido un error al intentar cerrar el chat.');
         }
     }
-    
-    /*MINIMIZAR NO FUNCIONA; EL RESTO DE COSAS SI PERO NO SE MINIXIMA, lo mas probable sea por la estructura de que el boton minizar es un hijo del bloqueChat
-    
-    
-        <div class="bloque modal bloqueChat" id="bloqueChat" style="display: none;">
-        <div class="infoChat">
-            <div class="imagenMensaje">
-                <img src="" alt="Imagen de perfil">
-            </div>
-            <div class="nombreConversacion">
-                <p></p>
-                <span class="estadoConexion">Desconectado</span>
-            </div>
-            <div class="botoneschat">
-                <button id="minizarChat"><?php echo $GLOBALS['minus']; ?></button>
-                <button id="cerrarChat"><?php echo $GLOBALS['cancelicon']; ?></button>
-            </div>
-        </div>
-        <ul class="listaMensajes"></ul>
 
-        <div class="previewsForm NGEESM previewsChat" style="position: relative;">
-            <!-- Vista previa de imagen -->
-            <div class="previewAreaArchivos" id="previewChatImagen" style="display: none;">
-                <label>Imagen</label>
-            </div>
-            <!-- Vista previa de audio -->
-            <div class="previewAreaArchivos" id="previewChatAudio" style="display: none;">
-                <label>Audio</label>
-            </div>
-            <!-- Vista previa de archivo -->
-            <div class="previewAreaArchivos" id="previewChatArchivo" style="display: none;">
-                <label>Archivo</label>
-            </div>
-
-            <!-- Botón de cancelar único, que aparecerá en cualquier vista previa -->
-            <button class="cancelButton borde" id="cancelUploadButton" style="display: none;">Cancelar</button>
-        </div>
-
-        <div class="chatEnvio">
-            <textarea class="mensajeContenido" rows="1"></textarea>
-            <button class="enviarMensaje"><?php echo $GLOBALS['enviarMensaje']; ?></button>
-            <button class="enviarAdjunto" id="enviarAdjunto"><?php echo $GLOBALS['enviarAdjunto']; ?></button>
-        </div>
-    </div>
-    
-    */ 
     async function minimizarChat() {
         try {
             const bloqueChat = document.getElementById('bloqueChat');
             const botonMinimizar = document.getElementById('minizarChat');
+            const chatIcono = document.getElementById('chatIcono');
     
-            botonMinimizar.addEventListener('click', (event) => {
+            function minimizar(event) {
                 event.stopPropagation(); // Evita que el evento se propague al contenedor padre
                 bloqueChat.classList.add('minimizado');
-                
+                bloqueChat.style.display = 'none'; // Oculta completamente el chat
+    
                 // Oculta los elementos internos
                 const elementosAOcultar = bloqueChat.querySelectorAll('.listaMensajes, .previewsChat, .chatEnvio');
                 elementosAOcultar.forEach(elem => elem.style.display = 'none');
@@ -222,7 +179,24 @@ function galle() {
                 // Borrar cualquier texto en el área de texto
                 const textareaMensaje = bloqueChat.querySelector('.mensajeContenido');
                 if (textareaMensaje) textareaMensaje.value = '';
+            }
+    
+            // Evento para el botón de minimizar
+            botonMinimizar.addEventListener('click', minimizar);
+    
+            // Evento para el ícono del chat
+            chatIcono.addEventListener('click', (event) => {
+                if (bloqueChat.style.display !== 'none') {
+                    minimizar(event);
+                } else {
+                    // Si el chat está oculto, lo mostramos
+                    bloqueChat.style.display = 'block';
+                    bloqueChat.classList.remove('minimizado');
+                    const elementosAMostrar = bloqueChat.querySelectorAll('.listaMensajes, .previewsChat, .chatEnvio');
+                    elementosAMostrar.forEach(elem => elem.style.display = '');
+                }
             });
+    
         } catch (error) {
             console.error('Error al minimizar el chat:', error);
             alert('Ha ocurrido un error al intentar minimizar el chat.');
