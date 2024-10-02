@@ -111,10 +111,6 @@ function galle() {
                 data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
             }
 
-            /*
-            Manejo de la respuesta que contiene 'mensajes' y 'conversacion' (ID de la conversación)
-            */
-
             if (data?.success) {
                 mostrarMensajes(data.data.mensajes);
 
@@ -139,6 +135,56 @@ function galle() {
         }
     }
 
+    async function cerrarChat() {
+        try {
+            const bloqueChat = document.querySelector('.bloqueChat');
+            const botonCerrar = document.getElementById('cerrarChat');
+    
+            botonCerrar.addEventListener('click', () => {
+                bloqueChat.style.display = 'none';
+                
+                // Resetear variables globales del chat
+                archivoChatId = null;
+                archivoChatUrl = null;
+    
+                // Borrar cualquier texto en el área de texto
+                const textareaMensaje = document.querySelector('.mensajeContenido');
+                textareaMensaje.value = '';
+            });
+        } catch (error) {
+            alert('Ha ocurrido un error al intentar cerrar el chat.');
+        }
+    }
+    
+    async function minimizarChat() {
+        try {
+            const listaMensajes = document.querySelector('.listaMensajes');
+            const previewsChat = document.querySelector('.previewsChat');
+            const chatEnvio = document.querySelector('.chatEnvio');
+            const botonMinimizar = document.getElementById('minizarChat');
+    
+            botonMinimizar.addEventListener('click', () => {
+                listaMensajes.style.display = 'none';
+                previewsChat.style.display = 'none';
+                chatEnvio.style.display = 'none';
+    
+                // Resetear variables globales del chat
+                archivoChatId = null;
+                archivoChatUrl = null;
+    
+                // Borrar cualquier texto en el área de texto
+                const textareaMensaje = document.querySelector('.mensajeContenido');
+                textareaMensaje.value = '';
+            });
+        } catch (error) {
+            alert('Ha ocurrido un error al intentar minimizar el chat.');
+        }
+    }
+    
+    // Llamar a las funciones para adjuntar los manejadores de eventos
+    cerrarChat();
+    minimizarChat();
+    
     async function manejarClickEnMensaje(item) {
         item.addEventListener('click', async () => {
             console.log('Evento click detectado.');
