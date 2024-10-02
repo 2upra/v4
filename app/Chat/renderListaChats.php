@@ -26,19 +26,18 @@ function obtenerChats($usuarioId, $pagina = 1, $resultadosPorPagina = 10)
     // Calcular el offset para la paginación
     $offset = ($pagina - 1) * $resultadosPorPagina;
 
-    // Obtener conversaciones que incluyan al usuario con paginación
+    // Obtener conversaciones que incluyan al usuario
     $query = $wpdb->prepare("
         SELECT id, participantes, fecha 
         FROM $tablaConversacion 
         WHERE JSON_CONTAINS(participantes, %s)
-        ORDER BY fecha DESC
-        LIMIT %d OFFSET %d
-    ", json_encode($usuarioId), $resultadosPorPagina, $offset);
+    ", json_encode($usuarioId));
 
     $conversaciones = $wpdb->get_results($query);
 
     if ($conversaciones) {
         foreach ($conversaciones as &$conversacion) {
+            // Obtener el último mensaje de cada conversación
             $ultimoMensaje = $wpdb->get_row($wpdb->prepare("
                 SELECT mensaje, fecha, emisor 
                 FROM $tablaMensajes 
@@ -48,6 +47,7 @@ function obtenerChats($usuarioId, $pagina = 1, $resultadosPorPagina = 10)
             ", $conversacion->id));
 
             if ($ultimoMensaje) {
+                // Limitar el mensaje a 32 caracteres
                 if (mb_strlen($ultimoMensaje->mensaje) > 32) {
                     $ultimoMensaje->mensaje = mb_substr($ultimoMensaje->mensaje, 0, 32) . '...';
                 }
@@ -57,6 +57,16 @@ function obtenerChats($usuarioId, $pagina = 1, $resultadosPorPagina = 10)
                 $conversacion->ultimoMensaje = null;
             }
         }
+
+        // Ordenar las conversaciones por la fecha del último mensaje (descendente)
+        usort($conversaciones, function ($a, $b) {
+            $fechaA = isset($a->ultimoMensaje->fecha) ? strtotime($a->ultimoMensaje->fecha) : 0;
+            $fechaB = isset($b->ultimoMensaje->fecha) ? strtotime($b->ultimoMensaje->fecha) : 0;
+            return $fechaB - $fechaA; // Orden descendente (más reciente primero)
+        });
+
+        // Aplicar paginación después de ordenar
+        $conversaciones = array_slice($conversaciones, $offset, $resultadosPorPagina);
     }
 
     return $conversaciones;
