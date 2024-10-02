@@ -1,19 +1,33 @@
 function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLeft = 0) {
     const triggers = document.querySelectorAll(triggerSelector);
-    
+    console.log(`Buscando triggers con selector: ${triggerSelector}. Encontrados:`, triggers);
+
     function toggleSubmenu(event) {
+        console.log(`Evento click recibido para:`, event.target);
+
         const trigger = event.target.closest(triggerSelector);
-        if (!trigger) return;
+        if (!trigger) {
+            console.log('Trigger no encontrado.');
+            return;
+        }
 
         const submenuId = `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || "default"}`;
-        const submenu = document.getElementById(submenuId);
-        if (!submenu) return;
+        console.log(`ID del submenu a buscar: ${submenuId}`);
 
+        const submenu = document.getElementById(submenuId);
+        if (!submenu) {
+            console.log(`Submenu con ID ${submenuId} no encontrado.`);
+            return;
+        }
+
+        console.log(`Submenu encontrado. Estado actual de display: ${submenu.style.display}`);
         submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
 
         if (submenu.style.display === "block") {
+            console.log('Ocultando submenu porque ya está visible.');
             hideSubmenu(submenu);
         } else {
+            console.log('Mostrando submenu porque no está visible.');
             showSubmenu(event, submenu);
         }
 
@@ -21,6 +35,8 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
     }
 
     function showSubmenu(event, submenu) {
+        console.log(`Mostrando submenu:`, submenu);
+
         const rect = event.target.getBoundingClientRect();
         const { innerWidth: vw, innerHeight: vh } = window;
 
@@ -31,22 +47,24 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
         }
 
         submenu.style.display = "block";
+        console.log(`Submenu display establecido a block. Posición: top=${submenu.style.top}, left=${submenu.style.left}`);
 
         submenu._darkBackground = createSubmenuDarkBackground(submenu);
         submenu.style.zIndex = 999; // Siempre por encima del fondo oscuro
 
         document.body.classList.add('no-scroll');
 
-        // Agregar evento click a los botones dentro del submenu
         const buttons = submenu.querySelectorAll('button');
         buttons.forEach(button => {
             button.addEventListener('click', () => {
-                hideSubmenu(submenu); // Cierra el submenu al hacer clic en un botón
+                console.log('Botón dentro del submenu clickeado. Cerrando submenu.');
+                hideSubmenu(submenu);
             });
         });
     }
 
     function hideSubmenu(submenu) {
+        console.log(`Ocultando submenu:`, submenu);
         if (submenu) submenu.style.display = "none";
         removeSubmenuDarkBackground(submenu._darkBackground);
         submenu._darkBackground = null;
