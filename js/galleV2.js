@@ -888,7 +888,7 @@ function galle() {
                     let fechaAnterior = null;
 
                     mensajes.reverse().forEach(mensaje => {
-                        agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true);
+                        agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto);
                         fechaAnterior = new Date(mensaje.fecha);
                     });
 
