@@ -260,16 +260,6 @@ function galle() {
         }
     }
 
-    /*
-
-    galleV2.js?ver=2.0.1.973842807:227  Uncaught TypeError: listaMensajes.appendChild is not a function
-    at manejarFecha (galleV2.js?ver=2.0.1.973842807:227:33)
-    at agregarMensajeAlChat (galleV2.js?ver=2.0.1.973842807:296:9)
-    at enviarMensaje (galleV2.js?ver=2.0.1.973842807:515:17)
-    at HTMLTextAreaElement.<anonymous> (galleV2.js?ver=2.0.1.973842807:496:17)
-
-    */
-
     function manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop) {
         // Comprobar si listaMensajes es un elemento DOM válido
         if (!listaMensajes || !(listaMensajes instanceof Element)) {
@@ -409,20 +399,19 @@ function galle() {
         }
     }
     
-
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
         const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
         let conversacionActualizada = false;
-
+    
         listaMensajes.forEach(mensaje => {
             const receptorId = mensaje.getAttribute('data-receptor');
-
+    
             if (receptorId == usuarioId) {
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
                     vistaPrevia.textContent = ultimoMensaje;
                 }
-
+    
                 const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
                 if (tiempoMensajeDiv) {
                     const fechaActual = new Date();
@@ -435,17 +424,20 @@ function galle() {
                 conversacionActualizada = true;
             }
         });
-
+    
         if (!conversacionActualizada) {
-            reiniciarChats();
+            // Agregamos un pequeño retraso antes de reiniciar los chats
+            setTimeout(() => {
+                reiniciarChats();
+            }, 2000); // 2 segundos de retraso
         }
     }
-
+    
     function reiniciarChats() {
         enviarAjax('reiniciarChats', {})
             .then(response => {
                 if (response.success && response.data.html) {
-                    const chatListContainer = document.querySelector('.mensajes');
+                    const chatListContainer = document.querySelector('.bloqueConversaciones');
                     if (chatListContainer) {
                         chatListContainer.innerHTML = response.data.html;
                     }
@@ -457,7 +449,6 @@ function galle() {
                 console.error('Error al reiniciar los chats:', error);
             });
     }
-
     /*
      *   FUNCIONES RELACIONADAS ACTUALIZAR EL TIEMPO CADA MINUTO
      */
