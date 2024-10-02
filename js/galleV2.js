@@ -191,6 +191,15 @@ function galle() {
     }
 
     /*
+     *   MANEJO DE BOTON PARA MOSTRAR LISTA DE CHATS Y CONVERSACION
+     */
+
+    /* 
+
+
+    */
+
+    /*
      *   FUNCIONES RELACIONADAS CON LA CARGAN LOS MENSAJES DE UNA CONVERSACION
      */
 
@@ -293,7 +302,6 @@ function galle() {
         }
     }
 
-    //DEPURA PORQUE DICE QUE listaMensajes no es un elemento DOM válido, no se puede agregar el mensaje. REVISA QUE PARAMETROS RECIBE E INTENTAR FORZAR ENCONTRAR listaMENSAJE
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null) {
         console.log('*** Iniciando función agregarMensajeAlChat ***');
         console.log('Parámetros recibidos:');
@@ -373,8 +381,6 @@ function galle() {
     
         console.log('*** Fin de la función agregarMensajeAlChat ***');
     }
-    
-
 
     function manejarMensajeWebSocket(data) {
         try {
@@ -452,6 +458,7 @@ function galle() {
                 console.error('Error al reiniciar los chats:', error);
             });
     }
+
     /*
      *   FUNCIONES RELACIONADAS ACTUALIZAR EL TIEMPO CADA MINUTO
      */
