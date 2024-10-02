@@ -565,6 +565,7 @@ function galle() {
     }
 
     function setupEnviarMensajeHandler() {
+        
         document.addEventListener('click', event => {
             if (event.target.matches('.enviarMensaje')) {
                 enviarMensaje();
@@ -580,6 +581,7 @@ function galle() {
         });
 
         function enviarMensaje() {
+            const listaMensajes = document.querySelector('.listaMensajes');
             if (subidaChatProgreso === true) {
                 // Verificamos si hay una subida en progreso
                 alert('Por favor espera a que se complete la subida del archivo.');
@@ -601,7 +603,8 @@ function galle() {
                 }
 
                 enviarMensajeWs(receptor, mensaje, adjunto);
-                agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), adjunto);
+                // agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true);
+                agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes,adjunto);
                 mensajeInput.value = '';
                 const mensajeVistaPrevia = `Tu: ${mensaje}`;
                 actualizarListaConversaciones(receptor, mensajeVistaPrevia);
