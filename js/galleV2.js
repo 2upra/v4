@@ -437,7 +437,7 @@ function galle() {
         enviarAjax('reiniciarChats', {})
             .then(response => {
                 if (response.success && response.data.html) {
-                    const chatListContainer = document.querySelector('.bloqueConversaciones');
+                    const chatListContainer = document.querySelector('.bloqueChatReiniciar');
                     if (chatListContainer) {
                         // Borra el contenido anterior
                         chatListContainer.innerHTML = '';
