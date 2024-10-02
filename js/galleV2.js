@@ -371,15 +371,7 @@ function galle() {
     }
 
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null) {
-        console.log('*** Iniciando función agregarMensajeAlChat ***');
-        console.log('Parámetros recibidos:');
-        console.log('mensajeTexto:', mensajeTexto);
-        console.log('clase:', clase);
-        console.log('fecha:', fecha);
-        console.log('fechaAnterior:', fechaAnterior);
-        console.log('insertAtTop:', insertAtTop);
-        console.log('adjunto:', adjunto);
-    
+
         // Log para verificar si listaMensajes se selecciona correctamente
         console.log('listaMensajes antes de validación:', listaMensajes);
     
@@ -455,12 +447,18 @@ function galle() {
             const { emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje } = JSON.parse(data);
             const listaMensajes = document.querySelector('.listaMensajes');
             const fechaActual = new Date();
+            const chatIconoSvg = document.querySelector('.chatIcono svg');
             
             // Asegúrate de que emisor y receptor estén definidos
             if (msgReceptor === emisor) {
                 if (msgEmisor === receptor) {
                     // Agregar mensaje desde el receptor (mensaje a la izquierda)
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', fechaActual, listaMensajes);
+                    
+                    // Cambiar el color del ícono cuando se recibe un mensaje
+                    if (chatIconoSvg) {
+                        chatIconoSvg.style.color = '#d43333'; // Cambia el color del ícono
+                    }
                 }
                 actualizarListaConversaciones(msgEmisor, msgMensaje);
             } else if (msgEmisor === emisor && msgReceptor === receptor) {
@@ -468,10 +466,19 @@ function galle() {
                 agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes);
                 actualizarListaConversaciones(msgReceptor, msgMensaje);
             }
+    
+            // Añadir un evento de clic para remover el color
+            if (chatIconoSvg) {
+                chatIconoSvg.addEventListener('click', function() {
+                    chatIconoSvg.style.color = ''; // Remueve el color al hacer clic
+                });
+            }
+    
         } catch (error) {
             console.error('Error al manejar el mensaje de WebSocket:', error);
         }
     }
+    
     
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
         const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
@@ -517,6 +524,17 @@ function galle() {
                         chatListContainer.innerHTML = '';
                         // Reemplaza con el nuevo contenido
                         chatListContainer.innerHTML = response.data.html;
+    
+                        // Selecciona el SVG y cambia su color
+                        const chatIconoSvg = document.querySelector('.chatIcono svg');
+                        if (chatIconoSvg) {
+                            chatIconoSvg.style.color = '#d43333'; // Aplica el nuevo color
+                            
+                            // Añade un evento de clic para remover el color
+                            chatIconoSvg.addEventListener('click', function() {
+                                chatIconoSvg.style.color = ''; // Remueve el color al hacer clic
+                            });
+                        }
                     }
                 } else {
                     console.error('Error al reiniciar los chats:', response);
@@ -526,7 +544,7 @@ function galle() {
                 console.error('Error al reiniciar los chats:', error);
             });
     }
-
+    
     /*
      *   FUNCIONES RELACIONADAS ACTUALIZAR EL TIEMPO CADA MINUTO
      */
