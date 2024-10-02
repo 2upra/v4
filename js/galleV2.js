@@ -219,11 +219,11 @@ function galle() {
         if (adjunto) {
             const adjuntoContainer = document.createElement('div');
             adjuntoContainer.classList.add('adjunto-container');
-    
+
             if (adjunto.archivoChatUrl) {
                 const ext = adjunto.archivoChatUrl.split('.').pop().toLowerCase();
                 const fileName = adjunto.archivoChatUrl.split('/').pop(); // Obtiene el nombre del archivo
-    
+
                 // Si es una imagen
                 if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
                     adjuntoContainer.innerHTML = `<img src="${adjunto.archivoChatUrl}" alt="Imagen adjunta" style="width: 100%; height: auto; object-fit: cover;">`;
@@ -239,7 +239,7 @@ function galle() {
                             <div class="file-name">${fileName}</div>
                             <a href="${adjunto.archivoChatUrl}" target="_blank">Descargar archivo</a>
                         </div>`;
-                    
+
                     // Inicializar el waveform después de que el elemento se haya agregado al DOM
                     setTimeout(() => {
                         // Utilizamos `adjunto.archivoChatUrl` como el identificador para el caché
@@ -255,7 +255,7 @@ function galle() {
                         </div>`;
                 }
             }
-    
+
             li.appendChild(adjuntoContainer);
         }
     }
@@ -273,47 +273,51 @@ function galle() {
     function manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop) {
         // Comprobar si listaMensajes es un elemento DOM válido
         if (!listaMensajes || !(listaMensajes instanceof Element)) {
-            console.error("listaMensajes no es un elemento DOM válido");
+            console.error('listaMensajes no es un elemento DOM válido');
             return;
         }
-    
+
+        // Verificar si la fecha del nuevo mensaje es mayor a 3 minutos respecto a la fecha anterior
         if (!fechaAnterior || fechaMensaje - fechaAnterior >= 3 * 60 * 1000) {
-            const divFecha = document.createElement('div');
-            divFecha.textContent = formatearTiempoRelativo(fechaMensaje);
-            divFecha.classList.add('fechaSeparador');
-            divFecha.setAttribute('data-fecha', fechaMensaje.toISOString());
-    
+            // Crear un elemento <li> en lugar de un <div>
+            const liFecha = document.createElement('li');
+            liFecha.textContent = formatearTiempoRelativo(fechaMensaje);
+            liFecha.classList.add('fechaSeparador');
+            liFecha.setAttribute('data-fecha', fechaMensaje.toISOString());
+
             try {
                 if (insertAtTop) {
+                    // Insertar en la parte superior de la lista, si es necesario
                     if (listaMensajes.firstChild) {
-                        listaMensajes.insertBefore(divFecha, listaMensajes.firstChild);
+                        listaMensajes.insertBefore(liFecha, listaMensajes.firstChild);
                     } else {
-                        listaMensajes.appendChild(divFecha);
+                        listaMensajes.appendChild(liFecha);
                     }
                 } else {
-                    listaMensajes.appendChild(divFecha);
+                    // Insertar al final de la lista
+                    listaMensajes.appendChild(liFecha);
                 }
             } catch (error) {
-                console.error("Error al insertar la fecha en listaMensajes:", error);
+                console.error('Error al insertar la fecha en listaMensajes:', error);
             }
         }
     }
 
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null) {
         const fechaMensaje = new Date(fecha);
-    
+
         // Asegúrate de que listaMensajes no sea null o undefined
         if (!listaMensajes || !(listaMensajes instanceof Element)) {
-            console.error("listaMensajes no es un elemento DOM válido, no se puede agregar el mensaje.");
+            console.error('listaMensajes no es un elemento DOM válido, no se puede agregar el mensaje.');
             return;
         }
-    
+
         if (!fechaAnterior) {
             let lastElement = null;
             const children = Array.from(listaMensajes.children || []);
             const searchOrder = insertAtTop ? 1 : -1;
             const startIndex = insertAtTop ? 0 : children.length - 1;
-    
+
             for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
                 const child = children[i];
                 if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
@@ -321,23 +325,23 @@ function galle() {
                     break;
                 }
             }
-    
+
             fechaAnterior = lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
         }
-    
+
         // Manejar la lógica de la fecha usando la nueva función
         manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
-    
+
         const li = document.createElement('li');
         li.textContent = mensajeTexto;
         li.classList.add(clase);
         li.setAttribute('data-fecha', fechaMensaje.toISOString());
-    
+
         // Manejar la lógica del adjunto usando la nueva función
         manejarAdjunto(adjunto, li);
-    
+
         insertAtTop ? listaMensajes.insertBefore(li, listaMensajes.firstChild) : listaMensajes.appendChild(li);
-    
+
         if (!insertAtTop) {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
         }
@@ -505,8 +509,8 @@ function galle() {
     */
 
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null) {
-        const messageData = { emisor, receptor, mensaje, adjunto, metadata };
-    
+        const messageData = {emisor, receptor, mensaje, adjunto, metadata};
+
         if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(messageData));
         } else {
@@ -514,14 +518,14 @@ function galle() {
             alert('No se puede enviar el mensaje, por favor, reinicia la página');
         }
     }
-    
+
     function setupEnviarMensajeHandler() {
         document.addEventListener('click', event => {
             if (event.target.matches('.enviarMensaje')) {
                 enviarMensaje();
             }
         });
-    
+
         const mensajeInput = document.querySelector('.mensajeContenido');
         mensajeInput.addEventListener('keydown', event => {
             if (event.key === 'Enter' && !event.altKey) {
@@ -529,17 +533,18 @@ function galle() {
                 enviarMensaje();
             }
         });
-    
+
         function enviarMensaje() {
-            if (subidaChatProgreso === true) { // Verificamos si hay una subida en progreso
+            if (subidaChatProgreso === true) {
+                // Verificamos si hay una subida en progreso
                 alert('Por favor espera a que se complete la subida del archivo.');
                 return; // Salimos de la función sin enviar el mensaje
             }
-    
+
             const mensaje = mensajeInput.value;
             if (mensaje.trim() !== '') {
                 ocultarPreviews();
-    
+
                 let adjunto = null;
                 if (archivoChatId || archivoChatUrl) {
                     adjunto = {
@@ -549,7 +554,7 @@ function galle() {
                     archivoChatId = null;
                     archivoChatUrl = null;
                 }
-    
+
                 enviarMensajeWs(receptor, mensaje, adjunto);
                 agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), adjunto);
                 mensajeInput.value = '';
@@ -558,7 +563,6 @@ function galle() {
             }
         }
     }
-    
 
     /*
      *   FUNCIONES PARA CARGAR MAS ADJUNTAR ARCHIVOS
@@ -568,7 +572,7 @@ function galle() {
         const previewChatAudio = document.getElementById('previewChatAudio');
         const previewChatImagen = document.getElementById('previewChatImagen');
         const previewChatArchivo = document.getElementById('previewChatArchivo');
-        const cancelUploadButton = document.getElementById('cancelUploadButton'); 
+        const cancelUploadButton = document.getElementById('cancelUploadButton');
         previewChatAudio.style.display = 'none';
         previewChatImagen.style.display = 'none';
         previewChatArchivo.style.display = 'none';
@@ -598,7 +602,7 @@ function galle() {
             archivoChatId = null;
             archivoChatUrl = null;
             ocultarPreviews();
-        })
+        });
 
         enviarAdjunto.addEventListener('click', () => abrirSelectorArchivos('*/*'));
 
