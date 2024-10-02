@@ -44,9 +44,9 @@ window.inicializarWaveform = function (containerId, audioSrc) {
         // Si no está en caché, carga el audio y guarda el buffer
         wavesurfer.load(audioSrc);
 
-        // Evento 'decode' se dispara cuando el archivo de audio ha sido decodificado
-        wavesurfer.on('decode', function () {
-            console.log('Audio decodificado.');
+        // Evento 'ready' se dispara cuando el archivo de audio ha sido cargado completamente
+        wavesurfer.on('ready', function () {
+            console.log('WaveSurfer está listo.');
 
             try {
                 const buffer = wavesurfer.backend.buffer;
