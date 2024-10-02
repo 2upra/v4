@@ -251,9 +251,7 @@ function galle() {
                         </div>`;
                 } else if (['wav'].includes(ext)) {
                     adjuntoContainer.innerHTML = `
-                        <div>
-                            <div class="file-name">Archivo: <a href="${adjunto.archivoChatUrl}" target="_blank">Descargar archivo</a></div>
-                        </div>
+                        <div class="file-name">Archivo: <a href="${adjunto.archivoChatUrl}" target="_blank">Descargar archivo</a></div>
                     `;
                 }
                 // Si es otro tipo de archivo
