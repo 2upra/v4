@@ -33,7 +33,8 @@ window.inicializarWaveform = function (containerId, audioSrc) {
         wavesurfer.on('ready', function () {
             // Si no hay picos almacenados, exportarlos y guardarlos en localStorage
             if (!storedPeaks) {
-                const peaks = wavesurfer.getPeaks(); // Usar getPeaks() en lugar de exportPCM()
+                // Usar exportPeaks() para obtener los picos
+                const peaks = wavesurfer.exportPeaks({ channels: 2, maxLength: 8000, precision: 10000 });
                 localStorage.setItem(peaksKey, JSON.stringify(peaks));
                 console.log('Picos generados y almacenados:', peaks);
             }
