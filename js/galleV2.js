@@ -233,9 +233,6 @@ function galle() {
                     const audioContainerId = `waveform-container-${Date.now()}`;
                     adjuntoContainer.innerHTML = `
                         <div id="${audioContainerId}" class="waveform-container without-image" data-audio-url="${adjunto.archivoChatUrl}">
-                            <div class="waveform-background"></div>
-                            <div class="waveform-message"></div>
-                            <div class="waveform-loading" style="display: none;">Cargando...</div>
                             <audio controls style="width: 100%;"><source src="${adjunto.archivoChatUrl}" type="audio/${ext}"></audio>
                         </div>
                         <div class="archivoChat">
