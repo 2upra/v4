@@ -505,8 +505,8 @@ function galle() {
     */
 
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null) {
-        const messageData = {emisor, receptor, mensaje, adjunto, metadata};
-
+        const messageData = { emisor, receptor, mensaje, adjunto, metadata };
+    
         if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(messageData));
         } else {
@@ -514,14 +514,14 @@ function galle() {
             alert('No se puede enviar el mensaje, por favor, reinicia la página');
         }
     }
-
+    
     function setupEnviarMensajeHandler() {
         document.addEventListener('click', event => {
             if (event.target.matches('.enviarMensaje')) {
                 enviarMensaje();
             }
         });
-
+    
         const mensajeInput = document.querySelector('.mensajeContenido');
         mensajeInput.addEventListener('keydown', event => {
             if (event.key === 'Enter' && !event.altKey) {
@@ -529,11 +529,17 @@ function galle() {
                 enviarMensaje();
             }
         });
-
+    
         function enviarMensaje() {
+            if (subidaChatProgreso === true) { // Verificamos si hay una subida en progreso
+                alert('Por favor espera a que se complete la subida del archivo.');
+                return; // Salimos de la función sin enviar el mensaje
+            }
+    
             const mensaje = mensajeInput.value;
             if (mensaje.trim() !== '') {
                 ocultarPreviews();
+    
                 let adjunto = null;
                 if (archivoChatId || archivoChatUrl) {
                     adjunto = {
@@ -543,7 +549,7 @@ function galle() {
                     archivoChatId = null;
                     archivoChatUrl = null;
                 }
-
+    
                 enviarMensajeWs(receptor, mensaje, adjunto);
                 agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), adjunto);
                 mensajeInput.value = '';
@@ -552,6 +558,7 @@ function galle() {
             }
         }
     }
+    
 
     /*
      *   FUNCIONES PARA CARGAR MAS ADJUNTAR ARCHIVOS
@@ -561,13 +568,15 @@ function galle() {
         const previewChatAudio = document.getElementById('previewChatAudio');
         const previewChatImagen = document.getElementById('previewChatImagen');
         const previewChatArchivo = document.getElementById('previewChatArchivo');
+        const cancelUploadButton = document.getElementById('cancelUploadButton'); 
         previewChatAudio.style.display = 'none';
         previewChatImagen.style.display = 'none';
         previewChatArchivo.style.display = 'none';
+        cancelUploadButton.style.display = 'none';
     }
 
     function subidaArchivosChat() {
-        const ids = ['enviarAdjunto', 'bloqueChat', 'previewChatAudio', 'previewChatArchivo', 'previewChatImagen'];
+        const ids = ['enviarAdjunto', 'bloqueChat', 'previewChatAudio', 'previewChatArchivo', 'previewChatImagen', 'cancelUploadButton'];
         const elements = ids.reduce((acc, id) => {
             const el = document.getElementById(id);
             if (!el) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
@@ -582,7 +591,14 @@ function galle() {
             return;
         }
 
-        const {enviarAdjunto, bloqueChat, previewChatArchivo, previewChatAudio, previewChatImagen} = elements;
+        const {enviarAdjunto, bloqueChat, previewChatArchivo, previewChatAudio, previewChatImagen, cancelUploadButton} = elements;
+
+        cancelUploadButton.addEventListener('click', () => {
+            subidaChatProgreso = false;
+            archivoChatId = null;
+            archivoChatUrl = null;
+            ocultarPreviews();
+        })
 
         enviarAdjunto.addEventListener('click', () => abrirSelectorArchivos('*/*'));
 
@@ -612,6 +628,7 @@ function galle() {
             try {
                 console.log('Cargando archivo de audio...');
                 previewChatAudio.style.display = 'block';
+                cancelUploadButton.style.display = 'block';
                 const progressBarId = waveAudio(file);
                 console.log('Barra de progreso creada con ID:', progressBarId);
 
@@ -636,6 +653,7 @@ function galle() {
             try {
                 console.log('Cargando archivo de imagen...');
                 previewChatImagen.style.display = 'block';
+                cancelUploadButton.style.display = 'block';
                 const progressBarId = `progress-${Date.now()}`;
                 console.log('Barra de progreso creada con ID:', progressBarId);
 
@@ -655,6 +673,7 @@ function galle() {
         const subidaChatArchivo = async file => {
             console.log('Iniciando subida de archivo:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
             subidaChatProgreso = true;
+            cancelUploadButton.style.display = 'block';
             ocultarPreviews(); // Ocultar otros previews
             previewChatArchivo.style.display = 'block';
             previewChatArchivo.innerHTML = `
