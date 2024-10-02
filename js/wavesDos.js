@@ -19,15 +19,14 @@ window.inicializarWaveform = function (containerId, audioSrc) {
 
     if (cachedWaveform) {
         // Si la waveform está en caché, cárgala directamente
-        wavesurfer.loadBlob(new Blob([atob(cachedWaveform)], { type: 'audio/wav' }));
+        wavesurfer.load(audioSrc, JSON.parse(cachedWaveform));
     } else {
         // Si no está en caché, carga el audio y guarda la waveform
         wavesurfer.load(audioSrc);
         wavesurfer.on('ready', function () {
-            // Guarda la waveform en caché
-            wavesurfer.exportPCM(1024, 10000, true).then(function(pcmData) {
-                localStorage.setItem(cacheKey, btoa(pcmData));
-            });
+            // Guarda la representación de la waveform en caché
+            const waveformData = wavesurfer.exportImage();
+            localStorage.setItem(cacheKey, JSON.stringify(waveformData));
         });
     }
 
