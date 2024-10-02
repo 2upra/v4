@@ -17,25 +17,27 @@ function conversacionesUsuario($usuarioId)
     return renderListaChats($conversaciones, $usuarioId);
 }
 
-function obtenerChats($usuarioId)
+function obtenerChats($usuarioId, $pagina = 1, $resultadosPorPagina = 10)
 {
     global $wpdb;
     $tablaConversacion = $wpdb->prefix . 'conversacion';
     $tablaMensajes = $wpdb->prefix . 'mensajes';
 
-    // Obtener conversaciones que incluyan al usuario
+    // Calcular el offset para la paginación
+    $offset = ($pagina - 1) * $resultadosPorPagina;
+
+    // Obtener conversaciones que incluyan al usuario con paginación
     $query = $wpdb->prepare("
         SELECT id, participantes, fecha 
         FROM $tablaConversacion 
         WHERE JSON_CONTAINS(participantes, %s)
-    ", json_encode($usuarioId));
-
-    chatLog("Consulta de conversaciones ejecutada: " . $query);
+        ORDER BY fecha DESC
+        LIMIT %d OFFSET %d
+    ", json_encode($usuarioId), $resultadosPorPagina, $offset);
 
     $conversaciones = $wpdb->get_results($query);
 
     if ($conversaciones) {
-        chatLog("Conversaciones obtenidas: " . print_r($conversaciones, true));
         foreach ($conversaciones as &$conversacion) {
             $ultimoMensaje = $wpdb->get_row($wpdb->prepare("
                 SELECT mensaje, fecha, emisor 
@@ -55,19 +57,11 @@ function obtenerChats($usuarioId)
                 $conversacion->ultimoMensaje = null;
             }
         }
-
-        // Ordenar las conversaciones por la fecha del último mensaje
-        usort($conversaciones, function ($a, $b) {
-            $fechaA = isset($a->ultimoMensaje->fecha) ? strtotime($a->ultimoMensaje->fecha) : 0;
-            $fechaB = isset($b->ultimoMensaje->fecha) ? strtotime($b->ultimoMensaje->fecha) : 0;
-            return $fechaB - $fechaA; // Orden descendente, más reciente primero
-        });
-    } else {
-        chatLog("No se encontraron conversaciones para el usuario con ID: " . $usuarioId);
     }
 
     return $conversaciones;
 }
+
 
 function obtenerNombreUsuario($usuarioId)
 {
