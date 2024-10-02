@@ -184,31 +184,28 @@ function galle() {
         }
     }
     
+    //maximizar funciona, pero no se maxima por ejemplo si el click lo hago en .infochat, y debería maximar cuando doy click ahi tambien 
     async function maximizarChat() {
         try {
             const bloqueChat = document.querySelector('.bloqueChat');
             const listaMensajes = document.querySelector('.listaMensajes');
             const previewsChat = document.querySelector('.previewsChat');
             const chatEnvio = document.querySelector('.chatEnvio');
-            const infoChat = document.querySelector('.infochat');
     
             bloqueChat.addEventListener('click', (event) => {
-                if (bloqueChat.classList.contains('minimizado')) {
-                    // Verificar si el clic fue en bloqueChat o en alguno de sus hijos directos
-                    if (event.target === bloqueChat || event.target === infoChat || bloqueChat.contains(event.target)) {
-                        bloqueChat.classList.remove('minimizado');
-                        bloqueChat.style.display = 'block';
-                        listaMensajes.style.display = 'block';
-                        previewsChat.style.display = 'block';
-                        chatEnvio.style.display = 'flex';
-                    }
+                if (bloqueChat.classList.contains('minimizado') && event.target === bloqueChat) {
+                    bloqueChat.classList.remove('minimizado');
+                    bloqueChat.style.display = 'block';
+                    listaMensajes.style.display = 'block';
+                    previewsChat.style.display = 'block';
+                    chatEnvio.style.display = 'flex';
                 }
             });
         } catch (error) {
             alert('Ha ocurrido un error al intentar maximizar el chat.');
         }
     }
-    
+
     maximizarChat();
     cerrarChat();
     minimizarChat();
