@@ -82,7 +82,7 @@ function renderChat()
 {
     ob_start();
 ?>
-    <div class="bloque bloqueChat" id="bloqueChat" style="display: none;">
+    <div class="bloque modal bloqueChat" id="bloqueChat" style="display: none;">
         <div class="infoChat">
             <div class="imagenMensaje">
                 <img src="" alt="Imagen de perfil">
