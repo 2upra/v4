@@ -305,19 +305,29 @@ function galle() {
 
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null) {
         const fechaMensaje = new Date(fecha);
-
-        // Asegúrate de que listaMensajes no sea null o undefined
+    
+        // Logs adicionales para diagnosticar problemas con listaMensajes
+        console.log('listaMensajes:', listaMensajes);
+        if (listaMensajes) {
+            console.log('listaMensajes tagName:', listaMensajes.tagName);
+            console.log('listaMensajes instanceof Element:', listaMensajes instanceof Element);
+            console.log('listaMensajes nodeType:', listaMensajes.nodeType); // Debería ser 1 para un elemento
+        } else {
+            console.error('listaMensajes es null o undefined.');
+        }
+    
+        // Asegúrate de que listaMensajes no sea null o undefined y sea un elemento válido
         if (!listaMensajes || !(listaMensajes instanceof Element)) {
             console.error('listaMensajes no es un elemento DOM válido, no se puede agregar el mensaje.');
             return;
         }
-
+    
         if (!fechaAnterior) {
             let lastElement = null;
             const children = Array.from(listaMensajes.children || []);
             const searchOrder = insertAtTop ? 1 : -1;
             const startIndex = insertAtTop ? 0 : children.length - 1;
-
+    
             for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
                 const child = children[i];
                 if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
@@ -325,27 +335,28 @@ function galle() {
                     break;
                 }
             }
-
+    
             fechaAnterior = lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
         }
-
+    
         // Manejar la lógica de la fecha usando la nueva función
         manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
-
+    
         const li = document.createElement('li');
         li.textContent = mensajeTexto;
         li.classList.add(clase);
         li.setAttribute('data-fecha', fechaMensaje.toISOString());
-
+    
         // Manejar la lógica del adjunto usando la nueva función
         manejarAdjunto(adjunto, li);
-
+    
         insertAtTop ? listaMensajes.insertBefore(li, listaMensajes.firstChild) : listaMensajes.appendChild(li);
-
+    
         if (!insertAtTop) {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
         }
     }
+    
 
     function manejarMensajeWebSocket(data) {
         try {
