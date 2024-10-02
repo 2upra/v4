@@ -77,7 +77,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
 
 function initializeStaticMenus() {
     createSubmenu(".subiricono", "submenusubir", 0, 120);
-    createSubmenu(".chatIcono", "bloqueConversaciones", 30, -220);
+    createSubmenu(".chatIcono", "bloqueConversaciones", 30, -250);
 }
 
 function submenu() {
