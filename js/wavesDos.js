@@ -40,8 +40,9 @@ window.inicializarWaveform = function (containerId, audioSrc) {
     if (cachedBuffer) {
         try {
             console.log('Buffer encontrado en caché.');
-            const decodedData = new Uint8Array(JSON.parse(cachedBuffer)).buffer;
-            loadAudioBuffer(decodedData);
+            // Convertir el caché en un ArrayBuffer
+            const audioData = base64ToArrayBuffer(cachedBuffer);
+            loadAudioBuffer(audioData);
         } catch (error) {
             console.error('Error al cargar el buffer desde caché. Recargando desde fuente:', error);
             wavesurfer.load(audioSrc);
@@ -58,12 +59,11 @@ window.inicializarWaveform = function (containerId, audioSrc) {
                     const buffer = wavesurfer.backend.buffer;
                     console.log('El buffer está listo.');
 
-                    // Convierte el buffer a Uint8Array para almacenarlo en localStorage
-                    const rawData = buffer.getChannelData(0);
-                    const uintArray = new Uint8Array(rawData.buffer);
+                    // Convertir el buffer a un ArrayBuffer
+                    const arrayBuffer = bufferToArrayBuffer(buffer);
 
-                    // Guardar el buffer en caché
-                    localStorage.setItem(cacheKey, JSON.stringify(Array.from(uintArray)));
+                    // Guardar el buffer en caché como base64
+                    localStorage.setItem(cacheKey, arrayBufferToBase64(arrayBuffer));
                     console.log('Buffer guardado en caché.');
                 } else {
                     console.error('El backend o el buffer no están disponibles.');
@@ -83,4 +83,46 @@ window.inicializarWaveform = function (containerId, audioSrc) {
     container.addEventListener('click', function () {
         wavesurfer.playPause();
     });
+
+    // Función para convertir un AudioBuffer a ArrayBuffer
+    function bufferToArrayBuffer(buffer) {
+        const numberOfChannels = buffer.numberOfChannels;
+        const length = buffer.length * numberOfChannels * Float32Array.BYTES_PER_ELEMENT;
+        const result = new ArrayBuffer(length);
+        const view = new DataView(result);
+
+        let offset = 0;
+
+        for (let channel = 0; channel < numberOfChannels; channel++) {
+            const channelData = buffer.getChannelData(channel);
+            for (let i = 0; i < channelData.length; i++) {
+                view.setFloat32(offset, channelData[i], true);
+                offset += Float32Array.BYTES_PER_ELEMENT;
+            }
+        }
+
+        return result;
+    }
+
+    // Función para convertir ArrayBuffer a base64
+    function arrayBufferToBase64(buffer) {
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return window.btoa(binary);
+    }
+
+    // Función para convertir base64 a ArrayBuffer
+    function base64ToArrayBuffer(base64) {
+        const binaryString = window.atob(base64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes.buffer;
+    }
 };
