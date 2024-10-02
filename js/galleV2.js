@@ -227,7 +227,6 @@ function galle() {
                 : listaMensajes.appendChild(divFecha);
         }
     }
-
     function manejarAdjunto(adjunto, li) {
         if (adjunto) {
             const adjuntoContainer = document.createElement('div');
@@ -235,6 +234,7 @@ function galle() {
     
             if (adjunto.archivoChatUrl) {
                 const ext = adjunto.archivoChatUrl.split('.').pop().toLowerCase();
+                const fileName = adjunto.archivoChatUrl.split('/').pop(); // Obtiene el nombre del archivo
     
                 // Si es una imagen
                 if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
@@ -248,15 +248,14 @@ function galle() {
                             <div class="waveform-message"></div>
                             <div class="waveform-loading" style="display: none;">Cargando...</div>
                             <audio controls style="width: 100%;"><source src="${adjunto.archivoChatUrl}" type="audio/${ext}"></audio>
-                        </div>`;
-                } else if (['wav'].includes(ext)) {
-                    adjuntoContainer.innerHTML = `
-                        <div class="file-name">Archivo: <a href="${adjunto.archivoChatUrl}" target="_blank">Descargar archivo</a></div>
-                    `;
-                }
-                // Si es otro tipo de archivo
+                        </div>
+                        <div class="file-name">Archivo: ${fileName}</div>`;
+                } 
+                // Si es un archivo WAV u otro tipo de archivo
                 else {
-                    adjuntoContainer.innerHTML = `<div class="file-name">Archivo: <a href="${adjunto.archivoChatUrl}" target="_blank">Descargar archivo</a></div>`;
+                    adjuntoContainer.innerHTML = `
+                        <div class="file-name">Archivo: ${fileName}</div>
+                        <a href="${adjunto.archivoChatUrl}" target="_blank">Descargar archivo</a>`;
                 }
             }
     
