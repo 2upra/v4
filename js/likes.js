@@ -4,7 +4,7 @@ function like() {
 
     // Usar delegación de eventos
     document.addEventListener('click', function(event) {
-        const likeButton = event.target.closest('.TJKQGJ');
+        const likeButton = event.target.closest('.botonlike');
         if (likeButton) {
             handleLike(event, likeButton);
         }

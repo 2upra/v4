@@ -131,7 +131,7 @@ function like($post_id)
 
     ob_start();
 ?>
-    <div class="TJKQGJ">
+    <div class="TJKQGJ botonlike">
         <button class="post-like-button <?= esc_attr($liked_class) ?>" data-post_id="<?= esc_attr($post_id) ?>" data-nonce="<?= wp_create_nonce('like_post_nonce') ?>">
             <?php echo $GLOBALS['iconoCorazon']; ?>
         </button>
