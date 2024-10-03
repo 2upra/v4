@@ -4,13 +4,25 @@ add_action('rest_api_init', function () {
     register_rest_route('avada/v1', '/stripe_webhook_pro', ['methods' => 'POST', 'callback' => 'stripe_webhook_pro', 'permission_callback' => '__return_true']);
 });
 
+
 function crear_sesion_pro(WP_REST_Request $request)
 {
-    if (!isset($_ENV['STRIPEKEY'])) return new WP_Error('stripe_key_missing', 'La clave de Stripe no está configurada', ['status' => 500]);
+    if (!isset($_ENV['STRIPEKEY'])) {
+        $error = 'La clave de Stripe no está configurada';
+        stripeError($error);  // Log del error
+        return new WP_Error('stripe_key_missing', $error, ['status' => 500]);
+    }
+
     \Stripe\Stripe::setApiKey($_ENV['STRIPEKEY']);
     $body = $request->get_json_params();
     $userId = isset($body['user_id']) ? intval($body['user_id']) : 0;
-    if (!$userId) return new WP_REST_Response(['error' => 'Usuario no autenticado o ID no proporcionado.'], 401);
+    
+    if (!$userId) {
+        $error = 'Usuario no autenticado o ID no proporcionado.';
+        stripeError($error);  // Log del error
+        return new WP_REST_Response(['error' => $error], 401);
+    }
+
     try {
         $session = \Stripe\Checkout\Session::create([
             'payment_method_types' => ['card'],
@@ -20,23 +32,32 @@ function crear_sesion_pro(WP_REST_Request $request)
             'cancel_url' => 'https://2upra.com',
             'client_reference_id' => $userId,
         ]);
+
         return new WP_REST_Response(['id' => $session->id], 200);
     } catch (Exception $e) {
-        return new WP_REST_Response(['error' => 'Error al crear la sesión: ' . $e->getMessage()], 500);
+        $error = 'Error al crear la sesión: ' . $e->getMessage();
+        stripeError($error);  // Log del error
+        return new WP_REST_Response(['error' => $error], 500);
     }
 }
 
 function stripe_webhook_pro(WP_REST_Request $request)
 {
     if (!isset($_ENV['STRIPEKEY'])) {
-        return new WP_Error('stripe_key_missing', 'La clave de Stripe no está configurada', ['status' => 500]);
+        $error = 'La clave de Stripe no está configurada';
+        stripeError($error);  // Log del error
+        return new WP_Error('stripe_key_missing', $error, ['status' => 500]);
     }
+
     \Stripe\Stripe::setApiKey($_ENV['STRIPEKEY']);
 
     try {
         if (!isset($_ENV['HOOKPRO'])) {
-            return new WP_Error('hookpro_missing', 'La clave de webhook no está configurada', ['status' => 500]);
+            $error = 'La clave de webhook no está configurada';
+            stripeError($error);  // Log del error
+            return new WP_Error('hookpro_missing', $error, ['status' => 500]);
         }
+
         $event = \Stripe\Webhook::constructEvent(
             $request->get_body(),
             $request->get_header('stripe-signature'),
@@ -45,6 +66,7 @@ function stripe_webhook_pro(WP_REST_Request $request)
 
         if ($event['type'] === 'checkout.session.completed') {
             $session = $event['data']['object'];
+
             if ($session['mode'] === 'subscription') {
                 $subscription = \Stripe\Subscription::retrieve($session['subscription']);
                 foreach ($subscription->items->data as $item) {
@@ -52,18 +74,20 @@ function stripe_webhook_pro(WP_REST_Request $request)
                         $userId = $session['client_reference_id'];
                         if (!empty($userId)) {
                             update_user_meta($userId, 'user_pro', '1');
-                            error_log('Actualizando usuario a Pro: ' . $userId);
+                            stripeError('Actualizando usuario a Pro: ' . $userId);  // Log de éxito
                         } else {
-                            error_log('client_reference_id vacío o nulo');
+                            stripeError('client_reference_id vacío o nulo');  // Log del error
                         }
                         break;
                     }
                 }
             }
         }
+
         return new WP_REST_Response(['status' => 'success'], 200);
     } catch (Exception $e) {
-        error_log('Error en el webhook: ' . $e->getMessage());
+        $error = 'Error en el webhook: ' . $e->getMessage();
+        stripeError($error);  // Log del error
         return new WP_REST_Response(
             [
                 'error' => $e instanceof \Stripe\Exception\SignatureVerificationException ? 'Firma de webhook inválida' : 'Error interno'
@@ -72,5 +96,6 @@ function stripe_webhook_pro(WP_REST_Request $request)
         );
     }
 }
+
 
 

@@ -4,7 +4,7 @@ function like() {
 
     // Usar delegación de eventos
     document.addEventListener('click', function(event) {
-        const likeButton = event.target.closest('.post-like-button');
+        const likeButton = event.target.closest('.TJKQGJ');
         if (likeButton) {
             handleLike(event, likeButton);
         }
@@ -12,20 +12,15 @@ function like() {
 
     async function handleLike(event, button) {
         event.preventDefault();
-
-        // Prevención de clics múltiples
         const now = Date.now();
         if (now - lastClickTime < clickDelay) {
             return;
         }
         lastClickTime = now;
-
         const post_id = parseInt(button.dataset.post_id, 10);
-        
         if (!post_id || button.dataset.requestRunning === 'true') {
             return;
         }
-
         // Comprobación de conexión
         if (!navigator.onLine) {
             alert('No hay conexión a internet. Por favor, verifica tu conexión e inténtalo de nuevo.');
@@ -39,12 +34,10 @@ function like() {
             like_state: !button.classList.contains('liked')
         };
 
-        // Feedback visual inmediato
         button.classList.toggle('liked');
     
         try {
-            const response = await enviarAjax('handle_post_like', data);
-            console.log('Respuesta del servidor:', response);
+            const response = await enviarAjax('like', data);
     
             if (response === 'not_logged_in') {
                 alert('Debes estar logueado para dar like.');
@@ -69,11 +62,9 @@ function like() {
                 updateLikeUI(button, likes);
                 showHeartAnimation(button.closest('.EDYQHV'));
             } else {
-                console.error('Respuesta del servidor no es un número válido:', response);
                 button.classList.toggle('liked'); // Revertir cambio visual
             }
         } catch (error) {
-            console.error('Error en la solicitud AJAX:', error);
             alert('Hubo un error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
             button.classList.toggle('liked'); // Revertir cambio visual
         } finally {
@@ -84,12 +75,10 @@ function like() {
     function updateLikeUI(button, likes) {
         const post = button.closest('.TJKQGJ');
         if (!post) {
-            console.error('No se encontró el elemento post');
             return;
         }
         const likeCount = post.querySelector('.like-count');
         if (!likeCount) {
-            console.error('No se encontró el elemento like-count');
             return;
         }
 
@@ -98,7 +87,6 @@ function like() {
 
     function showHeartAnimation(postContent) {
         if (!postContent) {
-            console.error('No se encontró el contenido del post para la animación');
             return;
         }
 

@@ -1,8 +1,6 @@
 <?php
 
-function handle_post_like() {
-    guardarLog("handle_post_like() llamada");
-
+function manejarLike() {
     if (!is_user_logged_in()) {
         guardarLog("Usuario no está logueado");
         echo 'not_logged_in';
@@ -33,6 +31,10 @@ function handle_post_like() {
     echo $like_count;
     wp_die();
 }
+
+add_action('wp_ajax_like', 'manejarLike');
+
+
 
 function likeAccion($post_id, $user_id, $action) {
     global $wpdb;
@@ -139,6 +141,3 @@ function like($post_id)
     $output = ob_get_clean();
     return $output;
 }
-
-add_action('wp_ajax_nopriv_handle_post_like', 'handle_post_like');
-add_action('wp_ajax_handle_post_like', 'handle_post_like');
