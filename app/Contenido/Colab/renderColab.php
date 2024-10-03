@@ -27,6 +27,18 @@ function colab()
 {
     ob_start()
 ?>
+    <div class="FLXVTQ">
+        <p>La funcionalidad de colaboración aún no esta disponible</p>
+        <button class="borde">Volver</button>
+    </div>
+
+<?php
+    return ob_get_clean();
+}
+
+function colabTest() {
+    ob_start();
+?>
     <div class="IBPDFF">
         <div>
             <div>Colab pendientes</div>
