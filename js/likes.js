@@ -2,9 +2,8 @@ function like() {
     let lastClickTime = 0;
     const clickDelay = 500; // 500 ms de retraso
 
-    // Usar delegación de eventos
     document.addEventListener('click', function(event) {
-        const likeButton = event.target.closest('.botonlike');
+        const likeButton = event.target.closest('.botonlike button'); // Captura el botón dentro de .botonlike
         if (likeButton) {
             handleLike(event, likeButton);
         }
@@ -14,31 +13,37 @@ function like() {
         event.preventDefault();
         const now = Date.now();
         if (now - lastClickTime < clickDelay) {
-            return;
+            return; // Evita múltiples clics rápidos
         }
         lastClickTime = now;
+
         const post_id = parseInt(button.dataset.post_id, 10);
+        const nonce = button.dataset.nonce;
+
         if (!post_id || button.dataset.requestRunning === 'true') {
             return;
         }
+
         // Comprobación de conexión
         if (!navigator.onLine) {
             alert('No hay conexión a internet. Por favor, verifica tu conexión e inténtalo de nuevo.');
             return;
         }
-    
-        button.dataset.requestRunning = 'true';
-    
+
+        button.dataset.requestRunning = 'true'; // Indica que se está ejecutando una solicitud
+
         const data = {
             post_id: post_id,
-            like_state: !button.classList.contains('liked')
+            like_state: !button.classList.contains('liked'),
+            nonce: nonce // Incluimos el nonce en la solicitud
         };
 
+        // Cambiar visualmente el estado del botón de like
         button.classList.toggle('liked');
-    
+
         try {
             const response = await enviarAjax('like', data);
-    
+
             if (response === 'not_logged_in') {
                 alert('Debes estar logueado para dar like.');
                 button.classList.toggle('liked'); // Revertir cambio visual
@@ -56,11 +61,11 @@ function like() {
                 button.classList.toggle('liked'); // Revertir cambio visual
                 return;
             }
-    
+
             const likes = parseInt(response, 10);
             if (!isNaN(likes)) {
                 updateLikeUI(button, likes);
-                showHeartAnimation(button.closest('.EDYQHV'));
+                showHeartAnimation(button.closest('.EDYQHV')); // Mostrar animación
             } else {
                 button.classList.toggle('liked'); // Revertir cambio visual
             }
@@ -68,10 +73,11 @@ function like() {
             alert('Hubo un error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
             button.classList.toggle('liked'); // Revertir cambio visual
         } finally {
-            button.dataset.requestRunning = 'false';
+            button.dataset.requestRunning = 'false'; // Finaliza la solicitud
         }
     }
 
+    // Actualiza el UI con el nuevo contador de likes
     function updateLikeUI(button, likes) {
         const post = button.closest('.TJKQGJ');
         if (!post) {
@@ -81,10 +87,10 @@ function like() {
         if (!likeCount) {
             return;
         }
-
         likeCount.textContent = likes;
     }
 
+    // Muestra la animación del corazón al dar like
     function showHeartAnimation(postContent) {
         if (!postContent) {
             return;
@@ -112,8 +118,8 @@ function like() {
 
         heart.animate(
             [
-                {opacity: 1, fontSize: '6rem'},
-                {opacity: 0, fontSize: '4rem'}
+                { opacity: 1, fontSize: '6rem' },
+                { opacity: 0, fontSize: '4rem' }
             ],
             {
                 duration: animationDuration,
