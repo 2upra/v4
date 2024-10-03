@@ -96,7 +96,7 @@ function contenidoColab($post_id, $colabMensaje, $post_audio_lite, $colabFileUrl
     ob_start();
 ?>
     <div class="XZAKCB">
-        <p>Mensaje de solicitud: <?php echo esc_html($colabMensaje); ?></p>
+       
         <div class="BCGWEY">
             <span class="badge ver-contenido" data-post-id="<?php echo esc_attr($post_id); ?>">Ver contenido</span>
         </div>
@@ -116,8 +116,9 @@ function contenidoColab($post_id, $colabMensaje, $post_audio_lite, $colabFileUrl
                             </div>
                         </a>
                         <p class="textoMuyPequeno">
-                            El archivo ha sido analizado y no se encontraron virus. Sin embargo, si no confías en la persona que realizó la solicitud, no descargues archivos. Asegúrate de mantener siempre tu sistema operativo actualizado y reporta cualquier abuso.
+                            El archivo ha sido analizado y no se encontraron virus. Sin embargo, si no confías en la persona que realizó la solicitud, no descargues archivos.
                         </p>
+                        <p class="mensajeColab">Mensaje de solicitud: <?php echo esc_html($colabMensaje); ?></p>
                     <?php else : ?>
                         <p>No hay archivo adjunto.</p>
                     <?php endif; ?>
