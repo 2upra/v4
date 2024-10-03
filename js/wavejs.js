@@ -19,7 +19,7 @@ function observeWaveform(container, postId, audioUrl) {
                     if (!container.dataset.audioLoaded) {
                         loadAudio(postId, audioUrl, container);
                     }
-                }, 1000099999); 
+                }, 10000); 
             } else {
 
                 clearTimeout(loadTimeout);
@@ -100,6 +100,10 @@ window.we = function (postId, audioUrl) {
                 wavesurfer = initWavesurfer(container);
                 wavesurfer.load(audioBlobUrl);
                 wavesurfer.on('ready', () => {
+                    const waveformBackground = container.querySelector('.waveform-background');
+                    if (waveformBackground) {
+                        waveformBackground.style.display = 'none';
+                    }
                     window.audioLoading = false;
                     container.dataset.audioLoaded = 'true';
                     container.querySelector('.waveform-loading').style.display = 'none';
