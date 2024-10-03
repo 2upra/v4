@@ -98,11 +98,11 @@ window.we = function (postId, audioUrl) {
                 const audioBlobUrl = URL.createObjectURL(blob);
 
                 wavesurfer = initWavesurfer(container);
+                wavesurfer.load(audioBlobUrl);
                 const waveformBackground = container.querySelector('.waveform-background');
                 if (waveformBackground) {
                     waveformBackground.style.display = 'none';
                 }
-                wavesurfer.load(audioBlobUrl);
                 wavesurfer.on('ready', () => {
                     window.audioLoading = false;
                     container.dataset.audioLoaded = 'true';
