@@ -4,7 +4,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
 {
     $filtro = $args['identifier'] ?? $args['filtro'];
 
-    $rolaEstado = function($status) use (&$query_args) {
+    $rolaEstado = function ($status) use (&$query_args) {
         $query_args['author'] = get_current_user_id();
         $query_args['post_status'] = $status;
         $query_args['meta_query'][] = ['key' => 'rola', 'value' => '1', 'compare' => '='];
@@ -18,8 +18,8 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
             ['key' => 'rola', 'value' => '1', 'compare' => '='],
             ['key' => 'post_audio', 'compare' => 'EXISTS']
         ],
-        'likesRolas' => fn() => ($user_liked_post_ids = obtenerLikesDelUsuario($current_user_id)) 
-            ? $query_args['post__in'] = $user_liked_post_ids 
+        'likesRolas' => fn() => ($user_liked_post_ids = obtenerLikesDelUsuario($current_user_id))
+            ? $query_args['post__in'] = $user_liked_post_ids
             : $query_args['posts_per_page'] = 0,
         'nada'     => fn() => $query_args['post_status'] = 'publish',
         'colabs'   => ['key' => 'paraColab', 'value' => '1', 'compare' => '='],
@@ -34,7 +34,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
         ],
         'sample'   => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
         'colab' => fn() => $query_args['post_status'] = 'publish',
-        'colabPendiente' => fn() => {
+        'colabPendiente' => function () use (&$query_args) {
             $query_args['author'] = get_current_user_id();
             $query_args['post_status'] = 'pending';
         },
@@ -55,4 +55,3 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
 
     return $query_args;
 }
-
