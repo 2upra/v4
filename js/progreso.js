@@ -1,3 +1,16 @@
+function escapeHTML(str) {
+    return str.replace(/[&<>"']/g, function (match) {
+        const escapeMap = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        };
+        return escapeMap[match];
+    });
+}
+
 function textflux() {
     const textContainer = document.querySelector('#textflux');
     const stickyContainer = document.querySelector('#containerflux');
@@ -6,14 +19,7 @@ function textflux() {
         return;
     }
 
-    const texts = [
-        "Interacción social, compartir ideas artísticas con facilidad",
-        "Chat en tiempo real con funciones adaptadas al desarrollo de ideas",
-        "Descentralización musical: nuestra propia plataforma de streaming",
-        "Respetar la seguridad, privacidad y los derechos de las personas y también de cada trabajo artístico",
-        "Queremos ofrecer un espacio único al arte... y que sea autosustentable",
-        "Buscamos personas que quieran apoyar, hay 99% de fe y 0.1% de posibilidad (0.9% para las chelas)"
-    ];
+    const texts = ['Interacción social, compartir ideas artísticas con facilidad', 'Chat en tiempo real con funciones adaptadas al desarrollo de ideas', 'Descentralización musical: nuestra propia plataforma de streaming', 'Respetar la seguridad, privacidad y los derechos de las personas y también de cada trabajo artístico', 'Queremos ofrecer un espacio único al arte... y que sea autosustentable', 'Buscamos personas que quieran apoyar, hay 99% de fe y 0.1% de posibilidad (0.9% para las chelas)'];
 
     let lastIndex = -1;
 
@@ -242,7 +248,12 @@ function initializeProgressSegments() {
             hideAllTooltips(); // Ocultar todos los tooltips visibles
             const tooltip = this.querySelector('.tooltip');
             if (tooltip) {
-                tooltip.innerHTML = this.getAttribute('data-tooltip').replace(/\*salto de linea\*/g, '<br>');
+                if (tooltip) {
+                    tooltip.innerHTML = this.getAttribute('data-tooltip').replace(/\*salto de linea\*/g, '<br>');
+                    const sanitizedTooltip = escapeHTML(this.getAttribute('data-tooltip')).replace(/\*salto de linea\*/g, '<br>');
+                    this.classList.add('show-tooltip');
+                    tooltip.innerHTML = sanitizedTooltip;
+                }
                 this.classList.add('show-tooltip');
             }
         });
@@ -264,6 +275,8 @@ function initializeProgressSegments() {
                 const tooltip = segments[currentIndex].querySelector('.tooltip');
                 if (tooltip) {
                     tooltip.innerHTML = segments[currentIndex].getAttribute('data-tooltip').replace(/\*salto de linea\*/g, '<br>');
+                    const sanitizedTooltip = escapeHTML(segments[currentIndex].getAttribute('data-tooltip')).replace(/\*salto de linea\*/g, '<br>');
+                    tooltip.innerHTML = sanitizedTooltip;
                 }
                 segments[currentIndex].classList.add('show-tooltip');
                 currentIndex++;
@@ -407,7 +420,7 @@ function inicializarPestanasSec(config) {
             function resetBotones() {
                 Object.values(botones).forEach(boton => boton.classList.remove('active'));
             }
-            
+
             function showContent(content, activeButton) {
                 Object.values(contenidos).forEach(contenido => (contenido.style.display = 'none'));
                 content.style.display = 'flex';
@@ -583,5 +596,3 @@ function setupScrolling() {
         centerElement(items[0]);
     }
 }
-
-
