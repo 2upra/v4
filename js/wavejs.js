@@ -95,10 +95,6 @@ window.we = function (postId, audioUrl) {
             .then((blob) => {
                 container.querySelector('.waveform-loading').style.display = 'block';
                 container.querySelector('.waveform-message').style.display = 'none';
-                const waveformBackground = container.querySelector('.waveform-background');
-                if (waveformBackground) {
-                    waveformBackground.style.display = 'none';
-                }
                 const audioBlobUrl = URL.createObjectURL(blob);
 
                 wavesurfer = initWavesurfer(container);
