@@ -10,6 +10,7 @@ async function handleAllRequests() {
         await aceptarcolab();
         await reporte();
         await bloqueos();
+        await banearUsuario();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }
@@ -66,6 +67,20 @@ async function reportarcolab() {
         '.EDYQHV'
     );
 }
+
+async function banearUsuario() {
+    await accionClick(
+        '.banearUsuario',
+        'banearUsuario',
+        'Eh, vais a banear a un hijo puta',
+        async (statusElement, data) => {
+            actualizarElemento(statusElement, data.new_status);
+            await alert('Baneando');
+        },
+        '.EDYQHV'
+    );
+}
+
 async function estadorola() {
     await accionClick('.toggle-status-rola', 'toggle_post_status', '¿Estás seguro de cambiar el estado de la rola?', async (statusElement, data) => {
         actualizarElemento(statusElement, data.new_status);
@@ -94,7 +109,6 @@ async function eliminarPost() {
         async (statusElement, data, postId) => {
             console.log('Respuesta del servidor:', data);
             if (data.success) {
-                // Usa data.post_id si existe, de lo contrario usa postId
                 const idToRemove = data.post_id || postId;
                 console.log('Intentando remover post con ID:', idToRemove);
                 removerPost('.EDYQHV', idToRemove);
@@ -142,14 +156,6 @@ async function reporte() {
         }
     }
 }
-
-/*
-
-<button class="bloquear" data-post-id="232082">Bloquear</button>
-genericAjax.js?ver=2.1.13.454380745:148  Uncaught (in promise) TypeError: Cannot read properties of null (reading 'currentTarget')
-    at bloquearUsuario (genericAjax.js?ver=2.1.13.454380745:148:30)
-    at HTMLButtonElement.<anonymous> (genericAjax.js?ver=2.1.13.454380745:224:21)
-*/
 
 async function bloqueos() {
     async function bloquearUsuario(event, response, post_id) {
