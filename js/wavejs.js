@@ -93,8 +93,8 @@ window.we = function (postId, audioUrl) {
             .then(stream => new Response(stream))
             .then(response => response.blob())
             .then((blob) => {
-                container.querySelector('.waveform-loading').style.display = 'block';
-                container.querySelector('.waveform-message').style.display = 'none';
+                //container.querySelector('.waveform-loading').style.display = 'block';
+                //container.querySelector('.waveform-message').style.display = 'none';
                 const audioBlobUrl = URL.createObjectURL(blob);
 
                 wavesurfer = initWavesurfer(container);
