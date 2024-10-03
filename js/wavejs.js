@@ -19,7 +19,7 @@ function observeWaveform(container, postId, audioUrl) {
                     if (!container.dataset.audioLoaded) {
                         loadAudio(postId, audioUrl, container);
                     }
-                }, 10000); 
+                }, 20000); 
             } else {
 
                 clearTimeout(loadTimeout);
