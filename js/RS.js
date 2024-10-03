@@ -238,8 +238,6 @@ function subidaRs() {
         reader.onload = e => {
             previewAudio.innerHTML = `
                 <div id="${audioContainerId}" class="waveform-container without-image" data-audio-url="${e.target.result}">
-                    <div class="waveform-background"></div>
-                    <div class="waveform-message"></div>
                     <div class="waveform-loading" style="display: none;">Cargando...</div>
                     <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
                     <div class="file-name">${file.name}</div>

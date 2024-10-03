@@ -1,7 +1,6 @@
 <?php
 
 /*
-Los audios no se cachean, vuelven a cargar todos cuando el usuario carga la pagina, hay alguna forma de que se cacheen mantiendo su seguridad estricta
 
 en la ventana de red veo que las solicitudes asi ninguna se cachea
 
@@ -12,7 +11,6 @@ GET
 Código de estado:
 200 OK
 Dirección remota:
-167.86.117.147:443
 Directiva de sitio de referencia:
 strict-origin-when-cross-origin
 accept-ranges:
@@ -55,7 +53,7 @@ function tokenAudio($audio_id) {
         return false;
     }
 
-    $expiration = time() + 60; // 1 minuto
+    $expiration = time() + 600; 
     $user_ip = $_SERVER['REMOTE_ADDR'];
     $unique_id = uniqid();
     $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
