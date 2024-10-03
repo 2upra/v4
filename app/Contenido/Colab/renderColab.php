@@ -27,18 +27,21 @@ function colab()
 {
     ob_start()
 ?>
-    <a href="https://2upra.com/">
+
     <div class="FLXVTQ">
-        <p>La funcionalidad de colaboración aún no esta disponible</p>
-        <button class="borde">Volver</button>
+        <a href="https://2upra.com/">
+            <p>La funcionalidad de colaboración aún no esta disponible</p>
+            <button class="borde">Volver</button>
+        </a>
     </div>
-    </a>
+
 
 <?php
     return ob_get_clean();
 }
 
-function colabTest() {
+function colabTest()
+{
     ob_start();
 ?>
     <div class="IBPDFF">
