@@ -28,8 +28,13 @@ function colab()
     ob_start()
 ?>
     <div class="IBPDFF">
-        <div>Colab pendientes</div>
-        <?php echo publicaciones(['post_type' => 'colab', 'filtro' => 'colabPendiente', 'posts' => 20]); ?>
+        <div>
+            <div>Colab pendientes</div>
+            <?php echo publicaciones(['post_type' => 'colab', 'filtro' => 'colabPendiente', 'posts' => 20]); ?>
+        </div>
+        <div>
+            <?php echo publicaciones(['post_type' => 'colab', 'filtro' => 'colab', 'posts' => 20]); ?>
+        </div>
     </div>
 <?php
     return ob_get_clean();

@@ -45,10 +45,11 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
         'sample'   => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
 
         // FILTROS COLAB
-        'colabPendiente' => function() use (&$query_args) {
-            $query_args['post_status'] = 'pending';
+        'colab' => function() use (&$query_args) {
+            $query_args['post_status'] = 'publish';
         },
-        'colabPendientes' => fn() => $query_args += [
+        
+        'colabPendiente' => fn() => $query_args += [
             'author' => get_current_user_id(),
             'post_status' => 'pending'
         ],
