@@ -61,12 +61,6 @@ window.we = function (postId, audioUrl) {
         }
 
         window.audioLoading = true;
-        container.querySelector('.waveform-loading').style.display = 'block';
-        container.querySelector('.waveform-message').style.display = 'none';
-        const waveformBackground = container.querySelector('.waveform-background');
-        if (waveformBackground) {
-            waveformBackground.style.display = 'none';
-        }
 
         fetch(audioUrl, {
             credentials: 'include', // Incluye las cookies de sesión en la solicitud
@@ -95,9 +89,16 @@ window.we = function (postId, audioUrl) {
                     }
                 });
             })
+            //cuando ya esta cargada
             .then(stream => new Response(stream))
             .then(response => response.blob())
             .then((blob) => {
+                container.querySelector('.waveform-loading').style.display = 'block';
+                container.querySelector('.waveform-message').style.display = 'none';
+                const waveformBackground = container.querySelector('.waveform-background');
+                if (waveformBackground) {
+                    waveformBackground.style.display = 'none';
+                }
                 const audioBlobUrl = URL.createObjectURL(blob);
 
                 wavesurfer = initWavesurfer(container);
