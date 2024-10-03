@@ -44,7 +44,8 @@ function shouldCache(url) {
 
 function loadContent(enlace, isPushState) {
     console.log('Iniciando carga de contenido:', enlace);
-    if (!enlace || enlace.startsWith('javascript:') || enlace.includes('#') || enlace.includes('descarga_token')) return;
+    const lowerEnlace = enlace.trim().toLowerCase();
+    if (!enlace || lowerEnlace.startsWith('javascript:') || lowerEnlace.startsWith('data:') || lowerEnlace.startsWith('vbscript:') || enlace.includes('#') || enlace.includes('descarga_token')) return;
 
     if (pageCache[enlace] && shouldCache(enlace)) {
         document.getElementById('content').innerHTML = pageCache[enlace];
