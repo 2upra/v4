@@ -79,6 +79,14 @@ function manejar_reproducciones_y_oyentes(WP_REST_Request $request) {
         return new WP_Error('unauthorized', 'Usuario no autenticado', array('status' => 401));
     }
 
+    // Validar que el post y el artista existan
+    if (!get_post($postId)) {
+        return new WP_Error('invalid_post', 'El post no existe', array('status' => 400));
+    }
+    if (!get_user_by('ID', $artistId)) {
+        return new WP_Error('invalid_artist', 'El artista no es válido', array('status' => 400));
+    }
+
     guardarLog("Solicitud recibida: audioSrc=$audioSrc, postId=$postId, artistId=$artistId, userId=$userId");
 
     // Manejar reproducción
