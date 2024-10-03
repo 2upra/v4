@@ -45,8 +45,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
         'sample'   => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
 
         // FILTROS COLAB
-        'colab' => function() use (&$query_args) {
-            postLog("Aplicando filtro 'colab', estableciendo post_status a 'pending'");
+        'colabPendiente' => function() use (&$query_args) {
             $query_args['post_status'] = 'pending';
         },
         'colabPendientes' => fn() => $query_args += [

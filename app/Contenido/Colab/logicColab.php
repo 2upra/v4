@@ -156,16 +156,4 @@ function actualizarEstadoColab($postId, $post_after, $post_before)
 }
 add_action('post_updated', 'actualizarEstadoColab', 10, 3);
 
-function colab()
-{
 
-    ob_start()
-    // Aqui tiene que aparecer los colas pendientes
-    // Tambien tiene que aparecer los colabs en cursos
-?>
-    <div class="IBPDFF">
-        <?php echo publicaciones(['post_type' => 'colab', 'filtro' => 'colab', 'posts' => 20]); ?>
-    </div>
-<?php
-    return ob_get_clean();
-}

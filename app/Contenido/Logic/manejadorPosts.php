@@ -75,9 +75,9 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 
         $filtro = !empty($args['identifier']) ? $args['identifier'] : $args['filtro'];
         $tipoPost = $args['post_type'];
+        
         if (!wp_doing_ajax()) {
             $clase_extra = 'clase-' . esc_attr($filtro);
-
             if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
                 $clase_extra = 'clase-rolastatus';
             }
