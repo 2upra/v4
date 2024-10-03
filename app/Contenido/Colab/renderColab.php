@@ -27,10 +27,12 @@ function colab()
 {
     ob_start()
 ?>
+    <a href="https://2upra.com/">
     <div class="FLXVTQ">
         <p>La funcionalidad de colaboración aún no esta disponible</p>
         <button class="borde">Volver</button>
     </div>
+    </a>
 
 <?php
     return ob_get_clean();
