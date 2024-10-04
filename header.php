@@ -184,12 +184,21 @@ if (!defined('ABSPATH')) {
                     <?php echo conversacionesUsuario($user_id) ?>
                 </div>
                 <?php echo renderChat() ?>
-                <div style="display: none;">
-                    <button class="mensajeBoton" data-receptor="1">Enviar a 1</button>
-                </div>
             </div>
 
-            <!-- Modal y fondo -->
+            <!-- Modal para editar post -->
+            <div id="editarPost" class="EditarPost modal">
+                <textarea id="mensajeEdit"></textarea>
+                <button id="enviarEdit">Editar</button>
+            </div>
+
+            <!-- Enviar mensaje de error -->
+            <div id="formularioError" class="formularioError" style="display:none;">
+                <textarea id="mensajeError" placeholder="Describe el error"></textarea>
+                <button id="enviarError">Enviar</button>
+            </div>
+
+            <!-- Modal de detalles -->
             <div id="modalDetallesIA" class="DetallesIA modal" style="display: none; z-index: 1000; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
                 <div class="modalContent">
                     <p id="modalDetallesContent"></p>
@@ -226,14 +235,6 @@ if (!defined('ABSPATH')) {
                     <button><a href="https://2upra.com/perfil/">Mi perfil</a></button>
                     <button><a href="https://2upra.com/colabs/">Mis colabs</a></button>
                 </div>
-            </div>
-
-            <!-- Enviar mensaje de error -->
-            <div id="formularioError" class="formularioError" style="display:none;">
-                <textarea id="mensajeError" placeholder="Describe el error"></textarea>
-
-                <button id="enviarError">Enviar</button>
-
             </div>
 
             <!-- colab modal -->

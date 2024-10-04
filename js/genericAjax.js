@@ -136,23 +136,59 @@ async function reporte() {
         button.addEventListener('click', function () {
             const postId = this.getAttribute('data-post-id');
             const tipoContenido = this.getAttribute('tipoContenido');
-            abrirModal(postId, tipoContenido);
+            abrirModalReporte(postId, tipoContenido);
         });
     });
 
-    function abrirModal(idContenido, tipoContenido) {
+    function abrirModalReporte(idContenido, tipoContenido) {
         modalManager.toggleModal('formularioError', true);
 
         accionClick('#enviarError', 'guardarReporte', '¿Estás seguro de que quieres enviar este reporte?', (statusElement, data) => {
             alert('Reporte enviado correctamente');
             modalManager.toggleModal('formularioError', false);
+            // Limpiar el formulario
             document.getElementById('mensajeError').value = '';
         });
 
+        //  Agrega el ID del post y el tipo de contenido
         const enviarErrorBtn = document.getElementById('enviarError');
         if (enviarErrorBtn) {
             enviarErrorBtn.dataset.postId = idContenido;
             enviarErrorBtn.dataset.tipoContenido = tipoContenido;
+        }
+    }
+}
+
+async function editarPost() {
+    modalManager.añadirModal('editarPost', '#editarPost', ['.editarPost']);
+    const editButtons = document.querySelectorAll('.editarPost');
+    if (editButtons.length === 0) {
+        return;
+    }
+
+    editButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            const postId = this.getAttribute('data-post-id');
+            abrirModalEditarPost(postId);
+        });
+    });
+
+    function abrirModalEditarPost(idContenido) {
+        modalManager.toggleModal('editarPost', true);
+
+        /*
+        Aqui esto tiene que buscar el contenido de y agregarlo al <textarea id="mensajeEdit"></textarea>
+        */
+
+        accionClick('#enviarEdit', 'cambiarDescripcion', '¿Estás seguro de que quieres editar este post?', (statusElement, data) => {
+            alert('Post editado correctamente');
+            modalManager.toggleModal('editarPost', false);
+        });
+
+        //Agrega el ID del post
+        const enviarEditBtn = document.getElementById('enviarEdit');
+        if (enviarEditBtn) {
+            enviarEditBtn.dataset.postId = idContenido;
         }
     }
 }
@@ -187,33 +223,35 @@ async function bloqueos() {
 
 // GENERIC CLICK - DEBE SER FLEXIBLE PORQUE TODA LA LOGICA DE CLICK PASA POR AQUI
 async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
-    const buttons = document.querySelectorAll(selector);
+    const buttons = document.querySelectorAll(selector); // Selecciona los botones.
 
     buttons.forEach(button => {
-        button.addEventListener('click', async event => {
-            const post_id = event.currentTarget.dataset.postId || event.currentTarget.getAttribute('data-post-id');
-            const tipoContenido = event.currentTarget.dataset.tipoContenido;
+        button.addEventListener('click', async event => { // Añade evento 'click'.
+            const post_id = event.currentTarget.dataset.postId || event.currentTarget.getAttribute('data-post-id'); // Obtiene el post_id.
+            const tipoContenido = event.currentTarget.dataset.tipoContenido; // Obtiene el tipo de contenido.
 
-            if (!post_id) {
+            if (!post_id) { // Verifica si post_id existe.
                 console.error('No se encontró post_id en el botón');
                 return;
             }
 
-            const confirmed = await confirm(confirmMessage);
+            const confirmed = await confirm(confirmMessage); // Cuadro de confirmación.
 
             if (confirmed) {
-                const mensajeErrorInput = document.getElementById('mensajeError');
-                const detalles = mensajeErrorInput ? mensajeErrorInput.value : '';
-                const data = await enviarAjax(action, {
-                    post_id: post_id,
-                    tipoContenido: tipoContenido,
-                    detalles: detalles
+                const detalles = document.getElementById('mensajeError')?.value || ''; // Obtiene detalles (si aplica).
+                const descripcion = document.getElementById('mensajeEdit')?.value || ''; // Obtiene descripción (si aplica).
+
+                const data = await enviarAjax(action, { // Envía datos vía AJAX.
+                    post_id, 
+                    tipoContenido,
+                    detalles,
+                    descripcion
                 });
 
                 if (data.success) {
-                    successCallback(null, data, post_id); 
+                    successCallback(null, data, post_id); // Llama a callback en caso de éxito.
                 } else {
-                    console.error(`Error al realizar la acción: ${action}. Mensaje: ${data.message}`);
+                    console.error(`Error: ${data.message}`); // Muestra error.
                     alert('Error al enviar el reporte: ' + (data.message || 'Error desconocido'));
                 }
             }

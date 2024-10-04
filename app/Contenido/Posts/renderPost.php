@@ -67,7 +67,9 @@ function htmlPost($filtro)
                     <?php else: ?>
                         <div class="NERWFB">
                             <div class="YWBIBG">
-                                <?php the_content(); ?>
+                                <p id="thePostContet" data-post-id="<?php echo esc_html($post_id) ?>">
+                                    <?php the_content(); ?>
+                                </p>
                                 <div>
                                     <?php
                                     //Información bpm - escala- nota 
