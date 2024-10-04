@@ -215,10 +215,10 @@ function galle() {
             let nombreUsuario = item.querySelector('.nombreUsuario strong')?.textContent || null;
 
             if (!imagenPerfil || !nombreUsuario) {
-                console.log('No se tienen los datos, realizando solicitud AJAX para obtener información del servidor.');
+                //console.log('No se tienen los datos, realizando solicitud AJAX para obtener información del servidor.');
                 try {
                     const data = await enviarAjax('infoUsuario', {receptor});
-                    console.log('Respuesta del servidor:', data);
+                    //console.log('Respuesta del servidor:', data);
 
                     if (data?.success) {
                         imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
@@ -430,25 +430,25 @@ function galle() {
     
 
     function manejarMensajeWebSocket(data) {
-        console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket.');
+        //console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket.');
 
         try {
             const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
-            console.log('manejarMensajeWebSocket: Mensaje parseado correctamente:', {msgEmisor, msgReceptor, msgMensaje});
+            //console.log('manejarMensajeWebSocket: Mensaje parseado correctamente:', {msgEmisor, msgReceptor, msgMensaje});
 
             const listaMensajes = document.querySelector('.listaMensajes');
             const fechaActual = new Date();
 
             // Asegúrate de que emisor y receptor estén definidos
             if (msgReceptor === emisor) {
-                console.log('manejarMensajeWebSocket: El mensaje es para nosotros.');
+                //console.log('manejarMensajeWebSocket: El mensaje es para nosotros.');
                 if (msgEmisor === receptor) {
-                    console.log('manejarMensajeWebSocket: El mensaje es del receptor actual, añadiendo a la izquierda.');
+                    //console.log('manejarMensajeWebSocket: El mensaje es del receptor actual, añadiendo a la izquierda.');
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', fechaActual, listaMensajes);
                 }
                 actualizarListaConversaciones(msgEmisor, msgMensaje);
             } else if (msgEmisor === emisor && msgReceptor === receptor) {
-                console.log('manejarMensajeWebSocket: Es una confirmación de recepción de nuestro mensaje, añadiendo a la derecha.');
+                //console.log('manejarMensajeWebSocket: Es una confirmación de recepción de nuestro mensaje, añadiendo a la derecha.');
                 agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes);
                 actualizarListaConversaciones(msgReceptor, msgMensaje);
             }
@@ -458,7 +458,7 @@ function galle() {
     }
 
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
-        console.log('actualizarListaConversaciones: Actualizando la lista de conversaciones.');
+        //console.log('actualizarListaConversaciones: Actualizando la lista de conversaciones.');
 
         const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
         let conversacionActualizada = false;
@@ -467,7 +467,7 @@ function galle() {
             const receptorId = mensaje.getAttribute('data-receptor');
 
             if (receptorId == usuarioId) {
-                console.log(`actualizarListaConversaciones: Actualizando último mensaje para usuario ${usuarioId}.`);
+                //console.log(`actualizarListaConversaciones: Actualizando último mensaje para usuario ${usuarioId}.`);
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
                     vistaPrevia.textContent = ultimoMensaje;
@@ -487,10 +487,10 @@ function galle() {
         });
 
         if (!conversacionActualizada) {
-            console.log('actualizarListaConversaciones: No se encontró la conversación, programando reinicio de chats.');
+            //console.log('actualizarListaConversaciones: No se encontró la conversación, programando reinicio de chats.');
             setTimeout(() => {
                 reiniciarChats();
-                console.log('actualizarListaConversaciones: Chats reiniciados.');
+                //console.log('actualizarListaConversaciones: Chats reiniciados.');
             }, 1000);
         }
     }
@@ -704,22 +704,22 @@ function galle() {
     */
 
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null) {
-        console.log('enviarMensajeWs: Preparando datos del mensaje para enviar.');
+        //console.log('enviarMensajeWs: Preparando datos del mensaje para enviar.');
 
         const temp_id = Date.now(); // O genera un UUID si prefieres
 
         const messageData = {emisor, receptor, mensaje, adjunto, metadata, temp_id};
-        console.log('enviarMensajeWs: Datos del mensaje preparados: ', messageData);
+        //console.log('enviarMensajeWs: Datos del mensaje preparados: ', messageData);
 
         if (ws?.readyState === WebSocket.OPEN) {
-            console.log('enviarMensajeWs: WebSocket está abierto, enviando mensaje...');
+            //console.log('enviarMensajeWs: WebSocket está abierto, enviando mensaje...');
             ws.send(JSON.stringify(messageData));
-            console.log('enviarMensajeWs: Mensaje enviado correctamente.');
+            //console.log('enviarMensajeWs: Mensaje enviado correctamente.');
 
             // Añade el mensaje a la interfaz con el temp_id
             const listaMensajes = document.querySelector('.listaMensajes');
             agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto, temp_id);
-            console.log('enviarMensajeWs: Mensaje agregado al chat con temp_id.');
+            //console.log('enviarMensajeWs: Mensaje agregado al chat con temp_id.');
         } else {
             console.error('enviarMensajeWs: WebSocket no está conectado, no se puede enviar el mensaje.');
             alert('No se puede enviar el mensaje, por favor, reinicia la página.');
@@ -727,7 +727,7 @@ function galle() {
     }
 
     function manejarConfirmacionMensajeGuardado(message) {
-        console.log('Mensaje guardado en el servidor:', message);
+        //console.log('Mensaje guardado en el servidor:', message);
 
         // **Actualizar la interfaz de usuario para indicar que el mensaje se guardó**
         // Busca el mensaje en la lista de mensajes usando el temp_id
@@ -755,10 +755,10 @@ function galle() {
     }
 
     function setupEnviarMensajeHandler() {
-        console.log('setupEnviarMensajeHandler: Inicializando el manejador de eventos para enviar mensajes.');
+        //console.log('setupEnviarMensajeHandler: Inicializando el manejador de eventos para enviar mensajes.');
 
         document.addEventListener('click', event => {
-            console.log('setupEnviarMensajeHandler - Evento click: Detectado.');
+            //console.log('setupEnviarMensajeHandler - Evento click: Detectado.');
             if (event.target.matches('.enviarMensaje')) {
                 enviarMensaje();
             }
@@ -773,21 +773,21 @@ function galle() {
         });
 
         function enviarMensaje() {
-            console.log('enviarMensaje: Iniciando el proceso de envío del mensaje.');
+            //console.log('enviarMensaje: Iniciando el proceso de envío del mensaje.');
 
             const listaMensajes = document.querySelector('.listaMensajes');
             if (subidaChatProgreso === true) {
-                console.log('enviarMensaje: Subida de chat en progreso, mostrando alerta al usuario.');
+                //console.log('enviarMensaje: Subida de chat en progreso, mostrando alerta al usuario.');
                 alert('Por favor espera a que se complete la subida del archivo.');
                 return;
             }
 
             const mensaje = mensajeInput.value;
             if (mensaje.trim() !== '') {
-                console.log('enviarMensaje: Mensaje no vacío, procediendo a enviar.');
+                //console.log('enviarMensaje: Mensaje no vacío, procediendo a enviar.');
 
                 ocultarPreviews();
-                console.log('enviarMensaje: Previews ocultas.');
+                //console.log('enviarMensaje: Previews ocultas.');
 
                 let adjunto = null;
                 if (archivoChatId || archivoChatUrl) {
@@ -795,23 +795,23 @@ function galle() {
                         archivoChatId: archivoChatId,
                         archivoChatUrl: archivoChatUrl
                     };
-                    console.log('enviarMensaje: Archivo adjunto detectado. Añadiendo al mensaje.');
+                    //console.log('enviarMensaje: Archivo adjunto detectado. Añadiendo al mensaje.');
                     archivoChatId = null;
                     archivoChatUrl = null;
                 }
 
                 enviarMensajeWs(receptor, mensaje, adjunto);
-                console.log(`enviarMensaje: Mensaje enviado a través de WebSocket al receptor ${receptor}.`);
+                //console.log(`enviarMensaje: Mensaje enviado a través de WebSocket al receptor ${receptor}.`);
 
                 //agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto);
-                //console.log('enviarMensaje: Mensaje agregado al chat.');
+                ////console.log('enviarMensaje: Mensaje agregado al chat.');
 
                 mensajeInput.value = '';
                 const mensajeVistaPrevia = `Tu: ${mensaje}`;
                 actualizarListaConversaciones(receptor, mensajeVistaPrevia);
-                console.log('enviarMensaje: Lista de conversaciones actualizada.');
+                //console.log('enviarMensaje: Lista de conversaciones actualizada.');
             } else {
-                console.log('enviarMensaje: Mensaje vacío, no se enviará nada.');
+                //console.log('enviarMensaje: Mensaje vacío, no se enviará nada.');
             }
         }
     }
@@ -864,7 +864,7 @@ function galle() {
 
             if (!file) return;
             if (file.size > 50 * 1024 * 1024) {
-                console.log('El archivo no puede superar los 50 MB.');
+                //console.log('El archivo no puede superar los 50 MB.');
                 return;
             }
             if (file.type.startsWith('audio/')) {
@@ -877,19 +877,19 @@ function galle() {
         };
 
         const subidaChatAudio = async file => {
-            console.log('Iniciando subida de audio:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
+            //console.log('Iniciando subida de audio:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
             subidaChatProgreso = true;
             ocultarPreviews(); // Ocultar otros previews
 
             try {
-                console.log('Cargando archivo de audio...');
+                //console.log('Cargando archivo de audio...');
                 previewChatAudio.style.display = 'block';
                 cancelUploadButton.style.display = 'block';
                 const progressBarId = waveAudio(file);
-                console.log('Barra de progreso creada con ID:', progressBarId);
+                //console.log('Barra de progreso creada con ID:', progressBarId);
 
                 const {fileUrl, fileId} = await subidaChatBackend(file, progressBarId);
-                console.log('Audio cargado con éxito:', fileId, 'URL:', fileUrl);
+                //console.log('Audio cargado con éxito:', fileId, 'URL:', fileUrl);
 
                 archivoChatId = fileId;
                 archivoChatUrl = fileUrl;
@@ -901,20 +901,20 @@ function galle() {
         };
 
         const subidaChatImagen = async file => {
-            console.log('Iniciando subida de imagen:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
+            //console.log('Iniciando subida de imagen:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
             subidaChatProgreso = true;
             ocultarPreviews(); // Ocultar otros previews
             updateChatPreviewImagen(file);
 
             try {
-                console.log('Cargando archivo de imagen...');
+                //console.log('Cargando archivo de imagen...');
                 previewChatImagen.style.display = 'block';
                 cancelUploadButton.style.display = 'block';
                 const progressBarId = `progress-${Date.now()}`;
-                console.log('Barra de progreso creada con ID:', progressBarId);
+                //console.log('Barra de progreso creada con ID:', progressBarId);
 
                 const {fileUrl, fileId} = await subidaChatBackend(file, progressBarId);
-                console.log('Imagen cargada con éxito:', fileId, 'URL:', fileUrl);
+                //console.log('Imagen cargada con éxito:', fileId, 'URL:', fileUrl);
 
                 archivoChatId = fileId;
                 archivoChatUrl = fileUrl;
@@ -927,7 +927,7 @@ function galle() {
         };
 
         const subidaChatArchivo = async file => {
-            console.log('Iniciando subida de archivo:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
+            //console.log('Iniciando subida de archivo:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
             subidaChatProgreso = true;
             cancelUploadButton.style.display = 'block';
             ocultarPreviews(); // Ocultar otros previews
@@ -937,12 +937,12 @@ function galle() {
                 <div id="barraProgresoFile" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>`;
 
             try {
-                console.log('Cargando archivo...');
+                //console.log('Cargando archivo...');
                 const progressBarId = `progress-${Date.now()}`;
-                console.log('Barra de progreso creada con ID:', progressBarId);
+                //console.log('Barra de progreso creada con ID:', progressBarId);
 
                 const {fileUrl, fileId} = await subidaChatBackend(file, progressBarId);
-                console.log('Archivo cargado con éxito:', fileId, 'URL:', fileUrl);
+                //console.log('Archivo cargado con éxito:', fileId, 'URL:', fileUrl);
 
                 archivoChatId = fileId;
                 archivoChatUrl = fileUrl;
