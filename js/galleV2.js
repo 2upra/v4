@@ -421,7 +421,7 @@ function galle() {
     }
 
     function manejarMensajeWebSocket(data) {
-        console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket.');
+        console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket.', {data});
         
         try {
             const { emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje } = JSON.parse(data);
@@ -429,20 +429,38 @@ function galle() {
             
             const listaMensajes = document.querySelector('.listaMensajes');
             const fechaActual = new Date();
+            
+            console.log('manejarMensajeWebSocket: Estado antes de procesar el mensaje:', {
+                emisor,
+                receptor,
+                msgEmisor,
+                msgReceptor
+            });
     
-            // Asegúrate de que emisor y receptor estén definidos
+            // Mensaje destinado a nuestro receptor
             if (msgReceptor === emisor) {
                 console.log('manejarMensajeWebSocket: El mensaje es para nosotros.');
                 if (msgEmisor === receptor) {
                     console.log('manejarMensajeWebSocket: El mensaje es del receptor actual, añadiendo a la izquierda.');
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', fechaActual, listaMensajes);
+                } else {
+                    console.log('manejarMensajeWebSocket: El mensaje no es del receptor actual, no se añadirá a la izquierda.');
                 }
                 actualizarListaConversaciones(msgEmisor, msgMensaje);
-            } else if (msgEmisor === emisor && msgReceptor === receptor) {
+            }
+            // Confirmación de mensaje enviado
+            else if (msgEmisor === emisor && msgReceptor === receptor) {
                 console.log('manejarMensajeWebSocket: Es una confirmación de recepción de nuestro mensaje, añadiendo a la derecha.');
                 agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes);
                 actualizarListaConversaciones(msgReceptor, msgMensaje);
+            } else {
+                console.log('manejarMensajeWebSocket: El mensaje no es relevante para nosotros, se ignora.');
             }
+    
+            console.log('manejarMensajeWebSocket: Estado final después de procesar el mensaje:', {
+                listaMensajes: listaMensajes.innerHTML,
+            });
+    
         } catch (error) {
             console.error('Error al manejar el mensaje de WebSocket:', error);
         }
@@ -664,8 +682,8 @@ function galle() {
                 enviarMensajeWs(receptor, mensaje, adjunto);
                 console.log(`enviarMensaje: Mensaje enviado a través de WebSocket al receptor ${receptor}.`);
     
-                agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto);
-                console.log('enviarMensaje: Mensaje agregado al chat.');
+                // agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto);
+                // console.log('enviarMensaje: Mensaje agregado al chat.');
     
                 mensajeInput.value = '';
                 const mensajeVistaPrevia = `Tu: ${mensaje}`;
