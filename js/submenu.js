@@ -1,32 +1,33 @@
 function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLeft = 0) {
     const triggers = document.querySelectorAll(triggerSelector);
-    console.log("Número de disparadores encontrados:", triggers.length);
+    
+    console.log(`[createSubmenu] Inicializando para el selector: ${triggerSelector}, submenú prefijo: ${submenuIdPrefix}, triggers encontrados: ${triggers.length}`);
 
     function toggleSubmenu(event) {
-        console.log("Evento para alternar el submenú activado.");
         const trigger = event.target.closest(triggerSelector);
         if (!trigger) {
-            console.warn("No se encontró un disparador para el objetivo del evento.");
+            console.warn(`[toggleSubmenu] No se encontró el trigger para el selector: ${triggerSelector}`);
             return;
         }
 
         const submenuId = `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || "default"}`;
-        console.log("Intentando alternar el submenú con ID:", submenuId);
         const submenu = document.getElementById(submenuId);
+        
+        console.log(`[toggleSubmenu] Trigger clickeado: ${trigger.id || trigger.dataset.postId || "default"}, Submenú ID: ${submenuId}`);
+
         if (!submenu) {
-            console.warn("Submenú no encontrado:", submenuId);
+            console.warn(`[toggleSubmenu] No se encontró el submenú con ID: ${submenuId}`);
             return;
         }
 
-        console.log("Estilo de visualización actual del submenú:", submenu.style.display);
-
         submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
+        console.log(`[toggleSubmenu] Submenú ID ${submenuId}, clase mobile-submenu: ${submenu.classList.contains('mobile-submenu')}`);
 
         if (submenu.style.display === "block") {
-            console.log("El submenú está actualmente visible. Ocultando submenú.");
+            console.log(`[toggleSubmenu] Ocultando submenú ID: ${submenuId}`);
             hideSubmenu(submenu);
         } else {
-            console.log("El submenú está actualmente oculto. Mostrando submenú.");
+            console.log(`[toggleSubmenu] Mostrando submenú ID: ${submenuId}`);
             showSubmenu(event, submenu);
         }
 
@@ -34,81 +35,88 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
     }
 
     function showSubmenu(event, submenu) {
-        console.log("Mostrando submenú:", submenu.id);
         const rect = event.target.getBoundingClientRect();
         const { innerWidth: vw, innerHeight: vh } = window;
 
+        console.log(`[showSubmenu] Mostrando submenú, posición del trigger: top=${rect.top}, left=${rect.left}`);
+
         if (vw > 640) {
-            console.log("Posicionando submenú para vista de escritorio.");
             submenu.style.position = "fixed";
             submenu.style.top = `${Math.min(rect.bottom + adjustTop, vh - submenu.offsetHeight)}px`;
             submenu.style.left = `${Math.min(rect.left + adjustLeft, vw - submenu.offsetWidth)}px`;
+            
+            console.log(`[showSubmenu] Ajustando posición submenú para pantallas grandes: top=${submenu.style.top}, left=${submenu.style.left}`);
         }
 
         submenu.style.display = "block";
-        console.log("Submenú posicionado en:", submenu.style.top, submenu.style.left);
-
         submenu._darkBackground = createSubmenuDarkBackground(submenu);
-        submenu.style.zIndex = 999; // Siempre por encima del fondo oscuro
+        submenu.style.zIndex = 999;
+
+        console.log(`[showSubmenu] Submenú ID ${submenu.id} mostrado con z-index: 999`);
 
         document.body.classList.add('no-scroll');
-        console.log("Clase no-scroll añadida al cuerpo.");
 
-        // Evitar el cierre del submenú en clic interno
         submenu.addEventListener('click', (e) => {
-            console.log("Submenú clicado. Propagación del evento detenida.");
             e.stopPropagation();
-            hideSubmenu(submenu); // Desmarca esta línea si no deseas cerrar el submenú con clics internos
+            console.log(`[showSubmenu] Clic dentro del submenú ID: ${submenu.id}, ocultándolo`);
+            hideSubmenu(submenu);
         });
     }
 
     function hideSubmenu(submenu) {
-        console.log("Ocultando submenú:", submenu.id);
-        if (submenu) submenu.style.display = "none";
+        if (submenu) {
+            console.log(`[hideSubmenu] Ocultando submenú ID: ${submenu.id}`);
+            submenu.style.display = "none";
+        }
+
         removeSubmenuDarkBackground(submenu._darkBackground);
         submenu._darkBackground = null;
 
         const activeSubmenus = Array.from(document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`)).filter(menu => menu.style.display === "block");
-        console.log("Submenús activos tras ocultar:", activeSubmenus.length);
 
         if (activeSubmenus.length === 0) {
+            console.log(`[hideSubmenu] No hay submenús activos, eliminando clase 'no-scroll' del body`);
             document.body.classList.remove('no-scroll');
-            console.log("Sin submenús activos. Scroll de página restaurado.");
         }
     }
 
-    triggers.forEach(trigger => trigger.addEventListener("click", toggleSubmenu));
+    triggers.forEach(trigger => {
+        console.log(`[createSubmenu] Añadiendo evento click al trigger: ${trigger.id || trigger.dataset.postId || "default"}`);
+        trigger.addEventListener("click", toggleSubmenu);
+    });
 
     document.addEventListener("click", (event) => {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
             if (!submenu.contains(event.target) && !event.target.matches(triggerSelector)) {
-                console.log("Documento clicado fuera del submenú y del disparador. Ocultando submenú:", submenu.id);
+                console.log(`[document click] Clic fuera del submenú ID: ${submenu.id}, ocultándolo`);
                 hideSubmenu(submenu);
             }
         });
     });
 
     window.addEventListener('resize', () => {
-        console.log("Ventana redimensionada. Ajustando clases del submenú.");
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
             submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
+            console.log(`[window resize] Ajuste de clase mobile-submenu para submenú ID: ${submenu.id}, mobile-submenu: ${submenu.classList.contains('mobile-submenu')}`);
         });
     });
 }
 
 function initializeStaticMenus() {
-    console.log("Inicializando menús estáticos.");
+    console.log('[initializeStaticMenus] Inicializando menús estáticos');
     createSubmenu(".subiricono", "submenusubir", 0, 120);
     createSubmenu(".chatIcono", "bloqueConversaciones", 30, -270);
 }
 
-
 function submenu() {
-    console.log("Reiniciando ajax submenu");
+    console.log('[submenu] Inicializando menús dinámicos');
     createSubmenu(".mipsubmenu", "submenuperfil", 0, 120);
     createSubmenu(".HR695R7", "opcionesrola", 100, 0);
     createSubmenu(".HR695R8", "opcionespost", 60, 0);
     createSubmenu(".submenucolab", "opcionescolab", 60, 0);
 }
 
-document.addEventListener('DOMContentLoaded', initializeStaticMenus);
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('[DOMContentLoaded] Documento cargado, inicializando menús estáticos');
+    initializeStaticMenus();
+});

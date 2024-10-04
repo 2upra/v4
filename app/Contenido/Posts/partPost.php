@@ -115,6 +115,9 @@ function opcionesPost($post_id, $author_id)
                 <button class="eliminarPost" data-post-id="<?php echo $post_id; ?>">Eliminar</button>
                 <button class="editarPost" data-post-id="<?php echo $post_id; ?>">Editar</button>
                 <button class="banearUsuario" data-post-id="<?php echo $post_id; ?>">Banear</button>
+                <?php if ($audio_id_lite && $descarga_permitida != 1) : ?>
+                    <button class="permitirDescarga" data-post-id="<?php echo $post_id; ?>">Permitir descarga</button>
+                <?php endif; ?>
             <?php elseif ($current_user_id == $author_id) : ?>
                 <button class="editarPost" data-post-id="<?php echo $post_id; ?>">Editar</button>
                 <button class="eliminarPost" data-post-id="<?php echo $post_id; ?>">Eliminar</button>
