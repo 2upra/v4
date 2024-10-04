@@ -11,6 +11,7 @@ async function handleAllRequests() {
         await reporte();
         await bloqueos();
         await banearUsuario();
+        await editarPost();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }
