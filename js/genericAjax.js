@@ -162,10 +162,12 @@ async function reporte() {
 async function editarPost() {
     modalManager.añadirModal('editarPost', '#editarPost', ['.editarPost']);
     const editButtons = document.querySelectorAll('.editarPost');
+    
     if (editButtons.length === 0) {
         return;
     }
 
+    // Añadir evento click a cada botón de editar
     editButtons.forEach(function (button) {
         button.addEventListener('click', function () {
             const postId = this.getAttribute('data-post-id');
@@ -173,23 +175,34 @@ async function editarPost() {
         });
     });
 
+    // Función para abrir el modal de edición y rellenarlo con el contenido del post
     function abrirModalEditarPost(idContenido) {
         modalManager.toggleModal('editarPost', true);
 
-        /*
-        Aqui esto tiene que buscar el contenido de y agregarlo al <textarea id="mensajeEdit"></textarea>
-        */
+        // Buscar el contenido del post correspondiente en el DOM
+        const postContentDiv = document.querySelector(`.thePostContet[data-post-id="${idContenido}"]`);
+        const postContent = postContentDiv ? postContentDiv.innerHTML.trim() : '';
 
-        accionClick('#enviarEdit', 'cambiarDescripcion', '¿Estás seguro de que quieres editar este post?', (statusElement, data) => {
-            alert('Post editado correctamente');
-            modalManager.toggleModal('editarPost', false);
-        });
+        // Insertar el contenido del post en el textarea del modal
+        const mensajeEditTextarea = document.getElementById('mensajeEdit');
+        if (mensajeEditTextarea) {
+            mensajeEditTextarea.value = postContent;
+        }
 
-        //Agrega el ID del post
+        // Agregar el ID del post al botón de enviar
         const enviarEditBtn = document.getElementById('enviarEdit');
         if (enviarEditBtn) {
             enviarEditBtn.dataset.postId = idContenido;
         }
+
+        accionClick('#enviarEdit', 'cambiarDescripcion', '¿Estás seguro de que quieres editar este post?', (statusElement, data) => {
+            alert('Post editado correctamente');
+            if (postContentDiv) {
+                postContentDiv.innerHTML = mensajeEditTextarea.value;
+            }
+
+            modalManager.toggleModal('editarPost', false);
+        });
     }
 }
 
