@@ -209,7 +209,6 @@ function galle() {
 
     async function manejarClickEnMensaje(item) {
         item.addEventListener('click', async () => {
-            console.log('Evento click detectado.');
             let conversacion = item.getAttribute('data-conversacion');
             receptor = item.getAttribute('data-receptor');
             let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
@@ -622,17 +621,14 @@ function galle() {
         document.addEventListener('click', event => {
             console.log('setupEnviarMensajeHandler - Evento click: Detectado.');
             if (event.target.matches('.enviarMensaje')) {
-                console.log('setupEnviarMensajeHandler - Evento click: Botón de enviar mensaje pulsado.');
                 enviarMensaje();
             }
         });
     
         const mensajeInput = document.querySelector('.mensajeContenido');
         mensajeInput.addEventListener('keydown', event => {
-            console.log(`setupEnviarMensajeHandler - Evento keydown: Tecla '${event.key}' presionada.`);
             if (event.key === 'Enter' && !event.altKey) {
                 event.preventDefault();
-                console.log('setupEnviarMensajeHandler - Evento keydown: Enter presionada sin Alt. Procediendo a enviar mensaje.');
                 enviarMensaje();
             }
         });
