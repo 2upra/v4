@@ -113,6 +113,7 @@ function opcionesPost($post_id, $author_id)
             <?php if (current_user_can('administrator')) : ?>
                 <button class="eliminarPost" data-post-id="<?php echo $post_id; ?>">Eliminar</button>
             <?php elseif ($current_user_id == $author_id) : ?>
+                <p><?php echo $current_user_id; ?> - <?php echo $author_id; ?></p>
                 <button class="editarPost" data-post-id="<?php echo $post_id; ?>">Editar</button>
                 <button class="eliminarPost" data-post-id="<?php echo $post_id; ?>">Eliminar</button>
             <?php endif; ?>
