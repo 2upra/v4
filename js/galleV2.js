@@ -422,20 +422,25 @@ function galle() {
     }
 
     function manejarMensajeWebSocket(data) {
+        console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket.');
+        
         try {
             const { emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje } = JSON.parse(data);
+            console.log('manejarMensajeWebSocket: Mensaje parseado correctamente:', {msgEmisor, msgReceptor, msgMensaje});
+            
             const listaMensajes = document.querySelector('.listaMensajes');
             const fechaActual = new Date();
-            
+    
             // Asegúrate de que emisor y receptor estén definidos
             if (msgReceptor === emisor) {
+                console.log('manejarMensajeWebSocket: El mensaje es para nosotros.');
                 if (msgEmisor === receptor) {
-                    // Agregar mensaje desde el receptor (mensaje a la izquierda)
+                    console.log('manejarMensajeWebSocket: El mensaje es del receptor actual, añadiendo a la izquierda.');
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', fechaActual, listaMensajes);
                 }
                 actualizarListaConversaciones(msgEmisor, msgMensaje);
             } else if (msgEmisor === emisor && msgReceptor === receptor) {
-                // Agregar mensaje desde el emisor (mensaje a la derecha)
+                console.log('manejarMensajeWebSocket: Es una confirmación de recepción de nuestro mensaje, añadiendo a la derecha.');
                 agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes);
                 actualizarListaConversaciones(msgReceptor, msgMensaje);
             }
@@ -445,6 +450,8 @@ function galle() {
     }
     
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
+        console.log('actualizarListaConversaciones: Actualizando la lista de conversaciones.');
+        
         const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
         let conversacionActualizada = false;
     
@@ -452,6 +459,7 @@ function galle() {
             const receptorId = mensaje.getAttribute('data-receptor');
     
             if (receptorId == usuarioId) {
+                console.log(`actualizarListaConversaciones: Actualizando último mensaje para usuario ${usuarioId}.`);
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
                     vistaPrevia.textContent = ultimoMensaje;
@@ -471,10 +479,11 @@ function galle() {
         });
     
         if (!conversacionActualizada) {
-            // Agregamos un pequeño retraso antes de reiniciar los chats
+            console.log('actualizarListaConversaciones: No se encontró la conversación, programando reinicio de chats.');
             setTimeout(() => {
                 reiniciarChats();
-            }, 1000); 
+                console.log('actualizarListaConversaciones: Chats reiniciados.');
+            }, 1000);
         }
     }
 
@@ -567,7 +576,6 @@ function galle() {
         };
         ws.onclose = () => {
             clearInterval(pingInterval);
-            console.log('Conexión cerrada. Reintentando en 5 segundos...');
             setTimeout(connectWebSocket, 5000);
         };
         ws.onerror = error => {
@@ -576,7 +584,6 @@ function galle() {
         ws.onmessage = ({data}) => {
             const message = JSON.parse(data);
             if (message.type === 'pong') {
-                console.log('Pong recibido');
             } else if (message.type === 'set_emisor') {
                 ws.send(JSON.stringify({emisor}));
             } else {
@@ -594,60 +601,82 @@ function galle() {
     */
 
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null) {
-        const messageData = {emisor, receptor, mensaje, adjunto, metadata};
-
+        console.log('enviarMensajeWs: Preparando datos del mensaje para enviar.');
+        
+        const messageData = { emisor, receptor, mensaje, adjunto, metadata };
+        console.log('enviarMensajeWs: Datos del mensaje preparados: ', messageData);
+    
         if (ws?.readyState === WebSocket.OPEN) {
+            console.log('enviarMensajeWs: WebSocket está abierto, enviando mensaje...');
             ws.send(JSON.stringify(messageData));
+            console.log('enviarMensajeWs: Mensaje enviado correctamente.');
         } else {
-            console.error('WebSocket no está conectado, no se puede enviar el mensaje');
-            alert('No se puede enviar el mensaje, por favor, reinicia la página');
+            console.error('enviarMensajeWs: WebSocket no está conectado, no se puede enviar el mensaje.');
+            alert('No se puede enviar el mensaje, por favor, reinicia la página.');
         }
     }
 
     function setupEnviarMensajeHandler() {
-        
+        console.log('setupEnviarMensajeHandler: Inicializando el manejador de eventos para enviar mensajes.');
+    
         document.addEventListener('click', event => {
+            console.log('setupEnviarMensajeHandler - Evento click: Detectado.');
             if (event.target.matches('.enviarMensaje')) {
+                console.log('setupEnviarMensajeHandler - Evento click: Botón de enviar mensaje pulsado.');
                 enviarMensaje();
             }
         });
-
+    
         const mensajeInput = document.querySelector('.mensajeContenido');
         mensajeInput.addEventListener('keydown', event => {
+            console.log(`setupEnviarMensajeHandler - Evento keydown: Tecla '${event.key}' presionada.`);
             if (event.key === 'Enter' && !event.altKey) {
                 event.preventDefault();
+                console.log('setupEnviarMensajeHandler - Evento keydown: Enter presionada sin Alt. Procediendo a enviar mensaje.');
                 enviarMensaje();
             }
         });
-
+    
         function enviarMensaje() {
+            console.log('enviarMensaje: Iniciando el proceso de envío del mensaje.');
+            
             const listaMensajes = document.querySelector('.listaMensajes');
             if (subidaChatProgreso === true) {
-                // Verificamos si hay una subida en progreso
+                console.log('enviarMensaje: Subida de chat en progreso, mostrando alerta al usuario.');
                 alert('Por favor espera a que se complete la subida del archivo.');
-                return; // Salimos de la función sin enviar el mensaje
+                return;
             }
-
+    
             const mensaje = mensajeInput.value;
             if (mensaje.trim() !== '') {
+                console.log('enviarMensaje: Mensaje no vacío, procediendo a enviar.');
+    
                 ocultarPreviews();
-
+                console.log('enviarMensaje: Previews ocultas.');
+    
                 let adjunto = null;
                 if (archivoChatId || archivoChatUrl) {
                     adjunto = {
                         archivoChatId: archivoChatId,
                         archivoChatUrl: archivoChatUrl
                     };
+                    console.log('enviarMensaje: Archivo adjunto detectado. Añadiendo al mensaje.');
                     archivoChatId = null;
                     archivoChatUrl = null;
                 }
-
+    
                 enviarMensajeWs(receptor, mensaje, adjunto);
-                // agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true);
+                console.log(`enviarMensaje: Mensaje enviado a través de WebSocket al receptor ${receptor}.`);
+    
                 agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto);
+                console.log('enviarMensaje: Mensaje agregado al chat.');
+    
                 mensajeInput.value = '';
                 const mensajeVistaPrevia = `Tu: ${mensaje}`;
                 actualizarListaConversaciones(receptor, mensajeVistaPrevia);
+                console.log('enviarMensaje: Lista de conversaciones actualizada.');
+            } else {
+                console.log('enviarMensaje: Mensaje vacío, no se enviará nada.');
             }
         }
     }

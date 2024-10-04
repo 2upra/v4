@@ -277,7 +277,7 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
                     successCallback(null, data, post_id); // Llama a callback en caso de éxito.
                 } else {
                     console.error(`Error: ${data.message}`); // Muestra error.
-                    alert('Error al enviar el reporte: ' + (data.message || 'Error desconocido'));
+                    alert('Error al enviar petición ' + (data.message || 'Error desconocido'));
                 }
             }
         });
