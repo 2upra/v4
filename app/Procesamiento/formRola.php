@@ -2,6 +2,20 @@
 
 function postRolaForm()
 {
+    ob_start() ?>
+
+    <div class="FLXVTQ">
+        <a href="https://2upra.com/">
+            <p>La funcionalidad de subir rola aún no esta disponible</p>
+            <button class="borde">Volver</button>
+        </a>
+    </div>
+
+<?php
+}
+
+function postRolaFormTest()
+{
     $nonce = wp_create_nonce('postRs');
 
     ob_start(); ?>
