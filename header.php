@@ -189,7 +189,7 @@ if (!defined('ABSPATH')) {
             <!-- Modal para editar post -->
             <div id="editarPost" class="EditarPost modal">
                 <textarea id="mensajeEdit"></textarea>
-                <button id="enviarEdit">Editar</button>
+                <button id="enviarEdit" class="borde">Editar</button>
             </div>
 
             <!-- Enviar mensaje de error -->
