@@ -34,6 +34,13 @@ function guardarBloqueo() {
     }
     
     $autor_id = $post->post_author;
+
+    // Verificar si el autor es un administrador
+    if (user_can($autor_id, 'administrator')) {
+        wp_send_json_error('Pero que haces boludo?');
+        return;
+    }
+    
     $bloqueo_existente = $wpdb->get_var($wpdb->prepare(
         "SELECT id FROM $tabla_bloqueo WHERE idUser = %d AND idBloqueado = %d",
         $usuario_actual,
