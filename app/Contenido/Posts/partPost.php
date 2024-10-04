@@ -103,6 +103,8 @@ function opcionesRola($post_id, $post_status, $audio_url)
 function opcionesPost($post_id, $author_id)
 {
     $current_user_id = get_current_user_id();
+    $audio_id_lite = get_post_meta($post_id, 'post_audio_lite', true);
+    $descarga_permitida = get_post_meta($post_id, 'paraDescarga', true);
     ob_start();
 ?>
     <button class="HR695R8" data-post-id="<?php echo $post_id; ?>"><?php echo $GLOBALS['iconotrespuntos']; ?></button>
@@ -116,6 +118,9 @@ function opcionesPost($post_id, $author_id)
             <?php elseif ($current_user_id == $author_id) : ?>
                 <button class="editarPost" data-post-id="<?php echo $post_id; ?>">Editar</button>
                 <button class="eliminarPost" data-post-id="<?php echo $post_id; ?>">Eliminar</button>
+                <?php if ($audio_id_lite && $descarga_permitida != 1) : ?>
+                    <button class="permitirDescarga" data-post-id="<?php echo $post_id; ?>">Permitir descarga</button>
+                <?php endif; ?>
             <?php else : ?>
                 <button class="reporte" data-post-id="<?php echo $post_id; ?>" tipoContenido="social_post" >Reportar</button>
                 <button class="bloquear" data-post-id="<?php echo $post_id; ?>">Bloquear</button>

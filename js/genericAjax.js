@@ -30,6 +30,19 @@ async function requestDeletion() {
     );
 }
 
+async function permitirDescarga() {	
+    await accionClick(
+        '.permitirDescarga',
+        'permitirDescarga',
+        '¿Estas seguro de permitir la descarga?',
+        async (statusElement, data) => {
+            actualizarElemento(statusElement, data.new_status);
+            await alert('Permitiendo descarga.');
+        },
+        '.EDYQHV'
+    );
+}
+
 async function rechazarColab() {
     await accionClick(
         '.rechazarcolab',
