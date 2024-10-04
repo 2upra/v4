@@ -4,7 +4,7 @@ function initializeAllAudioPlayers() {
         const audioUrl = container.getAttribute('data-audio-url');
         if (postId && audioUrl && !container.dataset.initialized) {
             container.dataset.initialized = 'true';
-            observeWaveform(container, postId, audioUrl);
+            //observeWaveform(container, postId, audioUrl);
         }
     });
 }
