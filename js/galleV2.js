@@ -600,8 +600,7 @@ function galle() {
                 // Manejar la confirmación de que el mensaje se guardó
                 manejarConfirmacionMensajeGuardado(message);
             } else if (message.type === 'message_error') {
-                // Manejar el error al guardar el mensaje
-                // manejarErrorMensaje(message);
+                manejarError(message);
             } else {
                 manejarMensajeWebSocket(JSON.stringify(message));
             }
@@ -744,6 +743,17 @@ function galle() {
         }
     }
 
+    function manejarError(message) {
+        const listaMensajes = document.querySelector('.listaMensajes');
+        const mensajeElemento = listaMensajes.querySelector(`[data-temp-id="${message.original_message.temp_id}"]`);
+
+        if (mensajeElemento) {
+            // Añade una clase o modifica el elemento para indicar que se ha enviado con éxito
+            mensajeElemento.classList.add('mensajeError');
+
+        }
+    }
+
     function setupEnviarMensajeHandler() {
         console.log('setupEnviarMensajeHandler: Inicializando el manejador de eventos para enviar mensajes.');
 
@@ -793,9 +803,8 @@ function galle() {
                 enviarMensajeWs(receptor, mensaje, adjunto);
                 console.log(`enviarMensaje: Mensaje enviado a través de WebSocket al receptor ${receptor}.`);
 
-                // aqui hace falta una confirmación visual si el mensaje realmente llega a guardarse
-                agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto);
-                console.log('enviarMensaje: Mensaje agregado al chat.');
+                //agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto);
+                //console.log('enviarMensaje: Mensaje agregado al chat.');
 
                 mensajeInput.value = '';
                 const mensajeVistaPrevia = `Tu: ${mensaje}`;
