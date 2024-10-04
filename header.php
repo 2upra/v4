@@ -211,7 +211,7 @@ if (!defined('ABSPATH')) {
             <div class="A1806241" id="submenusubir-subiricono">
                 <div class="A1806242">
                     <button id="subirrola"><a href="https://2upra.com/rola/">Subir rola</a></button>
-                    <button id="subirsample"><a href="https://2upra.com/subirsample/">Subir Sample</a></button>
+                    <!-- <button id="subirsample"><a href="https://2upra.com/subirsample/">Subir Sample</a></button> -->
                 </div>
             </div>
 
