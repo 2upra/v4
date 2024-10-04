@@ -87,4 +87,4 @@ function cambiarDescripcion()
     wp_die();
 }
 
-add_action('wp_ajax_cambiar_descripcion', 'cambiarDescripcion');
+add_action('wp_ajax_cambiarDescripcion', 'cambiarDescripcion');
