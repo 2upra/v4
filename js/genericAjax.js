@@ -160,6 +160,36 @@ async function reporte() {
     }
 }
 
+
+
+async function bloqueos() {
+    async function bloquearUsuario(event, response, post_id) {
+        const button = document.querySelector(`.bloquear[data-post-id="${post_id}"]`);
+        if (button) {
+            alert('Usuario bloqueado.');
+            button.textContent = 'Desbloquear';
+            button.classList.remove('bloquear');
+            button.classList.add('desbloquear');
+        } else {
+            return; 
+        }
+    }
+    accionClick('.bloquear', 'guardarBloqueo', '¿Estás seguro de bloquear este usuario?', bloquearUsuario);
+
+    async function desbloquearUsuario(event, response, post_id) {
+        const button = document.querySelector(`.desbloquear[data-post-id="${post_id}"]`);
+        if (button) {
+            alert('Usuario desbloqueado.');
+            button.textContent = 'Bloquear';
+            button.classList.remove('desbloquear');
+            button.classList.add('bloquear');
+        } else {
+            return; 
+        }
+    }
+    accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
+}
+
 async function editarPost() {
     modalManager.añadirModal('editarPost', '#editarPost', ['.editarPost']);
     const editButtons = document.querySelectorAll('.editarPost');
@@ -199,6 +229,11 @@ async function editarPost() {
             enviarEditBtn.dataset.postId = idContenido;
         }
 
+        // Remover eventos previos antes de añadir un nuevo evento
+        enviarEditBtn.replaceWith(enviarEditBtn.cloneNode(true)); 
+        const newEnviarEditBtn = document.getElementById('enviarEdit');
+        
+        // Volver a agregar el evento click al nuevo botón clonado
         accionClick('#enviarEdit', 'cambiarDescripcion', '¿Estás seguro de que quieres editar este post?', (statusElement, data) => {
             alert('Post editado correctamente');
             if (postContentDiv) {
@@ -209,35 +244,6 @@ async function editarPost() {
             modalManager.toggleModal('editarPost', false);
         });
     }
-}
-
-
-async function bloqueos() {
-    async function bloquearUsuario(event, response, post_id) {
-        const button = document.querySelector(`.bloquear[data-post-id="${post_id}"]`);
-        if (button) {
-            alert('Usuario bloqueado.');
-            button.textContent = 'Desbloquear';
-            button.classList.remove('bloquear');
-            button.classList.add('desbloquear');
-        } else {
-            return; 
-        }
-    }
-    accionClick('.bloquear', 'guardarBloqueo', '¿Estás seguro de bloquear este usuario?', bloquearUsuario);
-
-    async function desbloquearUsuario(event, response, post_id) {
-        const button = document.querySelector(`.desbloquear[data-post-id="${post_id}"]`);
-        if (button) {
-            alert('Usuario desbloqueado.');
-            button.textContent = 'Bloquear';
-            button.classList.remove('desbloquear');
-            button.classList.add('bloquear');
-        } else {
-            return; 
-        }
-    }
-    accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
 }
 
 // GENERIC CLICK - DEBE SER FLEXIBLE PORQUE TODA LA LOGICA DE CLICK PASA POR AQUI
