@@ -139,15 +139,15 @@ function galle() {
         try {
             const bloqueChat = document.querySelector('.bloqueChat');
             const botonCerrar = document.getElementById('cerrarChat');
-    
+
             botonCerrar.addEventListener('click', () => {
                 bloqueChat.style.display = 'none';
                 bloqueChat.classList.remove('minimizado');
-                
+
                 // Resetear variables globales del chat
                 archivoChatId = null;
                 archivoChatUrl = null;
-    
+
                 // Borrar cualquier texto en el área de texto
                 const textareaMensaje = document.querySelector('.mensajeContenido');
                 textareaMensaje.value = '';
@@ -161,19 +161,19 @@ function galle() {
         try {
             const bloqueChat = document.getElementById('bloqueChat');
             const botonMinimizar = document.getElementById('minizarChat');
-    
-            botonMinimizar.addEventListener('click', (event) => {
+
+            botonMinimizar.addEventListener('click', event => {
                 event.stopPropagation(); // Evita que el evento se propague al contenedor padre
                 bloqueChat.classList.add('minimizado');
-                
+
                 // Oculta los elementos internos
                 const elementosAOcultar = bloqueChat.querySelectorAll('.listaMensajes, .previewsChat, .chatEnvio');
-                elementosAOcultar.forEach(elem => elem.style.display = 'none');
-    
+                elementosAOcultar.forEach(elem => (elem.style.display = 'none'));
+
                 // Resetear variables globales del chat
                 if (typeof archivoChatId !== 'undefined') archivoChatId = null;
                 if (typeof archivoChatUrl !== 'undefined') archivoChatUrl = null;
-    
+
                 // Borrar cualquier texto en el área de texto
                 const textareaMensaje = bloqueChat.querySelector('.mensajeContenido');
                 if (textareaMensaje) textareaMensaje.value = '';
@@ -183,18 +183,18 @@ function galle() {
             alert('Ha ocurrido un error al intentar minimizar el chat.');
         }
     }
-    
+
     async function maximizarChat() {
         try {
             const bloqueChat = document.getElementById('bloqueChat');
-    
-            bloqueChat.addEventListener('click', (event) => {
+
+            bloqueChat.addEventListener('click', event => {
                 if (bloqueChat.classList.contains('minimizado')) {
                     bloqueChat.classList.remove('minimizado');
-                    
+
                     // Muestra los elementos internos
                     const elementosAMostrar = bloqueChat.querySelectorAll('.listaMensajes, .previewsChat, .chatEnvio');
-                    elementosAMostrar.forEach(elem => elem.style.display = '');
+                    elementosAMostrar.forEach(elem => (elem.style.display = ''));
                 }
             });
         } catch (error) {
@@ -202,7 +202,7 @@ function galle() {
             alert('Ha ocurrido un error al intentar maximizar el chat.');
         }
     }
-    
+
     maximizarChat();
     cerrarChat();
     minimizarChat();
@@ -369,7 +369,7 @@ function galle() {
         }
     }
 
-    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null) {
+    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null) {
         // Verifica si listaMensajes es un nodo DOM válido
         if (!listaMensajes || !(listaMensajes instanceof Element)) {
             console.error('Error: listaMensajes no es un elemento DOM válido o no se encontró. Valor recibido:', listaMensajes);
@@ -404,6 +404,14 @@ function galle() {
         li.classList.add(clase);
         li.setAttribute('data-fecha', fechaMensaje.toISOString());
     
+        // Asignar el temp_id como atributo data
+        if (temp_id) {
+            li.setAttribute('data-temp-id', temp_id);
+    
+            // Añade una clase para indicar que está pendiente de confirmación
+            li.classList.add('mensajePendiente');
+        }
+    
         // Lógica para manejar el adjunto
         manejarAdjunto(adjunto, li);
     
@@ -419,17 +427,18 @@ function galle() {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
         }
     }
+    
 
     function manejarMensajeWebSocket(data) {
         console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket.');
-        
+
         try {
-            const { emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje } = JSON.parse(data);
+            const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
             console.log('manejarMensajeWebSocket: Mensaje parseado correctamente:', {msgEmisor, msgReceptor, msgMensaje});
-            
+
             const listaMensajes = document.querySelector('.listaMensajes');
             const fechaActual = new Date();
-    
+
             // Asegúrate de que emisor y receptor estén definidos
             if (msgReceptor === emisor) {
                 console.log('manejarMensajeWebSocket: El mensaje es para nosotros.');
@@ -447,23 +456,23 @@ function galle() {
             console.error('Error al manejar el mensaje de WebSocket:', error);
         }
     }
-    
+
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
         console.log('actualizarListaConversaciones: Actualizando la lista de conversaciones.');
-        
+
         const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
         let conversacionActualizada = false;
-    
+
         listaMensajes.forEach(mensaje => {
             const receptorId = mensaje.getAttribute('data-receptor');
-    
+
             if (receptorId == usuarioId) {
                 console.log(`actualizarListaConversaciones: Actualizando último mensaje para usuario ${usuarioId}.`);
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
                     vistaPrevia.textContent = ultimoMensaje;
                 }
-    
+
                 const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
                 if (tiempoMensajeDiv) {
                     const fechaActual = new Date();
@@ -476,7 +485,7 @@ function galle() {
                 conversacionActualizada = true;
             }
         });
-    
+
         if (!conversacionActualizada) {
             console.log('actualizarListaConversaciones: No se encontró la conversación, programando reinicio de chats.');
             setTimeout(() => {
@@ -557,6 +566,7 @@ function galle() {
         }
     }
 
+    //mi duda es que, como recibo una confirmación de que el mensaje realmenete se guardo
     function connectWebSocket() {
         ws = new WebSocket(wsUrl);
         ws.onopen = () => {
@@ -580,11 +590,18 @@ function galle() {
         ws.onerror = error => {
             console.error('Error en WebSocket:', error);
         };
-        ws.onmessage = ({data}) => {
+        ws.onmessage = ({ data }) => {
             const message = JSON.parse(data);
             if (message.type === 'pong') {
+                // Manejo del ping-pong
             } else if (message.type === 'set_emisor') {
-                ws.send(JSON.stringify({emisor}));
+                ws.send(JSON.stringify({ emisor }));
+            } else if (message.type === 'message_saved') {
+                // Manejar la confirmación de que el mensaje se guardó
+                manejarConfirmacionMensajeGuardado(message);
+            } else if (message.type === 'message_error') {
+                // Manejar el error al guardar el mensaje
+                // manejarErrorMensaje(message);
             } else {
                 manejarMensajeWebSocket(JSON.stringify(message));
             }
@@ -595,37 +612,148 @@ function galle() {
      *   FUNCIONES PARA ENVIAR MENSAJE
      */
 
-    /* 
+    /*
 
+    public function onOpen(ConnectionInterface $conn)
+    {
+        $this->clients->attach($conn);
+        echo "New connection! ({$conn->resourceId})\n";
+
+        // Envía una instrucción para que el cliente envíe su token de autenticación
+        $conn->send(json_encode(['type' => 'auth', 'message' => 'Por favor, envía tu token de autenticación.']));
+    }
+
+    public function onMessage(ConnectionInterface $from, $msg)
+    {
+        // Log para mostrar el mensaje recibido
+        echo "Mensaje recibido de {$from->resourceId}: " . $msg . "\n";
+    (... codigos relacionado con la verf. de token y autor omitidos)
+            // Guardar el mensaje en WordPress
+        echo "Intentando guardar mensaje en WordPress...\n";
+
+        // Verificar si hay un token autenticado asociado
+        if (isset($this->autenticados[$from->resourceId])) {
+            echo "Token autenticado: " . $this->autenticados[$from->resourceId] . "\n";
+
+            // Obtener el user_id (emisor) para pasarlo junto con el token
+            if (isset($data['emisor'])) {
+                $user_id = $data['emisor'];
+                $this->guardarMensajeEnWordPress($data, $this->autenticados[$from->resourceId], $user_id);
+            } else {
+                echo "Error: No se proporcionó un emisor en los datos\n";
+            }
+        } else {
+            echo "Error: No se encontró un token autenticado para la conexión {$from->resourceId}\n";
+        }
+    }
+
+
+    private function guardarMensajeEnWordPress($data, $token, $user_id)
+    {
+        echo "Datos a enviar a WordPress: " . json_encode($data) . "\n";
+        echo "Token usado para autenticar en WordPress: $token\n";
+        echo "User ID usado para autenticar en WordPress: $user_id\n";
+    
+        $url = 'https://2upra.com/wp-json/galle/v2/procesarmensaje';
+        $max_intentos = 5; // Número máximo de intentos
+        $intento_actual = 0;
+    
+        while ($intento_actual < $max_intentos) {
+            // Iniciar cURL
+            $ch = curl_init($url);
+    
+            // Configurar opciones de cURL
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                "X-WP-Token: $token",   // Cambia a X-WP-Token o cualquier nombre adecuado
+                "X-User-ID: $user_id"   // Envía el user_id en los encabezados
+            ]);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    
+            // Ejecutar la solicitud cURL
+            $result = curl_exec($ch);
+            $error = curl_error($ch);
+    
+            // Si cURL tiene éxito
+            if ($result !== FALSE) {
+                echo "Respuesta de WordPress: {$result}\n";
+                curl_close($ch);
+                break; // Salir del bucle si la solicitud es exitosa
+            } else {
+                echo "Error de cURL: No se pudo guardar el mensaje en WordPress. Detalles: {$error}\n";
+                print_r(curl_getinfo($ch)); // Muestra información de depuración sobre la solicitud cURL
+            }
+    
+            curl_close($ch);
+            
+            // Incrementar el contador de intentos
+            $intento_actual++;
+    
+            // Esperar antes de reintentar (opcional)
+            if ($intento_actual < $max_intentos) {
+                sleep(2); // Espera 2 segundos antes de reintentar
+                echo "Reintentando (intento $intento_actual de $max_intentos)...\n";
+            }
+        }
+    
+        if ($intento_actual == $max_intentos) {
+            echo "Se alcanzó el número máximo de intentos. El mensaje no se pudo guardar.\n";
+        }
+    }
     */
 
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null) {
         console.log('enviarMensajeWs: Preparando datos del mensaje para enviar.');
-        
-        const messageData = { emisor, receptor, mensaje, adjunto, metadata };
+
+        const temp_id = Date.now(); // O genera un UUID si prefieres
+
+        const messageData = {emisor, receptor, mensaje, adjunto, metadata, temp_id};
         console.log('enviarMensajeWs: Datos del mensaje preparados: ', messageData);
-    
+
         if (ws?.readyState === WebSocket.OPEN) {
             console.log('enviarMensajeWs: WebSocket está abierto, enviando mensaje...');
             ws.send(JSON.stringify(messageData));
             console.log('enviarMensajeWs: Mensaje enviado correctamente.');
+
+            // Añade el mensaje a la interfaz con el temp_id
+            const listaMensajes = document.querySelector('.listaMensajes');
+            agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto, temp_id);
+            console.log('enviarMensajeWs: Mensaje agregado al chat con temp_id.');
         } else {
             console.error('enviarMensajeWs: WebSocket no está conectado, no se puede enviar el mensaje.');
             alert('No se puede enviar el mensaje, por favor, reinicia la página.');
         }
     }
 
+    function manejarConfirmacionMensajeGuardado(message) {
+        console.log('Mensaje guardado en el servidor:', message);
+
+        // **Actualizar la interfaz de usuario para indicar que el mensaje se guardó**
+        // Busca el mensaje en la lista de mensajes usando el temp_id
+        const listaMensajes = document.querySelector('.listaMensajes');
+        const mensajeElemento = listaMensajes.querySelector(`[data-temp-id="${message.original_message.temp_id}"]`);
+
+        if (mensajeElemento) {
+            // Añade una clase o modifica el elemento para indicar que se ha enviado con éxito
+            mensajeElemento.classList.add('mensajeEnviado');
+
+            // Opcional: Remueve la clase que indica que está pendiente
+            mensajeElemento.classList.remove('mensajePendiente');
+        }
+    }
+
     function setupEnviarMensajeHandler() {
         console.log('setupEnviarMensajeHandler: Inicializando el manejador de eventos para enviar mensajes.');
-    
+
         document.addEventListener('click', event => {
             console.log('setupEnviarMensajeHandler - Evento click: Detectado.');
             if (event.target.matches('.enviarMensaje')) {
-
                 enviarMensaje();
             }
         });
-    
+
         const mensajeInput = document.querySelector('.mensajeContenido');
         mensajeInput.addEventListener('keydown', event => {
             if (event.key === 'Enter' && !event.altKey) {
@@ -633,24 +761,24 @@ function galle() {
                 enviarMensaje();
             }
         });
-    
+
         function enviarMensaje() {
             console.log('enviarMensaje: Iniciando el proceso de envío del mensaje.');
-            
+
             const listaMensajes = document.querySelector('.listaMensajes');
             if (subidaChatProgreso === true) {
                 console.log('enviarMensaje: Subida de chat en progreso, mostrando alerta al usuario.');
                 alert('Por favor espera a que se complete la subida del archivo.');
                 return;
             }
-    
+
             const mensaje = mensajeInput.value;
             if (mensaje.trim() !== '') {
                 console.log('enviarMensaje: Mensaje no vacío, procediendo a enviar.');
-    
+
                 ocultarPreviews();
                 console.log('enviarMensaje: Previews ocultas.');
-    
+
                 let adjunto = null;
                 if (archivoChatId || archivoChatUrl) {
                     adjunto = {
@@ -661,13 +789,14 @@ function galle() {
                     archivoChatId = null;
                     archivoChatUrl = null;
                 }
-    
+
                 enviarMensajeWs(receptor, mensaje, adjunto);
                 console.log(`enviarMensaje: Mensaje enviado a través de WebSocket al receptor ${receptor}.`);
-    
+
+                // aqui hace falta una confirmación visual si el mensaje realmente llega a guardarse
                 agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto);
                 console.log('enviarMensaje: Mensaje agregado al chat.');
-    
+
                 mensajeInput.value = '';
                 const mensajeVistaPrevia = `Tu: ${mensaje}`;
                 actualizarListaConversaciones(receptor, mensajeVistaPrevia);
