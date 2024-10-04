@@ -100,7 +100,6 @@ function opcionesRola($post_id, $post_status, $audio_url)
     return ob_get_clean();
 }
 
-//OPCIONES EN LOS POST
 function opcionesPost($post_id, $author_id)
 {
     $current_user_id = get_current_user_id();
@@ -113,17 +112,13 @@ function opcionesPost($post_id, $author_id)
             <?php if (current_user_can('administrator')) : ?>
                 <button class="eliminarPost" data-post-id="<?php echo $post_id; ?>">Eliminar</button>
                 <button class="editarPost" data-post-id="<?php echo $post_id; ?>">Editar</button>
+                <button class="banearUsuario" data-post-id="<?php echo $post_id; ?>">Banear</button>
             <?php elseif ($current_user_id == $author_id) : ?>
                 <button class="editarPost" data-post-id="<?php echo $post_id; ?>">Editar</button>
                 <button class="eliminarPost" data-post-id="<?php echo $post_id; ?>">Eliminar</button>
-            <?php endif; ?>
-            
-            <button class="reporte" data-post-id="<?php echo $post_id; ?>" tipoContenido="social_post" >Reportar</button>
-
-            <button class="bloquear" data-post-id="<?php echo $post_id; ?>">Bloquear</button>
-
-            <?php if (current_user_can('administrator')) : ?>
-                <button class="banearUsuario" data-post-id="<?php echo $post_id; ?>">Banear</button>
+            <?php else : ?>
+                <button class="reporte" data-post-id="<?php echo $post_id; ?>" tipoContenido="social_post" >Reportar</button>
+                <button class="bloquear" data-post-id="<?php echo $post_id; ?>">Bloquear</button>
             <?php endif; ?>
         </div>
     </div>
