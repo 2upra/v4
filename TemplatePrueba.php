@@ -13,6 +13,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 
         <div id="menuData" style="display:none;" pestanaActual="">
             <div data-tab="Colab"></div>
+            <div data-tab="SubirRola"></div>
         </div>
 
         <div class="tabs">
@@ -21,6 +22,12 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
                 <div class="tab INICIO S4K7I3" id="Colab">
                     <div class="GSDKRA">
                         <div><?php echo colabTest(); ?></div>
+                    </div>
+                </div>
+
+                <div class="tab INICIO S4K7I3" id="SubirRola">
+                    <div class="GSDKRA">
+                        <div><?php echo postRolaForm(); ?></div>
                     </div>
                 </div>
 
