@@ -182,9 +182,12 @@ async function editarPost() {
 
         // Buscar el contenido del post correspondiente en el DOM
         const postContentDiv = document.querySelector(`.thePostContet[data-post-id="${idContenido}"]`);
-        const postContent = postContentDiv ? postContentDiv.innerHTML.trim() : '';
+        let postContent = postContentDiv ? postContentDiv.innerHTML.trim() : '';
 
-        // Insertar el contenido del post en el textarea del modal
+        // Eliminar etiquetas <p> y otras etiquetas innecesarias, manteniendo solo el texto
+        postContent = postContent.replace(/<[^>]+>/g, ''); // Elimina todas las etiquetas HTML
+
+        // Insertar el contenido limpio del post en el textarea del modal
         const mensajeEditTextarea = document.getElementById('mensajeEdit');
         if (mensajeEditTextarea) {
             mensajeEditTextarea.value = postContent;
@@ -199,6 +202,7 @@ async function editarPost() {
         accionClick('#enviarEdit', 'cambiarDescripcion', '¿Estás seguro de que quieres editar este post?', (statusElement, data) => {
             alert('Post editado correctamente');
             if (postContentDiv) {
+                // Actualizar el contenido del post sin etiquetas <p>
                 postContentDiv.innerHTML = mensajeEditTextarea.value;
             }
 
@@ -206,6 +210,7 @@ async function editarPost() {
         });
     }
 }
+
 
 async function bloqueos() {
     async function bloquearUsuario(event, response, post_id) {
