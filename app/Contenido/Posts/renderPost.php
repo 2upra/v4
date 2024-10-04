@@ -67,7 +67,7 @@ function htmlPost($filtro)
                     <?php else: ?>
                         <div class="NERWFB">
                             <div class="YWBIBG">
-                                <div id="thePostContet" data-post-id="<?php echo esc_html($post_id) ?>">
+                                <div class="thePostContet" data-post-id="<?php echo esc_html($post_id) ?>">
                                     <?php the_content(); ?>
                                 </div>
                                 <div>
