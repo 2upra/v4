@@ -323,6 +323,7 @@ function galle() {
         if (mensajes.length === 0) {
             const mensajeVacio = document.createElement('p');
             mensajeVacio.textContent = 'Aún no hay mensajes';
+            mensajeVacio.classList.add('mensajeVacio');
             listaMensajes.appendChild(mensajeVacio);
             return;
         }
