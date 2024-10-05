@@ -606,8 +606,10 @@ function galle() {
 
     //mi duda es que, como recibo una confirmación de que el mensaje realmenete se guardo
     function connectWebSocket() {
+        console.log('Intentando conectar a WebSocket...');
         ws = new WebSocket(wsUrl);
         ws.onopen = () => {
+            console.log('Conectado a WebSocket, enviando autenticación...');
             ws.send(
                 JSON.stringify({
                     emisor,
@@ -617,6 +619,7 @@ function galle() {
             );
             pingInterval = setInterval(() => {
                 if (ws.readyState === WebSocket.OPEN) {
+                    console.log('Enviando ping...');
                     ws.send(JSON.stringify({type: 'ping'}));
                 }
             }, 30000);
@@ -631,15 +634,18 @@ function galle() {
         ws.onmessage = ({data}) => {
             const message = JSON.parse(data);
             if (message.type === 'pong') {
-                // Manejo del ping-pong
+                console.log('Recibido pong, todo bien...');
             } else if (message.type === 'set_emisor') {
+                console.log('Recibido set_emisor, reenviando emisor...');
                 ws.send(JSON.stringify({emisor}));
             } else if (message.type === 'message_saved') {
-                // Manejar la confirmación de que el mensaje se guardó
+                console.log('Recibido message_saved, manejando confirmación de mensaje guardado...');
                 manejarConfirmacionMensajeGuardado(message);
             } else if (message.type === 'message_error') {
+                console.log('Recibido message_error, manejando error...');
                 manejarError(message);
             } else {
+                console.log('Recibido mensaje desconocido, manejando como mensaje WebSocket...');
                 manejarMensajeWebSocket(JSON.stringify(message));
             }
         };
