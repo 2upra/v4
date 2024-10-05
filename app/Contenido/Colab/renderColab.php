@@ -19,7 +19,7 @@ function htmlColab($filtro)
                 <? echo contenidoColab($var); ?>
             <? else: ?>
                 <div class="UICMCG">
-                    <div><? echo tituloColab($var); ?></div>
+                    <div class="MJYQLF"><? echo tituloColab($var); ?></div>
                     <div><? //echo participantesColab($var) ?></div>
                     <div><? //echo opcionesColaActivo($var); ?> </div>
                 </div>
