@@ -14,7 +14,7 @@ function htmlColab($filtro)
     $var = variablesColab($post_id);
     extract($var);
     ob_start();
-    
+
 ?>
 
     <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV"
@@ -28,18 +28,16 @@ function htmlColab($filtro)
                 <? echo contenidoColab($var); ?>
             <? else: ?>
                 <div class="UICMCG">
-                    <div class="MJYQLF">
-                        <? echo tituloColab($var); ?>
-                    </div>
-                        <? echo participantesColab($var) ?>
-                    <div><? //echo opcionesColaActivo($var); ?> </div>
+                    <? echo tituloColab($var); ?>
+                    <? echo participantesColab($var) ?>
+                    <? echo opcionesColaActivo($var); ?>
                 </div>
-                <div><? //echo pestanasColab($var); ?></div>
-                <div><? //echo chatColab($var); ?></div>
-                <div><? //echo archivosColab($var); ?></div>
-                <div><? //echo historialColab($var); ?></div>
-                <div><? //echo comandosColab($var); ?></div>
-                <div><? //echo enviarColab($var);?></div>
+                <? //echo pestanasColab($var); ?>
+                <? //echo chatColab($var); ?>
+                <? //echo archivosColab($var); ?>
+                <? //echo historialColab($var); ?>
+                <? //echo comandosColab($var); ?>
+                <? //echo enviarColab($var);?>
             <? endif; ?>
 
         </div>

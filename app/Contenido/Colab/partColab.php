@@ -6,7 +6,7 @@ function variablesColab($post_id = null)
         global $post;
         $post_id = $post->ID;
     }
-    
+
     $current_user_id = get_current_user_id();
     $colabPostOrigen = get_post_meta($post_id, 'colabPostOrigen', true);
     $colabAutor = get_post_meta($post_id, 'colabAutor', true);
@@ -21,7 +21,7 @@ function variablesColab($post_id = null)
     }
     $imagenPostOp = img($imagenPost, 40, 'all');
 
-    $postTitulo = get_the_title($post_id); 
+    $postTitulo = get_the_title($post_id);
 
     return [
         'post_audio_lite' => $post_audio_lite,
@@ -164,15 +164,17 @@ function tituloColab($var)
     $colabFecha = $var['colabFecha'];
 
     ob_start(); ?>
-
-    <div class="YXJIKK">
-        <img src="<? echo esc_url($imagenPostOp) ?>">
-    </div>
-    <div class="SNVKQC">
-        <p><? echo esc_html($postTitulo) ?></p>
-        <a href="<? echo esc_url(get_permalink()); ?>" class="post-link">
-            <? echo esc_html($colabFecha); ?>
-        </a>
+    
+    <div class="MJYQLF">
+        <div class="YXJIKK">
+            <img src="<? echo esc_url($imagenPostOp) ?>">
+        </div>
+        <div class="SNVKQC">
+            <p><? echo esc_html($postTitulo) ?></p>
+            <a href="<? echo esc_url(get_permalink()); ?>" class="post-link">
+                <? echo esc_html($colabFecha); ?>
+            </a>
+        </div>
     </div>
 
 <? return ob_get_clean();
@@ -191,5 +193,28 @@ function participantesColab($var)
         <img src="<? echo esc_url($colabAutorAvatar); ?>">
     </div>
 <?
+    return ob_get_clean();
+}
+
+function opcionesColabActivo($var)
+{
+    $post_id = $var['post_id'];
+    $colabColaborador = $var['colabColaborador'];
+
+    ob_start();
+?>
+    <button data-post-id="<? echo $post_id; ?>" class="botonsecundario submenucolab"><? echo $GLOBALS['iconotrespuntos']; ?></button>
+
+    <div class="A1806241" id="opcionescolab-<? echo $post_id; ?>">
+        <div class="A1806242">
+
+            <button class="reporte" data-post-id="<? echo $post_id; ?>" tipoContenido="colab">Reportar</button>
+            <button class="bloquear" data-post-id="<? echo $post_id; ?>">Bloquear</button>
+            <button class="mensajeBoton" data-receptor="<? echo $colabColaborador; ?>">Enviar mensaje</button>
+
+        </div>
+    </div>
+<?
+
     return ob_get_clean();
 }
