@@ -38,11 +38,13 @@ function htmlColab($filtro)
                     <? echo participantesColab($var) ?>
                     <? echo opcionesColabActivo($var); ?>
                 </div>
-                <? //echo chatColab($var); ?>
-                <? //echo archivosColab($var); ?>
-                <? //echo historialColab($var); ?>
-                <? //echo comandosColab($var); ?>
-                <? //echo enviarColab($var);?>
+                <div class="MXPLYN">
+                    <? echo chatColab($var); ?>
+                    <? //echo archivosColab($var); ?>
+                    <? //echo historialColab($var); ?>
+                    <? //echo comandosColab($var); ?>
+                    <? //echo enviarColab($var);?>
+                </div>
             <? endif; ?>
 
         </div>
