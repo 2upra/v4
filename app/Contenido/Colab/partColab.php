@@ -164,7 +164,7 @@ function tituloColab($var)
     $colabFecha = $var['colabFecha'];
 
     ob_start(); ?>
-    
+
     <div class="MJYQLF">
         <div class="YXJIKK">
             <img src="<? echo esc_url($imagenPostOp) ?>">

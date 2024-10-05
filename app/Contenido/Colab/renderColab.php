@@ -30,7 +30,7 @@ function htmlColab($filtro)
                 <div class="UICMCG">
                     <? echo tituloColab($var); ?>
                     <? echo participantesColab($var) ?>
-                    <? echo opcionesColaActivo($var); ?>
+                    <? echo opcionesColabActivo($var); ?>
                 </div>
                 <? //echo pestanasColab($var); ?>
                 <? //echo chatColab($var); ?>
