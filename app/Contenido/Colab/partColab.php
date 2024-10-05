@@ -24,6 +24,7 @@ function variablesColab($post_id = null)
     $postTitulo = get_the_title($post_id);
 
     return [
+        'post_id' => $post_id,
         'post_audio_lite' => $post_audio_lite,
         'current_user_id' => $current_user_id,
         'colabPostOrigen' => $colabPostOrigen,
