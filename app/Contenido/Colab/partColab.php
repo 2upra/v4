@@ -14,6 +14,9 @@ function variablesColab($post_id = null)
     $colabMensaje = get_post_meta($post_id, 'colabMensaje', true);
     $colabFileUrl = get_post_meta($post_id, 'colabFileUrl', true);
     $post_audio_lite = get_post_meta($post_id, 'post_audio_lite', true);
+    $imagenPost = get_the_post_thumbnail_url($post_id, 'full');
+    $imagenPostOp = img($imagenPost, 40, 'all');
+    $postTitulo = get_the_title($post_id); // Obtener el título del post
 
     return [
         'post_audio_lite' => $post_audio_lite,
@@ -27,10 +30,14 @@ function variablesColab($post_id = null)
         'colabColaboradorName' => get_the_author_meta('display_name', $colabColaborador),
         'colabColaboradorAvatar' => imagenPerfil($colabColaborador),
         'colabAutorAvatar' => imagenPerfil($colabAutor),
-        'colab_date' => get_the_date('', $post_id),
+        'colabFecha' => get_the_date('', $post_id),
         'colab_status' => get_post_status($post_id),
+        'imagenPostOp' => $imagenPostOp,
+        'postTitulo' => $postTitulo, // Añadir el título del post
     ];
 }
+
+
 
 function audioColab($post_id, $audio_id_lite)
 {
@@ -50,11 +57,17 @@ function audioColab($post_id, $audio_id_lite)
 <?
 }
 
-function opcionesColab($post_id, $colabColaborador, $colabColaboradorAvatar, $colabColaboradorName, $colab_date)
+function opcionesColab($var)
 {
+    $post_id = $var['post_id'];
+    $colabColaborador = $var['colabColaborador'];
+    $colabColaboradorAvatar = $var['colabColaboradorAvatar'];
+    $colabColaboradorName = $var['colabColaboradorName'];
+    $colabFecha = $var['colabFecha'];
     ob_start();
 ?>
     <div class="GFOPNU">
+
         <div class="CBZNGK">
             <a href="<? echo esc_url(get_author_posts_url($colabColaborador)); ?>"></a>
             <img src="<? echo esc_url($colabColaboradorAvatar); ?>">
@@ -66,12 +79,14 @@ function opcionesColab($post_id, $colabColaborador, $colabColaboradorAvatar, $co
                     <? echo esc_html($colabColaboradorName); ?></a>
             </div>
             <div class="HQLXWD">
-                <a href="<? echo esc_url(get_permalink()); ?>" class="post-link"><? echo esc_html($colab_date); ?></a>
+                <a href="<? echo esc_url(get_permalink()); ?>" class="post-link">
+                    <? echo esc_html($colabFecha); ?>
+                </a>
             </div>
         </div>
 
         <div class="flex gap-3 justify-end ml-auto">
-            
+
             <button data-post-id="<? echo $post_id; ?>" class="botonsecundario rechazarcolab">Rechazar</button>
             <button data-post-id="<? echo $post_id; ?>" class="botonprincipal aceptarcolab">Aceptar</button>
             <button data-post-id="<? echo $post_id; ?>" class="botonsecundario submenucolab"><? echo $GLOBALS['iconotrespuntos']; ?></button>
@@ -91,12 +106,17 @@ function opcionesColab($post_id, $colabColaborador, $colabColaboradorAvatar, $co
     return ob_get_clean();
 }
 
-function contenidoColab($post_id, $colabMensaje, $post_audio_lite, $colabFileUrl)
+function contenidoColab($var)
 {
+    $post_id = $var['post_id'];
+    $colabMensaje  = $var['colabMensaje'];
+    $post_audio_lite = $var['post_audio_lite'];
+    $colabFileUrl = $var['colabFileUrl'];
+
     ob_start();
 ?>
     <div class="XZAKCB">
-       
+
         <div class="BCGWEY">
             <span class="badge ver-contenido" data-post-id="<? echo esc_attr($post_id); ?>">Ver contenido</span>
         </div>
@@ -128,4 +148,26 @@ function contenidoColab($post_id, $colabMensaje, $post_audio_lite, $colabFileUrl
     </div>
 <?
     return ob_get_clean();
+}
+
+function tituloColab($var)
+{
+    $post_id = $var['post_id'];
+    $imagenPostOp = $var['imagenPostOp'];
+    $postTitulo = $var['postTitulo'];
+    $colabFecha = $var['colabFecha'];
+
+    ob_start(); ?>
+
+    <div>
+        <img src="<? echo esc_url($imagenPostOp) ?>">
+    </div>
+    <div>
+        <p><? echo esc_html($postTitulo) ?></p>
+        <a href="<? echo esc_url(get_permalink()); ?>" class="post-link">
+            <? echo esc_html($colabFecha); ?>
+        </a>
+    </div>
+
+<? return ob_get_clean();
 }

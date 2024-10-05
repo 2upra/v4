@@ -4,7 +4,7 @@ function htmlColab($filtro)
 {
     $post_id = get_the_ID();
     $var = variablesColab($post_id);
-    extract($var); // extrae variables de $var como $colabColaborador, etc.
+    extract($var);
     ob_start();
 ?>
 
@@ -15,20 +15,20 @@ function htmlColab($filtro)
 
         <div class="colab-content">
             <? if ($filtro === 'colabPendiente'): ?>
-                <? echo opcionesColab($post_id, $colabColaborador, $colabColaboradorAvatar, $colabColaboradorName, $colab_date); ?>
-                <? echo contenidoColab($post_id, $colabMensaje, $post_audio_lite, $colabFileUrl); ?>
+                <? echo opcionesColab($var); ?>
+                <? echo contenidoColab($var); ?>
             <? else: ?>
                 <div>
-                    <div><? //echo tituloColab(); ?></div>
-                    <div><? //echo participantesColab() ?></div>
-                    <div><? //echo opcionesColaActivo($post_id, $colabColaborador, $colabColaboradorAvatar, $colabColaboradorName, $colab_date); ?> </div>
+                    <div><? echo tituloColab($var); ?></div>
+                    <div><? //echo participantesColab($var) ?></div>
+                    <div><? //echo opcionesColaActivo($var); ?> </div>
                 </div>
-                <div><? //echo pestanasColab(); ?></div>
-                <div><? //echo chatColab(); ?></div>
-                <div><? //echo archivosColab(); ?></div>
-                <div><? //echo historialColab(); ?></div>
-                <div><? //echo comandosColab(); ?></div>
-                <div><? //echo enviarColab();?></div>
+                <div><? //echo pestanasColab($var); ?></div>
+                <div><? //echo chatColab($var); ?></div>
+                <div><? //echo archivosColab($var); ?></div>
+                <div><? //echo historialColab($var); ?></div>
+                <div><? //echo comandosColab($var); ?></div>
+                <div><? //echo enviarColab($var);?></div>
             <? endif; ?>
 
         </div>
