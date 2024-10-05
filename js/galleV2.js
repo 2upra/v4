@@ -103,7 +103,7 @@ function galle() {
 
     async function chatColab() {
         const chatColabElements = document.querySelectorAll('.bloqueChatColab');
-
+    
         chatColabElements.forEach(async (chatColabElement) => {
             const postId = chatColabElement.dataset.postId;
             if (!postId) {
@@ -111,19 +111,15 @@ function galle() {
                 return;
             }
             currentPage = 1;
-
+    
             try {
                 const data = await enviarAjax('obtenerChatColab', { colab_id: postId, page: currentPage });
     
                 if (data?.success) {
-                    //no se si si hay una forma facil de identificar cuando no hay mensajes, para mostrar un mensaje aca
                     mostrarMensajes(data.data.mensajes, chatColabElement);
+                    manejarScrollColab(data.data.conversacion, chatColabElement);
     
-                    // Manejar el scroll con el contenedor de mensajes
-                    //manejarScroll(data.data.conversacion, chatColabElement);
-    
-                    // Asegurarse de que el scroll esté al final
-                    //const listaMensajes = chatColabElement.querySelector('.listaMensajes');
+                    const listaMensajes = chatColabElement.querySelector('.listaMensajes');
                     if (listaMensajes) {
                         listaMensajes.scrollTop = listaMensajes.scrollHeight;
                     }
@@ -338,7 +334,7 @@ function galle() {
                 listaMensajes,
                 fechaAnterior,
                 false,
-                mensaje.adjunto // Pasamos el adjunto si lo hay
+                mensaje.adjunto 
             );
     
             fechaAnterior = new Date(mensaje.fecha);
@@ -664,97 +660,6 @@ function galle() {
      *   FUNCIONES PARA ENVIAR MENSAJE
      */
 
-    /*
-
-    public function onOpen(ConnectionInterface $conn)
-    {
-        $this->clients->attach($conn);
-        echo "New connection! ({$conn->resourceId})\n";
-
-        // Envía una instrucción para que el cliente envíe su token de autenticación
-        $conn->send(json_encode(['type' => 'auth', 'message' => 'Por favor, envía tu token de autenticación.']));
-    }
-
-    public function onMessage(ConnectionInterface $from, $msg)
-    {
-        // Log para mostrar el mensaje recibido
-        echo "Mensaje recibido de {$from->resourceId}: " . $msg . "\n";
-    (... codigos relacionado con la verf. de token y autor omitidos)
-            // Guardar el mensaje en WordPress
-        echo "Intentando guardar mensaje en WordPress...\n";
-
-        // Verificar si hay un token autenticado asociado
-        if (isset($this->autenticados[$from->resourceId])) {
-            echo "Token autenticado: " . $this->autenticados[$from->resourceId] . "\n";
-
-            // Obtener el user_id (emisor) para pasarlo junto con el token
-            if (isset($data['emisor'])) {
-                $user_id = $data['emisor'];
-                $this->guardarMensajeEnWordPress($data, $this->autenticados[$from->resourceId], $user_id);
-            } else {
-                echo "Error: No se proporcionó un emisor en los datos\n";
-            }
-        } else {
-            echo "Error: No se encontró un token autenticado para la conexión {$from->resourceId}\n";
-        }
-    }
-
-
-    private function guardarMensajeEnWordPress($data, $token, $user_id)
-    {
-        echo "Datos a enviar a WordPress: " . json_encode($data) . "\n";
-        echo "Token usado para autenticar en WordPress: $token\n";
-        echo "User ID usado para autenticar en WordPress: $user_id\n";
-    
-        $url = 'https://2upra.com/wp-json/galle/v2/procesarmensaje';
-        $max_intentos = 5; // Número máximo de intentos
-        $intento_actual = 0;
-    
-        while ($intento_actual < $max_intentos) {
-            // Iniciar cURL
-            $ch = curl_init($url);
-    
-            // Configurar opciones de cURL
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Content-Type: application/json',
-                "X-WP-Token: $token",   // Cambia a X-WP-Token o cualquier nombre adecuado
-                "X-User-ID: $user_id"   // Envía el user_id en los encabezados
-            ]);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-    
-            // Ejecutar la solicitud cURL
-            $result = curl_exec($ch);
-            $error = curl_error($ch);
-    
-            // Si cURL tiene éxito
-            if ($result !== FALSE) {
-                echo "Respuesta de WordPress: {$result}\n";
-                curl_close($ch);
-                break; // Salir del bucle si la solicitud es exitosa
-            } else {
-                echo "Error de cURL: No se pudo guardar el mensaje en WordPress. Detalles: {$error}\n";
-                print_r(curl_getinfo($ch)); // Muestra información de depuración sobre la solicitud cURL
-            }
-    
-            curl_close($ch);
-            
-            // Incrementar el contador de intentos
-            $intento_actual++;
-    
-            // Esperar antes de reintentar (opcional)
-            if ($intento_actual < $max_intentos) {
-                sleep(2); // Espera 2 segundos antes de reintentar
-                echo "Reintentando (intento $intento_actual de $max_intentos)...\n";
-            }
-        }
-    
-        if ($intento_actual == $max_intentos) {
-            echo "Se alcanzó el número máximo de intentos. El mensaje no se pudo guardar.\n";
-        }
-    }
-    */
 
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null) {
         //console.log('enviarMensajeWs: Preparando datos del mensaje para enviar.');
@@ -1116,6 +1021,25 @@ function galle() {
      */
 
     function manejarScroll(conversacion) {
+        /*este elemento ahora es flexible, si recibe un segundo parametro usa ese valor, pero por defecto es .listaMensajes 
+
+        un ejemplo en otra funcion
+
+        const listaMensajes = contenedor 
+            ? contenedor.querySelector('.listaMensajes') 
+            : document.querySelector('.listaMensajes');
+    
+        if (!listaMensajes) {
+            console.error('No se encontró el contenedor de mensajes.');
+            return;
+        }
+
+        si es un calab tiene que destinguir, porque obtenerChat es para los chat normales pero los chat de Colab son asi
+
+        <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>">
+            <ul class="listaMensajes"></ul>
+        </div>
+        */
         const listaMensajes = document.querySelector('.listaMensajes');
         let puedeDesplazar = true;
         currentPage = 1;
@@ -1136,7 +1060,6 @@ function galle() {
 
                 currentPage++;
 
-                // Realizar la solicitud AJAX solo si hay una conversación válida
                 const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
 
                 if (data?.success) {
@@ -1148,6 +1071,64 @@ function galle() {
                         fechaAnterior = new Date(mensaje.fecha);
                     });
 
+                    const primerMensaje = listaMensajes.querySelector('li');
+                    if (primerMensaje) {
+                        primerMensaje.scrollIntoView();
+                    }
+                } else {
+                    console.error('Error al obtener más mensajes.');
+                }
+            }
+        });
+    }
+
+    function manejarScrollColab(conversacion, contenedor = null) {
+        const listaMensajes = contenedor 
+            ? contenedor.querySelector('.listaMensajes') 
+            : document.querySelector('.listaMensajes');
+    
+        if (!listaMensajes) {
+            console.error('No se encontró el contenedor de mensajes.');
+            return;
+        }
+    
+        let puedeDesplazar = true;
+        let currentPage = 1; // Hacer currentPage específico para esta conversación
+    
+        if (!conversacion) {
+            console.warn('ID de conversación no válida. No se cargará más historial.');
+            return;
+        }
+    
+        listaMensajes.addEventListener('scroll', async e => {
+            if (e.target.scrollTop === 0 && puedeDesplazar) {
+                puedeDesplazar = false;
+    
+                setTimeout(() => {
+                    puedeDesplazar = true;
+                }, 2000);
+    
+                currentPage++;
+    
+                const data = await enviarAjax('obtenerChatColab', {conversacion, page: currentPage});
+    
+                if (data?.success) {
+                    const mensajes = data.data.mensajes;
+                    let fechaAnterior = null;
+    
+                    mensajes.reverse().forEach(mensaje => {
+                        agregarMensajeAlChat(
+                            mensaje.mensaje, 
+                            mensaje.clase, 
+                            mensaje.fecha, 
+                            listaMensajes, 
+                            fechaAnterior, 
+                            true, 
+                            mensaje.adjunto
+                        );
+                        fechaAnterior = new Date(mensaje.fecha);
+                    });
+    
                     const primerMensaje = listaMensajes.querySelector('li');
                     if (primerMensaje) {
                         primerMensaje.scrollIntoView();
