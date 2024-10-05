@@ -638,12 +638,127 @@ function galle() {
             } else if (message.type === 'set_emisor') {
                 console.log('Recibido set_emisor, reenviando emisor...');
                 ws.send(JSON.stringify({emisor}));
-/*************  ✨ Codeium Command 🌟  *************/
             } else if (message.type === 'message_saved') {
+                /*
+                puedes notar que hay 2 tipos de mensajes, uno no regresa conversacion id, y funciona bien, manejarConfirmacionMensajeGuardado(message); lo maneja bien encontrandolo, pero en el caso de que el mensaje llega con conversacion_id la funcion no esta preparada para ese caso
+
+                principalmentep porque los mensajes sin conversacion los encuentra en .listaMensajes y los mensajes con conversacion id estan en un html distinto, se que hay una forma para solucionarlo
+
+                function chatColab($var) {
+                    $post_id = intval($var['post_id']);
+                    $conversacion_id = intval($var['conversacion_id']);
+                    ob_start();
+                ?>
+                    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>">
+                        <ul class="listaMensajes"></ul>
+
+                        <div class="chatEnvio">
+                            <textarea class="mensajeContenidoColab borde" rows="1"></textarea>
+                            <button class="enviarMensajeColab borde" data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">  
+                                <?php echo $GLOBALS['enviarMensaje']; ?>
+                            </button>
+                            <button class="enviarAdjunto" id="enviarAdjunto"><?php echo $GLOBALS['enviarAdjunto']; ?></button>
+                        </div>
+                    </div>
+                <?php
+                    return ob_get_clean();
+                }
+
+                
+                function manejarConfirmacionMensajeGuardado(message) {
+                    const listaMensajes = document.querySelector('.listaMensajes');
+                    const mensajeElemento = listaMensajes.querySelector(`[data-temp-id="${message.original_message.temp_id}"]`);
+
+                    if (mensajeElemento) {
+                        console.log(`manejarConfirmacionMensajeGuardado: Confirmación de mensaje con ID temporal ${message.original_message.temp_id} recibida.`);
+                        console.log(`manejarConfirmacionMensajeGuardado: Agregando clase 'mensajeEnviado' y removiendo clase 'mensajePendiente' al elemento del mensaje.`);
+                        mensajeElemento.classList.add('mensajeEnviado');
+                        mensajeElemento.classList.remove('mensajePendiente');
+                    } else {
+                        console.warn(`manejarConfirmacionMensajeGuardado: No se encontró el elemento del mensaje con ID temporal ${message.original_message.temp_id}.`);
+                    }
+                }
+
+
+
+                Recibido message_saved: Recibido message_saved: 
+                {type: 'message_saved', message_id: null, timestamp: 1728168708, original_message: {…}}
+                message_id
+                : 
+                null
+                original_message
+                : 
+                adjunto
+                : 
+                null
+                conversacion_id
+                : 
+                "12"
+                emisor
+                : 
+                "1"
+                mensaje
+                : 
+                "230"
+                metadata
+                : 
+                null
+                receptor
+                : 
+                null
+                temp_id
+                : 
+                1728168707733
+                timestamp
+                : 
+                1728168708
+                type
+                : 
+                "message_saved"
+                [[Prototype]]
+                : 
+                Object
+                galleV2.js?ver=2.0.1.1033008652:644 Recibido message_saved, manejando confirmación de mensaje guardado...
+                Recibido message_saved: 
+                {type: 'message_saved', message_id: null, timestamp: 1728168719, original_message: {…}}
+                message_id
+                : 
+                null
+                original_message
+                : 
+                adjunto
+                : 
+                null
+                conversacion_id
+                : 
+                null
+                emisor
+                : 
+                "1"
+                mensaje
+                : 
+                "230"
+                metadata
+                : 
+                null
+                receptor
+                : 
+                "44"
+                temp_id
+                : 
+                1728168718878
+                timestamp
+                : 
+                1728168719
+                type
+                : 
+                "message_saved"
+                [[Prototype]]
+                : 
+                Object
+                */
                 console.log('Recibido message_saved:', message);
-                console.log('Recibido message_saved, manejando confirmación de mensaje guardado...');
                 manejarConfirmacionMensajeGuardado(message);
-/******  cd985ae8-6581-4739-8b3f-2322b673c6ba  *******/
             } else if (message.type === 'message_error') {
                 console.log('Recibido message_error, manejando error...');
                 manejarError(message);
@@ -678,9 +793,23 @@ function galle() {
     }
 
     function manejarConfirmacionMensajeGuardado(message) {
-        const listaMensajes = document.querySelector('.listaMensajes');
+        let listaMensajes;
+    
+        if (message.original_message.conversacion_id) {
+            const conversacionId = message.original_message.conversacion_id;
+            const bloqueChatColab = document.querySelector(`.bloqueChatColab[data-conversacion-id="${conversacionId}"]`);
+            if (bloqueChatColab) {
+                listaMensajes = bloqueChatColab.querySelector('.listaMensajes');
+            } else {
+                console.warn(`manejarConfirmacionMensajeGuardado: No se encontró el bloqueChatColab con conversacion_id ${conversacionId}.`);
+                return;
+            }
+        } else {
+            listaMensajes = document.querySelector('.listaMensajes');
+        }
+    
         const mensajeElemento = listaMensajes.querySelector(`[data-temp-id="${message.original_message.temp_id}"]`);
-
+    
         if (mensajeElemento) {
             console.log(`manejarConfirmacionMensajeGuardado: Confirmación de mensaje con ID temporal ${message.original_message.temp_id} recibida.`);
             console.log(`manejarConfirmacionMensajeGuardado: Agregando clase 'mensajeEnviado' y removiendo clase 'mensajePendiente' al elemento del mensaje.`);

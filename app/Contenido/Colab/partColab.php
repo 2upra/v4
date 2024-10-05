@@ -226,7 +226,7 @@ function chatColab($var) {
     $conversacion_id = intval($var['conversacion_id']);
     ob_start();
 ?>
-    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>">
+    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>" data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">
         <ul class="listaMensajes"></ul>
 
         <div class="chatEnvio">
@@ -240,5 +240,4 @@ function chatColab($var) {
 <?php
     return ob_get_clean();
 }
-
 
