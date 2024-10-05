@@ -1,7 +1,8 @@
 <?
 
 
-function procesarMensaje($request) {
+function procesarMensaje($request)
+{
     chatLog('Iniciando procesarMensaje');
     $usuario_actual = wp_get_current_user();
     if (!$usuario_actual->exists()) {
@@ -29,11 +30,17 @@ function procesarMensaje($request) {
     $conversacion_id = isset($params['conversacion_id']) ? $params['conversacion_id'] : null;
 
     // Verificar si los parámetros requeridos están presentes
-    if (!$emisor || !$receptor || !$mensaje) {
+    if (!$emisor || !$mensaje) {
         chatLog('Error: Datos incompletos');
         return new WP_Error('datos_incompletos', 'Faltan datos requeridos', array('status' => 400));
     }
 
+    // Verificar que exista al menos `receptor` o `conversacion_id`
+    if (!$receptor && !$conversacion_id) {
+        chatLog('Error: Falta receptor o conversacion_id');
+        return new WP_Error('datos_incompletos', 'Debe proporcionar receptor o conversacion_id', array('status' => 400));
+    }
+    
     // Verificar si el emisor es el mismo que el usuario autenticado
     if ($emisor != $usuario_actual->ID) {
         chatLog('Error: El emisor no coincide con el usuario autenticado. Emisor: ' . $emisor . ', Usuario autenticado: ' . $usuario_actual->ID);
@@ -128,6 +135,3 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
         return false;
     }
 }
-
-
-
