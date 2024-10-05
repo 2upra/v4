@@ -104,22 +104,22 @@ function galle() {
 
     async function chatColab() {
         const chatColabElements = document.querySelectorAll('.bloqueChatColab');
-    
-        chatColabElements.forEach(async (chatColabElement) => {
+
+        chatColabElements.forEach(async chatColabElement => {
             const postId = chatColabElement.dataset.postId;
             if (!postId) {
                 console.error('El elemento no tiene data-post-id.');
                 return;
             }
             currentPage = 1;
-    
+
             try {
-                const data = await enviarAjax('obtenerChatColab', { colab_id: postId, page: currentPage });
-    
+                const data = await enviarAjax('obtenerChatColab', {colab_id: postId, page: currentPage});
+
                 if (data?.success) {
                     mostrarMensajes(data.data.mensajes, chatColabElement);
                     manejarScrollColab(data.data.conversacion, chatColabElement);
-    
+
                     const listaMensajes = chatColabElement.querySelector('.listaMensajes');
                     if (listaMensajes) {
                         listaMensajes.scrollTop = listaMensajes.scrollHeight;
@@ -132,8 +132,6 @@ function galle() {
             }
         });
     }
-    
-    
 
     async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
         try {
@@ -306,17 +304,15 @@ function galle() {
      */
 
     function mostrarMensajes(mensajes, contenedor = null) {
-        const listaMensajes = contenedor 
-            ? contenedor.querySelector('.listaMensajes') 
-            : document.querySelector('.listaMensajes');
-    
+        const listaMensajes = contenedor ? contenedor.querySelector('.listaMensajes') : document.querySelector('.listaMensajes');
+
         if (!listaMensajes) {
             console.error('No se encontró el contenedor de mensajes.');
             return;
         }
-    
+
         listaMensajes.innerHTML = ''; // Limpiamos los mensajes anteriores
-    
+
         if (mensajes.length === 0) {
             const mensajeVacio = document.createElement('p');
             mensajeVacio.textContent = 'Aún no hay mensajes';
@@ -324,20 +320,12 @@ function galle() {
             listaMensajes.appendChild(mensajeVacio);
             return;
         }
-    
+
         let fechaAnterior = null;
-    
+
         mensajes.forEach(mensaje => {
-            agregarMensajeAlChat(
-                mensaje.mensaje,
-                mensaje.clase,
-                mensaje.fecha,
-                listaMensajes,
-                fechaAnterior,
-                false,
-                mensaje.adjunto 
-            );
-    
+            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto);
+
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
@@ -661,35 +649,36 @@ function galle() {
      *   FUNCIONES PARA ENVIAR MENSAJE
      */
 
-
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null, conversacion_id = null, listaMensajes = null) {
-
         const temp_id = Date.now(); // Genera un ID temporal para el mensaje
-        const messageData = { emisor, receptor, mensaje, adjunto, metadata, conversacion_id, temp_id };
-    
+        const messageData = {emisor, receptor, mensaje, adjunto, metadata, conversacion_id, temp_id};
+
         if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(messageData));
-    
+
             // Si no se recibe una listaMensajes específica, usa la lista por defecto en el DOM
             if (!listaMensajes) {
                 listaMensajes = document.querySelector('.listaMensajes');
             }
-    
+
             agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto, temp_id);
         } else {
             console.error('enviarMensajeWs: WebSocket no está conectado, no se puede enviar el mensaje.');
             alert('No se puede enviar el mensaje, por favor, reinicia la página.');
         }
     }
-    
 
     function manejarConfirmacionMensajeGuardado(message) {
         const listaMensajes = document.querySelector('.listaMensajes');
         const mensajeElemento = listaMensajes.querySelector(`[data-temp-id="${message.original_message.temp_id}"]`);
 
         if (mensajeElemento) {
+            console.log(`manejarConfirmacionMensajeGuardado: Confirmación de mensaje con ID temporal ${message.original_message.temp_id} recibida.`);
+            console.log(`manejarConfirmacionMensajeGuardado: Agregando clase 'mensajeEnviado' y removiendo clase 'mensajePendiente' al elemento del mensaje.`);
             mensajeElemento.classList.add('mensajeEnviado');
             mensajeElemento.classList.remove('mensajePendiente');
+        } else {
+            console.warn(`manejarConfirmacionMensajeGuardado: No se encontró el elemento del mensaje con ID temporal ${message.original_message.temp_id}.`);
         }
     }
 
@@ -698,9 +687,14 @@ function galle() {
         const mensajeElemento = listaMensajes.querySelector(`[data-temp-id="${message.original_message.temp_id}"]`);
 
         if (mensajeElemento) {
+            console.error(`manejarError: Error en el mensaje con ID temporal ${message.original_message.temp_id}.`);
+            console.log(`manejarError: Agregando clase 'mensajeError' al elemento del mensaje.`);
             mensajeElemento.classList.add('mensajeError');
+        } else {
+            console.warn(`manejarError: No se encontró el elemento del mensaje con ID temporal ${message.original_message.temp_id}.`);
         }
     }
+
 
     function setupEnviarMensajeHandler() {
         document.addEventListener('click', event => {
@@ -747,83 +741,56 @@ function galle() {
         }
     }
 
-    /*
+    function setupEnviarMensajeColab() {
+        document.addEventListener('click', event => {
+            if (event.target.matches('.enviarMensajeColab')) {
+                enviarMensajeColab(event.target);
+            }
+        });
 
-    pueden haber varias lista de mensajes, como envio la correcta a enviarMensajeWs, tambien, hay que enviar el conversacion_id, que es 
+        const mensajeInput = document.querySelector('.mensajeContenidoColab');
+        mensajeInput.addEventListener('keydown', event => {
+            if (event.key === 'Enter' && !event.altKey) {
+                event.preventDefault();
+                const enviarBtn = document.querySelector('.enviarMensajeColab');
+                enviarMensajeColab(enviarBtn);
+            }
+        });
 
-    asi se suele ver html
-
-function chatColab($var) {
-    $post_id = intval($var['post_id']);
-    $conversacion_id = intval($var['conversacion_id']);
-    ob_start();
-?>
-    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>">
-        <ul class="listaMensajes"></ul>
-
-        <div class="chatEnvio">
-            <textarea class="mensajeContenidoColab" rows="1"></textarea>
-            <button class="enviarMensajeColab" data-onversacion-id=" <?php echo esc_attr($conversacion_id); ?>">  <? echo $GLOBALS['enviarMensaje']; ?></button>
-            <button class="enviarAdjunto" id="enviarAdjunto"><? echo $GLOBALS['enviarAdjunto']; ?></button>
-        </div>
-    </div>
-<?php
-    return ob_get_clean();
-}
-
-
-    */
-
-function setupEnviarMensajeColab() {
-    document.addEventListener('click', event => {
-        if (event.target.matches('.enviarMensajeColab')) {
-            enviarMensajeColab(event.target);
-        }
-    });
-
-    const mensajeInput = document.querySelector('.mensajeContenidoColab');
-    mensajeInput.addEventListener('keydown', event => {
-        if (event.key === 'Enter' && !event.altKey) {
-            event.preventDefault();
-            const enviarBtn = document.querySelector('.enviarMensajeColab');
-            enviarMensajeColab(enviarBtn);
-        }
-    });
-
-    function enviarMensajeColab(button) {
-        if (subidaChatProgreso === true) {
-            alert('Por favor espera a que se complete la subida del archivo.');
-            return;
-        }
-
-        const mensajeInput = button.closest('.chatEnvio').querySelector('.mensajeContenidoColab');
-        const mensaje = mensajeInput.value.trim();
-
-        if (mensaje !== '') {
-            // Obtener el conversacion_id del botón
-            const conversacion_id = button.getAttribute('data-conversacion-id');
-
-            // Obtener la lista de mensajes correspondiente (cercana al botón)
-            const listaMensajes = button.closest('.bloqueChatColab').querySelector('.listaMensajes');
-
-            let adjunto = null;
-            if (archivoChatId || archivoChatUrl) {
-                adjunto = {
-                    archivoChatId: archivoChatId,
-                    archivoChatUrl: archivoChatUrl
-                };
-                archivoChatId = null;
-                archivoChatUrl = null;
+        function enviarMensajeColab(button) {
+            if (subidaChatProgreso === true) {
+                alert('Por favor espera a que se complete la subida del archivo.');
+                return;
             }
 
-            enviarMensajeWs(receptor, mensaje, adjunto, metadata = null, conversacion_id, listaMensajes);
+            const mensajeInput = button.closest('.chatEnvio').querySelector('.mensajeContenidoColab');
+            const mensaje = mensajeInput.value.trim();
 
-            mensajeInput.value = ''; // Limpiar el textarea después de enviar
-        } else {
-            alert('Por favor, ingresa un mensaje.');
+            if (mensaje !== '') {
+                // Obtener el conversacion_id del botón
+                const conversacion_id = button.getAttribute('data-conversacion-id');
+
+                // Obtener la lista de mensajes correspondiente (cercana al botón)
+                const listaMensajes = button.closest('.bloqueChatColab').querySelector('.listaMensajes');
+
+                let adjunto = null;
+                if (archivoChatId || archivoChatUrl) {
+                    adjunto = {
+                        archivoChatId: archivoChatId,
+                        archivoChatUrl: archivoChatUrl
+                    };
+                    archivoChatId = null;
+                    archivoChatUrl = null;
+                }
+
+                enviarMensajeWs(receptor, mensaje, adjunto, (metadata = null), conversacion_id, listaMensajes);
+
+                mensajeInput.value = ''; // Limpiar el textarea después de enviar
+            } else {
+                alert('Por favor, ingresa un mensaje.');
+            }
         }
     }
-}
 
     /*
      *   FUNCIONES PARA CARGAR MAS ADJUNTAR ARCHIVOS
@@ -1116,52 +1083,42 @@ function setupEnviarMensajeColab() {
     }
 
     function manejarScrollColab(conversacion, contenedor = null) {
-        const listaMensajes = contenedor 
-            ? contenedor.querySelector('.listaMensajes') 
-            : document.querySelector('.listaMensajes');
-    
+        const listaMensajes = contenedor ? contenedor.querySelector('.listaMensajes') : document.querySelector('.listaMensajes');
+
         if (!listaMensajes) {
             console.error('No se encontró el contenedor de mensajes.');
             return;
         }
-    
+
         let puedeDesplazar = true;
         let currentPage = 1; // Hacer currentPage específico para esta conversación
-    
+
         if (!conversacion) {
             console.warn('ID de conversación no válida. No se cargará más historial.');
             return;
         }
-    
+
         listaMensajes.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
                 puedeDesplazar = false;
-    
+
                 setTimeout(() => {
                     puedeDesplazar = true;
                 }, 2000);
-    
+
                 currentPage++;
-    
+
                 const data = await enviarAjax('obtenerChatColab', {conversacion, page: currentPage});
-    
+
                 if (data?.success) {
                     const mensajes = data.data.mensajes;
                     let fechaAnterior = null;
-    
+
                     mensajes.reverse().forEach(mensaje => {
-                        agregarMensajeAlChat(
-                            mensaje.mensaje, 
-                            mensaje.clase, 
-                            mensaje.fecha, 
-                            listaMensajes, 
-                            fechaAnterior, 
-                            true, 
-                            mensaje.adjunto
-                        );
+                        agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto);
                         fechaAnterior = new Date(mensaje.fecha);
                     });
-    
+
                     const primerMensaje = listaMensajes.querySelector('li');
                     if (primerMensaje) {
                         primerMensaje.scrollIntoView();
