@@ -31,9 +31,7 @@ function htmlColab($filtro)
                     <div class="MJYQLF">
                         <? echo tituloColab($var); ?>
                     </div>
-                    <div class="JZBLWD">
                         <? echo participantesColab($var) ?>
-                    </div>
                     <div><? //echo opcionesColaActivo($var); ?> </div>
                 </div>
                 <div><? //echo pestanasColab($var); ?></div>
