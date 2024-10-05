@@ -177,3 +177,19 @@ function tituloColab($var)
 
 <? return ob_get_clean();
 }
+
+function participantesColab($var)
+{
+    $post_id = $var['post_id'];
+    $colabColaboradorAvatar = $var['colabColaboradorAvatar'];
+    $colabAutorAvatar = $var['colabAutorAvatar'];
+
+    ob_start();
+?>
+    <div class="LIFVXC">
+        <img src="<? echo esc_url($colabColaboradorAvatar); ?>">
+        <img src="<? echo esc_url($colabAutorAvatar); ?>">
+    </div>
+<?
+    return ob_get_clean();
+}

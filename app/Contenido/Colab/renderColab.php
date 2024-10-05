@@ -1,11 +1,20 @@
 <?
 
+/*
+    TituloColab: 
+    [ ] Que al dar click en la imagen se pueda elegir la imagen del proyecto
+    [ ] Establecer imagenes de proyecto por defecto 
+    [ ] Cambiar el titulo al dar click en el nombre 
+    
+*/
+
 function htmlColab($filtro)
 {
     $post_id = get_the_ID();
     $var = variablesColab($post_id);
     extract($var);
     ob_start();
+    
 ?>
 
     <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV"
@@ -19,8 +28,12 @@ function htmlColab($filtro)
                 <? echo contenidoColab($var); ?>
             <? else: ?>
                 <div class="UICMCG">
-                    <div class="MJYQLF"><? echo tituloColab($var); ?></div>
-                    <div><? //echo participantesColab($var) ?></div>
+                    <div class="MJYQLF">
+                        <? echo tituloColab($var); ?>
+                    </div>
+                    <div class="JZBLWD">
+                        <? echo participantesColab($var) ?>
+                    </div>
                     <div><? //echo opcionesColaActivo($var); ?> </div>
                 </div>
                 <div><? //echo pestanasColab($var); ?></div>
