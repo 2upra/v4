@@ -113,7 +113,7 @@ function galle() {
                 console.error('El elemento no tiene data-post-id.');
                 return;
             }
-    
+            currentPage = 1;
             try {
                 // Hacer la solicitud para obtener los mensajes de chat
                 const data = await enviarAjax('obtenerChatColab', { conversacion: postId, page: currentPage });
@@ -123,10 +123,10 @@ function galle() {
                     mostrarMensajes(data.data.mensajes, chatColabElement);
     
                     // Manejar el scroll con el contenedor de mensajes
-                    manejarScroll(data.data.conversacion, chatColabElement);
+                    //manejarScroll(data.data.conversacion, chatColabElement);
     
                     // Asegurarse de que el scroll esté al final
-                    const listaMensajes = chatColabElement.querySelector('.listaMensajes');
+                    //const listaMensajes = chatColabElement.querySelector('.listaMensajes');
                     if (listaMensajes) {
                         listaMensajes.scrollTop = listaMensajes.scrollHeight;
                     }
