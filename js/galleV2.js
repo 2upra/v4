@@ -102,24 +102,21 @@ function galle() {
      */
 
     async function chatColab() {
-        // Buscar todos los elementos que contienen la clase 'bloqueChatColab'
         const chatColabElements = document.querySelectorAll('.bloqueChatColab');
-        
-        // Recorrer cada elemento para obtener su postId y hacer la solicitud
+
         chatColabElements.forEach(async (chatColabElement) => {
-            // Verificar si el elemento tiene el atributo data-post-id
             const postId = chatColabElement.dataset.postId;
             if (!postId) {
                 console.error('El elemento no tiene data-post-id.');
                 return;
             }
             currentPage = 1;
+
             try {
-                // Hacer la solicitud para obtener los mensajes de chat
                 const data = await enviarAjax('obtenerChatColab', { colab_id: postId, page: currentPage });
     
                 if (data?.success) {
-                    // Pasar el contenedor específico 'chatColabElement' a la función mostrarMensajes
+                    //no se si si hay una forma facil de identificar cuando no hay mensajes, para mostrar un mensaje aca
                     mostrarMensajes(data.data.mensajes, chatColabElement);
     
                     // Manejar el scroll con el contenedor de mensajes
@@ -312,7 +309,6 @@ function galle() {
      */
 
     function mostrarMensajes(mensajes, contenedor = null) {
-        // Si se pasa un contenedor, usamos ese, de lo contrario usamos el predeterminado
         const listaMensajes = contenedor 
             ? contenedor.querySelector('.listaMensajes') 
             : document.querySelector('.listaMensajes');
@@ -323,6 +319,14 @@ function galle() {
         }
     
         listaMensajes.innerHTML = ''; // Limpiamos los mensajes anteriores
+    
+        if (mensajes.length === 0) {
+            const mensajeVacio = document.createElement('p');
+            mensajeVacio.textContent = 'Aún no hay mensajes';
+            listaMensajes.appendChild(mensajeVacio);
+            return;
+        }
+    
         let fechaAnterior = null;
     
         mensajes.forEach(mensaje => {
