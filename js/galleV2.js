@@ -116,7 +116,7 @@ function galle() {
             currentPage = 1;
             try {
                 // Hacer la solicitud para obtener los mensajes de chat
-                const data = await enviarAjax('obtenerChatColab', { conversacion: postId, page: currentPage });
+                const data = await enviarAjax('obtenerChatColab', { colab_id: postId, page: currentPage });
     
                 if (data?.success) {
                     // Pasar el contenedor específico 'chatColabElement' a la función mostrarMensajes
