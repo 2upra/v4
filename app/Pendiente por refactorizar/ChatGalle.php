@@ -1,4 +1,4 @@
-<?php
+<?
 
 //ESTO ESTA PENDIENTE POR REFACTORIZAR
 /*

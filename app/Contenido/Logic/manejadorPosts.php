@@ -1,4 +1,4 @@
-<?php
+<?
 
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {

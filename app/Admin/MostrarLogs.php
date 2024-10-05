@@ -1,4 +1,4 @@
-<?php
+<?
 
 function render_admin_report($buttons, $contents) {
     if (!current_user_can('administrator')) return '';
@@ -6,19 +6,19 @@ function render_admin_report($buttons, $contents) {
     ob_start(); ?>
     <div class="QUHTCR">
         <div class="iconosacciones">
-            <?php foreach ($buttons as $id => $button): ?>
+            <? foreach ($buttons as $id => $button): ?>
                 <button id="<?= $id ?>" style="all:unset">
                     <?= $button['icon'] ?><span><?= $button['label'] ?></span>
                 </button>
-            <?php endforeach; ?>
+            <? endforeach; ?>
         </div>
-        <?php foreach ($contents as $id => $content): ?>
+        <? foreach ($contents as $id => $content): ?>
             <div id="<?= $id ?>" class="transacciones <?= $content['extra_class'] ?>">
                 <?= $content['content'] ?>
             </div>
-        <?php endforeach; ?>
+        <? endforeach; ?>
     </div>
-    <?php
+    <?
     return ob_get_clean();
 }
 

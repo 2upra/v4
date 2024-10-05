@@ -1,4 +1,4 @@
-<?php
+<?
 
 function variablesColab($post_id = null)
 {
@@ -38,16 +38,16 @@ function audioColab($post_id, $audio_id_lite)
     $waveCargada = get_post_meta($post_id, 'waveCargada', true);
     $urlAudioSegura = audioUrlSegura($audio_id_lite)
 ?>
-    <div id="waveform-<?php echo $post_id; ?>"
+    <div id="waveform-<? echo $post_id; ?>"
         class="waveform-container without-image"
-        postIDWave="<?php echo $post_id; ?>"
-        data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
-        data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
-        <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
+        postIDWave="<? echo $post_id; ?>"
+        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
+        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
+        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
         <div class="waveform-message"></div>
         <div class="waveform-loading" style="display: none;">Cargando...</div>
     </div>
-<?php
+<?
 }
 
 function opcionesColab($post_id, $colabColaborador, $colabColaboradorAvatar, $colabColaboradorName, $colab_date)
@@ -56,38 +56,38 @@ function opcionesColab($post_id, $colabColaborador, $colabColaboradorAvatar, $co
 ?>
     <div class="GFOPNU">
         <div class="CBZNGK">
-            <a href="<?php echo esc_url(get_author_posts_url($colabColaborador)); ?>"></a>
-            <img src="<?php echo esc_url($colabColaboradorAvatar); ?>">
+            <a href="<? echo esc_url(get_author_posts_url($colabColaborador)); ?>"></a>
+            <img src="<? echo esc_url($colabColaboradorAvatar); ?>">
         </div>
 
         <div class="ZVJVZA">
             <div class="JHVSFW">
-                <a href="<?php echo esc_url(get_author_posts_url($colabColaborador)); ?>" class="profile-link">
-                    <?php echo esc_html($colabColaboradorName); ?></a>
+                <a href="<? echo esc_url(get_author_posts_url($colabColaborador)); ?>" class="profile-link">
+                    <? echo esc_html($colabColaboradorName); ?></a>
             </div>
             <div class="HQLXWD">
-                <a href="<?php echo esc_url(get_permalink()); ?>" class="post-link"><?php echo esc_html($colab_date); ?></a>
+                <a href="<? echo esc_url(get_permalink()); ?>" class="post-link"><? echo esc_html($colab_date); ?></a>
             </div>
         </div>
 
         <div class="flex gap-3 justify-end ml-auto">
             
-            <button data-post-id="<?php echo $post_id; ?>" class="botonsecundario rechazarcolab">Rechazar</button>
-            <button data-post-id="<?php echo $post_id; ?>" class="botonprincipal aceptarcolab">Aceptar</button>
-            <button data-post-id="<?php echo $post_id; ?>" class="botonsecundario submenucolab"><?php echo $GLOBALS['iconotrespuntos']; ?></button>
+            <button data-post-id="<? echo $post_id; ?>" class="botonsecundario rechazarcolab">Rechazar</button>
+            <button data-post-id="<? echo $post_id; ?>" class="botonprincipal aceptarcolab">Aceptar</button>
+            <button data-post-id="<? echo $post_id; ?>" class="botonsecundario submenucolab"><? echo $GLOBALS['iconotrespuntos']; ?></button>
         </div>
 
-        <div class="A1806241" id="opcionescolab-<?php echo $post_id; ?>">
+        <div class="A1806241" id="opcionescolab-<? echo $post_id; ?>">
             <div class="A1806242">
 
-                <button class="reporte" data-post-id="<?php echo $post_id; ?>" tipoContenido="colab">Reportar</button>
-                <button class="bloquear" data-post-id="<?php echo $post_id; ?>">Bloquear</button>
-                <button class="mensajeBoton" data-receptor="<?php echo $colabColaborador; ?>">Enviar mensaje</button>
+                <button class="reporte" data-post-id="<? echo $post_id; ?>" tipoContenido="colab">Reportar</button>
+                <button class="bloquear" data-post-id="<? echo $post_id; ?>">Bloquear</button>
+                <button class="mensajeBoton" data-receptor="<? echo $colabColaborador; ?>">Enviar mensaje</button>
 
             </div>
         </div>
     </div>
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -98,34 +98,34 @@ function contenidoColab($post_id, $colabMensaje, $post_audio_lite, $colabFileUrl
     <div class="XZAKCB">
        
         <div class="BCGWEY">
-            <span class="badge ver-contenido" data-post-id="<?php echo esc_attr($post_id); ?>">Ver contenido</span>
+            <span class="badge ver-contenido" data-post-id="<? echo esc_attr($post_id); ?>">Ver contenido</span>
         </div>
-        <div class="colabfiles" id="colabfiles-<?php echo esc_attr($post_id); ?>" style="display: none;">
-            <?php if (!empty($post_audio_lite)) : ?>
+        <div class="colabfiles" id="colabfiles-<? echo esc_attr($post_id); ?>" style="display: none;">
+            <? if (!empty($post_audio_lite)) : ?>
                 <div class="DNPHZG">
-                    <?php echo audioColab($post_id, $post_audio_lite); ?>
+                    <? echo audioColab($post_id, $post_audio_lite); ?>
                 </div>
-            <?php else : ?>
+            <? else : ?>
                 <div class="AIWZKN">
-                    <?php if (!empty($colabFileUrl)) : ?>
-                        <?php $file_name = basename($colabFileUrl); ?>
-                        <a href="<?php echo esc_url($colabFileUrl); ?>" download class="file-download no-ajax">
+                    <? if (!empty($colabFileUrl)) : ?>
+                        <? $file_name = basename($colabFileUrl); ?>
+                        <a href="<? echo esc_url($colabFileUrl); ?>" download class="file-download no-ajax">
                             <div class="XQGSAN">
-                                <?php echo $GLOBALS['fileGrande']; ?>
-                                <?php echo esc_html($file_name); ?>
+                                <? echo $GLOBALS['fileGrande']; ?>
+                                <? echo esc_html($file_name); ?>
                             </div>
                         </a>
                         <p class="textoMuyPequeno">
                             El archivo ha sido analizado y no se encontraron virus. Sin embargo, si no confías en la persona que realizó la solicitud, no descargues archivos.
                         </p>
-                        <p class="mensajeColab">Mensaje de solicitud: <?php echo esc_html($colabMensaje); ?></p>
-                    <?php else : ?>
+                        <p class="mensajeColab">Mensaje de solicitud: <? echo esc_html($colabMensaje); ?></p>
+                    <? else : ?>
                         <p>No hay archivo adjunto.</p>
-                    <?php endif; ?>
+                    <? endif; ?>
                 </div>
-            <?php endif; ?>
+            <? endif; ?>
         </div>
     </div>
-<?php
+<?
     return ob_get_clean();
 }

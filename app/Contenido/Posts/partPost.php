@@ -1,4 +1,4 @@
-<?php
+<?
 
 //VARIABLES POSTS
 function variablesPosts($post_id = null)
@@ -54,12 +54,12 @@ function botonseguir($author_id)
 
     ob_start();
 ?>
-    <button class="<?php echo esc_attr($clase_boton); ?>"
-        data-seguidor-id="<?php echo esc_attr($current_user_id); ?>"
-        data-seguido-id="<?php echo esc_attr($author_id); ?>">
-        <?php echo $icono_boton; ?>
+    <button class="<? echo esc_attr($clase_boton); ?>"
+        data-seguidor-id="<? echo esc_attr($current_user_id); ?>"
+        data-seguido-id="<? echo esc_attr($author_id); ?>">
+        <? echo $icono_boton; ?>
     </button>
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -69,34 +69,34 @@ function opcionesRola($post_id, $post_status, $audio_url)
 {
     ob_start();
 ?>
-    <button class="HR695R7" data-post-id="<?php echo $post_id; ?>"><?php echo $GLOBALS['iconotrespuntos']; ?></button>
+    <button class="HR695R7" data-post-id="<? echo $post_id; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
 
-    <div class="A1806241" id="opcionesrola-<?php echo $post_id; ?>">
+    <div class="A1806241" id="opcionesrola-<? echo $post_id; ?>">
         <div class="A1806242">
-            <?php if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'pending_deletion') { ?>
-                <button class="toggle-status-rola" data-post-id="<?php echo $post_id; ?>">Cambiar estado</button>
-            <?php } ?>
+            <? if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'pending_deletion') { ?>
+                <button class="toggle-status-rola" data-post-id="<? echo $post_id; ?>">Cambiar estado</button>
+            <? } ?>
 
-            <?php if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
-                <button class="rechazar-rola" data-post-id="<?php echo $post_id; ?>">Rechazar rola</button>
-            <?php } ?>
+            <? if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
+                <button class="rechazar-rola" data-post-id="<? echo $post_id; ?>">Rechazar rola</button>
+            <? } ?>
 
-            <button class="download-button" data-audio-url="<?php echo $audio_url; ?>" data-filename="<?php echo basename($audio_url); ?>">Descargar</button>
+            <button class="download-button" data-audio-url="<? echo $audio_url; ?>" data-filename="<? echo basename($audio_url); ?>">Descargar</button>
 
-            <?php if ($post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
-                <?php if ($post_status == 'pending') { ?>
-                    <button class="request-deletion" data-post-id="<?php echo $post_id; ?>">Cancelar publicación</button>
-                <?php } else { ?>
-                    <button class="request-deletion" data-post-id="<?php echo $post_id; ?>">Solicitar eliminación</button>
-                <?php } ?>
-            <?php } ?>
+            <? if ($post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
+                <? if ($post_status == 'pending') { ?>
+                    <button class="request-deletion" data-post-id="<? echo $post_id; ?>">Cancelar publicación</button>
+                <? } else { ?>
+                    <button class="request-deletion" data-post-id="<? echo $post_id; ?>">Solicitar eliminación</button>
+                <? } ?>
+            <? } ?>
 
         </div>
     </div>
 
     <div id="modalBackground3" class="modal-background submenu modalBackground2 modalBackground3" style="display: none;"></div>
 
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -107,32 +107,32 @@ function opcionesPost($post_id, $author_id)
     $descarga_permitida = get_post_meta($post_id, 'paraDescarga', true);
     ob_start();
 ?>
-    <button class="HR695R8" data-post-id="<?php echo $post_id; ?>"><?php echo $GLOBALS['iconotrespuntos']; ?></button>
+    <button class="HR695R8" data-post-id="<? echo $post_id; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
 
-    <div class="A1806241" id="opcionespost-<?php echo $post_id; ?>">
+    <div class="A1806241" id="opcionespost-<? echo $post_id; ?>">
         <div class="A1806242">
-            <?php if (current_user_can('administrator')) : ?>
-                <button class="eliminarPost" data-post-id="<?php echo $post_id; ?>">Eliminar</button>
-                <button class="editarPost" data-post-id="<?php echo $post_id; ?>">Editar</button>
-                <button class="banearUsuario" data-post-id="<?php echo $post_id; ?>">Banear</button>
-                <?php if ($audio_id_lite && $descarga_permitida != 1) : ?>
-                    <button class="permitirDescarga" data-post-id="<?php echo $post_id; ?>">Permitir descarga</button>
-                <?php endif; ?>
-            <?php elseif ($current_user_id == $author_id) : ?>
-                <button class="editarPost" data-post-id="<?php echo $post_id; ?>">Editar</button>
-                <button class="eliminarPost" data-post-id="<?php echo $post_id; ?>">Eliminar</button>
-                <?php if ($audio_id_lite && $descarga_permitida != 1) : ?>
-                    <button class="permitirDescarga" data-post-id="<?php echo $post_id; ?>">Permitir descarga</button>
-                <?php endif; ?>
-            <?php else : ?>
-                <button class="reporte" data-post-id="<?php echo $post_id; ?>" tipoContenido="social_post" >Reportar</button>
-                <button class="bloquear" data-post-id="<?php echo $post_id; ?>">Bloquear</button>
-            <?php endif; ?>
+            <? if (current_user_can('administrator')) : ?>
+                <button class="eliminarPost" data-post-id="<? echo $post_id; ?>">Eliminar</button>
+                <button class="editarPost" data-post-id="<? echo $post_id; ?>">Editar</button>
+                <button class="banearUsuario" data-post-id="<? echo $post_id; ?>">Banear</button>
+                <? if ($audio_id_lite && $descarga_permitida != 1) : ?>
+                    <button class="permitirDescarga" data-post-id="<? echo $post_id; ?>">Permitir descarga</button>
+                <? endif; ?>
+            <? elseif ($current_user_id == $author_id) : ?>
+                <button class="editarPost" data-post-id="<? echo $post_id; ?>">Editar</button>
+                <button class="eliminarPost" data-post-id="<? echo $post_id; ?>">Eliminar</button>
+                <? if ($audio_id_lite && $descarga_permitida != 1) : ?>
+                    <button class="permitirDescarga" data-post-id="<? echo $post_id; ?>">Permitir descarga</button>
+                <? endif; ?>
+            <? else : ?>
+                <button class="reporte" data-post-id="<? echo $post_id; ?>" tipoContenido="social_post" >Reportar</button>
+                <button class="bloquear" data-post-id="<? echo $post_id; ?>">Bloquear</button>
+            <? endif; ?>
         </div>
     </div>
 
     <div id="modalBackground4" class="modal-background submenu modalBackground2 modalBackground3" style="display: none;"></div>
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -164,23 +164,23 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
 ?>
     <div class="SOVHBY">
         <div class="CBZNGK">
-            <a href="<?php echo esc_url(get_author_posts_url($author_id)); ?>"></a>
-            <img src="<?php echo esc_url($author_avatar); ?>">
-            <?php echo botonseguir($author_id); ?>
+            <a href="<? echo esc_url(get_author_posts_url($author_id)); ?>"></a>
+            <img src="<? echo esc_url($author_avatar); ?>">
+            <? echo botonseguir($author_id); ?>
         </div>
         <div class="ZVJVZA">
             <div class="JHVSFW">
-                <a href="<?php echo esc_url(get_author_posts_url($author_id)); ?>" class="profile-link">
-                    <?php echo esc_html($author_name); ?></a>
+                <a href="<? echo esc_url(get_author_posts_url($author_id)); ?>" class="profile-link">
+                    <? echo esc_html($author_name); ?></a>
             </div>
             <div class="HQLXWD">
-                <a href="<?php echo esc_url(get_permalink()); ?>" class="post-link"><?php echo esc_html($post_date); ?></a>
+                <a href="<? echo esc_url(get_permalink()); ?>" class="post-link"><? echo esc_html($post_date); ?></a>
             </div>
         </div>
     </div>
-    <?php if ($block || $colab) : ?>
+    <? if ($block || $colab) : ?>
         <div class="OFVWLS">
-            <?php
+            <?
             if ($block) {
                 echo "Exclusive";
             } elseif ($colab) {
@@ -188,11 +188,11 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
             }
             ?>
         </div>
-    <?php endif; ?>
+    <? endif; ?>
     <div class="YBZGPB">
-        <?php echo opcionesPost($post_id, $author_id); ?>
+        <? echo opcionesPost($post_id, $author_id); ?>
     </div>
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -204,18 +204,18 @@ function botonSuscribir($author_id, $author_name, $subscription_price_id = 'pric
 ?>
     <button
         class="ITKSUG"
-        data-offering-user-id="<?php echo esc_attr($author_id); ?>"
-        data-offering-user-login="<?php echo esc_attr($author_name); ?>"
-        data-offering-user-email="<?php echo esc_attr(get_the_author_meta('user_email', $author_id)); ?>"
-        data-subscriber-user-id="<?php echo esc_attr($current_user->ID); ?>"
-        data-subscriber-user-login="<?php echo esc_attr($current_user->user_login); ?>"
-        data-subscriber-user-email="<?php echo esc_attr($current_user->user_email); ?>"
-        data-price="<?php echo esc_attr($subscription_price_id); ?>"
-        data-url="<?php echo esc_url(get_permalink()); ?>">
+        data-offering-user-id="<? echo esc_attr($author_id); ?>"
+        data-offering-user-login="<? echo esc_attr($author_name); ?>"
+        data-offering-user-email="<? echo esc_attr(get_the_author_meta('user_email', $author_id)); ?>"
+        data-subscriber-user-id="<? echo esc_attr($current_user->ID); ?>"
+        data-subscriber-user-login="<? echo esc_attr($current_user->user_login); ?>"
+        data-subscriber-user-email="<? echo esc_attr($current_user->user_email); ?>"
+        data-price="<? echo esc_attr($subscription_price_id); ?>"
+        data-url="<? echo esc_url(get_permalink()); ?>">
         Suscribirse
     </button>
 
-<?php
+<?
 
     return ob_get_clean();
 }
@@ -226,13 +226,13 @@ function botonComentar($post_id)
 ?>
 
     <div class="RTAWOD">
-        <button class="WNLOFT" data-post-id="<?php echo $post_id; ?>">
-            <?php echo $GLOBALS['iconocomentario']; ?>
+        <button class="WNLOFT" data-post-id="<? echo $post_id; ?>">
+            <? echo $GLOBALS['iconocomentario']; ?>
         </button>
     </div>
 
 
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -260,15 +260,15 @@ function audioPost($post_id)
 
     ob_start();
 ?>
-    <div id="audio-container-<?php echo $post_id; ?>" class="audio-container" data-post-id="<?php echo $post_id; ?>" artista-id="<?php echo $post_author_id; ?>">
+    <div id="audio-container-<? echo $post_id; ?>" class="audio-container" data-post-id="<? echo $post_id; ?>" artista-id="<? echo $post_author_id; ?>">
 
         <div class="play-pause-sobre-imagen">
             <img src="https://2upra.com/wp-content/uploads/2024/03/1.svg" alt="Play" style="width: 50px; height: 50px;">
         </div>
 
-        <audio id="audio-<?php echo $post_id; ?>" src="<?php echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"></audio>
+        <audio id="audio-<? echo $post_id; ?>" src="<? echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"></audio>
     </div>
-    <?php
+    <?
     return ob_get_clean();
 }
 
@@ -280,16 +280,16 @@ function wave($audio_url, $audio_id_lite, $post_id)
         $waveCargada = get_post_meta($post_id, 'waveCargada', true);
         $urlAudioSegura = audioUrlSegura($audio_id_lite); // Usando la URL segura
     ?>
-        <div id="waveform-<?php echo $post_id; ?>"
+        <div id="waveform-<? echo $post_id; ?>"
              class="waveform-container without-image"
-             postIDWave="<?php echo $post_id; ?>"
-             data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
-             data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
-            <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
+             postIDWave="<? echo $post_id; ?>"
+             data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
+             data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
+            <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
             <div class="waveform-message"></div>
             <div class="waveform-loading" style="display: none;">Cargando...</div>
         </div>
-    <?php endif;
+    <? endif;
 }
 
 

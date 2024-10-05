@@ -1,4 +1,4 @@
-<?php
+<?
 
 // Función para guardar reporte
 function guardarReporte() {

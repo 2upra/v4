@@ -1,4 +1,4 @@
-<?php
+<?
 /*
 Template Name: dev
 */
@@ -9,24 +9,24 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 ?>
 
 <div id="main">
-    <div id="content" class="<?php echo esc_attr($nologin_class); ?>">
-        <input type="hidden" id="pagina_actual" name="pagina_actual" value="<?php echo esc_attr(get_the_title()); ?>">
+    <div id="content" class="<? echo esc_attr($nologin_class); ?>">
+        <input type="hidden" id="pagina_actual" name="pagina_actual" value="<? echo esc_attr(get_the_title()); ?>">
 
         <div id="menuData" style="display:none;" pestanaActual="">
             <div data-tab="2upra"></div>
-            <?php if (current_user_can('administrator')) : ?>
-            <?php endif; ?>
+            <? if (current_user_can('administrator')) : ?>
+            <? endif; ?>
         </div>
 
-        <?php if (is_user_logged_in()) : ?>
-            <?php echo devlogin(); ?>
-        <?php else : ?>
-            <?php echo dev(); ?>
-        <?php endif; ?>
+        <? if (is_user_logged_in()) : ?>
+            <? echo devlogin(); ?>
+        <? else : ?>
+            <? echo dev(); ?>
+        <? endif; ?>
 
     </div>
 </div>
 
-<?php
+<?
 get_footer();
 ?>

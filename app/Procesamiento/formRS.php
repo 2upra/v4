@@ -1,4 +1,4 @@
-<?php
+<?
 
 function formRs()
 {
@@ -11,9 +11,9 @@ function formRs()
     <div class="bloque" id="formRs">
 
         <div class="W8DK25">
-            <img id="perfil-imagen" src="<?php echo esc_url($urlImagenperfil); ?>" alt="Perfil"
+            <img id="perfil-imagen" src="<? echo esc_url($urlImagenperfil); ?>" alt="Perfil"
                 style="max-width: 50px; max-height: 50px; border-radius: 50%;">
-            <p><?php echo $nombreUsuario ?></p>
+            <p><? echo $nombreUsuario ?></p>
         </div>
 
         <div>
@@ -42,17 +42,17 @@ function formRs()
                 <label class="custom-checkbox">
                     <input type="checkbox" id="descargacheck" name="descargacheck" value="1">
                     <span class="checkmark"></span>
-                    <?php echo $GLOBALS['descargaicono']; ?>
+                    <? echo $GLOBALS['descargaicono']; ?>
                 </label>
                 <label class="custom-checkbox">
                     <input type="checkbox" id="exclusivocheck" name="exclusivocheck" value="1">
                     <span class="checkmark"></span>
-                    <?php echo $GLOBALS['estrella']; ?>
+                    <? echo $GLOBALS['estrella']; ?>
                 </label>
                 <label class="custom-checkbox">
                     <input type="checkbox" id="colabcheck" name="colabcheck" value="1">
                     <span class="checkmark"></span>
-                    <?php echo $GLOBALS['iconocolab']; ?>
+                    <? echo $GLOBALS['iconocolab']; ?>
                 </label>
                 <!--<label class="custom-checkbox">
                     <input type="checkbox" id="momento" name="momento" value="1">
@@ -63,16 +63,16 @@ function formRs()
         </div>
 
         <div class="botonesForm R0A915">
-            <button class="botonicono borde" id="botonAudio"><?php echo $GLOBALS['subiraudio']; ?></button>
+            <button class="botonicono borde" id="botonAudio"><? echo $GLOBALS['subiraudio']; ?></button>
 
-            <button class="botonicono borde" id="botonImagen"><?php echo $GLOBALS['subirimagen']; ?></button>
+            <button class="botonicono borde" id="botonImagen"><? echo $GLOBALS['subirimagen']; ?></button>
 
-            <button class="botonicono borde" id="botonArchivo"><?php echo $GLOBALS['subirarchivo']; ?></button>
+            <button class="botonicono borde" id="botonArchivo"><? echo $GLOBALS['subirarchivo']; ?></button>
 
             <button class="borde" id="enviarRs">Publicar</button>
         </div>
     </div>
 
-<?php
+<?
     return ob_get_clean();
 }

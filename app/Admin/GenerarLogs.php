@@ -1,4 +1,4 @@
-<?php
+<?
 function shortcode_mostrar_logs_para_admin() {
     if (current_user_can('administrator')) {
         ob_start();
@@ -7,7 +7,7 @@ function shortcode_mostrar_logs_para_admin() {
             <h3>Logs Personalizados</h3>
             <ol reversed id="custom-logs-list"></ol>
         </div>
-        <?php
+        <?
         return ob_get_clean();
     }
     return '';
@@ -22,7 +22,7 @@ function shortcode_mostrar_logs_para_admin_w() {
             <h3>Logs de WordPress</h3>
             <ol reversed id="wp-logs-list"></ol>
         </div>
-        <?php
+        <?
         return ob_get_clean();
     }
     return '';

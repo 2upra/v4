@@ -1,4 +1,4 @@
-<?php
+<?
 
 function process_album_post($post_id)
 {

@@ -1,4 +1,4 @@
-<?php
+<?
 
 function colabTabs()
 {
@@ -14,14 +14,14 @@ function colabTabs()
 
             <div class="tab INICIO S4K7I3" id="Colab">
                 <div class="GSDKRA">
-                    <?php echo colab(); ?>
+                    <? echo colab(); ?>
                 </div>
             </div>
 
         </div>
     </div>
 
-<?php
+<?
 
     return ob_get_clean();
 }

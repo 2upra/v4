@@ -1,4 +1,4 @@
-<?php
+<?
 function htmlPost($filtro)
 {
     $post_id = get_the_ID();
@@ -11,67 +11,67 @@ function htmlPost($filtro)
     ob_start();
 ?>
 
-    <li class="POST-<?php echo esc_attr($filtro); ?> EDYQHV"
-        filtro="<?php echo esc_attr($filtro); ?>"
-        id-post="<?php echo get_the_ID(); ?>"
-        autor="<?php echo esc_attr($author_id); ?>">
+    <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV"
+        filtro="<? echo esc_attr($filtro); ?>"
+        id-post="<? echo get_the_ID(); ?>"
+        autor="<? echo esc_attr($author_id); ?>">
 
-        <?php echo fondoPost($filtro, $block, $es_suscriptor, $post_id);  ?>
+        <? echo fondoPost($filtro, $block, $es_suscriptor, $post_id);  ?>
 
-        <?php if ($music): ?>
+        <? if ($music): ?>
             <div class="post-content">
                 <div class="MFQOYC">
-                    <?php echo like($post_id) ?>
-                    <?php echo opcionesRola($post_id, $post_status, $audio_url); ?>
+                    <? echo like($post_id) ?>
+                    <? echo opcionesRola($post_id, $post_status, $audio_url); ?>
                 </div>
                 <div class="KLYJBY">
-                    <?php echo audioPost($post_id) ?>
+                    <? echo audioPost($post_id) ?>
                 </div>
                 <div class="LRKHLC">
                     <div class="XOKALG">
                         <p>
-                            <?php echo $author_name ?>
+                            <? echo $author_name ?>
                         </p>
                         <p>-</p>
-                        <?php the_content(); ?>
+                        <? the_content(); ?>
                     </div>
                 </div>
                 <div class="CPQBEN" style="display: none;">
-                    <div class="CPQBAU"><?php echo $author_name ?></div>
-                    <div class="CPQBCO"><?php the_content(); ?></div>
+                    <div class="CPQBAU"><? echo $author_name ?></div>
+                    <div class="CPQBCO"><? the_content(); ?></div>
                 </div>
             </div>
-        <?php else: ?>
+        <? else: ?>
             <div class="post-content">
                 <div class="JNUZCN">
-                    <?php if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])): ?>
-                        <?php echo infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id, $block, $colab); ?>
-                    <?php else: ?>
+                    <? if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])): ?>
+                        <? echo infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id, $block, $colab); ?>
+                    <? else: ?>
                         <div class="XABLJI">
-                            <?php echo $post_status; ?>
-                            <?php echo opcionesRola($post_id, $post_status, $audio_url); ?>
+                            <? echo $post_status; ?>
+                            <? echo opcionesRola($post_id, $post_status, $audio_url); ?>
                             <div class="CPQBEN" style="display: none;">
-                                <div class="CPQBAU"><?php echo $author_name ?></div>
-                                <div class="CPQBCO"><?php the_content(); ?></div>
+                                <div class="CPQBAU"><? echo $author_name ?></div>
+                                <div class="CPQBCO"><? the_content(); ?></div>
                             </div>
                         </div>
-                    <?php endif; ?>
+                    <? endif; ?>
                 </div>
 
                 <div class="YGWCKC">
-                    <?php if ($block && !$es_suscriptor): ?>
+                    <? if ($block && !$es_suscriptor): ?>
                         <div class="ZHNDDD">
-                            <p>Suscríbete a <?php echo esc_html($author_name); ?> para ver el contenido de este post</p>
-                            <?php echo botonSuscribir($author_id, $author_name); ?>
+                            <p>Suscríbete a <? echo esc_html($author_name); ?> para ver el contenido de este post</p>
+                            <? echo botonSuscribir($author_id, $author_name); ?>
                         </div>
-                    <?php else: ?>
+                    <? else: ?>
                         <div class="NERWFB">
                             <div class="YWBIBG">
-                                <div class="thePostContet" data-post-id="<?php echo esc_html($post_id) ?>">
-                                    <?php the_content(); ?>
+                                <div class="thePostContet" data-post-id="<? echo esc_html($post_id) ?>">
+                                    <? the_content(); ?>
                                 </div>
                                 <div>
-                                    <?php
+                                    <?
                                     //Información bpm - escala- nota 
                                     $key_info = $key ? $key : null;
                                     $scale_info = $scale ? $scale : null;
@@ -84,51 +84,51 @@ function htmlPost($filtro)
                                     ?>
                                 </div>
                             </div>
-                            <?php //POST GENERICO DE RS
+                            <? //POST GENERICO DE RS
                             if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])): ?>
                                 <div class="ZQHOQY">
-                                    <?php wave($audio_url, $audio_id_lite, $post_id); ?>
+                                    <? wave($audio_url, $audio_id_lite, $post_id); ?>
                                 </div>
-                            <?php else: ?>
+                            <? else: ?>
                                 <div class="KLYJBY">
-                                    <?php echo audioPost($post_id) ?>
+                                    <? echo audioPost($post_id) ?>
                                 </div>
-                            <?php endif; ?>
+                            <? endif; ?>
                             <div class="FBKMJD">
                                 <div class="UKVPJI">
 
 
-                                    <div class="tags-container" id="tags-<?php echo get_the_ID(); ?>"></div>
+                                    <div class="tags-container" id="tags-<? echo get_the_ID(); ?>"></div>
                                     <!-- Datos del algoritmo -->
-                                    <p id-post-algoritmo="<?php echo get_the_ID(); ?>" style="display:none;"><?php echo esc_html($datosAlgoritmo); ?></p>
+                                    <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;"><? echo esc_html($datosAlgoritmo); ?></p>
 
-                                    <span class="infoIA-btn" data-post-id="<?php echo get_the_ID(); ?>">Detalles</span>
+                                    <span class="infoIA-btn" data-post-id="<? echo get_the_ID(); ?>">Detalles</span>
 
                                     <!-- Detalles IA -->
-                                    <p id-post-detalles-ia="<?php echo get_the_ID(); ?>" style="display:none;"><?php echo esc_html($detallesIA); ?></p>
+                                    <p id-post-detalles-ia="<? echo get_the_ID(); ?>" style="display:none;"><? echo esc_html($detallesIA); ?></p>
                                 </div>
                             </div>
                         </div>
-                    <?php endif; ?>
+                    <? endif; ?>
                 </div>
 
                 <div class="IZXEPH">
                     <div class="QSORIW">
-                        <?php echo like($post_id) ?>
-                        <?php echo botonComentar($post_id, $colab) ?>
-                        <?php echo botonDescarga($post_id) ?>
-                        <?php echo botonColab($post_id, $colab) ?>
+                        <? echo like($post_id) ?>
+                        <? echo botonComentar($post_id, $colab) ?>
+                        <? echo botonDescarga($post_id) ?>
+                        <? echo botonColab($post_id, $colab) ?>
                     </div>
                 </div>
             </div>
-        <?php endif; ?>
+        <? endif; ?>
     </li>
 
     <li class="comentarios">
-        <?php if (comments_open() || get_comments_number()) : comments_template();
+        <? if (comments_open() || get_comments_number()) : comments_template();
         endif; ?>
     </li>
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -147,20 +147,20 @@ function nohayPost($filtro, $is_ajax)
     ob_start();
 ?>
 
-    <?php if ($filtro === 'momento' || $is_ajax): ?>
+    <? if ($filtro === 'momento' || $is_ajax): ?>
         <div id="no-more-posts"></div>
-        <div id="no-more-posts-two" no-more="<?php echo esc_attr($filtro); ?>"></div>
-    <?php else: ?>
-        <div class="LNVHED no-<?php echo esc_attr($filtro); ?>">
+        <div id="no-more-posts-two" no-more="<? echo esc_attr($filtro); ?>"></div>
+    <? else: ?>
+        <div class="LNVHED no-<? echo esc_attr($filtro); ?>">
             <p>Aún no hay nada aquí</p>
-            <?php if ($filtro === 'rolastatus'): ?>
+            <? if ($filtro === 'rolastatus'): ?>
                 <p>Cuando publiques tu primera rola, aparecerá aquí</p>
-            <?php endif; ?>
+            <? endif; ?>
             <button><a href="https://2upra.com/">Volver al inicio</a></button>
         </div>
-    <?php endif; ?>
+    <? endif; ?>
 
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -232,14 +232,14 @@ add_action('wp_ajax_handle_user_modification', 'handle_user_modification');
 
 /* EL HTML 
 
-            <div class="texto-posts" data-post-id="<?php echo get_the_ID(); ?>">
-                <?php
+            <div class="texto-posts" data-post-id="<? echo get_the_ID(); ?>">
+                <?
                     the_content();
                     echo get_the_tag_list('<div class="post-tags">', ', ', '</div>');
                     if($current_user_id == $post->post_author) {
                 ?>
-                    <button class="edit-post-btn" data-post-id="<?php echo get_the_ID(); ?>"> Editar Contenido</button>
-                <?php } ?>
+                    <button class="edit-post-btn" data-post-id="<? echo get_the_ID(); ?>"> Editar Contenido</button>
+                <? } ?>
             </div>
 
             */

@@ -1,4 +1,4 @@
-<?php
+<?
 //PANEL NUEVO 2.0
 function panel()
 {
@@ -38,40 +38,40 @@ function panel()
         <div class="tabs">
             <div class="tab-content">
                 <div class="tab active" id="rolas" data-post-id="tab1-posts" data-id="unico1">
-                    <?php if ($fan_meta !== '1'): ?>
+                    <? if ($fan_meta !== '1'): ?>
                         <p class="titulorolasenviadas">Tus rolas enviadas</p>
-                        <?php echo do_shortcode('[mostrar_publicaciones_sociales filtro="rolastatus" tab_id="tab1-posts"]'); ?>
-                    <?php else: ?>
+                        <? echo do_shortcode('[mostrar_publicaciones_sociales filtro="rolastatus" tab_id="tab1-posts"]'); ?>
+                    <? else: ?>
                         <p class="titulorolasenviadas">Rolas que te gustan</p>
-                        <?php echo do_shortcode('[mostrar_publicaciones_sociales filtro="likes1" tab_id="tab1-posts"]'); ?>
-                    <?php endif; ?>
+                        <? echo do_shortcode('[mostrar_publicaciones_sociales filtro="likes1" tab_id="tab1-posts"]'); ?>
+                    <? endif; ?>
                 </div>
 
                 <div class="tab" id="eliminadas" data-post-id="tab2-posts" data-id="unico2">
-                    <?php if ($fan_meta !== '1'): ?>
+                    <? if ($fan_meta !== '1'): ?>
                         <p class="titulorolasenviadas">Tus rolas eliminadas</p>
-                        <?php echo do_shortcode('[mostrar_publicaciones_sociales filtro="rolasEliminadas" tab_id="tab2-posts"]'); ?>
-                    <?php else: ?>
+                        <? echo do_shortcode('[mostrar_publicaciones_sociales filtro="rolasEliminadas" tab_id="tab2-posts"]'); ?>
+                    <? else: ?>
                         <p class="titulorolasenviadas">Rolas que te gustan</p>
-                        <?php echo do_shortcode('[mostrar_publicaciones_sociales filtro="likes1" tab_id="tab2-posts"]'); ?>
-                    <?php endif; ?>
+                        <? echo do_shortcode('[mostrar_publicaciones_sociales filtro="likes1" tab_id="tab2-posts"]'); ?>
+                    <? endif; ?>
                 </div>
 
                 <div class="tab" id="rechazadas" data-post-id="tab3-posts" data-id="unico3">
-                    <?php if ($fan_meta !== '1'): ?>
+                    <? if ($fan_meta !== '1'): ?>
                         <p class="titulorolasenviadas">Rolas rechazadas</p>
-                        <?php echo do_shortcode('[mostrar_publicaciones_sociales filtro="rolasRechazadas" tab_id="tab3-posts"]'); ?>
-                    <?php else: ?>
+                        <? echo do_shortcode('[mostrar_publicaciones_sociales filtro="rolasRechazadas" tab_id="tab3-posts"]'); ?>
+                    <? else: ?>
                         <p class="titulorolasenviadas">Rolas que te gustan</p>
-                        <?php echo do_shortcode('[mostrar_publicaciones_sociales filtro="likes1" tab_id="tab3-posts"]'); ?>
-                    <?php endif; ?>
+                        <? echo do_shortcode('[mostrar_publicaciones_sociales filtro="likes1" tab_id="tab3-posts"]'); ?>
+                    <? endif; ?>
                 </div>
             </div>
         </div>
 
     </div>
 
-    <?php
+    <?
     return ob_get_clean();
 }
 

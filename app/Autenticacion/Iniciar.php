@@ -1,4 +1,4 @@
-<?php
+<?
 
 function iniciar_sesion() {
     if (is_user_logged_in()) return '<div>Ya has iniciado sesión. ¿Quieres cerrar sesión? <a href="' . wp_logout_url(home_url()) . '">Cerrar sesión</a></div>';
@@ -34,13 +34,13 @@ function iniciar_sesion() {
                     <button type="button" class="R0A915 A1 A2 boton-registro">Registrarme</button>
                     <button type="button" class="R0A915 A1 boton-cerrar">Volver</button>
                 </div>
-                <?php echo $mensaje; ?>
+                <? echo $mensaje; ?>
             </div>
         </form>
         <div class="RFZJUH">
-            <div class="HPUYVS" id="fondograno"><?php echo $GLOBALS['iconologo1']; ?></div>
+            <div class="HPUYVS" id="fondograno"><? echo $GLOBALS['iconologo1']; ?></div>
         </div>
     </div>
-    <?php
+    <?
     return ob_get_clean();
 }

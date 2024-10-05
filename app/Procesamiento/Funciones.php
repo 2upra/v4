@@ -1,4 +1,4 @@
-<?php
+<?
 
 function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
 {

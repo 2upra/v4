@@ -1,4 +1,4 @@
-<?php
+<?
 if (!is_user_logged_in()) {
 } else {
     $usuario = wp_get_current_user();
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 }
 ?>
 <!DOCTYPE html>
-<html <?php language_attributes(); ?>>
+<html <? language_attributes(); ?>>
 
 <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -50,67 +50,67 @@ if (!defined('ABSPATH')) {
             overflow: hidden;
         }
     </style>
-    <?php wp_head(); ?>
+    <? wp_head(); ?>
 </head>
 
-<body <?php body_class(); ?>>
+<body <? body_class(); ?>>
     <div id="preloader">
         <div class="loader-content">
-            <?php echo $GLOBALS['iconologo1']; ?>
+            <? echo $GLOBALS['iconologo1']; ?>
         </div>
     </div>
     <header>
 
-        <?php if (is_page('asley')) : ?>
+        <? if (is_page('asley')) : ?>
             <style>
                 #menu1 {
                     display: none;
                 }
             </style>
-        <?php else : ?>
+        <? else : ?>
 
-            <?php if (is_user_logged_in()) : ?>
+            <? if (is_user_logged_in()) : ?>
 
                 <nav id="menu1" class="menu-container">
                     <div class="logomenu">
-                        <?php echo $GLOBALS['iconologo']; ?>
+                        <? echo $GLOBALS['iconologo']; ?>
                     </div>
 
                     <div class="centermenu">
 
                         <div class="menu-item">
                             <a href="https://2upra.com/">
-                                <?php echo $GLOBALS['iconoinicio']; ?>
+                                <? echo $GLOBALS['iconoinicio']; ?>
                             </a>
                         </div>
 
                         <div class="xaxa1 menu-item">
                             <a href="https://2upra.com/sello">
-                                <?php echo $GLOBALS['icononube']; ?>
+                                <? echo $GLOBALS['icononube']; ?>
                             </a>
                         </div>
 
                         <div class="subiricono menu-item" id="subiricono">
                             <a>
-                                <?php echo $GLOBALS['subiricono']; ?>
+                                <? echo $GLOBALS['subiricono']; ?>
                             </a>
                         </div>
 
                         <div class="menu-item">
                             <a href="https://2upra.com/mu">
-                                <?php echo $GLOBALS['iconomusic']; ?>
+                                <? echo $GLOBALS['iconomusic']; ?>
                             </a>
                         </div>
 
                         <div class="menu-item iconocolab">
                             <a href="https://2upra.com/colabs">
-                                <?php echo $GLOBALS['iconocolab']; ?>
+                                <? echo $GLOBALS['iconocolab']; ?>
                             </a>
                         </div>
 
                         <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil mipsubmenu">
                             <a>
-                                <img src="<?php echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
+                                <img src="<? echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
                             </a>
                         </div>
 
@@ -121,13 +121,13 @@ if (!defined('ABSPATH')) {
 
                         <div class="menu-item iconoconfig">
                             <a href="https://2upra.com/config">
-                                <?php echo $GLOBALS['configicono']; ?>
+                                <? echo $GLOBALS['configicono']; ?>
                             </a>
                         </div>
 
                         <div class="xaxa1 menu-item">
                             <a>
-                                <?php echo do_shortcode('[mostrar_notificaciones]'); ?>
+                                <? echo do_shortcode('[mostrar_notificaciones]'); ?>
                             </a>
                         </div>
 
@@ -148,27 +148,27 @@ if (!defined('ABSPATH')) {
 
                         <div class="xaxa1 menu-item iconoperfil prostatus0" id="btnpro">
                             <a>
-                                <?php echo $GLOBALS['pro']; ?>
+                                <? echo $GLOBALS['pro']; ?>
                             </a>
                         </div>
 
                         <div class="xaxa1 menu-item iconoperfil chatIcono" id="chatIcono">
                             <a>
-                                <?php echo $GLOBALS['chatIcono']; ?>
+                                <? echo $GLOBALS['chatIcono']; ?>
                             </a>
                         </div>
 
                         <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil">
                             <a href="https://2upra.com/perfil">
-                                <img src="<?php echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
+                                <img src="<? echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
                             </a>
                         </div>
 
                     </div>
                 </nav>
-            <?php else : ?>
-            <?php endif; ?>
-        <?php endif; ?>
+            <? else : ?>
+            <? endif; ?>
+        <? endif; ?>
 
 
     </header>
@@ -181,9 +181,9 @@ if (!defined('ABSPATH')) {
 
             <div class="bloquesChatTest">
                 <div class="bloqueChatReiniciar">
-                    <?php echo conversacionesUsuario($user_id) ?>
+                    <? echo conversacionesUsuario($user_id) ?>
                 </div>
-                <?php echo renderChat() ?>
+                <? echo renderChat() ?>
             </div>
 
             <!-- Modal para editar post -->
@@ -255,7 +255,7 @@ if (!defined('ABSPATH')) {
 
 
             <!-- Información usuario -->
-            <?php
+            <?
             $current_user = wp_get_current_user();
             $is_admin = current_user_can('administrator') ? 'true' : 'false';
             $user_email = $current_user->user_email;

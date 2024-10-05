@@ -1,4 +1,4 @@
-<?php
+<?
 
 function socialTabs()
 {
@@ -20,16 +20,16 @@ function socialTabs()
                         <div class="K51M22">
 
                             <div class="PODOVV">
-                                <?php // echo momentosfijos() 
+                                <? // echo momentosfijos() 
                                 ?>
                             </div>
                         </div>
                         <div class="M0883I">
-                            <?php echo formRs(); ?>
+                            <? echo formRs(); ?>
                         </div>
 
                         <div class="FEDAG5">
-                            <?php echo publicaciones(['filtro' => 'nada', 'posts' => 10]); ?>
+                            <? echo publicaciones(['filtro' => 'nada', 'posts' => 10]); ?>
                         </div>
                     </div>
                 </div>
@@ -37,13 +37,13 @@ function socialTabs()
 
             <!-- Contenido visible para todos los usuarios -->
             <div class="tab S4K7I3" id="Proyecto">
-                <?php echo devlogin(); ?>
+                <? echo devlogin(); ?>
             </div>
 
         </div>
     </div>
 
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -58,16 +58,16 @@ function momentosfijos()
     $imagenTres = "https://images.ctfassets.net/kftzwdyauwt9/3XDJfuQZLCKWAIOleFIFZn/14b93d23652347ee7706eca921e3a716/enterprise.png?w=640&q=90&fm=webp";
 
 ?>
-    <div class="ZCOPHT" style="background-image: url('<?php echo esc_url($imagenUno); ?>');" onclick="window.location.href='https://2upra.com/quehacer';">
+    <div class="ZCOPHT" style="background-image: url('<? echo esc_url($imagenUno); ?>');" onclick="window.location.href='https://2upra.com/quehacer';">
         <p>Que hacer en 2upra</p>
     </div>
-    <div class="ZCOPHT" style="background-image: url('<?php echo esc_url($imagenDos); ?>');" onclick="window.location.href='https://2upra.com/descubrir2upra';">
+    <div class="ZCOPHT" style="background-image: url('<? echo esc_url($imagenDos); ?>');" onclick="window.location.href='https://2upra.com/descubrir2upra';">
         <p>Descubre el proyecto</p>
     </div>
-    <div class="ZCOPHT" style="background-image: url('<?php echo esc_url($imagenTres); ?>');" onclick="window.location.href='https://2upra.com/reglas';">
+    <div class="ZCOPHT" style="background-image: url('<? echo esc_url($imagenTres); ?>');" onclick="window.location.href='https://2upra.com/reglas';">
         <p>Normas y Políticas</p>
     </div>
-<?php
+<?
 
     $contenido = ob_get_clean();
     return $contenido;

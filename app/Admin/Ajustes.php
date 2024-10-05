@@ -1,4 +1,4 @@
-<?php
+<?
 
 // Redirigir URLs con /tag/ a búsqueda personalizada
 function redirect_tag_urls_to_custom_search() {

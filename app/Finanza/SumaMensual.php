@@ -1,4 +1,4 @@
-<?php
+<?
 
 function sumaAcciones($mostrarTodos = false)
 {

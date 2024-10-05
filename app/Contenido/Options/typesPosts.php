@@ -1,4 +1,4 @@
-<?php
+<?
 
 // Registrar estado de publicación: Rechazado y Pendiente de Eliminación
 function register_custom_post_statuses() {

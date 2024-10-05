@@ -1,4 +1,4 @@
-<?php
+<?
 
 function bloquear_y_eliminar_usuarios($usuarios) {
     foreach ($usuarios as $usuario) {

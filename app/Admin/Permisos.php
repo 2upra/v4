@@ -1,4 +1,4 @@
-<?php
+<?
 
 function otorgar_capacidades_roles() {
     global $wp_roles;

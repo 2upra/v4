@@ -1,4 +1,4 @@
-<?php
+<?
 
 function definir_acciones_usuario($usuarios_acciones, $actualizar_si_existe = false)
 {

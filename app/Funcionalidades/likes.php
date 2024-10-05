@@ -1,4 +1,4 @@
-<?php
+<?
 
 function manejarLike() {
     if (!is_user_logged_in()) {
@@ -133,11 +133,11 @@ function like($post_id)
 ?>
     <div class="TJKQGJ botonlike">
         <button class="post-like-button <?= esc_attr($liked_class) ?>" data-post_id="<?= esc_attr($post_id) ?>" data-nonce="<?= wp_create_nonce('like_post_nonce') ?>">
-            <?php echo $GLOBALS['iconoCorazon']; ?>
+            <? echo $GLOBALS['iconoCorazon']; ?>
         </button>
         <span class="like-count"><?= esc_html($like_count) ?></span>
     </div>
-<?php
+<?
     $output = ob_get_clean();
     return $output;
 }

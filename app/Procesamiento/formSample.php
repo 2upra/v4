@@ -1,4 +1,4 @@
-<?php
+<?
 
 // FORMULARIO PARA SUBIR PUBLICACIÓN
 function sample_form()
@@ -89,14 +89,14 @@ function sample_form()
             <div id="validationMessage" class="hidden"></div>
             <input type="hidden" name="action" value="submit_social_post">
             <input type="hidden" name="sample" value="1">
-            <input type="hidden" name="social_post_nonce" value="<?php echo $nonce; ?>" />
+            <input type="hidden" name="social_post_nonce" value="<? echo $nonce; ?>" />
 
 
         </form>
         <div id="uploadProgressContainer" style="position: fixed; bottom: 10px; right: 10px; display: flex; flex-direction: column;"></div>
         <button id="reportarerror" class="reportarerror">Reportar un error</button>
     </div>
-<?php
+<?
     return ob_get_clean();
 }
 add_shortcode('sample_form', 'sample_form');

@@ -1,4 +1,4 @@
-<?php
+<?
 
 function dev()
 {
@@ -33,25 +33,25 @@ function dev()
 
                         <a href="https://github.com/1ndoryu" class="no-ajax">
                             <button class="DZYBQD" id="github-button">
-                                <?php echo $GLOBALS['Github']; ?> GitHub
+                                <? echo $GLOBALS['Github']; ?> GitHub
                             </button>
                         </a>
 
                         <a href="https://chat.whatsapp.com/JOduGKvWGR9KbYfBS9BWGL" class="no-ajax">
                             <button class="DZYBQD" id="whatsapp-button">
-                                <?php echo $GLOBALS['Whatsapp']; ?> WhatsApp
+                                <? echo $GLOBALS['Whatsapp']; ?> WhatsApp
                             </button>
                         </a>
 
-                        <?php botonSponsor() ?>
+                        <? botonSponsor() ?>
 
                     </div>
 
                     <div class="CGUNVP" id="modalregistro">
-                        <?php echo registrar_usuario() ?>
+                        <? echo registrar_usuario() ?>
                     </div>
                     <div class="EJRINA" id="modalsesion">
-                        <?php echo iniciar_sesion() ?>
+                        <? echo iniciar_sesion() ?>
                     </div>
 
                 </div>
@@ -65,7 +65,7 @@ function dev()
 
 
                 <div class="XX1 XX2">
-                    <?php
+                    <?
                     $images = [
                         [
                             'title' => '<strong>Herramientas gratuitas</strong> para artistas: samples, drumkits, VST y más',
@@ -86,58 +86,58 @@ function dev()
                         $optimized_url = img($image['url'], 'medium', 50, 'all');
                     ?>
                         <div class="XXDD">
-                            <div class="spaceimagen index-<?php echo $index; ?>">
-                                <?php if ($index === 0): ?>
+                            <div class="spaceimagen index-<? echo $index; ?>">
+                                <? if ($index === 0): ?>
                                     <div class="KTEPUZ">
                                         <div class="WELODV">
-                                            <img src="<?php echo img('https://2upra.com/wp-content/uploads/1107885577068943408_и.jpg', 40, 'all'); ?>">
+                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/1107885577068943408_и.jpg', 40, 'all'); ?>">
                                             <p>Sample_pack_vol_1.winrar</p>
-                                            <?php echo botonDescargaPrueba(); ?>
+                                            <? echo botonDescargaPrueba(); ?>
                                         </div>
                                         <div class="WELODV KESAYW">
-                                            <img src="<?php echo img('https://2upra.com/wp-content/uploads/1107885577066304428_Magnetic-aura-subliminal.jpg', 40, 'all'); ?>">
+                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/1107885577066304428_Magnetic-aura-subliminal.jpg', 40, 'all'); ?>">
                                             <p>ambient sound.wav</p>
-                                            <?php echo botonDescargaPrueba(); ?>
+                                            <? echo botonDescargaPrueba(); ?>
                                         </div>
                                     </div>
-                                <?php elseif ($index === 1): ?>
+                                <? elseif ($index === 1): ?>
                                     <div class="KTEPUZ JOJLEZ">
                                         <div class="WELODV OQDGCR">
-                                            <img src="<?php echo img('https://2upra.com/wp-content/uploads/2024/05/2.webp', 40, 'all'); ?>">
+                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/05/2.webp', 40, 'all'); ?>">
                                             <p>Wandorius</p>
                                         </div>
                                         <div class="HPDTIR">
-                                            <?php echo $GLOBALS['present1']; ?>
+                                            <? echo $GLOBALS['present1']; ?>
                                         </div>
                                         <div class="WELODV KESAYW OQDGCR">
-                                            <img src="<?php echo img('https://2upra.com/wp-content/uploads/2024/05/1.webp', 40, 'all'); ?>">
+                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/05/1.webp', 40, 'all'); ?>">
                                             <p>Billie Eilish</p>
                                         </div>
                                     </div>
-                                <?php elseif ($index === 3): ?>
+                                <? elseif ($index === 3): ?>
                                     <div class="KTEPUZ UEMOGY">
                                         <div class="WELODV HYEXIH">
-                                            <img src="<?php echo img('https://2upra.com/wp-content/uploads/2024/05/3.jpg', 40, 'all'); ?>">
+                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/05/3.jpg', 40, 'all'); ?>">
                                             <div class="UPYTYH">
                                                 <p>Acceso gratuito a nuestra playlist de lo-fi por 1 mes</p>
                                                 <button>Acceder</button>
                                             </div>
                                         </div>
                                         <div class="WELODV KESAYW HYEXIH">
-                                            <img src="<?php echo img('https://2upra.com/wp-content/uploads/2024/05/4.jpg', 40, 'all'); ?>">
+                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/05/4.jpg', 40, 'all'); ?>">
                                             <div class="UPYTYH">
                                                 <p>ambient sound.wav</p>
                                                 <button>Acceder</button>
                                             </div>
                                         </div>
                                     </div>
-                                <?php else: ?>
-                                    <img src="<?php echo esc_url($optimized_url); ?>" alt="<?php echo esc_attr($image['alt']); ?>">
-                                <?php endif; ?>
+                                <? else: ?>
+                                    <img src="<? echo esc_url($optimized_url); ?>" alt="<? echo esc_attr($image['alt']); ?>">
+                                <? endif; ?>
                             </div>
-                            <h3 class="XXD1"><?php echo wp_kses_post($image['title']); ?></h3>
+                            <h3 class="XXD1"><? echo wp_kses_post($image['title']); ?></h3>
                         </div>
-                    <?php endforeach; ?>
+                    <? endforeach; ?>
                 </div>
 
                 <div class="DAEOXT">
@@ -152,20 +152,20 @@ function dev()
                     <div class="TTVMWQ">
                         <div class="XXDD IUNRBL">
                             <h3 class="XXD1"><strong>Conviértete en patrocinador:</strong> Si te gusta el proyecto, puedes colaborar obteniendo participación creativa, acceso anticipado, contenido exclusivo, reconocimiento y acciones mensuales del proyecto.</h3>
-                            <button class="DZYBQD<?php if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><?php echo $GLOBALS['iconoCorazon']; ?>Patrocinar</button>
+                            <button class="DZYBQD<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><? echo $GLOBALS['iconoCorazon']; ?>Patrocinar</button>
                         </div>
                         <div class="XXDD IUNRBL">
                             <h3 class="XXD1"><strong>Colabora como desarrollador:</strong> Recibirás una compensación acorde a tu participación, que puede incluir reconocimiento, acciones del proyecto o la posibilidad de formar parte del equipo principal y beneficiarte de las ganancias futuras.</h3>
-                            <button class="DZYBQD<?php if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><?php echo $GLOBALS['randomIcono']; ?>Unirte al proyecto</button>
+                            <button class="DZYBQD<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><? echo $GLOBALS['randomIcono']; ?>Unirte al proyecto</button>
                         </div>
                     </div>
 
 
                     <div class="CGUNVP" id="modalregistro">
-                        <?php echo registrar_usuario() ?>
+                        <? echo registrar_usuario() ?>
                     </div>
                     <div class="EJRINA" id="modalsesion">
-                        <?php echo iniciar_sesion() ?>
+                        <? echo iniciar_sesion() ?>
                     </div>
                     <div id="fondonegro"></div>
 
@@ -297,7 +297,7 @@ function dev()
     </div>
 
 
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -314,16 +314,16 @@ function devlogin()
 
 
 
-    <?php if ($acciones > 1 || $pro) : ?>
-        <?php echo panelInversor(); ?>
-    <?php else: ?>
+    <? if ($acciones > 1 || $pro) : ?>
+        <? echo panelInversor(); ?>
+    <? else: ?>
         <div class="UIKMYM">
 
 
 
 
             <div class="WZEFLA">
-                <p>Hola <?php echo esc_html($user_name) ?></p>
+                <p>Hola <? echo esc_html($user_name) ?></p>
             </div>
 
             <div class="OIEODG">
@@ -333,24 +333,24 @@ function devlogin()
             <div class="JUJRQG">
                 <a href="https://github.com/1ndoryu" class="no-ajax">
                     <button class="DZYBQD" id="github-button">
-                        <?php echo $GLOBALS['Github']; ?> GitHub
+                        <? echo $GLOBALS['Github']; ?> GitHub
                     </button>
                 </a>
 
                 <a href="https://chat.whatsapp.com/JOduGKvWGR9KbYfBS9BWGL" class="no-ajax">
                     <button class="DZYBQD" id="whatsapp-button">
-                        <?php echo $GLOBALS['Whatsapp']; ?> WhatsApp
+                        <? echo $GLOBALS['Whatsapp']; ?> WhatsApp
                     </button>
                 </a>
 
             </div>
-        <?php endif; ?>
+        <? endif; ?>
 
         </div>
 
-        <?php if ($pro) : ?>
+        <? if ($pro) : ?>
 
-        <?php else: ?>
+        <? else: ?>
             <div class="DAEOXT">
 
                 <div class="TTVMWQ">
@@ -358,8 +358,8 @@ function devlogin()
                         <h3 class="XXD1"><strong>Conviértete en patrocinador:</strong> Si te gusta el proyecto, puedes colaborar obteniendo participación creativa, acceso anticipado, contenido exclusivo, reconocimiento y acciones mensuales del proyecto.</h3>
 
                         <div class="DZYSQD DZYSQF">
-                            <?php echo botonSponsor() ?>
-                            <?php echo botonComprarAcciones() ?>
+                            <? echo botonSponsor() ?>
+                            <? echo botonComprarAcciones() ?>
                         </div>
 
                     </div>
@@ -367,23 +367,23 @@ function devlogin()
                         <h3 class="XXD1"><strong>Colabora como desarrollador:</strong> Recibirás una compensación acorde a tu participación, que puede incluir reconocimiento, acciones del proyecto o la posibilidad de formar parte del equipo principal y beneficiarte de las ganancias futuras.</h3>
                         <a href="https://chat.whatsapp.com/JOduGKvWGR9KbYfBS9BWGL" class="no-ajax">
                             <div class="DZYSQD DZYSQF">
-                                <button class="DZYBQD unirteproyecto<?php if (!is_user_logged_in()) echo ' boton-sesion'; ?>"><?php echo $GLOBALS['randomIcono']; ?>Unirte al proyecto</button>
+                                <button class="DZYBQD unirteproyecto<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>"><? echo $GLOBALS['randomIcono']; ?>Unirte al proyecto</button>
                             </div>
                         </a>
 
                     </div>
                 </div>
 
-                <?php echo modalComprarAcciones() ?>
+                <? echo modalComprarAcciones() ?>
 
 
 
             </div>
-        <?php endif; ?>
+        <? endif; ?>
 
 
 
-    <?php
+    <?
     return ob_get_clean();
 }
 
@@ -474,7 +474,7 @@ function formularioProgramador()
 
             </form>
         </div>
-    <?php return ob_get_clean();
+    <? return ob_get_clean();
 }
 
 /*

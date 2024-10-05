@@ -1,4 +1,4 @@
-<?php 
+<? 
 
 add_action('wp_ajax_ajustar_zona_horaria', 'ajustar_zona_horaria');
 add_action('wp_ajax_nopriv_ajustar_zona_horaria', 'ajustar_zona_horaria'); 

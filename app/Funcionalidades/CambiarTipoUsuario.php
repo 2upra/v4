@@ -1,4 +1,4 @@
-<?php
+<?
 
 function cambiar_tipo_usuario_callback()
 {

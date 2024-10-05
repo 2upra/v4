@@ -1,4 +1,4 @@
-<?php
+<?
 
 function img($url, $quality = 40, $strip = 'all') {
     // Check if $url is null or empty

@@ -1,4 +1,4 @@
-<?php
+<?
 
 function panelInversor()
 {
@@ -17,7 +17,7 @@ function panelInversor()
 ?>
 
     <div class="XIGFOL">
-        <p>Hola <?php echo $name ?></p>
+        <p>Hola <? echo $name ?></p>
         <p class="GJYGYE">Esta página solo es visible para inversores o sponsors</p>
 
     </div>
@@ -48,47 +48,47 @@ function panelInversor()
         <div class="XFBZWO">
             <div class="flex justify-between items-center">
                 <p class="ZTHAWI">Tu valor actual</p>
-                <?php echo botonComprarAcciones('Comprar') ?>
+                <? echo botonComprarAcciones('Comprar') ?>
             </div>
-            <p class="BFUUUL">$<?php echo number_format($valD, 2, '.', '.'); ?></p>
+            <p class="BFUUUL">$<? echo number_format($valD, 2, '.', '.'); ?></p>
             <div class="GraficoCapital">
-                <?php echo graficoHistorialAcciones() ?>
+                <? echo graficoHistorialAcciones() ?>
             </div>
         </div>
 
         <div class="XFBZWO">
             <p class="ZTHAWI">Valor 2upra</p>
-            <p class="BFUUUL"><?php echo $valEmp ?></p>
+            <p class="BFUUUL"><? echo $valEmp ?></p>
             <div class="GraficoCapital">
-                <?php echo capitalValores() ?>
+                <? echo capitalValores() ?>
             </div>
         </div>
 
         <div class="XFBZWO">
             <p class="ZTHAWI">Valor Acción</p>
-            <p class="BFUUUL"><?php echo $valAcc ?></p>
+            <p class="BFUUUL"><? echo $valAcc ?></p>
             <div class="GraficoCapital">
-                <?php echo bolsavalores() ?>
+                <? echo bolsavalores() ?>
             </div>
         </div>
 
     </div>
 
-    <?php echo modalComprarAcciones() ?>
+    <? echo modalComprarAcciones() ?>
 
-    <?php if (current_user_can('administrator')) : ?>
+    <? if (current_user_can('administrator')) : ?>
     <div class="YXJWYY flex ">
         <div class="XFBZWO">
-            <?php echo formCompraAcciones() ?>
+            <? echo formCompraAcciones() ?>
         </div>
         <div class="XFBZWO">
-            <?php echo calcularAccionPorUsuario() ?>
+            <? echo calcularAccionPorUsuario() ?>
         </div>
     </div>
-    <?php endif; ?>
+    <? endif; ?>
 
 
-<?php
+<?
     $contenido = ob_get_clean();
     return $contenido;
 }

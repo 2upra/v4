@@ -1,4 +1,4 @@
-<?php
+<?
 /*
 Template Name: Config
 */
@@ -9,22 +9,22 @@ get_header();
 
 <div id="main">
     <div id="content">
-        <input type="hidden" id="pagina_actual" name="pagina_actual" value="<?php echo esc_attr(get_the_title()); ?>">
-        <?php if (!is_user_logged_in()): ?>
-            <?php echo do_shortcode('[inicio]'); ?>
-        <?php else: ?>
+        <input type="hidden" id="pagina_actual" name="pagina_actual" value="<? echo esc_attr(get_the_title()); ?>">
+        <? if (!is_user_logged_in()): ?>
+            <? echo do_shortcode('[inicio]'); ?>
+        <? else: ?>
 
             <div id="menuData" style="display:none;" pestanaActual="">
                 <div data-tab="Configuración"></div>
-                <?php if (current_user_can('administrator')) : ?>
-                <?php endif; ?>
+                <? if (current_user_can('administrator')) : ?>
+                <? endif; ?>
             </div>
 
-            <?php echo config() ?>
+            <? echo config() ?>
 
-        <?php endif; ?>
+        <? endif; ?>
     </div>
 </div>
-<?php
+<?
 get_footer();
 ?>

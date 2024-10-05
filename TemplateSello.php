@@ -1,4 +1,4 @@
-<?php
+<?
 /*
 Template Name: Sello
 */
@@ -8,12 +8,12 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 ?>
 
 <div id="main">
-    <div id="content" class="<?php echo esc_attr($nologin_class); ?>">
-        <input type="hidden" id="pagina_actual" name="pagina_actual" value="<?php echo esc_attr(get_the_title()); ?>">
-        <?php if (!is_user_logged_in()):
+    <div id="content" class="<? echo esc_attr($nologin_class); ?>">
+        <input type="hidden" id="pagina_actual" name="pagina_actual" value="<? echo esc_attr(get_the_title()); ?>">
+        <? if (!is_user_logged_in()):
             // Aqui hace falta una pagina que indique debe iniciar seccion para ver sus rolas
         ?>
-        <?php else: ?>
+        <? else: ?>
 
             <div id="menuData" style="display:none;">
                 <div data-tab="Rolas"></div>
@@ -21,11 +21,11 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
                 <div data-tab="Rechazadas"></div>
             </div>
             <div class="P0390VU">
-                <?php echo panel() ?>
+                <? echo panel() ?>
             </div>
-        <?php endif; ?>
+        <? endif; ?>
     </div>
 </div>
-<?php
+<?
 get_footer();
 ?>

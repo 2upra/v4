@@ -1,4 +1,4 @@
-<?php
+<?
 
 function reproductor()
 {
@@ -25,27 +25,27 @@ function reproductor()
                 </div>
                 <div class="PQWXDA">
                     <button class="prev-btn">
-                        <?php echo $GLOBALS['anterior']; ?>
+                        <? echo $GLOBALS['anterior']; ?>
                     </button>
                     <button class="play-btn">
-                        <?php echo $GLOBALS['play']; ?>
+                        <? echo $GLOBALS['play']; ?>
                     </button>
                     <button class="pause-btn" style="display: none;">
-                        <?php echo $GLOBALS['pause']; ?>
+                        <? echo $GLOBALS['pause']; ?>
                     </button>
                     <button class="next-btn">
-                        <?php echo $GLOBALS['siguiente']; ?>
+                        <? echo $GLOBALS['siguiente']; ?>
                     </button>
                     <div class="BSUXDA">
                         <button class="JMFCAI">
-                            <?php echo $GLOBALS['volumen']; ?>
+                            <? echo $GLOBALS['volumen']; ?>
                         </button>
                         <div class="TGXRDF">
                             <input type="range" class="volume-control" min="0" max="1" step="0.01" value="1">
                         </div>
                     </div>
                     <button class="PCNLEZ">
-                        <?php echo $GLOBALS['cancelicon']; ?>
+                        <? echo $GLOBALS['cancelicon']; ?>
                     </button>
                 </div>
 
@@ -53,7 +53,7 @@ function reproductor()
 
         </div>
     </div>
-<?php
+<?
 
 }
 add_action('wp_footer', 'reproductor');

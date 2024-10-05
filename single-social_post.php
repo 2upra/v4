@@ -1,5 +1,5 @@
-<?php get_header(); ?>
-<?php
+<? get_header(); ?>
+<?
 $user_id = get_current_user_id();
 $acciones = get_user_meta($user_id, 'acciones', true);
 $nologin_class = !is_user_logged_in() ? ' nologin' : ''; 
@@ -11,13 +11,13 @@ if (have_posts()) :
         ob_start();
 ?>
         <div id="main">
-            <div id="content" class="<?php echo esc_attr($nologin_class); ?>">
+            <div id="content" class="<? echo esc_attr($nologin_class); ?>">
                 <div class="single">
-                    <?php echo htmlPost($filtro); ?>
+                    <? echo htmlPost($filtro); ?>
                 </div>
             </div>
         </div>
-<?php
+<?
         $contenido = ob_get_clean(); // Captura el contenido del buffer y lo limpia
         echo $contenido; // Muestra el contenido capturado
     endwhile;
@@ -26,4 +26,4 @@ else :
 endif;
 ?>
 
-<?php get_footer(); ?>
+<? get_footer(); ?>

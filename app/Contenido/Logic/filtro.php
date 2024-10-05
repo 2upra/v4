@@ -1,4 +1,4 @@
-<?php
+<?
 
 function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
 {

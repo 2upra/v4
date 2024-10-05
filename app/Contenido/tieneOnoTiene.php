@@ -1,4 +1,4 @@
-<?php 
+<? 
 
 function saberSi($user_id) {
     global $wpdb;

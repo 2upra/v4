@@ -1,4 +1,4 @@
-<?php
+<?
 
 // Función para agregar pinkys al usuario
 function agregarPinkys($usuario_id, $cantidad)
@@ -156,19 +156,19 @@ function botonDescarga($post_id)
         if ($usuario_id) {
             ?>
             <div class="ZAQIBB">
-                <button onclick="return procesarDescarga('<?php echo esc_js($post_id); ?>', '<?php echo esc_js($usuario_id); ?>')">
-                    <?php echo $GLOBALS['descargaicono']; ?>
+                <button onclick="return procesarDescarga('<? echo esc_js($post_id); ?>', '<? echo esc_js($usuario_id); ?>')">
+                    <? echo $GLOBALS['descargaicono']; ?>
                 </button>
             </div>
-            <?php
+            <?
         } else {
             ?>
             <div class="ZAQIBB">
                 <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down">
-                    <?php echo $GLOBALS['descargaicono']; ?>
+                    <? echo $GLOBALS['descargaicono']; ?>
                 </button>
             </div>
-            <?php
+            <?
         }
     }
     return ob_get_clean();
@@ -212,9 +212,9 @@ function botonDescargaPrueba()
     ?>
     <div class="ZAQIBB ASDGD8">
         <button>
-            <?php echo $GLOBALS['descargaicono']; ?>
+            <? echo $GLOBALS['descargaicono']; ?>
         </button>
     </div>
-<?php
+<?
     return ob_get_clean();
 }

@@ -1,4 +1,4 @@
-<?php
+<?
 
 
 // Función para manejar la solicitud AJAX
@@ -124,7 +124,7 @@ function renderListaChats($conversaciones, $usuarioId)
 ?>
         <div class="bloqueConversaciones bloque" id="bloqueConversaciones-chatIcono" style="display: none;">
             <ul class="mensajes">
-                <?php
+                <?
                 foreach ($conversaciones as $conversacion):
                     $participantes = json_decode($conversacion->participantes);
                     $otrosParticipantes = array_diff($participantes, [$usuarioId]);
@@ -160,14 +160,14 @@ function renderListaChats($conversaciones, $usuarioId)
                             <span></span>
                         </div>
                     </li>
-                <?php endforeach; ?>
+                <? endforeach; ?>
             </ul>
         </div>
-    <?php
+    <?
     } else {
     ?>
         <p>No tienes conversaciones activas.</p>
-<?php
+<?
     }
 
     $htmlGenerado = ob_get_clean();

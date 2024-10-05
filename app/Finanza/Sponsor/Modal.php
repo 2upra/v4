@@ -1,4 +1,4 @@
-<?php
+<?
 
 function add_pro_modal_to_footer()
 {
@@ -22,8 +22,8 @@ function add_pro_modal_to_footer()
             <p class="titulomodal">Apoya el proyecto y recibe beneficios</p>
         </div>
         <div class="panelperfilsupsec plan2">
-            <p class="tituloplan"><?php echo $plan_title . $highlight; ?></p>
-            <?php echo $modal_content; ?>
+            <p class="tituloplan"><? echo $plan_title . $highlight; ?></p>
+            <? echo $modal_content; ?>
         </div>
     </div>
 
@@ -32,11 +32,11 @@ function add_pro_modal_to_footer()
             <p class="titulomodal">Apoya el proyecto y recibe acciones mensuales</p>
         </div>
         <div class="panelperfilsupsec plan2">
-            <p class="tituloplan"><?php echo $plan_title . $highlight; ?></p>
-            <?php echo $modal_content; ?>
+            <p class="tituloplan"><? echo $plan_title . $highlight; ?></p>
+            <? echo $modal_content; ?>
         </div>
     </div>
     <div id="modalBackground" class="modal-background"></div>
-<?php
+<?
 }
 add_action('wp_footer', 'add_pro_modal_to_footer');

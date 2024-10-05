@@ -1,4 +1,4 @@
-<?php
+<?
 
 function custom_user_profile_shortcode_music() {
     $url_path = trim(parse_url(add_query_arg([]), PHP_URL_PATH), '/');
@@ -234,31 +234,31 @@ function postrolaresumen() {
 
     ob_start();
     ?>
-    <li class="social-post rola" data-post-id="<?php echo get_the_ID(); ?>">
-        <input type="hidden" class="post-id" value="<?php echo get_the_ID(); ?>" />
+    <li class="social-post rola" data-post-id="<? echo get_the_ID(); ?>">
+        <input type="hidden" class="post-id" value="<? echo get_the_ID(); ?>" />
         <div class="rola social-post-content" style="font-size: 13px;">
                     
-            <div id="audio-container-<?php echo get_the_ID(); ?>" class="audio-container" 
-             data-imagen="<?php echo esc_url($post_thumbnail_url); ?>"
-             data-title="<?php echo $post_content; ?>"
-             data-author="<?php echo esc_attr($author_name); ?>"
-             data-post-id="<?php echo get_the_ID(); ?>"
-             data-artist="<?php echo esc_attr($author_id); ?>"
-             data-liked="<?php echo $user_has_liked ? 'true' : 'false'; ?>"
+            <div id="audio-container-<? echo get_the_ID(); ?>" class="audio-container" 
+             data-imagen="<? echo esc_url($post_thumbnail_url); ?>"
+             data-title="<? echo $post_content; ?>"
+             data-author="<? echo esc_attr($author_name); ?>"
+             data-post-id="<? echo get_the_ID(); ?>"
+             data-artist="<? echo esc_attr($author_id); ?>"
+             data-liked="<? echo $user_has_liked ? 'true' : 'false'; ?>"
              style="width: 40px; height: 40px; aspect-ratio: 1 / 1; position: relative;">
 
-                <img class="imagen-post" src="<?php echo esc_url($post_thumbnail_url); ?>" alt="Imagen del post" style="position: absolute; border-radius: 3%; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+                <img class="imagen-post" src="<? echo esc_url($post_thumbnail_url); ?>" alt="Imagen del post" style="position: absolute; border-radius: 3%; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
                 <div class="play-pause-sobre-imagen" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); cursor: pointer; display: none;">
                     <img src="https://2upra.com/wp-content/uploads/2024/03/1.svg" alt="Play" style="width: 50px; height: 50px;"> 
                 </div>
-                <audio id="audio-<?php echo get_the_ID(); ?>" src="<?php echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"></audio>
+                <audio id="audio-<? echo get_the_ID(); ?>" src="<? echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"></audio>
             </div>
 
 
-    <div class="contentrola"><?php the_content(); ?></div>
-    <div class="duracionrola"><?php echo esc_html($duration); ?></div>
+    <div class="contentrola"><? the_content(); ?></div>
+    <div class="duracionrola"><? echo esc_html($duration); ?></div>
     <div class="social-post-like rola">
-        <?php
+        <?
         $current_post_id = get_the_ID();
         $nonce = wp_create_nonce('like_post_nonce');
         $like_count = contarLike($current_post_id);
@@ -267,7 +267,7 @@ function postrolaresumen() {
     </div>
 
 </li>
-  <?php
+  <?
   return ob_get_clean();
 }
 
@@ -299,33 +299,33 @@ function postcover() {
         : wp_get_attachment_image_url($post_thumbnail_id, 'medium');
 
     ?>
-    <li class="social-post cover" data-post-id="<?php echo get_the_ID(); ?>">
-        <input type="hidden" class="post-id" value="<?php echo get_the_ID(); ?>" />
+    <li class="social-post cover" data-post-id="<? echo get_the_ID(); ?>">
+        <input type="hidden" class="post-id" value="<? echo get_the_ID(); ?>" />
         <div class="cover social-post-content" style="font-size: 13px;">
                     
-            <div id="audio-container-<?php echo get_the_ID(); ?>" class="audio-container" 
-             data-imagen="<?php echo esc_url($post_thumbnail_url); ?>"
-             data-title="<?php echo $post_content; ?>"
-             data-author="<?php echo esc_attr($author_name); ?>"
-             data-post-id="<?php echo get_the_ID(); ?>"
-             data-artist="<?php echo esc_attr($author_id); ?>"
-             data-liked="<?php echo $user_has_liked ? 'true' : 'false'; ?>"
+            <div id="audio-container-<? echo get_the_ID(); ?>" class="audio-container" 
+             data-imagen="<? echo esc_url($post_thumbnail_url); ?>"
+             data-title="<? echo $post_content; ?>"
+             data-author="<? echo esc_attr($author_name); ?>"
+             data-post-id="<? echo get_the_ID(); ?>"
+             data-artist="<? echo esc_attr($author_id); ?>"
+             data-liked="<? echo $user_has_liked ? 'true' : 'false'; ?>"
              style="width: 150px;height: 150px;aspect-ratio: 1 / 1;position: relative;/* margin: auto; */">
 
-                <img class="imagen-post" src="<?php echo esc_url($post_thumbnail_url); ?>" alt="Imagen del post" style="position: absolute; border-radius: 3%; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+                <img class="imagen-post" src="<? echo esc_url($post_thumbnail_url); ?>" alt="Imagen del post" style="position: absolute; border-radius: 3%; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
                 <div class="play-pause-sobre-imagen" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); cursor: pointer; display: none;">
                     <img src="https://2upra.com/wp-content/uploads/2024/03/1.svg" alt="Play" style="width: 50px; height: 50px;"> 
                 </div>
-                <audio id="audio-<?php echo get_the_ID(); ?>" src="<?php echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"></audio>
+                <audio id="audio-<? echo get_the_ID(); ?>" src="<? echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"></audio>
             </div>
 
 
-        <div class="contentrola"><?php the_content(); ?></div>
+        <div class="contentrola"><? the_content(); ?></div>
         
     <div class="social-post-like" style="display: none;">
-        <button class="post-like-button <?php echo esc_attr($liked_class); ?>" data-post_id="<?php echo get_the_ID(); ?>" data-nonce="<?php echo wp_create_nonce('like_post_nonce'); ?>"><i class="fa-heart fas"></i></button>           
+        <button class="post-like-button <? echo esc_attr($liked_class); ?>" data-post_id="<? echo get_the_ID(); ?>" data-nonce="<? echo wp_create_nonce('like_post_nonce'); ?>"><i class="fa-heart fas"></i></button>           
     </div>
 </li>
-  <?php
+  <?
   return ob_get_clean();
 }

@@ -1,17 +1,17 @@
-<?php
+<?
 ?>
 
 <!DOCTYPE html>
-<html <?php language_attributes(); ?>>
+<html <? language_attributes(); ?>>
 
 <head>
-	<meta charset="<?php bloginfo('charset'); ?>">
+	<meta charset="<? bloginfo('charset'); ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<?php wp_head(); ?>
+	<? wp_head(); ?>
 </head>
 
-<body <?php body_class(); ?>>
-	<?php wp_body_open(); ?>
+<body <? body_class(); ?>>
+	<? wp_body_open(); ?>
 
 	<div id="main">
 		<div id="content">
@@ -22,7 +22,7 @@
 
 
 
-	<?php wp_footer(); ?>
+	<? wp_footer(); ?>
 </body>
 
 </html>

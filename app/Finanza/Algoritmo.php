@@ -1,4 +1,4 @@
-<?php
+<?
 
 function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
 {

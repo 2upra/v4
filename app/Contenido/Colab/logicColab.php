@@ -1,4 +1,4 @@
-<?php
+<?
 
 //Boton en todos los post
 function botonColab($postId, $colab)

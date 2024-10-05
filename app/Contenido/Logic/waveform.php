@@ -1,4 +1,4 @@
-<?php
+<?
 function save_waveform_image()
 {
     guardarLog('Iniciando la función save_waveform_image.');

@@ -1,4 +1,4 @@
-<?php
+<?
 
 function registrar_usuario() {
     if (is_user_logged_in()) return '<div>Hola.</div>';
@@ -41,17 +41,17 @@ function registrar_usuario() {
                 <label for="tipo_usuario">Tipo de Usuario:</label>
                 <div id="userTypeSelector">
                     <div id="userTypeArtista" class="user-type-option" data-value="artista" onclick="selectUserType('artista')">
-                        <div><?php echo $GLOBALS['iconomusic1']; ?></div>
+                        <div><? echo $GLOBALS['iconomusic1']; ?></div>
                         <div>Artista</div>
                     </div>
                     <div id="userTypeFan" class="user-type-option" data-value="fan" onclick="selectUserType('fan')">
-                        <div><?php echo $GLOBALS['iconoperfil1']; ?></div>
+                        <div><? echo $GLOBALS['iconoperfil1']; ?></div>
                         <div>Fan</div>
                     </div>
                 </div>
                 <input type="hidden" id="tipo_usuario" name="tipo_usuario" required>
                 <p id="errorTipoUsuario" style="color: red; display: none;">Por favor, selecciona un tipo de usuario.</p>
-                <?php echo $mensaje; ?>
+                <? echo $mensaje; ?>
                 <div class="XYSRLL">
                     <input class="R0A915 A1" type="submit" name="registrar_usuario_submit" value="Registrar" onclick="return validarSeleccion()">
                     <button type="button" class="R0A915 A1 boton-cerrar">Volver</button>
@@ -59,10 +59,10 @@ function registrar_usuario() {
             </div>
         </form>
         <div class="RFZJUH">
-            <div class="HPUYVS" id="fondograno"><?php echo $GLOBALS['iconologo1']; ?></div>
+            <div class="HPUYVS" id="fondograno"><? echo $GLOBALS['iconologo1']; ?></div>
         </div>
     </div>
-    <?php
+    <?
     return ob_get_clean();
 }
 

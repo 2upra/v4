@@ -1,4 +1,4 @@
-<?php
+<?
 
 if (!defined('ABSPATH')) {
     exit; // Direct script access denied.
@@ -13,10 +13,10 @@ if (post_password_required()) {
 if (have_comments()) : ?>
     <div id="comments" class="comments-container">
         <ol class="comment-list commentlist">
-            <?php wp_list_comments(['callback' => 'avada_comment']); ?>
+            <? wp_list_comments(['callback' => 'avada_comment']); ?>
         </ol>
 
-        <?php
+        <?
         if (get_comment_pages_count() > 1 && get_option('page_comments')) {
             echo '<nav class="fusion-pagination">';
             paginate_comments_links([
@@ -28,7 +28,7 @@ if (have_comments()) : ?>
         }
         ?>
     </div>
-<?php endif;
+<? endif;
 $post_id = get_the_ID();
 if (comments_open()) {
     $commenter = wp_get_current_commenter();
@@ -37,7 +37,7 @@ if (comments_open()) {
 
     ?>
     <div id="respond" class="comment-respond">
-        <?php
+        <?
 
         $fields = array(
             'author' => '<div class="comment-form-field comment-input-name"><input id="author" name="author" type="text" placeholder="' . __('Name *', 'Avada') . '" value="' . esc_attr($commenter['comment_author']) . '" required="required" /></div>',
@@ -77,7 +77,7 @@ if (comments_open()) {
         comment_form($comments_args);
         ?>
     </div>
-    <?php
+    <?
 }
 
 

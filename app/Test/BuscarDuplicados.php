@@ -1,4 +1,4 @@
-<?php
+<?
 
 function analyze_existing_files()
 {

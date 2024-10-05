@@ -1,4 +1,4 @@
-<?php
+<?
 add_action('rest_api_init', function () {
     register_rest_route('avada/v1', '/crear_sesion_pro', ['methods' => 'POST', 'callback' => 'crear_sesion_pro', 'permission_callback' => '__return_true']);
     register_rest_route('avada/v1', '/stripe_webhook_pro', ['methods' => 'POST', 'callback' => 'stripe_webhook_pro', 'permission_callback' => '__return_true']);

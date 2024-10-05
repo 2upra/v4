@@ -1,4 +1,4 @@
-<?php
+<?
 
 function agregar_acciones_unica_vez($user_id, $monto_pagado, $m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
 {
@@ -44,7 +44,7 @@ function formCompraAcciones() {
         
         <input type="submit" name="submit_acciones" value="Agregar Acciones">
     </form>
-    <?php
+    <?
     if (isset($_POST['submit_acciones'])) {
         $user_id = intval($_POST['user_id']);
         $monto_pagado = floatval($_POST['monto_pagado']);

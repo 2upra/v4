@@ -1,4 +1,4 @@
-<?php
+<?
 
 if (!function_exists('tablasMensaje')) {
     function tablasMensaje()

@@ -1,4 +1,4 @@
-<?php
+<?
 
 /**
  * The footer template.
@@ -15,10 +15,10 @@ if (!defined('ABSPATH')) {
 ?>
 
 <div>
-	<?php wp_footer(); ?>
+	<? wp_footer(); ?>
 </div>
 
-<?php get_template_part('templates/to-top'); ?>
+<? get_template_part('templates/to-top'); ?>
 </body>
 <svg style="display:none;">
   <filter id="pixelate" x="0" y="0">

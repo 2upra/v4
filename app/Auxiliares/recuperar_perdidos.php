@@ -1,4 +1,4 @@
-<?php
+<?
 /*
 add_action('admin_menu', 'ra_add_admin_menu');
 
@@ -12,10 +12,10 @@ function ra_admin_page() {
     <div class="wrap">
         <h1>Recuperar Archivos Perdidos</h1>
         <form method="post" action="">
-            <?php wp_nonce_field('ra_scan_action', 'ra_scan_nonce'); ?>
+            <? wp_nonce_field('ra_scan_action', 'ra_scan_nonce'); ?>
             <input type="submit" name="ra_scan" class="button button-primary" value="Escanear archivos perdidos">
         </form>
-        <?php
+        <?
         if (isset($_POST['ra_scan']) && check_admin_referer('ra_scan_action', 'ra_scan_nonce')) {
             $lost_files = ra_scan_lost_files();
             if (!empty($lost_files)) {
@@ -27,11 +27,11 @@ function ra_admin_page() {
                 echo "</ul>";
                 ?>
                 <form method="post" action="">
-                    <?php wp_nonce_field('ra_recover_action', 'ra_recover_nonce'); ?>
-                    <input type="hidden" name="lost_files" value="<?php echo esc_attr(json_encode($lost_files)); ?>">
+                    <? wp_nonce_field('ra_recover_action', 'ra_recover_nonce'); ?>
+                    <input type="hidden" name="lost_files" value="<? echo esc_attr(json_encode($lost_files)); ?>">
                     <input type="submit" name="ra_recover" class="button button-primary" value="Recuperar archivos">
                 </form>
-                <?php
+                <?
             } else {
                 echo "<p>No se encontraron archivos perdidos.</p>";
             }
@@ -42,7 +42,7 @@ function ra_admin_page() {
         }
         ?>
     </div>
-    <?php
+    <?
 }
 
 // Función para escanear archivos perdidos

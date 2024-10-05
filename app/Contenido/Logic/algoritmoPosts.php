@@ -1,4 +1,4 @@
-<?php
+<?
 
 global $wpdb;
 define('INTERES_TABLE', "{$wpdb->prefix}interes");

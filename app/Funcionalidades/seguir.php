@@ -1,4 +1,4 @@
-<?php
+<?
 
 function get_user_id_from_post($key) {
     return isset($_POST[$key]) ? (int) $_POST[$key] : 0;

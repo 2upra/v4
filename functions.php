@@ -1,4 +1,4 @@
-<?php
+<?
 
 require_once ABSPATH . 'wp-content/stripe/init.php';
 require_once __DIR__ . '/vendor/autoload.php';

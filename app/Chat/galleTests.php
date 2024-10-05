@@ -1,4 +1,4 @@
-<?php
+<?
 /*
 function procesarMensajeTest() {
     $emisor = 1; // ID del emisor

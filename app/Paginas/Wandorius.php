@@ -1,4 +1,4 @@
-<?php 
+<? 
 
 function freelancer_pestanas() {
     ob_start();
@@ -15,11 +15,11 @@ function freelancer_pestanas() {
 
         <div class="tab-content inicio freelancer" id="full">
             <div id="tab1" class="tab active" data-post-id="id1">
-                <?php echo do_shortcode('[html1]')?> 
+                <? echo do_shortcode('[html1]')?> 
             </div>
         </div>
     </div>
-    <?php
+    <?
     return ob_get_clean();
 }
 add_shortcode('freelancer_pestanas', 'freelancer_pestanas');
@@ -63,7 +63,7 @@ function html1() {
 	    </div>
     </div>
 
- <?php
+ <?
     return ob_get_clean();
 }
 add_shortcode('html1', 'html1');

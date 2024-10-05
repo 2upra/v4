@@ -1,4 +1,4 @@
-<?php
+<?
 /**
  * The main template file
  *
@@ -17,15 +17,15 @@ get_header();
 
 	<main id="primary" class="site-main">
 
-		<?php
+		<?
 		if ( have_posts() ) :
 
 			if ( is_home() && ! is_front_page() ) :
 				?>
 				<header>
-					<h1 class="page-title screen-reader-text"><?php single_post_title(); ?></h1>
+					<h1 class="page-title screen-reader-text"><? single_post_title(); ?></h1>
 				</header>
-				<?php
+				<?
 			endif;
 
 			/* Start the Loop */
@@ -52,6 +52,6 @@ get_header();
 
 	</main><!-- #main -->
 
-<?php
+<?
 get_sidebar();
 get_footer();

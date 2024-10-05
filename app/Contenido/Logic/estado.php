@@ -1,4 +1,4 @@
-<?php
+<?
 
 function cambiarEstado($post_id, $new_status)
 {

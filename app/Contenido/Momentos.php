@@ -1,4 +1,4 @@
-<?php 
+<? 
 
 
 function delete_expired_momentos() {

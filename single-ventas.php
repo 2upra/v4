@@ -1,7 +1,7 @@
-<?php get_header(); // Incluye el header ?>
+<? get_header(); // Incluye el header ?>
 
 
-<?php
+<?
 if ( have_posts() ) :
     while ( have_posts() ) : the_post();
             $buyer_id = get_post_meta(get_the_ID(), 'buyer_id', true);
@@ -106,4 +106,4 @@ endif;
 ?>
 
 
-    	<?php get_footer(); // Incluye el footer ?>
+    	<? get_footer(); // Incluye el footer ?>

@@ -1,4 +1,4 @@
-<?php
+<?
 
 
 /* 
@@ -47,17 +47,17 @@ function perfil()
             <div id="perfil" class="tab active">
                 <div class="YRGFQO">
                     <div class="LRFPKL">
-                        <?php echo perfilBanner($user_id); ?>
+                        <? echo perfilBanner($user_id); ?>
                     </div>
                     <div class="JNDKWD">
-                        <?php echo do_shortcode('[mostrar_publicaciones_sociales filtro="nada" tab_id="perfil"]'); ?>
+                        <? echo do_shortcode('[mostrar_publicaciones_sociales filtro="nada" tab_id="perfil"]'); ?>
                     </div>
                 </div>
             </div>
 
         </div>
     </div>
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -90,30 +90,30 @@ function perfilBanner($user_id)
 ?>
     <div class="X522YA FRRVBB">
         <div class="JKBZKR">
-            <img src="<?php echo esc_url($imagen_perfil); ?>" alt="">
+            <img src="<? echo esc_url($imagen_perfil); ?>" alt="">
             <div class="KFEVRT">
-                <p class="ZEKRWP"><?php echo esc_html($user_info->display_name); ?></p>
-                <p class="NZERUU">@<?php echo esc_html($user_info->user_login); ?></p>
-                <p class="ZBNIRW"><?php echo esc_html($descripcion); ?></p>
+                <p class="ZEKRWP"><? echo esc_html($user_info->display_name); ?></p>
+                <p class="NZERUU">@<? echo esc_html($user_info->user_login); ?></p>
+                <p class="ZBNIRW"><? echo esc_html($descripcion); ?></p>
             </div>
         </div>
 
         <div class="KNIDBC">
-            <p><?php echo esc_html($seguidores_count); ?> seguidores ·</p>
-            <p><?php echo esc_html($siguiendo_count); ?> siguiendo</p>
+            <p><? echo esc_html($seguidores_count); ?> seguidores ·</p>
+            <p><? echo esc_html($siguiendo_count); ?> siguiendo</p>
         </div>
 
         <div class="R0A915">
-            <?php if (!$mismoAutor): ?>
+            <? if (!$mismoAutor): ?>
                 <button class="AQMLHO">Seguir</button>
                 <button class="PRJWWT">Enviar mensaje</button>
-            <?php endif; ?>
-            <?php if ($mismoAutor): ?>
+            <? endif; ?>
+            <? if ($mismoAutor): ?>
                 <button class="DSQKYW">Configuracion</button>
-            <?php endif; ?>
+            <? endif; ?>
         </div>
     </div>
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -227,13 +227,13 @@ function extra_user_profile_fields($user)
         <tr>
             <th><label for="profile_description">Descripción del Perfil</label></th>
             <td>
-                <textarea name="profile_description" id="profile_description" rows="1" cols="30"><?php echo esc_attr(get_user_meta($user->ID, 'profile_description', true)); ?></textarea>
+                <textarea name="profile_description" id="profile_description" rows="1" cols="30"><? echo esc_attr(get_user_meta($user->ID, 'profile_description', true)); ?></textarea>
                 <br />
                 <span class="description">Por favor, introduce una descripción para tu perfil.</span>
             </td>
         </tr>
     </table>
-<?php
+<?
 }
 
 add_action('personal_options_update', 'save_extra_user_profile_fields');

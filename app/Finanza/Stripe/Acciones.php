@@ -1,4 +1,4 @@
-<?php
+<?
 
 // Registro de rutas REST API
 add_action('rest_api_init', function () {

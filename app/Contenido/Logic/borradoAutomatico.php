@@ -1,4 +1,4 @@
-<?php
+<?
 
 function eliminarPostPendientes() {
     // Argumentos para obtener posts en estado 'pending' y 'trash'

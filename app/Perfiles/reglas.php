@@ -1,4 +1,4 @@
-<?php
+<?
 
 // Redirigir a la página de perfil del usuario actual
 add_action('template_redirect', 'redirect_to_user_profile');
