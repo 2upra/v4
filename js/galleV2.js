@@ -638,9 +638,12 @@ function galle() {
             } else if (message.type === 'set_emisor') {
                 console.log('Recibido set_emisor, reenviando emisor...');
                 ws.send(JSON.stringify({emisor}));
+/*************  ✨ Codeium Command 🌟  *************/
             } else if (message.type === 'message_saved') {
+                console.log('Recibido message_saved:', message);
                 console.log('Recibido message_saved, manejando confirmación de mensaje guardado...');
                 manejarConfirmacionMensajeGuardado(message);
+/******  cd985ae8-6581-4739-8b3f-2322b673c6ba  *******/
             } else if (message.type === 'message_error') {
                 console.log('Recibido message_error, manejando error...');
                 manejarError(message);
