@@ -18,7 +18,7 @@ function htmlColab($filtro)
                 <? echo opcionesColab($var); ?>
                 <? echo contenidoColab($var); ?>
             <? else: ?>
-                <div>
+                <div class="UICMCG">
                     <div><? echo tituloColab($var); ?></div>
                     <div><? //echo participantesColab($var) ?></div>
                     <div><? //echo opcionesColaActivo($var); ?> </div>

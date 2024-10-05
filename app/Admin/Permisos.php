@@ -1,5 +1,5 @@
 <?
-
+/*
 function otorgar_capacidades_roles() {
     global $wp_roles;
     if (!isset($wp_roles)) $wp_roles = new WP_Roles();
@@ -17,4 +17,4 @@ function otorgar_capacidades_roles() {
     $artista->add_cap('delete_published_posts');
 }
 
-add_action('init', 'otorgar_capacidades_roles');
+add_action('init', 'otorgar_capacidades_roles'); */

@@ -6,7 +6,7 @@ function variablesColab($post_id = null)
         global $post;
         $post_id = $post->ID;
     }
-
+    
     $current_user_id = get_current_user_id();
     $colabPostOrigen = get_post_meta($post_id, 'colabPostOrigen', true);
     $colabAutor = get_post_meta($post_id, 'colabAutor', true);
@@ -14,9 +14,14 @@ function variablesColab($post_id = null)
     $colabMensaje = get_post_meta($post_id, 'colabMensaje', true);
     $colabFileUrl = get_post_meta($post_id, 'colabFileUrl', true);
     $post_audio_lite = get_post_meta($post_id, 'post_audio_lite', true);
+
     $imagenPost = get_the_post_thumbnail_url($post_id, 'full');
+    if (!$imagenPost) {
+        $imagenPost = 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/09/1ndoryu_1725478496.webp?quality=40&strip=all';
+    }
     $imagenPostOp = img($imagenPost, 40, 'all');
-    $postTitulo = get_the_title($post_id); // Obtener el título del post
+
+    $postTitulo = get_the_title($post_id); 
 
     return [
         'post_audio_lite' => $post_audio_lite,
@@ -36,6 +41,7 @@ function variablesColab($post_id = null)
         'postTitulo' => $postTitulo, // Añadir el título del post
     ];
 }
+
 
 
 
@@ -159,10 +165,10 @@ function tituloColab($var)
 
     ob_start(); ?>
 
-    <div>
+    <div class="YXJIKK">
         <img src="<? echo esc_url($imagenPostOp) ?>">
     </div>
-    <div>
+    <div class="SNVKQC">
         <p><? echo esc_html($postTitulo) ?></p>
         <a href="<? echo esc_url(get_permalink()); ?>" class="post-link">
             <? echo esc_html($colabFecha); ?>
