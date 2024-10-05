@@ -5,6 +5,12 @@
     [ ] Que al dar click en la imagen se pueda elegir la imagen del proyecto
     [ ] Establecer imagenes de proyecto por defecto 
     [ ] Cambiar el titulo al dar click en el nombre 
+
+    participantesColab:
+    [ ] Que al dar click en el nombre se pueda ver la lista de participantes
+    [ ] Que al dar click en el nombre de un participante se pueda ver el chat
+    [ ] Poder añardir otros miembros
+    [ ] El autor puede eliminar miembros
     
 */
 
@@ -32,7 +38,6 @@ function htmlColab($filtro)
                     <? echo participantesColab($var) ?>
                     <? echo opcionesColabActivo($var); ?>
                 </div>
-                <? //echo pestanasColab($var); ?>
                 <? //echo chatColab($var); ?>
                 <? //echo archivosColab($var); ?>
                 <? //echo historialColab($var); ?>

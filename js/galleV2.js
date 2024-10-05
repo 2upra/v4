@@ -39,6 +39,7 @@ function galle() {
         iniciarChat();
         clickMensaje();
         subidaArchivosChat();
+        chatColab();
     }
 
     /*
@@ -99,6 +100,46 @@ function galle() {
     /*
      *   FUNCIONES RELACIONADAS A ABRIR UNA CONVERSACION
      */
+
+    async function chatColab() {
+        // Buscar todos los elementos que contienen la clase 'bloqueChatColab'
+        const chatColabElements = document.querySelectorAll('.bloqueChatColab');
+        
+        // Recorrer cada elemento para obtener su postId y hacer la solicitud
+        chatColabElements.forEach(async (chatColabElement) => {
+            // Verificar si el elemento tiene el atributo data-post-id
+            const postId = chatColabElement.dataset.postId;
+            if (!postId) {
+                console.error('El elemento no tiene data-post-id.');
+                return;
+            }
+    
+            try {
+                // Hacer la solicitud para obtener los mensajes de chat
+                const data = await enviarAjax('obtenerChatColab', { conversacion: postId, page: currentPage });
+    
+                if (data?.success) {
+                    // Pasar el contenedor específico 'chatColabElement' a la función mostrarMensajes
+                    mostrarMensajes(data.data.mensajes, chatColabElement);
+    
+                    // Manejar el scroll con el contenedor de mensajes
+                    manejarScroll(data.data.conversacion, chatColabElement);
+    
+                    // Asegurarse de que el scroll esté al final
+                    const listaMensajes = chatColabElement.querySelector('.listaMensajes');
+                    if (listaMensajes) {
+                        listaMensajes.scrollTop = listaMensajes.scrollHeight;
+                    }
+                } else {
+                    console.error('Error al obtener la conversación colab:', data.message);
+                }
+            } catch (error) {
+                console.error('Error al obtener la conversación colab:', error);
+            }
+        });
+    }
+    
+    
 
     async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
         try {
@@ -270,13 +311,21 @@ function galle() {
      *   FUNCIONES RELACIONADAS CON LA CARGAN LOS MENSAJES DE UNA CONVERSACION
      */
 
-    function mostrarMensajes(mensajes) {
-        const listaMensajes = document.querySelector('.listaMensajes');
-        listaMensajes.innerHTML = '';
+    function mostrarMensajes(mensajes, contenedor = null) {
+        // Si se pasa un contenedor, usamos ese, de lo contrario usamos el predeterminado
+        const listaMensajes = contenedor 
+            ? contenedor.querySelector('.listaMensajes') 
+            : document.querySelector('.listaMensajes');
+    
+        if (!listaMensajes) {
+            console.error('No se encontró el contenedor de mensajes.');
+            return;
+        }
+    
+        listaMensajes.innerHTML = ''; // Limpiamos los mensajes anteriores
         let fechaAnterior = null;
-
+    
         mensajes.forEach(mensaje => {
-            // Mostrar el mensaje de texto junto con el adjunto si lo hay
             agregarMensajeAlChat(
                 mensaje.mensaje,
                 mensaje.clase,
@@ -284,9 +333,9 @@ function galle() {
                 listaMensajes,
                 fechaAnterior,
                 false,
-                mensaje.adjunto // Pasamos el adjunto
+                mensaje.adjunto // Pasamos el adjunto si lo hay
             );
-
+    
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
@@ -375,15 +424,15 @@ function galle() {
             console.error('Error: listaMensajes no es un elemento DOM válido o no se encontró. Valor recibido:', listaMensajes);
             return;
         }
-    
+
         const fechaMensaje = new Date(fecha);
-    
+
         if (!fechaAnterior) {
             let lastElement = null;
             const children = Array.from(listaMensajes.children || []);
             const searchOrder = insertAtTop ? 1 : -1;
             const startIndex = insertAtTop ? 0 : children.length - 1;
-    
+
             for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
                 const child = children[i];
                 if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
@@ -391,43 +440,42 @@ function galle() {
                     break;
                 }
             }
-    
+
             fechaAnterior = lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
         }
-    
+
         // Lógica para manejar la fecha
         manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
-    
+
         // Crear el nuevo mensaje
         const li = document.createElement('li');
         li.textContent = mensajeTexto;
         li.classList.add(clase);
         li.setAttribute('data-fecha', fechaMensaje.toISOString());
-    
+
         // Asignar el temp_id como atributo data
         if (temp_id) {
             li.setAttribute('data-temp-id', temp_id);
-    
+
             // Añade una clase para indicar que está pendiente de confirmación
             li.classList.add('mensajePendiente');
         }
-    
+
         // Lógica para manejar el adjunto
         manejarAdjunto(adjunto, li);
-    
+
         // Insertar el mensaje en la posición correcta
         if (insertAtTop) {
             listaMensajes.insertBefore(li, listaMensajes.firstChild);
         } else {
             listaMensajes.appendChild(li);
         }
-    
+
         // Si no se está insertando al inicio, desplázate hacia abajo
         if (!insertAtTop) {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
         }
     }
-    
 
     function manejarMensajeWebSocket(data) {
         //console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket.');
@@ -590,12 +638,12 @@ function galle() {
         ws.onerror = error => {
             console.error('Error en WebSocket:', error);
         };
-        ws.onmessage = ({ data }) => {
+        ws.onmessage = ({data}) => {
             const message = JSON.parse(data);
             if (message.type === 'pong') {
                 // Manejo del ping-pong
             } else if (message.type === 'set_emisor') {
-                ws.send(JSON.stringify({ emisor }));
+                ws.send(JSON.stringify({emisor}));
             } else if (message.type === 'message_saved') {
                 // Manejar la confirmación de que el mensaje se guardó
                 manejarConfirmacionMensajeGuardado(message);
@@ -750,7 +798,6 @@ function galle() {
         if (mensajeElemento) {
             // Añade una clase o modifica el elemento para indicar que se ha enviado con éxito
             mensajeElemento.classList.add('mensajeError');
-
         }
     }
 

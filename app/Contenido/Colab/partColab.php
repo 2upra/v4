@@ -14,6 +14,7 @@ function variablesColab($post_id = null)
     $colabMensaje = get_post_meta($post_id, 'colabMensaje', true);
     $colabFileUrl = get_post_meta($post_id, 'colabFileUrl', true);
     $post_audio_lite = get_post_meta($post_id, 'post_audio_lite', true);
+    $participantes = get_post_meta($post_id, 'participantes', true);
 
     $imagenPost = get_the_post_thumbnail_url($post_id, 'full');
     if (!$imagenPost) {
@@ -25,6 +26,7 @@ function variablesColab($post_id = null)
 
     return [
         'post_id' => $post_id,
+        'participantes' => $participantes,
         'post_audio_lite' => $post_audio_lite,
         'current_user_id' => $current_user_id,
         'colabPostOrigen' => $colabPostOrigen,
@@ -210,12 +212,21 @@ function opcionesColabActivo($var)
         <div class="A1806242">
 
             <button class="reporte" data-post-id="<? echo $post_id; ?>" tipoContenido="colab">Reportar</button>
-            <button class="bloquear" data-post-id="<? echo $post_id; ?>">Bloquear</button>
-            <button class="mensajeBoton" data-receptor="<? echo $colabColaborador; ?>">Enviar mensaje</button>
 
         </div>
     </div>
 <?
-
     return ob_get_clean();
 }
+
+function chatColab($var) {
+    $post_id = intval($var['post_id']);
+    ob_start();
+?>
+    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>">
+        <ul class="listaMensajes"></ul>
+    </div>
+<?php
+    return ob_get_clean();
+}
+
