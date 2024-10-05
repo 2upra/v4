@@ -40,6 +40,7 @@ function galle() {
         clickMensaje();
         subidaArchivosChat();
         chatColab();
+        setupEnviarMensajeColab();
     }
 
     /*
