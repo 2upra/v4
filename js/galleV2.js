@@ -816,7 +816,7 @@ function setupEnviarMensajeColab() {
                 archivoChatUrl = null;
             }
 
-            enviarMensajeWs(receptor, mensaje, adjunto, conversacion_id, listaMensajes);
+            enviarMensajeWs(receptor, mensaje, adjunto, metadata, conversacion_id, listaMensajes);
 
             mensajeInput.value = ''; // Limpiar el textarea después de enviar
         } else {
