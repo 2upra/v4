@@ -22,12 +22,12 @@ function escribirLog($mensaje, $archivo) {
     }
 }
 
-function stripeError($log) {
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/stripeError.log');
-}
-
 function chatLog($log) {
     escribirLog($log, '/var/www/wordpress/wp-content/themes/chat.log');
+}
+
+function stripeError($log) {
+    escribirLog($log, '/var/www/wordpress/wp-content/themes/stripeError.log');
 }
 
 function guardarLog($log) {
