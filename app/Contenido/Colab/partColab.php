@@ -230,8 +230,8 @@ function chatColab($var) {
         <ul class="listaMensajes"></ul>
 
         <div class="chatEnvio">
-            <textarea class="mensajeContenidoColab" rows="1"></textarea>
-            <button class="enviarMensajeColab" data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">  
+            <textarea class="mensajeContenidoColab borde" rows="1"></textarea>
+            <button class="enviarMensajeColab borde" data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">  
                 <?php echo $GLOBALS['enviarMensaje']; ?>
             </button>
             <button class="enviarAdjunto" id="enviarAdjunto"><?php echo $GLOBALS['enviarAdjunto']; ?></button>
