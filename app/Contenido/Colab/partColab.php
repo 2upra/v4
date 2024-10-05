@@ -15,6 +15,7 @@ function variablesColab($post_id = null)
     $colabFileUrl = get_post_meta($post_id, 'colabFileUrl', true);
     $post_audio_lite = get_post_meta($post_id, 'post_audio_lite', true);
     $participantes = get_post_meta($post_id, 'participantes', true);
+    $conversacion_id = get_post_meta($post_id, 'conversacion_id', true);
 
     $imagenPost = get_the_post_thumbnail_url($post_id, 'full');
     if (!$imagenPost) {
@@ -26,6 +27,7 @@ function variablesColab($post_id = null)
 
     return [
         'post_id' => $post_id,
+        'conversacion_id' => $conversacion_id,
         'participantes' => $participantes,
         'post_audio_lite' => $post_audio_lite,
         'current_user_id' => $current_user_id,
@@ -221,12 +223,22 @@ function opcionesColabActivo($var)
 
 function chatColab($var) {
     $post_id = intval($var['post_id']);
+    $conversacion_id = intval($var['conversacion_id']);
     ob_start();
 ?>
     <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>">
         <ul class="listaMensajes"></ul>
+
+        <div class="chatEnvio">
+            <textarea class="mensajeContenidoColab" rows="1"></textarea>
+            <button class="enviarMensajeColab" data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">  
+                <?php echo $GLOBALS['enviarMensaje']; ?>
+            </button>
+            <button class="enviarAdjunto" id="enviarAdjunto"><?php echo $GLOBALS['enviarAdjunto']; ?></button>
+        </div>
     </div>
 <?php
     return ob_get_clean();
 }
+
 

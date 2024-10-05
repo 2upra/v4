@@ -26,6 +26,7 @@ function procesarMensaje($request) {
     $mensaje = isset($params['mensaje']) ? $params['mensaje'] : null;
     $adjunto = isset($params['adjunto']) ? $params['adjunto'] : null;
     $metadata = isset($params['metadata']) ? $params['metadata'] : null;
+    $conversacion_id = isset($params['conversacion_id']) ? $params['conversacion_id'] : null;
 
     // Verificar si los parámetros requeridos están presentes
     if (!$emisor || !$receptor || !$mensaje) {
@@ -42,7 +43,7 @@ function procesarMensaje($request) {
     chatLog('Intentando guardar mensaje');
 
     try {
-        $resultado = guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata);
+        $resultado = guardarMensaje($emisor, $receptor, $mensaje, $adjunto, $metadata, $conversacion_id);
 
         if ($resultado) {
             chatLog('Mensaje guardado con éxito');
@@ -57,7 +58,7 @@ function procesarMensaje($request) {
     }
 }
 
-function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata = null)
+function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata = null, $conversacion_id = null)
 {
     global $wpdb;
     $tablaMensajes = $wpdb->prefix . 'mensajes';
@@ -69,28 +70,37 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
     $wpdb->query('START TRANSACTION');
 
     try {
-        $query = $wpdb->prepare("
-            SELECT id FROM $tablaConversacion
-            WHERE tipo = 1
-            AND JSON_CONTAINS(participantes, %s)
-            AND JSON_CONTAINS(participantes, %s)
-        ", json_encode($emisor), json_encode($receptor));
-
-        $conversacionID = $wpdb->get_var($query);
-
-        if (!$conversacionID) {
-            $participantes = json_encode([$emisor, $receptor], JSON_NUMERIC_CHECK);
-            $wpdb->insert($tablaConversacion, [
-                'tipo' => 1,
-                'participantes' => $participantes,
-                'fecha' => current_time('mysql')
-            ]);
-            $conversacionID = $wpdb->insert_id;
-            chatLog("Nueva conversación creada con ID: $conversacionID");
+        // Si se recibe una conversacion_id, utilizarla
+        if ($conversacion_id) {
+            $conversacionID = (int) $conversacion_id;
+            chatLog("Usando la conversación existente con ID: $conversacionID");
         } else {
-            chatLog("Conversación existente encontrada con ID: $conversacionID");
+            // Buscar una conversación existente entre los participantes
+            $query = $wpdb->prepare("
+                SELECT id FROM $tablaConversacion
+                WHERE tipo = 1
+                AND JSON_CONTAINS(participantes, %s)
+                AND JSON_CONTAINS(participantes, %s)
+            ", json_encode($emisor), json_encode($receptor));
+
+            $conversacionID = $wpdb->get_var($query);
+
+            // Si no se encuentra, crear una nueva conversación
+            if (!$conversacionID) {
+                $participantes = json_encode([$emisor, $receptor], JSON_NUMERIC_CHECK);
+                $wpdb->insert($tablaConversacion, [
+                    'tipo' => 1,
+                    'participantes' => $participantes,
+                    'fecha' => current_time('mysql')
+                ]);
+                $conversacionID = $wpdb->insert_id;
+                chatLog("Nueva conversación creada con ID: $conversacionID");
+            } else {
+                chatLog("Conversación existente encontrada con ID: $conversacionID");
+            }
         }
 
+        // Guardar el mensaje en la conversación obtenida o creada
         $resultado = $wpdb->insert($tablaMensajes, [
             'conversacion' => $conversacionID,
             'emisor' => $emisor,
@@ -100,6 +110,7 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
             'metadata' => isset($metadata) ? json_encode($metadata) : null,
         ]);
 
+        // Verificar si se guardó correctamente
         if ($resultado === false) {
             throw new Exception("Error al insertar el mensaje: " . $wpdb->last_error);
         }
@@ -110,6 +121,7 @@ function guardarMensaje($emisor, $receptor, $mensaje, $adjunto = null, $metadata
 
         return $mensajeID;
     } catch (Exception $e) {
+        // Si ocurre un error, hacer rollback de la transacción
         $wpdb->query('ROLLBACK');
         error_log($e->getMessage());
         chatLog("Error al guardar el mensaje: " . $e->getMessage());

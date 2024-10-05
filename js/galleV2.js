@@ -661,42 +661,33 @@ function galle() {
      */
 
 
-    function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null) {
-        //console.log('enviarMensajeWs: Preparando datos del mensaje para enviar.');
+    function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null, conversacion_id = null, listaMensajes = null) {
 
-        const temp_id = Date.now(); // O genera un UUID si prefieres
-
-        const messageData = {emisor, receptor, mensaje, adjunto, metadata, temp_id};
-        //console.log('enviarMensajeWs: Datos del mensaje preparados: ', messageData);
-
+        const temp_id = Date.now(); // Genera un ID temporal para el mensaje
+        const messageData = { emisor, receptor, mensaje, adjunto, metadata, conversacion_id, temp_id };
+    
         if (ws?.readyState === WebSocket.OPEN) {
-            //console.log('enviarMensajeWs: WebSocket está abierto, enviando mensaje...');
             ws.send(JSON.stringify(messageData));
-            //console.log('enviarMensajeWs: Mensaje enviado correctamente.');
-
-            // Añade el mensaje a la interfaz con el temp_id
-            const listaMensajes = document.querySelector('.listaMensajes');
+    
+            // Si no se recibe una listaMensajes específica, usa la lista por defecto en el DOM
+            if (!listaMensajes) {
+                listaMensajes = document.querySelector('.listaMensajes');
+            }
+    
             agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto, temp_id);
-            //console.log('enviarMensajeWs: Mensaje agregado al chat con temp_id.');
         } else {
             console.error('enviarMensajeWs: WebSocket no está conectado, no se puede enviar el mensaje.');
             alert('No se puede enviar el mensaje, por favor, reinicia la página.');
         }
     }
+    
 
     function manejarConfirmacionMensajeGuardado(message) {
-        //console.log('Mensaje guardado en el servidor:', message);
-
-        // **Actualizar la interfaz de usuario para indicar que el mensaje se guardó**
-        // Busca el mensaje en la lista de mensajes usando el temp_id
         const listaMensajes = document.querySelector('.listaMensajes');
         const mensajeElemento = listaMensajes.querySelector(`[data-temp-id="${message.original_message.temp_id}"]`);
 
         if (mensajeElemento) {
-            // Añade una clase o modifica el elemento para indicar que se ha enviado con éxito
             mensajeElemento.classList.add('mensajeEnviado');
-
-            // Opcional: Remueve la clase que indica que está pendiente
             mensajeElemento.classList.remove('mensajePendiente');
         }
     }
@@ -706,16 +697,12 @@ function galle() {
         const mensajeElemento = listaMensajes.querySelector(`[data-temp-id="${message.original_message.temp_id}"]`);
 
         if (mensajeElemento) {
-            // Añade una clase o modifica el elemento para indicar que se ha enviado con éxito
             mensajeElemento.classList.add('mensajeError');
         }
     }
 
     function setupEnviarMensajeHandler() {
-        //console.log('setupEnviarMensajeHandler: Inicializando el manejador de eventos para enviar mensajes.');
-
         document.addEventListener('click', event => {
-            //console.log('setupEnviarMensajeHandler - Evento click: Detectado.');
             if (event.target.matches('.enviarMensaje')) {
                 enviarMensaje();
             }
@@ -730,48 +717,112 @@ function galle() {
         });
 
         function enviarMensaje() {
-            //console.log('enviarMensaje: Iniciando el proceso de envío del mensaje.');
-
             const listaMensajes = document.querySelector('.listaMensajes');
             if (subidaChatProgreso === true) {
-                //console.log('enviarMensaje: Subida de chat en progreso, mostrando alerta al usuario.');
                 alert('Por favor espera a que se complete la subida del archivo.');
                 return;
             }
 
             const mensaje = mensajeInput.value;
             if (mensaje.trim() !== '') {
-                //console.log('enviarMensaje: Mensaje no vacío, procediendo a enviar.');
-
                 ocultarPreviews();
-                //console.log('enviarMensaje: Previews ocultas.');
-
                 let adjunto = null;
                 if (archivoChatId || archivoChatUrl) {
                     adjunto = {
                         archivoChatId: archivoChatId,
                         archivoChatUrl: archivoChatUrl
                     };
-                    //console.log('enviarMensaje: Archivo adjunto detectado. Añadiendo al mensaje.');
                     archivoChatId = null;
                     archivoChatUrl = null;
                 }
 
                 enviarMensajeWs(receptor, mensaje, adjunto);
-                //console.log(`enviarMensaje: Mensaje enviado a través de WebSocket al receptor ${receptor}.`);
-
-                //agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto);
-                ////console.log('enviarMensaje: Mensaje agregado al chat.');
 
                 mensajeInput.value = '';
                 const mensajeVistaPrevia = `Tu: ${mensaje}`;
                 actualizarListaConversaciones(receptor, mensajeVistaPrevia);
-                //console.log('enviarMensaje: Lista de conversaciones actualizada.');
             } else {
-                //console.log('enviarMensaje: Mensaje vacío, no se enviará nada.');
             }
         }
     }
+
+    /*
+
+    pueden haber varias lista de mensajes, como envio la correcta a enviarMensajeWs, tambien, hay que enviar el conversacion_id, que es 
+
+    asi se suele ver html
+
+function chatColab($var) {
+    $post_id = intval($var['post_id']);
+    $conversacion_id = intval($var['conversacion_id']);
+    ob_start();
+?>
+    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>">
+        <ul class="listaMensajes"></ul>
+
+        <div class="chatEnvio">
+            <textarea class="mensajeContenidoColab" rows="1"></textarea>
+            <button class="enviarMensajeColab" data-onversacion-id=" <?php echo esc_attr($conversacion_id); ?>">  <? echo $GLOBALS['enviarMensaje']; ?></button>
+            <button class="enviarAdjunto" id="enviarAdjunto"><? echo $GLOBALS['enviarAdjunto']; ?></button>
+        </div>
+    </div>
+<?php
+    return ob_get_clean();
+}
+
+
+    */
+
+function setupEnviarMensajeColab() {
+    document.addEventListener('click', event => {
+        if (event.target.matches('.enviarMensajeColab')) {
+            enviarMensajeColab(event.target);
+        }
+    });
+
+    const mensajeInput = document.querySelector('.mensajeContenidoColab');
+    mensajeInput.addEventListener('keydown', event => {
+        if (event.key === 'Enter' && !event.altKey) {
+            event.preventDefault();
+            const enviarBtn = document.querySelector('.enviarMensajeColab');
+            enviarMensajeColab(enviarBtn);
+        }
+    });
+
+    function enviarMensajeColab(button) {
+        if (subidaChatProgreso === true) {
+            alert('Por favor espera a que se complete la subida del archivo.');
+            return;
+        }
+
+        const mensajeInput = button.closest('.chatEnvio').querySelector('.mensajeContenidoColab');
+        const mensaje = mensajeInput.value.trim();
+
+        if (mensaje !== '') {
+            // Obtener el conversacion_id del botón
+            const conversacion_id = button.getAttribute('data-conversacion-id');
+
+            // Obtener la lista de mensajes correspondiente (cercana al botón)
+            const listaMensajes = button.closest('.bloqueChatColab').querySelector('.listaMensajes');
+
+            let adjunto = null;
+            if (archivoChatId || archivoChatUrl) {
+                adjunto = {
+                    archivoChatId: archivoChatId,
+                    archivoChatUrl: archivoChatUrl
+                };
+                archivoChatId = null;
+                archivoChatUrl = null;
+            }
+
+            enviarMensajeWs(receptor, mensaje, adjunto, conversacion_id, listaMensajes);
+
+            mensajeInput.value = ''; // Limpiar el textarea después de enviar
+        } else {
+            alert('Por favor, ingresa un mensaje.');
+        }
+    }
+}
 
     /*
      *   FUNCIONES PARA CARGAR MAS ADJUNTAR ARCHIVOS
@@ -1021,25 +1072,6 @@ function galle() {
      */
 
     function manejarScroll(conversacion) {
-        /*este elemento ahora es flexible, si recibe un segundo parametro usa ese valor, pero por defecto es .listaMensajes 
-
-        un ejemplo en otra funcion
-
-        const listaMensajes = contenedor 
-            ? contenedor.querySelector('.listaMensajes') 
-            : document.querySelector('.listaMensajes');
-    
-        if (!listaMensajes) {
-            console.error('No se encontró el contenedor de mensajes.');
-            return;
-        }
-
-        si es un calab tiene que destinguir, porque obtenerChat es para los chat normales pero los chat de Colab son asi
-
-        <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>">
-            <ul class="listaMensajes"></ul>
-        </div>
-        */
         const listaMensajes = document.querySelector('.listaMensajes');
         let puedeDesplazar = true;
         currentPage = 1;
