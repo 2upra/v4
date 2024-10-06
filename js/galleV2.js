@@ -528,6 +528,9 @@ function galle() {
                     const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
                     console.log(`Buscando ventana de chat con data-user-id="${contactoId}"`);
                     chatWindow = document.querySelector(`.bloqueChat[data-user-id="${contactoId}"]`);
+
+                    console.log('Actualizando lista de conversaciones.');
+                    actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
                 }
 
                 if (chatWindow) {

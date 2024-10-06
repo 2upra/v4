@@ -244,8 +244,6 @@ add_action('wp_ajax_obtenerChat', 'obtenerChat');
 const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
 console.log(`Buscando ventana de chat con data-user-id="${contactoId}"`);
 
-ayudame a colocarlo, se puede desde aqui?
-
 */
 
 function renderChat()
