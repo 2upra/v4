@@ -339,11 +339,16 @@ function galle() {
         let fechaAnterior = null;
 
         mensajes.forEach(mensaje => {
-            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, temp_id = null, msgEmisor.remitente);
+            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, temp_id = null, mensaje.remitente);
 
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
+
+
+
+
+
 
     function manejarAdjunto(adjunto, li) {
         if (adjunto) {
