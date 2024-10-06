@@ -226,9 +226,19 @@ function chatColab($var)
     $post_id = intval($var['post_id']);
     $conversacion_id = intval($var['conversacion_id']);
     $participantes = $var['participantes'];
-    ob_start();
+
+    // Determine if $participantes is an array or JSON string
+    if (is_array($participantes)) {
+        $participantes_json = json_encode($participantes);
+    } else {
+        // Assume it's already a JSON string
+        $participantes_json = $participantes;
+    }
+
+    // Properly escape the JSON string for HTML attribute
+    $participantes_escaped = htmlspecialchars($participantes_json, ENT_QUOTES, 'UTF-8');
 ?>
-    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>" data-participantes='<?php echo json_encode($participantes); ?>' data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">
+    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>" data-participantes="<?php echo $participantes_escaped; ?>' data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">
 
         <ul class="listaMensajes"></ul>
 
