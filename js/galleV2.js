@@ -440,6 +440,8 @@ function galle() {
             return;
         }
 
+        console.log('agregarMensajeAlChat:', {mensajeTexto, clase, fecha, listaMensajes, fechaAnterior, insertAtTop, adjunto, temp_id, msgEmisor});
+
         const fechaMensaje = new Date(fecha);
 
         // Obtener el último mensaje y su emisor
