@@ -468,12 +468,13 @@ function galle() {
     }
 
     function manejarMensajeWebSocket(data) {
-        console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket.');
+        console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket:', data);
 
         try {
             const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
             console.log('manejarMensajeWebSocket: Mensaje parseado correctamente:', {msgEmisor, msgReceptor, msgMensaje});
 
+            console.log('manejarMensajeWebSocket: Verificando si el mensaje es para nosotros...');
             const listaMensajes = document.querySelector('.listaMensajes');
             const fechaActual = new Date();
 
@@ -484,10 +485,12 @@ function galle() {
                     console.log('manejarMensajeWebSocket: El mensaje es del receptor actual, añadiendo a la izquierda.');
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', fechaActual, listaMensajes);
                 }
+                console.log('manejarMensajeWebSocket: Actualizando la lista de conversaciones con el mensaje de:', msgEmisor);
                 actualizarListaConversaciones(msgEmisor, msgMensaje);
             } else if (msgEmisor === emisor && msgReceptor === receptor) {
                 console.log('manejarMensajeWebSocket: Es una confirmación de recepción de nuestro mensaje, añadiendo a la derecha.');
                 agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes);
+                console.log('manejarMensajeWebSocket: Actualizando la lista de conversaciones con el mensaje de:', msgReceptor);
                 actualizarListaConversaciones(msgReceptor, msgMensaje);
             }
         } catch (error) {
