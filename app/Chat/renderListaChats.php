@@ -87,14 +87,21 @@ function obtenerNombreUsuario($usuarioId)
 
 
 function infoUsuario() {
+    chatLog('Iniciando la función infoUsuario.');
+
     if (!is_user_logged_in()) {
+        chatLog('Usuario no autenticado.');
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));
         wp_die();
     }
 
+    chatLog('Usuario autenticado.');
+
     $receptor = isset($_POST['receptor']) ? intval($_POST['receptor']) : 0;
+    chatLog('Valor de receptor recibido.', array('receptor' => $receptor));
 
     if ($receptor <= 0) {
+        chatLog('ID del receptor inválido.', array('receptor' => $receptor));
         wp_send_json_error(array('message' => 'ID del receptor inválido.'));
         wp_die();
     }
@@ -102,11 +109,22 @@ function infoUsuario() {
     $imagenPerfil = imagenPerfil($receptor) ?: 'ruta_por_defecto.jpg';
     $nombreUsuario = obtenerNombreUsuario($receptor) ?: 'Usuario Desconocido';
 
+    chatLog('Datos del usuario obtenidos.', array(
+        'imagenPerfil' => $imagenPerfil,
+        'nombreUsuario' => $nombreUsuario
+    ));
+
     if (ob_get_length()) {
         ob_end_clean();
+        chatLog('Buffer de salida limpiado.');
     }
 
     wp_send_json_success(array(
+        'imagenPerfil' => $imagenPerfil,
+        'nombreUsuario' => $nombreUsuario
+    ));
+
+    chatLog('Datos enviados correctamente.', array(
         'imagenPerfil' => $imagenPerfil,
         'nombreUsuario' => $nombreUsuario
     ));
