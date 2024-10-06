@@ -159,9 +159,8 @@ function galle() {
             if (data?.success) {
                 mostrarMensajes(data.data.mensajes);
 
-
                 const bloqueChat = document.querySelector('.bloqueChat');
-                bloqueChat.setAttribute('data-user-id', receptor); 
+                bloqueChat.setAttribute('data-user-id', receptor);
                 bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                 bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
                 bloqueChat.style.display = 'block';
@@ -320,7 +319,6 @@ function galle() {
     function mostrarMensajes(mensajes, contenedor = null) {
         const listaMensajes = contenedor ? contenedor.querySelector('.listaMensajes') : document.querySelector('.listaMensajes');
 
-
         if (!listaMensajes) {
             console.error('No se encontró el contenedor de mensajes.');
             return;
@@ -339,16 +337,11 @@ function galle() {
         let fechaAnterior = null;
 
         mensajes.forEach(mensaje => {
-            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, temp_id = null, mensaje.remitente);
+            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, (temp_id = null), mensaje.remitente);
 
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
-
-
-
-
-
 
     function manejarAdjunto(adjunto, li) {
         if (adjunto) {
@@ -433,14 +426,48 @@ function galle() {
     const userCache = window.userCache || {};
     window.userCache = userCache;
 
+    /*cuando llega a la parte de  const data = await enviarAjax('infoUsuario', {id: msgEmisor});, falla, puedes agregar console logs para encontrar el problema, el error que dice es galleV2.js?ver=2.0.1.1438272854:488  Error del servidor: undefined
+
+    para mas informacion infoUario es asi
+
+    function infoUsuario() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'Usuario no autenticado.'));
+        wp_die();
+    }
+
+    $receptor = isset($_POST['receptor']) ? intval($_POST['receptor']) : 0;
+
+    if ($receptor <= 0) {
+        wp_send_json_error(array('message' => 'ID del receptor inválido.'));
+        wp_die();
+    }
+
+    $imagenPerfil = imagenPerfil($receptor) ?: 'ruta_por_defecto.jpg';
+    $nombreUsuario = obtenerNombreUsuario($receptor) ?: 'Usuario Desconocido';
+
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
+    wp_send_json_success(array(
+        'imagenPerfil' => $imagenPerfil,
+        'nombreUsuario' => $nombreUsuario
+    ));
+
+    wp_die();
+}
+
+add_action('wp_ajax_infoUsuario', 'infoUsuario');
+
+    */
     async function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null) {
-        // Verifica si listaMensajes es un nodo DOM válido
         if (!listaMensajes || !(listaMensajes instanceof Element)) {
             console.error('Error: listaMensajes no es un elemento DOM válido o no se encontró. Valor recibido:', listaMensajes);
             return;
         }
 
-        console.log('agregarMensajeAlChat:', {mensajeTexto, clase, fecha, listaMensajes, fechaAnterior, insertAtTop, adjunto, temp_id, msgEmisor});
+        console.log('agregarMensajeAlChat - Parámetros:', {mensajeTexto, clase, fecha, listaMensajes, fechaAnterior, insertAtTop, adjunto, temp_id, msgEmisor});
 
         const fechaMensaje = new Date(fecha);
 
@@ -467,15 +494,22 @@ function galle() {
         msgEmisor = msgEmisor ? msgEmisor.toString() : null;
         lastMessageEmisor = lastMessageEmisor ? lastMessageEmisor.toString() : null;
 
+        console.log('Emisores:', {currentUserId, msgEmisor, lastMessageEmisor});
+
         // Verificar si necesitamos mostrar la información del usuario
         const needsUserInfo = msgEmisor !== currentUserId && msgEmisor !== lastMessageEmisor;
 
         if (needsUserInfo) {
+            console.log('Necesita información de usuario para msgEmisor:', msgEmisor);
+
             // Verificar si la información del usuario está en caché
             let userData = userCache[msgEmisor];
             if (!userData) {
+                console.log('No hay datos de caché para el usuario. Solicitando al servidor...');
+
                 try {
                     const data = await enviarAjax('infoUsuario', {id: msgEmisor});
+                    console.log('Respuesta AJAX recibida:', data);
 
                     if (data?.success) {
                         userData = {
@@ -493,6 +527,8 @@ function galle() {
                     console.error('Error al obtener la información del usuario:', err);
                     return;
                 }
+            } else {
+                console.log('Datos de caché para el usuario:', userData);
             }
 
             // Crear un elemento para mostrar la imagen de perfil y el nombre de usuario
