@@ -248,11 +248,11 @@ ayudame a colocarlo, se puede desde aqui?
 
 */
 
-function renderChat($contactoId)
+function renderChat()
 {
     ob_start();
     ?>
-    <div class="bloque modal bloqueChat" id="bloqueChat" data-user-id="<?php echo $contactoId; ?>" style="display: none;">
+    <div class="bloque modal bloqueChat" id="bloqueChat" data-user-id="" style="display: none;">
         <div class="infoChat">
             <div class="imagenMensaje">
                 <img src="" alt="Imagen de perfil">
