@@ -508,7 +508,7 @@ add_action('wp_ajax_infoUsuario', 'infoUsuario');
                 console.log('No hay datos de caché para el usuario. Solicitando al servidor...');
 
                 try {
-                    const data = await enviarAjax('infoUsuario', {id: msgEmisor});
+                    const data = await enviarAjax('infoUsuario', {receptor: msgEmisor});
                     console.log('Respuesta AJAX recibida:', data);
 
                     if (data?.success) {
