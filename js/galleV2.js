@@ -137,26 +137,27 @@ function galle() {
         try {
             let data = {success: true, data: {mensajes: [], conversacion: null}};
             currentPage = 1;
-
+    
             if (conversacion) {
                 data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
             } else if (receptor) {
                 data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
             }
-
+    
             if (data?.success) {
                 mostrarMensajes(data.data.mensajes);
-
+    
                 const bloqueChat = document.querySelector('.bloqueChat');
+                bloqueChat.setAttribute('data-user-id', receptor); // Establecer data-user-id
                 bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                 bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
                 bloqueChat.style.display = 'block';
-
+    
                 manejarScroll(data.data.conversacion);
-
+    
                 const listaMensajes = document.querySelector('.listaMensajes');
                 listaMensajes.scrollTop = listaMensajes.scrollHeight;
-
+    
                 // Actualizar estado de conexión del receptor
                 await actualizarEstadoConexion(receptor, bloqueChat);
                 setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
@@ -167,7 +168,6 @@ function galle() {
             alert('Ha ocurrido un error al intentar abrir la conversación.');
         }
     }
-
     async function cerrarChat() {
         try {
             const bloqueChat = document.querySelector('.bloqueChat');

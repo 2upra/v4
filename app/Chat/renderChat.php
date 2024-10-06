@@ -240,13 +240,19 @@ function obtenerChat()
 add_action('wp_ajax_obtenerChat', 'obtenerChat');
 
 
+/* en mi logica necesito que las ventanas al abrirse, tengan un data user id de quien corresponde chatWindow = document.querySelector(`.bloqueChat[data-user-id="${contactoId}"]`);
+const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
+console.log(`Buscando ventana de chat con data-user-id="${contactoId}"`);
 
+ayudame a colocarlo, se puede desde aqui?
 
-function renderChat()
+*/
+
+function renderChat($contactoId)
 {
     ob_start();
-?>
-    <div class="bloque modal bloqueChat" id="bloqueChat" style="display: none;">
+    ?>
+    <div class="bloque modal bloqueChat" id="bloqueChat" data-user-id="<?php echo $contactoId; ?>" style="display: none;">
         <div class="infoChat">
             <div class="imagenMensaje">
                 <img src="" alt="Imagen de perfil">
@@ -256,8 +262,8 @@ function renderChat()
                 <span class="estadoConexion">Desconectado</span>
             </div>
             <div class="botoneschat">
-                <button id="minizarChat"><? echo $GLOBALS['minus']; ?></button>
-                <button id="cerrarChat"><? echo $GLOBALS['cancelicon']; ?></button>
+                <button id="minizarChat"><?php echo $GLOBALS['minus']; ?></button>
+                <button id="cerrarChat"><?php echo $GLOBALS['cancelicon']; ?></button>
             </div>
         </div>
         <ul class="listaMensajes"></ul>
@@ -282,11 +288,11 @@ function renderChat()
 
         <div class="chatEnvio">
             <textarea class="mensajeContenido" rows="1"></textarea>
-            <button class="enviarMensaje"><? echo $GLOBALS['enviarMensaje']; ?></button>
-            <button class="enviarAdjunto" id="enviarAdjunto"><? echo $GLOBALS['enviarAdjunto']; ?></button>
+            <button class="enviarMensaje"><?php echo $GLOBALS['enviarMensaje']; ?></button>
+            <button class="enviarAdjunto" id="enviarAdjunto"><?php echo $GLOBALS['enviarAdjunto']; ?></button>
         </div>
     </div>
-<?
+    <?php
     $htmlGenerado = ob_get_clean();
     return $htmlGenerado;
 }
