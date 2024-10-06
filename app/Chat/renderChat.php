@@ -2,21 +2,28 @@
 
 function obtenerChatColab()
 {
+    chatLog('Iniciando obtenerChatColab...');
+
     // Verificar que el usuario está autenticado
     if (!is_user_logged_in()) {
+        chatLog('Usuario no autenticado.');
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));
         wp_die();
     }
 
     global $wpdb;
     $usuarioActual = get_current_user_id();
+    chatLog('Usuario actual: ' . $usuarioActual);
 
     // Obtener los parámetros del POST (se espera 'colab_id' y 'page')
     $colab_id = isset($_POST['colab_id']) ? intval($_POST['colab_id']) : 0;
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+    chatLog('Colab ID: ' . $colab_id . ', Página: ' . $page);
+
     $mensajesPorPagina = 10;
 
     if ($colab_id <= 0) {
+        chatLog('ID de colaboración inválido: ' . $colab_id);
         wp_send_json_error(array('message' => 'No se ha proporcionado un ID de colaboración válido.'));
         wp_die();
     }
@@ -24,8 +31,10 @@ function obtenerChatColab()
     // Obtener participantes de la colaboración
     $colabAutor = get_post_meta($colab_id, 'colabAutor', true);
     $colabColaborador = get_post_meta($colab_id, 'colabColaborador', true);
+    chatLog('Autor: ' . $colabAutor . ', Colaborador: ' . $colabColaborador);
 
     if (empty($colabAutor) || empty($colabColaborador)) {
+        chatLog('No se encontraron participantes para la colaboración.');
         wp_send_json_error(array('message' => 'No se encontraron participantes para esta colaboración.'));
         wp_die();
     }
@@ -34,31 +43,42 @@ function obtenerChatColab()
 
     // Asegurarse de que el usuario actual es uno de los participantes
     if (!in_array($usuarioActual, $participantes)) {
+        chatLog('Usuario no autorizado para acceder a la conversación.');
         wp_send_json_error(array('message' => 'El usuario actual no está autorizado para acceder a esta conversación.'));
         wp_die();
     }
 
-    // Intentar obtener el ID de la conversación desde los metadatos del post (colaboración)
+    // Intentar obtener el ID de la conversación desde los metadatos del post
     $conversacion = get_post_meta($colab_id, 'conversacion_id', true);
+    chatLog('ID de conversación obtenido: ' . $conversacion);
 
     $tablaConversaciones = $wpdb->prefix . 'conversacion';
 
     if (!$conversacion) {
+        chatLog('No existe conversación, creando una nueva.');
         // Si no existe, crear una nueva conversación
         $participantesJson = json_encode($participantes);
 
-        $wpdb->insert($tablaConversaciones, array(
+        $resultadoInsert = $wpdb->insert($tablaConversaciones, array(
             'tipo' => 2,
             'participantes' => $participantesJson,
             'fecha' => current_time('mysql')
         ));
 
+        if ($resultadoInsert === false) {
+            chatLog('Error al crear la nueva conversación.');
+            wp_send_json_error(array('message' => 'Error al crear la conversación.'));
+            wp_die();
+        }
+
         $conversacion = $wpdb->insert_id;
+        chatLog('Nueva conversación creada con ID: ' . $conversacion);
 
         // Guardar el ID de la conversación en los metadatos del post
         update_post_meta($colab_id, 'conversacion_id', $conversacion);
+        chatLog('ID de conversación guardado en los metadatos del post.');
 
-        // Guardar la conversación como metadato en ambos usuarios, bajo la meta 'participantes'
+        // Guardar la conversación como metadato en ambos usuarios
         foreach ($participantes as $participante) {
             $conversacionesUsuario = get_user_meta($participante, 'participantes', true);
 
@@ -76,8 +96,10 @@ function obtenerChatColab()
 
             // Actualizar la meta del usuario
             update_user_meta($participante, 'participantes', json_encode($conversacionesUsuario));
+            chatLog('Actualizando metadatos del usuario: ' . $participante);
         }
     } else {
+        chatLog('Verificando la existencia de la conversación en la base de datos.');
         // Verificar que la conversación existe en la base de datos
         $conversacionData = $wpdb->get_row($wpdb->prepare("
             SELECT participantes
@@ -86,6 +108,7 @@ function obtenerChatColab()
         ", $conversacion));
 
         if (!$conversacionData) {
+            chatLog('No se encontró la conversación en la base de datos.');
             wp_send_json_error(array('message' => 'No se encontró la conversación.'));
             wp_die();
         }
@@ -94,6 +117,7 @@ function obtenerChatColab()
         $participantesExistentes = json_decode($conversacionData->participantes, true);
 
         if (!in_array($usuarioActual, $participantesExistentes)) {
+            chatLog('El usuario no está autorizado en la conversación.');
             wp_send_json_error(array('message' => 'El usuario actual no está autorizado para acceder a esta conversación.'));
             wp_die();
         }
@@ -102,6 +126,8 @@ function obtenerChatColab()
     // Obtener los mensajes de la conversación
     $tablaMensajes = $wpdb->prefix . 'mensajes';
     $offset = ($page - 1) * $mensajesPorPagina;
+    chatLog('Consultando mensajes con offset: ' . $offset);
+    
     $query = $wpdb->prepare("
         SELECT mensaje, emisor AS remitente, fecha, adjunto
         FROM $tablaMensajes
@@ -113,9 +139,12 @@ function obtenerChatColab()
     $mensajes = $wpdb->get_results($query);
 
     if ($mensajes === null) {
+        chatLog('Error en la consulta a la base de datos.');
         wp_send_json_error(array('message' => 'Error en la consulta a la base de datos.'));
         wp_die();
     }
+
+    chatLog('Mensajes obtenidos: ' . count($mensajes));
 
     // Formatear los mensajes y preparar para la respuesta
     $mensajes = array_reverse($mensajes);
@@ -126,12 +155,14 @@ function obtenerChatColab()
         }
     }
 
+    chatLog('Enviando respuesta con los mensajes.');
     wp_send_json_success(array(
         'mensajes' => $mensajes ? $mensajes : array(),
         'conversacion' => $conversacion
     ));
     wp_die();
 }
+
 add_action('wp_ajax_obtenerChatColab', 'obtenerChatColab');
 
 
