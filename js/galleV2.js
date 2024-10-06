@@ -881,7 +881,7 @@ function galle() {
                 }
     
                 // Enviar el mensaje a través de WebSocket (incluyendo los participantes)
-                enviarMensajeWs(participantes, mensaje, adjunto, metadata = null,conversacion_id, listaMensajes);
+                enviarMensajeWs(participantes, mensaje, adjunto, metadata = 'colab', conversacion_id, listaMensajes);
     
                 mensajeInput.value = ''; // Limpiar el textarea después de enviar
             } else {
