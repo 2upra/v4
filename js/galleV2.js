@@ -335,7 +335,8 @@ function galle() {
                 adjunto: mensaje.adjunto,
                 remitente: mensaje.remitente
             }); // Mostrar los datos que se envian a agregarMensajeAlchat
-            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, mensaje.remitente);
+            // agregarMensajeAlChat(mensajeTexto: any, clase: any, fecha: any, listaMensajes?: Element | null, fechaAnterior?: null, insertAtTop?: boolean, adjunto?: null, temp_id?: null, msgEmisor?: null): void
+            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto,  temp_id = null, mensaje.remitente);
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
