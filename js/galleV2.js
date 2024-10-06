@@ -304,8 +304,19 @@ function galle() {
             return;
         }
 
+        console.log('mostrarMensajes: Mensajes completos:', mensajes); // Mostrar los datos completos recibidos
+
         let fechaAnterior = null;
         mensajes.forEach(mensaje => {
+            console.log('mostrarMensajes: Agregando mensaje:', {
+                mensaje: mensaje.mensaje,
+                clase: mensaje.clase,
+                fecha: mensaje.fecha,
+                listaMensajes: listaMensajes,
+                fechaAnterior: fechaAnterior,
+                adjunto: mensaje.adjunto,
+                emisor: mensaje.emisor
+            }); // Mostrar los datos que se envian a agregarMensajeAlchat
             agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, mensaje.emisor);
             fechaAnterior = new Date(mensaje.fecha);
         });
