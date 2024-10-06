@@ -238,7 +238,7 @@ function chatColab($var)
     // Properly escape the JSON string for HTML attribute
     $participantes_escaped = htmlspecialchars($participantes_json, ENT_QUOTES, 'UTF-8');
 ?>
-    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>" data-participantes="<?php echo $participantes_escaped; ?>' data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">
+    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>" data-participantes="<?php echo $participantes_escaped; ?>" data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">
 
         <ul class="listaMensajes"></ul>
 
