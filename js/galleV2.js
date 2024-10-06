@@ -533,16 +533,16 @@ add_action('wp_ajax_infoUsuario', 'infoUsuario');
 
             // Crear un elemento para mostrar la imagen de perfil y el nombre de usuario
             const userInfoElement = document.createElement('div');
-            userInfoElement.classList.add('user-info');
+            userInfoElement.classList.add('userChatInfo');
 
             const img = document.createElement('img');
             img.src = userData.imagenPerfil;
             img.alt = userData.nombreUsuario;
-            img.classList.add('user-profile-image');
+            img.classList.add('userChatAvatar');
 
             const usernameElement = document.createElement('span');
             usernameElement.textContent = userData.nombreUsuario;
-            usernameElement.classList.add('user-name');
+            usernameElement.classList.add('userNameChat');
 
             userInfoElement.appendChild(img);
             userInfoElement.appendChild(usernameElement);
