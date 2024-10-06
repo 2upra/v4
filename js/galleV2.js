@@ -683,10 +683,10 @@ function galle() {
     : 
     1728236042337
     */
-
+    //aqui recibe directament el valor "colab"
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null, conversacion_id = null, listaMensajes = null) {
         const temp_id = Date.now(); // Genera un ID temporal para el mensaje
-    
+
         // Verificar si 'receptor' es un objeto (posible JSON) o un string
         let receptorFinal;
         if (typeof receptor === 'string') {
@@ -697,17 +697,20 @@ function galle() {
             console.error('Formato de receptor no válido.');
             return;
         }
-    
+
         const messageData = {
             emisor,
-            receptor: receptorFinal,  
+            receptor: receptorFinal,
             mensaje,
             adjunto,
             metadata,
             conversacion_id,
             temp_id
         };
-    
+
+        // Log adicional para depurar metadata
+        console.log(`Valor de metadata: ${metadata !== null ? metadata : 'null'}`);
+
         console.log(`enviarMensajeWs: Enviando mensaje con datos:`);
         console.log(`  - emisor: ${messageData.emisor}`);
         console.log(`  - receptor: ${messageData.receptor}`);
@@ -716,16 +719,16 @@ function galle() {
         console.log(`  - metadata: ${messageData.metadata ? messageData.metadata : 'No'}`);
         console.log(`  - conversacion_id: ${messageData.conversacion_id}`);
         console.log(`  - temp_id: ${messageData.temp_id}`);
-    
+
         // Verificar si el WebSocket está listo para enviar
         if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(messageData));
-    
+
             // Si no se recibe una listaMensajes específica, usa la lista por defecto en el DOM
             if (!listaMensajes) {
                 listaMensajes = document.querySelector('.listaMensajes');
             }
-    
+
             // Agregar el mensaje al chat (UI)
             agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto, temp_id);
         } else {
@@ -733,11 +736,10 @@ function galle() {
             alert('No se puede enviar el mensaje, por favor, reinicia la página.');
         }
     }
-    
 
     function manejarConfirmacionMensajeGuardado(message) {
         let listaMensajes;
-    
+
         if (message.original_message.conversacion_id) {
             const conversacionId = message.original_message.conversacion_id;
             const bloqueChatColab = document.querySelector(`.bloqueChatColab[data-conversacion-id="${conversacionId}"]`);
@@ -750,9 +752,9 @@ function galle() {
         } else {
             listaMensajes = document.querySelector('.listaMensajes');
         }
-    
+
         const mensajeElemento = listaMensajes.querySelector(`[data-temp-id="${message.original_message.temp_id}"]`);
-    
+
         if (mensajeElemento) {
             //console.log(`manejarConfirmacionMensajeGuardado: Confirmación de mensaje con ID temporal ${message.original_message.temp_id} recibida.`);
             //console.log(`manejarConfirmacionMensajeGuardado: Agregando clase 'mensajeEnviado' y removiendo clase 'mensajePendiente' al elemento del mensaje.`);
@@ -775,7 +777,6 @@ function galle() {
             console.warn(`manejarError: No se encontró el elemento del mensaje con ID temporal ${message.original_message.temp_id}.`);
         }
     }
-
 
     function setupEnviarMensajeHandler() {
         document.addEventListener('click', event => {
@@ -862,7 +863,7 @@ function galle() {
                 enviarMensajeColab(event.target);
             }
         });
-    
+
         const mensajeInput = document.querySelector('.mensajeContenidoColab');
         mensajeInput.addEventListener('keydown', event => {
             if (event.key === 'Enter' && !event.altKey) {
@@ -871,32 +872,31 @@ function galle() {
                 enviarMensajeColab(enviarBtn);
             }
         });
-    
+
         function enviarMensajeColab(button) {
             if (subidaChatProgreso === true) {
                 alert('Por favor espera a que se complete la subida del archivo.');
                 return;
             }
-    
+
             const mensajeInput = button.closest('.chatEnvio').querySelector('.mensajeContenidoColab');
             const mensaje = mensajeInput.value.trim();
-    
+
             if (mensaje !== '') {
                 // Obtener el conversacion_id del botón
                 const conversacion_id = button.getAttribute('data-conversacion-id');
-                
+
                 // Obtener los participantes desde el atributo data-participantes
                 const bloqueChat = button.closest('.bloqueChatColab');
                 const participantesData = bloqueChat.getAttribute('data-participantes');
 
                 // Parse the JSON string directly
                 const participantes = JSON.parse(participantesData);
-                const metadata = "colab";
-            
-    
+                const metadata = 'colab';
+
                 // Obtener la lista de mensajes correspondiente (cercana al botón)
                 const listaMensajes = bloqueChat.querySelector('.listaMensajes');
-    
+
                 let adjunto = null;
                 if (archivoChatId || archivoChatUrl) {
                     adjunto = {
@@ -906,17 +906,16 @@ function galle() {
                     archivoChatId = null;
                     archivoChatUrl = null;
                 }
-    
+
                 // Enviar el mensaje a través de WebSocket (incluyendo los participantes)
                 enviarMensajeWs(participantes, mensaje, adjunto, metadata, conversacion_id, listaMensajes);
-    
+
                 mensajeInput.value = ''; // Limpiar el textarea después de enviar
             } else {
                 alert('Por favor, ingresa un mensaje.');
             }
         }
     }
-    
 
     /*
      *   FUNCIONES PARA CARGAR MAS ADJUNTAR ARCHIVOS
