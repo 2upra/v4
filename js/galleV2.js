@@ -473,20 +473,20 @@ function galle() {
 
     function manejarMensajeWebSocket(data) {
         console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket:', data);
-    
+
         try {
             const parsedData = JSON.parse(data);
             console.log('manejarMensajeWebSocket: Mensaje parseado correctamente:', parsedData);
-    
+
             const msgEmisor = String(parsedData.emisor);
             const msgReceptor = parsedData.receptor;
             const msgMensaje = parsedData.mensaje;
             const msgConversacionId = parsedData.conversacion_id;
             const msgAdjunto = parsedData.adjunto || null;
             const tempId = parsedData.temp_id || null;
-    
+
             console.log('manejarMensajeWebSocket:', {msgEmisor, msgReceptor, msgMensaje, msgConversacionId});
-    
+
             // Obtener el ID del usuario actual
             const currentUserId = String(emisor);
 
@@ -494,7 +494,7 @@ function galle() {
             try {
                 // Intentamos parsear msgReceptor
                 receptorIds = JSON.parse(msgReceptor);
-    
+
                 // Si el resultado no es un array, lo convertimos en uno
                 if (!Array.isArray(receptorIds)) {
                     receptorIds = [String(receptorIds)];
@@ -506,35 +506,48 @@ function galle() {
                 // Si falla el parseo, asumimos que es un único ID y lo colocamos en un array
                 receptorIds = [String(msgReceptor)];
             }
-    
+
             // Comprobar si el mensaje es para nosotros
             if (receptorIds.includes(currentUserId)) {
                 console.log('manejarMensajeWebSocket: El mensaje es para nosotros.');
-    
+                console.log('Datos del mensaje:', {
+                    msgConversacionId,
+                    msgEmisor,
+                    msgReceptor,
+                    currentUserId
+                });
+
                 let chatWindow;
-    
+
                 if (msgConversacionId && msgConversacionId !== 'null') {
                     // Mensaje grupal o con conversacion_id
+                    console.log(`Buscando ventana de chat con data-conversacion-id="${msgConversacionId}"`);
                     chatWindow = document.querySelector(`.bloqueChatColab[data-conversacion-id="${msgConversacionId}"]`);
                 } else {
                     // Mensaje uno a uno, usar el ID del emisor o receptor para encontrar la ventana de chat
                     const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
+                    console.log(`Buscando ventana de chat con data-user-id="${contactoId}"`);
                     chatWindow = document.querySelector(`.bloqueChat[data-user-id="${contactoId}"]`);
                 }
-    
+
                 if (chatWindow) {
+                    console.log('Ventana de chat encontrada:', chatWindow);
+
                     const listaMensajes = chatWindow.querySelector('.listaMensajes');
                     const fechaActual = new Date();
-    
+
                     if (msgEmisor === currentUserId) {
                         // El mensaje fue enviado por nosotros, lo añadimos a la derecha
+                        console.log('El mensaje fue enviado por nosotros. Añadiendo a la derecha.');
                         agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes, null, false, msgAdjunto, tempId);
                     } else {
                         // El mensaje fue enviado por otro participante, lo añadimos a la izquierda
+                        console.log('El mensaje fue enviado por otro participante. Añadiendo a la izquierda.');
                         agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', fechaActual, listaMensajes, null, false, msgAdjunto, tempId);
                     }
-    
+
                     // Actualizar la lista de conversaciones
+                    console.log('Actualizando lista de conversaciones.');
                     actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
                 } else {
                     console.log(`manejarMensajeWebSocket: No se encontró la ventana de chat para conversacion_id: ${msgConversacionId} o usuario: ${msgEmisor}`);
@@ -542,23 +555,23 @@ function galle() {
             } else if (msgEmisor === currentUserId) {
                 // El mensaje fue enviado por nosotros pero quizás a otra conversación
                 console.log('manejarMensajeWebSocket: Es una confirmación de recepción de nuestro mensaje.');
-    
+
                 let chatWindow;
-    
+
                 if (msgConversacionId && msgConversacionId !== 'null') {
                     chatWindow = document.querySelector(`.bloqueChatColab[data-conversacion-id="${msgConversacionId}"]`);
                 } else {
                     // Mensaje uno a uno
                     chatWindow = document.querySelector(`.bloqueChat[data-user-id="${msgReceptor}"]`);
                 }
-    
+
                 if (chatWindow) {
                     const listaMensajes = chatWindow.querySelector('.listaMensajes');
                     const fechaActual = new Date();
-    
+
                     // Añadir el mensaje a la derecha
                     agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes, null, false, msgAdjunto, tempId);
-    
+
                     // Actualizar la lista de conversaciones
                     actualizarListaConversaciones(msgConversacionId || msgReceptor, msgMensaje);
                 } else {
