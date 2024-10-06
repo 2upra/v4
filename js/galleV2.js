@@ -660,22 +660,45 @@ function galle() {
 
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null, conversacion_id = null, listaMensajes = null) {
         const temp_id = Date.now(); // Genera un ID temporal para el mensaje
-        const messageData = {emisor, receptor, mensaje, adjunto, metadata, conversacion_id, temp_id};
-
+    
+        // Verificar si 'receptor' es un objeto (posible JSON) o un string
+        let receptorFinal;
+        if (typeof receptor === 'string') {
+            receptorFinal = receptor; // Si es un string, lo usamos tal cual
+        } else if (typeof receptor === 'object') {
+            receptorFinal = JSON.stringify(receptor); // Si es un objeto (como un JSON), lo convertimos a string
+        } else {
+            console.error('Formato de receptor no válido.');
+            return;
+        }
+    
+        const messageData = {
+            emisor,
+            receptor: receptorFinal,  // Usamos el receptor ya procesado
+            mensaje,
+            adjunto,
+            metadata,
+            conversacion_id,
+            temp_id
+        };
+    
+        // Verificar si el WebSocket está listo para enviar
         if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(messageData));
-
+    
             // Si no se recibe una listaMensajes específica, usa la lista por defecto en el DOM
             if (!listaMensajes) {
                 listaMensajes = document.querySelector('.listaMensajes');
             }
-
+    
+            // Agregar el mensaje al chat (UI)
             agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto, temp_id);
         } else {
             console.error('enviarMensajeWs: WebSocket no está conectado, no se puede enviar el mensaje.');
             alert('No se puede enviar el mensaje, por favor, reinicia la página.');
         }
     }
+    
 
     function manejarConfirmacionMensajeGuardado(message) {
         let listaMensajes;
@@ -770,7 +793,7 @@ function galle() {
                 enviarMensajeColab(event.target);
             }
         });
-
+    
         const mensajeInput = document.querySelector('.mensajeContenidoColab');
         mensajeInput.addEventListener('keydown', event => {
             if (event.key === 'Enter' && !event.altKey) {
@@ -779,23 +802,27 @@ function galle() {
                 enviarMensajeColab(enviarBtn);
             }
         });
-
+    
         function enviarMensajeColab(button) {
             if (subidaChatProgreso === true) {
                 alert('Por favor espera a que se complete la subida del archivo.');
                 return;
             }
-
+    
             const mensajeInput = button.closest('.chatEnvio').querySelector('.mensajeContenidoColab');
             const mensaje = mensajeInput.value.trim();
-
+    
             if (mensaje !== '') {
                 // Obtener el conversacion_id del botón
                 const conversacion_id = button.getAttribute('data-conversacion-id');
-
+                
+                // Obtener los participantes desde el atributo data-participantes
+                const bloqueChat = button.closest('.bloqueChatColab');
+                const participantes = JSON.parse(bloqueChat.getAttribute('data-participantes'));
+    
                 // Obtener la lista de mensajes correspondiente (cercana al botón)
-                const listaMensajes = button.closest('.bloqueChatColab').querySelector('.listaMensajes');
-
+                const listaMensajes = bloqueChat.querySelector('.listaMensajes');
+    
                 let adjunto = null;
                 if (archivoChatId || archivoChatUrl) {
                     adjunto = {
@@ -805,15 +832,17 @@ function galle() {
                     archivoChatId = null;
                     archivoChatUrl = null;
                 }
-
-                enviarMensajeWs(receptor, mensaje, adjunto, (metadata = null), conversacion_id, listaMensajes);
-
+    
+                // Enviar el mensaje a través de WebSocket (incluyendo los participantes)
+                enviarMensajeWs(receptor, mensaje, adjunto, participantes, conversacion_id, listaMensajes);
+    
                 mensajeInput.value = ''; // Limpiar el textarea después de enviar
             } else {
                 alert('Por favor, ingresa un mensaje.');
             }
         }
     }
+    
 
     /*
      *   FUNCIONES PARA CARGAR MAS ADJUNTAR ARCHIVOS

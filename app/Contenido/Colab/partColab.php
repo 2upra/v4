@@ -221,23 +221,25 @@ function opcionesColabActivo($var)
     return ob_get_clean();
 }
 
-function chatColab($var) {
+function chatColab($var)
+{
     $post_id = intval($var['post_id']);
     $conversacion_id = intval($var['conversacion_id']);
+    $participantes = $var['participantes'];
     ob_start();
 ?>
-    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>" data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">
+    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>" data-participantes='<?php echo json_encode($participantes); ?>' data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">
+
         <ul class="listaMensajes"></ul>
 
         <div class="chatEnvio">
             <textarea class="mensajeContenidoColab borde" rows="1"></textarea>
-            <button class="enviarMensajeColab borde" data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">  
-                <?php echo $GLOBALS['enviarMensaje']; ?>
+            <button class="enviarMensajeColab borde" data-conversacion-id="<? echo esc_attr($conversacion_id); ?>">
+                <? echo $GLOBALS['enviarMensaje']; ?>
             </button>
-            <button class="enviarAdjunto" id="enviarAdjunto"><?php echo $GLOBALS['enviarAdjunto']; ?></button>
+            <button class="enviarAdjunto" id="enviarAdjunto"><? echo $GLOBALS['enviarAdjunto']; ?></button>
         </div>
     </div>
-<?php
+<?
     return ob_get_clean();
 }
-
