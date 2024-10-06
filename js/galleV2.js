@@ -468,25 +468,25 @@ function galle() {
     }
 
     function manejarMensajeWebSocket(data) {
-        //console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket.');
+        console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket.');
 
         try {
             const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
-            //console.log('manejarMensajeWebSocket: Mensaje parseado correctamente:', {msgEmisor, msgReceptor, msgMensaje});
+            console.log('manejarMensajeWebSocket: Mensaje parseado correctamente:', {msgEmisor, msgReceptor, msgMensaje});
 
             const listaMensajes = document.querySelector('.listaMensajes');
             const fechaActual = new Date();
 
             // Asegúrate de que emisor y receptor estén definidos
             if (msgReceptor === emisor) {
-                //console.log('manejarMensajeWebSocket: El mensaje es para nosotros.');
+                console.log('manejarMensajeWebSocket: El mensaje es para nosotros.');
                 if (msgEmisor === receptor) {
-                    //console.log('manejarMensajeWebSocket: El mensaje es del receptor actual, añadiendo a la izquierda.');
+                    console.log('manejarMensajeWebSocket: El mensaje es del receptor actual, añadiendo a la izquierda.');
                     agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', fechaActual, listaMensajes);
                 }
                 actualizarListaConversaciones(msgEmisor, msgMensaje);
             } else if (msgEmisor === emisor && msgReceptor === receptor) {
-                //console.log('manejarMensajeWebSocket: Es una confirmación de recepción de nuestro mensaje, añadiendo a la derecha.');
+                console.log('manejarMensajeWebSocket: Es una confirmación de recepción de nuestro mensaje, añadiendo a la derecha.');
                 agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes);
                 actualizarListaConversaciones(msgReceptor, msgMensaje);
             }
@@ -606,10 +606,10 @@ function galle() {
 
     //mi duda es que, como recibo una confirmación de que el mensaje realmenete se guardo
     function connectWebSocket() {
-        console.log('Intentando conectar a WebSocket...');
+        //console.log('Intentando conectar a WebSocket...');
         ws = new WebSocket(wsUrl);
         ws.onopen = () => {
-            console.log('Conectado a WebSocket, enviando autenticación...');
+            //console.log('Conectado a WebSocket, enviando autenticación...');
             ws.send(
                 JSON.stringify({
                     emisor,
@@ -619,7 +619,7 @@ function galle() {
             );
             pingInterval = setInterval(() => {
                 if (ws.readyState === WebSocket.OPEN) {
-                    console.log('Enviando ping...');
+                    //console.log('Enviando ping...');
                     ws.send(JSON.stringify({type: 'ping'}));
                 }
             }, 30000);
@@ -634,136 +634,18 @@ function galle() {
         ws.onmessage = ({data}) => {
             const message = JSON.parse(data);
             if (message.type === 'pong') {
-                console.log('Recibido pong, todo bien...');
+                //console.log('Recibido pong, todo bien...');
             } else if (message.type === 'set_emisor') {
                 console.log('Recibido set_emisor, reenviando emisor...');
                 ws.send(JSON.stringify({emisor}));
             } else if (message.type === 'message_saved') {
-                /*
-                puedes notar que hay 2 tipos de mensajes, uno no regresa conversacion id, y funciona bien, manejarConfirmacionMensajeGuardado(message); lo maneja bien encontrandolo, pero en el caso de que el mensaje llega con conversacion_id la funcion no esta preparada para ese caso
-
-                principalmentep porque los mensajes sin conversacion los encuentra en .listaMensajes y los mensajes con conversacion id estan en un html distinto, se que hay una forma para solucionarlo
-
-                function chatColab($var) {
-                    $post_id = intval($var['post_id']);
-                    $conversacion_id = intval($var['conversacion_id']);
-                    ob_start();
-                ?>
-                    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>">
-                        <ul class="listaMensajes"></ul>
-
-                        <div class="chatEnvio">
-                            <textarea class="mensajeContenidoColab borde" rows="1"></textarea>
-                            <button class="enviarMensajeColab borde" data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">  
-                                <?php echo $GLOBALS['enviarMensaje']; ?>
-                            </button>
-                            <button class="enviarAdjunto" id="enviarAdjunto"><?php echo $GLOBALS['enviarAdjunto']; ?></button>
-                        </div>
-                    </div>
-                <?php
-                    return ob_get_clean();
-                }
-
-                
-                function manejarConfirmacionMensajeGuardado(message) {
-                    const listaMensajes = document.querySelector('.listaMensajes');
-                    const mensajeElemento = listaMensajes.querySelector(`[data-temp-id="${message.original_message.temp_id}"]`);
-
-                    if (mensajeElemento) {
-                        console.log(`manejarConfirmacionMensajeGuardado: Confirmación de mensaje con ID temporal ${message.original_message.temp_id} recibida.`);
-                        console.log(`manejarConfirmacionMensajeGuardado: Agregando clase 'mensajeEnviado' y removiendo clase 'mensajePendiente' al elemento del mensaje.`);
-                        mensajeElemento.classList.add('mensajeEnviado');
-                        mensajeElemento.classList.remove('mensajePendiente');
-                    } else {
-                        console.warn(`manejarConfirmacionMensajeGuardado: No se encontró el elemento del mensaje con ID temporal ${message.original_message.temp_id}.`);
-                    }
-                }
-
-
-
-                Recibido message_saved: Recibido message_saved: 
-                {type: 'message_saved', message_id: null, timestamp: 1728168708, original_message: {…}}
-                message_id
-                : 
-                null
-                original_message
-                : 
-                adjunto
-                : 
-                null
-                conversacion_id
-                : 
-                "12"
-                emisor
-                : 
-                "1"
-                mensaje
-                : 
-                "230"
-                metadata
-                : 
-                null
-                receptor
-                : 
-                null
-                temp_id
-                : 
-                1728168707733
-                timestamp
-                : 
-                1728168708
-                type
-                : 
-                "message_saved"
-                [[Prototype]]
-                : 
-                Object
-                galleV2.js?ver=2.0.1.1033008652:644 Recibido message_saved, manejando confirmación de mensaje guardado...
-                Recibido message_saved: 
-                {type: 'message_saved', message_id: null, timestamp: 1728168719, original_message: {…}}
-                message_id
-                : 
-                null
-                original_message
-                : 
-                adjunto
-                : 
-                null
-                conversacion_id
-                : 
-                null
-                emisor
-                : 
-                "1"
-                mensaje
-                : 
-                "230"
-                metadata
-                : 
-                null
-                receptor
-                : 
-                "44"
-                temp_id
-                : 
-                1728168718878
-                timestamp
-                : 
-                1728168719
-                type
-                : 
-                "message_saved"
-                [[Prototype]]
-                : 
-                Object
-                */
                 console.log('Recibido message_saved:', message);
                 manejarConfirmacionMensajeGuardado(message);
             } else if (message.type === 'message_error') {
-                console.log('Recibido message_error, manejando error...');
+                //console.log('Recibido message_error, manejando error...');
                 manejarError(message);
             } else {
-                console.log('Recibido mensaje desconocido, manejando como mensaje WebSocket...');
+                //console.log('Recibido mensaje desconocido, manejando como mensaje WebSocket...');
                 manejarMensajeWebSocket(JSON.stringify(message));
             }
         };
@@ -811,8 +693,8 @@ function galle() {
         const mensajeElemento = listaMensajes.querySelector(`[data-temp-id="${message.original_message.temp_id}"]`);
     
         if (mensajeElemento) {
-            console.log(`manejarConfirmacionMensajeGuardado: Confirmación de mensaje con ID temporal ${message.original_message.temp_id} recibida.`);
-            console.log(`manejarConfirmacionMensajeGuardado: Agregando clase 'mensajeEnviado' y removiendo clase 'mensajePendiente' al elemento del mensaje.`);
+            //console.log(`manejarConfirmacionMensajeGuardado: Confirmación de mensaje con ID temporal ${message.original_message.temp_id} recibida.`);
+            //console.log(`manejarConfirmacionMensajeGuardado: Agregando clase 'mensajeEnviado' y removiendo clase 'mensajePendiente' al elemento del mensaje.`);
             mensajeElemento.classList.add('mensajeEnviado');
             mensajeElemento.classList.remove('mensajePendiente');
         } else {
@@ -826,7 +708,7 @@ function galle() {
 
         if (mensajeElemento) {
             console.error(`manejarError: Error en el mensaje con ID temporal ${message.original_message.temp_id}.`);
-            console.log(`manejarError: Agregando clase 'mensajeError' al elemento del mensaje.`);
+            //console.log(`manejarError: Agregando clase 'mensajeError' al elemento del mensaje.`);
             mensajeElemento.classList.add('mensajeError');
         } else {
             console.warn(`manejarError: No se encontró el elemento del mensaje con ID temporal ${message.original_message.temp_id}.`);
