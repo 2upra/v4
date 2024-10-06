@@ -469,29 +469,75 @@ function galle() {
 
     function manejarMensajeWebSocket(data) {
         console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket:', data);
-
+    
         try {
-            const {emisor: msgEmisor, receptor: msgReceptor, mensaje: msgMensaje} = JSON.parse(data);
-            console.log('manejarMensajeWebSocket: Mensaje parseado correctamente:', {msgEmisor, msgReceptor, msgMensaje});
-
-            console.log('manejarMensajeWebSocket: Verificando si el mensaje es para nosotros...');
-            const listaMensajes = document.querySelector('.listaMensajes');
-            const fechaActual = new Date();
-
-            // Asegúrate de que emisor y receptor estén definidos
-            if (msgReceptor === emisor) {
+            const parsedData = JSON.parse(data);
+            console.log('manejarMensajeWebSocket: Mensaje parseado correctamente:', parsedData);
+    
+            const msgEmisor = parsedData.emisor;
+            const msgReceptor = parsedData.receptor;
+            const msgMensaje = parsedData.mensaje;
+            const msgConversacionId = parsedData.conversacion_id;
+            const msgAdjunto = parsedData.adjunto || null;
+            const tempId = parsedData.temp_id || null;
+    
+            console.log('manejarMensajeWebSocket:', {msgEmisor, msgReceptor, msgMensaje, msgConversacionId});
+    
+            // Obtener el ID del usuario actual
+            const currentUserId = emisor; // Asegúrate de que esta variable está definida y contiene el ID del usuario actual
+    
+            // Parsear msgReceptor como array
+            let receptorIds = [];
+            try {
+                receptorIds = JSON.parse(msgReceptor);
+            } catch (e) {
+                // Si falla el parseo, asumimos que es un único ID
+                receptorIds = [msgReceptor];
+            }
+    
+            // Comprobar si el mensaje es para nosotros
+            if (receptorIds.includes(currentUserId)) {
                 console.log('manejarMensajeWebSocket: El mensaje es para nosotros.');
-                if (msgEmisor === receptor) {
-                    console.log('manejarMensajeWebSocket: El mensaje es del receptor actual, añadiendo a la izquierda.');
-                    agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', fechaActual, listaMensajes);
+    
+                // Encontrar la ventana de chat correspondiente usando el conversacion_id
+                const chatWindow = document.querySelector(`.bloqueChatColab[data-conversacion-id="${msgConversacionId}"]`);
+                if (chatWindow) {
+                    const listaMensajes = chatWindow.querySelector('.listaMensajes');
+                    const fechaActual = new Date();
+    
+                    if (msgEmisor === currentUserId) {
+                        // El mensaje fue enviado por nosotros, lo añadimos a la derecha
+                        agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes, null, false, msgAdjunto, tempId);
+                    } else {
+                        // El mensaje fue enviado por otro participante, lo añadimos a la izquierda
+                        agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', fechaActual, listaMensajes, null, false, msgAdjunto, tempId);
+                    }
+    
+                    // Actualizar la lista de conversaciones (si tienes esta funcionalidad)
+                    actualizarListaConversaciones(msgConversacionId, msgMensaje);
+                } else {
+                    console.log(`manejarMensajeWebSocket: No se encontró la ventana de chat para conversacion_id: ${msgConversacionId}`);
                 }
-                console.log('manejarMensajeWebSocket: Actualizando la lista de conversaciones con el mensaje de:', msgEmisor);
-                actualizarListaConversaciones(msgEmisor, msgMensaje);
-            } else if (msgEmisor === emisor && msgReceptor === receptor) {
-                console.log('manejarMensajeWebSocket: Es una confirmación de recepción de nuestro mensaje, añadiendo a la derecha.');
-                agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes);
-                console.log('manejarMensajeWebSocket: Actualizando la lista de conversaciones con el mensaje de:', msgReceptor);
-                actualizarListaConversaciones(msgReceptor, msgMensaje);
+            } else if (msgEmisor === currentUserId) {
+                // El mensaje fue enviado por nosotros pero quizás a otra conversación
+                console.log('manejarMensajeWebSocket: Es una confirmación de recepción de nuestro mensaje.');
+    
+                // Intentar encontrar la ventana de chat correspondiente
+                const chatWindow = document.querySelector(`.bloqueChatColab[data-conversacion-id="${msgConversacionId}"]`);
+                if (chatWindow) {
+                    const listaMensajes = chatWindow.querySelector('.listaMensajes');
+                    const fechaActual = new Date();
+    
+                    // Añadir el mensaje a la derecha
+                    agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes, null, false, msgAdjunto, tempId);
+    
+                    // Actualizar la lista de conversaciones
+                    actualizarListaConversaciones(msgConversacionId, msgMensaje);
+                } else {
+                    console.log(`manejarMensajeWebSocket: No se encontró la ventana de chat para conversacion_id: ${msgConversacionId}`);
+                }
+            } else {
+                console.log('manejarMensajeWebSocket: El mensaje no es para nosotros.');
             }
         } catch (error) {
             console.error('Error al manejar el mensaje de WebSocket:', error);
