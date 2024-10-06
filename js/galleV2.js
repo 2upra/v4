@@ -137,28 +137,21 @@ function galle() {
         try {
             let data = {success: true, data: {mensajes: [], conversacion: null}};
             currentPage = 1;
-    
             if (conversacion) {
                 data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
             } else if (receptor) {
                 data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
             }
-    
             if (data?.success) {
                 mostrarMensajes(data.data.mensajes);
-    
                 const bloqueChat = document.querySelector('.bloqueChat');
-                bloqueChat.setAttribute('data-user-id', receptor); // Establecer data-user-id
+                bloqueChat.setAttribute('data-user-id', receptor);
                 bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                 bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
                 bloqueChat.style.display = 'block';
-    
                 manejarScroll(data.data.conversacion);
-    
                 const listaMensajes = document.querySelector('.listaMensajes');
                 listaMensajes.scrollTop = listaMensajes.scrollHeight;
-    
-                // Actualizar estado de conexión del receptor
                 await actualizarEstadoConexion(receptor, bloqueChat);
                 setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
             } else {
@@ -168,6 +161,7 @@ function galle() {
             alert('Ha ocurrido un error al intentar abrir la conversación.');
         }
     }
+
     async function cerrarChat() {
         try {
             const bloqueChat = document.querySelector('.bloqueChat');
@@ -291,15 +285,6 @@ function galle() {
     }
 
     /*
-     *   MANEJO DE BOTON PARA MOSTRAR LISTA DE CHATS Y CONVERSACION
-     */
-
-    /* 
-
-
-    */
-
-    /*
      *   FUNCIONES RELACIONADAS CON LA CARGAN LOS MENSAJES DE UNA CONVERSACION
      */
 
@@ -310,9 +295,7 @@ function galle() {
             console.error('No se encontró el contenedor de mensajes.');
             return;
         }
-
-        listaMensajes.innerHTML = ''; // Limpiamos los mensajes anteriores
-
+        listaMensajes.innerHTML = '';
         if (mensajes.length === 0) {
             const mensajeVacio = document.createElement('p');
             mensajeVacio.textContent = 'Aún no hay mensajes';
@@ -322,10 +305,8 @@ function galle() {
         }
 
         let fechaAnterior = null;
-
         mensajes.forEach(mensaje => {
-            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto);
-
+            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, mensaje.emisor);
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
@@ -414,14 +395,7 @@ function galle() {
     */
 
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null) {
-        // Verifica si listaMensajes es un nodo DOM válido
-        if (!listaMensajes || !(listaMensajes instanceof Element)) {
-            console.error('Error: listaMensajes no es un elemento DOM válido o no se encontró. Valor recibido:', listaMensajes);
-            return;
-        }
-
         const fechaMensaje = new Date(fecha);
-
         if (!fechaAnterior) {
             let lastElement = null;
             const children = Array.from(listaMensajes.children || []);
@@ -438,35 +412,27 @@ function galle() {
 
             fechaAnterior = lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
         }
-
-        // Lógica para manejar la fecha
         manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
-
-        // Crear el nuevo mensaje
         const li = document.createElement('li');
         li.textContent = mensajeTexto;
         li.classList.add(clase);
         li.setAttribute('data-fecha', fechaMensaje.toISOString());
 
-        // Asignar el temp_id como atributo data
-        if (temp_id) {
-            li.setAttribute('data-temp-id', temp_id);
-
-            // Añade una clase para indicar que está pendiente de confirmación
-            li.classList.add('mensajePendiente');
+        // Agrega el atributo data-emisor si msgEmisor existe
+        if (msgEmisor) {
+            li.setAttribute('data-emisor', msgEmisor);
         }
 
-        // Lógica para manejar el adjunto
+        if (temp_id) {
+            li.setAttribute('data-temp-id', temp_id);
+            li.classList.add('mensajePendiente');
+        }
         manejarAdjunto(adjunto, li);
-
-        // Insertar el mensaje en la posición correcta
         if (insertAtTop) {
             listaMensajes.insertBefore(li, listaMensajes.firstChild);
         } else {
             listaMensajes.appendChild(li);
         }
-
-        // Si no se está insertando al inicio, desplázate hacia abajo
         if (!insertAtTop) {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
         }
@@ -478,28 +444,28 @@ function galle() {
 
     function manejarMensajeWebSocket(data) {
         //console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket:', data);
-    
+
         try {
             const parsedData = JSON.parse(data);
             //console.log('manejarMensajeWebSocket: Mensaje parseado correctamente:', parsedData);
-    
+
             const msgEmisor = String(parsedData.emisor);
             const msgReceptor = parsedData.receptor;
             const msgMensaje = parsedData.mensaje;
             const msgConversacionId = parsedData.conversacion_id;
             const msgAdjunto = parsedData.adjunto || null;
             const tempId = parsedData.temp_id || null;
-    
+
             //console.log('manejarMensajeWebSocket:', {msgEmisor, msgReceptor, msgMensaje, msgConversacionId});
-    
+
             // Obtener el ID del usuario actual
             const currentUserId = String(emisor);
-    
+
             let receptorIds;
             try {
                 // Intentamos parsear msgReceptor
                 receptorIds = JSON.parse(msgReceptor);
-    
+
                 // Si el resultado no es un array, lo convertimos en uno
                 if (!Array.isArray(receptorIds)) {
                     receptorIds = [String(receptorIds)];
@@ -511,7 +477,7 @@ function galle() {
                 // Si falla el parseo, asumimos que es un único ID y lo colocamos en un array
                 receptorIds = [String(msgReceptor)];
             }
-    
+
             // Comprobar si el mensaje es para nosotros
             if (receptorIds.includes(currentUserId)) {
                 //console.log('manejarMensajeWebSocket: El mensaje es para nosotros.');
@@ -521,9 +487,9 @@ function galle() {
                 //    msgReceptor,
                 //    currentUserId
                 //});
-    
+
                 let chatWindow;
-    
+
                 if (msgConversacionId && msgConversacionId !== 'null') {
                     // Mensaje grupal o con conversacion_id
                     //console.log(`Buscando ventana de chat con data-conversacion-id="${msgConversacionId}"`);
@@ -533,46 +499,27 @@ function galle() {
                     const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
                     //console.log(`Buscando ventana de chat con data-user-id="${contactoId}"`);
                     chatWindow = document.querySelector(`.bloqueChat[data-user-id="${contactoId}"]`);
-    
+
                     //console.log('Actualizando lista de conversaciones.');
                     actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
                 }
-    
+
                 if (chatWindow) {
                     //console.log('Ventana de chat encontrada:', chatWindow);
-    
+
                     const listaMensajes = chatWindow.querySelector('.listaMensajes');
                     const fechaActual = new Date();
-    
+
                     if (msgEmisor === currentUserId) {
                         // El mensaje fue enviado por nosotros, lo añadimos a la derecha
                         //console.log('El mensaje fue enviado por nosotros. Añadiendo a la derecha.');
-                        agregarMensajeAlChat(
-                            msgMensaje,
-                            'mensajeDerecha',
-                            fechaActual,
-                            listaMensajes,
-                            null,
-                            false,
-                            msgAdjunto,
-                            tempId
-                        );
+                        agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes, null, false, msgAdjunto, tempId);
                     } else {
                         // El mensaje fue enviado por otro participante, lo añadimos a la izquierda
                         //console.log('El mensaje fue enviado por otro participante. Añadiendo a la izquierda.');
-                        agregarMensajeAlChat(
-                            msgMensaje,
-                            'mensajeIzquierda',
-                            fechaActual,
-                            listaMensajes,
-                            null,
-                            false,
-                            msgAdjunto,
-                            tempId, 
-                            msgEmisor
-                        );
+                        agregarMensajeAlChat(msgMensaje, 'mensajeIzquierda', fechaActual, listaMensajes, null, false, msgAdjunto, tempId, msgEmisor);
                     }
-    
+
                     // Actualizar la lista de conversaciones
                     //console.log('Actualizando lista de conversaciones.');
                     actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
@@ -582,32 +529,23 @@ function galle() {
             } else if (msgEmisor === currentUserId) {
                 // El mensaje fue enviado por nosotros pero quizás a otra conversación
                 //console.log('manejarMensajeWebSocket: Es una confirmación de recepción de nuestro mensaje.');
-    
+
                 let chatWindow;
-    
+
                 if (msgConversacionId && msgConversacionId !== 'null') {
                     chatWindow = document.querySelector(`.bloqueChatColab[data-conversacion-id="${msgConversacionId}"]`);
                 } else {
                     // Mensaje uno a uno
                     chatWindow = document.querySelector(`.bloqueChat[data-user-id="${msgReceptor}"]`);
                 }
-    
+
                 if (chatWindow) {
                     const listaMensajes = chatWindow.querySelector('.listaMensajes');
                     const fechaActual = new Date();
-    
+
                     // Añadir el mensaje a la derecha
-                    agregarMensajeAlChat(
-                        msgMensaje,
-                        'mensajeDerecha',
-                        fechaActual,
-                        listaMensajes,
-                        null,
-                        false,
-                        msgAdjunto,
-                        tempId
-                    );
-    
+                    agregarMensajeAlChat(msgMensaje, 'mensajeDerecha', fechaActual, listaMensajes, null, false, msgAdjunto, tempId);
+
                     // Actualizar la lista de conversaciones
                     actualizarListaConversaciones(msgConversacionId || msgReceptor, msgMensaje);
                 } else {
