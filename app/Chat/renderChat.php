@@ -30,10 +30,50 @@ function obtenerChatColab()
     $colabColaborador = get_post_meta($colab_id, 'colabColaborador', true);
     chatLog('Autor: ' . $colabAutor . ', Colaborador: ' . $colabColaborador);
 
+    // Verificamos si los metadatos de los participantes están vacíos
     if (empty($colabAutor) || empty($colabColaborador)) {
-        chatLog('No se encontraron participantes para la colaboración.');
-        wp_send_json_error(array('message' => 'No se encontraron participantes para esta colaboración.'));
-        wp_die();
+        chatLog('No se encontraron participantes en los metadatos del post. Intentando obtener desde la conversación.');
+
+        // Obtenemos el ID de la conversación asociado al colab_id
+        $conversacion_id = get_post_meta($colab_id, 'conversacion_id', true);
+
+        if (!$conversacion_id) {
+            chatLog('No se encontró un ID de conversación en los metadatos del post.');
+            wp_send_json_error(array('message' => 'No se encontraron participantes para esta colaboración.'));
+            wp_die();
+        }
+
+        $tablaConversaciones = $wpdb->prefix . 'conversacion';
+
+        // Obtenemos los participantes desde la tabla de conversaciones
+        $conversacionData = $wpdb->get_row($wpdb->prepare("
+            SELECT participantes
+            FROM $tablaConversaciones
+            WHERE id = %d
+        ", $conversacion_id));
+
+        if (!$conversacionData) {
+            chatLog('No se encontró la conversación en la base de datos.');
+            wp_send_json_error(array('message' => 'No se encontró la conversación.'));
+            wp_die();
+        }
+
+        $participantes = json_decode($conversacionData->participantes, true);
+
+        if (empty($participantes) || count($participantes) < 2) {
+            chatLog('No se pudieron obtener los participantes de la conversación.');
+            wp_send_json_error(array('message' => 'No se encontraron participantes para esta colaboración.'));
+            wp_die();
+        }
+
+        // Actualizamos los metadatos del post con los participantes obtenidos
+        $colabAutor = $participantes[0];
+        $colabColaborador = $participantes[1];
+
+        update_post_meta($colab_id, 'colabAutor', $colabAutor);
+        update_post_meta($colab_id, 'colabColaborador', $colabColaborador);
+
+        chatLog('Metadatos del post actualizados con los participantes.');
     }
 
     $participantes = array($colabAutor, $colabColaborador);
@@ -44,10 +84,12 @@ function obtenerChatColab()
         wp_die();
     }
 
+    // Obtenemos o creamos la conversación
     $conversacion = get_post_meta($colab_id, 'conversacion_id', true);
     chatLog('ID de conversación obtenido: ' . $conversacion);
 
     $tablaConversaciones = $wpdb->prefix . 'conversacion';
+
 
     if (!$conversacion) {
         chatLog('No existe conversación, creando una nueva.');
