@@ -645,10 +645,10 @@ function galle() {
                 console.log('Recibido message_saved:', message);
                 manejarConfirmacionMensajeGuardado(message);
             } else if (message.type === 'message_error') {
-                //console.log('Recibido message_error, manejando error...');
+                console.log('Recibido message_error, manejando error...');
                 manejarError(message);
             } else {
-                //console.log('Recibido mensaje desconocido, manejando como mensaje WebSocket...');
+                console.log('Recibido mensaje desconocido, manejando como mensaje WebSocket...');
                 manejarMensajeWebSocket(JSON.stringify(message));
             }
         };
