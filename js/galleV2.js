@@ -658,6 +658,32 @@ function galle() {
      *   FUNCIONES PARA ENVIAR MENSAJE
      */
 
+    /*
+    original_message
+    : 
+    adjunto
+    : 
+    null
+    conversacion_id
+    : 
+    "13"
+    emisor
+    : 
+    "1"
+    mensaje
+    : 
+    "8"
+    metadata
+    : 
+    "colab"
+    receptor
+    : 
+    "[\"1\",\"44\"]"
+    temp_id
+    : 
+    1728236042337
+    */
+
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null, conversacion_id = null, listaMensajes = null) {
         const temp_id = Date.now(); // Genera un ID temporal para el mensaje
     
@@ -674,23 +700,23 @@ function galle() {
     
         const messageData = {
             emisor,
-            receptor: receptorFinal,  // Usamos el receptor ya procesado
+            receptor: receptorFinal,  
             mensaje,
             adjunto,
             metadata,
             conversacion_id,
             temp_id
         };
-
+    
         console.log(`enviarMensajeWs: Enviando mensaje con datos:`);
         console.log(`  - emisor: ${messageData.emisor}`);
         console.log(`  - receptor: ${messageData.receptor}`);
         console.log(`  - mensaje: ${messageData.mensaje}`);
         console.log(`  - adjunto: ${messageData.adjunto ? 'Sí' : 'No'}`);
-        console.log(`  - metadata: ${messageData.metadata ? 'Sí' : 'No'}`);
+        console.log(`  - metadata: ${messageData.metadata ? messageData.metadata : 'No'}`);
         console.log(`  - conversacion_id: ${messageData.conversacion_id}`);
         console.log(`  - temp_id: ${messageData.temp_id}`);
-
+    
         // Verificar si el WebSocket está listo para enviar
         if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(messageData));
@@ -865,6 +891,7 @@ function galle() {
 
                 // Parse the JSON string directly
                 const participantes = JSON.parse(participantesData);
+                const metadata = "colab";
             
     
                 // Obtener la lista de mensajes correspondiente (cercana al botón)
@@ -881,7 +908,7 @@ function galle() {
                 }
     
                 // Enviar el mensaje a través de WebSocket (incluyendo los participantes)
-                enviarMensajeWs(participantes, mensaje, adjunto, metadata = 'colab', conversacion_id, listaMensajes);
+                enviarMensajeWs(participantes, mensaje, adjunto, metadata, conversacion_id, listaMensajes);
     
                 mensajeInput.value = ''; // Limpiar el textarea después de enviar
             } else {
