@@ -427,38 +427,53 @@ function galle() {
     window.userCache = userCache;
 
     /*
-    Lo que pasa aqui es que no debería agregar tantos avatar, porque con 1 solo basta cuando son varios mensajes seguidos, algo similar pasa con la fecha que solo agrega una sola vez si ha pasado cierto tiempo
+    
+    aqui hay que arreglar la estructura html de los mensajes con avatar
 
-    en caso de que se necesite una logica para las imagenes y nombre, puedes hacerla aparte y usarla en esta funcion, es importante que todo siga funcianndo solo, hay que hacer ese ajuste porque es redundante mostrar una y otra vez el avatar el nombre si hay mensajes seguidos del mismo usuario
+    <ul class="listaMensajes">
+
+        asi se estructura un mensaje cuando debe mostrarse la imagen pero
+        
+        <img src="https://i0.wp.com/2upra.com/wp-content/uploads/2024/09/1ndoryu_1725478496.webp?quality=40&amp;strip=all" alt="Wandorius" class="userChatAvatar"><span class="userNameChat">Wandorius</span></div>
+        
+        <li class="fechaSeparador" data-fecha="2024-10-06T17:58:46.000Z">hace 4 horas</li>
+       
+        <li class="mensajeIzquierda" data-fecha="2024-10-06T17:58:46.000Z" data-msg-emisor="1">13</li>
+
+        esa no es la forma correcta, yo propongo para los mensajes con foto y nombre, hay que hacerlo asi
+
+
+        #fecha arriba
+        <li class="fechaSeparador" data-fecha="2024-10-06T17:58:46.000Z">hace 4 horas</li>
+        
+        #nombre afuera
+        <span class="userNameChat">Wandorius</span></div>
+        
+        # un div asi para pdoer poner la imagen al lado del mensaje
+        <div class="mensajeconAvatar">
+            <img src="https://i0.wp.com/2upra.com/wp-content/uploads/2024/09/1ndoryu_1725478496.webp?quality=40&amp;strip=all" alt="Wandorius" class="userChatAvatar"><span class="userNameChat">Wandorius</span></div>
+            <li class="mensajeIzquierda" data-fecha="2024-10-06T17:58:46.000Z" data-msg-emisor="1">13</li>
+        </div>
+
+        todo esto sin dañar la estructur los mensajes normales
 
     */
-
-    async function agregarMensajeAlChat(
-        mensajeTexto,
-        clase,
-        fecha,
-        listaMensajes = document.querySelector('.listaMensajes'),
-        fechaAnterior = null,
-        insertAtTop = false,
-        adjunto = null,
-        temp_id = null,
-        msgEmisor = null
-    ) {
+    async function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null) {
         if (!listaMensajes || !(listaMensajes instanceof Element)) {
             console.error('Error: listaMensajes no es un elemento DOM válido o no se encontró. Valor recibido:', listaMensajes);
             return;
         }
-    
-        console.log('agregarMensajeAlChat - Parámetros:', { mensajeTexto, clase, fecha, listaMensajes, fechaAnterior, insertAtTop, adjunto, temp_id, msgEmisor });
-    
+
+        console.log('agregarMensajeAlChat - Parámetros:', {mensajeTexto, clase, fecha, listaMensajes, fechaAnterior, insertAtTop, adjunto, temp_id, msgEmisor});
+
         const fechaMensaje = new Date(fecha);
-    
+
         // Obtener el último mensaje y su emisor
         let lastElement = null;
         const children = Array.from(listaMensajes.children || []);
         const searchOrder = insertAtTop ? 1 : -1;
         const startIndex = insertAtTop ? 0 : children.length - 1;
-    
+
         for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
             const child = children[i];
             if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
@@ -466,54 +481,33 @@ function galle() {
                 break;
             }
         }
-    
+
         fechaAnterior = lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
-    
+
         // Obtener el emisor del último mensaje
         let lastMessageEmisor = lastElement ? lastElement.getAttribute('data-msg-emisor') : null;
-    
+
         const currentUserId = emisor.toString();
         msgEmisor = msgEmisor ? msgEmisor.toString() : null;
         lastMessageEmisor = lastMessageEmisor ? lastMessageEmisor.toString() : null;
-    
-        console.log('Emisores:', { currentUserId, msgEmisor, lastMessageEmisor });
-    
+
+        console.log('Emisores:', {currentUserId, msgEmisor, lastMessageEmisor});
+
         // Verificar si necesitamos mostrar la información del usuario
         const needsUserInfo = msgEmisor !== currentUserId && msgEmisor !== lastMessageEmisor;
-    
-        // Lógica para manejar la fecha
-        manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
-    
-        // Crear el nuevo mensaje
-        const li = document.createElement('li');
-        li.textContent = mensajeTexto;
-        li.classList.add(clase);
-        li.setAttribute('data-fecha', fechaMensaje.toISOString());
-        li.setAttribute('data-msg-emisor', msgEmisor);
-    
-        // Asignar el temp_id como atributo data
-        if (temp_id) {
-            li.setAttribute('data-temp-id', temp_id);
-    
-            // Añade una clase para indicar que está pendiente de confirmación
-            li.classList.add('mensajePendiente');
-        }
-    
-        // Lógica para manejar el adjunto
-        manejarAdjunto(adjunto, li);
-    
+
         if (needsUserInfo) {
             console.log('Necesita información de usuario para msgEmisor:', msgEmisor);
-    
+
             // Verificar si la información del usuario está en caché
             let userData = userCache[msgEmisor];
             if (!userData) {
                 console.log('No hay datos de caché para el usuario. Solicitando al servidor...');
-    
+
                 try {
-                    const data = await enviarAjax('infoUsuario', { receptor: msgEmisor });
+                    const data = await enviarAjax('infoUsuario', {receptor: msgEmisor});
                     console.log('Respuesta AJAX recibida:', data);
-    
+
                     if (data?.success) {
                         userData = {
                             imagenPerfil: data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all',
@@ -533,48 +527,59 @@ function galle() {
             } else {
                 console.log('Datos de caché para el usuario:', userData);
             }
-    
-            // Crear un 'div' contenedor para mensaje con avatar
-            const mensajeConAvatar = document.createElement('div');
-            mensajeConAvatar.classList.add('mensajeConAvatar');
-    
-            // Añadir la imagen al contenedor
+
+            // Crear un elemento para mostrar la imagen de perfil y el nombre de usuario
+            const userInfoElement = document.createElement('div');
+            userInfoElement.classList.add('userChatInfo');
+
             const img = document.createElement('img');
             img.src = userData.imagenPerfil;
             img.alt = userData.nombreUsuario;
             img.classList.add('userChatAvatar');
-            mensajeConAvatar.appendChild(img);
-    
-            // Añadir el mensaje al contenedor
-            mensajeConAvatar.appendChild(li);
-    
-            // Añadir el nombre de usuario fuera del contenedor
+
             const usernameElement = document.createElement('span');
             usernameElement.textContent = userData.nombreUsuario;
             usernameElement.classList.add('userNameChat');
-    
-            // Insertar el nombre de usuario en la posición correcta
+
+            userInfoElement.appendChild(img);
+            userInfoElement.appendChild(usernameElement);
+
+            // Insertar el userInfoElement antes del mensaje
             if (insertAtTop) {
-                listaMensajes.insertBefore(usernameElement, listaMensajes.firstChild);
+                listaMensajes.insertBefore(userInfoElement, listaMensajes.firstChild);
             } else {
-                listaMensajes.appendChild(usernameElement);
-            }
-    
-            // Insertar el mensaje con avatar en la posición correcta
-            if (insertAtTop) {
-                listaMensajes.insertBefore(mensajeConAvatar, listaMensajes.firstChild);
-            } else {
-                listaMensajes.appendChild(mensajeConAvatar);
-            }
-        } else {
-            // Insertar el mensaje en la posición correcta sin avatar
-            if (insertAtTop) {
-                listaMensajes.insertBefore(li, listaMensajes.firstChild);
-            } else {
-                listaMensajes.appendChild(li);
+                listaMensajes.appendChild(userInfoElement);
             }
         }
-    
+
+        // Lógica para manejar la fecha
+        manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
+
+        // Crear el nuevo mensaje
+        const li = document.createElement('li');
+        li.textContent = mensajeTexto;
+        li.classList.add(clase);
+        li.setAttribute('data-fecha', fechaMensaje.toISOString());
+        li.setAttribute('data-msg-emisor', msgEmisor);
+
+        // Asignar el temp_id como atributo data
+        if (temp_id) {
+            li.setAttribute('data-temp-id', temp_id);
+
+            // Añade una clase para indicar que está pendiente de confirmación
+            li.classList.add('mensajePendiente');
+        }
+
+        // Lógica para manejar el adjunto
+        manejarAdjunto(adjunto, li);
+
+        // Insertar el mensaje en la posición correcta
+        if (insertAtTop) {
+            listaMensajes.insertBefore(li, listaMensajes.firstChild);
+        } else {
+            listaMensajes.appendChild(li);
+        }
+
         // Si no se está insertando al inicio, desplázate hacia abajo
         if (!insertAtTop) {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
