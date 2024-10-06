@@ -322,7 +322,7 @@ function galle() {
         "44"
         */
 
-        console.log('mostrarMensajes: Mensajes completos:', mensajes); /
+        console.log('mostrarMensajes: Mensajes completos:', mensajes); 
 
         let fechaAnterior = null;
         mensajes.forEach(mensaje => {
