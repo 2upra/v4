@@ -303,8 +303,26 @@ function galle() {
             listaMensajes.appendChild(mensajeVacio);
             return;
         }
+        /*
 
-        console.log('mostrarMensajes: Mensajes completos:', mensajes); // Mostrar los datos completos recibidos
+        adjunto
+        : 
+        null
+        clase
+        : 
+        "mensajeIzquierda"
+        fecha
+        : 
+        "2024-10-06 19:37:22"
+        mensaje
+        : 
+        "1"
+        remitente
+        : 
+        "44"
+        */
+
+        console.log('mostrarMensajes: Mensajes completos:', mensajes); /
 
         let fechaAnterior = null;
         mensajes.forEach(mensaje => {
@@ -315,9 +333,9 @@ function galle() {
                 listaMensajes: listaMensajes,
                 fechaAnterior: fechaAnterior,
                 adjunto: mensaje.adjunto,
-                emisor: mensaje.emisor
+                remitente: mensaje.remitente
             }); // Mostrar los datos que se envian a agregarMensajeAlchat
-            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, mensaje.emisor);
+            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, mensaje.remitente);
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
