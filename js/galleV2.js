@@ -159,8 +159,9 @@ function galle() {
             if (data?.success) {
                 mostrarMensajes(data.data.mensajes);
 
+
                 const bloqueChat = document.querySelector('.bloqueChat');
-                bloqueChat.setAttribute('data-user-id', receptor); // Establecer data-user-id
+                bloqueChat.setAttribute('data-user-id', receptor); 
                 bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                 bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
                 bloqueChat.style.display = 'block';
@@ -319,6 +320,7 @@ function galle() {
     function mostrarMensajes(mensajes, contenedor = null) {
         const listaMensajes = contenedor ? contenedor.querySelector('.listaMensajes') : document.querySelector('.listaMensajes');
 
+
         if (!listaMensajes) {
             console.error('No se encontró el contenedor de mensajes.');
             return;
@@ -337,11 +339,12 @@ function galle() {
         let fechaAnterior = null;
 
         mensajes.forEach(mensaje => {
-            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto);
+            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, temp_id = null, msgEmisor.remitente);
 
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
+
     function manejarAdjunto(adjunto, li) {
         if (adjunto) {
             const adjuntoContainer = document.createElement('div');
