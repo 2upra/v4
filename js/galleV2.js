@@ -681,7 +681,16 @@ function galle() {
             conversacion_id,
             temp_id
         };
-    
+
+        console.log(`enviarMensajeWs: Enviando mensaje con datos:`);
+        console.log(`  - emisor: ${messageData.emisor}`);
+        console.log(`  - receptor: ${messageData.receptor}`);
+        console.log(`  - mensaje: ${messageData.mensaje}`);
+        console.log(`  - adjunto: ${messageData.adjunto ? 'Sí' : 'No'}`);
+        console.log(`  - metadata: ${messageData.metadata ? 'Sí' : 'No'}`);
+        console.log(`  - conversacion_id: ${messageData.conversacion_id}`);
+        console.log(`  - temp_id: ${messageData.temp_id}`);
+
         // Verificar si el WebSocket está listo para enviar
         if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(messageData));
