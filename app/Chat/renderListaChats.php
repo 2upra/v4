@@ -89,6 +89,9 @@ function obtenerNombreUsuario($usuarioId)
 function infoUsuario() {
     chatLog('Iniciando infoUsuario');
     
+    // Log de todos los datos recibidos en la solicitud POST
+    chatLog('Datos recibidos en $_POST: ' . json_encode($_POST));
+
     if (!is_user_logged_in()) {
         chatLog('Usuario no autenticado.');
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));
@@ -123,6 +126,8 @@ function infoUsuario() {
     chatLog('Respuesta enviada con éxito');
     wp_die();
 }
+
+add_action('wp_ajax_infoUsuario', 'infoUsuario');
 
 add_action('wp_ajax_infoUsuario', 'infoUsuario');
 
