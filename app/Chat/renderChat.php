@@ -57,6 +57,26 @@ function obtenerChatColab()
 
         // Guardar el ID de la conversación en los metadatos del post
         update_post_meta($colab_id, 'conversacion_id', $conversacion);
+
+        // Guardar la conversación como metadato en ambos usuarios, bajo la meta 'participantes'
+        foreach ($participantes as $participante) {
+            $conversacionesUsuario = get_user_meta($participante, 'participantes', true);
+
+            // Si no existe, inicializar el array de conversaciones
+            if (empty($conversacionesUsuario)) {
+                $conversacionesUsuario = array();
+            } else {
+                $conversacionesUsuario = json_decode($conversacionesUsuario, true);
+            }
+
+            // Agregar la nueva conversación si no está ya en la lista
+            if (!in_array($conversacion, $conversacionesUsuario)) {
+                $conversacionesUsuario[] = $conversacion;
+            }
+
+            // Actualizar la meta del usuario
+            update_user_meta($participante, 'participantes', json_encode($conversacionesUsuario));
+        }
     } else {
         // Verificar que la conversación existe en la base de datos
         $conversacionData = $wpdb->get_row($wpdb->prepare("
@@ -113,6 +133,8 @@ function obtenerChatColab()
     wp_die();
 }
 add_action('wp_ajax_obtenerChatColab', 'obtenerChatColab');
+
+
 
 
 
