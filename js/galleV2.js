@@ -168,6 +168,8 @@ function galle() {
                 data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
             }
             if (data?.success) {
+                console.log('Mensaje completo:', data);
+
                 mostrarMensajes(data.data.mensajes);
                 const bloqueChat = document.querySelector('.bloqueChat');
                 bloqueChat.setAttribute('data-user-id', receptor);
@@ -345,7 +347,7 @@ function galle() {
                 fechaAnterior,
                 false,
                 mensaje.adjunto,
-                null, // temp_id
+                null, 
                 mensaje.remitente,
                 isFirstMessageOfThread,
                 userInfo
@@ -467,7 +469,7 @@ function galle() {
         isFirstMessageOfThread = false,
         userInfo = null
     ) {
-        console.log('agregarMensajeAlChat:', {
+        /* console.log('agregarMensajeAlChat:', {
             mensajeTexto,
             clase,
             fecha,
@@ -479,8 +481,42 @@ function galle() {
             msgEmisor,
             isFirstMessageOfThread,
             userInfo
-        });
+        }); */
         const fechaMensaje = new Date(fecha);
+
+        /*
+        {mensajeTexto: '3', clase: 'mensajeIzquierda', fecha: '2024-10-06 20:00:25', listaMensajes: ul.listaMensajes, fechaAnterior: Sun Oct 06 2024 20:00:24 GMT-0400 (Venezuela Time), …}
+        adjunto
+        : 
+        null
+        clase
+        : 
+        "mensajeIzquierda"
+        fecha
+        : 
+        "2024-10-06 20:00:25"
+        fechaAnterior
+        : 
+        Sun Oct 06 2024 20:00:24 GMT-0400 (Venezuela Time) {}
+        insertAtTop
+        : 
+        false
+        isFirstMessageOfThread
+        : 
+        false
+        listaMensajes
+        : 
+        ul.listaMensajes
+        mensajeTexto
+        : 
+        "3"
+        msgEmisor
+        : 
+        "44"
+        temp_id
+        : 
+        null
+        */
     
         // Obtener la última fecha de un mensaje anterior si no se proporcionó una fechaAnterior
         if (!fechaAnterior) {
