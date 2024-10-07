@@ -445,89 +445,209 @@ function galle() {
     */
 
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null, tipoMensaje = null) {
-        console.log('agregarMensajeAlChat: Recibiendo mensaje:', {
-            mensajeTexto,
-            clase,
-            fecha,
-            listaMensajes,
-            fechaAnterior,
-            insertAtTop,
-            adjunto,
-            temp_id,
-            msgEmisor,
-            isFirstMessageOfThread,
-            userInfo,
-            tipoMensaje
-        });
-
+    
         const fechaMensaje = new Date(fecha);
-
-        if (!fechaAnterior) {
-            fechaAnterior = obtenerFechaAnterior(listaMensajes, insertAtTop);
-        }
-
+        fechaAnterior = fechaAnterior || obtenerFechaAnterior(listaMensajes, insertAtTop);
+    
         manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
-
-        // Crear el contenedor principal del mensaje
-        const messageBlock = document.createElement('div');
-        messageBlock.classList.add('messageBlock');
-
-        // Verificar si el mensaje no es del usuario actual
+    
         const esUsuarioActual = msgEmisor === emisor;
-
-        // Agregar el nombre de usuario si es el primer mensaje del hilo y no es del usuario actual
-        if (tipoMensaje === 'Colab' && isFirstMessageOfThread && userInfo && !esUsuarioActual) {
-            const userNameElem = document.createElement('span');
-            userNameElem.textContent = userInfo.nombreUsuario;
-            userNameElem.classList.add('userName');
+        const esColabPrimerMensaje = tipoMensaje === 'Colab' && isFirstMessageOfThread && userInfo && !esUsuarioActual;
+    
+        const messageBlock = crearElemento('div', 'messageBlock');
+        const messageContainer = crearElemento('div', 'messageContainer');
+        const mensajeElem = crearElemento('div', ['mensajeText', clase], {
+            'data-fecha': fechaMensaje.toISOString(),
+            'data-emisor': msgEmisor || undefined,
+            'data-temp-id': temp_id || undefined
+        });
+    
+        if (temp_id) mensajeElem.classList.add('mensajePendiente');
+    
+        if (esColabPrimerMensaje) {
+            const userNameElem = crearElemento('span', 'userName', { textContent: userInfo.nombreUsuario });
+            const avatarImg = crearElemento('img', 'avatarImage', {
+                src: userInfo.imagenPerfil,
+                alt: userInfo.nombreUsuario
+            });
             messageBlock.appendChild(userNameElem);
-        }
-
-        // Crear el contenedor que agrupa el avatar y el mensaje
-        const messageContainer = document.createElement('div');
-        messageContainer.classList.add('messageContainer');
-
-        // Mostrar avatars solo si es tipoMensaje 'colab'
-        if (tipoMensaje === 'Colab' && isFirstMessageOfThread && userInfo && !esUsuarioActual) {
-            const avatarImg = document.createElement('img');
-            avatarImg.src = userInfo.imagenPerfil;
-            avatarImg.alt = userInfo.nombreUsuario;
-            avatarImg.classList.add('avatarImage');
             messageContainer.appendChild(avatarImg);
         }
-
-        // Crear el contenedor del mensaje
-        const mensajeElem = document.createElement('div');
-        mensajeElem.classList.add('mensajeText');
-        mensajeElem.classList.add(clase);
-        mensajeElem.setAttribute('data-fecha', fechaMensaje.toISOString());
-
-        if (msgEmisor) mensajeElem.setAttribute('data-emisor', msgEmisor);
-        if (temp_id) {
-            mensajeElem.setAttribute('data-temp-id', temp_id);
-            mensajeElem.classList.add('mensajePendiente');
-        }
-
-        // Añadir el texto del mensaje
-        const messageTextElem = document.createElement('p');
-        messageTextElem.textContent = mensajeTexto;
+    
+        const messageTextElem = crearElemento('p', null, { textContent: mensajeTexto });
         mensajeElem.appendChild(messageTextElem);
-
         manejarAdjunto(adjunto, mensajeElem);
-
-        // Agregar el mensaje al contenedor del mensaje
+    
         messageContainer.appendChild(mensajeElem);
-
-        // Agregar el contenedor del mensaje al bloque principal
         messageBlock.appendChild(messageContainer);
-
-        // Insertar el bloque del mensaje en la lista
-        if (insertAtTop) {
-            listaMensajes.insertBefore(messageBlock, listaMensajes.firstChild);
-        } else {
-            listaMensajes.appendChild(messageBlock);
-            listaMensajes.scrollTop = listaMensajes.scrollHeight; // Auto-scroll hacia abajo
+    
+        insertAtTop ? listaMensajes.insertBefore(messageBlock, listaMensajes.firstChild) : listaMensajes.appendChild(messageBlock);
+        if (!insertAtTop) listaMensajes.scrollTop = listaMensajes.scrollHeight;
+    }
+    
+    function crearElemento(tag, clase, atributos = {}) {
+        const elem = document.createElement(tag);
+        if (Array.isArray(clase)) clase.forEach(c => elem.classList.add(c));
+        else if (clase) elem.classList.add(clase);
+    
+        for (const [key, value] of Object.entries(atributos)) {
+            if (key === 'textContent') {
+                elem.textContent = value;
+            } else if (value !== undefined) {
+                elem.setAttribute(key, value);
+            }
         }
+        return elem;
+    }
+
+
+    function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
+        //console.log('actualizarListaConversaciones: Actualizando la lista de conversaciones.');
+
+        const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
+        let conversacionActualizada = false;
+
+        listaMensajes.forEach(mensaje => {
+            const receptorId = mensaje.getAttribute('data-receptor');
+
+            if (receptorId == usuarioId) {
+                //console.log(`actualizarListaConversaciones: Actualizando último mensaje para usuario ${usuarioId}.`);
+                const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
+                if (vistaPrevia) {
+                    vistaPrevia.textContent = ultimoMensaje;
+                }
+
+                const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
+                if (tiempoMensajeDiv) {
+                    const fechaActual = new Date();
+                    tiempoMensajeDiv.setAttribute('data-fecha', fechaActual.toISOString());
+                    const tiempoMensajeSpan = tiempoMensajeDiv.querySelector('span');
+                    if (tiempoMensajeSpan) {
+                        tiempoMensajeSpan.textContent = formatearTiempoRelativo(fechaActual);
+                    }
+                }
+                conversacionActualizada = true;
+            }
+        });
+
+        if (!conversacionActualizada) {
+            //console.log('actualizarListaConversaciones: No se encontró la conversación, programando reinicio de chats.');
+            setTimeout(() => {
+                reiniciarChats();
+                //console.log('actualizarListaConversaciones: Chats reiniciados.');
+            }, 1000);
+        }
+    }
+
+    function reiniciarChats() {
+        enviarAjax('reiniciarChats', {})
+            .then(response => {
+                if (response.success && response.data.html) {
+                    const chatListContainer = document.querySelector('.bloqueChatReiniciar');
+                    if (chatListContainer) {
+                        // Borra el contenido anterior
+                        chatListContainer.innerHTML = '';
+                        // Reemplaza con el nuevo contenido
+                        chatListContainer.innerHTML = response.data.html;
+                    }
+                } else {
+                    console.error('Error al reiniciar los chats:', response);
+                }
+            })
+            .catch(error => {
+                console.error('Error al reiniciar los chats:', error);
+            });
+    }
+
+    // TIEMPO
+
+    setInterval(actualizarTiemposRelativos, 4000);
+    actualizarTiemposRelativos();
+    function actualizarTiemposRelativos() {
+        const actualizarElementosFecha = selector => {
+            const elementos = document.querySelectorAll(selector);
+            elementos.forEach(elemento => {
+                const fechaMensaje = new Date(elemento.getAttribute('data-fecha'));
+                elemento.textContent = formatearTiempoRelativo(fechaMensaje);
+            });
+        };
+        actualizarElementosFecha('.fechaSeparador');
+        actualizarElementosFecha('.tiempoMensaje');
+    }
+
+    // VERIFICAR TOKEN
+
+    let token = null;
+    async function obtenerToken() {
+        try {
+            const response = await enviarAjax('generarToken', {});
+            if (response.success) {
+                return response.data.token;
+            } else {
+                console.error('No se pudo obtener el token:', response.message);
+                return null;
+            }
+        } catch (error) {
+            console.error('Error al obtener el token:', error);
+            return null;
+        }
+    }
+
+    // FUNCIONES SOCKET 
+
+    async function iniciarChat() {
+        token = await obtenerToken();
+        if (token) {
+            connectWebSocket();
+        } else {
+            console.error('No se pudo iniciar el chat sin un token válido');
+        }
+    }
+
+    function connectWebSocket() {
+        //console.log('Intentando conectar a WebSocket...');
+        ws = new WebSocket(wsUrl);
+        ws.onopen = () => {
+            //console.log('Conectado a WebSocket, enviando autenticación...');
+            ws.send(
+                JSON.stringify({
+                    emisor,
+                    type: 'auth',
+                    token: token
+                })
+            );
+            pingInterval = setInterval(() => {
+                if (ws.readyState === WebSocket.OPEN) {
+                    //console.log('Enviando ping...');
+                    ws.send(JSON.stringify({type: 'ping'}));
+                }
+            }, 30000);
+        };
+        ws.onclose = () => {
+            clearInterval(pingInterval);
+            setTimeout(connectWebSocket, 5000);
+        };
+        ws.onerror = error => {
+            console.error('Error en WebSocket:', error);
+        };
+        ws.onmessage = ({data}) => {
+            const message = JSON.parse(data);
+            if (message.type === 'pong') {
+                //console.log('Recibido pong, todo bien...');
+            } else if (message.type === 'set_emisor') {
+                //console.log('Recibido set_emisor, reenviando emisor...');
+                ws.send(JSON.stringify({emisor}));
+            } else if (message.type === 'message_saved') {
+                //console.log('Recibido message_saved:', message);
+                confirmarMensaje(message);
+            } else if (message.type === 'message_error') {
+                //console.log('Recibido message_error, manejando error...');
+                manejarError(message);
+            } else {
+                //console.log('Recibido mensaje desconocido, manejando como mensaje WebSocket...');
+                manejarMensajeWebSocket(JSON.stringify(message));
+            }
+        };
     }
 
     function manejarMensajeWebSocket(data) {
@@ -647,163 +767,6 @@ function galle() {
         }
     }
 
-    function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
-        //console.log('actualizarListaConversaciones: Actualizando la lista de conversaciones.');
-
-        const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
-        let conversacionActualizada = false;
-
-        listaMensajes.forEach(mensaje => {
-            const receptorId = mensaje.getAttribute('data-receptor');
-
-            if (receptorId == usuarioId) {
-                //console.log(`actualizarListaConversaciones: Actualizando último mensaje para usuario ${usuarioId}.`);
-                const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
-                if (vistaPrevia) {
-                    vistaPrevia.textContent = ultimoMensaje;
-                }
-
-                const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
-                if (tiempoMensajeDiv) {
-                    const fechaActual = new Date();
-                    tiempoMensajeDiv.setAttribute('data-fecha', fechaActual.toISOString());
-                    const tiempoMensajeSpan = tiempoMensajeDiv.querySelector('span');
-                    if (tiempoMensajeSpan) {
-                        tiempoMensajeSpan.textContent = formatearTiempoRelativo(fechaActual);
-                    }
-                }
-                conversacionActualizada = true;
-            }
-        });
-
-        if (!conversacionActualizada) {
-            //console.log('actualizarListaConversaciones: No se encontró la conversación, programando reinicio de chats.');
-            setTimeout(() => {
-                reiniciarChats();
-                //console.log('actualizarListaConversaciones: Chats reiniciados.');
-            }, 1000);
-        }
-    }
-
-    function reiniciarChats() {
-        enviarAjax('reiniciarChats', {})
-            .then(response => {
-                if (response.success && response.data.html) {
-                    const chatListContainer = document.querySelector('.bloqueChatReiniciar');
-                    if (chatListContainer) {
-                        // Borra el contenido anterior
-                        chatListContainer.innerHTML = '';
-                        // Reemplaza con el nuevo contenido
-                        chatListContainer.innerHTML = response.data.html;
-                    }
-                } else {
-                    console.error('Error al reiniciar los chats:', response);
-                }
-            })
-            .catch(error => {
-                console.error('Error al reiniciar los chats:', error);
-            });
-    }
-
-    /*
-     *   FUNCIONES RELACIONADAS ACTUALIZAR EL TIEMPO CADA MINUTO
-     */
-
-    setInterval(actualizarTiemposRelativos, 4000);
-    actualizarTiemposRelativos();
-    function actualizarTiemposRelativos() {
-        const actualizarElementosFecha = selector => {
-            const elementos = document.querySelectorAll(selector);
-            elementos.forEach(elemento => {
-                const fechaMensaje = new Date(elemento.getAttribute('data-fecha'));
-                elemento.textContent = formatearTiempoRelativo(fechaMensaje);
-            });
-        };
-        actualizarElementosFecha('.fechaSeparador');
-        actualizarElementosFecha('.tiempoMensaje');
-    }
-
-    /*
-     *   FUNCION RELACIONADA VERIFICAR TOKEN
-     */
-
-    let token = null;
-    async function obtenerToken() {
-        try {
-            const response = await enviarAjax('generarToken', {});
-            if (response.success) {
-                return response.data.token;
-            } else {
-                console.error('No se pudo obtener el token:', response.message);
-                return null;
-            }
-        } catch (error) {
-            console.error('Error al obtener el token:', error);
-            return null;
-        }
-    }
-
-    /*
-     *   FUNCION PRINCIPAL PARA INICIAR CONEXION
-     */
-
-    async function iniciarChat() {
-        token = await obtenerToken();
-        if (token) {
-            connectWebSocket();
-        } else {
-            console.error('No se pudo iniciar el chat sin un token válido');
-        }
-    }
-
-    //mi duda es que, como recibo una confirmación de que el mensaje realmenete se guardo
-    function connectWebSocket() {
-        //console.log('Intentando conectar a WebSocket...');
-        ws = new WebSocket(wsUrl);
-        ws.onopen = () => {
-            //console.log('Conectado a WebSocket, enviando autenticación...');
-            ws.send(
-                JSON.stringify({
-                    emisor,
-                    type: 'auth',
-                    token: token
-                })
-            );
-            pingInterval = setInterval(() => {
-                if (ws.readyState === WebSocket.OPEN) {
-                    //console.log('Enviando ping...');
-                    ws.send(JSON.stringify({type: 'ping'}));
-                }
-            }, 30000);
-        };
-        ws.onclose = () => {
-            clearInterval(pingInterval);
-            setTimeout(connectWebSocket, 5000);
-        };
-        ws.onerror = error => {
-            console.error('Error en WebSocket:', error);
-        };
-        ws.onmessage = ({data}) => {
-            const message = JSON.parse(data);
-            if (message.type === 'pong') {
-                //console.log('Recibido pong, todo bien...');
-            } else if (message.type === 'set_emisor') {
-                //console.log('Recibido set_emisor, reenviando emisor...');
-                ws.send(JSON.stringify({emisor}));
-            } else if (message.type === 'message_saved') {
-                //console.log('Recibido message_saved:', message);
-                manejarConfirmacionMensajeGuardado(message);
-            } else if (message.type === 'message_error') {
-                //console.log('Recibido message_error, manejando error...');
-                manejarError(message);
-            } else {
-                //console.log('Recibido mensaje desconocido, manejando como mensaje WebSocket...');
-                manejarMensajeWebSocket(JSON.stringify(message));
-            }
-        };
-    }
-
-
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null, conversacion_id = null, listaMensajes = null) {
         const temp_id = Date.now(); 
 
@@ -833,7 +796,7 @@ function galle() {
         }
     }
 
-    function manejarConfirmacionMensajeGuardado(message) {
+    function confirmarMensaje(message) {
         const conversacionId = message.original_message.conversacion_id;
         let listaMensajes;
     
@@ -867,6 +830,8 @@ function galle() {
             console.warn(`manejarError: No se encontró el elemento del mensaje con ID temporal ${message.original_message.temp_id}.`);
         }
     }
+
+    // FUNCIONES PARA ENVIAR MENSAJE
 
     function msSetup() {
         document.addEventListener('click', event => {
@@ -943,9 +908,7 @@ function galle() {
         }
     }
 
-    /*
-     *   FUNCIONES PARA CARGAR MAS ADJUNTAR ARCHIVOS
-     */
+    // FUNCIONES PARA ADJUNTAR ARCHIVOS
 
     function ocultarPreviews() {
         const previewChatAudio = document.getElementById('previewChatAudio');
