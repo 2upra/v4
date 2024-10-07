@@ -142,6 +142,7 @@ function galle() {
                 const data = await enviarAjax('obtenerChatColab', {colab_id: postId, page: currentPage});
 
                 if (data?.success) {
+                    console.log('Mensaje completo:', data);
                     mostrarMensajes(data.data.mensajes, chatColabElement);
                     manejarScrollColab(data.data.conversacion, chatColabElement);
 
@@ -168,7 +169,7 @@ function galle() {
                 data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
             }
             if (data?.success) {
-                console.log('Mensaje completo:', data);
+                
 
                 mostrarMensajes(data.data.mensajes);
                 const bloqueChat = document.querySelector('.bloqueChat');
