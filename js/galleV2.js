@@ -312,7 +312,7 @@ function galle() {
 
     async function mostrarMensajes(mensajes, contenedor = null) {
         const listaMensajes = contenedor ? contenedor.querySelector('.listaMensajes') : document.querySelector('.listaMensajes');
-
+    
         if (!listaMensajes) {
             console.error('No se encontró el contenedor de mensajes.');
             return;
@@ -325,21 +325,34 @@ function galle() {
             listaMensajes.appendChild(mensajeVacio);
             return;
         }
-
+    
         // **Nuevo código para obtener información de los usuarios**
         const uniqueRemitentes = [...new Set(mensajes.map(mensaje => mensaje.remitente))];
-        const userInfos = await obtenerInfoUsuarios(uniqueRemitentes);
-
+        const userInfos = await obtenerInfoUsuarios(uniqueRemitentes); // Suponiendo que devuelve un Map o un objeto
+    
         let fechaAnterior = null;
         let prevEmisor = null;
         mensajes.forEach(mensaje => {
             const isFirstMessageOfThread = mensaje.remitente !== prevEmisor;
             prevEmisor = mensaje.remitente;
-
+    
             // Obtenemos la información del usuario
-            const userInfo = userInfos.get(mensaje.remitente);
-
-            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, (temp_id = null), mensaje.remitente, isFirstMessageOfThread, userInfo);
+            const userInfo = userInfos.get(mensaje.remitente); // Si userInfos es un Map
+            // Si userInfos es un objeto, usar userInfos[mensaje.remitente];
+    
+            agregarMensajeAlChat(
+                mensaje.mensaje,
+                mensaje.clase,
+                mensaje.fecha,
+                listaMensajes,
+                fechaAnterior,
+                false,
+                mensaje.adjunto,
+                null, // temp_id
+                mensaje.remitente,
+                isFirstMessageOfThread,
+                userInfo
+            );
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
