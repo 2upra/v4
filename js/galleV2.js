@@ -170,8 +170,6 @@ function galle() {
                 data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
             }
             if (data?.success) {
-                
-
                 mostrarMensajes(data.data.mensajes);
                 const bloqueChat = document.querySelector('.bloqueChat');
                 bloqueChat.setAttribute('data-user-id', receptor);
@@ -316,7 +314,7 @@ function galle() {
 
     async function mostrarMensajes(mensajes, contenedor = null, tipoMensaje = null) {
         const listaMensajes = contenedor ? contenedor.querySelector('.listaMensajes') : document.querySelector('.listaMensajes');
-    
+
         if (!listaMensajes) {
             console.error('No se encontró el contenedor de mensajes.');
             return;
@@ -329,32 +327,19 @@ function galle() {
             listaMensajes.appendChild(mensajeVacio);
             return;
         }
-    
+
         // **Nuevo código para obtener información de los usuarios**
         const uniqueRemitentes = [...new Set(mensajes.map(mensaje => mensaje.remitente))];
-        const userInfos = await obtenerInfoUsuarios(uniqueRemitentes); 
-    
+        const userInfos = await obtenerInfoUsuarios(uniqueRemitentes);
+
         let fechaAnterior = null;
         let prevEmisor = null;
         mensajes.forEach(mensaje => {
             const isFirstMessageOfThread = mensaje.remitente !== prevEmisor;
             prevEmisor = mensaje.remitente;
-    
-            const userInfo = userInfos.get(mensaje.remitente); 
-            agregarMensajeAlChat(
-                mensaje.mensaje,
-                mensaje.clase,
-                mensaje.fecha,
-                listaMensajes,
-                fechaAnterior,
-                false,
-                mensaje.adjunto,
-                null, 
-                mensaje.remitente,
-                isFirstMessageOfThread,
-                userInfo,
-                tipoMensaje
-            );
+
+            const userInfo = userInfos.get(mensaje.remitente);
+            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, null, mensaje.remitente, isFirstMessageOfThread, userInfo, tipoMensaje);
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
@@ -459,21 +444,7 @@ function galle() {
 
     */
 
-    function agregarMensajeAlChat(
-        mensajeTexto,
-        clase,
-        fecha,
-        listaMensajes = document.querySelector('.listaMensajes'),
-        fechaAnterior = null,
-        insertAtTop = false,
-        adjunto = null,
-        temp_id = null,
-        msgEmisor = null,
-        isFirstMessageOfThread = false,
-        userInfo = null,
-        tipoMensaje = null,
-    ) {
-    
+    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null, tipoMensaje = null) {
         console.log('agregarMensajeAlChat: Recibiendo mensaje:', {
             mensajeTexto,
             clase,
@@ -486,24 +457,24 @@ function galle() {
             msgEmisor,
             isFirstMessageOfThread,
             userInfo,
-            tipoMensaje,
+            tipoMensaje
         });
-    
+
         const fechaMensaje = new Date(fecha);
-    
+
         if (!fechaAnterior) {
             fechaAnterior = obtenerFechaAnterior(listaMensajes, insertAtTop);
         }
-    
+
         manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
-    
+
         // Crear el contenedor principal del mensaje
         const messageBlock = document.createElement('div');
         messageBlock.classList.add('messageBlock');
-    
+
         // Verificar si el mensaje no es del usuario actual
         const esUsuarioActual = msgEmisor === emisor;
-    
+
         // Agregar el nombre de usuario si es el primer mensaje del hilo y no es del usuario actual
         if (isFirstMessageOfThread && userInfo && !esUsuarioActual) {
             const userNameElem = document.createElement('span');
@@ -511,45 +482,45 @@ function galle() {
             userNameElem.classList.add('userName');
             messageBlock.appendChild(userNameElem);
         }
-    
+
         // Crear el contenedor que agrupa el avatar y el mensaje
         const messageContainer = document.createElement('div');
         messageContainer.classList.add('messageContainer');
-        
+
         // Mostrar avatars solo si es tipoMensaje 'colab'
-        if (tipoMensaje === 'colab' && isFirstMessageOfThread && userInfo && !esUsuarioActual) {
+        if (tipoMensaje === 'Colab' && isFirstMessageOfThread && userInfo && !esUsuarioActual) {
             const avatarImg = document.createElement('img');
             avatarImg.src = userInfo.imagenPerfil;
             avatarImg.alt = userInfo.nombreUsuario;
             avatarImg.classList.add('avatarImage');
             messageContainer.appendChild(avatarImg);
+
+            // Crear el contenedor del mensaje
+            const mensajeElem = document.createElement('div');
+            mensajeElem.classList.add('mensaje');
+            mensajeElem.classList.add(clase);
+            mensajeElem.setAttribute('data-fecha', fechaMensaje.toISOString());
         }
-    
-        // Crear el contenedor del mensaje
-        const mensajeElem = document.createElement('div');
-        mensajeElem.classList.add('mensaje');
-        mensajeElem.classList.add(clase);
-        mensajeElem.setAttribute('data-fecha', fechaMensaje.toISOString());
-    
+        
         if (msgEmisor) mensajeElem.setAttribute('data-emisor', msgEmisor);
         if (temp_id) {
             mensajeElem.setAttribute('data-temp-id', temp_id);
             mensajeElem.classList.add('mensajePendiente');
         }
-    
+
         // Añadir el texto del mensaje
         const messageTextElem = document.createElement('p');
         messageTextElem.textContent = mensajeTexto;
         mensajeElem.appendChild(messageTextElem);
-    
+
         manejarAdjunto(adjunto, mensajeElem);
-    
+
         // Agregar el mensaje al contenedor del mensaje
         messageContainer.appendChild(mensajeElem);
-    
+
         // Agregar el contenedor del mensaje al bloque principal
         messageBlock.appendChild(messageContainer);
-    
+
         // Insertar el bloque del mensaje en la lista
         if (insertAtTop) {
             listaMensajes.insertBefore(messageBlock, listaMensajes.firstChild);
