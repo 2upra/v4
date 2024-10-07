@@ -1405,8 +1405,8 @@ function galle() {
                         prevEmisor = mensaje.remitente;
             
                         const userInfo = userInfos.get(mensaje.remitente);
-                        // function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null, tipoMensaje = null)
-                        agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto, null, isFirstMessageOfThread, userInfo, tipoMensaje);
+                        // (local function) agregarMensajeAlChat(mensajeTexto: any, clase: any, fecha: any, listaMensajes?: Element | null, fechaAnterior?: null, insertAtTop?: boolean, adjunto?: null, temp_id?: null, msgEmisor?: null, isFirstMessageOfThread?: boolean, userInfo?: null, tipoMensaje?: null): void
+                        agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto, null, null, isFirstMessageOfThread, userInfo, tipoMensaje);
                         
                         fechaAnterior = new Date(mensaje.fecha);
                     });
