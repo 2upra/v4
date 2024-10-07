@@ -484,7 +484,7 @@ function galle() {
         messageBlock.classList.add('messageBlock');
     
         // Verificar si el mensaje no es del usuario actual
-        const esUsuarioActual = msgEmisor === currentUserId;
+        const esUsuarioActual = msgEmisor === emisor;
     
         // Agregar el nombre de usuario si es el primer mensaje del hilo y no es del usuario actual
         if (isFirstMessageOfThread && userInfo && !esUsuarioActual) {
