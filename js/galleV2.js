@@ -1362,7 +1362,7 @@ function galle() {
 
     */
 
-    function manejarScrollColab(conversacion, contenedor = null) {
+    async function manejarScrollColab(conversacion, contenedor = null) {
         const listaMensajes = contenedor ? contenedor.querySelector('.listaMensajes') : document.querySelector('.listaMensajes');
 
         if (!listaMensajes) {
