@@ -498,7 +498,7 @@ function galle() {
 
         // Crear el contenedor del mensaje
         const mensajeElem = document.createElement('div');
-        mensajeElem.classList.add('mensaje');
+        mensajeElem.classList.add('mensajeText');
         mensajeElem.classList.add(clase);
         mensajeElem.setAttribute('data-fecha', fechaMensaje.toISOString());
 
