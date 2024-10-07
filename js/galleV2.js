@@ -494,14 +494,14 @@ function galle() {
             avatarImg.alt = userInfo.nombreUsuario;
             avatarImg.classList.add('avatarImage');
             messageContainer.appendChild(avatarImg);
-
-            // Crear el contenedor del mensaje
-            const mensajeElem = document.createElement('div');
-            mensajeElem.classList.add('mensaje');
-            mensajeElem.classList.add(clase);
-            mensajeElem.setAttribute('data-fecha', fechaMensaje.toISOString());
         }
         
+        // Crear el contenedor del mensaje
+        const mensajeElem = document.createElement('div');
+        mensajeElem.classList.add('mensaje');
+        mensajeElem.classList.add(clase);
+        mensajeElem.setAttribute('data-fecha', fechaMensaje.toISOString());
+
         if (msgEmisor) mensajeElem.setAttribute('data-emisor', msgEmisor);
         if (temp_id) {
             mensajeElem.setAttribute('data-temp-id', temp_id);
