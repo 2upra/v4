@@ -1392,9 +1392,10 @@ function galle() {
                 const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
 
                 if (data?.success) {
+                    const mensajes = data.data.mensajes;
                     const uniqueRemitentes = [...new Set(mensajes.map(mensaje => mensaje.remitente))];
                     const userInfos = await obtenerInfoUsuarios(uniqueRemitentes);
-                    const mensajes = data.data.mensajes;
+                    
                     let fechaAnterior = null;
                     let tipoMensaje = 'Colab';
 
