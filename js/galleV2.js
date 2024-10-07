@@ -1185,26 +1185,28 @@ function galle() {
                 setTimeout(() => (puedeDesplazar = true), 2000);
                 currentPage++;
     
-                const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
+                const data = await enviarAjax('obtenerChatColab', { conversacion_id, page: currentPage });
                 if (!data?.success) {
                     return console.error('Error al obtener más mensajes.');
                 }
     
-                const mensajes = data.data.mensajes; // Do not reverse the messages
+                // Asegúrate de que los mensajes estén en orden cronológico ascendente
+                const mensajes = data.data.mensajes;
     
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
     
-                // Initialize fechaAnterior and prevEmisor based on the first message currently displayed
-                let fechaAnterior = null,
-                    prevEmisor = null;
+                // Obtén el primer mensaje actualmente visible
+                const primerMensajeVisible = listaMensajes.querySelector('li');
+                let prevEmisor = null;
+                let fechaAnterior = null;
     
-                const firstMessageElement = listaMensajes.querySelector('li');
-                if (firstMessageElement) {
-                    prevEmisor = firstMessageElement.getAttribute('data-remitente') || null;
-                    fechaAnterior = new Date(firstMessageElement.getAttribute('data-fecha')) || null;
+                if (primerMensajeVisible) {
+                    prevEmisor = primerMensajeVisible.getAttribute('data-remitente');
+                    fechaAnterior = new Date(primerMensajeVisible.getAttribute('data-fecha'));
                 }
     
+                // Procesa los mensajes en orden cronológico ascendente
                 mensajes.forEach(mensaje => {
                     const esNuevoHilo = mensaje.remitente !== prevEmisor;
                     prevEmisor = mensaje.remitente;
@@ -1216,7 +1218,7 @@ function galle() {
                         mensaje.fecha,
                         listaMensajes,
                         fechaAnterior,
-                        true, // Assuming this flag means to prepend the message
+                        true, // Indica que estamos agregando al inicio
                         mensaje.adjunto,
                         null,
                         mensaje.remitente,
@@ -1228,14 +1230,13 @@ function galle() {
                     fechaAnterior = new Date(mensaje.fecha);
                 });
     
-                // Adjust scroll position to maintain continuity
-                const firstNewMessage = listaMensajes.querySelector('li[data-loaded="true"]');
-                if (firstNewMessage) {
-                    firstNewMessage.scrollIntoView();
+                // Mantén el scroll en la posición correcta después de agregar mensajes
+                if (listaMensajes.firstChild) {
+                    listaMensajes.firstChild.scrollIntoView();
                 }
             }
         });
     }
-    
+
     init();
 }
