@@ -1178,39 +1178,64 @@ function galle() {
         let puedeDesplazar = true,
             currentPage = 1,
             conversacion_id = conversacion;
-
+    
         listaMensajes.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
                 puedeDesplazar = false;
                 setTimeout(() => (puedeDesplazar = true), 2000);
                 currentPage++;
-
+    
                 const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
                 if (!data?.success) {
                     return console.error('Error al obtener más mensajes.');
                 }
-
-                const mensajes = data.data.mensajes.reverse();
+    
+                const mensajes = data.data.mensajes; // Do not reverse the messages
+    
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
-
+    
+                // Initialize fechaAnterior and prevEmisor based on the first message currently displayed
                 let fechaAnterior = null,
                     prevEmisor = null;
-
+    
+                const firstMessageElement = listaMensajes.querySelector('li');
+                if (firstMessageElement) {
+                    prevEmisor = firstMessageElement.getAttribute('data-remitente') || null;
+                    fechaAnterior = new Date(firstMessageElement.getAttribute('data-fecha')) || null;
+                }
+    
                 mensajes.forEach(mensaje => {
                     const esNuevoHilo = mensaje.remitente !== prevEmisor;
                     prevEmisor = mensaje.remitente;
-
+    
                     const userInfo = userInfos.get(mensaje.remitente);
-                    agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto, null, mensaje.remitente, esNuevoHilo, userInfo, 'Colab');
-
+                    agregarMensajeAlChat(
+                        mensaje.mensaje,
+                        mensaje.clase,
+                        mensaje.fecha,
+                        listaMensajes,
+                        fechaAnterior,
+                        true, // Assuming this flag means to prepend the message
+                        mensaje.adjunto,
+                        null,
+                        mensaje.remitente,
+                        esNuevoHilo,
+                        userInfo,
+                        'Colab'
+                    );
+    
                     fechaAnterior = new Date(mensaje.fecha);
                 });
-
-                listaMensajes.querySelector('li')?.scrollIntoView();
+    
+                // Adjust scroll position to maintain continuity
+                const firstNewMessage = listaMensajes.querySelector('li[data-loaded="true"]');
+                if (firstNewMessage) {
+                    firstNewMessage.scrollIntoView();
+                }
             }
         });
     }
-
+    
     init();
 }
