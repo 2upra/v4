@@ -476,7 +476,7 @@ function galle() {
         const esUsuarioActual = msgEmisor === emisor;
 
         // Agregar el nombre de usuario si es el primer mensaje del hilo y no es del usuario actual
-        if (isFirstMessageOfThread && userInfo && !esUsuarioActual) {
+        if (tipoMensaje === 'Colab' && isFirstMessageOfThread && userInfo && !esUsuarioActual) {
             const userNameElem = document.createElement('span');
             userNameElem.textContent = userInfo.nombreUsuario;
             userNameElem.classList.add('userName');
@@ -495,7 +495,7 @@ function galle() {
             avatarImg.classList.add('avatarImage');
             messageContainer.appendChild(avatarImg);
         }
-        
+
         // Crear el contenedor del mensaje
         const mensajeElem = document.createElement('div');
         mensajeElem.classList.add('mensaje');
