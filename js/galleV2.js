@@ -474,6 +474,21 @@ function galle() {
         tipoMensaje = null,
     ) {
     
+        console.log('agregarMensajeAlChat: Recibiendo mensaje:', {
+            mensajeTexto,
+            clase,
+            fecha,
+            listaMensajes,
+            fechaAnterior,
+            insertAtTop,
+            adjunto,
+            temp_id,
+            msgEmisor,
+            isFirstMessageOfThread,
+            userInfo,
+            tipoMensaje,
+        });
+    
         const fechaMensaje = new Date(fecha);
     
         if (!fechaAnterior) {
