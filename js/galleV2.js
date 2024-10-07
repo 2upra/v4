@@ -443,8 +443,20 @@ function galle() {
     /*
 
     */
-
-    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null) {
+    // en esta funcion puedes omitir agregar el avatar para los usuarios que envian los mensajes
+    function agregarMensajeAlChat(
+        mensajeTexto,
+        clase,
+        fecha,
+        listaMensajes = document.querySelector('.listaMensajes'),
+        fechaAnterior = null,
+        insertAtTop = false,
+        adjunto = null,
+        temp_id = null,
+        msgEmisor = null,
+        isFirstMessageOfThread = false,
+        userInfo = null
+    ) {
         const fechaMensaje = new Date(fecha);
     
         // Obtener la última fecha de un mensaje anterior si no se proporcionó una fechaAnterior
@@ -458,8 +470,11 @@ function galle() {
         const messageBlock = document.createElement('div');
         messageBlock.classList.add('messageBlock');
     
-        // Agregar el nombre de usuario si es el primer mensaje del hilo
-        if (isFirstMessageOfThread && userInfo) {
+        // Verificar si el mensaje no es del usuario actual
+        const esUsuarioActual = msgEmisor === currentUserId;
+    
+        // Agregar el nombre de usuario si es el primer mensaje del hilo y no es del usuario actual
+        if (isFirstMessageOfThread && userInfo && !esUsuarioActual) {
             const userNameElem = document.createElement('span');
             userNameElem.textContent = userInfo.nombreUsuario;
             userNameElem.classList.add('userName');
@@ -470,8 +485,8 @@ function galle() {
         const messageContainer = document.createElement('div');
         messageContainer.classList.add('messageContainer');
     
-        // Agregar el avatar si es el primer mensaje del hilo
-        if (isFirstMessageOfThread && userInfo) {
+        // Agregar el avatar si es el primer mensaje del hilo y no es del usuario actual
+        if (isFirstMessageOfThread && userInfo && !esUsuarioActual) {
             const avatarImg = document.createElement('img');
             avatarImg.src = userInfo.imagenPerfil;
             avatarImg.alt = userInfo.nombreUsuario;
