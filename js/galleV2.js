@@ -328,7 +328,7 @@ function galle() {
     
         // **Nuevo código para obtener información de los usuarios**
         const uniqueRemitentes = [...new Set(mensajes.map(mensaje => mensaje.remitente))];
-        const userInfos = await obtenerInfoUsuarios(uniqueRemitentes); // Suponiendo que devuelve un Map o un objeto
+        const userInfos = await obtenerInfoUsuarios(uniqueRemitentes); 
     
         let fechaAnterior = null;
         let prevEmisor = null;
@@ -336,10 +336,7 @@ function galle() {
             const isFirstMessageOfThread = mensaje.remitente !== prevEmisor;
             prevEmisor = mensaje.remitente;
     
-            // Obtenemos la información del usuario
-            const userInfo = userInfos.get(mensaje.remitente); // Si userInfos es un Map
-            // Si userInfos es un objeto, usar userInfos[mensaje.remitente];
-    
+            const userInfo = userInfos.get(mensaje.remitente); 
             agregarMensajeAlChat(
                 mensaje.mensaje,
                 mensaje.clase,
@@ -456,7 +453,7 @@ function galle() {
     /*
 
     */
-    // en esta funcion puedes omitir agregar el avatar para los usuarios que envian los mensajes
+
     function agregarMensajeAlChat(
         mensajeTexto,
         clase,
@@ -470,6 +467,19 @@ function galle() {
         isFirstMessageOfThread = false,
         userInfo = null
     ) {
+        console.log('agregarMensajeAlChat:', {
+            mensajeTexto,
+            clase,
+            fecha,
+            listaMensajes,
+            fechaAnterior,
+            insertAtTop,
+            adjunto,
+            temp_id,
+            msgEmisor,
+            isFirstMessageOfThread,
+            userInfo
+        });
         const fechaMensaje = new Date(fecha);
     
         // Obtener la última fecha de un mensaje anterior si no se proporcionó una fechaAnterior
