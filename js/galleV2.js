@@ -102,6 +102,29 @@ function galle() {
      *   FUNCIONES RELACIONADAS A ABRIR UNA CONVERSACION
      */
 
+    async function obtenerInfoUsuarios(userIds) {
+        const userInfos = new Map();
+    
+        await Promise.all(userIds.map(async userId => {
+            try {
+                const data = await enviarAjax('infoUsuario', { receptor: userId });
+                if (data?.success) {
+                    const imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
+                    const nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido';
+                    userInfos.set(userId, { imagenPerfil, nombreUsuario });
+                } else {
+                    console.error('Error al obtener información del usuario:', data.message);
+                    userInfos.set(userId, { imagenPerfil: 'default.jpg', nombreUsuario: 'Usuario Desconocido' });
+                }
+            } catch (error) {
+                console.error('Error al obtener información del usuario:', error);
+                userInfos.set(userId, { imagenPerfil: 'default.jpg', nombreUsuario: 'Usuario Desconocido' });
+            }
+        }));
+    
+        return userInfos;
+    }
+
     async function chatColab() {
         const chatColabElements = document.querySelectorAll('.bloqueChatColab');
 
@@ -242,11 +265,8 @@ function galle() {
             let nombreUsuario = item.querySelector('.nombreUsuario strong')?.textContent || null;
 
             if (!imagenPerfil || !nombreUsuario) {
-                //console.log('No se tienen los datos, realizando solicitud AJAX para obtener información del servidor.');
                 try {
                     const data = await enviarAjax('infoUsuario', {receptor});
-                    //console.log('Respuesta del servidor:', data);
-
                     if (data?.success) {
                         imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
                         nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido'; // Nombre por defecto si no se encuentra
@@ -288,9 +308,9 @@ function galle() {
      *   FUNCIONES RELACIONADAS CON LA CARGAN LOS MENSAJES DE UNA CONVERSACION
      */
 
-    function mostrarMensajes(mensajes, contenedor = null) {
+    async function mostrarMensajes(mensajes, contenedor = null) {
         const listaMensajes = contenedor ? contenedor.querySelector('.listaMensajes') : document.querySelector('.listaMensajes');
-
+    
         if (!listaMensajes) {
             console.error('No se encontró el contenedor de mensajes.');
             return;
@@ -303,40 +323,33 @@ function galle() {
             listaMensajes.appendChild(mensajeVacio);
             return;
         }
-        /*
-
-        adjunto
-        : 
-        null
-        clase
-        : 
-        "mensajeIzquierda"
-        fecha
-        : 
-        "2024-10-06 19:37:22"
-        mensaje
-        : 
-        "1"
-        remitente
-        : 
-        "44"
-        */
-
-        console.log('mostrarMensajes: Mensajes completos:', mensajes); 
-
+    
+        // **Nuevo código para obtener información de los usuarios**
+        const uniqueRemitentes = [...new Set(mensajes.map(mensaje => mensaje.remitente))];
+        const userInfos = await obtenerInfoUsuarios(uniqueRemitentes);
+    
         let fechaAnterior = null;
+        let prevEmisor = null;
         mensajes.forEach(mensaje => {
-            console.log('mostrarMensajes: Agregando mensaje:', {
-                mensaje: mensaje.mensaje,
-                clase: mensaje.clase,
-                fecha: mensaje.fecha,
-                listaMensajes: listaMensajes,
-                fechaAnterior: fechaAnterior,
-                adjunto: mensaje.adjunto,
-                remitente: mensaje.remitente
-            }); // Mostrar los datos que se envian a agregarMensajeAlchat
-            // agregarMensajeAlChat(mensajeTexto: any, clase: any, fecha: any, listaMensajes?: Element | null, fechaAnterior?: null, insertAtTop?: boolean, adjunto?: null, temp_id?: null, msgEmisor?: null): void
-            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto,  temp_id = null, mensaje.remitente);
+            const isFirstMessageOfThread = mensaje.remitente !== prevEmisor;
+            prevEmisor = mensaje.remitente;
+    
+            // Obtenemos la información del usuario
+            const userInfo = userInfos.get(mensaje.remitente);
+    
+            agregarMensajeAlChat(
+                mensaje.mensaje,
+                mensaje.clase,
+                mensaje.fecha,
+                listaMensajes,
+                fechaAnterior,
+                false,
+                mensaje.adjunto,
+                temp_id = null,
+                mensaje.remitente,
+                isFirstMessageOfThread,
+                userInfo
+            );
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
@@ -424,14 +437,26 @@ function galle() {
 
     */
 
-    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null) {
+    function agregarMensajeAlChat(
+        mensajeTexto,
+        clase,
+        fecha,
+        listaMensajes = document.querySelector('.listaMensajes'),
+        fechaAnterior = null,
+        insertAtTop = false,
+        adjunto = null,
+        temp_id = null,
+        msgEmisor = null,
+        isFirstMessageOfThread = false,
+        userInfo = null
+    ) {
         const fechaMensaje = new Date(fecha);
         if (!fechaAnterior) {
             let lastElement = null;
             const children = Array.from(listaMensajes.children || []);
             const searchOrder = insertAtTop ? 1 : -1;
             const startIndex = insertAtTop ? 0 : children.length - 1;
-
+    
             for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
                 const child = children[i];
                 if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
@@ -439,36 +464,98 @@ function galle() {
                     break;
                 }
             }
-
+    
             fechaAnterior = lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
         }
         manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
+    
         const li = document.createElement('li');
-        li.textContent = mensajeTexto;
         li.classList.add(clase);
         li.setAttribute('data-fecha', fechaMensaje.toISOString());
-
-        // Agrega el atributo data-emisor si msgEmisor existe
+    
         if (msgEmisor) {
             li.setAttribute('data-emisor', msgEmisor);
         }
-
+    
         if (temp_id) {
             li.setAttribute('data-temp-id', temp_id);
             li.classList.add('mensajePendiente');
         }
+    
+        // **Agregar avatar y nombre de usuario si es el primer mensaje del hilo**
+        if (isFirstMessageOfThread && userInfo) {
+            // Crear contenedor para el avatar y el nombre de usuario
+            const userContainer = document.createElement('div');
+            userContainer.classList.add('userContainer');
+    
+            // Crear imagen de avatar
+            const avatarImg = document.createElement('img');
+            avatarImg.src = userInfo.imagenPerfil;
+            avatarImg.alt = userInfo.nombreUsuario;
+            avatarImg.classList.add('avatarImage');
+    
+            // Crear elemento para el nombre de usuario
+            const userNameElem = document.createElement('span');
+            userNameElem.textContent = userInfo.nombreUsuario;
+            userNameElem.classList.add('userName');
+    
+            // Añadir avatar y nombre al contenedor
+            userContainer.appendChild(avatarImg);
+            userContainer.appendChild(userNameElem);
+    
+            // Añadir contenedor al mensaje
+            li.appendChild(userContainer);
+        }
+    
+        // Añadir el texto del mensaje
+        const messageTextElem = document.createElement('p');
+        messageTextElem.textContent = mensajeTexto;
+        li.appendChild(messageTextElem);
+    
         manejarAdjunto(adjunto, li);
+    
         if (insertAtTop) {
             listaMensajes.insertBefore(li, listaMensajes.firstChild);
         } else {
             listaMensajes.appendChild(li);
         }
+    
         if (!insertAtTop) {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
         }
     }
 
     /* 
+
+    necesito hacer uan funcion que agregue el avatar y el nombre del usuario segun la id, tiene que ser una funcion individua, esa id la consigue en data-emisor, y lo que va a hacer es agregar el avatar y el nombre de usuario en el chat pero solo una vez cada hilo de mensajes, es decir, si una persona manda 10 mesajes seguidos entonces se agrega el avatar y el nombre al primer mensaje para identificar que esos son sus mensajes, no es necesario colocar avatar y nombre a cada mensaje
+
+    asi se ven los mensajes, 
+
+    <li class="mensajeIzquierda" data-fecha="2024-10-07T00:00:26.000Z" data-emisor="44">4</li>
+    estan dentro de <ul class="listaMensajes"></ul
+
+    para encontrarlos se puede usar cualquiera de las 3 funciones que mostre para activar esta nueva funcion, lo importante es que sepa donde va agregar el avatar, en que conversacion, y que lo haga de forma correcta 1 sola vez por hilo de mensajes
+
+    asi se puede conseguir la informacion del usuario en base al id 
+
+    
+    if (!imagenPerfil || !nombreUsuario) {
+        try {
+            const data = await enviarAjax('infoUsuario', {receptor});
+            if (data?.success) {
+                imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
+                nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido'; // Nombre por defecto si no se encuentra
+            } else {
+                console.error('Error del servidor:', data.message);
+                alert(data.message || 'Error al obtener la información del usuario.');
+                return;
+            }
+        } catch (error) {
+            console.error('Error de conexión:', error);
+            alert('Error al intentar obtener la información del usuario.');
+            return;
+        }
+    }
 
     */
 
