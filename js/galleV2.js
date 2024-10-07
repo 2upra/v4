@@ -1190,10 +1190,10 @@ function galle() {
                     return console.error('Error al obtener más mensajes.');
                 }
 
-                const mensajes = data.data.mensajes.reverse();
+                mensajes = data.data.mensajes;
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
-
+                mensajes = data.data.mensajes.reverse();
                 let fechaAnterior = null,
                     prevEmisor = null;
 
