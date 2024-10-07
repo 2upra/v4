@@ -1400,8 +1400,12 @@ function galle() {
                     let tipoMensaje = 'Colab';
 
                     mensajes.reverse().forEach(mensaje => {
+                        const isFirstMessageOfThread = mensaje.remitente !== prevEmisor;
+                        prevEmisor = mensaje.remitente;
+            
+                        const userInfo = userInfos.get(mensaje.remitente);
                         // function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null, tipoMensaje = null)
-                        agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto, null, mensaje.remitente, userInfos, tipoMensaje);
+                        agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto, null, isFirstMessageOfThread, userInfo, tipoMensaje);
                         
                         fechaAnterior = new Date(mensaje.fecha);
                     });
