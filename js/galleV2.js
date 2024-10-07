@@ -446,64 +446,73 @@ function galle() {
 
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null) {
         const fechaMensaje = new Date(fecha);
-
+    
         // Obtener la última fecha de un mensaje anterior si no se proporcionó una fechaAnterior
         if (!fechaAnterior) {
             fechaAnterior = obtenerFechaAnterior(listaMensajes, insertAtTop);
         }
-
+    
         manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
-
+    
         const li = document.createElement('li');
         li.classList.add(clase);
         li.setAttribute('data-fecha', fechaMensaje.toISOString());
-
+    
         if (msgEmisor) li.setAttribute('data-emisor', msgEmisor);
         if (temp_id) {
             li.setAttribute('data-temp-id', temp_id);
             li.classList.add('mensajePendiente');
         }
-
-        // Agregar avatar y nombre de usuario si es el primer mensaje del hilo
-        if (isFirstMessageOfThread && userInfo) {
-            agregarAvatarYUsuario(li, userInfo);
-        }
-
+    
         // Añadir el texto del mensaje
         const messageTextElem = document.createElement('p');
         messageTextElem.textContent = mensajeTexto;
         li.appendChild(messageTextElem);
-
+    
         manejarAdjunto(adjunto, li);
-
-        // Insertar el mensaje en la lista
+    
+        // Crear un contenedor para el bloque del mensaje
+        const messageBlock = document.createElement('div');
+        messageBlock.classList.add('messageBlock');
+    
+        // Agregar avatar y nombre de usuario si es el primer mensaje del hilo
+        if (isFirstMessageOfThread && userInfo) {
+            const userContainer = crearUserContainer(userInfo);
+            messageBlock.appendChild(userContainer);
+        }
+    
+        // Agregar el mensaje al bloque del mensaje
+        messageBlock.appendChild(li);
+    
+        // Insertar el bloque del mensaje en la lista
         if (insertAtTop) {
-            listaMensajes.insertBefore(li, listaMensajes.firstChild);
+            listaMensajes.insertBefore(messageBlock, listaMensajes.firstChild);
         } else {
-            listaMensajes.appendChild(li);
+            listaMensajes.appendChild(messageBlock);
             listaMensajes.scrollTop = listaMensajes.scrollHeight; // Auto-scroll hacia abajo
         }
     }
-
-    // Función para agregar el avatar y el nombre de usuario
-    function agregarAvatarYUsuario(li, userInfo) {
+    
+    // Modificar esta función para que devuelva el userContainer
+    function crearUserContainer(userInfo) {
         const userContainer = document.createElement('div');
         userContainer.classList.add('userContainer');
-
+    
         const avatarImg = document.createElement('img');
         avatarImg.src = userInfo.imagenPerfil;
         avatarImg.alt = userInfo.nombreUsuario;
         avatarImg.classList.add('avatarImage');
-
+    
         const userNameElem = document.createElement('span');
         userNameElem.textContent = userInfo.nombreUsuario;
         userNameElem.classList.add('userName');
-
+    
         userContainer.appendChild(avatarImg);
         userContainer.appendChild(userNameElem);
-        li.appendChild(userContainer);
+    
+        return userContainer;
     }
-
+    
     function manejarMensajeWebSocket(data) {
         //console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket:', data);
 
