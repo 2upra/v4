@@ -18,7 +18,7 @@ function obtenerChatColab()
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
     chatLog('Colab ID: ' . $colab_id . ', Página: ' . $page);
 
-    $mensajesPorPagina = 10;
+    $mensajesPorPagina = 20;
 
     if ($colab_id <= 0) {
         chatLog('ID de colaboración inválido: ' . $colab_id);
