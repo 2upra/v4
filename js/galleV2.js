@@ -143,7 +143,8 @@ function galle() {
 
                 if (data?.success) {
                     console.log('Mensaje completo:', data);
-                    mostrarMensajes(data.data.mensajes, chatColabElement);
+                    const tipoMensaje = 'Colab';
+                    mostrarMensajes(data.data.mensajes, chatColabElement, tipoMensaje);
                     manejarScrollColab(data.data.conversacion, chatColabElement);
 
                     const listaMensajes = chatColabElement.querySelector('.listaMensajes');
@@ -313,7 +314,7 @@ function galle() {
      *   FUNCIONES RELACIONADAS CON LA CARGAN LOS MENSAJES DE UNA CONVERSACION
      */
 
-    async function mostrarMensajes(mensajes, contenedor = null) {
+    async function mostrarMensajes(mensajes, contenedor = null, tipoMensaje = null) {
         const listaMensajes = contenedor ? contenedor.querySelector('.listaMensajes') : document.querySelector('.listaMensajes');
     
         if (!listaMensajes) {
@@ -351,7 +352,8 @@ function galle() {
                 null, 
                 mensaje.remitente,
                 isFirstMessageOfThread,
-                userInfo
+                userInfo,
+                tipoMensaje
             );
             fechaAnterior = new Date(mensaje.fecha);
         });
@@ -468,58 +470,12 @@ function galle() {
         temp_id = null,
         msgEmisor = null,
         isFirstMessageOfThread = false,
-        userInfo = null
+        userInfo = null,
+        tipoMensaje = null,
     ) {
-        /* console.log('agregarMensajeAlChat:', {
-            mensajeTexto,
-            clase,
-            fecha,
-            listaMensajes,
-            fechaAnterior,
-            insertAtTop,
-            adjunto,
-            temp_id,
-            msgEmisor,
-            isFirstMessageOfThread,
-            userInfo
-        }); */
-        const fechaMensaje = new Date(fecha);
-
-        /*
-        {mensajeTexto: '3', clase: 'mensajeIzquierda', fecha: '2024-10-06 20:00:25', listaMensajes: ul.listaMensajes, fechaAnterior: Sun Oct 06 2024 20:00:24 GMT-0400 (Venezuela Time), …}
-        adjunto
-        : 
-        null
-        clase
-        : 
-        "mensajeIzquierda"
-        fecha
-        : 
-        "2024-10-06 20:00:25"
-        fechaAnterior
-        : 
-        Sun Oct 06 2024 20:00:24 GMT-0400 (Venezuela Time) {}
-        insertAtTop
-        : 
-        false
-        isFirstMessageOfThread
-        : 
-        false
-        listaMensajes
-        : 
-        ul.listaMensajes
-        mensajeTexto
-        : 
-        "3"
-        msgEmisor
-        : 
-        "44"
-        temp_id
-        : 
-        null
-        */
     
-        // Obtener la última fecha de un mensaje anterior si no se proporcionó una fechaAnterior
+        const fechaMensaje = new Date(fecha);
+    
         if (!fechaAnterior) {
             fechaAnterior = obtenerFechaAnterior(listaMensajes, insertAtTop);
         }
@@ -544,9 +500,9 @@ function galle() {
         // Crear el contenedor que agrupa el avatar y el mensaje
         const messageContainer = document.createElement('div');
         messageContainer.classList.add('messageContainer');
-    
-        // Agregar el avatar si es el primer mensaje del hilo y no es del usuario actual
-        if (isFirstMessageOfThread && userInfo && !esUsuarioActual) {
+        
+        // Mostrar avatars solo si es tipoMensaje 'colab'
+        if (tipoMensaje === 'colab' && isFirstMessageOfThread && userInfo && !esUsuarioActual) {
             const avatarImg = document.createElement('img');
             avatarImg.src = userInfo.imagenPerfil;
             avatarImg.alt = userInfo.nombreUsuario;
