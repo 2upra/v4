@@ -1356,6 +1356,12 @@ function galle() {
         });
     }
 
+    /*
+
+    creo que esto se confundo de la lista de mensajes
+
+    */
+
     function manejarScrollColab(conversacion, contenedor = null) {
         const listaMensajes = contenedor ? contenedor.querySelector('.listaMensajes') : document.querySelector('.listaMensajes');
 
@@ -1365,7 +1371,7 @@ function galle() {
         }
 
         let puedeDesplazar = true;
-        let currentPage = 1; // Hacer currentPage específico para esta conversación
+        let currentPage = 1;
 
         if (!conversacion) {
             console.warn('ID de conversación no válida. No se cargará más historial.');
@@ -1385,11 +1391,16 @@ function galle() {
                 const data = await enviarAjax('obtenerChatColab', {conversacion, page: currentPage});
 
                 if (data?.success) {
+                    const uniqueRemitentes = [...new Set(mensajes.map(mensaje => mensaje.remitente))];
+                    const userInfos = await obtenerInfoUsuarios(uniqueRemitentes);
                     const mensajes = data.data.mensajes;
                     let fechaAnterior = null;
+                    let tipoMensaje = 'Colab';
 
                     mensajes.reverse().forEach(mensaje => {
-                        agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto);
+                        // function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null, tipoMensaje = null)
+                        agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto, null, mensaje.remitente, userInfos, tipoMensaje);
+                        
                         fechaAnterior = new Date(mensaje.fecha);
                     });
 
