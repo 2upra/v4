@@ -1374,9 +1374,10 @@ function galle() {
         let currentPage = 1;
 
         if (!conversacion) {
-            console.warn('ID de conversación no válida. No se cargará más historial.');
+            console.error('ID de conversación no válida. No se cargará más historial.');
             return;
         }
+        colab_id = conversacion;
 
         listaMensajes.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
