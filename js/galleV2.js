@@ -34,13 +34,13 @@ function galle() {
 
     function init() {
         manejarScroll();
-        setupEnviarMensajeHandler();
+        msSetup();
         actualizarConexionEmisor();
         iniciarChat();
         clickMensaje();
         subidaArchivosChat();
         chatColab();
-        setupEnviarMensajeColab();
+        msColabSetup();
     }
 
     /*
@@ -927,7 +927,7 @@ function galle() {
         }
     }
 
-    function setupEnviarMensajeHandler() {
+    function msSetup() {
         document.addEventListener('click', event => {
             if (event.target.matches('.enviarMensaje')) {
                 enviarMensaje();
@@ -972,41 +972,7 @@ function galle() {
         }
     }
 
-    /*
-
-    no esta enviado los partcipantes a  enviarMensajeWs
-
-    ejemplo de como se ve el html renderizado
-
-    <div class="borde bloqueChatColab" id="chatcolab-232082" data-post-id="232082" data-participantes="&quot;[\&quot;1\&quot;,\&quot;44\&quot;]&quot;" data-conversacion-id="13">
-
-    html
-    function chatColab($var)
-{
-    $post_id = intval($var['post_id']);
-    $conversacion_id = intval($var['conversacion_id']);
-    $participantes = $var['participantes'];
-    ob_start();
-?>
-    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>" data-participantes='<?php echo json_encode($participantes); ?>' data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">
-
-        <ul class="listaMensajes"></ul>
-
-        <div class="chatEnvio">
-            <textarea class="mensajeContenidoColab borde" rows="1"></textarea>
-            <button class="enviarMensajeColab borde" data-conversacion-id="<? echo esc_attr($conversacion_id); ?>">
-                <? echo $GLOBALS['enviarMensaje']; ?>
-            </button>
-            <button class="enviarAdjunto" id="enviarAdjunto"><? echo $GLOBALS['enviarAdjunto']; ?></button>
-        </div>
-    </div>
-<?
-    return ob_get_clean();
-}
-
-    */
-
-    function setupEnviarMensajeColab() {
+    function msColabSetup() {
         document.addEventListener('click', event => {
             if (event.target.matches('.enviarMensajeColab')) {
                 enviarMensajeColab(event.target);
@@ -1017,52 +983,38 @@ function galle() {
         mensajeInput.addEventListener('keydown', event => {
             if (event.key === 'Enter' && !event.altKey) {
                 event.preventDefault();
-                const enviarBtn = document.querySelector('.enviarMensajeColab');
-                enviarMensajeColab(enviarBtn);
+                enviarMensajeColab(document.querySelector('.enviarMensajeColab'));
             }
         });
 
         function enviarMensajeColab(button) {
-            if (subidaChatProgreso === true) {
-                alert('Por favor espera a que se complete la subida del archivo.');
-                return;
+            if (subidaChatProgreso) {
+                return alert('Por favor espera a que se complete la subida del archivo.');
             }
 
-            const mensajeInput = button.closest('.chatEnvio').querySelector('.mensajeContenidoColab');
+            const bloqueChat = button.closest('.bloqueChatColab');
+            const mensajeInput = bloqueChat.querySelector('.mensajeContenidoColab');
             const mensaje = mensajeInput.value.trim();
 
-            if (mensaje !== '') {
-                // Obtener el conversacion_id del botón
-                const conversacion_id = button.getAttribute('data-conversacion-id');
-
-                // Obtener los participantes desde el atributo data-participantes
-                const bloqueChat = button.closest('.bloqueChatColab');
-                const participantesData = bloqueChat.getAttribute('data-participantes');
-
-                // Parse the JSON string directly
-                const participantes = JSON.parse(participantesData);
-                const metadata = 'colab';
-
-                // Obtener la lista de mensajes correspondiente (cercana al botón)
-                const listaMensajes = bloqueChat.querySelector('.listaMensajes');
-
-                let adjunto = null;
-                if (archivoChatId || archivoChatUrl) {
-                    adjunto = {
-                        archivoChatId: archivoChatId,
-                        archivoChatUrl: archivoChatUrl
-                    };
-                    archivoChatId = null;
-                    archivoChatUrl = null;
-                }
-
-                // Enviar el mensaje a través de WebSocket (incluyendo los participantes)
-                enviarMensajeWs(participantes, mensaje, adjunto, metadata, conversacion_id, listaMensajes);
-
-                mensajeInput.value = ''; // Limpiar el textarea después de enviar
-            } else {
-                alert('Por favor, ingresa un mensaje.');
+            if (!mensaje) {
+                return alert('Por favor, ingresa un mensaje.');
             }
+
+            const conversacion_id = button.getAttribute('data-conversacion-id');
+            const participantes = JSON.parse(bloqueChat.getAttribute('data-participantes'));
+            const metadata = 'colab';
+            const listaMensajes = bloqueChat.querySelector('.listaMensajes');
+
+            let adjunto = null;
+            if (archivoChatId || archivoChatUrl) {
+                adjunto = {archivoChatId, archivoChatUrl};
+                archivoChatId = archivoChatUrl = null;
+            }
+
+            // Enviar el mensaje a través de WebSocket
+            enviarMensajeWs(participantes, mensaje, adjunto, metadata, conversacion_id, listaMensajes);
+
+            mensajeInput.value = '';
         }
     }
 
@@ -1309,115 +1261,70 @@ function galle() {
         });
     }
 
-    /*
-     *   FUNCION PARA CARGAR MAS MENSAJES
-     */
+    // SCROLLS
 
     function manejarScroll(conversacion) {
         const listaMensajes = document.querySelector('.listaMensajes');
         let puedeDesplazar = true;
-        currentPage = 1;
-
-        // Verificar si la conversación es válida (no null ni undefined)
-        if (!conversacion) {
-            console.warn('ID de conversación no válida. No se cargará más historial.');
-            return; // Salir de la función si no hay una conversación válida
-        }
+        let currentPage = 1;
 
         listaMensajes?.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
                 puedeDesplazar = false;
-
-                setTimeout(() => {
-                    puedeDesplazar = true;
-                }, 2000);
-
+                setTimeout(() => (puedeDesplazar = true), 2000);
                 currentPage++;
-
                 const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
-
-                if (data?.success) {
-                    const mensajes = data.data.mensajes;
-                    let fechaAnterior = null;
-
-                    mensajes.reverse().forEach(mensaje => {
-                        agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto);
-                        fechaAnterior = new Date(mensaje.fecha);
-                    });
-
-                    const primerMensaje = listaMensajes.querySelector('li');
-                    if (primerMensaje) {
-                        primerMensaje.scrollIntoView();
-                    }
-                } else {
-                    console.error('Error al obtener más mensajes.');
+                if (!data?.success) {
+                    return console.error('Error al obtener más mensajes.');
                 }
+                const mensajes = data.data.mensajes.reverse();
+                let fechaAnterior = null;
+
+                mensajes.forEach(mensaje => {
+                    agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto);
+                    fechaAnterior = new Date(mensaje.fecha);
+                });
+
+                listaMensajes.querySelector('li')?.scrollIntoView();
             }
         });
     }
 
-    /*
-
-    creo que esto se confundo de la lista de mensajes
-
-    */
-
     async function manejarScrollColab(conversacion, contenedor = null) {
-        const listaMensajes = contenedor ? contenedor.querySelector('.listaMensajes') : document.querySelector('.listaMensajes');
-
-        if (!listaMensajes) {
-            console.error('No se encontró el contenedor de mensajes.');
-            return;
-        }
-
-        let puedeDesplazar = true;
-        let currentPage = 1;
-
-        if (!conversacion) {
-            console.error('ID de conversación no válida. No se cargará más historial.');
-            return;
-        }
-        conversacion_id = conversacion;
+        const listaMensajes = (contenedor || document).querySelector('.listaMensajes');
+        let puedeDesplazar = true,
+            currentPage = 1,
+            conversacion_id = conversacion;
 
         listaMensajes.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
                 puedeDesplazar = false;
-
-                setTimeout(() => {
-                    puedeDesplazar = true;
-                }, 2000);
-
+                setTimeout(() => (puedeDesplazar = true), 2000);
                 currentPage++;
 
                 const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
-
-                if (data?.success) {
-                    const mensajes = data.data.mensajes;
-                    const uniqueRemitentes = [...new Set(mensajes.map(mensaje => mensaje.remitente))];
-                    const userInfos = await obtenerInfoUsuarios(uniqueRemitentes);
-                    
-                    let fechaAnterior = null;
-                    let tipoMensaje = 'Colab';
-                    let prevEmisor = null;
-
-                    mensajes.reverse().forEach(mensaje => {
-                        const isFirstMessageOfThread = mensaje.remitente !== prevEmisor;
-                        prevEmisor = mensaje.remitente;
-            
-                        const userInfo = userInfos.get(mensaje.remitente);
-                        // (local function) agregarMensajeAlChat(mensajeTexto: any, clase: any, fecha: any, listaMensajes?: Element | null, fechaAnterior?: null, insertAtTop?: boolean, adjunto?: null, temp_id?: null, msgEmisor?: null, isFirstMessageOfThread?: boolean, userInfo?: null, tipoMensaje?: null): void
-                        agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto, null, mensaje.remitente, isFirstMessageOfThread, userInfo, tipoMensaje);
-                        
-                        fechaAnterior = new Date(mensaje.fecha);
-                    });
-
-                    const primerMensaje = listaMensajes.querySelector('li');
-                    if (primerMensaje) {
-                        primerMensaje.scrollIntoView();
-                    }
-                } else {
-                    console.error('Error al obtener más mensajes.');
+                if (!data?.success) {
+                    return console.error('Error al obtener más mensajes.');
                 }
+
+                const mensajes = data.data.mensajes.reverse();
+                const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
+                const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
+
+                let fechaAnterior = null,
+                    prevEmisor = null;
+
+                mensajes.forEach(mensaje => {
+                    const esNuevoHilo = mensaje.remitente !== prevEmisor;
+                    prevEmisor = mensaje.remitente;
+
+                    const userInfo = userInfos.get(mensaje.remitente);
+                    agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto, null, mensaje.remitente, esNuevoHilo, userInfo, 'Colab');
+
+                    fechaAnterior = new Date(mensaje.fecha);
+                });
+
+                listaMensajes.querySelector('li')?.scrollIntoView();
             }
         });
     }
