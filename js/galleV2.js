@@ -1178,53 +1178,35 @@ function galle() {
         let puedeDesplazar = true,
             currentPage = 1,
             conversacion_id = conversacion;
-    
+
         listaMensajes.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
                 puedeDesplazar = false;
                 setTimeout(() => (puedeDesplazar = true), 2000);
                 currentPage++;
-    
+
                 const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
                 if (!data?.success) {
                     return console.error('Error al obtener más mensajes.');
                 }
-    
-                const mensajes = data.data.mensajes;
-                // Revertimos el orden de los mensajes para que estén en orden cronológico
-                mensajes.reverse();
-    
-                // Obtenemos el remitente y la fecha del primer mensaje actualmente visible
-                let fechaAnterior = listaMensajes.firstChild ? new Date(listaMensajes.firstChild.dataset.fecha) : null;
-                let prevEmisor = listaMensajes.firstChild ? listaMensajes.firstChild.dataset.remitente : null;
-    
+
+                const mensajes = data.data.mensajes.reverse();
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
-    
+
+                let fechaAnterior = null,
+                    prevEmisor = null;
+
                 mensajes.forEach(mensaje => {
                     const esNuevoHilo = mensaje.remitente !== prevEmisor;
                     prevEmisor = mensaje.remitente;
-    
+
                     const userInfo = userInfos.get(mensaje.remitente);
-                    agregarMensajeAlChat(
-                        mensaje.mensaje,
-                        mensaje.clase,
-                        mensaje.fecha,
-                        listaMensajes,
-                        fechaAnterior,
-                        true,
-                        mensaje.adjunto,
-                        null,
-                        mensaje.remitente,
-                        esNuevoHilo,
-                        userInfo,
-                        'Colab'
-                    );
-    
+                    agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto, null, mensaje.remitente, esNuevoHilo, userInfo, 'Colab');
+
                     fechaAnterior = new Date(mensaje.fecha);
                 });
-    
-                // Ajustamos la vista al primer mensaje recién agregado
+
                 listaMensajes.querySelector('li')?.scrollIntoView();
             }
         });
