@@ -1196,15 +1196,11 @@ function galle() {
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
     
-                // Obtén el primer mensaje actualmente visible
-                const primerMensajeVisible = listaMensajes.querySelector('li');
+                // Guarda la posición del scroll actual
+                const posicionScrollAntes = listaMensajes.scrollHeight - listaMensajes.scrollTop;
+    
                 let prevEmisor = null;
                 let fechaAnterior = null;
-    
-                if (primerMensajeVisible) {
-                    prevEmisor = primerMensajeVisible.getAttribute('data-remitente');
-                    fechaAnterior = new Date(primerMensajeVisible.getAttribute('data-fecha'));
-                }
     
                 // Procesa los mensajes en orden cronológico ascendente
                 mensajes.forEach(mensaje => {
@@ -1224,16 +1220,14 @@ function galle() {
                         mensaje.remitente,
                         esNuevoHilo,
                         userInfo,
-                        'Colab'
+                        'colab'
                     );
     
                     fechaAnterior = new Date(mensaje.fecha);
                 });
     
                 // Mantén el scroll en la posición correcta después de agregar mensajes
-                if (listaMensajes.firstChild) {
-                    listaMensajes.firstChild.scrollIntoView();
-                }
+                listaMensajes.scrollTop = listaMensajes.scrollHeight - posicionScrollAntes;
             }
         });
     }
