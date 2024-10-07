@@ -1398,6 +1398,7 @@ function galle() {
                     
                     let fechaAnterior = null;
                     let tipoMensaje = 'Colab';
+                    let prevEmisor = null;
 
                     mensajes.reverse().forEach(mensaje => {
                         const isFirstMessageOfThread = mensaje.remitente !== prevEmisor;
