@@ -104,24 +104,26 @@ function galle() {
 
     async function obtenerInfoUsuarios(userIds) {
         const userInfos = new Map();
-    
-        await Promise.all(userIds.map(async userId => {
-            try {
-                const data = await enviarAjax('infoUsuario', { receptor: userId });
-                if (data?.success) {
-                    const imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
-                    const nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido';
-                    userInfos.set(userId, { imagenPerfil, nombreUsuario });
-                } else {
-                    console.error('Error al obtener información del usuario:', data.message);
-                    userInfos.set(userId, { imagenPerfil: 'default.jpg', nombreUsuario: 'Usuario Desconocido' });
+
+        await Promise.all(
+            userIds.map(async userId => {
+                try {
+                    const data = await enviarAjax('infoUsuario', {receptor: userId});
+                    if (data?.success) {
+                        const imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
+                        const nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido';
+                        userInfos.set(userId, {imagenPerfil, nombreUsuario});
+                    } else {
+                        console.error('Error al obtener información del usuario:', data.message);
+                        userInfos.set(userId, {imagenPerfil: 'default.jpg', nombreUsuario: 'Usuario Desconocido'});
+                    }
+                } catch (error) {
+                    console.error('Error al obtener información del usuario:', error);
+                    userInfos.set(userId, {imagenPerfil: 'default.jpg', nombreUsuario: 'Usuario Desconocido'});
                 }
-            } catch (error) {
-                console.error('Error al obtener información del usuario:', error);
-                userInfos.set(userId, { imagenPerfil: 'default.jpg', nombreUsuario: 'Usuario Desconocido' });
-            }
-        }));
-    
+            })
+        );
+
         return userInfos;
     }
 
@@ -310,7 +312,7 @@ function galle() {
 
     async function mostrarMensajes(mensajes, contenedor = null) {
         const listaMensajes = contenedor ? contenedor.querySelector('.listaMensajes') : document.querySelector('.listaMensajes');
-    
+
         if (!listaMensajes) {
             console.error('No se encontró el contenedor de mensajes.');
             return;
@@ -323,33 +325,21 @@ function galle() {
             listaMensajes.appendChild(mensajeVacio);
             return;
         }
-    
+
         // **Nuevo código para obtener información de los usuarios**
         const uniqueRemitentes = [...new Set(mensajes.map(mensaje => mensaje.remitente))];
         const userInfos = await obtenerInfoUsuarios(uniqueRemitentes);
-    
+
         let fechaAnterior = null;
         let prevEmisor = null;
         mensajes.forEach(mensaje => {
             const isFirstMessageOfThread = mensaje.remitente !== prevEmisor;
             prevEmisor = mensaje.remitente;
-    
+
             // Obtenemos la información del usuario
             const userInfo = userInfos.get(mensaje.remitente);
-    
-            agregarMensajeAlChat(
-                mensaje.mensaje,
-                mensaje.clase,
-                mensaje.fecha,
-                listaMensajes,
-                fechaAnterior,
-                false,
-                mensaje.adjunto,
-                temp_id = null,
-                mensaje.remitente,
-                isFirstMessageOfThread,
-                userInfo
-            );
+
+            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, (temp_id = null), mensaje.remitente, isFirstMessageOfThread, userInfo);
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
@@ -433,131 +423,86 @@ function galle() {
         }
     }
 
+    function obtenerFechaAnterior(listaMensajes, insertAtTop) {
+        let lastElement = null;
+        const children = Array.from(listaMensajes.children || []);
+        const searchOrder = insertAtTop ? 1 : -1;
+        const startIndex = insertAtTop ? 0 : children.length - 1;
+
+        for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
+            const child = children[i];
+            if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
+                lastElement = child;
+                break;
+            }
+        }
+
+        return lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
+    }
+
     /*
 
     */
 
-    function agregarMensajeAlChat(
-        mensajeTexto,
-        clase,
-        fecha,
-        listaMensajes = document.querySelector('.listaMensajes'),
-        fechaAnterior = null,
-        insertAtTop = false,
-        adjunto = null,
-        temp_id = null,
-        msgEmisor = null,
-        isFirstMessageOfThread = false,
-        userInfo = null
-    ) {
+    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null) {
         const fechaMensaje = new Date(fecha);
+
+        // Obtener la última fecha de un mensaje anterior si no se proporcionó una fechaAnterior
         if (!fechaAnterior) {
-            let lastElement = null;
-            const children = Array.from(listaMensajes.children || []);
-            const searchOrder = insertAtTop ? 1 : -1;
-            const startIndex = insertAtTop ? 0 : children.length - 1;
-    
-            for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
-                const child = children[i];
-                if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
-                    lastElement = child;
-                    break;
-                }
-            }
-    
-            fechaAnterior = lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
+            fechaAnterior = obtenerFechaAnterior(listaMensajes, insertAtTop);
         }
+
         manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
-    
+
         const li = document.createElement('li');
         li.classList.add(clase);
         li.setAttribute('data-fecha', fechaMensaje.toISOString());
-    
-        if (msgEmisor) {
-            li.setAttribute('data-emisor', msgEmisor);
-        }
-    
+
+        if (msgEmisor) li.setAttribute('data-emisor', msgEmisor);
         if (temp_id) {
             li.setAttribute('data-temp-id', temp_id);
             li.classList.add('mensajePendiente');
         }
-    
-        // **Agregar avatar y nombre de usuario si es el primer mensaje del hilo**
+
+        // Agregar avatar y nombre de usuario si es el primer mensaje del hilo
         if (isFirstMessageOfThread && userInfo) {
-            // Crear contenedor para el avatar y el nombre de usuario
-            const userContainer = document.createElement('div');
-            userContainer.classList.add('userContainer');
-    
-            // Crear imagen de avatar
-            const avatarImg = document.createElement('img');
-            avatarImg.src = userInfo.imagenPerfil;
-            avatarImg.alt = userInfo.nombreUsuario;
-            avatarImg.classList.add('avatarImage');
-    
-            // Crear elemento para el nombre de usuario
-            const userNameElem = document.createElement('span');
-            userNameElem.textContent = userInfo.nombreUsuario;
-            userNameElem.classList.add('userName');
-    
-            // Añadir avatar y nombre al contenedor
-            userContainer.appendChild(avatarImg);
-            userContainer.appendChild(userNameElem);
-    
-            // Añadir contenedor al mensaje
-            li.appendChild(userContainer);
+            agregarAvatarYUsuario(li, userInfo);
         }
-    
+
         // Añadir el texto del mensaje
         const messageTextElem = document.createElement('p');
         messageTextElem.textContent = mensajeTexto;
         li.appendChild(messageTextElem);
-    
+
         manejarAdjunto(adjunto, li);
-    
+
+        // Insertar el mensaje en la lista
         if (insertAtTop) {
             listaMensajes.insertBefore(li, listaMensajes.firstChild);
         } else {
             listaMensajes.appendChild(li);
-        }
-    
-        if (!insertAtTop) {
-            listaMensajes.scrollTop = listaMensajes.scrollHeight;
+            listaMensajes.scrollTop = listaMensajes.scrollHeight; // Auto-scroll hacia abajo
         }
     }
 
-    /* 
+    // Función para agregar el avatar y el nombre de usuario
+    function agregarAvatarYUsuario(li, userInfo) {
+        const userContainer = document.createElement('div');
+        userContainer.classList.add('userContainer');
 
-    necesito hacer uan funcion que agregue el avatar y el nombre del usuario segun la id, tiene que ser una funcion individua, esa id la consigue en data-emisor, y lo que va a hacer es agregar el avatar y el nombre de usuario en el chat pero solo una vez cada hilo de mensajes, es decir, si una persona manda 10 mesajes seguidos entonces se agrega el avatar y el nombre al primer mensaje para identificar que esos son sus mensajes, no es necesario colocar avatar y nombre a cada mensaje
+        const avatarImg = document.createElement('img');
+        avatarImg.src = userInfo.imagenPerfil;
+        avatarImg.alt = userInfo.nombreUsuario;
+        avatarImg.classList.add('avatarImage');
 
-    asi se ven los mensajes, 
+        const userNameElem = document.createElement('span');
+        userNameElem.textContent = userInfo.nombreUsuario;
+        userNameElem.classList.add('userName');
 
-    <li class="mensajeIzquierda" data-fecha="2024-10-07T00:00:26.000Z" data-emisor="44">4</li>
-    estan dentro de <ul class="listaMensajes"></ul
-
-    para encontrarlos se puede usar cualquiera de las 3 funciones que mostre para activar esta nueva funcion, lo importante es que sepa donde va agregar el avatar, en que conversacion, y que lo haga de forma correcta 1 sola vez por hilo de mensajes
-
-    asi se puede conseguir la informacion del usuario en base al id 
-
-    
-    if (!imagenPerfil || !nombreUsuario) {
-        try {
-            const data = await enviarAjax('infoUsuario', {receptor});
-            if (data?.success) {
-                imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
-                nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido'; // Nombre por defecto si no se encuentra
-            } else {
-                console.error('Error del servidor:', data.message);
-                alert(data.message || 'Error al obtener la información del usuario.');
-                return;
-            }
-        } catch (error) {
-            console.error('Error de conexión:', error);
-            alert('Error al intentar obtener la información del usuario.');
-            return;
-        }
+        userContainer.appendChild(avatarImg);
+        userContainer.appendChild(userNameElem);
+        li.appendChild(userContainer);
     }
-
-    */
 
     function manejarMensajeWebSocket(data) {
         //console.log('manejarMensajeWebSocket: Recibido nuevo mensaje del WebSocket:', data);
