@@ -1389,7 +1389,7 @@ function galle() {
 
                 currentPage++;
 
-                const data = await enviarAjax('obtenerChatColab', {conversacion, page: currentPage});
+                const data = await enviarAjax('obtenerChatColab', {colab_id, page: currentPage});
 
                 if (data?.success) {
                     const uniqueRemitentes = [...new Set(mensajes.map(mensaje => mensaje.remitente))];
