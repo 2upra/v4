@@ -34,13 +34,10 @@ function galle() {
 
     function init() {
         manejarScroll();
-        msSetup();
         actualizarConexionEmisor();
         iniciarChat();
         clickMensaje();
-        subidaArchivosChat();
-        chatColab();
-        msColabSetup();
+        chatColab(); // debería iniciarse de otra manera
     }
 
     /*
@@ -129,7 +126,7 @@ function galle() {
 
     async function chatColab() {
         const chatColabElements = document.querySelectorAll('.bloqueChatColab');
-
+    
         chatColabElements.forEach(async chatColabElement => {
             const postId = chatColabElement.dataset.postId;
             if (!postId) {
@@ -137,16 +134,17 @@ function galle() {
                 return;
             }
             currentPage = 1;
-
+    
             try {
-                const data = await enviarAjax('obtenerChatColab', {colab_id: postId, page: currentPage});
-
+                const data = await enviarAjax('obtenerChatColab', { colab_id: postId, page: currentPage });
+    
                 if (data?.success) {
                     console.log('Mensaje completo:', data);
                     const tipoMensaje = 'Colab';
                     mostrarMensajes(data.data.mensajes, chatColabElement, tipoMensaje);
                     manejarScrollColab(data.data.conversacion, chatColabElement);
-
+                    subidaArchivosChat(chatColabElement);
+                    msColabSetup(chatColabElement);
                     const listaMensajes = chatColabElement.querySelector('.listaMensajes');
                     if (listaMensajes) {
                         listaMensajes.scrollTop = listaMensajes.scrollHeight;
@@ -160,25 +158,37 @@ function galle() {
         });
     }
 
-    async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
+    async function abrirConversacion({ conversacion, receptor, imagenPerfil, nombreUsuario }) {
         try {
-            let data = {success: true, data: {mensajes: [], conversacion: null}};
+            let data = { success: true, data: { mensajes: [], conversacion: null } };
             currentPage = 1;
             if (conversacion) {
-                data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
+                data = await enviarAjax('obtenerChat', { conversacion, page: currentPage });
             } else if (receptor) {
-                data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
+                data = await enviarAjax('obtenerChat', { receptor, page: currentPage });
             }
             if (data?.success) {
-                mostrarMensajes(data.data.mensajes);
                 const bloqueChat = document.querySelector('.bloqueChat');
+                if (!bloqueChat) {
+                    console.error('No se encontró el elemento .bloqueChat en el DOM.');
+                    return;
+                }
+    
+                // Adjusted the call to pass the correct chat container element
+                subidaArchivosChat(bloqueChat);
+                msSetup(bloqueChat);
+                mostrarMensajes(data.data.mensajes, bloqueChat);
                 bloqueChat.setAttribute('data-user-id', receptor);
                 bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                 bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
                 bloqueChat.style.display = 'block';
-                manejarScroll(data.data.conversacion);
-                const listaMensajes = document.querySelector('.listaMensajes');
-                listaMensajes.scrollTop = listaMensajes.scrollHeight;
+                manejarScroll(data.data.conversacion, bloqueChat);
+    
+                const listaMensajes = bloqueChat.querySelector('.listaMensajes');
+                if (listaMensajes) {
+                    listaMensajes.scrollTop = listaMensajes.scrollHeight;
+                }
+    
                 await actualizarEstadoConexion(receptor, bloqueChat);
                 setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
             } else {
@@ -572,28 +582,29 @@ function galle() {
 
     // FUNCIONES PARA ENVIAR MENSAJE
 
-    function msSetup() {
+    function msSetup(chatContainer) {
         document.addEventListener('click', event => {
             if (event.target.matches('.enviarMensaje')) {
                 enviarMensaje();
             }
         });
+ 
 
         const mensajeInput = document.querySelector('.mensajeContenido');
         mensajeInput.addEventListener('keydown', event => {
             if (event.key === 'Enter' && !event.altKey) {
                 event.preventDefault();
-                enviarMensaje();
+                enviarMensaje(chatContainer);
             }
         });
 
-        function enviarMensaje() {
+        function enviarMensaje(chatContainer) {
             if (subidaChatProgreso) {
                 return alert('Por favor espera a que se complete la subida del archivo.');
             }
             const mensaje = mensajeInput.value.trim();
             if (!mensaje) return;
-            ocultarPreviews();
+            ocultarPreviews(chatContainer);
             let adjunto = archivoChatId || archivoChatUrl ? {archivoChatId, archivoChatUrl} : null;
             archivoChatId = archivoChatUrl = null;
             enviarMensajeWs(receptor, mensaje, adjunto);
@@ -602,42 +613,40 @@ function galle() {
         }
     }
 
-    // FUNCIONES PARA ADJUNTAR ARCHIVOS
 
-    function ocultarPreviews() {
-        const previewChatAudio = document.getElementById('previewChatAudio');
-        const previewChatImagen = document.getElementById('previewChatImagen');
-        const previewChatArchivo = document.getElementById('previewChatArchivo');
-        const cancelUploadButton = document.getElementById('cancelUploadButton');
-        previewChatAudio.style.display = 'none';
-        previewChatImagen.style.display = 'none';
-        previewChatArchivo.style.display = 'none';
-        cancelUploadButton.style.display = 'none';
+    function ocultarPreviews(chatContainer) {
+        const previewChatAudio = chatContainer.querySelector('.previewChatAudio');
+        const previewChatImagen = chatContainer.querySelector('.previewChatImagen');
+        const previewChatArchivo = chatContainer.querySelector('.previewChatArchivo');
+        const cancelUploadButton = chatContainer.querySelector('.cancelUploadButton');
+    
+        if (previewChatAudio) previewChatAudio.style.display = 'none';
+        if (previewChatImagen) previewChatImagen.style.display = 'none';
+        if (previewChatArchivo) previewChatArchivo.style.display = 'none';
+        if (cancelUploadButton) cancelUploadButton.style.display = 'none';
     }
 
-    function subidaArchivosChat() {
-        const ids = ['enviarAdjunto', 'bloqueChat', 'previewChatAudio', 'previewChatArchivo', 'previewChatImagen', 'cancelUploadButton'];
-        const elements = ids.reduce((acc, id) => {
-            const el = document.getElementById(id);
-            if (!el) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
-            acc[id] = el;
-            return acc;
-        }, {});
-
+    function subidaArchivosChat(chatContainer) {
+        const enviarAdjunto = chatContainer.querySelector('.enviarAdjunto');
+        const previewChatArchivo = chatContainer.querySelector('.previewChatArchivo');
+        const previewChatAudio = chatContainer.querySelector('.previewChatAudio');
+        const previewChatImagen = chatContainer.querySelector('.previewChatImagen');
+        const cancelUploadButton = chatContainer.querySelector('.cancelUploadButton');
+        const elements = {enviarAdjunto, previewChatArchivo, previewChatAudio, previewChatImagen, cancelUploadButton};
         const missingElements = Object.entries(elements)
             .filter(([_, el]) => !el)
-            .map(([id]) => id);
+            .map(([key]) => key);
+
         if (missingElements.length) {
+            console.warn(`Missing elements in chat container: ${missingElements.join(', ')}`);
             return;
         }
-
-        const {enviarAdjunto, bloqueChat, previewChatArchivo, previewChatAudio, previewChatImagen, cancelUploadButton} = elements;
 
         cancelUploadButton.addEventListener('click', () => {
             subidaChatProgreso = false;
             archivoChatId = null;
             archivoChatUrl = null;
-            ocultarPreviews();
+            ocultarPreviews(chatContainer);
         });
 
         enviarAdjunto.addEventListener('click', () => abrirSelectorArchivos('*/*'));
@@ -663,7 +672,7 @@ function galle() {
         const subidaChatAudio = async file => {
             //console.log('Iniciando subida de audio:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
             subidaChatProgreso = true;
-            ocultarPreviews(); // Ocultar otros previews
+            ocultarPreviews(chatContainer); // Ocultar otros previews
 
             try {
                 //console.log('Cargando archivo de audio...');
@@ -687,7 +696,7 @@ function galle() {
         const subidaChatImagen = async file => {
             //console.log('Iniciando subida de imagen:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
             subidaChatProgreso = true;
-            ocultarPreviews(); // Ocultar otros previews
+            ocultarPreviews(chatContainer); // Ocultar otros previews
             updateChatPreviewImagen(file);
 
             try {
@@ -714,7 +723,7 @@ function galle() {
             //console.log('Iniciando subida de archivo:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
             subidaChatProgreso = true;
             cancelUploadButton.style.display = 'block';
-            ocultarPreviews(); // Ocultar otros previews
+            ocultarPreviews(chatContainer); // Ocultar otros previews
             previewChatArchivo.style.display = 'block';
             previewChatArchivo.innerHTML = `
                 <div class="file-name">${file.name}</div>
@@ -863,7 +872,7 @@ function galle() {
                 let fechaAnterior = null;
 
                 mensajes.forEach(mensaje => {
-                    agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto);
+                    agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, true, mensaje.adjunto, null, null, null, null, 'Individual');
                     fechaAnterior = new Date(mensaje.fecha);
                 });
 
@@ -958,13 +967,6 @@ function galle() {
         });
     }
 
-    /*
-
-    Cuando recibe un mensaje, tiene que calcularse si ese mensaje continua el hilo del usuario actual o no para decicir si se debe colocar el avatar y nombre del usuario de quien envio el mensaje, es decir, determinar isFirstMessageOfThread = es true o false
-
-    */
-
-    //asi se calcucula inicialmente al cargas los mensajes pero no se calcula al recibir un mensaje
     async function mostrarMensajes(mensajes, contenedor = null, tipoMensaje = null) {
         const listaMensajes = contenedor ? contenedor.querySelector('.listaMensajes') : document.querySelector('.listaMensajes');
 
@@ -1158,7 +1160,7 @@ function galle() {
         }
     }
 
-    function msColabSetup() {
+    function msColabSetup(chatColabElement) {
         document.addEventListener('click', event => {
             if (event.target.matches('.enviarMensajeColab')) {
                 enviarMensajeColab(event.target);
@@ -1169,11 +1171,11 @@ function galle() {
         mensajeInput.addEventListener('keydown', event => {
             if (event.key === 'Enter' && !event.altKey) {
                 event.preventDefault();
-                enviarMensajeColab(document.querySelector('.enviarMensajeColab'));
+                enviarMensajeColab(document.querySelector('.enviarMensajeColab'), chatColabElement);
             }
         });
 
-        function enviarMensajeColab(button) {
+        function enviarMensajeColab(button, chatColabElement) {
             if (subidaChatProgreso) {
                 return alert('Por favor espera a que se complete la subida del archivo.');
             }
@@ -1185,7 +1187,7 @@ function galle() {
             if (!mensaje) {
                 return alert('Por favor, ingresa un mensaje.');
             }
-
+            ocultarPreviews(chatColabElement);
             const conversacion_id = button.getAttribute('data-conversacion-id');
             const participantes = JSON.parse(bloqueChat.getAttribute('data-participantes'));
             const metadata = 'colab';
