@@ -1191,22 +1191,22 @@ function galle() {
                 setTimeout(() => (puedeDesplazar = true), 2000);
                 currentPage++;
     
-                const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
+                const data = await enviarAjax('obtenerChatColab', { conversacion_id, page: currentPage });
                 if (!data?.success) {
                     return console.error('Error al obtener más mensajes.');
                 }
     
                 let mensajes = data.data.mensajes;
     
-                // Invertir los mensajes para procesarlos de más antiguos a más nuevos
-                mensajes.reverse();
+                // Ordenar los mensajes por fecha (ascendente) para procesarlos correctamente
+                mensajes.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
     
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
     
                 let fechaAnterior = null;
     
-                // Obtener el remitente del primer mensaje actualmente mostrado
+                // Obtenemos el remitente del primer mensaje actualmente mostrado
                 const primerMensajeMostrado = listaMensajes.querySelector('.messageBlock');
                 let prevEmisor = null;
     
@@ -1230,6 +1230,9 @@ function galle() {
     
                     const userInfo = userInfos.get(mensaje.remitente);
     
+                    // Si este es el primer mensaje de este hilo, es el más antiguo de este remitente
+                    const isFirstMessageOfThread = esNuevoHilo || i === 0;
+    
                     // Insertar el mensaje en el chat
                     agregarMensajeAlChat(
                         mensaje.mensaje,
@@ -1241,7 +1244,7 @@ function galle() {
                         mensaje.adjunto,
                         null,
                         mensaje.remitente,
-                        esNuevoHilo, // Indica si es el primer mensaje de un hilo
+                        isFirstMessageOfThread, // Indica si es el primer mensaje de un hilo
                         userInfo,
                         'Colab'
                     );
