@@ -15,9 +15,9 @@ function obtenerChatColab()
     chatLog('Usuario actual: ' . $usuarioActual);
     
     $mensajesPorPagina = 20;
-    $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+    $before_date = isset($_POST['before_date']) ? sanitize_text_field($_POST['before_date']) : null;
 
-    // Comprobar si se proporciona 'conversacion_id' directamente
+    // Obtener el ID de la conversación
     $conversacion = isset($_POST['conversacion_id']) ? intval($_POST['conversacion_id']) : null;
     $tablaConversaciones = $wpdb->prefix . 'conversacion';
 
@@ -45,9 +45,9 @@ function obtenerChatColab()
             wp_die();
         }
     } else {
-        // Proceder con la lógica existente utilizando 'colab_id'
+        // Proceder utilizando 'colab_id'
         $colab_id = isset($_POST['colab_id']) ? intval($_POST['colab_id']) : 0;
-        chatLog('Colab ID: ' . $colab_id . ', Página: ' . $page);
+        chatLog('Colab ID: ' . $colab_id);
 
         if ($colab_id <= 0) {
             chatLog('ID de colaboración inválido: ' . $colab_id);
@@ -149,16 +149,28 @@ function obtenerChatColab()
 
     // Obtener mensajes
     $tablaMensajes = $wpdb->prefix . 'mensajes';
-    $offset = ($page - 1) * $mensajesPorPagina;
-    chatLog('Consultando mensajes con offset: ' . $offset);
+    chatLog('Consultando mensajes.');
 
-    $query = $wpdb->prepare("
-        SELECT mensaje, emisor AS remitente, fecha, adjunto
-        FROM $tablaMensajes
-        WHERE conversacion = %d
-        ORDER BY fecha DESC
-        LIMIT %d OFFSET %d
-    ", $conversacion, $mensajesPorPagina, $offset);
+    if ($before_date) {
+        chatLog('Obteniendo mensajes antes de la fecha: ' . $before_date);
+
+        $query = $wpdb->prepare("
+            SELECT mensaje, emisor AS remitente, fecha, adjunto
+            FROM $tablaMensajes
+            WHERE conversacion = %d AND fecha < %s
+            ORDER BY fecha DESC
+            LIMIT %d
+        ", $conversacion, $before_date, $mensajesPorPagina);
+    } else {
+        chatLog('Obteniendo mensajes más recientes.');
+        $query = $wpdb->prepare("
+            SELECT mensaje, emisor AS remitente, fecha, adjunto
+            FROM $tablaMensajes
+            WHERE conversacion = %d
+            ORDER BY fecha DESC
+            LIMIT %d
+        ", $conversacion, $mensajesPorPagina);
+    }
 
     $mensajes = $wpdb->get_results($query);
 
@@ -170,8 +182,9 @@ function obtenerChatColab()
 
     chatLog('Mensajes obtenidos: ' . count($mensajes));
 
-    // Procesar mensajes
+    // Invertir los mensajes para que estén en orden cronológico
     $mensajes = array_reverse($mensajes);
+
     foreach ($mensajes as $mensaje) {
         $mensaje->clase = ($mensaje->remitente == $usuarioActual) ? 'mensajeDerecha' : 'mensajeIzquierda';
         if (!empty($mensaje->adjunto)) {
