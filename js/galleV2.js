@@ -1131,6 +1131,28 @@ function galle() {
         });
     }
 
+    /*
+
+    // UN HILO DE MENSAJES DESPUES DEL SCROLL B1 DEBERIA SER EL isFirstMessage, considera que te los estoy mostrando en el orden que se ven los logs, puedo notar que los se scroll estan invertidos aunque de cierto modo si se ven renderizados de forma correcta, 
+
+    //el orden en el que se envian los mensajess es 1, 2, 3, 4, 5 y las letras diferencias los hip
+
+    [[manejarScrollColab]] Índice: 10 mensaje.remitente: 1 prevEmisor: 44 esNuevoHilo: true
+    galleV2.js?ver=2.0.1.1020418618:1234 [[agregarMensajeAlChat]] {mensajeTexto: 'b5', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: true, esUsuarioActual: false, …}
+    galleV2.js?ver=2.0.1.1020418618:1184 [[manejarScrollColab]] Índice: 11 mensaje.remitente: 1 prevEmisor: 1 esNuevoHilo: false
+    galleV2.js?ver=2.0.1.1020418618:1234 [[agregarMensajeAlChat]] {mensajeTexto: 'b4', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
+    galleV2.js?ver=2.0.1.1020418618:1184 [[manejarScrollColab]] Índice: 12 mensaje.remitente: 1 prevEmisor: 1 esNuevoHilo: false
+    galleV2.js?ver=2.0.1.1020418618:1234 [[agregarMensajeAlChat]] {mensajeTexto: 'b3', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
+    galleV2.js?ver=2.0.1.1020418618:1184 [[manejarScrollColab]] Índice: 13 mensaje.remitente: 1 prevEmisor: 1 esNuevoHilo: false
+    galleV2.js?ver=2.0.1.1020418618:1234 [[agregarMensajeAlChat]] {mensajeTexto: 'b2', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
+    galleV2.js?ver=2.0.1.1020418618:1184 [[manejarScrollColab]] Índice: 14 mensaje.remitente: 1 prevEmisor: 1 esNuevoHilo: false
+    galleV2.js?ver=2.0.1.1020418618:1234 [[agregarMensajeAlChat]] {mensajeTexto: 'b1', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
+
+    b1 debe ser el isFirstMessageOfThread: true
+
+
+    */
+
     async function manejarScrollColab(conversacion, contenedor = null) {
         const listaMensajes = (contenedor || document).querySelector('.listaMensajes');
         let puedeDesplazar = true,
@@ -1175,7 +1197,7 @@ function galle() {
                 const scrollPosAntesDeInsertar = listaMensajes.scrollHeight - listaMensajes.scrollTop;
 
                 // Procesar los mensajes en orden ascendente (del más antiguo al más reciente)
-                for (let i = 0; i < mensajes.length; i++) {
+                for (let i = mensajes.length - 1; i >= 0; i--) {
                     const mensaje = mensajes[i];
 
                     // Verificar si este mensaje corresponde a un nuevo hilo (cambio de emisor)
