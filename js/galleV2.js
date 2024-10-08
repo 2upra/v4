@@ -460,7 +460,6 @@ function galle() {
         if (temp_id) mensajeElem.classList.add('mensajePendiente');
 
         if (esColabPrimerMensaje) {
-            // Añadimos una clase identificadora al messageBlock
             messageBlock.classList.add('firstMessageOfThread');
 
             const userNameElem = crearElemento('span', 'userName', {textContent: userInfo.nombreUsuario});
@@ -479,12 +478,9 @@ function galle() {
         messageContainer.appendChild(mensajeElem);
         messageBlock.appendChild(messageContainer);
 
-        if (insertAtTop) {
-            listaMensajes.insertBefore(messageBlock, listaMensajes.firstChild);
-        } else {
-            listaMensajes.appendChild(messageBlock);
-            listaMensajes.scrollTop = listaMensajes.scrollHeight;
-        }
+        // Ya no insertamos el messageBlock en el DOM aquí.
+        // En su lugar, lo devolvemos para que el llamador maneje su inserción.
+        return messageBlock;
     }
 
     function crearElemento(tag, clase, atributos = {}) {
@@ -1184,73 +1180,81 @@ function galle() {
         let puedeDesplazar = true,
             currentPage = 1,
             conversacion_id = conversacion;
-    
+
         listaMensajes.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
                 puedeDesplazar = false;
                 setTimeout(() => (puedeDesplazar = true), 2000);
                 currentPage++;
-    
+
                 const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
                 if (!data?.success) {
                     return console.error('Error al obtener más mensajes.');
                 }
-    
+
                 let mensajes = data.data.mensajes;
-    
+
                 // Invertir los mensajes para procesarlos de más antiguos a más nuevos
                 mensajes.reverse();
-    
+
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
-    
+
                 let fechaAnterior = null;
-    
+
                 // Obtener el remitente del primer mensaje actualmente mostrado
                 const primerMensajeMostrado = listaMensajes.querySelector('.messageBlock');
                 let prevEmisor = null;
-    
-                // Si ya hay mensajes cargados, obtenemos el remitente del último mensaje cargado
+
                 if (primerMensajeMostrado) {
                     const primerMensajeElem = primerMensajeMostrado.querySelector('.mensajeText');
                     if (primerMensajeElem) {
                         prevEmisor = primerMensajeElem.getAttribute('data-emisor') || null;
                     }
                 }
-    
+
                 // Guardar la posición del scroll actual antes de insertar nuevos mensajes
                 const scrollPosAntesDeInsertar = listaMensajes.scrollHeight - listaMensajes.scrollTop;
-    
+
+                // Crear un fragmento para almacenar los nuevos mensajes
+                const fragment = document.createDocumentFragment();
+
                 // Procesamos los mensajes uno por uno
                 for (let i = 0; i < mensajes.length; i++) {
                     const mensaje = mensajes[i];
-    
+
                     // Verificar si este mensaje corresponde a un nuevo hilo (cambio de emisor)
                     const esNuevoHilo = mensaje.remitente !== prevEmisor;
-    
+
                     const userInfo = userInfos.get(mensaje.remitente);
-    
-                    // Insertar el mensaje en el chat
-                    agregarMensajeAlChat(
+
+                    // Generar el messageBlock
+                    const messageBlock = agregarMensajeAlChat(
                         mensaje.mensaje,
                         mensaje.clase,
                         mensaje.fecha,
-                        listaMensajes,
+                        null, // No necesitamos pasar listaMensajes aquí
                         fechaAnterior,
                         true, // insertAtTop = true
                         mensaje.adjunto,
                         null,
                         mensaje.remitente,
-                        esNuevoHilo, // Indica si es el primer mensaje de un hilo
+                        esNuevoHilo,
                         userInfo,
                         'Colab'
                     );
-    
+
+                    // Añadir el messageBlock al fragmento
+                    fragment.appendChild(messageBlock);
+
                     // Actualizamos el estado de fecha y remitente para el siguiente mensaje
                     fechaAnterior = new Date(mensaje.fecha);
-                    prevEmisor = mensaje.remitente; // Actualizamos correctamente el remitente anterior
+                    prevEmisor = mensaje.remitente;
                 }
-    
+
+                // Insertar el fragmento completo al principio de listaMensajes
+                listaMensajes.insertBefore(fragment, listaMensajes.firstChild);
+
                 // Ajustar manualmente la posición del scroll tras insertar los mensajes
                 listaMensajes.scrollTop = listaMensajes.scrollHeight - scrollPosAntesDeInsertar;
             }
