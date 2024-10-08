@@ -1137,54 +1137,52 @@ function galle() {
         let puedeDesplazar = true,
             currentPage = 1,
             conversacion_id = conversacion;
-
+    
         listaMensajes.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
                 puedeDesplazar = false;
                 setTimeout(() => (puedeDesplazar = true), 2000);
                 currentPage++;
-
+    
                 const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
                 if (!data?.success) {
                     return console.error('Error al obtener más mensajes.');
                 }
-
+    
                 let mensajes = data.data.mensajes;
-
+    
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
-
+    
                 let fechaAnterior = null;
-
+    
                 // Obtener el remitente del primer mensaje actualmente mostrado
                 const primerMensajeMostrado = listaMensajes.querySelector('.messageBlock');
-                let prevEmisor = null;
-
-                // Si ya hay mensajes cargados, obtenemos el remitente del primer mensaje actualmente mostrado
+                let nextEmisor = null;
+    
                 if (primerMensajeMostrado) {
                     const primerMensajeElem = primerMensajeMostrado.querySelector('.mensajeText');
                     if (primerMensajeElem) {
-                        prevEmisor = primerMensajeElem.getAttribute('data-emisor') || null;
+                        nextEmisor = primerMensajeElem.getAttribute('data-emisor') || null;
                     }
                 }
-
-                console.log('[[manejarScrollColab]] prevEmisor inicial:', prevEmisor);
-
+    
+                console.log('[[manejarScrollColab]] nextEmisor inicial:', nextEmisor);
+    
                 // Guardar la posición del scroll actual antes de insertar nuevos mensajes
                 const scrollPosAntesDeInsertar = listaMensajes.scrollHeight - listaMensajes.scrollTop;
-
-                // Procesamos los mensajes en orden cronológico (del más antiguo al más reciente)
-                mensajes.reverse();
-                for (let i = 0; i < mensajes.length; i++) {
+    
+                // Procesar los mensajes desde el último hasta el primero
+                for (let i = mensajes.length - 1; i >= 0; i--) {
                     const mensaje = mensajes[i];
-
+    
                     // Verificar si este mensaje corresponde a un nuevo hilo (cambio de emisor)
-                    const esNuevoHilo = mensaje.remitente !== prevEmisor;
-                    
-                    console.log('[[manejarScrollColab]] Índice:', i, 'mensaje.remitente:', mensaje.remitente, 'prevEmisor:', prevEmisor, 'esNuevoHilo:', esNuevoHilo);
-
+                    const esNuevoHilo = mensaje.remitente !== nextEmisor;
+    
+                    console.log('[[manejarScrollColab]] Índice:', i, 'mensaje.remitente:', mensaje.remitente, 'nextEmisor:', nextEmisor, 'esNuevoHilo:', esNuevoHilo);
+    
                     const userInfo = userInfos.get(mensaje.remitente);
-                    
+    
                     // Insertar el mensaje en el chat al principio
                     agregarMensajeAlChat(
                         mensaje.mensaje,
@@ -1200,12 +1198,12 @@ function galle() {
                         userInfo,
                         'Colab'
                     );
-
-                    // Actualizamos prevEmisor y fechaAnterior para el siguiente mensaje
+    
+                    // Actualizamos nextEmisor y fechaAnterior para el siguiente mensaje
                     fechaAnterior = new Date(mensaje.fecha);
-                    prevEmisor = mensaje.remitente;
+                    nextEmisor = mensaje.remitente;
                 }
-
+    
                 // Ajustar manualmente la posición del scroll tras insertar los mensajes
                 listaMensajes.scrollTop = listaMensajes.scrollHeight - scrollPosAntesDeInsertar;
             }
