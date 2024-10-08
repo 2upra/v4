@@ -1184,39 +1184,29 @@ function galle() {
         let puedeDesplazar = true,
             currentPage = 1,
             conversacion_id = conversacion;
-
+    
         listaMensajes.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
                 puedeDesplazar = false;
                 setTimeout(() => (puedeDesplazar = true), 2000);
                 currentPage++;
-
+    
                 const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
                 if (!data?.success) {
                     return console.error('Error al obtener más mensajes.');
                 }
-
-                // Antes de agregar los nuevos mensajes, limpiar la información de usuario de los mensajes que ya no son primeros
-                const mensajesAnteriores = listaMensajes.querySelectorAll('.firstMessageOfThread');
-                mensajesAnteriores.forEach(mensaje => {
-                    mensaje.classList.remove('firstMessageOfThread');
-
-                    const userNameElem = mensaje.querySelector('.userName');
-                    const avatarImg = mensaje.querySelector('.avatarImage');
-                    if (userNameElem) userNameElem.remove();
-                    if (avatarImg) avatarImg.remove();
-                });
-
+    
                 let mensajes = data.data.mensajes;
-
+    
+                // Reverse the messages to process from oldest to newest
                 mensajes.reverse();
-                
+    
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
-
+    
                 let fechaAnterior = null;
-
-                // Obtener el emisor del primer mensaje actualmente mostrado
+    
+                // Get the sender of the first message currently displayed
                 const primerMensajeMostrado = listaMensajes.querySelector('.messageBlock');
                 let prevEmisor = null;
                 if (primerMensajeMostrado) {
@@ -1225,14 +1215,16 @@ function galle() {
                         prevEmisor = primerMensajeElem.getAttribute('data-emisor') || null;
                     }
                 }
-
-                // Iteramos del primero al último para procesar del más antiguo al más nuevo
+    
+                // Process messages from oldest to newest
                 for (let i = 0; i < mensajes.length; i++) {
                     const mensaje = mensajes[i];
+    
+                    // Determine if this message starts a new thread
                     const esNuevoHilo = mensaje.remitente !== prevEmisor;
-                    prevEmisor = mensaje.remitente;
-
+    
                     const userInfo = userInfos.get(mensaje.remitente);
+    
                     agregarMensajeAlChat(
                         mensaje.mensaje,
                         mensaje.clase,
@@ -1247,14 +1239,16 @@ function galle() {
                         userInfo,
                         'Colab'
                     );
-
+    
                     fechaAnterior = new Date(mensaje.fecha);
+    
+                    // Update prevEmisor after processing the message
+                    prevEmisor = mensaje.remitente;
                 }
-
-                // Ajustar el scroll para que permanezca en la posición correcta
-                const primerMensajeNuevo = listaMensajes.querySelector('div.messageBlock');
-                if (primerMensajeNuevo) {
-                    primerMensajeNuevo.scrollIntoView();
+    
+                // Adjust the scroll to maintain position after loading
+                if (listaMensajes.firstChild) {
+                    listaMensajes.firstChild.scrollIntoView();
                 }
             }
         });
