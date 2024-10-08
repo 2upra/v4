@@ -1207,7 +1207,7 @@ function galle() {
                     if (avatarImg) avatarImg.remove();
                 });
 
-                let mensajes = data.data.mensajes; // Los mensajes vienen del servidor del más nuevo al más antiguo
+                let mensajes = data.data.mensajes;
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
 
@@ -1222,9 +1222,9 @@ function galle() {
                         prevEmisor = primerMensajeElem.getAttribute('data-emisor') || null;
                     }
                 }
-
-                // Iteramos del último al primero para procesar del más antiguo al más nuevo
-                for (let i = mensajes.length - 1; i >= 0; i--) {
+                
+                // Iteramos del primero al último para procesar del más antiguo al más nuevo
+                for (let i = 0; i < mensajes.length; i++) {
                     const mensaje = mensajes[i];
                     const esNuevoHilo = mensaje.remitente !== prevEmisor;
                     prevEmisor = mensaje.remitente;
