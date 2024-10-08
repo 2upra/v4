@@ -1198,8 +1198,7 @@ function galle() {
     
                 let mensajes = data.data.mensajes;
     
-                // Invertimos los mensajes para procesarlos en orden cronológico
-                mensajes.reverse();
+                //mensajes.reverse();
     
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
