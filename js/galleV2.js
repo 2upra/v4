@@ -1184,81 +1184,73 @@ function galle() {
         let puedeDesplazar = true,
             currentPage = 1,
             conversacion_id = conversacion;
-
+    
         listaMensajes.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
                 puedeDesplazar = false;
                 setTimeout(() => (puedeDesplazar = true), 2000);
                 currentPage++;
-
+    
                 const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
                 if (!data?.success) {
                     return console.error('Error al obtener más mensajes.');
                 }
-
+    
                 let mensajes = data.data.mensajes;
-
+    
                 // Invertir los mensajes para procesarlos de más antiguos a más nuevos
                 mensajes.reverse();
-
+    
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
-
+    
                 let fechaAnterior = null;
-
+    
                 // Obtener el remitente del primer mensaje actualmente mostrado
                 const primerMensajeMostrado = listaMensajes.querySelector('.messageBlock');
                 let prevEmisor = null;
-
+    
+                // Si ya hay mensajes cargados, obtenemos el remitente del último mensaje cargado
                 if (primerMensajeMostrado) {
                     const primerMensajeElem = primerMensajeMostrado.querySelector('.mensajeText');
                     if (primerMensajeElem) {
                         prevEmisor = primerMensajeElem.getAttribute('data-emisor') || null;
                     }
                 }
-
+    
                 // Guardar la posición del scroll actual antes de insertar nuevos mensajes
                 const scrollPosAntesDeInsertar = listaMensajes.scrollHeight - listaMensajes.scrollTop;
-
-                // Crear un fragmento para almacenar los nuevos mensajes
-                const fragment = document.createDocumentFragment();
-
+    
                 // Procesamos los mensajes uno por uno
                 for (let i = 0; i < mensajes.length; i++) {
                     const mensaje = mensajes[i];
-
+    
                     // Verificar si este mensaje corresponde a un nuevo hilo (cambio de emisor)
                     const esNuevoHilo = mensaje.remitente !== prevEmisor;
-
+    
                     const userInfo = userInfos.get(mensaje.remitente);
-
-                    // Generar el messageBlock
-                    const messageBlock = agregarMensajeAlChat(
+    
+                    // Insertar el mensaje en el chat
+                    agregarMensajeAlChat(
                         mensaje.mensaje,
                         mensaje.clase,
                         mensaje.fecha,
-                        null, // No necesitamos pasar listaMensajes aquí
+                        listaMensajes,
                         fechaAnterior,
                         true, // insertAtTop = true
                         mensaje.adjunto,
                         null,
                         mensaje.remitente,
-                        esNuevoHilo,
+                        esNuevoHilo, // Indica si es el primer mensaje de un hilo
                         userInfo,
                         'Colab'
                     );
-
-                    // Añadir el messageBlock al fragmento
-                    fragment.appendChild(messageBlock);
-
+    
                     // Actualizamos el estado de fecha y remitente para el siguiente mensaje
                     fechaAnterior = new Date(mensaje.fecha);
-                    prevEmisor = mensaje.remitente;
+                    prevEmisor = mensaje.remitente; // Actualizamos correctamente el remitente anterior
                 }
-
-                // Insertar el fragmento completo al principio de listaMensajes
-                listaMensajes.insertBefore(fragment, listaMensajes.firstChild);
-
+    
                 // Ajustar manualmente la posición del scroll tras insertar los mensajes
                 listaMensajes.scrollTop = listaMensajes.scrollHeight - scrollPosAntesDeInsertar;
             }
