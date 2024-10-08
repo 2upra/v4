@@ -1199,11 +1199,22 @@ function galle() {
                 const scrollPosAntesDeInsertar = listaMensajes.scrollHeight - listaMensajes.scrollTop;
 
                 // Procesar los mensajes en orden ascendente (del más antiguo al más reciente)
+                // Procesar los mensajes en orden ascendente (del más antiguo al más reciente)
                 for (let i = 0; i < mensajes.length; i++) {
                     const mensaje = mensajes[i];
 
-                    // Verificar si este mensaje corresponde a un nuevo hilo (cambio de emisor)
-                    const esNuevoHilo = mensaje.remitente !== prevEmisor;
+                    let esNuevoHilo;
+
+                    if (i === 0 && currentPage > 1) {
+                        // Si es el primer mensaje del lote cargado y no es la primera página, siempre es un nuevo hilo
+                        esNuevoHilo = true;
+                    } else if (i === 0 && currentPage === 1) {
+                        // Si es el primer mensaje del chat (primera página), aplicamos la lógica normal
+                        esNuevoHilo = mensaje.remitente !== prevEmisor;
+                    } else {
+                        // Para los demás mensajes, comparamos con el mensaje anterior en el lote
+                        esNuevoHilo = mensaje.remitente !== mensajes[i - 1].remitente;
+                    }
 
                     console.log('[[manejarScrollColab]] Índice:', i, 'mensaje.remitente:', mensaje.remitente, 'prevEmisor:', prevEmisor, 'esNuevoHilo:', esNuevoHilo);
 
