@@ -93,13 +93,30 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function handleContentLoad(event, enlace, element) {
+        // If the element or its parent has 'no-ajax' class, return true (bypass AJAX).
         if (element.classList.contains('no-ajax') || element.closest('.no-ajax')) return true;
+    
+        // Ensure the 'enlace' is a valid string before proceeding.
+        if (typeof enlace !== 'string' || !enlace) {
+            console.warn('Invalid enlace:', enlace);
+            return true;
+        }
+    
+        // Convert the enlace to lowercase and trim it.
         const lowerCaseLink = enlace.trim().toLowerCase();
-        if (!enlace || lowerCaseLink.endsWith('.pdf') || ['https://2upra.com/nocache', 'javascript:', 'data:', 'vbscript:'].some(prefix => lowerCaseLink.startsWith(prefix)) || enlace.includes('#')) return true;
+    
+        // Check if it's a valid link that should be handled via AJAX.
+        if (lowerCaseLink.endsWith('.pdf') || 
+            ['https://2upra.com/nocache', 'javascript:', 'data:', 'vbscript:'].some(prefix => lowerCaseLink.startsWith(prefix)) || 
+            enlace.includes('#')) {
+            return true;
+        }
+    
+        // Prevent the default link click behavior and load the content via AJAX.
         event.preventDefault();
         loadContent(enlace, true);
     }
-
+    
     document.querySelectorAll('a, button a, .botones-panel').forEach(element => {
         element.addEventListener('click', function (event) {
             const enlace = this.getAttribute('href') || this.getAttribute('data-href') || this.querySelector('a')?.getAttribute('href');
