@@ -1207,17 +1207,17 @@ function galle() {
                     if (avatarImg) avatarImg.remove();
                 });
     
-                let mensajes = data.data.mensajes; // Los mensajes vienen del servidor del más nuevo al más antiguo
+                // Invertimos los mensajes para procesarlos del más antiguo al más nuevo
+                let mensajes = data.data.mensajes.reverse();
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
-    
+                
                 let fechaAnterior = null,
                     prevEmisor = null;
     
-                // Iteramos del último al primero para procesar del más antiguo al más nuevo
-                for (let i = mensajes.length - 1; i >= 0; i--) {
+                for (let i = 0; i < mensajes.length; i++) {
                     const mensaje = mensajes[i];
-                    const esNuevoHilo = mensaje.remitente !== prevEmisor;
+                    const esNuevoHilo = prevEmisor !== mensaje.remitente;
                     prevEmisor = mensaje.remitente;
     
                     const userInfo = userInfos.get(mensaje.remitente);
@@ -1227,7 +1227,7 @@ function galle() {
                         mensaje.fecha,
                         listaMensajes,
                         fechaAnterior,
-                        true, // insertAtTop = true
+                        false, // insertAtTop = false, insertamos al final
                         mensaje.adjunto,
                         null,
                         mensaje.remitente,
@@ -1239,11 +1239,8 @@ function galle() {
                     fechaAnterior = new Date(mensaje.fecha);
                 }
     
-                // Ajustar el scroll para que permanezca en la posición correcta
-                const primerMensajeNuevo = listaMensajes.querySelector('div.messageBlock');
-                if (primerMensajeNuevo) {
-                    primerMensajeNuevo.scrollIntoView();
-                }
+                // Después de agregar mensajes, ajustar el scroll si es necesario
+                // No es necesario ajustar en este caso si insertamos al final
             }
         });
     }
