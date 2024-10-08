@@ -1209,6 +1209,8 @@ function galle() {
                 // Obtener el remitente del primer mensaje actualmente mostrado
                 const primerMensajeMostrado = listaMensajes.querySelector('.messageBlock');
                 let prevEmisor = null;
+    
+                // Si ya hay mensajes cargados, obtenemos el remitente del último mensaje cargado
                 if (primerMensajeMostrado) {
                     const primerMensajeElem = primerMensajeMostrado.querySelector('.mensajeText');
                     if (primerMensajeElem) {
@@ -1216,15 +1218,19 @@ function galle() {
                     }
                 }
     
-                // Procesar los mensajes de más antiguos a más nuevos (ya que los revertimos)
+                // Guardar la posición del scroll actual antes de insertar nuevos mensajes
+                const scrollPosAntesDeInsertar = listaMensajes.scrollHeight - listaMensajes.scrollTop;
+    
+                // Procesamos los mensajes uno por uno
                 for (let i = 0; i < mensajes.length; i++) {
                     const mensaje = mensajes[i];
     
-                    // Si el remitente actual es diferente al remitente anterior, es un nuevo hilo
+                    // Verificar si este mensaje corresponde a un nuevo hilo (cambio de emisor)
                     const esNuevoHilo = mensaje.remitente !== prevEmisor;
     
                     const userInfo = userInfos.get(mensaje.remitente);
     
+                    // Insertar el mensaje en el chat
                     agregarMensajeAlChat(
                         mensaje.mensaje,
                         mensaje.clase,
@@ -1240,15 +1246,13 @@ function galle() {
                         'Colab'
                     );
     
-                    // Actualizar la fecha anterior y el remitente anterior
+                    // Actualizamos el estado de fecha y remitente para el siguiente mensaje
                     fechaAnterior = new Date(mensaje.fecha);
                     prevEmisor = mensaje.remitente; // Actualizamos correctamente el remitente anterior
                 }
     
-                // Ajustar el scroll para mantener la posición después de cargar
-                if (listaMensajes.firstChild) {
-                    listaMensajes.firstChild.scrollIntoView();
-                }
+                // Ajustar manualmente la posición del scroll tras insertar los mensajes
+                listaMensajes.scrollTop = listaMensajes.scrollHeight - scrollPosAntesDeInsertar;
             }
         });
     }
