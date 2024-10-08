@@ -1227,7 +1227,7 @@ function galle() {
                         mensaje.fecha,
                         listaMensajes,
                         fechaAnterior,
-                        true;
+                        true,
                         mensaje.adjunto,
                         null,
                         mensaje.remitente,
