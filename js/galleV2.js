@@ -1214,33 +1214,39 @@ function galle() {
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null, tipoMensaje = null) {
         const fechaMensaje = new Date(fecha);
         fechaAnterior = fechaAnterior || obtenerFechaAnterior(listaMensajes, insertAtTop);
-
+    
         manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
-
+    
         const esUsuarioActual = msgEmisor === emisor;
         const esColabPrimerMensaje = tipoMensaje === 'Colab' && isFirstMessageOfThread && userInfo && !esUsuarioActual;
-
-        console.log('[[agregarMensajeAlChat]] mensajeTexto:', mensajeTexto);
-        console.log('[[agregarMensajeAlChat]] msgEmisor:', msgEmisor, 'emisor actual:', emisor);
-        console.log('[[agregarMensajeAlChat]] isFirstMessageOfThread:', isFirstMessageOfThread);
-        console.log('[[agregarMensajeAlChat]] esUsuarioActual:', esUsuarioActual);
-        console.log('[[agregarMensajeAlChat]] esColabPrimerMensaje:', esColabPrimerMensaje);
-
+    
+        // Crear un objeto para contener toda la información del log
+        const logInfo = {
+            mensajeTexto: mensajeTexto,
+            msgEmisor: msgEmisor,
+            emisorActual: emisor,
+            isFirstMessageOfThread: isFirstMessageOfThread,
+            esUsuarioActual: esUsuarioActual,
+            esColabPrimerMensaje: esColabPrimerMensaje
+        };
+    
+        console.log('[[agregarMensajeAlChat]]', logInfo);
+    
         const messageBlock = crearElemento('div', 'messageBlock');
         const messageContainer = crearElemento('div', 'messageContainer');
-
+    
         const mensajeElem = crearElemento('div', ['mensajeText', clase], {
             'data-fecha': fechaMensaje.toISOString(),
             'data-emisor': msgEmisor || undefined,
             'data-temp-id': temp_id || undefined
         });
-
+    
         if (temp_id) mensajeElem.classList.add('mensajePendiente');
-
+    
         if (esColabPrimerMensaje) {
             // Añadimos una clase identificadora al messageBlock
             messageBlock.classList.add('firstMessageOfThread');
-
+    
             const userNameElem = crearElemento('span', 'userName', {textContent: userInfo.nombreUsuario});
             const avatarImg = crearElemento('img', 'avatarImage', {
                 src: userInfo.imagenPerfil,
@@ -1249,14 +1255,14 @@ function galle() {
             messageBlock.appendChild(userNameElem);
             messageContainer.appendChild(avatarImg);
         }
-
+    
         const messageTextElem = crearElemento('p', null, {textContent: mensajeTexto});
         mensajeElem.appendChild(messageTextElem);
         manejarAdjunto(adjunto, mensajeElem);
-
+    
         messageContainer.appendChild(mensajeElem);
         messageBlock.appendChild(messageContainer);
-
+    
         if (insertAtTop) {
             listaMensajes.insertBefore(messageBlock, listaMensajes.firstChild);
         } else {
