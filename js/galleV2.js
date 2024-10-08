@@ -1198,7 +1198,7 @@ function galle() {
     
                 let mensajes = data.data.mensajes;
     
-                // Ordenar los mensajes por fecha (ascendente) para procesarlos correctamente
+                // Ordenar los mensajes por fecha ascendente (más antiguos primero)
                 mensajes.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
     
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
@@ -1240,7 +1240,7 @@ function galle() {
                         mensaje.fecha,
                         listaMensajes,
                         fechaAnterior,
-                        true, // insertAtTop = true
+                        true, // insertAtTop = true, para insertar al principio
                         mensaje.adjunto,
                         null,
                         mensaje.remitente,
@@ -1259,6 +1259,6 @@ function galle() {
             }
         });
     }
-
+    
     init();
 }
