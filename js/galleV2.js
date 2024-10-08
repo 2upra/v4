@@ -1160,66 +1160,58 @@ function galle() {
         let puedeDesplazar = true,
             currentPage = 1,
             conversacion_id = conversacion;
-
+    
         listaMensajes.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
                 puedeDesplazar = false;
                 setTimeout(() => (puedeDesplazar = true), 2000);
                 currentPage++;
-
-                const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
+    
+                const data = await enviarAjax('obtenerChatColab', { conversacion_id, page: currentPage });
                 if (!data?.success) {
                     return console.error('Error al obtener más mensajes.');
                 }
-
+    
                 let mensajes = data.data.mensajes;
-
+    
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
-
+    
                 let fechaAnterior = null;
-
+    
                 // Invertimos los mensajes para tenerlos en orden cronológico
                 mensajes.reverse();
-
+    
                 // Obtener el remitente del primer mensaje actualmente mostrado
                 const primerMensajeMostrado = listaMensajes.querySelector('.messageBlock');
                 let prevEmisor = null;
-
+    
                 if (primerMensajeMostrado) {
                     const primerMensajeElem = primerMensajeMostrado.querySelector('.mensajeText');
                     if (primerMensajeElem) {
                         prevEmisor = primerMensajeElem.getAttribute('data-emisor') || null;
                     }
                 }
-
+    
                 console.log('[[manejarScrollColab]] prevEmisor inicial:', prevEmisor);
-
+    
                 // Guardar la posición del scroll actual antes de insertar nuevos mensajes
                 const scrollPosAntesDeInsertar = listaMensajes.scrollHeight - listaMensajes.scrollTop;
-
-                // Procesar los mensajes en orden ascendente (del más antiguo al más reciente)
+    
+                // Inicializamos prevRemitente con prevEmisor
+                let prevRemitente = prevEmisor;
+    
                 // Procesar los mensajes en orden ascendente (del más antiguo al más reciente)
                 for (let i = 0; i < mensajes.length; i++) {
                     const mensaje = mensajes[i];
-
-                    let esNuevoHilo;
-
-                    if (i === 0 && currentPage > 1) {
-                        // Si es el primer mensaje del lote cargado y no es la primera página, siempre es un nuevo hilo
-                        esNuevoHilo = true;
-                    } else if (i === 0 && currentPage === 1) {
-                        // Si es el primer mensaje del chat (primera página), aplicamos la lógica normal
-                        esNuevoHilo = mensaje.remitente !== prevEmisor;
-                    } else {
-                        // Para los demás mensajes, comparamos con el mensaje anterior en el lote
-                        esNuevoHilo = mensaje.remitente !== mensajes[i - 1].remitente;
-                    }
-
-                    console.log('[[manejarScrollColab]] Índice:', i, 'mensaje.remitente:', mensaje.remitente, 'prevEmisor:', prevEmisor, 'esNuevoHilo:', esNuevoHilo);
-
+    
+                    // Determinar si es un nuevo hilo comparando con prevRemitente
+                    const esNuevoHilo = mensaje.remitente !== prevRemitente;
+    
+                    console.log('[[manejarScrollColab]] Índice:', i, 'mensaje.mensaje:', mensaje.mensaje, 'mensaje.remitente:', mensaje.remitente, 'prevRemitente:', prevRemitente, 'esNuevoHilo:', esNuevoHilo);
+    
                     const userInfo = userInfos.get(mensaje.remitente);
-
+    
                     // Insertar el mensaje en el chat al principio
                     agregarMensajeAlChat(
                         mensaje.mensaje,
@@ -1235,12 +1227,15 @@ function galle() {
                         userInfo,
                         'Colab'
                     );
-
-                    // Actualizamos prevEmisor y fechaAnterior para el siguiente mensaje
+    
+                    // Actualizamos prevRemitente y fechaAnterior para el siguiente mensaje
                     fechaAnterior = new Date(mensaje.fecha);
-                    prevEmisor = mensaje.remitente;
+                    prevRemitente = mensaje.remitente;
                 }
-
+    
+                // Después de procesar todos los mensajes, actualizamos prevEmisor para la siguiente carga
+                prevEmisor = prevRemitente;
+    
                 // Ajustar manualmente la posición del scroll tras insertar los mensajes
                 listaMensajes.scrollTop = listaMensajes.scrollHeight - scrollPosAntesDeInsertar;
             }
