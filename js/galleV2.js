@@ -1174,12 +1174,13 @@ function galle() {
                 const scrollPosAntesDeInsertar = listaMensajes.scrollHeight - listaMensajes.scrollTop;
 
                 // Procesamos los mensajes en orden cronológico (del más antiguo al más reciente)
+                
                 for (let i = 0; i < mensajes.length; i++) {
                     const mensaje = mensajes[i];
 
                     // Verificar si este mensaje corresponde a un nuevo hilo (cambio de emisor)
                     const esNuevoHilo = mensaje.remitente !== prevEmisor;
-
+                    mensajes.reverse();
                     console.log('[[manejarScrollColab]] Índice:', i, 'mensaje.remitente:', mensaje.remitente, 'prevEmisor:', prevEmisor, 'esNuevoHilo:', esNuevoHilo);
 
                     const userInfo = userInfos.get(mensaje.remitente);
