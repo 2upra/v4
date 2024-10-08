@@ -1184,35 +1184,47 @@ function galle() {
         let puedeDesplazar = true,
             currentPage = 1,
             conversacion_id = conversacion;
-
+    
         listaMensajes.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
                 puedeDesplazar = false;
                 setTimeout(() => (puedeDesplazar = true), 2000);
                 currentPage++;
-
+    
                 const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
                 if (!data?.success) {
                     return console.error('Error al obtener más mensajes.');
                 }
-
+    
                 let mensajes = data.data.mensajes;
-
+    
+                // Invertir los mensajes para procesarlos de más antiguos a más nuevos
+                mensajes.reverse();
+    
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
-
+    
                 let fechaAnterior = null;
+    
+                // Obtener el remitente del primer mensaje actualmente mostrado
+                const primerMensajeMostrado = listaMensajes.querySelector('.messageBlock');
                 let prevEmisor = null;
-
-                // Process messages from last to first
-                for (let i = mensajes.length - 1; i >= 0; i--) {
+                if (primerMensajeMostrado) {
+                    const primerMensajeElem = primerMensajeMostrado.querySelector('.mensajeText');
+                    if (primerMensajeElem) {
+                        prevEmisor = primerMensajeElem.getAttribute('data-emisor') || null;
+                    }
+                }
+    
+                // Procesar los mensajes de más antiguos a más nuevos (ya que los revertimos)
+                for (let i = 0; i < mensajes.length; i++) {
                     const mensaje = mensajes[i];
-
-                    // Determine if this message starts a new thread
+    
+                    // Si el remitente actual es diferente al remitente anterior, es un nuevo hilo
                     const esNuevoHilo = mensaje.remitente !== prevEmisor;
-
+    
                     const userInfo = userInfos.get(mensaje.remitente);
-
+    
                     agregarMensajeAlChat(
                         mensaje.mensaje,
                         mensaje.clase,
@@ -1223,18 +1235,17 @@ function galle() {
                         mensaje.adjunto,
                         null,
                         mensaje.remitente,
-                        esNuevoHilo,
+                        esNuevoHilo, // Indica si es el primer mensaje de un hilo
                         userInfo,
                         'Colab'
                     );
-
+    
+                    // Actualizar la fecha anterior y el remitente anterior
                     fechaAnterior = new Date(mensaje.fecha);
-
-                    // Update prevEmisor after processing the message
-                    prevEmisor = mensaje.remitente;
+                    prevEmisor = mensaje.remitente; // Actualizamos correctamente el remitente anterior
                 }
-
-                // Adjust the scroll to maintain position after loading
+    
+                // Ajustar el scroll para mantener la posición después de cargar
                 if (listaMensajes.firstChild) {
                     listaMensajes.firstChild.scrollIntoView();
                 }
