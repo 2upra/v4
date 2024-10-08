@@ -237,37 +237,38 @@ function chatColab($var)
 
     // Properly escape the JSON string for HTML attribute
     $participantes_escaped = htmlspecialchars($participantes_json, ENT_QUOTES, 'UTF-8');
-    ?>
-    <div class="borde bloqueChatColab" data-post-id="<?php echo esc_attr($post_id); ?>" data-participantes="<?php echo $participantes_escaped; ?>" data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">
+?>
+    <div class="borde bloqueChatColab" id="chatcolab-<?php echo esc_attr($post_id); ?>" data-post-id="<?php echo esc_attr($post_id); ?>" data-participantes="<?php echo $participantes_escaped; ?>" data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">
+
         <ul class="listaMensajes"></ul>
 
         <div class="previewsForm NGEESM previewsChat" style="position: relative;">
             <!-- Vista previa de imagen -->
-            <div class="previewAreaArchivos previewChatImagen" style="display: none;">
+            <div class="previewAreaArchivos previewChatImagen" id="previewChatImagen" style="display: none;">
                 <label>Imagen</label>
             </div>
             <!-- Vista previa de audio -->
-            <div class="previewAreaArchivos previewChatAudio" style="display: none;">
+            <div class="previewAreaArchivos previewChatAudio" id="previewChatAudio" style="display: none;">
                 <label>Audio</label>
             </div>
             <!-- Vista previa de archivo -->
-            <div class="previewAreaArchivos previewChatArchivo" style="display: none;">
+            <div class="previewAreaArchivos previewChatArchivo" id="previewChatArchivo" style="display: none;">
                 <label>Archivo</label>
             </div>
 
             <!-- Botón de cancelar único, que aparecerá en cualquier vista previa -->
-            <button class="cancelButton borde cancelUploadButton" style="display: none;">Cancelar</button>
+            <button class="cancelButton borde cancelUploadButton" id="cancelUploadButton" style="display: none;">Cancelar</button>
         </div>
 
         <div class="chatEnvio">
             <textarea class="mensajeContenidoColab borde" rows="1"></textarea>
-            <button class="enviarMensajeColab borde" data-conversacion-id="<?php echo esc_attr($conversacion_id); ?>">
-                <?php echo $GLOBALS['enviarMensaje']; ?>
+            <button class="enviarMensajeColab borde" data-conversacion-id="<? echo esc_attr($conversacion_id); ?>">
+                <? echo $GLOBALS['enviarMensaje']; ?>
             </button>
-            <button class="enviarAdjunto"><?php echo $GLOBALS['enviarAdjunto']; ?></button>
+            <button class="enviarAdjunto" id="enviarAdjunto"><? echo $GLOBALS['enviarAdjunto']; ?></button>
         </div>
     </div>
-    <?php
+<?
     return ob_get_clean();
 }
 
