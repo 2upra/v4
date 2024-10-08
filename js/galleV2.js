@@ -1174,7 +1174,7 @@ function galle() {
                 const scrollPosAntesDeInsertar = listaMensajes.scrollHeight - listaMensajes.scrollTop;
 
                 // Procesamos los mensajes en orden cronológico (del más antiguo al más reciente)
-                
+                mensajes.reverse();
                 for (let i = 0; i < mensajes.length; i++) {
                     const mensaje = mensajes[i];
 
@@ -1184,7 +1184,7 @@ function galle() {
                     console.log('[[manejarScrollColab]] Índice:', i, 'mensaje.remitente:', mensaje.remitente, 'prevEmisor:', prevEmisor, 'esNuevoHilo:', esNuevoHilo);
 
                     const userInfo = userInfos.get(mensaje.remitente);
-                    mensajes.reverse();
+                    
                     // Insertar el mensaje en el chat al principio
                     agregarMensajeAlChat(
                         mensaje.mensaje,
