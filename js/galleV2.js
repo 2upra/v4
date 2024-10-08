@@ -1180,11 +1180,11 @@ function galle() {
 
                     // Verificar si este mensaje corresponde a un nuevo hilo (cambio de emisor)
                     const esNuevoHilo = mensaje.remitente !== prevEmisor;
-                    mensajes.reverse();
+                    
                     console.log('[[manejarScrollColab]] Índice:', i, 'mensaje.remitente:', mensaje.remitente, 'prevEmisor:', prevEmisor, 'esNuevoHilo:', esNuevoHilo);
 
                     const userInfo = userInfos.get(mensaje.remitente);
-
+                    mensajes.reverse();
                     // Insertar el mensaje en el chat al principio
                     agregarMensajeAlChat(
                         mensaje.mensaje,
