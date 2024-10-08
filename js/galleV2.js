@@ -1208,6 +1208,9 @@ function galle() {
                 });
 
                 let mensajes = data.data.mensajes;
+
+                mensajes.reverse();
+                
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
 
@@ -1222,7 +1225,7 @@ function galle() {
                         prevEmisor = primerMensajeElem.getAttribute('data-emisor') || null;
                     }
                 }
-                
+
                 // Iteramos del primero al último para procesar del más antiguo al más nuevo
                 for (let i = 0; i < mensajes.length; i++) {
                     const mensaje = mensajes[i];
