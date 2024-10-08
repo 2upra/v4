@@ -388,57 +388,6 @@ function galle() {
         }
     }
 
-    function manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop) {
-        // Comprobar si listaMensajes es un elemento DOM válido
-        if (!listaMensajes || !(listaMensajes instanceof Element)) {
-            console.error('listaMensajes no es un elemento DOM válido');
-            return;
-        }
-
-        // Verificar si la fecha del nuevo mensaje es mayor a 3 minutos respecto a la fecha anterior
-        if (!fechaAnterior || fechaMensaje - fechaAnterior >= 3 * 60 * 1000) {
-            // Crear un elemento <li> en lugar de un <div>
-            const liFecha = document.createElement('li');
-            liFecha.textContent = formatearTiempoRelativo(fechaMensaje);
-            liFecha.classList.add('fechaSeparador');
-            liFecha.setAttribute('data-fecha', fechaMensaje.toISOString());
-
-            try {
-                if (insertAtTop) {
-                    // Insertar en la parte superior de la lista, si es necesario
-                    if (listaMensajes.firstChild) {
-                        listaMensajes.insertBefore(liFecha, listaMensajes.firstChild);
-                    } else {
-                        listaMensajes.appendChild(liFecha);
-                    }
-                } else {
-                    // Insertar al final de la lista
-                    listaMensajes.appendChild(liFecha);
-                }
-                //console.log('Fecha insertada en listaMensajes:', liFecha);
-            } catch (error) {
-                console.error('Error al insertar la fecha en listaMensajes:', error);
-            }
-        }
-    }
-
-    function obtenerFechaAnterior(listaMensajes, insertAtTop) {
-        let lastElement = null;
-        const children = Array.from(listaMensajes.children || []);
-        const searchOrder = insertAtTop ? 1 : -1;
-        const startIndex = insertAtTop ? 0 : children.length - 1;
-
-        for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
-            const child = children[i];
-            if (child.tagName.toLowerCase() === 'li' && (child.classList.contains('mensajeDerecha') || child.classList.contains('mensajeIzquierda'))) {
-                lastElement = child;
-                break;
-            }
-        }
-
-        return lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
-    }
-
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
         //console.log('actualizarListaConversaciones: Actualizando la lista de conversaciones.');
 
@@ -801,51 +750,6 @@ function galle() {
         }
     }
 
-    function msColabSetup() {
-        document.addEventListener('click', event => {
-            if (event.target.matches('.enviarMensajeColab')) {
-                enviarMensajeColab(event.target);
-            }
-        });
-
-        const mensajeInput = document.querySelector('.mensajeContenidoColab');
-        mensajeInput.addEventListener('keydown', event => {
-            if (event.key === 'Enter' && !event.altKey) {
-                event.preventDefault();
-                enviarMensajeColab(document.querySelector('.enviarMensajeColab'));
-            }
-        });
-
-        function enviarMensajeColab(button) {
-            if (subidaChatProgreso) {
-                return alert('Por favor espera a que se complete la subida del archivo.');
-            }
-
-            const bloqueChat = button.closest('.bloqueChatColab');
-            const mensajeInput = bloqueChat.querySelector('.mensajeContenidoColab');
-            const mensaje = mensajeInput.value.trim();
-
-            if (!mensaje) {
-                return alert('Por favor, ingresa un mensaje.');
-            }
-
-            const conversacion_id = button.getAttribute('data-conversacion-id');
-            const participantes = JSON.parse(bloqueChat.getAttribute('data-participantes'));
-            const metadata = 'colab';
-            const listaMensajes = bloqueChat.querySelector('.listaMensajes');
-
-            let adjunto = null;
-            if (archivoChatId || archivoChatUrl) {
-                adjunto = {archivoChatId, archivoChatUrl};
-                archivoChatId = archivoChatUrl = null;
-            }
-
-            enviarMensajeWs(participantes, mensaje, adjunto, metadata, conversacion_id, listaMensajes);
-
-            mensajeInput.value = '';
-        }
-    }
-
     // FUNCIONES PARA ADJUNTAR ARCHIVOS
 
     function ocultarPreviews() {
@@ -1116,45 +1020,6 @@ function galle() {
         });
     }
 
-    /*
-
-    // UN HILO DE MENSAJES DESPUES DEL SCROLL; EJEMPLO B1 DEBERIA SER EL isFirstMessage,, no b5 ni c5, (son mensajes de ejmplos)  considera que te los estoy mostrando en el orden que se ven los logs, puedo notar que los se scroll estan invertidos aunque de cierto modo si se ven renderizados de forma correcta, 
-
-    //el orden en el que se envian los mensajess es 1, 2, 3, 4, 5 y las letras diferencias los hip
-
-    [[manejarScrollColab]] Índice: 12 mensaje.mensaje: c2 mensaje.remitente: 1 nextRemitente: 1 esNuevoHilo: false
-    galleV2.js?ver=2.0.1.148850864:1267 [[agregarMensajeAlChat]] {mensajeTexto: 'c2', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
-    galleV2.js?ver=2.0.1.148850864:1217 [[manejarScrollColab]] Índice: 11 mensaje.mensaje: c1 mensaje.remitente: 1 nextRemitente: 1 esNuevoHilo: false
-    galleV2.js?ver=2.0.1.148850864:1267 [[agregarMensajeAlChat]] {mensajeTexto: 'c1', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
-    galleV2.js?ver=2.0.1.148850864:1217 [[manejarScrollColab]] Índice: 10 mensaje.mensaje: c mensaje.remitente: 44 nextRemitente: 1 esNuevoHilo: true
-    galleV2.js?ver=2.0.1.148850864:1267 [[agregarMensajeAlChat]] {mensajeTexto: 'c', msgEmisor: '44', emisorActual: '44', isFirstMessageOfThread: true, esUsuarioActual: true, …}
-    galleV2.js?ver=2.0.1.148850864:1217 [[manejarScrollColab]] Índice: 9 mensaje.mensaje: b5 mensaje.remitente: 1 nextRemitente: 44 esNuevoHilo: true
-    galleV2.js?ver=2.0.1.148850864:1267 [[agregarMensajeAlChat]] {mensajeTexto: 'b5', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: true, esUsuarioActual: false, …}
-    galleV2.js?ver=2.0.1.148850864:1217 [[manejarScrollColab]] Índice: 8 mensaje.mensaje: b4 mensaje.remitente: 1 nextRemitente: 1 esNuevoHilo: false
-    galleV2.js?ver=2.0.1.148850864:1267 [[agregarMensajeAlChat]] {mensajeTexto: 'b4', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
-    galleV2.js?ver=2.0.1.148850864:1217 [[manejarScrollColab]] Índice: 7 mensaje.mensaje: b3 mensaje.remitente: 1 nextRemitente: 1 esNuevoHilo: false
-    galleV2.js?ver=2.0.1.148850864:1267 [[agregarMensajeAlChat]] {mensajeTexto: 'b3', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
-    galleV2.js?ver=2.0.1.148850864:1217 [[manejarScrollColab]] Índice: 6 mensaje.mensaje: b2 mensaje.remitente: 1 nextRemitente: 1 esNuevoHilo: false
-    galleV2.js?ver=2.0.1.148850864:1267 [[agregarMensajeAlChat]] {mensajeTexto: 'b2', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
-    galleV2.js?ver=2.0.1.148850864:1217 [[manejarScrollColab]] Índice: 5 mensaje.mensaje: b1 mensaje.remitente: 1 nextRemitente: 1 esNuevoHilo: false
-    galleV2.js?ver=2.0.1.148850864:1267 [[agregarMensajeAlChat]] {mensajeTexto: 'b1', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
-    galleV2.js?ver=2.0.1.148850864:1217 [[manejarScrollColab]] Índice: 4 mensaje.mensaje: b mensaje.remitente: 44 nextRemitente: 1 esNuevoHilo: true
-    galleV2.js?ver=2.0.1.148850864:1267 [[agregarMensajeAlChat]] {mensajeTexto: 'b', msgEmisor: '44', emisorActual: '44', isFirstMessageOfThread: true, esUsuarioActual: true, …}
-    galleV2.js?ver=2.0.1.148850864:1217 [[manejarScrollColab]] Índice: 3 mensaje.mensaje: a5 mensaje.remitente: 1 nextRemitente: 44 esNuevoHilo: true
-    galleV2.js?ver=2.0.1.148850864:1267 [[agregarMensajeAlChat]] {mensajeTexto: 'a5', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: true, esUsuarioActual: false, …}
-    galleV2.js?ver=2.0.1.148850864:1217 [[manejarScrollColab]] Índice: 2 mensaje.mensaje: a4 mensaje.remitente: 1 nextRemitente: 1 esNuevoHilo: false
-    galleV2.js?ver=2.0.1.148850864:1267 [[agregarMensajeAlChat]] {mensajeTexto: 'a4', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
-    galleV2.js?ver=2.0.1.148850864:1217 [[manejarScrollColab]] Índice: 1 mensaje.mensaje: a3 mensaje.remitente: 1 nextRemitente: 1 esNuevoHilo: false
-    galleV2.js?ver=2.0.1.148850864:1267 [[agregarMensajeAlChat]] {mensajeTexto: 'a3', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
-    galleV2.js?ver=2.0.1.148850864:1217 [[manejarScrollColab]] Índice: 0 mensaje.mensaje: a2 mensaje.remitente: 1 nextRemitente: 1 esNuevoHilo: false
-    galleV2.js?ver=2.0.1.148850864:1267 [[agregarMensajeAlChat]] {mensajeTexto: 'a2', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
-    b1 debe ser el isFirstMessageOfThread: true
-
-    NO SE PUEDE INVENTIR EL ORDEN DE CARGA PORQUE ES EL CORRECTO!!!!!!!
-    PIENSA EN OTRA MANERA
-
-    */
-
     async function manejarScrollColab(conversacion, contenedor = null) {
         const listaMensajes = (contenedor || document).querySelector('.listaMensajes');
         let puedeDesplazar = true,
@@ -1242,6 +1107,116 @@ function galle() {
                 listaMensajes.scrollTop = listaMensajes.scrollHeight - scrollPosAntesDeInsertar;
             }
         });
+    }
+
+    //la fecha no se maneja bien cuando envio un mensaje, aparece repidamente el span de "hace unos segundos" y no debería de ser asi, tambien pasa que a veces cuando hago scroll para cargar mas mensajes, la fecha aparece 2 veces, asi que hay que ajustar algunas cosas
+
+    function msColabSetup() {
+        document.addEventListener('click', event => {
+            if (event.target.matches('.enviarMensajeColab')) {
+                enviarMensajeColab(event.target);
+            }
+        });
+
+        const mensajeInput = document.querySelector('.mensajeContenidoColab');
+        mensajeInput.addEventListener('keydown', event => {
+            if (event.key === 'Enter' && !event.altKey) {
+                event.preventDefault();
+                enviarMensajeColab(document.querySelector('.enviarMensajeColab'));
+            }
+        });
+
+        function enviarMensajeColab(button) {
+            if (subidaChatProgreso) {
+                return alert('Por favor espera a que se complete la subida del archivo.');
+            }
+
+            const bloqueChat = button.closest('.bloqueChatColab');
+            const mensajeInput = bloqueChat.querySelector('.mensajeContenidoColab');
+            const mensaje = mensajeInput.value.trim();
+
+            if (!mensaje) {
+                return alert('Por favor, ingresa un mensaje.');
+            }
+
+            const conversacion_id = button.getAttribute('data-conversacion-id');
+            const participantes = JSON.parse(bloqueChat.getAttribute('data-participantes'));
+            const metadata = 'colab';
+            const listaMensajes = bloqueChat.querySelector('.listaMensajes');
+
+            let adjunto = null;
+            if (archivoChatId || archivoChatUrl) {
+                adjunto = {archivoChatId, archivoChatUrl};
+                archivoChatId = archivoChatUrl = null;
+            }
+
+            enviarMensajeWs(participantes, mensaje, adjunto, metadata, conversacion_id, listaMensajes);
+
+            mensajeInput.value = '';
+        }
+    }
+
+    function manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop) {
+        if (!listaMensajes || !(listaMensajes instanceof Element)) {
+            console.error('listaMensajes no es un elemento DOM válido');
+            return;
+        }
+
+        if (!fechaAnterior || Math.abs(fechaMensaje - fechaAnterior) >= 3 * 60 * 1000) {
+            // Convertir la fecha al formato deseado (por ejemplo, solo la fecha sin hora)
+            const fechaFormateada = formatearTiempoRelativo(fechaMensaje);
+
+            // Verificar si ya existe un separador con la misma fecha
+            let existingSeparator = null;
+            if (insertAtTop) {
+                existingSeparator = listaMensajes.querySelector(`.fechaSeparador[data-fecha="${fechaMensaje.toISOString()}"]`);
+            } else {
+                // Buscar sólo entre los últimos elementos para mejorar el rendimiento
+                const lastElements = Array.from(listaMensajes.children).slice(-5);
+                for (const elem of lastElements) {
+                    if (elem.classList.contains('fechaSeparador') && elem.getAttribute('data-fecha') === fechaMensaje.toISOString()) {
+                        existingSeparator = elem;
+                        break;
+                    }
+                }
+            }
+
+            if (!existingSeparator) {
+                const liFecha = document.createElement('div'); // Cambiar a 'div' si estás usando 'div' para mensajes
+                liFecha.textContent = fechaFormateada;
+                liFecha.classList.add('fechaSeparador');
+                liFecha.setAttribute('data-fecha', fechaMensaje.toISOString());
+
+                if (insertAtTop) {
+                    if (listaMensajes.firstChild) {
+                        listaMensajes.insertBefore(liFecha, listaMensajes.firstChild);
+                    } else {
+                        listaMensajes.appendChild(liFecha);
+                    }
+                } else {
+                    listaMensajes.appendChild(liFecha);
+                }
+            }
+        }
+    }
+
+    function obtenerFechaAnterior(listaMensajes, insertAtTop) {
+        let lastElement = null;
+        const children = Array.from(listaMensajes.children || []);
+        const searchOrder = insertAtTop ? 1 : -1;
+        const startIndex = insertAtTop ? 0 : children.length - 1;
+
+        for (let i = startIndex; insertAtTop ? i < children.length : i >= 0; i += searchOrder) {
+            const child = children[i];
+            // Buscar el elemento que contiene el mensaje
+            const mensajeElem = child.querySelector('.mensajeText.mensajeDerecha, .mensajeText.mensajeIzquierda');
+            if (mensajeElem) {
+                lastElement = mensajeElem;
+                break;
+            }
+        }
+
+        return lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
     }
 
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null, tipoMensaje = null) {
