@@ -3,17 +3,17 @@
 function obtenerChatColab()
 {
     chatLog('Iniciando obtenerChatColab...');
-
+    
     if (!is_user_logged_in()) {
         chatLog('Usuario no autenticado.');
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));
         wp_die();
     }
-
+    
     global $wpdb;
     $usuarioActual = get_current_user_id();
     chatLog('Usuario actual: ' . $usuarioActual);
-
+    
     $mensajesPorPagina = 20;
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
 
@@ -171,9 +171,7 @@ function obtenerChatColab()
     chatLog('Mensajes obtenidos: ' . count($mensajes));
 
     // Procesar mensajes
-    if ($page == 1) {
-        $mensajes = array_reverse($mensajes);
-    }
+    $mensajes = array_reverse($mensajes);
     foreach ($mensajes as $mensaje) {
         $mensaje->clase = ($mensaje->remitente == $usuarioActual) ? 'mensajeDerecha' : 'mensajeIzquierda';
         if (!empty($mensaje->adjunto)) {
@@ -281,7 +279,7 @@ console.log(`Buscando ventana de chat con data-user-id="${contactoId}"`);
 function renderChat()
 {
     ob_start();
-?>
+    ?>
     <div class="bloque modal bloqueChat" id="bloqueChat" data-user-id="" style="display: none;">
         <div class="infoChat">
             <div class="imagenMensaje">
@@ -322,7 +320,7 @@ function renderChat()
             <button class="enviarAdjunto" id="enviarAdjunto"><?php echo $GLOBALS['enviarAdjunto']; ?></button>
         </div>
     </div>
-<?php
+    <?php
     $htmlGenerado = ob_get_clean();
     return $htmlGenerado;
 }
