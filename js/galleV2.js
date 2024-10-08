@@ -439,53 +439,6 @@ function galle() {
         return lastElement ? new Date(lastElement.getAttribute('data-fecha')) : null;
     }
 
-    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null, tipoMensaje = null) {
-        const fechaMensaje = new Date(fecha);
-        fechaAnterior = fechaAnterior || obtenerFechaAnterior(listaMensajes, insertAtTop);
-
-        manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
-
-        const esUsuarioActual = msgEmisor === emisor;
-        const esColabPrimerMensaje = tipoMensaje === 'Colab' && isFirstMessageOfThread && userInfo && !esUsuarioActual;
-
-        const messageBlock = crearElemento('div', 'messageBlock');
-        const messageContainer = crearElemento('div', 'messageContainer');
-
-        const mensajeElem = crearElemento('div', ['mensajeText', clase], {
-            'data-fecha': fechaMensaje.toISOString(),
-            'data-emisor': msgEmisor || undefined,
-            'data-temp-id': temp_id || undefined
-        });
-
-        if (temp_id) mensajeElem.classList.add('mensajePendiente');
-
-        if (esColabPrimerMensaje) {
-            // Añadimos una clase identificadora al messageBlock
-            messageBlock.classList.add('firstMessageOfThread');
-
-            const userNameElem = crearElemento('span', 'userName', {textContent: userInfo.nombreUsuario});
-            const avatarImg = crearElemento('img', 'avatarImage', {
-                src: userInfo.imagenPerfil,
-                alt: userInfo.nombreUsuario
-            });
-            messageBlock.appendChild(userNameElem);
-            messageContainer.appendChild(avatarImg);
-        }
-
-        const messageTextElem = crearElemento('p', null, {textContent: mensajeTexto});
-        mensajeElem.appendChild(messageTextElem);
-        manejarAdjunto(adjunto, mensajeElem);
-
-        messageContainer.appendChild(mensajeElem);
-        messageBlock.appendChild(messageContainer);
-
-        if (insertAtTop) {
-            listaMensajes.insertBefore(messageBlock, listaMensajes.firstChild);
-        } else {
-            listaMensajes.appendChild(messageBlock);
-            listaMensajes.scrollTop = listaMensajes.scrollHeight;
-        }
-    }
 
     function crearElemento(tag, clase, atributos = {}) {
         const elem = document.createElement(tag);
@@ -1184,31 +1137,29 @@ function galle() {
         let puedeDesplazar = true,
             currentPage = 1,
             conversacion_id = conversacion;
-    
+
         listaMensajes.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
                 puedeDesplazar = false;
                 setTimeout(() => (puedeDesplazar = true), 2000);
                 currentPage++;
-    
+
                 const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
                 if (!data?.success) {
                     return console.error('Error al obtener más mensajes.');
                 }
-    
+
                 let mensajes = data.data.mensajes;
-    
-                //mensajes.reverse();
-    
+
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
-    
+
                 let fechaAnterior = null;
-    
+
                 // Obtener el remitente del primer mensaje actualmente mostrado
                 const primerMensajeMostrado = listaMensajes.querySelector('.messageBlock');
                 let prevEmisor = null;
-    
+
                 // Si ya hay mensajes cargados, obtenemos el remitente del primer mensaje actualmente mostrado
                 if (primerMensajeMostrado) {
                     const primerMensajeElem = primerMensajeMostrado.querySelector('.mensajeText');
@@ -1216,19 +1167,23 @@ function galle() {
                         prevEmisor = primerMensajeElem.getAttribute('data-emisor') || null;
                     }
                 }
-    
+
+                console.log('[[manejarScrollColab]] prevEmisor inicial:', prevEmisor);
+
                 // Guardar la posición del scroll actual antes de insertar nuevos mensajes
                 const scrollPosAntesDeInsertar = listaMensajes.scrollHeight - listaMensajes.scrollTop;
-    
+
                 // Procesamos los mensajes en orden cronológico (del más antiguo al más reciente)
                 for (let i = 0; i < mensajes.length; i++) {
                     const mensaje = mensajes[i];
-    
+
                     // Verificar si este mensaje corresponde a un nuevo hilo (cambio de emisor)
                     const esNuevoHilo = mensaje.remitente !== prevEmisor;
-    
+
+                    console.log('[[manejarScrollColab]] Índice:', i, 'mensaje.remitente:', mensaje.remitente, 'prevEmisor:', prevEmisor, 'esNuevoHilo:', esNuevoHilo);
+
                     const userInfo = userInfos.get(mensaje.remitente);
-    
+
                     // Insertar el mensaje en el chat al principio
                     agregarMensajeAlChat(
                         mensaje.mensaje,
@@ -1244,17 +1199,70 @@ function galle() {
                         userInfo,
                         'Colab'
                     );
-    
+
                     // Actualizamos prevEmisor y fechaAnterior para el siguiente mensaje
                     fechaAnterior = new Date(mensaje.fecha);
                     prevEmisor = mensaje.remitente;
                 }
-    
+
                 // Ajustar manualmente la posición del scroll tras insertar los mensajes
                 listaMensajes.scrollTop = listaMensajes.scrollHeight - scrollPosAntesDeInsertar;
             }
         });
     }
 
+    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null, tipoMensaje = null) {
+        const fechaMensaje = new Date(fecha);
+        fechaAnterior = fechaAnterior || obtenerFechaAnterior(listaMensajes, insertAtTop);
+
+        manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop);
+
+        const esUsuarioActual = msgEmisor === emisor;
+        const esColabPrimerMensaje = tipoMensaje === 'Colab' && isFirstMessageOfThread && userInfo && !esUsuarioActual;
+
+        console.log('[[agregarMensajeAlChat]] mensajeTexto:', mensajeTexto);
+        console.log('[[agregarMensajeAlChat]] msgEmisor:', msgEmisor, 'emisor actual:', emisor);
+        console.log('[[agregarMensajeAlChat]] isFirstMessageOfThread:', isFirstMessageOfThread);
+        console.log('[[agregarMensajeAlChat]] esUsuarioActual:', esUsuarioActual);
+        console.log('[[agregarMensajeAlChat]] esColabPrimerMensaje:', esColabPrimerMensaje);
+
+        const messageBlock = crearElemento('div', 'messageBlock');
+        const messageContainer = crearElemento('div', 'messageContainer');
+
+        const mensajeElem = crearElemento('div', ['mensajeText', clase], {
+            'data-fecha': fechaMensaje.toISOString(),
+            'data-emisor': msgEmisor || undefined,
+            'data-temp-id': temp_id || undefined
+        });
+
+        if (temp_id) mensajeElem.classList.add('mensajePendiente');
+
+        if (esColabPrimerMensaje) {
+            // Añadimos una clase identificadora al messageBlock
+            messageBlock.classList.add('firstMessageOfThread');
+
+            const userNameElem = crearElemento('span', 'userName', {textContent: userInfo.nombreUsuario});
+            const avatarImg = crearElemento('img', 'avatarImage', {
+                src: userInfo.imagenPerfil,
+                alt: userInfo.nombreUsuario
+            });
+            messageBlock.appendChild(userNameElem);
+            messageContainer.appendChild(avatarImg);
+        }
+
+        const messageTextElem = crearElemento('p', null, {textContent: mensajeTexto});
+        mensajeElem.appendChild(messageTextElem);
+        manejarAdjunto(adjunto, mensajeElem);
+
+        messageContainer.appendChild(mensajeElem);
+        messageBlock.appendChild(messageContainer);
+
+        if (insertAtTop) {
+            listaMensajes.insertBefore(messageBlock, listaMensajes.firstChild);
+        } else {
+            listaMensajes.appendChild(messageBlock);
+            listaMensajes.scrollTop = listaMensajes.scrollHeight;
+        }
+    }
     init();
 }
