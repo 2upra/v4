@@ -1191,22 +1191,22 @@ function galle() {
                 setTimeout(() => (puedeDesplazar = true), 2000);
                 currentPage++;
     
-                const data = await enviarAjax('obtenerChatColab', { conversacion_id, page: currentPage });
+                const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
                 if (!data?.success) {
                     return console.error('Error al obtener más mensajes.');
                 }
     
                 let mensajes = data.data.mensajes;
     
-                // Ordenar los mensajes por fecha ascendente (más antiguos primero)
-                mensajes.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+                // Invertir los mensajes para procesarlos de más antiguos a más nuevos
+                mensajes.reverse();
     
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
     
                 let fechaAnterior = null;
     
-                // Obtenemos el remitente del primer mensaje actualmente mostrado
+                // Obtener el remitente del primer mensaje actualmente mostrado
                 const primerMensajeMostrado = listaMensajes.querySelector('.messageBlock');
                 let prevEmisor = null;
     
@@ -1230,9 +1230,6 @@ function galle() {
     
                     const userInfo = userInfos.get(mensaje.remitente);
     
-                    // Si este es el primer mensaje de este hilo, es el más antiguo de este remitente
-                    const isFirstMessageOfThread = esNuevoHilo || i === 0;
-    
                     // Insertar el mensaje en el chat
                     agregarMensajeAlChat(
                         mensaje.mensaje,
@@ -1240,11 +1237,11 @@ function galle() {
                         mensaje.fecha,
                         listaMensajes,
                         fechaAnterior,
-                        true, // insertAtTop = true, para insertar al principio
+                        true, // insertAtTop = true
                         mensaje.adjunto,
                         null,
                         mensaje.remitente,
-                        isFirstMessageOfThread, // Indica si es el primer mensaje de un hilo
+                        esNuevoHilo, // Indica si es el primer mensaje de un hilo
                         userInfo,
                         'Colab'
                     );
@@ -1259,6 +1256,6 @@ function galle() {
             }
         });
     }
-    
+
     init();
 }
