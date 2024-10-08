@@ -1244,7 +1244,6 @@ function galle() {
         });
     }
 
-    //sabes que el avatar y el mesnaje se agregan en un div, asi esta bien, pero, no siempre va a agregarse el avatar, asi que necesito que en ese caso, se agregue un div vacío por cuestion puramente estetica, agrega un clase de spaceDivMs, y yo me encargo de css
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null, tipoMensaje = null) {
         const fechaMensaje = new Date(fecha);
         fechaAnterior = fechaAnterior || obtenerFechaAnterior(listaMensajes, insertAtTop);
@@ -1261,7 +1260,8 @@ function galle() {
             emisorActual: emisor,
             isFirstMessageOfThread: isFirstMessageOfThread,
             esUsuarioActual: esUsuarioActual,
-            esColabPrimerMensaje: esColabPrimerMensaje
+            esColabPrimerMensaje: esColabPrimerMensaje,
+            tipoMensaje: tipoMensaje
         };
 
         console.log('[[agregarMensajeAlChat]]', logInfo);
@@ -1288,8 +1288,8 @@ function galle() {
             });
             messageBlock.appendChild(userNameElem);
             messageContainer.appendChild(avatarImg);
-        } else {
-            // Si no hay avatar, agregamos un div vacío con la clase 'spaceDivMs'
+        } else if (tipoMensaje === 'Colab') {
+            // Si es un mensaje de tipo Colab pero no es el primer mensaje, agregamos un div vacío
             const spaceDiv = crearElemento('div', 'spaceDivMs');
             messageContainer.appendChild(spaceDiv);
         }
