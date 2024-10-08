@@ -1133,22 +1133,18 @@ function galle() {
 
     /*
 
-    // UN HILO DE MENSAJES DESPUES DEL SCROLL B1 DEBERIA SER EL isFirstMessage, considera que te los estoy mostrando en el orden que se ven los logs, puedo notar que los se scroll estan invertidos aunque de cierto modo si se ven renderizados de forma correcta, 
+    si, ahora establece corretamente el primer mensaje del hilo pero, los mensajes se ven al revés, es decir, se ven asi en el chat b5, b4, b3, b2, b1 cuando ser al revés, pero si volvemos a invetir el orden entonces ya no se establece bien el primer mensaje de hilo 
 
-    //el orden en el que se envian los mensajess es 1, 2, 3, 4, 5 y las letras diferencias los hip
-
-    [[manejarScrollColab]] Índice: 10 mensaje.remitente: 1 prevEmisor: 44 esNuevoHilo: true
-    galleV2.js?ver=2.0.1.1020418618:1234 [[agregarMensajeAlChat]] {mensajeTexto: 'b5', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: true, esUsuarioActual: false, …}
-    galleV2.js?ver=2.0.1.1020418618:1184 [[manejarScrollColab]] Índice: 11 mensaje.remitente: 1 prevEmisor: 1 esNuevoHilo: false
-    galleV2.js?ver=2.0.1.1020418618:1234 [[agregarMensajeAlChat]] {mensajeTexto: 'b4', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
-    galleV2.js?ver=2.0.1.1020418618:1184 [[manejarScrollColab]] Índice: 12 mensaje.remitente: 1 prevEmisor: 1 esNuevoHilo: false
-    galleV2.js?ver=2.0.1.1020418618:1234 [[agregarMensajeAlChat]] {mensajeTexto: 'b3', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
-    galleV2.js?ver=2.0.1.1020418618:1184 [[manejarScrollColab]] Índice: 13 mensaje.remitente: 1 prevEmisor: 1 esNuevoHilo: false
-    galleV2.js?ver=2.0.1.1020418618:1234 [[agregarMensajeAlChat]] {mensajeTexto: 'b2', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
-    galleV2.js?ver=2.0.1.1020418618:1184 [[manejarScrollColab]] Índice: 14 mensaje.remitente: 1 prevEmisor: 1 esNuevoHilo: false
-    galleV2.js?ver=2.0.1.1020418618:1234 [[agregarMensajeAlChat]] {mensajeTexto: 'b1', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
-
-    b1 debe ser el isFirstMessageOfThread: true
+    [[manejarScrollColab]] Índice: 14 mensaje.remitente: 1 prevEmisor: 44 esNuevoHilo: true
+    galleV2.js?ver=2.0.1.519042117:1256 [[agregarMensajeAlChat]] {mensajeTexto: 'b1', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: true, esUsuarioActual: false, …}
+    galleV2.js?ver=2.0.1.519042117:1206 [[manejarScrollColab]] Índice: 13 mensaje.remitente: 1 prevEmisor: 1 esNuevoHilo: false
+    galleV2.js?ver=2.0.1.519042117:1256 [[agregarMensajeAlChat]] {mensajeTexto: 'b2', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
+    galleV2.js?ver=2.0.1.519042117:1206 [[manejarScrollColab]] Índice: 12 mensaje.remitente: 1 prevEmisor: 1 esNuevoHilo: false
+    galleV2.js?ver=2.0.1.519042117:1256 [[agregarMensajeAlChat]] {mensajeTexto: 'b3', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
+    galleV2.js?ver=2.0.1.519042117:1206 [[manejarScrollColab]] Índice: 11 mensaje.remitente: 1 prevEmisor: 1 esNuevoHilo: false
+    galleV2.js?ver=2.0.1.519042117:1256 [[agregarMensajeAlChat]] {mensajeTexto: 'b4', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
+    galleV2.js?ver=2.0.1.519042117:1206 [[manejarScrollColab]] Índice: 10 mensaje.remitente: 1 prevEmisor: 1 esNuevoHilo: false
+    galleV2.js?ver=2.0.1.519042117:1256 [[agregarMensajeAlChat]] {mensajeTexto: 'b5', msgEmisor: '1', emisorActual: '44', isFirstMessageOfThread: false, esUsuarioActual: false, …}
 
 
     */
@@ -1177,9 +1173,6 @@ function galle() {
 
                 let fechaAnterior = null;
 
-                // Invertimos los mensajes para tenerlos en orden cronológico
-                mensajes.reverse();
-
                 // Obtener el remitente del primer mensaje actualmente mostrado
                 const primerMensajeMostrado = listaMensajes.querySelector('.messageBlock');
                 let prevEmisor = null;
@@ -1196,12 +1189,21 @@ function galle() {
                 // Guardar la posición del scroll actual antes de insertar nuevos mensajes
                 const scrollPosAntesDeInsertar = listaMensajes.scrollHeight - listaMensajes.scrollTop;
 
-                // Procesar los mensajes en orden ascendente (del más antiguo al más reciente)
+                // Primero, identificamos el primer mensaje del hilo
+                let primerMensajeHilo = null;
                 for (let i = mensajes.length - 1; i >= 0; i--) {
+                    if (mensajes[i].remitente !== prevEmisor) {
+                        primerMensajeHilo = i;
+                        break;
+                    }
+                }
+
+                // Ahora procesamos los mensajes en orden cronológico
+                for (let i = 0; i < mensajes.length; i++) {
                     const mensaje = mensajes[i];
 
-                    // Verificar si este mensaje corresponde a un nuevo hilo (cambio de emisor)
-                    const esNuevoHilo = mensaje.remitente !== prevEmisor;
+                    // Verificar si este mensaje es el primer mensaje del hilo
+                    const esNuevoHilo = i === primerMensajeHilo;
 
                     console.log('[[manejarScrollColab]] Índice:', i, 'mensaje.remitente:', mensaje.remitente, 'prevEmisor:', prevEmisor, 'esNuevoHilo:', esNuevoHilo);
 
@@ -1223,10 +1225,12 @@ function galle() {
                         'Colab'
                     );
 
-                    // Actualizamos prevEmisor y fechaAnterior para el siguiente mensaje
+                    // Actualizamos fechaAnterior para el siguiente mensaje
                     fechaAnterior = new Date(mensaje.fecha);
-                    prevEmisor = mensaje.remitente;
                 }
+
+                // Actualizamos prevEmisor para la próxima carga de mensajes
+                prevEmisor = mensajes[0].remitente;
 
                 // Ajustar manualmente la posición del scroll tras insertar los mensajes
                 listaMensajes.scrollTop = listaMensajes.scrollHeight - scrollPosAntesDeInsertar;
