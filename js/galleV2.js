@@ -1184,42 +1184,51 @@ function galle() {
         let puedeDesplazar = true,
             currentPage = 1,
             conversacion_id = conversacion;
-    
+
         listaMensajes.addEventListener('scroll', async e => {
             if (e.target.scrollTop === 0 && puedeDesplazar) {
                 puedeDesplazar = false;
                 setTimeout(() => (puedeDesplazar = true), 2000);
                 currentPage++;
-    
+
                 const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
                 if (!data?.success) {
                     return console.error('Error al obtener más mensajes.');
                 }
-    
+
                 // Antes de agregar los nuevos mensajes, limpiar la información de usuario de los mensajes que ya no son primeros
                 const mensajesAnteriores = listaMensajes.querySelectorAll('.firstMessageOfThread');
                 mensajesAnteriores.forEach(mensaje => {
                     mensaje.classList.remove('firstMessageOfThread');
-    
+
                     const userNameElem = mensaje.querySelector('.userName');
                     const avatarImg = mensaje.querySelector('.avatarImage');
                     if (userNameElem) userNameElem.remove();
                     if (avatarImg) avatarImg.remove();
                 });
-    
-                // Invertimos los mensajes para procesarlos del más antiguo al más nuevo
-                let mensajes = data.data.mensajes.reverse();
+
+                let mensajes = data.data.mensajes; // Los mensajes vienen del servidor del más nuevo al más antiguo
                 const remitentesUnicos = [...new Set(mensajes.map(m => m.remitente))];
                 const userInfos = await obtenerInfoUsuarios(remitentesUnicos);
-                
-                let fechaAnterior = null,
-                    prevEmisor = null;
-    
-                for (let i = 0; i < mensajes.length; i++) {
+
+                let fechaAnterior = null;
+
+                // Obtener el emisor del primer mensaje actualmente mostrado
+                const primerMensajeMostrado = listaMensajes.querySelector('.messageBlock');
+                let prevEmisor = null;
+                if (primerMensajeMostrado) {
+                    const primerMensajeElem = primerMensajeMostrado.querySelector('.mensajeText');
+                    if (primerMensajeElem) {
+                        prevEmisor = primerMensajeElem.getAttribute('data-emisor') || null;
+                    }
+                }
+
+                // Iteramos del último al primero para procesar del más antiguo al más nuevo
+                for (let i = mensajes.length - 1; i >= 0; i--) {
                     const mensaje = mensajes[i];
-                    const esNuevoHilo = prevEmisor !== mensaje.remitente;
+                    const esNuevoHilo = mensaje.remitente !== prevEmisor;
                     prevEmisor = mensaje.remitente;
-    
+
                     const userInfo = userInfos.get(mensaje.remitente);
                     agregarMensajeAlChat(
                         mensaje.mensaje,
@@ -1227,7 +1236,7 @@ function galle() {
                         mensaje.fecha,
                         listaMensajes,
                         fechaAnterior,
-                        true,
+                        true, // insertAtTop = true
                         mensaje.adjunto,
                         null,
                         mensaje.remitente,
@@ -1235,12 +1244,15 @@ function galle() {
                         userInfo,
                         'Colab'
                     );
-    
+
                     fechaAnterior = new Date(mensaje.fecha);
                 }
-    
-                // Después de agregar mensajes, ajustar el scroll si es necesario
-                // No es necesario ajustar en este caso si insertamos al final
+
+                // Ajustar el scroll para que permanezca en la posición correcta
+                const primerMensajeNuevo = listaMensajes.querySelector('div.messageBlock');
+                if (primerMensajeNuevo) {
+                    primerMensajeNuevo.scrollIntoView();
+                }
             }
         });
     }
