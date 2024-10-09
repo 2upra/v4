@@ -294,9 +294,16 @@ function galle() {
 
     // Función para manejar el clic en una conversación
     async function manejarClickEnConversacion(item) {
-        item.addEventListener('click', async () => {
-            console.log('Click en conversación detectado');
+        // Asignar el manejador de eventos al elemento padre
+        const listaMensajes = document.querySelector('.mensajes');
+        listaMensajes.addEventListener('click', async function (e) {
+            // Encontrar el elemento 'li' más cercano en el que se hizo clic
+            const item = e.target.closest('.mensaje');
+            if (!item) return; // Si no es un elemento 'li.mensaje', salir
 
+            console.log('Click en conversación detectado vía delegación de eventos');
+
+            // Tu código aquí, usando 'item' como el elemento 'li' que se hizo clic
             let conversacion = item.getAttribute('data-conversacion');
             let receptor = item.getAttribute('data-receptor');
             let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
@@ -352,9 +359,9 @@ function galle() {
     function clickMensaje() {
         // Seleccionando todos los elementos con la clase 'mensaje'
         const mensajes = document.querySelectorAll('.mensaje');
-    
+
         console.log('Cantidad de mensajes encontrados:', mensajes.length);
-    
+
         if (mensajes.length > 0) {
             mensajes.forEach((item, index) => {
                 console.log(`Mensaje ${index}:`, item);
@@ -369,12 +376,12 @@ function galle() {
         } else {
             console.warn('No se encontraron elementos con la clase "mensaje".');
         }
-    
+
         // Seleccionando todos los elementos con la clase 'mensajeBoton'
         const botonesMensaje = document.querySelectorAll('.mensajeBoton');
-    
+
         console.log('Cantidad de botones de mensaje encontrados:', botonesMensaje.length);
-    
+
         if (botonesMensaje.length > 0) {
             botonesMensaje.forEach((item, index) => {
                 console.log(`MensajeBoton ${index}:`, item);
