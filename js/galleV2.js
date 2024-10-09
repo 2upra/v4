@@ -998,100 +998,81 @@ function galle() {
         });
     }
 
-    async function manejarMensajeWebSocket(data) {
+    window.manejarMensajeWebSocket = async function manejarMensajeWebSocket(data, emisor) {
         try {
-            const parsedData = JSON.parse(data);
-
-            const msgEmisor = String(parsedData.emisor);
-            const msgReceptor = parsedData.receptor;
-            const msgMensaje = parsedData.mensaje;
-            const msgConversacionId = parsedData.conversacion_id;
-            const msgAdjunto = parsedData.adjunto || null;
-            const tempId = parsedData.temp_id || null;
-
-            // ID del usuario actual
-            const currentUserId = String(emisor);
-
-            let receptorIds;
-            try {
-                // Intentar parsear msgReceptor como JSON
-                receptorIds = JSON.parse(msgReceptor);
-
-                // Asegurarse de que receptorIds es un array de strings
-                if (!Array.isArray(receptorIds)) {
-                    receptorIds = [String(receptorIds)];
-                } else {
-                    receptorIds = receptorIds.map(id => String(id));
-                }
-            } catch (e) {
-                // Si falla el parseo, asumir que es un único ID
-                receptorIds = [String(msgReceptor)];
-            }
-
-            // Verificar si el mensaje es para el usuario actual o si fue enviado por el usuario actual
-            if (receptorIds.includes(currentUserId) || msgEmisor === currentUserId) {
-                let chatWindow;
-
-                // Determinar el tipo de mensaje (grupal o individual)
-                let tipoMensaje = null;
-                if (msgConversacionId && msgConversacionId !== 'null') {
-                    // Mensaje grupal o con conversacion_id
-                    chatWindow = document.querySelector(`.bloqueChatColab[data-conversacion-id="${msgConversacionId}"]`);
-                    tipoMensaje = 'Colab';
-                } else {
-                    // Mensaje individual
-                    const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
-                    chatWindow = document.querySelector(`.bloqueChat[data-user-id="${contactoId}"]`);
-                    tipoMensaje = 'Individual';
-
-                    // Actualizar lista de conversaciones
-                    actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
-                }
-
-                if (chatWindow) {
-                    const listaMensajes = chatWindow.querySelector('.listaMensajes');
-                    const fechaActual = new Date();
-
-                    // Obtener el último mensaje para determinar isFirstMessageOfThread
-                    const mensajes = listaMensajes.querySelectorAll('.mensajeText');
-                    let prevEmisor = null;
-
-                    if (mensajes.length > 0) {
-                        const ultimoMensaje = mensajes[mensajes.length - 1];
-                        prevEmisor = ultimoMensaje.getAttribute('data-emisor');
-                    }
-
-                    const isFirstMessageOfThread = msgEmisor !== prevEmisor;
-
-                    // Obtener la información del usuario si es necesario
-                    let userInfo = null;
-                    if (isFirstMessageOfThread && msgEmisor !== currentUserId) {
-                        const userInfos = await obtenerInfoUsuarios([msgEmisor]);
-                        userInfo = userInfos.get(msgEmisor);
-                    }
-
-                    // Determinar la clase del mensaje
-                    let claseMensaje;
-                    if (msgEmisor === currentUserId) {
-                        claseMensaje = 'mensajeDerecha';
-                    } else {
-                        claseMensaje = 'mensajeIzquierda';
-                    }
-
-                    // Añadir el mensaje al chat
-                    agregarMensajeAlChat(msgMensaje, claseMensaje, fechaActual, listaMensajes, null, false, msgAdjunto, tempId, msgEmisor, isFirstMessageOfThread, userInfo, tipoMensaje);
-
-                    // Actualizar lista de conversaciones
-                    if (tipoMensaje === 'Individual') {
-                        const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
-                        actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
-                    } else {
-                        actualizarListaConversaciones(msgConversacionId, msgMensaje);
-                    }
-                }
+            const usuarioActualId = String(emisor);
+            const mensajeProcesable = procesarYValidarMensaje(data, usuarioActualId);
+            if (mensajeProcesable) {
+                await procesarMensajeRecibido(mensajeProcesable, usuarioActualId);
             }
         } catch (error) {
             console.error('Error al manejar el mensaje de WebSocket:', error);
+        }
+    };
+    // Función que procesa el mensaje recibido y lo muestra en la interfaz si corresponde
+    async function procesarMensajeRecibido(mensajeDatos, usuarioActualId) {
+        const {msgEmisor, msgReceptor, msgMensaje, msgConversacionId, msgAdjunto, tempId} = mensajeDatos;
+
+        let ventanaChat; // Referencia a la ventana de chat
+        let tipoMensaje = null; // Tipo de mensaje: Individual o Grup
+
+        if (msgConversacionId && msgConversacionId !== 'null') {
+            // Mensaje grupal con conversacion_id
+            ventanaChat = document.querySelector(`.bloqueChatColab[data-conversacion-id="${msgConversacionId}"]`);
+            tipoMensaje = 'Colab';
+        } else {
+            // Mensaje individual
+            const contactoId = msgEmisor === usuarioActualId ? msgReceptor : msgEmisor;
+            ventanaChat = document.querySelector(`.bloqueChat[data-user-id="${contactoId}"]`);
+            tipoMensaje = 'Individual';
+
+            // Actualizar lista de conversaciones con el último mensaje
+            actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
+        }
+
+        if (ventanaChat) {
+            // Si la ventana de chat existe, procesar el mensaje en la ventana
+            await procesarMensajeFront(ventanaChat, mensajeDatos, usuarioActualId, tipoMensaje);
+        }
+    }
+
+    // Función que agrega el mensaje al chat y actualiza la interfaz
+    async function procesarMensajeFront(ventanaChat, mensajeDatos, usuarioActualId, tipoMensaje) {
+        const {msgEmisor, msgReceptor, msgMensaje, msgConversacionId, msgAdjunto, tempId} = mensajeDatos;
+
+        const listaMensajes = ventanaChat.querySelector('.listaMensajes');
+        const fechaActual = new Date();
+
+        // Obtener el último mensaje para determinar si es un nuevo hilo
+        const mensajes = listaMensajes.querySelectorAll('.mensajeText');
+        let emisorPrevio = null;
+
+        if (mensajes.length > 0) {
+            const ultimoMensaje = mensajes[mensajes.length - 1];
+            emisorPrevio = ultimoMensaje.getAttribute('data-emisor');
+        }
+
+        const esPrimerMensajeDelHilo = msgEmisor !== emisorPrevio;
+
+        // Obtener información del usuario si es necesario
+        let infoUsuario = null;
+        if (esPrimerMensajeDelHilo && msgEmisor !== usuarioActualId) {
+            const informacionUsuarios = await obtenerInfoUsuarios([msgEmisor]);
+            infoUsuario = informacionUsuarios.get(msgEmisor);
+        }
+
+        // Determinar la clase del mensaje según el emisor
+        let claseMensaje = msgEmisor === usuarioActualId ? 'mensajeDerecha' : 'mensajeIzquierda';
+
+        // Agregar el mensaje al chat
+        agregarMensajeAlChat(msgMensaje, claseMensaje, fechaActual, listaMensajes, null, false, msgAdjunto, tempId, msgEmisor, esPrimerMensajeDelHilo, infoUsuario, tipoMensaje);
+
+        // Actualizar lista de conversaciones con el último mensaje
+        if (tipoMensaje === 'Individual') {
+            const contactoId = msgEmisor === usuarioActualId ? msgReceptor : msgEmisor;
+            actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
+        } else {
+            actualizarListaConversaciones(msgConversacionId, msgMensaje);
         }
     }
 
