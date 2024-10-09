@@ -36,11 +36,8 @@ function galle() {
         manejarScroll();
         actualizarConexionEmisor();
         iniciarChat();
-        // clickMensaje();
-        chatColab();
-        maximizarChat();
-        cerrarChat();
-        minimizarChat();
+        clickMensaje();
+        chatColab(); // debería iniciarse de otra manera
     }
 
     /*
@@ -129,7 +126,7 @@ function galle() {
 
     async function chatColab() {
         const chatColabElements = document.querySelectorAll('.bloqueChatColab');
-
+    
         chatColabElements.forEach(async chatColabElement => {
             const postId = chatColabElement.dataset.postId;
             if (!postId) {
@@ -137,10 +134,10 @@ function galle() {
                 return;
             }
             currentPage = 1;
-
+    
             try {
-                const data = await enviarAjax('obtenerChatColab', {colab_id: postId, page: currentPage});
-
+                const data = await enviarAjax('obtenerChatColab', { colab_id: postId, page: currentPage });
+    
                 if (data?.success) {
                     console.log('Mensaje completo:', data);
                     const tipoMensaje = 'Colab';
@@ -159,6 +156,47 @@ function galle() {
                 console.error('Error al obtener la conversación colab:', error);
             }
         });
+    }
+
+    async function abrirConversacion({ conversacion, receptor, imagenPerfil, nombreUsuario }) {
+        try {
+            let data = { success: true, data: { mensajes: [], conversacion: null } };
+            currentPage = 1;
+            if (conversacion) {
+                data = await enviarAjax('obtenerChat', { conversacion, page: currentPage });
+            } else if (receptor) {
+                data = await enviarAjax('obtenerChat', { receptor, page: currentPage });
+            }
+            if (data?.success) {
+                const bloqueChat = document.querySelector('.bloqueChat');
+                if (!bloqueChat) {
+                    console.error('No se encontró el elemento .bloqueChat en el DOM.');
+                    return;
+                }
+    
+                // Adjusted the call to pass the correct chat container element
+                subidaArchivosChat(bloqueChat);
+                msSetup(bloqueChat);
+                mostrarMensajes(data.data.mensajes, bloqueChat);
+                bloqueChat.setAttribute('data-user-id', receptor);
+                bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
+                bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
+                bloqueChat.style.display = 'block';
+                manejarScroll(data.data.conversacion, bloqueChat);
+    
+                const listaMensajes = bloqueChat.querySelector('.listaMensajes');
+                if (listaMensajes) {
+                    listaMensajes.scrollTop = listaMensajes.scrollHeight;
+                }
+    
+                await actualizarEstadoConexion(receptor, bloqueChat);
+                setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
+            } else {
+                alert(data.message || 'Error desconocido al obtener los mensajes.');
+            }
+        } catch (error) {
+            alert('Ha ocurrido un error al intentar abrir la conversación.');
+        }
     }
 
     async function cerrarChat() {
@@ -229,103 +267,23 @@ function galle() {
         }
     }
 
-    // Función para abrir la conversación
-    async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
-        try {
-            console.log('Iniciando abrirConversacion con parámetros:', {conversacion, receptor, imagenPerfil, nombreUsuario});
-            let data = {success: true, data: {mensajes: [], conversacion: null}};
-            currentPage = 1;
+    maximizarChat();
+    cerrarChat();
+    minimizarChat();
 
-            if (conversacion) {
-                console.log('Obteniendo chat por conversacion ID:', conversacion, 'página:', currentPage);
-                data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
-            } else if (receptor) {
-                console.log('Obteniendo chat por receptor ID:', receptor, 'página:', currentPage);
-                data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
-            } else {
-                console.error('No se proporcionó ni conversacion ni receptor.');
-                alert('Error: No se pudo determinar la conversación o el receptor.');
-                return;
-            }
-
-            console.log('Respuesta de obtenerChat:', data);
-
-            if (data?.success) {
-                const bloqueChat = document.querySelector('.bloqueChat');
-                if (!bloqueChat) {
-                    console.error('No se encontró el elemento .bloqueChat en el DOM.');
-                    return;
-                }
-
-                // Inicializar funcionalidades del chat
-                subidaArchivosChat(bloqueChat);
-                msSetup(bloqueChat);
-
-                console.log('Mostrando mensajes:', data.data.mensajes);
-                mostrarMensajes(data.data.mensajes, bloqueChat);
-
-                // Actualizar información del chat
-                bloqueChat.setAttribute('data-user-id', receptor);
-                bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
-                bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
-                bloqueChat.style.display = 'block';
-
-                manejarScroll(data.data.conversacion, bloqueChat);
-
-                const listaMensajes = bloqueChat.querySelector('.listaMensajes');
-                if (listaMensajes) {
-                    listaMensajes.scrollTop = listaMensajes.scrollHeight;
-                } else {
-                    console.error('No se encontró el elemento .listaMensajes dentro de .bloqueChat.');
-                }
-
-                // Actualizar estado de conexión
-                await actualizarEstadoConexion(receptor, bloqueChat);
-                setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
-            } else {
-                console.error('Error al obtener los mensajes:', data.message);
-                alert(data.message || 'Error desconocido al obtener los mensajes.');
-            }
-        } catch (error) {
-            console.error('Ha ocurrido un error en abrirConversacion:', error);
-            alert('Ha ocurrido un error al intentar abrir la conversación.');
-        }
-    }
-
-    // Función para manejar los clics en las conversaciones utilizando delegación de eventos
-    function manejarClicksDeMensajes() {
-        const listaMensajes = document.querySelector('.mensajes');
-
-        if (!listaMensajes) {
-            console.warn('No se encontró el elemento con la clase "mensajes".');
-            return;
-        }
-
-        listaMensajes.addEventListener('click', async function (e) {
-            // Buscamos el elemento li con clase 'mensaje' más cercano al elemento clicado
-            const item = e.target.closest('.mensaje');
-            if (!item) return; // Si el clic no fue dentro de un 'li.mensaje', salimos
-
-            console.log('Click en conversación detectado vía delegación de eventos');
-
+    async function manejarClickEnConversacion(item) {
+        item.addEventListener('click', async () => {
             let conversacion = item.getAttribute('data-conversacion');
-            let receptor = item.getAttribute('data-receptor');
+            receptor = item.getAttribute('data-receptor');
             let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
             let nombreUsuario = item.querySelector('.nombreUsuario strong')?.textContent || null;
 
-            console.log('Datos obtenidos del elemento:', {conversacion, receptor, imagenPerfil, nombreUsuario});
-
             if (!imagenPerfil || !nombreUsuario) {
-                console.log('No se encontró imagen o nombre de usuario, obteniendo datos desde el servidor...');
-
                 try {
                     const data = await enviarAjax('infoUsuario', {receptor});
-                    console.log('Respuesta del servidor:', data);
-
                     if (data?.success) {
                         imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
-                        nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido';
-                        console.log('Datos actualizados:', {imagenPerfil, nombreUsuario});
+                        nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido'; // Nombre por defecto si no se encuentra
                     } else {
                         console.error('Error del servidor:', data.message);
                         alert(data.message || 'Error al obtener la información del usuario.');
@@ -338,70 +296,25 @@ function galle() {
                 }
             }
 
-            if (!receptor) {
-                console.error('El receptor no está definido.');
-                alert('Error: No se pudo determinar el receptor de la conversación.');
-                return;
-            }
-
             // Abrir la conversación
-            try {
-                console.log('Abriendo conversación con:', {conversacion, receptor, imagenPerfil, nombreUsuario});
-                await abrirConversacion({
-                    conversacion: conversacion || null,
-                    receptor,
-                    imagenPerfil,
-                    nombreUsuario
-                });
-            } catch (error) {
-                console.error('Error al abrir la conversación:', error);
-            }
+            abrirConversacion({
+                conversacion: conversacion || null,
+                receptor,
+                imagenPerfil,
+                nombreUsuario
+            });
         });
     }
 
-
-    manejarClicksDeMensajes();
-
-    // Función para asignar el manejador de clic a los mensajes
     function clickMensaje() {
-        // Seleccionando todos los elementos con la clase 'mensaje'
         const mensajes = document.querySelectorAll('.mensaje');
-
-        console.log('Cantidad de mensajes encontrados:', mensajes.length);
-
         if (mensajes.length > 0) {
-            mensajes.forEach((item, index) => {
-                console.log(`Mensaje ${index}:`, item);
-                console.log('Asignando manejarClickEnConversacion a un "mensaje"');
-                // Logueando atributos del elemento
-                console.log('Atributos del mensaje:', {
-                    'data-conversacion': item.getAttribute('data-conversacion'),
-                    'data-receptor': item.getAttribute('data-receptor')
-                });
-                manejarClickEnConversacion(item);
-            });
-        } else {
-            console.warn('No se encontraron elementos con la clase "mensaje".');
+            mensajes.forEach(item => manejarClickEnConversacion(item));
         }
 
-        // Seleccionando todos los elementos con la clase 'mensajeBoton'
         const botonesMensaje = document.querySelectorAll('.mensajeBoton');
-
-        console.log('Cantidad de botones de mensaje encontrados:', botonesMensaje.length);
-
         if (botonesMensaje.length > 0) {
-            botonesMensaje.forEach((item, index) => {
-                console.log(`MensajeBoton ${index}:`, item);
-                console.log('Asignando manejarClickEnConversacion a un "mensajeBoton"');
-                // Logueando atributos del elemento
-                console.log('Atributos del mensajeBoton:', {
-                    'data-conversacion': item.getAttribute('data-conversacion'),
-                    'data-receptor': item.getAttribute('data-receptor')
-                });
-                manejarClickEnConversacion(item);
-            });
-        } else {
-            console.warn('No se encontraron elementos con la clase "mensajeBoton".');
+            botonesMensaje.forEach(item => manejarClickEnConversacion(item));
         }
     }
 
@@ -675,6 +588,7 @@ function galle() {
                 enviarMensaje();
             }
         });
+ 
 
         const mensajeInput = document.querySelector('.mensajeContenido');
         mensajeInput.addEventListener('keydown', event => {
@@ -699,12 +613,13 @@ function galle() {
         }
     }
 
+
     function ocultarPreviews(chatContainer) {
         const previewChatAudio = chatContainer.querySelector('.previewChatAudio');
         const previewChatImagen = chatContainer.querySelector('.previewChatImagen');
         const previewChatArchivo = chatContainer.querySelector('.previewChatArchivo');
         const cancelUploadButton = chatContainer.querySelector('.cancelUploadButton');
-
+    
         if (previewChatAudio) previewChatAudio.style.display = 'none';
         if (previewChatImagen) previewChatImagen.style.display = 'none';
         if (previewChatArchivo) previewChatArchivo.style.display = 'none';
@@ -1083,116 +998,100 @@ function galle() {
         });
     }
 
-    // Función que parsea, valida y determina si debe procesarse el mensaje
-    function procesarYValidarMensaje(data, usuarioActualId) {
-        const mensajeDatos = JSON.parse(data);
-
-        // Extraer y asignar propiedades del mensaje
-        mensajeDatos.msgEmisor = String(mensajeDatos.emisor);
-        mensajeDatos.msgReceptor = mensajeDatos.receptor;
-        mensajeDatos.msgMensaje = mensajeDatos.mensaje;
-        mensajeDatos.msgConversacionId = mensajeDatos.conversacion_id;
-        mensajeDatos.msgAdjunto = mensajeDatos.adjunto || null;
-        mensajeDatos.tempId = mensajeDatos.temp_id || null;
-
-        // Parsear receptorIds
-        let receptorIds;
+    async function manejarMensajeWebSocket(data) {
         try {
-            receptorIds = JSON.parse(mensajeDatos.msgReceptor);
-            if (!Array.isArray(receptorIds)) {
-                receptorIds = [String(receptorIds)];
-            } else {
-                receptorIds = receptorIds.map(id => String(id));
+            const parsedData = JSON.parse(data);
+
+            const msgEmisor = String(parsedData.emisor);
+            const msgReceptor = parsedData.receptor;
+            const msgMensaje = parsedData.mensaje;
+            const msgConversacionId = parsedData.conversacion_id;
+            const msgAdjunto = parsedData.adjunto || null;
+            const tempId = parsedData.temp_id || null;
+
+            // ID del usuario actual
+            const currentUserId = String(emisor);
+
+            let receptorIds;
+            try {
+                // Intentar parsear msgReceptor como JSON
+                receptorIds = JSON.parse(msgReceptor);
+
+                // Asegurarse de que receptorIds es un array de strings
+                if (!Array.isArray(receptorIds)) {
+                    receptorIds = [String(receptorIds)];
+                } else {
+                    receptorIds = receptorIds.map(id => String(id));
+                }
+            } catch (e) {
+                // Si falla el parseo, asumir que es un único ID
+                receptorIds = [String(msgReceptor)];
             }
-        } catch (e) {
-            receptorIds = [String(mensajeDatos.msgReceptor)];
-        }
-        mensajeDatos.receptorIds = receptorIds;
 
-        // Determinar si el mensaje debe ser procesado
-        const {msgEmisor} = mensajeDatos;
-        if (receptorIds.includes(usuarioActualId) || msgEmisor === usuarioActualId) {
-            return mensajeDatos;
-        } else {
-            return null;
-        }
-    }
+            // Verificar si el mensaje es para el usuario actual o si fue enviado por el usuario actual
+            if (receptorIds.includes(currentUserId) || msgEmisor === currentUserId) {
+                let chatWindow;
 
-    window.manejarMensajeWebSocket = async function manejarMensajeWebSocket(data, emisor) {
-        try {
-            const usuarioActualId = String(emisor);
-            const mensajeProcesable = procesarYValidarMensaje(data, usuarioActualId);
-            if (mensajeProcesable) {
-                await procesarMensajeRecibido(mensajeProcesable, usuarioActualId);
+                // Determinar el tipo de mensaje (grupal o individual)
+                let tipoMensaje = null;
+                if (msgConversacionId && msgConversacionId !== 'null') {
+                    // Mensaje grupal o con conversacion_id
+                    chatWindow = document.querySelector(`.bloqueChatColab[data-conversacion-id="${msgConversacionId}"]`);
+                    tipoMensaje = 'Colab';
+                } else {
+                    // Mensaje individual
+                    const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
+                    chatWindow = document.querySelector(`.bloqueChat[data-user-id="${contactoId}"]`);
+                    tipoMensaje = 'Individual';
+
+                    // Actualizar lista de conversaciones
+                    actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
+                }
+
+                if (chatWindow) {
+                    const listaMensajes = chatWindow.querySelector('.listaMensajes');
+                    const fechaActual = new Date();
+
+                    // Obtener el último mensaje para determinar isFirstMessageOfThread
+                    const mensajes = listaMensajes.querySelectorAll('.mensajeText');
+                    let prevEmisor = null;
+
+                    if (mensajes.length > 0) {
+                        const ultimoMensaje = mensajes[mensajes.length - 1];
+                        prevEmisor = ultimoMensaje.getAttribute('data-emisor');
+                    }
+
+                    const isFirstMessageOfThread = msgEmisor !== prevEmisor;
+
+                    // Obtener la información del usuario si es necesario
+                    let userInfo = null;
+                    if (isFirstMessageOfThread && msgEmisor !== currentUserId) {
+                        const userInfos = await obtenerInfoUsuarios([msgEmisor]);
+                        userInfo = userInfos.get(msgEmisor);
+                    }
+
+                    // Determinar la clase del mensaje
+                    let claseMensaje;
+                    if (msgEmisor === currentUserId) {
+                        claseMensaje = 'mensajeDerecha';
+                    } else {
+                        claseMensaje = 'mensajeIzquierda';
+                    }
+
+                    // Añadir el mensaje al chat
+                    agregarMensajeAlChat(msgMensaje, claseMensaje, fechaActual, listaMensajes, null, false, msgAdjunto, tempId, msgEmisor, isFirstMessageOfThread, userInfo, tipoMensaje);
+
+                    // Actualizar lista de conversaciones
+                    if (tipoMensaje === 'Individual') {
+                        const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
+                        actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
+                    } else {
+                        actualizarListaConversaciones(msgConversacionId, msgMensaje);
+                    }
+                }
             }
         } catch (error) {
             console.error('Error al manejar el mensaje de WebSocket:', error);
-        }
-    };
-    // Función que procesa el mensaje recibido y lo muestra en la interfaz si corresponde
-    async function procesarMensajeRecibido(mensajeDatos, usuarioActualId) {
-        const {msgEmisor, msgReceptor, msgMensaje, msgConversacionId, msgAdjunto, tempId} = mensajeDatos;
-
-        let ventanaChat; // Referencia a la ventana de chat
-        let tipoMensaje = null; // Tipo de mensaje: Individual o Grup
-
-        if (msgConversacionId && msgConversacionId !== 'null') {
-            // Mensaje grupal con conversacion_id
-            ventanaChat = document.querySelector(`.bloqueChatColab[data-conversacion-id="${msgConversacionId}"]`);
-            tipoMensaje = 'Colab';
-        } else {
-            // Mensaje individual
-            const contactoId = msgEmisor === usuarioActualId ? msgReceptor : msgEmisor;
-            ventanaChat = document.querySelector(`.bloqueChat[data-user-id="${contactoId}"]`);
-            tipoMensaje = 'Individual';
-
-            // Actualizar lista de conversaciones con el último mensaje
-            actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
-        }
-
-        if (ventanaChat) {
-            // Si la ventana de chat existe, procesar el mensaje en la ventana
-            await procesarMensajeFront(ventanaChat, mensajeDatos, usuarioActualId, tipoMensaje);
-        }
-    }
-
-    // Función que agrega el mensaje al chat y actualiza la interfaz
-    async function procesarMensajeFront(ventanaChat, mensajeDatos, usuarioActualId, tipoMensaje) {
-        const {msgEmisor, msgReceptor, msgMensaje, msgConversacionId, msgAdjunto, tempId} = mensajeDatos;
-
-        const listaMensajes = ventanaChat.querySelector('.listaMensajes');
-        const fechaActual = new Date();
-
-        // Obtener el último mensaje para determinar si es un nuevo hilo
-        const mensajes = listaMensajes.querySelectorAll('.mensajeText');
-        let emisorPrevio = null;
-
-        if (mensajes.length > 0) {
-            const ultimoMensaje = mensajes[mensajes.length - 1];
-            emisorPrevio = ultimoMensaje.getAttribute('data-emisor');
-        }
-
-        const esPrimerMensajeDelHilo = msgEmisor !== emisorPrevio;
-
-        // Obtener información del usuario si es necesario
-        let infoUsuario = null;
-        if (esPrimerMensajeDelHilo && msgEmisor !== usuarioActualId) {
-            const informacionUsuarios = await obtenerInfoUsuarios([msgEmisor]);
-            infoUsuario = informacionUsuarios.get(msgEmisor);
-        }
-
-        // Determinar la clase del mensaje según el emisor
-        let claseMensaje = msgEmisor === usuarioActualId ? 'mensajeDerecha' : 'mensajeIzquierda';
-
-        // Agregar el mensaje al chat
-        agregarMensajeAlChat(msgMensaje, claseMensaje, fechaActual, listaMensajes, null, false, msgAdjunto, tempId, msgEmisor, esPrimerMensajeDelHilo, infoUsuario, tipoMensaje);
-
-        // Actualizar lista de conversaciones con el último mensaje
-        if (tipoMensaje === 'Individual') {
-            const contactoId = msgEmisor === usuarioActualId ? msgReceptor : msgEmisor;
-            actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
-        } else {
-            actualizarListaConversaciones(msgConversacionId, msgMensaje);
         }
     }
 
@@ -1216,7 +1115,7 @@ function galle() {
             tipoMensaje: tipoMensaje
         };
 
-        //console.log('[[agregarMensajeAlChat]]', logInfo);
+        console.log('[[agregarMensajeAlChat]]', logInfo);
 
         const messageBlock = crearElemento('div', 'messageBlock');
         const messageContainer = crearElemento('div', 'messageContainer');
