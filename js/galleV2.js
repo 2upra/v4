@@ -1119,6 +1119,7 @@ function galle() {
         };
 
         //console.log('[[agregarMensajeAlChat]]', logInfo);
+        console.log(mensajeLeido);
 
         const messageBlock = crearElemento('div', 'messageBlock');
         const messageContainer = crearElemento('div', 'messageContainer');
