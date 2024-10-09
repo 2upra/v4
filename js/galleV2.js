@@ -50,11 +50,11 @@ function galle() {
             .then(response => {
                 if (response.success) {
                 } else {
-                    console.error('No se pudo actualizar la conexión del emisor:', response.message);
+                    //console.error('No se pudo actualizar la conexión del emisor:', response.message);
                 }
             })
             .catch(error => {
-                console.error('Error al actualizar la conexión del emisor:', error);
+                //console.error('Error al actualizar la conexión del emisor:', error);
             });
     }
 
@@ -75,7 +75,7 @@ function galle() {
                 estadoConexion.classList.add('desconectado');
             }
         } catch (error) {
-            console.error('Error al verificar el estado de conexión del receptor:', error);
+            //console.error('Error al verificar el estado de conexión del receptor:', error);
         }
     }
 
@@ -85,12 +85,12 @@ function galle() {
                 if (response.success) {
                     return response.data;
                 } else {
-                    console.error('Error al verificar la conexión del receptor:', response.message);
+                    //console.error('Error al verificar la conexión del receptor:', response.message);
                     return null;
                 }
             })
             .catch(error => {
-                console.error('Error en la solicitud para verificar la conexión del receptor:', error);
+                //console.error('Error en la solicitud para verificar la conexión del receptor:', error);
                 return null;
             });
     }
@@ -111,11 +111,11 @@ function galle() {
                         const nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido';
                         userInfos.set(userId, {imagenPerfil, nombreUsuario});
                     } else {
-                        console.error('Error al obtener información del usuario:', data.message);
+                        //console.error('Error al obtener información del usuario:', data.message);
                         userInfos.set(userId, {imagenPerfil: 'default.jpg', nombreUsuario: 'Usuario Desconocido'});
                     }
                 } catch (error) {
-                    console.error('Error al obtener información del usuario:', error);
+                    //console.error('Error al obtener información del usuario:', error);
                     userInfos.set(userId, {imagenPerfil: 'default.jpg', nombreUsuario: 'Usuario Desconocido'});
                 }
             })
@@ -130,7 +130,7 @@ function galle() {
         chatColabElements.forEach(async chatColabElement => {
             const postId = chatColabElement.dataset.postId;
             if (!postId) {
-                console.error('El elemento no tiene data-post-id.');
+                //console.error('El elemento no tiene data-post-id.');
                 return;
             }
             currentPage = 1;
@@ -139,7 +139,7 @@ function galle() {
                 const data = await enviarAjax('obtenerChatColab', { colab_id: postId, page: currentPage });
     
                 if (data?.success) {
-                    console.log('Mensaje completo:', data);
+                    //console.log('Mensaje completo:', data);
                     const tipoMensaje = 'Colab';
                     mostrarMensajes(data.data.mensajes, chatColabElement, tipoMensaje);
                     manejarScrollColab(data.data.conversacion, chatColabElement);
@@ -150,10 +150,10 @@ function galle() {
                         listaMensajes.scrollTop = listaMensajes.scrollHeight;
                     }
                 } else {
-                    console.error('Error al obtener la conversación colab:', data.message);
+                    //console.error('Error al obtener la conversación colab:', data.message);
                 }
             } catch (error) {
-                console.error('Error al obtener la conversación colab:', error);
+                //console.error('Error al obtener la conversación colab:', error);
             }
         });
     }
@@ -170,7 +170,7 @@ function galle() {
             if (data?.success) {
                 const bloqueChat = document.querySelector('.bloqueChat');
                 if (!bloqueChat) {
-                    console.error('No se encontró el elemento .bloqueChat en el DOM.');
+                    //console.error('No se encontró el elemento .bloqueChat en el DOM.');
                     return;
                 }
     
@@ -243,7 +243,7 @@ function galle() {
                 if (textareaMensaje) textareaMensaje.value = '';
             });
         } catch (error) {
-            console.error('Error al minimizar el chat:', error);
+            //console.error('Error al minimizar el chat:', error);
             alert('Ha ocurrido un error al intentar minimizar el chat.');
         }
     }
@@ -262,7 +262,7 @@ function galle() {
                 }
             });
         } catch (error) {
-            console.error('Error al maximizar el chat:', error);
+            //console.error('Error al maximizar el chat:', error);
             alert('Ha ocurrido un error al intentar maximizar el chat.');
         }
     }
@@ -285,12 +285,12 @@ function galle() {
                         imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
                         nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido'; // Nombre por defecto si no se encuentra
                     } else {
-                        console.error('Error del servidor:', data.message);
+                        //console.error('Error del servidor:', data.message);
                         alert(data.message || 'Error al obtener la información del usuario.');
                         return;
                     }
                 } catch (error) {
-                    console.error('Error de conexión:', error);
+                    //console.error('Error de conexión:', error);
                     alert('Error al intentar obtener la información del usuario.');
                     return;
                 }
@@ -417,11 +417,11 @@ function galle() {
                         chatListContainer.innerHTML = response.data.html;
                     }
                 } else {
-                    console.error('Error al reiniciar los chats:', response);
+                    //console.error('Error al reiniciar los chats:', response);
                 }
             })
             .catch(error => {
-                console.error('Error al reiniciar los chats:', error);
+                //console.error('Error al reiniciar los chats:', error);
             });
     }
 
@@ -450,11 +450,11 @@ function galle() {
             if (response.success) {
                 return response.data.token;
             } else {
-                console.error('No se pudo obtener el token:', response.message);
+                //console.error('No se pudo obtener el token:', response.message);
                 return null;
             }
         } catch (error) {
-            console.error('Error al obtener el token:', error);
+            //console.error('Error al obtener el token:', error);
             return null;
         }
     }
@@ -466,7 +466,7 @@ function galle() {
         if (token) {
             connectWebSocket();
         } else {
-            console.error('No se pudo iniciar el chat sin un token válido');
+            //console.error('No se pudo iniciar el chat sin un token válido');
         }
     }
 
@@ -494,7 +494,7 @@ function galle() {
             setTimeout(connectWebSocket, 5000);
         };
         ws.onerror = error => {
-            console.error('Error en WebSocket:', error);
+            //console.error('Error en WebSocket:', error);
         };
         ws.onmessage = ({data}) => {
             const message = JSON.parse(data);
@@ -522,7 +522,7 @@ function galle() {
         const receptorFinal = typeof receptor === 'string' ? receptor : typeof receptor === 'object' ? JSON.stringify(receptor) : null;
 
         if (!receptorFinal) {
-            return console.error('Formato de receptor no válido.');
+            return //console.error('Formato de receptor no válido.');
         }
 
         const messageData = {
@@ -540,7 +540,7 @@ function galle() {
             listaMensajes ||= document.querySelector('.listaMensajes');
             agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto, temp_id);
         } else {
-            console.error('enviarMensajeWs: WebSocket no conectado, mensaje no enviado.');
+            //console.error('enviarMensajeWs: WebSocket no conectado, mensaje no enviado.');
             alert('No se puede enviar el mensaje, por favor, reinicia la página.');
         }
     }
@@ -552,7 +552,7 @@ function galle() {
         if (conversacionId) {
             const bloqueChatColab = document.querySelector(`.bloqueChatColab[data-conversacion-id="${conversacionId}"]`);
             if (!bloqueChatColab) {
-                return console.warn(`No se encontró el bloqueChatColab con conversacion_id ${conversacionId}.`);
+                return //console.warn(`No se encontró el bloqueChatColab con conversacion_id ${conversacionId}.`);
             }
             listaMensajes = bloqueChatColab.querySelector('.listaMensajes');
         } else {
@@ -564,7 +564,7 @@ function galle() {
         if (mensajeElemento) {
             mensajeElemento.classList.replace('mensajePendiente', 'mensajeEnviado');
         } else {
-            console.warn(`No se encontró el mensaje con ID temporal ${message.original_message.temp_id}.`);
+            //console.warn(`No se encontró el mensaje con ID temporal ${message.original_message.temp_id}.`);
         }
     }
 
@@ -573,10 +573,10 @@ function galle() {
         const mensajeElemento = listaMensajes.querySelector(`[data-temp-id="${message.original_message.temp_id}"]`);
 
         if (mensajeElemento) {
-            console.error(`manejarError: Error en el mensaje con ID temporal ${message.original_message.temp_id}.`);
+            //console.error(`manejarError: Error en el mensaje con ID temporal ${message.original_message.temp_id}.`);
             mensajeElemento.classList.add('mensajeError');
         } else {
-            console.warn(`manejarError: No se encontró el elemento del mensaje con ID temporal ${message.original_message.temp_id}.`);
+            //console.warn(`manejarError: No se encontró el elemento del mensaje con ID temporal ${message.original_message.temp_id}.`);
         }
     }
 
@@ -638,7 +638,7 @@ function galle() {
             .map(([key]) => key);
 
         if (missingElements.length) {
-            console.warn(`Missing elements in chat container: ${missingElements.join(', ')}`);
+            //console.warn(`Missing elements in chat container: ${missingElements.join(', ')}`);
             return;
         }
 
@@ -688,7 +688,7 @@ function galle() {
                 archivoChatUrl = fileUrl;
                 subidaChatProgreso = false;
             } catch (error) {
-                console.error('Error al cargar el audio:', error);
+                //console.error('Error al cargar el audio:', error);
                 subidaChatProgreso = false;
             }
         };
@@ -714,7 +714,7 @@ function galle() {
 
                 subidaChatProgreso = false;
             } catch (error) {
-                console.error('Error al cargar la imagen:', error);
+                //console.error('Error al cargar la imagen:', error);
                 subidaChatProgreso = false;
             }
         };
@@ -741,7 +741,7 @@ function galle() {
                 archivoChatUrl = fileUrl;
                 subidaChatProgreso = false;
             } catch (error) {
-                console.error('Error al cargar el archivo:', error);
+                //console.error('Error al cargar el archivo:', error);
                 subidaChatProgreso = false;
             }
         };
@@ -866,7 +866,7 @@ function galle() {
                 currentPage++;
                 const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
                 if (!data?.success) {
-                    return console.error('Error al obtener más mensajes.');
+                    return //console.error('Error al obtener más mensajes.');
                 }
                 const mensajes = data.data.mensajes.reverse();
                 let fechaAnterior = null;
@@ -895,7 +895,7 @@ function galle() {
 
                 const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
                 if (!data?.success) {
-                    return console.error('Error al obtener más mensajes.');
+                    return //console.error('Error al obtener más mensajes.');
                 }
 
                 let mensajes = data.data.mensajes;
@@ -915,7 +915,7 @@ function galle() {
                     }
                 }
 
-                console.log('[[manejarScrollColab]] nextRemitente inicial:', nextRemitente);
+                //console.log('[[manejarScrollColab]] nextRemitente inicial:', nextRemitente);
 
                 // Guardar la posición del scroll actual antes de insertar nuevos mensajes
                 const scrollPosAntesDeInsertar = listaMensajes.scrollHeight - listaMensajes.scrollTop;
@@ -937,7 +937,7 @@ function galle() {
                     // Determinar si es un nuevo hilo comparando con el remitente del mensaje siguiente
                     const esNuevoHilo = mensaje.remitente !== mensajeSiguienteRemitente;
 
-                    console.log(`[[manejarScrollColab]] Índice: ${i} mensaje.mensaje: ${mensaje.mensaje} mensaje.remitente: ${mensaje.remitente} mensajeSiguienteRemitente: ${mensajeSiguienteRemitente} esNuevoHilo: ${esNuevoHilo}`);
+                    //console.log(`[[manejarScrollColab]] Índice: ${i} mensaje.mensaje: ${mensaje.mensaje} mensaje.remitente: ${mensaje.remitente} mensajeSiguienteRemitente: ${mensajeSiguienteRemitente} esNuevoHilo: ${esNuevoHilo}`);
 
                     const userInfo = userInfos.get(mensaje.remitente);
 
@@ -971,7 +971,7 @@ function galle() {
         const listaMensajes = contenedor ? contenedor.querySelector('.listaMensajes') : document.querySelector('.listaMensajes');
 
         if (!listaMensajes) {
-            console.error('No se encontró el contenedor de mensajes.');
+            //console.error('No se encontró el contenedor de mensajes.');
             return;
         }
         listaMensajes.innerHTML = '';
@@ -998,100 +998,81 @@ function galle() {
         });
     }
 
-    async function manejarMensajeWebSocket(data) {
+    window.manejarMensajeWebSocket = async function manejarMensajeWebSocket(data, emisor) {
         try {
-            const parsedData = JSON.parse(data);
-
-            const msgEmisor = String(parsedData.emisor);
-            const msgReceptor = parsedData.receptor;
-            const msgMensaje = parsedData.mensaje;
-            const msgConversacionId = parsedData.conversacion_id;
-            const msgAdjunto = parsedData.adjunto || null;
-            const tempId = parsedData.temp_id || null;
-
-            // ID del usuario actual
-            const currentUserId = String(emisor);
-
-            let receptorIds;
-            try {
-                // Intentar parsear msgReceptor como JSON
-                receptorIds = JSON.parse(msgReceptor);
-
-                // Asegurarse de que receptorIds es un array de strings
-                if (!Array.isArray(receptorIds)) {
-                    receptorIds = [String(receptorIds)];
-                } else {
-                    receptorIds = receptorIds.map(id => String(id));
-                }
-            } catch (e) {
-                // Si falla el parseo, asumir que es un único ID
-                receptorIds = [String(msgReceptor)];
-            }
-
-            // Verificar si el mensaje es para el usuario actual o si fue enviado por el usuario actual
-            if (receptorIds.includes(currentUserId) || msgEmisor === currentUserId) {
-                let chatWindow;
-
-                // Determinar el tipo de mensaje (grupal o individual)
-                let tipoMensaje = null;
-                if (msgConversacionId && msgConversacionId !== 'null') {
-                    // Mensaje grupal o con conversacion_id
-                    chatWindow = document.querySelector(`.bloqueChatColab[data-conversacion-id="${msgConversacionId}"]`);
-                    tipoMensaje = 'Colab';
-                } else {
-                    // Mensaje individual
-                    const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
-                    chatWindow = document.querySelector(`.bloqueChat[data-user-id="${contactoId}"]`);
-                    tipoMensaje = 'Individual';
-
-                    // Actualizar lista de conversaciones
-                    actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
-                }
-
-                if (chatWindow) {
-                    const listaMensajes = chatWindow.querySelector('.listaMensajes');
-                    const fechaActual = new Date();
-
-                    // Obtener el último mensaje para determinar isFirstMessageOfThread
-                    const mensajes = listaMensajes.querySelectorAll('.mensajeText');
-                    let prevEmisor = null;
-
-                    if (mensajes.length > 0) {
-                        const ultimoMensaje = mensajes[mensajes.length - 1];
-                        prevEmisor = ultimoMensaje.getAttribute('data-emisor');
-                    }
-
-                    const isFirstMessageOfThread = msgEmisor !== prevEmisor;
-
-                    // Obtener la información del usuario si es necesario
-                    let userInfo = null;
-                    if (isFirstMessageOfThread && msgEmisor !== currentUserId) {
-                        const userInfos = await obtenerInfoUsuarios([msgEmisor]);
-                        userInfo = userInfos.get(msgEmisor);
-                    }
-
-                    // Determinar la clase del mensaje
-                    let claseMensaje;
-                    if (msgEmisor === currentUserId) {
-                        claseMensaje = 'mensajeDerecha';
-                    } else {
-                        claseMensaje = 'mensajeIzquierda';
-                    }
-
-                    // Añadir el mensaje al chat
-                    agregarMensajeAlChat(msgMensaje, claseMensaje, fechaActual, listaMensajes, null, false, msgAdjunto, tempId, msgEmisor, isFirstMessageOfThread, userInfo, tipoMensaje);
-
-                    // Actualizar lista de conversaciones
-                    if (tipoMensaje === 'Individual') {
-                        const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
-                        actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
-                    } else {
-                        actualizarListaConversaciones(msgConversacionId, msgMensaje);
-                    }
-                }
+            const usuarioActualId = String(emisor);
+            const mensajeProcesable = procesarYValidarMensaje(data, usuarioActualId);
+            if (mensajeProcesable) {
+                await procesarMensajeRecibido(mensajeProcesable, usuarioActualId);
             }
         } catch (error) {
-            console.error('Error al manejar el mensaje de WebSocket:', error);
+            //console.error('Error al manejar el mensaje de WebSocket:', error);
+        }
+    };
+    // Función que procesa el mensaje recibido y lo muestra en la interfaz si corresponde
+    async function procesarMensajeRecibido(mensajeDatos, usuarioActualId) {
+        const {msgEmisor, msgReceptor, msgMensaje, msgConversacionId, msgAdjunto, tempId} = mensajeDatos;
+
+        let ventanaChat; // Referencia a la ventana de chat
+        let tipoMensaje = null; // Tipo de mensaje: Individual o Grup
+
+        if (msgConversacionId && msgConversacionId !== 'null') {
+            // Mensaje grupal con conversacion_id
+            ventanaChat = document.querySelector(`.bloqueChatColab[data-conversacion-id="${msgConversacionId}"]`);
+            tipoMensaje = 'Colab';
+        } else {
+            // Mensaje individual
+            const contactoId = msgEmisor === usuarioActualId ? msgReceptor : msgEmisor;
+            ventanaChat = document.querySelector(`.bloqueChat[data-user-id="${contactoId}"]`);
+            tipoMensaje = 'Individual';
+
+            // Actualizar lista de conversaciones con el último mensaje
+            actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
+        }
+
+        if (ventanaChat) {
+            // Si la ventana de chat existe, procesar el mensaje en la ventana
+            await procesarMensajeFront(ventanaChat, mensajeDatos, usuarioActualId, tipoMensaje);
+        }
+    }
+
+    // Función que agrega el mensaje al chat y actualiza la interfaz
+    async function procesarMensajeFront(ventanaChat, mensajeDatos, usuarioActualId, tipoMensaje) {
+        const {msgEmisor, msgReceptor, msgMensaje, msgConversacionId, msgAdjunto, tempId} = mensajeDatos;
+
+        const listaMensajes = ventanaChat.querySelector('.listaMensajes');
+        const fechaActual = new Date();
+
+        // Obtener el último mensaje para determinar si es un nuevo hilo
+        const mensajes = listaMensajes.querySelectorAll('.mensajeText');
+        let emisorPrevio = null;
+
+        if (mensajes.length > 0) {
+            const ultimoMensaje = mensajes[mensajes.length - 1];
+            emisorPrevio = ultimoMensaje.getAttribute('data-emisor');
+        }
+
+        const esPrimerMensajeDelHilo = msgEmisor !== emisorPrevio;
+
+        // Obtener información del usuario si es necesario
+        let infoUsuario = null;
+        if (esPrimerMensajeDelHilo && msgEmisor !== usuarioActualId) {
+            const informacionUsuarios = await obtenerInfoUsuarios([msgEmisor]);
+            infoUsuario = informacionUsuarios.get(msgEmisor);
+        }
+
+        // Determinar la clase del mensaje según el emisor
+        let claseMensaje = msgEmisor === usuarioActualId ? 'mensajeDerecha' : 'mensajeIzquierda';
+
+        // Agregar el mensaje al chat
+        agregarMensajeAlChat(msgMensaje, claseMensaje, fechaActual, listaMensajes, null, false, msgAdjunto, tempId, msgEmisor, esPrimerMensajeDelHilo, infoUsuario, tipoMensaje);
+
+        // Actualizar lista de conversaciones con el último mensaje
+        if (tipoMensaje === 'Individual') {
+            const contactoId = msgEmisor === usuarioActualId ? msgReceptor : msgEmisor;
+            actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
+        } else {
+            actualizarListaConversaciones(msgConversacionId, msgMensaje);
         }
     }
 
@@ -1115,7 +1096,7 @@ function galle() {
             tipoMensaje: tipoMensaje
         };
 
-        console.log('[[agregarMensajeAlChat]]', logInfo);
+        //console.log('[[agregarMensajeAlChat]]', logInfo);
 
         const messageBlock = crearElemento('div', 'messageBlock');
         const messageContainer = crearElemento('div', 'messageContainer');
@@ -1207,7 +1188,7 @@ function galle() {
 
     function manejarFecha(fechaMensaje, fechaAnterior, listaMensajes, insertAtTop) {
         if (!listaMensajes || !(listaMensajes instanceof Element)) {
-            console.error('listaMensajes no es un elemento DOM válido');
+            //console.error('listaMensajes no es un elemento DOM válido');
             return;
         }
 
