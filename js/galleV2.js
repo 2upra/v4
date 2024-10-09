@@ -1136,8 +1136,8 @@ function galle() {
                         console.log('actualizarListaConversaciones A2')
                         actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
                     } else {
-                        console.log('actualizarListaConversaciones A3')
-                        actualizarListaConversaciones(msgConversacionId, msgMensaje);
+                        // console.log('actualizarListaConversaciones A3')
+                        // actualizarListaConversaciones(msgConversacionId, msgMensaje);
                     }
                 }
             }
