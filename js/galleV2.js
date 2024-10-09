@@ -352,26 +352,38 @@ function galle() {
     function clickMensaje() {
         // Seleccionando todos los elementos con la clase 'mensaje'
         const mensajes = document.querySelectorAll('.mensaje');
-
+    
         console.log('Cantidad de mensajes encontrados:', mensajes.length);
-
+    
         if (mensajes.length > 0) {
-            mensajes.forEach(item => {
+            mensajes.forEach((item, index) => {
+                console.log(`Mensaje ${index}:`, item);
                 console.log('Asignando manejarClickEnConversacion a un "mensaje"');
+                // Logueando atributos del elemento
+                console.log('Atributos del mensaje:', {
+                    'data-conversacion': item.getAttribute('data-conversacion'),
+                    'data-receptor': item.getAttribute('data-receptor')
+                });
                 manejarClickEnConversacion(item);
             });
         } else {
             console.warn('No se encontraron elementos con la clase "mensaje".');
         }
-
+    
         // Seleccionando todos los elementos con la clase 'mensajeBoton'
         const botonesMensaje = document.querySelectorAll('.mensajeBoton');
-
+    
         console.log('Cantidad de botones de mensaje encontrados:', botonesMensaje.length);
-
+    
         if (botonesMensaje.length > 0) {
-            botonesMensaje.forEach(item => {
+            botonesMensaje.forEach((item, index) => {
+                console.log(`MensajeBoton ${index}:`, item);
                 console.log('Asignando manejarClickEnConversacion a un "mensajeBoton"');
+                // Logueando atributos del elemento
+                console.log('Atributos del mensajeBoton:', {
+                    'data-conversacion': item.getAttribute('data-conversacion'),
+                    'data-receptor': item.getAttribute('data-receptor')
+                });
                 manejarClickEnConversacion(item);
             });
         } else {
