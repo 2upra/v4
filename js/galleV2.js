@@ -444,11 +444,11 @@ function galle() {
         });
 
         if (!conversacionActualizada) {
-            //console.log('actualizarListaConversaciones: No se encontró la conversación, programando reinicio de chats.');
+            console.log('actualizarListaConversaciones: No se encontró la conversación, programando reinicio de chats.');
             setTimeout(() => {
-                reiniciarChats();
+                // reiniciarChats();
                 clickMensaje();
-                //console.log('actualizarListaConversaciones: Chats reiniciados.');
+                console.log('actualizarListaConversaciones: Chats reiniciados.');
             }, 1000);
         }
     }
