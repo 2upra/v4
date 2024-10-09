@@ -446,7 +446,7 @@ function galle() {
         if (!conversacionActualizada) {
             console.log('actualizarListaConversaciones: No se encontró la conversación, programando reinicio de chats.');
             setTimeout(() => {
-                // reiniciarChats();
+                reiniciarChats();
                 clickMensaje();
                 console.log('actualizarListaConversaciones: Chats reiniciados.');
             }, 1000);
@@ -1093,6 +1093,7 @@ function galle() {
                     tipoMensaje = 'Individual';
 
                     // Actualizar lista de conversaciones
+                    console.log('actualizarListaConversaciones A1')
                     actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
                 }
 
@@ -1132,8 +1133,10 @@ function galle() {
                     // Actualizar lista de conversaciones
                     if (tipoMensaje === 'Individual') {
                         const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
+                        console.log('actualizarListaConversaciones A2')
                         actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
                     } else {
+                        console.log('actualizarListaConversaciones A3')
                         actualizarListaConversaciones(msgConversacionId, msgMensaje);
                     }
                 }
