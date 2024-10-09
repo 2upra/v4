@@ -320,14 +320,32 @@ function galle() {
     }
 
     function clickMensaje() {
+        // Seleccionando todos los elementos con la clase 'mensaje'
         const mensajes = document.querySelectorAll('.mensaje');
+
+        console.log('Cantidad de mensajes encontrados:', mensajes.length); // Log para saber cuántos mensajes se encontraron
+
         if (mensajes.length > 0) {
-            mensajes.forEach(item => manejarClickEnConversacion(item));
+            mensajes.forEach(item => {
+                console.log('Asignando manejarClickEnConversacion a un "mensaje"'); // Log para cada elemento 'mensaje'
+                manejarClickEnConversacion(item);
+            });
+        } else {
+            console.warn('No se encontraron elementos con la clase "mensaje".'); // Advertencia si no hay mensajes
         }
 
+        // Seleccionando todos los elementos con la clase 'mensajeBoton'
         const botonesMensaje = document.querySelectorAll('.mensajeBoton');
+
+        console.log('Cantidad de botones de mensaje encontrados:', botonesMensaje.length); // Log para saber cuántos botones se encontraron
+
         if (botonesMensaje.length > 0) {
-            botonesMensaje.forEach(item => manejarClickEnConversacion(item));
+            botonesMensaje.forEach(item => {
+                console.log('Asignando manejarClickEnConversacion a un "mensajeBoton"'); // Log para cada elemento 'mensajeBoton'
+                manejarClickEnConversacion(item);
+            });
+        } else {
+            console.warn('No se encontraron elementos con la clase "mensajeBoton".'); // Advertencia si no hay botones de mensajes
         }
     }
 
