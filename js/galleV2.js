@@ -292,18 +292,22 @@ function galle() {
         }
     }
 
-    // Función para manejar el clic en una conversación
-    async function manejarClickEnConversacion(item) {
-        // Asignar el manejador de eventos al elemento padre
+    // Función para manejar los clics en las conversaciones utilizando delegación de eventos
+    function manejarClicksDeMensajes() {
         const listaMensajes = document.querySelector('.mensajes');
+
+        if (!listaMensajes) {
+            console.warn('No se encontró el elemento con la clase "mensajes".');
+            return;
+        }
+
         listaMensajes.addEventListener('click', async function (e) {
-            // Encontrar el elemento 'li' más cercano en el que se hizo clic
+            // Buscamos el elemento li con clase 'mensaje' más cercano al elemento clicado
             const item = e.target.closest('.mensaje');
-            if (!item) return; // Si no es un elemento 'li.mensaje', salir
+            if (!item) return; // Si el clic no fue dentro de un 'li.mensaje', salimos
 
             console.log('Click en conversación detectado vía delegación de eventos');
 
-            // Tu código aquí, usando 'item' como el elemento 'li' que se hizo clic
             let conversacion = item.getAttribute('data-conversacion');
             let receptor = item.getAttribute('data-receptor');
             let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
@@ -354,6 +358,9 @@ function galle() {
             }
         });
     }
+
+
+    manejarClicksDeMensajes();
 
     // Función para asignar el manejador de clic a los mensajes
     function clickMensaje() {
