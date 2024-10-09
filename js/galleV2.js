@@ -36,7 +36,7 @@ function galle() {
         manejarScroll();
         actualizarConexionEmisor();
         iniciarChat();
-        clickMensaje();
+        // clickMensaje();
         chatColab();
         maximizarChat();
         cerrarChat();
