@@ -1093,7 +1093,7 @@ function galle() {
                     tipoMensaje = 'Individual';
 
                     // Actualizar lista de conversaciones
-                    console.log('actualizarListaConversaciones A1')
+                    console.log('actualizarListaConversaciones A1');
                     actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
                 }
 
@@ -1133,7 +1133,7 @@ function galle() {
                     // Actualizar lista de conversaciones
                     if (tipoMensaje === 'Individual') {
                         const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
-                        console.log('actualizarListaConversaciones A2')
+                        console.log('actualizarListaConversaciones A2');
                         actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
                     } else {
                         // console.log('actualizarListaConversaciones A3')
