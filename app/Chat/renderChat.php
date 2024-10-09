@@ -314,7 +314,7 @@ function renderChat()
             <button class="cancelButton borde cancelUploadButton" id="cancelUploadButton" style="display: none;">Cancelar</button>
         </div>
 
-        <div class="chatEnvio">
+        <div class="chatEnvio individualSend">
             <textarea class="mensajeContenido" rows="1"></textarea>
             <button class="enviarMensaje"><?php echo $GLOBALS['enviarMensaje']; ?></button>
             <button class="enviarAdjunto" id="enviarAdjunto"><?php echo $GLOBALS['enviarAdjunto']; ?></button>
