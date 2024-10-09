@@ -34,11 +34,13 @@ function galle() {
 
     function init() {
         manejarScroll();
-        manejarClickEnConversacion();
         actualizarConexionEmisor();
         iniciarChat();
         clickMensaje();
-        chatColab(); // debería iniciarse de otra manera
+        chatColab();
+        maximizarChat();
+        cerrarChat();
+        minimizarChat();
     }
 
     /*
@@ -159,47 +161,6 @@ function galle() {
         });
     }
 
-    async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
-        try {
-            let data = {success: true, data: {mensajes: [], conversacion: null}};
-            currentPage = 1;
-            if (conversacion) {
-                data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
-            } else if (receptor) {
-                data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
-            }
-            if (data?.success) {
-                const bloqueChat = document.querySelector('.bloqueChat');
-                if (!bloqueChat) {
-                    console.error('No se encontró el elemento .bloqueChat en el DOM.');
-                    return;
-                }
-
-                // Adjusted the call to pass the correct chat container element
-                subidaArchivosChat(bloqueChat);
-                msSetup(bloqueChat);
-                mostrarMensajes(data.data.mensajes, bloqueChat);
-                bloqueChat.setAttribute('data-user-id', receptor);
-                bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
-                bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
-                bloqueChat.style.display = 'block';
-                manejarScroll(data.data.conversacion, bloqueChat);
-
-                const listaMensajes = bloqueChat.querySelector('.listaMensajes');
-                if (listaMensajes) {
-                    listaMensajes.scrollTop = listaMensajes.scrollHeight;
-                }
-
-                await actualizarEstadoConexion(receptor, bloqueChat);
-                setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
-            } else {
-                alert(data.message || 'Error desconocido al obtener los mensajes.');
-            }
-        } catch (error) {
-            alert('Ha ocurrido un error al intentar abrir la conversación.');
-        }
-    }
-
     async function cerrarChat() {
         try {
             const bloqueChat = document.querySelector('.bloqueChat');
@@ -268,23 +229,69 @@ function galle() {
         }
     }
 
-    maximizarChat();
-    cerrarChat();
-    minimizarChat();
+    async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
+        try {
+            let data = {success: true, data: {mensajes: [], conversacion: null}};
+            currentPage = 1;
+            if (conversacion) {
+                data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
+            } else if (receptor) {
+                data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
+            }
+            if (data?.success) {
+                const bloqueChat = document.querySelector('.bloqueChat');
+                if (!bloqueChat) {
+                    console.error('No se encontró el elemento .bloqueChat en el DOM.');
+                    return;
+                }
+
+                // Adjusted the call to pass the correct chat container element
+                subidaArchivosChat(bloqueChat);
+                msSetup(bloqueChat);
+                mostrarMensajes(data.data.mensajes, bloqueChat);
+                bloqueChat.setAttribute('data-user-id', receptor);
+                bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
+                bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
+                bloqueChat.style.display = 'block';
+                manejarScroll(data.data.conversacion, bloqueChat);
+
+                const listaMensajes = bloqueChat.querySelector('.listaMensajes');
+                if (listaMensajes) {
+                    listaMensajes.scrollTop = listaMensajes.scrollHeight;
+                }
+
+                await actualizarEstadoConexion(receptor, bloqueChat);
+                setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
+            } else {
+                alert(data.message || 'Error desconocido al obtener los mensajes.');
+            }
+        } catch (error) {
+            alert('Ha ocurrido un error al intentar abrir la conversación.');
+        }
+    }
 
     async function manejarClickEnConversacion(item) {
         item.addEventListener('click', async () => {
+            console.log('Click en conversación detectado'); // Registro inicial del click
+
             let conversacion = item.getAttribute('data-conversacion');
             receptor = item.getAttribute('data-receptor');
             let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
             let nombreUsuario = item.querySelector('.nombreUsuario strong')?.textContent || null;
 
+            console.log('Datos obtenidos del elemento:', {conversacion, receptor, imagenPerfil, nombreUsuario});
+
             if (!imagenPerfil || !nombreUsuario) {
+                console.log('No se encontró imagen o nombre de usuario, obteniendo datos desde el servidor...');
+
                 try {
                     const data = await enviarAjax('infoUsuario', {receptor});
+                    console.log('Respuesta del servidor:', data);
+
                     if (data?.success) {
                         imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
                         nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido'; // Nombre por defecto si no se encuentra
+                        console.log('Datos actualizados:', {imagenPerfil, nombreUsuario});
                     } else {
                         console.error('Error del servidor:', data.message);
                         alert(data.message || 'Error al obtener la información del usuario.');
@@ -298,12 +305,17 @@ function galle() {
             }
 
             // Abrir la conversación
-            abrirConversacion({
-                conversacion: conversacion || null,
-                receptor,
-                imagenPerfil,
-                nombreUsuario
-            });
+            try {
+                console.log('Abriendo conversación con:', {conversacion, receptor, imagenPerfil, nombreUsuario});
+                abrirConversacion({
+                    conversacion: conversacion || null,
+                    receptor,
+                    imagenPerfil,
+                    nombreUsuario
+                });
+            } catch (error) {
+                console.error('Error al abrir la conversación:', error);
+            }
         });
     }
 
