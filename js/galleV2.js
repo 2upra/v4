@@ -232,104 +232,71 @@ function galle() {
 
     async function abrirConversacion({ conversacion, receptor, imagenPerfil, nombreUsuario }) {
         try {
-            console.log('abrirConversacion - Inicio', { conversacion, receptor, imagenPerfil, nombreUsuario });
             let data = { success: true, data: { mensajes: [], conversacion: null } };
-            let currentPage = 1;
-    
+            currentPage = 1;
             if (conversacion) {
-                console.log('Obteniendo chat por conversacion:', conversacion);
                 data = await enviarAjax('obtenerChat', { conversacion, page: currentPage });
             } else if (receptor) {
-                console.log('Obteniendo chat por receptor:', receptor);
                 data = await enviarAjax('obtenerChat', { receptor, page: currentPage });
-            } else {
-                console.warn('Ni conversacion ni receptor fueron proporcionados.');
             }
-    
-            console.log('Datos recibidos:', data);
-    
             if (data?.success) {
                 const bloqueChat = document.querySelector('.bloqueChat');
                 if (!bloqueChat) {
-                    console.error('No se encontró el elemento .bloqueChat en el DOM.');
+                    //console.error('No se encontró el elemento .bloqueChat en el DOM.');
                     return;
                 }
     
-                console.log('Elemento bloqueChat encontrado:', bloqueChat);
-    
-                // Ajuste de llamadas con el elemento correcto del contenedor de chat
+                // Adjusted the call to pass the correct chat container element
                 subidaArchivosChat(bloqueChat);
                 msSetup(bloqueChat);
                 mostrarMensajes(data.data.mensajes, bloqueChat);
-    
                 bloqueChat.setAttribute('data-user-id', receptor);
                 bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                 bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
                 bloqueChat.style.display = 'block';
-    
-                console.log('Configuración del bloque de chat completada.');
-    
                 manejarScroll(data.data.conversacion, bloqueChat);
-                console.log('Scroll manejado.');
     
                 const listaMensajes = bloqueChat.querySelector('.listaMensajes');
                 if (listaMensajes) {
                     listaMensajes.scrollTop = listaMensajes.scrollHeight;
-                    console.log('Scroll ajustado al final de listaMensajes.');
-                } else {
-                    console.warn('No se encontró el elemento .listaMensajes dentro de bloqueChat.');
                 }
     
                 await actualizarEstadoConexion(receptor, bloqueChat);
-                console.log('Estado de conexión actualizado para el receptor:', receptor);
-    
-                setInterval(() => {
-                    console.log('Actualizando estado de conexión en intervalo para el receptor:', receptor);
-                    actualizarEstadoConexion(receptor, bloqueChat);
-                }, 30000);
+                setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
             } else {
-                console.error('Error al obtener mensajes:', data.message || 'Error desconocido');
                 alert(data.message || 'Error desconocido al obtener los mensajes.');
             }
         } catch (error) {
-            console.error('Error en abrirConversacion:', error);
             alert('Ha ocurrido un error al intentar abrir la conversación.');
         }
     }
-    
+
     async function manejarClickEnConversacion(item) {
-        console.log('Configurando evento click para el item:', item);
         item.addEventListener('click', async () => {
-            console.log('Click en item:', item);
             let conversacion = item.getAttribute('data-conversacion');
-            let receptor = item.getAttribute('data-receptor');
+            receptor = item.getAttribute('data-receptor');
             let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
             let nombreUsuario = item.querySelector('.nombreUsuario strong')?.textContent || null;
-    
-            console.log('Datos extraídos:', { conversacion, receptor, imagenPerfil, nombreUsuario });
-    
+
             if (!imagenPerfil || !nombreUsuario) {
-                console.log('imagenPerfil o nombreUsuario no encontrados, solicitando infoUsuario...');
                 try {
-                    const data = await enviarAjax('infoUsuario', { receptor });
-                    console.log('Datos recibidos de infoUsuario:', data);
+                    const data = await enviarAjax('infoUsuario', {receptor});
                     if (data?.success) {
                         imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
-                        nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido';
+                        nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido'; // Nombre por defecto si no se encuentra
                     } else {
-                        console.error('Error del servidor:', data.message);
+                        //console.error('Error del servidor:', data.message);
                         alert(data.message || 'Error al obtener la información del usuario.');
                         return;
                     }
                 } catch (error) {
-                    console.error('Error de conexión al obtener infoUsuario:', error);
+                    //console.error('Error de conexión:', error);
                     alert('Error al intentar obtener la información del usuario.');
                     return;
                 }
             }
-    
+
             // Abrir la conversación
-            console.log('Abriendo conversación con:', { conversacion, receptor, imagenPerfil, nombreUsuario });
             abrirConversacion({
                 conversacion: conversacion || null,
                 receptor,
@@ -338,30 +305,16 @@ function galle() {
             });
         });
     }
-    
+
     function clickMensaje() {
         const mensajes = document.querySelectorAll('.mensaje');
-        console.log('Elementos .mensaje encontrados:', mensajes.length);
-    
         if (mensajes.length > 0) {
-            mensajes.forEach(item => {
-                console.log('Configurando manejarClickEnConversacion para mensaje:', item);
-                manejarClickEnConversacion(item);
-            });
-        } else {
-            console.warn('No se encontraron elementos con la clase .mensaje.');
+            mensajes.forEach(item => manejarClickEnConversacion(item));
         }
-    
+
         const botonesMensaje = document.querySelectorAll('.mensajeBoton');
-        console.log('Elementos .mensajeBoton encontrados:', botonesMensaje.length);
-    
         if (botonesMensaje.length > 0) {
-            botonesMensaje.forEach(item => {
-                console.log('Configurando manejarClickEnConversacion para mensajeBoton:', item);
-                manejarClickEnConversacion(item);
-            });
-        } else {
-            console.warn('No se encontraron elementos con la clase .mensajeBoton.');
+            botonesMensaje.forEach(item => manejarClickEnConversacion(item));
         }
     }
 
@@ -444,11 +397,10 @@ function galle() {
         });
 
         if (!conversacionActualizada) {
-            console.log('actualizarListaConversaciones: No se encontró la conversación, programando reinicio de chats.');
+            //console.log('actualizarListaConversaciones: No se encontró la conversación, programando reinicio de chats.');
             setTimeout(() => {
                 reiniciarChats();
-                clickMensaje();
-                console.log('actualizarListaConversaciones: Chats reiniciados.');
+                //console.log('actualizarListaConversaciones: Chats reiniciados.');
             }, 1000);
         }
     }
@@ -1093,7 +1045,6 @@ function galle() {
                     tipoMensaje = 'Individual';
 
                     // Actualizar lista de conversaciones
-                    console.log('actualizarListaConversaciones A1');
                     actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
                 }
 
@@ -1133,11 +1084,9 @@ function galle() {
                     // Actualizar lista de conversaciones
                     if (tipoMensaje === 'Individual') {
                         const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
-                        console.log('actualizarListaConversaciones A2');
                         actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
                     } else {
-                        // console.log('actualizarListaConversaciones A3')
-                        // actualizarListaConversaciones(msgConversacionId, msgMensaje);
+                        //actualizarListaConversaciones(msgConversacionId, msgMensaje);
                     }
                 }
             }
