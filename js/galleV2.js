@@ -990,6 +990,23 @@ function galle() {
             const isFirstMessageOfThread = mensaje.remitente !== prevEmisor;
             prevEmisor = mensaje.remitente;
 
+            const logInfo = {
+                msg: mensaje.mensaje,                // Contenido del mensaje
+                cls: mensaje.clase,                   // Clase CSS del mensaje
+                date: mensaje.fecha,                  // Fecha y hora del mensaje
+                lista: 'listaMensajes',               // Referencia al contenedor de mensajes
+                prevDate: fechaAnterior ? fechaAnterior.toISOString() : 'null', // Fecha del mensaje anterior
+                top: false,                           // Indica si se inserta al inicio (false en este caso)
+                adj: mensaje.adjunto ? 'si' : 'no',   // Indica si hay adjunto
+                tempId: null,                         // ID temporal (null en este caso)
+                emisor: mensaje.remitente,            // Remitente del mensaje
+                primerHilo: isFirstMessageOfThread,    // Si es el primer mensaje de un hilo
+                usuario: userInfo ? userInfo.id : 'desconocido', // ID del usuario o 'desconocido'
+                tipo: tipoMensaje || 'indefinido',     // Tipo de mensaje
+                leido: mensaje.leido     // Estado de lectura
+            };
+            console.log('[[mostrarMensajes]] - Enviando a agregarMensajeAlChat', logInfo);
+
             const userInfo = userInfos.get(mensaje.remitente);
             agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, null, mensaje.remitente, isFirstMessageOfThread, userInfo, tipoMensaje, mensaje.leido);
 
