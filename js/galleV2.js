@@ -34,6 +34,7 @@ function galle() {
 
     function init() {
         manejarScroll();
+        manejarClickEnConversacion();
         actualizarConexionEmisor();
         iniciarChat();
         clickMensaje();
