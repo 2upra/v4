@@ -237,7 +237,7 @@ function obtenerChat()
     $tablaMensajes = $wpdb->prefix . 'mensajes';
     $offset = ($page - 1) * $mensajesPorPagina;
     $query = $wpdb->prepare("
-        SELECT mensaje, emisor AS remitente, fecha, adjunto
+        SELECT mensaje, emisor AS remitente, fecha, adjunto, id, leido, metadata
         FROM $tablaMensajes
         WHERE conversacion = %d
         ORDER BY fecha DESC
