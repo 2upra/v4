@@ -993,7 +993,7 @@ function galle() {
             prevEmisor = mensaje.remitente;
 
             const userInfo = userInfos.get(mensaje.remitente);
-            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, null, mensaje.remitente, isFirstMessageOfThread, userInfo, tipoMensaje);
+            agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, null, mensaje.remitente, isFirstMessageOfThread, userInfo, tipoMensaje, mensaje.leido);
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
@@ -1098,7 +1098,7 @@ function galle() {
         }
     }
 
-    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null, tipoMensaje = null) {
+    function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null, tipoMensaje = null, mensajeLeido = false) {
         const fechaMensaje = new Date(fecha);
         fechaAnterior = fechaAnterior || obtenerFechaAnterior(listaMensajes, insertAtTop);
 
@@ -1126,7 +1126,8 @@ function galle() {
         const mensajeElem = crearElemento('div', ['mensajeText', clase], {
             'data-fecha': fechaMensaje.toISOString(),
             'data-emisor': msgEmisor || undefined,
-            'data-temp-id': temp_id || undefined
+            'data-temp-id': temp_id || undefined,
+            'data-leido': mensajeLeido || undefined,
         });
 
         if (temp_id) mensajeElem.classList.add('mensajePendiente');

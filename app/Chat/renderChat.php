@@ -153,7 +153,7 @@ function obtenerChatColab()
     chatLog('Consultando mensajes con offset: ' . $offset);
 
     $query = $wpdb->prepare("
-        SELECT mensaje, emisor AS remitente, fecha, adjunto
+        SELECT id, mensaje, emisor AS remitente, fecha, adjunto, metadata, leido
         FROM $tablaMensajes
         WHERE conversacion = %d
         ORDER BY fecha DESC
@@ -270,11 +270,6 @@ function obtenerChat()
 add_action('wp_ajax_obtenerChat', 'obtenerChat');
 
 
-/* en mi logica necesito que las ventanas al abrirse, tengan un data user id de quien corresponde chatWindow = document.querySelector(`.bloqueChat[data-user-id="${contactoId}"]`);
-const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
-console.log(`Buscando ventana de chat con data-user-id="${contactoId}"`);
-
-*/
 
 function renderChat()
 {
