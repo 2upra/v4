@@ -992,7 +992,7 @@ function galle() {
 
             // Aquí añadimos el console.log con un resumen de los datos
             const userInfo = userInfos.get(mensaje.remitente);
-            console.log('Enviando a agregarMensajeAlChat:', {
+            /* console.log('Enviando a agregarMensajeAlChat:', {
                 mensaje: mensaje.mensaje,
                 clase: mensaje.clase,
                 fecha: mensaje.fecha,
@@ -1003,7 +1003,7 @@ function galle() {
                 userInfo,
                 tipoMensaje,
                 leido: mensaje.leido
-            });
+            }); */
 
             agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, null, mensaje.remitente, isFirstMessageOfThread, userInfo, tipoMensaje, mensaje.leido);
 
@@ -1020,6 +1020,7 @@ function galle() {
             const msgConversacionId = parsedData.conversacion_id;
             const msgAdjunto = parsedData.adjunto || null;
             const tempId = parsedData.temp_id || null;
+            const leido = 0;
 
             // ID del usuario actual
             const currentUserId = String(emisor);
@@ -1092,7 +1093,7 @@ function galle() {
                     }
 
                     // Añadir el mensaje al chat
-                    agregarMensajeAlChat(msgMensaje, claseMensaje, fechaActual, listaMensajes, null, false, msgAdjunto, tempId, msgEmisor, isFirstMessageOfThread, userInfo, tipoMensaje);
+                    agregarMensajeAlChat(msgMensaje, claseMensaje, fechaActual, listaMensajes, null, false, msgAdjunto, tempId, msgEmisor, isFirstMessageOfThread, userInfo, tipoMensaje, leido);
                     console.log(`A2: Mensaje agregado: ${msgMensaje} por ${msgEmisor}`);
 
                     // Actualizar lista de conversaciones
@@ -1122,7 +1123,7 @@ function galle() {
         const messageBlock = crearElemento('div', 'messageBlock');
         const messageContainer = crearElemento('div', 'messageContainer');
 
-        const logInfo = {
+        /* const logInfo = {
             msg: mensajeTexto, // mensajeTexto: "Esto es un mensaje de ejemplo"
             cls: clase, // clase: "mensaje-clase"
             date: fecha, // fecha: "2023-10-05T14:48:00.000Z"
@@ -1138,7 +1139,7 @@ function galle() {
             leido: mensajeLeido // mensajeLeido: false
         };
 
-        console.log('[[agregarMensajeAlChat]]', logInfo);
+        console.log('[[agregarMensajeAlChat]]', logInfo);*/
 
         const mensajeElem = crearElemento('div', ['mensajeText', clase], {
             'data-fecha': fechaMensaje.toISOString(),
