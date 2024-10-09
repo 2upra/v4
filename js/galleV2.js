@@ -126,7 +126,7 @@ function galle() {
 
     async function chatColab() {
         const chatColabElements = document.querySelectorAll('.bloqueChatColab');
-    
+
         chatColabElements.forEach(async chatColabElement => {
             const postId = chatColabElement.dataset.postId;
             if (!postId) {
@@ -134,10 +134,10 @@ function galle() {
                 return;
             }
             currentPage = 1;
-    
+
             try {
-                const data = await enviarAjax('obtenerChatColab', { colab_id: postId, page: currentPage });
-    
+                const data = await enviarAjax('obtenerChatColab', {colab_id: postId, page: currentPage});
+
                 if (data?.success) {
                     //console.log('Mensaje completo:', data);
                     const tipoMensaje = 'Colab';
@@ -230,14 +230,14 @@ function galle() {
     cerrarChat();
     minimizarChat();
 
-    async function abrirConversacion({ conversacion, receptor, imagenPerfil, nombreUsuario }) {
+    async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
         try {
-            let data = { success: true, data: { mensajes: [], conversacion: null } };
+            let data = {success: true, data: {mensajes: [], conversacion: null}};
             currentPage = 1;
             if (conversacion) {
-                data = await enviarAjax('obtenerChat', { conversacion, page: currentPage });
+                data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
             } else if (receptor) {
-                data = await enviarAjax('obtenerChat', { receptor, page: currentPage });
+                data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
             }
             if (data?.success) {
                 const bloqueChat = document.querySelector('.bloqueChat');
@@ -245,7 +245,7 @@ function galle() {
                     //console.error('No se encontró el elemento .bloqueChat en el DOM.');
                     return;
                 }
-    
+
                 // Adjusted the call to pass the correct chat container element
                 subidaArchivosChat(bloqueChat);
                 msSetup(bloqueChat);
@@ -255,12 +255,12 @@ function galle() {
                 bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
                 bloqueChat.style.display = 'block';
                 manejarScroll(data.data.conversacion, bloqueChat);
-    
+
                 const listaMensajes = bloqueChat.querySelector('.listaMensajes');
                 if (listaMensajes) {
                     listaMensajes.scrollTop = listaMensajes.scrollHeight;
                 }
-    
+
                 await actualizarEstadoConexion(receptor, bloqueChat);
                 setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
             } else {
@@ -522,7 +522,7 @@ function galle() {
         const receptorFinal = typeof receptor === 'string' ? receptor : typeof receptor === 'object' ? JSON.stringify(receptor) : null;
 
         if (!receptorFinal) {
-            return //console.error('Formato de receptor no válido.');
+            return; //console.error('Formato de receptor no válido.');
         }
 
         const messageData = {
@@ -552,7 +552,7 @@ function galle() {
         if (conversacionId) {
             const bloqueChatColab = document.querySelector(`.bloqueChatColab[data-conversacion-id="${conversacionId}"]`);
             if (!bloqueChatColab) {
-                return //console.warn(`No se encontró el bloqueChatColab con conversacion_id ${conversacionId}.`);
+                return; //console.warn(`No se encontró el bloqueChatColab con conversacion_id ${conversacionId}.`);
             }
             listaMensajes = bloqueChatColab.querySelector('.listaMensajes');
         } else {
@@ -588,7 +588,6 @@ function galle() {
                 enviarMensaje();
             }
         });
- 
 
         const mensajeInput = document.querySelector('.mensajeContenido');
         mensajeInput.addEventListener('keydown', event => {
@@ -613,13 +612,12 @@ function galle() {
         }
     }
 
-
     function ocultarPreviews(chatContainer) {
         const previewChatAudio = chatContainer.querySelector('.previewChatAudio');
         const previewChatImagen = chatContainer.querySelector('.previewChatImagen');
         const previewChatArchivo = chatContainer.querySelector('.previewChatArchivo');
         const cancelUploadButton = chatContainer.querySelector('.cancelUploadButton');
-    
+
         if (previewChatAudio) previewChatAudio.style.display = 'none';
         if (previewChatImagen) previewChatImagen.style.display = 'none';
         if (previewChatArchivo) previewChatArchivo.style.display = 'none';
@@ -866,7 +864,7 @@ function galle() {
                 currentPage++;
                 const data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
                 if (!data?.success) {
-                    return //console.error('Error al obtener más mensajes.');
+                    return; //console.error('Error al obtener más mensajes.');
                 }
                 const mensajes = data.data.mensajes.reverse();
                 let fechaAnterior = null;
@@ -895,7 +893,7 @@ function galle() {
 
                 const data = await enviarAjax('obtenerChatColab', {conversacion_id, page: currentPage});
                 if (!data?.success) {
-                    return //console.error('Error al obtener más mensajes.');
+                    return; //console.error('Error al obtener más mensajes.');
                 }
 
                 let mensajes = data.data.mensajes;
@@ -1002,22 +1000,22 @@ function galle() {
     async function manejarMensajeWebSocket(data) {
         try {
             const parsedData = JSON.parse(data);
-    
+
             const msgEmisor = String(parsedData.emisor);
             const msgReceptor = parsedData.receptor;
             const msgMensaje = parsedData.mensaje;
             const msgConversacionId = parsedData.conversacion_id;
             const msgAdjunto = parsedData.adjunto || null;
             const tempId = parsedData.temp_id || null;
-    
+
             // ID del usuario actual
             const currentUserId = String(emisor);
-    
+
             let receptorIds;
             try {
                 // Intentar parsear msgReceptor como JSON
                 receptorIds = JSON.parse(msgReceptor);
-    
+
                 // Asegurarse de que receptorIds es un array de strings
                 if (!Array.isArray(receptorIds)) {
                     receptorIds = [String(receptorIds)];
@@ -1028,11 +1026,11 @@ function galle() {
                 // Si falla el parseo, asumir que es un único ID
                 receptorIds = [String(msgReceptor)];
             }
-    
+
             // Verificar si el mensaje es para el usuario actual o si fue enviado por el usuario actual
             if (receptorIds.includes(currentUserId) || msgEmisor === currentUserId) {
                 let chatWindow;
-    
+
                 // Determinar el tipo de mensaje (grupal o individual)
                 let tipoMensaje = null;
                 if (msgConversacionId && msgConversacionId !== 'null') {
@@ -1044,34 +1042,34 @@ function galle() {
                     const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
                     chatWindow = document.querySelector(`.bloqueChat[data-user-id="${contactoId}"]`);
                     tipoMensaje = 'Individual';
-    
+
                     // Actualizar lista de conversaciones
                     actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
                     console.log(`A1: Lista de conversaciones actualizada para ${contactoId}: ${msgMensaje}`);
                 }
-    
+
                 if (chatWindow) {
                     const listaMensajes = chatWindow.querySelector('.listaMensajes');
                     const fechaActual = new Date();
-    
+
                     // Obtener el último mensaje para determinar isFirstMessageOfThread
                     const mensajes = listaMensajes.querySelectorAll('.mensajeText');
                     let prevEmisor = null;
-    
+
                     if (mensajes.length > 0) {
                         const ultimoMensaje = mensajes[mensajes.length - 1];
                         prevEmisor = ultimoMensaje.getAttribute('data-emisor');
                     }
-    
+
                     const isFirstMessageOfThread = msgEmisor !== prevEmisor;
-    
+
                     // Obtener la información del usuario si es necesario
                     let userInfo = null;
                     if (isFirstMessageOfThread && msgEmisor !== currentUserId) {
                         const userInfos = await obtenerInfoUsuarios([msgEmisor]);
                         userInfo = userInfos.get(msgEmisor);
                     }
-    
+
                     // Determinar la clase del mensaje
                     let claseMensaje;
                     if (msgEmisor === currentUserId) {
@@ -1079,11 +1077,11 @@ function galle() {
                     } else {
                         claseMensaje = 'mensajeIzquierda';
                     }
-    
+
                     // Añadir el mensaje al chat
                     agregarMensajeAlChat(msgMensaje, claseMensaje, fechaActual, listaMensajes, null, false, msgAdjunto, tempId, msgEmisor, isFirstMessageOfThread, userInfo, tipoMensaje);
                     console.log(`A2: Mensaje agregado: ${msgMensaje} por ${msgEmisor}`);
-    
+
                     // Actualizar lista de conversaciones
                     if (tipoMensaje === 'Individual') {
                         const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
@@ -1108,24 +1106,32 @@ function galle() {
         const esUsuarioActual = msgEmisor === emisor;
         const esColabPrimerMensaje = tipoMensaje === 'Colab' && isFirstMessageOfThread && userInfo && !esUsuarioActual;
 
-        // Crear un objeto para contener toda la información del log
+        const messageBlock = crearElemento('div', 'messageBlock');
+        const messageContainer = crearElemento('div', 'messageContainer');
+
         const logInfo = {
-            mensajeTexto: mensajeTexto,
-            msgEmisor: msgEmisor,
-            tipoMensaje: tipoMensaje,
-            mensajeLeido: mensajeLeido
+            msg: mensajeTexto, // mensajeTexto: "Esto es un mensaje de ejemplo"
+            cls: clase, // clase: "mensaje-clase"
+            date: fecha, // fecha: "2023-10-05T14:48:00.000Z"
+            lista: listaMensajes, // listaMensajes: Elemento del DOM
+            prevDate: fechaAnterior, // fechaAnterior: "2023-10-04T10:30:00.000Z"
+            top: insertAtTop, // insertAtTop: false
+            adj: adjunto, // adjunto: "archivo.pdf"
+            tempId: temp_id, // temp_id: "temp12345"
+            emisor: msgEmisor, // msgEmisor: "usuario123"
+            primerHilo: isFirstMessageOfThread, // isFirstMessageOfThread: true
+            usuario: userInfo, // userInfo: { nombre: "Juan", id: "juan123" }
+            tipo: tipoMensaje, // tipoMensaje: "Texto"
+            leido: mensajeLeido // mensajeLeido: false
         };
 
         console.log('[[agregarMensajeAlChat]]', logInfo);
-
-        const messageBlock = crearElemento('div', 'messageBlock');
-        const messageContainer = crearElemento('div', 'messageContainer');
 
         const mensajeElem = crearElemento('div', ['mensajeText', clase], {
             'data-fecha': fechaMensaje.toISOString(),
             'data-emisor': msgEmisor || undefined,
             'data-temp-id': temp_id || undefined,
-            'data-leido': mensajeLeido || undefined,
+            'data-leido': mensajeLeido || undefined
         });
 
         if (temp_id) mensajeElem.classList.add('mensajePendiente');
@@ -1161,7 +1167,6 @@ function galle() {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
         }
     }
-
 
     function msColabSetup(chatColabElement) {
         document.addEventListener('click', event => {
