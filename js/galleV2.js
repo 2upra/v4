@@ -994,6 +994,7 @@ function galle() {
 
             const userInfo = userInfos.get(mensaje.remitente);
             agregarMensajeAlChat(mensaje.mensaje, mensaje.clase, mensaje.fecha, listaMensajes, fechaAnterior, false, mensaje.adjunto, null, mensaje.remitente, isFirstMessageOfThread, userInfo, tipoMensaje, mensaje.leido);
+
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
@@ -1111,15 +1112,11 @@ function galle() {
         const logInfo = {
             mensajeTexto: mensajeTexto,
             msgEmisor: msgEmisor,
-            emisorActual: emisor,
-            isFirstMessageOfThread: isFirstMessageOfThread,
-            esUsuarioActual: esUsuarioActual,
-            esColabPrimerMensaje: esColabPrimerMensaje,
-            tipoMensaje: tipoMensaje
+            tipoMensaje: tipoMensaje,
+            mensajeLeido: mensajeLeido
         };
 
-        //console.log('[[agregarMensajeAlChat]]', logInfo);
-        console.log(mensajeLeido);
+        console.log('[[agregarMensajeAlChat]]', logInfo);
 
         const messageBlock = crearElemento('div', 'messageBlock');
         const messageContainer = crearElemento('div', 'messageContainer');
@@ -1164,6 +1161,7 @@ function galle() {
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
         }
     }
+
 
     function msColabSetup(chatColabElement) {
         document.addEventListener('click', event => {
