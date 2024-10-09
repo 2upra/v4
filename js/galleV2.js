@@ -229,15 +229,27 @@ function galle() {
         }
     }
 
+    // Función para abrir la conversación
     async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
         try {
+            console.log('Iniciando abrirConversacion con parámetros:', {conversacion, receptor, imagenPerfil, nombreUsuario});
             let data = {success: true, data: {mensajes: [], conversacion: null}};
             currentPage = 1;
+
             if (conversacion) {
+                console.log('Obteniendo chat por conversacion ID:', conversacion, 'página:', currentPage);
                 data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
             } else if (receptor) {
+                console.log('Obteniendo chat por receptor ID:', receptor, 'página:', currentPage);
                 data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
+            } else {
+                console.error('No se proporcionó ni conversacion ni receptor.');
+                alert('Error: No se pudo determinar la conversación o el receptor.');
+                return;
             }
+
+            console.log('Respuesta de obtenerChat:', data);
+
             if (data?.success) {
                 const bloqueChat = document.querySelector('.bloqueChat');
                 if (!bloqueChat) {
@@ -245,37 +257,48 @@ function galle() {
                     return;
                 }
 
-                // Adjusted the call to pass the correct chat container element
+                // Inicializar funcionalidades del chat
                 subidaArchivosChat(bloqueChat);
                 msSetup(bloqueChat);
+
+                console.log('Mostrando mensajes:', data.data.mensajes);
                 mostrarMensajes(data.data.mensajes, bloqueChat);
+
+                // Actualizar información del chat
                 bloqueChat.setAttribute('data-user-id', receptor);
                 bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                 bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
                 bloqueChat.style.display = 'block';
+
                 manejarScroll(data.data.conversacion, bloqueChat);
 
                 const listaMensajes = bloqueChat.querySelector('.listaMensajes');
                 if (listaMensajes) {
                     listaMensajes.scrollTop = listaMensajes.scrollHeight;
+                } else {
+                    console.error('No se encontró el elemento .listaMensajes dentro de .bloqueChat.');
                 }
 
+                // Actualizar estado de conexión
                 await actualizarEstadoConexion(receptor, bloqueChat);
                 setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
             } else {
+                console.error('Error al obtener los mensajes:', data.message);
                 alert(data.message || 'Error desconocido al obtener los mensajes.');
             }
         } catch (error) {
+            console.error('Ha ocurrido un error en abrirConversacion:', error);
             alert('Ha ocurrido un error al intentar abrir la conversación.');
         }
     }
 
+    // Función para manejar el clic en una conversación
     async function manejarClickEnConversacion(item) {
         item.addEventListener('click', async () => {
-            console.log('Click en conversación detectado'); // Registro inicial del click
+            console.log('Click en conversación detectado');
 
             let conversacion = item.getAttribute('data-conversacion');
-            receptor = item.getAttribute('data-receptor');
+            let receptor = item.getAttribute('data-receptor');
             let imagenPerfil = item.querySelector('.imagenMensaje img')?.src || null;
             let nombreUsuario = item.querySelector('.nombreUsuario strong')?.textContent || null;
 
@@ -290,7 +313,7 @@ function galle() {
 
                     if (data?.success) {
                         imagenPerfil = data.data.imagenPerfil || 'https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&strip=all';
-                        nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido'; // Nombre por defecto si no se encuentra
+                        nombreUsuario = data.data.nombreUsuario || 'Usuario Desconocido';
                         console.log('Datos actualizados:', {imagenPerfil, nombreUsuario});
                     } else {
                         console.error('Error del servidor:', data.message);
@@ -304,10 +327,16 @@ function galle() {
                 }
             }
 
+            if (!receptor) {
+                console.error('El receptor no está definido.');
+                alert('Error: No se pudo determinar el receptor de la conversación.');
+                return;
+            }
+
             // Abrir la conversación
             try {
                 console.log('Abriendo conversación con:', {conversacion, receptor, imagenPerfil, nombreUsuario});
-                abrirConversacion({
+                await abrirConversacion({
                     conversacion: conversacion || null,
                     receptor,
                     imagenPerfil,
@@ -319,33 +348,34 @@ function galle() {
         });
     }
 
+    // Función para asignar el manejador de clic a los mensajes
     function clickMensaje() {
         // Seleccionando todos los elementos con la clase 'mensaje'
         const mensajes = document.querySelectorAll('.mensaje');
 
-        console.log('Cantidad de mensajes encontrados:', mensajes.length); // Log para saber cuántos mensajes se encontraron
+        console.log('Cantidad de mensajes encontrados:', mensajes.length);
 
         if (mensajes.length > 0) {
             mensajes.forEach(item => {
-                console.log('Asignando manejarClickEnConversacion a un "mensaje"'); // Log para cada elemento 'mensaje'
+                console.log('Asignando manejarClickEnConversacion a un "mensaje"');
                 manejarClickEnConversacion(item);
             });
         } else {
-            console.warn('No se encontraron elementos con la clase "mensaje".'); // Advertencia si no hay mensajes
+            console.warn('No se encontraron elementos con la clase "mensaje".');
         }
 
         // Seleccionando todos los elementos con la clase 'mensajeBoton'
         const botonesMensaje = document.querySelectorAll('.mensajeBoton');
 
-        console.log('Cantidad de botones de mensaje encontrados:', botonesMensaje.length); // Log para saber cuántos botones se encontraron
+        console.log('Cantidad de botones de mensaje encontrados:', botonesMensaje.length);
 
         if (botonesMensaje.length > 0) {
             botonesMensaje.forEach(item => {
-                console.log('Asignando manejarClickEnConversacion a un "mensajeBoton"'); // Log para cada elemento 'mensajeBoton'
+                console.log('Asignando manejarClickEnConversacion a un "mensajeBoton"');
                 manejarClickEnConversacion(item);
             });
         } else {
-            console.warn('No se encontraron elementos con la clase "mensajeBoton".'); // Advertencia si no hay botones de mensajes
+            console.warn('No se encontraron elementos con la clase "mensajeBoton".');
         }
     }
 
