@@ -11,11 +11,14 @@ function reiniciarChats()
     exit;
 }
 
+
+
 function conversacionesUsuario($usuarioId)
 {
     $conversaciones = obtenerChats($usuarioId);
     return renderListaChats($conversaciones, $usuarioId);
 }
+
 
 function obtenerChats($usuarioId, $pagina = 1, $resultadosPorPagina = 10)
 {
@@ -37,9 +40,9 @@ function obtenerChats($usuarioId, $pagina = 1, $resultadosPorPagina = 10)
 
     if ($conversaciones) {
         foreach ($conversaciones as &$conversacion) {
-            // Obtener el último mensaje de cada conversación
+            // Obtener el último mensaje de cada conversación incluyendo 'leido'
             $ultimoMensaje = $wpdb->get_row($wpdb->prepare("
-                SELECT mensaje, fecha, emisor 
+                SELECT mensaje, fecha, emisor, COALESCE(leido, FALSE) AS leido
                 FROM $tablaMensajes 
                 WHERE conversacion = %d 
                 ORDER BY fecha DESC
@@ -62,7 +65,7 @@ function obtenerChats($usuarioId, $pagina = 1, $resultadosPorPagina = 10)
         usort($conversaciones, function ($a, $b) {
             $fechaA = isset($a->ultimoMensaje->fecha) ? strtotime($a->ultimoMensaje->fecha) : 0;
             $fechaB = isset($b->ultimoMensaje->fecha) ? strtotime($b->ultimoMensaje->fecha) : 0;
-            return $fechaB - $fechaA; // Orden descendente (más reciente primero)
+            return $fechaB - $fechaA; 
         });
 
         // Aplicar paginación después de ordenar
@@ -72,59 +75,15 @@ function obtenerChats($usuarioId, $pagina = 1, $resultadosPorPagina = 10)
     return $conversaciones;
 }
 
-
-function obtenerNombreUsuario($usuarioId)
-{
-    $usuario = get_userdata($usuarioId);
-
-    if ($usuario) {
-        return !empty($usuario->display_name) ? $usuario->display_name : $usuario->user_login;
-    }
-
-    return '[Usuario desconocido]';
-}
-
-
-
-function infoUsuario() {
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'Usuario no autenticado.'));
-        wp_die();
-    }
-
-    $receptor = isset($_POST['receptor']) ? intval($_POST['receptor']) : 0;
-
-    if ($receptor <= 0) {
-        wp_send_json_error(array('message' => 'ID del receptor inválido.'));
-        wp_die();
-    }
-
-    $imagenPerfil = imagenPerfil($receptor) ?: 'ruta_por_defecto.jpg';
-    $nombreUsuario = obtenerNombreUsuario($receptor) ?: 'Usuario Desconocido';
-
-    if (ob_get_length()) {
-        ob_end_clean();
-    }
-
-    wp_send_json_success(array(
-        'imagenPerfil' => $imagenPerfil,
-        'nombreUsuario' => $nombreUsuario
-    ));
-
-    wp_die();
-}
-
-add_action('wp_ajax_infoUsuario', 'infoUsuario');
-
 function renderListaChats($conversaciones, $usuarioId)
 {
     ob_start();
 
     if ($conversaciones) {
-?>
+    ?>
         <div class="bloqueConversaciones bloque" id="bloqueConversaciones-chatIcono" style="display: none;">
             <ul class="mensajes">
-                <?
+                <?php
                 foreach ($conversaciones as $conversacion):
                     $participantes = json_decode($conversacion->participantes);
                     $otrosParticipantes = array_diff($participantes, [$usuarioId]);
@@ -134,6 +93,7 @@ function renderListaChats($conversaciones, $usuarioId)
 
                     $mensajeMostrado = "[No hay mensajes]";
                     $fechaOriginal = "";
+                    $leido = 0; // Valor por defecto
 
                     if ($conversacion->ultimoMensaje) {
                         if (!empty($conversacion->ultimoMensaje->mensaje)) {
@@ -142,9 +102,14 @@ function renderListaChats($conversaciones, $usuarioId)
                             $mensajeMostrado = "[Mensaje faltante]";
                         }
                         $fechaOriginal = $conversacion->ultimoMensaje->fecha;
+                        // Obtener el estado 'leido', asegurando que tenga un valor por defecto
+                        $leido = isset($conversacion->ultimoMensaje->leido) ? (int)$conversacion->ultimoMensaje->leido : 0;
                     }
                 ?>
-                    <li class="mensaje" data-receptor="<?= esc_attr($receptor); ?>" data-conversacion="<?= esc_attr($conversacion->id); ?>">
+                    <li class="mensaje <?php echo $leido ? 'leido' : 'no-leido'; ?>" 
+                        data-receptor="<?= esc_attr($receptor); ?>" 
+                        data-conversacion="<?= esc_attr($conversacion->id); ?>"
+                        data-leido="<?= esc_attr($leido); ?>">
                         <div class="imagenMensaje">
                             <img src="<?= esc_url($imagenPerfil); ?>" alt="Imagen de perfil">
                         </div>
@@ -159,40 +124,23 @@ function renderListaChats($conversaciones, $usuarioId)
                         <div class="tiempoMensaje" data-fecha="<?= esc_attr($fechaOriginal); ?>">
                             <span></span>
                         </div>
+                        <?php if ($leido): ?>
+                            <div class="iconoLeido">
+                                ✓ 
+                            </div>
+                        <?php endif; ?>
                     </li>
-                <? endforeach; ?>
+                <?php endforeach; ?>
             </ul>
         </div>
-    <?
+    <?php
     } else {
     ?>
         <p>No tienes conversaciones activas.</p>
-<?
+    <?php
     }
 
     $htmlGenerado = ob_get_clean();
     return $htmlGenerado;
 }
 
-
-function tiempoRelativo($fecha)
-{
-    $timestamp = strtotime($fecha);
-    $diferencia = time() - $timestamp;
-
-    if ($diferencia < 60) {
-        return 'hace unos segundos';
-    } elseif ($diferencia < 3600) {
-        $minutos = floor($diferencia / 60);
-        return "hace $minutos minuto" . ($minutos > 1 ? 's' : '');
-    } elseif ($diferencia < 86400) {
-        $horas = floor($diferencia / 3600);
-        return "hace $horas hora" . ($horas > 1 ? 's' : '');
-    } elseif ($diferencia < 604800) {
-        $dias = floor($diferencia / 86400);
-        return "hace $dias día" . ($dias > 1 ? 's' : '');
-    } else {
-        $semanas = floor($diferencia / 604800);
-        return "hace $semanas semana" . ($semanas > 1 ? 's' : '');
-    }
-}

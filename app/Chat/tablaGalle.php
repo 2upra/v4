@@ -34,6 +34,7 @@ if (!function_exists('tablasMensaje')) {
             adjunto LONGTEXT DEFAULT NULL,  -- Almacena múltiples ID de adjuntos en formato JSON
             metadata LONGTEXT DEFAULT NULL,  -- Metadatos adicionales
             iv BINARY(16) NOT NULL,  -- IV para cifrado (no se va a usar mientras tanto)
+            leido BOOLEAN NOT NULL DEFAULT FALSE; -- **nuevo para confirmacion de mensajes
             PRIMARY KEY (id),
             KEY conversacion (conversacion),
             KEY emisor (emisor)
