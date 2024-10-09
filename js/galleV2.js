@@ -1160,7 +1160,7 @@ function galle() {
             tipoMensaje: tipoMensaje
         };
 
-        console.log('[[agregarMensajeAlChat]]', logInfo);
+        //console.log('[[agregarMensajeAlChat]]', logInfo);
 
         const messageBlock = crearElemento('div', 'messageBlock');
         const messageContainer = crearElemento('div', 'messageContainer');
