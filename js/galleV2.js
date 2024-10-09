@@ -1001,22 +1001,22 @@ function galle() {
     async function manejarMensajeWebSocket(data) {
         try {
             const parsedData = JSON.parse(data);
-
+    
             const msgEmisor = String(parsedData.emisor);
             const msgReceptor = parsedData.receptor;
             const msgMensaje = parsedData.mensaje;
             const msgConversacionId = parsedData.conversacion_id;
             const msgAdjunto = parsedData.adjunto || null;
             const tempId = parsedData.temp_id || null;
-
+    
             // ID del usuario actual
             const currentUserId = String(emisor);
-
+    
             let receptorIds;
             try {
                 // Intentar parsear msgReceptor como JSON
                 receptorIds = JSON.parse(msgReceptor);
-
+    
                 // Asegurarse de que receptorIds es un array de strings
                 if (!Array.isArray(receptorIds)) {
                     receptorIds = [String(receptorIds)];
@@ -1027,11 +1027,11 @@ function galle() {
                 // Si falla el parseo, asumir que es un único ID
                 receptorIds = [String(msgReceptor)];
             }
-
+    
             // Verificar si el mensaje es para el usuario actual o si fue enviado por el usuario actual
             if (receptorIds.includes(currentUserId) || msgEmisor === currentUserId) {
                 let chatWindow;
-
+    
                 // Determinar el tipo de mensaje (grupal o individual)
                 let tipoMensaje = null;
                 if (msgConversacionId && msgConversacionId !== 'null') {
@@ -1043,33 +1043,34 @@ function galle() {
                     const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
                     chatWindow = document.querySelector(`.bloqueChat[data-user-id="${contactoId}"]`);
                     tipoMensaje = 'Individual';
-
+    
                     // Actualizar lista de conversaciones
                     actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
+                    console.log(`A1: Lista de conversaciones actualizada para ${contactoId}: ${msgMensaje}`);
                 }
-
+    
                 if (chatWindow) {
                     const listaMensajes = chatWindow.querySelector('.listaMensajes');
                     const fechaActual = new Date();
-
+    
                     // Obtener el último mensaje para determinar isFirstMessageOfThread
                     const mensajes = listaMensajes.querySelectorAll('.mensajeText');
                     let prevEmisor = null;
-
+    
                     if (mensajes.length > 0) {
                         const ultimoMensaje = mensajes[mensajes.length - 1];
                         prevEmisor = ultimoMensaje.getAttribute('data-emisor');
                     }
-
+    
                     const isFirstMessageOfThread = msgEmisor !== prevEmisor;
-
+    
                     // Obtener la información del usuario si es necesario
                     let userInfo = null;
                     if (isFirstMessageOfThread && msgEmisor !== currentUserId) {
                         const userInfos = await obtenerInfoUsuarios([msgEmisor]);
                         userInfo = userInfos.get(msgEmisor);
                     }
-
+    
                     // Determinar la clase del mensaje
                     let claseMensaje;
                     if (msgEmisor === currentUserId) {
@@ -1077,21 +1078,23 @@ function galle() {
                     } else {
                         claseMensaje = 'mensajeIzquierda';
                     }
-
+    
                     // Añadir el mensaje al chat
                     agregarMensajeAlChat(msgMensaje, claseMensaje, fechaActual, listaMensajes, null, false, msgAdjunto, tempId, msgEmisor, isFirstMessageOfThread, userInfo, tipoMensaje);
-
+                    console.log(`A2: Mensaje agregado: ${msgMensaje} por ${msgEmisor}`);
+    
                     // Actualizar lista de conversaciones
                     if (tipoMensaje === 'Individual') {
                         const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
                         actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
+                        console.log(`A3: Lista de conversaciones actualizada para ${contactoId}: ${msgMensaje}`);
                     } else {
                         //actualizarListaConversaciones(msgConversacionId, msgMensaje);
                     }
                 }
             }
         } catch (error) {
-            //console.error('Error al manejar el mensaje de WebSocket:', error);
+            console.error('Error al manejar el mensaje de WebSocket:', error);
         }
     }
 
