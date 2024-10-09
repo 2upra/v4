@@ -447,6 +447,7 @@ function galle() {
             //console.log('actualizarListaConversaciones: No se encontró la conversación, programando reinicio de chats.');
             setTimeout(() => {
                 reiniciarChats();
+                clickMensaje();
                 //console.log('actualizarListaConversaciones: Chats reiniciados.');
             }, 1000);
         }
