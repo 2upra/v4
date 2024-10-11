@@ -223,7 +223,12 @@ function dev()
                         ],
                         [
                             'title' => '<strong>Producción musical simplificada:</strong> acceso a playlists, distribución, alcance.',
-                        ]
+                        ],
+                        [
+                            'url' => 'https://2upra.com/wp-content/uploads/2024/10/asdfasdf.png',
+                            'title' => '<strong>Compartir trabajos</strong>, 2upra es una comunidad abierta donde los artistas pueden compartir sus trabajos libremente'
+                        ],
+
                     ];
 
                     foreach ($images as $index => $image):
@@ -284,6 +289,17 @@ function dev()
                     <? endforeach; ?>
                 </div>
 
+            </div>
+        </div>
+    </div>
+
+
+<?
+    return ob_get_clean();
+}
+
+/*
+
                 <div class="XX1 XX2">
                     <div class="XXDD IUNRBL">
                         <h3 class="XXD1"><strong>Conviértete en patrocinador:</strong> Si te gusta el proyecto, puedes colaborar obteniendo participación creativa, acceso anticipado, contenido exclusivo, reconocimiento y acciones mensuales del proyecto.</h3>
@@ -294,8 +310,6 @@ function dev()
                         <button class="DZYBQD<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><? echo $GLOBALS['randomIcono']; ?>Unirte al proyecto</button>
                     </div>
 
-
-
                     <div class="CGUNVP" id="modalregistro">
                         <? echo registrar_usuario() ?>
                     </div>
@@ -303,19 +317,9 @@ function dev()
                         <? echo iniciar_sesion() ?>
                     </div>
                     <div id="fondonegro"></div>
-
-
                 </div>
 
-            </div>
-        </div>
-    </div>
-
-
-<?
-    return ob_get_clean();
-}
-
+*/
 
 function devlogin()
 {
