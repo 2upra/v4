@@ -284,7 +284,7 @@ function dev()
                     <? endforeach; ?>
                 </div>
 
-                <div class="XXDD">
+                <div class="XX1 XX2">
                     <div class="XXDD IUNRBL">
                         <h3 class="XXD1"><strong>Conviértete en patrocinador:</strong> Si te gusta el proyecto, puedes colaborar obteniendo participación creativa, acceso anticipado, contenido exclusivo, reconocimiento y acciones mensuales del proyecto.</h3>
                         <button class="DZYBQD<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><? echo $GLOBALS['iconoCorazon']; ?>Patrocinar</button>
