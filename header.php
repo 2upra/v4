@@ -179,14 +179,15 @@ if (!defined('ABSPATH')) {
             <!-- Fondo oscuro para los submenus -->
             <div id="modalBackground2" class="modal-background submenu modalBackground2" style="display: none;"></div>
             <? if (!is_user_logged_in()) : ?>
-            <div class="bloquesChatTest">
-                <div class="bloqueChatReiniciar">
-                    <? echo conversacionesUsuario($user_id) ?>
+                <div class="bloquesChatTest">
+                    <div class="bloqueChatReiniciar">
+                        <? echo conversacionesUsuario($user_id) ?>
+                    </div>
+                    <? echo renderChat() ?>
                 </div>
-                <? echo renderChat() ?>
-            </div>
             <? else : ?>
-            
+            <? endif; ?>
+
             <!-- Modal para editar post -->
             <div id="editarPost" class="editarPostModal modal" style="display: none;">
                 <textarea id="mensajeEdit"></textarea>
