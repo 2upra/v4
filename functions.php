@@ -50,21 +50,28 @@ function postLog($log) {
     escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt');
 }
 
-
-//Script principal
 function scriptsOrdenados()
 {
     $dev_mode = true;
     $error_log = [];
 
+    // Definir scripts que no se deben cargar si el usuario no está logueado
+    $scripts_only_for_logged_in_users = [
+        'galleV2',
+        'likes',
+        'descargas',
+        'fan',
+    ];
+
+    // Lista de scripts con sus versiones
     $script_handles = [
         'ajaxPage' => '5.0.11',
         'autorows' => '1.0.1',
         'fan' => '1.0.36',
-        'stripeAccion' => '1.0.6',
+        'stripeAccion' => '1.0.6', 
         'reproductor' => '2.1.2',
-        'stripepro' => '1.0.8',
-        'progreso' => '1.0.23',
+        'stripepro' => '1.0.8',  
+        'progreso' => '1.0.23',  
         'modal' => '1.0.22',
         'alert' => '1.0.4',
         'submenu' => '1.2.15',
@@ -77,8 +84,8 @@ function scriptsOrdenados()
         'registro' => '1.0.12',
         'colab' => '1.0.2',
         'grained' => '1.0.3',
-        'subida' => '1.1.21',
-        'RS' => '1.0.1',
+        'subida' => '1.1.21',     
+        'RS' => '1.0.1',         
         'tagsPosts' => '1.0.1',
         'hashs' => '1.0.1',
         'background' => '1.0.1',
@@ -86,23 +93,30 @@ function scriptsOrdenados()
         'ajax-submit' => '2.1.38',
         'formscript' => '1.1.11',
         'genericAjax' => '2.1.13',
-        'wavejs' => ['2.0.12', ['jquery', 'wavesurfer']],
+        'wavejs' => ['2.0.12', ['jquery', 'wavesurfer']], 
         'inversores' => '1.0.4',
-        'likes' => '2.0.1',
+        'likes' => '2.0.1',      
         'galleV2' => '2.0.1',
     ];
 
     foreach ($script_handles as $handle => $data) {
+        // Verificar si el script debería cargarse solo para usuarios logueados
+        if (!is_user_logged_in() && in_array($handle, $scripts_only_for_logged_in_users)) {
+            continue; // No cargar el script si el usuario no está logueado
+        }
+
         $version = is_array($data) ? $data[0] : $data;
         $deps = is_array($data) && isset($data[1]) ? $data[1] : [];
         $version = $dev_mode ? $version . '.' . mt_rand() : $version;
 
+        // Verificar si el archivo del script existe
         $script_url = get_template_directory_uri() . "/js/{$handle}.js";
         if (!file_exists(get_template_directory() . "/js/{$handle}.js")) {
             $error_log[] = "Error: El archivo {$handle}.js no existe.";
             continue;
         }
 
+        // Encolar el script
         wp_enqueue_script(
             $handle,
             $script_url,
@@ -112,12 +126,15 @@ function scriptsOrdenados()
         );
     }
 
-    $nonce = wp_create_nonce('wp_rest');
-    wp_localize_script('galleV2', 'galleV2', array(
-        'nonce' => $nonce,
-        'apiUrl' => esc_url_raw(rest_url('galle/v2/guardarMensaje/')),
-        'emisor' => get_current_user_id()
-    ));
+    // Localización de scripts solo si el usuario está logueado
+    if (is_user_logged_in()) {
+        $nonce = wp_create_nonce('wp_rest');
+        wp_localize_script('galleV2', 'galleV2', array(
+            'nonce' => $nonce,
+            'apiUrl' => esc_url_raw(rest_url('galle/v2/guardarMensaje/')),
+            'emisor' => get_current_user_id()
+        ));
+    }
 
     // Scripts externos
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
