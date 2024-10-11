@@ -1,5 +1,65 @@
 <?
 
+function papelera()
+{
+    ob_start();
+?>
+    <div class="UIKMYM" style="display: none;">
+
+        <div class="WZEFLA">
+            <p>Proyecto 2upra</p>
+        </div>
+
+        <div class="OIEODG mb-3">
+            <p>2upra es una plataforma social que busca simplificar y mejorar la experiencia de los artistas en la producción musical. Nuestro objetivo es crear un espacio donde los músicos puedan acceder fácilmente a recursos como samples, plugins VST y herramientas de colaboración, todo en un solo lugar. Además, 2upra facilita la promoción y distribución de música, permitiendo a los artistas emergentes llegar a nuevas audiencias sin complicaciones.<br></p>
+
+            <p>En 2upra, los artistas pueden conectarse entre sí, colaborar en proyectos y vender o comprar samples, creando una comunidad dinámica y autosuficiente. Los fans también juegan un papel importante en nuestra plataforma, ya que pueden suscribirse a sus artistas favoritos, recibir actualizaciones exclusivas y apoyar directamente a los creadores que admiran.<br></p>
+
+            <p>Nuestro enfoque principal es apoyar a los artistas emergentes, brindándoles las herramientas necesarias para destacar en la industria musical. Creemos en democratizar el acceso a la producción y promoción musical, asegurando que cada talento tenga la oportunidad de ser escuchado.<br></p>
+
+            <p>En un mundo dominado por algoritmos, donde el éxito depende de la suerte en la viralización y de cuántos post puedes crear para posicionarte en algún trend de TikTok, surge un problema grave: el arte ya no predomina por su significado ni por su valor, sino por su capacidad de viralización. 2upra busca establecer un sistema justo que alivie la necesidad de contenido basura, no luchando contra él, sino abriendo nuevas puertas para explorar el mundo artístico musical de nuevas formas.<br></p>
+
+            <p>¿Como puedo apoyar el proyecto?<br></p>
+
+            <p>Hemos abierto el código fuente de 2upra en GitHub para que cualquier programador pueda unirse al proyecto y colaborar. Estamos abiertos a recibir donaciones o patrocinio.<br></p>
+        </div>
+
+        <div class="JUJRQG">
+
+            <a href="https://github.com/1ndoryu" class="no-ajax">
+                <button class="DZYBQD" id="github-button">
+                    <? echo $GLOBALS['Github']; ?> GitHub
+                </button>
+            </a>
+
+            <a href="https://chat.whatsapp.com/JOduGKvWGR9KbYfBS9BWGL" class="no-ajax">
+                <button class="DZYBQD" id="whatsapp-button">
+                    <? echo $GLOBALS['Whatsapp']; ?> WhatsApp
+                </button>
+            </a>
+
+            <? botonSponsor() ?>
+
+        </div>
+
+        <div class="CGUNVP" id="modalregistro">
+            <? echo registrar_usuario() ?>
+        </div>
+        <div class="EJRINA" id="modalsesion">
+            <? echo iniciar_sesion() ?>
+        </div>
+
+        <div class="QYGNPB YDFVMQ">
+            <div class="XXDD EZDNZE THFJWV">
+                <p class="MLZKPD">¿Que ofreceremos a los artistas?</p>
+                <p class="XXD2"></p>
+            </div>
+        </div>
+
+    </div>
+<?
+}
+
 function dev()
 {
     ob_start();
@@ -9,59 +69,16 @@ function dev()
     <div class="tabs">
         <div class="tab-content">
             <div class="tab active GMXSUJ" id="inicio">
-                <div class="UIKMYM">
 
-                    <div class="WZEFLA">
-                        <p>Proyecto 2upra</p>
-                    </div>
+                <div>
+                    
+                    <div>
 
-                    <div class="OIEODG mb-3">
-                        <p>2upra es una plataforma social que busca simplificar y mejorar la experiencia de los artistas en la producción musical. Nuestro objetivo es crear un espacio donde los músicos puedan acceder fácilmente a recursos como samples, plugins VST y herramientas de colaboración, todo en un solo lugar. Además, 2upra facilita la promoción y distribución de música, permitiendo a los artistas emergentes llegar a nuevas audiencias sin complicaciones.<br></p>
-
-                        <p>En 2upra, los artistas pueden conectarse entre sí, colaborar en proyectos y vender o comprar samples, creando una comunidad dinámica y autosuficiente. Los fans también juegan un papel importante en nuestra plataforma, ya que pueden suscribirse a sus artistas favoritos, recibir actualizaciones exclusivas y apoyar directamente a los creadores que admiran.<br></p>
-
-                        <p>Nuestro enfoque principal es apoyar a los artistas emergentes, brindándoles las herramientas necesarias para destacar en la industria musical. Creemos en democratizar el acceso a la producción y promoción musical, asegurando que cada talento tenga la oportunidad de ser escuchado.<br></p>
-
-                        <p>En un mundo dominado por algoritmos, donde el éxito depende de la suerte en la viralización y de cuántos post puedes crear para posicionarte en algún trend de TikTok, surge un problema grave: el arte ya no predomina por su significado ni por su valor, sino por su capacidad de viralización. 2upra busca establecer un sistema justo que alivie la necesidad de contenido basura, no luchando contra él, sino abriendo nuevas puertas para explorar el mundo artístico musical de nuevas formas.<br></p>
-
-                        <p>¿Como puedo apoyar el proyecto?<br></p> 
-
-                        <p>Hemos abierto el código fuente de 2upra en GitHub para que cualquier programador pueda unirse al proyecto y colaborar. Estamos abiertos a recibir donaciones o patrocinio.<br></p>
-                    </div>
-
-                    <div class="JUJRQG">
-
-                        <a href="https://github.com/1ndoryu" class="no-ajax">
-                            <button class="DZYBQD" id="github-button">
-                                <? echo $GLOBALS['Github']; ?> GitHub
-                            </button>
-                        </a>
-
-                        <a href="https://chat.whatsapp.com/JOduGKvWGR9KbYfBS9BWGL" class="no-ajax">
-                            <button class="DZYBQD" id="whatsapp-button">
-                                <? echo $GLOBALS['Whatsapp']; ?> WhatsApp
-                            </button>
-                        </a>
-
-                        <? botonSponsor() ?>
-
-                    </div>
-
-                    <div class="CGUNVP" id="modalregistro">
-                        <? echo registrar_usuario() ?>
-                    </div>
-                    <div class="EJRINA" id="modalsesion">
-                        <? echo iniciar_sesion() ?>
                     </div>
 
                 </div>
 
-                <div class="QYGNPB YDFVMQ">
-                    <div class="XXDD EZDNZE THFJWV">
-                        <p class="MLZKPD">¿Que ofreceremos a los artistas?</p>
-                        <p class="XXD2"></p>
-                    </div>
-                </div>
+
 
 
                 <div class="XX1 XX2">
@@ -495,7 +512,3 @@ function redirect_non_admin_users()
 add_action('template_redirect', 'redirect_non_admin_users');
 
 */
-
-
-
-
