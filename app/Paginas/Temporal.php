@@ -284,17 +284,16 @@ function dev()
                     <? endforeach; ?>
                 </div>
 
-                <div class="DAEOXT">
-                    <div class="TTVMWQ">
-                        <div class="XXDD IUNRBL">
-                            <h3 class="XXD1"><strong>Conviértete en patrocinador:</strong> Si te gusta el proyecto, puedes colaborar obteniendo participación creativa, acceso anticipado, contenido exclusivo, reconocimiento y acciones mensuales del proyecto.</h3>
-                            <button class="DZYBQD<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><? echo $GLOBALS['iconoCorazon']; ?>Patrocinar</button>
-                        </div>
-                        <div class="XXDD IUNRBL">
-                            <h3 class="XXD1"><strong>Colabora como desarrollador:</strong> Recibirás una compensación acorde a tu participación, que puede incluir reconocimiento, acciones del proyecto o la posibilidad de formar parte del equipo principal y beneficiarte de las ganancias futuras.</h3>
-                            <button class="DZYBQD<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><? echo $GLOBALS['randomIcono']; ?>Unirte al proyecto</button>
-                        </div>
+                <div class="XXDD">
+                    <div class="XXDD IUNRBL">
+                        <h3 class="XXD1"><strong>Conviértete en patrocinador:</strong> Si te gusta el proyecto, puedes colaborar obteniendo participación creativa, acceso anticipado, contenido exclusivo, reconocimiento y acciones mensuales del proyecto.</h3>
+                        <button class="DZYBQD<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><? echo $GLOBALS['iconoCorazon']; ?>Patrocinar</button>
                     </div>
+                    <div class="XXDD IUNRBL">
+                        <h3 class="XXD1"><strong>Colabora como desarrollador:</strong> Recibirás una compensación acorde a tu participación, que puede incluir reconocimiento, acciones del proyecto o la posibilidad de formar parte del equipo principal y beneficiarte de las ganancias futuras.</h3>
+                        <button class="DZYBQD<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>" id=""><? echo $GLOBALS['randomIcono']; ?>Unirte al proyecto</button>
+                    </div>
+
 
 
                     <div class="CGUNVP" id="modalregistro">
