@@ -173,109 +173,109 @@ if (!defined('ABSPATH')) {
 
     </header>
     <main class="clearfix ">
+        <? if (is_user_logged_in()) : ?>
+            <div id="submenusyinfos">
 
-        <div id="submenusyinfos">
-
-            <!-- Fondo oscuro para los submenus -->
-            <div id="modalBackground2" class="modal-background submenu modalBackground2" style="display: none;"></div>
-            <? if (!is_user_logged_in()) : ?>
+                <!-- Fondo oscuro para los submenus -->
+                <div id="modalBackground2" class="modal-background submenu modalBackground2" style="display: none;"></div>
+                >
                 <div class="bloquesChatTest">
                     <div class="bloqueChatReiniciar">
                         <? echo conversacionesUsuario($user_id) ?>
                     </div>
                     <? echo renderChat() ?>
                 </div>
-            <? else : ?>
-            <? endif; ?>
 
-            <!-- Modal para editar post -->
-            <div id="editarPost" class="editarPostModal modal" style="display: none;">
-                <textarea id="mensajeEdit"></textarea>
-                <button id="enviarEdit" class="borde">Editar</button>
-            </div>
-
-            <!-- Enviar mensaje de error -->
-            <div id="formularioError" class="formularioError" style="display:none;">
-                <textarea id="mensajeError" placeholder="Describe el error"></textarea>
-                <button id="enviarError">Enviar</button>
-            </div>
-
-            <!-- Modal de detalles -->
-            <div id="modalDetallesIA" class="DetallesIA modal" style="display: none; z-index: 1000; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-                <div class="modalContent">
-                    <p id="modalDetallesContent"></p>
+                <!-- Modal para editar post -->
+                <div id="editarPost" class="editarPostModal modal" style="display: none;">
+                    <textarea id="mensajeEdit"></textarea>
+                    <button id="enviarEdit" class="borde">Editar</button>
                 </div>
-            </div>
-            <div id="backgroundDetallesIA" class="modalBackground" style="display: none; z-index: 999; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);"></div>
 
-
-            <!-- submenu de subir rola o sample -->
-            <div class="A1806241" id="submenusubir-subiricono">
-                <div class="A1806242">
-                    <button id="subirrola"><a href="https://2upra.com/rola/">Subir rola</a></button>
-                    <!-- <button id="subirsample"><a href="https://2upra.com/subirsample/">Subir Sample</a></button> -->
+                <!-- Enviar mensaje de error -->
+                <div id="formularioError" class="formularioError" style="display:none;">
+                    <textarea id="mensajeError" placeholder="Describe el error"></textarea>
+                    <button id="enviarError">Enviar</button>
                 </div>
-            </div>
 
-            <!-- Modal formulario subir rola comprobación -->
-            <div id="a84J76WY" class="a84J76WY" style="display:none;">
-                <div class="I41B2TM">
-                    <div class="previewAreaArchivos" id="0I18J19">Aún no has subido una portada
+                <!-- Modal de detalles -->
+                <div id="modalDetallesIA" class="DetallesIA modal" style="display: none; z-index: 1000; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    <div class="modalContent">
+                        <p id="modalDetallesContent"></p>
+                    </div>
+                </div>
+                <div id="backgroundDetallesIA" class="modalBackground" style="display: none; z-index: 999; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);"></div>
+
+
+                <!-- submenu de subir rola o sample -->
+                <div class="A1806241" id="submenusubir-subiricono">
+                    <div class="A1806242">
+                        <button id="subirrola"><a href="https://2upra.com/rola/">Subir rola</a></button>
+                        <!-- <button id="subirsample"><a href="https://2upra.com/subirsample/">Subir Sample</a></button> -->
+                    </div>
+                </div>
+
+                <!-- Modal formulario subir rola comprobación -->
+                <div id="a84J76WY" class="a84J76WY" style="display:none;">
+                    <div class="I41B2TM">
+                        <div class="previewAreaArchivos" id="0I18J19">Aún no has subido una portada
+                            <label></label>
+                        </div>
+                        <div id="0I18J20"></div>
+                    </div>
+                    <div class="zJRLSY">
+                        <button id="MkzIeq">Seguir editando</button>
+                        <button id="externalSubmitBtn" type="button">Enviar</button>
+                    </div>
+                </div>
+
+                <!-- submenu al dar foto de perfil movil -->
+                <div class="A1806241" id="submenuperfil-default">
+                    <div class="A1806242">
+                        <button><a href="https://2upra.com/perfil/">Mi perfil</a></button>
+                        <button><a href="https://2upra.com/colabs/">Mis colabs</a></button>
+                    </div>
+                </div>
+
+                <!-- colab modal -->
+                <div id="modalcolab" class="modal gap-4" style="display: none;">
+                    <textarea id="textareaColab" placeholder="Escribe un mensaje para tu solicitud de colaboración. Debes esperar que la solicitud sea aceptada." rows="2"></textarea>
+                    <div class="previewAreaArchivos" id="previewColab" style="display: block;">Puedes enviar un archivo audio para la colaboración
                         <label></label>
                     </div>
-                    <div id="0I18J20"></div>
+                    <input type="file" id="postArchivoColab" name="postArchivoColab" style="display:none;">
+                    <div class="flex gap-3 justify-end">
+                        <button class="botonsecundario" type="button">Cancelar</button>
+                        <button id="empezarColab" class="botonprincipal">Enviar</button>
+                    </div>
                 </div>
-                <div class="zJRLSY">
-                    <button id="MkzIeq">Seguir editando</button>
-                    <button id="externalSubmitBtn" type="button">Enviar</button>
-                </div>
+
+
+                <!-- Configuración -->
+
+
+                <!-- Información usuario -->
+                <?
+                $current_user = wp_get_current_user();
+                $is_admin = current_user_can('administrator') ? 'true' : 'false';
+                $user_email = $current_user->user_email;
+                $user_name = $current_user->display_name;
+                $user_id = $current_user->ID;
+                $descripcion = get_user_meta($user_id, 'profile_description', true);
+
+                echo '<input type="hidden" id="user_is_admin" value="' . esc_attr($is_admin) . '">';
+                echo '<input type="hidden" id="user_email" value="' . esc_attr($user_email) . '">';
+                echo '<input type="hidden" id="user_name" value="' . esc_attr($user_name) . '">';
+                echo '<input type="hidden" id="user_id" value="' . esc_attr($user_id) . '">';
+                echo '<input type="hidden" id="descripcionUser" value="' . esc_attr($descripcion) . '">';
+
+                ?>
+
+
+
             </div>
-
-            <!-- submenu al dar foto de perfil movil -->
-            <div class="A1806241" id="submenuperfil-default">
-                <div class="A1806242">
-                    <button><a href="https://2upra.com/perfil/">Mi perfil</a></button>
-                    <button><a href="https://2upra.com/colabs/">Mis colabs</a></button>
-                </div>
-            </div>
-
-            <!-- colab modal -->
-            <div id="modalcolab" class="modal gap-4" style="display: none;">
-                <textarea id="textareaColab" placeholder="Escribe un mensaje para tu solicitud de colaboración. Debes esperar que la solicitud sea aceptada." rows="2"></textarea>
-                <div class="previewAreaArchivos" id="previewColab" style="display: block;">Puedes enviar un archivo audio para la colaboración
-                    <label></label>
-                </div>
-                <input type="file" id="postArchivoColab" name="postArchivoColab" style="display:none;">
-                <div class="flex gap-3 justify-end">
-                    <button class="botonsecundario" type="button">Cancelar</button>
-                    <button id="empezarColab" class="botonprincipal">Enviar</button>
-                </div>
-            </div>
-
-
-            <!-- Configuración -->
-
-
-            <!-- Información usuario -->
-            <?
-            $current_user = wp_get_current_user();
-            $is_admin = current_user_can('administrator') ? 'true' : 'false';
-            $user_email = $current_user->user_email;
-            $user_name = $current_user->display_name;
-            $user_id = $current_user->ID;
-            $descripcion = get_user_meta($user_id, 'profile_description', true);
-
-            echo '<input type="hidden" id="user_is_admin" value="' . esc_attr($is_admin) . '">';
-            echo '<input type="hidden" id="user_email" value="' . esc_attr($user_email) . '">';
-            echo '<input type="hidden" id="user_name" value="' . esc_attr($user_name) . '">';
-            echo '<input type="hidden" id="user_id" value="' . esc_attr($user_id) . '">';
-            echo '<input type="hidden" id="descripcionUser" value="' . esc_attr($descripcion) . '">';
-
-            ?>
-
-
-
-        </div>
+        <? else : ?>
+        <? endif; ?>
 
 
 </body>
