@@ -225,7 +225,7 @@ function dev()
                             'title' => '<strong>Producción musical simplificada:</strong> acceso a playlists, distribución, alcance.',
                         ],
                         [
-                            'url' => 'https://2upra.com/wp-content/uploads/2024/10/asdfasdf.png',
+                            'url' => 'https://2upra.com/wp-content/uploads/2024/10/sdfasdfsadg5.png',
                             'title' => '<strong>Compartir trabajos</strong>, 2upra es una comunidad abierta donde los artistas pueden compartir sus trabajos libremente'
                         ],
 
