@@ -200,10 +200,11 @@ function dev()
         <div class="tab-content">
             <div class="tab active GMXSUJ" id="inicio">
 
-                <div>
+                <div class="BKXAFN">
 
-                    <div>
-
+                    <div class="JMIOCI">
+                        <h2>Un entorno libre para almas libres</h2>
+                        <p>La próxima biblioteca de recursos musicales con herramientas potenciadas para la colaboración e independencia.</p>
                     </div>
 
                 </div>
@@ -213,10 +214,10 @@ function dev()
                     $images = [
 
                         [
-                            'title' => '<strong>Recursos Gratis</strong> para tu música: descarga samples, drumkits, VST y mucho más.',
+                            'title' => '<strong>Recursos gratis</strong> para tu música: descarga samples, drumkits, VST y mucho más.',
                         ],
                         [
-                            'title' => '<strong>Conecta y Colabora</strong> con otros artistas para impulsar juntos tu carrera musical y crear proyectos increíbles.',
+                            'title' => '<strong>Conecta y colabora</strong> con otros artistas para impulsar juntos tu carrera musical y crear proyectos increíbles.',
                         ],
                         [
                             'url' => 'https://2upra.com/wp-content/uploads/2024/05/asfsdf4.png',
@@ -233,7 +234,6 @@ function dev()
                             'url' => 'https://2upra.com/wp-content/uploads/2024/10/Recurso-1.png',
                             'title' => '<strong>Biblioteca de samples inteligente</strong>: impulsada por IA para organizar y encontrar samples que se adapten a tus gustos.',
                         ],
-
 
                     ];
 
