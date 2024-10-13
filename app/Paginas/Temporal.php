@@ -212,22 +212,28 @@ function dev()
                     <?
                     $images = [
                         [
-                            'title' => '<strong>Herramientas gratuitas</strong> para artistas: samples, drumkits, VST y más',
-                        ],
-                        [
-                            'title' => '<strong>Encontrar colaboraciones</strong> para impulsar la carrera musical de los artistas',
-                        ],
-                        [
-                            'url' => 'https://2upra.com/wp-content/uploads/2024/05/asfsdf4.png',
-                            'title' => '<strong>Monetización diversificada</strong> y apoyo integral para artistas a través de sus fans o contenidos propios',
-                        ],
-                        [
-                            'title' => '<strong>Producción musical simplificada:</strong> acceso a playlists, distribución, alcance.',
-                        ],
-                        [
-                            'url' => 'https://2upra.com/wp-content/uploads/2024/10/fdsfasfhgt.png',
-                            'title' => '<strong>Compartir trabajos</strong>, 2upra es una comunidad abierta donde los artistas pueden compartir sus trabajos libremente'
-                        ],
+                            [
+                                'title' => '<strong>Recursos Gratis</strong> para tu música: descarga samples, drumkits, VST y mucho más.',
+                            ],
+                            [
+                                'title' => '<strong>Conecta y Colabora</strong> con otros artistas para impulsar juntos tu carrera musical y crear proyectos increíbles.',
+                            ],
+                            [
+                                'url' => 'https://2upra.com/wp-content/uploads/2024/05/asfsdf4.png',
+                                'title' => '<strong>Gana con tu arte</strong>: diversifica tus ingresos y recibe el apoyo de tus fans a través de contenido exclusivo.',
+                            ],
+                            [
+                                'title' => '<strong>Producción más sencilla</strong>: Accede a playlists, distribuye tu música y aumenta tu alcance sin complicaciones.',
+                            ],
+                            [
+                                'url' => 'https://2upra.com/wp-content/uploads/2024/10/fdsfasfhgt.png',
+                                'title' => '<strong>Comparte tus proyectos</strong>: Únete a nuestra comunidad abierta y comparte tus trabajos libremente con otros artistas y fans.',
+                            ],
+                            [
+                                'url' => 'https://2upra.com/wp-content/uploads/2024/10/Recurso-1.png',
+                                'title' => '<strong>Biblioteca de samples inteligente</strong>: impulsada por IA para organizar y encontrar samples que se adapten a tus gustos.',
+                            ],
+                        ]
 
                     ];
 
@@ -266,9 +272,9 @@ function dev()
                                 <? elseif ($index === 3): ?>
                                     <div class="KTEPUZ UEMOGY">
                                         <div class="WELODV HYEXIH">
-                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/05/3.jpg', 40, 'all'); ?>">
+                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/10/e285720ece097bcf54447cad123c92a6.jpg', 40, 'all'); ?>">
                                             <div class="UPYTYH">
-                                                <p>Acceso gratuito a nuestra playlist de lo-fi por 1 mes</p>
+                                                <p>Playlist de Hip Hop Lofi </p>
                                                 <button>Acceder</button>
                                             </div>
                                         </div>
