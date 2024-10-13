@@ -211,29 +211,29 @@ function dev()
                 <div class="XX1 XX2">
                     <?
                     $images = [
+
                         [
-                            [
-                                'title' => '<strong>Recursos Gratis</strong> para tu música: descarga samples, drumkits, VST y mucho más.',
-                            ],
-                            [
-                                'title' => '<strong>Conecta y Colabora</strong> con otros artistas para impulsar juntos tu carrera musical y crear proyectos increíbles.',
-                            ],
-                            [
-                                'url' => 'https://2upra.com/wp-content/uploads/2024/05/asfsdf4.png',
-                                'title' => '<strong>Gana con tu arte</strong>: diversifica tus ingresos y recibe el apoyo de tus fans a través de contenido exclusivo.',
-                            ],
-                            [
-                                'title' => '<strong>Producción más sencilla</strong>: Accede a playlists, distribuye tu música y aumenta tu alcance sin complicaciones.',
-                            ],
-                            [
-                                'url' => 'https://2upra.com/wp-content/uploads/2024/10/fdsfasfhgt.png',
-                                'title' => '<strong>Comparte tus proyectos</strong>: Únete a nuestra comunidad abierta y comparte tus trabajos libremente con otros artistas y fans.',
-                            ],
-                            [
-                                'url' => 'https://2upra.com/wp-content/uploads/2024/10/Recurso-1.png',
-                                'title' => '<strong>Biblioteca de samples inteligente</strong>: impulsada por IA para organizar y encontrar samples que se adapten a tus gustos.',
-                            ],
-                        ]
+                            'title' => '<strong>Recursos Gratis</strong> para tu música: descarga samples, drumkits, VST y mucho más.',
+                        ],
+                        [
+                            'title' => '<strong>Conecta y Colabora</strong> con otros artistas para impulsar juntos tu carrera musical y crear proyectos increíbles.',
+                        ],
+                        [
+                            'url' => 'https://2upra.com/wp-content/uploads/2024/05/asfsdf4.png',
+                            'title' => '<strong>Gana con tu arte</strong>: diversifica tus ingresos y recibe el apoyo de tus fans a través de contenido exclusivo.',
+                        ],
+                        [
+                            'title' => '<strong>Producción más sencilla</strong>: Accede a playlists, distribuye tu música y aumenta tu alcance sin complicaciones.',
+                        ],
+                        [
+                            'url' => 'https://2upra.com/wp-content/uploads/2024/10/fdsfasfhgt.png',
+                            'title' => '<strong>Comparte tus proyectos</strong>: Únete a nuestra comunidad abierta y comparte tus trabajos libremente con otros artistas y fans.',
+                        ],
+                        [
+                            'url' => 'https://2upra.com/wp-content/uploads/2024/10/Recurso-1.png',
+                            'title' => '<strong>Biblioteca de samples inteligente</strong>: impulsada por IA para organizar y encontrar samples que se adapten a tus gustos.',
+                        ],
+
 
                     ];
 
