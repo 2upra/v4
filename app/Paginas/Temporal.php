@@ -412,29 +412,27 @@ function devlogin()
             </div>
         </div>
 
-        <div class="DAEOXT">
+        <div class="XFBZWO MLJOFR">
+            <div class="flex">
 
-            <div class="XFBZWO MLJOFR">
-                <div class="flex">
-
-                    <div class="QSBVLN">
-                        <p class="ZTHAWI">Total recaudado</p>
-                        <p class="BFUUUL">632$</p>
-                    </div>
-
-                    <div class="MDOKUH">
-                        <p class="ZTHAWI">Meta</p>
-                        <p class="BFUUUL">1000$</p>
-                    </div>
-
+                <div class="QSBVLN">
+                    <p class="ZTHAWI">Total recaudado</p>
+                    <p class="BFUUUL">632$</p>
                 </div>
 
-                <div class="progress-containerA1">
-                    <div class="progress-barA1"></div>
+                <div class="MDOKUH">
+                    <p class="ZTHAWI">Meta</p>
+                    <p class="BFUUUL">1000$</p>
                 </div>
+
             </div>
 
+            <div class="progress-containerA1">
+                <div class="progress-barA1"></div>
+            </div>
         </div>
+
+
 
         <? echo modalComprarAcciones() ?>
 
