@@ -217,7 +217,7 @@ function dev()
                         <button class="borde<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Sponsor</button>
                         <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Donar</button>
                     </div>
-                    <div class="TAZFZZ" id="modalCarta" style="display: none;">
+                    <div class="TAZFZZ modal" id="modalCarta" style="display: none;">
                         <div class="XCTQCK">
                             <p>Hola,
                                 <br>
