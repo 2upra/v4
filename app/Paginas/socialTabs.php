@@ -13,7 +13,11 @@ function socialTabs()
     <div class="tabs">
         <div class="tab-content">
 
-            <!-- Solo visible para administradores -->
+
+            <div class="tab S4K7I3" id="Proyecto">
+                <? echo devlogin(); ?>
+            </div>
+
             <div class="tab INICIO S4K7I3" id="inicio">
                 <div class="OXMGLZ">
                     <div class="OAXRVB">
@@ -35,10 +39,6 @@ function socialTabs()
                 </div>
             </div>
 
-            <!-- Contenido visible para todos los usuarios -->
-            <div class="tab S4K7I3" id="Proyecto">
-                <? echo devlogin(); ?>
-            </div>
 
         </div>
     </div>
