@@ -433,7 +433,7 @@ function devlogin()
 
         </div>
 
-        <div class="XFBZWO">
+        <div class="WLOZDD">
             <? echo calcularAccionPorUsuario() ?>
         </div>
 
