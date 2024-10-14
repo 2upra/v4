@@ -207,8 +207,8 @@ function dev()
                         <p>La próxima biblioteca de recursos musicales con herramientas potenciadas para la colaboración e independencia.</p>
                     </div>
                     <div class="BNZWJR">
-                        <span class="MASYTN GFDFDN">$632</span>
-                        <span class="MASYTN WJTTLG">$80</span>
+                        <span class="MASYTN GFDFDN">Total recaudado $632</span>
+                        <span class="MASYTN WJTTLG">Meta final $800</span>
                     </div>
                     <div class="LXCJWW">
                         <button class="borde<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Sponsor</button>
