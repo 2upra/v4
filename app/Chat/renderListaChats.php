@@ -136,7 +136,7 @@ function renderListaChats($conversaciones, $usuarioId)
     <?php
     } else {
     ?>
-        <p>No tienes conversaciones activas.</p>
+    
     <?php
     }
 
