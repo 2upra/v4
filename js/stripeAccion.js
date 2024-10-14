@@ -1,8 +1,8 @@
 function stripecompra() {
-    // Obtener elementos del DOM dentro de la función
     var botonComprar = document.getElementById('botonComprar');
     var cantidadCompra = document.getElementById('cantidadCompra');
     var cantidadReal = document.getElementById('cantidadReal');
+    var mensajeCantidad = document.querySelector('.ETXLXB'); // Elemento <p> que muestra el mensaje
 
     // Función para formatear la cantidad con el símbolo de dólar
     function formatearCantidad(input) {
@@ -20,6 +20,24 @@ function stripecompra() {
         });
     }
 
+    // Función para hacer que el borde titile
+    function titilarBorde(input) {
+        input.style.border = '2px solid white'; // Cambia el borde a blanco
+        setTimeout(function () {
+            input.style.border = ''; // Restablece el borde después de 2 segundos
+        }, 2000);
+    }
+
+    // Mostrar el mensaje y hacer titilar el borde si la cantidad es inválida
+    function manejarErrorCantidad() {
+        if (mensajeCantidad) {
+            mensajeCantidad.style.display = 'block'; // Forzar visibilidad del mensaje
+        }
+        if (cantidadCompra) {
+            titilarBorde(cantidadCompra); // Hacer titilar el borde del campo
+        }
+    }
+
     // Configurar evento de clic para el botón de comprar
     if (botonComprar) {
         botonComprar.addEventListener('click', function (e) {
@@ -30,7 +48,7 @@ function stripecompra() {
 
             // Validar cantidad y userId
             if (!cantidad || isNaN(cantidad) || cantidad <= 0) {
-                alert('Por favor, ingrese una cantidad válida para comprar.');
+                manejarErrorCantidad(); // Mostrar error si la cantidad es inválida
                 return;
             }
             if (!userId) {
