@@ -357,9 +357,6 @@ function devlogin()
     <? else: ?>
         <div class="UIKMYM">
 
-
-
-
             <div class="WZEFLA">
                 <p>Hola <? echo esc_html($user_name) ?></p>
             </div>
@@ -393,7 +390,7 @@ function devlogin()
 
                 <div class="TTVMWQ">
                     <div class="XXDD IUNRBL">
-                        <h3 class="XXD1"><strong>Conviértete en patrocinador:</strong> Si te gusta el proyecto, puedes colaborar obteniendo participación creativa, acceso anticipado, contenido exclusivo, reconocimiento y acciones mensuales del proyecto.</h3>
+                        <h3 class="XXD1"><strong>Conviértete en patrocinador:</strong> Puedes colaborar obteniendo participación creativa, acceso anticipado, contenido exclusivo, reconocimiento y acciones mensuales del proyecto.</h3>
 
                         <div class="DZYSQD DZYSQF">
                             <? echo botonSponsor() ?>
