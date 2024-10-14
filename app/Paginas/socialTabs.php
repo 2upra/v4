@@ -6,8 +6,8 @@ function socialTabs()
 ?>
 
     <div id="menuData" style="display:none;" pestanaActual="">
-        <div data-tab="inicio"></div>
         <div data-tab="Proyecto"></div>
+        <div data-tab="inicio"></div>
     </div>
 
     <div class="tabs">
