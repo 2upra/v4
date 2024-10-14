@@ -1,6 +1,6 @@
 function meta() {
-    const meta = 5000;
-    const recaudado = 612;
+    const meta = 1000;
+    const recaudado = 632;
     const porcentaje = (recaudado / meta) * 100;
 
     const progressBar = document.querySelector('.progress-barA1');
