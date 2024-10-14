@@ -214,8 +214,24 @@ function dev()
                         <button class="borde<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Sponsor</button>
                         <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Donar</button>
                     </div>
-                    <div class="TAZFZZ ">
-                        <p></p>
+                    <div class="LXCJWW">
+                        <button class="borde botonCarta">Carta</button>
+                    </div>
+                    <div class="TAZFZZ" style="display: none;">
+                        <div class="XCTQCK">
+                            <p>Hola,
+                                <br>
+                                No voy a hablar del proyecto ni a decir que es el próximo gran hito en aplicaciones web. Hoy quiero contarte un poco sobre mí, quién soy y por qué esto es tan importante para mí.<br>
+
+                                Este no es mi primer proyecto. Algunas cosas me han salido bien en el pasado, y otras no tanto. Sin embargo, la experiencia me ha brindado las herramientas necesarias para construir cosas cada vez más complejas.<br>
+
+                                La música se ha convertido en una parte fundamental de mi vida. Cuando comienzas una carrera musical, tienes ciertas expectativas, y podría parecer que la falta de talento o esfuerzo serían los mayores obstáculos. ¡Ja! Si solo dependiera de eso, sería genial. Claro, el talento y hacer las cosas bien son lo más importante, pero me he dado cuenta de que hay muchos problemas en la producción musical que nadie parece dispuesto a resolver. Las herramientas actuales están dispersas o te obligan a pagar suscripciones de $20 al mes cada una para usarlas, pffff.<br>
+
+                                Los productores necesitamos algo más accesible y práctico. Queremos poder separar pistas fácilmente, tener kits de batería frescos todos los días, un espacio donde encontrar colaboraciones, organizar nuestros samples, o tener una lista de sonidos favoritos para el próximo proyecto. Queremos subir un archivo WAV a todas las malditas plataforma y no tener que esperar un mes o un año si queremos borrarla porque ya no nos gusta en nuestro catalago, pero toda esta mierda realmente es más complicada de lo que debería, y como nadie sabe como funcionan estas cosas, que dificil es resolverlas, pero creeme, no es tan complicado, al menos para mí.<br>
+
+                                Lo bueno es que estoy dispuesta a construir cada una de estas soluciones, porque la independencia y resolver problemas le dan sentido a mi vida. He aprendido todo lo necesario, y estoy dispuesta a seguir aprendiendo lo que haga falta para lograrlo. También he aprendido que quizás no pueda hacerlo sola, y que no está mal aceptar que necesito un poco de ayuda.<br>
+                            </p>
+                        </div>
                     </div>
 
                     <div class="CGUNVP" id="modalregistro">
@@ -364,7 +380,7 @@ function devlogin()
         </div>
 
         <div class="OIEODG">
-            <p>Gracias por participar, estamos trabajando en mejorar la expriencia de entorno.</p>
+            <p>Gracias por participar, estamos trabajando en mejorar la experiencia de entorno.</p>
         </div>
 
         <div class="JUJRQG">
@@ -561,6 +577,3 @@ function redirect_non_admin_users()
 
 // Hook para ejecutar la función en todas las páginas
 add_action('template_redirect', 'redirect_non_admin_users');
-
-
-
