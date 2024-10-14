@@ -18,7 +18,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 
             <p>Bienvenido a 2upra.com ("2upra," "nosotros," "nuestro," o "la Plataforma"). Estos Términos y Condiciones ("Términos") rigen el acceso y uso de nuestro sitio web, aplicaciones, software, contenido, productos y servicios (colectivamente, los "Servicios"). Al acceder o utilizar los Servicios, usted ("Usuario", "usted" o "su") acepta estar legalmente obligado por estos Términos. Si no está de acuerdo con estos Términos, no acceda ni utilice los Servicios.</p>
 
-            <ol>
+            <ol class="ZPFSXX">
                 <li>
                     <h2>Elegibilidad:</h2>
                     <p>Debe tener al menos 13 años de edad para utilizar los Servicios. Si es menor de 18 años, debe tener el consentimiento de sus padres o tutores para utilizar los Servicios y aceptar estos Términos en su nombre. Al utilizar los Servicios, declara y garantiza que tiene la edad legal suficiente para celebrar un contrato vinculante con nosotros.</p>
