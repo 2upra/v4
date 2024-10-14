@@ -32,7 +32,7 @@ function iniciar_sesion()
                 <input type="password" id="contrasena_usuario_login" name="contrasena_usuario_login" required class="contrasena_usuario"><br>
                 <div class="XYSRLL">
                     <input class="R0A915 A1" type="submit" name="iniciar_sesion_submit" value="Iniciar sesión">
-                    <button type="button" class="R0A915 Botonprincipal A1 A2" id="google-login-btn"><? echo $GLOBALS['Google']; ?>Iniciar seccion con Google</button>
+                    <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn"><? echo $GLOBALS['Google']; ?>Iniciar seccion con Google</button>
 
                     <script>
                         document.getElementById('google-login-btn').addEventListener('click', function() {
