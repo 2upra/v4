@@ -542,13 +542,16 @@ function formularioProgramador()
 <? return ob_get_clean();
 }
 
-/*
+
 function redirect_non_admin_users()
 {
     // Verifica si el usuario está logueado y no es administrador
     if (is_user_logged_in() && !current_user_can('administrator')) {
-        // Verifica si la URL actual NO es 'https://2upra.com/'
-        if ($_SERVER['REQUEST_URI'] !== '/' && !is_page('2upra')) {
+        // Obtiene la URL actual
+        $current_url = $_SERVER['REQUEST_URI'];
+
+        // Verifica si la URL actual NO es 'https://2upra.com/' y NO es 'https://2upra.com/config'
+        if ($current_url !== '/' && !is_page('2upra') && !is_page('config')) {
             // Redirige a la página específica
             wp_redirect(home_url('/'));  // home_url('/') genera la URL raíz del sitio (https://2upra.com/)
             exit; // Detiene la ejecución para evitar que se cargue el resto de la página
@@ -559,4 +562,5 @@ function redirect_non_admin_users()
 // Hook para ejecutar la función en todas las páginas
 add_action('template_redirect', 'redirect_non_admin_users');
 
-*/
+
+
