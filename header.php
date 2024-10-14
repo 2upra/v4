@@ -178,7 +178,7 @@ if (!defined('ABSPATH')) {
 
                 <!-- Fondo oscuro para los submenus -->
                 <div id="modalBackground2" class="modal-background submenu modalBackground2" style="display: none;"></div>
-                >
+                
                 <div class="bloquesChatTest">
                     <div class="bloqueChatReiniciar">
                         <? echo conversacionesUsuario($user_id) ?>
