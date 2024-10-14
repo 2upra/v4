@@ -1,6 +1,6 @@
 <?
 /*
-Template Name: Colab
+Template Name: T&Q
 */
 
 get_header();
