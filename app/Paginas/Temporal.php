@@ -430,6 +430,11 @@ function devlogin()
             <div class="progress-containerA1">
                 <div class="progress-barA1"></div>
             </div>
+
+        </div>
+
+        <div class="XFBZWO">
+            <? echo calcularAccionPorUsuario() ?>
         </div>
 
 
