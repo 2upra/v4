@@ -117,6 +117,7 @@ class ModalManager {
 const modalManager = new ModalManager();
 
 function smooth() {
+    modalManager.añadirModal('carta', 'cartaModal', ['carta'])
     modalManager.añadirModal('modalinvertir', '#modalinvertir', ['.donar'], '.cerrardonar');
     modalManager.añadirModal('modalproyecto', '#modalproyecto', ['.unirteproyecto'], '.DGFDRDC');
     modalManager.añadirModal('proPro', '#propro', ['.prostatus0']);

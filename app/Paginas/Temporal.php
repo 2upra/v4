@@ -217,7 +217,7 @@ function dev()
                     <div class="LXCJWW">
                         <button class="borde botonCarta">Carta</button>
                     </div>
-                    <div class="TAZFZZ" style="display: none;">
+                    <div class="TAZFZZ" id="modalCarta" style="display: none;">
                         <div class="XCTQCK">
                             <p>Hola,
                                 <br>
