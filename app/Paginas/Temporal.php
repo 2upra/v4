@@ -219,7 +219,7 @@ function dev()
                     </div>
                     <div class="TAZFZZ modal" id="modalCarta" style="display: none;">
                         <div class="XCTQCK">
-                            <p>Hola,
+                            <p class="JMEPEB">Hola,
                                 <br>
                                 No voy a hablar del proyecto ni a decir que es el próximo gran hito en aplicaciones web. Hoy quiero contarte un poco sobre mí, quién soy y por qué esto es tan importante para mí.<br>
 
