@@ -204,7 +204,7 @@ function dev()
 
                     <div class="JMIOCI">
                         <h2>Un entorno libre para almas libres</h2>
-                        <p>La próxima biblioteca de recursos musicales con herramientas potenciadas para la colaboración e independencia.</p>
+                        <p>Biblioteca de recursos musicales con herramientas potenciadas para la colaboración e independencia artistica.</p>
                     </div>
                     <div class="BNZWJR">
                         <span class="MASYTN GFDFDN">Total recaudado $632</span>
