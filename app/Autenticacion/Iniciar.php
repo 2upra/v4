@@ -31,7 +31,7 @@ function iniciar_sesion() {
                 <input type="password" id="contrasena_usuario_login" name="contrasena_usuario_login" required class="contrasena_usuario"><br>
                 <div class="XYSRLL">
                     <input class="R0A915 A1" type="submit" name="iniciar_sesion_submit" value="Iniciar sesión">
-                    <button type="button" class="R0A915 A1 A2 boton-registro">Registrarme</button>
+                    <button type="button" class="R0A915 A1 A2">Registrate con Google</button>
                     <button type="button" class="R0A915 A1 boton-cerrar">Volver</button>
                 </div>
                 <? echo $mensaje; ?>
