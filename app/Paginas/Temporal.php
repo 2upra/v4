@@ -434,6 +434,7 @@ function devlogin()
         </div>
 
         <div class="WLOZDD">
+            <p>Muchas gracias</p>
             <? echo calcularAccionPorUsuario() ?>
         </div>
 
