@@ -208,7 +208,7 @@ function dev()
                     </div>
                     <div class="BNZWJR">
                         <span class="MASYTN GFDFDN">Total recaudado $632</span>
-                        <span class="MASYTN WJTTLG">Meta final $800</span>
+                        <span class="MASYTN WJTTLG">Meta final $1000</span>
                     </div>
                     <div class="LXCJWW">
                         <button class="borde<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Sponsor</button>
