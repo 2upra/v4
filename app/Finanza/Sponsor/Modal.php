@@ -3,11 +3,10 @@
 function add_pro_modal_to_footer()
 {
 
-    $plan_title = 'Patrocinio ';
+    $plan_title = 'Sponsor';
     $highlight = '✨';
     $modal_content = '
         <p class="priceplan">$5 <span>USD/mensual</span></p>
-        <p class="beneficiosplan">+ Participación creativa</p>
         <p class="beneficiosplan">+ Acceso anticipado</p>
         <p class="beneficiosplan">+ Contenido exclusivo</p>
         <p class="beneficiosplan">+ Reconocimiento</p>
@@ -29,7 +28,7 @@ function add_pro_modal_to_footer()
 
     <div class="panelperfilsup modalpro" id="proproacciones">
         <div class="panelperfilsupsec pla1">
-            <p class="titulomodal">Apoya el proyecto y recibe acciones mensuales</p>
+            <p class="titulomodal">Apoya el proyecto y recibe beneficios</p>
         </div>
         <div class="panelperfilsupsec plan2">
             <p class="tituloplan"><? echo $plan_title . $highlight; ?></p>
