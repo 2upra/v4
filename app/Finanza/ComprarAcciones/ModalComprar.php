@@ -8,7 +8,7 @@ function modalComprarAcciones()
 
         <div class="HMPGRM" id="modalinvertir">
             <div id="contenidocomprar">
-                <input type="text" id="cantidadCompra" placeholder="$10">
+                <input type="text" id="cantidadCompra" placeholder="$20">
                 <input type="hidden" id="cantidadReal">
                 <input type="hidden" id="userID" value="<? echo get_current_user_id(); ?>">
                 <p>"Al donar, parte de tu contribución se convierte en acciones de nuestra empresa a través de un fondo de inversión algorítmico que ajusta su valor automáticamente. Tu apoyo impulsa el proyecto y te hace parte de nuestro crecimiento, con la posibilidad de beneficiarte de nuestro crecimiento futuro"</p>
