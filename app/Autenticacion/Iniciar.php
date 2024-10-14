@@ -37,7 +37,7 @@ function iniciar_sesion()
                     <script>
                         document.getElementById('google-login-btn').addEventListener('click', function() {
                             window.location.href = 'https://accounts.google.com/o/oauth2/auth?' +
-                                'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com' +
+                                'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' + // Aquí agregamos el "&"
                                 'redirect_uri=https://2upra.com/google-callback&' +
                                 'response_type=code&' +
                                 'scope=email profile';
@@ -57,7 +57,14 @@ function iniciar_sesion()
     return ob_get_clean();
 }
 
-function handle_google_callback() {
+/*
+Acceso bloqueado: Error de autorización
+Missing required parameter: redirect_uri Más información sobre este error
+
+*/
+
+function handle_google_callback()
+{
     if (isset($_GET['code'])) {
         $code = $_GET['code'];
         $client_id = '84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com';
@@ -74,19 +81,19 @@ function handle_google_callback() {
                 'grant_type' => 'authorization_code',
             )
         ));
-        
+
         if (is_wp_error($response)) {
             echo 'Error en la autenticación con Google.';
             return;
         }
-        
+
         $token = json_decode($response['body']);
         $access_token = $token->access_token;
 
         // Obtener información del usuario
         $user_info_response = wp_remote_get('https://www.googleapis.com/oauth2/v1/userinfo?access_token=' . $access_token);
         $user_info = json_decode($user_info_response['body']);
-        
+
         if ($user_info && isset($user_info->email)) {
             $email = $user_info->email;
             $name = $user_info->name;
