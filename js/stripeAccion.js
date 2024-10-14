@@ -20,12 +20,24 @@ function stripecompra() {
         });
     }
 
-    // Función para hacer que el borde titile
+    // Función para hacer que el borde titile rápidamente
     function titilarBorde(input) {
-        input.style.border = '2px solid white'; // Cambia el borde a blanco
-        setTimeout(function () {
-            input.style.border = ''; // Restablece el borde después de 2 segundos
-        }, 2000);
+        let parpadeos = 6; // Número de parpadeos
+        let velocidadParpadeo = 200; // Tiempo de cada parpadeo en milisegundos (200ms = 0.2 segundos)
+
+        // Función para alternar el color del borde
+        function alternarBorde(count) {
+            if (count > 0) {
+                input.style.border = input.style.border === '2px solid white' ? '2px solid transparent' : '2px solid white';
+                setTimeout(function () {
+                    alternarBorde(count - 1); // Llamar de nuevo hasta que se agoten los parpadeos
+                }, velocidadParpadeo);
+            } else {
+                input.style.border = ''; // Restablecer el borde original al finalizar los parpadeos
+            }
+        }
+
+        alternarBorde(parpadeos); // Iniciar el proceso de parpadeo
     }
 
     // Mostrar el mensaje y hacer titilar el borde si la cantidad es inválida
