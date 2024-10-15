@@ -192,6 +192,8 @@ if (!defined('ABSPATH')) {
                     <button id="enviarEdit" class="borde">Editar</button>
                 </div>
 
+                <? echo modalCarta() ?>
+
                 <!-- Enviar mensaje de error -->
                 <div id="formularioError" class="formularioError" style="display:none;">
                     <textarea id="mensajeError" placeholder="Describe el error"></textarea>

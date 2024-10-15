@@ -218,8 +218,6 @@ function dev()
                         <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Donar</button>
                     </div>
 
-                    <? echo modalCarta() ?>
-
                     <div class="CGUNVP" id="modalregistro">
                         <? echo registrar_usuario() ?>
                     </div>
@@ -417,8 +415,7 @@ function devlogin()
             <button class="DZYBQD borde botonprincipal carta">Carta</button>
 
         </div>
-        
-        <? echo modalCarta() ?>
+
     </div>
 
     <? // if ($pro) : 
