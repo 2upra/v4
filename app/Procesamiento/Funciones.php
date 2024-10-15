@@ -529,10 +529,10 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
         . '"Instrumentos posibles":{"es":["Piano", "Guitarra"], "en":["Piano", "Guitar"]},'
         . '"Estado de animo":{"es":["Tranquilo"], "en":["Calm"]},'
         . '"Genero posible":{"es":["Hip hop"], "en":["Hip hop"]},'
-        . '"Tipo de audio":{"es":["Sample"], "en":["Sample"]},'
+        . '"Tipo de audio":{"es":["Sample, loop o one shot"], "en":["Sample"]},'
         . '"Tags posibles":{"es":["Naturaleza"], "en":["Nature"]},'
         . '"Sugerencia de busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
-        . " Nota adicional: solo responde con la estructura, intenta ser muy detallista y preciso con los datos, no digas nada adicional al usuario. "
+        . " Nota adicional: solo responde con la estructura, intenta ser muy detallista y preciso con los datos, no digas nada adicional al usuario. Algo importante a tener en cuenta es que debe determinarse bien si es un loop, o un one shot, o sea, los sonidos o golpes de sonidos, suenan una sola vez, y los loop es una secuencia de sonido, tu me entiendes, esa informacion va en tipo de audio."
         . "La descripción tiene que ser corta y breve, agrega solo datos en español y también en inglés, agrega muchas sugerencias de busqueda para optimizar el SEO.";
 
     // Usar el modelo Pro para generar la nueva descripción
