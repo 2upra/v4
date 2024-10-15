@@ -13,7 +13,7 @@ function socialTabs()
     <div class="tabs">
         <div class="tab-content">
 
-            <div class="tab INICIO S4K7I3" id="inicio">
+            <div class="tab INICIO S4K7I3" id="Feed">
                 <div class="OXMGLZ">
                     <div class="OAXRVB">
                         <div class="K51M22">
