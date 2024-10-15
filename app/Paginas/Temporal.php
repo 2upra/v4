@@ -339,7 +339,7 @@ function modalCarta()
 
                 <p>Los productores necesitamos algo más accesible y práctico. Queremos poder separar pistas fácilmente, tener kits de batería frescos todos los días, un espacio donde encontrar colaboraciones, organizar nuestros samples, o tener una lista de sonidos favoritos para el próximo proyecto. Queremos subir el WAV a todas las malditas plataformas y no tener que esperar un mes para se publiquen o un año si queremos borrarla porque ya no nos gusta en nuestro catalago, y que buena idea sería un lugar donde los artistas pequeños puedan recibir apoyo directo de sus fans, y que esten todas su música junto a cualquier contenido que deseen compartir, fuah.</p>
 
-                <p>Lo bueno es que estoy dispuesta a construir cada una de estas soluciones, porque la independencia y resolver problemas le dan sentido a mi vida. He aprendido todo lo necesario para empezar, y estoy dispuesta a seguir aprendiendo lo que haga falta para lograrlo. También he aprendido que quizás no pueda hacerlo sola, y que no está mal aceptar que necesito un poco de ayuda.</p>
+                <p>Lo bueno es que estoy dispuesta a construir cada una de estas soluciones, porque la independencia y resolver problemas le dan sentido a mi vida. He aprendido todo lo necesario para empezar, y estoy dispuesta a seguir aprendiendo lo que haga falta para lograrlo. También he aprendido que quizás no pueda hacerlo sola, y que no está mal aceptar que necesito un poco de ayuda, y la verdad, la necesito esta vez, cualquier pequeño apoyo hará la diferencia.</p>
 
             </div>
             <div class="WMPVLV">
