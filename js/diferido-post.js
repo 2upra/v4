@@ -27,6 +27,8 @@
             configurarEventoBusqueda();
             eventoBusquedaConfigurado = true;
         }
+
+        configurarEventosPostTag();
         ajustarAlturaMaxima();
         habilitarCargaPorScroll();
         establecerIdUsuarioDesdeInput();
