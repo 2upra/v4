@@ -437,8 +437,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     } else {
         $tags_usuario_texto = 'Sin etiquetas';
     }
-
-    // Crear el prompt para la IA, incluyendo el contenido del post y los tags del usuario
+    
     $prompt = "Un usuario acaba de subir un audio con la siguiente descripción: {$post_content}. Los tags asociados son: {$tags_usuario_texto}."
         . "Por favor, determina una descripción del audio utilizando el siguiente formato (ESTOS SON DATOS DE EJEMPLO): "
         . '{"Descripcion":"Descripción del audio generada por IA", "Instrumentos posibles":["Piano", "Guitarra", "Batería"], "Estado de animo":["Tranquilo", "Suave"], "Genero posible":["Hip hop", "Electrónica"], "Tipo de audio":["Sample"], "Tags posibles":["Naturaleza", "Percusión", "Relajación"], "Sugerencia de busqueda":["Sonido relajante", "percusión suave", "baterías para hip hop", "efectos cinematograficos"]}. '
