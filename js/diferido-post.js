@@ -22,18 +22,16 @@
         publicacionesCargadas.clear();
         identificador = '';
         window.idUsuarioActual = null;
-    
+
         if (!eventoBusquedaConfigurado) {
             configurarEventoBusqueda();
             eventoBusquedaConfigurado = true;
         }
 
-        configurarEventosPostTag();
         ajustarAlturaMaxima();
         habilitarCargaPorScroll();
         establecerIdUsuarioDesdeInput();
-    
-        // **Configurar inicialmente los eventos de <span class="postTag">**
+
         reiniciarEventosPostTag();
     }
 
@@ -61,9 +59,15 @@
             scrollTimeout = null;
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             const alturaVentana = window.innerHeight;
-            const alturaDocumento = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
+            const alturaDocumento = Math.max(
+                document.body.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.clientHeight,
+                document.documentElement.scrollHeight,
+                document.documentElement.offsetHeight
+            );
 
-            log('Evento de scroll detectado:', {scrollTop, alturaVentana, alturaDocumento, estaCargando});
+            log('Evento de scroll detectado:', { scrollTop, alturaVentana, alturaDocumento, estaCargando });
 
             if (scrollTop + alturaVentana > alturaDocumento - 100 && !estaCargando && hayMasContenido) {
                 log('Condiciones para cargar más contenido cumplidas');
@@ -92,15 +96,15 @@
             return;
         }
 
-        const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
+        const { filtro = '', tabId = '', posttype = '' } = listaPublicaciones.dataset;
         const idUsuario = window.idUsuarioActual || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
 
-        log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual});
+        log('Parámetros de carga:', { filtro, tabId, identificador, idUsuario, paginaActual });
 
         try {
             const respuesta = await fetch(ajaxUrl, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({
                     action: 'cargar_mas_publicaciones',
                     paged: paginaActual,
@@ -112,6 +116,10 @@
                     cargadas: Array.from(publicacionesCargadas).join(',')
                 })
             });
+
+            if (!respuesta.ok) {
+                throw new Error(`HTTP error! status: ${respuesta.status}`);
+            }
 
             const textoRespuesta = await respuesta.text();
             await procesarRespuesta(textoRespuesta);
@@ -125,45 +133,56 @@
     async function procesarRespuesta(respuesta) {
         log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
         const respuestaLimpia = respuesta.trim();
+
         if (respuestaLimpia === '<div id="no-more-posts"></div>') {
             log('No hay más publicaciones');
             detenerCarga();
-        } else {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(respuesta, 'text/html');
-    
-            doc.querySelectorAll('.EDYQHV').forEach(publicacion => {
-                const idPublicacion = publicacion.getAttribute('id-post');
-                if (idPublicacion && !publicacionesCargadas.has(idPublicacion)) {
-                    publicacionesCargadas.add(idPublicacion);
-                    log('Publicación añadida:', idPublicacion);
-                }
-            });
-    
-            const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
-            if (respuestaLimpia && !doc.querySelector('#no-more-posts')) {
-                listaPublicaciones.insertAdjacentHTML('beforeend', respuesta);
-                log('Contenido añadido');
-                paginaActual++;
-                ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts'].forEach(funcion => {
-                    if (typeof window[funcion] === 'function') window[funcion]();
-                });
-    
-                // **Aquí llamamos a reiniciarEventosPostTag para configurar los nuevos tags**
-                reiniciarEventosPostTag();
-            } else {
-                log('No más publicaciones o respuesta vacía');
-                detenerCarga();
+            return;
+        }
+
+        if (!respuestaLimpia) {
+            log('Respuesta vacía recibida');
+            detenerCarga();
+            return;
+        }
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(respuesta, 'text/html');
+
+        const publicacionesNuevas = doc.querySelectorAll('.EDYQHV');
+        if (publicacionesNuevas.length === 0) {
+            log('No se encontraron publicaciones nuevas en la respuesta');
+            detenerCarga();
+            return;
+        }
+
+        publicacionesNuevas.forEach(publicacion => {
+            const idPublicacion = publicacion.getAttribute('id-post');
+            if (idPublicacion && !publicacionesCargadas.has(idPublicacion)) {
+                publicacionesCargadas.add(idPublicacion);
+                log('Publicación añadida:', idPublicacion);
             }
+        });
+
+        const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
+        if (listaPublicaciones) {
+            listaPublicaciones.insertAdjacentHTML('beforeend', respuesta);
+            log('Contenido añadido');
+            paginaActual++;
+            ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts'].forEach(funcion => {
+                if (typeof window[funcion] === 'function') window[funcion]();
+            });
+
+            // Actualiza los eventos de delegación si es necesario
+            reiniciarEventosPostTag();
+        } else {
+            log('No se encontró .social-post-list para añadir contenido');
         }
     }
 
-    /**
-     * Reinicia los eventos de clic en los <span class="postTag">
-     */
     function reiniciarEventosPostTag() {
-        log('Reiniciando eventos de clic en <span class="postTag">');
-        configurarEventosPostTag();
+        log('Reiniciando eventos de clic mediante delegación en <span class="postTag">');
+        configurarDelegacionEventosPostTag();
     }
 
     function habilitarCargaPorScroll() {
@@ -171,24 +190,27 @@
         window.addEventListener('scroll', manejarScroll);
     }
 
-    function configurarEventosPostTag() {
-        const postTags = document.querySelectorAll('.postTag');
-
-        postTags.forEach(tag => {
-            tag.removeEventListener('click', manejadorClickPostTag);
-            tag.addEventListener('click', manejadorClickPostTag);
-        });
-
-        log('Eventos de clic configurados para <span class="postTag">');
+    function configurarDelegacionEventosPostTag() {
+        const contenedor = document.querySelector('.social-post-list');
+        if (contenedor) {
+            contenedor.removeEventListener('click', delegarClickPostTag);
+            contenedor.addEventListener('click', delegarClickPostTag);
+            log('Delegación de eventos de clic configurada para <span class="postTag">');
+        } else {
+            log('No se encontró el contenedor .social-post-list para delegar eventos');
+        }
     }
 
-    function manejadorClickPostTag(e) {
-        const tag = e.currentTarget;
-        const valorTag = tag.textContent.trim();
-        log('Tag clicado:', valorTag);
-        identificador = valorTag;
-        resetearCarga();
-        cargarMasContenido();
+    function delegarClickPostTag(e) {
+        const tag = e.target.closest('.postTag');
+        if (tag) {
+            e.preventDefault();
+            const valorTag = tag.textContent.trim();
+            log('Tag clicado mediante delegación:', valorTag);
+            identificador = valorTag;
+            resetearCarga();
+            cargarMasContenido();
+        }
     }
 
     function configurarEventoBusqueda() {
@@ -196,6 +218,7 @@
         if (inputBusqueda) {
             inputBusqueda.removeEventListener('keypress', manejadorEventoBusqueda);
             inputBusqueda.addEventListener('keypress', manejadorEventoBusqueda);
+            log('Evento de búsqueda configurado para el input #identifier');
         } else {
             log('No se encontró el elemento input de búsqueda');
         }
@@ -205,22 +228,27 @@
         if (e.key === 'Enter') {
             e.preventDefault();
             identificador = e.target.value.trim();
-            log('Enter presionado, valor de identificador:', identificador);
+            log('Enter presionado en búsqueda, valor de identificador:', identificador);
             resetearCarga();
             cargarMasContenido();
         }
     }
 
     function resetearCarga() {
+        log('Ejecutando resetearCarga');
         paginaActual = 1;
         publicacionesCargadas.clear();
-        habilitarCargaPorScroll();
-        log('Ejecutando resetearCarga');
+        hayMasContenido = true;
+
         const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
         if (listaPublicaciones) {
             listaPublicaciones.innerHTML = '';
+        } else {
+            log('No se encontró .social-post-list para limpiar contenido');
         }
-        hayMasContenido = true;
+
+        // Opcional: Scroll hacia la parte superior
+        window.scrollTo(0, 0);
     }
 
     function detenerCarga() {
@@ -234,6 +262,9 @@
         const elemento = contenedor?.querySelector('li[filtro="rolastatus"]');
         if (contenedor && elemento) {
             contenedor.style.maxHeight = `${elemento.offsetHeight + 40}px`;
+            log('Altura máxima ajustada');
+        } else {
+            log('No se encontró contenedor o elemento para ajustar altura máxima');
         }
     }
 
