@@ -493,6 +493,148 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 
     // Guardar nuevamente el metadato actualizado
     update_post_meta($post_id, 'datosAlgoritmo', json_encode($datos_algoritmo, JSON_UNESCAPED_UNICODE));
+    update_post_meta($post_id, 'flashIA', true);
 
     iaLog("Metadatos de 'datosAlgoritmo' actualizados para el post ID: {$post_id}");
 }
+
+/*
+necesito que automaticamente cada 30 minutos, todos los post que contengan un audio, osea buscar lost que tengan un ID en la meta post_audio_lite , que es un id de un archivo de audio, tiene que verificar si es un audio valido o existe porque aveces puede dar error, y si todo esta bien, ejecutar mejorarDescripcionAudioPro($post_id, $archivo_audio), tiene que ignorar los post que tienen update_post_meta($post_id, 'proIA', true); porque signifca que ya sus descripciones fueron mejoradas, tambien, puede dar prioridad obviamente los post mas recientes, y tambien mas prioridad a los que tienen mas like, referencia
+
+function contarLike($post_id) {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'post_likes';
+    
+    // Contar el número de likes para el post
+    $like_count = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM $table_name WHERE post_id = %d",
+        $post_id
+    ));
+
+    return $like_count ? $like_count : 0;
+}
+*/
+
+function mejorarDescripcionAudioPro($post_id, $archivo_audio)
+{
+    // Obtener el contenido actual del post
+    $post_content = get_post_field('post_content', $post_id);
+    if (!$post_content) {
+        iaLog("No se pudo obtener el contenido del post ID: {$post_id}");
+        return;
+    }
+
+    // Crear el prompt para el modelo Pro
+    $prompt = "El usuario ya subió este audio, pero se necesita una descripción del audio mejorada, el post original dice {$post_id}."
+        . " Por favor, determina una descripción del audio utilizando el siguiente formato JSON (ESTOS SON DATOS DE EJEMPLO): "
+        . '{"Descripcion":"Descripción del audio generada por IA", "Instrumentos posibles":["Piano", "Guitarra", "Batería"], "Estado de animo":["Tranquilo", "Suave"], "Genero posible":["Hip hop", "Electrónica"], "Tipo de audio":["Sample"], "Tags posibles":["Naturaleza", "Percusión", "Relajación"], "Sugerencia de busqueda":["Sonido relajante", "percusión suave", "baterías para hip hop", "efectos cinematograficos"]}.'
+        . " Nota adicional: solo responde con la estructura, intenta ser muy detallista con los datos, no digas nada adicional al usuario. "
+        . "La descripción tiene que ser corta y breve, agrega solo datos en español.";
+
+    // Usar el modelo Pro para generar la nueva descripción
+    $descripcion_mejorada = generarDescripcionIAPro($archivo_audio, $prompt);
+
+    if ($descripcion_mejorada) {
+        // Limpiar y procesar la nueva descripción generada
+        $descripcion_procesada = json_decode(trim($descripcion_mejorada, "```json \n"), true);
+
+        if ($descripcion_procesada) {
+            // Obtener el metadato 'datosAlgoritmo' existente
+            $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
+            if ($datos_algoritmo) {
+                $datos_algoritmo = json_decode($datos_algoritmo, true);
+            } else {
+                $datos_algoritmo = [];
+            }
+
+            // Preservar los datos esenciales
+            $datos_preservados = [
+                'tags' => $datos_algoritmo['tags'] ?? [],
+                'bpm' => $datos_algoritmo['bpm'] ?? null,
+                'key' => $datos_algoritmo['key'] ?? null,
+                'scale' => $datos_algoritmo['scale'] ?? null,
+                'autor' => $datos_algoritmo['autor'] ?? []
+            ];
+
+            // Agregar la nueva descripción IA mejorada
+            $nuevos_datos = [
+                'descripcion_ia_pro' => $descripcion_procesada
+            ];
+
+            // Combinar los datos preservados con los nuevos
+            $datos_actualizados = array_merge($datos_preservados, $nuevos_datos);
+
+            // Guardar los metadatos actualizados
+            update_post_meta($post_id, 'datosAlgoritmo', json_encode($datos_actualizados, JSON_UNESCAPED_UNICODE));
+            iaLog("Metadatos actualizados para el post ID: {$post_id}");
+
+            // Marcar que la descripción fue mejorada
+            update_post_meta($post_id, 'proIA', true);
+            iaLog("Post con descripción mejorada: {$post_id}");
+        } else {
+            iaLog("Error al procesar el JSON de la descripción mejorada generada por IA Pro.");
+        }
+    } else {
+        iaLog("No se pudo generar la descripción mejorada para el post ID: {$post_id}");
+    }
+}
+
+function procesarAudiosMejorarDescripcion() {
+    global $wpdb;
+    
+    // Buscar todos los post con un archivo de audio válido (post_audio_lite) que aún no tengan 'proIA' en true
+    $query = "
+        SELECT p.ID, pm.meta_value AS archivo_audio
+        FROM {$wpdb->posts} p
+        INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+        LEFT JOIN {$wpdb->postmeta} proIA_meta ON p.ID = proIA_meta.post_id AND proIA_meta.meta_key = 'proIA'
+        WHERE pm.meta_key = 'post_audio_lite'
+        AND proIA_meta.meta_value IS NULL
+        AND p.post_status = 'publish'
+        ORDER BY p.post_date DESC
+    ";
+    
+    $posts_con_audio = $wpdb->get_results($query);
+    
+    // Ordenar los posts por número de likes
+    usort($posts_con_audio, function($a, $b) {
+        return contarLike($b->ID) - contarLike($a->ID);
+    });
+
+    // Procesar cada post encontrado
+    foreach ($posts_con_audio as $post) {
+        $post_id = $post->ID;
+        $archivo_audio = $post->archivo_audio;
+
+        // Verificar si el archivo de audio existe
+        if (file_exists($archivo_audio)) {
+            // Ejecutar la función para mejorar la descripción del audio
+            mejorarDescripcionAudioPro($post_id, $archivo_audio);
+        } else {
+            iaLog("El archivo de audio no existe para el post ID: {$post_id}");
+        }
+    }
+}
+
+// Función para ejecutarla cada 30 minutos
+function programarMejorarDescripcionAudioPro() {
+    if (!wp_next_scheduled('mejorar_descripcion_audio_event')) {
+        wp_schedule_event(time(), 'thirty_minutes', 'mejorar_descripcion_audio_event');
+    }
+}
+
+add_action('mejorar_descripcion_audio_event', 'procesarAudiosMejorarDescripcion');
+
+// Registrar intervalo de 30 minutos
+function agregarIntervaloCronPersonalizado($schedules) {
+    $schedules['thirty_minutes'] = [
+        'interval' => 1800, // 1800 segundos = 30 minutos
+        'display'  => __('Cada 30 minutos')
+    ];
+    return $schedules;
+}
+
+add_filter('cron_schedules', 'agregarIntervaloCronPersonalizado');
+// Programar evento al activar el plugin o tema
+add_action('wp', 'programarMejorarDescripcionAudioPro');
+
