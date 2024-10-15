@@ -26,9 +26,9 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
-    // Obtener el identificador de búsqueda
-    $identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : '';
-    $posts = intval($args['posts']);
+    //si llega identifier es que es una busqueda
+    $identifier = $_POST['identifier'] ?? '';
+    $posts = $args['posts'];
 
     if ($args['post_type'] === 'social_post') {
         $posts_personalizados = calcularFeedPersonalizado($current_user_id);
@@ -38,23 +38,13 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             $post_ids = array_slice($post_ids, 0, $posts);
         }
 
-        $meta_query = [];
-
-        if (!empty($identifier)) {
-            $meta_query[] = [
-                'key' => 'datosAlgoritmo',
-                'value' => '%' . $wpdb->esc_like($identifier) . '%',
-                'compare' => 'LIKE'
-            ];
-        }
-
         $query_args = [
             'post_type' => $args['post_type'],
             'posts_per_page' => $posts,
             'paged' => $paged,
             'post__in' => $post_ids,
             'orderby' => 'post__in',
-            'meta_query' => $meta_query,
+            'meta_query' => !empty($identifier) ? [['key' => 'datosAlgoritmo', 'value' => $identifier, 'compare' => 'LIKE']] : [],
         ];
     } else {
         $query_args = [
@@ -64,17 +54,16 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             'orderby' => 'date',
             'order' => 'DESC', 
         ];
+
     }
 
     if (!empty($args['exclude'])) {
-        $query_args['post__not_in'] = array_map('intval', $args['exclude']);
+        $query_args['post__not_in'] = $args['exclude'];
     }
-
-    // Aplicar otros filtros si es necesario
     $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
-
     return $query_args;
 }
+
 
 
 function procesarPublicaciones($query_args, $args, $is_ajax)
