@@ -12,124 +12,13 @@
     let eventoBusquedaConfigurado = false;
     let scrollTimeout = null;
 
-    // Funciones existentes...
-
-    // *** Inicio de las funciones para el indicador de búsqueda global ***
-
-    /**
-     * Crea y muestra el indicador de búsqueda global.
-     */
-    function mostrarIndicadorBusquedaGlobal() {
-        // Verifica si el indicador ya existe
-        if (document.getElementById('indicador-busqueda-global')) return;
-
-        // Crear el contenedor del indicador
-        const indicador = document.createElement('div');
-        indicador.id = 'indicador-busqueda-global';
-        indicador.style.position = 'fixed';
-        indicador.style.top = '10px';
-        indicador.style.left = '50%';
-        indicador.style.transform = 'translateX(-50%)';
-        indicador.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        indicador.style.color = '#fff';
-        indicador.style.padding = '10px 20px';
-        indicador.style.borderRadius = '5px';
-        indicador.style.zIndex = '1000';
-        indicador.style.display = 'flex';
-        indicador.style.alignItems = 'center';
-        indicador.style.gap = '10px';
-        indicador.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
-        
-        // Mensaje de búsqueda
-        const mensaje = document.createElement('span');
-        mensaje.textContent = 'Buscando...';
-        mensaje.style.fontSize = '16px';
-
-        // Botón para restablecer la búsqueda
-        const botonReset = document.createElement('button');
-        botonReset.textContent = 'Restablecer';
-        botonReset.style.backgroundColor = '#ff4d4d';
-        botonReset.style.color = '#fff';
-        botonReset.style.border = 'none';
-        botonReset.style.padding = '5px 10px';
-        botonReset.style.borderRadius = '3px';
-        botonReset.style.cursor = 'pointer';
-        botonReset.style.fontSize = '14px';
-
-        // Agregar evento al botón para restablecer la búsqueda
-        botonReset.addEventListener('click', () => {
-            log('Botón de restablecer búsqueda clicado');
-            reiniciarCargaDiferida();
-            // También limpiar el valor del identificador si es necesario
-            const inputBusqueda = document.getElementById('identifier');
-            if (inputBusqueda) {
-                inputBusqueda.value = '';
-            }
-        });
-
-        // Añadir mensaje y botón al indicador
-        indicador.appendChild(mensaje);
-        indicador.appendChild(botonReset);
-
-        // Agregar el indicador al cuerpo del documento
-        document.body.appendChild(indicador);
-        log('Indicador de búsqueda global mostrado');
-    }
-
-    /**
-     * Oculta y elimina el indicador de búsqueda global.
-     */
-    function ocultarIndicadorBusquedaGlobal() {
-        const indicador = document.getElementById('indicador-busqueda-global');
-        if (indicador) {
-            indicador.remove();
-            log('Indicador de búsqueda global ocultado');
-        }
-    }
-
-    // *** Fin de las funciones para el indicador de búsqueda global ***
-
-    // Funciones existentes...
-
-    /**
-     * Muestra indicadores locales (placeholder en input).
-     * Ahora también muestra el indicador global.
-     */
-    function mostrarIndicadorBusqueda() {
-        const inputBusqueda = document.getElementById('identifier');
-        if (inputBusqueda) {
-            // Almacenar el placeholder original para restaurarlo después
-            inputBusqueda.dataset.placeholderOriginal = inputBusqueda.placeholder;
-            inputBusqueda.placeholder = 'Buscando...';
-            inputBusqueda.disabled = true; // Opcional: Deshabilitar el input mientras busca
-        }
-        // Mostrar el indicador global
-        mostrarIndicadorBusquedaGlobal();
-    }
-
-    /**
-     * Oculta indicadores locales y globales.
-     */
-    function ocultarIndicadorBusqueda() {
-        const inputBusqueda = document.getElementById('identifier');
-        if (inputBusqueda && inputBusqueda.dataset.placeholderOriginal) {
-            inputBusqueda.placeholder = inputBusqueda.dataset.placeholderOriginal;
-            delete inputBusqueda.dataset.placeholderOriginal; // Limpiar el dato almacenado
-            inputBusqueda.disabled = false; // Rehabilitar el input
-        }
-        // Ocultar el indicador global
-        ocultarIndicadorBusquedaGlobal();
-    }
-
-    /**
-     * Reinicia la carga diferida y limpia el estado de búsqueda.
-     */
+    // Función que se llama cada vez que se cambia de página mediante AJAX
     function reiniciarCargaDiferida() {
         log('Reiniciando carga diferida');
         window.removeEventListener('scroll', manejarScroll);
         estaCargando = false;
         hayMasContenido = true;
-        paginaActual = 1; // Reiniciar a la página 1
+        paginaActual = 2;
         publicacionesCargadas.clear();
         identificador = '';
         window.idUsuarioActual = null;
@@ -144,27 +33,33 @@
         establecerIdUsuarioDesdeInput();
 
         reiniciarEventosPostTag();
-
-        // Mostrar u ocultar indicadores según sea necesario
-        ocultarIndicadorBusqueda();
     }
 
-    /**
-     * Maneja el scroll para cargar más contenido.
-     */
+    function establecerIdUsuarioDesdeInput() {
+        const inputPaginaActual = document.getElementById('pagina_actual');
+        if (inputPaginaActual?.value.toLowerCase() === 'sello') {
+            const inputIdUsuario = document.getElementById('user_id');
+            if (inputIdUsuario) {
+                const idUsuario = inputIdUsuario.value;
+                const contenedorPerfil = document.querySelector('.custom-uprofile-container');
+                contenedorPerfil?.setAttribute('data-author-id', idUsuario);
+                window.idUsuarioActual = idUsuario;
+                log('ID de usuario establecido:', idUsuario);
+            } else {
+                log('No se encontró el input de user_id');
+            }
+        } else {
+            log('La página actual no es "sello"');
+        }
+    }
+    //
     function manejarScroll() {
         if (scrollTimeout) return;
         scrollTimeout = setTimeout(() => {
             scrollTimeout = null;
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             const alturaVentana = window.innerHeight;
-            const alturaDocumento = Math.max(
-                document.body.scrollHeight,
-                document.body.offsetHeight,
-                document.documentElement.clientHeight,
-                document.documentElement.scrollHeight,
-                document.documentElement.offsetHeight
-            );
+            const alturaDocumento = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
 
             log('Evento de scroll detectado:', {scrollTop, alturaVentana, alturaDocumento, estaCargando});
 
@@ -181,14 +76,10 @@
         estaCargando = true;
         log('Iniciando carga de más contenido');
 
-        // Mostrar el indicador de búsqueda global
-        mostrarIndicadorBusqueda();
-
         const elementoPestañaActiva = document.querySelector('.tab.active');
         if (elementoPestañaActiva?.getAttribute('ajax') === 'no') {
             log('La pestaña activa tiene ajax="no". No se cargará más contenido.');
             estaCargando = false;
-            ocultarIndicadorBusqueda();
             return;
         }
 
@@ -196,7 +87,6 @@
         if (!listaPublicaciones) {
             log('No se encontró una pestaña activa');
             estaCargando = false;
-            ocultarIndicadorBusqueda();
             return;
         }
 
@@ -231,7 +121,6 @@
             log('Error en la petición AJAX:', error);
         } finally {
             estaCargando = false;
-            ocultarIndicadorBusqueda();
         }
     }
 
@@ -304,6 +193,25 @@
         window.addEventListener('scroll', manejarScroll);
     }
 
+    function mostrarIndicadorBusqueda() {
+        const inputBusqueda = document.getElementById('identifier');
+        if (inputBusqueda) {
+            // Almacenar el placeholder original para restaurarlo después
+            inputBusqueda.dataset.placeholderOriginal = inputBusqueda.placeholder;
+            inputBusqueda.placeholder = 'Buscando...';
+            inputBusqueda.disabled = true; // Opcional: Deshabilitar el input mientras busca
+        }
+    }
+
+    function ocultarIndicadorBusqueda() {
+        const inputBusqueda = document.getElementById('identifier');
+        if (inputBusqueda && inputBusqueda.dataset.placeholderOriginal) {
+            inputBusqueda.placeholder = inputBusqueda.dataset.placeholderOriginal;
+            delete inputBusqueda.dataset.placeholderOriginal; // Limpiar el dato almacenado
+            inputBusqueda.disabled = false; // Rehabilitar el input
+        }
+    }
+
     //aqui necesito algo adicional, cuando se hace click a un postTag, en <input type="text" id="identifier" placeholder="Busqueda"> aparezca que se esta buscando, ya que si funciona pero el usuario puede perder si no ve que esta buscando
     function configurarDelegacionEventosPostTag() {
         const contenedor = document.querySelector('.social-post-list');
@@ -324,7 +232,6 @@
             log('Tag clicado mediante delegación:', valorTag);
             identificador = valorTag;
             resetearCarga();
-            mostrarIndicadorBusqueda(); // Mostrar el indicador cuando se hace clic en un tag
             cargarMasContenido();
         }
     }
@@ -346,7 +253,6 @@
             identificador = e.target.value.trim();
             log('Enter presionado en búsqueda, valor de identificador:', identificador);
             resetearCarga();
-            mostrarIndicadorBusqueda(); // Mostrar el indicador cuando se realiza una búsqueda
             cargarMasContenido();
         }
     }
