@@ -100,11 +100,18 @@ async function envioRs() {
     const button = document.getElementById('enviarRs');
 
     button.addEventListener('click', async event => {
+        // Almacenar el texto original del botón
+        const originalText = button.innerText || button.textContent;
+
+        // Cambiar el texto del botón a "Procesando" y deshabilitarlo
+        button.innerText = 'Procesando';
         button.disabled = true;
 
         const verificarCampos = verificarCamposRs();
         const valid = verificarCampos();
         if (!valid) {
+            // Restaurar el texto original y reactivar el botón si la validación falla
+            button.innerText = originalText;
             button.disabled = false;
             return;
         }
@@ -149,6 +156,8 @@ async function envioRs() {
             console.error('Error al enviar los datos:', error);
             alert('Ocurrió un error durante la publicación. Por favor, inténtelo de nuevo.');
         } finally {
+            // Restaurar el texto original y reactivar el botón
+            button.innerText = originalText;
             button.disabled = false;
         }
     });
