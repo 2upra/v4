@@ -219,7 +219,7 @@ function dev()
                     </div>
                     <div class="TAZFZZ" id="modalCarta" style="display: none;">
                         <div class="XCTQCK">
-                            <div class="WMPVLD"> <? echo $GLOBALS['iconoinicio']; ?></div>
+                            <div class="WMPVLD"> <? echo $GLOBALS['iconologo']; ?></div>
                             <div class="JMEPEB">
                                 <p>Hola,</p>
 
@@ -235,7 +235,7 @@ function dev()
 
                             </div>
                             <div class="WMPVLV">
-                                <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/10/dsfasdfds.png') ?>" alt="">
+                                <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/10/afsafad.png') ?>" alt="">
                                 <p>Wandorius</p>
                             </div>
                         </div>
