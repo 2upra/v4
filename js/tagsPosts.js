@@ -19,7 +19,6 @@ function removeDuplicates(arr) {
     return [...new Set(arr)];
 }
 
-
 function tagsPosts() {
     document.querySelectorAll('p[id-post-algoritmo]').forEach(function(pElement) {
         const postId = pElement.getAttribute('id-post-algoritmo');
@@ -69,29 +68,44 @@ function tagsPosts() {
             allTags.push(capitalize(jsonData.key) + ' ' + capitalize(jsonData.scale));
         }
 
-        // Agregar instrumentos posibles
-        if (jsonData.descripcion_ia && jsonData.descripcion_ia["Instrumentos posibles"]) {
-            allTags = allTags.concat(jsonData.descripcion_ia["Instrumentos posibles"].map(capitalize));
-        }
+        // Verificar si estamos usando la estructura nueva con "es" y "en"
+        const descripcion = jsonData.descripcion_ia_pro || jsonData.descripcion_ia;
 
-        // Agregar estados de ánimo
-        if (jsonData.descripcion_ia && jsonData.descripcion_ia["Estado de animo"]) {
-            allTags = allTags.concat(jsonData.descripcion_ia["Estado de animo"].map(capitalize));
-        }
+        if (descripcion) {
+            // Agregar instrumentos posibles (nueva estructura)
+            if (jsonData.instrumentos_posibles && jsonData.instrumentos_posibles["es"]) {
+                allTags = allTags.concat(jsonData.instrumentos_posibles["es"].map(capitalize));
+            } else if (descripcion["Instrumentos posibles"]) { // Estructura vieja
+                allTags = allTags.concat(descripcion["Instrumentos posibles"].map(capitalize));
+            }
 
-        // Agregar géneros posibles
-        if (jsonData.descripcion_ia && jsonData.descripcion_ia["Genero posible"]) {
-            allTags = allTags.concat(jsonData.descripcion_ia["Genero posible"].map(capitalize));
-        }
+            // Agregar estados de ánimo (nueva estructura)
+            if (jsonData.estado_animo && jsonData.estado_animo["es"]) {
+                allTags = allTags.concat(jsonData.estado_animo["es"].map(capitalize));
+            } else if (descripcion["Estado de animo"]) { // Estructura vieja
+                allTags = allTags.concat(descripcion["Estado de animo"].map(capitalize));
+            }
 
-        // Agregar tipo de audio
-        if (jsonData.descripcion_ia && jsonData.descripcion_ia["Tipo de audio"]) {
-            allTags = allTags.concat(jsonData.descripcion_ia["Tipo de audio"].map(capitalize));
-        }
+            // Agregar géneros posibles (nueva estructura)
+            if (jsonData.genero_posible && jsonData.genero_posible["es"]) {
+                allTags = allTags.concat(jsonData.genero_posible["es"].map(capitalize));
+            } else if (descripcion["Genero posible"]) { // Estructura vieja
+                allTags = allTags.concat(descripcion["Genero posible"].map(capitalize));
+            }
 
-        // Agregar tags posibles
-        if (jsonData.descripcion_ia && jsonData.descripcion_ia["Tags posibles"]) {
-            allTags = allTags.concat(jsonData.descripcion_ia["Tags posibles"].map(capitalize));
+            // Agregar tipo de audio (nueva estructura)
+            if (jsonData.tipo_audio && jsonData.tipo_audio["es"]) {
+                allTags = allTags.concat(jsonData.tipo_audio["es"].map(capitalize));
+            } else if (descripcion["Tipo de audio"]) { // Estructura vieja
+                allTags = allTags.concat(descripcion["Tipo de audio"].map(capitalize));
+            }
+
+            // Agregar tags posibles (nueva estructura)
+            if (jsonData.tags_posibles && jsonData.tags_posibles["es"]) {
+                allTags = allTags.concat(jsonData.tags_posibles["es"].map(capitalize));
+            } else if (descripcion["Tags posibles"]) { // Estructura vieja
+                allTags = allTags.concat(descripcion["Tags posibles"].map(capitalize));
+            }
         }
 
         // Eliminar duplicados globalmente y agregar al contenedor de tags
@@ -104,6 +118,7 @@ function tagsPosts() {
         });
     });
 }
+
 
 
 
