@@ -238,6 +238,7 @@ function dev()
                                 <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/10/afsafad.png') ?>" alt="">
                                 <p>Wandorius</p>
                             </div>
+                            <button class="borde cerrarCarta">Volver</button>
                         </div>
                     </div>
 
