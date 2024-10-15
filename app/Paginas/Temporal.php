@@ -202,9 +202,6 @@ function dev()
 
                 <div class="BKXAFN">
 
-                    <div class="LXCJWW">
-                        <button class="borde botonprincipal carta">Carta</button>
-                    </div>
                     <div class="JMIOCI">
                         <h2>Un entorno libre para almas libres</h2>
                         <p>Biblioteca de recursos musicales con herramientas potenciadas para la colaboración e independencia artistica.</p>
@@ -214,6 +211,7 @@ function dev()
                         <span class="MASYTN WJTTLG">Meta final $1000</span>
                     </div>
                     <div class="LXCJWW">
+                    <button class="borde  carta">Carta</button>
                         <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Apoyar</button>
                     </div>
 
