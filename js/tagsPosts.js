@@ -19,7 +19,7 @@ function removeDuplicates(arr) {
     return [...new Set(arr)];
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+function tagsPosts() {
     document.querySelectorAll('p[id-post-algoritmo]').forEach(function(pElement) {
         const postId = pElement.getAttribute('id-post-algoritmo');
         let jsonData = null;
@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function() {
             tagsContainer.appendChild(tagElement);
         });
     });
-});
+}
 
 
 

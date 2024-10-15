@@ -146,7 +146,7 @@
                 listaPublicaciones.insertAdjacentHTML('beforeend', respuesta);
                 log('Contenido añadido');
                 paginaActual++;
-                ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA'].forEach(funcion => {
+                ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts'].forEach(funcion => {
                     if (typeof window[funcion] === 'function') window[funcion]();
                 });
             } else {
