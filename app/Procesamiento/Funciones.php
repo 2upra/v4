@@ -579,12 +579,14 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
     }
 }
 
-function procesarAudiosMejorarDescripcion() {
+function procesarUnAudio() {
     global $wpdb;
+
+    // Buscar el post con un archivo de audio válido (post_audio_lite) que aún no tenga 'proIA' en true y procesar solo uno
+    iaLog("Iniciando el procesamiento de un audio...");
     
-    // Buscar todos los post con un archivo de audio válido (post_audio_lite) que aún no tengan 'proIA' en true
     $query = "
-        SELECT p.ID, pm.meta_value AS archivo_audio
+        SELECT p.ID, pm.meta_value AS archivo_audio_id
         FROM {$wpdb->posts} p
         INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
         LEFT JOIN {$wpdb->postmeta} proIA_meta ON p.ID = proIA_meta.post_id AND proIA_meta.meta_key = 'proIA'
@@ -592,29 +594,54 @@ function procesarAudiosMejorarDescripcion() {
         AND proIA_meta.meta_value IS NULL
         AND p.post_status = 'publish'
         ORDER BY p.post_date DESC
+        LIMIT 1
     ";
-    
-    $posts_con_audio = $wpdb->get_results($query);
-    
-    // Ordenar los posts por número de likes
-    usort($posts_con_audio, function($a, $b) {
-        return contarLike($b->ID) - contarLike($a->ID);
-    });
 
-    // Procesar cada post encontrado
-    foreach ($posts_con_audio as $post) {
-        $post_id = $post->ID;
-        $archivo_audio = $post->archivo_audio;
+    iaLog("Ejecutando consulta SQL para buscar post con audio...");
+    
+    $post_con_audio = $wpdb->get_row($query);
 
-        // Verificar si el archivo de audio existe
-        if (file_exists($archivo_audio)) {
-            // Ejecutar la función para mejorar la descripción del audio
-            mejorarDescripcionAudioPro($post_id, $archivo_audio);
-        } else {
-            iaLog("El archivo de audio no existe para el post ID: {$post_id}");
+    if ($post_con_audio) {
+        $post_id = $post_con_audio->ID;
+        $archivo_audio_id = $post_con_audio->archivo_audio_id;
+
+        iaLog("Post encontrado. ID: {$post_id}, archivo_audio_id: {$archivo_audio_id}");
+
+        // Obtener la URL del archivo de audio a partir de la ID
+        $archivo_audio_url = wp_get_attachment_url($archivo_audio_id);
+
+        // Si no se encuentra la URL, saltar al siguiente post
+        if (!$archivo_audio_url) {
+            iaLog("No se encontró la URL del archivo de audio para el post ID: {$post_id}. Saliendo.");
+            return;
         }
+
+        iaLog("URL del archivo de audio obtenida: {$archivo_audio_url}");
+
+        // Convertir la URL a la ruta del servidor
+        $upload_dir = wp_upload_dir();
+        $archivo_audio_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $archivo_audio_url);
+
+        iaLog("Ruta del servidor del archivo de audio: {$archivo_audio_path}");
+
+        // Verificar si el archivo de audio existe en el servidor
+        if (file_exists($archivo_audio_path)) {
+            iaLog("El archivo de audio existe en el servidor. Iniciando mejora de descripción...");
+
+            // Ejecutar la función para mejorar la descripción del audio
+            mejorarDescripcionAudioPro($post_id, $archivo_audio_path);
+
+            iaLog("Mejora de descripción completada para el post ID: {$post_id}");
+        } else {
+            iaLog("El archivo de audio no existe en el servidor para el post ID: {$post_id}");
+        }
+    } else {
+        iaLog("No se encontraron posts pendientes de mejora de descripción.");
     }
+
+    iaLog("Procesamiento de audio completado.");
 }
+
 
 // Función para ejecutarla cada 30 minutos
 function programarMejorarDescripcionAudioPro() {
@@ -623,7 +650,7 @@ function programarMejorarDescripcionAudioPro() {
     }
 }
 
-add_action('mejorar_descripcion_audio_event', 'procesarAudiosMejorarDescripcion');
+add_action('mejorar_descripcion_audio_event', 'procesarUnAudio');
 
 // Registrar intervalo de 30 minutos
 function agregarIntervaloCronPersonalizado($schedules) {
@@ -635,6 +662,6 @@ function agregarIntervaloCronPersonalizado($schedules) {
 }
 
 add_filter('cron_schedules', 'agregarIntervaloCronPersonalizado');
+
 // Programar evento al activar el plugin o tema
 add_action('wp', 'programarMejorarDescripcionAudioPro');
-
