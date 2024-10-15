@@ -212,7 +212,7 @@ function dev()
                     </div>
                     <div class="LXCJWW">
                     <button class="borde  carta">Carta</button>
-                        <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Apoyar</button>
+                        <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Iniciar sesión</button>
                     </div>
 
                     <div class="CGUNVP" id="modalregistro">

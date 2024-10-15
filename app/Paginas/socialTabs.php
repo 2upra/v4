@@ -6,17 +6,12 @@ function socialTabs()
 ?>
 
     <div id="menuData" style="display:none;" pestanaActual="">
+        <div data-tab="Feed"></div>
         <div data-tab="Proyecto"></div>
-        <div data-tab="inicio"></div>
     </div>
 
     <div class="tabs">
         <div class="tab-content">
-
-
-            <div class="tab S4K7I3" id="Proyecto">
-                <? echo devlogin(); ?>
-            </div>
 
             <div class="tab INICIO S4K7I3" id="inicio">
                 <div class="OXMGLZ">
@@ -37,6 +32,10 @@ function socialTabs()
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="tab S4K7I3" id="Proyecto">
+                <? echo devlogin(); ?>
             </div>
 
 
