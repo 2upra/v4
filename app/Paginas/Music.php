@@ -1,16 +1,32 @@
 <?
 
-function musica() {
-    
-    $user_id = get_current_user_id(); 
+function musica()
+{
+    ob_start();
+?>
+    <div class="FLXVTQ">
+        <a href="https://2upra.com/">
+            <p>Aquí encontraras música de tus artistas en la plataforma, aún no esta disponible esta funcionalidad.</p>
+            <button class="borde">Volver</button>
+        </a>
+    </div>
+<?
+    return ob_get_clean();
+}
+
+/*
+function musica()
+{
+
+    $user_id = get_current_user_id();
     saberSi($user_id);
     ob_start();
-    ?>
+?>
 
     <div class="tabs">
         <div class="tab-content">
             <div class="tab active ZYBVGE" id="Music" data-post-id="tab1-posts" ajax="no">
-                
+
                 <? if (get_user_meta($user_id, 'leGustaAlMenosUnaRola', true)) : ?>
                     <div class="SAOEXP">
                         <div class="XZCZLA">
@@ -36,8 +52,9 @@ function musica() {
         </div>
     </div>
 
-    <?
+<?
     // Retorna el contenido generado
     return ob_get_clean();
 }
 
+*/

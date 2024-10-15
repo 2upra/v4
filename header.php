@@ -77,25 +77,26 @@ if (!defined('ABSPATH')) {
                     </div>
 
                     <div class="centermenu">
-
-                        <div class="menu-item">
+                        <!--
+                        <div class="menu-item" style="display: none;">
                             <a href="https://2upra.com/">
-                                <? echo $GLOBALS['iconoinicio']; ?>
+                                <? // echo $GLOBALS['iconoinicio']; 
+                                ?>
                             </a>
                         </div>
-
+                        -->
                         <div class="xaxa1 menu-item">
                             <a href="https://2upra.com/sello">
                                 <? echo $GLOBALS['icononube']; ?>
                             </a>
                         </div>
-
+                        <!--
                         <div class="subiricono menu-item" id="subiricono">
                             <a>
-                                <? echo $GLOBALS['subiricono']; ?>
+                                <?// echo $GLOBALS['subiricono']; ?>
                             </a>
                         </div>
-
+                        -->
                         <div class="menu-item">
                             <a href="https://2upra.com/mu">
                                 <? echo $GLOBALS['iconomusic']; ?>
