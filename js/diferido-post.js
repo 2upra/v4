@@ -52,7 +52,7 @@
             log('La página actual no es "sello"');
         }
     }
-
+    //
     function manejarScroll() {
         if (scrollTimeout) return;
         scrollTimeout = setTimeout(() => {
