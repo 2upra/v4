@@ -527,7 +527,13 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
     // Crear el prompt para el modelo Pro
     $prompt = "El usuario ya subió este audio, pero se necesita una descripción del audio mejorada, el post original dice {$post_id}."
         . " Por favor, determina una descripción del audio utilizando el siguiente formato JSON (ESTOS SON DATOS DE EJEMPLO): "
-        . '{"Descripcion":"Descripción del audio generada por IA", "Instrumentos posibles":["Piano", "Guitarra", "Batería"], "Estado de animo":["Tranquilo", "Suave"], "Genero posible":["Hip hop", "Electrónica"], "Tipo de audio":["Sample"], "Tags posibles":["Naturaleza", "Percusión", "Relajación"], "Sugerencia de busqueda":["Sonido relajante", "percusión suave", "baterías para hip hop", "efectos cinematograficos"]}.'
+        . '{"Descripcion":{"es":"Descripción del audio generada por IA", "en":"AI generated audio description"},'
+        . '"Instrumentos posibles":{"es":["Piano", "Guitarra"], "en":["Piano", "Guitar"]},'
+        . '"Estado de animo":{"es":["Tranquilo"], "en":["Calm"]},'
+        . '"Genero posible":{"es":["Hip hop"], "en":["Hip hop"]},'
+        . '"Tipo de audio":{"es":["Sample"], "en":["Sample"]},'
+        . '"Tags posibles":{"es":["Naturaleza"], "en":["Nature"]},'
+        . '"Sugerencia de busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
         . " Nota adicional: solo responde con la estructura, intenta ser muy detallista con los datos, no digas nada adicional al usuario. "
         . "La descripción tiene que ser corta y breve, agrega solo datos en español.";
 
@@ -556,9 +562,36 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
                 'autor' => $datos_algoritmo['autor'] ?? []
             ];
 
-            // Agregar la nueva descripción IA mejorada
+            // Agregar la nueva descripción IA mejorada con traducciones
             $nuevos_datos = [
-                'descripcion_ia_pro' => $descripcion_procesada
+                'descripcion_ia_pro' => [
+                    'es' => $descripcion_procesada['Descripcion']['es'] ?? '',
+                    'en' => $descripcion_procesada['Descripcion']['en'] ?? ''
+                ],
+                'instrumentos_posibles' => [
+                    'es' => $descripcion_procesada['Instrumentos posibles']['es'] ?? [],
+                    'en' => $descripcion_procesada['Instrumentos posibles']['en'] ?? []
+                ],
+                'estado_animo' => [
+                    'es' => $descripcion_procesada['Estado de animo']['es'] ?? [],
+                    'en' => $descripcion_procesada['Estado de animo']['en'] ?? []
+                ],
+                'genero_posible' => [
+                    'es' => $descripcion_procesada['Genero posible']['es'] ?? [],
+                    'en' => $descripcion_procesada['Genero posible']['en'] ?? []
+                ],
+                'tipo_audio' => [
+                    'es' => $descripcion_procesada['Tipo de audio']['es'] ?? [],
+                    'en' => $descripcion_procesada['Tipo de audio']['en'] ?? []
+                ],
+                'tags_posibles' => [
+                    'es' => $descripcion_procesada['Tags posibles']['es'] ?? [],
+                    'en' => $descripcion_procesada['Tags posibles']['en'] ?? []
+                ],
+                'sugerencia_busqueda' => [
+                    'es' => $descripcion_procesada['Sugerencia de busqueda']['es'] ?? [],
+                    'en' => $descripcion_procesada['Sugerencia de busqueda']['en'] ?? []
+                ]
             ];
 
             // Combinar los datos preservados con los nuevos
@@ -578,6 +611,7 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
         iaLog("No se pudo generar la descripción mejorada para el post ID: {$post_id}");
     }
 }
+
 
 function procesarUnAudio() {
     global $wpdb;
