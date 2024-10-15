@@ -19,6 +19,7 @@ function removeDuplicates(arr) {
     return [...new Set(arr)];
 }
 
+
 function tagsPosts() {
     document.querySelectorAll('p[id-post-algoritmo]').forEach(function(pElement) {
         const postId = pElement.getAttribute('id-post-algoritmo');
@@ -40,6 +41,9 @@ function tagsPosts() {
             console.warn(`No se encontró el contenedor de tags para el post ${postId}`);
             return;
         }
+
+        // Limpiar el contenedor de tags antes de agregar nuevas etiquetas
+        tagsContainer.innerHTML = '';
 
         // Crear un array para almacenar todas las etiquetas unificadas
         let allTags = [];
@@ -100,6 +104,7 @@ function tagsPosts() {
         });
     });
 }
+
 
 
 
