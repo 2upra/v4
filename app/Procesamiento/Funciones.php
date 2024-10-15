@@ -437,7 +437,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     } else {
         $tags_usuario_texto = 'Sin etiquetas';
     }
-    
+
     $prompt = "Un usuario acaba de subir un audio con la siguiente descripción: {$post_content}. Los tags asociados son: {$tags_usuario_texto}."
         . "Por favor, determina una descripción del audio utilizando el siguiente formato (ESTOS SON DATOS DE EJEMPLO): "
         . '{"Descripcion":"Descripción del audio generada por IA", "Instrumentos posibles":["Piano", "Guitarra", "Batería"], "Estado de animo":["Tranquilo", "Suave"], "Genero posible":["Hip hop", "Electrónica"], "Tipo de audio":["Sample"], "Tags posibles":["Naturaleza", "Percusión", "Relajación"], "Sugerencia de busqueda":["Sonido relajante", "percusión suave", "baterías para hip hop", "efectos cinematograficos"]}. '
@@ -506,9 +506,25 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
         return;
     }
 
-    // Crear el prompt para el modelo Pro
-    $prompt = "El usuario ya subió este audio, pero se necesita una descripción del audio mejorada, el post original dice {$post_content}."
-        . " Por favor, determina una descripción del audio utilizando el siguiente formato JSON (ESTOS SON DATOS DE EJEMPLO): "
+    // Obtener los tags manuales del usuario desde la meta 'tagsUsuario'
+    $tags_usuario_str = get_post_meta($post_id, 'tagsUsuario', true);
+    if (!$tags_usuario_str) {
+        iaLog("No se encontraron tagsUsuario para el post ID: {$post_id}");
+        $tags_usuario = [];
+    } else {
+        // Convertir la cadena de tags en un array, eliminando espacios y manejando mayúsculas/minúsculas
+        $tags_usuario = array_map('trim', explode(',', $tags_usuario_str));
+        $tags_usuario = array_filter($tags_usuario); // Eliminar posibles elementos vacíos
+    }
+
+    // Convertir el array de tags en una cadena separada por comas para incluir en el prompt
+    $tags_usuario_formateados = implode(', ', $tags_usuario);
+
+    // Crear el prompt para el modelo Pro, incluyendo los tags manuales
+    $prompt = "El usuario ya subió este audio, pero se necesita una descripción del audio mejorada. "
+        . "El post original dice: \"{$post_content}\". "
+        . "Además, el usuario ha agregado los siguientes tags: {$tags_usuario_formateados}. "
+        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON (ESTOS SON DATOS DE EJEMPLO): "
         . '{"Descripcion":{"es":"(aqui iría una descripcion tuya del audio muy detallada)", "en":"(aqui en ingles)"},'
         . '"Instrumentos posibles":{"es":["Piano", "Guitarra"], "en":["Piano", "Guitar"]},'
         . '"Estado de animo":{"es":["Tranquilo"], "en":["Calm"]},'
@@ -517,7 +533,7 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
         . '"Tags posibles":{"es":["Naturaleza"], "en":["Nature"]},'
         . '"Sugerencia de busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
         . " Nota adicional: solo responde con la estructura, intenta ser muy detallista y preciso con los datos, no digas nada adicional al usuario. "
-        . "La descripción tiene que ser corta y breve, agrega solo datos en español y también en inglés, agrega muchas sugerencias de busqueda para optimizar el seo.";
+        . "La descripción tiene que ser corta y breve, agrega solo datos en español y también en inglés, agrega muchas sugerencias de busqueda para optimizar el SEO.";
 
     // Usar el modelo Pro para generar la nueva descripción
     $descripcion_mejorada = generarDescripcionIAPro($archivo_audio, $prompt);
