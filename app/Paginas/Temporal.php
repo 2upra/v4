@@ -573,7 +573,7 @@ function formularioProgramador()
 <? return ob_get_clean();
 }
 
-
+/*
 function redirect_non_admin_users()
 {
     // Verifica si el usuario está logueado y no es administrador
@@ -592,3 +592,4 @@ function redirect_non_admin_users()
 
 // Hook para ejecutar la función en todas las páginas
 add_action('template_redirect', 'redirect_non_admin_users');
+*/

@@ -1,5 +1,11 @@
 <?
 
+/*necesito una forma de mostrar publicaciones similiares a un post en especifico, asi muestro los post normalmente, pero necesito una funcion que reciba un id de un post por ejemplo y muestre post similares en base al contenido de datosAlgoritmo, que son metas con valores y tags, se suelen ver asi
+
+{"tags":["choir"],"bpm":140,"key":"B","scale":"minor","autor":{"id":"1","usuario":"1ndoryu","nombre":"Wandorius"},"descripcion_ia_pro":{"es":"Un breve sample vocal de un coro interpretando una armonía ascendente de cuatro acordes con un sonido etéreo y atmosférico.","en":"A short vocal sample of a choir performing a four-chord ascending harmony with an ethereal and atmospheric sound."},"instrumentos_posibles":{"es":["Coro"],"en":["Choir"]},"estado_animo":{"es":["Etéreo","Atmosférico","Angelical","Sereno","Espiritual"],"en":["Ethereal","Atmospheric","Angelic","Serene","Spiritual"]},"genero_posible":{"es":["Ambient","Clásica","New age","Banda sonora"],"en":["Ambient","Classical","New age","Soundtrack"]},"tipo_audio":{"es":["Sample","Loop","A capella"],"en":["Sample","Loop","A capella"]},"tags_posibles":{"es":["Voces","Armonía","Coros","Etéreo","Atmosférico","Angelical","Música celestial","Música relajante"],"en":["Vocals","Harmony","Choirs","Ethereal","Atmospheric","Angelic","Heavenly music","Relaxing music"]},"sugerencia_busqueda":{"es":["Sample de coro","Loop de coro","Voces angelicales","Música celestial","Atmósfera etérea","Música relajante para estudiar","Música para meditar","Música para yoga"],"en":["Choir sample","Choir loop","Angelic voices","Heavenly music","Ethereal atmosphere","Relaxing music for studying","Meditation music","Yoga music"]}}
+
+*/
+
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
     $user_id = obtenerUserId($is_ajax);
