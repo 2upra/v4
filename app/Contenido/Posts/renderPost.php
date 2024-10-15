@@ -124,9 +124,8 @@ function htmlPost($filtro)
         <? endif; ?>
     </li>
 
-    <li class="comentarios">
-        <? if (comments_open() || get_comments_number()) : comments_template();
-        endif; ?>
+    <li class="comentariosPost">
+
     </li>
 <?
     return ob_get_clean();
