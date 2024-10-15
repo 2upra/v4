@@ -1,5 +1,11 @@
 function mostrarPestana(id) {
-    document.querySelectorAll('.tab-content .tab').forEach(tab => {
+    const pestañas = document.querySelectorAll('.tab-content .tab');
+    if (pestañas.length === 0) {
+        console.warn('No hay pestañas disponibles para mostrar.');
+        return;
+    }
+
+    pestañas.forEach(tab => {
         tab.style.display = 'none';
         tab.classList.remove('active');
     });
@@ -10,29 +16,53 @@ function mostrarPestana(id) {
         return;
     }
 
-    document.querySelectorAll('.tab-links li').forEach(li => li.classList.remove('active'));
+    // Remover clase 'active' de todos los enlaces de pestañas
+    const enlaces = document.querySelectorAll('.tab-links li');
+    if (enlaces.length > 0) {
+        enlaces.forEach(li => li.classList.remove('active'));
+    }
 
     targetTab.style.display = 'block';
     targetTab.classList.add('active');
 
-    document.querySelector(`.tab-links a[href="${id}"]`).parentNode.classList.add('active');
+    // Añadir clase 'active' al enlace correspondiente si existe
+    const enlaceActivo = document.querySelector(`.tab-links a[href="${id}"]`);
+    if (enlaceActivo && enlaceActivo.parentNode) {
+        enlaceActivo.parentNode.classList.add('active');
+    }
 
-    document.getElementById('menuData').setAttribute('pestanaActual', id.replace('#', ''));
+    const menuData = document.getElementById('menuData');
+    if (menuData) {
+        menuData.setAttribute('pestanaActual', id.replace('#', ''));
+    }
 }
 
 function inicializarPestanas() {
     asignarPestanas();
 
+    const pestañasExistentes = document.querySelectorAll('.tab-content .tab');
     const hash = window.location.hash;
-    const targetId = hash && document.querySelector(hash) ? hash : '#' + document.querySelector('.tab-content .tab').id;
-    mostrarPestana(targetId);
+    let targetId = '';
 
-    document.querySelectorAll('.tab-links a').forEach(a => {
-        a.addEventListener('click', function(e) {
-            e.preventDefault();
-            mostrarPestana(this.getAttribute('href'));
+    if (hash && document.querySelector(hash)) {
+        targetId = hash;
+    } else if (pestañasExistentes.length > 0) {
+        targetId = '#' + pestañasExistentes[0].id;
+    }
+
+    if (targetId) {
+        mostrarPestana(targetId);
+    }
+
+    const enlaces = document.querySelectorAll('.tab-links a');
+    if (enlaces.length > 0) {
+        enlaces.forEach(a => {
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                mostrarPestana(this.getAttribute('href'));
+            });
         });
-    });
+    }
 }
 
 function asignarPestanas() {
@@ -42,7 +72,13 @@ function asignarPestanas() {
     if (menuData && adaptableTabs) {
         adaptableTabs.innerHTML = '';
 
-        menuData.querySelectorAll('[data-tab]').forEach((tab, index) => {
+        const tabs = menuData.querySelectorAll('[data-tab]');
+        if (tabs.length === 0) {
+            console.warn('No se encontraron elementos con [data-tab] para asignar pestañas.');
+            return;
+        }
+
+        tabs.forEach((tab, index) => {
             const li = document.createElement('li');
             const a = document.createElement('a');
             const tabName = tab.getAttribute('data-tab');
@@ -55,5 +91,7 @@ function asignarPestanas() {
             li.appendChild(a);
             adaptableTabs.appendChild(li);
         });
+    } else {
+        console.warn('Elementos #menuData o #adaptableTabs no encontrados en el DOM.');
     }
 }
