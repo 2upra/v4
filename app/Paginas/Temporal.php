@@ -214,8 +214,7 @@ function dev()
                         <span class="MASYTN WJTTLG">Meta final $1000</span>
                     </div>
                     <div class="LXCJWW">
-                        <button class="borde<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Sponsor</button>
-                        <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Donar</button>
+                        <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Apoyar</button>
                     </div>
 
                     <div class="CGUNVP" id="modalregistro">
