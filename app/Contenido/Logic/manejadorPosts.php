@@ -1,11 +1,5 @@
 <?
 
-/*necesito una forma de mostrar publicaciones similiares a un post en especifico, asi muestro los post normalmente, pero necesito una funcion que reciba un id de un post por ejemplo y muestre post similares en base al contenido de datosAlgoritmo, que son metas con valores y tags, se suelen ver asi
-
-{"tags":["choir"],"bpm":140,"key":"B","scale":"minor","autor":{"id":"1","usuario":"1ndoryu","nombre":"Wandorius"},"descripcion_ia_pro":{"es":"Un breve sample vocal de un coro interpretando una armonía ascendente de cuatro acordes con un sonido etéreo y atmosférico.","en":"A short vocal sample of a choir performing a four-chord ascending harmony with an ethereal and atmospheric sound."},"instrumentos_posibles":{"es":["Coro"],"en":["Choir"]},"estado_animo":{"es":["Etéreo","Atmosférico","Angelical","Sereno","Espiritual"],"en":["Ethereal","Atmospheric","Angelic","Serene","Spiritual"]},"genero_posible":{"es":["Ambient","Clásica","New age","Banda sonora"],"en":["Ambient","Classical","New age","Soundtrack"]},"tipo_audio":{"es":["Sample","Loop","A capella"],"en":["Sample","Loop","A capella"]},"tags_posibles":{"es":["Voces","Armonía","Coros","Etéreo","Atmosférico","Angelical","Música celestial","Música relajante"],"en":["Vocals","Harmony","Choirs","Ethereal","Atmospheric","Angelic","Heavenly music","Relaxing music"]},"sugerencia_busqueda":{"es":["Sample de coro","Loop de coro","Voces angelicales","Música celestial","Atmósfera etérea","Música relajante para estudiar","Música para meditar","Música para yoga"],"en":["Choir sample","Choir loop","Angelic voices","Heavenly music","Ethereal atmosphere","Relaxing music for studying","Meditation music","Yoga music"]}}
-
-*/
-
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
     $user_id = obtenerUserId($is_ajax);
@@ -17,6 +11,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         'posts' => 12,
         'exclude' => [],
         'post_type' => 'social_post',
+        'similar_to' => null, // Nuevo parámetro para posts similares
     ];
     $args = array_merge($defaults, $args);
     $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
@@ -32,9 +27,9 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
-    //si llega identifier es que es una busqueda
     $identifier = $_POST['identifier'] ?? '';
     $posts = $args['posts'];
+    $similar_to = $args['similar_to'];
 
     if ($args['post_type'] === 'social_post') {
         $posts_personalizados = calcularFeedPersonalizado($current_user_id);
@@ -60,11 +55,70 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             'orderby' => 'date',
             'order' => 'DESC', 
         ];
+    }
 
+    // Manejar publicaciones similares
+    if ($similar_to) {
+        // Obtener los datosAlgotimo del post similar
+        $datosAlgoritmo = get_post_meta($similar_to, 'datosAlgoritmo', true);
+        if ($datosAlgoritmo) {
+            $data = json_decode($datosAlgoritmo, true);
+
+            $meta_queries = [];
+            $relation = 'OR'; // Puedes ajustar esto según cómo quieras combinar las condiciones
+
+            // Ejemplo: Coincidencia de BPM
+            if (!empty($data['bpm'])) {
+                $meta_queries[] = [
+                    'key' => 'datosAlgoritmo',
+                    'value' => '"bpm":' . $data['bpm'],
+                    'compare' => 'LIKE',
+                ];
+            }
+
+            // Coincidencia de Key
+            if (!empty($data['key'])) {
+                $meta_queries[] = [
+                    'key' => 'datosAlgoritmo',
+                    'value' => '"key":"' . $data['key'] . '"',
+                    'compare' => 'LIKE',
+                ];
+            }
+
+            // Coincidencia de Scale
+            if (!empty($data['scale'])) {
+                $meta_queries[] = [
+                    'key' => 'datosAlgoritmo',
+                    'value' => '"scale":"' . $data['scale'] . '"',
+                    'compare' => 'LIKE',
+                ];
+            }
+
+            // Coincidencia de Tags
+            if (!empty($data['tags']) && is_array($data['tags'])) {
+                foreach ($data['tags'] as $tag) {
+                    $meta_queries[] = [
+                        'key' => 'datosAlgoritmo',
+                        'value' => '"' . $tag . '"',
+                        'compare' => 'LIKE',
+                    ];
+                }
+            }
+
+            if (!empty($meta_queries)) {
+                $query_args['meta_query'] = array_merge($query_args['meta_query'], [
+                    'relation' => $relation,
+                    ...$meta_queries
+                ]);
+
+                // Excluir el post original
+                $query_args['post__not_in'][] = $similar_to;
+            }
+        }
     }
 
     if (!empty($args['exclude'])) {
-        $query_args['post__not_in'] = $args['exclude'];
+        $query_args['post__not_in'] = array_merge($query_args['post__not_in'] ?? [], $args['exclude']);
     }
     $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
     return $query_args;
@@ -149,7 +203,6 @@ function obtenerUserId($is_ajax)
 
 function publicacionAjax()
 {
-    
     $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
     $filtro = isset($_POST['filtro']) ? sanitize_text_field($_POST['filtro']) : '';
     $tipoPost = isset($_POST['posttype']) ? sanitize_text_field($_POST['posttype']) : '';
@@ -159,6 +212,8 @@ function publicacionAjax()
     $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas'])
         ? array_map('intval', $_POST['cargadas'])
         : array();
+    $similar_to = isset($_POST['similar_to']) ? intval($_POST['similar_to']) : null; // Nuevo parámetro
+
     publicaciones(
         array(
             'filtro' => $filtro,
@@ -166,7 +221,8 @@ function publicacionAjax()
             'tab_id' => $tab_id,
             'user_id' => $user_id,
             'identifier' => $data_identifier,
-            'exclude' => $publicacionesCargadas
+            'exclude' => $publicacionesCargadas,
+            'similar_to' => $similar_to, // Pasar el parámetro a la función
         ),
         true,
         $paged
@@ -175,3 +231,4 @@ function publicacionAjax()
 
 add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
 add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
+
