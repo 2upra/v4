@@ -498,23 +498,6 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     iaLog("Metadatos de 'datosAlgoritmo' actualizados para el post ID: {$post_id}");
 }
 
-/*
-necesito que automaticamente cada 30 minutos, todos los post que contengan un audio, osea buscar lost que tengan un ID en la meta post_audio_lite , que es un id de un archivo de audio, tiene que verificar si es un audio valido o existe porque aveces puede dar error, y si todo esta bien, ejecutar mejorarDescripcionAudioPro($post_id, $archivo_audio), tiene que ignorar los post que tienen update_post_meta($post_id, 'proIA', true); porque signifca que ya sus descripciones fueron mejoradas, tambien, puede dar prioridad obviamente los post mas recientes, y tambien mas prioridad a los que tienen mas like, referencia
-
-function contarLike($post_id) {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'post_likes';
-    
-    // Contar el número de likes para el post
-    $like_count = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM $table_name WHERE post_id = %d",
-        $post_id
-    ));
-
-    return $like_count ? $like_count : 0;
-}
-*/
-
 function mejorarDescripcionAudioPro($post_id, $archivo_audio)
 {
     // Obtener el contenido actual del post
@@ -525,17 +508,17 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
     }
 
     // Crear el prompt para el modelo Pro
-    $prompt = "El usuario ya subió este audio, pero se necesita una descripción del audio mejorada, el post original dice {$post_id}."
+    $prompt = "El usuario ya subió este audio, pero se necesita una descripción del audio mejorada, el post original dice {$post_content}."
         . " Por favor, determina una descripción del audio utilizando el siguiente formato JSON (ESTOS SON DATOS DE EJEMPLO): "
-        . '{"Descripcion":{"es":"Descripción del audio generada por IA", "en":"AI generated audio description"},'
+        . '{"Descripcion":{"es":"(aqui iría una descripcion tuya del audio muy detallada)", "en":"(aqui en ingles)"},'
         . '"Instrumentos posibles":{"es":["Piano", "Guitarra"], "en":["Piano", "Guitar"]},'
         . '"Estado de animo":{"es":["Tranquilo"], "en":["Calm"]},'
         . '"Genero posible":{"es":["Hip hop"], "en":["Hip hop"]},'
         . '"Tipo de audio":{"es":["Sample"], "en":["Sample"]},'
         . '"Tags posibles":{"es":["Naturaleza"], "en":["Nature"]},'
         . '"Sugerencia de busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
-        . " Nota adicional: solo responde con la estructura, intenta ser muy detallista con los datos, no digas nada adicional al usuario. "
-        . "La descripción tiene que ser corta y breve, agrega solo datos en español.";
+        . " Nota adicional: solo responde con la estructura, intenta ser muy detallista y preciso con los datos, no digas nada adicional al usuario. "
+        . "La descripción tiene que ser corta y breve, agrega solo datos en español y también en inglés, agrega muchas sugerencias de busqueda para optimizar el seo.";
 
     // Usar el modelo Pro para generar la nueva descripción
     $descripcion_mejorada = generarDescripcionIAPro($archivo_audio, $prompt);
@@ -611,6 +594,7 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
         iaLog("No se pudo generar la descripción mejorada para el post ID: {$post_id}");
     }
 }
+
 
 
 function procesarUnAudio() {
