@@ -148,6 +148,12 @@ if (!defined('ABSPATH')) {
                             <input type="text" id="identifier" placeholder="Busqueda">
                         </div>
 
+                        <div class="xaxa1 menu-item iconoperfil">
+                            <a>
+                                <? echo $GLOBALS['vista1']; ?>
+                            </a>
+                        </div>
+
                         <div class="xaxa1 menu-item iconoperfil prostatus0" id="btnpro">
                             <a>
                                 <? echo $GLOBALS['pro']; ?>
