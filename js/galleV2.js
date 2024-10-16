@@ -1183,19 +1183,26 @@ function galle() {
     }
 
     function msColabSetup(chatColabElement) {
-        document.addEventListener('click', event => {
+        // Maneja los clics dentro de este chatColabElement específico
+        chatColabElement.addEventListener('click', event => {
             if (event.target.matches('.enviarMensajeColab')) {
-                enviarMensajeColab(event.target);
+                enviarMensajeColab(event.target, chatColabElement);
             }
         });
 
-        const mensajeInput = document.querySelector('.mensajeContenidoColab');
-        mensajeInput.addEventListener('keydown', event => {
-            if (event.key === 'Enter' && !event.altKey) {
-                event.preventDefault();
-                enviarMensajeColab(document.querySelector('.enviarMensajeColab'), chatColabElement);
-            }
-        });
+        // Selecciona el input de mensaje dentro de este chatColabElement
+        const mensajeInput = chatColabElement.querySelector('.mensajeContenidoColab');
+        if (mensajeInput) {
+            mensajeInput.addEventListener('keydown', event => {
+                if (event.key === 'Enter' && !event.altKey) {
+                    event.preventDefault();
+                    const enviarButton = chatColabElement.querySelector('.enviarMensajeColab');
+                    if (enviarButton) {
+                        enviarMensajeColab(enviarButton, chatColabElement);
+                    }
+                }
+            });
+        }
 
         function enviarMensajeColab(button, chatColabElement) {
             if (subidaChatProgreso) {
@@ -1203,22 +1210,38 @@ function galle() {
             }
 
             const bloqueChat = button.closest('.bloqueChatColab');
+            if (!bloqueChat) {
+                return alert('No se encontró el bloque de chat.');
+            }
+
             const mensajeInput = bloqueChat.querySelector('.mensajeContenidoColab');
             const mensaje = mensajeInput.value.trim();
 
             if (!mensaje) {
                 return alert('Por favor, ingresa un mensaje.');
             }
+
             ocultarPreviews(chatColabElement);
+
             const conversacion_id = button.getAttribute('data-conversacion-id');
-            const participantes = JSON.parse(bloqueChat.getAttribute('data-participantes'));
+            const participantesData = bloqueChat.getAttribute('data-participantes');
+            let participantes = [];
+            try {
+                participantes = JSON.parse(participantesData);
+            } catch (e) {
+                console.error('Error al parsear participantes:', e);
+                return alert('Error al procesar los participantes de la conversación.');
+            }
+
             const metadata = 'colab';
             const listaMensajes = bloqueChat.querySelector('.listaMensajes');
 
             let adjunto = null;
-            if (archivoChatId || archivoChatUrl) {
-                adjunto = {archivoChatId, archivoChatUrl};
-                archivoChatId = archivoChatUrl = null;
+            if (window.archivoChatId || window.archivoChatUrl) {
+     
+                adjunto = {archivoChatId: window.archivoChatId, archivoChatUrl: window.archivoChatUrl};
+                window.archivoChatId = null;
+                window.archivoChatUrl = null;
             }
 
             enviarMensajeWs(participantes, mensaje, adjunto, metadata, conversacion_id, listaMensajes);
