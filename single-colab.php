@@ -13,7 +13,7 @@ if (have_posts()) :
 ?>
         <div id="main">
             <div id="content" class="<?php echo esc_attr($nologin_class); ?>">
-                <div class="single">
+                <div class="single colabSingle">
                     <?php echo htmlColab($filtro); ?>
                 </div>
             </div>
