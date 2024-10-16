@@ -320,6 +320,44 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     $audio_path = get_attached_file($audio_id);
     guardarLog("Ruta del archivo de audio original: {$audio_path}");
 
+    // Obtener las partes del camino del archivo
+    $path_parts = pathinfo($audio_path);
+    $unique_id = uniqid('2upra_');
+    $base_path = $path_parts['dirname'] . '/' . $unique_id;
+
+    // Renombrar el archivo original
+    $new_original_filename = $unique_id . '.' . $path_parts['extension'];
+    $new_original_path = $path_parts['dirname'] . '/' . $new_original_filename;
+
+    if (rename($audio_path, $new_original_path)) {
+        guardarLog("Archivo original renombrado a: {$new_original_path}");
+
+        // Actualizar la información del attachment en WordPress
+        $attachment_data = array(
+            'ID' => $audio_id,
+            'guid' => wp_upload_dir()['baseurl'] . '/' . _wp_relative_upload_path($new_original_path),
+            'post_title' => sanitize_file_name(pathinfo($new_original_filename, PATHINFO_FILENAME)),
+            'post_name' => sanitize_title(pathinfo($new_original_filename, PATHINFO_FILENAME)),
+        );
+        wp_update_post($attachment_data);
+
+        // Actualizar el meta _wp_attached_file
+        update_post_meta($audio_id, '_wp_attached_file', _wp_relative_upload_path($new_original_path));
+    } else {
+        guardarLog("Error al renombrar el archivo original.");
+        return;
+    }
+
+    // Eliminar metadatos del archivo original renombrado usando ffmpeg
+    $comando_strip_metadata = "/usr/bin/ffmpeg -i " . escapeshellarg($new_original_path) . " -map_metadata -1 -c:v copy " . escapeshellarg($new_original_path . '.tmp') . " && mv " . escapeshellarg($new_original_path . '.tmp') . " " . escapeshellarg($new_original_path);
+    guardarLog("Ejecutando comando para eliminar metadatos del archivo original: {$comando_strip_metadata}");
+    exec($comando_strip_metadata, $output_strip, $return_strip);
+    if ($return_strip !== 0) {
+        guardarLog("Error al eliminar metadatos del archivo original: " . implode("\n", $output_strip));
+    } else {
+        guardarLog("Metadatos del archivo original eliminados correctamente.");
+    }
+
     // Si ya existe un archivo ligero, asociarlo al nuevo post
     if ($existing_lite_audio) {
         $existing_lite_audio_id = $existing_lite_audio[0]->ID;
@@ -327,22 +365,33 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         $meta_key = ($index == 1) ? "post_audio_lite" : "post_audio_lite_{$index}";
         update_post_meta($post_id, $meta_key, $existing_lite_audio_id);
         update_post_meta($post_id, 'AudioDuplicado', true);
-        analizarYGuardarMetasAudio($post_id, $audio_path, $index);
+        analizarYGuardarMetasAudio($post_id, $new_original_path, $index);
         return;
     }
 
-    // Obtener las partes del camino del archivo
-    $path_parts = pathinfo($audio_path);
-    $unique_id = uniqid('2upra_');
-    $base_path = $path_parts['dirname'] . '/' . $unique_id;
+    // Obtener el nombre de usuario del autor del post
+    $post_author_id = get_post_field('post_author', $post_id);
+    $author_info = get_userdata($post_author_id);
+    if ($author_info) {
+        $author_username = $author_info->user_login;
+        guardarLog("Nombre de usuario del autor obtenido: {$author_username}");
+    } else {
+        // Fallback en caso de no obtener la información del usuario
+        $author_username = "Desconocido";
+        guardarLog("No se pudo obtener el nombre de usuario del autor. Se usará 'Desconocido'.");
+    }
 
-    // Procesar archivo de audio ligero (128 kbps)
+    $page_name = "2upra.com";
+
+    // Procesar archivo de audio ligero (128 kbps) con metadatos adicionales
     $nuevo_archivo_path_lite = $base_path . '_128k.mp3';
-    $comando_lite = "/usr/bin/ffmpeg -i {$audio_path} -b:a 128k {$nuevo_archivo_path_lite}";
-    guardarLog("Ejecutando comando: {$comando_lite}");
+    $comando_lite = "/usr/bin/ffmpeg -i " . escapeshellarg($new_original_path) . " -b:a 128k -metadata author=" . escapeshellarg($author_username) . " -metadata comment=" . escapeshellarg($page_name) . " " . escapeshellarg($nuevo_archivo_path_lite);
+    guardarLog("Ejecutando comando para crear audio ligero con metadatos: {$comando_lite}");
     exec($comando_lite, $output_lite, $return_var_lite);
     if ($return_var_lite !== 0) {
         guardarLog("Error al procesar audio ligero: " . implode("\n", $output_lite));
+    } else {
+        guardarLog("Audio ligero creado exitosamente con metadatos.");
     }
 
     // Insertar archivo en la biblioteca de medios
@@ -359,6 +408,10 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         'post_status' => 'inherit'
     );
     $attach_id_lite = wp_insert_attachment($attachment_lite, $nuevo_archivo_path_lite, $post_id);
+    if (is_wp_error($attach_id_lite)) {
+        guardarLog("Error al insertar el adjunto ligero: " . $attach_id_lite->get_error_message());
+        return;
+    }
     guardarLog("ID de adjunto ligero: {$attach_id_lite}");
     $attach_data_lite = wp_generate_attachment_metadata($attach_id_lite, $nuevo_archivo_path_lite);
     wp_update_attachment_metadata($attach_id_lite, $attach_data_lite);
@@ -368,7 +421,7 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     update_post_meta($post_id, $meta_key, $attach_id_lite);
 
     // Extraer y guardar la duración del audio
-    $duration_command = "/usr/bin/ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {$nuevo_archivo_path_lite}";
+    $duration_command = "/usr/bin/ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 " . escapeshellarg($nuevo_archivo_path_lite);
     guardarLog("Ejecutando comando para duración del audio: {$duration_command}");
     $duration_in_seconds = shell_exec($duration_command);
     guardarLog("Salida de ffprobe: '{$duration_in_seconds}'");
@@ -377,11 +430,11 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     $duration_in_seconds = trim($duration_in_seconds);
     if (is_numeric($duration_in_seconds)) {
         $duration_in_seconds = (float)$duration_in_seconds;
-        $duration_formatted = floor($duration_in_seconds / 60) . ':' . str_pad($duration_in_seconds % 60, 2, '0', STR_PAD_LEFT);
+        $duration_formatted = floor($duration_in_seconds / 60) . ':' . str_pad(floor($duration_in_seconds % 60), 2, '0', STR_PAD_LEFT);
         update_post_meta($post_id, "audio_duration_{$index}", $duration_formatted);
         guardarLog("Duración del audio (formateada): {$duration_formatted}");
     } else {
-        guardarLog("Duración del audio no válida para el archivo {$audio_path}");
+        guardarLog("Duración del audio no válida para el archivo {$nuevo_archivo_path_lite}");
     }
 
     guardarLog("datos para sacar meta post id: {$post_id} path_lite: {$nuevo_archivo_path_lite} index: {$index}");
