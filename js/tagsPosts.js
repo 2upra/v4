@@ -121,8 +121,6 @@ function tagsPosts() {
     limitTags();
 }
 
-// Función para limitar los tags y agregar "Ver más"
-// Función para limitar los tags y agregar "Ver más"/"Ver menos"
 function limitTags(maxVisible = 5) {
     // Selecciona todos los contenedores de tags cuyo ID comienza con "tags-"
     document.querySelectorAll('[id^="tags-"]').forEach(function(tagsContainer) {
