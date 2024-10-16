@@ -86,6 +86,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!window.location.href.includes('?fb-edit=1')) {
         if (!window.galleInicializado && typeof window.galle === 'function') {
             window.galle();
+            window.setupEventDelegation();
             window.galleInicializado = true;
         }
         reinicializar();
