@@ -18,13 +18,15 @@ async function handleAllRequests() {
     }
 }
 
-// GENERIC CLICK - DEBE SER FLEXIBLE PORQUE TODA LA LOGICA DE CLICK PASA POR AQUI
 async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
     const buttons = document.querySelectorAll(selector); // Selecciona los botones.
 
     buttons.forEach(button => {
         // Verifica si el listener ya fue añadido
         if (!button.dataset.listenerAdded) {
+            // Marca el botón para indicar que ya tiene un listener
+            button.dataset.listenerAdded = 'true';
+            
             button.addEventListener('click', async event => { // Añade evento 'click'.
                 const post_id = event.currentTarget.dataset.postId || event.currentTarget.getAttribute('data-post-id'); // Obtiene el post_id.
                 const tipoContenido = event.currentTarget.dataset.tipoContenido; // Obtiene el tipo de contenido.
@@ -55,13 +57,10 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
                     }
                 }
             });
-            // Marca el botón para indicar que ya tiene un listener
-            button.dataset.listenerAdded = 'true';
         }
     });
 }
 
-//ejemplo de algunas acciones
 async function eliminarPost() {
     await accionClick(
         '.eliminarPost',
@@ -71,12 +70,9 @@ async function eliminarPost() {
             console.log('Respuesta del servidor:', data);
             if (data.success) {
                 const idToRemove = data.post_id || postId;
-                console.log('Intentando remover post con ID:', idToRemove);
                 removerPost('.EDYQHV', idToRemove);
-                console.log('¿Se removió el post?');
                 await alert('El post ha sido eliminado');
             } else {
-                console.log('Error al eliminar post');
                 actualizarElemento(statusElement, data.new_status);
                 await alert('Hubo un error al eliminar el post');
             }
@@ -85,7 +81,7 @@ async function eliminarPost() {
     );
 }
 
-async function permitirDescarga() {	
+async function permitirDescarga() {    
     await accionClick(
         '.permitirDescarga',
         'permitirDescarga',
@@ -110,7 +106,6 @@ async function banearUsuario() {
         '.EDYQHV'
     );
 }
-
 
 async function reporte() {
     modalManager.añadirModal('formularioError', '#formularioError', ['.reporte']);
