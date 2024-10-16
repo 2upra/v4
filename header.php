@@ -109,7 +109,7 @@ if (!defined('ABSPATH')) {
                             </a>
                         </div>
 
-                        <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil mipsubmenu">
+                        <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil mipsubmenu fotoperfilsub" id="fotoperfilsub">
                             <a>
                                 <img src="<? echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
                             </a>
@@ -216,6 +216,12 @@ if (!defined('ABSPATH')) {
                     <div class="A1806242">
                         <button id="subirrola"><a href="https://2upra.com/rola/">Subir rola</a></button>
                         <!-- <button id="subirsample"><a href="https://2upra.com/subirsample/">Subir Sample</a></button> -->
+                    </div>
+                </div>
+
+                <div class="A1806241" id="submenuperfildesk-fotoperfilsub">
+                    <div class="A1806242">
+                        <p>test</p>
                     </div>
                 </div>
 
