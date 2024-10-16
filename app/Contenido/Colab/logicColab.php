@@ -6,7 +6,6 @@ function botonColab($postId, $colab)
     return $colab ? "<div class='XFFPOX'><button class='ZYSVVV' data-post-id='$postId'>{$GLOBALS['iconocolab']}</button></div>" : '';
 }
 
-
 function empezarColab() {
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
@@ -44,6 +43,7 @@ function empezarColab() {
 
     // Crear el nuevo post de colaboración
     $newPostId = wp_insert_post([
+        'post_author' => $original_post->post_author, // Establece el autor al autor original
         'post_title' => "Colab entre $author_name y $collaborator_name",
         'post_type' => 'colab',
         'post_status' => 'pending',
