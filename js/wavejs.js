@@ -1,33 +1,30 @@
 function inicializarWaveforms() {
-    const observer = new IntersectionObserver(
-        entries => {
-            entries.forEach(entry => {
-                const container = entry.target;
-                const postId = container.getAttribute('postIDWave');
-                const audioUrl = container.getAttribute('data-audio-url');
-
-                if (entry.isIntersecting) {
-                    if (!container.dataset.loadTimeoutSet) {
-                        const loadTimeout = setTimeout(() => {
-                            if (!container.dataset.audioLoaded) {
-                                loadAudio(postId, audioUrl, container);
-                            }
-                        }, 20000); // Carga el audio después de 20 segundos de estar en el viewport
-
-                        container.dataset.loadTimeout = loadTimeout;
-                        container.dataset.loadTimeoutSet = 'true';
-                    }
-                } else {
-                    if (container.dataset.loadTimeoutSet) {
-                        clearTimeout(container.dataset.loadTimeout);
-                        delete container.dataset.loadTimeout;
-                        delete container.dataset.loadTimeoutSet;
-                    }
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const container = entry.target;
+            const postId = container.getAttribute('postIDWave');
+            const audioUrl = container.getAttribute('data-audio-url');
+    
+            if (entry.isIntersecting) {
+                if (!container.dataset.loadTimeoutSet) {
+                    const loadTimeout = setTimeout(() => {
+                        if (!container.dataset.audioLoaded) {
+                            loadAudio(postId, audioUrl, container);
+                        }
+                    }, 5000); // Reduce el tiempo de espera a 5 segundos
+    
+                    container.dataset.loadTimeout = loadTimeout;
+                    container.dataset.loadTimeoutSet = 'true'; 
                 }
-            });
-        },
-        {threshold: 0.5}
-    );
+            } else {
+                if (container.dataset.loadTimeoutSet) {
+                    clearTimeout(container.dataset.loadTimeout);
+                    delete container.dataset.loadTimeout;
+                    delete container.dataset.loadTimeoutSet;
+                }
+            }
+        });
+    }, { threshold: 0.1 }); // Reduce el umbral a 10%
 
     document.querySelectorAll('.waveform-container').forEach(container => {
         const postId = container.getAttribute('postIDWave');
@@ -51,170 +48,48 @@ function inicializarWaveforms() {
 
 function loadAudio(postId, audioUrl, container) {
     if (!container.dataset.audioLoaded) {
-        window.we(postId, audioUrl);
-        container.dataset.audioLoaded = 'true';
+        window.we(postId, audioUrl); 
+        container.dataset.audioLoaded = 'true'; 
     }
 }
 
 window.we = function (postId, audioUrl) {
     const container = document.getElementById(`waveform-${postId}`);
-    const MAX_RETRIES = 3;
     let wavesurfer;
-    var spinner = new Spinner().spin();
-    const loadAndPlayAudioStream = (retryCount = 0) => {
-        if (retryCount >= MAX_RETRIES) {
-            console.error('No se pudo cargar el audio después de varios intentos');
+
+    const initializeWavesurfer = () => {
+        wavesurfer = initWavesurfer(container);
+
+        wavesurfer.on('ready', () => {
+            container.dataset.audioLoaded = 'true';
             container.querySelector('.waveform-loading').style.display = 'none';
-            container.querySelector('.waveform-message').style.display = 'block';
-            container.querySelector('.waveform-message').textContent = 'Error al cargar el audio.';
-            stopSpinner();
-            return;
-        }
+            const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
 
-        window.audioLoading = true;
-
-        const containerSpin = document.querySelector('.JNUZCN');
-        const spinnerElement = containerSpin ? containerSpin.querySelector('.spin') : null;
-        console.log('Elemento del spinner encontrado:', spinnerElement); // Verificar si se encuentra el elemento con clase 'spin'
-
-        if (spinnerElement) {
-            console.log('Inicializando spinner...');
-            if (typeof Spinner === 'undefined') {
-                console.error('Spinner no está definido. Asegúrate de que la librería esté cargada correctamente.');
-            } else {
-                spinner = new Spinner({
-                    lines: 12, // Número de líneas del spinner
-                    length: 7, // Longitud de cada línea
-                    width: 5, // Ancho de la línea
-                    radius: 10, // Radio del círculo
-                    color: '#000', // Color del spinner
-                    scale: 1.0, // Escalado
-                    position: 'relative' // Posición dentro del contenedor
-                });
-
-                // Iniciamos el spinner en el elemento encontrado
-                console.log('Iniciando spinner...');
-                spinner.spin(spinnerElement);
-                spinnerElement.style.display = 'block';
-                console.log('Spinner mostrado (display: block)');
+            if (!waveCargada) {
+                setTimeout(() => {
+                    const image = generateWaveformImage(wavesurfer);
+                    sendImageToServer(image, postId);
+                }, 1);
             }
-        } else {
-            console.warn('No se encontró el elemento para el spinner.');
-        }
 
-        fetch(audioUrl, {
-            credentials: 'include' // Incluye las cookies de sesión en la solicitud
-        })
-            .then(response => {
-                console.log('Estado de la respuesta:', response.status);
-                if (!response.ok) {
-                    throw new Error('Respuesta de red no satisfactoria');
+            container.addEventListener('click', () => {
+                if (wavesurfer.isPlaying()) {
+                    wavesurfer.pause();
+                } else {
+                    wavesurfer.play();
                 }
-                return response;
-            })
-            .then(response => {
-                const reader = response.body.getReader();
-                return new ReadableStream({
-                    start(controller) {
-                        return pump();
-                        function pump() {
-                            return reader.read().then(({done, value}) => {
-                                if (done) {
-                                    controller.close();
-                                    return;
-                                }
-                                controller.enqueue(value);
-                                return pump();
-                            });
-                        }
-                    }
-                });
-            })
-            .then(stream => new Response(stream))
-            .then(response => response.blob())
-            .then(blob => {
-                console.log('Blob recibido:', blob); // Confirmar si el blob se recibe correctamente
-                const audioBlobUrl = URL.createObjectURL(blob);
-                console.log('URL del blob generado:', audioBlobUrl);
-
-                wavesurfer = initWavesurfer(container);
-                console.log('Wavesurfer inicializado:', wavesurfer);
-
-                wavesurfer.load(audioBlobUrl);
-                console.log('Audio cargado en Wavesurfer.');
-
-                const waveformBackground = container.querySelector('.waveform-background');
-                console.log('Elemento de fondo de waveform encontrado:', waveformBackground);
-
-                if (waveformBackground) {
-                    waveformBackground.style.display = 'none';
-                    console.log('Fondo de waveform ocultado.');
-                }
-
-                wavesurfer.on('ready', () => {
-                    console.log('Wavesurfer está listo.');
-                    window.audioLoading = false;
-                    container.dataset.audioLoaded = 'true';
-                    container.querySelector('.waveform-loading').style.display = 'none';
-                    console.log('Loading waveform ocultado.');
-
-                    // Ocultamos el spinner cuando el audio esté listo
-                    stopSpinner();
-
-                    const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
-                    console.log('¿Waveform ya cargada?:', waveCargada);
-
-                    if (!waveCargada) {
-                        setTimeout(() => {
-                            console.log('Generando imagen de waveform...');
-                            const image = generateWaveformImage(wavesurfer);
-                            console.log('Enviando imagen al servidor...');
-                            sendImageToServer(image, postId);
-                            console.log('Imagen enviada.');
-                        }, 1);
-                    }
-
-                    container.addEventListener('click', () => {
-                        if (wavesurfer.isPlaying()) {
-                            console.log('Pausando Wavesurfer...');
-                            wavesurfer.pause();
-                        } else {
-                            console.log('Reproduciendo Wavesurfer...');
-                            wavesurfer.play();
-                        }
-                    });
-                });
-
-                wavesurfer.on('error', () => {
-                    console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`);
-                    setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
-
-                    // Ocultamos el spinner si hay un error
-                    stopSpinner();
-                });
-            })
-            .catch(error => {
-                console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`, error);
-                setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
-                stopSpinner();
             });
+        });
+
+        wavesurfer.on('error', (e) => {
+            console.error('Error en WaveSurfer:', e);
+            // Implementa aquí lógica de reintento si es necesario
+        });
+
+        wavesurfer.load(audioUrl);
     };
 
-    const stopSpinner = () => {
-        const containerSpin = document.querySelector('.JNUZCN');
-        const spinnerElement = containerSpin ? containerSpin.querySelector('.spin') : null;
-
-        if (spinnerElement && spinner) {
-            console.log('Ocultando spinner...');
-            spinnerElement.style.display = 'none'; // Oculta el spinner
-            spinner.stop(); // Detenemos el spinner
-            console.log('Spinner detenido.');
-        } else {
-            console.warn('No se pudo detener el spinner. El elemento o el spinner no existen.');
-        }
-    };
-
-    loadAndPlayAudioStream();
+    initializeWavesurfer();
 };
 
 // La función que inicializa WaveSurfer con los estilos y configuraciones deseados
@@ -223,7 +98,7 @@ function initWavesurfer(container) {
     const ctx = document.createElement('canvas').getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 500);
     const progressGradient = ctx.createLinearGradient(0, 0, 0, 500);
-
+    
     // Configuración de los colores del gradiente
     gradient.addColorStop(0, '#FFFFFF');
     gradient.addColorStop(0.55, '#FFFFFF');
@@ -237,11 +112,11 @@ function initWavesurfer(container) {
         container: container,
         waveColor: gradient,
         progressColor: progressGradient,
-        backend: 'WebAudio',
+        backend: 'MediaElement', // Cambiado a MediaElement
         interact: true,
         barWidth: 2,
         height: containerHeight,
-        partialRender: true
+        partialRender: true,
     });
 }
 
@@ -265,7 +140,7 @@ async function sendImageToServer(imageData, postId) {
     for (let i = 0; i < byteString.length; i++) {
         ia[i] = byteString.charCodeAt(i);
     }
-    const blob = new Blob([ab], {type: mimeString});
+    const blob = new Blob([ab], { type: mimeString });
 
     const formData = new FormData();
     formData.append('action', 'save_waveform_image');
@@ -275,7 +150,7 @@ async function sendImageToServer(imageData, postId) {
     try {
         const response = await fetch(ajaxUrl, {
             method: 'POST',
-            body: formData
+            body: formData,
         });
 
         const data = await response.json();

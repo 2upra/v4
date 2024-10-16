@@ -98,7 +98,6 @@ function scriptsOrdenados()
         'likes' => '2.0.1',      
         'galleV2' => '2.0.1',
         'cambiarVistas' => '1.0.1',
-        'spin' => '1.0.1',
     ];
 
     foreach ($script_handles as $handle => $data) {
@@ -139,7 +138,6 @@ function scriptsOrdenados()
     }
 
     // Scripts externos
-    wp_enqueue_script('spin', 'https://spin.js.org/spin.umd.js', [], null, true);
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
     wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', ['chart-js'], null, true);
     wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.7.6', true);
