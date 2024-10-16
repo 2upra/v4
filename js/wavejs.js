@@ -60,6 +60,7 @@ window.we = function (postId, audioUrl) {
     const container = document.getElementById(`waveform-${postId}`);
     const MAX_RETRIES = 3;
     let wavesurfer;
+    let spinner; // Definimos el spinner fuera para poder detenerlo en diferentes lugares
 
     const loadAndPlayAudioStream = (retryCount = 0) => {
         if (retryCount >= MAX_RETRIES) {
@@ -67,6 +68,7 @@ window.we = function (postId, audioUrl) {
             container.querySelector('.waveform-loading').style.display = 'none';
             container.querySelector('.waveform-message').style.display = 'block';
             container.querySelector('.waveform-message').textContent = 'Error al cargar el audio.';
+            stopSpinner();
             return;
         }
 
@@ -76,6 +78,7 @@ window.we = function (postId, audioUrl) {
             credentials: 'include' // Incluye las cookies de sesión en la solicitud
         })
             .then(response => {
+                console.log('Estado de la respuesta:', response.status);
                 if (!response.ok) {
                     throw new Error('Respuesta de red no satisfactoria');
                 }
@@ -107,26 +110,30 @@ window.we = function (postId, audioUrl) {
                 console.log('URL del blob generado:', audioBlobUrl);
                 const containerSpin = document.querySelector('.JNUZCN');
 
-                const spinnerElement = containerSpin.querySelector('.spin');
+                const spinnerElement = containerSpin ? containerSpin.querySelector('.spin') : null;
                 console.log('Elemento del spinner encontrado:', spinnerElement); // Verificar si se encuentra el elemento con clase 'spin'
 
                 if (spinnerElement) {
                     console.log('Inicializando spinner...');
-                    var spinner = new Spinner({
-                        lines: 12, // Número de líneas del spinner
-                        length: 7, // Longitud de cada línea
-                        width: 5, // Ancho de la línea
-                        radius: 10, // Radio del círculo
-                        color: '#000', // Color del spinner
-                        scale: 1.0, // Escalado
-                        position: 'relative' // Posición dentro del contenedor
-                    });
+                    if (typeof Spinner === 'undefined') {
+                        console.error('Spinner no está definido. Asegúrate de que la librería esté cargada correctamente.');
+                    } else {
+                        spinner = new Spinner({
+                            lines: 12, // Número de líneas del spinner
+                            length: 7, // Longitud de cada línea
+                            width: 5, // Ancho de la línea
+                            radius: 10, // Radio del círculo
+                            color: '#000', // Color del spinner
+                            scale: 1.0, // Escalado
+                            position: 'relative' // Posición dentro del contenedor
+                        });
 
-                    // Iniciamos el spinner en el elemento encontrado
-                    console.log('Iniciando spinner...');
-                    spinner.spin(spinnerElement);
-                    spinnerElement.style.display = 'block';
-                    console.log('Spinner mostrado (display: block)');
+                        // Iniciamos el spinner en el elemento encontrado
+                        console.log('Iniciando spinner...');
+                        spinner.spin(spinnerElement);
+                        spinnerElement.style.display = 'block';
+                        console.log('Spinner mostrado (display: block)');
+                    }
                 } else {
                     console.warn('No se encontró el elemento para el spinner.');
                 }
@@ -153,12 +160,7 @@ window.we = function (postId, audioUrl) {
                     console.log('Loading waveform ocultado.');
 
                     // Ocultamos el spinner cuando el audio esté listo
-                    if (spinnerElement) {
-                        console.log('Ocultando spinner...');
-                        spinnerElement.style.display = 'none'; // Oculta el spinner
-                        spinner.stop(); // Detenemos el spinner
-                        console.log('Spinner detenido.');
-                    }
+                    stopSpinner();
 
                     const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
                     console.log('¿Waveform ya cargada?:', waveCargada);
@@ -189,18 +191,28 @@ window.we = function (postId, audioUrl) {
                     setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
 
                     // Ocultamos el spinner si hay un error
-                    if (spinnerElement) {
-                        console.log('Ocultando spinner debido a un error...');
-                        spinnerElement.style.display = 'none'; // Oculta el spinner
-                        spinner.stop(); // Detenemos el spinner
-                        console.log('Spinner detenido por error.');
-                    }
+                    stopSpinner();
                 });
             })
             .catch(error => {
                 console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`, error);
                 setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
+                stopSpinner();
             });
+    };
+
+    const stopSpinner = () => {
+        const containerSpin = document.querySelector('.JNUZCN');
+        const spinnerElement = containerSpin ? containerSpin.querySelector('.spin') : null;
+
+        if (spinnerElement && spinner) {
+            console.log('Ocultando spinner...');
+            spinnerElement.style.display = 'none'; // Oculta el spinner
+            spinner.stop(); // Detenemos el spinner
+            console.log('Spinner detenido.');
+        } else {
+            console.warn('No se pudo detener el spinner. El elemento o el spinner no existen.');
+        }
     };
 
     loadAndPlayAudioStream();
