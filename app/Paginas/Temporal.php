@@ -474,9 +474,6 @@ function devlogin()
                 <div class="XFBZWO">
                     <? echo formCompraAcciones() ?>
                 </div>
-                <div class="XFBZWO">
-                    <? echo calcularAccionPorUsuario() ?>
-                </div>
             </div>
         <? endif; ?>
 
