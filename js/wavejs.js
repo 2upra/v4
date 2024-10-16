@@ -102,14 +102,15 @@ window.we = function (postId, audioUrl) {
             .then(stream => new Response(stream))
             .then(response => response.blob())
             .then(blob => {
+                console.log('Blob recibido:', blob); // Confirmar si el blob se recibe correctamente
                 const audioBlobUrl = URL.createObjectURL(blob);
+                console.log('URL del blob generado:', audioBlobUrl);
 
-                // Encuentra el elemento con la clase '.spin' más cercano dentro del contenedor
                 const spinnerElement = container.querySelector('.spin');
+                console.log('Elemento del spinner encontrado:', spinnerElement); // Verificar si se encuentra el elemento con clase 'spin'
 
-                // Si el spinner existe, lo mostramos
                 if (spinnerElement) {
-                    // Inicializamos el spinner con las opciones que te convengan
+                    console.log('Inicializando spinner...');
                     var spinner = new Spinner({
                         lines: 12, // Número de líneas del spinner
                         length: 7, // Longitud de cada línea
@@ -121,42 +122,62 @@ window.we = function (postId, audioUrl) {
                     });
 
                     // Iniciamos el spinner en el elemento encontrado
+                    console.log('Iniciando spinner...');
                     spinner.spin(spinnerElement);
-                    spinnerElement.style.display = 'block'; // Asegúrate de que sea visible
+                    spinnerElement.style.display = 'block';
+                    console.log('Spinner mostrado (display: block)');
+                } else {
+                    console.warn('No se encontró el elemento para el spinner.');
                 }
 
                 wavesurfer = initWavesurfer(container);
+                console.log('Wavesurfer inicializado:', wavesurfer);
+
                 wavesurfer.load(audioBlobUrl);
+                console.log('Audio cargado en Wavesurfer.');
 
                 const waveformBackground = container.querySelector('.waveform-background');
+                console.log('Elemento de fondo de waveform encontrado:', waveformBackground);
+
                 if (waveformBackground) {
                     waveformBackground.style.display = 'none';
+                    console.log('Fondo de waveform ocultado.');
                 }
 
                 wavesurfer.on('ready', () => {
+                    console.log('Wavesurfer está listo.');
                     window.audioLoading = false;
                     container.dataset.audioLoaded = 'true';
                     container.querySelector('.waveform-loading').style.display = 'none';
+                    console.log('Loading waveform ocultado.');
 
                     // Ocultamos el spinner cuando el audio esté listo
                     if (spinnerElement) {
+                        console.log('Ocultando spinner...');
                         spinnerElement.style.display = 'none'; // Oculta el spinner
                         spinner.stop(); // Detenemos el spinner
+                        console.log('Spinner detenido.');
                     }
 
                     const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
+                    console.log('¿Waveform ya cargada?:', waveCargada);
 
                     if (!waveCargada) {
                         setTimeout(() => {
+                            console.log('Generando imagen de waveform...');
                             const image = generateWaveformImage(wavesurfer);
+                            console.log('Enviando imagen al servidor...');
                             sendImageToServer(image, postId);
+                            console.log('Imagen enviada.');
                         }, 1);
                     }
 
                     container.addEventListener('click', () => {
                         if (wavesurfer.isPlaying()) {
+                            console.log('Pausando Wavesurfer...');
                             wavesurfer.pause();
                         } else {
+                            console.log('Reproduciendo Wavesurfer...');
                             wavesurfer.play();
                         }
                     });
@@ -168,8 +189,10 @@ window.we = function (postId, audioUrl) {
 
                     // Ocultamos el spinner si hay un error
                     if (spinnerElement) {
+                        console.log('Ocultando spinner debido a un error...');
                         spinnerElement.style.display = 'none'; // Oculta el spinner
                         spinner.stop(); // Detenemos el spinner
+                        console.log('Spinner detenido por error.');
                     }
                 });
             })
