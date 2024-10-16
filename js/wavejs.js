@@ -105,8 +105,9 @@ window.we = function (postId, audioUrl) {
                 console.log('Blob recibido:', blob); // Confirmar si el blob se recibe correctamente
                 const audioBlobUrl = URL.createObjectURL(blob);
                 console.log('URL del blob generado:', audioBlobUrl);
+                const containerSpin = document.querySelector('.JNUZCN');
 
-                const spinnerElement = container.querySelector('.spin');
+                const spinnerElement = containerSpin.querySelector('.spin');
                 console.log('Elemento del spinner encontrado:', spinnerElement); // Verificar si se encuentra el elemento con clase 'spin'
 
                 if (spinnerElement) {
