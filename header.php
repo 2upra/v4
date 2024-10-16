@@ -144,14 +144,15 @@ if (!defined('ABSPATH')) {
                     <div class="endmenu">
 
 
-                        <div id="filtros">
-                            <input type="text" id="identifier" placeholder="Busqueda">
-                        </div>
-
-                        <div class="xaxa1 menu-item iconoperfil">
+                        <div class="xaxa1 menu-item iconoperfil" id="cambiarVista">
                             <a>
                                 <? echo $GLOBALS['vista1']; ?>
                             </a>
+                        </div>
+
+
+                        <div id="filtros">
+                            <input type="text" id="identifier" placeholder="Busqueda">
                         </div>
 
                         <div class="xaxa1 menu-item iconoperfil prostatus0" id="btnpro">

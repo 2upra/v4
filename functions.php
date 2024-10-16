@@ -97,6 +97,7 @@ function scriptsOrdenados()
         'inversores' => '1.0.4',
         'likes' => '2.0.1',      
         'galleV2' => '2.0.1',
+        'cambiarVIsta' => '1.0.1',
     ];
 
     foreach ($script_handles as $handle => $data) {
