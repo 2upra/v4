@@ -19,6 +19,7 @@ function removeDuplicates(arr) {
     return [...new Set(arr)];
 }
 
+
 function tagsPosts() {
     document.querySelectorAll('p[id-post-algoritmo]').forEach(function(pElement) {
         const postId = pElement.getAttribute('id-post-algoritmo');
@@ -117,9 +118,46 @@ function tagsPosts() {
             tagsContainer.appendChild(tagElement);
         });
     });
+    limitTags();
 }
 
+// Función para limitar los tags y agregar "Ver más"
+function limitTags(maxVisible = 5) {
+    // Selecciona todos los contenedores de tags cuyo ID comienza con "tags-"
+    document.querySelectorAll('[id^="tags-"]').forEach(function(tagsContainer) {
+        const tagElements = tagsContainer.querySelectorAll('.postTag');
+        
+        // Verifica si hay más tags de los permitidos
+        if (tagElements.length > maxVisible) {
+            // Oculta los tags que exceden el límite
+            tagElements.forEach(function(tag, index) {
+                if (index >= maxVisible) {
+                    tag.style.display = 'none';
+                }
+            });
 
+            // Verifica si el botón "Ver más" ya existe para evitar duplicados
+            if (!tagsContainer.querySelector('.postTagVerMas')) {
+                // Crea el elemento "Ver más"
+                const verMas = document.createElement('span');
+                verMas.classList.add('postTagVerMas');
+                verMas.textContent = 'Ver más';
+                // Agrega un event listener para manejar el clic
+                verMas.addEventListener('click', function() {
+                    // Muestra todos los tags ocultos
+                    tagElements.forEach(function(tag) {
+                        tag.style.display = 'inline'; // Puedes ajustar a 'block' si lo prefieres
+                    });
+                    // Oculta el botón "Ver más" después de hacer clic
+                    verMas.style.display = 'none';
+                });
+
+                // Agrega el botón "Ver más" al contenedor de tags
+                tagsContainer.appendChild(verMas);
+            }
+        }
+    });
+}
 
 
 
