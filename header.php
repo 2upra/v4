@@ -109,7 +109,7 @@ if (!defined('ABSPATH')) {
                             </a>
                         </div>
 
-                        <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil mipsubmenu fotoperfilsub" id="fotoperfilsub">
+                        <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil mipsubmenu">
                             <a>
                                 <img src="<? echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
                             </a>
@@ -159,8 +159,8 @@ if (!defined('ABSPATH')) {
                             </a>
                         </div>
 
-                        <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil">
-                            <a href="https://2upra.com/perfil">
+                        <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil fotoperfilsub" id="fotoperfilsub">
+                            <a>
                                 <img src="<? echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
                             </a>
                         </div>
