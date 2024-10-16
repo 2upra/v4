@@ -122,6 +122,7 @@ function tagsPosts() {
 }
 
 // Función para limitar los tags y agregar "Ver más"
+// Función para limitar los tags y agregar "Ver más"/"Ver menos"
 function limitTags(maxVisible = 5) {
     // Selecciona todos los contenedores de tags cuyo ID comienza con "tags-"
     document.querySelectorAll('[id^="tags-"]').forEach(function(tagsContainer) {
@@ -129,7 +130,7 @@ function limitTags(maxVisible = 5) {
         
         // Verifica si hay más tags de los permitidos
         if (tagElements.length > maxVisible) {
-            // Oculta los tags que exceden el límite
+            // Oculta los tags que exceden el límite inicialmente
             tagElements.forEach(function(tag, index) {
                 if (index >= maxVisible) {
                     tag.style.display = 'none';
@@ -137,23 +138,36 @@ function limitTags(maxVisible = 5) {
             });
 
             // Verifica si el botón "Ver más" ya existe para evitar duplicados
-            if (!tagsContainer.querySelector('.postTagVerMas')) {
-                // Crea el elemento "Ver más"
-                const verMas = document.createElement('span');
-                verMas.classList.add('postTagVerMas');
-                verMas.textContent = 'Ver más';
+            let toggleButton = tagsContainer.querySelector('.postTagToggle');
+
+            if (!toggleButton) {
+                // Crea el elemento de toggle (inicialmente "Ver más")
+                toggleButton = document.createElement('span');
+                toggleButton.classList.add('postTagToggle');
+                toggleButton.textContent = 'Ver más';
+
                 // Agrega un event listener para manejar el clic
-                verMas.addEventListener('click', function() {
-                    // Muestra todos los tags ocultos
-                    tagElements.forEach(function(tag) {
-                        tag.style.display = 'inline'; // Puedes ajustar a 'block' si lo prefieres
+                toggleButton.addEventListener('click', function() {
+                    const isCollapsed = toggleButton.textContent === 'Ver más';
+                    
+                    tagElements.forEach(function(tag, index) {
+                        if (isCollapsed) {
+                            // Mostrar todas las etiquetas
+                            tag.style.display = 'inline';
+                        } else {
+                            // Ocultar las etiquetas que exceden el límite
+                            if (index >= maxVisible) {
+                                tag.style.display = 'none';
+                            }
+                        }
                     });
-                    // Oculta el botón "Ver más" después de hacer clic
-                    verMas.style.display = 'none';
+
+                    // Cambiar el texto del botón
+                    toggleButton.textContent = isCollapsed ? 'Ver menos' : 'Ver más';
                 });
 
-                // Agrega el botón "Ver más" al contenedor de tags
-                tagsContainer.appendChild(verMas);
+                // Agrega el botón de toggle al contenedor de tags
+                tagsContainer.appendChild(toggleButton);
             }
         }
     });
