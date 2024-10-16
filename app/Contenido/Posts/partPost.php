@@ -189,6 +189,8 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
             ?>
         </div>
     <? endif; ?>
+    <div class="spin">
+    </div>
     <div class="YBZGPB">
         <? echo opcionesPost($post_id, $author_id); ?>
     </div>

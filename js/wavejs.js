@@ -1,3 +1,5 @@
+import {Spinner} from 'spin.js';
+
 function inicializarWaveforms() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -100,28 +102,44 @@ window.we = function (postId, audioUrl) {
             .then(response => response.blob())
             .then((blob) => {
                 const audioBlobUrl = URL.createObjectURL(blob);
-
+            
+                // Encuentra el elemento con la clase '.spin' más cercano dentro del contenedor
+                const spinnerElement = container.querySelector('.spin');
+            
+                // Si el spinner existe, lo mostramos
+                if (spinnerElement) {
+                    var spinner = new Spinner(opts).spin(spinnerElement);
+                    spinnerElement.style.display = 'block';  // Asegúrate de que sea visible
+                }
+            
                 wavesurfer = initWavesurfer(container);
                 wavesurfer.load(audioBlobUrl);
-
+            
                 const waveformBackground = container.querySelector('.waveform-background');
                 if (waveformBackground) {
                     waveformBackground.style.display = 'none';
                 }
-
+            
                 wavesurfer.on('ready', () => {
                     window.audioLoading = false;
                     container.dataset.audioLoaded = 'true';
                     container.querySelector('.waveform-loading').style.display = 'none';
+            
+                    // Ocultamos el spinner cuando el audio esté listo
+                    if (spinnerElement) {
+                        spinnerElement.style.display = 'none';  // Oculta el spinner
+                        spinner.stop();  // Detenemos el spinner
+                    }
+            
                     const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
-
+            
                     if (!waveCargada) {
                         setTimeout(() => {
                             const image = generateWaveformImage(wavesurfer);
                             sendImageToServer(image, postId);
                         }, 1);
                     }
-
+            
                     container.addEventListener('click', () => {
                         if (wavesurfer.isPlaying()) {
                             wavesurfer.pause();
@@ -130,10 +148,16 @@ window.we = function (postId, audioUrl) {
                         }
                     });
                 });
-
+            
                 wavesurfer.on('error', () => {
                     console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`);
                     setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
+            
+                    // Ocultamos el spinner si hay un error
+                    if (spinnerElement) {
+                        spinnerElement.style.display = 'none';  // Oculta el spinner
+                        spinner.stop();  // Detenemos el spinner
+                    }
                 });
             })
             .catch((error) => {
