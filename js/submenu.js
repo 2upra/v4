@@ -111,7 +111,7 @@ function initializeStaticMenus() {
     //console.log('[initializeStaticMenus] Inicializando menús estáticos');
     createSubmenu(".subiricono", "submenusubir", 0, 120);
     createSubmenu(".chatIcono", "bloqueConversaciones", 30, -270);
-    createSubmenu(".fotoperfilsub", "fotoperfilsub", 30, 150 )
+    createSubmenu(".fotoperfilsub", "fotoperfilsub", 30, 100);
 }
 
 // Esto se reinicia cada vez que cargan nuevos posts
