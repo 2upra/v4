@@ -53,7 +53,7 @@ function tokenAudio($audio_id) {
         return false;
     }
 
-    $expiration = time() + 600; 
+    $expiration = time() + 3600; 
     $user_ip = $_SERVER['REMOTE_ADDR'];
     $unique_id = uniqid();
     $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
