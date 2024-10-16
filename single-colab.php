@@ -14,7 +14,7 @@ if (have_posts()) :
         <div id="main">
             <div id="content" class="<?php echo esc_attr($nologin_class); ?>">
                 <div class="single">
-                    <?php echo htmlPost($filtro); ?>
+                    <?php echo htmlColab($filtro); ?>
                 </div>
             </div>
         </div>
