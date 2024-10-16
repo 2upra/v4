@@ -63,7 +63,7 @@ function scriptsOrdenados()
         'fan',
     ];
 
-    // Lista de scripts con sus versiones
+// wavejs.js?ver=2.0.12.375203239:84  Spinner no está definido. Asegúrate de que la librería esté cargada correctamente. intente agregarlo manualmente en spin.js pero parece que no esta funcionando 
     $script_handles = [
         'ajaxPage' => '5.0.11',
         'autorows' => '1.0.1',
@@ -93,7 +93,7 @@ function scriptsOrdenados()
         'ajax-submit' => '2.1.38',
         'formscript' => '1.1.11',
         'genericAjax' => '2.1.13',
-        'wavejs' => ['2.0.12', ['jquery', 'wavesurfer']], 
+        'wavejs' => ['2.0.12', ['jquery', 'wavesurfer', 'spin']],
         'inversores' => '1.0.4',
         'likes' => '2.0.1',      
         'galleV2' => '2.0.1',
@@ -139,6 +139,7 @@ function scriptsOrdenados()
     }
 
     // Scripts externos
+    wp_enqueue_script('spin', 'https://spin.js.org/spin.umd.js', [], null, true);
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
     wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', ['chart-js'], null, true);
     wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.7.6', true);
