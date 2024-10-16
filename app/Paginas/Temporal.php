@@ -211,7 +211,7 @@ function dev()
                         <span class="MASYTN WJTTLG">Meta final $1000</span>
                     </div>
                     <div class="LXCJWW">
-                    <button class="borde  carta">Carta</button>
+                        <button class="borde  carta">Carta</button>
                         <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Iniciar sesión</button>
                     </div>
 
@@ -448,7 +448,7 @@ function devlogin()
 
                 <div class="QSBVLN">
                     <p class="ZTHAWI">Total recaudado</p>
-                    <p class="BFUUUL">632$</p>
+                    <p class="BFUUUL">657$</p>
                 </div>
 
                 <div class="MDOKUH">
@@ -468,6 +468,17 @@ function devlogin()
             <p>Muchas gracias</p>
             <? echo calcularAccionPorUsuario() ?>
         </div>
+
+        <? if (current_user_can('administrator')) : ?>
+            <div class="YXJWYY flex ">
+                <div class="XFBZWO">
+                    <? echo formCompraAcciones() ?>
+                </div>
+                <div class="XFBZWO">
+                    <? echo calcularAccionPorUsuario() ?>
+                </div>
+            </div>
+        <? endif; ?>
 
 
 
