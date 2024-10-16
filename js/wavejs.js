@@ -60,8 +60,7 @@ window.we = function (postId, audioUrl) {
     const container = document.getElementById(`waveform-${postId}`);
     const MAX_RETRIES = 3;
     let wavesurfer;
-    let spinner; // Definimos el spinner fuera para poder detenerlo en diferentes lugares
-
+    var spinner = new Spinner().spin();
     const loadAndPlayAudioStream = (retryCount = 0) => {
         if (retryCount >= MAX_RETRIES) {
             console.error('No se pudo cargar el audio después de varios intentos');
