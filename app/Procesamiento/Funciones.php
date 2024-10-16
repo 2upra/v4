@@ -500,11 +500,13 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 function mejorarDescripcionAudioPro($post_id, $archivo_audio)
 {
     // Obtener el contenido actual del post
+    iaLog("Iniciando mejora de descripción para el post ID: {$post_id}");
     $post_content = get_post_field('post_content', $post_id);
     if (!$post_content) {
         iaLog("No se pudo obtener el contenido del post ID: {$post_id}");
         return;
     }
+    iaLog("Contenido del post obtenido para el post ID: {$post_id}");
 
     // Obtener los tags manuales del usuario desde la meta 'tagsUsuario'
     $tags_usuario_str = get_post_meta($post_id, 'tagsUsuario', true);
@@ -515,10 +517,12 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
         // Convertir la cadena de tags en un array, eliminando espacios y manejando mayúsculas/minúsculas
         $tags_usuario = array_map('trim', explode(',', $tags_usuario_str));
         $tags_usuario = array_filter($tags_usuario); // Eliminar posibles elementos vacíos
+        iaLog("TagsUsuario obtenidos y procesados para el post ID: {$post_id}");
     }
 
     // Convertir el array de tags en una cadena separada por comas para incluir en el prompt
     $tags_usuario_formateados = implode(', ', $tags_usuario);
+    iaLog("TagsUsuario formateados: {$tags_usuario_formateados}");
 
     // Crear el prompt para el modelo Pro, incluyendo los tags manuales
     $prompt = "El usuario ya subió este audio, pero se necesita una descripción del audio mejorada. "
@@ -539,16 +543,21 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
     $descripcion_mejorada = generarDescripcionIAPro($archivo_audio, $prompt);
 
     if ($descripcion_mejorada) {
+        iaLog("Descripción mejorada generada correctamente para el post ID: {$post_id}");
         // Limpiar y procesar la nueva descripción generada
         $descripcion_procesada = json_decode(trim($descripcion_mejorada, "```json \n"), true);
 
         if ($descripcion_procesada) {
+            iaLog("Descripción JSON procesada correctamente para el post ID: {$post_id}");
+
             // Obtener el metadato 'datosAlgoritmo' existente
             $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
             if ($datos_algoritmo) {
                 $datos_algoritmo = json_decode($datos_algoritmo, true);
+                iaLog("DatosAlgoritmo existentes obtenidos para el post ID: {$post_id}");
             } else {
                 $datos_algoritmo = [];
+                iaLog("No se encontraron datosAlgoritmo existentes para el post ID: {$post_id}");
             }
 
             // Preservar los datos esenciales
@@ -559,6 +568,7 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
                 'scale' => $datos_algoritmo['scale'] ?? null,
                 'autor' => $datos_algoritmo['autor'] ?? []
             ];
+            iaLog("Datos preservados para el post ID: {$post_id}");
 
             // Agregar la nueva descripción IA mejorada con traducciones
             $nuevos_datos = [
@@ -591,6 +601,7 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
                     'en' => $descripcion_procesada['Sugerencia de busqueda']['en'] ?? []
                 ]
             ];
+            iaLog("Nuevos datos generados para el post ID: {$post_id}");
 
             // Combinar los datos preservados con los nuevos
             $datos_actualizados = array_merge($datos_preservados, $nuevos_datos);
@@ -601,7 +612,7 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
 
             // Marcar que la descripción fue mejorada
             update_post_meta($post_id, 'proIA', true);
-            iaLog("Post con descripción mejorada: {$post_id}");
+            iaLog("Post con descripción mejorada marcado como IA Pro para el post ID: {$post_id}");
         } else {
             iaLog("Error al procesar el JSON de la descripción mejorada generada por IA Pro.");
         }
