@@ -74,6 +74,35 @@ window.we = function (postId, audioUrl) {
 
         window.audioLoading = true;
 
+        const containerSpin = document.querySelector('.JNUZCN');
+        const spinnerElement = containerSpin ? containerSpin.querySelector('.spin') : null;
+        console.log('Elemento del spinner encontrado:', spinnerElement); // Verificar si se encuentra el elemento con clase 'spin'
+
+        if (spinnerElement) {
+            console.log('Inicializando spinner...');
+            if (typeof Spinner === 'undefined') {
+                console.error('Spinner no está definido. Asegúrate de que la librería esté cargada correctamente.');
+            } else {
+                spinner = new Spinner({
+                    lines: 12, // Número de líneas del spinner
+                    length: 7, // Longitud de cada línea
+                    width: 5, // Ancho de la línea
+                    radius: 10, // Radio del círculo
+                    color: '#000', // Color del spinner
+                    scale: 1.0, // Escalado
+                    position: 'relative' // Posición dentro del contenedor
+                });
+
+                // Iniciamos el spinner en el elemento encontrado
+                console.log('Iniciando spinner...');
+                spinner.spin(spinnerElement);
+                spinnerElement.style.display = 'block';
+                console.log('Spinner mostrado (display: block)');
+            }
+        } else {
+            console.warn('No se encontró el elemento para el spinner.');
+        }
+
         fetch(audioUrl, {
             credentials: 'include' // Incluye las cookies de sesión en la solicitud
         })
@@ -108,35 +137,6 @@ window.we = function (postId, audioUrl) {
                 console.log('Blob recibido:', blob); // Confirmar si el blob se recibe correctamente
                 const audioBlobUrl = URL.createObjectURL(blob);
                 console.log('URL del blob generado:', audioBlobUrl);
-                const containerSpin = document.querySelector('.JNUZCN');
-
-                const spinnerElement = containerSpin ? containerSpin.querySelector('.spin') : null;
-                console.log('Elemento del spinner encontrado:', spinnerElement); // Verificar si se encuentra el elemento con clase 'spin'
-
-                if (spinnerElement) {
-                    console.log('Inicializando spinner...');
-                    if (typeof Spinner === 'undefined') {
-                        console.error('Spinner no está definido. Asegúrate de que la librería esté cargada correctamente.');
-                    } else {
-                        spinner = new Spinner({
-                            lines: 12, // Número de líneas del spinner
-                            length: 7, // Longitud de cada línea
-                            width: 5, // Ancho de la línea
-                            radius: 10, // Radio del círculo
-                            color: '#000', // Color del spinner
-                            scale: 1.0, // Escalado
-                            position: 'relative' // Posición dentro del contenedor
-                        });
-
-                        // Iniciamos el spinner en el elemento encontrado
-                        console.log('Iniciando spinner...');
-                        spinner.spin(spinnerElement);
-                        spinnerElement.style.display = 'block';
-                        console.log('Spinner mostrado (display: block)');
-                    }
-                } else {
-                    console.warn('No se encontró el elemento para el spinner.');
-                }
 
                 wavesurfer = initWavesurfer(container);
                 console.log('Wavesurfer inicializado:', wavesurfer);
