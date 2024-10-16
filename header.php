@@ -93,7 +93,8 @@ if (!defined('ABSPATH')) {
                         <!--
                         <div class="subiricono menu-item" id="subiricono">
                             <a>
-                                <?// echo $GLOBALS['subiricono']; ?>
+                                <? // echo $GLOBALS['subiricono']; 
+                                ?>
                             </a>
                         </div>
                         -->
@@ -221,9 +222,13 @@ if (!defined('ABSPATH')) {
 
                 <div class="A1806241" id="fotoperfilsub-fotoperfilsub">
                     <div class="A1806242">
-                        <p>test</p>
+                        <button><a href="https://2upra.com/perfil/">Perfil</a></button>
+                        <button><a href="https://2upra.com/config/">Configuración</a></button>
+                        <button class="formularioError">Reportar un error</button>
+                        <button><a href="<?php echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>
                     </div>
                 </div>
+
 
                 <!-- Modal formulario subir rola comprobación -->
                 <div id="a84J76WY" class="a84J76WY" style="display:none;">
