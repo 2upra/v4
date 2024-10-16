@@ -24,7 +24,7 @@ function inicializarWaveforms() {
                 }
             }
         });
-    }, { threshold: 0.9 });
+    }, { threshold: 0.5 });
 
     document.querySelectorAll('.waveform-container').forEach(container => {
         const postId = container.getAttribute('postIDWave');

@@ -93,7 +93,7 @@ function scriptsOrdenados()
         'ajax-submit' => '2.1.38',
         'formscript' => '1.1.11',
         'genericAjax' => '2.1.13',
-        'wavejs' => ['2.0.12', ['jquery', 'wavesurfer', 'spin']],
+        'wavejs' => ['2.0.12', ['jquery', 'wavesurfer']],
         'inversores' => '1.0.4',
         'likes' => '2.0.1',      
         'galleV2' => '2.0.1',
