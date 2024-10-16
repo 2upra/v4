@@ -1,6 +1,7 @@
 const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
 
 function setupEventDelegation() {
+    console.log('setupEventDelegation llmaado')
     const contenedor = document.querySelector('.A1806241'); // Reemplaza con el contenedor adecuado
 
     if (!contenedor) {
