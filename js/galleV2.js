@@ -230,6 +230,75 @@ function galle() {
     cerrarChat();
     minimizarChat();
 
+    function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
+        // Selecciona el contenedor de mensajes
+        const mensajesUl = document.querySelector('.mensajes');
+        if (!mensajesUl) {
+            console.warn('No se encontró el elemento .mensajes en el DOM.');
+            return;
+        }
+
+        // Selecciona todos los elementos de mensaje existentes
+        const listaMensajes = mensajesUl.querySelectorAll('.mensaje');
+        let conversacionActualizada = false;
+
+        listaMensajes.forEach(mensaje => {
+            const receptorId = mensaje.getAttribute('data-receptor');
+
+            if (receptorId == usuarioId) {
+                // Actualiza la vista previa del mensaje
+                const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
+                if (vistaPrevia) {
+                    vistaPrevia.textContent = ultimoMensaje;
+                }
+
+                // Actualiza el tiempo del mensaje
+                const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
+                if (tiempoMensajeDiv) {
+                    const fechaActual = new Date();
+                    tiempoMensajeDiv.setAttribute('data-fecha', fechaActual.toISOString());
+                    const tiempoMensajeSpan = tiempoMensajeDiv.querySelector('span');
+                    if (tiempoMensajeSpan) {
+                        tiempoMensajeSpan.textContent = formatearTiempoRelativo(fechaActual);
+                    }
+                }
+
+                // Mueve el mensaje actualizado al inicio de la lista
+                mensajesUl.insertBefore(mensaje, mensajesUl.firstChild);
+
+                conversacionActualizada = true;
+            }
+        });
+
+        if (!conversacionActualizada) {
+            // Si no se encuentra la conversación, reinicia los chats después de 1 segundo
+            setTimeout(() => {
+                reiniciarChats();
+            }, 1000);
+        }
+    }
+
+    function reiniciarChats() {
+        enviarAjax('reiniciarChats', {})
+            .then(response => {
+                if (response.success && response.data.html) {
+                    const chatListContainer = document.querySelector('.bloqueChatReiniciar');
+                    if (chatListContainer) {
+                        // Borra el contenido anterior
+                        chatListContainer.innerHTML = '';
+                        // Reemplaza con el nuevo contenido
+                        chatListContainer.innerHTML = response.data.html;
+                        clickMensaje();
+                    }
+                } else {
+                    //console.error('Error al reiniciar los chats:', response);
+                }
+            })
+            .catch(error => {
+                //console.error('Error al reiniciar los chats:', error);
+            });
+    }
+
     async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
         try {
             let data = {success: true, data: {mensajes: [], conversacion: null}};
@@ -365,74 +434,6 @@ function galle() {
 
             li.appendChild(adjuntoContainer);
         }
-    }
-
-    function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
-        // Selecciona el contenedor de mensajes
-        const mensajesUl = document.querySelector('.mensajes');
-        if (!mensajesUl) {
-            console.warn('No se encontró el elemento .mensajes en el DOM.');
-            return;
-        }
-
-        // Selecciona todos los elementos de mensaje existentes
-        const listaMensajes = mensajesUl.querySelectorAll('.mensaje');
-        let conversacionActualizada = false;
-
-        listaMensajes.forEach(mensaje => {
-            const receptorId = mensaje.getAttribute('data-receptor');
-
-            if (receptorId == usuarioId) {
-                // Actualiza la vista previa del mensaje
-                const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
-                if (vistaPrevia) {
-                    vistaPrevia.textContent = ultimoMensaje;
-                }
-
-                // Actualiza el tiempo del mensaje
-                const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
-                if (tiempoMensajeDiv) {
-                    const fechaActual = new Date();
-                    tiempoMensajeDiv.setAttribute('data-fecha', fechaActual.toISOString());
-                    const tiempoMensajeSpan = tiempoMensajeDiv.querySelector('span');
-                    if (tiempoMensajeSpan) {
-                        tiempoMensajeSpan.textContent = formatearTiempoRelativo(fechaActual);
-                    }
-                }
-
-                // Mueve el mensaje actualizado al inicio de la lista
-                mensajesUl.insertBefore(mensaje, mensajesUl.firstChild);
-
-                conversacionActualizada = true;
-            }
-        });
-
-        if (!conversacionActualizada) {
-            // Si no se encuentra la conversación, reinicia los chats después de 1 segundo
-            setTimeout(() => {
-                reiniciarChats();
-            }, 1000);
-        }
-    }
-
-    function reiniciarChats() {
-        enviarAjax('reiniciarChats', {})
-            .then(response => {
-                if (response.success && response.data.html) {
-                    const chatListContainer = document.querySelector('.bloqueChatReiniciar');
-                    if (chatListContainer) {
-                        // Borra el contenido anterior
-                        chatListContainer.innerHTML = '';
-                        // Reemplaza con el nuevo contenido
-                        chatListContainer.innerHTML = response.data.html;
-                    }
-                } else {
-                    //console.error('Error al reiniciar los chats:', response);
-                }
-            })
-            .catch(error => {
-                //console.error('Error al reiniciar los chats:', error);
-            });
     }
 
     // TIEMPO
