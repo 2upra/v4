@@ -100,7 +100,6 @@ add_action('wp_ajax_obtenerChatColab', 'obtenerChatColab');
 
 
 
-
 function obtenerChat()
 {
     if (!is_user_logged_in()) {
@@ -141,7 +140,23 @@ function obtenerChat()
         }
     }
 
+    // --- Inicio de la actualización de 'leido' ---
+
     $tablaMensajes = $wpdb->prefix . 'mensajes';
+    
+    $resultadoUpdate = $wpdb->update(
+        $tablaMensajes,
+        array('leido' => 1), // Establece 'leido' a TRUE
+        array(
+            'conversacion' => $conversacion,
+            'remitente !=' => $usuarioActual,
+            'leido' => 0
+        ),
+        array('%d'), // Formatos de los datos a actualizar
+        array('%d', '%d') // Formatos de las condiciones
+    );
+
+    // Obtener los mensajes con paginación
     $offset = ($page - 1) * $mensajesPorPagina;
     $query = $wpdb->prepare("
         SELECT mensaje, emisor AS remitente, fecha, adjunto, id, leido, metadata
