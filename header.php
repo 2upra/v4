@@ -110,6 +110,10 @@ if (!defined('ABSPATH')) {
                             </a>
                         </div>
 
+                        <div class="menuColabs">
+                            <? echo colabsResumen() ?>
+                        </div>
+
                         <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil mipsubmenu">
                             <a>
                                 <img src="<? echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
@@ -175,9 +179,6 @@ if (!defined('ABSPATH')) {
                             </a>
                         </div>
 
-                        <div class="menuColabs">
-                            <? echo colabsResumen() ?>
-                        </div>
 
                     </div>
                 </nav>
