@@ -128,15 +128,15 @@ function galle() {
         const chatColabElements = document.querySelectorAll('.bloqueChatColab');
 
         chatColabElements.forEach(async chatColabElement => {
-            const postId = chatColabElement.dataset.postId;
-            if (!postId) {
+            const conversacion_id = chatColabElement.dataset.conversacionId;
+            if (!conversacion_id) {
                 //console.error('El elemento no tiene data-post-id.');
                 return;
             }
             currentPage = 1;
 
             try {
-                const data = await enviarAjax('obtenerChatColab', {colab_id: postId, page: currentPage});
+                const data = await enviarAjax('obtenerChatColab', {conversacion_id: conversacion_id, page: currentPage});
 
                 if (data?.success) {
                     //console.log('Mensaje completo:', data);
