@@ -108,7 +108,7 @@ function perfilBanner($user_id)
                 <?
                 echo botonSeguirPerfilBanner($user_id);
                 ?>
-                <button class="borde PRJWWT mensajeBoton" data-receptor="<? echo esc_html($seguidores_count); ?>">Enviar mensaje</button>
+                <button class="borde PRJWWT mensajeBoton" data-receptor="<? echo esc_html($user_id); ?>">Enviar mensaje</button>
             <? endif; ?>
             <? if ($mismoAutor): ?>
                 <button class="DSQKYW">Configuración</button>
