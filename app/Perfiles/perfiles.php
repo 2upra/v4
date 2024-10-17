@@ -33,7 +33,7 @@ function obtener_seguidores_o_siguiendo($user_id, $metadato)
 
 function perfil()
 {
-    $url_path = trim(parse_url(add_query_arg([]), PHP_URL_PATH), '/');
+    $url_path = trim(parse_url(add_query_arg([]), _URL_PATH), '/');
     $url_segments = explode('/', $url_path);
     $user_slug = end($url_segments);
     $user = get_user_by('slug', $user_slug);
@@ -90,32 +90,32 @@ function perfilBanner($user_id)
     ?>
     <div class="X522YA FRRVBB">
         <div class="JKBZKR">
-            <img src="<?php echo esc_url($imagen_perfil); ?>" alt="">
+            <img src="<? echo esc_url($imagen_perfil); ?>" alt="">
             <div class="KFEVRT">
-                <p class="ZEKRWP"><?php echo esc_html($user_info->display_name); ?></p>
-                <p class="NZERUU">@<?php echo esc_html($user_info->user_login); ?></p>
-                <p class="ZBNIRW"><?php echo esc_html($descripcion); ?></p>
+                <p class="ZEKRWP"><? echo esc_html($user_info->display_name); ?></p>
+                <p class="NZERUU">@<? echo esc_html($user_info->user_login); ?></p>
+                <p class="ZBNIRW"><? echo esc_html($descripcion); ?></p>
             </div>
         </div>
 
         <div class="KNIDBC">
-            <p><?php echo esc_html($seguidores_count); ?> seguidores ·</p>
-            <p><?php echo esc_html($siguiendo_count); ?> siguiendo</p>
+            <p><? echo esc_html($seguidores_count); ?> seguidores ·</p>
+            <p><? echo esc_html($siguiendo_count); ?> siguiendo</p>
         </div>
 
         <div class="R0A915">
-            <?php if (!$mismoAutor): ?>
-                <?php
+            <? if (!$mismoAutor): ?>
+                <?
                 echo botonSeguirPerfilBanner($user_id);
                 ?>
-                <button class="borde PRJWWT mensajeBoton">Enviar mensaje</button>
-            <?php endif; ?>
-            <?php if ($mismoAutor): ?>
+                <button class="borde PRJWWT mensajeBoton" data-receptor="<? echo esc_html($user_id); ?>">Enviar mensaje</button>
+            <? endif; ?>
+            <? if ($mismoAutor): ?>
                 <button class="DSQKYW">Configuración</button>
-            <?php endif; ?>
+            <? endif; ?>
         </div>
     </div>
-    <?php
+    <?
     return ob_get_clean();
 }
 
@@ -151,9 +151,9 @@ function editar_perfil_usuario_shortcode()
         }
 
         if (isset($_FILES['imagen_perfil']) && $_FILES['imagen_perfil']['error'] === 0) {
-            require_once(ABSPATH . 'wp-admin/includes/media.php');
-            require_once(ABSPATH . 'wp-admin/includes/file.php');
-            require_once(ABSPATH . 'wp-admin/includes/image.php');
+            require_once(ABSPATH . 'wp-admin/includes/media.');
+            require_once(ABSPATH . 'wp-admin/includes/file.');
+            require_once(ABSPATH . 'wp-admin/includes/image.');
             $attachment_id = media_handle_upload('imagen_perfil', 0);
             if (!is_wp_error($attachment_id)) {
                 update_user_meta($current_user->ID, 'imagen_perfil_id', $attachment_id);
