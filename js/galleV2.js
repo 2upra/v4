@@ -323,6 +323,7 @@ function galle() {
                 bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                 bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
                 bloqueChat.style.display = 'block';
+                maximizarChat();
                 manejarScroll(data.data.conversacion, bloqueChat);
 
                 const listaMensajes = bloqueChat.querySelector('.listaMensajes');
