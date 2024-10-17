@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    const DEPURAR = true;
+    const DEPURAR = false;
     const log = DEPURAR ? console.log.bind(console) : () => {};
 
     let estaCargando = false;

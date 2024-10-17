@@ -226,6 +226,24 @@ function galle() {
         }
     }
 
+    async function maximizarChatDirectamente() {
+        try {
+            const bloqueChat = document.getElementById('bloqueChat');
+    
+            if (bloqueChat.classList.contains('minimizado')) {
+                bloqueChat.classList.remove('minimizado');
+    
+                // Muestra los elementos internos
+                const elementosAMostrar = bloqueChat.querySelectorAll('.listaMensajes, .previewsChat, .chatEnvio');
+                elementosAMostrar.forEach(elem => {
+                    elem.style.display = '';
+                });
+            }
+        } catch (error) {
+            alert('Ha ocurrido un error al intentar maximizar el chat directamente.');
+        }
+    }
+
     maximizarChat();
     cerrarChat();
     minimizarChat();
@@ -323,8 +341,8 @@ function galle() {
                 bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                 bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
                 bloqueChat.style.display = 'block';
+                maximizarChatDirectamente();
                 manejarScroll(data.data.conversacion, bloqueChat);
-
                 const listaMensajes = bloqueChat.querySelector('.listaMensajes');
                 if (listaMensajes) {
                     listaMensajes.scrollTop = listaMensajes.scrollHeight;
@@ -332,6 +350,7 @@ function galle() {
 
                 await actualizarEstadoConexion(receptor, bloqueChat);
                 setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
+                
             } else {
                 alert(data.message || 'Error desconocido al obtener los mensajes.');
             }
@@ -364,7 +383,7 @@ function galle() {
                     return;
                 }
             }
-
+            
             // Abrir la conversación
             abrirConversacion({
                 conversacion: conversacion || null,

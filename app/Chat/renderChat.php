@@ -100,9 +100,6 @@ add_action('wp_ajax_obtenerChatColab', 'obtenerChatColab');
 
 
 
-/*
-la tabla de mensajes tiene un leido BOOLEAN NOT NULL DEFAULT FALSE; ahora, cada vez que se pide obtener un chat, debería ahora marcar como true todos los mensajes de esa conversacion como leido, o sea true. 
-*/
 function obtenerChat()
 {
     if (!is_user_logged_in()) {
@@ -116,7 +113,7 @@ function obtenerChat()
     $conversacion = isset($_POST['conversacion']) ? intval($_POST['conversacion']) : 0;
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
     $mensajesPorPagina = 10;
-
+    chatLog('Conversación ID proporcionado: ' . $conversacion);
     if ($conversacion <= 0 && $receptor <= 0) {
         wp_send_json_error(array('message' => 'ID de conversación o receptor inválido.'));
         wp_die();
@@ -143,7 +140,23 @@ function obtenerChat()
         }
     }
 
+    // --- Inicio de la actualización de 'leido' ---
+
     $tablaMensajes = $wpdb->prefix . 'mensajes';
+    
+    $resultadoUpdate = $wpdb->update(
+        $tablaMensajes,
+        array('leido' => 1), // Establece 'leido' a TRUE
+        array(
+            'conversacion' => $conversacion,
+            'remitente !=' => $usuarioActual,
+            'leido' => 0
+        ),
+        array('%d'), // Formatos de los datos a actualizar
+        array('%d', '%d') // Formatos de las condiciones
+    );
+
+    // Obtener los mensajes con paginación
     $offset = ($page - 1) * $mensajesPorPagina;
     $query = $wpdb->prepare("
         SELECT mensaje, emisor AS remitente, fecha, adjunto, id, leido, metadata
