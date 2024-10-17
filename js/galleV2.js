@@ -274,7 +274,12 @@ function galle() {
 
                 conversacionActualizada = true;
 
+                // Logs adicionales para diagnosticar
+                console.log(`msgConversacionId: ${msgConversacionId}, conversacionAbierta: ${conversacionAbierta}`);
+
                 if (msgConversacionId && msgConversacionId != conversacionAbierta) {
+                    console.log('Condición para cambiar color cumplida.');
+
                     const chatIconoDiv = document.querySelector('#chatIcono');
                     if (chatIconoDiv) {
                         console.log('Añadiendo clase icono-rojo al contenedor #chatIcono');
@@ -282,6 +287,8 @@ function galle() {
                     } else {
                         console.warn('No se encontró el elemento #chatIcono');
                     }
+                } else {
+                    console.log('Condición para cambiar color NO cumplida.');
                 }
             }
         });
@@ -295,10 +302,15 @@ function galle() {
     }
 
     // Evento para quitar el color rojo al hacer clic en el icono de chat
-    document.querySelector('#chatIcono').addEventListener('click', function () {
-        console.log('Removiendo clase icono-rojo del contenedor #chatIcono');
-        this.classList.remove('icono-rojo');
-    });
+    const chatIconoElemento = document.querySelector('#chatIcono');
+    if (chatIconoElemento) {
+        chatIconoElemento.addEventListener('click', function () {
+            console.log('Removiendo clase icono-rojo del contenedor #chatIcono');
+            this.classList.remove('icono-rojo');
+        });
+    } else {
+        console.warn('No se encontró el elemento #chatIcono al agregar el event listener.');
+    }
 
     function reiniciarChats() {
         enviarAjax('reiniciarChats', {})
