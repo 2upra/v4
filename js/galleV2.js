@@ -332,6 +332,7 @@ function galle() {
 
                 await actualizarEstadoConexion(receptor, bloqueChat);
                 setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
+                maximizarChat();
             } else {
                 alert(data.message || 'Error desconocido al obtener los mensajes.');
             }
@@ -372,7 +373,6 @@ function galle() {
                 imagenPerfil,
                 nombreUsuario
             });
-            maximizarChat();
         });
     }
 
