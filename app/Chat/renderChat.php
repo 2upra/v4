@@ -102,6 +102,7 @@ add_action('wp_ajax_obtenerChatColab', 'obtenerChatColab');
 
 function obtenerChat()
 {
+    chatLog('----------obtener chat------------');
     if (!is_user_logged_in()) {
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));
         wp_die();
@@ -113,8 +114,16 @@ function obtenerChat()
     $conversacion = isset($_POST['conversacion']) ? intval($_POST['conversacion']) : 0;
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
     $mensajesPorPagina = 10;
+
+    // Registro de parámetros de entrada
+    chatLog('Parámetros recibidos: ' . json_encode($_POST));
+    chatLog('Usuario actual ID: ' . $usuarioActual);
+    chatLog('Receptor ID: ' . $receptor);
     chatLog('Conversación ID proporcionado: ' . $conversacion);
+    chatLog('Página solicitada: ' . $page);
+
     if ($conversacion <= 0 && $receptor <= 0) {
+        chatLog('ID de conversación o receptor inválido.');
         wp_send_json_error(array('message' => 'ID de conversación o receptor inválido.'));
         wp_die();
     }
@@ -133,8 +142,10 @@ function obtenerChat()
             json_encode($usuarioActual),
             json_encode($receptor)
         ));
+        chatLog('Conversación obtenida desde la base de datos: ' . $conversacion);
 
         if (!$conversacion) {
+            chatLog('No se encontró una conversación válida.');
             wp_send_json_success(array('mensajes' => array(), 'conversacion' => null));
             wp_die();
         }
@@ -143,18 +154,38 @@ function obtenerChat()
     // --- Inicio de la actualización de 'leido' ---
 
     $tablaMensajes = $wpdb->prefix . 'mensajes';
-    
+
+    // Datos de actualización
+    $update_data = array('leido' => 1);
+    $update_conditions = array(
+        'conversacion' => $conversacion,
+        'remitente !=' => $usuarioActual,
+        'leido' => 0
+    );
+    $update_format = array('%d');
+    $update_condition_format = array('%d', '%d');
+
+    // Registrar datos de actualización
+    chatLog('Actualizando mensajes con los siguientes parámetros:');
+    chatLog('Datos a actualizar: ' . json_encode($update_data));
+    chatLog('Condiciones de actualización: ' . json_encode($update_conditions));
+    chatLog('Formatos: Datos - ' . implode(', ', $update_format) . '; Condiciones - ' . implode(', ', $update_condition_format));
+
+    // Ejecutar la actualización
     $resultadoUpdate = $wpdb->update(
         $tablaMensajes,
-        array('leido' => 1), // Establece 'leido' a TRUE
-        array(
-            'conversacion' => $conversacion,
-            'remitente !=' => $usuarioActual,
-            'leido' => 0
-        ),
-        array('%d'), // Formatos de los datos a actualizar
-        array('%d', '%d') // Formatos de las condiciones
+        $update_data, // Establece 'leido' a TRUE
+        $update_conditions,
+        $update_format, // Formatos de los datos a actualizar
+        $update_condition_format // Formatos de las condiciones
     );
+
+    // Registrar resultado de la actualización
+    if ($resultadoUpdate === false) {
+        chatLog('Error al actualizar los mensajes: ' . $wpdb->last_error);
+    } else {
+        chatLog('Número de mensajes actualizados a leido: ' . $resultadoUpdate);
+    }
 
     // Obtener los mensajes con paginación
     $offset = ($page - 1) * $mensajesPorPagina;
@@ -166,12 +197,18 @@ function obtenerChat()
         LIMIT %d OFFSET %d
     ", $conversacion, $mensajesPorPagina, $offset);
 
+    // Registrar la consulta
+    chatLog('Consulta de mensajes ejecutada: ' . $query);
+
     $mensajes = $wpdb->get_results($query);
 
     if ($mensajes === null) {
+        chatLog('Error en la consulta a la base de datos: ' . $wpdb->last_error);
         wp_send_json_error(array('message' => 'Error en la consulta a la base de datos.'));
         wp_die();
     }
+
+    chatLog('Número de mensajes obtenidos: ' . count($mensajes));
 
     $mensajes = array_reverse($mensajes);
 
@@ -183,10 +220,18 @@ function obtenerChat()
         }
     }
 
-    wp_send_json_success(array(
+    // Registrar los mensajes formateados
+    chatLog('Mensajes formateados: ' . json_encode($mensajes));
+
+    $wp_response = array(
         'mensajes' => $mensajes ? $mensajes : array(),
         'conversacion' => $conversacion
-    ));
+    );
+
+    // Registrar la respuesta enviada
+    chatLog('Respuesta enviada al cliente: ' . json_encode($wp_response));
+
+    wp_send_json_success($wp_response);
     wp_die();
 }
 add_action('wp_ajax_obtenerChat', 'obtenerChat');
