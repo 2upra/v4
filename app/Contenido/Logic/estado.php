@@ -1,12 +1,5 @@
 <?
 
-function cambiarEstado($post_id, $new_status)
-{
-    $post = get_post($post_id);
-    $post->post_status = $new_status;
-    wp_update_post($post);
-    return json_encode(['success' => true, 'new_status' => $new_status]);
-}
 
 // Función genérica para manejar las solicitudes AJAX
 function permitirDescarga($post_id)
@@ -15,10 +8,30 @@ function permitirDescarga($post_id)
     return json_encode(['success' => true, 'message' => 'Descarga permitida']);
 }
 
-// Generic function to handle AJAX requests
+function cambiarEstado($post_id, $new_status)
+{
+    $post = get_post($post_id);
+    $post->post_status = $new_status;
+    wp_update_post($post);
+    return json_encode(['success' => true, 'new_status' => $new_status]);
+}
+
+function comprobarColabsUsuario($user_id)
+{
+    // Query para obtener las colaboraciones publicadas del usuario
+    $args = [
+        'author'         => $user_id,
+        'post_status'    => 'publish',
+        'post_type'      => 'colab', 
+        'posts_per_page' => -1,
+    ];
+    
+    $query = new WP_Query($args);
+    return $query->found_posts;
+}
+
 function cambioDeEstado()
 {
-    // Validate that post_id was received
     if (!isset($_POST['post_id'])) {
         echo json_encode(['success' => false, 'message' => 'Post ID is missing']);
         wp_die();
@@ -26,6 +39,17 @@ function cambioDeEstado()
 
     $post_id = $_POST['post_id'];
     $action = $_POST['action'];
+    $current_user_id = get_current_user_id();
+
+    // Si la acción es aceptar colaboración, comprobar el número de colabs publicadas
+    if ($action === 'aceptarcolab') {
+        $colabsPublicadas = comprobarColabsUsuario($current_user_id);
+        
+        if ($colabsPublicadas >= 3) {
+            echo json_encode(['success' => false, 'message' => 'Ya tienes 3 colaboraciones en curso. Debes finalizar una para aceptar otra.']);
+            wp_die();
+        }
+    }
 
     $estados = [
         'toggle_post_status'    => ($_POST['current_status'] == 'pending') ? 'publish' : 'pending',

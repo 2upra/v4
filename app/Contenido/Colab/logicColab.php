@@ -7,6 +7,8 @@ function botonColab($postId, $colab)
 }
 
 
+
+
 function empezarColab() {
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
@@ -177,6 +179,7 @@ function adjuntarArchivo($newPostId, $fileUrl) {
 
 
 add_action('wp_ajax_empezarColab', 'empezarColab');
+
 
 
 function actualizarEstadoColab($postId, $post_after, $post_before)
