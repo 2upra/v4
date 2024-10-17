@@ -226,6 +226,24 @@ function galle() {
         }
     }
 
+    async function maximizarChatDirectamente() {
+        try {
+            const bloqueChat = document.getElementById('bloqueChat');
+    
+            if (bloqueChat.classList.contains('minimizado')) {
+                bloqueChat.classList.remove('minimizado');
+    
+                // Muestra los elementos internos
+                const elementosAMostrar = bloqueChat.querySelectorAll('.listaMensajes, .previewsChat, .chatEnvio');
+                elementosAMostrar.forEach(elem => {
+                    elem.style.display = '';
+                });
+            }
+        } catch (error) {
+            alert('Ha ocurrido un error al intentar maximizar el chat directamente.');
+        }
+    }
+
     maximizarChat();
     cerrarChat();
     minimizarChat();
@@ -332,7 +350,7 @@ function galle() {
 
                 await actualizarEstadoConexion(receptor, bloqueChat);
                 setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
-                maximizarChat();
+                maximizarChatDirectamente();
             } else {
                 alert(data.message || 'Error desconocido al obtener los mensajes.');
             }
