@@ -113,7 +113,7 @@ function obtenerChat()
     $conversacion = isset($_POST['conversacion']) ? intval($_POST['conversacion']) : 0;
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
     $mensajesPorPagina = 10;
-
+    chatLog('Conversación ID proporcionado: ' . $conversacion);
     if ($conversacion <= 0 && $receptor <= 0) {
         wp_send_json_error(array('message' => 'ID de conversación o receptor inválido.'));
         wp_die();

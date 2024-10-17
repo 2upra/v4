@@ -229,10 +229,10 @@ function galle() {
     async function maximizarChatDirectamente() {
         try {
             const bloqueChat = document.getElementById('bloqueChat');
-    
+
             if (bloqueChat.classList.contains('minimizado')) {
                 bloqueChat.classList.remove('minimizado');
-    
+
                 // Muestra los elementos internos
                 const elementosAMostrar = bloqueChat.querySelectorAll('.listaMensajes, .previewsChat, .chatEnvio');
                 elementosAMostrar.forEach(elem => {
@@ -249,51 +249,79 @@ function galle() {
     minimizarChat();
 
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
+        console.log('actualizarListaConversaciones: Iniciando actualización con usuarioId:', usuarioId, 'y ultimoMensaje:', ultimoMensaje);
+
         // Selecciona el contenedor de mensajes
         const mensajesUl = document.querySelector('.mensajes');
         if (!mensajesUl) {
-            console.warn('No se encontró el elemento .mensajes en el DOM.');
+            console.log('actualizarListaConversaciones: No se encontró el elemento .mensajes en el DOM.');
             return;
         }
+        console.log('actualizarListaConversaciones: Elemento .mensajes encontrado.');
 
         // Selecciona todos los elementos de mensaje existentes
         const listaMensajes = mensajesUl.querySelectorAll('.mensaje');
+        console.log(`actualizarListaConversaciones: Se encontraron ${listaMensajes.length} mensajes.`);
+
         let conversacionActualizada = false;
 
-        listaMensajes.forEach(mensaje => {
+        listaMensajes.forEach((mensaje, index) => {
             const receptorId = mensaje.getAttribute('data-receptor');
+            console.log(`actualizarListaConversaciones: Procesando mensaje ${index + 1} con data-receptor: ${receptorId}`);
 
             if (receptorId == usuarioId) {
+                console.log(`actualizarListaConversaciones: Receptor coincide con usuarioId (${usuarioId}). Actualizando...`);
+
                 // Actualiza la vista previa del mensaje
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
+                    console.log('actualizarListaConversaciones: Actualizando vista previa del mensaje.');
                     vistaPrevia.textContent = ultimoMensaje;
+                    console.log('actualizarListaConversaciones: Nueva vista previa:', vistaPrevia.textContent);
+                } else {
+                    console.log('actualizarListaConversaciones: No se encontró .vistaPrevia p en el mensaje.');
                 }
 
                 // Actualiza el tiempo del mensaje
                 const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
                 if (tiempoMensajeDiv) {
+                    console.log('actualizarListaConversaciones: Actualizando tiempo del mensaje.');
                     const fechaActual = new Date();
                     tiempoMensajeDiv.setAttribute('data-fecha', fechaActual.toISOString());
                     const tiempoMensajeSpan = tiempoMensajeDiv.querySelector('span');
                     if (tiempoMensajeSpan) {
-                        tiempoMensajeSpan.textContent = formatearTiempoRelativo(fechaActual);
+                        const tiempoFormateado = formatearTiempoRelativo(fechaActual);
+                        tiempoMensajeSpan.textContent = tiempoFormateado;
+                        console.log('actualizarListaConversaciones: Nuevo tiempo formateado:', tiempoFormateado);
+                    } else {
+                        console.log('actualizarListaConversaciones: No se encontró el <span> dentro de .tiempoMensaje.');
                     }
+                } else {
+                    console.log('actualizarListaConversaciones: No se encontró .tiempoMensaje en el mensaje.');
                 }
 
                 // Mueve el mensaje actualizado al inicio de la lista
                 mensajesUl.insertBefore(mensaje, mensajesUl.firstChild);
+                console.log('actualizarListaConversaciones: Mensaje movido al inicio de la lista.');
 
                 conversacionActualizada = true;
+            } else {
+                console.log(`actualizarListaConversaciones: ReceptorId (${receptorId}) no coincide con usuarioId (${usuarioId}).`);
             }
         });
 
-        if (!conversacionActualizada) {
+        if (conversacionActualizada) {
+            console.log('actualizarListaConversaciones: Conversación actualizada exitosamente.');
+        } else {
+            console.log('actualizarListaConversaciones: No se encontró ninguna conversación para actualizar. Reiniciando chats en 1 segundo.');
             // Si no se encuentra la conversación, reinicia los chats después de 1 segundo
             setTimeout(() => {
+                console.log('actualizarListaConversaciones: Ejecutando reiniciarChats.');
                 reiniciarChats();
-            }, 1000);
+            }, 2000);
         }
+
+        console.log('actualizarListaConversaciones: Finaliza la función.');
     }
 
     function reiniciarChats() {
@@ -309,11 +337,11 @@ function galle() {
                         clickMensaje();
                     }
                 } else {
-                    //console.error('Error al reiniciar los chats:', response);
+                    console.error('Error al reiniciar los chats:', response);
                 }
             })
             .catch(error => {
-                //console.error('Error al reiniciar los chats:', error);
+                console.error('Error al reiniciar los chats:', error);
             });
     }
 
@@ -350,7 +378,6 @@ function galle() {
 
                 await actualizarEstadoConexion(receptor, bloqueChat);
                 setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
-                
             } else {
                 alert(data.message || 'Error desconocido al obtener los mensajes.');
             }
@@ -383,7 +410,7 @@ function galle() {
                     return;
                 }
             }
-            
+
             // Abrir la conversación
             abrirConversacion({
                 conversacion: conversacion || null,
