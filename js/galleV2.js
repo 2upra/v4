@@ -20,7 +20,9 @@ function formatearTiempoRelativo(fecha) {
     }
 }
 
+//tengo esta funcion, es muy compleja, hace funcionar un chat, pero tiene el problema de que solo funciona una conexion en una sola pestaña, por ejemplo, los mensajes solo se reciben en 1 sola y la conexion solo se mantiene en 1 sola pestaña. Como se hace para que todo este sincronizado en una sola pestaña, no te puedo mostrar el codigo completo pero si las partes importantes
 function galle() {
+    const channel = new BroadcastChannel('galle_chat_channel');
     const wsUrl = 'wss://2upra.com/ws';
     const emisor = galleV2.emisor;
     let receptor = null;
@@ -38,6 +40,8 @@ function galle() {
         iniciarChat();
         clickMensaje();
         chatColab(); // debería iniciarse de otra manera
+        setupBroadcastChannel();
+        manageControllerTab();
     }
 
     /*
@@ -295,61 +299,13 @@ function galle() {
             });
     }
 
-    /*
-    (... parte del codigo php omitido)
-
-        //los mensajes tienen una columna conversacion
-    $offset = ($page - 1) * $mensajesPorPagina;
-    $query = $wpdb->prepare("
-        SELECT mensaje, emisor AS remitente, fecha, adjunto, id, leido, metadata
-        FROM $tablaMensajes
-        WHERE conversacion = %d
-        ORDER BY fecha DESC
-        LIMIT %d OFFSET %d
-    ", $conversacion, $mensajesPorPagina, $offset);
-
-    // Registrar la consulta
-    chatLog('Consulta de mensajes ejecutada: ' . $query);
-
-    $mensajes = $wpdb->get_results($query);
-
-    if ($mensajes === null) {
-        chatLog('Error en la consulta a la base de datos: ' . $wpdb->last_error);
-        wp_send_json_error(array('message' => 'Error en la consulta a la base de datos.'));
-        wp_die();
-    }
-
-    chatLog('Número de mensajes obtenidos: ' . count($mensajes));
-
-    $mensajes = array_reverse($mensajes);
-
-    foreach ($mensajes as $mensaje) {
-        $mensaje->clase = ($mensaje->remitente == $usuarioActual) ? 'mensajeDerecha' : 'mensajeIzquierda';
-
-        if (!empty($mensaje->adjunto)) {
-            $mensaje->adjunto = json_decode($mensaje->adjunto, true);
-        }
-    }
-
-    // Registrar los mensajes formateados
-    chatLog('Mensajes formateados: ' . json_encode($mensajes));
-
-    $wp_response = array(
-        'mensajes' => $mensajes ? $mensajes : array(),
-        'conversacion' => $conversacion
-    );
-
-    el proposito establecer en una variable global llamada conversacionAbierta, para saber que conversacion esta abierta en cada momento, y obviamente limpiarla cuando se cierra 
-
-    */
-
     async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
         try {
             let data = {success: true, data: {mensajes: [], conversacion: null}};
             currentPage = 1;
             if (conversacion) {
                 data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
-                conversacionAbierta = conversacion; 
+                conversacionAbierta = conversacion;
             } else if (receptor) {
                 data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
                 conversacionAbierta = data.data.conversacion;
@@ -391,11 +347,11 @@ function galle() {
         try {
             const bloqueChat = document.querySelector('.bloqueChat');
             const botonCerrar = document.getElementById('cerrarChat');
-    
+
             botonCerrar.addEventListener('click', () => {
                 bloqueChat.style.display = 'none';
                 bloqueChat.classList.remove('minimizado');
-                conversacionAbierta = null; 
+                conversacionAbierta = null;
                 const textareaMensaje = document.querySelector('.mensajeContenido');
                 textareaMensaje.value = '';
             });
@@ -542,8 +498,31 @@ function galle() {
         if (token) {
             connectWebSocket();
         } else {
-            //console.error('No se pudo iniciar el chat sin un token válido');
+            console.error('No se pudo iniciar el chat sin un token válido');
         }
+    }
+
+    function setupBroadcastChannel() {
+        channel.onmessage = (event) => {
+            const message = event.data;
+            manejarMensajeWebSocket(JSON.stringify(message));
+        };
+    }
+
+    function manageControllerTab() {
+        if (!localStorage.getItem('chat_controller')) {
+            localStorage.setItem('chat_controller', Date.now());
+            connectWebSocket();
+        } else {
+            // Escuchar mensajes solo a través de BroadcastChannel
+        }
+
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'chat_controller' && !event.newValue) {
+                localStorage.setItem('chat_controller', Date.now());
+                connectWebSocket();
+            }
+        });
     }
 
     function connectWebSocket() {
@@ -574,6 +553,7 @@ function galle() {
         };
         ws.onmessage = ({data}) => {
             const message = JSON.parse(data);
+            channel.postMessage(message);
             if (message.type === 'pong') {
                 //console.log('Recibido pong, todo bien...');
             } else if (message.type === 'set_emisor') {
@@ -591,6 +571,20 @@ function galle() {
             }
         };
     }
+
+    // Escuchar mensajes entrantes desde otras pestañas
+    channel.onmessage = event => {
+        const message = event.data;
+
+        // Procesar el mensaje recibido
+        if (message.type === 'message_saved') {
+            confirmarMensaje(message);
+        } else if (message.type === 'message_error') {
+            manejarError(message);
+        } else {
+            manejarMensajeWebSocket(JSON.stringify(message));
+        }
+    };
 
     function enviarMensajeWs(receptor, mensaje, adjunto = null, metadata = null, conversacion_id = null, listaMensajes = null) {
         const temp_id = Date.now();
@@ -614,6 +608,7 @@ function galle() {
         if (ws?.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify(messageData));
             listaMensajes ||= document.querySelector('.listaMensajes');
+            channel.postMessage(messageData);
             agregarMensajeAlChat(mensaje, 'mensajeDerecha', new Date(), listaMensajes, null, false, adjunto, temp_id);
         } else {
             //console.error('enviarMensajeWs: WebSocket no conectado, mensaje no enviado.');
@@ -1213,24 +1208,6 @@ function galle() {
 
         const messageBlock = crearElemento('div', 'messageBlock');
         const messageContainer = crearElemento('div', 'messageContainer');
-
-        /* const logInfo = {
-            msg: mensajeTexto, // mensajeTexto: "Esto es un mensaje de ejemplo"
-            cls: clase, // clase: "mensaje-clase"
-            date: fecha, // fecha: "2023-10-05T14:48:00.000Z"
-            lista: listaMensajes, // listaMensajes: Elemento del DOM
-            prevDate: fechaAnterior, // fechaAnterior: "2023-10-04T10:30:00.000Z"
-            top: insertAtTop, // insertAtTop: false
-            adj: adjunto, // adjunto: "archivo.pdf"
-            tempId: temp_id, // temp_id: "temp12345"
-            emisor: msgEmisor, // msgEmisor: "usuario123"
-            primerHilo: isFirstMessageOfThread, // isFirstMessageOfThread: true
-            usuario: userInfo, // userInfo: { nombre: "Juan", id: "juan123" }
-            tipo: tipoMensaje, // tipoMensaje: "Texto"
-            leido: mensajeLeido // mensajeLeido: false
-        };
-
-        console.log('[[agregarMensajeAlChat]]', logInfo);*/
 
         const mensajeElem = crearElemento('div', ['mensajeText', clase], {
             'data-fecha': fechaMensaje.toISOString(),
