@@ -253,6 +253,7 @@ function galle() {
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
                     vistaPrevia.textContent = ultimoMensaje;
+                    console.log('Vista previa del mensaje actualizada.');
                 }
 
                 // Actualiza el tiempo del mensaje
@@ -263,12 +264,12 @@ function galle() {
                     const tiempoMensajeSpan = tiempoMensajeDiv.querySelector('span');
                     if (tiempoMensajeSpan) {
                         tiempoMensajeSpan.textContent = formatearTiempoRelativo(fechaActual);
+                        console.log('Tiempo del mensaje actualizado.');
                     }
                 }
 
                 // Mueve el mensaje actualizado al inicio de la lista
                 mensajesUl.insertBefore(mensaje, mensajesUl.firstChild);
-
                 conversacionActualizada = true;
 
                 // Si la conversación actualizada no está abierta, cambiar el color del icono
@@ -276,15 +277,25 @@ function galle() {
                     const chatIcono = document.querySelector('#chatIcono svg');
                     if (chatIcono) {
                         chatIcono.style.color = '#d43333'; // Color rojo
+                        console.log('Icono de chat coloreado de rojo.');
+                    } else {
+                        console.warn('No se encontró el icono de chat.');
                     }
                 }
             }
         });
 
         if (!conversacionActualizada) {
+            console.log('No se encontró ninguna conversación para el usuario.');
             // Si no se encuentra la conversación, reinicia los chats después de 1 segundo
             setTimeout(() => {
                 reiniciarChats();
+                console.log('Reiniciando chats...');
+                const chatIcono = document.querySelector('#chatIcono svg');
+                if (chatIcono) {
+                    chatIcono.style.color = '#d43333'; // Color rojo después de reiniciar
+                    console.log('Icono de chat coloreado de rojo después de reiniciar.');
+                }
             }, 1000);
         }
     }
@@ -293,7 +304,8 @@ function galle() {
     document.querySelector('#chatIcono').addEventListener('click', function () {
         const chatIcono = this.querySelector('svg');
         if (chatIcono) {
-            chatIcono.style.color = ''; 
+            chatIcono.style.color = '';
+            console.log('Color del icono de chat restablecido.');
         }
     });
 
