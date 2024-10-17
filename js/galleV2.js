@@ -1067,9 +1067,13 @@ function galle() {
             fechaAnterior = new Date(mensaje.fecha);
         });
     }
+
     async function manejarMensajeWebSocket(data) {
+        console.log('manejarMensajeWebSocket: Iniciando manejo de mensaje WebSocket.');
         try {
+            console.log('manejarMensajeWebSocket: Recibiendo datos:', data);
             const parsedData = JSON.parse(data);
+            console.log('manejarMensajeWebSocket: Datos parseados correctamente.');
 
             const msgEmisor = String(parsedData.emisor);
             const msgReceptor = parsedData.receptor;
@@ -1081,25 +1085,34 @@ function galle() {
 
             // ID del usuario actual
             const currentUserId = String(emisor);
+            console.log('manejarMensajeWebSocket: ID del usuario actual:', currentUserId);
 
             let receptorIds;
             try {
                 // Intentar parsear msgReceptor como JSON
                 receptorIds = JSON.parse(msgReceptor);
+                console.log('manejarMensajeWebSocket: msgReceptor parseado como JSON:', receptorIds);
 
                 // Asegurarse de que receptorIds es un array de strings
                 if (!Array.isArray(receptorIds)) {
                     receptorIds = [String(receptorIds)];
+                    console.log('manejarMensajeWebSocket: msgReceptor no era un array. Convertido a array:', receptorIds);
                 } else {
                     receptorIds = receptorIds.map(id => String(id));
+                    console.log('manejarMensajeWebSocket: receptorIds asegurado como array de strings:', receptorIds);
                 }
             } catch (e) {
                 // Si falla el parseo, asumir que es un único ID
                 receptorIds = [String(msgReceptor)];
+                console.warn('manejarMensajeWebSocket: Fallo al parsear msgReceptor como JSON. Asumiendo único ID:', receptorIds);
             }
+
+            console.log('manejarMensajeWebSocket: receptorIds finales:', receptorIds);
 
             // Verificar si el mensaje es para el usuario actual o si fue enviado por el usuario actual
             if (receptorIds.includes(currentUserId) || msgEmisor === currentUserId) {
+                console.log('manejarMensajeWebSocket: El mensaje es relevante para el usuario actual.');
+
                 let chatWindow;
 
                 // Determinar el tipo de mensaje (grupal o individual)
@@ -1108,18 +1121,21 @@ function galle() {
                     // Mensaje grupal o con conversacion_id
                     chatWindow = document.querySelector(`.bloqueChatColab[data-conversacion-id="${msgConversacionId}"]`);
                     tipoMensaje = 'Colab';
+                    console.log(`manejarMensajeWebSocket: Tipo de mensaje identificado como '${tipoMensaje}'.`);
                 } else {
                     // Mensaje individual
                     const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
                     chatWindow = document.querySelector(`.bloqueChat[data-user-id="${contactoId}"]`);
                     tipoMensaje = 'Individual';
+                    console.log(`manejarMensajeWebSocket: Tipo de mensaje identificado como '${tipoMensaje}'. Contacto ID: ${contactoId}`);
 
                     // Actualizar lista de conversaciones
                     actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
-                    console.log(`A1: Lista de conversaciones actualizada para ${contactoId}: ${msgMensaje}`);
+                    console.log(`manejarMensajeWebSocket: Lista de conversaciones actualizada para ${msgConversacionId || contactoId}: "${msgMensaje}"`);
                 }
 
                 if (chatWindow) {
+                    console.log('manejarMensajeWebSocket: Ventana de chat encontrada:', chatWindow);
                     const listaMensajes = chatWindow.querySelector('.listaMensajes');
                     const fechaActual = new Date();
 
@@ -1130,15 +1146,21 @@ function galle() {
                     if (mensajes.length > 0) {
                         const ultimoMensaje = mensajes[mensajes.length - 1];
                         prevEmisor = ultimoMensaje.getAttribute('data-emisor');
+                        console.log(`manejarMensajeWebSocket: Último emisor en el hilo: ${prevEmisor}`);
+                    } else {
+                        console.log('manejarMensajeWebSocket: No hay mensajes previos en el hilo.');
                     }
 
                     const isFirstMessageOfThread = msgEmisor !== prevEmisor;
+                    console.log(`manejarMensajeWebSocket: ¿Es el primer mensaje del hilo? ${isFirstMessageOfThread}`);
 
                     // Obtener la información del usuario si es necesario
                     let userInfo = null;
                     if (isFirstMessageOfThread && msgEmisor !== currentUserId) {
+                        console.log('manejarMensajeWebSocket: Obteniendo información del usuario para el emisor:', msgEmisor);
                         const userInfos = await obtenerInfoUsuarios([msgEmisor]);
                         userInfo = userInfos.get(msgEmisor);
+                        console.log('manejarMensajeWebSocket: Información del usuario obtenida:', userInfo);
                     }
 
                     // Determinar la clase del mensaje
@@ -1148,24 +1170,32 @@ function galle() {
                     } else {
                         claseMensaje = 'mensajeIzquierda';
                     }
+                    console.log(`manejarMensajeWebSocket: Clase del mensaje asignada: ${claseMensaje}`);
 
                     // Añadir el mensaje al chat
                     agregarMensajeAlChat(msgMensaje, claseMensaje, fechaActual, listaMensajes, null, false, msgAdjunto, tempId, msgEmisor, isFirstMessageOfThread, userInfo, tipoMensaje, leido);
-                    console.log(`A2: Mensaje agregado: ${msgMensaje} por ${msgEmisor}`);
+                    console.log(`manejarMensajeWebSocket: Mensaje agregado al chat: "${msgMensaje}" por emisor: ${msgEmisor}`);
 
-                    // Actualizar lista de conversaciones
+                    // Actualizar lista de conversaciones nuevamente si es mensaje individual
                     if (tipoMensaje === 'Individual') {
                         const contactoId = msgEmisor === currentUserId ? msgReceptor : msgEmisor;
                         actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
-                        console.log(`A3: Lista de conversaciones actualizada para ${contactoId}: ${msgMensaje}`);
+                        console.log(`manejarMensajeWebSocket: Lista de conversaciones actualizada nuevamente para ${msgConversacionId || contactoId}: "${msgMensaje}"`);
                     } else {
-                        //actualizarListaConversaciones(msgConversacionId, msgMensaje);
+                        console.log('manejarMensajeWebSocket: Tipo de mensaje es grupal. No se actualiza la lista de conversaciones nuevamente.');
+                        // actualizarListaConversaciones(msgConversacionId, msgMensaje);
                     }
+                } else {
+                    console.warn('manejarMensajeWebSocket: Ventana de chat no encontrada para el ID proporcionado:', msgConversacionId || msgEmisor);
+                    console.log('manejarMensajeWebSocket: No se pudo actualizar la lista de conversaciones debido a que la ventana de chat no se encontró.');
                 }
+            } else {
+                console.log('manejarMensajeWebSocket: El mensaje no es relevante para el usuario actual. No se actualiza la lista de conversaciones.');
             }
         } catch (error) {
-            console.error('Error al manejar el mensaje de WebSocket:', error);
+            console.error('manejarMensajeWebSocket: Error al manejar el mensaje de WebSocket:', error);
         }
+        console.log('manejarMensajeWebSocket: Finaliza el manejo del mensaje WebSocket.');
     }
 
     function agregarMensajeAlChat(mensajeTexto, clase, fecha, listaMensajes = document.querySelector('.listaMensajes'), fechaAnterior = null, insertAtTop = false, adjunto = null, temp_id = null, msgEmisor = null, isFirstMessageOfThread = false, userInfo = null, tipoMensaje = null, mensajeLeido = false) {
