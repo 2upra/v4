@@ -234,30 +234,30 @@ function galle() {
 
     function actualizarListaConversaciones(usuarioId, ultimoMensaje, msgConversacionId = null) {
         console.log('Iniciando actualizarListaConversaciones');
-
+    
         const mensajesUl = document.querySelector('.mensajes');
         if (!mensajesUl) {
             console.warn('No se encontró el elemento .mensajes en el DOM.');
             return;
         }
         console.log('Elemento .mensajes encontrado:', mensajesUl);
-
+    
         const listaMensajes = mensajesUl.querySelectorAll('.mensaje');
         console.log('Número de mensajes encontrados:', listaMensajes.length);
         let conversacionActualizada = false;
-
+    
         listaMensajes.forEach(mensaje => {
             const receptorId = mensaje.getAttribute('data-receptor');
             const conversacionId = mensaje.getAttribute('data-conversacion');
             console.log(`Procesando mensaje con receptorId: ${receptorId}, conversacionId: ${conversacionId}`);
-
+    
             if (receptorId == usuarioId) {
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
                     vistaPrevia.textContent = ultimoMensaje;
                     console.log('Actualizada la vista previa del mensaje:', ultimoMensaje);
                 }
-
+    
                 const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
                 if (tiempoMensajeDiv) {
                     const fechaActual = new Date();
@@ -268,18 +268,19 @@ function galle() {
                         console.log('Actualizado el tiempo del mensaje:', tiempoMensajeSpan.textContent);
                     }
                 }
-
+    
                 mensajesUl.insertBefore(mensaje, mensajesUl.firstChild);
                 console.log('Movimiento del mensaje al inicio de la lista');
-
+    
                 conversacionActualizada = true;
-
+    
                 // Logs adicionales para diagnosticar
                 console.log(`msgConversacionId: ${msgConversacionId}, conversacionAbierta: ${conversacionAbierta}`);
-
-                if (msgConversacionId && msgConversacionId != conversacionAbierta) {
+    
+                // Verificación de condición con más control
+                if (msgConversacionId && conversacionAbierta && msgConversacionId != conversacionAbierta) {
                     console.log('Condición para cambiar color cumplida.');
-
+    
                     const chatIconoDiv = document.querySelector('#chatIcono');
                     if (chatIconoDiv) {
                         console.log('Añadiendo clase icono-rojo al contenedor #chatIcono');
@@ -292,7 +293,7 @@ function galle() {
                 }
             }
         });
-
+    
         if (!conversacionActualizada) {
             console.log('No se encontró la conversación, reiniciando chats después de 1 segundo');
             setTimeout(() => {
@@ -300,6 +301,7 @@ function galle() {
             }, 1000);
         }
     }
+    
 
     // Evento para quitar el color rojo al hacer clic en el icono de chat
     const chatIconoElemento = document.querySelector('#chatIcono');
