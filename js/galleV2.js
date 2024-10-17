@@ -1040,7 +1040,7 @@ function galle() {
         });
     }
     async function manejarMensajeWebSocket(data) {
-        //console.log("🚀 Función manejarMensajeWebSocket llamada con data:", data);
+        console.log("🚀 Función manejarMensajeWebSocket llamada con data:", data);
         
         try {
             const parsedData = JSON.parse(data);
@@ -1054,7 +1054,7 @@ function galle() {
                 adjunto: parsedData.adjunto || null,
                 temp_id: parsedData.temp_id || null
             };
-            //console.log("📝 Resumen de datos recibidos:", resumenDatos);
+            console.log("📝 Resumen de datos recibidos:", resumenDatos);
     
             const msgEmisor = String(parsedData.emisor);
             const msgReceptor = parsedData.receptor;
@@ -1069,21 +1069,21 @@ function galle() {
             // Depuración de receptorIds
             try {
                 receptorIds = JSON.parse(msgReceptor);
-                //console.log("🔍 receptorIds después de JSON.parse:", receptorIds);
+                console.log("🔍 receptorIds después de JSON.parse:", receptorIds);
     
                 if (!Array.isArray(receptorIds)) {
-                    //console.warn("⚠️ receptorIds no es un array. Convertiéndolo a array.");
+                    console.warn("⚠️ receptorIds no es un array. Convertiéndolo a array.");
                     receptorIds = [String(receptorIds)];
                 } else {
                     receptorIds = receptorIds.map(id => String(id));
-                    //console.log("🔄 receptorIds mapeados a strings:", receptorIds);
+                    console.log("🔄 receptorIds mapeados a strings:", receptorIds);
                 }
             } catch (e) {
-                //console.error("❌ Error al parsear msgReceptor. Asignando receptorIds como array con msgReceptor:", e);
+                console.error("❌ Error al parsear msgReceptor. Asignando receptorIds como array con msgReceptor:", e);
                 receptorIds = [String(msgReceptor)];
             }
     
-            //console.log("✅ receptorIds final:", receptorIds);
+            console.log("✅ receptorIds final:", receptorIds);
     
             // Verificar si el mensaje es para el usuario actual o si fue enviado por el usuario actual
             if (receptorIds.includes(currentUserId) || msgEmisor === currentUserId) {
