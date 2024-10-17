@@ -229,10 +229,10 @@ function galle() {
     async function maximizarChatDirectamente() {
         try {
             const bloqueChat = document.getElementById('bloqueChat');
-    
+
             if (bloqueChat.classList.contains('minimizado')) {
                 bloqueChat.classList.remove('minimizado');
-    
+
                 // Muestra los elementos internos
                 const elementosAMostrar = bloqueChat.querySelectorAll('.listaMensajes, .previewsChat, .chatEnvio');
                 elementosAMostrar.forEach(elem => {
@@ -350,7 +350,6 @@ function galle() {
 
                 await actualizarEstadoConexion(receptor, bloqueChat);
                 setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
-                
             } else {
                 alert(data.message || 'Error desconocido al obtener los mensajes.');
             }
@@ -383,7 +382,7 @@ function galle() {
                     return;
                 }
             }
-            
+
             // Abrir la conversación
             abrirConversacion({
                 conversacion: conversacion || null,
@@ -1041,9 +1040,22 @@ function galle() {
         });
     }
     async function manejarMensajeWebSocket(data) {
+        console.log("🚀 Función manejarMensajeWebSocket llamada con data:", data);
+        
         try {
             const parsedData = JSON.parse(data);
-
+    
+            // Resumen de los datos recibidos
+            const resumenDatos = {
+                emisor: parsedData.emisor,
+                receptor: parsedData.receptor,
+                mensaje: parsedData.mensaje,
+                conversacion_id: parsedData.conversacion_id,
+                adjunto: parsedData.adjunto || null,
+                temp_id: parsedData.temp_id || null
+            };
+            console.log("📝 Resumen de datos recibidos:", resumenDatos);
+    
             const msgEmisor = String(parsedData.emisor);
             const msgReceptor = parsedData.receptor;
             const msgMensaje = parsedData.mensaje;
@@ -1051,26 +1063,28 @@ function galle() {
             const msgAdjunto = parsedData.adjunto || null;
             const tempId = parsedData.temp_id || null;
             const leido = 0;
-
-            // ID del usuario actual
             const currentUserId = String(emisor);
-
             let receptorIds;
+    
+            // Depuración de receptorIds
             try {
-                // Intentar parsear msgReceptor como JSON
                 receptorIds = JSON.parse(msgReceptor);
-
-                // Asegurarse de que receptorIds es un array de strings
+                console.log("🔍 receptorIds después de JSON.parse:", receptorIds);
+    
                 if (!Array.isArray(receptorIds)) {
+                    console.warn("⚠️ receptorIds no es un array. Convertiéndolo a array.");
                     receptorIds = [String(receptorIds)];
                 } else {
                     receptorIds = receptorIds.map(id => String(id));
+                    console.log("🔄 receptorIds mapeados a strings:", receptorIds);
                 }
             } catch (e) {
-                // Si falla el parseo, asumir que es un único ID
+                console.error("❌ Error al parsear msgReceptor. Asignando receptorIds como array con msgReceptor:", e);
                 receptorIds = [String(msgReceptor)];
             }
-
+    
+            console.log("✅ receptorIds final:", receptorIds);
+    
             // Verificar si el mensaje es para el usuario actual o si fue enviado por el usuario actual
             if (receptorIds.includes(currentUserId) || msgEmisor === currentUserId) {
                 let chatWindow;
