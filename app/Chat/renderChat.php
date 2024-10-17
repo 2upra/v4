@@ -102,7 +102,6 @@ add_action('wp_ajax_obtenerChatColab', 'obtenerChatColab');
 
 function obtenerChat()
 {
-    chatLog('----------obtener chat------------');
     if (!is_user_logged_in()) {
         wp_send_json_error(array('message' => 'Usuario no autenticado.'));
         wp_die();
@@ -115,6 +114,9 @@ function obtenerChat()
     $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
     $mensajesPorPagina = 10;
 
+    // Registro de inicio de la función
+    chatLog('----------obtener chat------------');
+    
     // Registro de parámetros de entrada
     chatLog('Parámetros recibidos: ' . json_encode($_POST));
     chatLog('Usuario actual ID: ' . $usuarioActual);
@@ -135,8 +137,8 @@ function obtenerChat()
             SELECT id 
             FROM $tablaConversaciones 
             WHERE tipo = 1
-            AND JSON_CONTAINS(participantes, %s)
-            AND JSON_CONTAINS(participantes, %s)
+              AND JSON_CONTAINS(participantes, %s)
+              AND JSON_CONTAINS(participantes, %s)
             LIMIT 1
         ",
             json_encode($usuarioActual),
@@ -155,32 +157,26 @@ function obtenerChat()
 
     $tablaMensajes = $wpdb->prefix . 'mensajes';
 
-    // Datos de actualización
-    $update_data = array('leido' => 1);
-    $update_conditions = array(
-        'conversacion' => $conversacion,
-        'remitente !=' => $usuarioActual,
-        'leido' => 0
-    );
-    $update_format = array('%d');
-    $update_condition_format = array('%d', '%d');
-
-    // Registrar datos de actualización
-    chatLog('Actualizando mensajes con los siguientes parámetros:');
-    chatLog('Datos a actualizar: ' . json_encode($update_data));
-    chatLog('Condiciones de actualización: ' . json_encode($update_conditions));
-    chatLog('Formatos: Datos - ' . implode(', ', $update_format) . '; Condiciones - ' . implode(', ', $update_condition_format));
-
-    // Ejecutar la actualización
-    $resultadoUpdate = $wpdb->update(
-        $tablaMensajes,
-        $update_data, // Establece 'leido' a TRUE
-        $update_conditions,
-        $update_format, // Formatos de los datos a actualizar
-        $update_condition_format // Formatos de las condiciones
+    // Construir la consulta SQL personalizada
+    $sql = $wpdb->prepare(
+        "UPDATE $tablaMensajes 
+         SET leido = %d 
+         WHERE conversacion = %d 
+           AND remitente != %d 
+           AND leido = %d",
+        1,                  // leido = 1
+        $conversacion,      // conversacion = 20
+        $usuarioActual,     // remitente != 1
+        0                   // leido = 0
     );
 
-    // Registrar resultado de la actualización
+    // Registrar la consulta que se va a ejecutar
+    chatLog('Consulta SQL para actualizar mensajes: ' . $sql);
+
+    // Ejecutar la consulta
+    $resultadoUpdate = $wpdb->query($sql);
+
+    // Registrar el resultado de la actualización
     if ($resultadoUpdate === false) {
         chatLog('Error al actualizar los mensajes: ' . $wpdb->last_error);
     } else {
@@ -235,6 +231,7 @@ function obtenerChat()
     wp_die();
 }
 add_action('wp_ajax_obtenerChat', 'obtenerChat');
+
 
 
 
