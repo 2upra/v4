@@ -37,11 +37,13 @@ function variablesPosts($post_id = null)
 }
 
 //BOTON DE SEGUIR
-
 function botonseguir($author_id)
 {
+    // Asegurarse de que $author_id sea un entero
+    $author_id = (int) $author_id;
     $current_user_id = get_current_user_id();
 
+    // Usar comparación no estricta o asegurar tipos
     if ($current_user_id === 0 || $current_user_id === $author_id) {
         return '';
     }
@@ -53,16 +55,47 @@ function botonseguir($author_id)
     $icono_boton = $es_seguido ? $GLOBALS['iconorestar'] : $GLOBALS['iconosumar'];
 
     ob_start();
-?>
-    <button class="<? echo esc_attr($clase_boton); ?>"
-        data-seguidor-id="<? echo esc_attr($current_user_id); ?>"
-        data-seguido-id="<? echo esc_attr($author_id); ?>">
-        <? echo $icono_boton; ?>
+    ?>
+    <button class="<?php echo esc_attr($clase_boton); ?>"
+        data-seguidor-id="<?php echo esc_attr($current_user_id); ?>"
+        data-seguido-id="<?php echo esc_attr($author_id); ?>">
+        <?php echo $icono_boton; ?>
     </button>
-<?
+    <?php
     return ob_get_clean();
 }
 
+
+function botonSeguirPerfilBanner($author_id)
+{
+    // Asegurarse de que $author_id sea un entero
+    $author_id = (int) $author_id;
+    $current_user_id = get_current_user_id();
+
+    // No mostrar el botón si el usuario no está conectado o es el mismo autor
+    if ($current_user_id === 0 || $current_user_id === $author_id) {
+        return '';
+    }
+
+    $siguiendo = get_user_meta($current_user_id, 'siguiendo', true);
+    $siguiendo = is_array($siguiendo) ? $siguiendo : array();
+    $es_seguido = in_array($author_id, $siguiendo);
+
+    // Determinar la clase y el texto del botón
+    $clase_boton = $es_seguido ? 'dejar-de-seguir' : 'seguir';
+    $texto_boton = $es_seguido ? 'Dejar de seguir' : 'Seguir';
+
+    // Generar el botón con el texto correspondiente
+    ob_start();
+    ?>
+    <button class="borde <?php echo esc_attr($clase_boton); ?>"
+            data-seguidor-id="<?php echo esc_attr($current_user_id); ?>"
+            data-seguido-id="<?php echo esc_attr($author_id); ?>">
+        <?php echo esc_html($texto_boton); ?>
+    </button>
+    <?php
+    return ob_get_clean();
+}
 
 //OPCIONES EN LAS ROLAS 
 function opcionesRola($post_id, $post_status, $audio_url)

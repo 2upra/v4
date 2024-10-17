@@ -87,33 +87,35 @@ function perfilBanner($user_id)
     $descripcion = get_user_meta($user_id, 'profile_description', true);
 
     ob_start();
-?>
+    ?>
     <div class="X522YA FRRVBB">
         <div class="JKBZKR">
-            <img src="<? echo esc_url($imagen_perfil); ?>" alt="">
+            <img src="<?php echo esc_url($imagen_perfil); ?>" alt="">
             <div class="KFEVRT">
-                <p class="ZEKRWP"><? echo esc_html($user_info->display_name); ?></p>
-                <p class="NZERUU">@<? echo esc_html($user_info->user_login); ?></p>
-                <p class="ZBNIRW"><? echo esc_html($descripcion); ?></p>
+                <p class="ZEKRWP"><?php echo esc_html($user_info->display_name); ?></p>
+                <p class="NZERUU">@<?php echo esc_html($user_info->user_login); ?></p>
+                <p class="ZBNIRW"><?php echo esc_html($descripcion); ?></p>
             </div>
         </div>
 
         <div class="KNIDBC">
-            <p><? echo esc_html($seguidores_count); ?> seguidores ·</p>
-            <p><? echo esc_html($siguiendo_count); ?> siguiendo</p>
+            <p><?php echo esc_html($seguidores_count); ?> seguidores ·</p>
+            <p><?php echo esc_html($siguiendo_count); ?> siguiendo</p>
         </div>
 
         <div class="R0A915">
-            <? if (!$mismoAutor): ?>
-                <button class="AQMLHO">Seguir</button>
-                <button class="PRJWWT">Enviar mensaje</button>
-            <? endif; ?>
-            <? if ($mismoAutor): ?>
-                <button class="DSQKYW">Configuracion</button>
-            <? endif; ?>
+            <?php if (!$mismoAutor): ?>
+                <?php
+                echo botonSeguirPerfilBanner($user_id);
+                ?>
+                <button class="borde PRJWWT mensajeBoton">Enviar mensaje</button>
+            <?php endif; ?>
+            <?php if ($mismoAutor): ?>
+                <button class="DSQKYW">Configuración</button>
+            <?php endif; ?>
         </div>
     </div>
-<?
+    <?php
     return ob_get_clean();
 }
 
