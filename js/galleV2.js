@@ -278,7 +278,7 @@ function galle() {
                 console.log(`conversacionId: ${mensajeConversacionId}, conversacionAbierta: ${conversacionAbierta}`);
 
                 // Verificación de condición con más control
-                if (mensajeConversacionId && conversacionAbierta && mensajeConversacionId != conversacionAbierta) {
+                if (mensajeConversacionId && (conversacionAbierta === null || mensajeConversacionId != conversacionAbierta)) {
                     console.log('Condición para cambiar color cumplida.');
 
                     const chatIconoDiv = document.querySelector('#chatIcono');
