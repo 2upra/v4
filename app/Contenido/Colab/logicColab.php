@@ -60,6 +60,44 @@ function empezarColab() {
     if ($newPostId) {
         guardarLog("Colaboración creada con ID: $newPostId");
 
+        global $wpdb;
+        $tablaConversacion = $wpdb->prefix . 'conversaciones'; // Asegúrate de que coincide con la tabla creada
+
+        // Crear una nueva conversación
+        $tipo_conversacion = 2; // Tipo 2 según lo indicado (podría representar una conversación de grupo o específica)
+        $participantes_conversacion = json_encode([$original_post->post_author, $current_user_id]);
+        $fecha_conversacion = current_time('mysql');
+
+        $insert_conversacion = $wpdb->insert(
+            $tablaConversacion,
+            [
+                'tipo' => $tipo_conversacion,
+                'participantes' => $participantes_conversacion,
+                'fecha' => $fecha_conversacion,
+            ],
+            [
+                '%d',
+                '%s',
+                '%s',
+            ]
+        );
+
+        if ($insert_conversacion) {
+            $conversacion_id = $wpdb->insert_id;
+
+            // Guardar el ID de la conversación en los metadatos del post de colaboración
+            update_post_meta($newPostId, 'conversacion_id', $conversacion_id);
+
+            // Guardar los participantes en los metadatos del post de colaboración
+            update_post_meta($newPostId, 'participantes', [$original_post->post_author, $current_user_id]);
+
+            guardarLog("Conversación creada con ID: $conversacion_id");
+        } else {
+            guardarLog('Error al crear la conversación en la base de datos');
+            // Puedes decidir si deseas eliminar el post de colaboración si falla la creación de la conversación
+            wp_send_json_error(['message' => 'Error al crear la conversación']);
+        }
+
         // Actualizar el meta 'colabs' del post original para incluir al nuevo colaborador
         $existing_colabs[] = $current_user_id;
         update_post_meta($postId, 'colabs', $existing_colabs);
