@@ -98,8 +98,6 @@ add_action('wp_ajax_obtenerChatColab', 'obtenerChatColab');
 
 
 
-
-
 function obtenerChat()
 {
     if (!is_user_logged_in()) {
@@ -162,11 +160,11 @@ function obtenerChat()
         "UPDATE $tablaMensajes 
          SET leido = %d 
          WHERE conversacion = %d 
-           AND remitente != %d 
+           AND emisor != %d 
            AND leido = %d",
         1,                  // leido = 1
         $conversacion,      // conversacion = 20
-        $usuarioActual,     // remitente != 1
+        $usuarioActual,     // emisor != 1
         0                   // leido = 0
     );
 
