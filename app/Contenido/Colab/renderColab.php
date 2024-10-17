@@ -95,8 +95,22 @@ function colabsResumen() {
     $args = array(
         'post_type'      => 'colab',           // Tipo de post
         'post_status'    => 'publish',         // Solo posts publicados
-        'author'         => $current_user_id,  // Autor actual
         'posts_per_page' => -1,                // Obtener todos los posts
+        'meta_query'     => array(             // Añadir meta_query para filtrar por colabColaborador o colabAutor
+            'relation' => 'OR',                // Relación OR para que se cumpla cualquiera de las condiciones
+            array(
+                'key'     => 'colabColaborador', // Meta key para el colaborador
+                'value'   => $current_user_id,   // Valor a comparar (ID del usuario actual)
+                'compare' => '=',                // Comparación exacta
+                'type'    => 'NUMERIC',          // Tipo de dato para asegurar la comparación correcta
+            ),
+            array(
+                'key'     => 'colabAutor',       // Meta key para el autor
+                'value'   => $current_user_id,   // Valor a comparar (ID del usuario actual)
+                'compare' => '=',                // Comparación exacta
+                'type'    => 'NUMERIC',          // Tipo de dato para asegurar la comparación correcta
+            ),
+        ),
     );
 
     // Ejecutar la consulta
