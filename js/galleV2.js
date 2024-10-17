@@ -368,21 +368,23 @@ function galle() {
     }
 
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
-        //console.log('actualizarListaConversaciones: Actualizando la lista de conversaciones.');
-
-        const listaMensajes = document.querySelectorAll('.mensajes .mensaje');
+        // Selecciona la lista de mensajes
+        const listaMensajes = document.querySelector('.mensajes');
+        const mensajes = listaMensajes.querySelectorAll('.mensaje');
         let conversacionActualizada = false;
-
-        listaMensajes.forEach(mensaje => {
+        let mensajeActualizado;
+    
+        mensajes.forEach(mensaje => {
             const receptorId = mensaje.getAttribute('data-receptor');
-
+    
             if (receptorId == usuarioId) {
-                //console.log(`actualizarListaConversaciones: Actualizando último mensaje para usuario ${usuarioId}.`);
+                // Actualiza la vista previa del mensaje
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
                     vistaPrevia.textContent = ultimoMensaje;
                 }
-
+    
+                // Actualiza el tiempo del mensaje
                 const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
                 if (tiempoMensajeDiv) {
                     const fechaActual = new Date();
@@ -392,17 +394,56 @@ function galle() {
                         tiempoMensajeSpan.textContent = formatearTiempoRelativo(fechaActual);
                     }
                 }
+    
                 conversacionActualizada = true;
+                mensajeActualizado = mensaje;
             }
         });
-
-        if (!conversacionActualizada) {
-            //console.log('actualizarListaConversaciones: No se encontró la conversación, programando reinicio de chats.');
-            setTimeout(() => {
-                reiniciarChats();
-                //console.log('actualizarListaConversaciones: Chats reiniciados.');
-            }, 1000);
+    
+        if (conversacionActualizada && mensajeActualizado) {
+            // Mover el mensaje actualizado al principio de la lista
+            listaMensajes.insertBefore(mensajeActualizado, listaMensajes.firstChild);
+        } else {
+            // Si no se encontró la conversación, agregar una nueva al principio
+            const nuevaConversacion = crearElementoConversacion(usuarioId, ultimoMensaje);
+            listaMensajes.insertBefore(nuevaConversacion, listaMensajes.firstChild);
         }
+    }
+    
+    // Función auxiliar para crear un nuevo elemento de conversación
+    function crearElementoConversacion(usuarioId, ultimoMensaje) {
+        const li = document.createElement('li');
+        li.classList.add('mensaje', 'no-leido');
+        li.setAttribute('data-receptor', usuarioId);
+        // Asigna otros atributos necesarios, como data-conversacion y data-leido
+        // Por ejemplo:
+        li.setAttribute('data-conversacion', generarIdConversacion());
+        li.setAttribute('data-leido', '0');
+    
+        // Crear la estructura interna del mensaje
+        const vistaPrevia = document.createElement('div');
+        vistaPrevia.classList.add('vistaPrevia');
+        const p = document.createElement('p');
+        p.textContent = ultimoMensaje;
+        vistaPrevia.appendChild(p);
+    
+        const tiempoMensaje = document.createElement('div');
+        tiempoMensaje.classList.add('tiempoMensaje');
+        const span = document.createElement('span');
+        const fechaActual = new Date();
+        tiempoMensaje.setAttribute('data-fecha', fechaActual.toISOString());
+        span.textContent = formatearTiempoRelativo(fechaActual);
+        tiempoMensaje.appendChild(span);
+    
+        li.appendChild(vistaPrevia);
+        li.appendChild(tiempoMensaje);
+    
+        return li;
+    }
+    
+    // Función auxiliar para generar un ID único para la conversación
+    function generarIdConversacion() {
+        return Date.now(); // Simplemente un ejemplo, podrías usar otra lógica
     }
 
     function reiniciarChats() {
