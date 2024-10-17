@@ -116,6 +116,8 @@ if (!defined('ABSPATH')) {
                             </a>
                         </div>
 
+                        
+
 
                     </div>
 
@@ -171,6 +173,10 @@ if (!defined('ABSPATH')) {
                             <a>
                                 <img src="<? echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
                             </a>
+                        </div>
+
+                        <div class="menuColabs">
+                            <? echo colabsResumen() ?>
                         </div>
 
                     </div>
