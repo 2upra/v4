@@ -33,7 +33,7 @@ function obtener_seguidores_o_siguiendo($user_id, $metadato)
 
 function perfil()
 {
-    $url_path = trim(parse_url(add_query_arg([]), _URL_PATH), '/');
+    $url_path = trim(parse_url(add_query_arg([]), PHP_URL_PATH), '/');
     $url_segments = explode('/', $url_path);
     $user_slug = end($url_segments);
     $user = get_user_by('slug', $user_slug);
@@ -108,7 +108,7 @@ function perfilBanner($user_id)
                 <?
                 echo botonSeguirPerfilBanner($user_id);
                 ?>
-                <button class="borde PRJWWT mensajeBoton" data-receptor="<? echo esc_html($user_id); ?>">Enviar mensaje</button>
+                <button class="borde PRJWWT mensajeBoton" data-receptor="<? echo esc_html($seguidores_count); ?>">Enviar mensaje</button>
             <? endif; ?>
             <? if ($mismoAutor): ?>
                 <button class="DSQKYW">Configuración</button>
