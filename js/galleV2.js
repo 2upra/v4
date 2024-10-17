@@ -233,30 +233,31 @@ function galle() {
     let conversacionAbierta = null;
 
     function actualizarListaConversaciones(usuarioId, ultimoMensaje, msgConversacionId = null) {
-        // Selecciona el contenedor de mensajes
+        console.log('Iniciando actualizarListaConversaciones');
+
         const mensajesUl = document.querySelector('.mensajes');
         if (!mensajesUl) {
             console.warn('No se encontró el elemento .mensajes en el DOM.');
             return;
         }
+        console.log('Elemento .mensajes encontrado:', mensajesUl);
 
-        // Selecciona todos los elementos de mensaje existentes
         const listaMensajes = mensajesUl.querySelectorAll('.mensaje');
+        console.log('Número de mensajes encontrados:', listaMensajes.length);
         let conversacionActualizada = false;
 
         listaMensajes.forEach(mensaje => {
             const receptorId = mensaje.getAttribute('data-receptor');
             const conversacionId = mensaje.getAttribute('data-conversacion');
+            console.log(`Procesando mensaje con receptorId: ${receptorId}, conversacionId: ${conversacionId}`);
 
             if (receptorId == usuarioId) {
-                // Actualiza la vista previa del mensaje
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
                     vistaPrevia.textContent = ultimoMensaje;
-                    console.log('Vista previa del mensaje actualizada.');
+                    console.log('Actualizada la vista previa del mensaje:', ultimoMensaje);
                 }
 
-                // Actualiza el tiempo del mensaje
                 const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
                 if (tiempoMensajeDiv) {
                     const fechaActual = new Date();
@@ -264,49 +265,39 @@ function galle() {
                     const tiempoMensajeSpan = tiempoMensajeDiv.querySelector('span');
                     if (tiempoMensajeSpan) {
                         tiempoMensajeSpan.textContent = formatearTiempoRelativo(fechaActual);
-                        console.log('Tiempo del mensaje actualizado.');
+                        console.log('Actualizado el tiempo del mensaje:', tiempoMensajeSpan.textContent);
                     }
                 }
 
-                // Mueve el mensaje actualizado al inicio de la lista
                 mensajesUl.insertBefore(mensaje, mensajesUl.firstChild);
+                console.log('Movimiento del mensaje al inicio de la lista');
+
                 conversacionActualizada = true;
 
-                // Si la conversación actualizada no está abierta, cambiar el color del icono
                 if (msgConversacionId && msgConversacionId != conversacionAbierta) {
-                    const chatIcono = document.querySelector('#chatIcono svg');
-                    if (chatIcono) {
-                        chatIcono.style.color = '#d43333'; // Color rojo
-                        console.log('Icono de chat coloreado de rojo.');
+                    const chatIconoDiv = document.querySelector('#chatIcono');
+                    if (chatIconoDiv) {
+                        console.log('Añadiendo clase icono-rojo al contenedor #chatIcono');
+                        chatIconoDiv.classList.add('icono-rojo');
                     } else {
-                        console.warn('No se encontró el icono de chat.');
+                        console.warn('No se encontró el elemento #chatIcono');
                     }
                 }
             }
         });
 
         if (!conversacionActualizada) {
-            console.log('No se encontró ninguna conversación para el usuario.');
-            // Si no se encuentra la conversación, reinicia los chats después de 1 segundo
+            console.log('No se encontró la conversación, reiniciando chats después de 1 segundo');
             setTimeout(() => {
                 reiniciarChats();
-                console.log('Reiniciando chats...');
-                const chatIcono = document.querySelector('#chatIcono svg');
-                if (chatIcono) {
-                    chatIcono.style.color = '#d43333'; // Color rojo después de reiniciar
-                    console.log('Icono de chat coloreado de rojo después de reiniciar.');
-                }
             }, 1000);
         }
     }
 
     // Evento para quitar el color rojo al hacer clic en el icono de chat
     document.querySelector('#chatIcono').addEventListener('click', function () {
-        const chatIcono = this.querySelector('svg');
-        if (chatIcono) {
-            chatIcono.style.color = '';
-            console.log('Color del icono de chat restablecido.');
-        }
+        console.log('Removiendo clase icono-rojo del contenedor #chatIcono');
+        this.classList.remove('icono-rojo');
     });
 
     function reiniciarChats() {
