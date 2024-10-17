@@ -368,22 +368,27 @@ function galle() {
     }
 
     function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
-        // Selecciona la lista de mensajes
-        const listaMensajes = document.querySelector('.mensajes');
-        const mensajes = listaMensajes.querySelectorAll('.mensaje');
+        // Selecciona el contenedor de mensajes
+        const mensajesUl = document.querySelector('.mensajes');
+        if (!mensajesUl) {
+            console.warn('No se encontró el elemento .mensajes en el DOM.');
+            return;
+        }
+
+        // Selecciona todos los elementos de mensaje existentes
+        const listaMensajes = mensajesUl.querySelectorAll('.mensaje');
         let conversacionActualizada = false;
-        let mensajeActualizado;
-    
-        mensajes.forEach(mensaje => {
+
+        listaMensajes.forEach(mensaje => {
             const receptorId = mensaje.getAttribute('data-receptor');
-    
+
             if (receptorId == usuarioId) {
                 // Actualiza la vista previa del mensaje
                 const vistaPrevia = mensaje.querySelector('.vistaPrevia p');
                 if (vistaPrevia) {
                     vistaPrevia.textContent = ultimoMensaje;
                 }
-    
+
                 // Actualiza el tiempo del mensaje
                 const tiempoMensajeDiv = mensaje.querySelector('.tiempoMensaje');
                 if (tiempoMensajeDiv) {
@@ -394,56 +399,20 @@ function galle() {
                         tiempoMensajeSpan.textContent = formatearTiempoRelativo(fechaActual);
                     }
                 }
-    
+
+                // Mueve el mensaje actualizado al inicio de la lista
+                mensajesUl.insertBefore(mensaje, mensajesUl.firstChild);
+
                 conversacionActualizada = true;
-                mensajeActualizado = mensaje;
             }
         });
-    
-        if (conversacionActualizada && mensajeActualizado) {
-            // Mover el mensaje actualizado al principio de la lista
-            listaMensajes.insertBefore(mensajeActualizado, listaMensajes.firstChild);
-        } else {
-            // Si no se encontró la conversación, agregar una nueva al principio
-            const nuevaConversacion = crearElementoConversacion(usuarioId, ultimoMensaje);
-            listaMensajes.insertBefore(nuevaConversacion, listaMensajes.firstChild);
+
+        if (!conversacionActualizada) {
+            // Si no se encuentra la conversación, reinicia los chats después de 1 segundo
+            setTimeout(() => {
+                reiniciarChats();
+            }, 1000);
         }
-    }
-    
-    // Función auxiliar para crear un nuevo elemento de conversación
-    function crearElementoConversacion(usuarioId, ultimoMensaje) {
-        const li = document.createElement('li');
-        li.classList.add('mensaje', 'no-leido');
-        li.setAttribute('data-receptor', usuarioId);
-        // Asigna otros atributos necesarios, como data-conversacion y data-leido
-        // Por ejemplo:
-        li.setAttribute('data-conversacion', generarIdConversacion());
-        li.setAttribute('data-leido', '0');
-    
-        // Crear la estructura interna del mensaje
-        const vistaPrevia = document.createElement('div');
-        vistaPrevia.classList.add('vistaPrevia');
-        const p = document.createElement('p');
-        p.textContent = ultimoMensaje;
-        vistaPrevia.appendChild(p);
-    
-        const tiempoMensaje = document.createElement('div');
-        tiempoMensaje.classList.add('tiempoMensaje');
-        const span = document.createElement('span');
-        const fechaActual = new Date();
-        tiempoMensaje.setAttribute('data-fecha', fechaActual.toISOString());
-        span.textContent = formatearTiempoRelativo(fechaActual);
-        tiempoMensaje.appendChild(span);
-    
-        li.appendChild(vistaPrevia);
-        li.appendChild(tiempoMensaje);
-    
-        return li;
-    }
-    
-    // Función auxiliar para generar un ID único para la conversación
-    function generarIdConversacion() {
-        return Date.now(); // Simplemente un ejemplo, podrías usar otra lógica
     }
 
     function reiniciarChats() {
@@ -1279,7 +1248,6 @@ function galle() {
 
             let adjunto = null;
             if (window.archivoChatId || window.archivoChatUrl) {
-     
                 adjunto = {archivoChatId: window.archivoChatId, archivoChatUrl: window.archivoChatUrl};
                 window.archivoChatId = null;
                 window.archivoChatUrl = null;
