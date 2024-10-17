@@ -20,7 +20,6 @@ function formatearTiempoRelativo(fecha) {
     }
 }
 
-//tengo esta funcion, es muy compleja, hace funcionar un chat, pero tiene el problema de que solo funciona una conexion en una sola pestaña, por ejemplo, los mensajes solo se reciben en 1 sola y la conexion solo se mantiene en 1 sola pestaña. Como se hace para que todo este sincronizado en una sola pestaña, no te puedo mostrar el codigo completo pero si las partes importantes
 function galle() {
     const channel = new BroadcastChannel('galle_chat_channel');
     const wsUrl = 'wss://2upra.com/ws';
@@ -230,7 +229,10 @@ function galle() {
     cerrarChat();
     minimizarChat();
 
-    function actualizarListaConversaciones(usuarioId, ultimoMensaje) {
+    // Variable global para el ID de la conversación abierta
+    let conversacionAbierta = null;
+
+    function actualizarListaConversaciones(usuarioId, ultimoMensaje, msgConversacionId = null) {
         // Selecciona el contenedor de mensajes
         const mensajesUl = document.querySelector('.mensajes');
         if (!mensajesUl) {
@@ -244,6 +246,7 @@ function galle() {
 
         listaMensajes.forEach(mensaje => {
             const receptorId = mensaje.getAttribute('data-receptor');
+            const conversacionId = mensaje.getAttribute('data-conversacion');
 
             if (receptorId == usuarioId) {
                 // Actualiza la vista previa del mensaje
@@ -267,6 +270,14 @@ function galle() {
                 mensajesUl.insertBefore(mensaje, mensajesUl.firstChild);
 
                 conversacionActualizada = true;
+
+                // Si la conversación actualizada no está abierta, cambiar el color del icono
+                if (msgConversacionId && msgConversacionId != conversacionAbierta) {
+                    const chatIcono = document.querySelector('#chatIcono svg');
+                    if (chatIcono) {
+                        chatIcono.style.color = '#d43333'; // Color rojo
+                    }
+                }
             }
         });
 
@@ -277,6 +288,14 @@ function galle() {
             }, 1000);
         }
     }
+
+    // Evento para quitar el color rojo al hacer clic en el icono de chat
+    document.querySelector('#chatIcono').addEventListener('click', function () {
+        const chatIcono = this.querySelector('svg');
+        if (chatIcono) {
+            chatIcono.style.color = ''; 
+        }
+    });
 
     function reiniciarChats() {
         enviarAjax('reiniciarChats', {})
@@ -503,7 +522,7 @@ function galle() {
     }
 
     function setupBroadcastChannel() {
-        channel.onmessage = (event) => {
+        channel.onmessage = event => {
             const message = event.data;
             manejarMensajeWebSocket(JSON.stringify(message));
         };
@@ -517,7 +536,7 @@ function galle() {
             // Escuchar mensajes solo a través de BroadcastChannel
         }
 
-        window.addEventListener('storage', (event) => {
+        window.addEventListener('storage', event => {
             if (event.key === 'chat_controller' && !event.newValue) {
                 localStorage.setItem('chat_controller', Date.now());
                 connectWebSocket();
@@ -1144,7 +1163,7 @@ function galle() {
                     tipoMensaje = 'Individual';
 
                     // Actualizar lista de conversaciones
-                    actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje);
+                    actualizarListaConversaciones(msgConversacionId || contactoId, msgMensaje, msgConversacionId);
                     console.log(`A1: Lista de conversaciones actualizada para ${contactoId}: ${msgMensaje}`);
                 }
 
