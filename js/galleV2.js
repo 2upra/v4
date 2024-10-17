@@ -341,8 +341,8 @@ function galle() {
                 bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                 bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
                 bloqueChat.style.display = 'block';
+                maximizarChatDirectamente();
                 manejarScroll(data.data.conversacion, bloqueChat);
-
                 const listaMensajes = bloqueChat.querySelector('.listaMensajes');
                 if (listaMensajes) {
                     listaMensajes.scrollTop = listaMensajes.scrollHeight;
@@ -350,7 +350,7 @@ function galle() {
 
                 await actualizarEstadoConexion(receptor, bloqueChat);
                 setInterval(() => actualizarEstadoConexion(receptor, bloqueChat), 30000);
-                maximizarChatDirectamente();
+                
             } else {
                 alert(data.message || 'Error desconocido al obtener los mensajes.');
             }
