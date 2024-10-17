@@ -158,28 +158,6 @@ function galle() {
         });
     }
 
-    async function cerrarChat() {
-        try {
-            const bloqueChat = document.querySelector('.bloqueChat');
-            const botonCerrar = document.getElementById('cerrarChat');
-
-            botonCerrar.addEventListener('click', () => {
-                bloqueChat.style.display = 'none';
-                bloqueChat.classList.remove('minimizado');
-
-                // Resetear variables globales del chat
-                archivoChatId = null;
-                archivoChatUrl = null;
-
-                // Borrar cualquier texto en el área de texto
-                const textareaMensaje = document.querySelector('.mensajeContenido');
-                textareaMensaje.value = '';
-            });
-        } catch (error) {
-            alert('Ha ocurrido un error al intentar cerrar el chat.');
-        }
-    }
-
     async function minimizarChat() {
         try {
             const bloqueChat = document.getElementById('bloqueChat');
@@ -317,23 +295,73 @@ function galle() {
             });
     }
 
+    /*
+    (... parte del codigo php omitido)
+
+        //los mensajes tienen una columna conversacion
+    $offset = ($page - 1) * $mensajesPorPagina;
+    $query = $wpdb->prepare("
+        SELECT mensaje, emisor AS remitente, fecha, adjunto, id, leido, metadata
+        FROM $tablaMensajes
+        WHERE conversacion = %d
+        ORDER BY fecha DESC
+        LIMIT %d OFFSET %d
+    ", $conversacion, $mensajesPorPagina, $offset);
+
+    // Registrar la consulta
+    chatLog('Consulta de mensajes ejecutada: ' . $query);
+
+    $mensajes = $wpdb->get_results($query);
+
+    if ($mensajes === null) {
+        chatLog('Error en la consulta a la base de datos: ' . $wpdb->last_error);
+        wp_send_json_error(array('message' => 'Error en la consulta a la base de datos.'));
+        wp_die();
+    }
+
+    chatLog('Número de mensajes obtenidos: ' . count($mensajes));
+
+    $mensajes = array_reverse($mensajes);
+
+    foreach ($mensajes as $mensaje) {
+        $mensaje->clase = ($mensaje->remitente == $usuarioActual) ? 'mensajeDerecha' : 'mensajeIzquierda';
+
+        if (!empty($mensaje->adjunto)) {
+            $mensaje->adjunto = json_decode($mensaje->adjunto, true);
+        }
+    }
+
+    // Registrar los mensajes formateados
+    chatLog('Mensajes formateados: ' . json_encode($mensajes));
+
+    $wp_response = array(
+        'mensajes' => $mensajes ? $mensajes : array(),
+        'conversacion' => $conversacion
+    );
+
+    el proposito establecer en una variable global llamada conversacionAbierta, para saber que conversacion esta abierta en cada momento, y obviamente limpiarla cuando se cierra 
+
+    */
+
     async function abrirConversacion({conversacion, receptor, imagenPerfil, nombreUsuario}) {
         try {
             let data = {success: true, data: {mensajes: [], conversacion: null}};
             currentPage = 1;
             if (conversacion) {
                 data = await enviarAjax('obtenerChat', {conversacion, page: currentPage});
+                conversacionAbierta = conversacion; 
             } else if (receptor) {
                 data = await enviarAjax('obtenerChat', {receptor, page: currentPage});
+                conversacionAbierta = data.data.conversacion;
             }
             if (data?.success) {
                 const bloqueChat = document.querySelector('.bloqueChat');
                 if (!bloqueChat) {
-                    //console.error('No se encontró el elemento .bloqueChat en el DOM.');
+                    console.error('No se encontró el elemento .bloqueChat en el DOM.');
                     return;
                 }
 
-                // Adjusted the call to pass the correct chat container element
+                // Configuraciones del chat
                 subidaArchivosChat(bloqueChat);
                 msSetup(bloqueChat);
                 mostrarMensajes(data.data.mensajes, bloqueChat);
@@ -354,7 +382,26 @@ function galle() {
                 alert(data.message || 'Error desconocido al obtener los mensajes.');
             }
         } catch (error) {
+            console.error('Error al abrir la conversación:', error);
             alert('Ha ocurrido un error al intentar abrir la conversación.');
+        }
+    }
+
+    async function cerrarChat() {
+        try {
+            const bloqueChat = document.querySelector('.bloqueChat');
+            const botonCerrar = document.getElementById('cerrarChat');
+    
+            botonCerrar.addEventListener('click', () => {
+                bloqueChat.style.display = 'none';
+                bloqueChat.classList.remove('minimizado');
+                conversacionAbierta = null; 
+                const textareaMensaje = document.querySelector('.mensajeContenido');
+                textareaMensaje.value = '';
+            });
+        } catch (error) {
+            console.error('Error al cerrar el chat:', error);
+            alert('Ha ocurrido un error al intentar cerrar el chat.');
         }
     }
 
@@ -1040,11 +1087,11 @@ function galle() {
         });
     }
     async function manejarMensajeWebSocket(data) {
-        console.log("🚀 Función manejarMensajeWebSocket llamada con data:", data);
-        
+        console.log('🚀 Función manejarMensajeWebSocket llamada con data:', data);
+
         try {
             const parsedData = JSON.parse(data);
-    
+
             // Resumen de los datos recibidos
             const resumenDatos = {
                 emisor: parsedData.emisor,
@@ -1054,8 +1101,8 @@ function galle() {
                 adjunto: parsedData.adjunto || null,
                 temp_id: parsedData.temp_id || null
             };
-            console.log("📝 Resumen de datos recibidos:", resumenDatos);
-    
+            console.log('📝 Resumen de datos recibidos:', resumenDatos);
+
             const msgEmisor = String(parsedData.emisor);
             const msgReceptor = parsedData.receptor;
             const msgMensaje = parsedData.mensaje;
@@ -1065,26 +1112,26 @@ function galle() {
             const leido = 0;
             const currentUserId = String(emisor);
             let receptorIds;
-    
+
             // Depuración de receptorIds
             try {
                 receptorIds = JSON.parse(msgReceptor);
-                console.log("🔍 receptorIds después de JSON.parse:", receptorIds);
-    
+                console.log('🔍 receptorIds después de JSON.parse:', receptorIds);
+
                 if (!Array.isArray(receptorIds)) {
-                    console.warn("⚠️ receptorIds no es un array. Convertiéndolo a array.");
+                    console.warn('⚠️ receptorIds no es un array. Convertiéndolo a array.');
                     receptorIds = [String(receptorIds)];
                 } else {
                     receptorIds = receptorIds.map(id => String(id));
-                    console.log("🔄 receptorIds mapeados a strings:", receptorIds);
+                    console.log('🔄 receptorIds mapeados a strings:', receptorIds);
                 }
             } catch (e) {
-                console.error("❌ Error al parsear msgReceptor. Asignando receptorIds como array con msgReceptor:", e);
+                console.error('❌ Error al parsear msgReceptor. Asignando receptorIds como array con msgReceptor:', e);
                 receptorIds = [String(msgReceptor)];
             }
-    
-            console.log("✅ receptorIds final:", receptorIds);
-    
+
+            console.log('✅ receptorIds final:', receptorIds);
+
             // Verificar si el mensaje es para el usuario actual o si fue enviado por el usuario actual
             if (receptorIds.includes(currentUserId) || msgEmisor === currentUserId) {
                 let chatWindow;

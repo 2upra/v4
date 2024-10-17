@@ -182,6 +182,7 @@ function obtenerChat()
     }
 
     // Obtener los mensajes con paginación
+    //los mensajes tienen una columna conversacion
     $offset = ($page - 1) * $mensajesPorPagina;
     $query = $wpdb->prepare("
         SELECT mensaje, emisor AS remitente, fecha, adjunto, id, leido, metadata
