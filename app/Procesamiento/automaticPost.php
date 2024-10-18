@@ -1,30 +1,69 @@
 <?
 
 function buscarAudios($directorio) {
-    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio));
+    guardarLog("Iniciando búsqueda de audios en el directorio: {$directorio}");
+
+    // Verificar si el directorio existe
+    if (!is_dir($directorio)) {
+        guardarLog("Error: El directorio no existe o no es accesible: {$directorio}");
+        error_log("Error: El directorio no existe o no es accesible: " . $directorio);
+        return [];
+    }
+
+    // Verificar permisos del directorio
+    if (!is_readable($directorio)) {
+        guardarLog("Error: No se puede leer el directorio: {$directorio}");
+        error_log("Error: No se puede leer el directorio: " . $directorio);
+        return [];
+    }
+
+    try {
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio));
+    } catch (Exception $e) {
+        guardarLog("Excepción al crear el iterador de directorios: " . $e->getMessage());
+        error_log("Excepción al crear el iterador de directorios: " . $e->getMessage());
+        return [];
+    }
+
     $audios_para_procesar = [];
     
     // Definir las extensiones permitidas
     $extensiones_permitidas = ['wav', 'mp3'];
+    guardarLog("Extensiones permitidas: " . implode(", ", $extensiones_permitidas));
     
+    $total_archivos = 0;
+    $archivos_validos = 0;
+
     foreach ($iterator as $archivo) {
+        $total_archivos++;
+
         if ($archivo->isFile()) {
             $ruta_archivo = $archivo->getPathname();
             $extension = strtolower(pathinfo($ruta_archivo, PATHINFO_EXTENSION));
+            
+            guardarLog("Procesando archivo: {$ruta_archivo} con extensión: {$extension}");
             
             // Verificar si la extensión está permitida
             if (!in_array($extension, $extensiones_permitidas)) {
                 guardarLog("Archivo omitido por extensión no permitida: {$ruta_archivo}");
                 continue; // Saltar archivos que no sean wav o mp3
             }
-            
+
+            $archivos_validos++;
+
+            // Verificar si el archivo es legible
+            if (!is_readable($ruta_archivo)) {
+                guardarLog("Archivo no legible (sin permisos): {$ruta_archivo}");
+                continue;
+            }
+
             $file_hash = hash_file('sha256', $ruta_archivo);
             if (!$file_hash) {
                 guardarLog("Error al generar el hash para el archivo: {$ruta_archivo}");
                 error_log("Error al generar el hash para el archivo: " . $ruta_archivo);
                 continue;
             }
-    
+
             if (debeProcesarse($ruta_archivo, $file_hash)) {
                 $audios_para_procesar[] = [
                     'ruta' => $ruta_archivo,
@@ -34,22 +73,37 @@ function buscarAudios($directorio) {
             } else {
                 guardarLog("Archivo ya procesado o existente: {$ruta_archivo}");
             }
+        } else {
+            guardarLog("Elemento no es un archivo: " . $archivo->getPathname());
         }
     }
-    
+
+    guardarLog("Total de elementos encontrados en el directorio: {$total_archivos}");
+    guardarLog("Total de archivos válidos (wav, mp3): {$archivos_validos}");
+    guardarLog("Total de audios para procesar: " . count($audios_para_procesar));
+
     return $audios_para_procesar;
 }
 
 function debeProcesarse($ruta_archivo, $file_hash) {
-    $existing_attachment = attachment_url_to_postid(wp_get_attachment_url_by_path($ruta_archivo));
+    guardarLog("Verificando si debe procesarse: {$ruta_archivo} con hash: {$file_hash}");
+    
+    $attachment_url = wp_get_attachment_url_by_path($ruta_archivo);
+    if (!$attachment_url) {
+        guardarLog("No se encontró URL de adjunto para la ruta: {$ruta_archivo}");
+    } else {
+        guardarLog("URL de adjunto encontrada: {$attachment_url}");
+    }
+
+    $existing_attachment = attachment_url_to_postid($attachment_url);
     if ($existing_attachment) {
-        guardarLog("Adjunto existente encontrado para: {$ruta_archivo}");
+        guardarLog("Adjunto existente encontrado para: {$ruta_archivo} (Post ID: {$existing_attachment})");
         return false;
     }
 
     if (!$file_hash) {
         guardarLog("Hash inexistente para el archivo: {$ruta_archivo}");
-        error_log("Error al generar el hash para el archivo: " . $ruta_archivo);
+        error_log("Error: Hash inexistente para el archivo: " . $ruta_archivo);
         return false;
     }
 
@@ -65,13 +119,15 @@ function debeProcesarse($ruta_archivo, $file_hash) {
 
 function procesarAudios() {
     $directorio_audios = '/home/asley01/MEGA/Waw/X';
-    guardarLog("Iniciando búsqueda de audios en: {$directorio_audios}");
+    guardarLog("Iniciando procesamiento de audios en: {$directorio_audios}");
+    
     $audios_para_procesar = buscarAudios($directorio_audios);
 
     if (!empty($audios_para_procesar)) {
         guardarLog("Cantidad de audios a procesar: " . count($audios_para_procesar));
         // Procesamos todos los audios encontrados
         foreach ($audios_para_procesar as $audio_info) {
+            guardarLog("Iniciando procesamiento de audio: {$audio_info['ruta']}");
             autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
             guardarLog("Procesado audio: {$audio_info['ruta']}");
         }
@@ -83,6 +139,7 @@ function procesarAudios() {
         guardarLog("No se encontraron audios para procesar en: {$directorio_audios}");
     }
 }
+
 
 add_action('init', 'iniciar_cron_procesamiento_audios');
 function iniciar_cron_procesamiento_audios() {
