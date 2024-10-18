@@ -53,10 +53,14 @@ function galle() {
     
         colabResumenItems.forEach(function(item) {
             item.addEventListener('click', function() {
+                // Obtiene el data-post_id del elemento clicado
                 const postId = this.getAttribute('data-post_id');
+    
                 // Construye el selector para encontrar el <li> correspondiente
-                const selector = `li.modal.POST-colab[data-post_id="${postId}"]`;
+                // Asumiendo que la clase siempre contiene 'POST-colab' y 'modal'
+                const selector = `li.modal.POST-colab[id-post="${postId}"]`;
                 const targetModal = document.querySelector(selector);
+    
                 if(targetModal) {
                     // Muestra el modal estableciendo display a 'block'
                     targetModal.style.display = 'block';
@@ -75,6 +79,7 @@ function galle() {
         closeModalButtons.forEach(function(btn) {
             btn.addEventListener('click', function() {
                 // Obtiene el id-post del botón de cierre
+                
                 const postId = this.getAttribute('id-post');
                 
                 // Construye el selector para encontrar el <li> correspondiente
@@ -107,7 +112,6 @@ function galle() {
             this.style.display = 'none';
         });
     }
-    
 
     /*
      *   FUNCIONES RELACIONADAS A VERIFICAR EL STATUS ONLINE
