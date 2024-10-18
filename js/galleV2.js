@@ -41,6 +41,75 @@ function galle() {
         chatColab(); // debería iniciarse de otra manera
         setupBroadcastChannel();
         manageControllerTab();
+        abrirColab();
+    }
+
+    function abrirColab() {
+        // Selecciona todos los elementos <li> con la clase 'colabResumen'
+        const colabResumenItems = document.querySelectorAll('li.colabResumen');
+        
+        // Referencia al fondo modal
+        const modalBackground = document.getElementById('modalBackground2');
+    
+        colabResumenItems.forEach(function(item) {
+            item.addEventListener('click', function() {
+                // Obtiene el data-post_id del elemento clicado
+                const postId = this.getAttribute('data-post_id');
+    
+                // Construye el selector para encontrar el <li> correspondiente
+                // Asumiendo que la clase siempre contiene 'POST-colab' y 'modal'
+                const selector = `li.modal.POST-colab[id-post="${postId}"]`;
+                const targetModal = document.querySelector(selector);
+    
+                if(targetModal) {
+                    // Muestra el modal estableciendo display a 'block'
+                    targetModal.style.display = 'block';
+    
+                    // Muestra el fondo modal
+                    modalBackground.style.display = 'block';
+                } else {
+                    console.warn(`No se encontró una conversación con id-post="${postId}"`);
+                }
+            });
+        });
+    
+        // Selecciona todos los botones de cierre con la clase 'cerrarColab'
+        const closeModalButtons = document.querySelectorAll('.cerrarColab');
+        
+        closeModalButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                // Obtiene el id-post del botón de cierre
+                const postId = this.getAttribute('data-post_id');
+                
+                // Construye el selector para encontrar el <li> correspondiente
+                const selector = `li.modal.POST-colab[id-post="${postId}"]`;
+                const targetModal = document.querySelector(selector);
+    
+                if(targetModal) {
+                    // Oculta el modal estableciendo display a 'none'
+                    targetModal.style.display = 'none';
+    
+                    // Oculta el fondo modal
+                    modalBackground.style.display = 'none';
+                } else {
+                    console.warn(`No se encontró una conversación con id-post="${postId}"`);
+                }
+            });
+        });
+    
+        // Opcional: Cerrar el modal al hacer clic en el fondo modal
+        modalBackground.addEventListener('click', function() {
+            // Selecciona el modal actualmente visible
+            const visibleModal = document.querySelector('li.modal.POST-colab[style*="display: block"]');
+            
+            if(visibleModal) {
+                // Oculta el modal
+                visibleModal.style.display = 'none';
+            }
+    
+            // Oculta el fondo modal
+            this.style.display = 'none';
+        });
     }
 
     /*
