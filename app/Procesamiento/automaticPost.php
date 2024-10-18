@@ -1,6 +1,13 @@
 <?
 
 
+/*
+el problema es que la ejecución llega hasta aqui
+
+2024-10-18 23:15:50 - Iniciando verificación del archivo: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/phonk-drums_160bpm_F_minor.wav con hash: 795d3c8eacf41c27fc121e7d26eeb4641819117b9b9dcec870258017ab66a760
+2024-10-18 23:15:50 - El archivo existe y es accesible: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/phonk-drums_160bpm_F_minor.wav
+y no muestra mas logs
+*/
 
 function procesarAudios() {
     $directorio_audios = '/home/asley01/MEGA/Waw/X';
@@ -111,48 +118,75 @@ function buscarAudios($directorio) {
     return $audios_para_procesar;
 }
 
+function wp_get_attachment_url_by_path($file_path) {
+    global $wpdb;
+    $sql = $wpdb->prepare("
+        SELECT guid FROM $wpdb->posts 
+        WHERE guid LIKE %s 
+        AND post_type = 'attachment'
+    ", '%' . ltrim($file_path, '/'));
+    
+    return $wpdb->get_var($sql);
+}
+
 function debeProcesarse($ruta_archivo, $file_hash) {
     guardarLog("Iniciando verificación del archivo: {$ruta_archivo} con hash: {$file_hash}");
     
-    // Revisar si la ruta del archivo existe y es accesible
-    if (!file_exists($ruta_archivo)) {
-        guardarLog("El archivo no existe: {$ruta_archivo}");
-        error_log("Error: El archivo no existe: " . $ruta_archivo);
+    try {
+        // Verificación de existencia del archivo
+        if (!file_exists($ruta_archivo)) {
+            guardarLog("El archivo no existe: {$ruta_archivo}");
+            error_log("Error: El archivo no existe: {$ruta_archivo}");
+            return false;
+        } else {
+            guardarLog("El archivo existe y es accesible: {$ruta_archivo}");
+        }
+
+        // Obtener URL del adjunto por la ruta del archivo
+        if (!function_exists('wp_get_attachment_url_by_path')) {
+            guardarLog("Función wp_get_attachment_url_by_path no está definida.");
+            throw new Exception("Función wp_get_attachment_url_by_path no está definida.");
+        }
+
+        $attachment_url = wp_get_attachment_url_by_path($ruta_archivo);
+        if (!$attachment_url) {
+            guardarLog("No se encontró URL de adjunto para la ruta: {$ruta_archivo}");
+        } else {
+            guardarLog("URL de adjunto encontrada: {$attachment_url}");
+        }
+
+        // Buscar si ya existe el adjunto en WordPress
+        $existing_attachment = attachment_url_to_postid($attachment_url);
+        if ($existing_attachment) {
+            guardarLog("Adjunto existente encontrado para: {$ruta_archivo} (Post ID: {$existing_attachment})");
+            return false;
+        }
+
+        // Verificar si existe el hash
+        if (!$file_hash) {
+            guardarLog("Hash inexistente para el archivo: {$ruta_archivo}");
+            error_log("Error: Hash inexistente para el archivo: " . $ruta_archivo);
+            return false;
+        }
+
+        if (!function_exists('obtenerHash')) {
+            guardarLog("Función obtenerHash no está definida.");
+            throw new Exception("Función obtenerHash no está definida.");
+        }
+
+        $hash_exists = obtenerHash($file_hash);
+        if ($hash_exists) {
+            guardarLog("Hash ya existe en la base de datos para el archivo: {$ruta_archivo}");
+            return false;
+        }
+
+        guardarLog("Archivo listo para procesar: {$ruta_archivo}");
+        return true;
+    } catch (Exception $e) {
+        guardarLog("Excepción en debeProcesarse: " . $e->getMessage());
+        error_log("Excepción en debeProcesarse: " . $e->getMessage());
         return false;
-    } else {
-        guardarLog("El archivo existe y es accesible: {$ruta_archivo}");
     }
-
-    // Obtener URL del adjunto por la ruta del archivo
-    $attachment_url = wp_get_attachment_url_by_path($ruta_archivo);
-    if (!$attachment_url) {
-        guardarLog("No se encontró URL de adjunto para la ruta: {$ruta_archivo}");
-    } else {
-        guardarLog("URL de adjunto encontrada: {$attachment_url}");
-    }
-
-    // Buscar si ya existe el adjunto en WordPress
-    $existing_attachment = attachment_url_to_postid($attachment_url);
-    if ($existing_attachment) {
-        guardarLog("Adjunto existente encontrado para: {$ruta_archivo} (Post ID: {$existing_attachment})");
-        return false;
-    }
-
-    // Verificar si existe el hash
-    if (!$file_hash) {
-        guardarLog("Hash inexistente para el archivo: {$ruta_archivo}");
-        error_log("Error: Hash inexistente para el archivo: " . $ruta_archivo);
-        return false;
-    }
-
-    $hash_exists = obtenerHash($file_hash);
-    if ($hash_exists) {
-        guardarLog("Hash ya existe en la base de datos para el archivo: {$ruta_archivo}");
-        return false;
-    }
-
-    guardarLog("Archivo listo para procesar: {$ruta_archivo}");
-    return true;
 }
 
 
