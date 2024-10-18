@@ -57,7 +57,6 @@ function galle() {
                 // Construye el selector para encontrar el <li> correspondiente
                 const selector = `li.modal.POST-colab[data-post_id="${postId}"]`;
                 const targetModal = document.querySelector(selector);
-    
                 if(targetModal) {
                     // Muestra el modal estableciendo display a 'block'
                     targetModal.style.display = 'block';
