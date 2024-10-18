@@ -59,7 +59,7 @@ function iniciar_sesion()
 
 
 /*
-ayudame a poner guardarLogs para ver porque falla handle_google_callback para iniciar seccion con google
+ayudame a poner guardarLog para ver porque falla handle_google_callback para iniciar seccion con google
 te muestro el boton para iniciar seccion
 <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn"><? echo $GLOBALS['Google']; ?>Iniciar sesión con Google</button>
 
@@ -120,10 +120,10 @@ function sincronizar_drive_con_vps($access_token, $folder_path)
 
 
 function handle_google_callback() {
-    guardarLogs('Iniciando handle_google_callback');
+    guardarLog('Iniciando handle_google_callback');
     
     if (isset($_GET['code'])) {
-        guardarLogs('Código de autorización recibido: ' . $_GET['code']);
+        guardarLog('Código de autorización recibido: ' . $_GET['code']);
         $code = $_GET['code'];
         $client_id = '84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com';
         $client_secret = ($_ENV['GOOGLEAPI']);
@@ -140,57 +140,57 @@ function handle_google_callback() {
         ));
 
         if (is_wp_error($response)) {
-            guardarLogs('Error en la autenticación con Google: ' . $response->get_error_message());
+            guardarLog('Error en la autenticación con Google: ' . $response->get_error_message());
             echo 'Error en la autenticación con Google.';
             return;
         }
 
         $token = json_decode($response['body']);
-        guardarLogs('Token de acceso obtenido: ' . $token->access_token);
+        guardarLog('Token de acceso obtenido: ' . $token->access_token);
         $access_token = $token->access_token;
 
         // Obtener información del usuario
         $user_info_response = wp_remote_get('https://www.googleapis.com/oauth2/v1/userinfo?access_token=' . $access_token);
         if (is_wp_error($user_info_response)) {
-            guardarLogs('Error al obtener información del usuario: ' . $user_info_response->get_error_message());
+            guardarLog('Error al obtener información del usuario: ' . $user_info_response->get_error_message());
             echo 'Error al obtener información del usuario.';
             return;
         }
 
         $user_info = json_decode($user_info_response['body']);
-        guardarLogs('Información del usuario obtenida: ' . print_r($user_info, true));
+        guardarLog('Información del usuario obtenida: ' . print_r($user_info, true));
 
         if ($user_info && isset($user_info->email)) {
             $email = $user_info->email;
             $name = $user_info->name;
-            guardarLogs('Usuario autenticado: ' . $email);
+            guardarLog('Usuario autenticado: ' . $email);
 
             if ($user = get_user_by('email', $email)) {
                 wp_set_current_user($user->ID);
                 wp_set_auth_cookie($user->ID);
-                guardarLogs('Usuario existente logueado: ' . $email);
+                guardarLog('Usuario existente logueado: ' . $email);
             } else {
                 $random_password = wp_generate_password();
                 $user_id = wp_create_user($name, $random_password, $email);
                 wp_set_current_user($user_id);
                 wp_set_auth_cookie($user_id);
-                guardarLogs('Nuevo usuario creado: ' . $email);
+                guardarLog('Nuevo usuario creado: ' . $email);
             }
 
             // Solo sincronizar si el usuario es el administrador (por ejemplo, tú mismo)
             if ($email == 'andoryyu@gmail.com') {
                 $folder_path = '/var/www/html/wp-content/uploads/drive_sync';
                 sincronizar_drive_con_vps($access_token, $folder_path);
-                guardarLogs('Archivos de Google Drive sincronizados para: ' . $email);
+                guardarLog('Archivos de Google Drive sincronizados para: ' . $email);
             }
 
             wp_redirect('https://2upra.com');
-            guardarLogs('Redireccionando a la página principal');
+            guardarLog('Redireccionando a la página principal');
             exit;
         } else {
-            guardarLogs('No se pudo obtener el correo electrónico del usuario.');
+            guardarLog('No se pudo obtener el correo electrónico del usuario.');
         }
     } else {
-        guardarLogs('No se recibió el código de autorización.');
+        guardarLog('No se recibió el código de autorización.');
     }
 }
