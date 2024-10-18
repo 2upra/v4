@@ -23,7 +23,7 @@ function htmlColab($filtro)
 
 ?>
 
-    <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV"
+    <li class="modal POST-<? echo esc_attr($filtro); ?> EDYQHV"
         filtro="<? echo esc_attr($filtro); ?>"
         id-post="<? echo get_the_ID(); ?>"
         autor="<? echo esc_attr($colabColaborador); ?>">
