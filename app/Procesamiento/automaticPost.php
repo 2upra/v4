@@ -2,29 +2,7 @@
 
 
 /*
-el problema es que la ejecución llega hasta aqui
 
-2024-10-18 23:36:11 - No se encontró URL de adjunto para la ruta: /home/asley01/MEGA/Waw/X/♥️ Memphis/Aggrevetad Robber(140Bpm)-Project Pat [vocals].wav
-2024-10-18 23:36:11 - Archivo listo para procesar: /home/asley01/MEGA/Waw/X/♥️ Memphis/Aggrevetad Robber(140Bpm)-Project Pat [vocals].wav
-2024-10-18 23:36:11 - Archivo agregado para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Memphis/Aggrevetad Robber(140Bpm)-Project Pat [vocals].wav
-2024-10-18 23:36:11 - Procesando archivo: /home/asley01/MEGA/Waw/X/♥️ Memphis/DJ PINKY 02 156bpm.wav con extensión: wav
-2024-10-18 23:36:11 - Iniciando verificación del archivo: /home/asley01/MEGA/Waw/X/♥️ Memphis/DJ PINKY 02 156bpm.wav con hash: 15fb11318430ee43d2b31d5af3baf0e07d8a8c3514b74c818f8d384c76829379
-2024-10-18 23:36:11 - El archivo existe y es accesible: /home/asley01/MEGA/Waw/X/♥️ Memphis/DJ PINKY 02 156bpm.wav
-2024-10-18 23:36:11 - No se encontró URL de adjunto para la ruta: /home/asley01/MEGA/Waw/X/♥️ Memphis/DJ PINKY 02 156bpm.wav
-2024-10-18 23:36:11 - Archivo listo para procesar: /home/asley01/MEGA/Waw/X/♥️ Memphis/DJ PINKY 02 156bpm.wav
-2024-10-18 23:36:11 - Archivo agregado para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Memphis/DJ PINKY 02 156bpm.wav
-2024-10-18 23:36:11 - Procesando archivo: /home/asley01/MEGA/Waw/X/♥️ Memphis/Niggaz.wav con extensión: wav
-2024-10-18 23:36:11 - Iniciando verificación del archivo: /home/asley01/MEGA/Waw/X/♥️ Memphis/Niggaz.wav con hash: 3f819c00c742666a74a6972ed237346ee24d744424587cf0caaee19dd521cef3
-2024-10-18 23:36:11 - El archivo existe y es accesible: /home/asley01/MEGA/Waw/X/♥️ Memphis/Niggaz.wav
-2024-10-18 23:36:11 - No se encontró URL de adjunto para la ruta: /home/asley01/MEGA/Waw/X/♥️ Memphis/Niggaz.wav
-2024-10-18 23:36:11 - Archivo listo para procesar: /home/asley01/MEGA/Waw/X/♥️ Memphis/Niggaz.wav
-2024-10-18 23:36:11 - Archivo agregado para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Memphis/Niggaz.wav
-2024-10-18 23:36:11 - Procesando archivo: /home/asley01/MEGA/Waw/X/♥️ Memphis/Aggrevetad Robber(140Bpm)-Project Pat.wav con extensión: wav
-2024-10-18 23:36:11 - Iniciando verificación del archivo: /home/asley01/MEGA/Waw/X/♥️ Memphis/Aggrevetad Robber(140Bpm)-Project Pat.wav con hash: eb13dd5aec29c3686c2bec3aa22350589a2884af3a4f92f5520065260f0361ae
-2024-10-18 23:36:11 - El archivo existe y es accesible: /home/asley01/MEGA/Waw/X/♥️ Memphis/Aggrevetad Robber(140Bpm)-Project Pat.wav
-2024-10-18 23:36:11 - No se encontró URL de adjunto para la ruta: /home/asley01/MEGA/Waw/X/♥️ Memphis/Aggrevetad Robber(140Bpm)-Project Pat.wav
-2024-10-18 23:36:11 - Archivo listo para procesar: /home/asley01/MEGA/Waw/X/♥️ Memphis/Aggrevetad Robber(140Bpm)-Project Pat.wav
-2024-10-18 23:36:11 - Archivo agregado para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Memphis/Aggrevetad Robber(140Bpm)-Project Pat.wav
 */
 
 function procesarAudios() {
@@ -35,11 +13,11 @@ function procesarAudios() {
 
     if (!empty($audios_para_procesar)) {
         guardarLog("Cantidad de audios a procesar: " . count($audios_para_procesar));
-        // Procesamos todos los audios encontrados
+
         foreach ($audios_para_procesar as $audio_info) {
             guardarLog("Iniciando procesamiento de audio: {$audio_info['ruta']}");
             autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
-            //guardarLog("Procesado audio: {$audio_info['ruta']}");
+            guardarLog("Procesado audio: {$audio_info['ruta']}");
         }
 
         // Espera de 5 minutos antes de la siguiente ejecución
@@ -228,31 +206,31 @@ add_action('procesar_audio_cron_event', 'procesarAudios');
 function autRevisarAudio($audio, $file_hash) {
     // Verificar si el archivo existe
     if (!file_exists($audio)) {
-        //guardarLog("Archivo de audio no encontrado: {$audio}");
+        guardarLog("Archivo de audio no encontrado: {$audio}");
         error_log("El archivo de audio no existe: " . $audio);
         return;
     }
-    //guardarLog("Archivo de audio encontrado: {$audio}");
+    guardarLog("Archivo de audio encontrado: {$audio}");
     
     // Obtener información del directorio de subidas
     $upload_dir = wp_upload_dir();
     $file_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $audio);
-    //guardarLog("URL del archivo de audio: {$file_url}");
+    guardarLog("URL del archivo de audio: {$file_url}");
     
     $user_id = 44; // ID del usuario que sube el archivo
     
     // Guardar el hash en la base de datos
     $hash_id = guardarHash($file_hash, $file_url, 'confirmed', $user_id);
     if (!$hash_id) {
-        //guardarLog("Error al guardar el hash en DB para: {$audio}");
+        guardarLog("Error al guardar el hash en DB para: {$audio}");
         error_log("Error al guardar el hash en la base de datos para el archivo: " . $audio);
         return;
     }
-    //guardarLog("Hash guardado exitosamente para: {$audio} con ID: {$hash_id}");
+    guardarLog("Hash guardado exitosamente para: {$audio} con ID: {$hash_id}");
     
     // Procesar el audio
     autProcesarAudio($audio);
-    //guardarLog("Procesamiento iniciado para: {$audio}");
+    guardarLog("Procesamiento iniciado para: {$audio}");
 }
 
 
