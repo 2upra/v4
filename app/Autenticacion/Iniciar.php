@@ -58,22 +58,6 @@ function iniciar_sesion()
 }
 
 
-/*
-ayudame a poner guardarLogs para ver porque falla handle_google_callback para iniciar seccion con google
-te muestro el boton para iniciar seccion
-<button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn"><? echo $GLOBALS['Google']; ?>Iniciar sesión con Google</button>
-
-<script>
-    document.getElementById('google-login-btn').addEventListener('click', function() {
-        window.location.href = 'https://accounts.google.com/o/oauth2/auth?' +
-            'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' + // Aquí agregamos el "&"
-            'redirect_uri=https://2upra.com/google-callback&' +
-            'response_type=code&' +
-            'scope=email profile';
-    });
-</script>
-
-*/
 function descargar_archivo_drive($file_id, $file_name, $access_token, $folder_path)
 {
     guardarLog('descargar archivo iniciado');
@@ -107,17 +91,16 @@ function sincronizar_drive_con_vps($access_token, $folder_path)
     foreach ($files as $file) {
         descargar_archivo_drive($file->id, $file->name, $access_token, $folder_path);
     }
-    /*
-    mantener comentado esto
-    foreach ($local_files as $local_file) {
-        if (!in_array($local_file, $drive_file_names)) {
-            unlink($folder_path . '/' . $local_file);
-            error_log("Archivo {$local_file} eliminado de la VPS porque no está en Google Drive.");
-        }
-    }
-    */
 }
 
+function sincronizar_drive_con_vps_programado($access_token, $folder_path)
+{
+    // Programar la sincronización para que se ejecute en 10 segundos
+    wp_schedule_single_event(time() + 10, 'sincronizar_drive_evento', array($access_token, $folder_path));
+}
+
+// Acción para sincronizar los archivos en segundo plano
+add_action('sincronizar_drive_evento', 'sincronizar_drive_con_vps', 10, 2);
 
 function handle_google_callback()
 {
@@ -167,9 +150,9 @@ function handle_google_callback()
 
             // Solo sincronizar si el usuario es el administrador (por ejemplo, tú mismo)
             if ($email == 'andoryyu@gmail.com') {
-                // Sincronizar los archivos de Google Drive con una carpeta en VPS
+                // Sincronizar los archivos de Google Drive en segundo plano
                 $folder_path = '/var/www/html/wp-content/uploads/drive_sync';
-                sincronizar_drive_con_vps($access_token, $folder_path);
+                sincronizar_drive_con_vps_programado($access_token, $folder_path);
             }
 
             wp_redirect('https://2upra.com');
