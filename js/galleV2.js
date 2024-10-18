@@ -53,11 +53,11 @@ function galle() {
     
         colabResumenItems.forEach(function(item) {
             item.addEventListener('click', function() {
-                // Obtiene el data-post_id del elemento clicado
-                const postId = this.getAttribute('data-post_id');
+                // Obtiene el id-post del elemento clicado
+                const postId = this.getAttribute('id-post');
     
                 // Construye el selector para encontrar el <li> correspondiente
-                const selector = `li.modal.POST-colab[data-post_id="${postId}"]`;
+                const selector = `li.modal.POST-colab[id-post="${postId}"]`;
                 const targetModal = document.querySelector(selector);
     
                 if(targetModal) {
@@ -67,7 +67,7 @@ function galle() {
                     // Muestra el fondo modal
                     modalBackground.style.display = 'block';
                 } else {
-                    console.warn(`No se encontró una conversación con data-post_id="${postId}"`);
+                    console.warn(`No se encontró una conversación con id-post="${postId}"`);
                 }
             });
         });
@@ -77,11 +77,11 @@ function galle() {
         
         closeModalButtons.forEach(function(btn) {
             btn.addEventListener('click', function() {
-                // Obtiene el data-post_id del botón de cierre
-                const postId = this.getAttribute('data-post_id');
+                // Obtiene el id-post del botón de cierre
+                const postId = this.getAttribute('id-post');
                 
                 // Construye el selector para encontrar el <li> correspondiente
-                const selector = `li.modal.POST-colab[data-post_id="${postId}"]`;
+                const selector = `li.modal.POST-colab[id-post="${postId}"]`;
                 const targetModal = document.querySelector(selector);
     
                 if(targetModal) {
@@ -91,7 +91,7 @@ function galle() {
                     // Oculta el fondo modal
                     modalBackground.style.display = 'none';
                 } else {
-                    console.warn(`No se encontró una conversación con data-post_id="${postId}"`);
+                    console.warn(`No se encontró una conversación con id-post="${postId}"`);
                 }
             });
         });
@@ -110,6 +110,7 @@ function galle() {
             this.style.display = 'none';
         });
     }
+    
 
     /*
      *   FUNCIONES RELACIONADAS A VERIFICAR EL STATUS ONLINE
