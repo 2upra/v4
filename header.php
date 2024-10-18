@@ -120,7 +120,7 @@ if (!defined('ABSPATH')) {
                             </a>
                         </div>
 
-                        
+
 
 
                     </div>
@@ -192,7 +192,8 @@ if (!defined('ABSPATH')) {
         <? echo modalCarta() ?>
         <? if (is_user_logged_in()) : ?>
             <div id="submenusyinfos">
-
+                
+                <? echo publicaciones(['post_type' => 'colab', 'filtro' => 'colab', 'posts' => 3]); ?>
                 <!-- Fondo oscuro para los submenus -->
                 <div id="modalBackground2" class="modal-background submenu modalBackground2" style="display: none;"></div>
 

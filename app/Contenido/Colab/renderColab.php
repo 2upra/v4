@@ -80,7 +80,7 @@ function colabTest()
             <? echo publicaciones(['post_type' => 'colab', 'filtro' => 'colabPendiente', 'posts' => 20]); ?>
         </div>
         <div>
-            <? echo publicaciones(['post_type' => 'colab', 'filtro' => 'colab', 'posts' => 20]); ?>
+            
         </div>
     </div>
 <?
