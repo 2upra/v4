@@ -53,11 +53,9 @@ function galle() {
     
         colabResumenItems.forEach(function(item) {
             item.addEventListener('click', function() {
-                // Obtiene el id-post del elemento clicado
-                const postId = this.getAttribute('id-post');
-    
+                const postId = this.getAttribute('data-post_id');
                 // Construye el selector para encontrar el <li> correspondiente
-                const selector = `li.modal.POST-colab[id-post="${postId}"]`;
+                const selector = `li.modal.POST-colab[data-post_id="${postId}"]`;
                 const targetModal = document.querySelector(selector);
     
                 if(targetModal) {
