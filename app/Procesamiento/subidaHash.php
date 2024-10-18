@@ -141,6 +141,25 @@ function actualizarUrlArchivo($file_id, $new_url)
     return $resultado;
 }
 
+function obtenerFileIDPorURL($url)
+{
+    global $wpdb;
+    
+    $file_id = $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT id FROM {$wpdb->prefix}file_hashes WHERE file_url = %s",
+            $url
+        )
+    );
+
+    if ($file_id !== null) {
+        return (int) $file_id;
+    } else {
+        guardarLog("No se encontró File ID para la URL: $url");
+        return false;
+    }
+}
+
 
 
 function nombreUnicoFile($dir, $name, $ext)
@@ -176,6 +195,18 @@ function guardarHash($hash, $url, $status = 'pending', $user_id)
     return $wpdb->insert_id;
 }
 
+function confirmarHashId($file_id)
+{
+    global $wpdb;
+    return $wpdb->update(
+        "{$wpdb->prefix}file_hashes",
+        array('status' => 'confirmed'),
+        array('id' => $file_id),
+        array('%s'),
+        array('%d')
+    );
+}
+
 
 function eliminarHash($file_hash)
 {
@@ -192,17 +223,6 @@ function eliminarHash($file_hash)
 }
 
 
-function confirmarHashId($file_id)
-{
-    global $wpdb;
-    return $wpdb->update(
-        "{$wpdb->prefix}file_hashes",
-        array('status' => 'confirmed'),
-        array('id' => $file_id),
-        array('%s'),
-        array('%d')
-    );
-}
 
 function limpiarArchivosPendientes()
 {

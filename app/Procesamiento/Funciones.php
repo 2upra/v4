@@ -1,5 +1,6 @@
 <?
 
+
 function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
 {
     // Saneamiento de datos
@@ -298,7 +299,6 @@ function renombrarArchivoAdjunto($postId, $archivoId)
 }
 
 
-
 function procesarAudioLigero($post_id, $audio_id, $index)
 {
     guardarLog("INICIO procesarAudioLigero para Post ID: $post_id y Audio ID: $audio_id");
@@ -322,34 +322,11 @@ function procesarAudioLigero($post_id, $audio_id, $index)
 
     // Obtener las partes del camino del archivo
     $path_parts = pathinfo($audio_path);
-    $unique_id = uniqid('2upra_');
-    $base_path = $path_parts['dirname'] . '/' . $unique_id;
+    // $unique_id = uniqid('2upra_'); // Ya no es necesario generar un nuevo nombre
+    $base_path = $path_parts['dirname'] . '/' . $path_parts['filename'];
 
-    // Renombrar el archivo original
-    $new_original_filename = $unique_id . '.' . $path_parts['extension'];
-    $new_original_path = $path_parts['dirname'] . '/' . $new_original_filename;
-
-    if (rename($audio_path, $new_original_path)) {
-        guardarLog("Archivo original renombrado a: {$new_original_path}");
-
-        // Actualizar la información del attachment en WordPress
-        $attachment_data = array(
-            'ID' => $audio_id,
-            'guid' => wp_upload_dir()['baseurl'] . '/' . _wp_relative_upload_path($new_original_path),
-            'post_title' => sanitize_file_name(pathinfo($new_original_filename, PATHINFO_FILENAME)),
-            'post_name' => sanitize_title(pathinfo($new_original_filename, PATHINFO_FILENAME)),
-        );
-        wp_update_post($attachment_data);
-
-        // Actualizar el meta _wp_attached_file
-        update_post_meta($audio_id, '_wp_attached_file', _wp_relative_upload_path($new_original_path));
-    } else {
-        guardarLog("Error al renombrar el archivo original.");
-        return;
-    }
-
-    // Eliminar metadatos del archivo original renombrado usando ffmpeg
-    $comando_strip_metadata = "/usr/bin/ffmpeg -i " . escapeshellarg($new_original_path) . " -map_metadata -1 -c:v copy " . escapeshellarg($new_original_path . '.tmp') . " && mv " . escapeshellarg($new_original_path . '.tmp') . " " . escapeshellarg($new_original_path);
+    // Eliminar metadatos del archivo original usando ffmpeg
+    $comando_strip_metadata = "/usr/bin/ffmpeg -i " . escapeshellarg($audio_path) . " -map_metadata -1 -c:v copy " . escapeshellarg($audio_path . '.tmp') . " && mv " . escapeshellarg($audio_path . '.tmp') . " " . escapeshellarg($audio_path);
     guardarLog("Ejecutando comando para eliminar metadatos del archivo original: {$comando_strip_metadata}");
     exec($comando_strip_metadata, $output_strip, $return_strip);
     if ($return_strip !== 0) {
@@ -365,7 +342,7 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         $meta_key = ($index == 1) ? "post_audio_lite" : "post_audio_lite_{$index}";
         update_post_meta($post_id, $meta_key, $existing_lite_audio_id);
         update_post_meta($post_id, 'AudioDuplicado', true);
-        analizarYGuardarMetasAudio($post_id, $new_original_path, $index);
+        analizarYGuardarMetasAudio($post_id, $audio_path, $index);
         return;
     }
 
@@ -385,7 +362,7 @@ function procesarAudioLigero($post_id, $audio_id, $index)
 
     // Procesar archivo de audio ligero (128 kbps) con metadatos adicionales
     $nuevo_archivo_path_lite = $base_path . '_128k.mp3';
-    $comando_lite = "/usr/bin/ffmpeg -i " . escapeshellarg($new_original_path) . " -b:a 128k -metadata author=" . escapeshellarg($author_username) . " -metadata comment=" . escapeshellarg($page_name) . " " . escapeshellarg($nuevo_archivo_path_lite);
+    $comando_lite = "/usr/bin/ffmpeg -i " . escapeshellarg($audio_path) . " -b:a 128k -metadata author=" . escapeshellarg($author_username) . " -metadata comment=" . escapeshellarg($page_name) . " " . escapeshellarg($nuevo_archivo_path_lite);
     guardarLog("Ejecutando comando para crear audio ligero con metadatos: {$comando_lite}");
     exec($comando_lite, $output_lite, $return_var_lite);
     if ($return_var_lite !== 0) {
@@ -441,9 +418,13 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
 }
 
+/*
+
+
+*/
+
 function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 {
-    // Ejecutar el script de Python para análisis de audio
     $python_command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py \"{$nuevo_archivo_path_lite}\"");
     iaLog("Ejecutando comando de Python: {$python_command}");
     exec($python_command, $output, $return_var);
@@ -488,7 +469,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     if ($tags_usuario) {
         $tags_usuario_texto = is_array($tags_usuario) ? implode(', ', $tags_usuario) : $tags_usuario;
     } else {
-        $tags_usuario_texto = 'Sin etiquetas';
+        $tags_usuario_texto = 'No se agregaron etiquetas por el usuario esta vez';
     }
 
     $prompt = "Un usuario acaba de subir un audio con la siguiente descripción: {$post_content}. Los tags asociados son: {$tags_usuario_texto}."
