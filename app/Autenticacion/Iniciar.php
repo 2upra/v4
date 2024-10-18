@@ -63,6 +63,7 @@ function iniciar_sesion()
 
 function descargar_archivo_drive($file_id, $file_name, $access_token, $folder_path)
 {
+    guardarLog('descargar archivo iniciado');
     $download_url = "https://www.googleapis.com/drive/v3/files/{$file_id}?alt=media&access_token={$access_token}";
     $response = wp_remote_get($download_url, array('timeout' => 120));
     if (!is_wp_error($response)) {
@@ -94,6 +95,7 @@ function sincronizar_drive_con_vps($access_token, $folder_path)
         descargar_archivo_drive($file->id, $file->name, $access_token, $folder_path);
     }
     /*
+    mantener comentado esto
     foreach ($local_files as $local_file) {
         if (!in_array($local_file, $drive_file_names)) {
             unlink($folder_path . '/' . $local_file);
