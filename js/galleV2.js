@@ -57,8 +57,7 @@ function galle() {
                 const postId = this.getAttribute('data-post_id');
     
                 // Construye el selector para encontrar el <li> correspondiente
-                // Asumiendo que la clase siempre contiene 'POST-colab' y 'modal'
-                const selector = `li.modal.POST-colab[id-post="${postId}"]`;
+                const selector = `li.modal.POST-colab[data-post_id="${postId}"]`;
                 const targetModal = document.querySelector(selector);
     
                 if(targetModal) {
@@ -68,7 +67,7 @@ function galle() {
                     // Muestra el fondo modal
                     modalBackground.style.display = 'block';
                 } else {
-                    console.warn(`No se encontró una conversación con id-post="${postId}"`);
+                    console.warn(`No se encontró una conversación con data-post_id="${postId}"`);
                 }
             });
         });
@@ -78,11 +77,11 @@ function galle() {
         
         closeModalButtons.forEach(function(btn) {
             btn.addEventListener('click', function() {
-                // Obtiene el id-post del botón de cierre
+                // Obtiene el data-post_id del botón de cierre
                 const postId = this.getAttribute('data-post_id');
                 
                 // Construye el selector para encontrar el <li> correspondiente
-                const selector = `li.modal.POST-colab[id-post="${postId}"]`;
+                const selector = `li.modal.POST-colab[data-post_id="${postId}"]`;
                 const targetModal = document.querySelector(selector);
     
                 if(targetModal) {
@@ -92,7 +91,7 @@ function galle() {
                     // Oculta el fondo modal
                     modalBackground.style.display = 'none';
                 } else {
-                    console.warn(`No se encontró una conversación con id-post="${postId}"`);
+                    console.warn(`No se encontró una conversación con data-post_id="${postId}"`);
                 }
             });
         });
