@@ -36,8 +36,8 @@ function htmlColab($filtro)
                 <div class="UICMCG">
                     <? echo tituloColab($var); ?>
                     <? echo participantesColab($var) ?>
-                    <button class="cerrarColab" id-post="<? echo get_the_ID(); ?>">cerrar</button>
-                    <? echo opcionesColabActivo($var); ?>
+                    <button class="cerrarColab" id-post="<? echo get_the_ID(); ?>"><?php echo $GLOBALS['cancelicon']; ?></button>
+                    <? // echo opcionesColabActivo($var); ?>
                 </div>
                 <div class="MXPLYN">
                     <? echo chatColab($var); ?>
