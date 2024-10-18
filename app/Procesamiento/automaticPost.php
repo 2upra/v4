@@ -1,5 +1,31 @@
 <?
 
+
+
+function procesarAudios() {
+    $directorio_audios = '/home/asley01/MEGA/Waw/X';
+    guardarLog("Iniciando procesamiento de audios en: {$directorio_audios}");
+    
+    $audios_para_procesar = buscarAudios($directorio_audios);
+
+    if (!empty($audios_para_procesar)) {
+        guardarLog("Cantidad de audios a procesar: " . count($audios_para_procesar));
+        // Procesamos todos los audios encontrados
+        foreach ($audios_para_procesar as $audio_info) {
+            guardarLog("Iniciando procesamiento de audio: {$audio_info['ruta']}");
+            autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
+            guardarLog("Procesado audio: {$audio_info['ruta']}");
+        }
+
+        // Espera de 5 minutos antes de la siguiente ejecución
+        wp_schedule_single_event(time() + 300, 'procesar_audio_cron_event');
+        guardarLog("Evento programado para procesar audios en 5 minutos.");
+    } else {
+        guardarLog("No se encontraron audios para procesar en: {$directorio_audios}");
+    }
+}
+
+
 function buscarAudios($directorio) {
     guardarLog("Iniciando búsqueda de audios en el directorio: {$directorio}");
 
@@ -86,8 +112,18 @@ function buscarAudios($directorio) {
 }
 
 function debeProcesarse($ruta_archivo, $file_hash) {
-    guardarLog("Verificando si debe procesarse: {$ruta_archivo} con hash: {$file_hash}");
+    guardarLog("Iniciando verificación del archivo: {$ruta_archivo} con hash: {$file_hash}");
     
+    // Revisar si la ruta del archivo existe y es accesible
+    if (!file_exists($ruta_archivo)) {
+        guardarLog("El archivo no existe: {$ruta_archivo}");
+        error_log("Error: El archivo no existe: " . $ruta_archivo);
+        return false;
+    } else {
+        guardarLog("El archivo existe y es accesible: {$ruta_archivo}");
+    }
+
+    // Obtener URL del adjunto por la ruta del archivo
     $attachment_url = wp_get_attachment_url_by_path($ruta_archivo);
     if (!$attachment_url) {
         guardarLog("No se encontró URL de adjunto para la ruta: {$ruta_archivo}");
@@ -95,12 +131,14 @@ function debeProcesarse($ruta_archivo, $file_hash) {
         guardarLog("URL de adjunto encontrada: {$attachment_url}");
     }
 
+    // Buscar si ya existe el adjunto en WordPress
     $existing_attachment = attachment_url_to_postid($attachment_url);
     if ($existing_attachment) {
         guardarLog("Adjunto existente encontrado para: {$ruta_archivo} (Post ID: {$existing_attachment})");
         return false;
     }
 
+    // Verificar si existe el hash
     if (!$file_hash) {
         guardarLog("Hash inexistente para el archivo: {$ruta_archivo}");
         error_log("Error: Hash inexistente para el archivo: " . $ruta_archivo);
@@ -117,28 +155,7 @@ function debeProcesarse($ruta_archivo, $file_hash) {
     return true;
 }
 
-function procesarAudios() {
-    $directorio_audios = '/home/asley01/MEGA/Waw/X';
-    guardarLog("Iniciando procesamiento de audios en: {$directorio_audios}");
-    
-    $audios_para_procesar = buscarAudios($directorio_audios);
 
-    if (!empty($audios_para_procesar)) {
-        guardarLog("Cantidad de audios a procesar: " . count($audios_para_procesar));
-        // Procesamos todos los audios encontrados
-        foreach ($audios_para_procesar as $audio_info) {
-            guardarLog("Iniciando procesamiento de audio: {$audio_info['ruta']}");
-            autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
-            guardarLog("Procesado audio: {$audio_info['ruta']}");
-        }
-
-        // Espera de 5 minutos antes de la siguiente ejecución
-        wp_schedule_single_event(time() + 300, 'procesar_audio_cron_event');
-        guardarLog("Evento programado para procesar audios en 5 minutos.");
-    } else {
-        guardarLog("No se encontraron audios para procesar en: {$directorio_audios}");
-    }
-}
 
 
 add_action('init', 'iniciar_cron_procesamiento_audios');
