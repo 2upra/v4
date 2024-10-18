@@ -57,10 +57,23 @@ function iniciar_sesion()
     return ob_get_clean();
 }
 
+
 /*
+ayudame a poner guardarLogs para ver porque falla handle_google_callback para iniciar seccion con google
+te muestro el boton para iniciar seccion
+<button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn"><? echo $GLOBALS['Google']; ?>Iniciar sesión con Google</button>
+
+<script>
+    document.getElementById('google-login-btn').addEventListener('click', function() {
+        window.location.href = 'https://accounts.google.com/o/oauth2/auth?' +
+            'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' + // Aquí agregamos el "&"
+            'redirect_uri=https://2upra.com/google-callback&' +
+            'response_type=code&' +
+            'scope=email profile';
+    });
+</script>
 
 */
-
 function descargar_archivo_drive($file_id, $file_name, $access_token, $folder_path)
 {
     guardarLog('descargar archivo iniciado');
@@ -106,9 +119,11 @@ function sincronizar_drive_con_vps($access_token, $folder_path)
 }
 
 
-function handle_google_callback()
-{
+function handle_google_callback() {
+    guardarLogs('Iniciando handle_google_callback');
+    
     if (isset($_GET['code'])) {
+        guardarLogs('Código de autorización recibido: ' . $_GET['code']);
         $code = $_GET['code'];
         $client_id = '84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com';
         $client_secret = ($_ENV['GOOGLEAPI']);
@@ -125,40 +140,57 @@ function handle_google_callback()
         ));
 
         if (is_wp_error($response)) {
+            guardarLogs('Error en la autenticación con Google: ' . $response->get_error_message());
             echo 'Error en la autenticación con Google.';
             return;
         }
 
         $token = json_decode($response['body']);
+        guardarLogs('Token de acceso obtenido: ' . $token->access_token);
         $access_token = $token->access_token;
 
         // Obtener información del usuario
         $user_info_response = wp_remote_get('https://www.googleapis.com/oauth2/v1/userinfo?access_token=' . $access_token);
+        if (is_wp_error($user_info_response)) {
+            guardarLogs('Error al obtener información del usuario: ' . $user_info_response->get_error_message());
+            echo 'Error al obtener información del usuario.';
+            return;
+        }
+
         $user_info = json_decode($user_info_response['body']);
+        guardarLogs('Información del usuario obtenida: ' . print_r($user_info, true));
 
         if ($user_info && isset($user_info->email)) {
             $email = $user_info->email;
             $name = $user_info->name;
+            guardarLogs('Usuario autenticado: ' . $email);
 
             if ($user = get_user_by('email', $email)) {
                 wp_set_current_user($user->ID);
                 wp_set_auth_cookie($user->ID);
+                guardarLogs('Usuario existente logueado: ' . $email);
             } else {
                 $random_password = wp_generate_password();
                 $user_id = wp_create_user($name, $random_password, $email);
                 wp_set_current_user($user_id);
                 wp_set_auth_cookie($user_id);
+                guardarLogs('Nuevo usuario creado: ' . $email);
             }
 
             // Solo sincronizar si el usuario es el administrador (por ejemplo, tú mismo)
             if ($email == 'andoryyu@gmail.com') {
-                // Sincronizar los archivos de Google Drive con una carpeta en VPS
                 $folder_path = '/var/www/html/wp-content/uploads/drive_sync';
                 sincronizar_drive_con_vps($access_token, $folder_path);
+                guardarLogs('Archivos de Google Drive sincronizados para: ' . $email);
             }
 
             wp_redirect('https://2upra.com');
+            guardarLogs('Redireccionando a la página principal');
             exit;
+        } else {
+            guardarLogs('No se pudo obtener el correo electrónico del usuario.');
         }
+    } else {
+        guardarLogs('No se recibió el código de autorización.');
     }
 }
