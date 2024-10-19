@@ -477,7 +477,7 @@ function rehacerNombreAudio($post_id, $archivo_audio)
     $nombre_archivo = pathinfo($archivo_audio, PATHINFO_FILENAME);
 
     // Crear el prompt para la IA con el nombre del archivo incluido
-    $prompt = "El archivo se llama '{$nombre_archivo}' es un nombre viejo porque el usuario ha cambiado o mejorado la descripcion, la descripcion nueva que escribio el usuario es '{$post_content}'. Escucha este audio y por favor, genera un nombre corto que lo represente tomando en cuenta la descripcion que genero el usuario. Por lo general son samples, como un kick, snare, sample vintage, o efectos (FX). Identifica el instrumento dominante o la emoción clave, por ejemplo, 'sample melancólico' o 'snare agresivo'. Entrega solo un nombre corto y descriptivo que represente el audio.";
+    $prompt = "El archivo se llama '{$nombre_archivo}' es un nombre viejo porque el usuario ha cambiado o mejorado la descripción, la descripción nueva que escribió el usuario es '{$post_content}'. Escucha este audio y por favor, genera un nombre corto que lo represente tomando en cuenta la descripción que generó el usuario. Por lo general son samples, como un kick, snare, sample vintage, o efectos (FX). Identifica el instrumento dominante o la emoción clave, por ejemplo, 'sample melancólico' o 'snare agresivo'. Entrega solo un nombre corto y descriptivo que represente el audio.";
 
     // Generar el nombre usando la IA
     $nombre_generado = generarDescripcionIA($archivo_audio, $prompt);
@@ -526,10 +526,25 @@ function rehacerNombreAudio($post_id, $archivo_audio)
         // Actualizar la meta 'rutaOriginal'
         $ruta_original = get_post_meta($post_id, 'rutaOriginal', true);
         if ($ruta_original) {
-            // Obtener la nueva ruta del archivo original renombrado
-            $nueva_ruta_original = pathinfo(get_attached_file($attachment_id_audio), PATHINFO_DIRNAME) . '/' . $nombre_final_con_id . '.' . pathinfo(get_attached_file($attachment_id_audio), PATHINFO_EXTENSION);
-            update_post_meta($post_id, 'rutaOriginal', $nueva_ruta_original);
-            iaLog("Meta 'rutaOriginal' actualizada a: {$nueva_ruta_original}");
+            // Obtener la ruta del directorio
+            $directorio_original = pathinfo($ruta_original, PATHINFO_DIRNAME);
+
+            // Construir la nueva ruta original
+            $ext_extension = pathinfo($ruta_original, PATHINFO_EXTENSION);
+            $nueva_ruta_original = $directorio_original . '/' . $nombre_final_con_id . '.' . $ext_extension;
+
+            // Renombrar el archivo físico en el servidor
+            $ruta_original_completa = $ruta_original;
+            $nueva_ruta_completa = $nueva_ruta_original;
+
+            if (rename($ruta_original_completa, $nueva_ruta_completa)) {
+                // Actualizar la meta 'rutaOriginal' con la nueva ruta
+                update_post_meta($post_id, 'rutaOriginal', $nueva_ruta_completa);
+                iaLog("Meta 'rutaOriginal' actualizada a: {$nueva_ruta_completa}");
+            } else {
+                iaLog("Error al renombrar el archivo en el servidor de {$ruta_original_completa} a {$nueva_ruta_completa}");
+                return null;
+            }
         } else {
             iaLog("Meta 'rutaOriginal' no existe para el post ID: {$post_id}");
         }
