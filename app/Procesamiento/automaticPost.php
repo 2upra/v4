@@ -393,6 +393,7 @@ Error: Respuesta inesperada de la API. Detalles: {«candidates»:[{«finishReaso
 
 */
 
+
 function generarNombreAudio($audio_path_lite)
 {
     // Verificar que el archivo de audio exista
@@ -415,14 +416,23 @@ function generarNombreAudio($audio_path_lite)
         // Limpiar la respuesta obtenida (eliminar espacios en blanco al inicio y al final)
         $nombre_generado_limpio = trim($nombre_generado);
         $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- ]/', '', $nombre_generado_limpio);
-        $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 30); // Limitar a 50 caracteres
+        
+        // Limitar el nombre a 35 caracteres
+        $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 35);
+        
+        // Añadir el identificador único '2upra_' al inicio
+        $nombre_final = '2upra_' . $nombre_generado_limpio;
 
-        return $nombre_generado_limpio;
+        // Asegurarse de que el nombre completo no exceda los 35 caracteres
+        $nombre_final = substr($nombre_final, 0, 35);
+
+        return $nombre_final;
     } else {
         iaLog("No se recibió una respuesta válida de la IA para el archivo de audio: {$audio_path_lite}");
         return null;
     }
 }
+
 
 
 function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id) {
