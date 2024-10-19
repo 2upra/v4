@@ -149,7 +149,7 @@ add_filter('cron_schedules', 'cincoMinutos');
 function cincoMinutos($schedules) {
     if (!isset($schedules['cada_cinco_minutos'])) {
         $schedules['cada_cinco_minutos'] = array(
-            'interval' => 120, // 5 minutos en segundos
+            'interval' => 300, // 5 minutos en segundos
             'display'  => __('Cada 5 minutos')
         );
     }
