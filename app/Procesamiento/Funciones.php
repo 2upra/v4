@@ -619,6 +619,10 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
                     'es' => $descripcion_procesada['Estado de animo']['es'] ?? [],
                     'en' => $descripcion_procesada['Estado de animo']['en'] ?? []
                 ],
+                'artista_posible' => [
+                    'es' => $descripcion_procesada['Artista posible']['es'] ?? [],
+                    'en' => $descripcion_procesada['Artista posible']['en'] ?? []
+                ],
                 'genero_posible' => [
                     'es' => $descripcion_procesada['Genero posible']['es'] ?? [],
                     'en' => $descripcion_procesada['Genero posible']['en'] ?? []
