@@ -328,20 +328,6 @@ function autProcesarAudio($audio_path) {
     guardarLog("Archivos enviados a crearAutPost.");
 }
 
-/*
-
-19-Oct-2024 00:21:19 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function obtenerUrlPublica() in /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/automaticPost.php:290
-Stack trace:
-#0 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/automaticPost.php(189): autProcesarAudio()
-#1 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/automaticPost.php(16): autRevisarAudio()
-#2 /var/www/wordpress/wp-includes/class-wp-hook.php(324): procesarAudios()
-#3 /var/www/wordpress/wp-includes/class-wp-hook.php(348): WP_Hook->apply_filters()
-#4 /var/www/wordpress/wp-includes/plugin.php(565): WP_Hook->do_action()
-#5 /var/www/wordpress/wp-cron.php(191): do_action_ref_array()
-#6 {main}
-  thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/automaticPost.php on line 290
-
-*/
 
 function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite) {
     // ID del usuario autor
@@ -352,7 +338,7 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite) {
         return new WP_Error('autor_invalido', 'El usuario con ID 44 no existe.');
     }
 
-    $prompt = "Genera una descripción corta para el siguiente archivo de audio. Puede ser un sample, un fx, un loop, un sonido de un kick, puede ser cualquier cosa, el proposito es la descriciopn sea corta (solo responde con la descripcion no digas nada adiciona); te doy ejemplos Sample oscuro phonk, Fx de explosion, kick de house, sonido de sintentizador, piano melodía, guitarra acustica sample";
+    $prompt = "Genera una descripción corta para el siguiente archivo de audio. Puede ser un sample, un fx, un loop, un sonido de un kick, puede ser cualquier cosa, el propósito es que la descripción sea corta (solo responde con la descripción, no digas nada adicional); te doy ejemplos: Sample oscuro phonk, Fx de explosión, kick de house, sonido de sintetizador, piano melodía, guitarra acústica sample.";
     $descripcion = generarDescripcionIA($nuevo_nombre_lite, $prompt);
 
     // Verificar si se obtuvo una descripción válida
@@ -381,10 +367,92 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite) {
     if (is_wp_error($post_id)) {
         return $post_id; // Retornar el error para manejarlo externamente
     }
-
     $index = 1;
     analizarYGuardarMetasAudio($post_id, $nuevo_nombre_lite, $index);
+
+    // Subir y adjuntar ambos archivos de audio al post
+    $audio_original_id = subir_y_adjuntar_archivo($nuevo_nombre_original, $post_id);
+    if (is_wp_error($audio_original_id)) {
+        // Opcional: Eliminar el post creado en caso de error
+        wp_delete_post($post_id, true);
+        return $audio_original_id;
+    }
+
+    $audio_lite_id = subir_y_adjuntar_archivo($nuevo_nombre_lite, $post_id);
+    if (is_wp_error($audio_lite_id)) {
+        return $audio_lite_id;
+    }
+
+    // Guardar los IDs de los archivos de audio como metadatos del post
+    update_post_meta($post_id, 'post_audio', $audio_original_id);
+    update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
+
     return $post_id;
+}
+
+function subir_y_adjuntar_archivo($archivo, $post_id) {
+    // Verificar que el archivo existe
+    if (!file_exists($archivo)) {
+        return new WP_Error('archivo_no_encontrado', 'El archivo especificado no existe: ' . esc_html($archivo));
+    }
+
+    // Obtener las variables necesarias
+    $wp_upload_dir = wp_upload_dir();
+    $upload_path = $wp_upload_dir['path'];
+
+    // Obtener el nombre base del archivo
+    $filename = basename($archivo);
+
+    // Sanitizar el nombre del archivo
+    $filename = sanitize_file_name($filename);
+
+    // Asegurar un nombre único para evitar conflictos
+    $unique_filename = wp_unique_filename($wp_upload_dir['path'], $filename);
+
+    // Construir la ruta de destino completa
+    $destino = trailingslashit($wp_upload_dir['path']) . $unique_filename;
+
+    // Copiar el archivo al directorio de cargas de WordPress
+    if (!copy($archivo, $destino)) {
+        return new WP_Error('error_copia_archivo', 'No se pudo copiar el archivo al directorio de cargas.');
+    }
+
+    // Determinar el tipo de archivo
+    $filetype = wp_check_filetype($unique_filename, null);
+
+    // Verificar que el tipo de archivo es soportado
+    if (!$filetype['type']) {
+        // Opcional: Puedes eliminar el archivo copiado si el tipo no es soportado
+        @unlink($destino);
+        return new WP_Error('tipo_archivo_no_soportado', 'El tipo de archivo no es soportado: ' . esc_html($unique_filename));
+    }
+
+    // Preparar los datos para la adjunción
+    $attachment = [
+        'guid'           => trailingslashit($wp_upload_dir['url']) . $unique_filename,
+        'post_mime_type' => $filetype['type'],
+        'post_title'     => sanitize_file_name(pathinfo($unique_filename, PATHINFO_FILENAME)),
+        'post_content'   => '',
+        'post_status'    => 'inherit',
+    ];
+
+    // Insertar la adjunción en la base de datos
+    $attach_id = wp_insert_attachment($attachment, $destino, $post_id);
+
+    if (is_wp_error($attach_id)) {
+        // Opcional: Puedes eliminar el archivo copiado si la inserción falla
+        @unlink($destino);
+        return $attach_id;
+    }
+
+    // Incluir el archivo necesario para procesar adjuntos
+    require_once(ABSPATH . 'wp-admin/includes/image.php');
+
+    // Generar los metadatos de la adjunción
+    $attach_data = wp_generate_attachment_metadata($attach_id, $destino);
+    wp_update_attachment_metadata($attach_id, $attach_data);
+
+    return $attach_id;
 }
 
 
