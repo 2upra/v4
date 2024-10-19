@@ -363,71 +363,55 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite) {
     // Insertar el post en la base de datos
     $post_id = wp_insert_post($post_data);
 
-    // Verificar si hubo un error al insertar el post
+
     if (is_wp_error($post_id)) {
         return $post_id; // Retornar el error para manejarlo externamente
     }
     $index = 1;
     analizarYGuardarMetasAudio($post_id, $nuevo_nombre_lite, $index);
 
-    // Subir y adjuntar ambos archivos de audio al post
-    $audio_original_id = subir_y_adjuntar_archivo($nuevo_nombre_original, $post_id);
+    $audio_original_id = adjuntarArchivoAut($nuevo_nombre_original, $post_id);
     if (is_wp_error($audio_original_id)) {
-        // Opcional: Eliminar el post creado en caso de error
         wp_delete_post($post_id, true);
         return $audio_original_id;
     }
 
-    $audio_lite_id = subir_y_adjuntar_archivo($nuevo_nombre_lite, $post_id);
+    $audio_lite_id = adjuntarArchivoAut($nuevo_nombre_lite, $post_id);
     if (is_wp_error($audio_lite_id)) {
         return $audio_lite_id;
     }
 
-    // Guardar los IDs de los archivos de audio como metadatos del post
     update_post_meta($post_id, 'post_audio', $audio_original_id);
     update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
+    update_post_meta($post_id, 'postAut', 'true');
 
     return $post_id;
 }
 
-function subir_y_adjuntar_archivo($archivo, $post_id) {
-    // Verificar que el archivo existe
+function adjuntarArchivoAut($archivo, $post_id) {
+
     if (!file_exists($archivo)) {
         return new WP_Error('archivo_no_encontrado', 'El archivo especificado no existe: ' . esc_html($archivo));
     }
 
-    // Obtener las variables necesarias
+
     $wp_upload_dir = wp_upload_dir();
     $upload_path = $wp_upload_dir['path'];
 
-    // Obtener el nombre base del archivo
+
     $filename = basename($archivo);
-
-    // Sanitizar el nombre del archivo
     $filename = sanitize_file_name($filename);
-
-    // Asegurar un nombre único para evitar conflictos
     $unique_filename = wp_unique_filename($wp_upload_dir['path'], $filename);
-
-    // Construir la ruta de destino completa
     $destino = trailingslashit($wp_upload_dir['path']) . $unique_filename;
-
-    // Copiar el archivo al directorio de cargas de WordPress
     if (!copy($archivo, $destino)) {
         return new WP_Error('error_copia_archivo', 'No se pudo copiar el archivo al directorio de cargas.');
     }
-
-    // Determinar el tipo de archivo
     $filetype = wp_check_filetype($unique_filename, null);
-
-    // Verificar que el tipo de archivo es soportado
     if (!$filetype['type']) {
-        // Opcional: Puedes eliminar el archivo copiado si el tipo no es soportado
         @unlink($destino);
         return new WP_Error('tipo_archivo_no_soportado', 'El tipo de archivo no es soportado: ' . esc_html($unique_filename));
     }
 
-    // Preparar los datos para la adjunción
     $attachment = [
         'guid'           => trailingslashit($wp_upload_dir['url']) . $unique_filename,
         'post_mime_type' => $filetype['type'],
@@ -436,19 +420,14 @@ function subir_y_adjuntar_archivo($archivo, $post_id) {
         'post_status'    => 'inherit',
     ];
 
-    // Insertar la adjunción en la base de datos
     $attach_id = wp_insert_attachment($attachment, $destino, $post_id);
 
     if (is_wp_error($attach_id)) {
-        // Opcional: Puedes eliminar el archivo copiado si la inserción falla
         @unlink($destino);
         return $attach_id;
     }
 
-    // Incluir el archivo necesario para procesar adjuntos
     require_once(ABSPATH . 'wp-admin/includes/image.php');
-
-    // Generar los metadatos de la adjunción
     $attach_data = wp_generate_attachment_metadata($attach_id, $destino);
     wp_update_attachment_metadata($attach_id, $attach_data);
 
