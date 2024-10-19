@@ -561,6 +561,12 @@ function rehacerNombreAudio($post_id, $archivo_audio)
         }
 
         iaLog("Renombrado completado exitosamente para el post ID: {$post_id}");
+        $user_id = get_current_user_id();
+
+        if ($user_id === 1) {
+            update_post_meta($post_id, 'Verificado', true);
+        }
+
         return $nombre_final_con_id;
     } else {
         iaLog("No se recibió una respuesta válida de la IA para el archivo de audio: {$archivo_audio}");
@@ -701,7 +707,7 @@ function adjuntarArchivoAut($archivo, $post_id, $file_id = null)
         // Asumir que es una ruta de archivo local
         $archivo_procesar = $archivo;
     }
-    
+
     // Verificar si el archivo existe
     if (!file_exists($archivo_procesar)) {
         // Eliminar el archivo temporal si existe
@@ -840,7 +846,8 @@ function rehacerDescripcionAccion($post_id)
 
 
 
-function buscar_archivo_recursivo($dir, $filename) {
+function buscar_archivo_recursivo($dir, $filename)
+{
     $files = scandir($dir);
     foreach ($files as $file) {
         if ($file === '.' || $file === '..') continue;
@@ -860,7 +867,7 @@ function buscar_archivo_recursivo($dir, $filename) {
 function obtenerFileIDPorURL($url)
 {
     global $wpdb;
-    
+
     $file_id = $wpdb->get_var(
         $wpdb->prepare(
             "SELECT id FROM {$wpdb->prefix}file_hashes WHERE file_url = %s",
