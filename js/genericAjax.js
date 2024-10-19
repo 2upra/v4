@@ -174,13 +174,11 @@ async function editarPost() {
         const enviarEditBtn = document.getElementById('enviarEdit');
         if (enviarEditBtn) {
             enviarEditBtn.dataset.postId = idContenido;
+            // Asegúrate de que el button no tenga listeners previos
+            enviarEditBtn.dataset.listenerAdded = 'false';
         }
 
-        // Remover eventos previos antes de añadir un nuevo evento
-        enviarEditBtn.replaceWith(enviarEditBtn.cloneNode(true)); 
-        const newEnviarEditBtn = document.getElementById('enviarEdit');
-        
-        // Volver a agregar el evento click al nuevo botón clonado
+        // Añadir o reasignar el evento click al botón de enviar
         accionClick('#enviarEdit', 'cambiarDescripcion', '¿Estás seguro de que quieres editar este post?', (statusElement, data) => {
             alert('Post editado correctamente');
             if (postContentDiv) {
@@ -193,12 +191,13 @@ async function editarPost() {
     }
 }
 
+// Función genérica para manejar clicks y acciones
 async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
     const buttons = document.querySelectorAll(selector); // Selecciona los botones.
 
     buttons.forEach(button => {
         // Verifica si el listener ya fue añadido
-        if (!button.dataset.listenerAdded) {
+        if (button.dataset.listenerAdded !== 'true') {
             button.addEventListener('click', async event => { // Añade evento 'click'.
                 const post_id = event.currentTarget.dataset.postId || event.currentTarget.getAttribute('data-post-id'); // Obtiene el post_id.
                 const tipoContenido = event.currentTarget.dataset.tipoContenido; // Obtiene el tipo de contenido.
