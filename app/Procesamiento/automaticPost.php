@@ -23,38 +23,95 @@ add_action('procesar_audio1_cron_event', 'procesarAudios');
 */
 
 /*
-2024-10-19 02:36:06 - Cron de procesamiento de audios programado para cada 2 minutos.
-2024-10-19 02:36:07 - Iniciando procesamiento de audios en: /home/asley01/MEGA/Waw/X
-2024-10-19 02:36:07 - Cantidad de audios a procesar: 1
-2024-10-19 02:36:07 - Iniciando procesamiento de audio: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav
-2024-10-19 02:36:07 - Archivo de audio encontrado: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav
-2024-10-19 02:36:07 - URL del archivo de audio: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav
-2024-10-19 02:36:07 - Hash guardado exitosamente para: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav con ID: 8240
-2024-10-19 02:36:07 - --Inicio de la función autProcesarAudio.--
-2024-10-19 02:36:07 - Ruta inicial: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav, Directorio: /home/asley01/MEGA/Waw/X/♥️ 808, Basename: Cymatics - Oracle 808 27 - F#, Extensión: wav
-2024-10-19 02:36:07 - File ID obtenido: 8240
-2024-10-19 02:36:07 - Comando para eliminar metadatos: /usr/bin/ffmpeg -i '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav' -map_metadata -1 -c copy '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#_temp.wav' -y
-2024-10-19 02:36:07 - Metadatos eliminados del archivo: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav
-2024-10-19 02:36:07 - Comando para crear versión lite: /usr/bin/ffmpeg -i '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav' -b:a 128k '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#_lite.mp3' -y
-2024-10-19 02:36:07 - Versión lite creada: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#_lite.mp3
-2024-10-19 02:36:09 - Nombre limpio generado: Vintage Synth Pad
-2024-10-19 02:36:09 - Archivo original renombrado: /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav
-2024-10-19 02:36:09 - Archivo lite renombrado: /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad_lite.mp3
-2024-10-19 02:36:09 - Archivo lite movido al directorio de uploads: /var/www/wordpress/wp-content/uploads/audio/Vintage Synth Pad_lite.mp3
-2024-10-19 02:36:09 - Inicio de actualizarUrlArchivo para File ID: 8240 con nueva URL: /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav
-2024-10-19 02:36:09 - URL actualizada correctamente para File ID: 8240
-2024-10-19 02:36:09 - Ruta actualizada correctamente para File ID: 8240 a /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav
-2024-10-19 02:36:09 - Enviando rutas a crearAutPost: Original - /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav, Lite - /var/www/wordpress/wp-content/uploads/audio/Vintage Synth Pad_lite.mp3
-2024-10-19 02:36:13 - ID de usuario recibido: 1
-2024-10-19 02:36:13 - Estado del usuario 1 actualizado a 'conectado'.
-2024-10-19 02:36:14 - Archivos enviados a crearAutPost.
-2024-10-19 02:36:14 - --Fin de la función autProcesarAudio.--
-A este punto el audio se proceso y se publico correctamente, pero porque parece aqui vuelve a iniciar y da error, y claro, al final el error no parece afectar en algo pero me intriga saber porque regresa e intenta buscar Cymatics - Oracle 808 27 - F#.wav cuando claramente ya no existe porque fue renombrado y procesado
-2024-10-19 02:36:14 - Procesamiento iniciado para: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav
-2024-10-19 02:36:14 - Error al procesar el audio: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav
+2024-10-19 03:13:04 - [procesarAudios] Iniciando procesamiento de audios en: /home/asley01/MEGA/Waw/X
+2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3
+2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3
+2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 9f80f5a5c4a05875402eb0689b7e0e9855121eb397899cd6af86f3a9400d2b46
+2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
+2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3
+2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/80s Synth Loop_lite.mp3_resultados.json
+2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi_lite.mp3_resultados.json
+2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Retro_lite.mp3_resultados.json
+2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick 808.wav
+2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick 808.wav
+2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 9d6e4f57fc32a52c6cc0d087c35dbca4d587e86ac13f75ea042495b6240a2113
+2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
+2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick 808.wav
+2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Sample Glitch.mp3
+2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Sample Glitch.mp3
+2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 85d4d61e081d7b6e7e3ebcfe93e14d5c2a1e5016f39d05df845b312b75218425
+2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
+2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Sample Glitch.mp3
+2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Glitch Bass_lite.mp3_resultados.json
+2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi.wav
+2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi.wav
+2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 6c6db452c79450372d48e37f6515f0353dd6f65833f5a6b9208e38433bacb9a4
+2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
+2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi.wav
+2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/80s Synth Pad_lite.mp3_resultados.json
+2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Vintage Dub.mp3
+2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Vintage Dub.mp3
+2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 650a9b52752641125f73a463178ffa294af9a1e7410a67e46c697d32219d4b3e
+2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
+2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Vintage Dub.mp3
+2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick 808_lite.mp3_resultados.json
+2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorted Kick_lite.mp3_resultados.json
+2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Pulsos Vintage_lite.mp3_resultados.json
+2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick 808_lite.mp3
+2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick 808_lite.mp3
+2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: cfefcc84f8a3eb198542bff68adf6a608cf0be1508ad552741fb659f7d5936be
+2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
+2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick 808_lite.mp3
+2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Pulsos Vintage.mp3
+2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Pulsos Vintage.mp3
+2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 08dfdb9b2c3d31d5a30da35d15e305d0de48f7c504c39989f41a4ac1b86be10a
+2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
+2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Pulsos Vintage.mp3
+2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorted Kick.mp3
+2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorted Kick.mp3
+2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: fbe4b2deffb6499a829a33d52b43c365db9d907370cd12df113822de1552b599
+2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
+2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorted Kick.mp3
+2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Glitch Bass.mp3
+2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Glitch Bass.mp3
+2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 0dfa7a89b282a80e03cf614e9bc9c3e5165f91c806f957e8b8e96d147f4d3b85
+2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
+2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Glitch Bass.mp3
+2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
+2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
+2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 939fa9ec5f0cf8ca5888ff833a9ec34d991d8cd24266c3289f491318ffcadf28
+2024-10-19 03:13:04 - [debeProcesarse] El archivo y hash son válidos para el procesamiento.
+2024-10-19 03:13:04 - [buscarAudios] Audio válido encontrado: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav con hash: 939fa9ec5f0cf8ca5888ff833a9ec34d991d8cd24266c3289f491318ffcadf28
+2024-10-19 03:13:04 - [buscarAudios] Total de audios encontrados para procesar: 1
+2024-10-19 03:13:04 - [procesarAudios] Cantidad de audios a procesar: 1
+2024-10-19 03:13:04 - [procesarAudios] Iniciando procesamiento de audio: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
+2024-10-19 03:13:04 - [autRevisarAudio] Archivo de audio encontrado: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
+2024-10-19 03:13:04 - [autRevisarAudio] URL del archivo de audio generado: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
+2024-10-19 03:13:04 - [autRevisarAudio] ID del usuario que sube el archivo: 44
+2024-10-19 03:13:04 - [autRevisarAudio] Hash guardado exitosamente para: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav con ID de hash: 8241
+2024-10-19 03:13:04 - [autRevisarAudio] Iniciando procesamiento del audio: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
+2024-10-19 03:13:04 - --Inicio de la función autProcesarAudio.--
+2024-10-19 03:13:04 - Ruta inicial: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav, Directorio: /home/asley01/MEGA/Waw/X/♥️ 808, Basename: freddie-dredd-type-bass_130bpm_C_major, Extensión: wav
+2024-10-19 03:13:04 - File ID obtenido: 8241
+2024-10-19 03:13:04 - Comando para eliminar metadatos: /usr/bin/ffmpeg -i '/home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav' -map_metadata -1 -c copy '/home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major_temp.wav' -y
+2024-10-19 03:13:04 - Metadatos eliminados del archivo: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
+2024-10-19 03:13:04 - Comando para crear versión lite: /usr/bin/ffmpeg -i '/home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav' -b:a 128k '/home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major_lite.mp3' -y
+2024-10-19 03:13:04 - Versión lite creada: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major_lite.mp32024-10-19 03:13:06 - Nombre limpio generado: Glitch Snare
+2024-10-19 03:13:06 - Archivo original renombrado: /home/asley01/MEGA/Waw/X/♥️ 808/Glitch Snare.wav
+2024-10-19 03:13:06 - Archivo lite renombrado: /home/asley01/MEGA/Waw/X/♥️ 808/Glitch Snare_lite.mp3
+2024-10-19 03:13:06 - Archivo lite movido al directorio de uploads: /var/www/wordpress/wp-content/uploads/audio/Glitch Snare_lite.mp3
+2024-10-19 03:13:06 - Inicio de actualizarUrlArchivo para File ID: 8241 con nueva URL: /home/asley01/MEGA/Waw/X/♥️ 808/Glitch Snare.wav
+2024-10-19 03:13:06 - URL actualizada correctamente para File ID: 8241
+2024-10-19 03:13:06 - Ruta actualizada correctamente para File ID: 8241 a /home/asley01/MEGA/Waw/X/♥️ 808/Glitch Snare.wav2024-10-19 03:13:06 - Enviando rutas a crearAutPost: Original - /home/asley01/MEGA/Waw/X/♥️ 808/Glitch Snare.wav, Lite - /var/www/wordpress/wp-content/uploads/audio/Glitch Snare_lite.mp3
+2024-10-19 03:13:12 - Archivos enviados a crearAutPost.
+2024-10-19 03:13:12 - --Fin de la función autProcesarAudio.--
+2024-10-19 03:13:12 - [autRevisarAudio] Procesamiento completado exitosamente para: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
+2024-10-19 03:13:12 - [procesarAudios] Error al procesar el audio: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
 
 */
 
+// ETAPA 1 - BUSCAR AUDIO 
+//////////////////////////////////////////////////////////////////////////////
 
 function procesarAudios() {
     $func_name = __FUNCTION__; // Nombre de la función para los logs
@@ -77,15 +134,9 @@ function procesarAudios() {
         // Procesar solo el primer audio válido
         $audio_info = $audios_para_procesar[0];
         guardarLog("[$func_name] Iniciando procesamiento de audio: {$audio_info['ruta']}");
-
         // Procesar el audio
-        $procesado = autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
+        autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
 
-        if ($procesado) {
-            guardarLog("[$func_name] Procesado correctamente el audio: {$audio_info['ruta']}");
-        } else {
-            guardarLog("[$func_name] Error al procesar el audio: {$audio_info['ruta']}");
-        }
     } else {
         guardarLog("[$func_name] No se encontraron audios para procesar en: {$directorio_audios}");
     }
@@ -165,55 +216,73 @@ function buscarAudios($directorio) {
     return $audios_para_procesar;
 }
 
+
 function debeProcesarse($ruta_archivo, $file_hash) {
     $func_name = __FUNCTION__; // Nombre de la función para los logs
+    $resumen_logs = []; // Arreglo para acumular los mensajes del log
     
     try {
         // Verificación de existencia del archivo
         if (!file_exists($ruta_archivo)) {
-            guardarLog("[$func_name] Error: El archivo no existe: {$ruta_archivo}");
+            $resumen_logs[] = "Error: El archivo no existe: {$ruta_archivo}";
             error_log("[$func_name] Error: El archivo no existe: {$ruta_archivo}");
+            guardarLogResumen($func_name, $resumen_logs); // Guardar resumen
             return false;
         }
-        guardarLog("[$func_name] Archivo encontrado: {$ruta_archivo}");
+        $resumen_logs[] = "Archivo encontrado: {$ruta_archivo}";
         
-        // Obtener URL del adjunto por la ruta del archivo
-        $attachment_url = wp_get_attachment_url_by_path($ruta_archivo);
-        if ($attachment_url) {
-            guardarLog("[$func_name] URL del adjunto generado: {$attachment_url}");
-            
-            // Buscar si ya existe el adjunto en WordPress
-            $existing_attachment = attachment_url_to_postid($attachment_url);
-            if ($existing_attachment) {
-                guardarLog("[$func_name] El adjunto ya existe en WordPress con ID: {$existing_attachment}");
-                return false;
-            }
-        } else {
-            guardarLog("[$func_name] No se pudo generar la URL del adjunto para: {$ruta_archivo}");
-        }
-
         // Verificar si existe el hash
         if (!$file_hash) {
-            guardarLog("[$func_name] Error: Hash inexistente para el archivo: {$ruta_archivo}");
+            $resumen_logs[] = "Error: Hash inexistente para el archivo: {$ruta_archivo}";
             error_log("[$func_name] Error: Hash inexistente para el archivo: {$ruta_archivo}");
+            guardarLogResumen($func_name, $resumen_logs); // Guardar resumen
             return false;
         }
-        guardarLog("[$func_name] Hash recibido: {$file_hash}");
+        $resumen_logs[] = "Hash recibido: {$file_hash}";
 
         $hash_exists = obtenerHash($file_hash);
         if ($hash_exists) {
-            guardarLog("[$func_name] El hash ya existe en la base de datos.");
-            return false;
+            $resumen_logs[] = "El hash ya existe en la base de datos.";
+
+            // Verificar si el archivo ya ha sido cargado
+            if (verificarCargaArchivoPorHash($file_hash)) {
+                $resumen_logs[] = "El archivo con hash {$file_hash} ya ha sido cargado, no es necesario procesarlo.";
+                guardarLogResumen($func_name, $resumen_logs); // Guardar resumen
+                return false; // Detener el procesamiento
+            }
+            $resumen_logs[] = "El archivo no ha sido cargado correctamente, continuar con el procesamiento.";
         }
 
-        guardarLog("[$func_name] El archivo y hash son válidos para el procesamiento.");
+        $resumen_logs[] = "El archivo y hash son válidos para el procesamiento.";
+        guardarLogResumen($func_name, $resumen_logs); // Guardar resumen
         return true;
     } catch (Exception $e) {
-        guardarLog("[$func_name] Excepción capturada: " . $e->getMessage());
+        $resumen_logs[] = "Excepción capturada: " . $e->getMessage();
         error_log("[$func_name] Excepción capturada: " . $e->getMessage());
+        guardarLogResumen($func_name, $resumen_logs); // Guardar resumen
         return false;
     }
 }
+
+
+function wp_get_attachment_url_by_path($file_path) {
+    global $wpdb;
+    $sql = $wpdb->prepare("
+        SELECT guid FROM $wpdb->posts 
+        WHERE guid LIKE %s 
+        AND post_type = 'attachment'
+    ", '%' . ltrim($file_path, '/'));
+    
+    return $wpdb->get_var($sql);
+}
+
+
+
+function guardarLogResumen($func_name, $resumen_logs) {
+    $resumen = implode("; ", $resumen_logs);
+    guardarLog("[$func_name] Resumen: " . $resumen);
+}
+
 
 
 function autRevisarAudio($audio, $file_hash) {
@@ -257,42 +326,8 @@ function autRevisarAudio($audio, $file_hash) {
     }
 }
 
-
-function wp_get_attachment_url_by_path($file_path) {
-    global $wpdb;
-    $sql = $wpdb->prepare("
-        SELECT guid FROM $wpdb->posts 
-        WHERE guid LIKE %s 
-        AND post_type = 'attachment'
-    ", '%' . ltrim($file_path, '/'));
-    
-    return $wpdb->get_var($sql);
-}
-
-
-/*
-
-2024-10-19 02:36:07 - --Inicio de la función autProcesarAudio.--
-2024-10-19 02:36:07 - Ruta inicial: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav, Directorio: /home/asley01/MEGA/Waw/X/♥️ 808, Basename: Cymatics - Oracle 808 27 - F#, Extensión: wav
-2024-10-19 02:36:07 - File ID obtenido: 8240
-2024-10-19 02:36:07 - Comando para eliminar metadatos: /usr/bin/ffmpeg -i '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav' -map_metadata -1 -c copy '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#_temp.wav' -y
-2024-10-19 02:36:07 - Metadatos eliminados del archivo: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav
-2024-10-19 02:36:07 - Comando para crear versión lite: /usr/bin/ffmpeg -i '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav' -b:a 128k '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#_lite.mp3' -y
-2024-10-19 02:36:07 - Versión lite creada: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#_lite.mp3
-2024-10-19 02:36:09 - Nombre limpio generado: Vintage Synth Pad
-2024-10-19 02:36:09 - Archivo original renombrado: /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav
-2024-10-19 02:36:09 - Archivo lite renombrado: /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad_lite.mp3
-2024-10-19 02:36:09 - Archivo lite movido al directorio de uploads: /var/www/wordpress/wp-content/uploads/audio/Vintage Synth Pad_lite.mp3
-2024-10-19 02:36:09 - Inicio de actualizarUrlArchivo para File ID: 8240 con nueva URL: /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav
-2024-10-19 02:36:09 - URL actualizada correctamente para File ID: 8240
-2024-10-19 02:36:09 - Ruta actualizada correctamente para File ID: 8240 a /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav
-2024-10-19 02:36:09 - Enviando rutas a crearAutPost: Original - /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav, Lite - /var/www/wordpress/wp-content/uploads/audio/Vintage Synth Pad_lite.mp3
-2024-10-19 02:36:13 - ID de usuario recibido: 1
-2024-10-19 02:36:13 - Estado del usuario 1 actualizado a 'conectado'.
-2024-10-19 02:36:14 - Archivos enviados a crearAutPost.
-2024-10-19 02:36:14 - --Fin de la función autProcesarAudio.--
-
-*/
+// ETAPA 2 - PROCESAR EL AUDIO ENCONTRADO
+//////////////////////////////////////////////////////////////////////////////
 
 function autProcesarAudio($audio_path) {
     guardarLog("--Inicio de la función autProcesarAudio.--");
@@ -410,22 +445,10 @@ function autProcesarAudio($audio_path) {
     }
     guardarLog("Archivo lite movido al directorio de uploads: $target_path_lite");
 
-    // 7. Actualizar la ruta del archivo original en la base de datos
-    if ($file_id !== false) {
-        $new_file_url = "$directory/$nombre_limpio.$extension"; // Verificar que sea la ruta correcta
 
-        // Actualizar la ruta en la base de datos
-        $actualizacion_exitosa = actualizarUrlArchivo($file_id, $new_file_url);
-        if ($actualizacion_exitosa) {
-            guardarLog("Ruta actualizada correctamente para File ID: $file_id a $new_file_url");
-        } else {
-            guardarLog("Error al actualizar ruta para File ID: $file_id");
-        }
-    }
-
-    // 8. Enviar rutas a crearAutPost
+    // 7. Enviar rutas a crearAutPost
     guardarLog("Enviando rutas a crearAutPost: Original - $nuevo_nombre_original, Lite - $target_path_lite");
-    crearAutPost($nuevo_nombre_original, $target_path_lite);
+    crearAutPost($nuevo_nombre_original, $target_path_lite, $file_id);
     guardarLog("Archivos enviados a crearAutPost.");
 
     guardarLog("--Fin de la función autProcesarAudio.--");
@@ -456,7 +479,7 @@ function generarNombreAudio($audio_path_lite)
     }
 }
 
-function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite) {
+function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id) {
 
     $autor_id = 44;
     $prompt = "Genera una descripción corta para el siguiente archivo de audio. Puede ser un sample, un fx, un loop, un sonido de un kick, puede ser cualquier cosa, el propósito es que la descripción sea corta (solo responde con la descripción, no digas nada adicional); te doy ejemplos: Sample oscuro phonk, Fx de explosión, kick de house, sonido de sintetizador, piano melodía, guitarra acústica sample.";
@@ -485,7 +508,7 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite) {
 
     analizarYGuardarMetasAudio($post_id, $nuevo_nombre_lite, $index);
 
-    $audio_original_id = adjuntarArchivoAut($nuevo_nombre_original, $post_id);
+    $audio_original_id = adjuntarArchivoAut($nuevo_nombre_original, $post_id, $file_id);
     if (is_wp_error($audio_original_id)) {
         wp_delete_post($post_id, true);
         return $audio_original_id;
@@ -504,21 +527,7 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite) {
     return $post_id;
 }
 
-
-/**
- * Adjunta un archivo a un post de WordPress.
- *
- * Esta función soporta:
- * - Rutas absolutas de archivos en el servidor.
- * - URLs externas.
- * - Rutas dentro del directorio de uploads de WordPress.
- *
- * @param string $archivo Ruta o URL del archivo a adjuntar.
- * @param int    $post_id ID del post al que se adjuntará el archivo.
- *
- * @return int|WP_Error ID de adjunto en caso de éxito, WP_Error en caso de fallo.
- */
-function adjuntarArchivoAut($archivo, $post_id) {
+function adjuntarArchivoAut($archivo, $post_id, $file_id = null) {
     
     // Variables para manejo de archivos temporales
     $es_url = filter_var($archivo, FILTER_VALIDATE_URL);
@@ -627,6 +636,28 @@ function adjuntarArchivoAut($archivo, $post_id) {
     require_once(ABSPATH . 'wp-admin/includes/image.php');
     $attach_data = wp_generate_attachment_metadata($attach_id, $destino);
     wp_update_attachment_metadata($attach_id, $attach_data);
+    
+    // Obtener la URL del adjunto
+    $adjunto_url = wp_get_attachment_url($attach_id);
+    
+    // Si se proporcionó un file_id, actualizar la URL usando actualizarUrlArchivo
+    if ( ! is_null($file_id) ) {
+        // Asegúrate de que la función actualizarUrlArchivo esté definida
+        if ( function_exists( 'actualizarUrlArchivo' ) ) {
+            $resultado_actualizacion = actualizarUrlArchivo( $file_id, $adjunto_url );
+            
+            // Verificar si la actualización fue exitosa
+            if ( is_wp_error( $resultado_actualizacion ) ) {
+
+                wp_delete_attachment( $attach_id, true );
+                return new WP_Error( 'actualizacion_url_fallida', 'No se pudo actualizar la URL del archivo: ' . $resultado_actualizacion->get_error_message() );
+            }
+        } else {
+            // Manejar el caso donde actualizarUrlArchivo no está definida
+            wp_delete_attachment( $attach_id, true );
+            return new WP_Error( 'funcion_no_definida', 'La función actualizarUrlArchivo no está definida.' );
+        }
+    }
     
     // Eliminar el archivo temporal si existe
     if ($es_url && file_exists($archivo_temp)) {
