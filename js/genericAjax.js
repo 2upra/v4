@@ -179,7 +179,10 @@ async function bloqueos() {
 }
 
 async function editarPost() {
+    // Añadir el modal si aún no está añadido
     modalManager.añadirModal('editarPost', '#editarPost', ['.editarPost']);
+    
+    // Seleccionar todos los botones de editar
     const editButtons = document.querySelectorAll('.editarPost');
     
     if (editButtons.length === 0) {
@@ -194,7 +197,41 @@ async function editarPost() {
         });
     });
 
-    // Función para abrir el modal de edición y rellenarlo con el contenido del post
+    // Obtener el botón de enviar una vez
+    const enviarEditBtn = document.getElementById('enviarEdit');
+    if (enviarEditBtn) {
+        // Remover cualquier event listener previo para evitar duplicados
+        enviarEditBtn.replaceWith(enviarEditBtn.cloneNode(true));
+        const newEnviarEditBtn = document.getElementById('enviarEdit');
+        
+        // Añadir el event listener una sola vez
+        newEnviarEditBtn.addEventListener('click', function () {
+            const postId = this.dataset.postId;
+            if (!postId) return;
+
+            // Confirmación de la acción
+            if (!confirm('¿Estás seguro de que quieres editar este post?')) {
+                return;
+            }
+
+            // Obtener el contenido editado
+            const mensajeEditTextarea = document.getElementById('mensajeEdit');
+            const nuevoContenido = mensajeEditTextarea ? mensajeEditTextarea.value.trim() : '';
+
+            // Actualizar el contenido en el DOM
+            const postContentDiv = document.querySelector(`.thePostContet[data-post-id="${postId}"]`);
+            if (postContentDiv) {
+                postContentDiv.innerHTML = nuevoContenido; // Asegúrate de sanitizar si es necesario
+            }
+
+            alert('Post editado correctamente');
+
+            // Cerrar el modal
+            modalManager.toggleModal('editarPost', false);
+        });
+    }
+
+    // Función para abrir el modal y rellenarlo con el contenido del post
     function abrirModalEditarPost(idContenido) {
         modalManager.toggleModal('editarPost', true);
 
@@ -202,37 +239,23 @@ async function editarPost() {
         const postContentDiv = document.querySelector(`.thePostContet[data-post-id="${idContenido}"]`);
         let postContent = postContentDiv ? postContentDiv.innerHTML.trim() : '';
 
-        // Eliminar etiquetas <p> y otras etiquetas innecesarias, manteniendo solo el texto
+        // Eliminar etiquetas HTML, manteniendo solo el texto
         postContent = postContent.replace(/<[^>]+>/g, ''); // Elimina todas las etiquetas HTML
 
-        // Insertar el contenido limpio del post en el textarea del modal
+        // Insertar el contenido limpio en el textarea del modal
         const mensajeEditTextarea = document.getElementById('mensajeEdit');
         if (mensajeEditTextarea) {
             mensajeEditTextarea.value = postContent;
         }
 
-        // Agregar el ID del post al botón de enviar
-        const enviarEditBtn = document.getElementById('enviarEdit');
+        // Asignar el ID del post al botón de enviar
         if (enviarEditBtn) {
             enviarEditBtn.dataset.postId = idContenido;
         }
-
-        // Remover eventos previos antes de añadir un nuevo evento
-        enviarEditBtn.replaceWith(enviarEditBtn.cloneNode(true)); 
-        const newEnviarEditBtn = document.getElementById('enviarEdit');
-        
-        // Volver a agregar el evento click al nuevo botón clonado
-        accionClick('#enviarEdit', 'cambiarDescripcion', '¿Estás seguro de que quieres editar este post?', (statusElement, data) => {
-            alert('Post editado correctamente');
-            if (postContentDiv) {
-                // Actualizar el contenido del post sin etiquetas <p>
-                postContentDiv.innerHTML = mensajeEditTextarea.value;
-            }
-
-            modalManager.toggleModal('editarPost', false);
-        });
     }
 }
+
+
 
 async function requestDeletion() {
     await accionClick(
