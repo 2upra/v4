@@ -387,6 +387,12 @@ function autProcesarAudio($audio_path) {
     guardarLog("--Fin de la función autProcesarAudio.--");
 }
 
+/*
+
+Error: Respuesta inesperada de la API. Detalles: {«candidates»:[{«finishReason»:»SAFETY»,»index»:0,»safetyRatings»:[{«category»:»HARM_CATEGORY_SEXUALLY_EXPLICIT»,»probability»:»NEGLIGIBLE»},{«category»:»HARM_CATEGORY_HATE_SPEECH»,»probability»:»NEGLIGIBLE»},{«category»:»HARM_CATEGORY_HARASSMENT»,»probability»:»NEGLIGIBLE»},{«category»:»HARM_CATEGORY_DANGEROUS_CONTENT»,»probability»:»MEDIUM»}]}],»usageMetadata»:{«promptTokenCount»:151,»totalTokenCount»:151}}
+
+*/
+
 function generarNombreAudio($audio_path_lite)
 {
     // Verificar que el archivo de audio exista
@@ -395,7 +401,13 @@ function generarNombreAudio($audio_path_lite)
         return null;
     }
 
-    $prompt = "Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, si es un kick, un snare, un sample vintage, fx, cosas así. Simplemente genera un nombre corto de audio (no agregues más información adicional ni comentes nada adicional, solo entrega un nombre corto de audio), te dare unos ejemplos, lo esencial es por ejemplo identificar el instrumento dominante, o si es un sample poner, sample melancolico, identificar cosas clave como una emocion dominante, un instrumento, un sonido, una vibra, etc.";
+    // Obtener el nombre del archivo a partir de la ruta
+    $nombre_archivo = pathinfo($audio_path_lite, PATHINFO_FILENAME);
+
+    // Prompt para la IA con el nombre del archivo incluido
+    $prompt = "El archivo se llama '{$nombre_archivo}' te lo enseño para lo tomes en cuenta, a veces tendra sentido el nombre a veces no, pero es importante tenerlo en cuenta, a veces vienen con nombres de marcas, paginas, etc, hay que ignorar eso. Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, como un kick, snare, sample vintage, o efectos (FX). Identifica el instrumento dominante o la emoción clave, por ejemplo, 'sample melancólico' o 'snare agresivo'. Entrega solo un nombre corto y descriptivo que represente el audio.";
+
+    // Generar el nombre usando la IA
     $nombre_generado = generarDescripcionIA($audio_path_lite, $prompt);
 
     // Verificar si se obtuvo una respuesta
@@ -403,7 +415,7 @@ function generarNombreAudio($audio_path_lite)
         // Limpiar la respuesta obtenida (eliminar espacios en blanco al inicio y al final)
         $nombre_generado_limpio = trim($nombre_generado);
         $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- ]/', '', $nombre_generado_limpio);
-        $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 50); // Limitar a 50 caracteres
+        $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 30); // Limitar a 50 caracteres
 
         return $nombre_generado_limpio;
     } else {
@@ -411,6 +423,7 @@ function generarNombreAudio($audio_path_lite)
         return null;
     }
 }
+
 
 function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id) {
 
