@@ -560,7 +560,7 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
 
     // Crear el prompt para el modelo Pro, incluyendo los tags manuales
     $prompt = "El usuario ya subió este audio, pero se necesita una descripción del audio mejorada. "
-        . "El post original dice: \"{$post_content}\". "
+        . "El post original dice (tienes que tener en cuenta que puede ser contenido incorrecto lo que dice, no es improtante lo que dice el post original porque puede contener una descripción incorrecta): \"{$post_content}\". "
         . "Además, el usuario ha agregado los siguientes tags: {$tags_usuario_formateados}. "
         . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON (ESTOS SON DATOS DE EJEMPLO): "
         . '{"Descripcion":{"es":"(aqui iría una descripcion tuya del audio muy detallada)", "en":"(aqui en ingles)"},'
