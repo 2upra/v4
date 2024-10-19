@@ -58,13 +58,13 @@ function botonseguir($author_id)
     $icono_boton = $es_seguido ? $GLOBALS['iconorestar'] : $GLOBALS['iconosumar'];
 
     ob_start();
-    ?>
+?>
     <button class="<?php echo esc_attr($clase_boton); ?>"
         data-seguidor-id="<?php echo esc_attr($current_user_id); ?>"
         data-seguido-id="<?php echo esc_attr($author_id); ?>">
         <?php echo $icono_boton; ?>
     </button>
-    <?php
+<?php
     return ob_get_clean();
 }
 
@@ -90,13 +90,13 @@ function botonSeguirPerfilBanner($author_id)
 
     // Generar el botón con el texto correspondiente
     ob_start();
-    ?>
+?>
     <button class="borde <?php echo esc_attr($clase_boton); ?>"
-            data-seguidor-id="<?php echo esc_attr($current_user_id); ?>"
-            data-seguido-id="<?php echo esc_attr($author_id); ?>">
+        data-seguidor-id="<?php echo esc_attr($current_user_id); ?>"
+        data-seguido-id="<?php echo esc_attr($author_id); ?>">
         <?php echo esc_html($texto_boton); ?>
     </button>
-    <?php
+<?php
     return ob_get_clean();
 }
 
@@ -161,7 +161,7 @@ function opcionesPost($post_id, $author_id)
                     <button class="permitirDescarga" data-post-id="<? echo $post_id; ?>">Permitir descarga</button>
                 <? endif; ?>
             <? else : ?>
-                <button class="reporte" data-post-id="<? echo $post_id; ?>" tipoContenido="social_post" >Reportar</button>
+                <button class="reporte" data-post-id="<? echo $post_id; ?>" tipoContenido="social_post">Reportar</button>
                 <button class="bloquear" data-post-id="<? echo $post_id; ?>">Bloquear</button>
             <? endif; ?>
         </div>
@@ -201,7 +201,7 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
     $ultimoEdit = get_post_meta($post_id, 'ultimoEdit', true);
 
     ob_start();
-    ?>
+?>
     <div class="SOVHBY">
         <div class="CBZNGK">
             <a href="<?php echo esc_url(get_author_posts_url($author_id)); ?>"></a>
@@ -223,10 +223,9 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
     </div>
 
     <?php if ($postAut == '1' && empty($ultimoEdit)) : ?>
+
         <div class="verificacionPost">
-            <div class="verificacionPost">
-                <?php echo $GLOBALS['stop']; ?>
-            </div>
+            <?php echo $GLOBALS['stop']; ?>
         </div>
     <?php endif; ?>
 
@@ -241,13 +240,13 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
             ?>
         </div>
     <?php endif; ?>
-    
+
     <div class="spin"></div>
-    
+
     <div class="YBZGPB">
         <?php echo opcionesPost($post_id, $author_id); ?>
     </div>
-    <?php
+<?php
     return ob_get_clean();
 }
 
@@ -337,16 +336,13 @@ function wave($audio_url, $audio_id_lite, $post_id)
         $urlAudioSegura = audioUrlSegura($audio_id_lite); // Usando la URL segura
     ?>
         <div id="waveform-<? echo $post_id; ?>"
-             class="waveform-container without-image"
-             postIDWave="<? echo $post_id; ?>"
-             data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
-             data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
+            class="waveform-container without-image"
+            postIDWave="<? echo $post_id; ?>"
+            data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
+            data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
             <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
             <div class="waveform-message"></div>
             <div class="waveform-loading" style="display: none;">Cargando...</div>
         </div>
-    <? endif;
+<? endif;
 }
-
-
-
