@@ -19,7 +19,48 @@ async function handleAllRequests() {
     }
 }
 
+//esta funcion se va a llamar muchas veces, cada vez que se hace scroll por ejemplo, son muchos post y todo esto maneja la logica de las acciones que se pueden realizar en un post, pero, no es lo suficientemente inteligente en el sentido, de que cada vez que se hace scroll, para los nuevos contenidos, la accion parece estar repetida 2 veces porque la la alerta de confirmacion apareces 2 veces, otro scroll, 3 veces, otro scroll 4 veces, y asi infinitamente, manten las funciones async
+async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
+    const buttons = document.querySelectorAll(selector); // Selecciona los botones.
 
+    buttons.forEach(button => {
+        // Verifica si el listener ya fue añadido
+        if (!button.dataset.listenerAdded) {
+            button.addEventListener('click', async event => { // Añade evento 'click'.
+                const post_id = event.currentTarget.dataset.postId || event.currentTarget.getAttribute('data-post-id'); // Obtiene el post_id.
+                const tipoContenido = event.currentTarget.dataset.tipoContenido; // Obtiene el tipo de contenido.
+
+                if (!post_id) { // Verifica si post_id existe.
+                    console.error('No se encontró post_id en el botón');
+                    return;
+                }
+
+                const confirmed = await confirm(confirmMessage); // Cuadro de confirmación.
+
+                if (confirmed) {
+                    const detalles = document.getElementById('mensajeError')?.value || ''; // Obtiene detalles (si aplica).
+                    const descripcion = document.getElementById('mensajeEdit')?.value || ''; // Obtiene descripción (si aplica).
+
+                    const data = await enviarAjax(action, { // Envía datos vía AJAX.
+                        post_id, 
+                        tipoContenido,
+                        detalles,
+                        descripcion
+                    });
+
+                    if (data.success) {
+                        successCallback(null, data, post_id); // Llama a callback en caso de éxito.
+                    } else {
+                        console.error(`Error: ${data.message}`); // Muestra error.
+                        alert('Error al enviar petición ' + (data.message || 'Error desconocido'));
+                    }
+                }
+            });
+            // Marca el botón para indicar que ya tiene un listener
+            button.dataset.listenerAdded = 'true';
+        }
+    });
+}
 
 //ejemplo de algunas acciones
 async function eliminarPost() {
@@ -137,10 +178,6 @@ async function bloqueos() {
     accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
 }
 
-/*
-Mis alertas son personalizadas, la primera vez que intento modificar un post funciona bien, aparece una alerta, pero si modifico otro post, aparecen 2 alertas, y se repite asi sucesivamente, tengo que reiniciar la pagina para que se restaure
-*/
-
 async function editarPost() {
     modalManager.añadirModal('editarPost', '#editarPost', ['.editarPost']);
     const editButtons = document.querySelectorAll('.editarPost');
@@ -178,11 +215,13 @@ async function editarPost() {
         const enviarEditBtn = document.getElementById('enviarEdit');
         if (enviarEditBtn) {
             enviarEditBtn.dataset.postId = idContenido;
-            // No resetear listenerAdded
-            // enviarEditBtn.dataset.listenerAdded = 'false';
         }
 
-        // Añadir el evento click solo una vez
+        // Remover eventos previos antes de añadir un nuevo evento
+        enviarEditBtn.replaceWith(enviarEditBtn.cloneNode(true)); 
+        const newEnviarEditBtn = document.getElementById('enviarEdit');
+        
+        // Volver a agregar el evento click al nuevo botón clonado
         accionClick('#enviarEdit', 'cambiarDescripcion', '¿Estás seguro de que quieres editar este post?', (statusElement, data) => {
             alert('Post editado correctamente');
             if (postContentDiv) {
@@ -193,49 +232,6 @@ async function editarPost() {
             modalManager.toggleModal('editarPost', false);
         });
     }
-}
-
-// Función genérica para manejar clicks y acciones
-async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
-    const buttons = document.querySelectorAll(selector); // Selecciona los botones.
-
-    buttons.forEach(button => {
-        // Verifica si el listener ya fue añadido
-        if (button.dataset.listenerAdded !== 'true') {
-            button.addEventListener('click', async event => { // Añade evento 'click'.
-                const post_id = event.currentTarget.dataset.postId || event.currentTarget.getAttribute('data-post-id'); // Obtiene el post_id.
-                const tipoContenido = event.currentTarget.dataset.tipoContenido; // Obtiene el tipo de contenido.
-
-                if (!post_id) { // Verifica si post_id existe.
-                    console.error('No se encontró post_id en el botón');
-                    return;
-                }
-
-                const confirmed = await confirm(confirmMessage); // Cuadro de confirmación.
-
-                if (confirmed) {
-                    const detalles = document.getElementById('mensajeError')?.value || ''; // Obtiene detalles (si aplica).
-                    const descripcion = document.getElementById('mensajeEdit')?.value || ''; // Obtiene descripción (si aplica).
-
-                    const data = await enviarAjax(action, { // Envía datos vía AJAX.
-                        post_id, 
-                        tipoContenido,
-                        detalles,
-                        descripcion
-                    });
-
-                    if (data.success) {
-                        successCallback(null, data, post_id); // Llama a callback en caso de éxito.
-                    } else {
-                        console.error(`Error: ${data.message}`); // Muestra error.
-                        alert('Error al enviar petición ' + (data.message || 'Error desconocido'));
-                    }
-                }
-            });
-            // Marca el botón para indicar que ya tiene un listener
-            button.dataset.listenerAdded = 'true';
-        }
-    });
 }
 
 async function requestDeletion() {
