@@ -531,6 +531,135 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     iaLog("Metadatos de 'datosAlgoritmo' actualizados para el post ID: {$post_id}");
 }
 
+function rehacerDescripcionAudio($post_id, $archivo_audio)
+{
+    iaLog("Iniciando mejora de descripción para el post ID: {$post_id}");
+    $post_content = get_post_field('post_content', $post_id);
+    if (!$post_content) {
+        iaLog("No se pudo obtener el contenido del post ID: {$post_id}");
+        return;
+    }
+    iaLog("Contenido del post obtenido para el post ID: {$post_id}");
+
+    // Obtener los tags manuales del usuario desde la meta 'tagsUsuario'
+    $tags_usuario_str = get_post_meta($post_id, 'tagsUsuario', true);
+    if (!$tags_usuario_str) {
+        iaLog("No se encontraron tagsUsuario para el post ID: {$post_id}");
+        $tags_usuario = [];
+    } else {
+        $tags_usuario = array_map('trim', explode(',', $tags_usuario_str));
+        $tags_usuario = array_filter($tags_usuario); // Eliminar posibles elementos vacíos
+        iaLog("TagsUsuario obtenidos y procesados para el post ID: {$post_id}");
+    }
+    // Convertir el array de tags en una cadena separada por comas para incluir en el prompt
+    $tags_usuario_formateados = implode(', ', $tags_usuario);
+    iaLog("TagsUsuario formateados: {$tags_usuario_formateados}");
+
+    $prompt = "El usuario ya subió este audio, pero acaba de editar la descripción, y hacer que rehacer los tags en base a su nueva descripción . "
+        . "Este fue la descripción que realizo, tomala en cuenta para generar la siguiente informacion: \"{$post_content}\". "
+        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON (ESTOS SON DATOS DE EJEMPLO): "
+        . '{"Descripcion":{"es":"(aqui iría una descripcion tuya del audio muy detallada)", "en":"(aqui en ingles)"},'
+        . '"Instrumentos posibles":{"es":["Piano", "Guitarra"], "en":["Piano", "Guitar"]},'
+        . '"Estado de animo":{"es":["Tranquilo"], "en":["Calm"]},'
+        . '"Genero posible":{"es":["Hip hop"], "en":["Hip hop"]},'
+        . '"Artista posible":{"es":["Freddie Dredd, Flume"], "en":["Freddie Dredd, Flume"]},'
+        . '"Tipo de audio":{"es":["aqui necesito que puedas determinar si es un sample, un loop o un one shot"], "en":["Sample"]},'
+        . '"Tags posibles":{"es":["Naturaleza, phonk, memphis, oscuro"], "en":["Nature"]},'
+        . '"Sugerencia de busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
+        . " Nota adicional: solo responde con la estructura, intenta ser muy detallista y preciso con los datos, no digas nada adicional al usuario. Algo importante a tener en cuenta es que debe determinarse bien si es un loop, o un one shot, o sea, los sonidos o golpes de sonidos, suenan una sola vez, y los loop es una secuencia de sonido, tu me entiendes, esa informacion va en tipo de audio, en los tags posible, preferiblemente tags de una sola palabra, no frases."
+        . "La descripción tiene que ser corta y breve, agreg datos en español y también en inglés, agrega muchas sugerencias de busqueda para optimizar el SEO.";
+
+    $descripcion_mejorada = generarDescripcionIA($archivo_audio, $prompt);
+
+    if ($descripcion_mejorada) {
+        iaLog("Descripción mejorada generada correctamente para el post ID: {$post_id}");
+        // Limpiar y procesar la nueva descripción generada
+        $descripcion_procesada = json_decode(trim($descripcion_mejorada, "```json \n"), true);
+
+        if ($descripcion_procesada) {
+            iaLog("Descripción JSON procesada correctamente para el post ID: {$post_id}");
+
+            // Obtener el metadato 'datosAlgoritmo' existente
+            $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
+            if ($datos_algoritmo) {
+                $datos_algoritmo = json_decode($datos_algoritmo, true);
+                iaLog("DatosAlgoritmo existentes obtenidos para el post ID: {$post_id}");
+            } else {
+                $datos_algoritmo = [];
+                iaLog("No se encontraron datosAlgoritmo existentes para el post ID: {$post_id}");
+            }
+
+            // Preservar los datos esenciales
+            $datos_preservados = [
+                'tags' => $datos_algoritmo['tags'] ?? [],
+                'bpm' => $datos_algoritmo['bpm'] ?? null,
+                'key' => $datos_algoritmo['key'] ?? null,
+                'scale' => $datos_algoritmo['scale'] ?? null,
+                'autor' => $datos_algoritmo['autor'] ?? []
+            ];
+            iaLog("Datos preservados para el post ID: {$post_id}");
+
+            // Agregar la nueva descripción IA mejorada con traducciones
+            $nuevos_datos = [
+                'descripcion_ia_pro' => [
+                    'es' => $descripcion_procesada['Descripcion']['es'] ?? '',
+                    'en' => $descripcion_procesada['Descripcion']['en'] ?? ''
+                ],
+                'instrumentos_posibles' => [
+                    'es' => $descripcion_procesada['Instrumentos posibles']['es'] ?? [],
+                    'en' => $descripcion_procesada['Instrumentos posibles']['en'] ?? []
+                ],
+                'estado_animo' => [
+                    'es' => $descripcion_procesada['Estado de animo']['es'] ?? [],
+                    'en' => $descripcion_procesada['Estado de animo']['en'] ?? []
+                ],
+                'artista_posible' => [
+                    'es' => $descripcion_procesada['Artista posible']['es'] ?? [],
+                    'en' => $descripcion_procesada['Artista posible']['en'] ?? []
+                ],
+                'genero_posible' => [
+                    'es' => $descripcion_procesada['Genero posible']['es'] ?? [],
+                    'en' => $descripcion_procesada['Genero posible']['en'] ?? []
+                ],
+                'tipo_audio' => [
+                    'es' => $descripcion_procesada['Tipo de audio']['es'] ?? [],
+                    'en' => $descripcion_procesada['Tipo de audio']['en'] ?? []
+                ],
+                'tags_posibles' => [
+                    'es' => $descripcion_procesada['Tags posibles']['es'] ?? [],
+                    'en' => $descripcion_procesada['Tags posibles']['en'] ?? []
+                ],
+                'sugerencia_busqueda' => [
+                    'es' => $descripcion_procesada['Sugerencia de busqueda']['es'] ?? [],
+                    'en' => $descripcion_procesada['Sugerencia de busqueda']['en'] ?? []
+                ]
+            ];
+            iaLog("Nuevos datos generados para el post ID: {$post_id}");
+
+            // Combinar los datos preservados con los nuevos
+            $datos_actualizados = array_merge($datos_preservados, $nuevos_datos);
+            
+            // Guardar los metadatos actualizados
+            update_post_meta($post_id, 'datosAlgoritmo', json_encode($datos_actualizados, JSON_UNESCAPED_UNICODE));
+            iaLog("Metadatos actualizados para el post ID: {$post_id}");
+            
+            // Agregar el metadato 'ultimoEdit' con la fecha actual
+            $fecha_actual = current_time('mysql'); // Formato de fecha de WordPress
+            update_post_meta($post_id, 'ultimoEdit', $fecha_actual);
+            
+            iaLog("Metadato 'ultimoEdit' agregado para el post ID: {$post_id} con fecha {$fecha_actual}");
+            
+            // Marcar el post como IA Pro
+            update_post_meta($post_id, 'proIA', false);          
+        } else {
+            iaLog("Error al procesar el JSON de la descripción mejorada generada por IA Pro.");
+        }
+    } else {
+        iaLog("No se pudo generar la descripción mejorada para el post ID: {$post_id}");
+    }
+
+}
+
 function mejorarDescripcionAudioPro($post_id, $archivo_audio)
 {
     // Obtener el contenido actual del post
@@ -662,12 +791,13 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
 
 
 
-function procesarUnAudio() {
+function procesarUnAudio()
+{
     global $wpdb;
 
     // Buscar el post con un archivo de audio válido (post_audio_lite) que aún no tenga 'proIA' en true y procesar solo uno
     iaLog("Iniciando el procesamiento de un audio...");
-    
+
     $query = "
         SELECT p.ID, pm.meta_value AS archivo_audio_id
         FROM {$wpdb->posts} p
@@ -681,7 +811,7 @@ function procesarUnAudio() {
     ";
 
     iaLog("Ejecutando consulta SQL para buscar post con audio...");
-    
+
     $post_con_audio = $wpdb->get_row($query);
 
     if ($post_con_audio) {
@@ -727,7 +857,8 @@ function procesarUnAudio() {
 
 
 // Función para ejecutarla cada 30 minutos
-function programarMejorarDescripcionAudioPro() {
+function programarMejorarDescripcionAudioPro()
+{
     if (!wp_next_scheduled('mejorar_descripcion_audio_event')) {
         wp_schedule_event(time(), 'thirty_minutes', 'mejorar_descripcion_audio_event');
     }
@@ -736,7 +867,8 @@ function programarMejorarDescripcionAudioPro() {
 add_action('mejorar_descripcion_audio_event', 'procesarUnAudio');
 
 // Registrar intervalo de 30 minutos
-function agregarIntervaloCronPersonalizado($schedules) {
+function agregarIntervaloCronPersonalizado($schedules)
+{
     $schedules['thirty_minutes'] = [
         'interval' => 1800, // 1800 segundos = 30 minutos
         'display'  => __('Cada 30 minutos')

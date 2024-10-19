@@ -118,7 +118,7 @@ function cambiarDescripcion()
     // Actualizar la descripción del post si todo es correcto
     $post->post_content = wp_kses_post($descripcion); // Sanitizar el contenido del post
     wp_update_post($post);
-
+    rehacerDescripcionAccion($post_id);
     echo json_encode(['success' => true]);
     wp_die();
 }

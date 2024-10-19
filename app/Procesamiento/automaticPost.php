@@ -629,4 +629,25 @@ function adjuntarArchivoAut($archivo, $post_id, $file_id = null) {
     return $attach_id;
 }
 
+function rehacerDescripcionAccion($post_id) {
+    // Obtener el ID del audio lite del metadato 'post_audio_lite'
+    $audio_lite_id = get_post_meta($post_id, 'post_audio_lite', true);
+
+    // Verificar si existe el ID
+    if ($audio_lite_id) {
+        // Obtener la ruta completa del archivo adjunto (audio lite)
+        $archivo_audio = get_attached_file($audio_lite_id);
+
+        if ($archivo_audio) {
+            // Llamar a la función para rehacer la descripción con el archivo de audio
+            rehacerDescripcionAudio($post_id, $archivo_audio);
+
+            iaLog("Descripción del audio actualizada para el post ID: {$post_id} con archivo de audio en la ruta {$archivo_audio}");
+        } else {
+            iaLog("No se pudo obtener la ruta del archivo de audio lite para el post ID: {$post_id}");
+        }
+    } else {
+        iaLog("No se encontró el metadato 'post_audio_lite' para el post ID: {$post_id}");
+    }
+}
 
