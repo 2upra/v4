@@ -419,7 +419,7 @@ function generarNombreAudio($audio_path_lite)
         $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- ]/', '', $nombre_generado_limpio);
 
         // Limitar el nombre a 35 caracteres
-        $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 50);
+        $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 60);
 
         // Añadir el identificador único '2upra_' al inicio
         $nombre_final = '2upra_' . $nombre_generado_limpio;
@@ -431,7 +431,7 @@ function generarNombreAudio($audio_path_lite)
         $nombre_final_con_id = $nombre_final . '_' . $id_unica;
 
         // Asegurarse de que el nombre completo no exceda los 35 caracteres
-        $nombre_final_con_id = substr($nombre_final_con_id, 0, 50);
+        $nombre_final_con_id = substr($nombre_final_con_id, 0, 60);
 
         return $nombre_final_con_id;
     } else {
@@ -487,11 +487,11 @@ function rehacerNombreAudio($post_id, $archivo_audio)
         // Limpiar el nombre generado
         $nombre_generado_limpio = trim($nombre_generado);
         $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- ]/', '', $nombre_generado_limpio);
-        $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 50);
+        $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 60);
         $nombre_final = '2upra_' . $nombre_generado_limpio;
         $id_unica = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
         $nombre_final_con_id = $nombre_final . '_' . $id_unica;
-        $nombre_final_con_id = substr($nombre_final_con_id, 0, 50);
+        $nombre_final_con_id = substr($nombre_final_con_id, 0, 60);
 
         iaLog("Nombre generado: {$nombre_final_con_id}");
 
