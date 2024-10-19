@@ -353,53 +353,136 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite) {
     return $post_id;
 }
 
-function adjuntarArchivoAut($archivo, $post_id) {
 
-    if (!file_exists($archivo)) {
+/**
+ * Adjunta un archivo a un post de WordPress.
+ *
+ * Esta función soporta:
+ * - Rutas absolutas de archivos en el servidor.
+ * - URLs externas.
+ * - Rutas dentro del directorio de uploads de WordPress.
+ *
+ * @param string $archivo Ruta o URL del archivo a adjuntar.
+ * @param int    $post_id ID del post al que se adjuntará el archivo.
+ *
+ * @return int|WP_Error ID de adjunto en caso de éxito, WP_Error en caso de fallo.
+ */
+function adjuntarArchivoAut($archivo, $post_id) {
+    
+    // Variables para manejo de archivos temporales
+    $es_url = filter_var($archivo, FILTER_VALIDATE_URL);
+    $archivo_temp = '';
+    
+    if ($es_url) {
+        // Descargar el archivo desde la URL a una ubicación temporal
+        $temp_dir = sys_get_temp_dir();
+        $nombre_archivo = basename(parse_url($archivo, PHP_URL_PATH));
+        $archivo_temp = tempnam($temp_dir, 'upload_') . '_' . sanitize_file_name($nombre_archivo);
+        
+        $contenido = @file_get_contents($archivo);
+        if ($contenido === false) {
+            return new WP_Error('error_descarga', 'No se pudo descargar el archivo desde la URL: ' . esc_html($archivo));
+        }
+        
+        // Guardar el contenido descargado en el archivo temporal
+        if (file_put_contents($archivo_temp, $contenido) === false) {
+            return new WP_Error('error_guardar_temporal', 'No se pudo guardar el archivo descargado en: ' . esc_html($archivo_temp));
+        }
+        
+        $archivo_procesar = $archivo_temp;
+    } else {
+        // Asumir que es una ruta de archivo local
+        $archivo_procesar = $archivo;
+    }
+    
+    // Verificar si el archivo existe
+    if (!file_exists($archivo_procesar)) {
+        // Eliminar el archivo temporal si existe
+        if ($es_url && file_exists($archivo_temp)) {
+            @unlink($archivo_temp);
+        }
         return new WP_Error('archivo_no_encontrado', 'El archivo especificado no existe: ' . esc_html($archivo));
     }
-
-
+    
+    // Obtener información de la ruta de uploads
     $wp_upload_dir = wp_upload_dir();
-    $upload_path = $wp_upload_dir['path'];
-
-
-    $filename = basename($archivo);
-    $filename = sanitize_file_name($filename);
-    $unique_filename = wp_unique_filename($wp_upload_dir['path'], $filename);
-    $destino = trailingslashit($wp_upload_dir['path']) . $unique_filename;
-    if (!copy($archivo, $destino)) {
-        return new WP_Error('error_copia_archivo', 'No se pudo copiar el archivo al directorio de cargas.');
+    
+    // Determinar si el archivo está dentro del directorio de uploads
+    $ruta_relativa = '';
+    if (strpos(realpath($archivo_procesar), realpath($wp_upload_dir['basedir'])) === 0) {
+        // Archivo está dentro de uploads
+        $ruta_relativa = str_replace(realpath($wp_upload_dir['basedir']) . DIRECTORY_SEPARATOR, '', realpath($archivo_procesar));
     }
+    
+    // Si el archivo no está en uploads, copiarlo al directorio de uploads
+    if (empty($ruta_relativa)) {
+        $filename = basename($archivo_procesar);
+        $filename = sanitize_file_name($filename);
+        $unique_filename = wp_unique_filename($wp_upload_dir['path'], $filename);
+        $destino = trailingslashit($wp_upload_dir['path']) . $unique_filename;
+        
+        if (!copy($archivo_procesar, $destino)) {
+            // Eliminar el archivo temporal si existe
+            if ($es_url && file_exists($archivo_temp)) {
+                @unlink($archivo_temp);
+            }
+            return new WP_Error('error_copia_archivo', 'No se pudo copiar el archivo al directorio de cargas.');
+        }
+    } else {
+        // El archivo ya está en uploads
+        $unique_filename = basename($archivo_procesar);
+        $destino = $archivo_procesar;
+    }
+    
+    // Obtener el tipo de archivo
     $filetype = wp_check_filetype($unique_filename, null);
     if (!$filetype['type']) {
-        @unlink($destino);
+        // Eliminar el archivo temporal si existe
+        if ($es_url && file_exists($archivo_temp)) {
+            @unlink($archivo_temp);
+        }
+        // Si el archivo fue copiado a uploads, eliminarlo
+        if (!empty($ruta_relativa)) {
+            @unlink($destino);
+        }
         return new WP_Error('tipo_archivo_no_soportado', 'El tipo de archivo no es soportado: ' . esc_html($unique_filename));
     }
-
+    
+    // Preparar los datos del adjunto
     $attachment = [
-        'guid'           => trailingslashit($wp_upload_dir['url']) . $unique_filename,
+        'guid'           => $wp_upload_dir['url'] . '/' . $unique_filename,
         'post_mime_type' => $filetype['type'],
         'post_title'     => sanitize_file_name(pathinfo($unique_filename, PATHINFO_FILENAME)),
         'post_content'   => '',
         'post_status'    => 'inherit',
     ];
-
+    
+    // Insertar el adjunto en la base de datos
     $attach_id = wp_insert_attachment($attachment, $destino, $post_id);
-
+    
     if (is_wp_error($attach_id)) {
-        @unlink($destino);
+        // Eliminar el archivo temporal si existe
+        if ($es_url && file_exists($archivo_temp)) {
+            @unlink($archivo_temp);
+        }
+        // Si el archivo fue copiado a uploads, eliminarlo
+        if (!empty($ruta_relativa)) {
+            @unlink($destino);
+        }
         return $attach_id;
     }
-
+    
+    // Generar y actualizar los metadatos del adjunto
     require_once(ABSPATH . 'wp-admin/includes/image.php');
     $attach_data = wp_generate_attachment_metadata($attach_id, $destino);
     wp_update_attachment_metadata($attach_id, $attach_data);
-
+    
+    // Eliminar el archivo temporal si existe
+    if ($es_url && file_exists($archivo_temp)) {
+        @unlink($archivo_temp);
+    }
+    
     return $attach_id;
 }
-
-
-
 
 
