@@ -229,7 +229,7 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
         <? if ($postAut == '1' && empty($ultimoEdit)) : ?>
             <? echo $GLOBALS['robot']; ?>
         <? endif; ?>
-        <? if ($postAut == '1') : ?>
+        <? if ($verificado == '1') : ?>
             <? echo $GLOBALS['check']; ?>
         <? endif; ?>
     </div>
