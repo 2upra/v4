@@ -330,28 +330,18 @@ function autProcesarAudio($audio_path) {
 
 
 function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite) {
-    // ID del usuario autor
+
     $autor_id = 44;
-
-    // Verificar si el usuario existe
-    if (!get_userdata($autor_id)) {
-        return new WP_Error('autor_invalido', 'El usuario con ID 44 no existe.');
-    }
-
     $prompt = "Genera una descripción corta para el siguiente archivo de audio. Puede ser un sample, un fx, un loop, un sonido de un kick, puede ser cualquier cosa, el propósito es que la descripción sea corta (solo responde con la descripción, no digas nada adicional); te doy ejemplos: Sample oscuro phonk, Fx de explosión, kick de house, sonido de sintetizador, piano melodía, guitarra acústica sample.";
+    
     $descripcion = generarDescripcionIA($nuevo_nombre_lite, $prompt);
 
-    // Verificar si se obtuvo una descripción válida
     if (is_wp_error($descripcion) || empty($descripcion)) {
         return new WP_Error('descripcion_generacion_fallida', 'No se pudo generar una descripción para el audio.');
     }
 
-    $titulo = mb_substr($descripcion, 0, 15);
-
-    // Contenido completo de la descripción
+    $titulo = mb_substr($descripcion, 0, 30);
     $contenido = $descripcion;
-
-    // Datos del post
     $post_data = [
         'post_title'    => $titulo,
         'post_content'  => $contenido,
@@ -360,14 +350,12 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite) {
         'post_type'     => 'social_post',
     ];
 
-    // Insertar el post en la base de datos
     $post_id = wp_insert_post($post_data);
-
-
     if (is_wp_error($post_id)) {
-        return $post_id; // Retornar el error para manejarlo externamente
+        return $post_id;
     }
     $index = 1;
+
     analizarYGuardarMetasAudio($post_id, $nuevo_nombre_lite, $index);
 
     $audio_original_id = adjuntarArchivoAut($nuevo_nombre_original, $post_id);
