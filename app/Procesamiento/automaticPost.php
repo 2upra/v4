@@ -18,8 +18,33 @@ function definir_cron_cada_dos_minutos($schedules) {
     }
     return $schedules;
 }
-*/
+
 add_action('procesar_audio1_cron_event', 'procesarAudios');
+*/
+/*
+2024-10-19 02:18:50 - Iniciando procesamiento de audios en: /home/asley01/MEGA/Waw/X
+2024-10-19 02:18:50 - Cantidad de audios a procesar: 1
+2024-10-19 02:18:50 - Iniciando procesamiento de audio: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi_lite.mp3
+2024-10-19 02:18:50 - Archivo de audio encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi_lite.mp3
+2024-10-19 02:18:50 - URL del archivo de audio: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi_lite.mp3
+2024-10-19 02:18:50 - Hash guardado exitosamente para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi_lite.mp3 con ID: 8238
+2024-10-19 02:18:50 - File ID obtenido: 8238
+2024-10-19 02:18:50 - Strip metadata: /usr/bin/ffmpeg -i '/home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi_lite.mp3' -map_metadata -1 -c copy '/home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi_lite_temp.mp3' -y
+2024-10-19 02:18:50 - Metadatos eliminados.
+2024-10-19 02:18:50 - Crear lite: /usr/bin/ffmpeg -i '/home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi_lite.mp3' -b:a 128k '/home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi_lite_lite.mp3' -y
+2024-10-19 02:18:51 - Versión lite creada.
+2024-10-19 02:18:53 - Nombre limpio: Vintage Glitch
+2024-10-19 02:18:53 - Archivo renombrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Vintage Glitch.mp3
+2024-10-19 02:18:53 - Archivo lite renombrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Vintage Glitch_lite.mp3
+2024-10-19 02:18:53 - Archivo lite movido a uploads: /var/www/wordpress/wp-content/uploads/audio/Vintage Glitch_lite.mp3
+2024-10-19 02:18:53 - Inicio de actualizarUrlArchivo para File ID: 8238 con nueva URL: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Vintage Glitch.mp3
+2024-10-19 02:18:53 - URL actualizada correctamente para File ID: 8238
+2024-10-19 02:18:53 - Ruta actualizada correctamente para File ID: 8238 a /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Vintage Glitch.mp3
+2024-10-19 02:19:00 - Archivos enviados a crearAutPost.
+2024-10-19 02:19:00 - Procesamiento iniciado para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi_lite.mp3
+2024-10-19 02:19:00 - Error al procesar el audio: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi_lite.mp3
+
+*/
 
 function procesarAudios() {
     $directorio_audios = '/home/asley01/MEGA/Waw/X';
