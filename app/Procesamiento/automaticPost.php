@@ -216,93 +216,133 @@ function generarNombreAudio($audio_path_lite)
     }
 }
 
+function obtenerUrlPublica($file_path) {
+    // Obtener información de los directorios de uploads de WordPress
+    $uploads_dir = wp_upload_dir();
+    $base_path = realpath($uploads_dir['basedir']);
+    $file_path = realpath($file_path);
+
+    // Verificar si el archivo está dentro del directorio de uploads
+    if ($base_path === false || $file_path === false || strpos($file_path, $base_path) !== 0) {
+        return false; // La ruta no está dentro del directorio de uploads
+    }
+
+    // Obtener la ruta relativa del archivo dentro de uploads
+    $relative_path = ltrim(str_replace($base_path, '', $file_path), '/\\');
+
+    // Construir y retornar la URL pública
+    return trailingslashit($uploads_dir['baseurl']) . str_replace(DIRECTORY_SEPARATOR, '/', $relative_path);
+}
+
 function autProcesarAudio($audio_path) {
     // Verificar si el archivo existe
     if (!file_exists($audio_path)) {
-        //guardarLog("El archivo de audio no existe en la ruta proporcionada: {$audio_path}");
+        guardarLog("Archivo no encontrado: $audio_path");
         return;
     }
 
-    // Obtener las partes del camino del archivo
+    // Obtener partes del path
     $path_parts = pathinfo($audio_path);
     $directory = realpath($path_parts['dirname']);
     if ($directory === false) {
-        //guardarLog("Ruta inválida del directorio: {$path_parts['dirname']}");
+        guardarLog("Directorio inválido: {$path_parts['dirname']}");
         return;
     }
     $extension = strtolower($path_parts['extension']);
     $basename = $path_parts['filename'];
 
-    // Definir la ruta temporal para eliminar metadatos
-    $temp_path = $directory . '/' . $basename . '_temp.' . $extension;
+    // Ruta temporal para eliminar metadatos
+    $temp_path = "$directory/{$basename}_temp.$extension";
 
-    // 1. Eliminar metadatos del archivo original usando ffmpeg
+    // 1. Eliminar metadatos con ffmpeg
     $comando_strip_metadata = "/usr/bin/ffmpeg -i " . escapeshellarg($audio_path) . " -map_metadata -1 -c copy " . escapeshellarg($temp_path) . " -y";
-    //guardarLog("Ejecutando comando para eliminar metadatos: {$comando_strip_metadata}");
+    guardarLog("Strip metadata: $comando_strip_metadata");
     exec($comando_strip_metadata, $output_strip, $return_strip);
     if ($return_strip !== 0) {
-        //guardarLog("Error al eliminar metadatos: " . implode("\n", $output_strip));
+        guardarLog("Error strip metadata: " . implode(" | ", $output_strip));
         return;
     }
 
-    // Reemplazar el archivo original con el archivo sin metadatos
+    // Reemplazar archivo original
     if (!rename($temp_path, $audio_path)) {
-        //guardarLog("Error al reemplazar el archivo original con la versión sin metadatos.");
+        guardarLog("No se pudo reemplazar el archivo original.");
         return;
     }
-    //guardarLog("Metadatos eliminados correctamente del archivo original.");
+    guardarLog("Metadatos eliminados.");
 
-    // 2. Crear una versión lite del audio en MP3 a 128 kbps
-    $lite_path = $directory . '/' . $basename . '_lite.mp3';
+    // 2. Crear versión lite en MP3 a 128 kbps
+    $lite_path = "$directory/{$basename}_lite.mp3";
     $comando_lite = "/usr/bin/ffmpeg -i " . escapeshellarg($audio_path) . " -b:a 128k " . escapeshellarg($lite_path) . " -y";
-    //guardarLog("Ejecutando comando para crear versión lite: {$comando_lite}");
+    guardarLog("Crear lite: $comando_lite");
     exec($comando_lite, $output_lite, $return_lite);
     if ($return_lite !== 0) {
-        //guardarLog("Error al crear la versión lite: " . implode("\n", $output_lite));
+        guardarLog("Error crear lite: " . implode(" | ", $output_lite));
         return;
     }
-    //guardarLog("Versión lite creada exitosamente: {$lite_path}");
+    guardarLog("Versión lite creada.");
 
-    // 3. Enviar la versión lite a la IA para obtener un nombre limpio
+    // 3. Obtener nombre limpio por IA
     $nombre_limpio = generarNombreAudio($lite_path);
     if (empty($nombre_limpio)) {
-        //guardarLog("La IA no retornó un nombre válido.");
+        guardarLog("Nombre limpio inválido.");
         return;
     }
-    //guardarLog("Nombre limpio generado por la IA: {$nombre_limpio}");
+    guardarLog("Nombre limpio: $nombre_limpio");
 
-    // 4. Renombrar el archivo original
-    $nuevo_nombre_original = $directory . '/' . $nombre_limpio . '.' . $extension;
+    // 4. Renombrar archivo original
+    $nuevo_nombre_original = "$directory/$nombre_limpio.$extension";
     if (!rename($audio_path, $nuevo_nombre_original)) {
-        //guardarLog("Error al renombrar el archivo original a: {$nuevo_nombre_original}");
+        guardarLog("No se pudo renombrar archivo original.");
         return;
     }
-    //guardarLog("Archivo original renombrado a: {$nuevo_nombre_original}");
+    guardarLog("Archivo renombrado: $nuevo_nombre_original");
 
-    // 5. Renombrar el archivo lite
-    $nuevo_nombre_lite = $directory . '/' . $nombre_limpio . '_lite.mp3';
+    // 5. Renombrar archivo lite
+    $nuevo_nombre_lite = "$directory/{$nombre_limpio}_lite.mp3";
     if (!rename($lite_path, $nuevo_nombre_lite)) {
-        //guardarLog("Error al renombrar el archivo lite a: {$nuevo_nombre_lite}");
+        guardarLog("No se pudo renombrar archivo lite.");
         return;
     }
-    //guardarLog("Archivo lite renombrado a: {$nuevo_nombre_lite}");
+    guardarLog("Archivo lite renombrado: $nuevo_nombre_lite");
 
+    // Obtener URL pública del archivo original
     $public_url_original = obtenerUrlPublica($nuevo_nombre_original); 
+    if ($public_url_original === false) {
+        guardarLog("No se pudo obtener URL pública para: $nuevo_nombre_original");
+    }
+
+    // Obtener ID del archivo por URL original
     $file_id = obtenerFileIDPorURL(obtenerUrlPublica($audio_path)); 
 
     if ($file_id !== false) {
         $actualizacion_exitosa = actualizarUrlArchivo($file_id, $public_url_original);
         if (!$actualizacion_exitosa) {
-            //guardarLog("No se pudo actualizar la URL en la base de datos para File ID: $file_id");
+            guardarLog("Error al actualizar URL para File ID: $file_id");
         }
     } else {
-        //guardarLog("No se encontró File ID para el archivo original. No se actualizará la URL.");
+        guardarLog("File ID no encontrado para el archivo original.");
     }
 
-    // Pasar las rutas absolutas a crearAutPost
+    // Enviar rutas a crearAutPost
     crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite);
-    //guardarLog("Archivos enviados a crearAutPost: {$nuevo_nombre_original}, {$nuevo_nombre_lite}");
+    guardarLog("Archivos enviados a crearAutPost.");
 }
+
+/*
+
+19-Oct-2024 00:21:19 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function obtenerUrlPublica() in /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/automaticPost.php:290
+Stack trace:
+#0 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/automaticPost.php(189): autProcesarAudio()
+#1 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/automaticPost.php(16): autRevisarAudio()
+#2 /var/www/wordpress/wp-includes/class-wp-hook.php(324): procesarAudios()
+#3 /var/www/wordpress/wp-includes/class-wp-hook.php(348): WP_Hook->apply_filters()
+#4 /var/www/wordpress/wp-includes/plugin.php(565): WP_Hook->do_action()
+#5 /var/www/wordpress/wp-cron.php(191): do_action_ref_array()
+#6 {main}
+  thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/automaticPost.php on line 290
+
+*/
+
 function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite) {
     // ID del usuario autor
     $autor_id = 44;
