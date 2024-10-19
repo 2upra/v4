@@ -567,7 +567,7 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
         . '"Instrumentos posibles":{"es":["Piano", "Guitarra"], "en":["Piano", "Guitar"]},'
         . '"Estado de animo":{"es":["Tranquilo"], "en":["Calm"]},'
         . '"Genero posible":{"es":["Hip hop"], "en":["Hip hop"]},'
-        . '"Tipo de audio":{"es":["Sample, loop o one shot"], "en":["Sample"]},'
+        . '"Tipo de audio":{"es":["aqui necesito que puedas determinar si es un sample, un loop o un one shot"], "en":["Sample"]},'
         . '"Tags posibles":{"es":["Naturaleza, phonk, memphis, oscuro"], "en":["Nature"]},'
         . '"Sugerencia de busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
         . " Nota adicional: solo responde con la estructura, intenta ser muy detallista y preciso con los datos, no digas nada adicional al usuario. Algo importante a tener en cuenta es que debe determinarse bien si es un loop, o un one shot, o sea, los sonidos o golpes de sonidos, suenan una sola vez, y los loop es una secuencia de sonido, tu me entiendes, esa informacion va en tipo de audio, en los tags posible, preferiblemente tags de una sola palabra, no frases."
