@@ -440,6 +440,23 @@ function generarNombreAudio($audio_path_lite)
     }
 }
 
+/*
+
+2024-10-19 18:51:30 - Archivo de audio: /var/www/wordpress/wp-content/uploads/audio/2upra_Canserbero FX_B0bgY_lite.mp3
+2024-10-19 18:51:30 - Archivo de audio cargado y convertido a base64 con éxito.
+
+2024-10-19 18:51:32 - Respuesta completa de la API: {"candidates":[{"content":{"parts":[{"text":"Canserbero Vocal FX -  Voz Atormentada \n"}],"role":"model"},"finishReason":"STOP","index":0,"safetyRatings":[{"category":"HARM_CATEGORY_SEXUALLY_EXPLICIT","probability":"NEGLIGIBLE"},{"category":"HARM_CATEGORY_HATE_SPEECH","probability":"NEGLIGIBLE"},{"category":"HARM_CATEGORY_HARASSMENT","probability":"NEGLIGIBLE"},{"category":"HARM_CATEGORY_DANGEROUS_CONTENT","probability":"NEGLIGIBLE"}]}],"usageMetadata":{"promptTokenCount":232,"candidatesTokenCount":12,"totalTokenCount":244}}
+
+2024-10-19 18:51:32 - Contenido generado: Canserbero Vocal FX -  Voz Atormentada 
+2024-10-19 18:51:32 - Nombre generado: 2upra_Canserbero Vocal FX -  Voz Atormen
+2024-10-19 18:51:32 - Archivo renombrado de /var/www/wordpress/wp-content/uploads/2024/10/2upra_Canserbero FX_B0bgY.mp3 a /var/www/wordpress/wp-content/uploads/2024/10/2upra_Canserbero Vocal FX -  Voz Atormen.mp3
+2024-10-19 18:51:32 - Archivo renombrado de /var/www/wordpress/wp-content/uploads/audio/2upra_Canserbero FX_B0bgY_lite.mp3 a /var/www/wordpress/wp-content/uploads/audio/2upra_Canserbero Vocal FX -  Voz Atormen_lite.mp3
+
+2024-10-19 18:51:32 - Meta 'rutaOriginal' actualizada a: /var/www/wordpress/wp-content/uploads/2024/10/2upra_Canserbero Vocal FX -  Voz Atormen.mp3
+2024-10-19 18:51:32 - Renombrado completado exitosamente para el post ID: 233165
+2024-10-19 18:51:32 - Descripción del audio actualizada para el post ID: 233165 con archivo de audio en la ruta /var/www/wordpress/wp-content/uploads/audio/2upra_Canserbero FX_B0bgY_lite.mp3
+*/
+
 function rehacerNombreAudio($post_id, $archivo_audio)
 {
     // Verificar si el archivo de audio existe
@@ -452,7 +469,7 @@ function rehacerNombreAudio($post_id, $archivo_audio)
     $post_content = get_post_field('post_content', $post_id);
     if (!$post_content) {
         iaLog("No se pudo obtener el contenido del post ID: {$post_id}");
-        return;
+        return null;
     }
     iaLog("Contenido del post obtenido para el post ID: {$post_id}");
 
@@ -493,65 +510,20 @@ function rehacerNombreAudio($post_id, $archivo_audio)
             return null;
         }
 
-        // Función para renombrar un archivo de adjunto
-        function renombrar_archivo_adjunto($attachment_id, $nuevo_nombre, $es_lite = false)
-        {
-            // Obtener el path completo del archivo adjunto
-            $ruta_archivo = get_attached_file($attachment_id);
-            if (!file_exists($ruta_archivo)) {
-                iaLog("El archivo adjunto con ID {$attachment_id} no existe en la ruta: {$ruta_archivo}");
-                return false;
-            }
-
-            // Obtener la carpeta y la extensión del archivo
-            $carpeta = pathinfo($ruta_archivo, PATHINFO_DIRNAME);
-            $extension = pathinfo($ruta_archivo, PATHINFO_EXTENSION);
-            if ($es_lite) {
-                $nuevo_nombre .= '_lite';
-            }
-            $nueva_ruta = $carpeta . '/' . $nuevo_nombre . '.' . $extension;
-
-            // Renombrar el archivo
-            if (!rename($ruta_archivo, $nueva_ruta)) {
-                iaLog("Error al renombrar el archivo de {$ruta_archivo} a {$nueva_ruta}");
-                return false;
-            }
-
-            iaLog("Archivo renombrado de {$ruta_archivo} a {$nueva_ruta}");
-
-            // Actualizar la ruta del adjunto en la base de datos
-            $wp_filetype = wp_check_filetype(basename($nueva_ruta), null);
-            $attachment_data = array(
-                'ID' => $attachment_id,
-                'post_name' => sanitize_title($nuevo_nombre),
-                'guid' => home_url('/') . str_replace(ABSPATH, '', $nueva_ruta),
-            );
-
-            // Actualizar solo si wp_update_post está disponible
-            if (function_exists('wp_update_post')) {
-                wp_update_post($attachment_data);
-            }
-
-            update_attached_file($attachment_id, $nueva_ruta);
-
-            return true;
-        }
-
-        // Renombrar el archivo 'post_audio'
+        // Renombrar los archivos adjuntos
         $renombrado_audio = renombrar_archivo_adjunto($attachment_id_audio, $nombre_final_con_id, false);
         if (!$renombrado_audio) {
             iaLog("Falló al renombrar el archivo 'post_audio' para el post ID: {$post_id}");
             return null;
         }
 
-        // Renombrar el archivo 'post_audio_lite'
         $renombrado_audio_lite = renombrar_archivo_adjunto($attachment_id_audio_lite, $nombre_final_con_id, true);
         if (!$renombrado_audio_lite) {
             iaLog("Falló al renombrar el archivo 'post_audio_lite' para el post ID: {$post_id}");
             return null;
         }
 
-        // Actualizar la meta 'rutaOriginal' si existe
+        // Actualizar la meta 'rutaOriginal'
         $ruta_original = get_post_meta($post_id, 'rutaOriginal', true);
         if ($ruta_original) {
             // Obtener la nueva ruta del archivo original renombrado
@@ -560,7 +532,17 @@ function rehacerNombreAudio($post_id, $archivo_audio)
             iaLog("Meta 'rutaOriginal' actualizada a: {$nueva_ruta_original}");
         } else {
             iaLog("Meta 'rutaOriginal' no existe para el post ID: {$post_id}");
+        }
 
+        // Obtener la ID hash de la meta (asumiendo que el meta key es 'idHash_audioId')
+        $id_hash_audio = get_post_meta($post_id, 'idHash_audioId', true);
+        if ($id_hash_audio) {
+            // Obtener la nueva URL de 'post_audio'
+            $nueva_url_audio = wp_get_attachment_url($attachment_id_audio);
+            actualizarUrlArchivo($id_hash_audio, $nueva_url_audio);
+            iaLog("URL de 'post_audio' actualizada para el hash ID: {$id_hash_audio}");
+        } else {
+            iaLog("Meta 'idHash_audioId' no existe para el post ID: {$post_id}");
         }
 
         iaLog("Renombrado completado exitosamente para el post ID: {$post_id}");
@@ -570,6 +552,51 @@ function rehacerNombreAudio($post_id, $archivo_audio)
         return null;
     }
 }
+
+
+function renombrar_archivo_adjunto($attachment_id, $nuevo_nombre, $es_lite = false)
+{
+    // Obtener el path completo del archivo adjunto
+    $ruta_archivo = get_attached_file($attachment_id);
+    if (!file_exists($ruta_archivo)) {
+        iaLog("El archivo adjunto con ID {$attachment_id} no existe en la ruta: {$ruta_archivo}");
+        return false;
+    }
+
+    // Obtener la carpeta y la extensión del archivo
+    $carpeta = pathinfo($ruta_archivo, PATHINFO_DIRNAME);
+    $extension = pathinfo($ruta_archivo, PATHINFO_EXTENSION);
+    if ($es_lite) {
+        $nuevo_nombre .= '_lite';
+    }
+    $nueva_ruta = $carpeta . '/' . $nuevo_nombre . '.' . $extension;
+
+    // Renombrar el archivo
+    if (!rename($ruta_archivo, $nueva_ruta)) {
+        iaLog("Error al renombrar el archivo de {$ruta_archivo} a {$nueva_ruta}");
+        return false;
+    }
+
+    iaLog("Archivo renombrado de {$ruta_archivo} a {$nueva_ruta}");
+
+    // Actualizar la ruta del adjunto en la base de datos
+    $wp_filetype = wp_check_filetype(basename($nueva_ruta), null);
+    $attachment_data = array(
+        'ID' => $attachment_id,
+        'post_name' => sanitize_title($nuevo_nombre),
+        'guid' => home_url('/') . str_replace(ABSPATH, '', $nueva_ruta),
+    );
+
+    // Actualizar el post del adjunto
+    if (function_exists('wp_update_post')) {
+        wp_update_post($attachment_data);
+    }
+
+    update_attached_file($attachment_id, $nueva_ruta);
+
+    return true;
+}
+
 
 
 
