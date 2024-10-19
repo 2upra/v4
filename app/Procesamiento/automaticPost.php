@@ -795,3 +795,126 @@ function rehacerDescripcionAccion($post_id)
         iaLog("No se encontró el metadato 'post_audio_lite' para el post ID: {$post_id}");
     }
 }
+
+
+
+function buscar_archivo_recursivo($dir, $filename) {
+    $files = scandir($dir);
+    foreach ($files as $file) {
+        if ($file === '.' || $file === '..') continue;
+        $path = $dir . DIRECTORY_SEPARATOR . $file;
+        if (is_dir($path)) {
+            $result = buscar_archivo_recursivo($path, $filename);
+            if ($result !== false) {
+                return $result;
+            }
+        } elseif ($file === $filename) {
+            return $path;
+        }
+    }
+    return false;
+}
+
+function actualizar_metas_posts_social() {
+    // Define los argumentos para la consulta de posts
+    $args = array(
+        'post_type'      => 'social_post',
+        'meta_key'       => 'postAut',
+        'meta_value'     => '1',
+        'posts_per_page' => -1, // Obtener todos los posts
+        'fields'         => 'ids', // Solo IDs para eficiencia
+    );
+
+    $query = new WP_Query($args);
+
+    if ( !$query->have_posts() ) {
+        error_log('No se encontraron posts de tipo social_post con postAut=1.');
+        return;
+    }
+
+    // Directorio base donde se buscarán los archivos originales
+    $directorio_base = '/home/asley01/MEGA/Waw/X/';
+
+    foreach ( $query->posts as $post_id ) {
+        // Verificar si los metadatos ya existen
+        $rutaOriginal = get_post_meta( $post_id, 'rutaOriginal', true );
+        $rutaLiteOriginal = get_post_meta( $post_id, 'rutaLiteOriginal', true );
+        $idHash_audioId = get_post_meta( $post_id, 'idHash_audioId', true );
+
+        // Solo procesar si al menos uno de los metadatos está vacío
+        if ( $rutaOriginal && $rutaLiteOriginal && $idHash_audioId ) {
+            continue; // Todos los metadatos están presentes, omitir
+        }
+
+        // Obtener el ID de adjunto de post_audio
+        $post_audio_id = get_post_meta( $post_id, 'post_audio', true );
+        if ( !$post_audio_id ) {
+            error_log("Post ID $post_id: No se encontró 'post_audio'.");
+        }
+
+        // Obtener el ID de adjunto de post_audio_lite
+        $post_audio_lite_id = get_post_meta( $post_id, 'post_audio_lite', true );
+        if ( !$post_audio_lite_id ) {
+            error_log("Post ID $post_id: No se encontró 'post_audio_lite'.");
+        }
+
+        // Actualizar 'rutaOriginal' si falta
+        if ( !$rutaOriginal && $post_audio_id ) {
+            $adjunto = get_post( $post_audio_id );
+            if ( $adjunto ) {
+                $filename = basename( get_attached_file( $post_audio_id ) );
+                $ruta_completa = buscar_archivo_recursivo( $directorio_base, $filename );
+                if ( $ruta_completa ) {
+                    update_post_meta( $post_id, 'rutaOriginal', $ruta_completa );
+                } else {
+                    error_log("Post ID $post_id: No se encontró el archivo original '$filename'.");
+                }
+            } else {
+                error_log("Post ID $post_id: No se encontró el adjunto con ID $post_audio_id.");
+            }
+        }
+
+        // Actualizar 'rutaLiteOriginal' si falta
+        if ( !$rutaLiteOriginal && $post_audio_lite_id ) {
+            $adjunto_lite = get_post( $post_audio_lite_id );
+            if ( $adjunto_lite ) {
+                $ruta_lite = get_attached_file( $post_audio_lite_id );
+                if ( $ruta_lite ) {
+                    update_post_meta( $post_id, 'rutaLiteOriginal', $ruta_lite );
+                } else {
+                    error_log("Post ID $post_id: No se pudo obtener la ruta de 'post_audio_lite'.");
+                }
+            } else {
+                error_log("Post ID $post_id: No se encontró el adjunto lite con ID $post_audio_lite_id.");
+            }
+        }
+
+        // Actualizar 'idHash_audioId' si falta
+        if ( !$idHash_audioId && $post_audio_id ) {
+            $adjunto_url = wp_get_attachment_url( $post_audio_id );
+            if ( $adjunto_url ) {
+                $file_id = obtenerFileIDPorURL( $adjunto_url ); // Asegúrate de que esta función esté definida
+                if ( $file_id ) {
+                    update_post_meta( $post_id, 'idHash_audioId', $file_id );
+                } else {
+                    error_log("Post ID $post_id: No se pudo obtener 'idHash_audioId' para la URL '$adjunto_url'.");
+                }
+            } else {
+                error_log("Post ID $post_id: No se pudo obtener la URL del adjunto con ID $post_audio_id.");
+            }
+        }
+    }
+
+    error_log('Actualización de metadatos de posts social_post completada.');
+}
+
+ejecutar_actualizar_metas_posts_social_una_vez();
+
+function ejecutar_actualizar_metas_posts_social_una_vez() {
+    if ( get_option( 'actualizar_metas_posts_social_realizado' ) ) {
+        return;
+    }
+    actualizar_metas_posts_social();
+    update_option( 'actualizar_metas_posts_social_realizado', 1 );
+}
+
