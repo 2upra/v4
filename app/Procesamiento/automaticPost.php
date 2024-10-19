@@ -815,6 +815,25 @@ function buscar_archivo_recursivo($dir, $filename) {
     return false;
 }
 
+function obtenerFileIDPorURL($url)
+{
+    global $wpdb;
+    
+    $file_id = $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT id FROM {$wpdb->prefix}file_hashes WHERE file_url = %s",
+            $url
+        )
+    );
+
+    if ($file_id !== null) {
+        return (int) $file_id;
+    } else {
+        guardarLog("No se encontró File ID para la URL: $url");
+        return false;
+    }
+}
+
 function actualizar_metas_posts_social() {
     // Define los argumentos para la consulta de posts
     $args = array(
@@ -893,7 +912,7 @@ function actualizar_metas_posts_social() {
         if ( !$idHash_audioId && $post_audio_id ) {
             $adjunto_url = wp_get_attachment_url( $post_audio_id );
             if ( $adjunto_url ) {
-                $file_id = obtenerFileIDPorURL( $adjunto_url ); // Asegúrate de que esta función esté definida
+                $file_id = obtenerFileIDPorURL( $adjunto_url ); 
                 if ( $file_id ) {
                     update_post_meta( $post_id, 'idHash_audioId', $file_id );
                 } else {
