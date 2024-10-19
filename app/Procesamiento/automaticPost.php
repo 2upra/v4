@@ -1,5 +1,5 @@
 <?
-/*
+
 add_action('init', 'iniciar_cron_procesamiento_audios');
 function iniciar_cron_procesamiento_audios() {
     if (!wp_next_scheduled('procesar_audio1_cron_event')) {
@@ -18,7 +18,7 @@ function definir_cron_cada_dos_minutos($schedules) {
     }
     return $schedules;
 }
-*/
+
 add_action('procesar_audio1_cron_event', 'procesarAudios');
 
 function procesarAudios() {
@@ -304,6 +304,31 @@ function autProcesarAudio($audio_path) {
     // 8. Enviar rutas a crearAutPost
     crearAutPost($nuevo_nombre_original, $target_path_lite);
     guardarLog("Archivos enviados a crearAutPost.");
+}
+
+function generarNombreAudio($audio_path_lite)
+{
+    // Verificar que el archivo de audio exista
+    if (!file_exists($audio_path_lite)) {
+        iaLog("El archivo de audio no existe en la ruta especificada: {$audio_path_lite}");
+        return null;
+    }
+
+    $prompt = "Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, si es un kick, un snare, un sample vintage, fx, cosas así. Simplemente genera un nombre corto de audio (no agregues más información adicional ni comentes nada adicional, solo entrega un nombre corto de audio), te dare unos ejemplos, lo esencial es por ejemplo identificar el instrumento dominante, o si es un sample poner, sample melancolico, identificar cosas clave como una emocion dominante, un instrumento, un sonido, una vibra, etc.";
+    $nombre_generado = generarDescripcionIA($audio_path_lite, $prompt);
+
+    // Verificar si se obtuvo una respuesta
+    if ($nombre_generado) {
+        // Limpiar la respuesta obtenida (eliminar espacios en blanco al inicio y al final)
+        $nombre_generado_limpio = trim($nombre_generado);
+        $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- ]/', '', $nombre_generado_limpio);
+        $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 50); // Limitar a 50 caracteres
+
+        return $nombre_generado_limpio;
+    } else {
+        iaLog("No se recibió una respuesta válida de la IA para el archivo de audio: {$audio_path_lite}");
+        return null;
+    }
 }
 
 function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite) {
