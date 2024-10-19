@@ -833,7 +833,7 @@ function obtenerFileIDPorURL($url)
         return false;
     }
 }
-
+/*
 function actualizar_metas_posts_social() {
     // Define los argumentos para la consulta de posts
     $args = array(
@@ -937,3 +937,4 @@ function ejecutar_actualizar_metas_posts_social_una_vez() {
     update_option( 'actualizar_metas_posts_social_realizado', 1 );
 }
 
+*/
