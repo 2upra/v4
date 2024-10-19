@@ -189,9 +189,12 @@ function autRevisarAudio($audio, $file_hash) {
 }
 
 function autProcesarAudio($audio_path) {
+    guardarLog("--Inicio de la función autProcesarAudio.--");
+
     // Verificar si el archivo existe
     if (!file_exists($audio_path)) {
         guardarLog("Archivo no encontrado: $audio_path");
+        guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
 
@@ -200,15 +203,19 @@ function autProcesarAudio($audio_path) {
     $directory = realpath($path_parts['dirname']);
     if ($directory === false) {
         guardarLog("Directorio inválido: {$path_parts['dirname']}");
+        guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
     $extension = strtolower($path_parts['extension']);
     $basename = $path_parts['filename'];
 
+    guardarLog("Ruta inicial: $audio_path, Directorio: $directory, Basename: $basename, Extensión: $extension");
+
     // Obtener ID del archivo por la ruta directa
     $file_id = obtenerFileIDPorURL($audio_path);
     if ($file_id === false) {
         guardarLog("File ID no encontrado para la ruta: $audio_path");
+        guardarLog("Fin de la función autProcesarAudio.");
         return;
     } else {
         guardarLog("File ID obtenido: $file_id");
@@ -219,56 +226,62 @@ function autProcesarAudio($audio_path) {
 
     // 1. Eliminar metadatos con ffmpeg
     $comando_strip_metadata = "/usr/bin/ffmpeg -i " . escapeshellarg($audio_path) . " -map_metadata -1 -c copy " . escapeshellarg($temp_path) . " -y";
-    guardarLog("Strip metadata: $comando_strip_metadata");
+    guardarLog("Comando para eliminar metadatos: $comando_strip_metadata");
     exec($comando_strip_metadata, $output_strip, $return_strip);
     if ($return_strip !== 0) {
-        guardarLog("Error strip metadata: " . implode(" | ", $output_strip));
+        guardarLog("Error al eliminar metadatos: " . implode(" | ", $output_strip));
+        guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
 
     // Reemplazar archivo original
     if (!rename($temp_path, $audio_path)) {
         guardarLog("No se pudo reemplazar el archivo original.");
+        guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
-    guardarLog("Metadatos eliminados.");
+    guardarLog("Metadatos eliminados del archivo: $audio_path");
 
     // 2. Crear versión lite en MP3 a 128 kbps
     $lite_path = "$directory/{$basename}_lite.mp3";
     $comando_lite = "/usr/bin/ffmpeg -i " . escapeshellarg($audio_path) . " -b:a 128k " . escapeshellarg($lite_path) . " -y";
-    guardarLog("Crear lite: $comando_lite");
+    guardarLog("Comando para crear versión lite: $comando_lite");
     exec($comando_lite, $output_lite, $return_lite);
     if ($return_lite !== 0) {
-        guardarLog("Error crear lite: " . implode(" | ", $output_lite));
+        guardarLog("Error al crear versión lite: " . implode(" | ", $output_lite));
+        guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
-    guardarLog("Versión lite creada.");
+    guardarLog("Versión lite creada: $lite_path");
 
     // 3. Obtener nombre limpio por IA
     $nombre_limpio = generarNombreAudio($lite_path);
     if (empty($nombre_limpio)) {
         guardarLog("Nombre limpio inválido.");
+        guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
-    guardarLog("Nombre limpio: $nombre_limpio");
+    guardarLog("Nombre limpio generado: $nombre_limpio");
 
-    // 4. Renombrar archivo original en su ubicación actual
+    // 4. Renombrar archivo original
     $nuevo_nombre_original = "$directory/$nombre_limpio.$extension";
     if (!rename($audio_path, $nuevo_nombre_original)) {
-        guardarLog("No se pudo renombrar archivo original.");
+        guardarLog("No se pudo renombrar el archivo original.");
+        guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
-    guardarLog("Archivo renombrado: $nuevo_nombre_original");
+    guardarLog("Archivo original renombrado: $nuevo_nombre_original");
 
     // 5. Renombrar archivo lite
     $nuevo_nombre_lite = "$directory/{$nombre_limpio}_lite.mp3";
     if (!rename($lite_path, $nuevo_nombre_lite)) {
-        guardarLog("No se pudo renombrar archivo lite.");
+        guardarLog("No se pudo renombrar el archivo lite.");
+        guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
     guardarLog("Archivo lite renombrado: $nuevo_nombre_lite");
 
-    // 6. Mover únicamente el archivo lite al directorio de uploads
+    // 6. Mover el archivo lite al directorio de uploads
     $uploads_dir = wp_upload_dir();
     $target_dir_audio = trailingslashit($uploads_dir['basedir']) . "audio/";
 
@@ -276,6 +289,7 @@ function autProcesarAudio($audio_path) {
     if (!file_exists($target_dir_audio)) {
         if (!wp_mkdir_p($target_dir_audio)) {
             guardarLog("No se pudo crear el directorio de uploads/audio.");
+            guardarLog("Fin de la función autProcesarAudio.");
             return;
         }
     }
@@ -285,14 +299,14 @@ function autProcesarAudio($audio_path) {
     // Mover archivo lite
     if (!rename($nuevo_nombre_lite, $target_path_lite)) {
         guardarLog("No se pudo mover el archivo lite al directorio de uploads.");
+        guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
-    guardarLog("Archivo lite movido a uploads: $target_path_lite");
+    guardarLog("Archivo lite movido al directorio de uploads: $target_path_lite");
 
     // 7. Actualizar la ruta del archivo original en la base de datos
     if ($file_id !== false) {
-        // Obtener la nueva ruta del archivo original después de renombrar
-        $new_file_url = "$directory/$nombre_limpio.$extension"; // Asegúrate de que esta sea la ruta correcta
+        $new_file_url = "$directory/$nombre_limpio.$extension"; // Verificar que sea la ruta correcta
 
         // Actualizar la ruta en la base de datos
         $actualizacion_exitosa = actualizarUrlArchivo($file_id, $new_file_url);
@@ -304,9 +318,11 @@ function autProcesarAudio($audio_path) {
     }
 
     // 8. Enviar rutas a crearAutPost
-    guardarLog("Enviando a crearAutPost: Original - $nuevo_nombre_original, Lite - $target_path_lite");
+    guardarLog("Enviando rutas a crearAutPost: Original - $nuevo_nombre_original, Lite - $target_path_lite");
     crearAutPost($nuevo_nombre_original, $target_path_lite);
     guardarLog("Archivos enviados a crearAutPost.");
+
+    guardarLog("--Fin de la función autProcesarAudio.--");
 }
 
 function generarNombreAudio($audio_path_lite)
