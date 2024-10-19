@@ -630,6 +630,10 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id)
 function adjuntarArchivoAut($archivo, $post_id, $file_id = null)
 {
 
+    if ($file_id !== null) {
+        update_post_meta($post_id, 'idHash_audioId', $file_id);
+    }
+
     // Variables para manejo de archivos temporales
     $es_url = filter_var($archivo, FILTER_VALIDATE_URL);
     $archivo_temp = '';
@@ -655,7 +659,7 @@ function adjuntarArchivoAut($archivo, $post_id, $file_id = null)
         // Asumir que es una ruta de archivo local
         $archivo_procesar = $archivo;
     }
-
+    
     // Verificar si el archivo existe
     if (!file_exists($archivo_procesar)) {
         // Eliminar el archivo temporal si existe
