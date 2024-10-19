@@ -1,5 +1,5 @@
 <?
-/*
+
 add_action('init', 'iniciar_cron_procesamiento_audios');
 function iniciar_cron_procesamiento_audios() {
     if (!wp_next_scheduled('procesar_audio1_cron_event')) {
@@ -20,53 +20,101 @@ function definir_cron_cada_dos_minutos($schedules) {
 }
 
 add_action('procesar_audio1_cron_event', 'procesarAudios');
+
+
+/*
+2024-10-19 02:36:06 - Cron de procesamiento de audios programado para cada 2 minutos.
+2024-10-19 02:36:07 - Iniciando procesamiento de audios en: /home/asley01/MEGA/Waw/X
+2024-10-19 02:36:07 - Cantidad de audios a procesar: 1
+2024-10-19 02:36:07 - Iniciando procesamiento de audio: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav
+2024-10-19 02:36:07 - Archivo de audio encontrado: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav
+2024-10-19 02:36:07 - URL del archivo de audio: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav
+2024-10-19 02:36:07 - Hash guardado exitosamente para: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav con ID: 8240
+2024-10-19 02:36:07 - --Inicio de la función autProcesarAudio.--
+2024-10-19 02:36:07 - Ruta inicial: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav, Directorio: /home/asley01/MEGA/Waw/X/♥️ 808, Basename: Cymatics - Oracle 808 27 - F#, Extensión: wav
+2024-10-19 02:36:07 - File ID obtenido: 8240
+2024-10-19 02:36:07 - Comando para eliminar metadatos: /usr/bin/ffmpeg -i '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav' -map_metadata -1 -c copy '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#_temp.wav' -y
+2024-10-19 02:36:07 - Metadatos eliminados del archivo: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav
+2024-10-19 02:36:07 - Comando para crear versión lite: /usr/bin/ffmpeg -i '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav' -b:a 128k '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#_lite.mp3' -y
+2024-10-19 02:36:07 - Versión lite creada: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#_lite.mp3
+2024-10-19 02:36:09 - Nombre limpio generado: Vintage Synth Pad
+2024-10-19 02:36:09 - Archivo original renombrado: /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav
+2024-10-19 02:36:09 - Archivo lite renombrado: /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad_lite.mp3
+2024-10-19 02:36:09 - Archivo lite movido al directorio de uploads: /var/www/wordpress/wp-content/uploads/audio/Vintage Synth Pad_lite.mp3
+2024-10-19 02:36:09 - Inicio de actualizarUrlArchivo para File ID: 8240 con nueva URL: /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav
+2024-10-19 02:36:09 - URL actualizada correctamente para File ID: 8240
+2024-10-19 02:36:09 - Ruta actualizada correctamente para File ID: 8240 a /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav
+2024-10-19 02:36:09 - Enviando rutas a crearAutPost: Original - /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav, Lite - /var/www/wordpress/wp-content/uploads/audio/Vintage Synth Pad_lite.mp3
+2024-10-19 02:36:13 - ID de usuario recibido: 1
+2024-10-19 02:36:13 - Estado del usuario 1 actualizado a 'conectado'.
+2024-10-19 02:36:14 - Archivos enviados a crearAutPost.
+2024-10-19 02:36:14 - --Fin de la función autProcesarAudio.--
+A este punto el audio se proceso y se publico correctamente, pero porque parece aqui vuelve a iniciar y da error, y claro, al final el error no parece afectar en algo pero me intriga saber porque regresa e intenta buscar Cymatics - Oracle 808 27 - F#.wav cuando claramente ya no existe porque fue renombrado y procesado
+2024-10-19 02:36:14 - Procesamiento iniciado para: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav
+2024-10-19 02:36:14 - Error al procesar el audio: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav
+
 */
 
 
 function procesarAudios() {
+    $func_name = __FUNCTION__; // Nombre de la función para los logs
     $directorio_audios = '/home/asley01/MEGA/Waw/X';
-    guardarLog("Iniciando procesamiento de audios en: {$directorio_audios}");
-    
+    guardarLog("[$func_name] Iniciando procesamiento de audios en: {$directorio_audios}");
+
+    // Implementar bloqueo para prevenir ejecuciones simultáneas
+    $lock_file = '/tmp/procesar_audios.lock';
+    $fp = fopen($lock_file, 'c');
+    if (!flock($fp, LOCK_EX | LOCK_NB)) {
+        guardarLog("[$func_name] Otro proceso de procesarAudios está en ejecución.");
+        return;
+    }
+
     $audios_para_procesar = buscarAudios($directorio_audios);
 
     if (!empty($audios_para_procesar)) {
-        guardarLog("Cantidad de audios a procesar: " . count($audios_para_procesar));
+        guardarLog("[$func_name] Cantidad de audios a procesar: " . count($audios_para_procesar));
 
         // Procesar solo el primer audio válido
         $audio_info = $audios_para_procesar[0];
-        guardarLog("Iniciando procesamiento de audio: {$audio_info['ruta']}");
-        
-        // Asegúrate de que autRevisarAudio maneja correctamente errores y actualiza el estado del audio.
-        $procesado = autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
-        
-        if ($procesado) {
-            guardarLog("Procesado correctamente el audio: {$audio_info['ruta']}");
-        } else {
-            guardarLog("Error al procesar el audio: {$audio_info['ruta']}");
-        }
+        guardarLog("[$func_name] Iniciando procesamiento de audio: {$audio_info['ruta']}");
 
-        // No es necesario programar otro evento aquí, ya que el cron recurrente se encarga de esto.
+        // Procesar el audio
+        $procesado = autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
+
+        if ($procesado) {
+            guardarLog("[$func_name] Procesado correctamente el audio: {$audio_info['ruta']}");
+        } else {
+            guardarLog("[$func_name] Error al procesar el audio: {$audio_info['ruta']}");
+        }
     } else {
-        guardarLog("No se encontraron audios para procesar en: {$directorio_audios}");
+        guardarLog("[$func_name] No se encontraron audios para procesar en: {$directorio_audios}");
     }
+
+    // Liberar el bloqueo
+    flock($fp, LOCK_UN);
+    fclose($fp);
+    unlink($lock_file);
 }
 
 function buscarAudios($directorio) {
+    $func_name = __FUNCTION__; // Nombre de la función para los logs
+
     // Solo mantenemos logs críticos
     if (!is_dir($directorio)) {
-        guardarLog("Error: El directorio no existe o no es accesible: {$directorio}");
+        guardarLog("[$func_name] Error: El directorio no existe o no es accesible: {$directorio}");
         return [];
     }
 
     if (!is_readable($directorio)) {
-        guardarLog("Error: No se puede leer el directorio: {$directorio}");
+        guardarLog("[$func_name] Error: No se puede leer el directorio: {$directorio}");
         return [];
     }
 
     try {
         $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio));
     } catch (Exception $e) {
-        error_log("Excepción al crear el iterador de directorios: " . $e->getMessage());
+        guardarLog("[$func_name] Excepción al crear el iterador de directorios: " . $e->getMessage());
+        error_log("[$func_name] Excepción al crear el iterador de directorios: " . $e->getMessage());
         return [];
     }
 
@@ -77,25 +125,29 @@ function buscarAudios($directorio) {
         if ($archivo->isFile()) {
             $ruta_archivo = $archivo->getPathname();
             $extension = strtolower(pathinfo($ruta_archivo, PATHINFO_EXTENSION));
-            
+
             // Verificar si la extensión está permitida
             if (!in_array($extension, $extensiones_permitidas)) {
+                guardarLog("[$func_name] Archivo ignorado (extensión no permitida): {$ruta_archivo}");
                 continue; // Saltar archivos que no sean wav o mp3
             }
 
             // Verificar si el archivo es legible
             if (!is_readable($ruta_archivo)) {
-                error_log("Archivo no legible (sin permisos): {$ruta_archivo}");
+                guardarLog("[$func_name] Archivo no legible (sin permisos): {$ruta_archivo}");
+                error_log("[$func_name] Archivo no legible (sin permisos): {$ruta_archivo}");
                 continue;
             }
 
             $file_hash = hash_file('sha256', $ruta_archivo);
             if (!$file_hash) {
-                error_log("Error al generar el hash para el archivo: " . $ruta_archivo);
+                guardarLog("[$func_name] Error al generar el hash para el archivo: {$ruta_archivo}");
+                error_log("[$func_name] Error al generar el hash para el archivo: {$ruta_archivo}");
                 continue;
             }
 
             if (debeProcesarse($ruta_archivo, $file_hash)) {
+                guardarLog("[$func_name] Audio válido encontrado: {$ruta_archivo} con hash: {$file_hash}");
                 $audios_para_procesar[] = [
                     'ruta' => $ruta_archivo,
                     'hash' => $file_hash
@@ -103,48 +155,108 @@ function buscarAudios($directorio) {
 
                 // Solo añadimos el primer audio válido
                 break;
+            } else {
+                guardarLog("[$func_name] Audio no válido para procesamiento: {$ruta_archivo}");
             }
         }
     }
 
+    guardarLog("[$func_name] Total de audios encontrados para procesar: " . count($audios_para_procesar));
     return $audios_para_procesar;
 }
 
 function debeProcesarse($ruta_archivo, $file_hash) {
+    $func_name = __FUNCTION__; // Nombre de la función para los logs
+    
     try {
         // Verificación de existencia del archivo
         if (!file_exists($ruta_archivo)) {
-            error_log("Error: El archivo no existe: {$ruta_archivo}");
+            guardarLog("[$func_name] Error: El archivo no existe: {$ruta_archivo}");
+            error_log("[$func_name] Error: El archivo no existe: {$ruta_archivo}");
             return false;
         }
-
+        guardarLog("[$func_name] Archivo encontrado: {$ruta_archivo}");
+        
         // Obtener URL del adjunto por la ruta del archivo
         $attachment_url = wp_get_attachment_url_by_path($ruta_archivo);
         if ($attachment_url) {
+            guardarLog("[$func_name] URL del adjunto generado: {$attachment_url}");
+            
             // Buscar si ya existe el adjunto en WordPress
             $existing_attachment = attachment_url_to_postid($attachment_url);
             if ($existing_attachment) {
+                guardarLog("[$func_name] El adjunto ya existe en WordPress con ID: {$existing_attachment}");
                 return false;
             }
+        } else {
+            guardarLog("[$func_name] No se pudo generar la URL del adjunto para: {$ruta_archivo}");
         }
 
         // Verificar si existe el hash
         if (!$file_hash) {
-            error_log("Error: Hash inexistente para el archivo: " . $ruta_archivo);
+            guardarLog("[$func_name] Error: Hash inexistente para el archivo: {$ruta_archivo}");
+            error_log("[$func_name] Error: Hash inexistente para el archivo: {$ruta_archivo}");
             return false;
         }
+        guardarLog("[$func_name] Hash recibido: {$file_hash}");
 
         $hash_exists = obtenerHash($file_hash);
         if ($hash_exists) {
+            guardarLog("[$func_name] El hash ya existe en la base de datos.");
             return false;
         }
 
+        guardarLog("[$func_name] El archivo y hash son válidos para el procesamiento.");
         return true;
     } catch (Exception $e) {
-        error_log("Excepción en debeProcesarse: " . $e->getMessage());
+        guardarLog("[$func_name] Excepción capturada: " . $e->getMessage());
+        error_log("[$func_name] Excepción capturada: " . $e->getMessage());
         return false;
     }
 }
+
+
+function autRevisarAudio($audio, $file_hash) {
+    $func_name = __FUNCTION__; // Nombre de la función actual para los logs
+    
+    // Verificar si el archivo existe
+    if (!file_exists($audio)) {
+        guardarLog("[$func_name] Error: Archivo de audio no encontrado: {$audio}");
+        error_log("[$func_name] Error: El archivo de audio no existe: " . $audio);
+        return;
+    }
+    guardarLog("[$func_name] Archivo de audio encontrado: {$audio}");
+    
+    // Obtener información del directorio de subidas
+    $upload_dir = wp_upload_dir();
+    $file_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $audio);
+    guardarLog("[$func_name] URL del archivo de audio generado: {$file_url}");
+    
+    $user_id = 44; // ID del usuario que sube el archivo
+    guardarLog("[$func_name] ID del usuario que sube el archivo: {$user_id}");
+    
+    // Guardar el hash en la base de datos
+    $hash_id = guardarHash($file_hash, $file_url, 'confirmed', $user_id);
+    if (!$hash_id) {
+        guardarLog("[$func_name] Error: No se pudo guardar el hash en la base de datos para el archivo: {$audio}");
+        error_log("[$func_name] Error: No se pudo guardar el hash en la base de datos para el archivo: " . $audio);
+        return;
+    }
+    guardarLog("[$func_name] Hash guardado exitosamente para: {$audio} con ID de hash: {$hash_id}");
+    
+    // Procesar el audio
+    guardarLog("[$func_name] Iniciando procesamiento del audio: {$audio}");
+    $resultado = autProcesarAudio($audio);
+    
+    // Verificar si el procesamiento fue exitoso
+    if ($resultado === false) {
+        guardarLog("[$func_name] Error: Fallo en el procesamiento del audio: {$audio}");
+        error_log("[$func_name] Error: El procesamiento del audio ha fallado para: " . $audio);
+    } else {
+        guardarLog("[$func_name] Procesamiento completado exitosamente para: {$audio}");
+    }
+}
+
 
 function wp_get_attachment_url_by_path($file_path) {
     global $wpdb;
@@ -158,35 +270,29 @@ function wp_get_attachment_url_by_path($file_path) {
 }
 
 
-function autRevisarAudio($audio, $file_hash) {
-    // Verificar si el archivo existe
-    if (!file_exists($audio)) {
-        guardarLog("Archivo de audio no encontrado: {$audio}");
-        error_log("El archivo de audio no existe: " . $audio);
-        return;
-    }
-    guardarLog("Archivo de audio encontrado: {$audio}");
-    
-    // Obtener información del directorio de subidas
-    $upload_dir = wp_upload_dir();
-    $file_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $audio);
-    guardarLog("URL del archivo de audio: {$file_url}");
-    
-    $user_id = 44; // ID del usuario que sube el archivo
-    
-    // Guardar el hash en la base de datos
-    $hash_id = guardarHash($file_hash, $file_url, 'confirmed', $user_id);
-    if (!$hash_id) {
-        guardarLog("Error al guardar el hash en DB para: {$audio}");
-        error_log("Error al guardar el hash en la base de datos para el archivo: " . $audio);
-        return;
-    }
-    guardarLog("Hash guardado exitosamente para: {$audio} con ID: {$hash_id}");
-    
-    // Procesar el audio
-    autProcesarAudio($audio);
-    guardarLog("Procesamiento iniciado para: {$audio}");
-}
+/*
+
+2024-10-19 02:36:07 - --Inicio de la función autProcesarAudio.--
+2024-10-19 02:36:07 - Ruta inicial: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav, Directorio: /home/asley01/MEGA/Waw/X/♥️ 808, Basename: Cymatics - Oracle 808 27 - F#, Extensión: wav
+2024-10-19 02:36:07 - File ID obtenido: 8240
+2024-10-19 02:36:07 - Comando para eliminar metadatos: /usr/bin/ffmpeg -i '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav' -map_metadata -1 -c copy '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#_temp.wav' -y
+2024-10-19 02:36:07 - Metadatos eliminados del archivo: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav
+2024-10-19 02:36:07 - Comando para crear versión lite: /usr/bin/ffmpeg -i '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#.wav' -b:a 128k '/home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#_lite.mp3' -y
+2024-10-19 02:36:07 - Versión lite creada: /home/asley01/MEGA/Waw/X/♥️ 808/Cymatics - Oracle 808 27 - F#_lite.mp3
+2024-10-19 02:36:09 - Nombre limpio generado: Vintage Synth Pad
+2024-10-19 02:36:09 - Archivo original renombrado: /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav
+2024-10-19 02:36:09 - Archivo lite renombrado: /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad_lite.mp3
+2024-10-19 02:36:09 - Archivo lite movido al directorio de uploads: /var/www/wordpress/wp-content/uploads/audio/Vintage Synth Pad_lite.mp3
+2024-10-19 02:36:09 - Inicio de actualizarUrlArchivo para File ID: 8240 con nueva URL: /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav
+2024-10-19 02:36:09 - URL actualizada correctamente para File ID: 8240
+2024-10-19 02:36:09 - Ruta actualizada correctamente para File ID: 8240 a /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav
+2024-10-19 02:36:09 - Enviando rutas a crearAutPost: Original - /home/asley01/MEGA/Waw/X/♥️ 808/Vintage Synth Pad.wav, Lite - /var/www/wordpress/wp-content/uploads/audio/Vintage Synth Pad_lite.mp3
+2024-10-19 02:36:13 - ID de usuario recibido: 1
+2024-10-19 02:36:13 - Estado del usuario 1 actualizado a 'conectado'.
+2024-10-19 02:36:14 - Archivos enviados a crearAutPost.
+2024-10-19 02:36:14 - --Fin de la función autProcesarAudio.--
+
+*/
 
 function autProcesarAudio($audio_path) {
     guardarLog("--Inicio de la función autProcesarAudio.--");
@@ -361,7 +467,7 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite) {
         return new WP_Error('descripcion_generacion_fallida', 'No se pudo generar una descripción para el audio.');
     }
 
-    $titulo = mb_substr($descripcion, 0, 30);
+    $titulo = mb_substr($descripcion, 0, 60);
     $contenido = $descripcion;
     $post_data = [
         'post_title'    => $titulo,
@@ -392,6 +498,7 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite) {
 
     update_post_meta($post_id, 'post_audio', $audio_original_id);
     update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
+    update_post_meta($post_id, 'paraDesacarga', '1');
     update_post_meta($post_id, 'postAut', 'true');
 
     return $post_id;
