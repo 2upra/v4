@@ -186,50 +186,6 @@ function autRevisarAudio($audio, $file_hash) {
     guardarLog("Procesamiento iniciado para: {$audio}");
 }
 
-
-function generarNombreAudio($audio_path_lite)
-{
-    // Verificar que el archivo de audio exista
-    if (!file_exists($audio_path_lite)) {
-        iaLog("El archivo de audio no existe en la ruta especificada: {$audio_path_lite}");
-        return null;
-    }
-
-    $prompt = "Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, si es un kick, un snare, un sample vintage, fx, cosas así. Simplemente genera un nombre corto de audio (no agregues más información adicional ni comentes nada adicional, solo entrega un nombre corto de audio), te dare unos ejemplos, lo esencial es por ejemplo identificar el instrumento dominante, o si es un sample poner, sample melancolico, identificar cosas clave como una emocion dominante, un instrumento, un sonido, una vibra, etc.";
-    $nombre_generado = generarDescripcionIA($audio_path_lite, $prompt);
-
-    // Verificar si se obtuvo una respuesta
-    if ($nombre_generado) {
-        // Limpiar la respuesta obtenida (eliminar espacios en blanco al inicio y al final)
-        $nombre_generado_limpio = trim($nombre_generado);
-        $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- ]/', '', $nombre_generado_limpio);
-        $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 50); // Limitar a 50 caracteres
-
-        return $nombre_generado_limpio;
-    } else {
-        iaLog("No se recibió una respuesta válida de la IA para el archivo de audio: {$audio_path_lite}");
-        return null;
-    }
-}
-
-function obtenerUrlPublica($file_path) {
-    // Obtener información de los directorios de uploads de WordPress
-    $uploads_dir = wp_upload_dir();
-    $base_path = realpath($uploads_dir['basedir']);
-    $file_path = realpath($file_path);
-
-    // Verificar si el archivo está dentro del directorio de uploads
-    if ($base_path === false || $file_path === false || strpos($file_path, $base_path) !== 0) {
-        return false; // La ruta no está dentro del directorio de uploads
-    }
-
-    // Obtener la ruta relativa del archivo dentro de uploads
-    $relative_path = ltrim(str_replace($base_path, '', $file_path), '/\\');
-
-    // Construir y retornar la URL pública
-    return trailingslashit($uploads_dir['baseurl']) . str_replace(DIRECTORY_SEPARATOR, '/', $relative_path);
-}
-
 function autProcesarAudio($audio_path) {
     // Verificar si el archivo existe
     if (!file_exists($audio_path)) {
@@ -246,6 +202,15 @@ function autProcesarAudio($audio_path) {
     }
     $extension = strtolower($path_parts['extension']);
     $basename = $path_parts['filename'];
+
+    // Obtener ID del archivo por la ruta directa
+    $file_id = obtenerFileIDPorURL($audio_path);
+    if ($file_id === false) {
+        guardarLog("File ID no encontrado para la ruta: $audio_path");
+        return;
+    } else {
+        guardarLog("File ID obtenido: $file_id");
+    }
 
     // Ruta temporal para eliminar metadatos
     $temp_path = "$directory/{$basename}_temp.$extension";
@@ -285,7 +250,7 @@ function autProcesarAudio($audio_path) {
     }
     guardarLog("Nombre limpio: $nombre_limpio");
 
-    // 4. Renombrar archivo original
+    // 4. Renombrar archivo original en su ubicación actual
     $nuevo_nombre_original = "$directory/$nombre_limpio.$extension";
     if (!rename($audio_path, $nuevo_nombre_original)) {
         guardarLog("No se pudo renombrar archivo original.");
@@ -301,29 +266,45 @@ function autProcesarAudio($audio_path) {
     }
     guardarLog("Archivo lite renombrado: $nuevo_nombre_lite");
 
-    // Obtener URL pública del archivo original
-    $public_url_original = obtenerUrlPublica($nuevo_nombre_original); 
-    if ($public_url_original === false) {
-        guardarLog("No se pudo obtener URL pública para: $nuevo_nombre_original");
-    }
+    // 6. Mover únicamente el archivo lite al directorio de uploads
+    $uploads_dir = wp_upload_dir();
+    $target_dir_audio = trailingslashit($uploads_dir['basedir']) . "audio/";
 
-    // Obtener ID del archivo por URL original
-    $file_id = obtenerFileIDPorURL(obtenerUrlPublica($audio_path)); 
-
-    if ($file_id !== false) {
-        $actualizacion_exitosa = actualizarUrlArchivo($file_id, $public_url_original);
-        if (!$actualizacion_exitosa) {
-            guardarLog("Error al actualizar URL para File ID: $file_id");
+    // Crear directorio 'audio' si no existe
+    if (!file_exists($target_dir_audio)) {
+        if (!wp_mkdir_p($target_dir_audio)) {
+            guardarLog("No se pudo crear el directorio de uploads/audio.");
+            return;
         }
-    } else {
-        guardarLog("File ID no encontrado para el archivo original.");
     }
 
-    // Enviar rutas a crearAutPost
-    crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite);
+    $target_path_lite = $target_dir_audio . "{$nombre_limpio}_lite.mp3";
+
+    // Mover archivo lite
+    if (!rename($nuevo_nombre_lite, $target_path_lite)) {
+        guardarLog("No se pudo mover el archivo lite al directorio de uploads.");
+        return;
+    }
+    guardarLog("Archivo lite movido a uploads: $target_path_lite");
+
+    // 7. Actualizar la ruta del archivo original en la base de datos
+    if ($file_id !== false) {
+        // Obtener la nueva ruta del archivo original después de renombrar
+        $new_file_url = dirname($audio_path) . "/$nombre_limpio.$extension";
+
+        // Actualizar la ruta en la base de datos
+        $actualizacion_exitosa = actualizarUrlArchivo($file_id, $new_file_url);
+        if ($actualizacion_exitosa) {
+            guardarLog("Ruta actualizada correctamente para File ID: $file_id a $new_file_url");
+        } else {
+            guardarLog("Error al actualizar ruta para File ID: $file_id");
+        }
+    }
+
+    // 8. Enviar rutas a crearAutPost
+    crearAutPost($nuevo_nombre_original, $target_path_lite);
     guardarLog("Archivos enviados a crearAutPost.");
 }
-
 
 function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite) {
 
