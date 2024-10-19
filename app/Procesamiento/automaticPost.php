@@ -23,90 +23,23 @@ add_action('procesar_audio1_cron_event', 'procesarAudios');
 
 
 /*
-2024-10-19 03:13:04 - [procesarAudios] Iniciando procesamiento de audios en: /home/asley01/MEGA/Waw/X
-2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3
-2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3
-2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 9f80f5a5c4a05875402eb0689b7e0e9855121eb397899cd6af86f3a9400d2b46
-2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
-2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3
-2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/80s Synth Loop_lite.mp3_resultados.json
-2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi_lite.mp3_resultados.json
-2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Retro_lite.mp3_resultados.json
-2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick 808.wav
-2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick 808.wav
-2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 9d6e4f57fc32a52c6cc0d087c35dbca4d587e86ac13f75ea042495b6240a2113
-2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
-2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick 808.wav
-2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Sample Glitch.mp3
-2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Sample Glitch.mp3
-2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 85d4d61e081d7b6e7e3ebcfe93e14d5c2a1e5016f39d05df845b312b75218425
-2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
-2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Sample Glitch.mp3
-2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Glitch Bass_lite.mp3_resultados.json
-2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi.wav
-2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi.wav
-2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 6c6db452c79450372d48e37f6515f0353dd6f65833f5a6b9208e38433bacb9a4
-2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
-2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorsion Lo-Fi.wav
-2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/80s Synth Pad_lite.mp3_resultados.json
-2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Vintage Dub.mp3
-2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Vintage Dub.mp3
-2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 650a9b52752641125f73a463178ffa294af9a1e7410a67e46c697d32219d4b3e
-2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
-2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Vintage Dub.mp3
-2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick 808_lite.mp3_resultados.json
-2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorted Kick_lite.mp3_resultados.json
-2024-10-19 03:13:04 - [buscarAudios] Archivo ignorado (extensión no permitida): /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Pulsos Vintage_lite.mp3_resultados.json
-2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick 808_lite.mp3
-2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick 808_lite.mp3
-2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: cfefcc84f8a3eb198542bff68adf6a608cf0be1508ad552741fb659f7d5936be
-2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
-2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick 808_lite.mp3
-2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Pulsos Vintage.mp3
-2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Pulsos Vintage.mp3
-2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 08dfdb9b2c3d31d5a30da35d15e305d0de48f7c504c39989f41a4ac1b86be10a
-2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
-2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Pulsos Vintage.mp3
-2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorted Kick.mp3
-2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorted Kick.mp3
-2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: fbe4b2deffb6499a829a33d52b43c365db9d907370cd12df113822de1552b599
-2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
-2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorted Kick.mp3
-2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Glitch Bass.mp3
-2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Glitch Bass.mp3
-2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 0dfa7a89b282a80e03cf614e9bc9c3e5165f91c806f957e8b8e96d147f4d3b85
-2024-10-19 03:13:04 - [debeProcesarse] El hash ya existe en la base de datos.
-2024-10-19 03:13:04 - [buscarAudios] Audio no válido para procesamiento: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Glitch Bass.mp3
-2024-10-19 03:13:04 - [debeProcesarse] Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
-2024-10-19 03:13:04 - [debeProcesarse] No se pudo generar la URL del adjunto para: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
-2024-10-19 03:13:04 - [debeProcesarse] Hash recibido: 939fa9ec5f0cf8ca5888ff833a9ec34d991d8cd24266c3289f491318ffcadf28
-2024-10-19 03:13:04 - [debeProcesarse] El archivo y hash son válidos para el procesamiento.
-2024-10-19 03:13:04 - [buscarAudios] Audio válido encontrado: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav con hash: 939fa9ec5f0cf8ca5888ff833a9ec34d991d8cd24266c3289f491318ffcadf28
-2024-10-19 03:13:04 - [buscarAudios] Total de audios encontrados para procesar: 1
-2024-10-19 03:13:04 - [procesarAudios] Cantidad de audios a procesar: 1
-2024-10-19 03:13:04 - [procesarAudios] Iniciando procesamiento de audio: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
-2024-10-19 03:13:04 - [autRevisarAudio] Archivo de audio encontrado: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
-2024-10-19 03:13:04 - [autRevisarAudio] URL del archivo de audio generado: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
-2024-10-19 03:13:04 - [autRevisarAudio] ID del usuario que sube el archivo: 44
-2024-10-19 03:13:04 - [autRevisarAudio] Hash guardado exitosamente para: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav con ID de hash: 8241
-2024-10-19 03:13:04 - [autRevisarAudio] Iniciando procesamiento del audio: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
-2024-10-19 03:13:04 - --Inicio de la función autProcesarAudio.--
-2024-10-19 03:13:04 - Ruta inicial: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav, Directorio: /home/asley01/MEGA/Waw/X/♥️ 808, Basename: freddie-dredd-type-bass_130bpm_C_major, Extensión: wav
-2024-10-19 03:13:04 - File ID obtenido: 8241
-2024-10-19 03:13:04 - Comando para eliminar metadatos: /usr/bin/ffmpeg -i '/home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav' -map_metadata -1 -c copy '/home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major_temp.wav' -y
-2024-10-19 03:13:04 - Metadatos eliminados del archivo: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
-2024-10-19 03:13:04 - Comando para crear versión lite: /usr/bin/ffmpeg -i '/home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav' -b:a 128k '/home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major_lite.mp3' -y
-2024-10-19 03:13:04 - Versión lite creada: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major_lite.mp32024-10-19 03:13:06 - Nombre limpio generado: Glitch Snare
-2024-10-19 03:13:06 - Archivo original renombrado: /home/asley01/MEGA/Waw/X/♥️ 808/Glitch Snare.wav
-2024-10-19 03:13:06 - Archivo lite renombrado: /home/asley01/MEGA/Waw/X/♥️ 808/Glitch Snare_lite.mp3
-2024-10-19 03:13:06 - Archivo lite movido al directorio de uploads: /var/www/wordpress/wp-content/uploads/audio/Glitch Snare_lite.mp3
-2024-10-19 03:13:06 - Inicio de actualizarUrlArchivo para File ID: 8241 con nueva URL: /home/asley01/MEGA/Waw/X/♥️ 808/Glitch Snare.wav
-2024-10-19 03:13:06 - URL actualizada correctamente para File ID: 8241
-2024-10-19 03:13:06 - Ruta actualizada correctamente para File ID: 8241 a /home/asley01/MEGA/Waw/X/♥️ 808/Glitch Snare.wav2024-10-19 03:13:06 - Enviando rutas a crearAutPost: Original - /home/asley01/MEGA/Waw/X/♥️ 808/Glitch Snare.wav, Lite - /var/www/wordpress/wp-content/uploads/audio/Glitch Snare_lite.mp3
-2024-10-19 03:13:12 - Archivos enviados a crearAutPost.
-2024-10-19 03:13:12 - --Fin de la función autProcesarAudio.--
-2024-10-19 03:13:12 - [autRevisarAudio] Procesamiento completado exitosamente para: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
-2024-10-19 03:13:12 - [procesarAudios] Error al procesar el audio: /home/asley01/MEGA/Waw/X/♥️ 808/freddie-dredd-type-bass_130bpm_C_major.wav
+2024-10-19 05:10:38 - [procesarAudios] Iniciando procesamiento de audios en: /home/asley01/MEGA/Waw/X
+
+2024-10-19 05:10:38 - Iniciando verificación de carga para File ID: 8236 con URL: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorted Kick_lite.mp3
+2024-10-19 05:10:38 - Error al cargar el archivo con File ID: 8236. Código HTTP: 0
+
+2024-10-19 05:10:38 - [debeProcesarse] Resumen: Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3; Hash recibido: 9f80f5a5c4a05875402eb0689b7e0e9855121eb397899cd6af86f3a9400d2b46; El hash ya existe en la base de datos.; El archivo no ha sido cargado correctamente, continuar con el procesamiento.; El archivo y hash son válidos para el procesamiento.
+
+2024-10-19 05:10:38 - [buscarAudios] Audio válido encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3 con hash: 9f80f5a5c4a05875402eb0689b7e0e9855121eb397899cd6af86f3a9400d2b46
+
+2024-10-19 05:10:38 - [buscarAudios] Total de audios encontrados para procesar: 1
+2024-10-19 05:10:38 - [procesarAudios] Cantidad de audios a procesar: 1
+2024-10-19 05:10:38 - [procesarAudios] Iniciando procesamiento de audio: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3
+
+2024-10-19 05:10:38 - [autRevisarAudio] Archivo de audio encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3
+2024-10-19 05:10:38 - [autRevisarAudio] URL del archivo de audio generado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3
+2024-10-19 05:10:38 - [autRevisarAudio] ID del usuario que sube el archivo: 44
+2024-10-19 05:10:38 - [autRevisarAudio] Error: No se pudo guardar el hash en la base de datos para el archivo: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3
 
 */
 
@@ -521,7 +454,7 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id) {
 
     update_post_meta($post_id, 'post_audio', $audio_original_id);
     update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
-    update_post_meta($post_id, 'paraDesacarga', '1');
+    update_post_meta($post_id, 'paraDescarga', '1');
     update_post_meta($post_id, 'postAut', 'true');
 
     return $post_id;
