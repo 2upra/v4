@@ -455,7 +455,7 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id) {
     update_post_meta($post_id, 'post_audio', $audio_original_id);
     update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
     update_post_meta($post_id, 'paraDescarga', '1');
-    update_post_meta($post_id, 'postAut', 'true');
+    update_post_meta($post_id, 'postAut', '1');
 
     return $post_id;
 }
