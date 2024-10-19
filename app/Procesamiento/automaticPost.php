@@ -84,6 +84,17 @@ function buscarAudios($directorio) {
     return $audios_para_procesar;
 }
 
+function wp_get_attachment_url_by_path($file_path) {
+    global $wpdb;
+    $sql = $wpdb->prepare("
+        SELECT guid FROM $wpdb->posts 
+        WHERE guid LIKE %s 
+        AND post_type = 'attachment'
+    ", '%' . ltrim($file_path, '/'));
+    
+    return $wpdb->get_var($sql);
+}
+
 function debeProcesarse($ruta_archivo, $file_hash) {
     try {
         // Verificación de existencia del archivo
