@@ -19,48 +19,7 @@ async function handleAllRequests() {
     }
 }
 
-//esta funcion se va a llamar muchas veces, cada vez que se hace scroll por ejemplo, son muchos post y todo esto maneja la logica de las acciones que se pueden realizar en un post, pero, no es lo suficientemente inteligente en el sentido, de que cada vez que se hace scroll, para los nuevos contenidos, la accion parece estar repetida 2 veces porque la la alerta de confirmacion apareces 2 veces, otro scroll, 3 veces, otro scroll 4 veces, y asi infinitamente, manten las funciones async
-async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
-    const buttons = document.querySelectorAll(selector); // Selecciona los botones.
 
-    buttons.forEach(button => {
-        // Verifica si el listener ya fue añadido
-        if (!button.dataset.listenerAdded) {
-            button.addEventListener('click', async event => { // Añade evento 'click'.
-                const post_id = event.currentTarget.dataset.postId || event.currentTarget.getAttribute('data-post-id'); // Obtiene el post_id.
-                const tipoContenido = event.currentTarget.dataset.tipoContenido; // Obtiene el tipo de contenido.
-
-                if (!post_id) { // Verifica si post_id existe.
-                    console.error('No se encontró post_id en el botón');
-                    return;
-                }
-
-                const confirmed = await confirm(confirmMessage); // Cuadro de confirmación.
-
-                if (confirmed) {
-                    const detalles = document.getElementById('mensajeError')?.value || ''; // Obtiene detalles (si aplica).
-                    const descripcion = document.getElementById('mensajeEdit')?.value || ''; // Obtiene descripción (si aplica).
-
-                    const data = await enviarAjax(action, { // Envía datos vía AJAX.
-                        post_id, 
-                        tipoContenido,
-                        detalles,
-                        descripcion
-                    });
-
-                    if (data.success) {
-                        successCallback(null, data, post_id); // Llama a callback en caso de éxito.
-                    } else {
-                        console.error(`Error: ${data.message}`); // Muestra error.
-                        alert('Error al enviar petición ' + (data.message || 'Error desconocido'));
-                    }
-                }
-            });
-            // Marca el botón para indicar que ya tiene un listener
-            button.dataset.listenerAdded = 'true';
-        }
-    });
-}
 
 //ejemplo de algunas acciones
 async function eliminarPost() {
@@ -232,6 +191,48 @@ async function editarPost() {
             modalManager.toggleModal('editarPost', false);
         });
     }
+}
+
+async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
+    const buttons = document.querySelectorAll(selector); // Selecciona los botones.
+
+    buttons.forEach(button => {
+        // Verifica si el listener ya fue añadido
+        if (!button.dataset.listenerAdded) {
+            button.addEventListener('click', async event => { // Añade evento 'click'.
+                const post_id = event.currentTarget.dataset.postId || event.currentTarget.getAttribute('data-post-id'); // Obtiene el post_id.
+                const tipoContenido = event.currentTarget.dataset.tipoContenido; // Obtiene el tipo de contenido.
+
+                if (!post_id) { // Verifica si post_id existe.
+                    console.error('No se encontró post_id en el botón');
+                    return;
+                }
+
+                const confirmed = await confirm(confirmMessage); // Cuadro de confirmación.
+
+                if (confirmed) {
+                    const detalles = document.getElementById('mensajeError')?.value || ''; // Obtiene detalles (si aplica).
+                    const descripcion = document.getElementById('mensajeEdit')?.value || ''; // Obtiene descripción (si aplica).
+
+                    const data = await enviarAjax(action, { // Envía datos vía AJAX.
+                        post_id, 
+                        tipoContenido,
+                        detalles,
+                        descripcion
+                    });
+
+                    if (data.success) {
+                        successCallback(null, data, post_id); // Llama a callback en caso de éxito.
+                    } else {
+                        console.error(`Error: ${data.message}`); // Muestra error.
+                        alert('Error al enviar petición ' + (data.message || 'Error desconocido'));
+                    }
+                }
+            });
+            // Marca el botón para indicar que ya tiene un listener
+            button.dataset.listenerAdded = 'true';
+        }
+    });
 }
 
 async function requestDeletion() {
