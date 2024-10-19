@@ -137,6 +137,10 @@ async function bloqueos() {
     accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
 }
 
+/*
+Mis alertas son personalizadas, la primera vez que intento modificar un post funciona bien, aparece una alerta, pero si modifico otro post, aparecen 2 alertas, y se repite asi sucesivamente, tengo que reiniciar la pagina para que se restaure
+*/
+
 async function editarPost() {
     modalManager.añadirModal('editarPost', '#editarPost', ['.editarPost']);
     const editButtons = document.querySelectorAll('.editarPost');
@@ -174,11 +178,11 @@ async function editarPost() {
         const enviarEditBtn = document.getElementById('enviarEdit');
         if (enviarEditBtn) {
             enviarEditBtn.dataset.postId = idContenido;
-            // Asegúrate de que el button no tenga listeners previos
-            enviarEditBtn.dataset.listenerAdded = 'false';
+            // No resetear listenerAdded
+            // enviarEditBtn.dataset.listenerAdded = 'false';
         }
 
-        // Añadir o reasignar el evento click al botón de enviar
+        // Añadir el evento click solo una vez
         accionClick('#enviarEdit', 'cambiarDescripcion', '¿Estás seguro de que quieres editar este post?', (statusElement, data) => {
             alert('Post editado correctamente');
             if (postContentDiv) {
