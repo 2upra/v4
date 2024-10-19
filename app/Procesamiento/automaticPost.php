@@ -1,5 +1,25 @@
 <?
 
+add_action('init', 'iniciar_cron_procesamiento_audios');
+function iniciar_cron_procesamiento_audios() {
+    if (!wp_next_scheduled('procesar_audio_cron_event')) {
+        wp_schedule_event(time(), 'cadaDosMinutos', 'procesar_audio_cron_event');
+        guardarLog("Cron de procesamiento de audios programado para cada 2 minutos.");
+    }
+}
+
+add_filter('cron_schedules', 'definir_cron_cada_dos_minutos');
+function definir_cron_cada_dos_minutos($schedules) {
+    if (!isset($schedules['cadaDosMinutos'])) {
+        $schedules['cadaDosMinutos'] = array(
+            'interval' => 120, // 120 segundos = 2 minutos
+            'display'  => __('Cada 2 minutos')
+        );
+    }
+    return $schedules;
+}
+
+add_action('procesar_audio_cron_event', 'procesarAudios');
 
 function procesarAudios() {
     $directorio_audios = '/home/asley01/MEGA/Waw/X';
@@ -13,13 +33,17 @@ function procesarAudios() {
         // Procesar solo el primer audio válido
         $audio_info = $audios_para_procesar[0];
         guardarLog("Iniciando procesamiento de audio: {$audio_info['ruta']}");
-        autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
-        guardarLog("Procesado audio: {$audio_info['ruta']}");
+        
+        // Asegúrate de que autRevisarAudio maneja correctamente errores y actualiza el estado del audio.
+        $procesado = autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
+        
+        if ($procesado) {
+            guardarLog("Procesado correctamente el audio: {$audio_info['ruta']}");
+        } else {
+            guardarLog("Error al procesar el audio: {$audio_info['ruta']}");
+        }
 
-        // Programar la siguiente ejecución solo si hay más audios
-        // Eliminamos el procesamiento de múltiples audios para evitar sobrecarga
-        wp_schedule_single_event(time() + 300, 'procesar_audio_cron_event');
-        guardarLog("Evento programado para procesar audios en 5 minutos.");
+        // No es necesario programar otro evento aquí, ya que el cron recurrente se encarga de esto.
     } else {
         guardarLog("No se encontraron audios para procesar en: {$directorio_audios}");
     }
@@ -84,17 +108,6 @@ function buscarAudios($directorio) {
     return $audios_para_procesar;
 }
 
-function wp_get_attachment_url_by_path($file_path) {
-    global $wpdb;
-    $sql = $wpdb->prepare("
-        SELECT guid FROM $wpdb->posts 
-        WHERE guid LIKE %s 
-        AND post_type = 'attachment'
-    ", '%' . ltrim($file_path, '/'));
-    
-    return $wpdb->get_var($sql);
-}
-
 function debeProcesarse($ruta_archivo, $file_hash) {
     try {
         // Verificación de existencia del archivo
@@ -104,10 +117,6 @@ function debeProcesarse($ruta_archivo, $file_hash) {
         }
 
         // Obtener URL del adjunto por la ruta del archivo
-        if (!function_exists('wp_get_attachment_url_by_path')) {
-            throw new Exception("Función wp_get_attachment_url_by_path no está definida.");
-        }
-
         $attachment_url = wp_get_attachment_url_by_path($ruta_archivo);
         if ($attachment_url) {
             // Buscar si ya existe el adjunto en WordPress
@@ -135,29 +144,16 @@ function debeProcesarse($ruta_archivo, $file_hash) {
     }
 }
 
-
-
-
-add_action('init', 'iniciar_cron_procesamiento_audios');
-function iniciar_cron_procesamiento_audios() {
-    if (!wp_next_scheduled('procesar_audio_cron_event')) {
-        wp_schedule_event(time(), 'cada_cinco_minutos', 'procesar_audio_cron_event');
-    }
+function wp_get_attachment_url_by_path($file_path) {
+    global $wpdb;
+    $sql = $wpdb->prepare("
+        SELECT guid FROM $wpdb->posts 
+        WHERE guid LIKE %s 
+        AND post_type = 'attachment'
+    ", '%' . ltrim($file_path, '/'));
+    
+    return $wpdb->get_var($sql);
 }
-
-add_filter('cron_schedules', 'cincoMinutos');
-function cincoMinutos($schedules) {
-    if (!isset($schedules['cada_cinco_minutos'])) {
-        $schedules['cada_cinco_minutos'] = array(
-            'interval' => 600, // 5 minutos en segundos
-            'display'  => __('Cada 5 minutos')
-        );
-    }
-    return $schedules;
-}
-
-add_action('procesar_audio_cron_event', 'procesarAudios');
-
 
 
 function autRevisarAudio($audio, $file_hash) {
