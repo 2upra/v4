@@ -59,12 +59,12 @@ function botonseguir($author_id)
 
     ob_start();
 ?>
-    <button class="<?php echo esc_attr($clase_boton); ?>"
-        data-seguidor-id="<?php echo esc_attr($current_user_id); ?>"
-        data-seguido-id="<?php echo esc_attr($author_id); ?>">
-        <?php echo $icono_boton; ?>
+    <button class="<? echo esc_attr($clase_boton); ?>"
+        data-seguidor-id="<? echo esc_attr($current_user_id); ?>"
+        data-seguido-id="<? echo esc_attr($author_id); ?>">
+        <? echo $icono_boton; ?>
     </button>
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -91,12 +91,12 @@ function botonSeguirPerfilBanner($author_id)
     // Generar el botón con el texto correspondiente
     ob_start();
 ?>
-    <button class="borde <?php echo esc_attr($clase_boton); ?>"
-        data-seguidor-id="<?php echo esc_attr($current_user_id); ?>"
-        data-seguido-id="<?php echo esc_attr($author_id); ?>">
-        <?php echo esc_html($texto_boton); ?>
+    <button class="borde <? echo esc_attr($clase_boton); ?>"
+        data-seguidor-id="<? echo esc_attr($current_user_id); ?>"
+        data-seguido-id="<? echo esc_attr($author_id); ?>">
+        <? echo esc_html($texto_boton); ?>
     </button>
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -199,39 +199,45 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
     // Obtener los metadatos del post
     $postAut = get_post_meta($post_id, 'postAut', true);
     $ultimoEdit = get_post_meta($post_id, 'ultimoEdit', true);
+    $verificado = get_post_meta($post_id, 'Verificado', true);
 
     ob_start();
 ?>
     <div class="SOVHBY">
         <div class="CBZNGK">
-            <a href="<?php echo esc_url(get_author_posts_url($author_id)); ?>"></a>
-            <img src="<?php echo esc_url($author_avatar); ?>">
-            <?php echo botonseguir($author_id); ?>
+            <a href="<? echo esc_url(get_author_posts_url($author_id)); ?>"></a>
+            <img src="<? echo esc_url($author_avatar); ?>">
+            <? echo botonseguir($author_id); ?>
         </div>
         <div class="ZVJVZA">
             <div class="JHVSFW">
-                <a href="<?php echo esc_url(get_author_posts_url($author_id)); ?>" class="profile-link">
-                    <?php echo esc_html($author_name); ?>
+                <a href="<? echo esc_url(get_author_posts_url($author_id)); ?>" class="profile-link">
+                    <? echo esc_html($author_name); ?>
                 </a>
             </div>
             <div class="HQLXWD">
-                <a href="<?php echo esc_url(get_permalink()); ?>" class="post-link">
-                    <?php echo esc_html($post_date); ?>
+                <a href="<? echo esc_url(get_permalink()); ?>" class="post-link">
+                    <? echo esc_html($post_date); ?>
                 </a>
             </div>
         </div>
     </div>
 
-    <?php if ($postAut == '1' && empty($ultimoEdit)) : ?>
 
-        <div class="verificacionPost">
-            <?php echo $GLOBALS['stop']; ?>
-        </div>
-    <?php endif; ?>
 
-    <?php if ($block || $colab) : ?>
+    <div class="verificacionPost">
+        <? if ($postAut == '1' && empty($ultimoEdit)) : ?>
+            <? echo $GLOBALS['robot']; ?>
+        <? endif; ?>
+        <? if ($postAut == '1') : ?>
+            <? echo $GLOBALS['check']; ?>
+        <? endif; ?>
+    </div>
+
+
+    <? if ($block || $colab) : ?>
         <div class="OFVWLS">
-            <?php
+            <?
             if ($block) {
                 echo "Exclusivo";
             } elseif ($colab) {
@@ -239,14 +245,14 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
             }
             ?>
         </div>
-    <?php endif; ?>
+    <? endif; ?>
 
     <div class="spin"></div>
 
     <div class="YBZGPB">
-        <?php echo opcionesPost($post_id, $author_id); ?>
+        <? echo opcionesPost($post_id, $author_id); ?>
     </div>
-<?php
+<?
     return ob_get_clean();
 }
 

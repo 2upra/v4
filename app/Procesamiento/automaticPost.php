@@ -1,5 +1,5 @@
 <?
-/*
+
 add_action('init', 'iniciar_cron_procesamiento_audios');
 function iniciar_cron_procesamiento_audios()
 {
@@ -22,7 +22,7 @@ function definir_cron_cada_dos_minutos($schedules)
 }
 
 add_action('procesar_audio1_cron_event', 'procesarAudios');
-*/
+
 
 /*
 2024-10-19 05:10:38 - [procesarAudios] Iniciando procesamiento de audios en: /home/asley01/MEGA/Waw/X
