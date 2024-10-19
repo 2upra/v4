@@ -12,7 +12,7 @@ add_filter('cron_schedules', 'definir_cron_cada_dos_minutos');
 function definir_cron_cada_dos_minutos($schedules) {
     if (!isset($schedules['cadaDosMinutos'])) {
         $schedules['cadaDosMinutos'] = array(
-            'interval' => 120, // 120 segundos = 2 minutos
+            'interval' => 180, // 120 segundos = 2 minutos
             'display'  => __('Cada 2 minutos')
         );
     }
