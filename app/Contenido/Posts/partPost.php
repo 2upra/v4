@@ -33,6 +33,9 @@ function variablesPosts($post_id = null)
         'scale' => get_post_meta($post_id, 'audio_scale', true),
         'detallesIA' => get_post_meta($post_id, 'audio_descripcion', true),
         'datosAlgoritmo' => get_post_meta($post_id, 'datosAlgoritmo', true),
+        'postAut' => get_post_meta($post_id, 'postAut', true),
+        'ultimoEdit' => get_post_meta($post_id, 'ultimoEdit', true),
+
     ];
 }
 
@@ -193,43 +196,61 @@ function imagenPost($post_id, $size = 'medium', $quality = 50, $strip = 'all', $
 //MOSTRAR INFORMACIÓN DEL AUTOR
 function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id, $block, $colab)
 {
+    // Obtener los metadatos del post
+    $postAut = get_post_meta($post_id, 'postAut', true);
+    $ultimoEdit = get_post_meta($post_id, 'ultimoEdit', true);
+
     ob_start();
-?>
+    ?>
     <div class="SOVHBY">
         <div class="CBZNGK">
-            <a href="<? echo esc_url(get_author_posts_url($author_id)); ?>"></a>
-            <img src="<? echo esc_url($author_avatar); ?>">
-            <? echo botonseguir($author_id); ?>
+            <a href="<?php echo esc_url(get_author_posts_url($author_id)); ?>"></a>
+            <img src="<?php echo esc_url($author_avatar); ?>">
+            <?php echo botonseguir($author_id); ?>
         </div>
         <div class="ZVJVZA">
             <div class="JHVSFW">
-                <a href="<? echo esc_url(get_author_posts_url($author_id)); ?>" class="profile-link">
-                    <? echo esc_html($author_name); ?></a>
+                <a href="<?php echo esc_url(get_author_posts_url($author_id)); ?>" class="profile-link">
+                    <?php echo esc_html($author_name); ?>
+                </a>
             </div>
             <div class="HQLXWD">
-                <a href="<? echo esc_url(get_permalink()); ?>" class="post-link"><? echo esc_html($post_date); ?></a>
+                <a href="<?php echo esc_url(get_permalink()); ?>" class="post-link">
+                    <?php echo esc_html($post_date); ?>
+                </a>
             </div>
         </div>
     </div>
-    <? if ($block || $colab) : ?>
+
+    <?php if ($postAut == '1' && empty($ultimoEdit)) : ?>
+        <div class="verificacionPost">
+            <div class="verificacionPost">
+                <?php echo $GLOBALS['stop']; ?>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($block || $colab) : ?>
         <div class="OFVWLS">
-            <?
+            <?php
             if ($block) {
-                echo "Exclusive";
+                echo "Exclusivo";
             } elseif ($colab) {
                 echo "Colab";
             }
             ?>
         </div>
-    <? endif; ?>
-    <div class="spin">
-    </div>
+    <?php endif; ?>
+    
+    <div class="spin"></div>
+    
     <div class="YBZGPB">
-        <? echo opcionesPost($post_id, $author_id); ?>
+        <?php echo opcionesPost($post_id, $author_id); ?>
     </div>
-<?
+    <?php
     return ob_get_clean();
 }
+
 
 //BOTON PARA SUSCRIBIRSE
 function botonSuscribir($author_id, $author_name, $subscription_price_id = 'price_1OqGjlCdHJpmDkrryMzL0BCK')

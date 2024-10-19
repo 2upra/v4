@@ -64,12 +64,12 @@ function procesarAudios() {
     if (!empty($audios_para_procesar)) {
         guardarLog("[$func_name] Cantidad de audios a procesar: " . count($audios_para_procesar));
 
-        // Procesar solo el primer audio válido
-        $audio_info = $audios_para_procesar[0];
+        // Elegir un audio al azar para procesar
+        $audio_info = $audios_para_procesar[array_rand($audios_para_procesar)]; 
         guardarLog("[$func_name] Iniciando procesamiento de audio: {$audio_info['ruta']}");
+        
         // Procesar el audio
         autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
-
     } else {
         guardarLog("[$func_name] No se encontraron audios para procesar en: {$directorio_audios}");
     }
@@ -112,43 +112,35 @@ function buscarAudios($directorio) {
 
             // Verificar si la extensión está permitida
             if (!in_array($extension, $extensiones_permitidas)) {
-                guardarLog("[$func_name] Archivo ignorado (extensión no permitida): {$ruta_archivo}");
                 continue; // Saltar archivos que no sean wav o mp3
             }
 
             // Verificar si el archivo es legible
             if (!is_readable($ruta_archivo)) {
-                guardarLog("[$func_name] Archivo no legible (sin permisos): {$ruta_archivo}");
-                error_log("[$func_name] Archivo no legible (sin permisos): {$ruta_archivo}");
                 continue;
             }
 
             $file_hash = hash_file('sha256', $ruta_archivo);
             if (!$file_hash) {
-                guardarLog("[$func_name] Error al generar el hash para el archivo: {$ruta_archivo}");
-                error_log("[$func_name] Error al generar el hash para el archivo: {$ruta_archivo}");
                 continue;
             }
 
             if (debeProcesarse($ruta_archivo, $file_hash)) {
-                guardarLog("[$func_name] Audio válido encontrado: {$ruta_archivo} con hash: {$file_hash}");
                 $audios_para_procesar[] = [
                     'ruta' => $ruta_archivo,
                     'hash' => $file_hash
                 ];
-
-                // Solo añadimos el primer audio válido
-                break;
-            } else {
-                guardarLog("[$func_name] Audio no válido para procesamiento: {$ruta_archivo}");
             }
+        }
+
+        // Limitar la cantidad de archivos analizados por iteración para mejorar eficiencia 
+        if (count($audios_para_procesar) >= 100) { 
+            break;
         }
     }
 
-    guardarLog("[$func_name] Total de audios encontrados para procesar: " . count($audios_para_procesar));
     return $audios_para_procesar;
 }
-
 
 function debeProcesarse($ruta_archivo, $file_hash) {
     $func_name = __FUNCTION__; // Nombre de la función para los logs
