@@ -1,66 +1,6 @@
 const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
 
-//esto se llama cada vez que hay un ajax
-async function handleAllRequests() {
-    try {
-        await requestDeletion();
-        await estadorola();
-        await rejectPost();
-        await eliminarPost();
-        await rechazarColab();
-        await aceptarcolab();
-        await reporte();
-        await bloqueos();
-        await banearUsuario();
-        await editarPost();
-        await permitirDescarga();
-    } catch (error) {
-        console.error('Ocurrió un error al procesar las solicitudes:', error);
-    }
-}
 
-//esta funcion se va a llamar muchas veces, cada vez que se hace scroll por ejemplo, son muchos post y todo esto maneja la logica de las acciones que se pueden realizar en un post, pero, no es lo suficientemente inteligente en el sentido, de que cada vez que se hace scroll, para los nuevos contenidos, la accion parece estar repetida 2 veces porque la la alerta de confirmacion apareces 2 veces, otro scroll, 3 veces, otro scroll 4 veces, y asi infinitamente, manten las funciones async
-async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
-    const buttons = document.querySelectorAll(selector); // Selecciona los botones.
-
-    buttons.forEach(button => {
-        // Verifica si el listener ya fue añadido
-        if (!button.dataset.listenerAdded) {
-            button.addEventListener('click', async event => { // Añade evento 'click'.
-                const post_id = event.currentTarget.dataset.postId || event.currentTarget.getAttribute('data-post-id'); // Obtiene el post_id.
-                const tipoContenido = event.currentTarget.dataset.tipoContenido; // Obtiene el tipo de contenido.
-
-                if (!post_id) { // Verifica si post_id existe.
-                    console.error('No se encontró post_id en el botón');
-                    return;
-                }
-
-                const confirmed = await confirm(confirmMessage); // Cuadro de confirmación.
-
-                if (confirmed) {
-                    const detalles = document.getElementById('mensajeError')?.value || ''; // Obtiene detalles (si aplica).
-                    const descripcion = document.getElementById('mensajeEdit')?.value || ''; // Obtiene descripción (si aplica).
-
-                    const data = await enviarAjax(action, { // Envía datos vía AJAX.
-                        post_id, 
-                        tipoContenido,
-                        detalles,
-                        descripcion
-                    });
-
-                    if (data.success) {
-                        successCallback(null, data, post_id); // Llama a callback en caso de éxito.
-                    } else {
-                        console.error(`Error: ${data.message}`); // Muestra error.
-                        alert('Error al enviar petición ' + (data.message || 'Error desconocido'));
-                    }
-                }
-            });
-            // Marca el botón para indicar que ya tiene un listener
-            button.dataset.listenerAdded = 'true';
-        }
-    });
-}
 
 //ejemplo de algunas acciones
 async function eliminarPost() {
@@ -178,18 +118,19 @@ async function bloqueos() {
     accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
 }
 
+// Inicializa la funcionalidad de edición de publicaciones
 async function editarPost() {
-    // Añadir el modal si aún no está añadido
+    // Añade el modal de edición si aún no está presente
     modalManager.añadirModal('editarPost', '#editarPost', ['.editarPost']);
     
-    // Seleccionar todos los botones de editar
+    // Selecciona todos los botones de edición
     const editButtons = document.querySelectorAll('.editarPost');
     
     if (editButtons.length === 0) {
         return;
     }
 
-    // Añadir evento click a cada botón de editar
+    // Agrega un event listener a cada botón de edición
     editButtons.forEach(function (button) {
         button.addEventListener('click', function () {
             const postId = this.getAttribute('data-post-id');
@@ -197,65 +138,150 @@ async function editarPost() {
         });
     });
 
-    // Obtener el botón de enviar una vez
+    // Configura el botón de enviar una vez
     const enviarEditBtn = document.getElementById('enviarEdit');
     if (enviarEditBtn) {
-        // Remover cualquier event listener previo para evitar duplicados
-        enviarEditBtn.replaceWith(enviarEditBtn.cloneNode(true));
-        const newEnviarEditBtn = document.getElementById('enviarEdit');
-        
-        // Añadir el event listener una sola vez
-        newEnviarEditBtn.addEventListener('click', function () {
-            const postId = this.dataset.postId;
-            if (!postId) return;
+        // Verifica si ya se ha añadido el listener para evitar duplicados
+        if (!enviarEditBtn.dataset.listenerAdded) {
+            enviarEditBtn.addEventListener('click', async function () {
+                const postId = this.dataset.postId;
+                
+                if (!postId) {
+                    console.error('No se encontró post_id en el botón enviarEdit');
+                    return;
+                }
+                
+                // Muestra una confirmación al usuario
+                const confirmed = await confirm('¿Estás seguro de que quieres editar este post?');
+                if (!confirmed) return;
 
-            // Confirmación de la acción
-            if (!confirm('¿Estás seguro de que quieres editar este post?')) {
-                return;
-            }
+                // Obtiene la descripción editada del textarea
+                const descripcion = document.getElementById('mensajeEdit')?.value.trim() || '';
+                
+                try {
+                    // Envía la solicitud AJAX para actualizar la descripción
+                    const data = await enviarAjax('cambiarDescripcion', {
+                        post_id: postId,
+                        descripcion: descripcion
+                    });
 
-            // Obtener el contenido editado
-            const mensajeEditTextarea = document.getElementById('mensajeEdit');
-            const nuevoContenido = mensajeEditTextarea ? mensajeEditTextarea.value.trim() : '';
+                    if (data.success) {
+                        alert('Post editado correctamente');
 
-            // Actualizar el contenido en el DOM
-            const postContentDiv = document.querySelector(`.thePostContet[data-post-id="${postId}"]`);
-            if (postContentDiv) {
-                postContentDiv.innerHTML = nuevoContenido; // Asegúrate de sanitizar si es necesario
-            }
+                        // Actualiza el contenido de la publicación en el DOM
+                        const postContentDiv = document.querySelector(`.thePostContet[data-post-id="${postId}"]`);
+                        if (postContentDiv) {
+                            postContentDiv.textContent = descripcion; // Usa textContent para evitar inyecciones de HTML
+                        }
 
-            alert('Post editado correctamente');
-
-            // Cerrar el modal
-            modalManager.toggleModal('editarPost', false);
-        });
-    }
-
-    // Función para abrir el modal y rellenarlo con el contenido del post
-    function abrirModalEditarPost(idContenido) {
-        modalManager.toggleModal('editarPost', true);
-
-        // Buscar el contenido del post correspondiente en el DOM
-        const postContentDiv = document.querySelector(`.thePostContet[data-post-id="${idContenido}"]`);
-        let postContent = postContentDiv ? postContentDiv.innerHTML.trim() : '';
-
-        // Eliminar etiquetas HTML, manteniendo solo el texto
-        postContent = postContent.replace(/<[^>]+>/g, ''); // Elimina todas las etiquetas HTML
-
-        // Insertar el contenido limpio en el textarea del modal
-        const mensajeEditTextarea = document.getElementById('mensajeEdit');
-        if (mensajeEditTextarea) {
-            mensajeEditTextarea.value = postContent;
-        }
-
-        // Asignar el ID del post al botón de enviar
-        if (enviarEditBtn) {
-            enviarEditBtn.dataset.postId = idContenido;
+                        // Cierra el modal
+                        modalManager.toggleModal('editarPost', false);
+                    } else {
+                        console.error(`Error: ${data.message}`);
+                        alert('Error al enviar petición: ' + (data.message || 'Error desconocido'));
+                    }
+                } catch (error) {
+                    console.error('Error al editar el post:', error);
+                    alert('Ocurrió un error al editar el post.');
+                }
+            });
+            // Marca que el listener ya ha sido añadido
+            enviarEditBtn.dataset.listenerAdded = 'true';
         }
     }
 }
 
+// Abre el modal de edición y rellena el contenido correspondiente
+function abrirModalEditarPost(idContenido) {
+    // Muestra el modal
+    modalManager.toggleModal('editarPost', true);
 
+    // Busca el contenido del post correspondiente en el DOM
+    const postContentDiv = document.querySelector(`.thePostContet[data-post-id="${idContenido}"]`);
+    let postContent = postContentDiv ? postContentDiv.innerHTML.trim() : '';
+
+    // Elimina todas las etiquetas HTML para obtener solo el texto
+    postContent = postContent.replace(/<[^>]+>/g, '');
+
+    // Inserta el contenido limpio en el textarea del modal
+    const mensajeEditTextarea = document.getElementById('mensajeEdit');
+    if (mensajeEditTextarea) {
+        mensajeEditTextarea.value = postContent;
+    }
+
+    // Asigna el ID de la publicación al botón de enviar mediante un atributo de datos
+    const enviarEditBtn = document.getElementById('enviarEdit');
+    if (enviarEditBtn) {
+        enviarEditBtn.dataset.postId = idContenido;
+    }
+}
+
+// Maneja todas las solicitudes cada vez que hay una actualización de contenido vía AJAX
+async function handleAllRequests() {
+    try {
+        await requestDeletion();
+        await estadorola();
+        await rejectPost();
+        await eliminarPost();
+        await rechazarColab();
+        await aceptarcolab();
+        await reporte();
+        await bloqueos();
+        await banearUsuario();
+        await editarPost();
+        await permitirDescarga();
+    } catch (error) {
+        console.error('Ocurrió un error al procesar las solicitudes:', error);
+    }
+}
+
+// Función genérica para manejar acciones con confirmación y AJAX
+async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
+    const buttons = document.querySelectorAll(selector); // Selecciona los botones.
+
+    buttons.forEach(button => {
+        // Verifica si el listener ya fue añadido
+        if (!button.dataset.listenerAdded) {
+            button.addEventListener('click', async event => { // Añade evento 'click'.
+                const post_id = event.currentTarget.dataset.postId || event.currentTarget.getAttribute('data-post-id'); // Obtiene el post_id.
+                const tipoContenido = event.currentTarget.dataset.tipoContenido; // Obtiene el tipo de contenido.
+
+                if (!post_id) { // Verifica si post_id existe.
+                    console.error('No se encontró post_id en el botón');
+                    return;
+                }
+
+                const confirmed = await confirm(confirmMessage); // Cuadro de confirmación.
+
+                if (confirmed) {
+                    const detalles = document.getElementById('mensajeError')?.value || ''; // Obtiene detalles (si aplica).
+                    const descripcion = document.getElementById('mensajeEdit')?.value || ''; // Obtiene descripción (si aplica).
+
+                    try {
+                        const data = await enviarAjax(action, { // Envía datos vía AJAX.
+                            post_id, 
+                            tipoContenido,
+                            detalles,
+                            descripcion
+                        });
+
+                        if (data.success) {
+                            successCallback(null, data, post_id); // Llama a callback en caso de éxito.
+                        } else {
+                            console.error(`Error: ${data.message}`); // Muestra error.
+                            alert('Error al enviar petición: ' + (data.message || 'Error desconocido'));
+                        }
+                    } catch (error) {
+                        console.error('Error al procesar la acción:', error);
+                        alert('Ocurrió un error al procesar la acción.');
+                    }
+                }
+            });
+            // Marca el botón para indicar que ya tiene un listener
+            button.dataset.listenerAdded = 'true';
+        }
+    });
+}
 
 async function requestDeletion() {
     await accionClick(
