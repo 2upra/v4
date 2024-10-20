@@ -217,12 +217,22 @@ function calcularFeedPersonalizado($userId)
         $horasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / 3600;
         $factorTiempo = pow(0.98, $horasDesdePublicacion);
 
+        // Verificar metas 'Verificado' y 'postAut'
+        $metaVerificado = isset($datosAlgoritmo['Verificado']) && $datosAlgoritmo['Verificado'] == 1;
+        $metaPostAut = isset($datosAlgoritmo['postAut']) && $datosAlgoritmo['postAut'] == 1;
+
+        // Ajustar puntos según las metas
+        if ($metaVerificado && !$metaPostAut) {
+            $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.2;
+        } elseif (!$metaVerificado && $metaPostAut) {
+            $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.8;
+        } else {
+            $puntosFinal = $puntosUsuario + $puntosIntereses + $puntosLikes;
+        }
+
         // Introducir aleatoriedad controlada en los puntos finales
-        $aleatoriedad = mt_rand(0, 20); // Número aleatorio entre 0 y 20
-
-        $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes + $aleatoriedad) * $factorTiempo;
-
-        // Evitar que el factor de aleatoriedad supere cierto porcentaje
+        $aleatoriedad = mt_rand(0, 30); 
+        $puntosFinal = $puntosFinal * $factorTiempo;
         $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100));
 
         $posts_personalizados[$post_id] = $puntosFinal;
@@ -231,7 +241,6 @@ function calcularFeedPersonalizado($userId)
 
     // Mezclar los posts ligeramente para introducir aleatoriedad
     uasort($posts_personalizados, function($a, $b) {
-        // Comparar los puntos con una variación aleatoria
         $random_factor = mt_rand(-10, 10) / 100; // Variación entre -10% y +10%
         $a_adjusted = $a * (1 + $random_factor);
         $b_adjusted = $b * (1 + $random_factor);
