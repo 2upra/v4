@@ -1,11 +1,6 @@
 <?
-function save_waveform_image()
-{
-    guardarLog('Iniciando la función save_waveform_image.');
-
-    // Validar datos de entrada.
+function save_waveform_image() {
     if (!isset($_FILES['image']) || !isset($_POST['post_id'])) {
-        guardarLog('Datos incompletos: ' . print_r($_POST, true) . print_r($_FILES, true));
         wp_send_json_error('Datos incompletos');
         return;
     }
@@ -13,14 +8,11 @@ function save_waveform_image()
     $file = $_FILES['image'];
     $post_id = intval($_POST['post_id']);
 
-    guardarLog('Archivo recibido: ' . print_r($file, true));
-
     // Eliminar la imagen anterior si waveCargada es false.
     if (get_post_meta($post_id, 'waveCargada', true) === 'false') {
         $existing_attachment_id = get_post_meta($post_id, 'waveform_image_id', true);
         if ($existing_attachment_id) {
             wp_delete_attachment($existing_attachment_id, true);
-            guardarLog('Imagen anterior eliminada: ' . $existing_attachment_id);
         }
     }
 
@@ -34,7 +26,10 @@ function save_waveform_image()
     require_once(ABSPATH . 'wp-admin/includes/image.php');
     require_once(ABSPATH . 'wp-admin/includes/file.php');
     require_once(ABSPATH . 'wp-admin/includes/media.php');
-    $attachment_id = media_handle_upload('image', $post_id);
+    
+    // Obtener el autor del post y asignar la imagen a él.
+    $author_id = get_post_field('post_author', $post_id);
+    $attachment_id = media_handle_upload('image', $post_id, array('post_author' => $author_id));
 
     // Remover el filtro.
     remove_filter('wp_handle_upload_prefilter', function ($file) use ($post_id) {
@@ -44,7 +39,6 @@ function save_waveform_image()
 
     // Manejar errores de subida.
     if (is_wp_error($attachment_id)) {
-        guardarLog('Error al subir la imagen: ' . $attachment_id->get_error_message());
         wp_send_json_error('Error al subir la imagen');
         return;
     }
@@ -59,7 +53,6 @@ function save_waveform_image()
     update_post_meta($post_id, 'waveform_image_url', $image_url);
     update_post_meta($post_id, 'waveCargada', true);
 
-    guardarLog('Imagen guardada correctamente - ID: ' . $attachment_id . ', URL: ' . $image_url);
     wp_send_json_success(array(
         'message' => 'Imagen guardada correctamente',
         'url' => $image_url,

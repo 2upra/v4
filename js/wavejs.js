@@ -100,28 +100,31 @@ window.we = function (postId, audioUrl) {
             .then(response => response.blob())
             .then((blob) => {
                 const audioBlobUrl = URL.createObjectURL(blob);
-
+            
                 wavesurfer = initWavesurfer(container);
                 wavesurfer.load(audioBlobUrl);
-
+            
                 const waveformBackground = container.querySelector('.waveform-background');
                 if (waveformBackground) {
                     waveformBackground.style.display = 'none';
                 }
-
+            
                 wavesurfer.on('ready', () => {
                     window.audioLoading = false;
                     container.dataset.audioLoaded = 'true';
                     container.querySelector('.waveform-loading').style.display = 'none';
                     const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
-
-                    if (!waveCargada) {
+            
+                    // Detectar si el usuario está en móvil
+                    const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
+            
+                    if (!waveCargada && !isMobile) {
                         setTimeout(() => {
                             const image = generateWaveformImage(wavesurfer);
                             sendImageToServer(image, postId);
                         }, 1);
                     }
-
+            
                     container.addEventListener('click', () => {
                         if (wavesurfer.isPlaying()) {
                             wavesurfer.pause();
@@ -130,7 +133,7 @@ window.we = function (postId, audioUrl) {
                         }
                     });
                 });
-
+            
                 wavesurfer.on('error', () => {
                     console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`);
                     setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
