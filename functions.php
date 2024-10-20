@@ -15,9 +15,9 @@ function escribirLog($mensaje, $archivo) {
 
     // Limitar el tamaño del archivo de log a 400 líneas
     $line_count = count(file($archivo));
-    if ($line_count > 400) {
+    if ($line_count > 2000) {
         $lines = file($archivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        $new_lines = array_slice($lines, -400);
+        $new_lines = array_slice($lines, -2000);
         file_put_contents($archivo, implode(PHP_EOL, $new_lines) . PHP_EOL);
     }
 }
@@ -180,7 +180,7 @@ function limpiarLogs()
             $file_size = filesize($file) / (1024 * 1024);
             if ($file_size > 1) {
                 $lines = file($file);
-                $lines = array_slice($lines, -1000);
+                $lines = array_slice($lines, -2000);
                 file_put_contents($file, implode('', $lines));
             }
         }
