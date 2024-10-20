@@ -81,23 +81,31 @@ function generarMetaDeIntereses($user_id)
     return actualizarIntereses($user_id, $tag_intensidad, $interesesActuales);
 }
 
+
+
 function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
 {
     global $wpdb;
 
+    // Iniciar transacción
     $wpdb->query('START TRANSACTION');
 
     try {
-        $batch_values = [];
-        $intereses_nuevos = array_keys($tag_intensidad);
+        // 1. Limitar a los 100 intereses más intensos
+        uasort($tag_intensidad, function($a, $b) {
+            return $b['intensity'] - $a['intensity'];
+        });
+        $tag_intensidad = array_slice($tag_intensidad, 0, 100, true);
 
-        // Preparar batch para inserción/actualización
-        foreach ($tag_intensidad as $interest => $intensity) {
+        // 2. Preparar batch para inserción/actualización
+        $batch_values = [];
+        foreach ($tag_intensidad as $interest => $data) {
+            $intensity = $data['intensity'];
             $batch_values[] = $wpdb->prepare('(%d, %s, %d)', $user_id, $interest, $intensity);
         }
 
+        // 3. Insertar o actualizar intereses en lote
         if (!empty($batch_values)) {
-            // Insertar o actualizar intereses en lote
             $values = implode(', ', $batch_values);
             $sql = "
                 INSERT INTO " . INTERES_TABLE . " (user_id, interest, intensity)
@@ -107,7 +115,7 @@ function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
             $wpdb->query($sql);
         }
 
-        // Eliminar intereses que ya no aplican
+        // 4. Eliminar intereses que ya no aplican (los que no están entre los 100 más intensos)
         $intereses_a_eliminar = array_diff_key($interesesActuales, $tag_intensidad);
         if (!empty($intereses_a_eliminar)) {
             $placeholders = implode(', ', array_fill(0, count($intereses_a_eliminar), '%s'));
@@ -118,16 +126,21 @@ function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
             $wpdb->query($sql);
         }
 
+        // 5. Confirmar transacción
         $wpdb->query('COMMIT');
+        
+        // 6. Log de éxito
         logAlgoritmo("Intereses actualizados exitosamente para el usuario: $user_id");
         return true;
     } catch (Exception $e) {
+        // 7. Manejo de errores y rollback
         $wpdb->query('ROLLBACK');
         error_log('Error al actualizar intereses: ' . $e->getMessage());
         logAlgoritmo("Error al actualizar intereses: " . $e->getMessage());
         return false;
     }
 }
+
 
 function calcularFeedPersonalizado($userId)
 {
