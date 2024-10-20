@@ -43,39 +43,58 @@ function procesarAudios()
         return;
     }
 
+    $resumen_logs = [];
+    $total_audios = 0;
+    $audios_procesados = 0;
+
     try {
         $audios_para_procesar = buscarAudios($directorio_audios);
-        if ($audios_para_procesar) {
+        $total_audios = count($audios_para_procesar);
+
+        if ($total_audios > 0) {
             $audio_info = $audios_para_procesar[array_rand($audios_para_procesar)];
             autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
+            $audios_procesados++;
+
+            $resumen_logs[] = "Audio seleccionado para procesar: {$audio_info['ruta']}";
         }
     } finally {
         flock($fp, LOCK_UN);
         fclose($fp);
         unlink($lock_file);
+
+        // Resumen final del proceso
+        $resumen_logs[] = "Total de audios encontrados: $total_audios";
+        $resumen_logs[] = "Total de audios procesados: $audios_procesados";
+        guardarLogResumen('procesarAudios', $resumen_logs);
     }
 }
 
 # Paso 2
 function buscarAudios($directorio)
 {
+    $resumen_logs = [];
+    $audios = [];
+    $extensiones_permitidas = ['wav', 'mp3'];
+    $total_archivos = 0;
+    $archivos_validos = 0;
+
     if (!is_dir($directorio) || !is_readable($directorio)) {
         guardarLog("[buscarAudios] Error: El directorio no existe, no es accesible o no se puede leer: {$directorio}");
         return [];
     }
 
-    $audios = [];
-    $extensiones_permitidas = ['wav', 'mp3'];
-
     try {
         $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio, FilesystemIterator::SKIP_DOTS));
         foreach ($iterator as $archivo) {
+            $total_archivos++;
             if ($archivo->isFile()) {
                 $ext = strtolower($archivo->getExtension());
                 if (in_array($ext, $extensiones_permitidas, true) && is_readable($archivo->getPathname())) {
                     $hash = hash_file('sha256', $archivo->getPathname());
                     if ($hash && debeProcesarse($archivo->getPathname(), $hash)) {
                         $audios[] = ['ruta' => $archivo->getPathname(), 'hash' => $hash];
+                        $archivos_validos++;
                         if (count($audios) >= 100) break;
                     }
                 }
@@ -86,6 +105,11 @@ function buscarAudios($directorio)
         error_log("[buscarAudios] Excepción al iterar directorios: " . $e->getMessage());
     }
 
+    // Resumen del proceso de búsqueda
+    $resumen_logs[] = "Total de archivos revisados: $total_archivos";
+    $resumen_logs[] = "Archivos válidos encontrados: $archivos_validos";
+    guardarLogResumen('buscarAudios', $resumen_logs);
+
     return $audios;
 }
 
@@ -93,33 +117,35 @@ function buscarAudios($directorio)
 function debeProcesarse($ruta_archivo, $file_hash)
 {
     $logs = [];
+    $resultado_procesamiento = true;
 
     try {
         if (!file_exists($ruta_archivo)) {
             $mensaje = "Error: El archivo no existe: {$ruta_archivo}";
             $logs[] = $mensaje;
             error_log("[debeProcesarse] $mensaje");
-            guardarLogResumen('debeProcesarse', $logs);
-            return false;
+            $resultado_procesamiento = false;
         }
 
         if (!$file_hash) {
             $mensaje = "Error: Hash inexistente para el archivo: {$ruta_archivo}";
             $logs[] = $mensaje;
             error_log("[debeProcesarse] $mensaje");
-            guardarLogResumen('debeProcesarse', $logs);
-            return false;
+            $resultado_procesamiento = false;
         }
 
         if (obtenerHash($file_hash) && verificarCargaArchivoPorHash($file_hash)) {
             $mensaje = "El archivo con hash {$file_hash} ya ha sido cargado, no es necesario procesarlo.";
             $logs[] = $mensaje;
-            guardarLogResumen('debeProcesarse', $logs);
-            return false;
+            $resultado_procesamiento = false;
+        }
+
+        if ($resultado_procesamiento) {
+            $logs[] = "El archivo {$ruta_archivo} está listo para ser procesado.";
         }
 
         guardarLogResumen('debeProcesarse', $logs);
-        return true;
+        return $resultado_procesamiento;
     } catch (Exception $e) {
         $mensaje = "Excepción capturada: " . $e->getMessage();
         $logs[] = $mensaje;
