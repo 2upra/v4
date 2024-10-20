@@ -566,8 +566,8 @@ function rehacerDescripcionAudio($post_id, $archivo_audio)
         . '"Tipo de audio":{"es":["aqui necesito que puedas determinar si es un sample, un loop o un one shot"], "en":["Sample"]},'
         . '"Tags posibles":{"es":["Naturaleza, phonk, memphis, oscuro"], "en":["Nature"]},'
         . '"Sugerencia de busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
-        . " Nota adicional: solo responde con la estructura, intenta ser muy detallista y preciso con los datos, no digas nada adicional al usuario. Algo importante a tener en cuenta es que debe determinarse bien si es un loop, o un one shot, o sea, los sonidos o golpes de sonidos, suenan una sola vez, y los loop es una secuencia de sonido, tu me entiendes, esa informacion va en tipo de audio, en los tags posible, preferiblemente tags de una sola palabra, no frases."
-        . "La descripción tiene que ser corta y breve, agreg datos en español y también en inglés, agrega muchas sugerencias de busqueda para optimizar el SEO.";
+        . " Nota adicional: solo responde con la estructura, intenta ser muy detallista y preciso con los datos, puedes omitir cosas manteniendo la estructura, mejor la calidad que la cantidad, no digas nada adicional al usuario. Algo importante a tener en cuenta es que debe determinarse bien si es un loop, o un one shot, o sea, los sonidos o golpes de sonidos, suenan una sola vez, y los loop es una secuencia de sonido, tu me entiendes, esa informacion va en tipo de audio, en los tags posible, preferiblemente tags de una sola palabra, no frases."
+        . "La descripción tiene que ser corta y breve, agrega datos en español y también en inglés, agrega muchas sugerencias de busqueda para optimizar el SEO.";
 
     $descripcion_mejorada = generarDescripcionIA($archivo_audio, $prompt);
 
