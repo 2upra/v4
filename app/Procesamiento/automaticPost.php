@@ -1,5 +1,13 @@
 <?
 
+#Auxiliares
+function guardarLogResumen($func_name, $resumen_logs)
+{
+    $resumen = implode("; ", $resumen_logs);
+    guardarLog("[$func_name] Resumen: " . $resumen);
+}
+
+
 add_action('init', 'iniciar_cron_procesamiento_audios');
 function iniciar_cron_procesamiento_audios()
 {
@@ -20,242 +28,125 @@ function definir_cron_cada_dos_minutos($schedules)
     }
     return $schedules;
 }
-
 add_action('procesar_audio1_cron_event', 'procesarAudios');
 
 
-/*
-2024-10-19 05:10:38 - [procesarAudios] Iniciando procesamiento de audios en: /home/asley01/MEGA/Waw/X
-
-2024-10-19 05:10:38 - Iniciando verificación de carga para File ID: 8236 con URL: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Distorted Kick_lite.mp3
-2024-10-19 05:10:38 - Error al cargar el archivo con File ID: 8236. Código HTTP: 0
-
-2024-10-19 05:10:38 - [debeProcesarse] Resumen: Archivo encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3; Hash recibido: 9f80f5a5c4a05875402eb0689b7e0e9855121eb397899cd6af86f3a9400d2b46; El hash ya existe en la base de datos.; El archivo no ha sido cargado correctamente, continuar con el procesamiento.; El archivo y hash son válidos para el procesamiento.
-
-2024-10-19 05:10:38 - [buscarAudios] Audio válido encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3 con hash: 9f80f5a5c4a05875402eb0689b7e0e9855121eb397899cd6af86f3a9400d2b46
-
-2024-10-19 05:10:38 - [buscarAudios] Total de audios encontrados para procesar: 1
-2024-10-19 05:10:38 - [procesarAudios] Cantidad de audios a procesar: 1
-2024-10-19 05:10:38 - [procesarAudios] Iniciando procesamiento de audio: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3
-
-2024-10-19 05:10:38 - [autRevisarAudio] Archivo de audio encontrado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3
-2024-10-19 05:10:38 - [autRevisarAudio] URL del archivo de audio generado: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3
-2024-10-19 05:10:38 - [autRevisarAudio] ID del usuario que sube el archivo: 44
-2024-10-19 05:10:38 - [autRevisarAudio] Error: No se pudo guardar el hash en la base de datos para el archivo: /home/asley01/MEGA/Waw/X/♥️ Especial/Drum/Kick Dusty.mp3
-
-*/
-
-// ETAPA 1 - BUSCAR AUDIO 
-//////////////////////////////////////////////////////////////////////////////
-
+# Paso 1
 function procesarAudios()
 {
-    $func_name = __FUNCTION__; // Nombre de la función para los logs
     $directorio_audios = '/home/asley01/MEGA/Waw/X';
-    guardarLog("[$func_name] Iniciando procesamiento de audios en: {$directorio_audios}");
-
-    // Implementar bloqueo para prevenir ejecuciones simultáneas
     $lock_file = '/tmp/procesar_audios.lock';
+
     $fp = fopen($lock_file, 'c');
-    if (!flock($fp, LOCK_EX | LOCK_NB)) {
-        guardarLog("[$func_name] Otro proceso de procesarAudios está en ejecución.");
+    if ($fp === false || !flock($fp, LOCK_EX | LOCK_NB)) {
         return;
     }
 
-    $audios_para_procesar = buscarAudios($directorio_audios);
-
-    if (!empty($audios_para_procesar)) {
-        guardarLog("[$func_name] Cantidad de audios a procesar: " . count($audios_para_procesar));
-
-        // Elegir un audio al azar para procesar
-        $audio_info = $audios_para_procesar[array_rand($audios_para_procesar)];
-        guardarLog("[$func_name] Iniciando procesamiento de audio: {$audio_info['ruta']}");
-
-        // Procesar el audio
-        autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
-    } else {
-        guardarLog("[$func_name] No se encontraron audios para procesar en: {$directorio_audios}");
+    try {
+        $audios_para_procesar = buscarAudios($directorio_audios);
+        if ($audios_para_procesar) {
+            $audio_info = $audios_para_procesar[array_rand($audios_para_procesar)];
+            autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
+        }
+    } finally {
+        flock($fp, LOCK_UN);
+        fclose($fp);
+        unlink($lock_file);
     }
-
-    // Liberar el bloqueo
-    flock($fp, LOCK_UN);
-    fclose($fp);
-    unlink($lock_file);
 }
 
+# Paso 2
 function buscarAudios($directorio)
 {
-    $func_name = __FUNCTION__; // Nombre de la función para los logs
-
-    // Solo mantenemos logs críticos
-    if (!is_dir($directorio)) {
-        guardarLog("[$func_name] Error: El directorio no existe o no es accesible: {$directorio}");
+    if (!is_dir($directorio) || !is_readable($directorio)) {
+        guardarLog("[buscarAudios] Error: El directorio no existe, no es accesible o no se puede leer: {$directorio}");
         return [];
     }
 
-    if (!is_readable($directorio)) {
-        guardarLog("[$func_name] Error: No se puede leer el directorio: {$directorio}");
-        return [];
-    }
-
-    try {
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio));
-    } catch (Exception $e) {
-        guardarLog("[$func_name] Excepción al crear el iterador de directorios: " . $e->getMessage());
-        error_log("[$func_name] Excepción al crear el iterador de directorios: " . $e->getMessage());
-        return [];
-    }
-
-    $audios_para_procesar = [];
+    $audios = [];
     $extensiones_permitidas = ['wav', 'mp3'];
 
-    foreach ($iterator as $archivo) {
-        if ($archivo->isFile()) {
-            $ruta_archivo = $archivo->getPathname();
-            $extension = strtolower(pathinfo($ruta_archivo, PATHINFO_EXTENSION));
-
-            // Verificar si la extensión está permitida
-            if (!in_array($extension, $extensiones_permitidas)) {
-                continue; // Saltar archivos que no sean wav o mp3
-            }
-
-            // Verificar si el archivo es legible
-            if (!is_readable($ruta_archivo)) {
-                continue;
-            }
-
-            $file_hash = hash_file('sha256', $ruta_archivo);
-            if (!$file_hash) {
-                continue;
-            }
-
-            if (debeProcesarse($ruta_archivo, $file_hash)) {
-                $audios_para_procesar[] = [
-                    'ruta' => $ruta_archivo,
-                    'hash' => $file_hash
-                ];
+    try {
+        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio, FilesystemIterator::SKIP_DOTS));
+        foreach ($iterator as $archivo) {
+            if ($archivo->isFile()) {
+                $ext = strtolower($archivo->getExtension());
+                if (in_array($ext, $extensiones_permitidas, true) && is_readable($archivo->getPathname())) {
+                    $hash = hash_file('sha256', $archivo->getPathname());
+                    if ($hash && debeProcesarse($archivo->getPathname(), $hash)) {
+                        $audios[] = ['ruta' => $archivo->getPathname(), 'hash' => $hash];
+                        if (count($audios) >= 100) break;
+                    }
+                }
             }
         }
-
-        // Limitar la cantidad de archivos analizados por iteración para mejorar eficiencia 
-        if (count($audios_para_procesar) >= 100) {
-            break;
-        }
+    } catch (Exception $e) {
+        guardarLog("[buscarAudios] Excepción al iterar directorios: " . $e->getMessage());
+        error_log("[buscarAudios] Excepción al iterar directorios: " . $e->getMessage());
     }
 
-    return $audios_para_procesar;
+    return $audios;
 }
 
+# Paso 3
 function debeProcesarse($ruta_archivo, $file_hash)
 {
-    $func_name = __FUNCTION__; // Nombre de la función para los logs
-    $resumen_logs = []; // Arreglo para acumular los mensajes del log
+    $logs = [];
 
     try {
-        // Verificación de existencia del archivo
         if (!file_exists($ruta_archivo)) {
-            $resumen_logs[] = "Error: El archivo no existe: {$ruta_archivo}";
-            error_log("[$func_name] Error: El archivo no existe: {$ruta_archivo}");
-            guardarLogResumen($func_name, $resumen_logs); // Guardar resumen
+            $mensaje = "Error: El archivo no existe: {$ruta_archivo}";
+            $logs[] = $mensaje;
+            error_log("[debeProcesarse] $mensaje");
+            guardarLogResumen('debeProcesarse', $logs);
             return false;
         }
-        $resumen_logs[] = "Archivo encontrado: {$ruta_archivo}";
 
-        // Verificar si existe el hash
         if (!$file_hash) {
-            $resumen_logs[] = "Error: Hash inexistente para el archivo: {$ruta_archivo}";
-            error_log("[$func_name] Error: Hash inexistente para el archivo: {$ruta_archivo}");
-            guardarLogResumen($func_name, $resumen_logs); // Guardar resumen
+            $mensaje = "Error: Hash inexistente para el archivo: {$ruta_archivo}";
+            $logs[] = $mensaje;
+            error_log("[debeProcesarse] $mensaje");
+            guardarLogResumen('debeProcesarse', $logs);
             return false;
         }
-        $resumen_logs[] = "Hash recibido: {$file_hash}";
 
-        $hash_exists = obtenerHash($file_hash);
-        if ($hash_exists) {
-            $resumen_logs[] = "El hash ya existe en la base de datos.";
-
-            // Verificar si el archivo ya ha sido cargado
-            if (verificarCargaArchivoPorHash($file_hash)) {
-                $resumen_logs[] = "El archivo con hash {$file_hash} ya ha sido cargado, no es necesario procesarlo.";
-                guardarLogResumen($func_name, $resumen_logs); // Guardar resumen
-                return false; // Detener el procesamiento
-            }
-            $resumen_logs[] = "El archivo no ha sido cargado correctamente, continuar con el procesamiento.";
+        if (obtenerHash($file_hash) && verificarCargaArchivoPorHash($file_hash)) {
+            $mensaje = "El archivo con hash {$file_hash} ya ha sido cargado, no es necesario procesarlo.";
+            $logs[] = $mensaje;
+            guardarLogResumen('debeProcesarse', $logs);
+            return false;
         }
 
-        $resumen_logs[] = "El archivo y hash son válidos para el procesamiento.";
-        guardarLogResumen($func_name, $resumen_logs); // Guardar resumen
+        guardarLogResumen('debeProcesarse', $logs);
         return true;
     } catch (Exception $e) {
-        $resumen_logs[] = "Excepción capturada: " . $e->getMessage();
-        error_log("[$func_name] Excepción capturada: " . $e->getMessage());
-        guardarLogResumen($func_name, $resumen_logs); // Guardar resumen
+        $mensaje = "Excepción capturada: " . $e->getMessage();
+        $logs[] = $mensaje;
+        error_log("[debeProcesarse] $mensaje");
+        guardarLogResumen('debeProcesarse', $logs);
         return false;
     }
 }
 
-
-function wp_get_attachment_url_by_path($file_path)
-{
-    global $wpdb;
-    $sql = $wpdb->prepare("
-        SELECT guid FROM $wpdb->posts 
-        WHERE guid LIKE %s 
-        AND post_type = 'attachment'
-    ", '%' . ltrim($file_path, '/'));
-
-    return $wpdb->get_var($sql);
-}
-
-
-
-function guardarLogResumen($func_name, $resumen_logs)
-{
-    $resumen = implode("; ", $resumen_logs);
-    guardarLog("[$func_name] Resumen: " . $resumen);
-}
-
-
-
+# Paso 4 
 function autRevisarAudio($audio, $file_hash)
 {
-    $func_name = __FUNCTION__; // Nombre de la función actual para los logs
-
-    // Verificar si el archivo existe
     if (!file_exists($audio)) {
-        guardarLog("[$func_name] Error: Archivo de audio no encontrado: {$audio}");
-        error_log("[$func_name] Error: El archivo de audio no existe: " . $audio);
+        error_log("[autRevisarAudio] Error: El archivo de audio no existe: {$audio}");
         return;
     }
-    guardarLog("[$func_name] Archivo de audio encontrado: {$audio}");
 
-    // Obtener información del directorio de subidas
     $upload_dir = wp_upload_dir();
     $file_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $audio);
-    guardarLog("[$func_name] URL del archivo de audio generado: {$file_url}");
+    $user_id = 44;
 
-    $user_id = 44; // ID del usuario que sube el archivo
-    guardarLog("[$func_name] ID del usuario que sube el archivo: {$user_id}");
-
-    // Guardar el hash en la base de datos
-    $hash_id = guardarHash($file_hash, $file_url, 'confirmed', $user_id);
-    if (!$hash_id) {
-        guardarLog("[$func_name] Error: No se pudo guardar el hash en la base de datos para el archivo: {$audio}");
-        error_log("[$func_name] Error: No se pudo guardar el hash en la base de datos para el archivo: " . $audio);
+    if (!guardarHash($file_hash, $file_url, 'confirmed', $user_id)) {
+        error_log("[autRevisarAudio] Error: No se pudo guardar el hash en la base de datos para el archivo: {$audio}");
         return;
     }
-    guardarLog("[$func_name] Hash guardado exitosamente para: {$audio} con ID de hash: {$hash_id}");
 
-    // Procesar el audio
-    guardarLog("[$func_name] Iniciando procesamiento del audio: {$audio}");
-    $resultado = autProcesarAudio($audio);
-
-    // Verificar si el procesamiento fue exitoso
-    if ($resultado === false) {
-        guardarLog("[$func_name] Error: Fallo en el procesamiento del audio: {$audio}");
-        error_log("[$func_name] Error: El procesamiento del audio ha fallado para: " . $audio);
-    } else {
-        guardarLog("[$func_name] Procesamiento completado exitosamente para: {$audio}");
+    if (!autProcesarAudio($audio)) {
+        error_log("[autRevisarAudio] Error: El procesamiento del audio ha fallado para: {$audio}");
     }
 }
 
@@ -387,13 +278,6 @@ function autProcesarAudio($audio_path)
 
     guardarLog("--Fin de la función autProcesarAudio.--");
 }
-
-/*
-
-Error: Respuesta inesperada de la API. Detalles: {«candidates»:[{«finishReason»:»SAFETY»,»index»:0,»safetyRatings»:[{«category»:»HARM_CATEGORY_SEXUALLY_EXPLICIT»,»probability»:»NEGLIGIBLE»},{«category»:»HARM_CATEGORY_HATE_SPEECH»,»probability»:»NEGLIGIBLE»},{«category»:»HARM_CATEGORY_HARASSMENT»,»probability»:»NEGLIGIBLE»},{«category»:»HARM_CATEGORY_DANGEROUS_CONTENT»,»probability»:»MEDIUM»}]}],»usageMetadata»:{«promptTokenCount»:151,»totalTokenCount»:151}}
-
-*/
-
 
 function generarNombreAudio($audio_path_lite)
 {

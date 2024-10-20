@@ -10,35 +10,23 @@ function subidaRs()
         guardarLog('Error: Usuario no autorizado');
         wp_send_json_error(['message' => 'No autorizado. Debes estar logueado']);
     }
-    
-    guardarLog('Usuario autorizado, procediendo a crear el post.');
 
+    #Paso 1
     $postId = crearPost();
     if (is_wp_error($postId)) {
         guardarLog('Error al crear el post: ' . $postId->get_error_message());
         wp_send_json_error(['message' => 'Error al crear el post']);
     }
-
-    guardarLog('Post creado con ID: ' . $postId . '. Actualizando meta datos.');
-
+    #Paso 2
     actualizarMetaDatos($postId);
-    guardarLog('Meta datos actualizados.');
+    #Paso 3
     datosParaAlgoritmo($postId);
-    guardarLog('Datos para algoritmo procesados.');
-
+    #Paso 4
     confirmarArchivos($postId);
-    guardarLog('Archivos confirmados.');
-
+    #Paso 5
     procesarURLs($postId);
-    guardarLog('URLs procesadas.');
-
+    #Paso 6
     asignarTags($postId);
-    guardarLog('Tags asignadas.');
-
-    guardarLog('Post RS creado con ID: ' . $postId);
-
-    guardarLog('Final completado');
-
     wp_send_json_success(['message' => 'Post creado exitosamente']);
     wp_die();
 }

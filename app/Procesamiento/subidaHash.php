@@ -234,21 +234,18 @@ function confirmarHashId($file_id)
 }
 
 
-function eliminarHash($file_hash)
+function eliminarHash($id)
 {
     global $wpdb;
-    $resultado = (bool) $wpdb->delete("{$wpdb->prefix}file_hashes", array('file_hash' => $file_hash), array('%s'));
-    
+    $resultado = (bool) $wpdb->delete("{$wpdb->prefix}file_hashes", array('id' => $id), array('%d'));
     if ($resultado) {
-        guardarLog("Hash eliminado: $file_hash");
+        guardarLog("eliminarHash: Registro eliminado con ID: $id");
     } else {
-        guardarLog("Error al eliminar el hash: $file_hash");
+        guardarLog("eliminarHash: Error al eliminar el registro con ID: $id");
     }
     
     return $resultado;
 }
-
-
 
 function limpiarArchivosPendientes()
 {

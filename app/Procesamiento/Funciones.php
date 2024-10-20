@@ -1,23 +1,16 @@
 <?
 
-
+# Paso 1 
 function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
 {
-    // Saneamiento de datos
     $contenido = sanitize_textarea_field($_POST['textoNormal'] ?? '');
     $tags = sanitize_text_field($_POST['tags'] ?? '');
-
-    // Validación del contenido
     if (empty($contenido)) {
         guardarLog('empty_content: El contenido no puede estar vacío.');
         return new WP_Error('empty_content', 'El contenido no puede estar vacío.');
     }
-
-    // Generar el título
     $titulo = wp_trim_words($contenido, 15, '...');
     $autor = get_current_user_id();
-
-    // Insertar el post
     $postId = wp_insert_post([
         'post_title'   => $titulo,
         'post_content' => $contenido,
@@ -25,60 +18,17 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
         'post_author'  => $autor,
         'post_type'    => $tipoPost,
     ]);
-
     if (is_wp_error($postId)) {
         return $postId;
     }
-
-    // Guardar los tags en el meta campo 'tagsUsuario'
     if (!empty($tags)) {
         update_post_meta($postId, 'tagsUsuario', $tags);
     }
 
     return $postId;
 }
-function datosParaAlgoritmo($postId)
-{
 
-    // Obtener el texto normal desde la solicitud POST
-    $textoNormal = isset($_POST['textoNormal']) ? trim($_POST['textoNormal']) : '';
-
-    // Solución al problema de codificación del texto
-    $textoNormal = htmlspecialchars_decode($textoNormal, ENT_QUOTES);
-
-    // Procesar los tags, eliminando espacios y creando un array
-    $tags = isset($_POST['tags']) ? array_map('trim', explode(',', $_POST['tags'])) : [];
-
-    // Obtener la ID del autor
-    $autorId = get_post_field('post_author', $postId);
-
-    // Obtener el nombre de usuario y el nombre para mostrar
-    $nombreUsuario = get_the_author_meta('user_login', $autorId);
-    $nombreMostrar = get_the_author_meta('display_name', $autorId);
-
-    // Preparar los datos para el algoritmo 
-    $datosAlgoritmo = [
-        'tags' => $tags,
-        'texto' => $textoNormal,
-        'autor' => [
-            'id' => $autorId,
-            'usuario' => $nombreUsuario,
-            'nombre' => $nombreMostrar,
-        ],
-    ];
-
-    // Guardar log de los datos compilados
-    guardarLog("Datos para algoritmo compilados para postId: {$postId}");
-
-    // Codificar los datos en JSON y actualizar metadatos
-    if ($datosAlgoritmoJson = json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE)) {
-        update_post_meta($postId, 'datosAlgoritmo', $datosAlgoritmoJson);
-        guardarLog("Metadatos de datosAlgoritmo actualizados para postId: {$postId}");
-    } else {
-        guardarLog("Error al codificar datosAlgoritmo a JSON para postId: {$postId}");
-    }
-}
-
+#Paso 2
 function actualizarMetaDatos($postId)
 {
     $meta_fields = [
@@ -86,7 +36,6 @@ function actualizarMetaDatos($postId)
         'esExclusivo'  => 'exclusivo',
         'paraDescarga' => 'descarga'
     ];
-
     foreach ($meta_fields as $meta_key => $post_key) {
         if (isset($_POST[$post_key])) {
             $value = $_POST[$post_key] == '1' ? 1 : 0;
@@ -97,14 +46,37 @@ function actualizarMetaDatos($postId)
     }
 }
 
+#Paso 3
+function datosParaAlgoritmo($postId)
+{
+    $textoNormal = isset($_POST['textoNormal']) ? trim($_POST['textoNormal']) : '';
+    $textoNormal = htmlspecialchars_decode($textoNormal, ENT_QUOTES);
+    $tags = isset($_POST['tags']) ? array_map('trim', explode(',', $_POST['tags'])) : [];
+    $autorId = get_post_field('post_author', $postId);
+    $nombreUsuario = get_the_author_meta('user_login', $autorId);
+    $nombreMostrar = get_the_author_meta('display_name', $autorId);
+    $datosAlgoritmo = [
+        'tags' => $tags,
+        'texto' => $textoNormal,
+        'autor' => [
+            'id' => $autorId,
+            'usuario' => $nombreUsuario,
+            'nombre' => $nombreMostrar,
+        ],
+    ];
+    if ($datosAlgoritmoJson = json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE)) {
+        update_post_meta($postId, 'datosAlgoritmo', $datosAlgoritmoJson);
+    } else {
+    }
+}
+
+#Paso 4
 function confirmarArchivos($postId)
 {
     $campos = ['archivoId', 'audioId', 'imagenId'];
-
     foreach ($campos as $campo) {
         if (!empty($_POST[$campo])) {
             $file_id = intval($_POST[$campo]);
-
             if ($file_id > 0) {
                 update_post_meta($postId, 'idHash_' . $campo, $file_id);
                 guardarLog("idHash_{$campo} actualizado para postId: {$postId}");
@@ -114,37 +86,7 @@ function confirmarArchivos($postId)
     }
 }
 
-function eliminarAdjuntosPost($post_id)
-{
-    $adjuntos = get_attached_media('', $post_id);
-
-    foreach ($adjuntos as $adjunto) {
-        wp_delete_attachment($adjunto->ID, true);
-        guardarLog("Adjunto eliminado: {$adjunto->ID} para postId: {$post_id}");
-
-        $file_hash = get_post_meta($post_id, 'idHash_archivoId', true);
-
-        if ($file_hash) {
-            eliminarHash($file_hash);
-            guardarLog("Hash eliminado: {$file_hash} para postId: {$post_id}");
-
-            delete_post_meta($post_id, 'idHash_archivoId');
-        }
-    }
-}
-
-// Hook para ejecutar la función antes de que se borre un post
-add_action('before_delete_post', 'eliminarAdjuntosPost');
-
-function asignarTags($postId)
-{
-    if (!empty($_POST['Tags'])) {
-        $tags = sanitize_text_field($_POST['Tags']);
-        $tags_array = explode(',', $tags);
-        wp_set_post_tags($postId, $tags_array, false);
-    }
-}
-
+#Paso 5
 function procesarURLs($postId)
 {
     $procesarURLs = [
@@ -165,41 +107,28 @@ function procesarURLs($postId)
     }
 }
 
+#Paso 5.1
 function procesarArchivo($postId, $campo, $renombrar = false)
 {
-    guardarLog("Inicio de procesarArchivo para Post ID: $postId y Campo: $campo"); // Log inicial
-
-    // Obtener la URL del archivo desde el campo proporcionado
     $url = esc_url_raw($_POST[$campo]);
-    guardarLog("URL del archivo obtenida: $url");
-
-    // Obtener el ID del archivo asociado con la URL y el Post ID
     $archivoId = obtenerArchivoId($url, $postId);
-    guardarLog("Resultado de obtenerArchivoId: " . (is_wp_error($archivoId) ? "Error - " . $archivoId->get_error_message() : "Archivo ID: $archivoId"));
 
-    // Verificar si se obtuvo correctamente el archivoId y no es un error
     if ($archivoId && !is_wp_error($archivoId)) {
-        // Actualizar los metadatos con el archivo adjunto
         actualizarMetaConArchivo($postId, $campo, $archivoId);
-        guardarLog("Metadatos actualizados para Post ID: $postId con Archivo ID: $archivoId en el campo: $campo");
 
-        // Si se requiere renombrar el archivo, se ejecuta la función correspondiente
         if ($renombrar) {
-            guardarLog("Renombrar archivo activado para Post ID: $postId y Archivo ID: $archivoId");
             renombrarArchivoAdjunto($postId, $archivoId);
         }
 
-        guardarLog("Fin de procesarArchivo - operación exitosa para Post ID: $postId y Campo: $campo"); // Log final exitoso
         return true;
     } else {
-        guardarLog("Error: No se pudo procesar el archivo para Post ID: $postId y Campo: $campo"); // Log de error
+        guardarLog("Error: No se pudo procesar el archivo para Post ID: $postId y Campo: $campo");
     }
 
-    guardarLog("Fin de procesarArchivo - operación fallida para Post ID: $postId y Campo: $campo"); // Log final fallido
     return false;
 }
 
-
+#Paso 5.2
 function obtenerArchivoId($url, $postId)
 {
     $archivoId = attachment_url_to_postid($url);
@@ -216,6 +145,7 @@ function obtenerArchivoId($url, $postId)
     return $archivoId;
 }
 
+#Paso 5.3
 function actualizarMetaConArchivo($postId, $campo, $archivoId)
 {
     $meta_mapping = [
@@ -232,12 +162,11 @@ function actualizarMetaConArchivo($postId, $campo, $archivoId)
     }
 }
 
+#Paso 5.4
 function renombrarArchivoAdjunto($postId, $archivoId)
 {
     $file_id = intval($_POST['audioId']);
-    guardarLog("Inicio de renombrarArchivoAdjunto para Post ID: $postId y Archivo ID: $archivoId"); // Log inicial
-
-    // Obtener información del post y del autor
+    
     $post = get_post($postId);
     $author = get_userdata($post->post_author);
 
@@ -246,57 +175,47 @@ function renombrarArchivoAdjunto($postId, $archivoId)
         return new WP_Error('post_or_author_not_found', 'No se pudo obtener el post o el autor.');
     }
 
-    // Obtener la ruta del archivo adjunto
     $file_path = get_attached_file($archivoId);
-    guardarLog("Ruta del archivo actual: $file_path");
 
     $info = pathinfo($file_path);
 
-    // Generar el nuevo nombre de archivo
     $new_filename = sprintf(
         '2upra_%s_%s.%s',
         sanitize_file_name(mb_substr($author->user_login, 0, 20)),
         sanitize_file_name(mb_substr($post->post_content, 0, 40)),
         $info['extension']
     );
-    guardarLog("Nuevo nombre de archivo generado: $new_filename");
 
-    // Definir la nueva ruta del archivo
     $new_file_path = $info['dirname'] . DIRECTORY_SEPARATOR . $new_filename;
-    guardarLog("Nueva ruta de archivo: $new_file_path");
 
-    // Intentar renombrar el archivo
     if (rename($file_path, $new_file_path)) {
-        guardarLog("Archivo renombrado con éxito de $file_path a $new_file_path");
-
-        // Convertir la ruta de archivo del servidor a la URL pública
-        $upload_dir = wp_upload_dir(); // Obtener directorio de uploads
+        $upload_dir = wp_upload_dir();
         $public_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $new_file_path);
-        guardarLog("URL pública generada: $public_url");
 
-        // Actualizar la URL pública en la base de datos
         actualizarUrlArchivo($file_id, $public_url);
-
-        // Actualizar la ruta del archivo adjunto en la base de datos
         update_attached_file($archivoId, $new_file_path);
-        guardarLog("Ruta del archivo actualizada en la base de datos para Archivo ID: $archivoId");
-
-        // Actualizar los metadatos del post
         update_post_meta($postId, 'sample', true);
-        guardarLog("Metadato 'sample' actualizado para Post ID: $postId");
-
-        // Procesar el audio ligero
         procesarAudioLigero($postId, $archivoId, 1);
-        guardarLog("procesarAudioLigero ejecutado para Post ID: $postId y Archivo ID: $archivoId");
     } else {
-        // Manejar error en el renombrado
-        $error_message = "Error: No se pudo renombrar el archivo adjunto de $file_path a $new_file_path.";
-        guardarLog($error_message);
+        guardarLog("Error: No se pudo renombrar el archivo adjunto de $file_path a $new_file_path.");
         return new WP_Error('rename_failed', 'No se pudo renombrar el archivo adjunto.');
     }
-
-    guardarLog("Fin de renombrarArchivoAdjunto para Post ID: $postId y Archivo ID: $archivoId"); // Log final
 }
+
+
+#Paso 6
+function asignarTags($postId)
+{
+    if (!empty($_POST['Tags'])) {
+        $tags = sanitize_text_field($_POST['Tags']);
+        $tags_array = explode(',', $tags);
+        wp_set_post_tags($postId, $tags_array, false);
+    }
+}
+
+
+
+
 
 
 function procesarAudioLigero($post_id, $audio_id, $index)
