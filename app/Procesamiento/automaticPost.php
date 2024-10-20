@@ -26,12 +26,6 @@ function definir_cron_cada_dos_minutos($schedules)
 }
 add_action('procesar_audio1_cron_event', 'procesarAudios');
 
-function guardarLogResumen($func_name, $resumen_logs)
-{
-    $resumen = implode("; ", $resumen_logs);
-    guardarLog("[$func_name] Resumen: " . $resumen);
-}
-
 # Paso 1
 function procesarAudios()
 {
@@ -43,58 +37,39 @@ function procesarAudios()
         return;
     }
 
-    $resumen_logs = [];
-    $total_audios = 0;
-    $audios_procesados = 0;
-
     try {
         $audios_para_procesar = buscarAudios($directorio_audios);
-        $total_audios = count($audios_para_procesar);
-
-        if ($total_audios > 0) {
+        if (count($audios_para_procesar) > 0) {
             $audio_info = $audios_para_procesar[array_rand($audios_para_procesar)];
             autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
-            $audios_procesados++;
-
-            $resumen_logs[] = "Audio seleccionado para procesar: {$audio_info['ruta']}";
         }
     } finally {
         flock($fp, LOCK_UN);
         fclose($fp);
         unlink($lock_file);
-
-        // Resumen final del proceso
-        $resumen_logs[] = "Total de audios encontrados: $total_audios";
-        $resumen_logs[] = "Total de audios procesados: $audios_procesados";
-        guardarLogResumen('procesarAudios', $resumen_logs);
     }
 }
 
 # Paso 2
 function buscarAudios($directorio)
 {
-    $resumen_logs = [];
     $audios = [];
     $extensiones_permitidas = ['wav', 'mp3'];
-    $total_archivos = 0;
-    $archivos_validos = 0;
 
     if (!is_dir($directorio) || !is_readable($directorio)) {
-        guardarLog("[buscarAudios] Error: El directorio no existe, no es accesible o no se puede leer: {$directorio}");
+        guardarLog("[buscarAudios] Error: El directorio no existe o no es accesible: {$directorio}");
         return [];
     }
 
     try {
         $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio, FilesystemIterator::SKIP_DOTS));
         foreach ($iterator as $archivo) {
-            $total_archivos++;
             if ($archivo->isFile()) {
                 $ext = strtolower($archivo->getExtension());
                 if (in_array($ext, $extensiones_permitidas, true) && is_readable($archivo->getPathname())) {
                     $hash = hash_file('sha256', $archivo->getPathname());
                     if ($hash && debeProcesarse($archivo->getPathname(), $hash)) {
                         $audios[] = ['ruta' => $archivo->getPathname(), 'hash' => $hash];
-                        $archivos_validos++;
                         if (count($audios) >= 100) break;
                     }
                 }
@@ -102,13 +77,7 @@ function buscarAudios($directorio)
         }
     } catch (Exception $e) {
         guardarLog("[buscarAudios] Excepción al iterar directorios: " . $e->getMessage());
-        error_log("[buscarAudios] Excepción al iterar directorios: " . $e->getMessage());
     }
-
-    // Resumen del proceso de búsqueda
-    $resumen_logs[] = "Total de archivos revisados: $total_archivos";
-    $resumen_logs[] = "Archivos válidos encontrados: $archivos_validos";
-    guardarLogResumen('buscarAudios', $resumen_logs);
 
     return $audios;
 }
@@ -116,41 +85,24 @@ function buscarAudios($directorio)
 # Paso 3
 function debeProcesarse($ruta_archivo, $file_hash)
 {
-    $logs = [];
-    $resultado_procesamiento = true;
-
     try {
         if (!file_exists($ruta_archivo)) {
-            $mensaje = "Error: El archivo no existe: {$ruta_archivo}";
-            $logs[] = $mensaje;
-            error_log("[debeProcesarse] $mensaje");
-            $resultado_procesamiento = false;
+            guardarLog("[debeProcesarse] Error: El archivo no existe: {$ruta_archivo}");
+            return false;
         }
 
         if (!$file_hash) {
-            $mensaje = "Error: Hash inexistente para el archivo: {$ruta_archivo}";
-            $logs[] = $mensaje;
-            error_log("[debeProcesarse] $mensaje");
-            $resultado_procesamiento = false;
+            guardarLog("[debeProcesarse] Error: Hash inexistente para el archivo: {$ruta_archivo}");
+            return false;
         }
 
         if (obtenerHash($file_hash) && verificarCargaArchivoPorHash($file_hash)) {
-            $mensaje = "El archivo con hash {$file_hash} ya ha sido cargado, no es necesario procesarlo.";
-            $logs[] = $mensaje;
-            $resultado_procesamiento = false;
+            return false;
         }
 
-        if ($resultado_procesamiento) {
-            $logs[] = "El archivo {$ruta_archivo} está listo para ser procesado.";
-        }
-
-        guardarLogResumen('debeProcesarse', $logs);
-        return $resultado_procesamiento;
+        return true;
     } catch (Exception $e) {
-        $mensaje = "Excepción capturada: " . $e->getMessage();
-        $logs[] = $mensaje;
-        error_log("[debeProcesarse] $mensaje");
-        guardarLogResumen('debeProcesarse', $logs);
+        guardarLog("[debeProcesarse] Excepción capturada: " . $e->getMessage());
         return false;
     }
 }
@@ -159,7 +111,7 @@ function debeProcesarse($ruta_archivo, $file_hash)
 function autRevisarAudio($audio, $file_hash)
 {
     if (!file_exists($audio)) {
-        error_log("[autRevisarAudio] Error: El archivo de audio no existe: {$audio}");
+        guardarLog("[autRevisarAudio] Error: El archivo de audio no existe: {$audio}");
         return;
     }
 
@@ -168,12 +120,12 @@ function autRevisarAudio($audio, $file_hash)
     $user_id = 44;
 
     if (!guardarHash($file_hash, $file_url, 'confirmed', $user_id)) {
-        error_log("[autRevisarAudio] Error: No se pudo guardar el hash en la base de datos para el archivo: {$audio}");
+        guardarLog("[autRevisarAudio] Error: No se pudo guardar el hash en la base de datos para el archivo: {$audio}");
         return;
     }
 
     if (!autProcesarAudio($audio)) {
-        error_log("[autRevisarAudio] Error: El procesamiento del audio ha fallado para: {$audio}");
+        guardarLog("[autRevisarAudio] Error: El procesamiento del audio ha fallado para: {$audio}");
     }
 }
 
@@ -807,7 +759,7 @@ function actualizar_metas_posts_social() {
     $query = new WP_Query($args);
 
     if ( !$query->have_posts() ) {
-        error_log('No se encontraron posts de tipo social_post con postAut=1.');
+        guardarLog('No se encontraron posts de tipo social_post con postAut=1.');
         return;
     }
 
@@ -828,13 +780,13 @@ function actualizar_metas_posts_social() {
         // Obtener el ID de adjunto de post_audio
         $post_audio_id = get_post_meta( $post_id, 'post_audio', true );
         if ( !$post_audio_id ) {
-            error_log("Post ID $post_id: No se encontró 'post_audio'.");
+            guardarLog("Post ID $post_id: No se encontró 'post_audio'.");
         }
 
         // Obtener el ID de adjunto de post_audio_lite
         $post_audio_lite_id = get_post_meta( $post_id, 'post_audio_lite', true );
         if ( !$post_audio_lite_id ) {
-            error_log("Post ID $post_id: No se encontró 'post_audio_lite'.");
+            guardarLog("Post ID $post_id: No se encontró 'post_audio_lite'.");
         }
 
         // Actualizar 'rutaOriginal' si falta
@@ -846,10 +798,10 @@ function actualizar_metas_posts_social() {
                 if ( $ruta_completa ) {
                     update_post_meta( $post_id, 'rutaOriginal', $ruta_completa );
                 } else {
-                    error_log("Post ID $post_id: No se encontró el archivo original '$filename'.");
+                    guardarLog("Post ID $post_id: No se encontró el archivo original '$filename'.");
                 }
             } else {
-                error_log("Post ID $post_id: No se encontró el adjunto con ID $post_audio_id.");
+                guardarLog("Post ID $post_id: No se encontró el adjunto con ID $post_audio_id.");
             }
         }
 
@@ -861,10 +813,10 @@ function actualizar_metas_posts_social() {
                 if ( $ruta_lite ) {
                     update_post_meta( $post_id, 'rutaLiteOriginal', $ruta_lite );
                 } else {
-                    error_log("Post ID $post_id: No se pudo obtener la ruta de 'post_audio_lite'.");
+                    guardarLog("Post ID $post_id: No se pudo obtener la ruta de 'post_audio_lite'.");
                 }
             } else {
-                error_log("Post ID $post_id: No se encontró el adjunto lite con ID $post_audio_lite_id.");
+                guardarLog("Post ID $post_id: No se encontró el adjunto lite con ID $post_audio_lite_id.");
             }
         }
 
@@ -876,15 +828,15 @@ function actualizar_metas_posts_social() {
                 if ( $file_id ) {
                     update_post_meta( $post_id, 'idHash_audioId', $file_id );
                 } else {
-                    error_log("Post ID $post_id: No se pudo obtener 'idHash_audioId' para la URL '$adjunto_url'.");
+                    guardarLog("Post ID $post_id: No se pudo obtener 'idHash_audioId' para la URL '$adjunto_url'.");
                 }
             } else {
-                error_log("Post ID $post_id: No se pudo obtener la URL del adjunto con ID $post_audio_id.");
+                guardarLog("Post ID $post_id: No se pudo obtener la URL del adjunto con ID $post_audio_id.");
             }
         }
     }
 
-    error_log('Actualización de metadatos de posts social_post completada.');
+    guardarLog('Actualización de metadatos de posts social_post completada.');
 }
 
 ejecutar_actualizar_metas_posts_social_una_vez();
