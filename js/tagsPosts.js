@@ -95,9 +95,9 @@ function tagsPosts() {
             }
 
             // Agregar tipo de audio (nueva estructura)
-            if (jsonData.tipo_audio && jsonData.tipo_audio["es"]) {
+            if (jsonData.tipo_audio && Array.isArray(jsonData.tipo_audio["es"])) {
                 allTags = allTags.concat(jsonData.tipo_audio["es"].map(capitalize));
-            } else if (descripcion["Tipo de audio"]) { // Estructura vieja
+            } else if (descripcion["Tipo de audio"] && Array.isArray(descripcion["Tipo de audio"])) { // Estructura vieja
                 allTags = allTags.concat(descripcion["Tipo de audio"].map(capitalize));
             }
 
