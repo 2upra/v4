@@ -4,6 +4,7 @@ global $wpdb;
 define('INTERES_TABLE', "{$wpdb->prefix}interes");
 define('BATCH_SIZE', 1000);
 
+
 function generarMetaDeIntereses($user_id)
 {
     global $wpdb;
@@ -43,17 +44,24 @@ function generarMetaDeIntereses($user_id)
     foreach ($post_data as $post) {
         $datosAlgoritmo = !empty($post->meta_value) ? json_decode($post->meta_value, true) : [];
 
-        // Procesar tags
-        if (!empty($datosAlgoritmo['tags'])) {
-            foreach ($datosAlgoritmo['tags'] as $tag) {
-                $tag_intensidad[$tag] = isset($tag_intensidad[$tag]) ? $tag_intensidad[$tag] + 1 : 1;
+        // Procesar todos los campos de datosAlgoritmo
+        foreach ($datosAlgoritmo as $key => $value) {
+            if (is_array($value)) {
+                // Verificar si hay versiones en español e inglés
+                if (isset($value['es']) && is_array($value['es'])) {
+                    foreach ($value['es'] as $item) {
+                        $tag_intensidad[$item] = isset($tag_intensidad[$item]) ? $tag_intensidad[$item] + 1 : 1;
+                    }
+                }
+                if (isset($value['en']) && is_array($value['en'])) {
+                    foreach ($value['en'] as $item) {
+                        $tag_intensidad[$item] = isset($tag_intensidad[$item]) ? $tag_intensidad[$item] + 1 : 1;
+                    }
+                }
+            } elseif (!empty($value)) {
+                // Si el valor es un string o un número, simplemente lo agregamos como un interés
+                $tag_intensidad[$value] = isset($tag_intensidad[$value]) ? $tag_intensidad[$value] + 1 : 1;
             }
-        }
-
-        // Procesar autor
-        if (!empty($datosAlgoritmo['autor']['usuario'])) {
-            $autor = $datosAlgoritmo['autor']['usuario'];
-            $tag_intensidad[$autor] = isset($tag_intensidad[$autor]) ? $tag_intensidad[$autor] + 1 : 1;
         }
 
         // Procesar palabras del contenido del post
@@ -129,7 +137,7 @@ function calcularFeedPersonalizado($userId)
 
     $siguiendo = (array) get_user_meta($userId, 'siguiendo', true);
 
-    generarMetaDeIntereses($userId);
+    generarMetaDeIntereses($userId);  // Generar o actualizar los intereses del usuario
     logAlgoritmo("Intereses del usuario generados para el usuario ID: $userId");
 
     // Obtener intereses del usuario
@@ -198,22 +206,42 @@ function calcularFeedPersonalizado($userId)
         $autor_id = $post_data->post_author;
         $post_date = $post_data->post_date;
 
+        // Puntos si el usuario sigue al autor
         $puntosUsuario = in_array($autor_id, $siguiendo) ? 50 : 0;
 
+        // Puntos asignados por intereses, ahora abarcando más campos de 'datosAlgoritmo'
         $puntosIntereses = 0;
         $datosAlgoritmo = !empty($meta_results[$post_id]->meta_value) ? json_decode($meta_results[$post_id]->meta_value, true) : [];
 
-        if (!empty($datosAlgoritmo['tags'])) {
-            foreach ($datosAlgoritmo['tags'] as $tag) {
-                if (isset($interesesUsuario[$tag])) {
-                    $puntosIntereses += 10 + $interesesUsuario[$tag]->intensity;
+        // Iterar sobre todos los campos de datosAlgoritmo
+        foreach ($datosAlgoritmo as $key => $value) {
+            if (is_array($value)) {
+                // Procesar versiones en español ('es') e inglés ('en')
+                if (isset($value['es']) && is_array($value['es'])) {
+                    foreach ($value['es'] as $item) {
+                        if (isset($interesesUsuario[$item])) {
+                            $puntosIntereses += 10 + $interesesUsuario[$item]->intensity;
+                        }
+                    }
                 }
+                if (isset($value['en']) && is_array($value['en'])) {
+                    foreach ($value['en'] as $item) {
+                        if (isset($interesesUsuario[$item])) {
+                            $puntosIntereses += 10 + $interesesUsuario[$item]->intensity;
+                        }
+                    }
+                }
+            } elseif (!empty($value) && isset($interesesUsuario[$value])) {
+                // Si el valor es un string simple o numérico, verificar si coincide con algún interés
+                $puntosIntereses += 10 + $interesesUsuario[$value]->intensity;
             }
         }
 
+        // Puntos por likes
         $likes = isset($likes_by_post[$post_id]) ? $likes_by_post[$post_id] : 0;
         $puntosLikes = 5 + $likes;
 
+        // Puntos por tiempo desde la publicación
         $horasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / 3600;
         $factorTiempo = pow(0.98, $horasDesdePublicacion);
 
@@ -235,6 +263,7 @@ function calcularFeedPersonalizado($userId)
         $puntosFinal = $puntosFinal * $factorTiempo;
         $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100));
 
+        // Asignar los puntos finales al post
         $posts_personalizados[$post_id] = $puntosFinal;
         $resumenPuntos[] = $post_id . ':' . round($puntosFinal, 2);
     }
