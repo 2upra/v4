@@ -259,7 +259,7 @@ function calcularFeedPersonalizado($userId)
         }
 
         // Introducir aleatoriedad controlada en los puntos finales
-        $aleatoriedad = mt_rand(0, 30); 
+        $aleatoriedad = mt_rand(10, 50); 
         $puntosFinal = $puntosFinal * $factorTiempo;
         $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100));
 
