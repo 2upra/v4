@@ -223,9 +223,9 @@ function calcularFeedPersonalizado($userId)
 
         // Ajustar puntos según las metas
         if ($metaVerificado && !$metaPostAut) {
-            $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.5;
+            $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.9;
         } elseif (!$metaVerificado && $metaPostAut) {
-            $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.5;
+            $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
         } else {
             $puntosFinal = $puntosUsuario + $puntosIntereses + $puntosLikes;
         }
