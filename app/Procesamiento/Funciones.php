@@ -415,16 +415,25 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     if ($descripcion) {
         // Procesar el JSON eliminando caracteres innecesarios
         $descripcion_procesada = json_decode(trim($descripcion, "```json \n"), true);
-
+    
         if ($descripcion_procesada) {
+            // Verificar si 'descripcion_ia' está estructurado incorrectamente
+            if (isset($descripcion_procesada['descripcion_ia']['descripcion'])) {
+                // Corregir la estructura de 'descripcion_ia'
+                $descripcion_procesada['descripcion_ia'] = [
+                    'es' => $descripcion_procesada['descripcion_ia']['descripcion']['es'] ?? '',
+                    'en' => $descripcion_procesada['descripcion_ia']['descripcion']['en'] ?? ''
+                ];
+            }
+    
             // Definir el sufijo para los datos, según el índice
             $suffix = ($index == 1) ? '' : "_{$index}";
-
+    
             // Asegurarse de que la clave 'descripcion_ia' esté bien estructurada
             if (isset($descripcion_procesada['descripcion_ia'])) {
-                // Crear un array con los datos procesados
+                // Crear los nuevos datos con la estructura correcta
                 $nuevos_datos = [
-                    'descripcion' => [
+                    'descripcion_ia' => [
                         'es' => $descripcion_procesada['descripcion_ia']['es'] ?? '',
                         'en' => $descripcion_procesada['descripcion_ia']['en'] ?? ''
                     ],
@@ -457,7 +466,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
                         'en' => $descripcion_procesada['sugerencia_busqueda']['en'] ?? []
                     ]
                 ];
-
+    
                 // Guardar los datos procesados en los metadatos del post
                 update_post_meta($post_id, "audio_descripcion{$suffix}", json_encode($nuevos_datos, JSON_UNESCAPED_UNICODE));
                 iaLog("Descripción del audio guardada para el post ID: {$post_id}");
@@ -470,10 +479,10 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     } else {
         iaLog("No se pudo generar la descripción del audio para el post ID: {$post_id}");
     }
-
+    
     // Obtener los datos del algoritmo
     $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
-
+    
     // Si no existen, inicializarlos como un array vacío
     if (!$datos_algoritmo) {
         $datos_algoritmo = [];
@@ -483,23 +492,23 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
             $datos_algoritmo = [];
         }
     }
-
+    
     // Agregar los nuevos datos del algoritmo, incluyendo la descripción procesada
     $nuevos_datos_algoritmo = [
         'bpm' => $resultados['bpm'] ?? '',
         'emotion' => $resultados['emotion'] ?? '',
         'key' => $resultados['key'] ?? '',
         'scale' => $resultados['scale'] ?? '',
-        'descripcion_ia' => $nuevos_datos
+        'descripcion_ia' => $nuevos_datos // Aquí se incluye la descripción procesada
     ];
-
+    
     iaLog("Datos nuevos a agregar: " . json_encode($nuevos_datos_algoritmo));
-
+    
     // Combinar los nuevos datos con los existentes
     $datos_algoritmo = array_merge($datos_algoritmo, $nuevos_datos_algoritmo);
-
+    
     iaLog("Metadatos actuales para 'datosAlgoritmo' antes de guardar: " . json_encode($datos_algoritmo));
-
+    
     // Guardar los datos combinados en los metadatos del post
     update_post_meta($post_id, 'datosAlgoritmo', json_encode($datos_algoritmo, JSON_UNESCAPED_UNICODE));
 
