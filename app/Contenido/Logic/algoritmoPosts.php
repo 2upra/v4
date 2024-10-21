@@ -253,7 +253,7 @@ function calcularFeedPersonalizado($userId)
         $post_date = $post_data->post_date;
         
         // Puntos por seguir al autor
-        $puntosUsuario = in_array($autor_id, $datos['siguiendo']) ? 50 : 0;
+        $puntosUsuario = in_array($autor_id, $datos['siguiendo']) ? 20 : 0;
 
         // Puntos por intereses
         $puntosIntereses = 0;
@@ -265,13 +265,13 @@ function calcularFeedPersonalizado($userId)
                     if (isset($value[$lang]) && is_array($value[$lang])) {
                         foreach ($value[$lang] as $item) {
                             if (isset($datos['interesesUsuario'][$item])) {
-                                $puntosIntereses += 10 + $datos['interesesUsuario'][$item]->intensity;
+                                $puntosIntereses += 1 + $datos['interesesUsuario'][$item]->intensity;
                             }
                         }
                     }
                 }
             } elseif (!empty($value) && isset($datos['interesesUsuario'][$value])) {
-                $puntosIntereses += 10 + $datos['interesesUsuario'][$value]->intensity;
+                $puntosIntereses += 1 + $datos['interesesUsuario'][$value]->intensity;
             }
         }
 
