@@ -37,12 +37,25 @@ function actualizar_titulos_y_slugs_social_posts() {
             $nuevo_titulo = sanitize_text_field( $contenido );
             $nuevo_slug   = sanitize_title( $contenido );
 
-            guardarLog("Nuevo título: $nuevo_titulo");
-            guardarLog("Nuevo slug base: $nuevo_slug");
+            guardarLog("Nuevo título propuesto: $nuevo_titulo");
+            guardarLog("Nuevo slug base propuesto: $nuevo_slug");
 
-            // Asegurar que el slug sea único
-            $nuevo_slug_unico = wp_unique_post_slug( $nuevo_slug, $post_id, get_post_status( $post_id ), get_post_type( $post_id ), get_post_parent( $post_id ) );
-            guardarLog("Nuevo slug único: $nuevo_slug_unico");
+            // Obtener el slug actual
+            $slug_actual = get_post_field( 'post_name', $post_id );
+            guardarLog("Slug actual: $slug_actual");
+
+            // Verificar si el slug actual ya tiene un sufijo numérico
+            $slug_base = preg_replace('/-\d+$/', '', $slug_actual);
+            if ( $slug_base === $slug_actual ) {
+                // El slug actual no tiene sufijo numérico
+                // Preparar el nuevo slug único
+                $nuevo_slug_unico = wp_unique_post_slug( $nuevo_slug, $post_id, get_post_status( $post_id ), get_post_type( $post_id ), get_post_parent( $post_id ) );
+                guardarLog("Nuevo slug único: $nuevo_slug_unico");
+            } else {
+                // El slug ya tiene un sufijo numérico, asumiendo que es único
+                guardarLog("El slug ya tiene un sufijo numérico. No se actualizará el slug.");
+                $nuevo_slug_unico = $slug_actual; // Mantener el slug actual
+            }
 
             // Preparar los datos para actualizar
             $post_data = array(
@@ -51,35 +64,40 @@ function actualizar_titulos_y_slugs_social_posts() {
                 'post_name'  => $nuevo_slug_unico,
             );
 
-            // Actualizar el post
-            $resultado = wp_update_post( $post_data, true );
+            // Comparar el título actual con el propuesto
+            $titulo_actual = get_post_field( 'post_title', $post_id );
+            $actualizar_titulo = ( $titulo_actual !== $nuevo_titulo );
 
-            if ( is_wp_error( $resultado ) ) {
-                guardarLog("Error actualizando el post ID $post_id: " . $resultado->get_error_message());
+            // Comparar el slug actual con el propuesto
+            $actualizar_slug = ( $slug_actual !== $nuevo_slug_unico );
+
+            if ( $actualizar_titulo || $actualizar_slug ) {
+                // Actualizar el post solo si el título o slug son diferentes
+                $resultado = wp_update_post( $post_data, true );
+
+                if ( is_wp_error( $resultado ) ) {
+                    guardarLog("Error actualizando el post ID $post_id: " . $resultado->get_error_message());
+                } else {
+                    guardarLog("Post ID $post_id actualizado correctamente.");
+                }
             } else {
-                guardarLog("Post ID $post_id actualizado correctamente.");
+                guardarLog("Post ID $post_id no requiere actualizaciones.");
             }
         }
+
+        // Opcionalmente, establecer la opción para evitar futuras actualizaciones
+        update_option( 'social_posts_actualizados', true );
+        guardarLog('Opción social_posts_actualizados establecida como true.');
     } else {
         guardarLog('No se encontraron posts que cumplan con los criterios.');
     }
 
     // Restaurar los datos originales de la consulta
     wp_reset_postdata();
-
-    // Marcar como actualizado
-    update_option( 'social_posts_actualizados', true );
-    guardarLog('Actualización completada. Opción social_posts_actualizados establecida a true.');
 }
-add_action( 'init', 'actualizar_titulos_y_slugs_social_posts' );
+actualizar_titulos_y_slugs_social_posts();
 
-/**
- * Actualiza título y slug al guardar un post 'social_post' verificado.
- *
- * @param int     $post_id
- * @param WP_Post $post
- * @param bool    $update
- */
+
 function actualizar_titulo_slug_al_guardar( $post_id, $post, $update ) {
     guardarLog("Iniciando actualización al guardar para post ID: $post_id");
 
