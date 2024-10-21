@@ -10,7 +10,7 @@ function actualizar_titulos_y_slugs_social_posts() {
     $args = array(
         'post_type'      => 'social_post',
         'meta_key'       => 'Verificado',
-        'meta_value'     => 'true',
+        'meta_value'     => '1',
         'posts_per_page' => -1, // Obtener todos los posts
     );
 
