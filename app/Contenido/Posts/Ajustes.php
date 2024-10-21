@@ -89,7 +89,7 @@ function actualizar_titulos_y_slugs_social_posts() {
     // Restaurar los datos originales de la consulta
     wp_reset_postdata();
 }
-actualizar_titulos_y_slugs_social_posts();
+
 
 
 function actualizar_titulo_slug_al_guardar( $post_id, $post, $update ) {
