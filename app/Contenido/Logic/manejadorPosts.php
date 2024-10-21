@@ -24,7 +24,6 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         return $output;
     }
 }
-
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
     // Obtener el identificador del POST
@@ -134,15 +133,37 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
                 ];
             }
 
-            // Coincidencia de Tags
-            if (!empty($data['tags']) && is_array($data['tags'])) {
-                foreach ($data['tags'] as $tag) {
-                    $meta_queries[] = [
-                        'key'     => 'datosAlgoritmo',
-                        'value'   => '"' . $tag . '"',
-                        'compare' => 'LIKE',
-                    ];
+            // Coincidencia de Tags en ambos idiomas
+            if (!empty($data['tags_posibles'])) {
+                foreach (['es', 'en'] as $lang) {
+                    if (!empty($data['tags_posibles'][$lang]) && is_array($data['tags_posibles'][$lang])) {
+                        foreach ($data['tags_posibles'][$lang] as $tag) {
+                            $meta_queries[] = [
+                                'key'     => 'datosAlgoritmo',
+                                'value'   => '"' . $tag . '"',
+                                'compare' => 'LIKE',
+                            ];
+                        }
+                    }
                 }
+            }
+
+            // Coincidencias de descripción, estado de ánimo, artistas, etc.
+            if (!empty($data)) {
+                $combined_data = implode(' ', array_merge(
+                    $data['descripcion_ia_pro']['es'] ?? [],
+                    $data['descripcion_ia_pro']['en'] ?? [],
+                    $data['estado_animo']['es'] ?? [],
+                    $data['estado_animo']['en'] ?? [],
+                    $data['artista_posible']['es'] ?? [],
+                    $data['artista_posible']['en'] ?? []
+                ));
+
+                $meta_queries[] = [
+                    'key'     => 'datosAlgoritmo',
+                    'value'   => $combined_data,
+                    'compare' => 'LIKE',
+                ];
             }
 
             if (!empty($meta_queries)) {
@@ -180,6 +201,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
     return $query_args;
 }
+
 
 
 
