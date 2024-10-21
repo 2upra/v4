@@ -815,27 +815,34 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
 }
 
 
-
 function procesarUnAudio()
 {
     global $wpdb;
 
-    // Buscar el post con un archivo de audio válido (post_audio_lite) que aún no tenga 'proIA' en true y procesar solo uno
     iaLog("Iniciando el procesamiento de un audio...");
 
     $query = "
         SELECT p.ID, pm.meta_value AS archivo_audio_id
         FROM {$wpdb->posts} p
         INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-        LEFT JOIN {$wpdb->postmeta} proIA_meta ON p.ID = proIA_meta.post_id AND proIA_meta.meta_key = 'proIA'
+        LEFT JOIN {$wpdb->postmeta} proIA_meta 
+            ON p.ID = proIA_meta.post_id 
+            AND proIA_meta.meta_key = 'proIA'
+        LEFT JOIN {$wpdb->postmeta} verificado_meta 
+            ON p.ID = verificado_meta.post_id 
+            AND verificado_meta.meta_key = 'Verificado'
         WHERE pm.meta_key = 'post_audio_lite'
-        AND proIA_meta.meta_value IS NULL
-        AND p.post_status = 'publish'
+            AND proIA_meta.meta_value IS NULL
+            AND (
+                verificado_meta.meta_value IS NULL 
+                OR verificado_meta.meta_value NOT IN ('true', '1')
+            )
+            AND p.post_status = 'publish'
         ORDER BY p.post_date DESC
         LIMIT 1
     ";
 
-    iaLog("Ejecutando consulta SQL para buscar post con audio...");
+    iaLog("Ejecutando consulta SQL para buscar post con audio, excluyendo verificados...");
 
     $post_con_audio = $wpdb->get_row($query);
 
