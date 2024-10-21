@@ -26,43 +26,49 @@ function definir_cron_cada_dos_minutos($schedules)
 }
 add_action('procesar_audio1_cron_event', 'procesarAudios');
 
-# Paso 1
+// Paso 1 - Ejecuta cada 4 minutos, envía un solo audio válido para autProcesarAudio
 function procesarAudios()
 {
     $directorio_audios = '/home/asley01/MEGA/Waw/X';
     $lock_file = '/tmp/procesar_audios.lock';
 
+    // Intentar crear y obtener un candado exclusivo
     $fp = fopen($lock_file, 'c');
     if ($fp === false || !flock($fp, LOCK_EX | LOCK_NB)) {
         return;
     }
 
     try {
-        $audios_para_procesar = buscarAudios($directorio_audios);
-        if (count($audios_para_procesar) > 0) {
-            $audio_info = $audios_para_procesar[array_rand($audios_para_procesar)];
+        $audio_info = buscarUnAudioValido($directorio_audios);
+        if ($audio_info) {
             autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
         }
     } finally {
         flock($fp, LOCK_UN);
         fclose($fp);
-        unlink($lock_file);
+        // Verificar si el lock_file actual es el que se creó
+        if (file_exists($lock_file)) {
+            unlink($lock_file);
+        }
     }
 }
 
-# Paso 2
-function buscarAudios($directorio)
+// Paso 2 - Buscar y retornar un solo audio válido
+function buscarUnAudioValido($directorio)
 {
-    $audios = [];
     $extensiones_permitidas = ['wav', 'mp3'];
 
     if (!is_dir($directorio) || !is_readable($directorio)) {
-        //guardarLog("[buscarAudios] Error: El directorio no existe o no es accesible: {$directorio}");
-        return [];
+        //guardarLog("[buscarUnAudioValido] Error: El directorio no existe o no es accesible: {$directorio}");
+        return null;
     }
 
     try {
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio, FilesystemIterator::SKIP_DOTS));
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($directorio, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
+
         foreach ($iterator as $archivo) {
             if ($archivo->isFile()) {
                 $nombreArchivo = $archivo->getFilename();
@@ -83,26 +89,20 @@ function buscarAudios($directorio)
                         $hash = hash_file('sha256', $rutaArchivo);
 
                         if ($hash && debeProcesarse($rutaArchivo, $hash)) {
-                            $audios[] = ['ruta' => $rutaArchivo, 'hash' => $hash];
-
-                            // Detener el bucle si ya se han encontrado 100 archivos
-                            if (count($audios) >= 100) {
-                                break;
-                            }
+                            return ['ruta' => $rutaArchivo, 'hash' => $hash];
                         }
                     }
                 }
             }
         }
     } catch (Exception $e) {
-        //guardarLog("[buscarAudios] Excepción al iterar directorios: " . $e->getMessage());
+        //guardarLog("[buscarUnAudioValido] Excepción al iterar directorios: " . $e->getMessage());
     }
 
-    return $audios;
+    return null;
 }
 
-
-# Paso 3
+// Paso 3 - Verificar si el archivo debe ser procesado
 function debeProcesarse($ruta_archivo, $file_hash)
 {
     try {
@@ -116,7 +116,8 @@ function debeProcesarse($ruta_archivo, $file_hash)
             return false;
         }
 
-        if (obtenerHash($file_hash) && verificarCargaArchivoPorHash($file_hash)) {
+        // Asumiendo que obtenerHash() devuelve un valor si el hash ya existe
+        if (obtenerHash($file_hash) || verificarCargaArchivoPorHash($file_hash)) {
             return false;
         }
 
@@ -127,7 +128,7 @@ function debeProcesarse($ruta_archivo, $file_hash)
     }
 }
 
-# Paso 4 
+// Paso 4 - Revisar y procesar el audio automáticamente
 function autRevisarAudio($audio, $file_hash)
 {
     if (!file_exists($audio)) {
