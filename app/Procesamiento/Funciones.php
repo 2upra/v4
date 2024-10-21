@@ -73,6 +73,7 @@ function datosParaAlgoritmo($postId)
 #Paso 4
 function confirmarArchivos($postId)
 {
+    #Aquí tiene que buscar archivoId1 (ademas de archivoId), y archivoId2 y archivoId3 existe, lo mismo para los demás hasta 30
     $campos = ['archivoId', 'audioId', 'imagenId'];
     foreach ($campos as $campo) {
         if (!empty($_POST[$campo])) {
@@ -89,6 +90,7 @@ function confirmarArchivos($postId)
 #Paso 5
 function procesarURLs($postId)
 {
+    #Aqui tiene que comprobar si tiene AudioUrl1 (ademas de 'audioUrl') y AudioUrl2 y AudioUrl3 hasta 30 (solo para AudioUrl)
     $procesarURLs = [
         'imagenUrl'  => 'procesarArchivo',
         'audioUrl'   => ['procesarArchivo', true],
@@ -148,6 +150,7 @@ function obtenerArchivoId($url, $postId)
 #Paso 5.3
 function actualizarMetaConArchivo($postId, $campo, $archivoId)
 {
+    #aqui esto puedo recibir AudioUrl1 (ademas de 'audioUrl') y AudioUrl2 y AudioUrl3 hasta 30, tienes que estar preparado para eso
     $meta_mapping = [
         'imagenUrl' => 'imagenID',
         'audioUrl' => 'post_audio',
@@ -165,6 +168,7 @@ function actualizarMetaConArchivo($postId, $campo, $archivoId)
 #Paso 5.4
 function renombrarArchivoAdjunto($postId, $archivoId)
 {
+    #aqui esto puedo recibir AudioUrl1 (ademas de 'audioUrl') y AudioUrl2 y AudioUrl3 hasta 30, tienes que estar preparado para eso
     $file_id = intval($_POST['audioId']);
 
     $post = get_post($postId);
@@ -195,6 +199,7 @@ function renombrarArchivoAdjunto($postId, $archivoId)
         actualizarUrlArchivo($file_id, $public_url);
         update_attached_file($archivoId, $new_file_path);
         update_post_meta($postId, 'sample', true);
+        #aqui tiene que generar los index de 1 a 30 dinamicamente segun los AudioUrl que reciba, hay que optimizar esto para que procese todo bien
         procesarAudioLigero($postId, $archivoId, 1);
     } else {
         guardarLog("Error: No se pudo renombrar el archivo adjunto de $file_path a $new_file_path.");
@@ -202,27 +207,12 @@ function renombrarArchivoAdjunto($postId, $archivoId)
     }
 }
 
-
-#Paso 6
-function asignarTags($postId)
-{
-    if (!empty($_POST['Tags'])) {
-        $tags = sanitize_text_field($_POST['Tags']);
-        $tags_array = explode(',', $tags);
-        wp_set_post_tags($postId, $tags_array, false);
-    }
-}
-
-
-
-
-
-
+#Paso 5.5
+# Crear hash de todos los audio lite para que esto pueda comprobar si ya existen
 function procesarAudioLigero($post_id, $audio_id, $index)
 {
     guardarLog("INICIO procesarAudioLigero para Post ID: $post_id y Audio ID: $audio_id");
 
-    // Verificar si ya existe un archivo de audio ligero asociado a este audio_id
     $existing_lite_audio = get_posts(array(
         'post_type' => 'attachment',
         'meta_query' => array(
@@ -252,17 +242,6 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         guardarLog("Error al eliminar metadatos del archivo original: " . implode("\n", $output_strip));
     } else {
         guardarLog("Metadatos del archivo original eliminados correctamente.");
-    }
-
-    // Si ya existe un archivo ligero, asociarlo al nuevo post
-    if ($existing_lite_audio) {
-        $existing_lite_audio_id = $existing_lite_audio[0]->ID;
-        guardarLog("Archivo ligero ya existente encontrado: ID $existing_lite_audio_id, asociando al nuevo post.");
-        $meta_key = ($index == 1) ? "post_audio_lite" : "post_audio_lite_{$index}";
-        update_post_meta($post_id, $meta_key, $existing_lite_audio_id);
-        update_post_meta($post_id, 'AudioDuplicado', true);
-        analizarYGuardarMetasAudio($post_id, $audio_path, $index);
-        return;
     }
 
     // Obtener el nombre de usuario del autor del post
@@ -334,14 +313,11 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     }
 
     guardarLog("datos para sacar meta post id: {$post_id} path_lite: {$nuevo_archivo_path_lite} index: {$index}");
+    #Enviar solo el primero y si hay mas de 2 agregar un tag que lo indique
     analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
 }
 
-/*
-
-
-*/
-
+#Paso 5.6
 function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 {
     $python_command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py \"{$nuevo_archivo_path_lite}\"");
@@ -413,47 +389,6 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 
     $descripcion = generarDescripcionIA($nuevo_archivo_path_lite, $prompt);
 
-    /*
-    Esto es un problema grave por favor corrige y dame el codigo corregido, el problema no es como se reciben los json sino como se agregan despues al final 
-    asi esta mal (datos de ejemplo)
-    {"bpm":144,"emotion":"","key":"C","scale":"major","descripcion_ia":{"descripcion_ia":{"es":"dato ","en":"dato"},"instrumentos_posibles":{"es":["dato"],"en":["dato"]},"estado_animo":{"es":["dato"],"en":["dato"]},"artista_posible":{"es":["dato"],"en":["dato"]},"genero_posible":{"es":["dato"],"en":["dato"]},"tipo_audio":{"es":["dato"],"en":[""dato""]},"tags_posibles":{"es":["dato"],"en":["dato"]},"sugerencia_busqueda":{"es":["dato"],"en":["dato"]}}}
-
-    asi esta bien  (datos de ejemplo)
-    {"bpm":144,"emotion":"","key":"C","scale":"major","descripcion_ia":{"es":"dato ","en":"dato"},"instrumentos_posibles":{"es":["dato"],"en":["dato"]},"estado_animo":{"es":["dato"],"en":["dato"]},"artista_posible":{"es":["dato"],"en":["dato"]},"genero_posible":{"es":["dato"],"en":["dato"]},"tipo_audio":{"es":["dato"],"en":[""dato""]},"tags_posibles":{"es":["dato"],"en":["dato"]},"sugerencia_busqueda":{"es":["dato"],"en":["dato"]}}
-
-    la difrencia esta en descripcion_ia":{ } (bien) y "descripcion_ia":{"descripcion_ia":{ }} (mal)
-
-    me estas estendiendo???
-
-    Ejemplo de estructura incorrecta:
-
-
-    {
-        "descripcion_ia": {
-            "descripcion_ia": {
-                "es": "dato",
-                "en": "dato"
-            },
-            "instrumentos_posibles": {...},
-            "estado_animo": {...},
-            ...
-        }
-    }
-    Estructura correcta:
-    Debe ser algo así:
-
-
-    {
-        "descripcion_ia": {
-            "es": "dato",
-            "en": "dato"
-        },
-        "instrumentos_posibles": {...},
-        "estado_animo": {...},
-        ...
-    }
-
-    */
     if ($descripcion) {
         // Procesar el JSON eliminando caracteres innecesarios
         $descripcion_procesada = json_decode(trim($descripcion, "```json \n"), true);
@@ -565,6 +500,24 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     iaLog("Metadatos de 'datosAlgoritmo' actualizados para el post ID: {$post_id}");
     
 }
+
+
+
+#Paso 6
+function asignarTags($postId)
+{
+    if (!empty($_POST['Tags'])) {
+        $tags = sanitize_text_field($_POST['Tags']);
+        $tags_array = explode(',', $tags);
+        wp_set_post_tags($postId, $tags_array, false);
+    }
+}
+
+
+
+
+
+
 
 function rehacerDescripcionAudio($post_id, $archivo_audio)
 {

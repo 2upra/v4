@@ -24,7 +24,6 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         return $output;
     }
 }
-
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
     $identifier = $_POST['identifier'] ?? '';
@@ -37,44 +36,49 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
     }
 
     if ($args['post_type'] === 'social_post') {
-        $posts_personalizados = calcularFeedPersonalizado($current_user_id);
-        $post_ids = array_keys($posts_personalizados);
+        if (empty($identifier)) {
+            // Solo calcular el feed personalizado si no hay un identifier
+            $posts_personalizados = calcularFeedPersonalizado($current_user_id);
+            $post_ids = array_keys($posts_personalizados);
 
-        // Eliminar $similar_to de $post_ids si está presente
-        if ($similar_to) {
-            $post_ids = array_filter($post_ids, function($post_id) use ($similar_to) {
-                return $post_id != $similar_to;
-            });
-        }
+            // Eliminar $similar_to de $post_ids si está presente
+            if ($similar_to) {
+                $post_ids = array_filter($post_ids, function($post_id) use ($similar_to) {
+                    return $post_id != $similar_to;
+                });
+            }
 
-        if ($paged == 1) {
-            $post_ids = array_slice($post_ids, 0, $posts);
-        }
+            if ($paged == 1) {
+                $post_ids = array_slice($post_ids, 0, $posts);
+            }
 
-        $query_args = [
-            'post_type'      => $args['post_type'],
-            'posts_per_page' => $posts,
-            'paged'          => $paged,
-            'post__in'       => $post_ids,
-            'orderby'        => 'post__in',
-            'meta_query'     => [],
-        ];
-
-        // Añadir meta_query si hay un identificador
-        if (!empty($identifier)) {
-            $query_args['meta_query'][] = [
-                'key'     => 'datosAlgoritmo',
-                'value'   => $identifier,
-                'compare' => 'LIKE',
+            $query_args = [
+                'post_type'      => $args['post_type'],
+                'posts_per_page' => $posts,
+                'paged'          => $paged,
+                'post__in'       => $post_ids,
+                'orderby'        => 'post__in',
+                'meta_query'     => [],
+            ];
+        } else {
+            // Cuando hay un identifier, no usar calcularFeedPersonalizado
+            $query_args = [
+                'post_type'      => $args['post_type'],
+                'posts_per_page' => $posts,
+                'paged'          => $paged,
+                'orderby'        => 'date',
+                'order'          => 'DESC',
+                'meta_query'     => [
+                    [
+                        'key'     => 'datosAlgoritmo',
+                        'value'   => $identifier,
+                        'compare' => 'LIKE',
+                    ],
+                ],
             ];
         }
 
-        // Si hay exclusiones adicionales, combinarlas
-        if (!empty($args['exclude'])) {
-            $post_not_in = array_merge($post_not_in, $args['exclude']);
-        }
-
-        // Añadir post__not_in si hay exclusiones
+        // Añadir exclusiones si existen
         if (!empty($post_not_in)) {
             $query_args['post__not_in'] = $post_not_in;
         }
@@ -88,9 +92,18 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             'meta_query'     => [],
         ];
 
-        // Añadir exclusiones si existen
+        // Añadir eliminaciones si existen
         if (!empty($post_not_in)) {
             $query_args['post__not_in'] = $post_not_in;
+        }
+
+        // Añadir meta_query si hay un identificador
+        if (!empty($identifier)) {
+            $query_args['meta_query'][] = [
+                'key'     => 'datosAlgoritmo',
+                'value'   => $identifier,
+                'compare' => 'LIKE',
+            ];
         }
     }
 
