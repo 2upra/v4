@@ -426,9 +426,9 @@ function rehacerNombreAudio($post_id, $archivo_audio)
         iaLog("Renombrado completado exitosamente para el post ID: {$post_id}");
         $user_id = get_current_user_id();
 
-        if ($user_id === 1) {
+        if (user_can($user_id, 'administrator')) {
             update_post_meta($post_id, 'Verificado', true);
-        }
+        }        
 
         return $nombre_final_con_id;
     } else {
