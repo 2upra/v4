@@ -12,7 +12,6 @@ function registrarCambioSlug($old_slug, $post_id, $new_slug) {
         error_log("No se puede escribir en el archivo de log: $log_file");
     }
 }
-
 function actualizar_titulos_y_slugs_social_posts() {
     // Argumentos para la consulta
     $args = array(
@@ -20,6 +19,8 @@ function actualizar_titulos_y_slugs_social_posts() {
         'meta_key'       => 'Verificado',
         'meta_value'     => '1',
         'posts_per_page' => -1, // Obtener todos los posts
+        // Desactivar temporalmente la verificación de la fecha en 'ultima_actualizacion_slug'
+        /*
         'meta_query'     => array(
             'relation' => 'OR',
             array(
@@ -33,6 +34,7 @@ function actualizar_titulos_y_slugs_social_posts() {
                 'type'    => 'DATETIME',
             ),
         ),
+        */
     );
 
     $query = new WP_Query( $args );
@@ -94,7 +96,9 @@ function actualizar_titulos_y_slugs_social_posts() {
     // Restaurar los datos originales de la consulta
     wp_reset_postdata();
 }
+
 actualizar_titulos_y_slugs_social_posts();
+
 
 function actualizar_titulo_slug_al_guardar( $post_id, $post, $update ) {
     guardarLog("Iniciando actualización al guardar para post ID: $post_id");
