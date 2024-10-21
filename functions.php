@@ -35,7 +35,7 @@ function guardarLog($log) {
 }
 
 function logAlgoritmo($log) {
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/logAlgoritmo.log', 100); // Máximo de 100 líneas
+    escribirLog($log, '/var/www/wordpress/wp-content/themes/logAlgoritmo.log', 20); // Máximo de 100 líneas
 }
 
 function ajaxPostLog($log) {
