@@ -412,6 +412,15 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 
     $descripcion = generarDescripcionIA($nuevo_archivo_path_lite, $prompt);
 
+    // ves la diferencia: mal "descripcion_ia":{"descripcion":{"es": (continuoa) }} pero en realidad tiene que ser asi "descripcion_ia":{"es":"Un loop de un (continua) }
+    //MAL 
+    //{"bpm":93,"emotion":"","key":"C#","scale":"minor","descripcion_ia":{"descripcion":{"es":"Un loop de un sonido de bajo grave que se repite con una frecuencia ligeramente irregular, con una textura digital y distorsionada, creando una atmósfera oscura e industrial.","en":"A loop of a deep bass sound that repeats with a slightly irregular frequency, featuring a digital and distorted texture, creating a dark and industrial atmosphere."},"instrumentos_posibles":{"es":["Bajo"],"en":["Bass"]},"estado_animo":{"es":["Oscuro","Industrial","Tenso"],"en":["Dark","Industrial","Tense"]},"artista_posible":{"es":["RL Grime, Skrillex"],"en":["RL Grime, Skrillex"]},"genero_posible":{"es":["Hip hop","Electrónica","Trap"],"en":["Hip hop","Electronic","Trap"]},"tipo_audio":{"es":["Loop"],"en":["Loop"]},"tags_posibles":{"es":["Bajo","Grave","Distorsionado","Industrial"],"en":["Bass","Deep","Distorted","Industrial"]},"sugerencia_busqueda":{"es":["Sonido de bajo oscuro","Loop de bajo","Música industrial","Efecto de sonido"],"en":["Dark bass sound","Bass loop","Industrial music","Sound effect"]}}}
+
+    //BIEN 
+    // {"bpm":93,"emotion":"","key":"C#","scale":"minor","descripcion_ia":{"es":"Un loop de un sonido de bajo grave que se repite con una frecuencia ligeramente irregular, con una textura digital y distorsionada, creando una atmósfera oscura e industrial.","en":"A loop of a deep bass sound that repeats with a slightly irregular frequency, featuring a digital and distorted texture, creating a dark and industrial atmosphere."},"instrumentos_posibles":{"es":["Bajo"],"en":["Bass"]},"estado_animo":{"es":["Oscuro","Industrial","Tenso"],"en":["Dark","Industrial","Tense"]},"artista_posible":{"es":["RL Grime, Skrillex"],"en":["RL Grime, Skrillex"]},"genero_posible":{"es":["Hip hop","Electrónica","Trap"],"en":["Hip hop","Electronic","Trap"]},"tipo_audio":{"es":["Loop"],"en":["Loop"]},"tags_posibles":{"es":["Bajo","Grave","Distorsionado","Industrial"],"en":["Bass","Deep","Distorted","Industrial"]},"sugerencia_busqueda":{"es":["Sonido de bajo oscuro","Loop de bajo","Música industrial","Efecto de sonido"],"en":["Dark bass sound","Bass loop","Industrial music","Sound effect"]}}
+
+    //hay que corregirlo aqui
+
     if ($descripcion) {
         $descripcion_procesada = json_decode(trim($descripcion, "```json \n"), true);
 
@@ -419,8 +428,8 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
             $suffix = ($index == 1) ? '' : "_{$index}";
             $nuevos_datos = [
                 'descripcion' => [
-                    'es' => $descripcion_procesada['Descripcion']['es'] ?? '',
-                    'en' => $descripcion_procesada['Descripcion']['en'] ?? ''
+                    'es' => $descripcion_procesada['descripcion_ia']['es'] ?? '',
+                    'en' => $descripcion_procesada['descripcion_ia']['en'] ?? ''
                 ],
                 'instrumentos_posibles' => [
                     'es' => $descripcion_procesada['instrumentos_posibles']['es'] ?? [],
