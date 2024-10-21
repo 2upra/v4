@@ -397,6 +397,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         }
     }
 
+    //el prompt no hay que tocarlo esta perfecto 
     $prompt = "El usuario ya subió este audio, pero acaba de editar la descripción o lo acaba de publicar ahora mismo. "
         . "Ten muy en cuenta la descripcion. descripción:\"{$post_content}\". {$tags_usuario_texto}"
         . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON: "
@@ -412,10 +413,59 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 
     $descripcion = generarDescripcionIA($nuevo_archivo_path_lite, $prompt);
 
+    /*
+    Esto es un problema grave por favor corrige y dame el codigo corregido 
+    asi esta mal (datos de ejemplo)
+    {"bpm":144,"emotion":"","key":"C","scale":"major","descripcion_ia":{"descripcion":{"es":"dato ","en":"dato"},"instrumentos_posibles":{"es":["dato"],"en":["dato"]},"estado_animo":{"es":["dato"],"en":["dato"]},"artista_posible":{"es":["dato"],"en":["dato"]},"genero_posible":{"es":["dato"],"en":["dato"]},"tipo_audio":{"es":["dato"],"en":[""dato""]},"tags_posibles":{"es":["dato"],"en":["dato"]},"sugerencia_busqueda":{"es":["dato"],"en":["dato"]}}}
+
+    asi esta bien  (datos de ejemplo)
+    {"bpm":144,"emotion":"","key":"C","scale":"major","descripcion_ia":{"es":"dato ","en":"dato"},"instrumentos_posibles":{"es":["dato"],"en":["dato"]},"estado_animo":{"es":["dato"],"en":["dato"]},"artista_posible":{"es":["dato"],"en":["dato"]},"genero_posible":{"es":["dato"],"en":["dato"]},"tipo_audio":{"es":["dato"],"en":[""dato""]},"tags_posibles":{"es":["dato"],"en":["dato"]},"sugerencia_busqueda":{"es":["dato"],"en":["dato"]}}}
+
+        la difrencia esta en descripcion_ia":{ } (bien) y "descripcion_ia":{"descripcion":{ }} (mal)
+
+    me estas estendiendo???
+    mas logs
+
+    2024-10-21 04:51:37 - Respuesta completa de la API: {"candidates":[{"content":{"parts":[{"text":"```json\n{\"descripcion_ia\":{\"es\":\"Un sonido de bajo que se repite a lo largo de la grabaci\u00f3n, dando un ritmo constante. El tono es grave y tiene una calidad oscura. El sonido se puede usar como un loop de hip hop o m\u00fasica electr\u00f3nica.\", \"en\":\"A repeating bass sound throughout the recording, providing a steady rhythm. The tone is low and has a dark quality. The sound can be used as a loop for hip hop or electronic music.\"},\"instrumentos_posibles\":{\"es\":[\"Bajo\"], \"en\":[\"Bass\"]},\"estado_animo\":{\"es\":[\"Oscuro\", \"Intenso\"], \"en\":[\"Dark\", \"Intense\"]},\"genero_posible\":{\"es\":[\"Hip hop\", \"M\u00fasica electr\u00f3nica\"], \"en\":[\"Hip hop\", \"Electronic music\"]},\"artista_posible\":{\"es\":[\"DJ Shadow\", \"Flying Lotus\"], \"en\":[\"DJ Shadow\", \"Flying Lotus\"]},\"tipo_audio\":{\"es\":[\"Loop\"], \"en\":[\"Loop\"]},\"tags_posibles\":{\"es\":[\"Bajo\", \"Oscuro\", \"Hip hop\", \"Electronica\"], \"en\":[\"Bass\", \"Dark\", \"Hip hop\", \"Electronic\"]},\"sugerencia_busqueda\":{\"es\":[\"Loop de bajo oscuro\", \"Sonido de hip hop\", \"M\u00fasica electr\u00f3nica oscura\"], \"en\":[\"Dark bass loop\", \"Hip hop sound\", \"Dark electronic music\"]}}\n``` \n"}],"role":"model"},"finishReason":"STOP","index":0,"safetyRatings":[{"category":"HARM_CATEGORY_SEXUALLY_EXPLICIT","probability":"NEGLIGIBLE"},{"category":"HARM_CATEGORY_HATE_SPEECH","probability":"NEGLIGIBLE"},{"category":"HARM_CATEGORY_HARASSMENT","probability":"NEGLIGIBLE"},{"category":"HARM_CATEGORY_DANGEROUS_CONTENT","probability":"NEGLIGIBLE"}]}],"usageMetadata":{"promptTokenCount":487,"candidatesTokenCount":279,"totalTokenCount":766}}
+    2024-10-21 04:51:37 - Contenido generado: ```json
+    {"descripcion_ia":{"es":"Un sonido de bajo que se repite a lo largo de la grabación, dando un ritmo constante. El tono es grave y tiene una calidad oscura. El sonido se puede usar como un loop de hip hop o música electrónica.", "en":"A repeating bass sound throughout the recording, providing a steady rhythm. The tone is low and has a dark quality. The sound can be used as a loop for hip hop or electronic music."},"instrumentos_posibles":{"es":["Bajo"], "en":["Bass"]},"estado_animo":{"es":["Oscuro", "Intenso"], "en":["Dark", "Intense"]},"genero_posible":{"es":["Hip hop", "Música electrónica"], "en":["Hip hop", "Electronic music"]},"artista_posible":{"es":["DJ Shadow", "Flying Lotus"], "en":["DJ Shadow", "Flying Lotus"]},"tipo_audio":{"es":["Loop"], "en":["Loop"]},"tags_posibles":{"es":["Bajo", "Oscuro", "Hip hop", "Electronica"], "en":["Bass", "Dark", "Hip hop", "Electronic"]},"sugerencia_busqueda":{"es":["Loop de bajo oscuro", "Sonido de hip hop", "Música electrónica oscura"], "en":["Dark bass loop", "Hip hop sound", "Dark electronic music"]}}
+    ``` 
+    2024-10-21 04:51:37 - Descripción del audio guardada para el post ID: 234365
+    2024-10-21 04:51:37 - Datos nuevos a agregar: {"bpm":124,"emotion":"","key":"C#","scale":"minor","descripcion_ia":{"descripcion_ia":{"es":"Un sonido de bajo que se repite a lo largo de la grabaci\u00f3n, dando un ritmo constante. El tono es grave y tiene una calidad oscura. El sonido se puede usar como un loop de hip hop o m\u00fasica electr\u00f3nica.","en":"A repeating bass sound throughout the recording, providing a steady rhythm. The tone is low and has a dark quality. The sound can be used as a loop for hip hop or electronic music."},"instrumentos_posibles":{"es":["Bajo"],"en":["Bass"]},"estado_animo":{"es":["Oscuro","Intenso"],"en":["Dark","Intense"]},"artista_posible":{"es":["DJ Shadow","Flying Lotus"],"en":["DJ Shadow","Flying Lotus"]},"genero_posible":{"es":["Hip hop","M\u00fasica electr\u00f3nica"],"en":["Hip hop","Electronic music"]},"tipo_audio":{"es":["Loop"],"en":["Loop"]},"tags_posibles":{"es":["Bajo","Oscuro","Hip hop","Electronica"],"en":["Bass","Dark","Hip hop","Electronic"]},"sugerencia_busqueda":{"es":["Loop de bajo oscuro","Sonido de hip hop","M\u00fasica electr\u00f3nica oscura"],"en":["Dark bass loop","Hip hop sound","Dark electronic music"]}}}
+
+    Ejemplo de estructura incorrecta:
+
+
+    {
+        "descripcion_ia": {
+            "descripcion": {
+                "es": "dato",
+                "en": "dato"
+            },
+            "instrumentos_posibles": {...},
+            "estado_animo": {...},
+            ...
+        }
+    }
+    Estructura correcta:
+    Debe ser algo así:
+
+
+    {
+        "descripcion_ia": {
+            "es": "dato",
+            "en": "dato"
+        },
+        "instrumentos_posibles": {...},
+        "estado_animo": {...},
+        ...
+    }
+
+    */
     if ($descripcion) {
         // Procesar el JSON eliminando caracteres innecesarios
         $descripcion_procesada = json_decode(trim($descripcion, "```json \n"), true);
-    
+
         if ($descripcion_procesada) {
             // Verificar si 'descripcion_ia' está estructurado incorrectamente
             if (isset($descripcion_procesada['descripcion_ia']['descripcion'])) {
@@ -425,12 +475,12 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
                     'en' => $descripcion_procesada['descripcion_ia']['descripcion']['en'] ?? ''
                 ];
             }
-    
+
             // Definir el sufijo para los datos, según el índice
             $suffix = ($index == 1) ? '' : "_{$index}";
-    
+
             // Asegurarse de que la clave 'descripcion_ia' esté bien estructurada
-            if (isset($descripcion_procesada['descripcion_ia'])) {
+            if (isset($descripcion_procesada['descripcion_ia']) && is_array($descripcion_procesada['descripcion_ia'])) {
                 // Crear los nuevos datos con la estructura correcta
                 $nuevos_datos = [
                     'descripcion_ia' => [
@@ -466,12 +516,12 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
                         'en' => $descripcion_procesada['sugerencia_busqueda']['en'] ?? []
                     ]
                 ];
-    
+
                 // Guardar los datos procesados en los metadatos del post
                 update_post_meta($post_id, "audio_descripcion{$suffix}", json_encode($nuevos_datos, JSON_UNESCAPED_UNICODE));
                 iaLog("Descripción del audio guardada para el post ID: {$post_id}");
             } else {
-                iaLog("Error: 'descripcion_ia' no está presente en el JSON procesado.");
+                iaLog("Error: 'descripcion_ia' no está presente o tiene una estructura incorrecta en el JSON procesado.");
             }
         } else {
             iaLog("Error al procesar el JSON de la descripción generada por IA.");
@@ -479,10 +529,10 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     } else {
         iaLog("No se pudo generar la descripción del audio para el post ID: {$post_id}");
     }
-    
+
     // Obtener los datos del algoritmo
     $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
-    
+
     // Si no existen, inicializarlos como un array vacío
     if (!$datos_algoritmo) {
         $datos_algoritmo = [];
@@ -492,7 +542,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
             $datos_algoritmo = [];
         }
     }
-    
+
     // Agregar los nuevos datos del algoritmo, incluyendo la descripción procesada
     $nuevos_datos_algoritmo = [
         'bpm' => $resultados['bpm'] ?? '',
@@ -501,14 +551,14 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         'scale' => $resultados['scale'] ?? '',
         'descripcion_ia' => $nuevos_datos // Aquí se incluye la descripción procesada
     ];
-    
+
     iaLog("Datos nuevos a agregar: " . json_encode($nuevos_datos_algoritmo));
-    
+
     // Combinar los nuevos datos con los existentes
     $datos_algoritmo = array_merge($datos_algoritmo, $nuevos_datos_algoritmo);
-    
+
     iaLog("Metadatos actuales para 'datosAlgoritmo' antes de guardar: " . json_encode($datos_algoritmo));
-    
+
     // Guardar los datos combinados en los metadatos del post
     update_post_meta($post_id, 'datosAlgoritmo', json_encode($datos_algoritmo, JSON_UNESCAPED_UNICODE));
 
