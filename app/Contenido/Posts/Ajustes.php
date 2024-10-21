@@ -1,55 +1,64 @@
 <?
 
-/**
- * Actualiza títulos y slugs de los posts 'social_post' verificados.
- */
-function actualizar_titulos_y_slugs_social_posts() {
-    guardarLog('Iniciando la función actualizar_titulos_y_slugs_social_posts');
+function registrarCambioSlug($old_slug, $post_id, $new_slug) {
+    $log_file = get_stylesheet_directory() . '/cambiosSlug.log';
+    $date = current_time('Y-m-d H:i:s');
+    $log_entry = sprintf("[%s] Post ID: %d | Slug Anterior: %s | Nuevo Slug: %s\n", $date, $post_id, $old_slug, $new_slug);
+    
+    // Asegurarse de que el archivo es escribible
+    if (is_writable($log_file)) {
+        file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX);
+    } else {
+        error_log("No se puede escribir en el archivo de log: $log_file");
+    }
+}
 
+function actualizar_titulos_y_slugs_social_posts() {
     // Argumentos para la consulta
     $args = array(
         'post_type'      => 'social_post',
         'meta_key'       => 'Verificado',
         'meta_value'     => '1',
         'posts_per_page' => -1, // Obtener todos los posts
+        'meta_query'     => array(
+            'relation' => 'OR',
+            array(
+                'key'     => 'ultima_actualizacion_slug',
+                'compare' => 'NOT EXISTS',
+            ),
+            array(
+                'key'     => 'ultima_actualizacion_slug',
+                'value'   => date('Y-m-d H:i:s', strtotime('-7 days')),
+                'compare' => '<',
+                'type'    => 'DATETIME',
+            ),
+        ),
     );
 
     $query = new WP_Query( $args );
-    guardarLog('Consulta WP_Query ejecutada con argumentos: ' . print_r($args, true));
 
     if ( $query->have_posts() ) {
-        guardarLog('Posts encontrados: ' . $query->found_posts);
         while ( $query->have_posts() ) {
             $query->the_post();
 
             $post_id   = get_the_ID();
-            $contenido = get_the_content();
-
-            guardarLog("Procesando post ID: $post_id");
+            // Extraer contenido sin etiquetas HTML
+            $contenido = wp_strip_all_tags( get_the_content() );
 
             // Limpiar el contenido para usarlo en el título y slug
             $nuevo_titulo = sanitize_text_field( $contenido );
             $nuevo_slug   = sanitize_title( $contenido );
 
-            guardarLog("Nuevo título propuesto: $nuevo_titulo");
-            guardarLog("Nuevo slug base propuesto: $nuevo_slug");
+            // Verificar que el contenido no esté vacío
+            if ( empty( $nuevo_titulo ) || empty( $nuevo_slug ) ) {
+                continue; // Saltar a la siguiente iteración
+            }
 
             // Obtener el slug actual
             $slug_actual = get_post_field( 'post_name', $post_id );
-            guardarLog("Slug actual: $slug_actual");
 
-            // Verificar si el slug actual ya tiene un sufijo numérico
-            $slug_base = preg_replace('/-\d+$/', '', $slug_actual);
-            if ( $slug_base === $slug_actual ) {
-                // El slug actual no tiene sufijo numérico
-                // Preparar el nuevo slug único
-                $nuevo_slug_unico = wp_unique_post_slug( $nuevo_slug, $post_id, get_post_status( $post_id ), get_post_type( $post_id ), get_post_parent( $post_id ) );
-                guardarLog("Nuevo slug único: $nuevo_slug_unico");
-            } else {
-                // El slug ya tiene un sufijo numérico, asumiendo que es único
-                guardarLog("El slug ya tiene un sufijo numérico. No se actualizará el slug.");
-                $nuevo_slug_unico = $slug_actual; // Mantener el slug actual
-            }
+            // Preparar el nuevo slug único
+            $nuevo_slug_unico = wp_unique_post_slug( $nuevo_slug, $post_id, get_post_status( $post_id ), get_post_type( $post_id ), get_post_parent( $post_id ) );
 
             // Preparar los datos para actualizar
             $post_data = array(
@@ -69,28 +78,23 @@ function actualizar_titulos_y_slugs_social_posts() {
                 // Actualizar el post solo si el título o slug son diferentes
                 $resultado = wp_update_post( $post_data, true );
 
-                if ( is_wp_error( $resultado ) ) {
-                    guardarLog("Error actualizando el post ID $post_id: " . $resultado->get_error_message());
-                } else {
-                    guardarLog("Post ID $post_id actualizado correctamente.");
+                if ( ! is_wp_error( $resultado ) ) {
+                    // Actualizar la meta 'ultima_actualizacion_slug' con la fecha actual
+                    update_post_meta( $post_id, 'ultima_actualizacion_slug', current_time( 'mysql' ) );
+
+                    // Si se actualizó el slug, registrar el cambio
+                    if ( $actualizar_slug ) {
+                        registrarCambioSlug($slug_actual, $post_id, $nuevo_slug_unico);
+                    }
                 }
-            } else {
-                guardarLog("Post ID $post_id no requiere actualizaciones.");
             }
         }
-
-        // Opcionalmente, establecer la opción para evitar futuras actualizaciones
-        update_option( 'social_posts_actualizados', true );
-        guardarLog('Opción social_posts_actualizados establecida como true.');
-    } else {
-        guardarLog('No se encontraron posts que cumplan con los criterios.');
     }
 
     // Restaurar los datos originales de la consulta
     wp_reset_postdata();
 }
-
-
+actualizar_titulos_y_slugs_social_posts();
 
 function actualizar_titulo_slug_al_guardar( $post_id, $post, $update ) {
     guardarLog("Iniciando actualización al guardar para post ID: $post_id");
