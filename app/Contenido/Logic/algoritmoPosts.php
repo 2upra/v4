@@ -232,12 +232,18 @@ function obtenerDatosFeed($userId)
     ];
 }
 
-
+// [21-Oct-2024 19:39:41 UTC] PHP Warning:  foreach() argument must be of type array|object, null given in /var/www/wordpress/wp-content/themes/2upra3v/app/Contenido/Logic/algoritmoPosts.php on line 261
 function calcularFeedPersonalizado($userId)
 {
     $datos = obtenerDatosFeed($userId);
 
     if (empty($datos)) {
+        return [];
+    }
+
+    // Verify if 'author_results' exists and is an array
+    if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
+        logAlgoritmo("Error: 'author_results' is not set or not an array for user ID: $userId");
         return [];
     }
 
@@ -313,7 +319,7 @@ function calcularFeedPersonalizado($userId)
         $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100)); // Hasta 50% de variación
 
         // Ajuste extra aleatorio (puedes ajustar el rango si deseas más variación)
-        $ajusteExtra = mt_rand(-20, 20); // Variación entre -15 y +15 puntos
+        $ajusteExtra = mt_rand(-20, 20); // Variación entre -20 y +20 puntos
         $puntosFinal += $ajusteExtra;
 
         // Asegurar que los puntos finales no sean negativos
@@ -339,7 +345,6 @@ function calcularFeedPersonalizado($userId)
 
     return $posts_personalizados;
 }
-
 // Función para normalizar el texto (evitar problemas de acentos y caracteres especiales)
 function normalizarTexto($texto)
 {
