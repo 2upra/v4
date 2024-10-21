@@ -25,15 +25,18 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
     }
 }
 
-
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
-    // Obtener el identificador del POST
+
+    if (!empty($args['similar_to'])) {
+        return configuracionQueryArgsSimilarTo($args, $paged, $user_id, $current_user_id);
+    }
+
+    // Continuar con la lógica existente para otros casos
     $identifier = $_POST['identifier'] ?? '';
     $posts = $args['posts'];
-    $similar_to = $args['similar_to'] ?? null; // Asegurarse de que $similar_to esté definido
+    $similar_to = $args['similar_to'] ?? null;
 
-    // Inicializar post__not_in con $similar_to si está definido
     $post_not_in = [];
 
     if ($similar_to) {
@@ -98,103 +101,100 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         }
     }
 
-    // Manejar publicaciones similares
-    if ($similar_to) {
-        // Obtener los datosAlgoritmo del post similar
-        $datosAlgoritmo = get_post_meta($similar_to, 'datosAlgoritmo', true);
-        if ($datosAlgoritmo) {
-            $data = json_decode($datosAlgoritmo, true);
+    // Aplicar filtros adicionales si existen
+    $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
 
-            $meta_queries = [];
-            $relation = 'OR'; // Puedes ajustar esto según cómo quieras combinar las condiciones
+    return $query_args;
+}
 
-            // Ejemplo: Coincidencia de BPM
-            if (!empty($data['bpm'])) {
-                $meta_queries[] = [
-                    'key'     => 'datosAlgoritmo',
-                    'value'   => '"bpm":' . $data['bpm'],
-                    'compare' => 'LIKE',
-                ];
-            }
 
-            // Coincidencia de Key
-            if (!empty($data['key'])) {
-                $meta_queries[] = [
-                    'key'     => 'datosAlgoritmo',
-                    'value'   => '"key":"' . $data['key'] . '"',
-                    'compare' => 'LIKE',
-                ];
-            }
+function configuracionQueryArgsSimilarTo($args, $paged, $user_id, $current_user_id)
+{
+    $identifier = $_POST['identifier'] ?? '';
+    $posts = $args['posts'];
+    $similar_to = $args['similar_to'];
 
-            // Coincidencia de Scale
-            if (!empty($data['scale'])) {
-                $meta_queries[] = [
-                    'key'     => 'datosAlgoritmo',
-                    'value'   => '"scale":"' . $data['scale'] . '"',
-                    'compare' => 'LIKE',
-                ];
-            }
+    $post_not_in = [$similar_to]; // Incluir 'similar_to' en exclusiones
 
-            // Coincidencia de Tags en ambos idiomas
-            if (!empty($data['tags_posibles'])) {
-                foreach (['es', 'en'] as $lang) {
-                    if (!empty($data['tags_posibles'][$lang]) && is_array($data['tags_posibles'][$lang])) {
-                        foreach ($data['tags_posibles'][$lang] as $tag) {
-                            $meta_queries[] = [
-                                'key'     => 'datosAlgoritmo',
-                                'value'   => '"' . $tag . '"',
-                                'compare' => 'LIKE',
-                            ];
-                        }
+    // Configuración básica de la consulta
+    $query_args = [
+        'post_type'      => $args['post_type'],
+        'posts_per_page' => $posts,
+        'paged'          => $paged,
+        'orderby'        => 'date',
+        'order'          => 'DESC',
+        'meta_query'     => [],
+        'post__not_in'   => $post_not_in,
+    ];
+
+    // Añadir meta_query si hay un identificador
+    if (!empty($identifier)) {
+        $query_args['meta_query'][] = [
+            'key'     => 'datosAlgoritmo',
+            'value'   => $identifier,
+            'compare' => 'LIKE',
+        ];
+    }
+
+    // Obtener los datosAlgoritmo del post similar
+    $datosAlgoritmo = get_post_meta($similar_to, 'datosAlgoritmo', true);
+    if ($datosAlgoritmo) {
+        $data = json_decode($datosAlgoritmo, true);
+
+        $meta_queries = [];
+        $relation = 'OR'; // Puedes ajustar esto según cómo quieras combinar las condiciones
+
+        // Coincidencia de Tags en ambos idiomas
+        if (!empty($data['tags_posibles'])) {
+            foreach (['es', 'en'] as $lang) {
+                if (!empty($data['tags_posibles'][$lang]) && is_array($data['tags_posibles'][$lang])) {
+                    foreach ($data['tags_posibles'][$lang] as $tag) {
+                        $meta_queries[] = [
+                            'key'     => 'datosAlgoritmo',
+                            'value'   => '"' . $tag . '"',
+                            'compare' => 'LIKE',
+                        ];
                     }
                 }
             }
+        }
 
+        // Combinar descripciones, estados de ánimo y artistas posibles
+        if (!empty($data)) {
+            $combined_data = implode(' ', array_filter([
+                is_array($data['descripcion_ia_pro']['es'] ?? null) ? implode(' ', $data['descripcion_ia_pro']['es']) : '',
+                is_array($data['descripcion_ia_pro']['en'] ?? null) ? implode(' ', $data['descripcion_ia_pro']['en']) : '',
+                is_array($data['estado_animo']['es'] ?? null) ? implode(' ', $data['estado_animo']['es']) : '',
+                is_array($data['estado_animo']['en'] ?? null) ? implode(' ', $data['estado_animo']['en']) : '',
+                is_array($data['artista_posible']['es'] ?? null) ? implode(' ', $data['artista_posible']['es']) : '',
+                is_array($data['artista_posible']['en'] ?? null) ? implode(' ', $data['artista_posible']['en']) : ''
+            ]));
 
-            if (!empty($data)) {
-                $combined_data = implode(' ', array_merge(
-                    is_array($data['descripcion_ia_pro']['es'] ?? null) ? $data['descripcion_ia_pro']['es'] : [],
-                    is_array($data['descripcion_ia_pro']['en'] ?? null) ? $data['descripcion_ia_pro']['en'] : [],
-                    is_array($data['estado_animo']['es'] ?? null) ? $data['estado_animo']['es'] : [],
-                    is_array($data['estado_animo']['en'] ?? null) ? $data['estado_animo']['en'] : [],
-                    is_array($data['artista_posible']['es'] ?? null) ? $data['artista_posible']['es'] : [],
-                    is_array($data['artista_posible']['en'] ?? null) ? $data['artista_posible']['en'] : []
-                ));
-                
-
+            if ($combined_data) {
                 $meta_queries[] = [
                     'key'     => 'datosAlgoritmo',
                     'value'   => $combined_data,
                     'compare' => 'LIKE',
                 ];
             }
+        }
 
-            if (!empty($meta_queries)) {
-                // Ajustar la relación si hay múltiples condiciones
-                if (count($meta_queries) > 1) {
-                    $meta_query = [
-                        'relation' => $relation,
-                    ];
-                    $meta_query = array_merge($meta_query, $meta_queries);
-                } else {
-                    $meta_query = $meta_queries[0];
-                }
+        if (!empty($meta_queries)) {
+            // Ajustar la relación si hay múltiples condiciones
+            if (count($meta_queries) > 1) {
+                $meta_query = [
+                    'relation' => $relation,
+                ];
+                $meta_query = array_merge($meta_query, $meta_queries);
+            } else {
+                $meta_query = $meta_queries[0];
+            }
 
-                // Combinar las meta_queries existentes con las nuevas
-                if (!empty($query_args['meta_query'])) {
-                    $query_args['meta_query'][] = $meta_query;
-                } else {
-                    $query_args['meta_query'] = [$meta_query];
-                }
-
-                // Asegurarse de que $similar_to ya esté en post__not_in
-                if (isset($query_args['post__not_in'])) {
-                    if (!in_array($similar_to, $query_args['post__not_in'])) {
-                        $query_args['post__not_in'][] = $similar_to;
-                    }
-                } else {
-                    $query_args['post__not_in'] = [$similar_to];
-                }
+            // Combinar las meta_queries existentes con las nuevas
+            if (!empty($query_args['meta_query'])) {
+                $query_args['meta_query'][] = $meta_query;
+            } else {
+                $query_args['meta_query'] = [$meta_query];
             }
         }
     }
