@@ -232,6 +232,18 @@ function obtenerDatosFeed($userId)
     ];
 }
 
+/*
+3 ajustes pequeños
+que ya tenga tanta relevancia la novedad, es decir, que no importe tanto lo reciente que sea el post
+un poco mas de aleatearidad 
+y por ultimo
+
+esto tiene que invertirse si el usuario es admin, es decir, que los usuarios admin tienen que ver los post que no estan verificados
+
+    $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.9;
+} elseif (!$metaVerificado && $metaPostAut) {
+    $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
+*/
 
 function calcularFeedPersonalizado($userId)
 {
@@ -240,6 +252,10 @@ function calcularFeedPersonalizado($userId)
     if (empty($datos)) {
         return [];
     }
+
+    // Verificar si el usuario es administrador
+    $usuario = get_userdata($userId);
+    $esAdmin = in_array('administrator', (array) $usuario->roles);
 
     $posts_personalizados = [];
     $resumenPuntos = [];
@@ -275,30 +291,41 @@ function calcularFeedPersonalizado($userId)
         $likes = isset($datos['likes_by_post'][$post_id]) ? $datos['likes_by_post'][$post_id] : 0;
         $puntosLikes = 5 + $likes;
 
-        // Decaimiento por tiempo
+        // Decaimiento por tiempo (ajustado para reducir la importancia de la recencia)
         $horasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / 3600;
-        $factorTiempo = pow(0.98, $horasDesdePublicacion);
+        // Aumentar el base de decaimiento para que la recencia tenga menor impacto
+        $factorTiempo = pow(0.99, $horasDesdePublicacion);
 
         // Obtener 'Verificado' y 'postAut' individualmente
         $metaVerificado = isset($datos['verificado_results'][$post_id]->meta_value) && $datos['verificado_results'][$post_id]->meta_value == '1';
         $metaPostAut = isset($datos['postAut_results'][$post_id]->meta_value) && $datos['postAut_results'][$post_id]->meta_value == '1';
 
-        // Ajuste por metadatos
-        if ($metaVerificado && !$metaPostAut) {
-            $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.9;
-        } elseif (!$metaVerificado && $metaPostAut) {
-            $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
+        // Ajuste por metadatos, invertido si el usuario es admin
+        if ($esAdmin) {
+            if (!$metaVerificado && $metaPostAut) {
+                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.9;
+            } elseif ($metaVerificado && !$metaPostAut) {
+                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
+            } else {
+                $puntosFinal = $puntosUsuario + $puntosIntereses + $puntosLikes;
+            }
         } else {
-            $puntosFinal = $puntosUsuario + $puntosIntereses + $puntosLikes;
+            if ($metaVerificado && !$metaPostAut) {
+                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.9;
+            } elseif (!$metaVerificado && $metaPostAut) {
+                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
+            } else {
+                $puntosFinal = $puntosUsuario + $puntosIntereses + $puntosLikes;
+            }
         }
 
-        // Aumentar la aleatoriedad
-        $aleatoriedad = mt_rand(0, 30); // Aumentamos hasta 30% de variación
+        // Aumentar la aleatoriedad (incrementar el rango para más variación)
+        $aleatoriedad = mt_rand(0, 50); // Aumentamos hasta 50% de variación
         $puntosFinal = $puntosFinal * $factorTiempo;
-        $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100)); // Hasta 30% de variación
+        $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100)); // Hasta 50% de variación
 
-        // Ajuste extra aleatorio
-        $ajusteExtra = mt_rand(-10, 10); // Variación entre -10 y +10 puntos
+        // Ajuste extra aleatorio (puedes ajustar el rango si deseas más variación)
+        $ajusteExtra = mt_rand(-20, 20); // Variación entre -15 y +15 puntos
         $puntosFinal += $ajusteExtra;
 
         // Asegurar que los puntos finales no sean negativos
