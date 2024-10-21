@@ -418,9 +418,9 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         $descripcion_procesada = json_decode(trim($descripcion, "```json \n"), true);
 
         if ($descripcion_procesada) {
-            // Verificar si 'descripcion_ia' está estructurado incorrectamente
+            // Verificar si 'descripcion_ia' está estructurado incorrectamente (si está anidado)
             if (isset($descripcion_procesada['descripcion_ia']['descripcion_ia'])) {
-                // Corregir la estructura de 'descripcion_ia' si está anidada incorrectamente
+                // Corregir la estructura de 'descripcion_ia'
                 $descripcion_procesada['descripcion_ia'] = [
                     'es' => $descripcion_procesada['descripcion_ia']['descripcion_ia']['es'] ?? '',
                     'en' => $descripcion_procesada['descripcion_ia']['descripcion_ia']['en'] ?? ''
@@ -430,50 +430,45 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
             // Definir el sufijo para los datos, según el índice
             $suffix = ($index == 1) ? '' : "_{$index}";
 
-            // Asegurarse de que la clave 'descripcion_ia' esté bien estructurada
-            if (isset($descripcion_procesada['descripcion_ia']) && is_array($descripcion_procesada['descripcion_ia'])) {
-                // Crear los nuevos datos con la estructura correcta
-                $nuevos_datos = [
-                    'descripcion_ia' => [
-                        'es' => $descripcion_procesada['descripcion_ia']['es'] ?? '',
-                        'en' => $descripcion_procesada['descripcion_ia']['en'] ?? ''
-                    ],
-                    'instrumentos_posibles' => [
-                        'es' => $descripcion_procesada['instrumentos_posibles']['es'] ?? [],
-                        'en' => $descripcion_procesada['instrumentos_posibles']['en'] ?? []
-                    ],
-                    'estado_animo' => [
-                        'es' => $descripcion_procesada['estado_animo']['es'] ?? [],
-                        'en' => $descripcion_procesada['estado_animo']['en'] ?? []
-                    ],
-                    'artista_posible' => [
-                        'es' => $descripcion_procesada['artista_posible']['es'] ?? [],
-                        'en' => $descripcion_procesada['artista_posible']['en'] ?? []
-                    ],
-                    'genero_posible' => [
-                        'es' => $descripcion_procesada['genero_posible']['es'] ?? [],
-                        'en' => $descripcion_procesada['genero_posible']['en'] ?? []
-                    ],
-                    'tipo_audio' => [
-                        'es' => $descripcion_procesada['tipo_audio']['es'] ?? '',
-                        'en' => $descripcion_procesada['tipo_audio']['en'] ?? ''
-                    ],
-                    'tags_posibles' => [
-                        'es' => $descripcion_procesada['tags_posibles']['es'] ?? [],
-                        'en' => $descripcion_procesada['tags_posibles']['en'] ?? []
-                    ],
-                    'sugerencia_busqueda' => [
-                        'es' => $descripcion_procesada['sugerencia_busqueda']['es'] ?? [],
-                        'en' => $descripcion_procesada['sugerencia_busqueda']['en'] ?? []
-                    ]
-                ];
+            // Crear los nuevos datos con la estructura correcta
+            $nuevos_datos = [
+                'descripcion_ia' => [
+                    'es' => $descripcion_procesada['descripcion_ia']['es'] ?? '',
+                    'en' => $descripcion_procesada['descripcion_ia']['en'] ?? ''
+                ],
+                'instrumentos_posibles' => [
+                    'es' => $descripcion_procesada['instrumentos_posibles']['es'] ?? [],
+                    'en' => $descripcion_procesada['instrumentos_posibles']['en'] ?? []
+                ],
+                'estado_animo' => [
+                    'es' => $descripcion_procesada['estado_animo']['es'] ?? [],
+                    'en' => $descripcion_procesada['estado_animo']['en'] ?? []
+                ],
+                'artista_posible' => [
+                    'es' => $descripcion_procesada['artista_posible']['es'] ?? [],
+                    'en' => $descripcion_procesada['artista_posible']['en'] ?? []
+                ],
+                'genero_posible' => [
+                    'es' => $descripcion_procesada['genero_posible']['es'] ?? [],
+                    'en' => $descripcion_procesada['genero_posible']['en'] ?? []
+                ],
+                'tipo_audio' => [
+                    'es' => $descripcion_procesada['tipo_audio']['es'] ?? '',
+                    'en' => $descripcion_procesada['tipo_audio']['en'] ?? ''
+                ],
+                'tags_posibles' => [
+                    'es' => $descripcion_procesada['tags_posibles']['es'] ?? [],
+                    'en' => $descripcion_procesada['tags_posibles']['en'] ?? []
+                ],
+                'sugerencia_busqueda' => [
+                    'es' => $descripcion_procesada['sugerencia_busqueda']['es'] ?? [],
+                    'en' => $descripcion_procesada['sugerencia_busqueda']['en'] ?? []
+                ]
+            ];
 
-                // Guardar los datos procesados en los metadatos del post
-                update_post_meta($post_id, "audio_descripcion{$suffix}", json_encode($nuevos_datos, JSON_UNESCAPED_UNICODE));
-                iaLog("Descripción del audio guardada para el post ID: {$post_id}");
-            } else {
-                iaLog("Error: 'descripcion_ia' no está presente o tiene una estructura incorrecta en el JSON procesado.");
-            }
+            // Guardar los datos procesados en los metadatos del post
+            update_post_meta($post_id, "audio_descripcion{$suffix}", json_encode($nuevos_datos, JSON_UNESCAPED_UNICODE));
+            iaLog("Descripción del audio guardada para el post ID: {$post_id}");
         } else {
             iaLog("Error al procesar el JSON de la descripción generada por IA.");
         }
@@ -494,18 +489,27 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         }
     }
 
-    // Crear los nuevos datos del algoritmo, asegurándote de no anidar incorrectamente 'descripcion_ia'
+    // ---- AQUI ESTÁ EL CAMBIO CLAVE ----
+    // No sobrescribimos la clave 'descripcion_ia' en 'datos_algoritmo' si ya está presente.
+    // En lugar de hacer un array_merge, hacemos una combinación manual para evitar sobrescrituras incorrectas.
+    if (isset($datos_algoritmo['descripcion_ia'])) {
+        // Si ya existe 'descripcion_ia', evita sobrescribirla incorrectamente
+        $datos_algoritmo['descripcion_ia'] = array_merge($datos_algoritmo['descripcion_ia'], $nuevos_datos['descripcion_ia']);
+    } else {
+        // Si no existe, agregarla directamente
+        $datos_algoritmo['descripcion_ia'] = $nuevos_datos['descripcion_ia'];
+    }
+
+    // Crear los nuevos datos del algoritmo
     $nuevos_datos_algoritmo = [
         'bpm' => $resultados['bpm'] ?? '',
         'emotion' => $resultados['emotion'] ?? '',
         'key' => $resultados['key'] ?? '',
-        'scale' => $resultados['scale'] ?? '',
-        'descripcion_ia' => $nuevos_datos // Aquí se incluye la descripción procesada
+        'scale' => $resultados['scale'] ?? ''
+        // No incluyas 'descripcion_ia' aquí porque ya fue procesada arriba
     ];
 
-    iaLog("Datos nuevos a agregar: " . json_encode($nuevos_datos_algoritmo));
-
-    // Combinar los nuevos datos con los existentes
+    // Combinar los nuevos datos del algoritmo con los datos existentes
     $datos_algoritmo = array_merge($datos_algoritmo, $nuevos_datos_algoritmo);
 
     iaLog("Metadatos actuales para 'datosAlgoritmo' antes de guardar: " . json_encode($datos_algoritmo));
