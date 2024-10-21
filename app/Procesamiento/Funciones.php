@@ -422,6 +422,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 
             // Asegurarse de que la clave 'descripcion_ia' esté bien estructurada
             if (isset($descripcion_procesada['descripcion_ia'])) {
+                // Crear un array con los datos procesados
                 $nuevos_datos = [
                     'descripcion' => [
                         'es' => $descripcion_procesada['descripcion_ia']['es'] ?? '',
