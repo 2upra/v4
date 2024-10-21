@@ -6,12 +6,6 @@
 function actualizar_titulos_y_slugs_social_posts() {
     guardarLog('Iniciando la función actualizar_titulos_y_slugs_social_posts');
 
-    // Verifica si la actualización ya se ha realizado
-    if ( get_option( 'social_posts_actualizados' ) ) {
-        guardarLog('Opción social_posts_actualizados encontrada. Saliendo de la función.');
-        return;
-    }
-
     // Argumentos para la consulta
     $args = array(
         'post_type'      => 'social_post',
