@@ -474,9 +474,10 @@ function rehacerDescripcionAudio($post_id, $archivo_audio)
     $tags_usuario_formateados = implode(', ', $tags_usuario);
     iaLog("TagsUsuario formateados: {$tags_usuario_formateados}");
 
-    $prompt = "El usuario ya subió este audio, pero acaba de editar la descripción, y hacer que rehacer los tags en base a su nueva descripción . "
-        . "Este fue la descripción que realizo, tomala en cuenta para generar la siguiente informacion: \"{$post_content}\". "
-        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON (ESTOS SON DATOS DE EJEMPLO): "
+    
+    $prompt = "El usuario ya subió este audio, pero acaba de editar la descripción o lo acaba de publicar ahora mismo. "
+        . "Ten muy en cuenta la descripcion. descripción:\"{$post_content}\". "
+        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON: "
         . '{"Descripcion":{"es":"(aqui iría una descripcion tuya del audio muy detallada)", "en":"(aqui en ingles)"},'
         . '"Instrumentos posibles":{"es":["Piano", "Guitarra"], "en":["Piano", "Guitar"]},'
         . '"Estado de animo":{"es":["Tranquilo"], "en":["Calm"]},'
@@ -485,8 +486,10 @@ function rehacerDescripcionAudio($post_id, $archivo_audio)
         . '"Tipo de audio":{"es":["aqui necesito que puedas determinar si es un sample, un loop o un one shot"], "en":["Sample"]},'
         . '"Tags posibles":{"es":["Naturaleza, phonk, memphis, oscuro"], "en":["Nature"]},'
         . '"Sugerencia de busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
-        . " Nota adicional: solo responde con la estructura, intenta ser muy detallista y preciso con los datos, puedes omitir cosas manteniendo la estructura, mejor la calidad que la cantidad, no digas nada adicional al usuario. Algo importante a tener en cuenta es que debe determinarse bien si es un loop, o un one shot, o sea, los sonidos o golpes de sonidos, suenan una sola vez, y los loop es una secuencia de sonido, tu me entiendes, esa informacion va en tipo de audio, en los tags posible, preferiblemente tags de una sola palabra, no frases."
-        . "La descripción tiene que ser corta y breve, agrega datos en español y también en inglés, agrega muchas sugerencias de busqueda para optimizar el SEO.";
+        . " Nota adicional: responde solo con la estructura JSON solicitada, mantén datos vacíos si no aplica. Es crucial determinar si es un loop o un one shot, usa tags de una palabra. Optimiza el SEO con sugerencias de búsqueda relevantes.";
+    
+    $descripcion_mejorada = generarDescripcionIA($archivo_audio, $prompt);
+    
 
     $descripcion_mejorada = generarDescripcionIA($archivo_audio, $prompt);
 
@@ -581,36 +584,28 @@ function rehacerDescripcionAudio($post_id, $archivo_audio)
 
 function mejorarDescripcionAudioPro($post_id, $archivo_audio)
 {
-    // Obtener el contenido actual del post
-    iaLog("Iniciando mejora de descripción para el post ID: {$post_id}");
-    $post_content = get_post_field('post_content', $post_id);
-    if (!$post_content) {
-        iaLog("No se pudo obtener el contenido del post ID: {$post_id}");
-        return;
-    }
-    iaLog("Contenido del post obtenido para el post ID: {$post_id}");
+    // Comprobar si tiene la meta 'postAut' en 1
+    $postAut = get_post_meta($post_id, 'postAut', true);
+    // Comprobar si tiene la meta 'Verificado' en 1
+    $verificado = get_post_meta($post_id, 'Verificado', true);
 
-    // Obtener los tags manuales del usuario desde la meta 'tagsUsuario'
-    $tags_usuario_str = get_post_meta($post_id, 'tagsUsuario', true);
-    if (!$tags_usuario_str) {
-        iaLog("No se encontraron tagsUsuario para el post ID: {$post_id}");
-        $tags_usuario = [];
+    // Si la meta 'postAut' es 1 y la meta 'Verificado' no es 1, no enviar el contenido a la IA
+    if ($postAut == 1 && $verificado != 1) {
+        iaLog("El post ID: {$post_id} tiene postAut en 1 y no está verificado. No se enviará el contenido a la IA.");
+        $post_content = ''; // No enviamos el contenido
     } else {
-        // Convertir la cadena de tags en un array, eliminando espacios y manejando mayúsculas/minúsculas
-        $tags_usuario = array_map('trim', explode(',', $tags_usuario_str));
-        $tags_usuario = array_filter($tags_usuario); // Eliminar posibles elementos vacíos
-        iaLog("TagsUsuario obtenidos y procesados para el post ID: {$post_id}");
+        // Obtener el contenido actual del post
+        $post_content = get_post_field('post_content', $post_id);
+        if (!$post_content) {
+            iaLog("No se pudo obtener el contenido del post ID: {$post_id}");
+        } else {
+            iaLog("Contenido del post obtenido para el post ID: {$post_id}");
+        }
     }
 
-    // Convertir el array de tags en una cadena separada por comas para incluir en el prompt
-    $tags_usuario_formateados = implode(', ', $tags_usuario);
-    iaLog("TagsUsuario formateados: {$tags_usuario_formateados}");
-
-    // Crear el prompt para el modelo Pro, incluyendo los tags manuales
-    $prompt = "El usuario ya subió este audio, pero se necesita una descripción del audio mejorada. "
-        . "El post original dice (tienes que tener en cuenta que puede ser contenido incorrecto lo que dice, no es improtante lo que dice el post original porque puede contener una descripción incorrecta): \"{$post_content}\". "
-        . "Además, el usuario ha agregado los siguientes tags: {$tags_usuario_formateados}. "
-        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON (ESTOS SON DATOS DE EJEMPLO): "
+    $prompt = "El usuario ya subió este audio, pero acaba de editar la descripción o lo acaba de publicar ahora mismo. "
+        . "Ten muy en cuenta la descripcion. descripción:\"{$post_content}\". "
+        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON: "
         . '{"Descripcion":{"es":"(aqui iría una descripcion tuya del audio muy detallada)", "en":"(aqui en ingles)"},'
         . '"Instrumentos posibles":{"es":["Piano", "Guitarra"], "en":["Piano", "Guitar"]},'
         . '"Estado de animo":{"es":["Tranquilo"], "en":["Calm"]},'
@@ -619,8 +614,7 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
         . '"Tipo de audio":{"es":["aqui necesito que puedas determinar si es un sample, un loop o un one shot"], "en":["Sample"]},'
         . '"Tags posibles":{"es":["Naturaleza, phonk, memphis, oscuro"], "en":["Nature"]},'
         . '"Sugerencia de busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
-        . " Nota adicional: solo responde con la estructura, intenta ser muy detallista y preciso con los datos, no digas nada adicional al usuario. Algo importante a tener en cuenta es que debe determinarse bien si es un loop, o un one shot, o sea, los sonidos o golpes de sonidos, suenan una sola vez, y los loop es una secuencia de sonido, tu me entiendes, esa informacion va en tipo de audio, en los tags posible, preferiblemente tags de una sola palabra, no frases."
-        . "La descripción tiene que ser corta y breve, agrega solo datos en español y también en inglés, agrega muchas sugerencias de busqueda para optimizar el SEO.";
+        . " Nota adicional: responde solo con la estructura JSON solicitada, mantén datos vacíos si no aplica. Es crucial determinar si es un loop o un one shot, usa tags de una palabra. Optimiza el SEO con sugerencias de búsqueda relevantes.";
 
     // Usar el modelo Pro para generar la nueva descripción
     $descripcion_mejorada = generarDescripcionIAPro($archivo_audio, $prompt);
