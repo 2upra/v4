@@ -73,7 +73,7 @@ function stripe_webhook_pro(WP_REST_Request $request)
                     if ($item->price->id === 'price_1PBgGfCdHJpmDkrrHorFUNaV') {
                         $userId = $session['client_reference_id'];
                         if (!empty($userId)) {
-                            update_user_meta($userId, 'user_pro', '1');
+                            update_user_meta($userId, 'user_pro', true);
                             stripeError('Actualizando usuario a Pro: ' . $userId);  // Log de éxito
                         } else {
                             stripeError('client_reference_id vacío o nulo');  // Log del error

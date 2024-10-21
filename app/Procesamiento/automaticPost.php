@@ -497,7 +497,7 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id)
         return $post_id;
     }
     $index = 1;
-    update_post_meta($post_id, 'postAut', '1');
+    update_post_meta($post_id, 'postAut', true);
     analizarYGuardarMetasAudio($post_id, $nuevo_nombre_lite, $index);
 
     $audio_original_id = adjuntarArchivoAut($nuevo_nombre_original, $post_id, $file_id);
@@ -517,7 +517,7 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id)
 
     update_post_meta($post_id, 'post_audio', $audio_original_id);
     update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
-    update_post_meta($post_id, 'paraDescarga', '1');
+    update_post_meta($post_id, 'paraDescarga', true);
     
 
     return $post_id;
