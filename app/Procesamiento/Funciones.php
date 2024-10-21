@@ -401,13 +401,13 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         . "Ten muy en cuenta la descripcion. descripción:\"{$post_content}\". {$tags_usuario_texto}"
         . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON: "
         . '{"Descripcion":{"es":"(aqui iría una descripcion tuya del audio muy detallada)", "en":"(aqui en ingles)"},'
-        . '"Instrumentos posibles":{"es":["Piano", "Guitarra"], "en":["Piano", "Guitar"]},'
-        . '"Estado de animo":{"es":["Tranquilo"], "en":["Calm"]},'
-        . '"Genero posible":{"es":["Hip hop"], "en":["Hip hop"]},'
-        . '"Artista posible":{"es":["Freddie Dredd, Flume"], "en":["Freddie Dredd, Flume"]},'
-        . '"Tipo de audio":{"es":["aqui necesito que puedas determinar si es un sample, un loop o un one shot"], "en":["Sample"]},'
-        . '"Tags posibles":{"es":["Naturaleza, phonk, memphis, oscuro"], "en":["Nature"]},'
-        . '"Sugerencia de busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
+        . '"instrumentos_posibles":{"es":["Piano", "Guitarra"], "en":["Piano", "Guitar"]},'
+        . '"estado_animo":{"es":["Tranquilo"], "en":["Calm"]},'
+        . '"genero_posible":{"es":["Hip hop"], "en":["Hip hop"]},'
+        . '"artista_posible":{"es":["Freddie Dredd, Flume"], "en":["Freddie Dredd, Flume"]},'
+        . '"tipo_audio":{"es":["aqui necesito que puedas determinar si es un sample, un loop o un one shot"], "en":["Sample"]},'
+        . '"tags_posibles":{"es":["Naturaleza, phonk, memphis, oscuro"], "en":["Nature"]},'
+        . '"sugerencia_busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
         . " Nota adicional: responde solo con la estructura JSON solicitada, mantén datos vacíos si no aplica. Es crucial determinar si es un loop o un one shot, o un sample, usa tags de una palabra. Optimiza el SEO con sugerencias de búsqueda relevantes.";
 
     $descripcion = generarDescripcionIA($nuevo_archivo_path_lite, $prompt);
@@ -423,32 +423,32 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
                     'en' => $descripcion_procesada['Descripcion']['en'] ?? ''
                 ],
                 'instrumentos_posibles' => [
-                    'es' => $descripcion_procesada['Instrumentos posibles']['es'] ?? [],
-                    'en' => $descripcion_procesada['Instrumentos posibles']['en'] ?? []
+                    'es' => $descripcion_procesada['instrumentos_posibles']['es'] ?? [],
+                    'en' => $descripcion_procesada['instrumentos_posibles']['en'] ?? []
                 ],
                 'estado_animo' => [
-                    'es' => $descripcion_procesada['Estado de animo']['es'] ?? [],
-                    'en' => $descripcion_procesada['Estado de animo']['en'] ?? []
+                    'es' => $descripcion_procesada['estado_animo']['es'] ?? [],
+                    'en' => $descripcion_procesada['estado_animo']['en'] ?? []
                 ],
                 'artista_posible' => [
-                    'es' => $descripcion_procesada['Artista posible']['es'] ?? [],
-                    'en' => $descripcion_procesada['Artista posible']['en'] ?? []
+                    'es' => $descripcion_procesada['artista_posible']['es'] ?? [],
+                    'en' => $descripcion_procesada['artista_posible']['en'] ?? []
                 ],
                 'genero_posible' => [
-                    'es' => $descripcion_procesada['Genero posible']['es'] ?? [],
-                    'en' => $descripcion_procesada['Genero posible']['en'] ?? []
+                    'es' => $descripcion_procesada['genero_posible']['es'] ?? [],
+                    'en' => $descripcion_procesada['genero_posible']['en'] ?? []
                 ],
                 'tipo_audio' => [
-                    'es' => $descripcion_procesada['Tipo de audio']['es'] ?? '',
-                    'en' => $descripcion_procesada['Tipo de audio']['en'] ?? ''
+                    'es' => $descripcion_procesada['tipo_audio']['es'] ?? '',
+                    'en' => $descripcion_procesada['tipo_audio']['en'] ?? ''
                 ],
                 'tags_posibles' => [
-                    'es' => $descripcion_procesada['Tags posibles']['es'] ?? [],
-                    'en' => $descripcion_procesada['Tags posibles']['en'] ?? []
+                    'es' => $descripcion_procesada['tags_posibles']['es'] ?? [],
+                    'en' => $descripcion_procesada['tags_posibles']['en'] ?? []
                 ],
                 'sugerencia_busqueda' => [
-                    'es' => $descripcion_procesada['Sugerencia de busqueda']['es'] ?? [],
-                    'en' => $descripcion_procesada['Sugerencia de busqueda']['en'] ?? []
+                    'es' => $descripcion_procesada['sugerencia_busqueda']['es'] ?? [],
+                    'en' => $descripcion_procesada['sugerencia_busqueda']['en'] ?? []
                 ]
             ];
 
