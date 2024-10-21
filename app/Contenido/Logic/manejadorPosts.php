@@ -27,16 +27,9 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
-
-    if (!empty($args['similar_to'])) {
-        return configuracionQueryArgsSimilarTo($args, $paged, $user_id, $current_user_id);
-    }
-
-    // Continuar con la lógica existente para otros casos
     $identifier = $_POST['identifier'] ?? '';
     $posts = $args['posts'];
-    $similar_to = $args['similar_to'] ?? null;
-
+    $similar_to = $args['similar_to'] ?? null; 
     $post_not_in = [];
 
     if ($similar_to) {
@@ -101,41 +94,19 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         }
     }
 
+    // Manejar publicaciones similares llamando a una función separada
+    if ($similar_to) {
+        $query_args = configurarSimilarTo($query_args, $similar_to);
+    }
+
     // Aplicar filtros adicionales si existen
     $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
 
     return $query_args;
 }
 
-
-function configuracionQueryArgsSimilarTo($args, $paged, $user_id, $current_user_id)
+function configurarSimilarTo($query_args, $similar_to)
 {
-    $identifier = $_POST['identifier'] ?? '';
-    $posts = $args['posts'];
-    $similar_to = $args['similar_to'];
-
-    $post_not_in = [$similar_to]; // Incluir 'similar_to' en exclusiones
-
-    // Configuración básica de la consulta
-    $query_args = [
-        'post_type'      => $args['post_type'],
-        'posts_per_page' => $posts,
-        'paged'          => $paged,
-        'orderby'        => 'date',
-        'order'          => 'DESC',
-        'meta_query'     => [],
-        'post__not_in'   => $post_not_in,
-    ];
-
-    // Añadir meta_query si hay un identificador
-    if (!empty($identifier)) {
-        $query_args['meta_query'][] = [
-            'key'     => 'datosAlgoritmo',
-            'value'   => $identifier,
-            'compare' => 'LIKE',
-        ];
-    }
-
     // Obtener los datosAlgoritmo del post similar
     $datosAlgoritmo = get_post_meta($similar_to, 'datosAlgoritmo', true);
     if ($datosAlgoritmo) {
@@ -159,24 +130,21 @@ function configuracionQueryArgsSimilarTo($args, $paged, $user_id, $current_user_
             }
         }
 
-        // Combinar descripciones, estados de ánimo y artistas posibles
         if (!empty($data)) {
-            $combined_data = implode(' ', array_filter([
-                is_array($data['descripcion_ia_pro']['es'] ?? null) ? implode(' ', $data['descripcion_ia_pro']['es']) : '',
-                is_array($data['descripcion_ia_pro']['en'] ?? null) ? implode(' ', $data['descripcion_ia_pro']['en']) : '',
-                is_array($data['estado_animo']['es'] ?? null) ? implode(' ', $data['estado_animo']['es']) : '',
-                is_array($data['estado_animo']['en'] ?? null) ? implode(' ', $data['estado_animo']['en']) : '',
-                is_array($data['artista_posible']['es'] ?? null) ? implode(' ', $data['artista_posible']['es']) : '',
-                is_array($data['artista_posible']['en'] ?? null) ? implode(' ', $data['artista_posible']['en']) : ''
-            ]));
+            $combined_data = implode(' ', array_merge(
+                is_array($data['descripcion_ia_pro']['es'] ?? []) ? $data['descripcion_ia_pro']['es'] : [],
+                is_array($data['descripcion_ia_pro']['en'] ?? []) ? $data['descripcion_ia_pro']['en'] : [],
+                is_array($data['estado_animo']['es'] ?? []) ? $data['estado_animo']['es'] : [],
+                is_array($data['estado_animo']['en'] ?? []) ? $data['estado_animo']['en'] : [],
+                is_array($data['artista_posible']['es'] ?? []) ? $data['artista_posible']['es'] : [],
+                is_array($data['artista_posible']['en'] ?? []) ? $data['artista_posible']['en'] : []
+            ));
 
-            if ($combined_data) {
-                $meta_queries[] = [
-                    'key'     => 'datosAlgoritmo',
-                    'value'   => $combined_data,
-                    'compare' => 'LIKE',
-                ];
-            }
+            $meta_queries[] = [
+                'key'     => 'datosAlgoritmo',
+                'value'   => $combined_data,
+                'compare' => 'LIKE',
+            ];
         }
 
         if (!empty($meta_queries)) {
@@ -196,11 +164,17 @@ function configuracionQueryArgsSimilarTo($args, $paged, $user_id, $current_user_
             } else {
                 $query_args['meta_query'] = [$meta_query];
             }
+
+            // Asegurarse de que $similar_to ya esté en post__not_in
+            if (isset($query_args['post__not_in'])) {
+                if (!in_array($similar_to, $query_args['post__not_in'])) {
+                    $query_args['post__not_in'][] = $similar_to;
+                }
+            } else {
+                $query_args['post__not_in'] = [$similar_to];
+            }
         }
     }
-
-    // Aplicar filtros adicionales si existen
-    $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
 
     return $query_args;
 }
