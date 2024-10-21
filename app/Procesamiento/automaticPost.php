@@ -65,12 +65,31 @@ function buscarAudios($directorio)
         $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio, FilesystemIterator::SKIP_DOTS));
         foreach ($iterator as $archivo) {
             if ($archivo->isFile()) {
+                $nombreArchivo = $archivo->getFilename();
+
+                // Omitir archivos que empiezan por "2upra_"
+                if (strpos($nombreArchivo, '2upra_') === 0) {
+                    continue;
+                }
+
                 $ext = strtolower($archivo->getExtension());
-                if (in_array($ext, $extensiones_permitidas, true) && is_readable($archivo->getPathname())) {
-                    $hash = hash_file('sha256', $archivo->getPathname());
-                    if ($hash && debeProcesarse($archivo->getPathname(), $hash)) {
-                        $audios[] = ['ruta' => $archivo->getPathname(), 'hash' => $hash];
-                        if (count($audios) >= 100) break;
+
+                // Solo procesar si la extensión está permitida
+                if (in_array($ext, $extensiones_permitidas, true)) {
+                    $rutaArchivo = $archivo->getPathname();
+
+                    // Verificar si el archivo es legible
+                    if (is_readable($rutaArchivo)) {
+                        $hash = hash_file('sha256', $rutaArchivo);
+
+                        if ($hash && debeProcesarse($rutaArchivo, $hash)) {
+                            $audios[] = ['ruta' => $rutaArchivo, 'hash' => $hash];
+
+                            // Detener el bucle si ya se han encontrado 100 archivos
+                            if (count($audios) >= 100) {
+                                break;
+                            }
+                        }
                     }
                 }
             }
@@ -81,6 +100,7 @@ function buscarAudios($directorio)
 
     return $audios;
 }
+
 
 # Paso 3
 function debeProcesarse($ruta_archivo, $file_hash)
