@@ -303,22 +303,6 @@ function generarNombreAudio($audio_path_lite)
     }
 }
 
-/*
-
-2024-10-19 18:51:30 - Archivo de audio: /var/www/wordpress/wp-content/uploads/audio/2upra_Canserbero FX_B0bgY_lite.mp3
-2024-10-19 18:51:30 - Archivo de audio cargado y convertido a base64 con éxito.
-
-2024-10-19 18:51:32 - Respuesta completa de la API: {"candidates":[{"content":{"parts":[{"text":"Canserbero Vocal FX -  Voz Atormentada \n"}],"role":"model"},"finishReason":"STOP","index":0,"safetyRatings":[{"category":"HARM_CATEGORY_SEXUALLY_EXPLICIT","probability":"NEGLIGIBLE"},{"category":"HARM_CATEGORY_HATE_SPEECH","probability":"NEGLIGIBLE"},{"category":"HARM_CATEGORY_HARASSMENT","probability":"NEGLIGIBLE"},{"category":"HARM_CATEGORY_DANGEROUS_CONTENT","probability":"NEGLIGIBLE"}]}],"usageMetadata":{"promptTokenCount":232,"candidatesTokenCount":12,"totalTokenCount":244}}
-
-2024-10-19 18:51:32 - Contenido generado: Canserbero Vocal FX -  Voz Atormentada 
-2024-10-19 18:51:32 - Nombre generado: 2upra_Canserbero Vocal FX -  Voz Atormen
-2024-10-19 18:51:32 - Archivo renombrado de /var/www/wordpress/wp-content/uploads/2024/10/2upra_Canserbero FX_B0bgY.mp3 a /var/www/wordpress/wp-content/uploads/2024/10/2upra_Canserbero Vocal FX -  Voz Atormen.mp3
-2024-10-19 18:51:32 - Archivo renombrado de /var/www/wordpress/wp-content/uploads/audio/2upra_Canserbero FX_B0bgY_lite.mp3 a /var/www/wordpress/wp-content/uploads/audio/2upra_Canserbero Vocal FX -  Voz Atormen_lite.mp3
-
-2024-10-19 18:51:32 - Meta 'rutaOriginal' actualizada a: /var/www/wordpress/wp-content/uploads/2024/10/2upra_Canserbero Vocal FX -  Voz Atormen.mp3
-2024-10-19 18:51:32 - Renombrado completado exitosamente para el post ID: 233165
-2024-10-19 18:51:32 - Descripción del audio actualizada para el post ID: 233165 con archivo de audio en la ruta /var/www/wordpress/wp-content/uploads/audio/2upra_Canserbero FX_B0bgY_lite.mp3
-*/
 
 function rehacerNombreAudio($post_id, $archivo_audio)
 {
@@ -328,11 +312,16 @@ function rehacerNombreAudio($post_id, $archivo_audio)
         return null;
     }
 
+    $user_id = get_current_user_id();
+
+    if (!user_can($user_id, 'administrator')) {
+        return;
+    }
+
     // Obtener el contenido del post
     $post_content = get_post_field('post_content', $post_id);
     if (!$post_content) {
         iaLog("No se pudo obtener el contenido del post ID: {$post_id}");
-        return null;
     }
     iaLog("Contenido del post obtenido para el post ID: {$post_id}");
 
@@ -406,13 +395,12 @@ function rehacerNombreAudio($post_id, $archivo_audio)
                 iaLog("Meta 'rutaOriginal' actualizada a: {$nueva_ruta_completa}");
             } else {
                 iaLog("Error al renombrar el archivo en el servidor de {$ruta_original_completa} a {$nueva_ruta_completa}");
-                return null;
+                update_post_meta($post_id, 'rutaOriginalPerdida', true);
             }
         } else {
             iaLog("Meta 'rutaOriginal' no existe para el post ID: {$post_id}");
         }
 
-        // Obtener la ID hash de la meta (asumiendo que el meta key es 'idHash_audioId')
         $id_hash_audio = get_post_meta($post_id, 'idHash_audioId', true);
         if ($id_hash_audio) {
             // Obtener la nueva URL de 'post_audio'
@@ -424,11 +412,8 @@ function rehacerNombreAudio($post_id, $archivo_audio)
         }
 
         iaLog("Renombrado completado exitosamente para el post ID: {$post_id}");
-        $user_id = get_current_user_id();
 
-        if (user_can($user_id, 'administrator')) {
-            update_post_meta($post_id, 'Verificado', true);
-        }        
+        update_post_meta($post_id, 'Verificado', true);
 
         return $nombre_final_con_id;
     } else {
