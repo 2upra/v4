@@ -212,14 +212,14 @@ function calcularFeedPersonalizado($userId)
     foreach ($author_results as $post_id => $post_data) {
         $autor_id = $post_data->post_author;
         $post_date = $post_data->post_date;
-
+    
         // Puntos si el usuario sigue al autor
         $puntosUsuario = in_array($autor_id, $siguiendo) ? 50 : 0;
-
+    
         // Puntos asignados por intereses, ahora abarcando más campos de 'datosAlgoritmo'
         $puntosIntereses = 0;
         $datosAlgoritmo = !empty($meta_results[$post_id]->meta_value) ? json_decode($meta_results[$post_id]->meta_value, true) : [];
-
+    
         // Iterar sobre todos los campos de datosAlgoritmo
         foreach ($datosAlgoritmo as $key => $value) {
             if (is_array($value)) {
@@ -243,19 +243,19 @@ function calcularFeedPersonalizado($userId)
                 $puntosIntereses += 10 + $interesesUsuario[$value]->intensity;
             }
         }
-
+    
         // Puntos por likes
         $likes = isset($likes_by_post[$post_id]) ? $likes_by_post[$post_id] : 0;
         $puntosLikes = 5 + $likes;
-
+    
         // Puntos por tiempo desde la publicación
         $horasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / 3600;
         $factorTiempo = pow(0.98, $horasDesdePublicacion);
-
+    
         // Verificar metas 'Verificado' y 'postAut'
         $metaVerificado = isset($datosAlgoritmo['Verificado']) && $datosAlgoritmo['Verificado'] == 1;
         $metaPostAut = isset($datosAlgoritmo['postAut']) && $datosAlgoritmo['postAut'] == 1;
-
+    
         // Ajustar puntos según las metas
         if ($metaVerificado && !$metaPostAut) {
             $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.9;
@@ -264,22 +264,30 @@ function calcularFeedPersonalizado($userId)
         } else {
             $puntosFinal = $puntosUsuario + $puntosIntereses + $puntosLikes;
         }
-
-        // Introducir aleatoriedad controlada en los puntos finales
-        $aleatoriedad = mt_rand(10, 50); 
+    
+        // Introducir aleatoriedad controlada en los puntos finales (aleatoriedad incrementada)
+        $aleatoriedad = mt_rand(0, 20);  // Aumentar el rango de aleatoriedad del 0-10 a 0-20
         $puntosFinal = $puntosFinal * $factorTiempo;
-        $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100));
-
+        $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100)); // Hasta 20% de variación
+    
+        // Introducir una segunda capa de aleatoriedad con una pequeña suma o resta aleatoria
+        $ajusteExtra = mt_rand(-5, 5);  // Variación entre -5 y +5 puntos
+        $puntosFinal += $ajusteExtra;
+    
         // Asignar los puntos finales al post
         $posts_personalizados[$post_id] = $puntosFinal;
         $resumenPuntos[] = $post_id . ':' . round($puntosFinal, 2);
     }
-
+    
     // Mezclar los posts ligeramente para introducir aleatoriedad
     uasort($posts_personalizados, function($a, $b) {
-        $random_factor = mt_rand(-10, 10) / 100; // Variación entre -10% y +10%
-        $a_adjusted = $a * (1 + $random_factor);
-        $b_adjusted = $b * (1 + $random_factor);
+        $random_factor_a = mt_rand(-10, 10) / 100; // Variación entre -10% y +10%
+        $random_factor_b = mt_rand(-10, 10) / 100; // Variación entre -10% y +10%
+        
+        // Aplicar aleatoriedad diferente para cada post
+        $a_adjusted = $a * (1 + $random_factor_a);
+        $b_adjusted = $b * (1 + $random_factor_b);
+        
         return $b_adjusted <=> $a_adjusted;
     });
 
