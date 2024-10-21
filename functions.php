@@ -5,7 +5,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-function escribirLog($mensaje, $archivo) {
+function escribirLog($mensaje, $archivo, $max_lineas = 2000) {
     if (is_object($mensaje) || is_array($mensaje)) {
         $mensaje = json_encode($mensaje);
     }
@@ -13,11 +13,11 @@ function escribirLog($mensaje, $archivo) {
     $timestamped_log = date('Y-m-d H:i:s') . ' - ' . $mensaje;
     file_put_contents($archivo, $timestamped_log . PHP_EOL, FILE_APPEND);
 
-    // Limitar el tamaño del archivo de log a 400 líneas
+    // Limitar la cantidad de líneas en el archivo
     $line_count = count(file($archivo));
-    if ($line_count > 2000) {
+    if ($line_count > $max_lineas) {
         $lines = file($archivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        $new_lines = array_slice($lines, -2000);
+        $new_lines = array_slice($lines, -$max_lineas);
         file_put_contents($archivo, implode(PHP_EOL, $new_lines) . PHP_EOL);
     }
 }
@@ -35,7 +35,7 @@ function guardarLog($log) {
 }
 
 function logAlgoritmo($log) {
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/logAlgoritmo.log');
+    escribirLog($log, '/var/www/wordpress/wp-content/themes/logAlgoritmo.log', 100); // Máximo de 100 líneas
 }
 
 function ajaxPostLog($log) {
