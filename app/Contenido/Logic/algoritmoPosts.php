@@ -303,17 +303,17 @@ function calcularFeedPersonalizado($userId)
         // Ajuste por metadatos, invertido si el usuario es admin
         if ($esAdmin) {
             if (!$metaVerificado && $metaPostAut) {
-                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.9;
+                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.5;
             } elseif ($metaVerificado && !$metaPostAut) {
-                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
+                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.5;
             } else {
                 $puntosFinal = $puntosUsuario + $puntosIntereses + $puntosLikes;
             }
         } else {
             if ($metaVerificado && !$metaPostAut) {
-                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.9;
+                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.5;
             } elseif (!$metaVerificado && $metaPostAut) {
-                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
+                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.5;
             } else {
                 $puntosFinal = $puntosUsuario + $puntosIntereses + $puntosLikes;
             }
