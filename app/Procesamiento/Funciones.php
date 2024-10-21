@@ -413,12 +413,53 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 
     $descripcion = generarDescripcionIA($nuevo_archivo_path_lite, $prompt);
 
+    /*
+    Esto es un problema grave por favor corrige y dame el codigo corregido, el problema no es como se reciben los json sino como se agregan despues al final 
+    asi esta mal (datos de ejemplo)
+    {"bpm":144,"emotion":"","key":"C","scale":"major","descripcion_ia":{"descripcion_ia":{"es":"dato ","en":"dato"},"instrumentos_posibles":{"es":["dato"],"en":["dato"]},"estado_animo":{"es":["dato"],"en":["dato"]},"artista_posible":{"es":["dato"],"en":["dato"]},"genero_posible":{"es":["dato"],"en":["dato"]},"tipo_audio":{"es":["dato"],"en":[""dato""]},"tags_posibles":{"es":["dato"],"en":["dato"]},"sugerencia_busqueda":{"es":["dato"],"en":["dato"]}}}
+
+    asi esta bien  (datos de ejemplo)
+    {"bpm":144,"emotion":"","key":"C","scale":"major","descripcion_ia":{"es":"dato ","en":"dato"},"instrumentos_posibles":{"es":["dato"],"en":["dato"]},"estado_animo":{"es":["dato"],"en":["dato"]},"artista_posible":{"es":["dato"],"en":["dato"]},"genero_posible":{"es":["dato"],"en":["dato"]},"tipo_audio":{"es":["dato"],"en":[""dato""]},"tags_posibles":{"es":["dato"],"en":["dato"]},"sugerencia_busqueda":{"es":["dato"],"en":["dato"]}}
+
+    la difrencia esta en descripcion_ia":{ } (bien) y "descripcion_ia":{"descripcion_ia":{ }} (mal)
+
+    me estas estendiendo???
+
+    Ejemplo de estructura incorrecta:
+
+
+    {
+        "descripcion_ia": {
+            "descripcion_ia": {
+                "es": "dato",
+                "en": "dato"
+            },
+            "instrumentos_posibles": {...},
+            "estado_animo": {...},
+            ...
+        }
+    }
+    Estructura correcta:
+    Debe ser algo así:
+
+
+    {
+        "descripcion_ia": {
+            "es": "dato",
+            "en": "dato"
+        },
+        "instrumentos_posibles": {...},
+        "estado_animo": {...},
+        ...
+    }
+
+    */
     if ($descripcion) {
         // Procesar el JSON eliminando caracteres innecesarios
         $descripcion_procesada = json_decode(trim($descripcion, "```json \n"), true);
 
         if ($descripcion_procesada) {
-            // Verificar si 'descripcion_ia' está estructurado incorrectamente (si está anidado)
+            // Verificar si 'descripcion_ia' está estructurado incorrectamente
             if (isset($descripcion_procesada['descripcion_ia']['descripcion_ia'])) {
                 // Corregir la estructura de 'descripcion_ia'
                 $descripcion_procesada['descripcion_ia'] = [
@@ -470,10 +511,10 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
             update_post_meta($post_id, "audio_descripcion{$suffix}", json_encode($nuevos_datos, JSON_UNESCAPED_UNICODE));
             iaLog("Descripción del audio guardada para el post ID: {$post_id}");
         } else {
-            iaLog("Error al procesar el JSON de la descripción generada por IA.");
+            iaLog("Error: 'descripcion_ia' no está presente o tiene una estructura incorrecta en el JSON procesado.");
         }
     } else {
-        iaLog("No se pudo generar la descripción del audio para el post ID: {$post_id}");
+        iaLog("Error al procesar el JSON de la descripción generada por IA.");
     }
 
     // Obtener los datos del algoritmo
@@ -489,27 +530,18 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         }
     }
 
-    // ---- AQUI ESTÁ EL CAMBIO CLAVE ----
-    // No sobrescribimos la clave 'descripcion_ia' en 'datos_algoritmo' si ya está presente.
-    // En lugar de hacer un array_merge, hacemos una combinación manual para evitar sobrescrituras incorrectas.
-    if (isset($datos_algoritmo['descripcion_ia'])) {
-        // Si ya existe 'descripcion_ia', evita sobrescribirla incorrectamente
-        $datos_algoritmo['descripcion_ia'] = array_merge($datos_algoritmo['descripcion_ia'], $nuevos_datos['descripcion_ia']);
-    } else {
-        // Si no existe, agregarla directamente
-        $datos_algoritmo['descripcion_ia'] = $nuevos_datos['descripcion_ia'];
-    }
-
-    // Crear los nuevos datos del algoritmo
+    // Combinar los nuevos datos con los existentes, asegurando que 'descripcion_ia' no esté duplicado incorrectamente
     $nuevos_datos_algoritmo = [
         'bpm' => $resultados['bpm'] ?? '',
         'emotion' => $resultados['emotion'] ?? '',
         'key' => $resultados['key'] ?? '',
-        'scale' => $resultados['scale'] ?? ''
-        // No incluyas 'descripcion_ia' aquí porque ya fue procesada arriba
+        'scale' => $resultados['scale'] ?? '',
+        'descripcion_ia' => $nuevos_datos // Esto ya contiene la estructura correcta de 'descripcion_ia'
     ];
 
-    // Combinar los nuevos datos del algoritmo con los datos existentes
+    iaLog("Datos nuevos a agregar: " . json_encode($nuevos_datos_algoritmo));
+
+    // Combinar los nuevos datos con los existentes
     $datos_algoritmo = array_merge($datos_algoritmo, $nuevos_datos_algoritmo);
 
     iaLog("Metadatos actuales para 'datosAlgoritmo' antes de guardar: " . json_encode($datos_algoritmo));
