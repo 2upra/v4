@@ -1,36 +1,5 @@
 <?
 
-function corregir_post_meta_postAut() {
-    // Argumentos para la consulta de los posts de tipo 'social_post'
-    $args = array(
-        'post_type'      => 'social_post',  // Tipo de post a buscar
-        'post_status'    => 'any',          // Puedes cambiar esto según tus necesidades (publicado, borrador, etc.)
-        'posts_per_page' => -1,             // Todos los posts de tipo 'social_post'
-        'fields'         => 'ids'           // Solo obtener los IDs de los posts
-    );
-
-    // Conseguir todos los posts de tipo 'social_post'
-    $posts = get_posts($args);
-
-    // Recorremos los posts
-    foreach ($posts as $post_id) {
-        // Obtener el valor actual de 'postAut'
-        $post_aut_value = get_post_meta($post_id, 'postAut', true);
-
-        // Si el valor es '1', lo actualizamos a true
-        if ($post_aut_value === '1') {
-            update_post_meta($post_id, 'postAut', true);
-            echo "Meta actualizado para post ID: $post_id <br>";
-        }
-    }
-
-    // Esto es opcional, es solo para asegurarse de que la función no se ejecute más de una vez.
-    // Podrías eliminar esta función después de ejecutarla.
-    remove_action('init', 'corregir_post_meta_postAut');
-}
-
-// Esta función se ejecutará en el hook 'init'
-add_action('init', 'corregir_post_meta_postAut');
 
 // Función genérica para manejar las solicitudes AJAX
 function permitirDescarga($post_id)
