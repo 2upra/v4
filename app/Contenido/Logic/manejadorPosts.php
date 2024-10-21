@@ -24,6 +24,8 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         return $output;
     }
 }
+
+
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
     // Obtener el identificador del POST
@@ -148,16 +150,17 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
                 }
             }
 
-            // Coincidencias de descripción, estado de ánimo, artistas, etc.
+
             if (!empty($data)) {
                 $combined_data = implode(' ', array_merge(
-                    $data['descripcion_ia_pro']['es'] ?? [],
-                    $data['descripcion_ia_pro']['en'] ?? [],
-                    $data['estado_animo']['es'] ?? [],
-                    $data['estado_animo']['en'] ?? [],
-                    $data['artista_posible']['es'] ?? [],
-                    $data['artista_posible']['en'] ?? []
+                    is_array($data['descripcion_ia_pro']['es'] ?? null) ? $data['descripcion_ia_pro']['es'] : [],
+                    is_array($data['descripcion_ia_pro']['en'] ?? null) ? $data['descripcion_ia_pro']['en'] : [],
+                    is_array($data['estado_animo']['es'] ?? null) ? $data['estado_animo']['es'] : [],
+                    is_array($data['estado_animo']['en'] ?? null) ? $data['estado_animo']['en'] : [],
+                    is_array($data['artista_posible']['es'] ?? null) ? $data['artista_posible']['es'] : [],
+                    is_array($data['artista_posible']['en'] ?? null) ? $data['artista_posible']['en'] : []
                 ));
+                
 
                 $meta_queries[] = [
                     'key'     => 'datosAlgoritmo',
