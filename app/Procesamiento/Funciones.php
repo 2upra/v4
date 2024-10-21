@@ -532,9 +532,6 @@ function rehacerDescripcionAudio($post_id, $archivo_audio)
 
     $descripcion_mejorada = generarDescripcionIA($archivo_audio, $prompt);
 
-
-    $descripcion_mejorada = generarDescripcionIA($archivo_audio, $prompt);
-
     if ($descripcion_mejorada) {
         iaLog("Descripción mejorada generada correctamente para el post ID: {$post_id}");
         // Limpiar y procesar la nueva descripción generada
