@@ -412,18 +412,9 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
 
     $descripcion = generarDescripcionIA($nuevo_archivo_path_lite, $prompt);
 
-    // ves la diferencia: mal "descripcion_ia":{"descripcion":{"es": (continuoa) }} pero en realidad tiene que ser asi "descripcion_ia":{"es":"Un loop de un (continua) }
-    //MAL 
-    //{"bpm":93,"emotion":"","key":"C#","scale":"minor","descripcion_ia":{"descripcion":{"es":"Un loop de un sonido de bajo grave que se repite con una frecuencia ligeramente irregular, con una textura digital y distorsionada, creando una atmósfera oscura e industrial.","en":"A loop of a deep bass sound that repeats with a slightly irregular frequency, featuring a digital and distorted texture, creating a dark and industrial atmosphere."},"instrumentos_posibles":{"es":["Bajo"],"en":["Bass"]},"estado_animo":{"es":["Oscuro","Industrial","Tenso"],"en":["Dark","Industrial","Tense"]},"artista_posible":{"es":["RL Grime, Skrillex"],"en":["RL Grime, Skrillex"]},"genero_posible":{"es":["Hip hop","Electrónica","Trap"],"en":["Hip hop","Electronic","Trap"]},"tipo_audio":{"es":["Loop"],"en":["Loop"]},"tags_posibles":{"es":["Bajo","Grave","Distorsionado","Industrial"],"en":["Bass","Deep","Distorted","Industrial"]},"sugerencia_busqueda":{"es":["Sonido de bajo oscuro","Loop de bajo","Música industrial","Efecto de sonido"],"en":["Dark bass sound","Bass loop","Industrial music","Sound effect"]}}}
-
-    //BIEN 
-    // {"bpm":93,"emotion":"","key":"C#","scale":"minor","descripcion_ia":{"es":"Un loop de un sonido de bajo grave que se repite con una frecuencia ligeramente irregular, con una textura digital y distorsionada, creando una atmósfera oscura e industrial.","en":"A loop of a deep bass sound that repeats with a slightly irregular frequency, featuring a digital and distorted texture, creating a dark and industrial atmosphere."},"instrumentos_posibles":{"es":["Bajo"],"en":["Bass"]},"estado_animo":{"es":["Oscuro","Industrial","Tenso"],"en":["Dark","Industrial","Tense"]},"artista_posible":{"es":["RL Grime, Skrillex"],"en":["RL Grime, Skrillex"]},"genero_posible":{"es":["Hip hop","Electrónica","Trap"],"en":["Hip hop","Electronic","Trap"]},"tipo_audio":{"es":["Loop"],"en":["Loop"]},"tags_posibles":{"es":["Bajo","Grave","Distorsionado","Industrial"],"en":["Bass","Deep","Distorted","Industrial"]},"sugerencia_busqueda":{"es":["Sonido de bajo oscuro","Loop de bajo","Música industrial","Efecto de sonido"],"en":["Dark bass sound","Bass loop","Industrial music","Sound effect"]}}
-
-    //hay que corregirlo aqui
-
     if ($descripcion) {
         $descripcion_procesada = json_decode(trim($descripcion, "```json \n"), true);
-
+    
         if ($descripcion_procesada) {
             $suffix = ($index == 1) ? '' : "_{$index}";
             $nuevos_datos = [
@@ -431,36 +422,15 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
                     'es' => $descripcion_procesada['descripcion_ia']['es'] ?? '',
                     'en' => $descripcion_procesada['descripcion_ia']['en'] ?? ''
                 ],
-                'instrumentos_posibles' => [
-                    'es' => $descripcion_procesada['instrumentos_posibles']['es'] ?? [],
-                    'en' => $descripcion_procesada['instrumentos_posibles']['en'] ?? []
-                ],
-                'estado_animo' => [
-                    'es' => $descripcion_procesada['estado_animo']['es'] ?? [],
-                    'en' => $descripcion_procesada['estado_animo']['en'] ?? []
-                ],
-                'artista_posible' => [
-                    'es' => $descripcion_procesada['artista_posible']['es'] ?? [],
-                    'en' => $descripcion_procesada['artista_posible']['en'] ?? []
-                ],
-                'genero_posible' => [
-                    'es' => $descripcion_procesada['genero_posible']['es'] ?? [],
-                    'en' => $descripcion_procesada['genero_posible']['en'] ?? []
-                ],
-                'tipo_audio' => [
-                    'es' => $descripcion_procesada['tipo_audio']['es'] ?? '',
-                    'en' => $descripcion_procesada['tipo_audio']['en'] ?? ''
-                ],
-                'tags_posibles' => [
-                    'es' => $descripcion_procesada['tags_posibles']['es'] ?? [],
-                    'en' => $descripcion_procesada['tags_posibles']['en'] ?? []
-                ],
-                'sugerencia_busqueda' => [
-                    'es' => $descripcion_procesada['sugerencia_busqueda']['es'] ?? [],
-                    'en' => $descripcion_procesada['sugerencia_busqueda']['en'] ?? []
-                ]
+                'instrumentos_posibles' => $descripcion_procesada['instrumentos_posibles'] ?? ['es' => [], 'en' => []],
+                'estado_animo' => $descripcion_procesada['estado_animo'] ?? ['es' => [], 'en' => []],
+                'artista_posible' => $descripcion_procesada['artista_posible'] ?? ['es' => [], 'en' => []],
+                'genero_posible' => $descripcion_procesada['genero_posible'] ?? ['es' => [], 'en' => []],
+                'tipo_audio' => $descripcion_procesada['tipo_audio'] ?? ['es' => '', 'en' => ''],
+                'tags_posibles' => $descripcion_procesada['tags_posibles'] ?? ['es' => [], 'en' => []],
+                'sugerencia_busqueda' => $descripcion_procesada['sugerencia_busqueda'] ?? ['es' => [], 'en' => []]
             ];
-
+    
             update_post_meta($post_id, "audio_descripcion{$suffix}", json_encode($nuevos_datos, JSON_UNESCAPED_UNICODE));
             iaLog("Descripción del audio guardada para el post ID: {$post_id}");
         } else {
@@ -469,9 +439,9 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     } else {
         iaLog("No se pudo generar la descripción del audio para el post ID: {$post_id}");
     }
-
+    
     $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
-
+    
     if (!$datos_algoritmo) {
         $datos_algoritmo = [];
     } else {
@@ -480,21 +450,24 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
             $datos_algoritmo = [];
         }
     }
-
+    
     $nuevos_datos_algoritmo = [
         'bpm' => $resultados['bpm'] ?? '',
         'emotion' => $resultados['emotion'] ?? '',
         'key' => $resultados['key'] ?? '',
         'scale' => $resultados['scale'] ?? '',
-        'descripcion_ia' => $nuevos_datos
+        'descripcion_ia' => [
+            'es' => $nuevos_datos['descripcion']['es'],
+            'en' => $nuevos_datos['descripcion']['en']
+        ]
     ];
-
+    
     iaLog("Datos nuevos a agregar: " . json_encode($nuevos_datos_algoritmo));
-
+    
     $datos_algoritmo = array_merge($datos_algoritmo, $nuevos_datos_algoritmo);
-
+    
     iaLog("Metadatos actuales para 'datosAlgoritmo' antes de guardar: " . json_encode($datos_algoritmo));
-
+    
     update_post_meta($post_id, 'datosAlgoritmo', json_encode($datos_algoritmo, JSON_UNESCAPED_UNICODE));
     update_post_meta($post_id, 'flashIA', true);
 
