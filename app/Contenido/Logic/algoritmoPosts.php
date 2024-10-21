@@ -232,17 +232,6 @@ function obtenerDatosFeed($userId)
     ];
 }
 
-/*
-Hay que hacer una funcion (entorno wordpress)
-
-que busque todos los post tipo social_post y que tengan la meta de Verificado en true, (que se ejecute una sola vez)
-
-que ajuste el titulo, y el enlace permanente segun el contenido 
-
-Osea un contenido puede ser asi Drum hip hop entonces el titulo y el enlace permanente debe ser igual, habran muchos post con el mismo contenido pero supongo que se puede manejar bien
-
-y tambien debería ajustarse automaticamente cada que un usuario admin edita un post 
-*/
 
 function calcularFeedPersonalizado($userId)
 {
