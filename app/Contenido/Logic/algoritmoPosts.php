@@ -233,16 +233,15 @@ function obtenerDatosFeed($userId)
 }
 
 /*
-3 ajustes pequeños
-que ya tenga tanta relevancia la novedad, es decir, que no importe tanto lo reciente que sea el post
-un poco mas de aleatearidad 
-y por ultimo
+Hay que hacer una funcion (entorno wordpress)
 
-esto tiene que invertirse si el usuario es admin, es decir, que los usuarios admin tienen que ver los post que no estan verificados
+que busque todos los post tipo social_post y que tengan la meta de Verificado en true, (que se ejecute una sola vez)
 
-    $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.9;
-} elseif (!$metaVerificado && $metaPostAut) {
-    $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
+que ajuste el titulo, y el enlace permanente segun el contenido 
+
+Osea un contenido puede ser asi Drum hip hop entonces el titulo y el enlace permanente debe ser igual, habran muchos post con el mismo contenido pero supongo que se puede manejar bien
+
+y tambien debería ajustarse automaticamente cada que un usuario admin edita un post 
 */
 
 function calcularFeedPersonalizado($userId)
