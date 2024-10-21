@@ -319,7 +319,7 @@ function calcularFeedPersonalizado($userId)
         $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100)); // Hasta 50% de variación
 
         // Ajuste extra aleatorio (puedes ajustar el rango si deseas más variación)
-        $ajusteExtra = mt_rand(-20, 20); // Variación entre -20 y +20 puntos
+        $ajusteExtra = mt_rand(-50, 50); // Variación entre -50 y +50 puntos
         $puntosFinal += $ajusteExtra;
 
         // Asegurar que los puntos finales no sean negativos
