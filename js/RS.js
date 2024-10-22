@@ -7,6 +7,7 @@ let audiosData = [];
 // Logs
 let enablelogRS = true;
 const logRS = enablelogRS ? console.log : function () {};
+let waveSurferInstances = {};
 
 function iniciarRS() {
     logRS('comienzoFormRS fue llamado');
@@ -204,46 +205,47 @@ function subidaRs() {
             alert(`Audio subido: ${file.name}`);
             previewAudio.style.display = 'block';
             opciones.style.display = 'flex';
-    
+
             // Crear un ID temporal para el archivo
             const tempId = `temp-${Date.now()}`;
             const progressBarId = waveAudio(file, tempId);
-    
+
             // Agregamos el objeto temporalmente a audiosData
-            audiosData.push({ tempId, fileUrl: null, fileId: null });
-    
-            const { fileUrl, fileId } = await subidaRsBackend(file, progressBarId);
-    
+            audiosData.push({tempId, fileUrl: null, fileId: null});
+
+            const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
+
             // Actualizar el audio en audiosData con los valores reales cuando lleguen del backend
             const index = audiosData.findIndex(audio => audio.tempId === tempId);
             if (index !== -1) {
                 audiosData[index].fileUrl = fileUrl;
                 audiosData[index].fileId = fileId;
-    
+
                 // Actualizar el atributo data-audio-url en el contenedor de la waveform con el verdadero fileUrl
                 const waveformContainer = document.querySelector(`[data-temp-id="${tempId}"]`);
                 if (waveformContainer) {
                     waveformContainer.setAttribute('data-audio-url', fileUrl);
                 }
             }
-    
+
             // Verificamos si ya hay 30 audios subidos
             if (audiosData.length > 30) {
                 alert('Ya has subido el límite máximo de 30 audios.');
             }
-    
+
             subidaAudioEnProgreso = false;
         } catch (error) {
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
             subidaAudioEnProgreso = false;
         }
     };
+
     
     const waveAudio = (file, tempId) => {
         const reader = new FileReader(),
             audioContainerId = `waveform-container-${Date.now()}`,
             progressBarId = `progress-${Date.now()}`;
-    
+
         reader.onload = e => {
             const newWaveform = document.createElement('div');
             newWaveform.innerHTML = `
@@ -258,32 +260,37 @@ function subidaRs() {
                         <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
                     </div>
                 </div>`;
-    
+
             previewAudio.appendChild(newWaveform);
             inicializarWaveform(audioContainerId, e.target.result);
-    
+
             const deleteButton = newWaveform.querySelector('.delete-waveform');
             deleteButton.addEventListener('click', () => eliminarWaveform(audioContainerId, tempId));
         };
-    
+
         reader.readAsDataURL(file);
         return progressBarId;
     };
-    
-    // Esta función ahora eliminará el audio usando el tempId y luego el fileUrl cuando esté disponible
+
     const eliminarWaveform = (containerId, tempId) => {
         const wrapper = document.getElementById(containerId);
+
         if (wrapper) {
+            // Detener y destruir la instancia de WaveSurfer si existe
+            if (waveSurferInstances[containerId]) {
+                waveSurferInstances[containerId].destroy();
+                delete waveSurferInstances[containerId]; // Eliminar la instancia después de destruirla
+            }
+
+            // Eliminar el contenedor del DOM
             wrapper.parentNode.removeChild(wrapper);
         }
-    
+
         const index = audiosData.findIndex(audio => audio.tempId === tempId);
         if (index !== -1) {
             audiosData.splice(index, 1);
         }
     };
-    
-
     const subidaArchivo = async file => {
         subidaArchivoEnProgreso = true;
         previewArchivo.style.display = 'block';
@@ -483,4 +490,56 @@ function limpiarCamposRs() {
 
     const colabCheckbox = document.getElementById('colab');
     if (colabCheckbox) colabCheckbox.checked = false;
+}
+
+window.inicializarWaveform = function (containerId, audioSrc) {
+    const container = document.getElementById(containerId);
+    
+    if (container && audioSrc) {
+        const peaksKey = `waveform_peaks_${audioSrc}`;
+        console.log(`Clave de los picos: ${peaksKey}`);
+
+        const options = {
+            container: container,
+            waveColor: '#d9dcff',
+            progressColor: '#4353ff',
+            backend: 'WebAudio',
+            height: 60,
+            barWidth: 2,
+            responsive: true
+        };
+
+        const storedPeaks = localStorage.getItem(peaksKey);
+        if (storedPeaks) {
+            options.peaks = JSON.parse(storedPeaks);
+            console.log('Picos cargados desde localStorage:', options.peaks);
+        } else {
+            console.log('No se encontraron picos almacenados. Se generarán nuevos picos.');
+        }
+
+        // Crear instancia de WaveSurfer
+        let wavesurfer = WaveSurfer.create(options);
+
+        // Almacenar la instancia en waveSurferInstances
+        waveSurferInstances[containerId] = wavesurfer;
+
+        wavesurfer.load(audioSrc);
+        console.log(`Cargando el archivo de audio: ${audioSrc}`);
+
+        wavesurfer.on('ready', function () {
+            console.log('Audio listo. Forma de onda generada.');
+            if (!storedPeaks) {
+                const peaks = wavesurfer.exportPeaks({ channels: 2, maxLength: 8000, precision: 10000 });
+                localStorage.setItem(peaksKey, JSON.stringify(peaks));
+                console.log('Picos generados y almacenados en localStorage:', peaks);
+            }
+        });
+
+        container.addEventListener('click', function () {
+            console.log('Toggling play/pause');
+            wavesurfer.playPause();
+        });
+    } else {
+        console.log('Error: No se encontró el contenedor o el audioSrc no es válido.');
+    }
 }
