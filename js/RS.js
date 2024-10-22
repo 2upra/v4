@@ -243,6 +243,9 @@ function subidaRs() {
 
             previewAudio.appendChild(newWaveform);
             inicializarWaveform(audioContainerId, e.target.result); //definido en otra parte
+            // Aquí es donde agregamos el event listener para eliminar el waveform
+            const deleteButton = newWaveform.querySelector('.delete-waveform');
+            deleteButton.addEventListener('click', () => eliminarWaveform(audioContainerId));
         };
 
         reader.readAsDataURL(file);
@@ -252,9 +255,13 @@ function subidaRs() {
     const eliminarWaveform = containerId => {
         const container = document.getElementById(containerId);
         const audioUrl = container.getAttribute('data-audio-url');
+
+        // Remover visualmente el contenedor
         if (container) {
             container.parentNode.removeChild(container);
         }
+
+        // Remover el objeto correspondiente del array audiosData
         const index = audiosData.findIndex(audio => audio.fileUrl === audioUrl);
         if (index !== -1) {
             audiosData.splice(index, 1);
