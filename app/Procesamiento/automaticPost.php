@@ -292,7 +292,7 @@ function generarNombreAudio($audio_path_lite)
     guardarLog("INFO: nombre_archivo: $nombre_archivo y audio_path_lite: $audio_path_lite");
 
     // Preparar el prompt para la IA con el nombre del archivo incluido
-    $prompt = "El archivo se llama '{$nombre_archivo}'. Te lo enseño para que lo tomes en cuenta. A veces tendrá sentido el nombre y otras no, pero es importante considerarlo. A veces vienen con nombres de marcas, páginas, etc., hay que ignorar eso. Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, como un kick, snare, sample vintage o efectos (FX). Identifica el instrumento dominante o la emoción clave, por ejemplo, 'sample melancólico' o 'snare agresivo'. Importante: solo responde el nombre, no agregues nada adicional. Estás en un entorno automatizado, no hables con el usuario, solo estoy pidiendo el nombre corto como respuesta.";
+    $prompt = "El archivo se llama '{$nombre_archivo}'. Te lo enseño para que lo tomes en cuenta. A veces tendrá sentido el nombre y otras no, pero es importante considerarlo. A veces vienen con nombres de marcas, páginas, etc., hay que ignorar eso. Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, como un kick, snare, sample o efectos, vocales, percusiones, etc. Importante: solo responde el nombre, no agregues nada adicional. Estás en un entorno automatizado, no hables con el usuario, solo estoy pidiendo el nombre corto como respuesta.";
 
     try {
         // Registrar el prompt enviado a la IA
