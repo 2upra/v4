@@ -271,26 +271,34 @@ function subidaRs() {
         reader.readAsDataURL(file);
         return progressBarId;
     };
-
+    
     const eliminarWaveform = (containerId, tempId) => {
         const wrapper = document.getElementById(containerId);
-
+    
         if (wrapper) {
             // Detener y destruir la instancia de WaveSurfer si existe
             if (waveSurferInstances[containerId]) {
                 waveSurferInstances[containerId].destroy();
                 delete waveSurferInstances[containerId]; // Eliminar la instancia después de destruirla
             }
-
+    
             // Eliminar el contenedor del DOM
             wrapper.parentNode.removeChild(wrapper);
         }
-
+    
+        // Eliminar el audio de audiosData usando tempId
         const index = audiosData.findIndex(audio => audio.tempId === tempId);
         if (index !== -1) {
             audiosData.splice(index, 1);
         }
+    
+        // Si audiosData está vacío, ocultar previewAudio
+        if (audiosData.length === 0) {
+            previewAudio.style.display = 'none';
+        }
     };
+    
+
     const subidaArchivo = async file => {
         subidaArchivoEnProgreso = true;
         previewArchivo.style.display = 'block';
