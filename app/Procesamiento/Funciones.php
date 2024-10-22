@@ -222,9 +222,45 @@ function actualizarMetaConArchivo($postId, $campo, $archivoId)
     }
 }
 
+/*
+
+(
+    [action] => subidaRs
+    [imagenUrl1] => null
+    [imagenId1] => null
+    [archivoUrl1] => null
+    [archivoId1] => null
+    [audioUrl1] => https://2upra.com/wp-content/uploads/2024/10/dr-660-127.wav
+    [audioId1] => 9261
+    [audioUrl2] => https://2upra.com/wp-content/uploads/2024/10/Ofuh-yeah.mp3
+    [audioId2] => 9262
+    [tags] => test3
+    [textoNormal] => test3
+    [descarga] => 0
+    [exclusivo] => 0
+    [colab] => 0
+    [music] => 0
+)
+
+2024-10-22 19:39:37 - Advertencia: El file_id (9261) no coincide con archivoId (235822).
+2024-10-22 19:39:37 - enviando 235822 con https://2upra.com/wp-content/uploads/2024/10/2upra_1ndoryu_test3.wav a actualizarUrlArchivo
+2024-10-22 19:39:37 - Inicio de actualizarUrlArchivo para File ID: 235822 con nueva URL: https://2upra.com/wp-content/uploads/2024/10/2upra_1ndoryu_test3.wav
+2024-10-22 19:39:37 - URL actualizada correctamente para File ID: 235822
+2024-10-22 19:39:41 - Archivo adjunto renombrado a 2upra_1ndoryu_test3.wav para postId: 235821
+2024-10-22 19:39:41 - Advertencia: El file_id (9262) no coincide con archivoId (235824).
+2024-10-22 19:39:41 - enviando 235824 con https://2upra.com/wp-content/uploads/2024/10/2upra_1ndoryu_test3.mp3 a actualizarUrlArchivo
+2024-10-22 19:39:41 - Inicio de actualizarUrlArchivo para File ID: 235824 con nueva URL: https://2upra.com/wp-content/uploads/2024/10/2upra_1ndoryu_test3.mp3
+2024-10-22 19:39:41 - URL actualizada correctamente para File ID: 235824
+2024-10-22 19:39:42 - Archivo adjunto renombrado a 2upra_1ndoryu_test3.mp3 para postId: 235821
+
+renombrarArchivoAdjunto funciona mal, renombra los archivo pero envia actualizarUrlArchivo los datos incorrecta
+
+*/
+
 #Paso 5.4
 function renombrarArchivoAdjunto($postId, $archivoId, $campo)
 {
+    guardarLog("renombrarArchivoAdjunto recibio: $postId, $archivoId, $campo")
     // Extraer el índice del campo, por ejemplo, de 'audioUrl1' extraemos '1'
     preg_match('/(\d+)$/', $campo, $matches);
     $indice = isset($matches[1]) ? $matches[1] : '';
