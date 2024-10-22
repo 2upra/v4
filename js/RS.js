@@ -129,7 +129,7 @@ async function envioRs() {
         console.log('Valores finales:', 'descarga:', descarga, 'exclusivo:', exclusivo, 'colab:', colab, 'tags:', tags, 'textoNormal:', textoNormal);
 
         const data = {
-            imagenUrl: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
+            imagenUrl1: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
             imagenId: typeof imagenId !== 'undefined' ? imagenId : null,
             audioUrl1: typeof audioUrl !== 'undefined' ? audioUrl : null,
             audioId: typeof audioId !== 'undefined' ? audioId : null,
