@@ -127,7 +127,7 @@ function configurarSimilarTo($query_args, $similar_to)
         $data = json_decode($datosAlgoritmo, true);
 
         $meta_queries = [];
-        $relation = 'OR'; // Puedes ajustar esto según cómo quieras combinar las condiciones
+        $relation = 'OR'; 
 
         // Coincidencia de Tags en ambos idiomas
         if (!empty($data['tags_posibles'])) {
@@ -144,21 +144,53 @@ function configurarSimilarTo($query_args, $similar_to)
             }
         }
 
+
+        // Función auxiliar para obtener datos de varias claves
+        function get_meta_field($data, $keys, $lang) {
+            foreach ($keys as $key) {
+                if (isset($data[$key][$lang]) && is_array($data[$key][$lang])) {
+                    return $data[$key][$lang];
+                }
+            }
+            return []; // Devuelve un arreglo vacío si no se encuentra ninguna clave válida
+        }
+
         if (!empty($data)) {
+            // Definir las posibles claves para cada categoría
+            $descripcion_keys = ['descripcion_ia_pro', 'descripcion_ia'];
+            $estado_animo_keys = ['estado_animo']; // Asumo que 'estado_animo' es consistente
+            $artista_posible_keys = ['artista_posible']; // Asumo que 'artista_posible' es consistente
+
+            // Obtener los datos de descripción en ambos idiomas
+            $descripcion_es = get_meta_field($data, $descripcion_keys, 'es');
+            $descripcion_en = get_meta_field($data, $descripcion_keys, 'en');
+
+            // Obtener los datos de estado_animo en ambos idiomas
+            $estado_animo_es = get_meta_field($data, $estado_animo_keys, 'es');
+            $estado_animo_en = get_meta_field($data, $estado_animo_keys, 'en');
+
+            // Obtener los datos de artista_posible en ambos idiomas
+            $artista_posible_es = get_meta_field($data, $artista_posible_keys, 'es');
+            $artista_posible_en = get_meta_field($data, $artista_posible_keys, 'en');
+
+            // Combinar todos los datos en una sola cadena
             $combined_data = implode(' ', array_merge(
-                is_array($data['descripcion_ia_pro']['es'] ?? []) ? $data['descripcion_ia_pro']['es'] : [],
-                is_array($data['descripcion_ia_pro']['en'] ?? []) ? $data['descripcion_ia_pro']['en'] : [],
-                is_array($data['estado_animo']['es'] ?? []) ? $data['estado_animo']['es'] : [],
-                is_array($data['estado_animo']['en'] ?? []) ? $data['estado_animo']['en'] : [],
-                is_array($data['artista_posible']['es'] ?? []) ? $data['artista_posible']['es'] : [],
-                is_array($data['artista_posible']['en'] ?? []) ? $data['artista_posible']['en'] : []
+                $descripcion_es,
+                $descripcion_en,
+                $estado_animo_es,
+                $estado_animo_en,
+                $artista_posible_es,
+                $artista_posible_en
             ));
 
-            $meta_queries[] = [
-                'key'     => 'datosAlgoritmo',
-                'value'   => $combined_data,
-                'compare' => 'LIKE',
-            ];
+            // Asegurarse de que $combined_data no esté vacío antes de agregar a meta_queries
+            if (!empty($combined_data)) {
+                $meta_queries[] = [
+                    'key'     => 'datosAlgoritmo',
+                    'value'   => $combined_data,
+                    'compare' => 'LIKE',
+                ];
+            }
         }
 
         if (!empty($meta_queries)) {
@@ -167,14 +199,26 @@ function configurarSimilarTo($query_args, $similar_to)
                 $meta_query = [
                     'relation' => $relation,
                 ];
-                $meta_query = array_merge($meta_query, $meta_queries);
+                // Agregar cada consulta individual
+                foreach ($meta_queries as $mq) {
+                    $meta_query[] = $mq;
+                }
             } else {
                 $meta_query = $meta_queries[0];
             }
 
             // Combinar las meta_queries existentes con las nuevas
             if (!empty($query_args['meta_query'])) {
-                $query_args['meta_query'][] = $meta_query;
+                // Si 'meta_query' ya es una matriz con 'relation', necesitamos combinar correctamente
+                if (isset($query_args['meta_query']['relation'])) {
+                    // Añadir nuevas consultas manteniendo la relación existente
+                    foreach ($meta_queries as $mq) {
+                        $query_args['meta_query'][] = $mq;
+                    }
+                } else {
+                    // Si 'meta_query' no tiene 'relation', añadir como condiciones OR
+                    $query_args['meta_query'] = array_merge($query_args['meta_query'], $meta_queries);
+                }
             } else {
                 $query_args['meta_query'] = [$meta_query];
             }
