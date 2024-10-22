@@ -20,6 +20,11 @@ function iniciarRS() {
         subidaAudioEnProgreso = false;
         subidaImagenEnProgreso = false;
         subidaArchivoEnProgreso = false;
+        cantidadAudio = 2;
+
+        audioUrls = [];
+        audioIds = [];
+        
         subidaRs();
         envioRs();
         placeholderRs();
@@ -163,8 +168,29 @@ async function envioRs() {
     });
 }
 
+// Función principal
 function subidaRs() {
-    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs'];
+    const elements = obtenerElementos(['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs']);
+
+    if (!elements) return;
+
+    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs} = elements;
+
+    inicializarEventos({
+        formRs,
+        botonAudio,
+        botonImagen,
+        previewAudio,
+        previewArchivo,
+        opciones,
+        botonArchivo,
+        previewImagen,
+        enviarRs
+    });
+}
+
+// Función para obtener y verificar elementos del DOM
+function obtenerElementos(ids) {
     const elements = ids.reduce((acc, id) => {
         const el = document.getElementById(id);
         if (!el) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
@@ -172,127 +198,225 @@ function subidaRs() {
         return acc;
     }, {});
 
-    const missingElements = Object.entries(elements)
-        .filter(([_, el]) => !el)
-        .map(([id]) => id);
-    if (missingElements.length) {
-        return;
-    }
+    const missing = Object.keys(elements).filter(key => !elements[key]);
+    return missing.length ? null : elements;
+}
 
-    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs} = elements;
-
-    const inicialSubida = event => {
-        event.preventDefault();
-        const file = event.dataTransfer?.files[0] || event.target.files[0];
-
-        if (!file) return;
-        if (file.size > 50 * 1024 * 1024) return alert('El archivo no puede superar los 50 MB.');
-
-        file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
-    };
-
-    const subidaAudio = async file => {
-        subidaAudioEnProgreso = true;
-        try {
-            alert(`Audio subido: ${file.name}`);
-            previewAudio.style.display = 'block';
-            opciones.style.display = 'flex';
-            const progressBarId = waveAudio(file);
-            const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
-            audioUrl = fileUrl;
-            audioId = fileId;
-            subidaAudioEnProgreso = false;
-        } catch (error) {
-            alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
-            subidaAudioEnProgreso = false;
-        }
-    };
-
-    const subidaArchivo = async file => {
-        subidaArchivoEnProgreso = true;
-        previewArchivo.style.display = 'block';
-        previewArchivo.innerHTML = `<div class="file-name">${file.name}</div><div id="barraProgresoFile" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>`;
-        try {
-            alert(`Archivo subido: ${file.name}`);
-            const {fileUrl, fileId} = await subidaRsBackend(file, 'barraProgresoFile');
-            archivoUrl = fileUrl;
-            archivoId = fileId;
-            subidaArchivoEnProgreso = false;
-        } catch {
-            alert('Hubo un problema al cargar el Archivo. Inténtalo de nuevo.');
-            subidaArchivoEnProgreso = false;
-        }
-    };
-
-    const subidaImagen = async file => {
-        subidaImagenEnProgreso = true;
-        opciones.style.display = 'flex';
-        updatePreviewImagen(file);
-        try {
-            alert(`Imagen subida: ${file.name}`);
-            const {fileUrl, fileId} = await subidaRsBackend(file, 'barraProgresoImagen');
-            imagenUrl = fileUrl;
-            imagenId = fileId;
-            subidaImagenEnProgreso = false;
-        } catch {
-            alert('Hubo un problema al cargar la Imagen. Inténtalo de nuevo.');
-            subidaImagenEnProgreso = false;
-        }
-    };
-
-    const waveAudio = file => {
-        const reader = new FileReader(),
-            audioContainerId = `waveform-container-${Date.now()}`,
-            progressBarId = `progress-${Date.now()}`;
-        reader.onload = e => {
-            previewAudio.innerHTML = `
-                <div id="${audioContainerId}" class="waveform-container without-image" data-audio-url="${e.target.result}">
-                    <div class="waveform-loading" style="display: none;">Cargando...</div>
-                    <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
-                    <div class="file-name">${file.name}</div>
-                </div>
-                <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
-                    <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
-                </div>`;
-            inicializarWaveform(audioContainerId, e.target.result);
-        };
-        reader.readAsDataURL(file);
-        return progressBarId;
-    };
-
-    const updatePreviewImagen = file => {
-        const reader = new FileReader();
-        reader.onload = e => {
-            previewImagen.innerHTML = `<img src="${e.target.result}" alt="Preview" style="width: 100%; height: 100%; aspect-ratio: 1 / 1; object-fit: cover;">`;
-            previewImagen.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    };
-
-    formRs.addEventListener('click', event => {
-        const clickedElement = event.target.closest('.previewAudio, .previewImagen');
-        clickedElement && abrirSelectorArchivos(clickedElement.classList.contains('previewAudio') ? 'audio/*' : 'image/*');
-    });
-
-    const abrirSelectorArchivos = tipoArchivo => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = tipoArchivo;
-        input.onchange = inicialSubida;
-        input.click();
-    };
-
+// Función para inicializar todos los eventos
+function inicializarEventos({formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs}) {
+    formRs.addEventListener('click', manejarClickForm);
     botonArchivo.addEventListener('click', () => abrirSelectorArchivos('*'));
     botonAudio.addEventListener('click', () => abrirSelectorArchivos('audio/*'));
     botonImagen.addEventListener('click', () => abrirSelectorArchivos('image/*'));
 
     ['dragover', 'dragleave', 'drop'].forEach(eventName => {
-        formRs.addEventListener(eventName, e => {
-            e.preventDefault();
-            formRs.style.backgroundColor = eventName === 'dragover' ? '#e9e9e9' : '';
-            eventName === 'drop' && inicialSubida(e);
-        });
+        formRs.addEventListener(eventName, manejarDragDrop(formRs));
     });
+}
+
+// Handler para los eventos de drag and drop
+function manejarDragDrop(formRs) {
+    return function (e) {
+        e.preventDefault();
+        if (e.type === 'dragover') {
+            formRs.style.backgroundColor = '#e9e9e9';
+        } else {
+            formRs.style.backgroundColor = '';
+            if (e.type === 'drop') {
+                manejarSubida(e);
+            }
+        }
+    };
+}
+
+// Handler para clicks dentro del formulario
+function manejarClickForm(event) {
+    const clickedElement = event.target.closest('.previewAudio, .previewImagen');
+    if (clickedElement) {
+        const tipo = clickedElement.classList.contains('previewAudio') ? 'audio/*' : 'image/*';
+        abrirSelectorArchivos(tipo);
+    }
+}
+
+// Función para abrir el selector de archivos
+function abrirSelectorArchivos(tipoArchivo) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = tipoArchivo;
+    input.onchange = manejarSubida;
+    input.click();
+}
+
+// Handler principal para la subida de archivos
+function manejarSubida(event) {
+    event.preventDefault();
+    const file = event.dataTransfer?.files[0] || event.target.files[0];
+
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) return alert('El archivo no puede superar los 50 MB.');
+
+    if (file.type.startsWith('audio/')) {
+        subirAudio(file);
+    } else if (file.type.startsWith('image/')) {
+        subirImagen(file);
+    } else {
+        subirArchivo(file);
+    }
+}
+
+/* 
+    cantidadAudio = 2 *se estable inicialmente en 2* 
+
+    Necesito que inicialmente subida audio funcione normal, inicialmente, 
+    cuando se sube un audio, crea
+    audioUrl = fileUrl;
+    audioId = fileId;
+
+    pero ahora tiene que permitir subir varios,
+    se sube otro audio, ahora tiene que permitir agregar nuevo preview, 
+    hacer 
+    audioUrl2 = fileUrl;
+    audioId2 = fileId;
+    e ir sumando segundo los audios nuevos, y que todo funcione igual para los siguientes audio
+*/
+
+// Función para subir archivos de audio
+async function subirAudio(file) {
+    if (subidaAudioEnProgreso) return;
+    subidaAudioEnProgreso = true;
+    try {
+        alert(`Audio subido: ${file.name}`);
+
+        // Crear un nuevo preview para el audio
+        agregarNuevoPreviewAudio();
+
+        // Obtener el nuevo preview creado
+        const nuevoPreviewId = `previewAudio${cantidadAudio}`;
+        const nuevoPreview = document.getElementById(nuevoPreviewId);
+        if (!nuevoPreview) throw new Error('No se encontró el contenedor para el nuevo preview de audio.');
+
+        // Mostrar el nuevo contenedor de preview
+        nuevoPreview.style.display = 'block';
+
+        // Crear el waveform y obtener el ID de la barra de progreso
+        const progressBarId = waveAudio(file, nuevoPreviewId);
+
+        // Subir el archivo al backend
+        const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
+
+        // Almacenar las URLs y IDs en los arreglos
+        audioUrls.push(fileUrl);
+        audioIds.push(fileId);
+
+        // Verificar si se necesita agregar otro preview (opcional)
+        cantidadAudio++;
+    } catch (error) {
+        console.error(error);
+        alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
+    } finally {
+        subidaAudioEnProgreso = false;
+    }
+}
+
+// Función para manejar la creación del waveform de audio
+function waveAudio(file, targetPreviewId) {
+    const reader = new FileReader();
+    const audioContainerId = `waveform-container-${Date.now()}`;
+    const progressBarId = `progress-${Date.now()}`;
+
+    reader.onload = e => {
+        const targetPreview = document.getElementById(targetPreviewId);
+        if (!targetPreview) {
+            console.warn(`Contenedor de preview con id="${targetPreviewId}" no encontrado.`);
+            return;
+        }
+
+        // Insertar el contenido HTML en el nuevo preview
+        targetPreview.innerHTML = `
+            <div id="${audioContainerId}" class="waveform-container without-image" data-audio-url="${e.target.result}">
+                <div class="waveform-loading" style="display: none;">Cargando...</div>
+                <audio controls style="width: 100%;">
+                    <source src="${e.target.result}" type="${file.type}">
+                </audio>
+                <div class="file-name">${file.name}</div>
+            </div>
+            <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
+                <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
+            </div>
+        `;
+        inicializarWaveform(audioContainerId, e.target.result);
+    };
+
+    reader.readAsDataURL(file);
+    return progressBarId;
+}
+
+function agregarNuevoPreviewAudio() {
+    const nuevoDiv = document.createElement('div');
+    nuevoDiv.className = 'previewAreaArchivos';
+    nuevoDiv.id = `previewAudio${cantidadAudio}`;
+    nuevoDiv.style.display = 'none';
+    const nuevoLabel = document.createElement('label');
+    nuevoDiv.appendChild(nuevoLabel);
+    const contenedor = document.getElementById('dinamicPreview');
+    if (contenedor) {
+        contenedor.appendChild(nuevoDiv);
+    }
+    cantidadAudio++;
+}
+
+// Función para subir imágenes
+async function subirImagen(file) {
+    if (subidaImagenEnProgreso) return;
+    subidaImagenEnProgreso = true;
+    try {
+        alert(`Imagen subida: ${file.name}`);
+        opciones.style.display = 'flex';
+        crearPreviewImagen(file);
+        const {fileUrl, fileId} = await subidaRsBackend(file, 'barraProgresoImagen');
+        imagenUrl = fileUrl;
+        imagenId = fileId;
+    } catch (error) {
+        alert('Hubo un problema al cargar la Imagen. Inténtalo de nuevo.');
+    } finally {
+        subidaImagenEnProgreso = false;
+    }
+}
+
+// Función para subir otros tipos de archivos
+async function subirArchivo(file) {
+    if (subidaArchivoEnProgreso) return;
+    subidaArchivoEnProgreso = true;
+    try {
+        alert(`Archivo subido: ${file.name}`);
+        crearPreviewArchivo(file);
+        const {fileUrl, fileId} = await subidaRsBackend(file, 'barraProgresoFile');
+        archivoUrl = fileUrl;
+        archivoId = fileId;
+    } catch (error) {
+        alert('Hubo un problema al cargar el Archivo. Inténtalo de nuevo.');
+    } finally {
+        subidaArchivoEnProgreso = false;
+    }
+}
+
+// Función para crear la vista previa de imagen
+function crearPreviewImagen(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+        previewImagen.innerHTML = `<img src="${e.target.result}" alt="Preview" style="width: 100%; height: 100%; aspect-ratio: 1 / 1; object-fit: cover;">`;
+        previewImagen.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+// Función para crear la vista previa de archivo
+function crearPreviewArchivo(file) {
+    previewArchivo.style.display = 'block';
+    previewArchivo.innerHTML = `
+        <div class="file-name">${file.name}</div>
+        <div id="barraProgresoFile" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
+    `;
 }
 
 async function subidaRsBackend(file, progressBarId) {
