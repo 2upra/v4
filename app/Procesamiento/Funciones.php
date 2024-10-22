@@ -6,7 +6,7 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
     $contenido = sanitize_textarea_field($_POST['textoNormal'] ?? '');
     $tags = sanitize_text_field($_POST['tags'] ?? '');
     if (empty($contenido)) {
-        guardarLog('empty_content: El contenido no puede estar vacío.');
+        //guardarLog('empty_content: El contenido no puede estar vacío.');
         return new WP_Error('empty_content', 'El contenido no puede estar vacío.');
     }
     $titulo = wp_trim_words($contenido, 15, '...');
@@ -88,7 +88,7 @@ function confirmarArchivos($postId)
                 $file_id = intval($_POST[$campo]);
                 if ($file_id > 0) {
                     update_post_meta($postId, 'idHash_' . $campo, $file_id);
-                    guardarLog("idHash_{$campo} actualizado para postId: {$postId}");
+                    //guardarLog("idHash_{$campo} actualizado para postId: {$postId}");
                     confirmarHashId($file_id);
                 }
             }
@@ -129,7 +129,7 @@ function procesarURLs($postId)
                     }
                 } else {
                     // Opcional: Manejar URLs inválidas
-                    guardarLog("URL inválida en el campo: {$campo} para postId: {$postId}");
+                    //guardarLog("URL inválida en el campo: {$campo} para postId: {$postId}");
                 }
             }
         }
@@ -151,7 +151,7 @@ function procesarArchivo($postId, $campo, $renombrar = false)
 
         return true;
     } else {
-        guardarLog("Error: No se pudo procesar el archivo para Post ID: $postId y Campo: $campo");
+        //guardarLog("Error: No se pudo procesar el archivo para Post ID: $postId y Campo: $campo");
     }
 
     return false;
@@ -206,19 +206,19 @@ function actualizarMetaConArchivo($postId, $campo, $archivoId)
             // Podemos establecer la miniatura del post.
             if ($baseField === 'imagenUrl' && $index === '') {
                 set_post_thumbnail($postId, $archivoId);
-                guardarLog("Miniatura del post establecida con archivo ID: {$archivoId} para postId: {$postId}");
+                //guardarLog("Miniatura del post establecida con archivo ID: {$archivoId} para postId: {$postId}");
             } else {
-                guardarLog("Meta clave '{$meta_key}' actualizada con archivo ID: {$archivoId} para postId: {$postId}");
+                //guardarLog("Meta clave '{$meta_key}' actualizada con archivo ID: {$archivoId} para postId: {$postId}");
             }
         } else {
             // Si el tipo base no está en el mapeo, usar el nombre completo del campo como meta_key.
             update_post_meta($postId, $campo, $archivoId);
-            guardarLog("Meta clave '{$campo}' actualizada con archivo ID: {$archivoId} para postId: {$postId}");
+            //guardarLog("Meta clave '{$campo}' actualizada con archivo ID: {$archivoId} para postId: {$postId}");
         }
     } else {
         // Si el campo no coincide con los patrones esperados, manejarlo de forma predeterminada.
         update_post_meta($postId, $campo, $archivoId);
-        guardarLog("Meta clave '{$campo}' actualizada con archivo ID: {$archivoId} para postId: {$postId}");
+        //guardarLog("Meta clave '{$campo}' actualizada con archivo ID: {$archivoId} para postId: {$postId}");
     }
 }
 
@@ -273,7 +273,7 @@ function renombrarArchivoAdjunto($postId, $archivoId, $campo)
     if (rename($file_path, $new_file_path)) {
         $upload_dir = wp_upload_dir();
         $public_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $new_file_path);
-
+        guardarLog("enviando $archivoId con $public_url a actualizarUrlArchivo");
         actualizarUrlArchivo($archivoId, $public_url);
         update_attached_file($archivoId, $new_file_path);
         update_post_meta($postId, 'sample', true);
@@ -296,11 +296,11 @@ function renombrarArchivoAdjunto($postId, $archivoId, $campo)
 
 function procesarAudioLigero($post_id, $audio_id, $index)
 {
-    guardarLog("INICIO procesarAudioLigero para Post ID: $post_id y Audio ID: $audio_id");
+    //guardarLog("INICIO procesarAudioLigero para Post ID: $post_id y Audio ID: $audio_id");
 
     // Obtener el archivo de audio original
     $audio_path = get_attached_file($audio_id);
-    guardarLog("Ruta del archivo de audio original: {$audio_path}");
+    //guardarLog("Ruta del archivo de audio original: {$audio_path}");
 
     // Obtener las partes del camino del archivo
     $path_parts = pathinfo($audio_path);
@@ -309,12 +309,12 @@ function procesarAudioLigero($post_id, $audio_id, $index)
 
     // Eliminar metadatos del archivo original usando ffmpeg
     $comando_strip_metadata = "/usr/bin/ffmpeg -i " . escapeshellarg($audio_path) . " -map_metadata -1 -c:v copy " . escapeshellarg($audio_path . '.tmp') . " && mv " . escapeshellarg($audio_path . '.tmp') . " " . escapeshellarg($audio_path);
-    guardarLog("Ejecutando comando para eliminar metadatos del archivo original: {$comando_strip_metadata}");
+    //guardarLog("Ejecutando comando para eliminar metadatos del archivo original: {$comando_strip_metadata}");
     exec($comando_strip_metadata, $output_strip, $return_strip);
     if ($return_strip !== 0) {
-        guardarLog("Error al eliminar metadatos del archivo original: " . implode("\n", $output_strip));
+        //guardarLog("Error al eliminar metadatos del archivo original: " . implode("\n", $output_strip));
     } else {
-        guardarLog("Metadatos del archivo original eliminados correctamente.");
+        //guardarLog("Metadatos del archivo original eliminados correctamente.");
     }
 
     // Obtener el nombre de usuario del autor del post
@@ -322,11 +322,11 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     $author_info = get_userdata($post_author_id);
     if ($author_info) {
         $author_username = $author_info->user_login;
-        guardarLog("Nombre de usuario del autor obtenido: {$author_username}");
+        //guardarLog("Nombre de usuario del autor obtenido: {$author_username}");
     } else {
         // Fallback en caso de no obtener la información del usuario
         $author_username = "Desconocido";
-        guardarLog("No se pudo obtener el nombre de usuario del autor. Se usará 'Desconocido'.");
+        //guardarLog("No se pudo obtener el nombre de usuario del autor. Se usará 'Desconocido'.");
     }
 
     $page_name = "2upra.com";
@@ -334,12 +334,12 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     // Procesar archivo de audio ligero (128 kbps) con metadatos adicionales
     $nuevo_archivo_path_lite = $base_path . '_128k.mp3';
     $comando_lite = "/usr/bin/ffmpeg -i " . escapeshellarg($audio_path) . " -b:a 128k -metadata author=" . escapeshellarg($author_username) . " -metadata comment=" . escapeshellarg($page_name) . " " . escapeshellarg($nuevo_archivo_path_lite);
-    guardarLog("Ejecutando comando para crear audio ligero con metadatos: {$comando_lite}");
+    //guardarLog("Ejecutando comando para crear audio ligero con metadatos: {$comando_lite}");
     exec($comando_lite, $output_lite, $return_var_lite);
     if ($return_var_lite !== 0) {
-        guardarLog("Error al procesar audio ligero: " . implode("\n", $output_lite));
+        //guardarLog("Error al procesar audio ligero: " . implode("\n", $output_lite));
     } else {
-        guardarLog("Audio ligero creado exitosamente con metadatos.");
+        //guardarLog("Audio ligero creado exitosamente con metadatos.");
     }
 
     // Insertar archivo en la biblioteca de medios
@@ -357,10 +357,10 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     );
     $attach_id_lite = wp_insert_attachment($attachment_lite, $nuevo_archivo_path_lite, $post_id);
     if (is_wp_error($attach_id_lite)) {
-        guardarLog("Error al insertar el adjunto ligero: " . $attach_id_lite->get_error_message());
+        //guardarLog("Error al insertar el adjunto ligero: " . $attach_id_lite->get_error_message());
         return;
     }
-    guardarLog("ID de adjunto ligero: {$attach_id_lite}");
+    //guardarLog("ID de adjunto ligero: {$attach_id_lite}");
     $attach_data_lite = wp_generate_attachment_metadata($attach_id_lite, $nuevo_archivo_path_lite);
     wp_update_attachment_metadata($attach_id_lite, $attach_data_lite);
 
@@ -370,9 +370,9 @@ function procesarAudioLigero($post_id, $audio_id, $index)
 
     // Extraer y guardar la duración del audio
     $duration_command = "/usr/bin/ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 " . escapeshellarg($nuevo_archivo_path_lite);
-    guardarLog("Ejecutando comando para duración del audio: {$duration_command}");
+    //guardarLog("Ejecutando comando para duración del audio: {$duration_command}");
     $duration_in_seconds = shell_exec($duration_command);
-    guardarLog("Salida de ffprobe: '{$duration_in_seconds}'");
+    //guardarLog("Salida de ffprobe: '{$duration_in_seconds}'");
 
     // Limpiar y validar la duración del audio
     $duration_in_seconds = trim($duration_in_seconds);
@@ -380,19 +380,19 @@ function procesarAudioLigero($post_id, $audio_id, $index)
         $duration_in_seconds = (float)$duration_in_seconds;
         $duration_formatted = floor($duration_in_seconds / 60) . ':' . str_pad(floor($duration_in_seconds % 60), 2, '0', STR_PAD_LEFT);
         update_post_meta($post_id, "audio_duration_{$index}", $duration_formatted);
-        guardarLog("Duración del audio (formateada): {$duration_formatted}");
+        //guardarLog("Duración del audio (formateada): {$duration_formatted}");
     } else {
-        guardarLog("Duración del audio no válida para el archivo {$nuevo_archivo_path_lite}");
+        //guardarLog("Duración del audio no válida para el archivo {$nuevo_archivo_path_lite}");
     }
 
-    guardarLog("datos para sacar meta post id: {$post_id} path_lite: {$nuevo_archivo_path_lite} index: {$index}");
+    //guardarLog("datos para sacar meta post id: {$post_id} path_lite: {$nuevo_archivo_path_lite} index: {$index}");
 
     // Llamar a analizarYGuardarMetasAudio solo si el índice es 1
     if ($index === 1) {
         analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
-        guardarLog("Se ha llamado a analizarYGuardarMetasAudio para el índice 1.");
+        //guardarLog("Se ha llamado a analizarYGuardarMetasAudio para el índice 1.");
     } else {
-        guardarLog("No se llamó a analizarYGuardarMetasAudio ya que el índice no es 1.");
+        //guardarLog("No se llamó a analizarYGuardarMetasAudio ya que el índice no es 1.");
     }
 }
 
