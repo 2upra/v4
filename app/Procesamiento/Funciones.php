@@ -73,43 +73,70 @@ function datosParaAlgoritmo($postId)
 #Paso 4
 function confirmarArchivos($postId)
 {
-    #Aquí tiene que buscar archivoId1 (ademas de archivoId), y archivoId2 y archivoId3 existe, lo mismo para los demás hasta 30
-    $campos = ['archivoId', 'audioId', 'imagenId'];
-    foreach ($campos as $campo) {
-        if (!empty($_POST[$campo])) {
-            $file_id = intval($_POST[$campo]);
-            if ($file_id > 0) {
-                update_post_meta($postId, 'idHash_' . $campo, $file_id);
-                guardarLog("idHash_{$campo} actualizado para postId: {$postId}");
-                confirmarHashId($file_id);
+    // Define los tipos de campos que deseas procesar
+    $tiposCampos = ['archivoId', 'audioId', 'imagenId'];
+    
+    // Define el número máximo de iteraciones (puedes ajustar este valor según tus necesidades)
+    $maxCampos = 30;
+    
+    foreach ($tiposCampos as $tipo) {
+        for ($i = 1; $i <= $maxCampos; $i++) {
+            // Construye el nombre del campo, por ejemplo, 'archivoId1', 'archivoId2', etc.
+            $campo = $tipo . $i;
+            
+            if (!empty($_POST[$campo])) {
+                $file_id = intval($_POST[$campo]);
+                if ($file_id > 0) {
+                    update_post_meta($postId, 'idHash_' . $campo, $file_id);
+                    guardarLog("idHash_{$campo} actualizado para postId: {$postId}");
+                    confirmarHashId($file_id);
+                }
             }
         }
     }
 }
 
-#Paso 5
+#Paso 5 
 function procesarURLs($postId)
 {
-    #Aqui tiene que comprobar si tiene AudioUrl1 (ademas de 'audioUrl') y AudioUrl2 y AudioUrl3 hasta 30 (solo para AudioUrl)
-    $procesarURLs = [
-        'imagenUrl'  => 'procesarArchivo',
+    $tiposURLs = [
+        'imagenUrl'  => ['procesarArchivo', false],
         'audioUrl'   => ['procesarArchivo', true],
-        'archivoUrl' => 'procesarArchivo',
+        'archivoUrl' => ['procesarArchivo', false],
     ];
-
-    foreach ($procesarURLs as $field => $callback) {
-        if (!empty($_POST[$field])) {
-            $url = esc_url_raw($_POST[$field]);
-            if (filter_var($url, FILTER_VALIDATE_URL)) {
-                is_array($callback)
-                    ? $callback[0]($postId, $field, $callback[1])
-                    : $callback($postId, $field);
+    
+    // Define el número máximo de iteraciones (ajustable según tus necesidades)
+    $maxCampos = 30;
+    
+    foreach ($tiposURLs as $tipo => $callbackData) {
+        // Extrae la función de callback y el parámetro adicional
+        $funcionCallback = $callbackData[0];
+        $parametroAdicional = isset($callbackData[1]) ? $callbackData[1] : null;
+        
+        for ($i = 1; $i <= $maxCampos; $i++) {
+            // Construye el nombre del campo, por ejemplo, 'imagenUrl1', 'imagenUrl2', etc.
+            $campo = $tipo . $i;
+            
+            if (!empty($_POST[$campo])) {
+                $url = esc_url_raw($_POST[$campo]);
+                if (filter_var($url, FILTER_VALIDATE_URL)) {
+                    if ($parametroAdicional !== null) {
+                        // Llama a la función de callback con el parámetro adicional
+                        call_user_func($funcionCallback, $postId, $campo, $parametroAdicional);
+                    } else {
+                        // Llama a la función de callback sin el parámetro adicional
+                        call_user_func($funcionCallback, $postId, $campo);
+                    }
+                } else {
+                    // Opcional: Manejar URLs inválidas
+                    guardarLog("URL inválida en el campo: {$campo} para postId: {$postId}");
+                }
             }
         }
     }
 }
 
-#Paso 5.1
+#Paso 5.1 #Prepara para buscar la ID y actualizar la meta
 function procesarArchivo($postId, $campo, $renombrar = false)
 {
     $url = esc_url_raw($_POST[$campo]);
@@ -119,7 +146,7 @@ function procesarArchivo($postId, $campo, $renombrar = false)
         actualizarMetaConArchivo($postId, $campo, $archivoId);
 
         if ($renombrar) {
-            renombrarArchivoAdjunto($postId, $archivoId);
+            renombrarArchivoAdjunto($postId, $archivoId, $campo);
         }
 
         return true;
@@ -130,7 +157,7 @@ function procesarArchivo($postId, $campo, $renombrar = false)
     return false;
 }
 
-#Paso 5.2
+#Paso 5.2 #Busca la Id de Adjunto segun la URL
 function obtenerArchivoId($url, $postId)
 {
     $archivoId = attachment_url_to_postid($url);
@@ -150,26 +177,72 @@ function obtenerArchivoId($url, $postId)
 #Paso 5.3
 function actualizarMetaConArchivo($postId, $campo, $archivoId)
 {
-    #aqui esto puedo recibir AudioUrl1 (ademas de 'audioUrl') y AudioUrl2 y AudioUrl3 hasta 30, tienes que estar preparado para eso
+    // Mapeo de tipos base de campos a claves meta.
     $meta_mapping = [
-        'imagenUrl' => 'imagenID',
-        'audioUrl' => 'post_audio',
-        'archivoUrl' => 'archivoID'
+        'imagenUrl'   => 'imagenID',
+        'audioUrl'    => 'post_audio',
+        'archivoUrl'  => 'archivoID'
     ];
 
-    $meta_key = isset($meta_mapping[$campo]) ? $meta_mapping[$campo] : $campo;
-    update_post_meta($postId, $meta_key, $archivoId);
+    // Regex para extraer el tipo base y el índice (si existe).
+    $pattern = '/^(?<base>imagenUrl|audioUrl|archivoUrl)(?<index>\d*)$/';
 
-    if ($campo === 'imagenUrl') {
-        set_post_thumbnail($postId, $archivoId);
+    if (preg_match($pattern, $campo, $matches)) {
+        $baseField = $matches['base'];             // e.g., 'audioUrl'
+        $index     = $matches['index'];            // e.g., '1'; puede estar vacío si no hay número.
+
+        // Obtener la clave meta base desde el mapeo.
+        if (isset($meta_mapping[$baseField])) {
+            $baseMetaKey = $meta_mapping[$baseField];
+
+            // Si hay un índice, lo añadimos a la clave meta para mantener unicidad.
+            // Por ejemplo, 'post_audio1', 'post_audio2', etc.
+            $meta_key = $baseMetaKey . ($index !== '' ? $index : '');
+
+            // Actualizar el meta dato específico.
+            update_post_meta($postId, $meta_key, $archivoId);
+
+            // Si es una imagen sin índice (asumiendo que 'imagenUrl' sin número es la principal)
+            // Podemos establecer la miniatura del post.
+            if ($baseField === 'imagenUrl' && $index === '') {
+                set_post_thumbnail($postId, $archivoId);
+                guardarLog("Miniatura del post establecida con archivo ID: {$archivoId} para postId: {$postId}");
+            } else {
+                guardarLog("Meta clave '{$meta_key}' actualizada con archivo ID: {$archivoId} para postId: {$postId}");
+            }
+        } else {
+            // Si el tipo base no está en el mapeo, usar el nombre completo del campo como meta_key.
+            update_post_meta($postId, $campo, $archivoId);
+            guardarLog("Meta clave '{$campo}' actualizada con archivo ID: {$archivoId} para postId: {$postId}");
+        }
+    } else {
+        // Si el campo no coincide con los patrones esperados, manejarlo de forma predeterminada.
+        update_post_meta($postId, $campo, $archivoId);
+        guardarLog("Meta clave '{$campo}' actualizada con archivo ID: {$archivoId} para postId: {$postId}");
     }
 }
 
 #Paso 5.4
-function renombrarArchivoAdjunto($postId, $archivoId)
+function renombrarArchivoAdjunto($postId, $archivoId, $campo)
 {
-    #aqui esto puedo recibir AudioUrl1 (ademas de 'audioUrl') y AudioUrl2 y AudioUrl3 hasta 30, tienes que estar preparado para eso
-    $file_id = intval($_POST['audioId']);
+    // Extraer el índice del campo, por ejemplo, de 'audioUrl1' extraemos '1'
+    preg_match('/(\d+)$/', $campo, $matches);
+    $indice = isset($matches[1]) ? $matches[1] : '';
+
+    // Construir el nombre del campo 'audioId' correspondiente
+    $audioIdCampo = 'audioId' . $indice;
+
+    // Obtener el file_id correspondiente
+    if (!empty($_POST[$audioIdCampo])) {
+        $file_id = intval($_POST[$audioIdCampo]);
+    } else {
+        guardarLog("Advertencia: No se encontró el campo {$audioIdCampo} en \$_POST.");
+        $file_id = 0; // O manejar de otra manera según tus necesidades
+    }
+
+    if ($file_id !== $archivoId) {
+        guardarLog("Advertencia: El file_id ({$file_id}) no coincide con archivoId ({$archivoId}).");
+    }
 
     $post = get_post($postId);
     $author = get_userdata($post->post_author);
@@ -180,6 +253,11 @@ function renombrarArchivoAdjunto($postId, $archivoId)
     }
 
     $file_path = get_attached_file($archivoId);
+
+    if (!$file_path || !file_exists($file_path)) {
+        guardarLog("Error: El archivo adjunto no existe para archivoId: {$archivoId}.");
+        return new WP_Error('file_not_found', 'El archivo adjunto no existe.');
+    }
 
     $info = pathinfo($file_path);
 
@@ -196,34 +274,29 @@ function renombrarArchivoAdjunto($postId, $archivoId)
         $upload_dir = wp_upload_dir();
         $public_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $new_file_path);
 
-        actualizarUrlArchivo($file_id, $public_url);
+        actualizarUrlArchivo($archivoId, $public_url);
         update_attached_file($archivoId, $new_file_path);
         update_post_meta($postId, 'sample', true);
-        #aqui tiene que generar los index de 1 a 30 dinamicamente segun los AudioUrl que reciba, hay que optimizar esto para que procese todo bien
-        procesarAudioLigero($postId, $archivoId, 1);
+
+        // Generar el índice dinámicamente según el campo
+        if (preg_match('/(\d+)$/', $campo, $matches)) {
+            $indiceDinamico = intval($matches[1]);
+        } else {
+            $indiceDinamico = 1; // Valor predeterminado si no hay índice
+        }
+
+        procesarAudioLigero($postId, $archivoId, $indiceDinamico);
+
+        guardarLog("Archivo adjunto renombrado a {$new_filename} para postId: {$postId}");
     } else {
         guardarLog("Error: No se pudo renombrar el archivo adjunto de $file_path a $new_file_path.");
         return new WP_Error('rename_failed', 'No se pudo renombrar el archivo adjunto.');
     }
 }
 
-#Paso 5.5
-# Crear hash de todos los audio lite para que esto pueda comprobar si ya existen
 function procesarAudioLigero($post_id, $audio_id, $index)
 {
     guardarLog("INICIO procesarAudioLigero para Post ID: $post_id y Audio ID: $audio_id");
-
-    $existing_lite_audio = get_posts(array(
-        'post_type' => 'attachment',
-        'meta_query' => array(
-            array(
-                'key' => "post_audio_lite",
-                'value' => $audio_id,
-                'compare' => '='
-            )
-        ),
-        'posts_per_page' => 1
-    ));
 
     // Obtener el archivo de audio original
     $audio_path = get_attached_file($audio_id);
@@ -313,8 +386,14 @@ function procesarAudioLigero($post_id, $audio_id, $index)
     }
 
     guardarLog("datos para sacar meta post id: {$post_id} path_lite: {$nuevo_archivo_path_lite} index: {$index}");
-    #Enviar solo el primero y si hay mas de 2 agregar un tag que lo indique
-    analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
+
+    // Llamar a analizarYGuardarMetasAudio solo si el índice es 1
+    if ($index === 1) {
+        analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index);
+        guardarLog("Se ha llamado a analizarYGuardarMetasAudio para el índice 1.");
+    } else {
+        guardarLog("No se llamó a analizarYGuardarMetasAudio ya que el índice no es 1.");
+    }
 }
 
 #Paso 5.6

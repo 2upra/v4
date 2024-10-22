@@ -24,6 +24,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         return $output;
     }
 }
+
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
     $identifier = $_POST['identifier'] ?? '';
