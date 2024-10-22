@@ -271,7 +271,7 @@ function subidaRs() {
         reader.readAsDataURL(file);
         return progressBarId;
     };
-    
+
     const eliminarWaveform = (containerId, tempId) => {
         const wrapper = document.getElementById(containerId);
     
@@ -498,15 +498,12 @@ function limpiarCamposRs() {
 
     const colabCheckbox = document.getElementById('colab');
     if (colabCheckbox) colabCheckbox.checked = false;
-}
 
+}
 window.inicializarWaveform = function (containerId, audioSrc) {
     const container = document.getElementById(containerId);
-    
-    if (container && audioSrc) {
-        const peaksKey = `waveform_peaks_${audioSrc}`;
-        console.log(`Clave de los picos: ${peaksKey}`);
 
+    if (container && audioSrc) {
         const options = {
             container: container,
             waveColor: '#d9dcff',
@@ -516,14 +513,6 @@ window.inicializarWaveform = function (containerId, audioSrc) {
             barWidth: 2,
             responsive: true
         };
-
-        const storedPeaks = localStorage.getItem(peaksKey);
-        if (storedPeaks) {
-            options.peaks = JSON.parse(storedPeaks);
-            console.log('Picos cargados desde localStorage:', options.peaks);
-        } else {
-            console.log('No se encontraron picos almacenados. Se generarán nuevos picos.');
-        }
 
         // Crear instancia de WaveSurfer
         let wavesurfer = WaveSurfer.create(options);
@@ -536,11 +525,6 @@ window.inicializarWaveform = function (containerId, audioSrc) {
 
         wavesurfer.on('ready', function () {
             console.log('Audio listo. Forma de onda generada.');
-            if (!storedPeaks) {
-                const peaks = wavesurfer.exportPeaks({ channels: 2, maxLength: 8000, precision: 10000 });
-                localStorage.setItem(peaksKey, JSON.stringify(peaks));
-                console.log('Picos generados y almacenados en localStorage:', peaks);
-            }
         });
 
         container.addEventListener('click', function () {
