@@ -195,8 +195,13 @@ function subidaRs() {
 
         file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
     };
-    // Array para almacenar objetos con fileUrl y fileId
 
+    //tambien quiero que entienda que por ejemplo si el usuario borra todos los waveAudio con sus fileUrl, fileId correspondiente oculte previewAudio.style.display
+
+    /*
+    Se estana agregando los fileUrl, fileId, pero no se eliminan de audioData
+    falla en borrar los fileUrl, fileId, de audiosData 
+    */
     const subidaAudio = async file => {
         subidaAudioEnProgreso = true;
         try {
@@ -206,6 +211,12 @@ function subidaRs() {
 
             const progressBarId = waveAudio(file);
             const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
+
+            // Actualizar el atributo data-audio-url en el contenedor de la waveform con el verdadero fileUrl
+            const waveformContainer = document.querySelector(`[id^="waveform-container-"]`);
+            if (waveformContainer) {
+                waveformContainer.setAttribute('data-audio-url', fileUrl);
+            }
 
             // Verificamos si ya hay 30 audios subidos
             if (audiosData.length < 30) {
@@ -221,7 +232,6 @@ function subidaRs() {
             subidaAudioEnProgreso = false;
         }
     };
-
     const waveAudio = file => {
         const reader = new FileReader(),
             audioContainerId = `waveform-container-${Date.now()}`,
@@ -265,7 +275,7 @@ function subidaRs() {
             wrapper.parentNode.removeChild(wrapper);
         }
 
-        // Remover el objeto correspondiente del array audiosData
+        // Remover el objeto correspondiente del array audiosData usando el verdadero fileUrl
         const index = audiosData.findIndex(audio => audio.fileUrl === audioUrl);
         if (index !== -1) {
             audiosData.splice(index, 1);
