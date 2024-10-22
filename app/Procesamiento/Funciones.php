@@ -455,14 +455,14 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     //el prompt no hay que tocarlo esta perfecto 
     $prompt = "El usuario ya subió este audio, pero acaba de editar la descripción o lo acaba de publicar ahora mismo. "
         . "Ten muy en cuenta la descripcion. descripción:\"{$post_content}\". {$tags_usuario_texto}"
-        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON: "
+        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON, estos son datos de ejemplo!!: "
         . '{"descripcion_ia":{"es":"(aqui iría una descripcion tuya del audio muy detallada)", "en":"(aqui en ingles)"},'
         . '"instrumentos_posibles":{"es":["Piano", "Guitarra"], "en":["Piano", "Guitar"]},'
         . '"estado_animo":{"es":["Tranquilo"], "en":["Calm"]},'
         . '"genero_posible":{"es":["Hip hop"], "en":["Hip hop"]},'
         . '"artista_posible":{"es":["Freddie Dredd, Flume"], "en":["Freddie Dredd, Flume"]},'
         . '"tipo_audio":{"es":["aqui necesito que puedas determinar si es un sample, un loop o un one shot"], "en":["Sample"]},'
-        . '"tags_posibles":{"es":["Naturaleza, phonk, memphis, oscuro"], "en":["Nature"]},'
+        . '"tags_posibles":{"es":["Naturaleza", "phonk", "memphis", "oscuro"], "en":["Nature"]},'
         . '"sugerencia_busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
         . " Nota adicional: responde solo con la estructura JSON solicitada, mantén datos vacíos si no aplica. Es crucial determinar si es un loop o un one shot, o un sample, usa tags de una palabra. Optimiza el SEO con sugerencias de búsqueda relevantes. Se muy detallado sin perder precisión";
 
@@ -625,7 +625,7 @@ function rehacerDescripcionAudio($post_id, $archivo_audio)
 
     $prompt = "El usuario ya subió este audio, pero acaba de editar la descripción o lo acaba de publicar ahora mismo. "
         . "Ten muy en cuenta la descripcion. descripción:\"{$post_content}\". "
-        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON: "
+        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON, estos son datos de ejemplo!!: : "
         . '{"Descripcion":{"es":"(aqui iría una descripcion tuya del audio muy detallada)", "en":"(aqui en ingles)"},'
         . '"Instrumentos posibles":{"es":["Piano", "Guitarra"], "en":["Piano", "Guitar"]},'
         . '"Estado de animo":{"es":["Tranquilo"], "en":["Calm"]},'
@@ -749,7 +749,7 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
 
     $prompt = "El usuario ya subió este audio, pero acaba de editar la descripción o lo acaba de publicar ahora mismo. "
         . "Ten muy en cuenta la descripcion. descripción:\"{$post_content}\". "
-        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON: "
+        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON, estos son datos de ejemplo!!: : "
         . '{"Descripcion":{"es":"(aqui iría una descripcion tuya del audio muy detallada)", "en":"(aqui en ingles)"},'
         . '"Instrumentos posibles":{"es":["Piano", "Guitarra"], "en":["Piano", "Guitar"]},'
         . '"Estado de animo":{"es":["Tranquilo"], "en":["Calm"]},'
