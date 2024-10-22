@@ -195,7 +195,7 @@ function subidaRs() {
 
         file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
     };
-
+    //
     const subidaAudio = async file => {
         subidaAudioEnProgreso = true;
         try {
