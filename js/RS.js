@@ -4,6 +4,7 @@ let subidaAudioEnProgreso = false;
 let subidaImagenEnProgreso = false;
 let subidaArchivoEnProgreso = false;
 let audiosData = [];
+let uploadInProgressCount = 0;
 // Logs
 let enablelogRS = true;
 const logRS = enablelogRS ? console.log : function () {};
@@ -19,6 +20,7 @@ function iniciarRS() {
         audioId = null;
         archivoUrl = null;
         archivoId = null;
+        uploadInProgressCount = 0;
 
         audiosData = [];
 
@@ -39,23 +41,10 @@ function verificarCamposRs() {
     const textoRsDiv = document.getElementById('textoRs');
     textoRsDiv.setAttribute('placeholder', 'Puedes agregar tags agregando un #');
 
-    // Variables que representan si hay subidas en progreso
-    const subidaAudioEnProgreso = window.subidaAudioEnProgreso || false;
-    const subidaImagenEnProgreso = window.subidaImagenEnProgreso || false;
-    const subidaArchivoEnProgreso = window.subidaArchivoEnProgreso || false;
-
     function verificarCampos() {
         // Verificar si hay alguna subida en progreso
-        if (subidaAudioEnProgreso) {
-            alert('Espera que se suba tu archivo de audio.');
-            return false;
-        }
-        if (subidaImagenEnProgreso) {
-            alert('Espera que se suba tu imagen.');
-            return false;
-        }
-        if (subidaArchivoEnProgreso) {
-            alert('Espera que se suba tu archivo.');
+        if (uploadInProgressCount > 0) {
+            alert('Espera a que se completen las subidas de archivos.');
             return false;
         }
 
@@ -128,25 +117,40 @@ async function envioRs() {
         const descargaCheckbox = document.getElementById('descargacheck');
         const exclusivoCheckbox = document.getElementById('exclusivocheck');
         const colabCheckbox = document.getElementById('colabcheck');
+        const musicCheckbox = document.getElementById('musiccheck');
         const descarga = descargaCheckbox.checked ? descargaCheckbox.value : 0;
         const exclusivo = exclusivoCheckbox.checked ? exclusivoCheckbox.value : 0;
         const colab = colabCheckbox.checked ? colabCheckbox.value : 0;
-        // Iterar sobre los audios y asignar dinámicamente las propiedades audioUrl1, audioUrl2, ..., archivoId1, archivoId2, ...
+        const music = musicCheckbox.checked ? musicCheckbox.value : 0;
+        const uniqueAudioUrls = new Set(); // Para almacenar URLs únicas
+        const uniqueAudioIds = new Set(); // Para almacenar IDs únicos
+
         audiosData.slice(0, maxAudios).forEach((audio, index) => {
-            const audioNumber = index + 1; // Comenzar desde 1 en lugar de 0
-            audioData[`audioUrl${audioNumber}`] = audio.fileUrl;
-            audioData[`archivoId${audioNumber}`] = audio.fileId;
+            const audioNumber = index + 1;
+
+            // Comprobar si el audioUrl ya ha sido añadido
+            if (!uniqueAudioUrls.has(audio.audioUrl) && !uniqueAudioIds.has(audio.audioId)) {
+                audioData[`audioUrl${audioNumber}`] = audio.audioUrl;
+                audioData[`audioId${audioNumber}`] = audio.audioId;
+
+                // Agregar los valores a los conjuntos para controlar duplicados
+                uniqueAudioUrls.add(audio.audioUrl);
+                uniqueAudioIds.add(audio.audioId);
+            }
         });
 
         const data = {
-            imagenUrl: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
-            imagenId: typeof imagenId !== 'undefined' ? imagenId : null,
+            imagenUrl1: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
+            imagenId1: typeof imagenId !== 'undefined' ? imagenId : null,
+            archivoUrl1: typeof archivoUrl !== 'undefined' ? archivoUrl : null,
+            archivoId1: typeof archivoId !== 'undefined' ? archivoId : null,
             ...audioData,
             tags,
             textoNormal,
             descarga,
             exclusivo,
-            colab
+            colab,
+            music
         };
 
         try {
@@ -195,54 +199,32 @@ function subidaRs() {
         file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
     };
 
-    // Función para verificar si hay una subida en progreso
-    const haySubidaEnProgreso = () => {
-        return audiosData.some(audio => audio.fileUrl === null || audio.fileId === null);
-    };
-
     const subidaAudio = async file => {
-        // Crear un ID temporal para el archivo
-        const tempId = `temp-${Date.now()}`;
-        const progressBarId = waveAudio(file, tempId);
-
-        // Agregamos el objeto temporalmente a audiosData
-        audiosData.push({tempId, fileUrl: null, fileId: null});
-
         try {
             alert(`Audio subido: ${file.name}`);
             previewAudio.style.display = 'block';
             opciones.style.display = 'flex';
-
+            const tempId = `temp-${Date.now()}`;
+            const progressBarId = waveAudio(file, tempId);
+            audiosData.push({tempId, fileUrl: null, fileId: null});
             const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
-
-            // Actualizar el audio en audiosData con los valores reales cuando lleguen del backend
             const index = audiosData.findIndex(audio => audio.tempId === tempId);
             if (index !== -1) {
-                audiosData[index].fileUrl = fileUrl;
-                audiosData[index].fileId = fileId;
-
-                // Actualizar el atributo data-audio-url en el contenedor de la waveform con el verdadero fileUrl
+                audiosData[index].audioUrl = fileUrl;
+                audiosData[index].audioId = fileId;
                 const waveformContainer = document.querySelector(`[data-temp-id="${tempId}"]`);
                 if (waveformContainer) {
                     waveformContainer.setAttribute('data-audio-url', fileUrl);
                 }
             }
-
-            // Verificamos si ya hay 30 audios subidos
             if (audiosData.length > 30) {
                 alert('Ya has subido el límite máximo de 30 audios.');
             }
         } catch (error) {
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
-        } finally {
-
-            if (!haySubidaEnProgreso()) {
-                subidaAudioEnProgreso = false;
-            }
         }
     };
 
-    // Función para eliminar la waveform y actualizar audiosData
     const eliminarWaveform = (containerId, tempId) => {
         const wrapper = document.getElementById(containerId);
 
@@ -252,14 +234,17 @@ function subidaRs() {
 
             // Detener la reproducción y destruir la instancia de WaveSurfer si existe
             if (waveSurferInstances[containerId]) {
-                waveSurferInstances[containerId].unAll(); // Eliminar todos los eventos
+                // Eliminar todos los eventos para evitar reproducción accidental
+                waveSurferInstances[containerId].unAll();
 
+                // Detener si estaba reproduciendo
                 if (waveSurferInstances[containerId].isPlaying()) {
-                    waveSurferInstances[containerId].stop(); // Detener reproducción si está en curso
+                    waveSurferInstances[containerId].stop();
                 }
 
-                waveSurferInstances[containerId].destroy(); // Destruir la instancia
-                delete waveSurferInstances[containerId]; // Eliminar del objeto
+                // Destruir la instancia
+                waveSurferInstances[containerId].destroy();
+                delete waveSurferInstances[containerId];
             }
         }
 
@@ -272,11 +257,6 @@ function subidaRs() {
         // Si audiosData está vacío, ocultar previewAudio
         if (audiosData.length === 0) {
             previewAudio.style.display = 'none';
-        }
-
-        // Verificar si aún hay subidas en progreso
-        if (!haySubidaEnProgreso()) {
-            subidaAudioEnProgreso = false;
         }
     };
 
@@ -388,6 +368,9 @@ function subidaRs() {
 async function subidaRsBackend(file, progressBarId) {
     logRS('Iniciando subida de archivo', {fileName: file.name, fileSize: file.size});
 
+    // Incrementar el contador de subidas en progreso
+    uploadInProgressCount++;
+
     const formData = new FormData();
     formData.append('action', 'file_upload');
     formData.append('file', file);
@@ -412,6 +395,9 @@ async function subidaRsBackend(file, progressBarId) {
         xhr.onload = () => {
             logRS('Respuesta recibida', {status: xhr.status, response: xhr.responseText});
 
+            // Decrementar el contador al finalizar la subida
+            uploadInProgressCount--;
+
             if (xhr.status === 200) {
                 try {
                     const result = JSON.parse(xhr.responseText);
@@ -434,6 +420,7 @@ async function subidaRsBackend(file, progressBarId) {
 
         xhr.onerror = () => {
             logRS('Error en la conexión con el servidor', {status: xhr.status});
+            uploadInProgressCount--; // Decrementar el contador en caso de error
             reject(new Error('Error en la conexión con el servidor'));
         };
 
@@ -442,6 +429,7 @@ async function subidaRsBackend(file, progressBarId) {
             xhr.send(formData);
         } catch (error) {
             logRS('Error al enviar la solicitud AJAX', {errorMessage: error.message});
+            uploadInProgressCount--; // Decrementar el contador en caso de error
             reject(new Error('Error al enviar la solicitud AJAX'));
         }
     });

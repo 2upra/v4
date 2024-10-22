@@ -54,6 +54,11 @@ function formRs()
                     <span class="checkmark"></span>
                     <? echo $GLOBALS['iconocolab']; ?>
                 </label>
+                <label class="custom-checkbox">
+                    <input type="checkbox" id="musiccheck" name="musiccheck" value="1">
+                    <span class="checkmark"></span>
+                    <? echo $GLOBALS['iconomusic']; ?>
+                </label>
                 <!--<label class="custom-checkbox">
                     <input type="checkbox" id="momento" name="momento" value="1">
                     <span class="checkmark"></span>
