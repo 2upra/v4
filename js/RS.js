@@ -5,6 +5,7 @@ let subidaImagenEnProgreso = false;
 let subidaArchivoEnProgreso = false;
 let audiosData = [];
 let uploadInProgressCount = 0;
+let maxAudios = 30;
 // Logs
 let enablelogRS = true;
 const logRS = enablelogRS ? console.log : function () {};
