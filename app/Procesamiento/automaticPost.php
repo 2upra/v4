@@ -283,44 +283,58 @@ function generarNombreAudio($audio_path_lite)
 {
     // Verificar que el archivo de audio exista
     if (!file_exists($audio_path_lite)) {
-        iaLog("El archivo de audio no existe en la ruta especificada: {$audio_path_lite}");
-        return null;
+        iaLog("ERROR: El archivo de audio no existe en la ruta especificada: {$audio_path_lite}");
+        return '2upra_Error El archivo de audio no existe';
     }
 
     // Obtener el nombre del archivo a partir de la ruta
     $nombre_archivo = pathinfo($audio_path_lite, PATHINFO_FILENAME);
-    guardarLog("nombre_archivo: $nombre_archivo y audio_path_lite: $audio_path_lite,");
-    // Prompt para la IA con el nombre del archivo incluido
-    $prompt = "El archivo se llama '{$nombre_archivo}' te lo enseño para lo tomes en cuenta, a veces tendra sentido el nombre a veces no, pero es importante tenerlo en cuenta, a veces vienen con nombres de marcas, paginas, etc, hay que ignorar eso. Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, como un kick, snare, sample vintage, o efectos (FX). Identifica el instrumento dominante o la emoción clave, por ejemplo, 'sample melancólico' o 'snare agresivo'. Imporante: solo responde el nombre, no agregues nada adicional, estas en un entorno automatizado, no hables con el usuario, solo estoy pidiendo el nombre corto como respuesta.";
+    guardarLog("INFO: nombre_archivo: $nombre_archivo y audio_path_lite: $audio_path_lite");
 
-    // Generar el nombre usando la IA
-    $nombre_generado = generarDescripcionIA($audio_path_lite, $prompt);
+    // Preparar el prompt para la IA con el nombre del archivo incluido
+    $prompt = "El archivo se llama '{$nombre_archivo}'. Te lo enseño para que lo tomes en cuenta. A veces tendrá sentido el nombre y otras no, pero es importante considerarlo. A veces vienen con nombres de marcas, páginas, etc., hay que ignorar eso. Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, como un kick, snare, sample vintage o efectos (FX). Identifica el instrumento dominante o la emoción clave, por ejemplo, 'sample melancólico' o 'snare agresivo'. Importante: solo responde el nombre, no agregues nada adicional. Estás en un entorno automatizado, no hables con el usuario, solo estoy pidiendo el nombre corto como respuesta.";
 
-    // Verificar si se obtuvo una respuesta
-    if ($nombre_generado) {
-        // Limpiar la respuesta obtenida (eliminar espacios en blanco al inicio y al final)
-        $nombre_generado_limpio = trim($nombre_generado);
-        $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- ]/', '', $nombre_generado_limpio);
+    try {
+        // Registrar el prompt enviado a la IA
+        iaLog("INFO: Enviando prompt a la IA: $prompt");
 
-        // Limitar el nombre a 35 caracteres
-        $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 60);
+        // Generar el nombre usando la IA
+        $nombre_generado = generarDescripcionIA($audio_path_lite, $prompt);
 
-        // Añadir el identificador único '2upra_' al inicio
-        $nombre_final = '2upra_' . $nombre_generado_limpio;
+        // Registrar la respuesta de la IA
+        iaLog("INFO: Respuesta de la IA: $nombre_generado");
 
-        // Generar una ID aleatoria única de 4 caracteres (letras y números)
-        $id_unica = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
+        // Verificar si se obtuvo una respuesta válida
+        if ($nombre_generado) {
+            // Limpiar la respuesta obtenida (eliminar espacios en blanco al inicio y al final)
+            $nombre_generado_limpio = trim($nombre_generado);
+            $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- ]/', '', $nombre_generado_limpio);
 
-        // Añadir la ID única al final del nombre
-        $nombre_final_con_id = $nombre_final . '_' . $id_unica;
+            // Limitar el nombre a 60 caracteres
+            $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 60);
 
-        // Asegurarse de que el nombre completo no exceda los 35 caracteres
-        $nombre_final_con_id = substr($nombre_final_con_id, 0, 60);
+            // Añadir el identificador único '2upra_' al inicio
+            $nombre_final = '2upra_' . $nombre_generado_limpio;
 
-        return $nombre_final_con_id;
-    } else {
-        iaLog("No se recibió una respuesta válida de la IA para el archivo de audio: {$audio_path_lite}");
-        return null;
+            // Generar una ID aleatoria única de 4 caracteres (letras y números)
+            $id_unica = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
+
+            // Añadir la ID única al final del nombre
+            $nombre_final_con_id = $nombre_final . '_' . $id_unica;
+
+            // Asegurarse de que el nombre completo no exceda los 60 caracteres
+            $nombre_final_con_id = substr($nombre_final_con_id, 0, 60);
+
+            guardarLog("INFO: Nombre final generado: $nombre_final_con_id");
+            return $nombre_final_con_id;
+        } else {
+            iaLog("ERROR: No se recibió una respuesta válida de la IA para el archivo de audio: {$audio_path_lite}");
+            return '2upra_Error Respuesta inesperada de la API Detalles ' . basename($audio_path_lite) . '.wav';
+        }
+    } catch (Exception $e) {
+        // Capturar y registrar cualquier excepción que ocurra durante el proceso
+        iaLog("EXCEPCIÓN: " . $e->getMessage());
+        return '2upra_Error Excepción durante la generación del nombre';
     }
 }
 
