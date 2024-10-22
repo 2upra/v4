@@ -131,7 +131,7 @@ async function envioRs() {
         const data = {
             imagenUrl: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
             imagenId: typeof imagenId !== 'undefined' ? imagenId : null,
-            audioUrl: typeof audioUrl !== 'undefined' ? audioUrl : null,
+            audioUrl1: typeof audioUrl !== 'undefined' ? audioUrl : null,
             audioId: typeof audioId !== 'undefined' ? audioId : null,
             archivoUrl: typeof archivoUrl !== 'undefined' ? archivoUrl : null,
             archivoId: typeof archivoId !== 'undefined' ? archivoId : null,
