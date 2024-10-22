@@ -3,9 +3,13 @@ let imagenUrl, imagenId, audioUrl, audioId, archivoUrl, archivoId;
 let subidaAudioEnProgreso = false;
 let subidaImagenEnProgreso = false;
 let subidaArchivoEnProgreso = false;
+
 let audiosData = [];
-let uploadInProgressCount = 0;
 let maxAudios = 30;
+let audioData = {}; // Inicializa audioData como un objeto
+
+
+let uploadInProgressCount = 0;
 // Logs
 let enablelogRS = true;
 const logRS = enablelogRS ? console.log : function () {};
@@ -21,14 +25,14 @@ function iniciarRS() {
         audioId = null;
         archivoUrl = null;
         archivoId = null;
-        uploadInProgressCount = 0;
 
+        audioData = {};
+        uploadInProgressCount = 0;
         audiosData = [];
 
         subidaAudioEnProgreso = false;
         subidaImagenEnProgreso = false;
         subidaArchivoEnProgreso = false;
-        cantidadAudio = 2;
         subidaRs();
         envioRs();
         placeholderRs();
