@@ -196,9 +196,6 @@ function subidaRs() {
         file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
     };
 
-    // Definimos los arrays para almacenar las URLs e IDs de los audios subidos
-
-
     const subidaAudio = async file => {
         subidaAudioEnProgreso = true;
         try {
@@ -316,20 +313,6 @@ function subidaRs() {
             eventName === 'drop' && inicialSubida(e);
         });
     });
-}
-
-function agregarNuevoPreviewAudio() {
-    const nuevoDiv = document.createElement('div');
-    nuevoDiv.className = 'previewAreaArchivos';
-    nuevoDiv.id = `previewAudio${cantidadAudio}`;
-    nuevoDiv.style.display = 'none';
-    const nuevoLabel = document.createElement('label');
-    nuevoDiv.appendChild(nuevoLabel);
-    const contenedor = document.getElementById('dinamicPreview');
-    if (contenedor) {
-        contenedor.appendChild(nuevoDiv);
-    }
-    cantidadAudio++;
 }
 
 async function subidaRsBackend(file, progressBarId) {
