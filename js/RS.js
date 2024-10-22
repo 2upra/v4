@@ -198,89 +198,91 @@ function subidaRs() {
 
     //tambien quiero que entienda que por ejemplo si el usuario borra todos los waveAudio con sus fileUrl, fileId correspondiente oculte previewAudio.style.display
 
-    /*
-    Se estana agregando los fileUrl, fileId, pero no se eliminan de audioData
-    falla en borrar los fileUrl, fileId, de audiosData 
-    */
     const subidaAudio = async file => {
         subidaAudioEnProgreso = true;
         try {
             alert(`Audio subido: ${file.name}`);
             previewAudio.style.display = 'block';
             opciones.style.display = 'flex';
-
-            const progressBarId = waveAudio(file);
-            const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
-
-            // Actualizar el atributo data-audio-url en el contenedor de la waveform con el verdadero fileUrl
-            const waveformContainer = document.querySelector(`[id^="waveform-container-"]`);
-            if (waveformContainer) {
-                waveformContainer.setAttribute('data-audio-url', fileUrl);
+    
+            // Crear un ID temporal para el archivo
+            const tempId = `temp-${Date.now()}`;
+            const progressBarId = waveAudio(file, tempId);
+    
+            // Agregamos el objeto temporalmente a audiosData
+            audiosData.push({ tempId, fileUrl: null, fileId: null });
+    
+            const { fileUrl, fileId } = await subidaRsBackend(file, progressBarId);
+    
+            // Actualizar el audio en audiosData con los valores reales cuando lleguen del backend
+            const index = audiosData.findIndex(audio => audio.tempId === tempId);
+            if (index !== -1) {
+                audiosData[index].fileUrl = fileUrl;
+                audiosData[index].fileId = fileId;
+    
+                // Actualizar el atributo data-audio-url en el contenedor de la waveform con el verdadero fileUrl
+                const waveformContainer = document.querySelector(`[data-temp-id="${tempId}"]`);
+                if (waveformContainer) {
+                    waveformContainer.setAttribute('data-audio-url', fileUrl);
+                }
             }
-
+    
             // Verificamos si ya hay 30 audios subidos
-            if (audiosData.length < 30) {
-                // Agregamos el nuevo objeto con fileUrl y fileId
-                audiosData.push({fileUrl, fileId});
-            } else {
+            if (audiosData.length > 30) {
                 alert('Ya has subido el límite máximo de 30 audios.');
             }
-
+    
             subidaAudioEnProgreso = false;
         } catch (error) {
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
             subidaAudioEnProgreso = false;
         }
     };
-    const waveAudio = file => {
+    
+    const waveAudio = (file, tempId) => {
         const reader = new FileReader(),
             audioContainerId = `waveform-container-${Date.now()}`,
             progressBarId = `progress-${Date.now()}`;
-
+    
         reader.onload = e => {
-            // Agregamos la nueva onda sin borrar la anterior
             const newWaveform = document.createElement('div');
             newWaveform.innerHTML = `
-        <div id="${audioContainerId}" class="waveform-wrapper">
-            <div class="waveform-container without-image" data-audio-url="${e.target.result}">
-                <div class="waveform-loading" style="display: none;">Cargando...</div>
-                <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
-                <div class="file-name">${file.name}</div>
-                <button class="delete-waveform">Eliminar</button>
-            </div>
-            <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
-                <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
-            </div>
-        </div>`; // Envolvemos la waveform y el progress bar en un contenedor común
-
+                <div id="${audioContainerId}" class="waveform-wrapper">
+                    <div class="waveform-container without-image" data-temp-id="${tempId}">
+                        <div class="waveform-loading" style="display: none;">Cargando...</div>
+                        <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
+                        <div class="file-name">${file.name}</div>
+                        <button class="delete-waveform">Eliminar</button>
+                    </div>
+                    <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
+                        <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
+                    </div>
+                </div>`;
+    
             previewAudio.appendChild(newWaveform);
-            inicializarWaveform(audioContainerId, e.target.result); //definido en otra parte
-
-            // Agregamos el event listener para eliminar el waveform
+            inicializarWaveform(audioContainerId, e.target.result);
+    
             const deleteButton = newWaveform.querySelector('.delete-waveform');
-            deleteButton.addEventListener('click', () => eliminarWaveform(audioContainerId));
+            deleteButton.addEventListener('click', () => eliminarWaveform(audioContainerId, tempId));
         };
-
+    
         reader.readAsDataURL(file);
         return progressBarId;
     };
-
-    // Esta función ahora también eliminará el progress bar correspondiente
-    const eliminarWaveform = containerId => {
-        const wrapper = document.getElementById(containerId); // Seleccionamos el contenedor común
-        const audioUrl = wrapper.querySelector('.waveform-container').getAttribute('data-audio-url');
-
-        // Remover visualmente el contenedor que incluye la waveform y la barra de progreso
+    
+    // Esta función ahora eliminará el audio usando el tempId y luego el fileUrl cuando esté disponible
+    const eliminarWaveform = (containerId, tempId) => {
+        const wrapper = document.getElementById(containerId);
         if (wrapper) {
             wrapper.parentNode.removeChild(wrapper);
         }
-
-        // Remover el objeto correspondiente del array audiosData usando el verdadero fileUrl
-        const index = audiosData.findIndex(audio => audio.fileUrl === audioUrl);
+    
+        const index = audiosData.findIndex(audio => audio.tempId === tempId);
         if (index !== -1) {
             audiosData.splice(index, 1);
         }
     };
+    
 
     const subidaArchivo = async file => {
         subidaArchivoEnProgreso = true;
