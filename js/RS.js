@@ -3,8 +3,7 @@ let imagenUrl, imagenId, audioUrl, audioId, archivoUrl, archivoId;
 let subidaAudioEnProgreso = false;
 let subidaImagenEnProgreso = false;
 let subidaArchivoEnProgreso = false;
-let audiosUrls = [];
-let audiosIds = [];
+let audiosData = [];
 // Logs
 let enablelogRS = true;
 const logRS = enablelogRS ? console.log : function () {};
@@ -20,8 +19,7 @@ function iniciarRS() {
         archivoUrl = null;
         archivoId = null;
 
-        audiosUrls = [];
-        audiosIds = [];
+        audiosData = [];
 
         subidaAudioEnProgreso = false;
         subidaImagenEnProgreso = false;
@@ -197,7 +195,8 @@ function subidaRs() {
 
         file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
     };
-    //
+    // Array para almacenar objetos con fileUrl y fileId
+
     const subidaAudio = async file => {
         subidaAudioEnProgreso = true;
         try {
@@ -209,10 +208,9 @@ function subidaRs() {
             const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
 
             // Verificamos si ya hay 30 audios subidos
-            if (audiosUrls.length < 30) {
-                // Agregamos la nueva URL y ID a los arrays
-                audiosUrls.push(fileUrl);
-                audiosIds.push(fileId);
+            if (audiosData.length < 30) {
+                // Agregamos el nuevo objeto con fileUrl y fileId
+                audiosData.push({fileUrl, fileId});
             } else {
                 alert('Ya has subido el límite máximo de 30 audios.');
             }
@@ -237,17 +235,30 @@ function subidaRs() {
                 <div class="waveform-loading" style="display: none;">Cargando...</div>
                 <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
                 <div class="file-name">${file.name}</div>
+                <button class="delete-waveform" onclick="eliminarWaveform('${audioContainerId}')">Eliminar</button>
             </div>
             <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
                 <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
             </div>`;
 
-            previewAudio.appendChild(newWaveform); // No sobrescribimos, sino que agregamos el nuevo
+            previewAudio.appendChild(newWaveform);
             inicializarWaveform(audioContainerId, e.target.result); //definido en otra parte
         };
 
         reader.readAsDataURL(file);
         return progressBarId;
+    };
+
+    const eliminarWaveform = containerId => {
+        const container = document.getElementById(containerId);
+        const audioUrl = container.getAttribute('data-audio-url');
+        if (container) {
+            container.parentNode.removeChild(container);
+        }
+        const index = audiosData.findIndex(audio => audio.fileUrl === audioUrl);
+        if (index !== -1) {
+            audiosData.splice(index, 1);
+        }
     };
 
     const subidaArchivo = async file => {
