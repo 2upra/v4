@@ -240,7 +240,6 @@ function subidaRs() {
         }
     };
 
-    
     const waveAudio = (file, tempId) => {
         const reader = new FileReader(),
             audioContainerId = `waveform-container-${Date.now()}`,
@@ -274,30 +273,41 @@ function subidaRs() {
 
     const eliminarWaveform = (containerId, tempId) => {
         const wrapper = document.getElementById(containerId);
-    
+
         if (wrapper) {
-            // Detener y destruir la instancia de WaveSurfer si existe
+            // Detener la reproducción y destruir la instancia de WaveSurfer si existe
             if (waveSurferInstances[containerId]) {
-                waveSurferInstances[containerId].destroy();
+                if (waveSurferInstances[containerId].isPlaying()) {
+                    waveSurferInstances[containerId].stop(); // Detener si estaba reproduciendo
+                }
+                waveSurferInstances[containerId].destroy(); // Destruir la instancia
                 delete waveSurferInstances[containerId]; // Eliminar la instancia después de destruirla
             }
-    
+
             // Eliminar el contenedor del DOM
             wrapper.parentNode.removeChild(wrapper);
         }
-    
+
         // Eliminar el audio de audiosData usando tempId
         const index = audiosData.findIndex(audio => audio.tempId === tempId);
         if (index !== -1) {
             audiosData.splice(index, 1);
         }
-    
+
         // Si audiosData está vacío, ocultar previewAudio
         if (audiosData.length === 0) {
             previewAudio.style.display = 'none';
         }
+
+        // Verificar si la instancia sigue reproduciendo después de 1 segundo y detenerla si es necesario
+        setTimeout(() => {
+            if (waveSurferInstances[containerId]) {
+                if (waveSurferInstances[containerId].isPlaying()) {
+                    waveSurferInstances[containerId].stop(); // Detener si sigue reproduciendo
+                }
+            }
+        }, 500); 
     };
-    
 
     const subidaArchivo = async file => {
         subidaArchivoEnProgreso = true;
@@ -498,8 +508,112 @@ function limpiarCamposRs() {
 
     const colabCheckbox = document.getElementById('colab');
     if (colabCheckbox) colabCheckbox.checked = false;
-
 }
+
+/*
+cuando se borra un audio, debería detener la reproduccion, pero no es lo que hace, en cambio cuando borro, se empieza a reproducir aunque no estaba reproduciendose
+
+let waveSurferInstances = {};
+    const subidaAudio = async file => {
+        subidaAudioEnProgreso = true;
+        try {
+            alert(`Audio subido: ${file.name}`);
+            previewAudio.style.display = 'block';
+            opciones.style.display = 'flex';
+
+            // Crear un ID temporal para el archivo
+            const tempId = `temp-${Date.now()}`;
+            const progressBarId = waveAudio(file, tempId);
+
+            // Agregamos el objeto temporalmente a audiosData
+            audiosData.push({tempId, fileUrl: null, fileId: null});
+
+            const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
+
+            // Actualizar el audio en audiosData con los valores reales cuando lleguen del backend
+            const index = audiosData.findIndex(audio => audio.tempId === tempId);
+            if (index !== -1) {
+                audiosData[index].fileUrl = fileUrl;
+                audiosData[index].fileId = fileId;
+
+                // Actualizar el atributo data-audio-url en el contenedor de la waveform con el verdadero fileUrl
+                const waveformContainer = document.querySelector(`[data-temp-id="${tempId}"]`);
+                if (waveformContainer) {
+                    waveformContainer.setAttribute('data-audio-url', fileUrl);
+                }
+            }
+
+            // Verificamos si ya hay 30 audios subidos
+            if (audiosData.length > 30) {
+                alert('Ya has subido el límite máximo de 30 audios.');
+            }
+
+            subidaAudioEnProgreso = false;
+        } catch (error) {
+            alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
+            subidaAudioEnProgreso = false;
+        }
+    };
+
+    
+    const waveAudio = (file, tempId) => {
+        const reader = new FileReader(),
+            audioContainerId = `waveform-container-${Date.now()}`,
+            progressBarId = `progress-${Date.now()}`;
+
+        reader.onload = e => {
+            const newWaveform = document.createElement('div');
+            newWaveform.innerHTML = `
+                <div id="${audioContainerId}" class="waveform-wrapper">
+                    <div class="waveform-container without-image" data-temp-id="${tempId}">
+                        <div class="waveform-loading" style="display: none;">Cargando...</div>
+                        <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
+                        <div class="file-name">${file.name}</div>
+                        <button class="delete-waveform">Eliminar</button>
+                    </div>
+                    <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
+                        <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
+                    </div>
+                </div>`;
+
+            previewAudio.appendChild(newWaveform);
+            inicializarWaveform(audioContainerId, e.target.result);
+
+            const deleteButton = newWaveform.querySelector('.delete-waveform');
+            deleteButton.addEventListener('click', () => eliminarWaveform(audioContainerId, tempId));
+        };
+
+        reader.readAsDataURL(file);
+        return progressBarId;
+    };
+
+    const eliminarWaveform = (containerId, tempId) => {
+        const wrapper = document.getElementById(containerId);
+    
+        if (wrapper) {
+            // Detener y destruir la instancia de WaveSurfer si existe
+            if (waveSurferInstances[containerId]) {
+                waveSurferInstances[containerId].destroy();
+                delete waveSurferInstances[containerId]; // Eliminar la instancia después de destruirla
+            }
+    
+            // Eliminar el contenedor del DOM
+            wrapper.parentNode.removeChild(wrapper);
+        }
+    
+        // Eliminar el audio de audiosData usando tempId
+        const index = audiosData.findIndex(audio => audio.tempId === tempId);
+        if (index !== -1) {
+            audiosData.splice(index, 1);
+        }
+    
+        // Si audiosData está vacío, ocultar previewAudio
+        if (audiosData.length === 0) {
+            previewAudio.style.display = 'none';
+        }
+    };
+*/
+
 window.inicializarWaveform = function (containerId, audioSrc) {
     const container = document.getElementById(containerId);
 
@@ -534,4 +648,4 @@ window.inicializarWaveform = function (containerId, audioSrc) {
     } else {
         console.log('Error: No se encontró el contenedor o el audioSrc no es válido.');
     }
-}
+};
