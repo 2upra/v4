@@ -231,19 +231,22 @@ function subidaRs() {
             // Agregamos la nueva onda sin borrar la anterior
             const newWaveform = document.createElement('div');
             newWaveform.innerHTML = `
-            <div id="${audioContainerId}" class="waveform-container without-image" data-audio-url="${e.target.result}">
+        <div id="${audioContainerId}" class="waveform-wrapper">
+            <div class="waveform-container without-image" data-audio-url="${e.target.result}">
                 <div class="waveform-loading" style="display: none;">Cargando...</div>
                 <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
                 <div class="file-name">${file.name}</div>
-                <button class="delete-waveform" onclick="eliminarWaveform('${audioContainerId}')">Eliminar</button>
+                <button class="delete-waveform">Eliminar</button>
             </div>
             <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
                 <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
-            </div>`;
+            </div>
+        </div>`; // Envolvemos la waveform y el progress bar en un contenedor común
 
             previewAudio.appendChild(newWaveform);
             inicializarWaveform(audioContainerId, e.target.result); //definido en otra parte
-            // Aquí es donde agregamos el event listener para eliminar el waveform
+
+            // Agregamos el event listener para eliminar el waveform
             const deleteButton = newWaveform.querySelector('.delete-waveform');
             deleteButton.addEventListener('click', () => eliminarWaveform(audioContainerId));
         };
@@ -252,13 +255,14 @@ function subidaRs() {
         return progressBarId;
     };
 
+    // Esta función ahora también eliminará el progress bar correspondiente
     const eliminarWaveform = containerId => {
-        const container = document.getElementById(containerId);
-        const audioUrl = container.getAttribute('data-audio-url');
+        const wrapper = document.getElementById(containerId); // Seleccionamos el contenedor común
+        const audioUrl = wrapper.querySelector('.waveform-container').getAttribute('data-audio-url');
 
-        // Remover visualmente el contenedor
-        if (container) {
-            container.parentNode.removeChild(container);
+        // Remover visualmente el contenedor que incluye la waveform y la barra de progreso
+        if (wrapper) {
+            wrapper.parentNode.removeChild(wrapper);
         }
 
         // Remover el objeto correspondiente del array audiosData
