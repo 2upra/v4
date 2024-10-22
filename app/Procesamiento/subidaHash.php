@@ -120,14 +120,14 @@ function verificarCargaArchivoPorHash($file_hash)
     $archivo = obtenerHash($file_hash);
     
     if (!$archivo) {
-        guardarLog("No se encontró ningún archivo con el hash: $file_hash");
+        //guardarLog("No se encontró ningún archivo con el hash: $file_hash");
         return false;
     }
     
     $file_id = $archivo['id'];
     $file_url = $archivo['file_url'];
     
-    guardarLog("Iniciando verificación de carga para File ID: $file_id con URL: $file_url");
+    //guardarLog("Iniciando verificación de carga para File ID: $file_id con URL: $file_url");
     
     // Inicializar cURL
     $ch = curl_init($file_url);
@@ -148,11 +148,11 @@ function verificarCargaArchivoPorHash($file_hash)
     
     // Verificar el código de respuesta
     if ($http_code >= 200 && $http_code < 300) {
-        guardarLog("El archivo con File ID: $file_id se cargó correctamente. Código HTTP: $http_code");
+        //guardarLog("El archivo con File ID: $file_id se cargó correctamente. Código HTTP: $http_code");
         
         return true;
     } else {
-        guardarLog("Error al cargar el archivo con File ID: $file_id. Código HTTP: $http_code");
+        //guardarLog("Error al cargar el archivo con File ID: $file_id. Código HTTP: $http_code");
 
         return false;
     }

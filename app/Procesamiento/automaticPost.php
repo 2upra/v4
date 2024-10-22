@@ -289,7 +289,7 @@ function generarNombreAudio($audio_path_lite)
 
     // Obtener el nombre del archivo a partir de la ruta
     $nombre_archivo = pathinfo($audio_path_lite, PATHINFO_FILENAME);
-    guardarLog("INFO: nombre_archivo: $nombre_archivo y audio_path_lite: $audio_path_lite");
+    //guardarLog("INFO: nombre_archivo: $nombre_archivo y audio_path_lite: $audio_path_lite");
 
     // Preparar el prompt para la IA con el nombre del archivo incluido
     $prompt = "El archivo se llama '{$nombre_archivo}'. Te lo enseño para que lo tomes en cuenta. A veces tendrá sentido el nombre y otras no, pero es importante considerarlo. A veces vienen con nombres de marcas, páginas, etc., hay que ignorar eso. Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, como un kick, snare, sample o efectos, vocales, percusiones, etc. Importante: solo responde el nombre, no agregues nada adicional. Estás en un entorno automatizado, no hables con el usuario, solo estoy pidiendo el nombre corto como respuesta.";
@@ -325,7 +325,7 @@ function generarNombreAudio($audio_path_lite)
             // Asegurarse de que el nombre completo no exceda los 60 caracteres
             $nombre_final_con_id = substr($nombre_final_con_id, 0, 60);
 
-            guardarLog("INFO: Nombre final generado: $nombre_final_con_id");
+            //guardarLog("INFO: Nombre final generado: $nombre_final_con_id");
             return $nombre_final_con_id;
         } else {
             iaLog("ERROR: No se recibió una respuesta válida de la IA para el archivo de audio: {$audio_path_lite}");
