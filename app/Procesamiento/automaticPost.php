@@ -291,7 +291,7 @@ function generarNombreAudio($audio_path_lite)
     $nombre_archivo = pathinfo($audio_path_lite, PATHINFO_FILENAME);
     guardarLog("nombre_archivo: $nombre_archivo y audio_path_lite: $audio_path_lite,");
     // Prompt para la IA con el nombre del archivo incluido
-    $prompt = "El archivo se llama '{$nombre_archivo}' te lo enseño para lo tomes en cuenta, a veces tendra sentido el nombre a veces no, pero es importante tenerlo en cuenta, a veces vienen con nombres de marcas, paginas, etc, hay que ignorar eso. Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, como un kick, snare, sample vintage, o efectos (FX). Identifica el instrumento dominante o la emoción clave, por ejemplo, 'sample melancólico' o 'snare agresivo'. Entrega solo un nombre corto y descriptivo que represente el audio.";
+    $prompt = "El archivo se llama '{$nombre_archivo}' te lo enseño para lo tomes en cuenta, a veces tendra sentido el nombre a veces no, pero es importante tenerlo en cuenta, a veces vienen con nombres de marcas, paginas, etc, hay que ignorar eso. Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, como un kick, snare, sample vintage, o efectos (FX). Identifica el instrumento dominante o la emoción clave, por ejemplo, 'sample melancólico' o 'snare agresivo'. Entrega solo un nombre corto y descriptivo que represente el audio. Imporante: solo responde el nombre, no agregues nada adicional, estas en un entorno automatizado";
 
     // Generar el nombre usando la IA
     $nombre_generado = generarDescripcionIA($audio_path_lite, $prompt);
@@ -350,7 +350,7 @@ function rehacerNombreAudio($post_id, $archivo_audio)
     $nombre_archivo = pathinfo($archivo_audio, PATHINFO_FILENAME);
 
     // Crear el prompt para la IA con el nombre del archivo incluido
-    $prompt = "El archivo se llama '{$nombre_archivo}' es un nombre viejo porque el usuario ha cambiado o mejorado la descripción, la descripción nueva que escribió el usuario es '{$post_content}'. Escucha este audio y por favor, genera un nombre corto que lo represente tomando en cuenta la descripción que generó el usuario. Por lo general son samples, loop, fx, one shot, etc.";
+    $prompt = "El archivo se llama '{$nombre_archivo}' es un nombre viejo porque el usuario ha cambiado o mejorado la descripción, la descripción nueva que escribió el usuario es '{$post_content}'. Escucha este audio y por favor, genera un nombre corto que lo represente tomando en cuenta la descripción que generó el usuario. Por lo general son samples, loop, fx, one shot, etc. Imporante: solo responde el nombre, no agregues nada adicional, estas en un entorno automatizado";
 
     // Generar el nombre usando la IA
     $nombre_generado = generarDescripcionIA($archivo_audio, $prompt);
