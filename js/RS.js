@@ -3,6 +3,8 @@ let imagenUrl, imagenId, audioUrl, audioId, archivoUrl, archivoId;
 let subidaAudioEnProgreso = false;
 let subidaImagenEnProgreso = false;
 let subidaArchivoEnProgreso = false;
+let audiosUrls = [];
+let audiosIds = [];
 // Logs
 let enablelogRS = true;
 const logRS = enablelogRS ? console.log : function () {};
