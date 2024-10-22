@@ -131,24 +131,23 @@ async function envioRs() {
         const descarga = descargaCheckbox.checked ? descargaCheckbox.value : 0;
         const exclusivo = exclusivoCheckbox.checked ? exclusivoCheckbox.value : 0;
         const colab = colabCheckbox.checked ? colabCheckbox.value : 0;
-
-        console.log('Valores finales:', 'descarga:', descarga, 'exclusivo:', exclusivo, 'colab:', colab, 'tags:', tags, 'textoNormal:', textoNormal);
+        // Iterar sobre los audios y asignar dinámicamente las propiedades audioUrl1, audioUrl2, ..., archivoId1, archivoId2, ...
+        audiosData.slice(0, maxAudios).forEach((audio, index) => {
+            const audioNumber = index + 1; // Comenzar desde 1 en lugar de 0
+            audioData[`audioUrl${audioNumber}`] = audio.fileUrl;
+            audioData[`archivoId${audioNumber}`] = audio.fileId;
+        });
 
         const data = {
-            imagenUrl1: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
+            imagenUrl: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
             imagenId: typeof imagenId !== 'undefined' ? imagenId : null,
-            audioUrl1: typeof audioUrl !== 'undefined' ? audioUrl : null,
-            audioId: typeof audioId !== 'undefined' ? audioId : null,
-            archivoUrl: typeof archivoUrl !== 'undefined' ? archivoUrl : null,
-            archivoId: typeof archivoId !== 'undefined' ? archivoId : null,
+            ...audioData,
             tags,
             textoNormal,
             descarga,
             exclusivo,
             colab
         };
-
-        console.table(data); // Verificar la tabla de datos antes de enviar
 
         try {
             const response = await enviarAjax('subidaRs', data);
@@ -162,7 +161,6 @@ async function envioRs() {
             console.error('Error al enviar los datos:', error);
             alert('Ocurrió un error durante la publicación. Por favor, inténtelo de nuevo.');
         } finally {
-            // Restaurar el texto original y reactivar el botón
             button.innerText = originalText;
             button.disabled = false;
         }
@@ -197,21 +195,23 @@ function subidaRs() {
         file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
     };
 
-    //tambien quiero que entienda que por ejemplo si el usuario borra todos los waveAudio con sus fileUrl, fileId correspondiente oculte previewAudio.style.display
+    // Función para verificar si hay una subida en progreso
+    const haySubidaEnProgreso = () => {
+        return audiosData.some(audio => audio.fileUrl === null || audio.fileId === null);
+    };
 
     const subidaAudio = async file => {
-        subidaAudioEnProgreso = true;
+        // Crear un ID temporal para el archivo
+        const tempId = `temp-${Date.now()}`;
+        const progressBarId = waveAudio(file, tempId);
+
+        // Agregamos el objeto temporalmente a audiosData
+        audiosData.push({tempId, fileUrl: null, fileId: null});
+
         try {
             alert(`Audio subido: ${file.name}`);
             previewAudio.style.display = 'block';
             opciones.style.display = 'flex';
-
-            // Crear un ID temporal para el archivo
-            const tempId = `temp-${Date.now()}`;
-            const progressBarId = waveAudio(file, tempId);
-
-            // Agregamos el objeto temporalmente a audiosData
-            audiosData.push({tempId, fileUrl: null, fileId: null});
 
             const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
 
@@ -232,10 +232,50 @@ function subidaRs() {
             if (audiosData.length > 30) {
                 alert('Ya has subido el límite máximo de 30 audios.');
             }
-
-            subidaAudioEnProgreso = false;
         } catch (error) {
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
+        } finally {
+
+            if (!haySubidaEnProgreso()) {
+                subidaAudioEnProgreso = false;
+            }
+        }
+    };
+
+    // Función para eliminar la waveform y actualizar audiosData
+    const eliminarWaveform = (containerId, tempId) => {
+        const wrapper = document.getElementById(containerId);
+
+        if (wrapper) {
+            // Eliminar el contenedor del DOM primero
+            wrapper.parentNode.removeChild(wrapper);
+
+            // Detener la reproducción y destruir la instancia de WaveSurfer si existe
+            if (waveSurferInstances[containerId]) {
+                waveSurferInstances[containerId].unAll(); // Eliminar todos los eventos
+
+                if (waveSurferInstances[containerId].isPlaying()) {
+                    waveSurferInstances[containerId].stop(); // Detener reproducción si está en curso
+                }
+
+                waveSurferInstances[containerId].destroy(); // Destruir la instancia
+                delete waveSurferInstances[containerId]; // Eliminar del objeto
+            }
+        }
+
+        // Eliminar el audio de audiosData usando tempId
+        const index = audiosData.findIndex(audio => audio.tempId === tempId);
+        if (index !== -1) {
+            audiosData.splice(index, 1);
+        }
+
+        // Si audiosData está vacío, ocultar previewAudio
+        if (audiosData.length === 0) {
+            previewAudio.style.display = 'none';
+        }
+
+        // Verificar si aún hay subidas en progreso
+        if (!haySubidaEnProgreso()) {
             subidaAudioEnProgreso = false;
         }
     };
@@ -276,41 +316,6 @@ function subidaRs() {
 
         reader.readAsDataURL(file);
         return progressBarId;
-    };
-
-    const eliminarWaveform = (containerId, tempId) => {
-        const wrapper = document.getElementById(containerId);
-
-        if (wrapper) {
-            // Eliminar el contenedor del DOM primero
-            wrapper.parentNode.removeChild(wrapper);
-
-            // Detener la reproducción y destruir la instancia de WaveSurfer si existe
-            if (waveSurferInstances[containerId]) {
-                // Eliminar todos los eventos para evitar reproducción accidental
-                waveSurferInstances[containerId].unAll();
-
-                // Detener si estaba reproduciendo
-                if (waveSurferInstances[containerId].isPlaying()) {
-                    waveSurferInstances[containerId].stop();
-                }
-
-                // Destruir la instancia
-                waveSurferInstances[containerId].destroy();
-                delete waveSurferInstances[containerId];
-            }
-        }
-
-        // Eliminar el audio de audiosData usando tempId
-        const index = audiosData.findIndex(audio => audio.tempId === tempId);
-        if (index !== -1) {
-            audiosData.splice(index, 1);
-        }
-
-        // Si audiosData está vacío, ocultar previewAudio
-        if (audiosData.length === 0) {
-            previewAudio.style.display = 'none';
-        }
     };
 
     const subidaArchivo = async file => {
