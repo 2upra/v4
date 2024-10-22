@@ -273,40 +273,37 @@ function subidaRs() {
 
     const eliminarWaveform = (containerId, tempId) => {
         const wrapper = document.getElementById(containerId);
-
+    
         if (wrapper) {
+            // Eliminar el contenedor del DOM primero
+            wrapper.parentNode.removeChild(wrapper);
+    
             // Detener la reproducción y destruir la instancia de WaveSurfer si existe
             if (waveSurferInstances[containerId]) {
+                // Eliminar todos los eventos para evitar reproducción accidental
+                waveSurferInstances[containerId].unAll();
+    
+                // Detener si estaba reproduciendo
                 if (waveSurferInstances[containerId].isPlaying()) {
-                    waveSurferInstances[containerId].stop(); // Detener si estaba reproduciendo
+                    waveSurferInstances[containerId].stop();
                 }
-                waveSurferInstances[containerId].destroy(); // Destruir la instancia
-                delete waveSurferInstances[containerId]; // Eliminar la instancia después de destruirla
+    
+                // Destruir la instancia
+                waveSurferInstances[containerId].destroy();
+                delete waveSurferInstances[containerId];
             }
-
-            // Eliminar el contenedor del DOM
-            wrapper.parentNode.removeChild(wrapper);
         }
-
+    
         // Eliminar el audio de audiosData usando tempId
         const index = audiosData.findIndex(audio => audio.tempId === tempId);
         if (index !== -1) {
             audiosData.splice(index, 1);
         }
-
+    
         // Si audiosData está vacío, ocultar previewAudio
         if (audiosData.length === 0) {
             previewAudio.style.display = 'none';
         }
-
-        // Verificar si la instancia sigue reproduciendo después de 1 segundo y detenerla si es necesario
-        setTimeout(() => {
-            if (waveSurferInstances[containerId]) {
-                if (waveSurferInstances[containerId].isPlaying()) {
-                    waveSurferInstances[containerId].stop(); // Detener si sigue reproduciendo
-                }
-            }
-        }, 500); 
     };
 
     const subidaArchivo = async file => {
@@ -589,29 +586,42 @@ let waveSurferInstances = {};
 
     const eliminarWaveform = (containerId, tempId) => {
         const wrapper = document.getElementById(containerId);
-    
+
         if (wrapper) {
-            // Detener y destruir la instancia de WaveSurfer si existe
+            // Detener la reproducción y destruir la instancia de WaveSurfer si existe
             if (waveSurferInstances[containerId]) {
-                waveSurferInstances[containerId].destroy();
+                if (waveSurferInstances[containerId].isPlaying()) {
+                    waveSurferInstances[containerId].stop(); // Detener si estaba reproduciendo
+                }
+                waveSurferInstances[containerId].destroy(); // Destruir la instancia
                 delete waveSurferInstances[containerId]; // Eliminar la instancia después de destruirla
             }
-    
+
             // Eliminar el contenedor del DOM
             wrapper.parentNode.removeChild(wrapper);
         }
-    
+
         // Eliminar el audio de audiosData usando tempId
         const index = audiosData.findIndex(audio => audio.tempId === tempId);
         if (index !== -1) {
             audiosData.splice(index, 1);
         }
-    
+
         // Si audiosData está vacío, ocultar previewAudio
         if (audiosData.length === 0) {
             previewAudio.style.display = 'none';
         }
+
+        // Verificar si la instancia sigue reproduciendo después de 1 segundo y detenerla si es necesario
+        setTimeout(() => {
+            if (waveSurferInstances[containerId]) {
+                if (waveSurferInstances[containerId].isPlaying()) {
+                    waveSurferInstances[containerId].stop(); // Detener si sigue reproduciendo
+                }
+            }
+        }, 500); 
     };
+
 */
 
 window.inicializarWaveform = function (containerId, audioSrc) {
