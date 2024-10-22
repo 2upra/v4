@@ -260,7 +260,7 @@ renombrarArchivoAdjunto funciona mal, renombra los archivo pero envia actualizar
 #Paso 5.4
 function renombrarArchivoAdjunto($postId, $archivoId, $campo)
 {
-    guardarLog("renombrarArchivoAdjunto recibio: $postId, $archivoId, $campo")
+    guardarLog("renombrarArchivoAdjunto recibio: $postId, $archivoId, $campo");
     // Extraer el índice del campo, por ejemplo, de 'audioUrl1' extraemos '1'
     preg_match('/(\d+)$/', $campo, $matches);
     $indice = isset($matches[1]) ? $matches[1] : '';
