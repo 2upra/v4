@@ -260,11 +260,18 @@ function subidaRs() {
                     </div>
                 </div>`;
 
+            // Agregar el nuevo waveform al contenedor de previsualización
             previewAudio.appendChild(newWaveform);
+
+            // Inicializar WaveSurfer
             inicializarWaveform(audioContainerId, e.target.result);
 
+            // Obtener el botón de eliminar y agregar un evento de clic
             const deleteButton = newWaveform.querySelector('.delete-waveform');
-            deleteButton.addEventListener('click', () => eliminarWaveform(audioContainerId, tempId));
+            deleteButton.addEventListener('click', event => {
+                event.stopPropagation(); // Evitar que el clic se propague al contenedor del waveform
+                eliminarWaveform(audioContainerId, tempId);
+            });
         };
 
         reader.readAsDataURL(file);
@@ -273,33 +280,33 @@ function subidaRs() {
 
     const eliminarWaveform = (containerId, tempId) => {
         const wrapper = document.getElementById(containerId);
-    
+
         if (wrapper) {
             // Eliminar el contenedor del DOM primero
             wrapper.parentNode.removeChild(wrapper);
-    
+
             // Detener la reproducción y destruir la instancia de WaveSurfer si existe
             if (waveSurferInstances[containerId]) {
                 // Eliminar todos los eventos para evitar reproducción accidental
                 waveSurferInstances[containerId].unAll();
-    
+
                 // Detener si estaba reproduciendo
                 if (waveSurferInstances[containerId].isPlaying()) {
                     waveSurferInstances[containerId].stop();
                 }
-    
+
                 // Destruir la instancia
                 waveSurferInstances[containerId].destroy();
                 delete waveSurferInstances[containerId];
             }
         }
-    
+
         // Eliminar el audio de audiosData usando tempId
         const index = audiosData.findIndex(audio => audio.tempId === tempId);
         if (index !== -1) {
             audiosData.splice(index, 1);
         }
-    
+
         // Si audiosData está vacío, ocultar previewAudio
         if (audiosData.length === 0) {
             previewAudio.style.display = 'none';
@@ -508,47 +515,40 @@ function limpiarCamposRs() {
 }
 
 /*
-cuando se borra un audio, debería detener la reproduccion, pero no es lo que hace, en cambio cuando borro, se empieza a reproducir aunque no estaba reproduciendose
+sigue sucediendo, tambien parece que como el boton eliminar esta dentro del wave, al dar click tambuen cuenta como una reproducion, y se reproduciendo aunque se borra del dom
 
-let waveSurferInstances = {};
-    const subidaAudio = async file => {
-        subidaAudioEnProgreso = true;
-        try {
-            alert(`Audio subido: ${file.name}`);
-            previewAudio.style.display = 'block';
-            opciones.style.display = 'flex';
-
-            // Crear un ID temporal para el archivo
-            const tempId = `temp-${Date.now()}`;
-            const progressBarId = waveAudio(file, tempId);
-
-            // Agregamos el objeto temporalmente a audiosData
-            audiosData.push({tempId, fileUrl: null, fileId: null});
-
-            const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
-
-            // Actualizar el audio en audiosData con los valores reales cuando lleguen del backend
-            const index = audiosData.findIndex(audio => audio.tempId === tempId);
-            if (index !== -1) {
-                audiosData[index].fileUrl = fileUrl;
-                audiosData[index].fileId = fileId;
-
-                // Actualizar el atributo data-audio-url en el contenedor de la waveform con el verdadero fileUrl
-                const waveformContainer = document.querySelector(`[data-temp-id="${tempId}"]`);
-                if (waveformContainer) {
-                    waveformContainer.setAttribute('data-audio-url', fileUrl);
+    const eliminarWaveform = (containerId, tempId) => {
+        const wrapper = document.getElementById(containerId);
+    
+        if (wrapper) {
+            // Eliminar el contenedor del DOM primero
+            wrapper.parentNode.removeChild(wrapper);
+    
+            // Detener la reproducción y destruir la instancia de WaveSurfer si existe
+            if (waveSurferInstances[containerId]) {
+                // Eliminar todos los eventos para evitar reproducción accidental
+                waveSurferInstances[containerId].unAll();
+    
+                // Detener si estaba reproduciendo
+                if (waveSurferInstances[containerId].isPlaying()) {
+                    waveSurferInstances[containerId].stop();
                 }
+    
+                // Destruir la instancia
+                waveSurferInstances[containerId].destroy();
+                delete waveSurferInstances[containerId];
             }
-
-            // Verificamos si ya hay 30 audios subidos
-            if (audiosData.length > 30) {
-                alert('Ya has subido el límite máximo de 30 audios.');
-            }
-
-            subidaAudioEnProgreso = false;
-        } catch (error) {
-            alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
-            subidaAudioEnProgreso = false;
+        }
+    
+        // Eliminar el audio de audiosData usando tempId
+        const index = audiosData.findIndex(audio => audio.tempId === tempId);
+        if (index !== -1) {
+            audiosData.splice(index, 1);
+        }
+    
+        // Si audiosData está vacío, ocultar previewAudio
+        if (audiosData.length === 0) {
+            previewAudio.style.display = 'none';
         }
     };
 
