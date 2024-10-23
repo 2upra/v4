@@ -85,51 +85,67 @@ function verificarCamposRs() {
 function selectorformtipo() {
     // Al cargar la página, se activa el checkbox 'descargacheck' por defecto
     const descargacheck = document.getElementById('descargacheck');
+    descargacheck.checked = true;
+    const label = descargacheck.closest('label');
+    label.style.color = '#ffffff';
+    label.style.background = '#131313';
+
+    const musiccheck = document.getElementById('musiccheck');
     const exclusivocheck = document.getElementById('exclusivocheck');
     const colabcheck = document.getElementById('colabcheck');
-    const musiccheck = document.getElementById('musiccheck');
-    
-    // Checkbox por defecto
-    descargacheck.checked = true;
-    const labelDescarga = descargacheck.closest('label');
-    labelDescarga.style.color = '#ffffff';
-    labelDescarga.style.background = '#131313';
-    
-    document.addEventListener('change', function (event) {
-        const target = event.target;
-        
-        // Si se marca 'musiccheck', desactiva los otros
-        if (target === musiccheck && target.checked) {
-            descargacheck.checked = false;
-            exclusivocheck.checked = false;
-            colabcheck.checked = false;
-            setCheckboxStyle(musiccheck);
-            setCheckboxStyle(descargacheck);
-            setCheckboxStyle(exclusivocheck);
-            setCheckboxStyle(colabcheck);
-        } 
-        // Si se marca 'exclusivocheck', desactiva 'colabcheck'
-        else if (target === exclusivocheck && target.checked) {
-            colabcheck.checked = false;
-            setCheckboxStyle(colabcheck);
-            setCheckboxStyle(exclusivocheck);
-        }
 
-        // Estilo general para cualquier checkbox
-        setCheckboxStyle(target);
+    document.addEventListener('change', function (event) {
+        if (event.target.matches('.custom-checkbox input[type="checkbox"]')) {
+            const checkedCheckboxes = document.querySelectorAll('.custom-checkbox input[type="checkbox"]:checked');
+
+            // Si hay más de 2 checkboxes seleccionados, desmarca el que acaba de ser seleccionado
+            if (checkedCheckboxes.length > 2) {
+                event.target.checked = false;
+                alert('Solo puedes seleccionar un máximo de 2 opciones.');
+                return;
+            }
+
+            // Si se marca 'musiccheck', desmarca los demás checkboxes
+            if (event.target.id === 'musiccheck' && event.target.checked) {
+                descargacheck.checked = false;
+                exclusivocheck.checked = false;
+                colabcheck.checked = false;
+                resetStyles(); // Restablecer estilos de los otros checkboxes
+            }
+
+            // Si se marca 'exclusivocheck', desmarca 'colabcheck'
+            if (event.target.id === 'exclusivocheck' && event.target.checked) {
+                colabcheck.checked = false;
+                const colabLabel = colabcheck.closest('label');
+                colabLabel.style.color = '#6b6b6b';
+                colabLabel.style.background = '';
+            }
+
+            // Estilo al checkbox seleccionado
+            const label = event.target.closest('label');
+            if (event.target.checked) {
+                label.style.color = '#ffffff';
+                label.style.background = '#131313';
+            } else {
+                label.style.color = '#6b6b6b';
+                label.style.background = '';
+            }
+        }
     });
 
-    function setCheckboxStyle(checkbox) {
-        const label = checkbox.closest('label');
-        if (checkbox.checked) {
-            label.style.color = '#ffffff';
-            label.style.background = '#131313';
-        } else {
-            label.style.color = '#6b6b6b';
-            label.style.background = '';
-        }
+    // Función para restablecer estilos cuando se desmarcan checkboxes
+    function resetStyles() {
+        const checkboxes = document.querySelectorAll('.custom-checkbox input[type="checkbox"]');
+        checkboxes.forEach(function (checkbox) {
+            const label = checkbox.closest('label');
+            if (!checkbox.checked) {
+                label.style.color = '#6b6b6b';
+                label.style.background = '';
+            }
+        });
     }
 }
+
 
 async function envioRs() {
     const button = document.getElementById('enviarRs');
