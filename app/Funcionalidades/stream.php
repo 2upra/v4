@@ -1,5 +1,22 @@
 <?
 
+// Función para verificar si el usuario es administrador o tiene la meta `pro`
+function usuarioEsAdminOPro() {
+    $current_user = wp_get_current_user();
+    
+    // Verificar si es administrador
+    if (in_array('administrator', $current_user->roles)) {
+        return true;
+    }
+    
+    // Verificar si tiene la meta `pro`
+    if (get_user_meta($current_user->ID, 'pro', true)) {
+        return true;
+    }
+
+    return false;
+}
+
 function tokenAudio($audio_id) {
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
         return false;
@@ -113,9 +130,15 @@ function audioStreamEnd($data) {
 
     header('Content-Type: ' . get_post_mime_type($audio_id));
     header("Accept-Ranges: bytes");
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Cache-Control: post-check=0, pre-check=0", false);
-    header("Pragma: no-cache");
+
+    // Si el usuario es admin o tiene meta `pro`, permitir caché del navegador
+    if (usuarioEsAdminOPro()) {
+        header("Cache-Control: public, max-age=15768000"); 
+    } else {
+        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+        header("Cache-Control: post-check=0, pre-check=0", false);
+        header("Pragma: no-cache");
+    }
 
     // Manejar Ranges HTTP para streaming parcial
     if (isset($_SERVER['HTTP_RANGE'])) {
