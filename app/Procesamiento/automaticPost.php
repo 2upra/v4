@@ -59,7 +59,7 @@ function buscarUnAudioValido($directorio)
     $extensiones_permitidas = ['wav', 'mp3'];
 
     if (!is_dir($directorio) || !is_readable($directorio)) {
-        //guardarLog("[buscarUnAudioValido] Error: El directorio no existe o no es accesible: {$directorio}");
+        guardarLog("[buscarUnAudioValido] Error: El directorio no existe o no es accesible: {$directorio}");
         return null;
     }
 
@@ -96,7 +96,7 @@ function buscarUnAudioValido($directorio)
             }
         }
     } catch (Exception $e) {
-        //guardarLog("[buscarUnAudioValido] Excepción al iterar directorios: " . $e->getMessage());
+        guardarLog("[buscarUnAudioValido] Excepción al iterar directorios: " . $e->getMessage());
     }
 
     return null;
