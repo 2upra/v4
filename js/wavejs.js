@@ -22,7 +22,11 @@ function inicializarWaveforms() {
             observer.observe(container);
             container.addEventListener('click', () => {
                 if (!container.dataset.audioLoaded) {
-                    container.dataset.loadTimeoutSet && (clearTimeout(container.dataset.loadTimeout), delete container.dataset.loadTimeout, delete container.dataset.loadTimeoutSet);
+                    if (container.dataset.loadTimeoutSet) {
+                        clearTimeout(container.dataset.loadTimeout);
+                        delete container.dataset.loadTimeout;
+                        delete container.dataset.loadTimeoutSet;
+                    }
                     loadAudio(postId, audioUrl, container);
                 }
             });
