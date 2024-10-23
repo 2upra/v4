@@ -123,23 +123,22 @@ function debeProcesarse($ruta_archivo, $file_hash)
 {
     try {
         if (!file_exists($ruta_archivo)) {
-            //guardarLog("[debeProcesarse] Error: El archivo no existe: {$ruta_archivo}");
+            guardarLog("[debeProcesarse] Error: El archivo no existe: {$ruta_archivo}");
             return false;
         }
 
         if (!$file_hash) {
-            //guardarLog("[debeProcesarse] Error: Hash inexistente para el archivo: {$ruta_archivo}");
+            guardarLog("[debeProcesarse] Error: Hash inexistente para el archivo: {$ruta_archivo}");
             return false;
         }
 
-        // Asumiendo que obtenerHash() devuelve un valor si el hash ya existe
         if (obtenerHash($file_hash) || verificarCargaArchivoPorHash($file_hash)) {
             return false;
         }
 
         return true;
     } catch (Exception $e) {
-        //guardarLog("[debeProcesarse] Excepción capturada: " . $e->getMessage());
+        guardarLog("[debeProcesarse] Excepción capturada: " . $e->getMessage());
         return false;
     }
 }
@@ -148,7 +147,7 @@ function debeProcesarse($ruta_archivo, $file_hash)
 function autRevisarAudio($audio, $file_hash)
 {
     if (!file_exists($audio)) {
-        //guardarLog("[autRevisarAudio] Error: El archivo de audio no existe: {$audio}");
+        guardarLog("[autRevisarAudio] Error: El archivo de audio no existe: {$audio}");
         return;
     }
 
