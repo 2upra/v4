@@ -139,7 +139,7 @@ function procesarURLs($postId)
         $parametroAdicional = isset($callbackData[1]) ? $callbackData[1] : null;
         
         for ($i = 1; $i <= $maxCampos; $i++) {
-            // Construye el nombre del campo, por ejemplo, 'imagenUrl1', 'imagenUrl2', etc.
+
             $campo = $tipo . $i;
             
             if (!empty($_POST[$campo])) {
@@ -227,9 +227,8 @@ function actualizarMetaConArchivo($postId, $campo, $archivoId)
             // Actualizar el meta dato específico.
             update_post_meta($postId, $meta_key, $archivoId);
 
-            // Si es una imagen sin índice (asumiendo que 'imagenUrl' sin número es la principal)
-            // Podemos establecer la miniatura del post.
-            if ($baseField === 'imagenUrl' && $index === '') {
+
+            if ($baseField === 'imagenUrl1' && $index === '') {
                 set_post_thumbnail($postId, $archivoId);
                 //guardarLog("Miniatura del post establecida con archivo ID: {$archivoId} para postId: {$postId}");
             } else {
