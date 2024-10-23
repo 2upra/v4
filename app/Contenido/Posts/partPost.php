@@ -376,12 +376,3 @@ function wave($audio_url, $audio_id_lite, $post_id)
     </div>
 <?php
 }
-
-add_action('wp_enqueue_scripts', 'add_audio_security_vars');
-
-function add_audio_security_vars() {
-    wp_localize_script('tu-script-principal', 'audioSecurityVars', array(
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('audio_security_nonce')
-    ));
-}

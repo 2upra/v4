@@ -48,8 +48,9 @@ function inicializarWaveforms() {
 
 function loadAudio(postId, audioUrl, container) {
     if (!container.dataset.audioLoaded) {
-        // Añadir nonce a la URL si es necesario
-        const secureUrl = audioUrl + (audioUrl.includes('?') ? '&' : '?') + '_wpnonce=' + wpApiSettings.nonce;
+
+        const secureUrl = audioUrl + (audioUrl.includes('?') ? '&' : '?') + 
+                         'security_nonce=' + audioSecurityVars.nonce;
         window.we(postId, secureUrl);
         container.dataset.audioLoaded = 'true';
     }

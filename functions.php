@@ -158,6 +158,11 @@ function scriptsOrdenados()
         'ajax_url' => admin_url('admin-ajax.php')
     ));
 
+    wp_localize_script('wavesurfer-script', 'audioSecurityVars', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('audio_security_nonce')
+    ));
+
     wp_localize_script('wavejs', 'ajax_params', ['ajaxurl' => $ajax_url]);
     wp_localize_script('form-script', 'wpData', ['isAdmin' => current_user_can('administrator')]);
 
