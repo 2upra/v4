@@ -6,7 +6,7 @@
 
 
 
-// Paso 1 - Ejecuta cada 4 minutos, envía un solo audio válido para autProcesarAudio
+
 
 
 // ETAPA 2 - PROCESAR EL AUDIO ENCONTRADO

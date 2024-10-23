@@ -22,6 +22,8 @@ function definir_cron_cada_dos_minutos($schedules)
 }
 add_action('procesar_audio1_cron_event', 'procesarAudios');
 
+
+// Paso 1 - Ejecuta cada 4 minutos, envía un solo audio válido para autProcesarAudio
 function procesarAudios()
 {
     autLog("procesarAudios llamado");
@@ -64,6 +66,12 @@ function procesarAudios()
 }
 
 
+/*
+Por si se bloquean
+sudo chmod -R o+rx /home/asley01/MEGA/Waw/X/
+sudo chown -R asley01:www-data /home/asley01/MEGA/Waw/X/
+sudo chmod -R g+rx /home/asley01/MEGA/Waw/X/
+*/
 // Paso 2 - Buscar y retornar un solo audio válido
 function buscarUnAudioValido($directorio)
 {
