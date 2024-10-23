@@ -3,6 +3,8 @@
 // Función para verificar si el usuario es administrador o tiene la meta `pro`
 function usuarioEsAdminOPro() {
     // Obtener el usuario actual de WordPress
+    $current_user_id = get_current_user_id();
+    guardarLog("user id: $current_user_id");
     $current_user = wp_get_current_user();
 
     // Comprobar si el usuario está logueado
