@@ -105,21 +105,26 @@ function audioStreamEnd($data) {
     $cache_file = $cache_dir . '/audio_' . $audio_id . '.cache';
 
     if (file_exists($cache_file) && (time() - filemtime($cache_file) < 24 * 60 * 60)) {
+        guardarLog("audioStreamEnd: Cargando audio desde el archivo en caché: $cache_file");
         $file = $cache_file;
     } else {
         $original_file = get_attached_file($audio_id);
         if (!file_exists($original_file)) {
+            guardarLog("audioStreamEnd: Error - Archivo de audio original no encontrado para el audio ID: $audio_id");
             return new WP_Error('no_audio', 'Archivo de audio no encontrado.', array('status' => 404));
         }
         if (!@copy($original_file, $cache_file)) {
+            guardarLog("audioStreamEnd: Error - Fallo al copiar el archivo de audio al caché.");
             return new WP_Error('copy_failed', 'Error al copiar el archivo de audio al caché.', array('status' => 500));
         }
 
+        guardarLog("audioStreamEnd: Archivo de audio copiado exitosamente al caché: $cache_file");
         $file = $cache_file;
     }
 
     $fp = @fopen($file, 'rb');
     if (!$fp) {
+        guardarLog("audioStreamEnd: Error - No se pudo abrir el archivo de audio: $file");
         return new WP_Error('file_open_error', 'No se pudo abrir el archivo de audio.', array('status' => 500));
     }
 
@@ -133,8 +138,10 @@ function audioStreamEnd($data) {
 
     // Si el usuario es admin o tiene meta `pro`, permitir caché del navegador
     if (usuarioEsAdminOPro()) {
+        guardarLog("audioStreamEnd: Cargando con caché del navegador habilitada para el usuario admin/pro");
         header("Cache-Control: public, max-age=15768000"); 
     } else {
+        guardarLog("audioStreamEnd: Cargando con caché del navegador deshabilitada para el usuario no admin/pro");
         header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
         header("Cache-Control: post-check=0, pre-check=0", false);
         header("Pragma: no-cache");
@@ -142,10 +149,12 @@ function audioStreamEnd($data) {
 
     // Manejar Ranges HTTP para streaming parcial
     if (isset($_SERVER['HTTP_RANGE'])) {
+        guardarLog("audioStreamEnd: HTTP Range solicitado: " . $_SERVER['HTTP_RANGE']);
         $c_start = $start;
         $c_end = $end;
         list(, $range) = explode('=', $_SERVER['HTTP_RANGE'], 2);
         if (strpos($range, ',') !== false) {
+            guardarLog("audioStreamEnd: Error - Rango solicitado no soportado.");
             header('HTTP/1.1 416 Requested Range Not Satisfiable');
             header("Content-Range: bytes $start-$end/$size");
             exit;
@@ -159,6 +168,7 @@ function audioStreamEnd($data) {
         }
         $c_end = ($c_end > $end) ? $end : $c_end;
         if ($c_start > $c_end || $c_start > $size - 1 || $c_end >= $size) {
+            guardarLog("audioStreamEnd: Error - Rango solicitado fuera de los límites.");
             header('HTTP/1.1 416 Requested Range Not Satisfiable');
             header("Content-Range: bytes $start-$end/$size");
             exit;
@@ -190,9 +200,11 @@ function audioStreamEnd($data) {
         }
     }
 
+    guardarLog("audioStreamEnd: Transmisión del audio completada para el archivo: $file");
     fclose($fp);
     exit();
 }
+
 
 
 // Registra el cron job
