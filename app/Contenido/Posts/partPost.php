@@ -329,26 +329,25 @@ function audioPost($post_id)
 
         <audio id="audio-<? echo $post_id; ?>" src="<? echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"></audio>
     </div>
-    <?
+<?
     return ob_get_clean();
 }
 
 // funcion de ejemplo que uso en otra parte, el sistema reconoce la wave para generarla y reproducirla cuando el audio se estructura de esta manera:
 function wave($audio_url, $audio_id_lite, $post_id)
 {
-    if ($audio_url) :
-        $wave = get_post_meta($post_id, 'waveform_image_url', true);
-        $waveCargada = get_post_meta($post_id, 'waveCargada', true);
-        $urlAudioSegura = audioUrlSegura($audio_id_lite); // Usando la URL segura
-    ?>
-        <div id="waveform-<? echo $post_id; ?>"
-            class="waveform-container without-image"
-            postIDWave="<? echo $post_id; ?>"
-            data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
-            data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
-            <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
-            <div class="waveform-message"></div>
-            <div class="waveform-loading" style="display: none;">Cargando...</div>
-        </div>
-<? endif;
+    $wave = get_post_meta($post_id, 'waveform_image_url', true);
+    $waveCargada = get_post_meta($post_id, 'waveCargada', true);
+    $urlAudioSegura = audioUrlSegura($audio_id_lite); // Usando la URL segura
+?>
+    <div id="waveform-<? echo $post_id; ?>"
+        class="waveform-container without-image"
+        postIDWave="<? echo $post_id; ?>"
+        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
+        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
+        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
+        <div class="waveform-message"></div>
+        <div class="waveform-loading" style="display: none;">Cargando...</div>
+    </div>
+<?
 }
