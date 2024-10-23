@@ -130,13 +130,22 @@ class AudioSecureHandler
 
     public function generateToken($audio_id) 
     {
-        // Validar el formato del audio_id
-        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
-            guardarLog('generateToken: audio_id inválido: ' . $audio_id);
+        // Verificar si el audio_id es un adjunto válido en WordPress
+        if (!wp_attachment_is('audio', $audio_id)) {
+            guardarLog('generateToken: audio_id no es un adjunto de audio válido: ' . $audio_id);
             return false;
         }
     
-        // Datos para el token
+        // Validar el formato del audio_id
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
+            guardarLog('generateToken: audio_id tiene un formato inválido: ' . $audio_id);
+            return false;
+        }
+    
+        // Log para comprobar que el audio_id es válido
+        guardarLog('generateToken: audio_id válido: ' . $audio_id);
+    
+        // Continuar con el proceso de tokenización...
         $data = [
             'id' => $audio_id,
             'exp' => time() + self::TOKEN_EXPIRY,
@@ -146,18 +155,11 @@ class AudioSecureHandler
             'nonce' => wp_create_nonce('audio_stream_' . $audio_id)
         ];
     
-        // Log de datos antes de codificarlos
-        guardarLog('generateToken: datos antes de codificar: ' . json_encode($data));
-    
-        // Codificación y firma
         $payload = json_encode($data);
         $signature = hash_hmac('sha256', $payload, $_ENV['AUDIOCLAVE']);
-        
-        // Log de la firma generada
-        guardarLog('generateToken: firma generada: ' . $signature);
-        
         return base64_encode($payload) . '.' . $signature;
     }
+    
     
 
     public function verifyToken($token)
