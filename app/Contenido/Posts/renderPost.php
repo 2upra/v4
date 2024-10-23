@@ -228,23 +228,6 @@ add_action('wp_ajax_handle_user_modification', 'handle_user_modification');
 
 
 
-
-/* EL HTML 
-
-            <div class="texto-posts" data-post-id="<? echo get_the_ID(); ?>">
-                <?
-                    the_content();
-                    echo get_the_tag_list('<div class="post-tags">', ', ', '</div>');
-                    if($current_user_id == $post->post_author) {
-                ?>
-                    <button class="edit-post-btn" data-post-id="<? echo get_the_ID(); ?>"> Editar Contenido</button>
-                <? } ?>
-            </div>
-
-            */
-
-
-
 add_action('wp_ajax_update_post_content', 'update_post_content_callback');
 
 function update_post_content_callback()

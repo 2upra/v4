@@ -28,14 +28,16 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
     return $postId;
 }
 
-#Paso 2
+# Paso 2
 function actualizarMetaDatos($postId)
 {
     $meta_fields = [
         'paraColab'    => 'colab',
         'esExclusivo'  => 'exclusivo',
-        'paraDescarga' => 'descarga'
+        'paraDescarga' => 'descarga',
+        'rola'         => 'music'
     ];
+
     foreach ($meta_fields as $meta_key => $post_key) {
         if (isset($_POST[$post_key])) {
             $value = $_POST[$post_key] == '1' ? 1 : 0;
@@ -44,7 +46,30 @@ function actualizarMetaDatos($postId)
         }
         update_post_meta($postId, $meta_key, $value);
     }
+
+    # Llama a registrarNombreRolas si viene 'rola'
+    if (isset($_POST['music']) && $_POST['music'] == '1') {
+        registrarNombreRolas($postId);
+    }
 }
+
+# Paso 2.1 - Registrar nombres de rolas
+function registrarNombreRolas($postId)
+{
+    # Se busca hasta 30 posibles nombres de rolas en $_POST
+    for ($i = 1; $i <= 30; $i++) {
+        $rola_key = 'nombreRola' . $i;
+
+        if (isset($_POST[$rola_key])) {
+            # Sanitizar el valor
+            $nombre_rola = sanitize_text_field($_POST[$rola_key]);
+
+            # Guardar el nombre de la rola en un meta con el mismo nombre
+            update_post_meta($postId, $rola_key, $nombre_rola);
+        }
+    }
+}
+
 
 #Paso 3
 function datosParaAlgoritmo($postId)
