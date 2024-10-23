@@ -8,7 +8,6 @@ let audiosData = [];
 let maxAudios = 30;
 let audioData = {}; // Inicializa audioData como un objeto
 
-
 let uploadInProgressCount = 0;
 // Logs
 let enablelogRS = true;
@@ -216,7 +215,25 @@ function subidaRs() {
             }
         }
     };
-    
+
+    // Obtén la referencia al checkbox de música
+    const musicCheckbox = document.getElementById('musiccheck');
+
+    // Función para actualizar la visibilidad de los campos de nombre
+    const actualizarCamposNombre = () => {
+        const cantidadAudios = audiosData.length;
+        const mostrarCampos = musicCheckbox.checked && cantidadAudios > 1;
+
+        audiosData.forEach(audio => {
+            const inputNombre = document.getElementById(`nombre-${audio.tempId}`);
+            if (inputNombre) {
+                inputNombre.style.display = mostrarCampos ? 'block' : 'none';
+            }
+        });
+    };
+
+    // Agrega un listener para cambios en el checkbox
+    musicCheckbox.addEventListener('change', actualizarCamposNombre);
 
     const subidaAudio = async file => {
         try {
@@ -226,7 +243,7 @@ function subidaRs() {
             const tempId = `temp-${Date.now()}`;
             const progressBarId = waveAudio(file, tempId);
             audiosData.push({tempId, fileUrl: null, fileId: null});
-            
+    
             // Actualiza la dirección de flexión después de agregar el audio
             actualizarFlexDirection();
     
@@ -243,15 +260,56 @@ function subidaRs() {
             if (audiosData.length > 30) {
                 alert('Ya has subido el límite máximo de 30 audios.');
             }
+    
+            // Actualiza los campos de nombre después de subir el audio
+            actualizarCamposNombre();
+    
         } catch (error) {
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
         }
     };
 
-    // y esto restablecerlo si quedan 2
+    const waveAudio = (file, tempId) => {
+        const reader = new FileReader(),
+            audioContainerId = `waveform-container-${Date.now()}`,
+            progressBarId = `progress-${Date.now()}`;
+
+        reader.onload = e => {
+            const newWaveform = document.createElement('div');
+            newWaveform.innerHTML = `
+            <div id="${audioContainerId}" class="waveform-wrapper">
+                <div class="waveform-container without-image" data-temp-id="${tempId}">
+                    <div class="waveform-loading" style="display: none;">Cargando...</div>
+                    <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
+                    <div class="file-name">${file.name}</div>
+                    <button class="delete-waveform">Eliminar</button>
+                </div>
+                <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
+                    <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
+                </div>
+                <!-- Campo de texto para el nombre del audio -->
+                <input type="text" id="nombre-${tempId}" class="nombreAudioRs" placeholder="Titulo" style="display: none; margin-top: 5px; width: 100%;">
+            </div>`;
+
+            previewAudio.appendChild(newWaveform);
+            inicializarWaveform(audioContainerId, e.target.result);
+            const deleteButton = newWaveform.querySelector('.delete-waveform');
+            deleteButton.addEventListener('click', event => {
+                event.stopPropagation();
+                eliminarWaveform(audioContainerId, tempId);
+            });
+
+            // Actualiza los campos de nombre después de agregar un nuevo audio
+            actualizarCamposNombre();
+        };
+
+        reader.readAsDataURL(file);
+        return progressBarId;
+    };
+
     const eliminarWaveform = (containerId, tempId) => {
         const wrapper = document.getElementById(containerId);
-    
+
         if (wrapper) {
             wrapper.parentNode.removeChild(wrapper);
             if (waveSurferInstances[containerId]) {
@@ -263,56 +321,18 @@ function subidaRs() {
                 delete waveSurferInstances[containerId];
             }
         }
-    
+
         const index = audiosData.findIndex(audio => audio.tempId === tempId);
         if (index !== -1) {
             audiosData.splice(index, 1);
         }
-    
+
         if (audiosData.length === 0) {
             previewAudio.style.display = 'none';
         }
-    
+
         // Actualiza la dirección de flexión después de eliminar el audio
         actualizarFlexDirection();
-    };
-
-    const waveAudio = (file, tempId) => {
-        const reader = new FileReader(),
-            audioContainerId = `waveform-container-${Date.now()}`,
-            progressBarId = `progress-${Date.now()}`;
-
-        reader.onload = e => {
-            const newWaveform = document.createElement('div');
-            newWaveform.innerHTML = `
-                <div id="${audioContainerId}" class="waveform-wrapper">
-                    <div class="waveform-container without-image" data-temp-id="${tempId}">
-                        <div class="waveform-loading" style="display: none;">Cargando...</div>
-                        <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
-                        <div class="file-name">${file.name}</div>
-                        <button class="delete-waveform">Eliminar</button>
-                    </div>
-                    <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
-                        <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
-                    </div>
-                </div>`;
-
-            // Agregar el nuevo waveform al contenedor de previsualización
-            previewAudio.appendChild(newWaveform);
-
-            // Inicializar WaveSurfer
-            inicializarWaveform(audioContainerId, e.target.result);
-
-            // Obtener el botón de eliminar y agregar un evento de clic
-            const deleteButton = newWaveform.querySelector('.delete-waveform');
-            deleteButton.addEventListener('click', event => {
-                event.stopPropagation(); // Evitar que el clic se propague al contenedor del waveform
-                eliminarWaveform(audioContainerId, tempId);
-            });
-        };
-
-        reader.readAsDataURL(file);
-        return progressBarId;
     };
 
     const subidaArchivo = async file => {
