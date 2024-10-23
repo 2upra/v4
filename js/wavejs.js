@@ -1,33 +1,30 @@
 function inicializarWaveforms() {
-    const observer = new IntersectionObserver(
-        entries => {
-            entries.forEach(entry => {
-                const container = entry.target;
-                const postId = container.getAttribute('postIDWave');
-                const audioUrl = container.getAttribute('data-audio-url');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const container = entry.target;
+            const postId = container.getAttribute('postIDWave');
+            const audioUrl = container.getAttribute('data-audio-url');
 
-                if (entry.isIntersecting) {
-                    if (!container.dataset.loadTimeoutSet) {
-                        const loadTimeout = setTimeout(() => {
-                            if (!container.dataset.audioLoaded) {
-                                loadAudio(postId, audioUrl, container);
-                            }
-                        }, 20000); // Carga el audio después de 20 segundos de estar en el viewport
+            if (entry.isIntersecting) {
+                if (!container.dataset.loadTimeoutSet) {
+                    const loadTimeout = setTimeout(() => {
+                        if (!container.dataset.audioLoaded) {
+                            loadAudio(postId, audioUrl, container);
+                        }
+                    }, 20000); // Carga el audio después de 20 segundos de estar en el viewport
 
-                        container.dataset.loadTimeout = loadTimeout;
-                        container.dataset.loadTimeoutSet = 'true';
-                    }
-                } else {
-                    if (container.dataset.loadTimeoutSet) {
-                        clearTimeout(container.dataset.loadTimeout);
-                        delete container.dataset.loadTimeout;
-                        delete container.dataset.loadTimeoutSet;
-                    }
+                    container.dataset.loadTimeout = loadTimeout;
+                    container.dataset.loadTimeoutSet = 'true'; 
                 }
-            });
-        },
-        {threshold: 0.5}
-    );
+            } else {
+                if (container.dataset.loadTimeoutSet) {
+                    clearTimeout(container.dataset.loadTimeout);
+                    delete container.dataset.loadTimeout;
+                    delete container.dataset.loadTimeoutSet;
+                }
+            }
+        });
+    }, { threshold: 0.5 });
 
     document.querySelectorAll('.waveform-container').forEach(container => {
         const postId = container.getAttribute('postIDWave');
@@ -49,57 +46,10 @@ function inicializarWaveforms() {
     });
 }
 
-/*
-esto hay aplicarlo aqui, esta bien asi ?
 function loadAudio(postId, audioUrl, container) {
     if (!container.dataset.audioLoaded) {
-        const headers = new Headers({
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'audio/mpeg, audio/*'
-            // No enviar cache-control: no-cache
-        });
-
-        fetch(audioUrl, {
-            method: 'GET',
-            headers: headers,
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            
-            // Si recibimos 304, usar la caché
-            if (response.status === 304) {
-                return Promise.reject('using-cache');
-            }
-            
-            return response.arrayBuffer();
-        })
-        .then(buffer => {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            return audioContext.decodeAudioData(buffer);
-        })
-        .then(audioBuffer => {
-            initWavesurfer(container, audioBuffer);
-            container.dataset.audioLoaded = 'true';
-        })
-        .catch(error => {
-            if (error === 'using-cache') {
-                // Usar versión cacheada
-                console.log('Using cached version');
-                return;
-            }
-            console.error('Error loading audio:', error);
-        });
-    }
-}
-
-*/
-
-function loadAudio(postId, audioUrl, container) {
-    if (!container.dataset.audioLoaded) {
-        // La URL ya incluye el security_nonce, no necesitamos añadirlo de nuevo
-        window.we(postId, audioUrl);
-        container.dataset.audioLoaded = 'true';
+        window.we(postId, audioUrl); 
+        container.dataset.audioLoaded = 'true'; 
     }
 }
 
@@ -120,63 +70,61 @@ window.we = function (postId, audioUrl) {
         window.audioLoading = true;
 
         fetch(audioUrl, {
-            credentials: 'same-origin',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                Accept: 'audio/*' // Añadido para especificar que esperamos audio
-            }
+            credentials: 'include', // Incluye las cookies de sesión en la solicitud
         })
-            .then(response => {
-            
-                // Si recibimos 304, usar la caché
-                if (response.status === 304) {
-                    return Promise.reject('using-cache');
-                }
-                
+            .then((response) => {
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error('Respuesta de red no satisfactoria');
                 }
-                console.log('Content-Type:', response.headers.get('content-type'));
-                return response.arrayBuffer();
+                return response;
             })
-            .then(buffer => {
-                // Crear un blob con el tipo explícito
-                const blob = new Blob([buffer], {type: 'audio/mpeg'}); // o el tipo que corresponda
-
-                const audioBlobUrl = URL.createObjectURL(blob);
-                wavesurfer = initWavesurfer(container);
-
-                // Manejar errores de decodificación
-                wavesurfer.on('error', err => {
-                    console.error('Error en wavesurfer:', err);
-                    if (retryCount < MAX_RETRIES) {
-                        setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
+            .then((response) => {
+                const reader = response.body.getReader();
+                return new ReadableStream({
+                    start(controller) {
+                        return pump();
+                        function pump() {
+                            return reader.read().then(({ done, value }) => {
+                                if (done) {
+                                    controller.close();
+                                    return;
+                                }
+                                controller.enqueue(value);
+                                return pump();
+                            });
+                        }
                     }
                 });
-
-                // Cargar el audio
+            })
+            .then(stream => new Response(stream))
+            .then(response => response.blob())
+            .then((blob) => {
+                const audioBlobUrl = URL.createObjectURL(blob);
+            
+                wavesurfer = initWavesurfer(container);
                 wavesurfer.load(audioBlobUrl);
-
+            
                 const waveformBackground = container.querySelector('.waveform-background');
                 if (waveformBackground) {
                     waveformBackground.style.display = 'none';
                 }
-
+            
                 wavesurfer.on('ready', () => {
                     window.audioLoading = false;
                     container.dataset.audioLoaded = 'true';
                     container.querySelector('.waveform-loading').style.display = 'none';
                     const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
-
+            
+                    // Detectar si el usuario está en móvil
                     const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
-
+            
                     if (!waveCargada && !isMobile) {
                         setTimeout(() => {
                             const image = generateWaveformImage(wavesurfer);
                             sendImageToServer(image, postId);
                         }, 1);
                     }
-
+            
                     container.addEventListener('click', () => {
                         if (wavesurfer.isPlaying()) {
                             wavesurfer.pause();
@@ -185,18 +133,15 @@ window.we = function (postId, audioUrl) {
                         }
                     });
                 });
-            })
-            .catch(error => {
-                console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`, error);
-                if (retryCount < MAX_RETRIES) {
+            
+                wavesurfer.on('error', () => {
+                    console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`);
                     setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
-                }
-                if (error === 'using-cache') {
-                    // Usar versión cacheada
-                    console.log('Using cached version');
-                    return;
-                }
-                console.error('Error loading audio:', error);
+                });
+            })
+            .catch((error) => {
+                console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`, error);
+                setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
             });
     };
 
@@ -209,7 +154,7 @@ function initWavesurfer(container) {
     const ctx = document.createElement('canvas').getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 500);
     const progressGradient = ctx.createLinearGradient(0, 0, 0, 500);
-
+    
     // Configuración de los colores del gradiente
     gradient.addColorStop(0, '#FFFFFF');
     gradient.addColorStop(0.55, '#FFFFFF');
@@ -227,7 +172,7 @@ function initWavesurfer(container) {
         interact: true,
         barWidth: 2,
         height: containerHeight,
-        partialRender: true
+        partialRender: true,
     });
 }
 
@@ -251,7 +196,7 @@ async function sendImageToServer(imageData, postId) {
     for (let i = 0; i < byteString.length; i++) {
         ia[i] = byteString.charCodeAt(i);
     }
-    const blob = new Blob([ab], {type: mimeString});
+    const blob = new Blob([ab], { type: mimeString });
 
     const formData = new FormData();
     formData.append('action', 'save_waveform_image');
@@ -261,7 +206,7 @@ async function sendImageToServer(imageData, postId) {
     try {
         const response = await fetch(ajaxUrl, {
             method: 'POST',
-            body: formData
+            body: formData,
         });
 
         const data = await response.json();
