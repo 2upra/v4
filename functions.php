@@ -30,7 +30,7 @@ function stripeError($log) {
     escribirLog($log, '/var/www/wordpress/wp-content/themes/stripeError.log');
 }
 
-function automaticPost($log) {
+function autLog($log) {
     escribirLog($log, '/var/www/wordpress/wp-content/themes/automaticPost.log');
 }
 
