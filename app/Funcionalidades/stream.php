@@ -55,7 +55,7 @@ function wave($audio_url, $audio_id_lite, $post_id)
     $audio_handler = AudioSecureHandler::getInstance();
     $wave = get_post_meta($post_id, 'waveform_image_url', true);
     $waveCargada = get_post_meta($post_id, 'waveCargada', true);
-    $urlAudioSegura = $audio_handler->getSecureUrl($post_id);
+    $urlAudioSegura = $audio_handler->getSecureUrl($audio_id_lite);
 
     // Verificación de error
     if (!$urlAudioSegura) {
