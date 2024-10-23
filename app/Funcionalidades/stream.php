@@ -76,9 +76,20 @@ add_action('rest_api_init', function () {
 
 // Modificar la función audioStreamEnd para implementar streaming
 function audioStreamEnd($data) {
-    $current_user_id = get_current_user_id();
-    guardarLog("user id: $current_user_id");
-    $current_user = wp_get_current_user();
+
+    // Obtener identificador de usuario o visitante
+    $user_identifier = get_current_user_id();
+    if ($user_identifier === 0) {
+        // Si no hay usuario autenticado, usar la IP como identificador
+        $user_identifier = 'guest_' . hash('md5', $_SERVER['REMOTE_ADDR']);
+    }
+
+    // Obtener información del usuario
+    $user_info = wp_get_current_user();
+    $username = $user_info->ID !== 0 ? $user_info->user_login : 'Visitante';
+
+    // Guardar log con la información
+    guardarLog("Usuario: $username (ID: $user_identifier)");
 
     $token = $data['token'];
     $parts = explode('|', base64_decode($token));
