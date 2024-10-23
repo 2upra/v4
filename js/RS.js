@@ -165,7 +165,13 @@ function selectorformtipo() {
                     // Solo permitir exclusivo junto con music
                     colab.checked = false;
                     colab.disabled = true;
-                } el
+                } else {
+                    colab.disabled = false; // Permitir si music no está marcado
+                }
+            }
+        }
+    });
+}
 
 
 
