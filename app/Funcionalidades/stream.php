@@ -78,6 +78,9 @@ add_action('rest_api_init', function () {
 
 // Modificar la función audioStreamEnd para implementar streaming
 function audioStreamEnd($data) {
+    $current_user_id = get_current_user_id();
+    guardarLog("user id: $current_user_id");
+    $current_user = wp_get_current_user();
     $token = $data['token'];
     $parts = explode('|', base64_decode($token));
     $audio_id = $parts[0];
@@ -124,7 +127,7 @@ function audioStreamEnd($data) {
     header("Accept-Ranges: bytes");
 
     // Si el usuario es admin o tiene meta `pro`, permitir caché del navegador
-    if (usuarioEsAdminOPro()) {
+    if (usuarioEsAdminOPro($current_user)) {
         guardarLog("audioStreamEnd: Cargando con caché del navegador habilitada para el usuario admin/pro");
         header("Cache-Control: public, max-age=15768000"); 
     } else {

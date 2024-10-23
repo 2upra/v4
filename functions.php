@@ -5,11 +5,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-function usuarioEsAdminOPro() {
-    // Obtener el usuario actual de WordPress
-    $current_user_id = get_current_user_id();
-    guardarLog("user id: $current_user_id");
-    $current_user = wp_get_current_user();
+function usuarioEsAdminOPro($current_user) {
 
     // Comprobar si el usuario está logueado
     if (!$current_user || 0 == $current_user->ID) {
