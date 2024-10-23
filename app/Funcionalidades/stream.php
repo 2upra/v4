@@ -132,12 +132,12 @@ class AudioSecureHandler
     {
         $mime_type = get_post_mime_type($audio_id);
         if (strpos($mime_type, 'audio') === false) {
-            guardarLog('generateToken: audio_id no es un archivo de audio, MIME: ' . $mime_type);
+            guardarLog("generateToken: audio_id no es un archivo de audio, MIME: $mime_type");
             return false;
         }
-        guardarLog('generateToken: MIME type correcto: ' . $mime_type);
+        guardarLog("generateToken: MIME type correcto: $mime_type");
         // Log para comprobar que el audio_id es válido
-        guardarLog('generateToken: audio_id válido: ' . $audio_id);
+        guardarLog("generateToken: audio_id válido:  $audio_id");
 
         // Continuar con el proceso de tokenización...
         $data = [
