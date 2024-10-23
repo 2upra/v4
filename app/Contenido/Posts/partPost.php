@@ -352,12 +352,12 @@ function display_audio_player($audio_id) {
 */
 function wave($audio_url, $audio_id_lite, $post_id)
 {
-    $handler = AudioSecureHandler::getInstance();
+    $audio_handler = AudioSecureHandler::getInstance();
     $wave = get_post_meta($post_id, 'waveform_image_url', true);
     $waveCargada = get_post_meta($post_id, 'waveCargada', true);
     
     // Usando el nuevo sistema para obtener la URL segura
-    $urlAudioSegura = $handler->getAudioUrl($audio_id_lite);
+    $urlAudioSegura = $audio_handler->getSecureUrl($post_id);
     
     // Verificación de error
     if (!$urlAudioSegura) {
@@ -375,4 +375,13 @@ function wave($audio_url, $audio_id_lite, $post_id)
         <div class="waveform-loading" style="display: none;">Cargando...</div>
     </div>
 <?php
+}
+
+add_action('wp_enqueue_scripts', 'add_audio_security_vars');
+
+function add_audio_security_vars() {
+    wp_localize_script('tu-script-principal', 'audioSecurityVars', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('audio_security_nonce')
+    ));
 }

@@ -272,6 +272,14 @@ class AudioSecureHandler
         fclose($fp);
     }
 
+    public function getSecureUrl($audio_id) {
+        $token = $this->generateToken($audio_id);
+        return add_query_arg([
+            'action' => 'stream_secure_audio',
+            'token' => $token
+        ], admin_url('admin-ajax.php'));
+    }
+
     // Método auxiliar para uso público
     public function getAudioUrl($audio_id)
     {
@@ -285,6 +293,24 @@ class AudioSecureHandler
 
 
 // Inicialización y hooks
+
+add_action('wp_ajax_stream_secure_audio', 'handle_secure_audio_stream');
+add_action('wp_ajax_nopriv_stream_secure_audio', 'handle_secure_audio_stream');
+
+function handle_secure_audio_stream() {
+    $token = $_GET['token'] ?? '';
+    if (empty($token)) {
+        wp_send_json_error('Token no proporcionado');
+    }
+
+    $handler = AudioSecureHandler::getInstance();
+    $result = $handler->streamAudio($token);
+
+    if (is_wp_error($result)) {
+        wp_send_json_error($result->get_error_message());
+    }
+}
+
 add_action('rest_api_init', function () {
     register_rest_route('1/v1', '/2', [
         'methods' => 'GET',

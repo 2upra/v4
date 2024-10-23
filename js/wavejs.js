@@ -48,10 +48,13 @@ function inicializarWaveforms() {
 
 function loadAudio(postId, audioUrl, container) {
     if (!container.dataset.audioLoaded) {
-        window.we(postId, audioUrl); 
-        container.dataset.audioLoaded = 'true'; 
+        // Añadir nonce a la URL si es necesario
+        const secureUrl = audioUrl + (audioUrl.includes('?') ? '&' : '?') + '_wpnonce=' + wpApiSettings.nonce;
+        window.we(postId, secureUrl);
+        container.dataset.audioLoaded = 'true';
     }
 }
+
 
 window.we = function (postId, audioUrl) {
     const container = document.getElementById(`waveform-${postId}`);
@@ -70,11 +73,14 @@ window.we = function (postId, audioUrl) {
         window.audioLoading = true;
 
         fetch(audioUrl, {
-            credentials: 'include', // Incluye las cookies de sesión en la solicitud
+            credentials: 'same-origin', // Importante para las cookies de sesión
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
             .then((response) => {
                 if (!response.ok) {
-                    throw new Error('Respuesta de red no satisfactoria');
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return response;
             })
