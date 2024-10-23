@@ -96,7 +96,6 @@ function selectorformtipo() {
         if (event.target.matches('.custom-checkbox input[type="checkbox"]')) {
             const label = event.target.closest('label');
 
-            // Cambiar estilos según el estado del checkbox
             if (event.target.checked) {
                 label.style.color = '#ffffff';
                 label.style.background = '#131313';
@@ -105,45 +104,68 @@ function selectorformtipo() {
                 label.style.background = '';
             }
 
-            // Obtener todos los checkboxes
             const exclusivo = document.getElementById('exclusivocheck');
             const colab = document.getElementById('colabcheck');
             const music = document.getElementById('musiccheck');
 
-            // Lógica para gestionar las restricciones
-            if (music.checked) {
-                // Si music está activado, desactivar colab y descarga
-                colab.checked = false;
-                colab.disabled = true;
-                descarga.checked = false;
-                descarga.disabled = true;
+            // Obtener el número de checkboxes seleccionados
+            const checkboxes = document.querySelectorAll('.custom-checkbox input[type="checkbox"]');
+            let checkedCount = 0;
+            checkboxes.forEach((checkbox) => {
+                if (checkbox.checked) {
+                    checkedCount++;
+                }
+            });
+
+            // Si ya hay 2 seleccionados, deshabilitar los no seleccionados
+            if (checkedCount >= 2) {
+                checkboxes.forEach((checkbox) => {
+                    if (!checkbox.checked) {
+                        checkbox.disabled = true;
+                    }
+                });
             } else {
-                descarga.disabled = false; // Si no está marcado, permitir descarga
+                checkboxes.forEach((checkbox) => {
+                    checkbox.disabled = false;
+                });
             }
 
-            if (exclusivo.checked) {
-                // Si exclusivo está activado, desactivar colab
-                colab.checked = false;
-                colab.disabled = true;
-            } else {
-                colab.disabled = !music.checked; // Permitir colab solo si music no está marcado
-            }
-
-            if (colab.checked) {
-                // Si colab está activado, desactivar exclusivo y music
-                exclusivo.checked = false;
-                exclusivo.disabled = true;
-                music.checked = false;
-                music.disabled = true;
-            } else {
-                // Permitir activar exclusivo y music si colab no está marcado
+            // Si se selecciona un checkbox, se aplican las excepciones
+            if (event.target.id === 'descargacheck' && descarga.checked) {
+                // Permitir exclusivocheck y colabcheck con descargacheck
                 exclusivo.disabled = false;
-                music.disabled = false;
+                colab.disabled = false;
             }
-        }
-    });
-}
 
+            if (event.target.id === 'exclusivocheck') {
+                if (exclusivo.checked) {
+                    // Solo permitir musica o descarga junto con exclusivo
+                    colab.checked = false;
+                    colab.disabled = true;
+                } else {
+                    colab.disabled = false; // Permitir si exclusivo no está marcado
+                }
+            }
+
+            if (event.target.id === 'colabcheck') {
+                if (colab.checked) {
+                    // Solo permitir descarga junto con colab
+                    exclusivo.checked = false;
+                    exclusivo.disabled = true;
+                    music.checked = false;
+                    music.disabled = true;
+                } else {
+                    exclusivo.disabled = false; // Permitir si colab no está marcado
+                    music.disabled = false;
+                }
+            }
+
+            if (event.target.id === 'musiccheck') {
+                if (music.checked) {
+                    // Solo permitir exclusivo junto con music
+                    colab.checked = false;
+                    colab.disabled = true;
+                } el
 
 
 
