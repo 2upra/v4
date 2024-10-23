@@ -50,6 +50,58 @@ necesito que se cheeen los audios sin que pierdan su estricta seguridad
 // Función para obtener la URL segura del audio
 
 
+function wave($audio_url, $audio_id_lite, $post_id)
+{
+    $audio_handler = AudioSecureHandler::getInstance();
+    $wave = get_post_meta($post_id, 'waveform_image_url', true);
+    $waveCargada = get_post_meta($post_id, 'waveCargada', true);
+    $urlAudioSegura = $audio_handler->getSecureUrl($post_id);
+
+    // Verificación de error
+    if (!$urlAudioSegura) {
+        error_log("Error generando URL segura para audio ID: " . $audio_id_lite);
+        return; // O maneja el error como prefieras
+    }
+?>
+    <div id="waveform-<?php echo esc_attr($post_id); ?>"
+        class="waveform-container without-image"
+        postIDWave="<?php echo esc_attr($post_id); ?>"
+        data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
+        data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
+        <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
+        <div class="waveform-message"></div>
+        <div class="waveform-loading" style="display: none;">Cargando...</div>
+    </div>
+<?php
+}
+
+function handle_secure_audio_stream()
+{
+    $token = $_GET['token'] ?? '';
+    if (empty($token)) {
+        wp_send_json_error('Token no proporcionado');
+    }
+
+    $handler = AudioSecureHandler::getInstance();
+    $result = $handler->streamAudio($token);
+
+    if (is_wp_error($result)) {
+        wp_send_json_error($result->get_error_message());
+    }
+}
+
+add_action('rest_api_init', function () {
+    register_rest_route('1/v1', '/2', [
+        'methods' => 'GET',
+        'callback' => function ($request) {
+            return AudioSecureHandler::getInstance()->streamAudio($request->get_param('token'));
+        },
+        'permission_callback' => '__return_true'
+    ]);
+});
+
+add_action('wp_ajax_stream_secure_audio', 'handle_secure_audio_stream');
+add_action('wp_ajax_nopriv_stream_secure_audio', 'handle_secure_audio_stream');
 
 
 class AudioSecureHandler
@@ -76,10 +128,15 @@ class AudioSecureHandler
         return self::$instance;
     }
 
-    public function generateToken($audio_id)
+    public function generateToken($audio_id) 
     {
-        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) return false;
-
+        // Validar el formato del audio_id
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
+            guardarLog('generateToken: audio_id inválido: ' . $audio_id);
+            return false;
+        }
+    
+        // Datos para el token
         $data = [
             'id' => $audio_id,
             'exp' => time() + self::TOKEN_EXPIRY,
@@ -88,11 +145,20 @@ class AudioSecureHandler
             'adm' => $this->is_admin,
             'nonce' => wp_create_nonce('audio_stream_' . $audio_id)
         ];
-
+    
+        // Log de datos antes de codificarlos
+        guardarLog('generateToken: datos antes de codificar: ' . json_encode($data));
+    
+        // Codificación y firma
         $payload = json_encode($data);
         $signature = hash_hmac('sha256', $payload, $_ENV['AUDIOCLAVE']);
+        
+        // Log de la firma generada
+        guardarLog('generateToken: firma generada: ' . $signature);
+        
         return base64_encode($payload) . '.' . $signature;
     }
+    
 
     public function verifyToken($token)
     {
@@ -255,7 +321,7 @@ class AudioSecureHandler
             guardarLog('El archivo no existe: ' . $file_path);
             return;
         }
-    
+
         $mime_type = mime_content_type($file_path);
         if (!strpos($mime_type, 'audio/') === 0) {
             guardarLog('Tipo MIME no válido: ' . $mime_type);
@@ -297,7 +363,8 @@ class AudioSecureHandler
         return true;
     }
 
-    public function getSecureUrl($audio_id) {
+    public function getSecureUrl($audio_id)
+    {
         $token = $this->generateToken($audio_id);
         return add_query_arg([
             'action' => 'stream_secure_audio',
@@ -305,49 +372,7 @@ class AudioSecureHandler
         ], admin_url('admin-ajax.php'));
     }
 
-    // Método auxiliar para uso público
-    public function getAudioUrl($audio_id)
-    {
-        $token = $this->generateToken($audio_id);
-        return add_query_arg([
-            'action' => 'stream_audio',
-            'token' => $token
-        ], admin_url('admin-ajax.php'));
-    }
 }
 
 
 // Inicialización y hooks
-
-add_action('wp_ajax_stream_secure_audio', 'handle_secure_audio_stream');
-add_action('wp_ajax_nopriv_stream_secure_audio', 'handle_secure_audio_stream');
-
-function handle_secure_audio_stream() {
-    $token = $_GET['token'] ?? '';
-    if (empty($token)) {
-        wp_send_json_error('Token no proporcionado');
-    }
-
-    $handler = AudioSecureHandler::getInstance();
-    $result = $handler->streamAudio($token);
-
-    if (is_wp_error($result)) {
-        wp_send_json_error($result->get_error_message());
-    }
-}
-
-add_action('rest_api_init', function () {
-    register_rest_route('1/v1', '/2', [
-        'methods' => 'GET',
-        'callback' => function ($request) {
-            return AudioSecureHandler::getInstance()->streamAudio($request->get_param('token'));
-        },
-        'permission_callback' => '__return_true'
-    ]);
-});
-
-function get_secure_audio_url($audio_id)
-{
-    $token = AudioSecureHandler::getInstance()->generateToken($audio_id);
-    return $token ? site_url("/wp-json/1/v1/2?token=" . urlencode($token)) : false;
-}
