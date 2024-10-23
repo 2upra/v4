@@ -92,8 +92,7 @@ add_action('rest_api_init', function () {
     ));
 });
 
-// NO FUNCIONA DICE ESTO 2024-10-23 22:16:18 - Usuario: Visitante (ID: guest_47288938cbf2f39a22166380b2c849c9)
-// Modificar la función audioStreamEnd para implementar streaming
+
 function audioStreamEnd($data) {
 
     // Obtener identificador de usuario o visitante
@@ -156,8 +155,8 @@ function audioStreamEnd($data) {
     header("Accept-Ranges: bytes");
 
     // Si el usuario es admin o tiene meta `pro`, permitir caché del navegador
-    /*
-    if (usuarioEsAdminOPro($current_user)) {
+
+    if (usuarioEsAdminOPro($user_identifier)) {
         guardarLog("audioStreamEnd: Cargando con caché del navegador habilitada para el usuario admin/pro");
         header("Cache-Control: public, max-age=15768000"); 
     } else {
@@ -166,7 +165,7 @@ function audioStreamEnd($data) {
         header("Cache-Control: post-check=0, pre-check=0", false);
         header("Pragma: no-cache");
     }
-    */
+
     // Manejar Ranges HTTP para streaming parcial
     if (isset($_SERVER['HTTP_RANGE'])) {
         guardarLog("audioStreamEnd: HTTP Range solicitado: " . $_SERVER['HTTP_RANGE']);
