@@ -95,7 +95,7 @@ function handle_secure_audio_stream() {
 add_action('wp_ajax_stream_secure_audio', 'handle_secure_audio_stream');
 add_action('wp_ajax_nopriv_stream_secure_audio', 'handle_secure_audio_stream');
 
-//aqui hay 2 problemas graves, 1) el audio no se esta cacheando en ningun momento, segundo, puedo acceder directamente al enlace https://2upra.com/wp-admin/admin-ajax.php?action=stream_secure_audio&token=ejemplo&security_nonce=ejemplo sin problema y descargar el audio cosa que no debería
+// da este error testkit1/:1  Uncaught (in promise) EncodingError: Failed to execute 'decodeAudioData' on 'BaseAudioContext': Unable to decode audio data
 
 /*
 function inicializarWaveforms() {
@@ -382,52 +382,118 @@ class AudioSecureHandler
         return $cache_dir . '/audio_' . $audio_id . '_' . self::CACHE_VERSION . '.cache';
     }
 
-    private function processAndCacheFile($source_path, $cache_path)
-    {
-        // Proceso básico de encriptación/optimización
+    private function processAndCacheFile($source_path, $cache_path) {
         $key = substr(hash('sha256', $_ENV['AUDIOCLAVE']), 0, 32);
         $iv = random_bytes(16);
-
+        
         $source = fopen($source_path, 'rb');
         $cache = fopen($cache_path, 'wb');
-
-        fwrite($cache, $iv); // Guardar IV al inicio
-
+        
+        // Escribir IV al inicio
+        fwrite($cache, $iv);
+        
+        // Encriptar por bloques
         while (!feof($source)) {
             $chunk = fread($source, self::CHUNK_SIZE);
-            $processed = openssl_encrypt($chunk, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
-            fwrite($cache, $processed);
+            $padded = $this->addPKCS7Padding($chunk, 16);
+            $encrypted = openssl_encrypt(
+                $padded,
+                'AES-256-CBC',
+                $key,
+                OPENSSL_RAW_DATA,
+                $iv
+            );
+            fwrite($cache, $encrypted);
         }
-
+        
         fclose($source);
         fclose($cache);
         chmod($cache_path, 0600);
     }
+    
+    private function addPKCS7Padding($data, $blockSize) {
+        $pad = $blockSize - (strlen($data) % $blockSize);
+        return $data . str_repeat(chr($pad), $pad);
+    }
 
-    private function streamFileWithRanges($file_path)
-    {
+    private function streamFileWithRanges($file_path) {
         $size = filesize($file_path);
         $fp = fopen($file_path, 'rb');
-
+    
+        // Leer el IV del inicio del archivo
+        $iv = fread($fp, 16);
+        $size -= 16; // Ajustar el tamaño total
+    
+        // Configurar la desencriptación
+        $key = substr(hash('sha256', $_ENV['AUDIOCLAVE']), 0, 32);
+        $cipher = 'AES-256-CBC';
+    
+        header('Content-Type: audio/mpeg');
+        header('Accept-Ranges: bytes');
+    
         if (isset($_SERVER['HTTP_RANGE'])) {
             list($start, $end) = $this->parseRange($_SERVER['HTTP_RANGE'], $size);
-            fseek($fp, $start);
+            
+            // Ajustar inicio y fin para la encriptación en bloques
+            $blockSize = 16;
+            $adjustedStart = $start - ($start % $blockSize);
+            $adjustedEnd = min($end + ($blockSize - ($end % $blockSize)), $size - 1);
+            
+            fseek($fp, $adjustedStart + 16); // +16 por el IV
+            
             header('HTTP/1.1 206 Partial Content');
             header("Content-Range: bytes $start-$end/$size");
             header('Content-Length: ' . ($end - $start + 1));
+            
+            // Leer y desencriptar por bloques
+            $buffer = '';
+            while (ftell($fp) <= $adjustedEnd + 16) {
+                $chunk = fread($fp, self::CHUNK_SIZE);
+                if ($chunk === false) break;
+                
+                $decrypted = openssl_decrypt(
+                    $chunk,
+                    $cipher,
+                    $key,
+                    OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING,
+                    $iv
+                );
+                
+                // Recortar al rango exacto solicitado
+                if (strlen($buffer) === 0 && $start > $adjustedStart) {
+                    $decrypted = substr($decrypted, $start - $adjustedStart);
+                }
+                if (ftell($fp) > $end + 16) {
+                    $decrypted = substr($decrypted, 0, $end - $start + 1);
+                }
+                
+                echo $decrypted;
+                flush();
+            }
         } else {
             header('Content-Length: ' . $size);
+            
+            // Streaming completo
+            while (!feof($fp)) {
+                $chunk = fread($fp, self::CHUNK_SIZE);
+                if ($chunk === false) break;
+                
+                $decrypted = openssl_decrypt(
+                    $chunk,
+                    $cipher,
+                    $key,
+                    OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING,
+                    $iv
+                );
+                
+                echo $decrypted;
+                flush();
+            }
         }
-
-        header('Content-Type: audio/mpeg');
-        header('Accept-Ranges: bytes');
-
-        while (!feof($fp)) {
-            echo fread($fp, self::CHUNK_SIZE);
-            flush();
-        }
+        
         fclose($fp);
     }
+    
 
     private function parseRange($range, $size)
     {
@@ -441,3 +507,5 @@ class AudioSecureHandler
 
 
 // Inicialización y hooks
+
+
