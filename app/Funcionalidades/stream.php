@@ -399,7 +399,13 @@ class AudioSecureHandler
     {
         // Verificar referer
         $referer = $_SERVER['HTTP_REFERER'] ?? '';
-        if (!$referer || parse_url($referer, PHP_URL_HOST) !== $_SERVER['HTTP_HOST']) {
+        if (!$referer) {
+            guardarLog("validateRequest: Error - Referer no presente.");
+            return false;
+        }
+
+        if (parse_url($referer, PHP_URL_HOST) !== $_SERVER['HTTP_HOST']) {
+            guardarLog("validateRequest: Error - Referer inválido. Referer: $referer, Host esperado: " . $_SERVER['HTTP_HOST']);
             return false;
         }
 
@@ -408,15 +414,18 @@ class AudioSecureHandler
             empty($_SERVER['HTTP_X_REQUESTED_WITH']) ||
             strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest'
         ) {
+            guardarLog("validateRequest: Error - No es una petición AJAX. HTTP_X_REQUESTED_WITH: " . ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? 'no establecido'));
             return false;
         }
 
         // Verificar nonce
         $nonce = $_GET['security_nonce'] ?? '';
         if (!wp_verify_nonce($nonce, 'audio_stream_nonce')) {
+            guardarLog("validateRequest: Error - Nonce inválido. Nonce proporcionado: $nonce");
             return false;
         }
 
+        guardarLog("validateRequest: Solicitud validada exitosamente.");
         return true;
     }
 

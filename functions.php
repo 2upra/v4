@@ -5,7 +5,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-function escribirLog($mensaje, $archivo, $max_lineas = 2000) {
+function escribirLog($mensaje, $archivo, $max_lineas = 200) {
     if (is_object($mensaje) || is_array($mensaje)) {
         $mensaje = json_encode($mensaje);
     }
