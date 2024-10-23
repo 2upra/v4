@@ -29,29 +29,45 @@ add_action('procesar_audio1_cron_event', 'procesarAudios');
 // Paso 1 - Ejecuta cada 4 minutos, envía un solo audio válido para autProcesarAudio
 function procesarAudios()
 {
+    guardarLog("procesarAudios llamado");
     $directorio_audios = '/home/asley01/MEGA/Waw/X';
     $lock_file = '/tmp/procesar_audios.lock';
 
     // Intentar crear y obtener un candado exclusivo
     $fp = fopen($lock_file, 'c');
-    if ($fp === false || !flock($fp, LOCK_EX | LOCK_NB)) {
+    if ($fp === false) {
+        guardarLog("Error al abrir el archivo de bloqueo: $lock_file.");
+        return;
+    }
+    if (!flock($fp, LOCK_EX | LOCK_NB)) {
+        guardarLog("No se pudo obtener el bloqueo exclusivo: otro proceso está en ejecución.");
         return;
     }
 
     try {
+        guardarLog("Bloqueo obtenido, iniciando el procesamiento de audios.");
         $audio_info = buscarUnAudioValido($directorio_audios);
         if ($audio_info) {
+            guardarLog("Audio válido encontrado: " . $audio_info['ruta']);
             autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
+        } else {
+            guardarLog("No se encontró ningún audio válido en el directorio: $directorio_audios.");
         }
+    } catch (Exception $e) {
+        guardarLog("Error durante el procesamiento de audios: " . $e->getMessage());
     } finally {
         flock($fp, LOCK_UN);
         fclose($fp);
+        guardarLog("Bloqueo liberado, proceso finalizado.");
+        
         // Verificar si el lock_file actual es el que se creó
         if (file_exists($lock_file)) {
             unlink($lock_file);
+            guardarLog("Archivo de bloqueo eliminado: $lock_file.");
         }
     }
 }
+
 
 // Paso 2 - Buscar y retornar un solo audio válido
 function buscarUnAudioValido($directorio)
