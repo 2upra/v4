@@ -333,48 +333,21 @@ function audioPost($post_id)
     return ob_get_clean();
 }
 
+//esto ahora debe soportar varias waves, en un post (entorno wordpress), puede haber varios audio_id_lite (buscar y comprobar cuantos hay, puede haber hasta treinta), el primero ya esta puesto y llega por lo general con $audio_id_lite, pero aqui dentro de esta funcion se puede comprobar, los audio id lite se guardan asi: el primero por defecto se guarda en una meta post_audio_lite, no hay que comprobar si existe porque sino exista la funcion no activa, lo que hay que comprobar es el resto que puede ser post_audio_lite_2, post_audio_lite_3, post_audio_lite_4 hasta treinta, y en consecuencia mostrar esas wave, si mas de una wave, por favor ponerlas toda en un div con clase multiwaves
 function wave($audio_url, $audio_id_lite, $post_id)
 {
-    // Inicializar array para almacenar todos los audio IDs
-    $audio_ids = array();
-    
-    // Añadir el primer audio ID (el que viene por defecto)
-    $audio_ids[] = $audio_id_lite;
-    
-    // Comprobar si existen más audio IDs (del 2 al 30)
-    for ($i = 2; $i <= 30; $i++) {
-        $additional_audio = get_post_meta($post_id, 'post_audio_lite_' . $i, true);
-        if (!empty($additional_audio)) {
-            $audio_ids[] = $additional_audio;
-        }
-    }
-    
-    // Si hay más de una wave, envolver en div multiwaves
-    if (count($audio_ids) > 1) {
-        echo '<div class="multiwaves">';
-    }
-    
-    // Generar wave para cada audio ID
-    foreach ($audio_ids as $index => $current_audio_id) {
-        $wave = get_post_meta($post_id, 'waveform_image_url' . ($index > 0 ? '_' . ($index + 1) : ''), true);
-        $waveCargada = get_post_meta($post_id, 'waveCargada' . ($index > 0 ? '_' . ($index + 1) : ''), true);
-        $urlAudioSegura = audioUrlSegura($current_audio_id);
-        ?>
-        <div id="waveform-<?php echo $post_id . '-' . ($index + 1); ?>"
-            class="waveform-container without-image"
-            postIDWave="<?php echo $post_id; ?>"
-            data-wave-index="<?php echo ($index + 1); ?>"
-            data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
-            data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
-            <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
-            <div class="waveform-message"></div>
-            <div class="waveform-loading" style="display: none;">Cargando...</div>
-        </div>
-        <?php
-    }
-    
-    // Cerrar div multiwaves si hay más de una wave
-    if (count($audio_ids) > 1) {
-        echo '</div>';
-    }
+    $wave = get_post_meta($post_id, 'waveform_image_url', true);
+    $waveCargada = get_post_meta($post_id, 'waveCargada', true);
+    $urlAudioSegura = audioUrlSegura($audio_id_lite); // Usando la URL segura
+?>
+    <div id="waveform-<? echo $post_id; ?>"
+        class="waveform-container without-image"
+        postIDWave="<? echo $post_id; ?>"
+        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
+        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
+        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
+        <div class="waveform-message"></div>
+        <div class="waveform-loading" style="display: none;">Cargando...</div>
+    </div>
+<?
 }

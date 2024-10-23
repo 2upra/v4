@@ -48,214 +48,157 @@ necesito que se cheeen los audios sin que pierdan su estricta seguridad
 */
 
 // Función para obtener la URL segura del audio
-function tokenAudio($audio_id) {
-    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
+class AudioSecureHandler {
+    private static $instance = null;
+    private $cache_enabled;
+    private $is_admin;
+    private const CACHE_TIME = 86400; // 24 horas
+    private const BUFFER_SIZE = 8192; // 8KB
+    private const TOKEN_EXPIRY = 3600; // 1 hora
+
+    private function __construct() {
+        $this->is_admin = current_user_can('administrator');
+        $this->cache_enabled = defined('AUDIO_CACHE_ENABLED') && AUDIO_CACHE_ENABLED;
+    }
+
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    public function generateToken($audio_id) {
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) return false;
+
+        $data = [
+            'id' => $audio_id,
+            'exp' => time() + self::TOKEN_EXPIRY,
+            'ip' => $_SERVER['REMOTE_ADDR'],
+            'uid' => uniqid(),
+            'adm' => $this->is_admin
+        ];
+
+        $payload = json_encode($data);
+        $signature = hash_hmac('sha256', $payload, $_ENV['AUDIOCLAVE']);
+        return base64_encode($payload) . '.' . $signature;
+    }
+
+    public function verifyToken($token) {
+        list($payload, $signature) = explode('.', $token);
+        
+        $data = json_decode(base64_decode($payload), true);
+        if (!$data) return false;
+
+        if (!$this->is_admin && $data['ip'] !== $_SERVER['REMOTE_ADDR']) return false;
+        if (time() > $data['exp']) return false;
+        if ($this->tokenIsUsed($data['uid']) && !$this->is_admin) return false;
+
+        $expected_signature = hash_hmac('sha256', base64_decode($payload), $_ENV['AUDIOCLAVE']);
+        
+        if (hash_equals($expected_signature, $signature)) {
+            if (!$this->is_admin) $this->markTokenAsUsed($data['uid']);
+            return $data;
+        }
         return false;
     }
 
-    $expiration = time() + 3600; 
-    $user_ip = $_SERVER['REMOTE_ADDR'];
-    $unique_id = uniqid();
-    $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
-    $signature = hash_hmac('sha256', $data, ($_ENV['AUDIOCLAVE']));
-    return base64_encode($data . '|' . $signature);
-}
-
-// Función para verificar el token
-function verificarAudio($token) {
-    $parts = explode('|', base64_decode($token));
-    if (count($parts) !== 5) return false; // Asegurarse de que haya 5 partes
-    list($audio_id, $expiration, $user_ip, $unique_id, $signature) = $parts;
-
-    if ($_SERVER['REMOTE_ADDR'] !== $user_ip) {
-        return false;
-    }
-    if (time() > $expiration) return false;
-    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
-        return false;
-    }
-    if (tokenYaUsado($unique_id)) return false;
-
-    $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
-    $expected_signature = hash_hmac('sha256', $data, ($_ENV['AUDIOCLAVE']));
-    
-    if (hash_equals($expected_signature, $signature)) {
-        marcarTokenComoUsado($unique_id);
-        return true;
-    }
-    return false;
-}
-
-function marcarTokenComoUsado($unique_id) {
-    set_transient('audio_token_' . $unique_id, true, 3600);
-}
-
-function tokenYaUsado($unique_id) {
-    return get_transient('audio_token_' . $unique_id) !== false;
-}
-
-// Función para obtener la URL segura del audio
-function audioUrlSegura($audio_id) {
-    $token = tokenAudio($audio_id);
-    if (!$token) {
-        return new WP_Error('invalid_audio_id', 'Audio ID inválido.');
-    }
-    return site_url("/wp-json/1/v1/2?token=" . urlencode($token));
-}
-
-// Registrar el endpoint REST
-add_action('rest_api_init', function () {
-    register_rest_route('1/v1', '/2', array(
-        'methods' => 'GET',
-        'callback' => 'audioStreamEnd',
-        'args' => array(
-            'token' => array(
-                'required' => true,
-            ),
-        ),
-        'permission_callback' => function($request) {
-            return verificarAudio($request->get_param('token'));
-        }
-    ));
-});
-
-
-// Modificar la función audioStreamEnd para implementar streaming
-function audioStreamEnd($data) {
-    $token = $data['token'];
-    $parts = explode('|', base64_decode($token));
-    $audio_id = $parts[0];
-
-    // Directorio de caché
-    $upload_dir = wp_upload_dir();
-    $cache_dir = $upload_dir['basedir'] . '/audio_cache';
-    if (!file_exists($cache_dir)) {
-        wp_mkdir_p($cache_dir);
+    private function tokenIsUsed($uid) {
+        return get_transient('audio_token_' . $uid) !== false;
     }
 
-    $cache_file = $cache_dir . '/audio_' . $audio_id . '.cache';
+    private function markTokenAsUsed($uid) {
+        set_transient('audio_token_' . $uid, true, self::TOKEN_EXPIRY);
+    }
 
-    if (file_exists($cache_file) && (time() - filemtime($cache_file) < 24 * 60 * 60)) {
-        $file = $cache_file;
-    } else {
-        $original_file = get_attached_file($audio_id);
-        if (!file_exists($original_file)) {
-            return new WP_Error('no_audio', 'Archivo de audio no encontrado.', array('status' => 404));
-        }
-        if (!@copy($original_file, $cache_file)) {
-            return new WP_Error('copy_failed', 'Error al copiar el archivo de audio al caché.', array('status' => 500));
+    public function streamAudio($token) {
+        $data = $this->verifyToken($token);
+        if (!$data) return new WP_Error('invalid_token', 'Token inválido');
+
+        $audio_id = $data['id'];
+        $file_path = $this->getAudioPath($audio_id);
+        
+        if (!$file_path) {
+            return new WP_Error('file_not_found', 'Audio no encontrado');
         }
 
-        $file = $cache_file;
+        $this->sendHeaders($audio_id, $file_path);
+        $this->streamFile($file_path);
+        exit;
     }
 
-    $fp = @fopen($file, 'rb');
-    if (!$fp) {
-        return new WP_Error('file_open_error', 'No se pudo abrir el archivo de audio.', array('status' => 500));
-    }
-
-    $size = filesize($file);
-    $length = $size;
-    $start = 0;
-    $end = $size - 1;
-
-    header('Content-Type: ' . get_post_mime_type($audio_id));
-    header("Accept-Ranges: bytes");
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Cache-Control: post-check=0, pre-check=0", false);
-    header("Pragma: no-cache");
-
-    // Manejar Ranges HTTP para streaming parcial
-    if (isset($_SERVER['HTTP_RANGE'])) {
-        $c_start = $start;
-        $c_end = $end;
-        list(, $range) = explode('=', $_SERVER['HTTP_RANGE'], 2);
-        if (strpos($range, ',') !== false) {
-            header('HTTP/1.1 416 Requested Range Not Satisfiable');
-            header("Content-Range: bytes $start-$end/$size");
-            exit;
-        }
-        if ($range == '-') {
-            $c_start = $size - substr($range, 1);
-        } else {
-            $range = explode('-', $range);
-            $c_start = $range[0];
-            $c_end = (isset($range[1]) && is_numeric($range[1])) ? $range[1] : $size;
-        }
-        $c_end = ($c_end > $end) ? $end : $c_end;
-        if ($c_start > $c_end || $c_start > $size - 1 || $c_end >= $size) {
-            header('HTTP/1.1 416 Requested Range Not Satisfiable');
-            header("Content-Range: bytes $start-$end/$size");
-            exit;
-        }
-        $start = $c_start;
-        $end = $c_end;
-        $length = $end - $start + 1;
-        fseek($fp, $start);
-        header('HTTP/1.1 206 Partial Content');
-    }
-
-    header("Content-Range: bytes $start-$end/$size");
-    header("Content-Length: " . $length);
-
-    // Streaming con rate limiting
-    $buffer = 1024 * 8; // 8 KB
-    $sleep = 1000; // Microsegundos de espera entre cada envío de buffer
-    $sent = 0;
-    while (!feof($fp) && ($p = ftell($fp)) <= $end) {
-        if ($p + $buffer > $end) {
-            $buffer = $end - $p + 1;
-        }
-        echo fread($fp, $buffer);
-        $sent += $buffer;
-        flush();
-        if ($sent >= 64 * 1024) { // Cada 64 KB
-            usleep($sleep);
-            $sent = 0;
-        }
-    }
-
-    fclose($fp);
-    exit();
-}
-
-
-// Registra el cron job
-add_action('wp', 'schedule_audio_cache_cleanup');
-
-function schedule_audio_cache_cleanup() {
-    if (!wp_next_scheduled('audio_cache_cleanup')) {
-        wp_schedule_event(time(), 'daily', 'audio_cache_cleanup');
-    }
-}
-
-// Función para limpiar el caché
-add_action('audio_cache_cleanup', 'clean_audio_cache');
-
-function clean_audio_cache() {
-    $upload_dir = wp_upload_dir();
-    $cache_dir = $upload_dir['basedir'] . '/audio_cache';
-
-    if (is_dir($cache_dir)) {
-        $files = glob($cache_dir . '/*');
-        $now = time();
-
-        foreach ($files as $file) {
-            if (is_file($file) && ($now - filemtime($file) > 7 * 24 * 60 * 60)) {
-                unlink($file);
+    private function getAudioPath($audio_id) {
+        if ($this->is_admin && $this->cache_enabled) {
+            $cache_path = $this->getCachePath($audio_id);
+            if (file_exists($cache_path) && (time() - filemtime($cache_path) < self::CACHE_TIME)) {
+                return $cache_path;
             }
         }
+
+        $original_path = get_attached_file($audio_id);
+        if (!file_exists($original_path)) return false;
+
+        if ($this->is_admin && $this->cache_enabled) {
+            $this->cacheFile($original_path, $cache_path);
+            return $cache_path;
+        }
+
+        return $original_path;
+    }
+
+    private function getCachePath($audio_id) {
+        $upload_dir = wp_upload_dir();
+        $cache_dir = $upload_dir['basedir'] . '/audio_cache';
+        if (!file_exists($cache_dir)) wp_mkdir_p($cache_dir);
+        return $cache_dir . '/audio_' . $audio_id . '.cache';
+    }
+
+    private function cacheFile($source, $destination) {
+        copy($source, $destination);
+    }
+
+    private function sendHeaders($audio_id, $file_path) {
+        $size = filesize($file_path);
+        header('Content-Type: ' . get_post_mime_type($audio_id));
+        header('Accept-Ranges: bytes');
+        
+        if ($this->is_admin && $this->cache_enabled) {
+            header('Cache-Control: public, max-age=' . self::CACHE_TIME);
+        } else {
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+        }
+
+        // Manejo de ranges para streaming parcial
+        if (isset($_SERVER['HTTP_RANGE'])) {
+            $this->handleRangeRequest($file_path, $size);
+        } else {
+            header('Content-Length: ' . $size);
+        }
+    }
+
+    private function streamFile($file_path) {
+        $fp = fopen($file_path, 'rb');
+        while (!feof($fp)) {
+            echo fread($fp, self::BUFFER_SIZE);
+            flush();
+        }
+        fclose($fp);
     }
 }
 
-// Desprogramar el cron job cuando el plugin se desactiva
-function unschedule_audio_cache_cleanup() {
-    $timestamp = wp_next_scheduled('audio_cache_cleanup');
-    if ($timestamp) {
-        wp_unschedule_event($timestamp, 'audio_cache_cleanup');
-    }
+// Inicialización y hooks
+add_action('rest_api_init', function() {
+    register_rest_route('1/v1', '/2', [
+        'methods' => 'GET',
+        'callback' => function($request) {
+            return AudioSecureHandler::getInstance()->streamAudio($request->get_param('token'));
+        },
+        'permission_callback' => '__return_true'
+    ]);
+});
+
+function get_secure_audio_url($audio_id) {
+    $token = AudioSecureHandler::getInstance()->generateToken($audio_id);
+    return $token ? site_url("/wp-json/1/v1/2?token=" . urlencode($token)) : false;
 }
-register_deactivation_hook(__FILE__, 'unschedule_audio_cache_cleanup');
-
-
-
