@@ -131,7 +131,10 @@ class AudioSecureHandler
     public function streamAudio($token)
     {
         $data = $this->verifyToken($token);
-        if (!$data) return new WP_Error('invalid_token', 'Token inválido');
+        if (!$data) {
+            guardarLog('Token verification failed');
+            return new WP_Error('invalid_token', 'Token inválido');
+        }
 
         $audio_id = $data['id'];
         $file_path = $this->getAudioPath($audio_id);
@@ -140,7 +143,9 @@ class AudioSecureHandler
             return new WP_Error('file_not_found', 'Audio no encontrado');
         }
 
-        // Implementación de límite de velocidad
+        guardarLog('Streaming audio file: ' . $file_path);
+        guardarLog('Audio ID: ' . $audio_id);
+        guardarLog('MIME Type: ' . mime_content_type($file_path));
         $this->rateLimiter();
 
         $this->sendHeaders($audio_id, $file_path);
@@ -225,6 +230,10 @@ class AudioSecureHandler
         } else {
             header('Content-Length: ' . $size);
         }
+
+        guardarLog('Sending audio file: ' . $file_path);
+        guardarLog('MIME Type: ' . $mime);
+        guardarLog('File size: ' . $size);
     }
 
     private function handleRangeRequest($file_path, $size)
@@ -243,19 +252,19 @@ class AudioSecureHandler
     private function streamFile($file_path)
     {
         if (!file_exists($file_path)) {
-            error_log('El archivo no existe: ' . $file_path);
+            guardarLog('El archivo no existe: ' . $file_path);
             return;
         }
     
         $mime_type = mime_content_type($file_path);
         if (!strpos($mime_type, 'audio/') === 0) {
-            error_log('Tipo MIME no válido: ' . $mime_type);
+            guardarLog('Tipo MIME no válido: ' . $mime_type);
             return;
         }
 
         $fp = fopen($file_path, 'rb');
         if (!$fp) {
-            error_log('No se pudo abrir el archivo: ' . $file_path);
+            guardarLog('No se pudo abrir el archivo: ' . $file_path);
             return;
         }
         if (isset($_SERVER['HTTP_RANGE'])) {
@@ -285,6 +294,7 @@ class AudioSecureHandler
         }
 
         fclose($fp);
+        return true;
     }
 
     public function getSecureUrl($audio_id) {
