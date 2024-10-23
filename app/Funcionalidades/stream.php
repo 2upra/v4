@@ -3,19 +3,30 @@
 // Función para verificar si el usuario es administrador o tiene la meta `pro`
 function usuarioEsAdminOPro() {
     $current_user = wp_get_current_user();
-    
-    // Verificar si es administrador
-    if (in_array('administrator', $current_user->roles)) {
-        return true;
+
+    // Asegurarse de que el usuario está logueado
+    if (!$current_user || empty($current_user->roles)) {
+        guardarLog("usuarioEsAdminOPro: Error - Usuario no logueado o sin roles asignados.");
+        return false;
     }
-    
-    // Verificar si tiene la meta `pro`
-    if (get_user_meta($current_user->ID, 'pro', true)) {
+
+    // Verificar si el usuario es administrador
+    if (in_array('administrator', (array) $current_user->roles)) {
+        guardarLog("usuarioEsAdminOPro: Usuario es administrador.");
         return true;
     }
 
+    // Verificar si tiene la meta `pro`
+    $is_pro = get_user_meta($current_user->ID, 'pro', true);
+    if ($is_pro) {
+        guardarLog("usuarioEsAdminOPro: Usuario tiene la meta 'pro'.");
+        return true;
+    }
+
+    guardarLog("usuarioEsAdminOPro: Usuario no es administrador ni tiene la meta 'pro'.");
     return false;
 }
+
 
 function tokenAudio($audio_id) {
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
