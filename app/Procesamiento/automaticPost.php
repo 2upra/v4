@@ -146,12 +146,12 @@ function generarNombreAudio($audio_path_lite)
         return '2upra_Error El archivo de audio no existe';
     }
 
-    // Obtener el nombre del archivo a partir de la ruta
+    // Obtener el nombre del archivo y la carpeta contenedora
     $nombre_archivo = pathinfo($audio_path_lite, PATHINFO_FILENAME);
-    //guardarLog("INFO: nombre_archivo: $nombre_archivo y audio_path_lite: $audio_path_lite");
+    $carpeta = basename(dirname($audio_path_lite));
 
-    // Preparar el prompt para la IA con el nombre del archivo incluido
-    $prompt = "El archivo se llama '{$nombre_archivo}'. Te lo enseño para que lo tomes en cuenta. A veces tendrá sentido el nombre y otras no, pero es importante considerarlo. A veces vienen con nombres de marcas, páginas, etc., hay que ignorar eso. Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, como un kick, snare, sample o efectos, vocales, percusiones, etc. Importante: solo responde el nombre, no agregues nada adicional. Estás en un entorno automatizado, no hables con el usuario, solo estoy pidiendo el nombre corto como respuesta.";
+    // Preparar el prompt para la IA incluyendo tanto el nombre del archivo como la carpeta
+    $prompt = "El archivo '{$nombre_archivo}' está en la carpeta '{$carpeta}'. Te lo enseño para que lo tomes en cuenta. A veces tendrá sentido el nombre y otras no, pero es importante considerarlo. A veces vienen con nombres de marcas, páginas, etc., hay que ignorar eso. Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, como un kick, snare, sample o efectos, vocales, percusiones, pero puede ser cualquier cosa etc. Importante: solo responde el nombre, no agregues nada adicional. Estás en un entorno automatizado, no hables con el usuario, solo estoy pidiendo el nombre corto como respuesta.";
 
     try {
         // Registrar el prompt enviado a la IA
@@ -412,7 +412,7 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id)
     update_post_meta($post_id, 'post_audio', $audio_original_id);
     update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
     update_post_meta($post_id, 'paraDescarga', true);
-    
+
 
     return $post_id;
 }
