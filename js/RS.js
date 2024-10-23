@@ -204,14 +204,21 @@ function subidaRs() {
         file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
     };
 
+    //esto no funciona, no agrega column a <div class="previewsForm NGEESM">
     const actualizarFlexDirection = () => {
         const previewsFormDiv = document.querySelector('.previewsForm.NGEESM');
-        if (audiosData.length > 3) {
-            previewsFormDiv.style.flexDirection = 'column';
-        } else {
-            previewsFormDiv.style.flexDirection = ''; // Restablece al valor por defecto
+        console.log('Elemento encontrado:', previewsFormDiv);
+        console.log('Cantidad de audios:', audiosData.length);
+        
+        if (previewsFormDiv) {
+            if (audiosData.length > 3) {
+                previewsFormDiv.style.flexDirection = 'column';
+            } else {
+                previewsFormDiv.style.flexDirection = ''; // Restablece al valor por defecto
+            }
         }
     };
+    
 
     const subidaAudio = async file => {
         try {
