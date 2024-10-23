@@ -17,7 +17,7 @@ function formRs()
         </div>
 
         <div>
-            <div class="postTags DABVYT" id="textoRs" contenteditable="true" data-placeholder="Puedes agregar tags usando #, los samples con imagen tienen mayor relevancia"></div>
+            <div class="postTags DABVYT" id="textoRs" contenteditable="true" data-placeholder="Agrega tags usando #, puedes agregar varios audios a la vez"></div>
 
             <input type="hidden" id="postTagsHidden" name="post_tags">
 

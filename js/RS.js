@@ -82,7 +82,7 @@ function verificarCamposRs() {
     return verificarCampos;
 }
 
-function selectorformtipo() {
+async function selectorformtipo() {
     // Al cargar la página, se activa el checkbox 'descargacheck' por defecto
     const descargacheck = document.getElementById('descargacheck');
     descargacheck.checked = true;
@@ -94,7 +94,7 @@ function selectorformtipo() {
     const exclusivocheck = document.getElementById('exclusivocheck');
     const colabcheck = document.getElementById('colabcheck');
 
-    document.addEventListener('change', function (event) {
+    document.addEventListener('change', async function (event) {
         if (event.target.matches('.custom-checkbox input[type="checkbox"]')) {
             const checkedCheckboxes = document.querySelectorAll('.custom-checkbox input[type="checkbox"]:checked');
 
@@ -105,8 +105,16 @@ function selectorformtipo() {
                 return;
             }
 
-            // Si se marca 'musiccheck', desmarca los demás checkboxes
+            // Si se marca 'musiccheck', desmarca los demás checkboxes y pide confirmación
             if (event.target.id === 'musiccheck' && event.target.checked) {
+                // Mostrar la alerta personalizada y esperar confirmación del usuario
+                const confirmacion = await window.confirm("Vas a publicar música en nuestra plataforma y en otras plataformas de stream.");
+                if (!confirmacion) {
+                    // Si el usuario no confirma, desmarcar 'musiccheck'
+                    event.target.checked = false;
+                    return;
+                }
+
                 descargacheck.checked = false;
                 exclusivocheck.checked = false;
                 colabcheck.checked = false;
@@ -163,6 +171,8 @@ function selectorformtipo() {
         });
     }
 }
+
+
 
 
 
