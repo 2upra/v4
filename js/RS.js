@@ -82,117 +82,37 @@ function verificarCamposRs() {
     return verificarCampos;
 }
 
-
 function selectorformtipo() {
-    // Elementos de las casillas de verificación
-    const descarga = document.getElementById('descargacheck');
-    const exclusivo = document.getElementById('exclusivocheck');
-    const colab = document.getElementById('colabcheck');
-    const music = document.getElementById('musiccheck');
+    // Al cargar la página, se activa el checkbox 'descargacheck' por defecto
+    const descargacheck = document.getElementById('descargacheck');
+    descargacheck.checked = true;
+    const label = descargacheck.closest('label');
+    label.style.color = '#ffffff';
+    label.style.background = '#131313';
 
-    const checkboxes = [descarga, exclusivo, colab, music];
+    document.addEventListener('change', function (event) {
+        if (event.target.matches('.custom-checkbox input[type="checkbox"]')) {
+            const checkedCheckboxes = document.querySelectorAll('.custom-checkbox input[type="checkbox"]:checked');
 
-    // Función para aplicar estilos al label asociado a un checkbox
-    function aplicarEstilos(checkbox) {
-        const label = checkbox.closest('label');
-        if (checkbox.checked) {
-            label.style.color = '#ffffff';
-            label.style.background = '#131313';
-        } else {
-            label.style.color = '#6b6b6b';
-            label.style.background = '';
-        }
-    }
+            // Si hay más de 2 checkboxes seleccionados, desmarca el que acaba de ser seleccionado
+            if (checkedCheckboxes.length > 2) {
+                event.target.checked = false;
+                alert('Solo puedes seleccionar un máximo de 2 opciones.');
+                return;
+            }
 
-    // Función para actualizar el estado de las casillas
-    function actualizarCheckboxes() {
-        // Primero, aplicamos las reglas específicas
-        if (descarga.checked) {
-            exclusivo.disabled = false;
-            colab.disabled = false;
-            music.checked = false;
-            music.disabled = true;
-        }
-
-        if (exclusivo.checked) {
-            colab.checked = false;
-            colab.disabled = true;
-            music.disabled = false;
-        } else {
-            if (!descarga.checked && !music.checked) {
-                colab.disabled = false;
+            // Estilo al checkbox seleccionado
+            const label = event.target.closest('label');
+            if (event.target.checked) {
+                label.style.color = '#ffffff';
+                label.style.background = '#131313';
+            } else {
+                label.style.color = '#6b6b6b';
+                label.style.background = '';
             }
         }
-
-        if (colab.checked) {
-            exclusivo.checked = false;
-            exclusivo.disabled = true;
-            music.checked = false;
-            music.disabled = true;
-        } else {
-            if (!exclusivo.checked) {
-                exclusivo.disabled = false;
-            }
-        }
-
-        if (music.checked) {
-            colab.checked = false;
-            colab.disabled = true;
-            exclusivo.disabled = false;
-        } else {
-            if (!exclusivo.checked && !descarga.checked) {
-                colab.disabled = false;
-            }
-        }
-
-        // Luego, aplicamos la regla global de máximo 2 seleccionadas
-        let checkedCount = checkboxes.filter(cb => cb.checked).length;
-
-        if (checkedCount >= 2) {
-            checkboxes.forEach(cb => {
-                if (!cb.checked) {
-                    cb.disabled = true;
-                }
-            });
-        } else {
-            // Re-activar todas las casillas que no estén deshabilitadas por reglas específicas
-            checkboxes.forEach(cb => {
-                if (!(cb === music && descarga.checked) && 
-                    !(cb === colab && exclusivo.checked) &&
-                    !(cb === exclusivo && colab.checked)) {
-                    cb.disabled = false;
-                }
-            });
-        }
-
-        // Aplicar estilos a todas las casillas
-        checkboxes.forEach(cb => aplicarEstilos(cb));
-    }
-
-    // Inicializar: seleccionar 'descargacheck' y actualizar el estado
-    descarga.checked = true;
-    actualizarCheckboxes();
-
-    // Agregar listener al contenedor específico si existe para mejorar la eficiencia
-    const contenedor = document.querySelector('.custom-checkbox');
-    if (contenedor) {
-        contenedor.addEventListener('change', function (event) {
-            if (event.target.matches('input[type="checkbox"]')) {
-                actualizarCheckboxes();
-            }
-        });
-    } else {
-        // Si no hay un contenedor específico, usar el document
-        document.addEventListener('change', function (event) {
-            if (event.target.matches('.custom-checkbox input[type="checkbox"]')) {
-                actualizarCheckboxes();
-            }
-        });
-    }
+    });
 }
-
-
-
 
 async function envioRs() {
     const button = document.getElementById('enviarRs');
