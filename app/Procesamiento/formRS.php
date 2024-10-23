@@ -24,7 +24,7 @@ function formRs()
             <textarea id="postContent" name="post_content" rows="2" required placeholder="Escribe aquí" style="display: none;"></textarea>
         </div>
 
-        <div class="previewsForm NGEESM">
+        <div class="previewsForm NGEESM RS">
             <div class="previewAreaArchivos" id="previewImagen" style="display: none;">
                 <label></label>
             </div>

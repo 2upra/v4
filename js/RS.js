@@ -206,10 +206,8 @@ function subidaRs() {
 
     //esto no funciona, no agrega column a <div class="previewsForm NGEESM">
     const actualizarFlexDirection = () => {
-        const previewsFormDiv = document.querySelector('.previewsForm.NGEESM');
-        console.log('Elemento encontrado:', previewsFormDiv);
-        console.log('Cantidad de audios:', audiosData.length);
-        
+        const previewsFormDiv = document.querySelector('.previewsForm.NGEESM.RS');
+
         if (previewsFormDiv) {
             if (audiosData.length > 3) {
                 previewsFormDiv.style.flexDirection = 'column';
