@@ -157,13 +157,12 @@ function autRevisarAudio($audio, $file_hash)
     $user_id = 44;
 
     if (!guardarHash($file_hash, $file_url, 'confirmed', $user_id)) {
-        //guardarLog("[autRevisarAudio] Error: No se pudo guardar el hash en la base de datos para el archivo: {$audio}");
+        guardarLog("[autRevisarAudio] Error: No se pudo guardar el hash en la base de datos para el archivo: {$audio}");
         return;
     }
 
-    if (!autProcesarAudio($audio)) {
-        //guardarLog("[autRevisarAudio] Error: El procesamiento del audio ha fallado para: {$audio}");
-    }
+    autProcesarAudio($audio);
+
 }
 
 // ETAPA 2 - PROCESAR EL AUDIO ENCONTRADO
