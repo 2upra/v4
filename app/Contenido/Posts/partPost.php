@@ -352,7 +352,7 @@ function wave($audio_url, $audio_id_lite, $post_id)
 
     // Comprobar si existen las siguientes waves (hasta 30)
     for ($i = 2; $i <= 30; $i++) {
-        $audio_id_field = 'post_audio_lite' . $i;
+        $audio_id_field = 'post_audio_lite_' . $i;
         $audio_id_lite_next = get_post_meta($post_id, $audio_id_field, true);
         
         if ($audio_id_lite_next) {
