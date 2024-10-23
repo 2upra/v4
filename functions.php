@@ -30,6 +30,10 @@ function stripeError($log) {
     escribirLog($log, '/var/www/wordpress/wp-content/themes/stripeError.log');
 }
 
+function automaticPost($log) {
+    escribirLog($log, '/var/www/wordpress/wp-content/themes/automaticPost.log');
+}
+
 function guardarLog($log) {
     escribirLog($log, '/var/www/wordpress/wp-content/themes/logsw.txt');
 }
