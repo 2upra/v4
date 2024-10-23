@@ -333,21 +333,66 @@ function audioPost($post_id)
     return ob_get_clean();
 }
 
-// funcion de ejemplo que uso en otra parte, el sistema reconoce la wave para generarla y reproducirla cuando el audio se estructura de esta manera:
-function wave($audio_url, $audio_id_lite, $post_id)
+function wave_multi($audio_url, $audio_id_lite, $post_id)
 {
+    // Mostrar la primera wave, que ya llega con $audio_id_lite.
+    $waves = [];
+    $audio_ids = [];
     $wave = get_post_meta($post_id, 'waveform_image_url', true);
     $waveCargada = get_post_meta($post_id, 'waveCargada', true);
     $urlAudioSegura = audioUrlSegura($audio_id_lite); // Usando la URL segura
-?>
-    <div id="waveform-<? echo $post_id; ?>"
-        class="waveform-container without-image"
-        postIDWave="<? echo $post_id; ?>"
-        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
-        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
-        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
-        <div class="waveform-message"></div>
-        <div class="waveform-loading" style="display: none;">Cargando...</div>
-    </div>
-<?
+
+    // Añadir la primera wave a la lista
+    $audio_ids[] = [
+        'audio_id_lite' => $audio_id_lite,
+        'wave' => $wave,
+        'waveCargada' => $waveCargada,
+        'urlAudioSegura' => $urlAudioSegura,
+    ];
+
+    // Comprobar si existen las siguientes waves (hasta 30)
+    for ($i = 2; $i <= 30; $i++) {
+        $audio_id_field = 'post_audio_lite' . $i;
+        $audio_id_lite_next = get_post_meta($post_id, $audio_id_field, true);
+        
+        if ($audio_id_lite_next) {
+            // Si se encuentra un audio_id_lite adicional, procesarlo.
+            $wave_next = get_post_meta($post_id, 'waveform_image_url' . $i, true);
+            $waveCargada_next = get_post_meta($post_id, 'waveCargada' . $i, true);
+            $urlAudioSegura_next = audioUrlSegura($audio_id_lite_next);
+
+            // Añadir la wave a la lista
+            $audio_ids[] = [
+                'audio_id_lite' => $audio_id_lite_next,
+                'wave' => $wave_next,
+                'waveCargada' => $waveCargada_next,
+                'urlAudioSegura' => $urlAudioSegura_next,
+            ];
+        }
+    }
+
+    // Si hay más de una wave, usar el contenedor multiwaves.
+    if (count($audio_ids) > 1) {
+        echo '<div class="multiwaves">';
+    }
+
+    // Renderizar cada wave
+    foreach ($audio_ids as $index => $audio_data) {
+        ?>
+        <div id="waveform-<?php echo $post_id . '-' . ($index + 1); ?>"
+             class="waveform-container without-image"
+             postIDWave="<?php echo $post_id; ?>"
+             data-wave-cargada="<?php echo $audio_data['waveCargada'] ? 'true' : 'false'; ?>"
+             data-audio-url="<?php echo esc_url($audio_data['urlAudioSegura']); ?>">
+            <div class="waveform-background" style="background-image: url('<?php echo esc_url($audio_data['wave']); ?>');"></div>
+            <div class="waveform-message"></div>
+            <div class="waveform-loading" style="display: none;">Cargando...</div>
+        </div>
+        <?php
+    }
+
+    // Cerrar el contenedor multiwaves si corresponde.
+    if (count($audio_ids) > 1) {
+        echo '</div>';
+    }
 }
