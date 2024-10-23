@@ -1,6 +1,15 @@
 <?
 
-
+// Añade esto al inicio de tu archivo
+add_action('init', function() {
+    if (!defined('DOING_AJAX') && !defined('REST_REQUEST')) {
+        return;
+    }
+    $user_id = wp_validate_auth_cookie('', 'logged_in');
+    if ($user_id) {
+        wp_set_current_user($user_id);
+    }
+});
 
 function tokenAudio($audio_id) {
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
@@ -84,7 +93,7 @@ add_action('rest_api_init', function () {
     ));
 });
 
-
+// NO FUNCIONA DICE ESTO 2024-10-23 22:16:18 - Usuario: Visitante (ID: guest_47288938cbf2f39a22166380b2c849c9)
 // Modificar la función audioStreamEnd para implementar streaming
 function audioStreamEnd($data) {
 
