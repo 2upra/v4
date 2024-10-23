@@ -368,36 +368,23 @@ class AudioSecureHandler
 
     public function streamAudio($token)
     {
-        // Verificar referer
-        $referer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
-        if (!$this->is_admin && !$this->validateReferer($referer)) {
-            wp_die('Acceso no autorizado', 'Error', ['response' => 403]);
-        }
-
         $data = $this->verifyToken($token);
         if (!$data) {
             wp_die('Token inválido', 'Error', ['response' => 403]);
         }
 
         $audio_id = $data['id'];
-        $cache_path = $this->getCachePath($audio_id);
+        $file_path = get_attached_file($audio_id);
         
-        // Intentar usar versión cacheada primero
-        if (!file_exists($cache_path) || (time() - filemtime($cache_path) > self::CACHE_TIME)) {
-            $original_path = get_attached_file($audio_id);
-            if (!file_exists($original_path)) {
-                wp_die('Audio no encontrado', 'Error', ['response' => 404]);
-            }
-            
-            // Crear caché
-            $this->cacheFile($original_path, $cache_path);
+        if (!file_exists($file_path)) {
+            wp_die('Audio no encontrado', 'Error', ['response' => 404]);
         }
 
-        $this->rateLimiter();
-        $this->sendHeaders($audio_id, $cache_path);
-        $this->streamFile($cache_path);
+        $this->sendHeaders($file_path);
+        $this->streamFileWithRangeSupport($file_path);
         exit;
     }
+
 
     private function validateReferer($referer) 
     {
@@ -492,35 +479,25 @@ class AudioSecureHandler
         chmod($cache_path, 0600);
     }
 
-    private function sendHeaders($audio_id, $file_path)
+    private function sendHeaders($file_path)
     {
         $size = filesize($file_path);
-        $mime = get_post_mime_type($audio_id);
+        $mime = mime_content_type($file_path);
 
         header('Content-Type: ' . $mime);
         header('Accept-Ranges: bytes');
+        header('Cache-Control: private, max-age=' . self::CACHE_TIME);
+        header('Content-Length: ' . $size);
+        
+        // Prevenir cacheo en navegadores
+        header('Expires: 0');
+        header('Pragma: no-cache');
+        
+        // Seguridad adicional
         header('X-Content-Type-Options: nosniff');
         header('X-Frame-Options: DENY');
-        header('Access-Control-Allow-Origin: *');
-
-        if ($this->cache_enabled) {
-            header('Cache-Control: private, max-age=' . self::CACHE_TIME);
-            header('ETag: "' . md5_file($file_path) . '"');
-        } else {
-            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-            header('Pragma: no-cache');
-        }
-
-        if (isset($_SERVER['HTTP_RANGE'])) {
-            $this->handleRangeRequest($file_path, $size);
-        } else {
-            header('Content-Length: ' . $size);
-        }
-
-        //guardarLog('Sending audio file: ' . $file_path);
-        //guardarLog('MIME Type: ' . $mime);
-        //guardarLog('File size: ' . $size);
     }
+
 
     private function handleRangeRequest($file_path, $size)
     {
@@ -535,29 +512,58 @@ class AudioSecureHandler
         header('Content-Length: ' . ($end - $start + 1));
     }
 
-    private function streamFile($file_path) 
+    private function streamFileWithRangeSupport($file_path)
     {
-        $key = substr(hash('sha256', $_ENV['AUDIOCLAVE']), 0, 32);
-        $handle = fopen($file_path, 'rb');
-        
-        // Leer IV del inicio del archivo
-        $iv = fread($handle, 16);
-        
-        while (!feof($handle)) {
-            $encrypted = fread($handle, self::BUFFER_SIZE);
-            $decrypted = openssl_decrypt(
-                $encrypted,
-                'AES-256-CBC',
-                $key,
-                OPENSSL_RAW_DATA,
-                $iv
-            );
-            echo $decrypted;
-            ob_flush();
+        $fp = fopen($file_path, 'rb');
+        $size = filesize($file_path);
+        $length = $size;
+        $start = 0;
+        $end = $size - 1;
+
+        if (isset($_SERVER['HTTP_RANGE'])) {
+            $c_start = $start;
+            $c_end = $end;
+
+            list(, $range) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+            if (strpos($range, ',') !== false) {
+                header('HTTP/1.1 416 Requested Range Not Satisfiable');
+                header("Content-Range: bytes $start-$end/$size");
+                exit;
+            }
+
+            if ($range[0] == '-') {
+                $c_start = $size - substr($range, 1);
+            } else {
+                $range = explode('-', $range);
+                $c_start = $range[0];
+                $c_end = (isset($range[1]) && is_numeric($range[1])) ? $range[1] : $size - 1;
+            }
+
+            $c_end = ($c_end > $end) ? $end : $c_end;
+            if ($c_start > $c_end || $c_start > $size - 1 || $c_end >= $size) {
+                header('HTTP/1.1 416 Requested Range Not Satisfiable');
+                header("Content-Range: bytes $start-$end/$size");
+                exit;
+            }
+
+            $start = $c_start;
+            $end = $c_end;
+            $length = $end - $start + 1;
+            fseek($fp, $start);
+            header('HTTP/1.1 206 Partial Content');
+            header("Content-Range: bytes $start-$end/$size");
+        }
+
+        header('Content-Length: ' . $length);
+        $buffer = 1024 * 8;
+        while (!feof($fp) && ($p = ftell($fp)) <= $end) {
+            if ($p + $buffer > $end) {
+                $buffer = $end - $p + 1;
+            }
+            echo fread($fp, $buffer);
             flush();
         }
-        
-        fclose($handle);
+        fclose($fp);
     }
 
 
