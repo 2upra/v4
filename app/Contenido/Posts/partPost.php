@@ -333,7 +333,7 @@ function audioPost($post_id)
     return ob_get_clean();
 }
 
-function wave_multi($audio_url, $audio_id_lite, $post_id)
+function wave($audio_url, $audio_id_lite, $post_id)
 {
     // Mostrar la primera wave, que ya llega con $audio_id_lite.
     $waves = [];
