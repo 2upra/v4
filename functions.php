@@ -191,9 +191,9 @@ function scriptsOrdenados()
         'ajax_url' => admin_url('admin-ajax.php')
     ));
 
-    wp_localize_script('wavejs', 'audioSecurityVars', array(
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('audio_security_nonce')
+    wp_localize_script('wavejs', 'audioSettings', array(
+        'nonce' => wp_create_nonce('wp_rest'),
+        'restUrl' => rest_url()
     ));
     
 

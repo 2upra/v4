@@ -75,7 +75,7 @@ window.we = function (postId, audioUrl) {
         fetch(audioUrl, {
             credentials: 'include',
             headers: {
-                'X-WP-Nonce': wpApiSettings.nonce
+                'X-WP-Nonce': audioSettings.nonce
             }
         })
             .then(response => {
