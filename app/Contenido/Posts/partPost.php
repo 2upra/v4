@@ -338,16 +338,24 @@ function wave($audio_url, $audio_id_lite, $post_id)
 {
     $wave = get_post_meta($post_id, 'waveform_image_url', true);
     $waveCargada = get_post_meta($post_id, 'waveCargada', true);
-    $urlAudioSegura = audioUrlSegura($audio_id_lite); // Usando la URL segura
+    
+    // Usando el nuevo sistema para obtener la URL segura
+    $urlAudioSegura = get_secure_audio_url($audio_id_lite);
+    
+    // Verificación de error
+    if (!$urlAudioSegura) {
+        error_log("Error generando URL segura para audio ID: " . $audio_id_lite);
+        return; // O maneja el error como prefieras
+    }
 ?>
-    <div id="waveform-<? echo $post_id; ?>"
+    <div id="waveform-<?php echo esc_attr($post_id); ?>"
         class="waveform-container without-image"
-        postIDWave="<? echo $post_id; ?>"
-        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
-        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
-        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
+        postIDWave="<?php echo esc_attr($post_id); ?>"
+        data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
+        data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
+        <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
         <div class="waveform-message"></div>
         <div class="waveform-loading" style="display: none;">Cargando...</div>
     </div>
-<?
+<?php
 }
