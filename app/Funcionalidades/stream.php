@@ -130,20 +130,12 @@ class AudioSecureHandler
 
     public function generateToken($audio_id)
     {
-        // Verificar si el audio_id es un adjunto válido en WordPress
-        if (!wp_attachment_is('audio', $audio_id)) {
-            guardarLog('generateToken: audio_id no es un adjunto de audio válido: ' . $audio_id);
-            return false;
-        }
-
         $mime_type = get_post_mime_type($audio_id);
         if (strpos($mime_type, 'audio') === false) {
             guardarLog('generateToken: audio_id no es un archivo de audio, MIME: ' . $mime_type);
             return false;
         }
         guardarLog('generateToken: MIME type correcto: ' . $mime_type);
-
-
         // Log para comprobar que el audio_id es válido
         guardarLog('generateToken: audio_id válido: ' . $audio_id);
 
