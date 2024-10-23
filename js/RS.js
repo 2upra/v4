@@ -81,9 +81,16 @@ function verificarCamposRs() {
 
     return verificarCampos;
 }
+
 function selectorformtipo() {
     // Activar inicialmente "descargacheck"
-    document.getElementById('descargacheck').checked = true;
+    const descarga = document.getElementById('descargacheck');
+    descarga.checked = true;
+
+    // Aplicar estilos al label correspondiente
+    const labelDescarga = descarga.closest('label');
+    labelDescarga.style.color = '#ffffff';
+    labelDescarga.style.background = '#131313';
 
     document.addEventListener('change', function (event) {
         if (event.target.matches('.custom-checkbox input[type="checkbox"]')) {
@@ -97,7 +104,6 @@ function selectorformtipo() {
                 label.style.background = '';
             }
 
-            const descarga = document.getElementById('descargacheck');
             const exclusivo = document.getElementById('exclusivocheck');
             const colab = document.getElementById('colabcheck');
             const music = document.getElementById('musiccheck');
@@ -144,6 +150,7 @@ function selectorformtipo() {
         }
     });
 }
+
 
 
 async function envioRs() {
