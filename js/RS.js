@@ -6,7 +6,8 @@ let subidaArchivoEnProgreso = false;
 
 let audiosData = [];
 let maxAudios = 30;
-let audioData = {}; // Inicializa audioData como un objeto
+let audioData = {};
+const nombreRolaData = {};
 
 let uploadInProgressCount = 0;
 // Logs
@@ -28,6 +29,7 @@ function iniciarRS() {
         audioData = {};
         uploadInProgressCount = 0;
         audiosData = [];
+        nombreRolaData;
 
         subidaAudioEnProgreso = false;
         subidaImagenEnProgreso = false;
@@ -126,29 +128,58 @@ async function envioRs() {
         const exclusivo = exclusivoCheckbox.checked ? exclusivoCheckbox.value : 0;
         const colab = colabCheckbox.checked ? colabCheckbox.value : 0;
         const music = musicCheckbox.checked ? musicCheckbox.value : 0;
-        const uniqueAudioUrls = new Set(); // Para almacenar URLs únicas
-        const uniqueAudioIds = new Set(); // Para almacenar IDs únicos
+
+        // Función para validar la URL
+        const isValidUrl = url => {
+            const requiredPrefix = 'https://2upra.com/wp-content/uploads';
+            return url.startsWith(requiredPrefix);
+        };
+
+        const nombreInputs = document.querySelectorAll('.nombreAudioRs');
 
         audiosData.slice(0, maxAudios).forEach((audio, index) => {
             const audioNumber = index + 1;
 
-            // Comprobar si el audioUrl ya ha sido añadido
+            if (!isValidUrl(audio.audioUrl)) {
+                console.warn(`URL inválida para el audio con ID ${audio.audioId}: ${audio.audioUrl}`);
+                return; 
+            }
+
             if (!uniqueAudioUrls.has(audio.audioUrl) && !uniqueAudioIds.has(audio.audioId)) {
                 audioData[`audioUrl${audioNumber}`] = audio.audioUrl;
                 audioData[`audioId${audioNumber}`] = audio.audioId;
 
-                // Agregar los valores a los conjuntos para controlar duplicados
+
                 uniqueAudioUrls.add(audio.audioUrl);
                 uniqueAudioIds.add(audio.audioId);
+
+                const tempId = audio.tempId; // Asumiendo que cada audio tiene un tempId único
+                const nombreInput = Array.from(nombreInputs).find(input => input.id === `nombre-${tempId}`);
+
+                if (nombreInput) {
+                    let nombreRola = nombreInput.value.trim();
+
+                    const MAX_NOMBRE_LENGTH = 100; 
+
+                    if (nombreRola.length > MAX_NOMBRE_LENGTH) {
+                        nombreRola = nombreRola.substring(0, MAX_NOMBRE_LENGTH);
+                        console.warn(`El nombre de la canción para audio ID ${audio.audioId} excede el máximo de caracteres. Se truncó a ${MAX_NOMBRE_LENGTH} caracteres.`);
+                    }
+                    nombreRolaData[`nombreRola${audioNumber}`] = nombreRola;
+                } else {
+                    nombreRolaData[`nombreRola${audioNumber}`] = null;
+                }
             }
         });
 
+        // Construir el objeto final de datos a enviar
         const data = {
             imagenUrl1: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
             imagenId1: typeof imagenId !== 'undefined' ? imagenId : null,
             archivoUrl1: typeof archivoUrl !== 'undefined' ? archivoUrl : null,
             archivoId1: typeof archivoId !== 'undefined' ? archivoId : null,
             ...audioData,
+            ...nombreRolaData, 
             tags,
             textoNormal,
             descarga,
@@ -156,6 +187,8 @@ async function envioRs() {
             colab,
             music
         };
+
+
 
         try {
             const response = await enviarAjax('subidaRs', data);
@@ -208,7 +241,7 @@ function subidaRs() {
         const previewsFormDiv = document.querySelector('.previewsForm.NGEESM.RS');
 
         if (previewsFormDiv) {
-            if (audiosData.length > 3) {
+            if (audiosData.length > 1) {
                 previewsFormDiv.style.flexDirection = 'column';
             } else {
                 previewsFormDiv.style.flexDirection = ''; // Restablece al valor por defecto
@@ -242,11 +275,11 @@ function subidaRs() {
             opciones.style.display = 'flex';
             const tempId = `temp-${Date.now()}`;
             const progressBarId = waveAudio(file, tempId);
-            audiosData.push({tempId, fileUrl: null, fileId: null});
-    
+            audiosData.push({tempId, audioUrl: null, audioId: null});
+
             // Actualiza la dirección de flexión después de agregar el audio
             actualizarFlexDirection();
-    
+
             const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
             const index = audiosData.findIndex(audio => audio.tempId === tempId);
             if (index !== -1) {
@@ -260,10 +293,9 @@ function subidaRs() {
             if (audiosData.length > 30) {
                 alert('Ya has subido el límite máximo de 30 audios.');
             }
-    
+
             // Actualiza los campos de nombre después de subir el audio
             actualizarCamposNombre();
-    
         } catch (error) {
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
         }
