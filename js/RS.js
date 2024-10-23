@@ -81,11 +81,14 @@ function verificarCamposRs() {
 
     return verificarCampos;
 }
-
 function selectorformtipo() {
+    // Activar inicialmente "descargacheck"
+    document.getElementById('descargacheck').checked = true;
+
     document.addEventListener('change', function (event) {
         if (event.target.matches('.custom-checkbox input[type="checkbox"]')) {
             const label = event.target.closest('label');
+
             if (event.target.checked) {
                 label.style.color = '#ffffff';
                 label.style.background = '#131313';
@@ -93,9 +96,55 @@ function selectorformtipo() {
                 label.style.color = '#6b6b6b';
                 label.style.background = '';
             }
+
+            const descarga = document.getElementById('descargacheck');
+            const exclusivo = document.getElementById('exclusivocheck');
+            const colab = document.getElementById('colabcheck');
+            const music = document.getElementById('musiccheck');
+
+            // Si se selecciona un checkbox, se aplican las excepciones
+            if (event.target.id === 'descargacheck' && descarga.checked) {
+                // Permitir exclusivocheck y colabcheck con descargacheck
+                exclusivo.disabled = false;
+                colab.disabled = false;
+            }
+
+            if (event.target.id === 'exclusivocheck') {
+                if (exclusivo.checked) {
+                    // Solo permitir musica o descarga junto con exclusivo
+                    colab.checked = false;
+                    colab.disabled = true;
+                } else {
+                    colab.disabled = false; // Permitir si exclusivo no está marcado
+                }
+            }
+
+            if (event.target.id === 'colabcheck') {
+                if (colab.checked) {
+                    // Solo permitir descarga junto con colab
+                    exclusivo.checked = false;
+                    exclusivo.disabled = true;
+                    music.checked = false;
+                    music.disabled = true;
+                } else {
+                    exclusivo.disabled = false; // Permitir si colab no está marcado
+                    music.disabled = false;
+                }
+            }
+
+            if (event.target.id === 'musiccheck') {
+                if (music.checked) {
+                    // Solo permitir exclusivo junto con music
+                    colab.checked = false;
+                    colab.disabled = true;
+                } else {
+                    colab.disabled = false; // Permitir si music no está marcado
+                }
+            }
         }
     });
 }
+
 
 async function envioRs() {
     const button = document.getElementById('enviarRs');
@@ -365,7 +414,7 @@ function subidaRs() {
             previewAudio.style.display = 'none';
         }
 
-        // Actualiza la dirección de flexión después de eliminar el audio
+        actualizarCamposNombre();
         actualizarFlexDirection();
     };
 
