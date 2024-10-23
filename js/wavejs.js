@@ -1,30 +1,33 @@
 function inicializarWaveforms() {
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            const container = entry.target;
-            const postId = container.getAttribute('postIDWave');
-            const audioUrl = container.getAttribute('data-audio-url');
+    const observer = new IntersectionObserver(
+        entries => {
+            entries.forEach(entry => {
+                const container = entry.target;
+                const postId = container.getAttribute('postIDWave');
+                const audioUrl = container.getAttribute('data-audio-url');
 
-            if (entry.isIntersecting) {
-                if (!container.dataset.loadTimeoutSet) {
-                    const loadTimeout = setTimeout(() => {
-                        if (!container.dataset.audioLoaded) {
-                            loadAudio(postId, audioUrl, container);
-                        }
-                    }, 20000); // Carga el audio después de 20 segundos de estar en el viewport
+                if (entry.isIntersecting) {
+                    if (!container.dataset.loadTimeoutSet) {
+                        const loadTimeout = setTimeout(() => {
+                            if (!container.dataset.audioLoaded) {
+                                loadAudio(postId, audioUrl, container);
+                            }
+                        }, 20000); // Carga el audio después de 20 segundos de estar en el viewport
 
-                    container.dataset.loadTimeout = loadTimeout;
-                    container.dataset.loadTimeoutSet = 'true'; 
+                        container.dataset.loadTimeout = loadTimeout;
+                        container.dataset.loadTimeoutSet = 'true';
+                    }
+                } else {
+                    if (container.dataset.loadTimeoutSet) {
+                        clearTimeout(container.dataset.loadTimeout);
+                        delete container.dataset.loadTimeout;
+                        delete container.dataset.loadTimeoutSet;
+                    }
                 }
-            } else {
-                if (container.dataset.loadTimeoutSet) {
-                    clearTimeout(container.dataset.loadTimeout);
-                    delete container.dataset.loadTimeout;
-                    delete container.dataset.loadTimeoutSet;
-                }
-            }
-        });
-    }, { threshold: 0.5 });
+            });
+        },
+        {threshold: 0.5}
+    );
 
     document.querySelectorAll('.waveform-container').forEach(container => {
         const postId = container.getAttribute('postIDWave');
@@ -48,8 +51,8 @@ function inicializarWaveforms() {
 
 function loadAudio(postId, audioUrl, container) {
     if (!container.dataset.audioLoaded) {
-        window.we(postId, audioUrl); 
-        container.dataset.audioLoaded = 'true'; 
+        window.we(postId, audioUrl);
+        container.dataset.audioLoaded = 'true';
     }
 }
 
@@ -70,21 +73,24 @@ window.we = function (postId, audioUrl) {
         window.audioLoading = true;
 
         fetch(audioUrl, {
-            credentials: 'include', // Incluye las cookies de sesión en la solicitud
+            credentials: 'include',
+            headers: {
+                'X-WP-Nonce': wpApiSettings.nonce
+            }
         })
-            .then((response) => {
+            .then(response => {
                 if (!response.ok) {
                     throw new Error('Respuesta de red no satisfactoria');
                 }
                 return response;
             })
-            .then((response) => {
+            .then(response => {
                 const reader = response.body.getReader();
                 return new ReadableStream({
                     start(controller) {
                         return pump();
                         function pump() {
-                            return reader.read().then(({ done, value }) => {
+                            return reader.read().then(({done, value}) => {
                                 if (done) {
                                     controller.close();
                                     return;
@@ -98,33 +104,33 @@ window.we = function (postId, audioUrl) {
             })
             .then(stream => new Response(stream))
             .then(response => response.blob())
-            .then((blob) => {
+            .then(blob => {
                 const audioBlobUrl = URL.createObjectURL(blob);
-            
+
                 wavesurfer = initWavesurfer(container);
                 wavesurfer.load(audioBlobUrl);
-            
+
                 const waveformBackground = container.querySelector('.waveform-background');
                 if (waveformBackground) {
                     waveformBackground.style.display = 'none';
                 }
-            
+
                 wavesurfer.on('ready', () => {
                     window.audioLoading = false;
                     container.dataset.audioLoaded = 'true';
                     container.querySelector('.waveform-loading').style.display = 'none';
                     const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
-            
+
                     // Detectar si el usuario está en móvil
                     const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
-            
+
                     if (!waveCargada && !isMobile) {
                         setTimeout(() => {
                             const image = generateWaveformImage(wavesurfer);
                             sendImageToServer(image, postId);
                         }, 1);
                     }
-            
+
                     container.addEventListener('click', () => {
                         if (wavesurfer.isPlaying()) {
                             wavesurfer.pause();
@@ -133,13 +139,13 @@ window.we = function (postId, audioUrl) {
                         }
                     });
                 });
-            
+
                 wavesurfer.on('error', () => {
                     console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`);
                     setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
                 });
             })
-            .catch((error) => {
+            .catch(error => {
                 console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`, error);
                 setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
             });
@@ -154,7 +160,7 @@ function initWavesurfer(container) {
     const ctx = document.createElement('canvas').getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 500);
     const progressGradient = ctx.createLinearGradient(0, 0, 0, 500);
-    
+
     // Configuración de los colores del gradiente
     gradient.addColorStop(0, '#FFFFFF');
     gradient.addColorStop(0.55, '#FFFFFF');
@@ -172,7 +178,7 @@ function initWavesurfer(container) {
         interact: true,
         barWidth: 2,
         height: containerHeight,
-        partialRender: true,
+        partialRender: true
     });
 }
 
@@ -196,7 +202,7 @@ async function sendImageToServer(imageData, postId) {
     for (let i = 0; i < byteString.length; i++) {
         ia[i] = byteString.charCodeAt(i);
     }
-    const blob = new Blob([ab], { type: mimeString });
+    const blob = new Blob([ab], {type: mimeString});
 
     const formData = new FormData();
     formData.append('action', 'save_waveform_image');
@@ -206,7 +212,7 @@ async function sendImageToServer(imageData, postId) {
     try {
         const response = await fetch(ajaxUrl, {
             method: 'POST',
-            body: formData,
+            body: formData
         });
 
         const data = await response.json();

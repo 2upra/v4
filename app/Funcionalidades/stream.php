@@ -54,7 +54,11 @@ function audioUrlSegura($audio_id) {
     if (!$token) {
         return new WP_Error('invalid_audio_id', 'Audio ID inválido.');
     }
-    return site_url("/wp-json/1/v1/2?token=" . urlencode($token));
+    
+    // Crear nonce para el usuario actual
+    $nonce = wp_create_nonce('wp_rest');
+    
+    return site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce);
 }
 
 // Registrar el endpoint REST
@@ -68,6 +72,13 @@ add_action('rest_api_init', function () {
             ),
         ),
         'permission_callback' => function($request) {
+            // Autenticar el usuario si hay un nonce válido
+            $nonce = $request->get_param('_wpnonce');
+            if ($nonce && wp_verify_nonce($nonce, 'wp_rest')) {
+                // Restaurar la sesión del usuario
+                wp_set_current_user(wp_validate_auth_cookie());
+            }
+            
             return verificarAudio($request->get_param('token'));
         }
     ));
