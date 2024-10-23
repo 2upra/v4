@@ -222,53 +222,33 @@ function actualizarMetaConArchivo($postId, $campo, $archivoId)
     }
 }
 
-/*
-
-(
-    [action] => subidaRs
-    [imagenUrl1] => null
-    [imagenId1] => null
-    [archivoUrl1] => null
-    [archivoId1] => null
-    [audioUrl1] => https://2upra.com/wp-content/uploads/2024/10/dr-660-127.wav
-    [audioId1] => 9261
-    [audioUrl2] => https://2upra.com/wp-content/uploads/2024/10/Ofuh-yeah.mp3
-    [audioId2] => 9262
-    [tags] => test3
-    [textoNormal] => test3
-    [descarga] => 0
-    [exclusivo] => 0
-    [colab] => 0
-    [music] => 0
-)
-
-2024-10-22 19:39:37 - Advertencia: El file_id (9261) no coincide con archivoId (235822).
-2024-10-22 19:39:37 - enviando 235822 con https://2upra.com/wp-content/uploads/2024/10/2upra_1ndoryu_test3.wav a actualizarUrlArchivo
-2024-10-22 19:39:37 - Inicio de actualizarUrlArchivo para File ID: 235822 con nueva URL: https://2upra.com/wp-content/uploads/2024/10/2upra_1ndoryu_test3.wav
-2024-10-22 19:39:37 - URL actualizada correctamente para File ID: 235822
-2024-10-22 19:39:41 - Archivo adjunto renombrado a 2upra_1ndoryu_test3.wav para postId: 235821
-2024-10-22 19:39:41 - Advertencia: El file_id (9262) no coincide con archivoId (235824).
-2024-10-22 19:39:41 - enviando 235824 con https://2upra.com/wp-content/uploads/2024/10/2upra_1ndoryu_test3.mp3 a actualizarUrlArchivo
-2024-10-22 19:39:41 - Inicio de actualizarUrlArchivo para File ID: 235824 con nueva URL: https://2upra.com/wp-content/uploads/2024/10/2upra_1ndoryu_test3.mp3
-2024-10-22 19:39:41 - URL actualizada correctamente para File ID: 235824
-2024-10-22 19:39:42 - Archivo adjunto renombrado a 2upra_1ndoryu_test3.mp3 para postId: 235821
-
-renombrarArchivoAdjunto funciona mal, renombra los archivo pero envia actualizarUrlArchivo los datos incorrecta
-
-*/
-
-#Paso 5.4
 function renombrarArchivoAdjunto($postId, $archivoId, $campo)
 {
-    guardarLog("renombrarArchivoAdjunto recibio: $postId, $archivoId, $campo");
+    guardarLog("renombrarArchivoAdjunto recibió: $postId, $archivoId, $campo");
+    
     // Extraer el índice del campo, por ejemplo, de 'audioUrl1' extraemos '1'
-    preg_match('/(\d+)$/', $campo, $matches);
-    $indice = isset($matches[1]) ? $matches[1] : '';
+    if (preg_match('/(\d+)$/', $campo, $matches)) {
+        $indice = intval($matches[1]);
+    } else {
+        guardarLog("Advertencia: No se pudo extraer el índice del campo {$campo}.");
+        return; // Salir si no se puede extraer el índice
+    }
 
-    // Construir el nombre del campo 'audioId' correspondiente
+    // Definir el nombre del campo para idHash_audioIdX
+    $idHashCampo = "idHash_audioId{$indice}";
+    
+    // Obtener el idHash desde los meta del post
+    $idHash = get_post_meta($postId, $idHashCampo, true);
+    
+    if (empty($idHash)) {
+        guardarLog("Advertencia: No se encontró el meta {$idHashCampo} para postId {$postId}.");
+        return; // Salir si no se encuentra el idHash
+    }
+
+    // Construir el nombre del campo 'audioIdX'
     $audioIdCampo = 'audioId' . $indice;
 
-    // Obtener el file_id correspondiente
+    // Obtener el file_id correspondiente desde $_POST
     if (!empty($_POST[$audioIdCampo])) {
         $file_id = intval($_POST[$audioIdCampo]);
     } else {
@@ -280,6 +260,7 @@ function renombrarArchivoAdjunto($postId, $archivoId, $campo)
         guardarLog("Advertencia: El file_id ({$file_id}) no coincide con archivoId ({$archivoId}).");
     }
 
+    // Obtener el post y el autor
     $post = get_post($postId);
     $author = get_userdata($post->post_author);
 
@@ -288,6 +269,7 @@ function renombrarArchivoAdjunto($postId, $archivoId, $campo)
         return new WP_Error('post_or_author_not_found', 'No se pudo obtener el post o el autor.');
     }
 
+    // Obtener la ruta del archivo adjunto
     $file_path = get_attached_file($archivoId);
 
     if (!$file_path || !file_exists($file_path)) {
@@ -297,6 +279,7 @@ function renombrarArchivoAdjunto($postId, $archivoId, $campo)
 
     $info = pathinfo($file_path);
 
+    // Construir el nuevo nombre de archivo
     $new_filename = sprintf(
         '2upra_%s_%s.%s',
         sanitize_file_name(mb_substr($author->user_login, 0, 20)),
@@ -306,22 +289,23 @@ function renombrarArchivoAdjunto($postId, $archivoId, $campo)
 
     $new_file_path = $info['dirname'] . DIRECTORY_SEPARATOR . $new_filename;
 
+    // Renombrar el archivo
     if (rename($file_path, $new_file_path)) {
         $upload_dir = wp_upload_dir();
         $public_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $new_file_path);
-        guardarLog("enviando $archivoId con $public_url a actualizarUrlArchivo");
-        actualizarUrlArchivo($archivoId, $public_url);
+        
+        // Log corregido para utilizar idHash en lugar de archivoId
+        guardarLog("enviando $idHash con $public_url a actualizarUrlArchivo");
+        actualizarUrlArchivo($idHash, $public_url); // Usar idHash en lugar de archivoId
+        
+        // Actualizar la ruta del archivo adjunto
         update_attached_file($archivoId, $new_file_path);
+        
+        // Actualizar metadatos según sea necesario
         update_post_meta($postId, 'sample', true);
 
-        // Generar el índice dinámicamente según el campo
-        if (preg_match('/(\d+)$/', $campo, $matches)) {
-            $indiceDinamico = intval($matches[1]);
-        } else {
-            $indiceDinamico = 1; // Valor predeterminado si no hay índice
-        }
-
-        procesarAudioLigero($postId, $archivoId, $indiceDinamico);
+        // Procesar el audio de manera ligera
+        procesarAudioLigero($postId, $archivoId, $indice);
 
         guardarLog("Archivo adjunto renombrado a {$new_filename} para postId: {$postId}");
     } else {
