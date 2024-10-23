@@ -121,6 +121,12 @@ function selectorformtipo() {
                 colabLabel.style.background = '';
             }
 
+            // Si se marca 'descargacheck', desmarca 'musiccheck'
+            if (event.target.id === 'descargacheck' && event.target.checked) {
+                musiccheck.checked = false; // Desactiva 'musiccheck'
+                resetStyles(); // Restablecer estilos de los otros checkboxes
+            }
+
             // Estilo al checkbox seleccionado
             const label = event.target.closest('label');
             if (event.target.checked) {
@@ -145,6 +151,7 @@ function selectorformtipo() {
         });
     }
 }
+
 
 
 async function envioRs() {
