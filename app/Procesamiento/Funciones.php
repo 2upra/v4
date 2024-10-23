@@ -279,11 +279,15 @@ function renombrarArchivoAdjunto($postId, $archivoId, $campo)
 
     $info = pathinfo($file_path);
 
-    // Construir el nuevo nombre de archivo
+    // Generar un identificador aleatorio de 5 dígitos
+    $random_id = rand(10000, 99999);
+
+    // Construir el nuevo nombre de archivo con el ID aleatorio
     $new_filename = sprintf(
-        '2upra_%s_%s.%s',
+        '2upra_%s_%s_%s.%s',
         sanitize_file_name(mb_substr($author->user_login, 0, 20)),
         sanitize_file_name(mb_substr($post->post_content, 0, 40)),
+        $random_id, // Agregar el ID aleatorio
         $info['extension']
     );
 
