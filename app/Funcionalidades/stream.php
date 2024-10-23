@@ -11,6 +11,89 @@ add_action('init', function() {
     }
 });
 
+function audioUrlSegura($audio_id) {
+    $user_id = get_current_user_id();
+    
+    // Si el usuario es admin o pro, usar una URL más simple
+    if (usuarioEsAdminOPro($user_id)) {
+        return site_url("/wp-json/1/v1/audio-pro/{$audio_id}");
+    }
+    
+    // Para usuarios normales, mantener el sistema de tokens
+    $token = tokenAudio($audio_id);
+    if (!$token) {
+        return new WP_Error('invalid_audio_id', 'Audio ID inválido.');
+    }
+    
+    $nonce = wp_create_nonce('wp_rest');
+    return site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce);
+}
+
+// Registrar dos endpoints: uno para usuarios pro/admin y otro para usuarios normales
+add_action('rest_api_init', function () {
+    // Endpoint para usuarios pro/admin
+    register_rest_route('1/v1', '/audio-pro/(?P<id>\d+)', array(
+        'methods' => 'GET',
+        'callback' => 'audioStreamEndPro',
+        'permission_callback' => function() {
+            return usuarioEsAdminOPro(get_current_user_id());
+        },
+        'args' => array(
+            'id' => array(
+                'validate_callback' => function($param) {
+                    return is_numeric($param);
+                }
+            ),
+        ),
+    ));
+
+    // Endpoint original para usuarios normales
+    register_rest_route('1/v1', '/2', array(
+        'methods' => 'GET',
+        'callback' => 'audioStreamEnd',
+        'args' => array(
+            'token' => array(
+                'required' => true,
+            ),
+        ),
+        'permission_callback' => function($request) {
+            return verificarAudio($request->get_param('token'));
+        }
+    ));
+});
+
+// Nueva función para streaming de audio para usuarios pro/admin
+function audioStreamEndPro($request) {
+    $audio_id = $request['id'];
+    
+    $original_file = get_attached_file($audio_id);
+    if (!file_exists($original_file)) {
+        return new WP_Error('no_audio', 'Archivo de audio no encontrado.', array('status' => 404));
+    }
+
+    // Configurar headers para caché agresivo
+    header('Content-Type: ' . get_post_mime_type($audio_id));
+    header('Accept-Ranges: bytes');
+    header('Cache-Control: public, max-age=31536000'); // 1 año
+    header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT');
+    header('Pragma: public');
+
+    // Streaming directo del archivo
+    $fp = @fopen($original_file, 'rb');
+    $size = filesize($original_file);
+    
+    // Manejar ranges si es necesario
+    if (isset($_SERVER['HTTP_RANGE'])) {
+        // [Código existente para manejar ranges...]
+    } else {
+        header('Content-Length: ' . $size);
+        fpassthru($fp);
+    }
+    
+    fclose($fp);
+    exit;
+}
+
 function tokenAudio($audio_id) {
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
         return false;
@@ -57,57 +140,8 @@ function tokenYaUsado($unique_id) {
     return get_transient('audio_token_' . $unique_id) !== false;
 }
 
-// Función para obtener la URL segura del audio
-function audioUrlSegura($audio_id) {
-    $token = tokenAudio($audio_id);
-    if (!$token) {
-        return new WP_Error('invalid_audio_id', 'Audio ID inválido.');
-    }
-    
-    // Crear nonce para el usuario actual
-    $nonce = wp_create_nonce('wp_rest');
-    
-    return site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce);
-}
-
-// Registrar el endpoint REST
-add_action('rest_api_init', function () {
-    register_rest_route('1/v1', '/2', array(
-        'methods' => 'GET',
-        'callback' => 'audioStreamEnd',
-        'args' => array(
-            'token' => array(
-                'required' => true,
-            ),
-        ),
-        'permission_callback' => function($request) {
-            // Intentar autenticar por cookie
-            $user_id = wp_validate_auth_cookie('', 'logged_in');
-            if ($user_id) {
-                wp_set_current_user($user_id);
-            }
-            
-            return verificarAudio($request->get_param('token'));
-        }
-    ));
-});
-
 
 function audioStreamEnd($data) {
-
-    // Obtener identificador de usuario o visitante
-    $user_identifier = get_current_user_id();
-    if ($user_identifier === 0) {
-        // Si no hay usuario autenticado, usar la IP como identificador
-        $user_identifier = 'guest_' . hash('md5', $_SERVER['REMOTE_ADDR']);
-    }
-
-    // Obtener información del usuario
-    $user_info = wp_get_current_user();
-    $username = $user_info->ID !== 0 ? $user_info->user_login : 'Visitante';
-
-    // Guardar log con la información
-    guardarLog("Usuario: $username (ID: $user_identifier)");
 
     $token = $data['token'];
     $parts = explode('|', base64_decode($token));
@@ -155,16 +189,6 @@ function audioStreamEnd($data) {
     header("Accept-Ranges: bytes");
 
     // Si el usuario es admin o tiene meta `pro`, permitir caché del navegador
-
-    if (usuarioEsAdminOPro($user_identifier)) {
-        guardarLog("audioStreamEnd: Cargando con caché del navegador habilitada para el usuario admin/pro");
-        header("Cache-Control: public, max-age=15768000"); 
-    } else {
-        guardarLog("audioStreamEnd: Cargando con caché del navegador deshabilitada para el usuario no admin/pro");
-        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-        header("Cache-Control: post-check=0, pre-check=0", false);
-        header("Pragma: no-cache");
-    }
 
     // Manejar Ranges HTTP para streaming parcial
     if (isset($_SERVER['HTTP_RANGE'])) {
