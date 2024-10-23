@@ -1,18 +1,22 @@
 function inicializarWaveforms() {
-    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
-        const container = entry.target;
-        const {postIDWave: postId, dataset} = container;
-        const audioUrl = container.getAttribute('data-audio-url');
-        
-        if (entry.isIntersecting && !dataset.loadTimeoutSet) {
-            dataset.loadTimeout = setTimeout(() => !dataset.audioLoaded && loadAudio(postId, audioUrl, container), 20000);
-            dataset.loadTimeoutSet = 'true';
-        } else if (!entry.isIntersecting && dataset.loadTimeoutSet) {
-            clearTimeout(dataset.loadTimeout);
-            delete dataset.loadTimeout;
-            delete dataset.loadTimeoutSet;
-        }
-    }), {threshold: 0.5});
+    const observer = new IntersectionObserver(
+        entries =>
+            entries.forEach(entry => {
+                const container = entry.target;
+                const {postIDWave: postId, dataset} = container;
+                const audioUrl = container.getAttribute('data-audio-url');
+
+                if (entry.isIntersecting && !dataset.loadTimeoutSet) {
+                    dataset.loadTimeout = setTimeout(() => !dataset.audioLoaded && loadAudio(postId, audioUrl, container), 20000);
+                    dataset.loadTimeoutSet = 'true';
+                } else if (!entry.isIntersecting && dataset.loadTimeoutSet) {
+                    clearTimeout(dataset.loadTimeout);
+                    delete dataset.loadTimeout;
+                    delete dataset.loadTimeoutSet;
+                }
+            }),
+        {threshold: 0.5}
+    );
 
     document.querySelectorAll('.waveform-container').forEach(container => {
         const postId = container.getAttribute('postIDWave');
@@ -22,11 +26,7 @@ function inicializarWaveforms() {
             observer.observe(container);
             container.addEventListener('click', () => {
                 if (!container.dataset.audioLoaded) {
-                    if (container.dataset.loadTimeoutSet) {
-                        clearTimeout(container.dataset.loadTimeout);
-                        delete container.dataset.loadTimeout;
-                        delete container.dataset.loadTimeoutSet;
-                    }
+                    container.dataset.loadTimeoutSet && (clearTimeout(container.dataset.loadTimeout), delete container.dataset.loadTimeout, delete container.dataset.loadTimeoutSet);
                     loadAudio(postId, audioUrl, container);
                 }
             });
@@ -34,8 +34,7 @@ function inicializarWaveforms() {
     });
 }
 
-const loadAudio = (postId, audioUrl, container) => 
-    !container.dataset.audioLoaded && (window.we(postId, audioUrl), container.dataset.audioLoaded = 'true');
+const loadAudio = (postId, audioUrl, container) => !container.dataset.audioLoaded && (window.we(postId, audioUrl), (container.dataset.audioLoaded = 'true'));
 
 window.we = (postId, audioUrl) => {
     const container = document.getElementById(`waveform-${postId}`);
@@ -55,18 +54,21 @@ window.we = (postId, audioUrl) => {
             window.audioLoading = true;
             const response = await fetch(audioUrl, {credentials: 'include'});
             if (!response.ok) throw new Error('Respuesta de red no satisfactoria');
-            
+
             const blob = await response.blob();
             wavesurfer = initWavesurfer(container);
             wavesurfer.load(URL.createObjectURL(blob));
 
-            container.querySelector('.waveform-background')?.style.display = 'none';
+            const backgroundElement = container.querySelector('.waveform-background');
+            if (backgroundElement) {
+                backgroundElement.style.display = 'none';
+            }
 
             wavesurfer.on('ready', () => {
                 window.audioLoading = false;
                 container.dataset.audioLoaded = 'true';
                 container.querySelector('.waveform-loading').style.display = 'none';
-                
+
                 if (!container.getAttribute('data-wave-cargada') && !/Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent)) {
                     setTimeout(() => sendImageToServer(generateWaveformImage(wavesurfer), postId), 1);
                 }
@@ -90,7 +92,7 @@ window.we = (postId, audioUrl) => {
 const initWavesurfer = container => {
     const ctx = document.createElement('canvas').getContext('2d');
     const [gradient, progressGradient] = [ctx.createLinearGradient(0, 0, 0, 500), ctx.createLinearGradient(0, 0, 0, 500)];
-    
+
     gradient.addColorStop(0, '#FFFFFF');
     gradient.addColorStop(0.55, '#FFFFFF');
     gradient.addColorStop(0.551, '#d43333');
@@ -109,7 +111,6 @@ const initWavesurfer = container => {
         partialRender: true
     });
 };
-
 
 // Función para generar la imagen de la forma de onda
 function generateWaveformImage(wavesurfer) {
@@ -131,7 +132,7 @@ async function sendImageToServer(imageData, postId) {
     for (let i = 0; i < byteString.length; i++) {
         ia[i] = byteString.charCodeAt(i);
     }
-    const blob = new Blob([ab], { type: mimeString });
+    const blob = new Blob([ab], {type: mimeString});
 
     const formData = new FormData();
     formData.append('action', 'save_waveform_image');
@@ -141,7 +142,7 @@ async function sendImageToServer(imageData, postId) {
     try {
         const response = await fetch(ajaxUrl, {
             method: 'POST',
-            body: formData,
+            body: formData
         });
 
         const data = await response.json();
