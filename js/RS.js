@@ -135,6 +135,10 @@ function selectorformtipo() {
                 // Permitir exclusivocheck y colabcheck con descargacheck
                 exclusivo.disabled = false;
                 colab.disabled = false;
+
+                // Desactivar y deshabilitar la casilla de music si descarga está seleccionada
+                music.checked = false;
+                music.disabled = true;
             }
 
             if (event.target.id === 'exclusivocheck') {
@@ -172,6 +176,7 @@ function selectorformtipo() {
         }
     });
 }
+
 
 
 
