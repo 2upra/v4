@@ -103,6 +103,185 @@ add_action('rest_api_init', function () {
 add_action('wp_ajax_stream_secure_audio', 'handle_secure_audio_stream');
 add_action('wp_ajax_nopriv_stream_secure_audio', 'handle_secure_audio_stream');
 
+//aqui hay 2 problemas graves, 1) el audio no se esta cacheando en ningun momento, segundo, puedo acceder directamente al enlace https://2upra.com/wp-admin/admin-ajax.php?action=stream_secure_audio&token=ejemplo&security_nonce=ejemplo sin problema y descargar el audio cosa que no debería
+
+/*
+function inicializarWaveforms() {
+    const observer = new IntersectionObserver(
+        entries => {
+            entries.forEach(entry => {
+                const container = entry.target;
+                const postId = container.getAttribute('postIDWave');
+                const audioUrl = container.getAttribute('data-audio-url');
+
+                if (entry.isIntersecting) {
+                    if (!container.dataset.loadTimeoutSet) {
+                        const loadTimeout = setTimeout(() => {
+                            if (!container.dataset.audioLoaded) {
+                                loadAudio(postId, audioUrl, container);
+                            }
+                        }, 20000); // Carga el audio después de 20 segundos de estar en el viewport
+
+                        container.dataset.loadTimeout = loadTimeout;
+                        container.dataset.loadTimeoutSet = 'true';
+                    }
+                } else {
+                    if (container.dataset.loadTimeoutSet) {
+                        clearTimeout(container.dataset.loadTimeout);
+                        delete container.dataset.loadTimeout;
+                        delete container.dataset.loadTimeoutSet;
+                    }
+                }
+            });
+        },
+        {threshold: 0.5}
+    );
+
+    document.querySelectorAll('.waveform-container').forEach(container => {
+        const postId = container.getAttribute('postIDWave');
+        const audioUrl = container.getAttribute('data-audio-url');
+        if (postId && audioUrl && !container.dataset.initialized) {
+            container.dataset.initialized = 'true';
+            observer.observe(container);
+            container.addEventListener('click', () => {
+                if (!container.dataset.audioLoaded) {
+                    if (container.dataset.loadTimeoutSet) {
+                        clearTimeout(container.dataset.loadTimeout);
+                        delete container.dataset.loadTimeout;
+                        delete container.dataset.loadTimeoutSet;
+                    }
+                    loadAudio(postId, audioUrl, container);
+                }
+            });
+        }
+    });
+}
+
+function loadAudio(postId, audioUrl, container) {
+    if (!container.dataset.audioLoaded) {
+        const secureUrl = audioUrl + (audioUrl.includes('?') ? '&' : '?') + 'security_nonce=' + audioSecurityVars.nonce;
+        window.we(postId, secureUrl);
+        container.dataset.audioLoaded = 'true';
+    }
+}
+
+window.we = function (postId, audioUrl) {
+    const container = document.getElementById(`waveform-${postId}`);
+    const MAX_RETRIES = 3;
+    let wavesurfer;
+
+    const loadAndPlayAudioStream = (retryCount = 0) => {
+        if (retryCount >= MAX_RETRIES) {
+            console.error('No se pudo cargar el audio después de varios intentos');
+            container.querySelector('.waveform-loading').style.display = 'none';
+            container.querySelector('.waveform-message').style.display = 'block';
+            container.querySelector('.waveform-message').textContent = 'Error al cargar el audio.';
+            return;
+        }
+
+        window.audioLoading = true;
+
+        fetch(audioUrl, {
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                Accept: 'audio/*' // Añadido para especificar que esperamos audio
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                console.log('Content-Type:', response.headers.get('content-type'));
+                return response.arrayBuffer();
+            })
+            .then(buffer => {
+                // Crear un blob con el tipo explícito
+                const blob = new Blob([buffer], {type: 'audio/mpeg'}); // o el tipo que corresponda
+
+                const audioBlobUrl = URL.createObjectURL(blob);
+                wavesurfer = initWavesurfer(container);
+
+                // Manejar errores de decodificación
+                wavesurfer.on('error', err => {
+                    console.error('Error en wavesurfer:', err);
+                    if (retryCount < MAX_RETRIES) {
+                        setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
+                    }
+                });
+
+                // Cargar el audio
+                wavesurfer.load(audioBlobUrl);
+
+                const waveformBackground = container.querySelector('.waveform-background');
+                if (waveformBackground) {
+                    waveformBackground.style.display = 'none';
+                }
+
+                wavesurfer.on('ready', () => {
+                    window.audioLoading = false;
+                    container.dataset.audioLoaded = 'true';
+                    container.querySelector('.waveform-loading').style.display = 'none';
+                    const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
+
+                    const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
+
+                    if (!waveCargada && !isMobile) {
+                        setTimeout(() => {
+                            const image = generateWaveformImage(wavesurfer);
+                            sendImageToServer(image, postId);
+                        }, 1);
+                    }
+
+                    container.addEventListener('click', () => {
+                        if (wavesurfer.isPlaying()) {
+                            wavesurfer.pause();
+                        } else {
+                            wavesurfer.play();
+                        }
+                    });
+                });
+            })
+            .catch(error => {
+                console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`, error);
+                if (retryCount < MAX_RETRIES) {
+                    setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
+                }
+            });
+    };
+
+    loadAndPlayAudioStream();
+};
+
+// La función que inicializa WaveSurfer con los estilos y configuraciones deseados
+function initWavesurfer(container) {
+    const containerHeight = container.classList.contains('waveform-container-venta') ? 60 : 102;
+    const ctx = document.createElement('canvas').getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 500);
+    const progressGradient = ctx.createLinearGradient(0, 0, 0, 500);
+
+    // Configuración de los colores del gradiente
+    gradient.addColorStop(0, '#FFFFFF');
+    gradient.addColorStop(0.55, '#FFFFFF');
+    gradient.addColorStop(0.551, '#d43333');
+    gradient.addColorStop(1, '#d43333');
+
+    progressGradient.addColorStop(0, '#d43333');
+    progressGradient.addColorStop(1, '#d43333');
+
+    return WaveSurfer.create({
+        container: container,
+        waveColor: gradient,
+        progressColor: progressGradient,
+        backend: 'WebAudio',
+        interact: true,
+        barWidth: 2,
+        height: containerHeight,
+        partialRender: true
+    });
+}
+
+*/
 
 class AudioSecureHandler
 {
@@ -117,7 +296,7 @@ class AudioSecureHandler
     private function __construct()
     {
         $this->is_admin = current_user_can('administrator');
-        $this->cache_enabled = defined('AUDIO_CACHE_ENABLED') && AUDIO_CACHE_ENABLED;
+        $this->cache_enabled = true; // Forzamos el cacheo
     }
 
     public static function getInstance()
@@ -130,38 +309,12 @@ class AudioSecureHandler
 
     public function generateToken($audio_id)
     {
-        // Verificar si el adjunto existe
-        $post = get_post($audio_id);
-        if (!$post) {
-            guardarLog("generateToken: No se encontró el post/adjunto con ID: $audio_id");
-            return false;
-        }
-        guardarLog("generateToken: Se encontró el adjunto con ID: $audio_id, tipo de post: " . $post->post_type);
-
-        // Verificar si es un archivo adjunto
-        if ($post->post_type !== 'attachment') {
-            guardarLog("generateToken: El ID $audio_id no es un archivo adjunto, es de tipo: " . $post->post_type);
-            return false;
-        }
-
-        // Obtener el tipo MIME
         $mime_type = get_post_mime_type($audio_id);
-        if (!$mime_type) {
-            guardarLog("generateToken: El adjunto con ID $audio_id no tiene tipo MIME asignado.");
-        } else {
-            guardarLog("generateToken: El adjunto con ID $audio_id tiene MIME type: $mime_type");
-        }
-
-        // Validar si es un archivo de audio
         if (strpos($mime_type, 'audio') === false) {
-            guardarLog("generateToken: El adjunto con ID $audio_id no es un archivo de audio, MIME: $mime_type");
             return false;
         }
 
-        // Log para comprobar que el audio_id es válido
-        guardarLog("generateToken: audio_id válido: $audio_id");
 
-        // Continuar con el proceso de tokenización...
         $data = [
             'id' => $audio_id,
             'exp' => time() + self::TOKEN_EXPIRY,
@@ -215,28 +368,49 @@ class AudioSecureHandler
 
     public function streamAudio($token)
     {
+        // Verificar referer
+        $referer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
+        if (!$this->is_admin && !$this->validateReferer($referer)) {
+            wp_die('Acceso no autorizado', 'Error', ['response' => 403]);
+        }
+
         $data = $this->verifyToken($token);
         if (!$data) {
-            guardarLog('Token verification failed');
-            return new WP_Error('invalid_token', 'Token inválido');
+            wp_die('Token inválido', 'Error', ['response' => 403]);
         }
 
         $audio_id = $data['id'];
-        $file_path = $this->getAudioPath($audio_id);
-
-        if (!$file_path) {
-            return new WP_Error('file_not_found', 'Audio no encontrado');
+        $cache_path = $this->getCachePath($audio_id);
+        
+        // Intentar usar versión cacheada primero
+        if (!file_exists($cache_path) || (time() - filemtime($cache_path) > self::CACHE_TIME)) {
+            $original_path = get_attached_file($audio_id);
+            if (!file_exists($original_path)) {
+                wp_die('Audio no encontrado', 'Error', ['response' => 404]);
+            }
+            
+            // Crear caché
+            $this->cacheFile($original_path, $cache_path);
         }
 
-        guardarLog('Streaming audio file: ' . $file_path);
-        guardarLog('Audio ID: ' . $audio_id);
-        guardarLog('MIME Type: ' . mime_content_type($file_path));
         $this->rateLimiter();
-
-        $this->sendHeaders($audio_id, $file_path);
-        $this->streamFile($file_path);
+        $this->sendHeaders($audio_id, $cache_path);
+        $this->streamFile($cache_path);
         exit;
     }
+
+    private function validateReferer($referer) 
+    {
+        $allowed_domains = [
+            parse_url(home_url(), PHP_URL_HOST),
+            // Añadir otros dominios permitidos si es necesario
+        ];
+        
+        $referer_host = parse_url($referer, PHP_URL_HOST);
+        return in_array($referer_host, $allowed_domains);
+    }
+    
+
 
     private function rateLimiter()
     {
@@ -283,12 +457,39 @@ class AudioSecureHandler
         return $cache_dir . '/audio_' . $audio_id . '_' . $salt . '.cache';
     }
 
-    private function cacheFile($source, $destination)
+    private function cacheFile($source_path, $cache_path) 
     {
-        if (!copy($source, $destination)) return false;
+        if (!file_exists(dirname($cache_path))) {
+            wp_mkdir_p(dirname($cache_path));
+        }
+
+        // Aplicar encriptación básica al archivo cacheado
+        $key = substr(hash('sha256', $_ENV['AUDIOCLAVE']), 0, 32);
+        $iv = random_bytes(16);
+        
+        $source = fopen($source_path, 'rb');
+        $cache = fopen($cache_path, 'wb');
+        
+        // Escribir IV al inicio del archivo
+        fwrite($cache, $iv);
+        
+        while (!feof($source)) {
+            $chunk = fread($source, self::BUFFER_SIZE);
+            $encrypted = openssl_encrypt(
+                $chunk,
+                'AES-256-CBC',
+                $key,
+                OPENSSL_RAW_DATA,
+                $iv
+            );
+            fwrite($cache, $encrypted);
+        }
+        
+        fclose($source);
+        fclose($cache);
+        
         // Establecer permisos restrictivos
-        chmod($destination, 0640);
-        return true;
+        chmod($cache_path, 0600);
     }
 
     private function sendHeaders($audio_id, $file_path)
@@ -316,9 +517,9 @@ class AudioSecureHandler
             header('Content-Length: ' . $size);
         }
 
-        guardarLog('Sending audio file: ' . $file_path);
-        guardarLog('MIME Type: ' . $mime);
-        guardarLog('File size: ' . $size);
+        //guardarLog('Sending audio file: ' . $file_path);
+        //guardarLog('MIME Type: ' . $mime);
+        //guardarLog('File size: ' . $size);
     }
 
     private function handleRangeRequest($file_path, $size)
@@ -334,53 +535,31 @@ class AudioSecureHandler
         header('Content-Length: ' . ($end - $start + 1));
     }
 
-    private function streamFile($file_path)
+    private function streamFile($file_path) 
     {
-        if (!file_exists($file_path)) {
-            guardarLog('El archivo no existe: ' . $file_path);
-            return;
-        }
-
-        $mime_type = mime_content_type($file_path);
-        if (!strpos($mime_type, 'audio/') === 0) {
-            guardarLog('Tipo MIME no válido: ' . $mime_type);
-            return;
-        }
-
-        $fp = fopen($file_path, 'rb');
-        if (!$fp) {
-            guardarLog('No se pudo abrir el archivo: ' . $file_path);
-            return;
-        }
-        if (isset($_SERVER['HTTP_RANGE'])) {
-            $range = str_replace('bytes=', '', $_SERVER['HTTP_RANGE']);
-            list($start,) = explode('-', $range);
-            fseek($fp, (int)$start);
-        }
-
-        // Deshabilitar el tiempo límite de ejecución para archivos grandes
-        set_time_limit(0);
-
-        // Limpiar cualquier salida anterior
-        ob_clean();
-        flush();
-
-        // Streaming del archivo
-        while (!feof($fp) && connection_status() == 0) {
-            $buffer = fread($fp, self::BUFFER_SIZE);
-            echo $buffer;
+        $key = substr(hash('sha256', $_ENV['AUDIOCLAVE']), 0, 32);
+        $handle = fopen($file_path, 'rb');
+        
+        // Leer IV del inicio del archivo
+        $iv = fread($handle, 16);
+        
+        while (!feof($handle)) {
+            $encrypted = fread($handle, self::BUFFER_SIZE);
+            $decrypted = openssl_decrypt(
+                $encrypted,
+                'AES-256-CBC',
+                $key,
+                OPENSSL_RAW_DATA,
+                $iv
+            );
+            echo $decrypted;
             ob_flush();
             flush();
-
-            // Pequeña pausa para control de velocidad
-            if (!$this->is_admin) {
-                usleep(50); // 50 microsegundos de pausa
-            }
         }
-
-        fclose($fp);
-        return true;
+        
+        fclose($handle);
     }
+
 
     public function getSecureUrl($audio_id)
     {
