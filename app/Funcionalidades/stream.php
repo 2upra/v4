@@ -210,7 +210,7 @@ class AudioSecureHandler
         header('Accept-Ranges: bytes');
         header('X-Content-Type-Options: nosniff');
         header('X-Frame-Options: DENY');
-        header('Content-Security-Policy: default-src \'none\'');
+        header('Access-Control-Allow-Origin: *');
 
         if ($this->cache_enabled) {
             header('Cache-Control: private, max-age=' . self::CACHE_TIME);
@@ -242,7 +242,22 @@ class AudioSecureHandler
 
     private function streamFile($file_path)
     {
+        if (!file_exists($file_path)) {
+            error_log('El archivo no existe: ' . $file_path);
+            return;
+        }
+    
+        $mime_type = mime_content_type($file_path);
+        if (!strpos($mime_type, 'audio/') === 0) {
+            error_log('Tipo MIME no válido: ' . $mime_type);
+            return;
+        }
+
         $fp = fopen($file_path, 'rb');
+        if (!$fp) {
+            error_log('No se pudo abrir el archivo: ' . $file_path);
+            return;
+        }
         if (isset($_SERVER['HTTP_RANGE'])) {
             $range = str_replace('bytes=', '', $_SERVER['HTTP_RANGE']);
             list($start,) = explode('-', $range);
