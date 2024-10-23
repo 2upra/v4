@@ -87,7 +87,7 @@ window.we = function (postId, audioUrl) {
                 console.log('Content-Type:', response.headers.get('content-type'));
                 return response.arrayBuffer();
             })
-            .then(blob => {
+            .then(buffer => {
                 // Crear un blob con el tipo explícito
                 const blob = new Blob([buffer], {type: 'audio/mpeg'}); // o el tipo que corresponda
 
