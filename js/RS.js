@@ -128,6 +128,8 @@ async function envioRs() {
         const exclusivo = exclusivoCheckbox.checked ? exclusivoCheckbox.value : 0;
         const colab = colabCheckbox.checked ? colabCheckbox.value : 0;
         const music = musicCheckbox.checked ? musicCheckbox.value : 0;
+        const uniqueAudioUrls = new Set(); // Para almacenar URLs únicas
+        const uniqueAudioIds = new Set(); 
 
         // Función para validar la URL
         const isValidUrl = url => {
