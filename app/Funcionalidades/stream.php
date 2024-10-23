@@ -130,14 +130,36 @@ class AudioSecureHandler
 
     public function generateToken($audio_id)
     {
-        $mime_type = get_post_mime_type($audio_id);
-        if (strpos($mime_type, 'audio') === false) {
-            guardarLog("generateToken: audio_id no es un archivo de audio, MIME: $mime_type");
+        // Verificar si el adjunto existe
+        $post = get_post($audio_id);
+        if (!$post) {
+            guardarLog("generateToken: No se encontró el post/adjunto con ID: $audio_id");
             return false;
         }
-        guardarLog("generateToken: MIME type correcto: $mime_type");
+        guardarLog("generateToken: Se encontró el adjunto con ID: $audio_id, tipo de post: " . $post->post_type);
+
+        // Verificar si es un archivo adjunto
+        if ($post->post_type !== 'attachment') {
+            guardarLog("generateToken: El ID $audio_id no es un archivo adjunto, es de tipo: " . $post->post_type);
+            return false;
+        }
+
+        // Obtener el tipo MIME
+        $mime_type = get_post_mime_type($audio_id);
+        if (!$mime_type) {
+            guardarLog("generateToken: El adjunto con ID $audio_id no tiene tipo MIME asignado.");
+        } else {
+            guardarLog("generateToken: El adjunto con ID $audio_id tiene MIME type: $mime_type");
+        }
+
+        // Validar si es un archivo de audio
+        if (strpos($mime_type, 'audio') === false) {
+            guardarLog("generateToken: El adjunto con ID $audio_id no es un archivo de audio, MIME: $mime_type");
+            return false;
+        }
+
         // Log para comprobar que el audio_id es válido
-        guardarLog("generateToken: audio_id válido:  $audio_id");
+        guardarLog("generateToken: audio_id válido: $audio_id");
 
         // Continuar con el proceso de tokenización...
         $data = [
@@ -153,6 +175,7 @@ class AudioSecureHandler
         $signature = hash_hmac('sha256', $payload, $_ENV['AUDIOCLAVE']);
         return base64_encode($payload) . '.' . $signature;
     }
+
 
 
 
