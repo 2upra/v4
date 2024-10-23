@@ -204,6 +204,15 @@ function subidaRs() {
         file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
     };
 
+    const actualizarFlexDirection = () => {
+        const previewsFormDiv = document.querySelector('.previewsForm.NGEESM');
+        if (audiosData.length > 3) {
+            previewsFormDiv.style.flexDirection = 'column';
+        } else {
+            previewsFormDiv.style.flexDirection = ''; // Restablece al valor por defecto
+        }
+    };
+
     const subidaAudio = async file => {
         try {
             alert(`Audio subido: ${file.name}`);
@@ -212,6 +221,10 @@ function subidaRs() {
             const tempId = `temp-${Date.now()}`;
             const progressBarId = waveAudio(file, tempId);
             audiosData.push({tempId, fileUrl: null, fileId: null});
+            
+            // Actualiza la dirección de flexión después de agregar el audio
+            actualizarFlexDirection();
+    
             const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
             const index = audiosData.findIndex(audio => audio.tempId === tempId);
             if (index !== -1) {
@@ -230,39 +243,33 @@ function subidaRs() {
         }
     };
 
+    // y esto restablecerlo si quedan 2
     const eliminarWaveform = (containerId, tempId) => {
         const wrapper = document.getElementById(containerId);
-
+    
         if (wrapper) {
-            // Eliminar el contenedor del DOM primero
             wrapper.parentNode.removeChild(wrapper);
-
-            // Detener la reproducción y destruir la instancia de WaveSurfer si existe
             if (waveSurferInstances[containerId]) {
-                // Eliminar todos los eventos para evitar reproducción accidental
                 waveSurferInstances[containerId].unAll();
-
-                // Detener si estaba reproduciendo
                 if (waveSurferInstances[containerId].isPlaying()) {
                     waveSurferInstances[containerId].stop();
                 }
-
-                // Destruir la instancia
                 waveSurferInstances[containerId].destroy();
                 delete waveSurferInstances[containerId];
             }
         }
-
-        // Eliminar el audio de audiosData usando tempId
+    
         const index = audiosData.findIndex(audio => audio.tempId === tempId);
         if (index !== -1) {
             audiosData.splice(index, 1);
         }
-
-        // Si audiosData está vacío, ocultar previewAudio
+    
         if (audiosData.length === 0) {
             previewAudio.style.display = 'none';
         }
+    
+        // Actualiza la dirección de flexión después de eliminar el audio
+        actualizarFlexDirection();
     };
 
     const waveAudio = (file, tempId) => {
