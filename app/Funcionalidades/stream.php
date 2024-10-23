@@ -128,23 +128,25 @@ class AudioSecureHandler
         return self::$instance;
     }
 
-    public function generateToken($audio_id) 
+    public function generateToken($audio_id)
     {
         // Verificar si el audio_id es un adjunto válido en WordPress
         if (!wp_attachment_is('audio', $audio_id)) {
             guardarLog('generateToken: audio_id no es un adjunto de audio válido: ' . $audio_id);
             return false;
         }
-    
-        // Validar el formato del audio_id
-        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
-            guardarLog('generateToken: audio_id tiene un formato inválido: ' . $audio_id);
+
+        $mime_type = get_post_mime_type($audio_id);
+        if (strpos($mime_type, 'audio') === false) {
+            guardarLog('generateToken: audio_id no es un archivo de audio, MIME: ' . $mime_type);
             return false;
         }
-    
+        guardarLog('generateToken: MIME type correcto: ' . $mime_type);
+
+
         // Log para comprobar que el audio_id es válido
         guardarLog('generateToken: audio_id válido: ' . $audio_id);
-    
+
         // Continuar con el proceso de tokenización...
         $data = [
             'id' => $audio_id,
@@ -154,13 +156,13 @@ class AudioSecureHandler
             'adm' => $this->is_admin,
             'nonce' => wp_create_nonce('audio_stream_' . $audio_id)
         ];
-    
+
         $payload = json_encode($data);
         $signature = hash_hmac('sha256', $payload, $_ENV['AUDIOCLAVE']);
         return base64_encode($payload) . '.' . $signature;
     }
-    
-    
+
+
 
     public function verifyToken($token)
     {
@@ -373,7 +375,6 @@ class AudioSecureHandler
             'token' => $token
         ], admin_url('admin-ajax.php'));
     }
-
 }
 
 
