@@ -49,6 +49,52 @@ function inicializarWaveforms() {
     });
 }
 
+/*
+esto hay aplicarlo aqui, esta bien asi ?
+function loadAudio(postId, audioUrl, container) {
+    if (!container.dataset.audioLoaded) {
+        const headers = new Headers({
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'audio/mpeg, audio/*'
+            // No enviar cache-control: no-cache
+        });
+
+        fetch(audioUrl, {
+            method: 'GET',
+            headers: headers,
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            // Si recibimos 304, usar la caché
+            if (response.status === 304) {
+                return Promise.reject('using-cache');
+            }
+            
+            return response.arrayBuffer();
+        })
+        .then(buffer => {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            return audioContext.decodeAudioData(buffer);
+        })
+        .then(audioBuffer => {
+            initWavesurfer(container, audioBuffer);
+            container.dataset.audioLoaded = 'true';
+        })
+        .catch(error => {
+            if (error === 'using-cache') {
+                // Usar versión cacheada
+                console.log('Using cached version');
+                return;
+            }
+            console.error('Error loading audio:', error);
+        });
+    }
+}
+
+*/
+
 function loadAudio(postId, audioUrl, container) {
     if (!container.dataset.audioLoaded) {
         const secureUrl = audioUrl + (audioUrl.includes('?') ? '&' : '?') + 'security_nonce=' + audioSecurityVars.nonce;
@@ -81,6 +127,12 @@ window.we = function (postId, audioUrl) {
             }
         })
             .then(response => {
+            
+                // Si recibimos 304, usar la caché
+                if (response.status === 304) {
+                    return Promise.reject('using-cache');
+                }
+                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -139,6 +191,12 @@ window.we = function (postId, audioUrl) {
                 if (retryCount < MAX_RETRIES) {
                     setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
                 }
+                if (error === 'using-cache') {
+                    // Usar versión cacheada
+                    console.log('Using cached version');
+                    return;
+                }
+                console.error('Error loading audio:', error);
             });
     };
 

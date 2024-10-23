@@ -293,13 +293,16 @@ class AudioSecureHandler
     }
 
     // Añadimos el método getSecureUrl que estabas usando
-    public function getSecureUrl($audio_id)
-    {
-        // Generamos un token temporal simple
+    public function getSecureUrl($audio_id) {
         $token = $this->generateSimpleToken($audio_id);
-        return rest_url('1/v1/2') . '?token=' . $token;
+        $nonce = wp_create_nonce('audio_stream_nonce');
+        return add_query_arg([
+            'token' => $token,
+            'security_nonce' => $nonce,
+            '_' => time() // Prevenir cacheo de la URL
+        ], rest_url('1/v1/2'));
     }
-
+    
     private function generateSimpleToken($audio_id)
     {
         $data = [
@@ -331,33 +334,56 @@ class AudioSecureHandler
 
 
     private function streamWithHybridCache($audio_id) {
-        // Verificar caché del servidor
-        $cached_path = $this->getServerCachePath($audio_id);
-
-        if (!file_exists($cached_path)) {
-            $original_path = get_attached_file($audio_id);
-            if (!file_exists($original_path)) {
-                wp_die('Audio no encontrado', 'Error', ['response' => 404]);
-            }
-            $this->processAndCacheFile($original_path, $cached_path);
+        // Verificar referer y token primero
+        if (!$this->validateRequest()) {
+            header('HTTP/1.1 403 Forbidden');
+            exit('Acceso no autorizado');
         }
 
-        // Headers para caché híbrida
-        $etag = md5_file($cached_path);
-        $last_modified = gmdate('D, d M Y H:i:s', filemtime($cached_path)) . ' GMT';
-
-        header('ETag: "' . $etag . '"');
-        header('Last-Modified: ' . $last_modified);
-        header('Cache-Control: public, max-age=' . self::CACHE_TIME);
-
-        // Verificar caché del navegador
-        if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && 
-            trim($_SERVER['HTTP_IF_NONE_MATCH'], '"') === $etag) {
+        $cached_path = $this->getServerCachePath($audio_id);
+        
+        // Generar ETag único basado en el archivo y el usuario
+        $etag = '"' . md5($cached_path . wp_get_current_user()->ID) . '"';
+        
+        // Configurar headers de caché más estrictos
+        header('Cache-Control: private, must-revalidate, max-age=' . self::CACHE_TIME);
+        header('ETag: ' . $etag);
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($cached_path)) . ' GMT');
+        header('Vary: User-Agent, Cookie');
+        header('X-Content-Type-Options: nosniff');
+        header('X-Frame-Options: DENY');
+        header('Content-Disposition: inline; filename="audio.mp3"'); // Previene descarga directa
+        
+        // Verificar si podemos usar la caché del navegador
+        if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
             header('HTTP/1.1 304 Not Modified');
             exit;
         }
 
+        // Stream el audio
         $this->streamFileWithRanges($cached_path);
+    }
+
+    private function validateRequest() {
+        // Verificar referer
+        $referer = $_SERVER['HTTP_REFERER'] ?? '';
+        if (!$referer || parse_url($referer, PHP_URL_HOST) !== $_SERVER['HTTP_HOST']) {
+            return false;
+        }
+
+        // Verificar que sea una petición AJAX
+        if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || 
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
+            return false;
+        }
+
+        // Verificar nonce
+        $nonce = $_GET['security_nonce'] ?? '';
+        if (!wp_verify_nonce($nonce, 'audio_stream_nonce')) {
+            return false;
+        }
+
+        return true;
     }
 
 
