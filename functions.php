@@ -5,6 +5,43 @@ require_once __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
+function usuarioEsAdminOPro() {
+    // Obtener el usuario actual de WordPress
+    $current_user_id = get_current_user_id();
+    guardarLog("user id: $current_user_id");
+    $current_user = wp_get_current_user();
+
+    // Comprobar si el usuario está logueado
+    if (!$current_user || 0 == $current_user->ID) {
+        guardarLog("usuarioEsAdminOPro: Error - Usuario no logueado.");
+        return false;
+    }
+
+    // Verificar si el usuario tiene roles asignados
+    if (empty($current_user->roles)) {
+        guardarLog("usuarioEsAdminOPro: Error - Usuario logueado pero sin roles asignados.");
+        guardarLog("usuarioEsAdminOPro: Información del usuario - " . print_r($current_user, true)); // Log para verificar el contenido del usuario
+        return false;
+    }
+
+    // Verificar si el usuario es administrador
+    if (in_array('administrator', (array) $current_user->roles)) {
+        guardarLog("usuarioEsAdminOPro: Usuario es administrador.");
+        return true;
+    }
+
+    // Verificar si tiene la meta `pro`
+    $is_pro = get_user_meta($current_user->ID, 'pro', true);
+    if (!empty($is_pro)) {
+        guardarLog("usuarioEsAdminOPro: Usuario tiene la meta 'pro'.");
+        return true;
+    }
+
+    // Si no es administrador ni tiene la meta 'pro'
+    guardarLog("usuarioEsAdminOPro: Usuario no es administrador ni tiene la meta 'pro'.");
+    return false;
+}
+
 function escribirLog($mensaje, $archivo, $max_lineas = 200) {
     if (is_object($mensaje) || is_array($mensaje)) {
         $mensaje = json_encode($mensaje);
