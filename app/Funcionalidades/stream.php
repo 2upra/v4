@@ -1,7 +1,5 @@
 <?
 
-// Función para verificar si el usuario es administrador o tiene la meta `pro`
-
 
 
 function tokenAudio($audio_id) {
@@ -81,6 +79,7 @@ function audioStreamEnd($data) {
     $current_user_id = get_current_user_id();
     guardarLog("user id: $current_user_id");
     $current_user = wp_get_current_user();
+
     $token = $data['token'];
     $parts = explode('|', base64_decode($token));
     $audio_id = $parts[0];
