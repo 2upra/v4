@@ -97,8 +97,8 @@ function loadAudio(postId, audioUrl, container) {
 
 function loadAudio(postId, audioUrl, container) {
     if (!container.dataset.audioLoaded) {
-        const secureUrl = audioUrl + (audioUrl.includes('?') ? '&' : '?') + 'security_nonce=' + audioSecurityVars.nonce;
-        window.we(postId, secureUrl);
+        // La URL ya incluye el security_nonce, no necesitamos añadirlo de nuevo
+        window.we(postId, audioUrl);
         container.dataset.audioLoaded = 'true';
     }
 }

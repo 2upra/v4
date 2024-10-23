@@ -73,11 +73,19 @@ add_action('rest_api_init', function () {
     register_rest_route('1/v1', '/2', [
         'methods' => 'GET',
         'callback' => function ($request) {
-            $token = $request->get_param('token');
-            if (empty($token)) {
-                return new WP_Error('token_missing', 'Token no proporcionado', ['status' => 400]);
+            try {
+                $token = $request->get_param('token');
+                if (empty($token)) {
+                    return new WP_Error('token_missing', 'Token no proporcionado', ['status' => 400]);
+                }
+                
+                $handler = AudioSecureHandler::getInstance();
+                return $handler->streamAudio($token);
+                
+            } catch (Exception $e) {
+                guardarLog("REST API Error: " . $e->getMessage());
+                return new WP_Error('stream_error', 'Error al procesar la solicitud', ['status' => 500]);
             }
-            return AudioSecureHandler::getInstance()->streamAudio($token);
         },
         'permission_callback' => '__return_true'
     ]);
@@ -299,29 +307,24 @@ class AudioSecureHandler
     }
 
     // Añadimos el método getSecureUrl que estabas usando
-    public function getSecureUrl($audio_id)
-    {
+    public function getSecureUrl($audio_id) {
         $token = $this->generateSimpleToken($audio_id);
-        $nonce = wp_create_nonce('audio_stream_nonce');
         return add_query_arg([
             'token' => $token,
-            'security_nonce' => $nonce,
             '_' => time() // Prevenir cacheo de la URL
         ], rest_url('1/v1/2'));
     }
-
-    private function generateSimpleToken($audio_id)
-    {
+    
+    private function generateSimpleToken($audio_id) {
         $data = [
             'id' => $audio_id,
-            'exp' => time() + 3600, // 1 hora de expiración
+            'exp' => time() + 3600,
             'nonce' => wp_create_nonce('audio_stream_' . $audio_id)
         ];
-
+    
         return base64_encode(json_encode($data)) . '.' .
-            hash_hmac('sha256', $audio_id, $_ENV['AUDIOCLAVE']);
+               hash_hmac('sha256', $audio_id, $_ENV['AUDIOCLAVE']);
     }
-
     private function verifySimpleToken($token)
     {
         list($payload, $signature) = explode('.', $token);
@@ -395,38 +398,143 @@ class AudioSecureHandler
         $this->streamFileWithRanges($cached_path);
     }
 
-    private function validateRequest()
+    /*
+
+        private function verifySimpleToken($token)
     {
-        // Verificar referer
-        $referer = $_SERVER['HTTP_REFERER'] ?? '';
-        if (!$referer) {
-            guardarLog("validateRequest: Error - Referer no presente.");
+        list($payload, $signature) = explode('.', $token);
+        $data = json_decode(base64_decode($payload), true);
+
+        if (!$data || time() > $data['exp']) {
             return false;
         }
 
-        if (parse_url($referer, PHP_URL_HOST) !== $_SERVER['HTTP_HOST']) {
-            guardarLog("validateRequest: Error - Referer inválido. Referer: $referer, Host esperado: " . $_SERVER['HTTP_HOST']);
+        $expected_signature = hash_hmac('sha256', $data['id'], $_ENV['AUDIOCLAVE']);
+
+        if (hash_equals($expected_signature, $signature)) {
+            return $data['id'];
+        }
+        return false;
+    }
+
+
+    add_action('rest_api_init', function () {
+    register_rest_route('1/v1', '/2', [
+        'methods' => 'GET',
+        'callback' => function ($request) {
+            $token = $request->get_param('token');
+            if (empty($token)) {
+                return new WP_Error('token_missing', 'Token no proporcionado', ['status' => 400]);
+            }
+            return AudioSecureHandler::getInstance()->streamAudio($token);
+        },
+        'permission_callback' => '__return_true'
+    ]);
+});
+
+function handle_secure_audio_stream()
+{
+    $token = $_GET['token'] ?? '';
+    if (empty($token)) {
+        wp_send_json_error('Token no proporcionado');
+    }
+
+    AudioSecureHandler::getInstance()->streamAudio($token);
+    exit;
+}
+
+add_action('wp_ajax_stream_secure_audio', 'handle_secure_audio_stream');
+add_action('wp_ajax_nopriv_stream_secure_audio', 'handle_secure_audio_stream');
+
+
+    cliente 
+
+    function loadAudio(postId, audioUrl, container) {
+    if (!container.dataset.audioLoaded) {
+        const secureUrl = audioUrl + (audioUrl.includes('?') ? '&' : '?') + 'security_nonce=' + audioSecurityVars.nonce;
+        window.we(postId, secureUrl);
+        container.dataset.audioLoaded = 'true';
+    }
+}
+
+    2024-10-23 20:45:58 - streamAudio: Iniciando transmisión de audio usando la caché híbrida para el audio ID: 236136
+    2024-10-23 20:45:58 - streamWithHybridCache: Verificando referer y token para el audio ID: 236136
+    2024-10-23 20:45:58 - validateRequest: Error - Nonce inválido. Nonce proporcionado: d3843048b7
+    2024-10-23 20:45:58 - streamWithHybridCache: Error - Acceso no autorizado
+    2024-10-23 20:46:02 - streamAudio: Iniciando verificación del token: eyJpZCI6IjIzNjEzNiIsImV4cCI6MTcyOTcxOTkyOSwibm9uY2UiOiJiYjIzODlmOTNmIn0=.a6c8c6cbb3fec52d603cff8f3b09e568081abc051daabb4e781d05be60d92741
+    2024-10-23 20:46:02 - streamAudio: Token válido: 236136
+    2024-10-23 20:46:02 - streamAudio: Iniciando transmisión de audio usando la caché híbrida para el audio ID: 236136
+    2024-10-23 20:46:02 - streamWithHybridCache: Verificando referer y token para el audio ID: 236136
+    2024-10-23 20:46:02 - validateRequest: Error - Nonce inválido. Nonce proporcionado: d3843048b7
+    2024-10-23 20:46:02 - streamWithHybridCache: Error - Acceso no autorizado
+
+        public function getSecureUrl($audio_id)
+    {
+        $token = $this->generateSimpleToken($audio_id);
+        $nonce = wp_create_nonce('audio_stream_nonce');
+        return add_query_arg([
+            'token' => $token,
+            'security_nonce' => $nonce,
+            '_' => time() // Prevenir cacheo de la URL
+        ], rest_url('1/v1/2'));
+    }
+
+    */
+
+    private function validateRequest() {
+        try {
+            // Verificar referer
+            $referer = $_SERVER['HTTP_REFERER'] ?? '';
+            if (!$referer) {
+                guardarLog("validateRequest: Error - Referer no presente.");
+                return false;
+            }
+    
+            $allowedHosts = [
+                $_SERVER['HTTP_HOST'],
+                'www.' . $_SERVER['HTTP_HOST']
+            ];
+            
+            $refererHost = parse_url($referer, PHP_URL_HOST);
+            if (!in_array($refererHost, $allowedHosts)) {
+                guardarLog("validateRequest: Error - Referer inválido. Referer: $referer, Host esperado: " . $_SERVER['HTTP_HOST']);
+                return false;
+            }
+    
+            // Verificar que sea una petición AJAX
+            if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || 
+                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
+                guardarLog("validateRequest: Error - No es una petición AJAX");
+                return false;
+            }
+    
+            // Verificar el nonce del token
+            $token = $_GET['token'] ?? '';
+            if (empty($token)) {
+                guardarLog("validateRequest: Error - Token no proporcionado");
+                return false;
+            }
+    
+            list($payload, $signature) = explode('.', $token);
+            $data = json_decode(base64_decode($payload), true);
+            
+            if (!$data || !isset($data['nonce'])) {
+                guardarLog("validateRequest: Error - Token malformado o sin nonce");
+                return false;
+            }
+    
+            if (!wp_verify_nonce($data['nonce'], 'audio_stream_' . $data['id'])) {
+                guardarLog("validateRequest: Error - Nonce del token inválido");
+                return false;
+            }
+    
+            guardarLog("validateRequest: Solicitud validada exitosamente.");
+            return true;
+    
+        } catch (Exception $e) {
+            guardarLog("validateRequest: Error inesperado - " . $e->getMessage());
             return false;
         }
-
-        // Verificar que sea una petición AJAX
-        if (
-            empty($_SERVER['HTTP_X_REQUESTED_WITH']) ||
-            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest'
-        ) {
-            guardarLog("validateRequest: Error - No es una petición AJAX. HTTP_X_REQUESTED_WITH: " . ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? 'no establecido'));
-            return false;
-        }
-
-        // Verificar nonce
-        $nonce = $_GET['security_nonce'] ?? '';
-        if (!wp_verify_nonce($nonce, 'audio_stream_nonce')) {
-            guardarLog("validateRequest: Error - Nonce inválido. Nonce proporcionado: $nonce");
-            return false;
-        }
-
-        guardarLog("validateRequest: Solicitud validada exitosamente.");
-        return true;
     }
 
 
