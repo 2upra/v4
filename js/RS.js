@@ -113,12 +113,24 @@ function selectorformtipo() {
                 resetStyles(); // Restablecer estilos de los otros checkboxes
             }
 
-            // Si se marca 'exclusivocheck', desmarca 'colabcheck'
+            // Si se marca 'exclusivocheck', desmarca 'colabcheck' y 'musiccheck'
             if (event.target.id === 'exclusivocheck' && event.target.checked) {
-                colabcheck.checked = false;
+                colabcheck.checked = false; // Desactiva 'colabcheck'
+                musiccheck.checked = false; // Desactiva 'musiccheck'
                 const colabLabel = colabcheck.closest('label');
                 colabLabel.style.color = '#6b6b6b';
                 colabLabel.style.background = '';
+                resetStyles(); // Restablecer estilos de los otros checkboxes
+            }
+
+            // Si se marca 'colabcheck', desmarca 'exclusivocheck' y 'musiccheck'
+            if (event.target.id === 'colabcheck' && event.target.checked) {
+                exclusivocheck.checked = false; // Desactiva 'exclusivocheck'
+                musiccheck.checked = false; // Desactiva 'musiccheck'
+                const exclusivocLabel = exclusivocheck.closest('label');
+                exclusivocLabel.style.color = '#6b6b6b';
+                exclusivocLabel.style.background = '';
+                resetStyles(); // Restablecer estilos de los otros checkboxes
             }
 
             // Si se marca 'descargacheck', desmarca 'musiccheck'
@@ -151,6 +163,7 @@ function selectorformtipo() {
         });
     }
 }
+
 
 
 
