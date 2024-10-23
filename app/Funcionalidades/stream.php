@@ -81,11 +81,10 @@ add_action('rest_api_init', function () {
             ),
         ),
         'permission_callback' => function($request) {
-            // Autenticar el usuario si hay un nonce válido
-            $nonce = $request->get_param('_wpnonce');
-            if ($nonce && wp_verify_nonce($nonce, 'wp_rest')) {
-                // Restaurar la sesión del usuario
-                wp_set_current_user(wp_validate_auth_cookie());
+            // Intentar autenticar por cookie
+            $user_id = wp_validate_auth_cookie('', 'logged_in');
+            if ($user_id) {
+                wp_set_current_user($user_id);
             }
             
             return verificarAudio($request->get_param('token'));
