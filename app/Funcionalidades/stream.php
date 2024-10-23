@@ -68,6 +68,7 @@ function wave($audio_url, $audio_id_lite, $post_id)
     </div>
 <?php
 }
+
 // Manejador de la API REST
 add_action('rest_api_init', function () {
     register_rest_route('1/v1', '/2', [
@@ -76,6 +77,7 @@ add_action('rest_api_init', function () {
             try {
                 $token = $request->get_param('token');
                 if (empty($token)) {
+                    guardarLog("REST API: Error - Token no proporcionado");
                     return new WP_Error('token_missing', 'Token no proporcionado', ['status' => 400]);
                 }
                 
@@ -105,183 +107,16 @@ function handle_secure_audio_stream()
 add_action('wp_ajax_stream_secure_audio', 'handle_secure_audio_stream');
 add_action('wp_ajax_nopriv_stream_secure_audio', 'handle_secure_audio_stream');
 
-// da este error testkit1/:1  Uncaught (in promise) EncodingError: Failed to execute 'decodeAudioData' on 'BaseAudioContext': Unable to decode audio data
-
 /*
-function inicializarWaveforms() {
-    const observer = new IntersectionObserver(
-        entries => {
-            entries.forEach(entry => {
-                const container = entry.target;
-                const postId = container.getAttribute('postIDWave');
-                const audioUrl = container.getAttribute('data-audio-url');
 
-                if (entry.isIntersecting) {
-                    if (!container.dataset.loadTimeoutSet) {
-                        const loadTimeout = setTimeout(() => {
-                            if (!container.dataset.audioLoaded) {
-                                loadAudio(postId, audioUrl, container);
-                            }
-                        }, 20000); // Carga el audio después de 20 segundos de estar en el viewport
-
-                        container.dataset.loadTimeout = loadTimeout;
-                        container.dataset.loadTimeoutSet = 'true';
-                    }
-                } else {
-                    if (container.dataset.loadTimeoutSet) {
-                        clearTimeout(container.dataset.loadTimeout);
-                        delete container.dataset.loadTimeout;
-                        delete container.dataset.loadTimeoutSet;
-                    }
-                }
-            });
-        },
-        {threshold: 0.5}
-    );
-
-    document.querySelectorAll('.waveform-container').forEach(container => {
-        const postId = container.getAttribute('postIDWave');
-        const audioUrl = container.getAttribute('data-audio-url');
-        if (postId && audioUrl && !container.dataset.initialized) {
-            container.dataset.initialized = 'true';
-            observer.observe(container);
-            container.addEventListener('click', () => {
-                if (!container.dataset.audioLoaded) {
-                    if (container.dataset.loadTimeoutSet) {
-                        clearTimeout(container.dataset.loadTimeout);
-                        delete container.dataset.loadTimeout;
-                        delete container.dataset.loadTimeoutSet;
-                    }
-                    loadAudio(postId, audioUrl, container);
-                }
-            });
-        }
-    });
-}
-
-function loadAudio(postId, audioUrl, container) {
-    if (!container.dataset.audioLoaded) {
-        const secureUrl = audioUrl + (audioUrl.includes('?') ? '&' : '?') + 'security_nonce=' + audioSecurityVars.nonce;
-        window.we(postId, secureUrl);
-        container.dataset.audioLoaded = 'true';
-    }
-}
-
-window.we = function (postId, audioUrl) {
-    const container = document.getElementById(`waveform-${postId}`);
-    const MAX_RETRIES = 3;
-    let wavesurfer;
-
-    const loadAndPlayAudioStream = (retryCount = 0) => {
-        if (retryCount >= MAX_RETRIES) {
-            console.error('No se pudo cargar el audio después de varios intentos');
-            container.querySelector('.waveform-loading').style.display = 'none';
-            container.querySelector('.waveform-message').style.display = 'block';
-            container.querySelector('.waveform-message').textContent = 'Error al cargar el audio.';
-            return;
-        }
-
-        window.audioLoading = true;
-
-        fetch(audioUrl, {
-            credentials: 'same-origin',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                Accept: 'audio/*' // Añadido para especificar que esperamos audio
-            }
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                console.log('Content-Type:', response.headers.get('content-type'));
-                return response.arrayBuffer();
-            })
-            .then(buffer => {
-                // Crear un blob con el tipo explícito
-                const blob = new Blob([buffer], {type: 'audio/mpeg'}); // o el tipo que corresponda
-
-                const audioBlobUrl = URL.createObjectURL(blob);
-                wavesurfer = initWavesurfer(container);
-
-                // Manejar errores de decodificación
-                wavesurfer.on('error', err => {
-                    console.error('Error en wavesurfer:', err);
-                    if (retryCount < MAX_RETRIES) {
-                        setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
-                    }
-                });
-
-                // Cargar el audio
-                wavesurfer.load(audioBlobUrl);
-
-                const waveformBackground = container.querySelector('.waveform-background');
-                if (waveformBackground) {
-                    waveformBackground.style.display = 'none';
-                }
-
-                wavesurfer.on('ready', () => {
-                    window.audioLoading = false;
-                    container.dataset.audioLoaded = 'true';
-                    container.querySelector('.waveform-loading').style.display = 'none';
-                    const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
-
-                    const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
-
-                    if (!waveCargada && !isMobile) {
-                        setTimeout(() => {
-                            const image = generateWaveformImage(wavesurfer);
-                            sendImageToServer(image, postId);
-                        }, 1);
-                    }
-
-                    container.addEventListener('click', () => {
-                        if (wavesurfer.isPlaying()) {
-                            wavesurfer.pause();
-                        } else {
-                            wavesurfer.play();
-                        }
-                    });
-                });
-            })
-            .catch(error => {
-                console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`, error);
-                if (retryCount < MAX_RETRIES) {
-                    setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
-                }
-            });
-    };
-
-    loadAndPlayAudioStream();
-};
-
-// La función que inicializa WaveSurfer con los estilos y configuraciones deseados
-function initWavesurfer(container) {
-    const containerHeight = container.classList.contains('waveform-container-venta') ? 60 : 102;
-    const ctx = document.createElement('canvas').getContext('2d');
-    const gradient = ctx.createLinearGradient(0, 0, 0, 500);
-    const progressGradient = ctx.createLinearGradient(0, 0, 0, 500);
-
-    // Configuración de los colores del gradiente
-    gradient.addColorStop(0, '#FFFFFF');
-    gradient.addColorStop(0.55, '#FFFFFF');
-    gradient.addColorStop(0.551, '#d43333');
-    gradient.addColorStop(1, '#d43333');
-
-    progressGradient.addColorStop(0, '#d43333');
-    progressGradient.addColorStop(1, '#d43333');
-
-    return WaveSurfer.create({
-        container: container,
-        waveColor: gradient,
-        progressColor: progressGradient,
-        backend: 'WebAudio',
-        interact: true,
-        barWidth: 2,
-        height: containerHeight,
-        partialRender: true
-    });
-}
+2024-10-23 20:53:43 - streamAudio: Iniciando transmisión de audio usando la caché híbrida para el audio ID: 236136
+2024-10-23 20:53:43 - streamWithHybridCache: Verificando referer y token para el audio ID: 236136
+2024-10-23 20:53:43 - validateRequest: Error - Nonce del token inválido
+2024-10-23 20:53:43 - streamWithHybridCache: Error - Acceso no autorizado
+2024-10-23 20:53:48 - streamAudio: Iniciando verificación del token: eyJpZCI6IjIzNjEzNiIsImV4cCI6MTcyOTcyMDQwNiwibm9uY2UiOiJiYjIzODlmOTNmIn0=.a6c8c6cbb3fec52d603cff8f3b09e568081abc051daabb4e781d05be60d92741
+2024-10-23 20:53:48 - streamAudio: Token válido: 236136
+2024-10-23 20:53:48 - streamAudio: Iniciando transmisión de audio usando la caché híbrida para el audio ID: 236136
+2024-10-23 20:53:48 - streamWithHybridCache: Verificando referer y token para el audio ID: 236136
 
 */
 
@@ -307,39 +142,62 @@ class AudioSecureHandler
     }
 
     // Añadimos el método getSecureUrl que estabas usando
-    public function getSecureUrl($audio_id) {
+    public function getSecureUrl($audio_id)
+    {
         $token = $this->generateSimpleToken($audio_id);
         return add_query_arg([
             'token' => $token,
             '_' => time() // Prevenir cacheo de la URL
         ], rest_url('1/v1/2'));
     }
-    
-    private function generateSimpleToken($audio_id) {
+
+    private function generateSimpleToken($audio_id)
+    {
+        $nonce = wp_create_nonce('audio_stream_' . $audio_id); // Crear nonce específico
+        guardarLog("generateSimpleToken: Generando nonce para audio ID $audio_id: $nonce");
+
         $data = [
             'id' => $audio_id,
             'exp' => time() + 3600,
-            'nonce' => wp_create_nonce('audio_stream_' . $audio_id)
+            'nonce' => $nonce
         ];
-    
-        return base64_encode(json_encode($data)) . '.' .
-               hash_hmac('sha256', $audio_id, $_ENV['AUDIOCLAVE']);
+
+        $payload = base64_encode(json_encode($data));
+        $signature = hash_hmac('sha256', $audio_id, $_ENV['AUDIOCLAVE']);
+
+        guardarLog("generateSimpleToken: Token generado con payload: " . json_encode($data));
+
+        return $payload . '.' . $signature;
     }
+
     private function verifySimpleToken($token)
     {
-        list($payload, $signature) = explode('.', $token);
-        $data = json_decode(base64_decode($payload), true);
+        try {
+            list($payload, $signature) = explode('.', $token);
+            $data = json_decode(base64_decode($payload), true);
 
-        if (!$data || time() > $data['exp']) {
+            guardarLog("verifySimpleToken: Verificando token con datos: " . json_encode($data));
+
+            if (!$data || time() > $data['exp']) {
+                guardarLog("verifySimpleToken: Token expirado o inválido");
+                return false;
+            }
+
+            $expected_signature = hash_hmac('sha256', $data['id'], $_ENV['AUDIOCLAVE']);
+
+            if (hash_equals($expected_signature, $signature)) {
+                guardarLog("verifySimpleToken: Token válido para audio ID: " . $data['id']);
+                // Guardar el nonce para usarlo en validateRequest
+                set_transient('audio_nonce_' . $data['id'], $data['nonce'], 3600);
+                return $data['id'];
+            }
+
+            guardarLog("verifySimpleToken: Firma inválida");
+            return false;
+        } catch (Exception $e) {
+            guardarLog("verifySimpleToken: Error - " . $e->getMessage());
             return false;
         }
-
-        $expected_signature = hash_hmac('sha256', $data['id'], $_ENV['AUDIOCLAVE']);
-
-        if (hash_equals($expected_signature, $signature)) {
-            return $data['id'];
-        }
-        return false;
     }
 
 
@@ -398,89 +256,6 @@ class AudioSecureHandler
         $this->streamFileWithRanges($cached_path);
     }
 
-    /*
-
-        private function verifySimpleToken($token)
-    {
-        list($payload, $signature) = explode('.', $token);
-        $data = json_decode(base64_decode($payload), true);
-
-        if (!$data || time() > $data['exp']) {
-            return false;
-        }
-
-        $expected_signature = hash_hmac('sha256', $data['id'], $_ENV['AUDIOCLAVE']);
-
-        if (hash_equals($expected_signature, $signature)) {
-            return $data['id'];
-        }
-        return false;
-    }
-
-
-    add_action('rest_api_init', function () {
-    register_rest_route('1/v1', '/2', [
-        'methods' => 'GET',
-        'callback' => function ($request) {
-            $token = $request->get_param('token');
-            if (empty($token)) {
-                return new WP_Error('token_missing', 'Token no proporcionado', ['status' => 400]);
-            }
-            return AudioSecureHandler::getInstance()->streamAudio($token);
-        },
-        'permission_callback' => '__return_true'
-    ]);
-});
-
-function handle_secure_audio_stream()
-{
-    $token = $_GET['token'] ?? '';
-    if (empty($token)) {
-        wp_send_json_error('Token no proporcionado');
-    }
-
-    AudioSecureHandler::getInstance()->streamAudio($token);
-    exit;
-}
-
-add_action('wp_ajax_stream_secure_audio', 'handle_secure_audio_stream');
-add_action('wp_ajax_nopriv_stream_secure_audio', 'handle_secure_audio_stream');
-
-
-    cliente 
-
-    function loadAudio(postId, audioUrl, container) {
-    if (!container.dataset.audioLoaded) {
-        const secureUrl = audioUrl + (audioUrl.includes('?') ? '&' : '?') + 'security_nonce=' + audioSecurityVars.nonce;
-        window.we(postId, secureUrl);
-        container.dataset.audioLoaded = 'true';
-    }
-}
-
-    2024-10-23 20:45:58 - streamAudio: Iniciando transmisión de audio usando la caché híbrida para el audio ID: 236136
-    2024-10-23 20:45:58 - streamWithHybridCache: Verificando referer y token para el audio ID: 236136
-    2024-10-23 20:45:58 - validateRequest: Error - Nonce inválido. Nonce proporcionado: d3843048b7
-    2024-10-23 20:45:58 - streamWithHybridCache: Error - Acceso no autorizado
-    2024-10-23 20:46:02 - streamAudio: Iniciando verificación del token: eyJpZCI6IjIzNjEzNiIsImV4cCI6MTcyOTcxOTkyOSwibm9uY2UiOiJiYjIzODlmOTNmIn0=.a6c8c6cbb3fec52d603cff8f3b09e568081abc051daabb4e781d05be60d92741
-    2024-10-23 20:46:02 - streamAudio: Token válido: 236136
-    2024-10-23 20:46:02 - streamAudio: Iniciando transmisión de audio usando la caché híbrida para el audio ID: 236136
-    2024-10-23 20:46:02 - streamWithHybridCache: Verificando referer y token para el audio ID: 236136
-    2024-10-23 20:46:02 - validateRequest: Error - Nonce inválido. Nonce proporcionado: d3843048b7
-    2024-10-23 20:46:02 - streamWithHybridCache: Error - Acceso no autorizado
-
-        public function getSecureUrl($audio_id)
-    {
-        $token = $this->generateSimpleToken($audio_id);
-        $nonce = wp_create_nonce('audio_stream_nonce');
-        return add_query_arg([
-            'token' => $token,
-            'security_nonce' => $nonce,
-            '_' => time() // Prevenir cacheo de la URL
-        ], rest_url('1/v1/2'));
-    }
-
-    */
-
     private function validateRequest() {
         try {
             // Verificar referer
@@ -497,7 +272,7 @@ add_action('wp_ajax_nopriv_stream_secure_audio', 'handle_secure_audio_stream');
             
             $refererHost = parse_url($referer, PHP_URL_HOST);
             if (!in_array($refererHost, $allowedHosts)) {
-                guardarLog("validateRequest: Error - Referer inválido. Referer: $referer, Host esperado: " . $_SERVER['HTTP_HOST']);
+                guardarLog("validateRequest: Error - Referer inválido. Referer: $referer");
                 return false;
             }
     
@@ -508,7 +283,7 @@ add_action('wp_ajax_nopriv_stream_secure_audio', 'handle_secure_audio_stream');
                 return false;
             }
     
-            // Verificar el nonce del token
+            // Obtener y verificar el token
             $token = $_GET['token'] ?? '';
             if (empty($token)) {
                 guardarLog("validateRequest: Error - Token no proporcionado");
@@ -518,17 +293,19 @@ add_action('wp_ajax_nopriv_stream_secure_audio', 'handle_secure_audio_stream');
             list($payload, $signature) = explode('.', $token);
             $data = json_decode(base64_decode($payload), true);
             
-            if (!$data || !isset($data['nonce'])) {
-                guardarLog("validateRequest: Error - Token malformado o sin nonce");
+            if (!$data || !isset($data['id']) || !isset($data['nonce'])) {
+                guardarLog("validateRequest: Error - Token malformado");
                 return false;
             }
     
-            if (!wp_verify_nonce($data['nonce'], 'audio_stream_' . $data['id'])) {
-                guardarLog("validateRequest: Error - Nonce del token inválido");
+            // Obtener el nonce guardado
+            $stored_nonce = get_transient('audio_nonce_' . $data['id']);
+            if (!$stored_nonce || $stored_nonce !== $data['nonce']) {
+                guardarLog("validateRequest: Error - Nonce no coincide");
                 return false;
             }
     
-            guardarLog("validateRequest: Solicitud validada exitosamente.");
+            guardarLog("validateRequest: Solicitud validada exitosamente");
             return true;
     
         } catch (Exception $e) {
@@ -536,7 +313,6 @@ add_action('wp_ajax_nopriv_stream_secure_audio', 'handle_secure_audio_stream');
             return false;
         }
     }
-
 
     public function streamAudio($token)
     {
