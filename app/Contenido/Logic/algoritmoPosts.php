@@ -297,9 +297,9 @@ function calcularFeedPersonalizado($userId)
         // Ajuste por metadatos, invertido si el usuario es admin
         if ($esAdmin) {
             if (!$metaVerificado && $metaPostAut) {
-                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.5;
+                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.8;
             } elseif ($metaVerificado && !$metaPostAut) {
-                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.5;
+                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.2;
             } else {
                 $puntosFinal = $puntosUsuario + $puntosIntereses + $puntosLikes;
             }
@@ -314,7 +314,7 @@ function calcularFeedPersonalizado($userId)
         }
 
         // Aumentar la aleatoriedad (incrementar el rango para más variación)
-        $aleatoriedad = mt_rand(0, 50); // Aumentamos hasta 50% de variación
+        $aleatoriedad = mt_rand(0, 60); // Aumentamos hasta 50% de variación
         $puntosFinal = $puntosFinal * $factorTiempo;
         $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100)); // Hasta 50% de variación
 
