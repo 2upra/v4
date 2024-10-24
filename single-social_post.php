@@ -31,7 +31,7 @@ if (have_posts()) :
         <!--- Metadatos estructurados -->
 
 
-        <main id="mainPost" role="mainPost">
+        <div class="mainPost">
             <article id="post-<?php echo $current_post_id; ?>" <?php post_class('single-social-post'); ?>>
                 <div class="content-wrapper<?php echo esc_attr($nologin_class); ?>">
                     <div class="single">
@@ -50,7 +50,7 @@ if (have_posts()) :
                     </div>
                 </div>
             </article>
-        </main>
+        </div>
 <?php
     endwhile;
 else:
