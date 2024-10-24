@@ -31,7 +31,7 @@ if (have_posts()) :
         <!--- Metadatos estructurados -->
 
 
-        <div class="mainPost">
+        <div class="mainPost" id="content">
             <article id="post-<?php echo $current_post_id; ?>" <?php post_class('single-social-post'); ?>>
                 <div class="content-wrapper<?php echo esc_attr($nologin_class); ?>">
                     <div class="single">
