@@ -29,42 +29,14 @@ if (have_posts()) :
         );
 ?>
         <!--- Metadatos estructurados -->
-        <script type="application/ld+json">
-            <?php echo json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT); ?>
-        </script>
 
-        <main id="main" role="main">
+
+        <main id="mainPost" role="mainPost">
             <article id="post-<?php echo $current_post_id; ?>" <?php post_class('single-social-post'); ?>>
                 <div class="content-wrapper<?php echo esc_attr($nologin_class); ?>">
                     <div class="single">
                         <?php echo htmlPost($filtro); ?>
-                        
-                        <!-- Información del algoritmo -->
-                        <div class="UKVPJI">
-                            <div class="tags-container" id="tags-<?php echo $current_post_id; ?>" 
-                                 role="navigation" aria-label="Etiquetas del post">
-                                <?php
-                                if (!empty($datos_decoded['tags'])) {
-                                    foreach ($datos_decoded['tags'] as $tag) {
-                                        echo '<span class="postTag">' . esc_html($tag) . '</span>';
-                                    }
-                                }
-                                ?>
-                            </div>
-                            
-                            <!-- Datos del algoritmo -->
-                            <p id-post-algoritmo="<?php echo $current_post_id; ?>" 
-                               class="algoritmo-data" style="display:none;">
-                                <?php echo esc_html($datosAlgoritmo); ?>
-                            </p>
-
-                            <button class="infoIA-btn" data-post-id="<?php echo $current_post_id; ?>" 
-                                    aria-expanded="false">
-                                Detalles
-                            </button>
-                        </div>
-
-                        <!-- Publicaciones similares -->
+                    
                         <section class="publicaciones-similares">
                             <h2>Publicaciones Similares</h2>
                             <?php
