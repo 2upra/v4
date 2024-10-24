@@ -175,3 +175,18 @@ function optimizar_headers($headers) {
     return $headers;
 }
 add_filter('wp_headers', 'optimizar_headers');
+
+// Añadir soporte para títulos SEO
+add_theme_support('title-tag');
+
+// Añadir soporte para miniaturas destacadas
+add_theme_support('post-thumbnails');
+
+// Añade esto en functions.php para cargar los scripts de manera optimizada
+function optimize_scripts() {
+    // Desregistrar jQuery y volver a registrarlo en el footer
+    wp_deregister_script('jquery');
+    wp_register_script('jquery', includes_url('/js/jquery/jquery.js'), false, null, true);
+    wp_enqueue_script('jquery');
+}
+add_action('wp_enqueue_scripts', 'optimize_scripts');

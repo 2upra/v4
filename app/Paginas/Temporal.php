@@ -203,7 +203,7 @@ function dev()
                 <div class="BKXAFN">
 
                     <div class="JMIOCI">
-                        <h2>Un entorno libre para almas libres</h2>
+                        <h1>Un entorno libre para almas libres</h1>
                         <p>Biblioteca de recursos musicales con herramientas potenciadas para la colaboración e independencia artistica.</p>
                     </div>
                     <div class="BNZWJR">
