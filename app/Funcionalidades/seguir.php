@@ -70,8 +70,3 @@ function seguir_usuarios_automaticamente1() {
     }
 }
 
-function enqueue_seguir_script() {
-    wp_enqueue_script('seguir', get_template_directory_uri() . '/js/seguir.js', ['jquery'], '1.0.9', true);
-    wp_localize_script('seguir', 'ajax_params', ['ajax_url' => admin_url('admin-ajax.php')]);
-}
-add_action('wp_enqueue_scripts', 'enqueue_seguir_script');
