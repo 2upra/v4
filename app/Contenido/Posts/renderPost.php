@@ -96,16 +96,10 @@ function htmlPost($filtro)
                             <? endif; ?>
                             <div class="FBKMJD">
                                 <div class="UKVPJI">
-
-
                                     <div class="tags-container" id="tags-<? echo get_the_ID(); ?>"></div>
                                     <!-- Datos del algoritmo -->
                                     <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;"><? echo esc_html($datosAlgoritmo); ?></p>
 
-                                    <span class="infoIA-btn" data-post-id="<? echo get_the_ID(); ?>">Detalles</span>
-
-                                    <!-- Detalles IA -->
-                                    <p id-post-detalles-ia="<? echo get_the_ID(); ?>" style="display:none;"><? echo esc_html($detallesIA); ?></p>
                                 </div>
                             </div>
                         </div>

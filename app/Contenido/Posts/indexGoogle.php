@@ -84,6 +84,23 @@ function modificar_separador_titulo($sep) {
 }
 add_filter('document_title_separator', 'modificar_separador_titulo');
 
+function optimizar_longitud_titulo($title) {
+    // Limitar longitud a 60 caracteres
+    if (strlen($title) > 60) {
+        $title = substr($title, 0, 57) . '...';
+    }
+    return $title;
+}
+add_filter('the_title', 'optimizar_longitud_titulo');
+
+// Estructura jerárquica de títulos
+function asegurar_jerarquia_titulos($content) {
+    // Asegurarse de que solo hay un H1
+    $content = preg_replace('/<h1>(.*?)<\/h1>/i', '<h2>$1</h2>', $content);
+    return $content;
+}
+add_filter('the_content', 'asegurar_jerarquia_titulos');
+
 function optimizar_imagenes($content) {
     // Añadir atributos alt y title a imágenes
     $content = preg_replace('/<img(.*?)alt=[\'"](.*?)[\'"](.*?)>/i', '<img$1alt="'.get_the_title().' - $2"$3>', $content);
