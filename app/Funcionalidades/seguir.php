@@ -24,25 +24,37 @@ function update_follow_relationship($follower_id, $followed_id, $action) {
         $followers = array_diff($followers, [$follower_id]);
     }
 
-    update_user_meta($follower_id, 'siguiendo', $following);
-    return update_user_meta($followed_id, 'seguidores', $followers);
+    $update_following = update_user_meta($follower_id, 'siguiendo', array_values($following));
+    $update_followers = update_user_meta($followed_id, 'seguidores', array_values($followers));
+
+    return $update_following && $update_followers;
 }
 
 function seguir_usuario() {
-    return update_follow_relationship(
+    $result = update_follow_relationship(
         get_user_id_from_post('seguidor_id'),
         get_user_id_from_post('seguido_id'),
         'follow'
     );
+
+    wp_send_json([
+        'success' => $result,
+        'message' => $result ? 'Usuario seguido exitosamente' : 'Error al seguir usuario'
+    ]);
 }
 add_action('wp_ajax_seguir_usuario', 'seguir_usuario');
 
 function dejar_de_seguir_usuario() {
-    return update_follow_relationship(
+    $result = update_follow_relationship(
         get_user_id_from_post('seguidor_id'),
         get_user_id_from_post('seguido_id'),
         'unfollow'
     );
+
+    wp_send_json([
+        'success' => $result,
+        'message' => $result ? 'Usuario dejado de seguir exitosamente' : 'Error al dejar de seguir usuario'
+    ]);
 }
 add_action('wp_ajax_dejar_de_seguir_usuario', 'dejar_de_seguir_usuario');
 
