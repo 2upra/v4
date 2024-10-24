@@ -305,9 +305,9 @@ function calcularFeedPersonalizado($userId)
             }
         } else {
             if ($metaVerificado && !$metaPostAut) {
-                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.5;
+                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.8;
             } elseif (!$metaVerificado && $metaPostAut) {
-                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.5;
+                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.2;
             } else {
                 $puntosFinal = $puntosUsuario + $puntosIntereses + $puntosLikes;
             }
