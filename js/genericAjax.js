@@ -65,15 +65,22 @@ async function banearUsuario() {
     );
 }
 
-
 function initEditWordPress() {
     console.log('Se ha iniciado la función initEditWordPress');
 
-    // Delegamos el evento click al body para que funcione incluso con elementos dinámicos
+    // Verificamos si los botones existen en el DOM
+    const buttons = document.querySelectorAll('.editarWordPress');
+    if (buttons.length > 0) {
+        console.log('Botones encontrados:', buttons.length);
+    } else {
+        console.warn('No se encontraron botones con la clase editarWordPress');
+    }
+
+    // Delegación de evento click al body
     document.body.addEventListener('click', function(e) {
         console.log('Se ha detectado un clic en el body');
 
-        // Verificamos si el elemento clicado contiene la clase 'editarWordPress'
+        // Verificamos si el elemento clicado tiene la clase 'editarWordPress'
         if (e.target && e.target.classList.contains('editarWordPress')) {
             console.log('El clic fue en un elemento con la clase editarWordPress');
 
