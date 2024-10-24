@@ -21,6 +21,47 @@ if (!defined('ABSPATH')) {
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php
+    // Función para títulos optimizados
+    function get_seo_title()
+    {
+        $title = '';
+
+        // Página principal
+        if (is_home() || is_front_page()) {
+            $title = get_bloginfo('name') . ' | ' . get_bloginfo('description');
+        }
+        // Posts individuales
+        elseif (is_single()) {
+            $title = get_the_title() . ' | ' . get_bloginfo('name');
+        }
+        // Páginas
+        elseif (is_page()) {
+            $title = get_the_title() . ' | ' . get_bloginfo('name');
+        }
+        // Categorías
+        elseif (is_category()) {
+            $title = single_cat_title('', false) . ' | ' . get_bloginfo('name');
+        }
+        // Archivos
+        elseif (is_archive()) {
+            $title = get_the_archive_title() . ' | ' . get_bloginfo('name');
+        }
+        // Búsqueda
+        elseif (is_search()) {
+            $title = 'Resultados para: ' . get_search_query() . ' | ' . get_bloginfo('name');
+        }
+        // 404
+        elseif (is_404()) {
+            $title = 'Página no encontrada | ' . get_bloginfo('name');
+        }
+
+        return esc_html($title);
+    }
+    ?>
+
+    <title><?php echo get_seo_title(); ?></title>
+
     <style>
         #preloader {
             position: fixed;

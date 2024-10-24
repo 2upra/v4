@@ -57,13 +57,32 @@ function excluir_posts_del_sitemap($args, $post_type) {
 }
 add_filter('wp_sitemaps_posts_query_args', 'excluir_posts_del_sitemap', 10, 2);
 
-function optimizar_titulos($title) {
+function optimizar_titulos_seo($title_parts) {
     if (is_single()) {
-        $title = get_the_title() . ' | ' . get_bloginfo('name');
+        // Personalizar longitud del título
+        $title = get_the_title();
+        if (strlen($title) > 60) {
+            $title = substr($title, 0, 57) . '...';
+        }
+        
+        // Estructura: Título del Post | Categoría | Nombre del Sitio
+        $category = get_the_category();
+        if ($category) {
+            $title_parts['title'] = $title;
+            $title_parts['page'] = $category[0]->name;
+            $title_parts['tagline'] = get_bloginfo('name');
+        }
     }
-    return $title;
+    
+    return $title_parts;
 }
-add_filter('pre_get_document_title', 'optimizar_titulos');
+add_filter('document_title_parts', 'optimizar_titulos_seo');
+
+// Modificar el separador de títulos
+function modificar_separador_titulo($sep) {
+    return '|';
+}
+add_filter('document_title_separator', 'modificar_separador_titulo');
 
 function optimizar_imagenes($content) {
     // Añadir atributos alt y title a imágenes
