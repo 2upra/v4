@@ -39,6 +39,19 @@ async function permitirDescarga() {
     );
 }
 
+async function verificarPost() {
+    await accionClick(
+        '.verificarPost',
+        'verificarPost',
+        'Verificar este post tilin',
+        async (statusElement, data) => {
+            actualizarElemento(statusElement, data.new_status);
+            await alert('Actualizado');
+        },
+        '.EDYQHV'
+    );
+}
+
 async function banearUsuario() {
     await accionClick(
         '.banearUsuario',

@@ -1,19 +1,11 @@
 <?
 
 
-// Función genérica para manejar las solicitudes AJAX
+
 function permitirDescarga($post_id)
 {
     update_post_meta($post_id, 'paraDescarga', true);
     return json_encode(['success' => true, 'message' => 'Descarga permitida']);
-}
-
-function cambiarEstado($post_id, $new_status)
-{
-    $post = get_post($post_id);
-    $post->post_status = $new_status;
-    wp_update_post($post);
-    return json_encode(['success' => true, 'new_status' => $new_status]);
 }
 
 function comprobarColabsUsuario($user_id)
@@ -28,6 +20,14 @@ function comprobarColabsUsuario($user_id)
     
     $query = new WP_Query($args);
     return $query->found_posts;
+}
+
+function cambiarEstado($post_id, $new_status)
+{
+    $post = get_post($post_id);
+    $post->post_status = $new_status;
+    wp_update_post($post);
+    return json_encode(['success' => true, 'new_status' => $new_status]);
 }
 
 function cambioDeEstado()
@@ -72,7 +72,31 @@ function cambioDeEstado()
     wp_die();
 }
 
-// Register AJAX actions
+function verificarPost()
+{
+    if (!isset($_POST['post_id'])) {
+        echo json_encode(['success' => false, 'message' => 'Post ID is missing']);
+        wp_die();
+    }
+
+    $post_id = $_POST['post_id'];
+    $current_user = wp_get_current_user();
+
+    // Verificar si el usuario es administrador
+    if (!user_can($current_user, 'administrator')) {
+        echo json_encode(['success' => false, 'message' => 'No tienes permisos para verificar este post']);
+        wp_die();
+    }
+
+    // Actualizar el meta 'Verificado' a true
+    update_post_meta($post_id, 'Verificado', true);
+
+    echo json_encode(['success' => true, 'message' => 'Post verificado correctamente']);
+    wp_die();
+}
+
+//hay una nueva accion verificarPost que lo que tiene que hacer es simplemente agregar la meta de Verificado true en el post (comprobar si el usuario es admin para esta accion)
+add_action('wp_ajax_verificarPost', 'verificarPost');
 add_action('wp_ajax_permitirDescarga', 'cambioDeEstado');
 add_action('wp_ajax_aceptarcolab', 'cambioDeEstado');
 add_action('wp_ajax_rechazarcolab', 'cambioDeEstado');
