@@ -52,11 +52,11 @@ function botonseguir($author_id)
     // Si el usuario está viendo su propio perfil, añadimos una clase de deshabilitado
     if ($current_user_id === $author_id) {
         ob_start();
-        ?>
+?>
         <button class="mismo-usuario" disabled>
             <? echo $GLOBALS['iconomisusuario']; ?>
         </button>
-        <?php
+    <?php
         return ob_get_clean();
     }
 
@@ -73,7 +73,7 @@ function botonseguir($author_id)
         data-seguido-id="<? echo esc_attr($author_id); ?>">
         <? echo $icono_boton; ?>
     </button>
-    <?php
+<?php
     return ob_get_clean();
 }
 
@@ -168,7 +168,7 @@ function opcionesPost($post_id, $author_id)
             <? if (current_user_can('administrator')) : ?>
                 <button class="eliminarPost" data-post-id="<? echo $post_id; ?>">Eliminar</button>
                 <? if (!$post_verificado) : ?>
-                    <button class="verificarPost" data-post-id="<? echo $post_id; ?>">Verificar</button> 
+                    <button class="verificarPost" data-post-id="<? echo $post_id; ?>">Verificar</button>
                 <? endif; ?>
                 <button class="editarPost" data-post-id="<? echo $post_id; ?>">Editar</button>
                 <button class="banearUsuario" data-post-id="<? echo $post_id; ?>">Banear</button>
@@ -221,11 +221,14 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
     $postAut = get_post_meta($post_id, 'postAut', true);
     $ultimoEdit = get_post_meta($post_id, 'ultimoEdit', true);
     $verificado = get_post_meta($post_id, 'Verificado', true);
-    
+
     // Verificar si el autor es el usuario actual
     $current_user_id = get_current_user_id();
     $is_current_user = ($current_user_id === $author_id);
-    
+    guardarLog('current_user_id: ' . $current_user_id);
+    guardarLog('author_id: ' . $author_id);
+
+
     ob_start();
 ?>
     <div class="SOVHBY <? echo $is_current_user ? 'miContenido' : ''; ?>">
@@ -377,4 +380,3 @@ function wave($audio_url, $audio_id_lite, $post_id)
     </div>
 <?
 }
-
