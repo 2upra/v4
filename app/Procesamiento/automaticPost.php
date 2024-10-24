@@ -287,7 +287,9 @@ function rehacerNombreAudio($post_id, $archivo_audio)
                 // Actualizar la meta 'rutaOriginal' con la nueva ruta
                 update_post_meta($post_id, 'rutaOriginal', $nueva_ruta_completa);
                 iaLog("Meta 'rutaOriginal' actualizada a: {$nueva_ruta_completa}");
+                guardarLog("Archivo renombrado en el servidor de {$ruta_original_completa} a {$nueva_ruta_completa}");
             } else {
+                guardarLog("error en nombrar archivo en el servidor {$ruta_original_completa} a {$nueva_ruta_completa}");
                 iaLog("Error al renombrar el archivo en el servidor de {$ruta_original_completa} a {$nueva_ruta_completa}");
                 update_post_meta($post_id, 'rutaOriginalPerdida', true);
             }
@@ -316,7 +318,6 @@ function rehacerNombreAudio($post_id, $archivo_audio)
     }
 }
 
-
 function renombrar_archivo_adjunto($attachment_id, $nuevo_nombre, $es_lite = false)
 {
     // Obtener el path completo del archivo adjunto
@@ -337,10 +338,12 @@ function renombrar_archivo_adjunto($attachment_id, $nuevo_nombre, $es_lite = fal
     // Renombrar el archivo
     if (!rename($ruta_archivo, $nueva_ruta)) {
         iaLog("Error al renombrar el archivo de {$ruta_archivo} a {$nueva_ruta}");
+        guardarLog("Error al renombrar el archivo de {$ruta_archivo} a {$nueva_ruta}");
         return false;
     }
 
     iaLog("Archivo renombrado de {$ruta_archivo} a {$nueva_ruta}");
+    guardarLog("Archivo renombrado en el servidor de {$ruta_archivo} a {$nueva_ruta}");
 
     // Actualizar la ruta del adjunto en la base de datos
     $wp_filetype = wp_check_filetype(basename($nueva_ruta), null);
@@ -359,6 +362,7 @@ function renombrar_archivo_adjunto($attachment_id, $nuevo_nombre, $es_lite = fal
 
     return true;
 }
+
 
 
 
