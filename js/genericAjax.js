@@ -243,6 +243,7 @@ async function handleAllRequests() {
         await banearUsuario();
         await editarPost();
         await permitirDescarga();
+        await verificarPost();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }
