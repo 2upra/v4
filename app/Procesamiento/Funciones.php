@@ -673,7 +673,7 @@ function rehacerDescripcionAudio($post_id, $archivo_audio)
 
     $prompt = "El usuario ya subió este audio, pero acaba de editar la descripción o lo acaba de publicar ahora mismo. "
         . "Ten muy en cuenta la descripcion. descripción:\"{$post_content}\". "
-        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON, estos son datos de ejemplo!!: : "
+        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON, estos son datos de ejemplo sin relacion alguna con el caso actual!!: : "
         . '{"Descripcion":{"es":"(aqui iría una descripcion tuya del audio muy detallada)", "en":"(aqui en ingles)"},'
         . '"Instrumentos posibles":{"es":["Piano", "Guitarra"], "en":["Piano", "Guitar"]},'
         . '"Estado de animo":{"es":["Tranquilo"], "en":["Calm"]},'
