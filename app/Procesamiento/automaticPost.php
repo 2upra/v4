@@ -132,7 +132,7 @@ function autProcesarAudio($audio_path)
 
     // 7. Enviar rutas a crearAutPost
     //guardarLog("Enviando rutas a crearAutPost: Original - $nuevo_nombre_original, Lite - $target_path_lite");
-    crearAutPost($nuevo_nombre_original, $target_path_lite, $file_id);
+    crearAutPost($nuevo_nombre_original, $target_path_lite, $file_id, $lite_path);
     //guardarLog("Archivos enviados a crearAutPost.");
 
     //guardarLog("--Fin de la función autProcesarAudio.--");
@@ -146,12 +146,13 @@ function generarNombreAudio($audio_path_lite)
         return '2upra_Error El archivo de audio no existe';
     }
 
-    // Obtener el nombre del archivo y la carpeta contenedora
+    // Obtener el nombre del archivo, la carpeta contenedora y la carpeta un nivel arriba
     $nombre_archivo = pathinfo($audio_path_lite, PATHINFO_FILENAME);
     $carpeta = basename(dirname($audio_path_lite));
+    $carpeta_abuela = basename(dirname(dirname($audio_path_lite))); // Obtener la carpeta un nivel más arriba
 
-    // Preparar el prompt para la IA incluyendo tanto el nombre del archivo como la carpeta
-    $prompt = "El archivo '{$nombre_archivo}' está en la carpeta '{$carpeta}'. Te lo enseño para que lo tomes en cuenta. A veces tendrá sentido el nombre y otras no, pero es importante considerarlo. A veces vienen con nombres de marcas, páginas, etc., hay que ignorar eso. Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, como un kick, snare, sample o efectos, vocales, percusiones, pero puede ser cualquier cosa etc. Importante: solo responde el nombre, no agregues nada adicional. Estás en un entorno automatizado, no hables con el usuario, solo estoy pidiendo el nombre corto como respuesta.";
+    // Preparar el prompt para la IA incluyendo tanto el nombre del archivo como las carpetas
+    $prompt = "El archivo '{$nombre_archivo}' está en la carpeta '{$carpeta}', y a su vez esta carpeta está en '{$carpeta_abuela}'. Te lo enseño para que lo tomes en cuenta. A veces tendrá sentido el nombre y otras no, pero es importante considerarlo. A veces vienen con nombres de marcas, páginas, etc., hay que ignorar eso. Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, como un kick, snare, sample o efectos, vocales, percusiones, pero puede ser cualquier cosa etc. Importante: solo responde el nombre, no agregues nada adicional. Estás en un entorno automatizado, no hables con el usuario, solo estoy pidiendo el nombre corto como respuesta.";
 
     try {
         // Registrar el prompt enviado a la IA
@@ -369,10 +370,21 @@ function renombrar_archivo_adjunto($attachment_id, $nuevo_nombre, $es_lite = fal
 
 
 
-function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id)
+function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lite_path)
 {
     $autor_id = 44;
-    $prompt = "Genera una descripción corta para el siguiente archivo de audio. Puede ser un sample, un fx, un loop, un sonido de un kick, puede ser cualquier cosa, el propósito es que la descripción sea corta (solo responde con la descripción, no digas nada adicional); te doy ejemplos: Sample oscuro phonk, Fx de explosión, kick de house, sonido de sintetizador, piano melodía, guitarra acústica sample.";
+
+    // Obtener el nombre del archivo, la carpeta contenedora y la carpeta abuela
+    $nombre_archivo = pathinfo($lite_path, PATHINFO_FILENAME);
+    $carpeta = basename(dirname($lite_path));
+    $carpeta_abuela = basename(dirname(dirname($lite_path))); // Obtener la carpeta un nivel más arriba
+
+    // Preparar el prompt con información de la ruta original y las carpetas
+    $prompt = "Genera una descripción corta para el siguiente archivo de audio. Puede ser un sample, un fx, un loop, un sonido de un kick, puede ser cualquier cosa. El propósito es que la descripción sea corta (solo responde con la descripción, no digas nada adicional). Te doy ejemplos: Sample oscuro phonk, Fx de explosión, kick de house, sonido de sintetizador, piano melodía, guitarra acústica sample. \n\n" . 
+    "Te muestro la ruta original del archivo, su carpeta y la carpeta abuela, ya que esta información puede ser relevante para determinar sobre qué trata el audio: \n" .
+    "Archivo: '{$nombre_archivo}'\nCarpeta: '{$carpeta}'\nCarpeta abuela: '{$carpeta_abuela}'.";
+
+    // Aquí puedes continuar el flujo para enviar este prompt a la IA y procesar la respuesta
 
     $descripcion = generarDescripcionIA($nuevo_nombre_lite, $prompt);
 
