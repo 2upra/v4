@@ -11,7 +11,10 @@ function seguir() {
             },
             success: function(response) {
                 console.log(response);
-                button.textContent = 'Siguiendo'; // Actualiza el texto del botón
+                // Cambiar ícono en lugar de texto
+                button.innerHTML = '<i class="icon-restar"></i>'; // Actualiza el icono
+                button.classList.remove('seguir');
+                button.classList.add('dejar-de-seguir'); // Cambia la clase a 'dejar-de-seguir'
             }
         });
     }
@@ -27,24 +30,24 @@ function seguir() {
             },
             success: function(response) {
                 console.log(response);
-                button.textContent = 'Seguir'; // Actualiza el texto del botón
+                // Cambiar ícono en lugar de texto
+                button.innerHTML = '<i class="icon-sumar"></i>'; // Actualiza el icono
+                button.classList.remove('dejar-de-seguir');
+                button.classList.add('seguir'); // Cambia la clase a 'seguir'
             }
         });
     }
 
-    document.querySelectorAll('.seguir').forEach(function(button) {
+    document.querySelectorAll('.seguir, .dejar-de-seguir').forEach(function(button) {
         button.addEventListener('click', function() {
             var seguidor_id = this.getAttribute('data-seguidor-id');
             var seguido_id = this.getAttribute('data-seguido-id');
-            seguir_usuario(seguidor_id, seguido_id, this); // Pasa el botón como argumento
-        });
-    });
 
-    document.querySelectorAll('.dejar-de-seguir').forEach(function(button) {
-        button.addEventListener('click', function() {
-            var seguidor_id = this.getAttribute('data-seguidor-id');
-            var seguido_id = this.getAttribute('data-seguido-id');
-            dejar_de_seguir_usuario(seguidor_id, seguido_id, this); // Pasa el botón como argumento
+            if (this.classList.contains('seguir')) {
+                seguir_usuario(seguidor_id, seguido_id, this); // Llama a seguir
+            } else {
+                dejar_de_seguir_usuario(seguidor_id, seguido_id, this); // Llama a dejar de seguir
+            }
         });
     });
 }

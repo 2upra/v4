@@ -42,13 +42,22 @@ function variablesPosts($post_id = null)
 //BOTON DE SEGUIR
 function botonseguir($author_id)
 {
-    // Asegurarse de que $author_id sea un entero
     $author_id = (int) $author_id;
     $current_user_id = get_current_user_id();
 
-    // Usar comparación no estricta o asegurar tipos
-    if ($current_user_id === 0 || $current_user_id === $author_id) {
-        return '';
+    if ($current_user_id === 0) {
+        return ''; // Usuario no autenticado
+    }
+
+    // Si el usuario está viendo su propio perfil, añadimos una clase de deshabilitado
+    if ($current_user_id === $author_id) {
+        ob_start();
+        ?>
+        <button class="mismo-usuario" disabled>
+            <? echo $GLOBALS['iconomisusuario']; ?>
+        </button>
+        <?php
+        return ob_get_clean();
     }
 
     $siguiendo = get_user_meta($current_user_id, 'siguiendo', true);
@@ -58,15 +67,16 @@ function botonseguir($author_id)
     $icono_boton = $es_seguido ? $GLOBALS['iconorestar'] : $GLOBALS['iconosumar'];
 
     ob_start();
-?>
+    ?>
     <button class="<? echo esc_attr($clase_boton); ?>"
         data-seguidor-id="<? echo esc_attr($current_user_id); ?>"
         data-seguido-id="<? echo esc_attr($author_id); ?>">
         <? echo $icono_boton; ?>
     </button>
-<?
+    <?php
     return ob_get_clean();
 }
+
 
 
 function botonSeguirPerfilBanner($author_id)
@@ -141,9 +151,7 @@ function opcionesPost($post_id, $author_id)
     $current_user_id = get_current_user_id();
     $audio_id_lite = get_post_meta($post_id, 'post_audio_lite', true);
     $descarga_permitida = get_post_meta($post_id, 'paraDescarga', true);
-    // Comprobar si el post ya está verificado
     $post_verificado = get_post_meta($post_id, 'Verificado', true);
-    
     ob_start();
 ?>
     <button class="HR695R8" data-post-id="<? echo $post_id; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
