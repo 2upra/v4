@@ -10,7 +10,7 @@ if (have_posts()) :
         $current_post_id = get_the_ID();
         
         // Obtener los datos del algoritmo (asumiendo que están en un campo personalizado)
-        $datosAlgoritmo = get_post_meta($current_post_id, 'datos_algoritmo', true);
+        $datosAlgoritmo = get_post_meta($current_post_id, 'datosAlgoritmo', true);
         $datos_decoded = json_decode($datosAlgoritmo, true);
 
         // Preparar los datos estructurados para Schema.org
