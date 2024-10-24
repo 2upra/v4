@@ -221,10 +221,14 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
     $postAut = get_post_meta($post_id, 'postAut', true);
     $ultimoEdit = get_post_meta($post_id, 'ultimoEdit', true);
     $verificado = get_post_meta($post_id, 'Verificado', true);
-
+    
+    // Verificar si el autor es el usuario actual
+    $current_user_id = get_current_user_id();
+    $is_current_user = ($current_user_id === $author_id);
+    
     ob_start();
 ?>
-    <div class="SOVHBY">
+    <div class="SOVHBY <?php echo $is_current_user ? 'miContenido' : ''; ?>">
         <div class="CBZNGK">
             <a href="<? echo esc_url(get_author_posts_url($author_id)); ?>"></a>
             <img src="<? echo esc_url($author_avatar); ?>">
