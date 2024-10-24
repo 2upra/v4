@@ -93,6 +93,7 @@ if (!defined('ABSPATH')) {
     </style>
 
     <? wp_head(); ?>
+    <link rel="icon" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-96x96.png">
 </head>
 
 <body <? body_class(); ?>>
