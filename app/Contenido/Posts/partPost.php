@@ -223,15 +223,18 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
     $verificado = get_post_meta($post_id, 'Verificado', true);
 
     // Verificar si el autor es el usuario actual
-    $current_user_id = get_current_user_id();
+    $current_user_id = (int)get_current_user_id();
+    $author_id = (int)$author_id;
     $is_current_user = ($current_user_id === $author_id);
-    guardarLog('current_user_id: ' . $current_user_id);
-    guardarLog('author_id: ' . $author_id);
-
+    
+    // Debug
+    guardarLog('current_user_id: ' . $current_user_id . ' (' . gettype($current_user_id) . ')');
+    guardarLog('author_id: ' . $author_id . ' (' . gettype($author_id) . ')');
+    guardarLog('is_current_user: ' . ($is_current_user ? 'true' : 'false'));
 
     ob_start();
 ?>
-    <div class="SOVHBY <? echo $is_current_user ? 'miContenido' : ''; ?>">
+    <div class="SOVHBY <?php echo ($is_current_user ? 'miContenido' : ''); ?>">
         <div class="CBZNGK">
             <a href="<? echo esc_url(get_author_posts_url($author_id)); ?>"></a>
             <img src="<? echo esc_url($author_avatar); ?>">
