@@ -56,3 +56,86 @@ function excluir_posts_del_sitemap($args, $post_type) {
     return $args;
 }
 add_filter('wp_sitemaps_posts_query_args', 'excluir_posts_del_sitemap', 10, 2);
+
+function optimizar_titulos($title) {
+    if (is_single()) {
+        $title = get_the_title() . ' | ' . get_bloginfo('name');
+    }
+    return $title;
+}
+add_filter('pre_get_document_title', 'optimizar_titulos');
+
+function optimizar_imagenes($content) {
+    // Añadir atributos alt y title a imágenes
+    $content = preg_replace('/<img(.*?)alt=[\'"](.*?)[\'"](.*?)>/i', '<img$1alt="'.get_the_title().' - $2"$3>', $content);
+    return $content;
+}
+add_filter('the_content', 'optimizar_imagenes');
+
+function auto_enlaces_internos($content) {
+    $posts = get_posts(array(
+        'numberposts' => 5,
+        'orderby' => 'rand'
+    ));
+    
+    foreach($posts as $post) {
+        $content = str_replace($post->post_title, 
+            '<a href="'.get_permalink($post->ID).'">'.$post->post_title.'</a>', 
+            $content);
+    }
+    return $content;
+}
+add_filter('the_content', 'auto_enlaces_internos');
+
+function mostrar_breadcrumbs() {
+    if (!is_front_page()) {
+        echo '<div class="breadcrumbs">';
+        echo '<a href="'.home_url().'">Inicio</a> » ';
+        if (is_single()) {
+            the_category(' » ');
+            echo ' » ';
+            the_title();
+        } elseif (is_category()) {
+            single_cat_title();
+        }
+        echo '</div>';
+    }
+}
+
+function optimizar_recursos() {
+    wp_dequeue_style('wp-block-library');
+    wp_dequeue_style('wp-embed');
+    remove_action('wp_head', 'print_emoji_detection_script', 7);
+    remove_action('wp_print_styles', 'print_emoji_styles');
+}
+add_action('wp_enqueue_scripts', 'optimizar_recursos');
+
+function crear_sitemap() {
+    $posts = get_posts(array(
+        'numberposts' => -1,
+        'post_type' => 'post'
+    ));
+    
+    $sitemap = '<?xml version="1.0" encoding="UTF-8"?>';
+    $sitemap .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+    
+    foreach($posts as $post) {
+        $sitemap .= '<url>';
+        $sitemap .= '<loc>'.get_permalink($post->ID).'</loc>';
+        $sitemap .= '<lastmod>'.get_the_modified_date('c', $post->ID).'</lastmod>';
+        $sitemap .= '</url>';
+    }
+    
+    $sitemap .= '</urlset>';
+    
+    file_put_contents(ABSPATH . 'sitemap.xml', $sitemap);
+}
+add_action('save_post', 'crear_sitemap');
+
+function optimizar_headers($headers) {
+    $headers['X-Content-Type-Options'] = 'nosniff';
+    $headers['X-Frame-Options'] = 'SAMEORIGIN';
+    $headers['X-XSS-Protection'] = '1; mode=block';
+    return $headers;
+}
+add_filter('wp_headers', 'optimizar_headers');
