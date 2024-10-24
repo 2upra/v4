@@ -66,27 +66,16 @@ async function banearUsuario() {
 }
 
 function initEditWordPress() {
-    // Verificar si wpAdminUrl está definido
-    if (typeof wpAdminUrl === 'undefined') {
-        console.error('wpAdminUrl no está definido');
-        return;
-    }
-
-    document.addEventListener('click', function(e) {
-        const button = e.target.closest('.editarWordPress');
-        if (button) {
-            const postId = button.getAttribute('data-post-id');
+    document.body.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('editarWordPress')) {
+            const postId = e.target.dataset.postId;
             if (postId) {
-                const url = `${wpAdminUrl}post.php?post=${postId}&action=edit&classic-editor`;
-                console.log('Abriendo URL:', url); // Para debugging
+                const url = '/wp-admin/post.php?post=' + postId + '&action=edit&classic-editor';
                 window.open(url, '_blank');
-            } else {
-                console.error('No se encontró post-id');
             }
         }
     });
 }
-
 
 async function reporte() {
     modalManager.añadirModal('formularioError', '#formularioError', ['.reporte']);
