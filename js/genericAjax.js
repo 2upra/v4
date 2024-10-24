@@ -65,18 +65,32 @@ async function banearUsuario() {
     );
 }
 
+
 function initEditWordPress() {
-    // Delegamos el evento click al body para que funcione con los elementos dinámicos también
+    console.log('Se ha iniciado la función initEditWordPress');
+
+    // Delegamos el evento click al body para que funcione incluso con elementos dinámicos
     document.body.addEventListener('click', function(e) {
+        console.log('Se ha detectado un clic en el body');
+
         // Verificamos si el elemento clicado contiene la clase 'editarWordPress'
         if (e.target && e.target.classList.contains('editarWordPress')) {
+            console.log('El clic fue en un elemento con la clase editarWordPress');
+
             const postId = e.target.dataset.postId; // Obtenemos el post ID del atributo data-post-id
+            console.log('Post ID obtenido: ', postId);
+
             if (postId) {
                 const url = `/wp-admin/post.php?post=${postId}&action=edit&classic-editor`;
+                console.log('URL generada: ', url);
+
                 window.open(url, '_blank'); // Abrimos el enlace en una nueva pestaña
+                console.log('Se ha abierto una nueva pestaña con la URL');
             } else {
                 console.error('El elemento clicado no tiene un "data-post-id" válido.');
             }
+        } else {
+            console.log('El clic no fue en un elemento con la clase editarWordPress');
         }
     });
 }
