@@ -1,14 +1,21 @@
-//CUANDO SE EMPIEZA A SEGUIR DEBERIA DE MOSTRAR EL BOTON DE DEJAR DE SEGUIR AL MOMENTO POR SI EL USUARIO SE ARREPIENTE PERO NO LO HACE!!!!!!
+/* esto funciona pero la alerta falla en el sentido que deja de seguir inmediatamente y debería de esperar la confirmacion del usuario 
+
+ejemplo algo asi, porque mi funcion de alertas es personalizada
+                const confirmed = await confirm(confirmMessage); // Cuadro de confirmación.
+
+                if (confirmed) {
+*/
 function seguir() {
     async function manejarSeguimiento(seguidor_id, seguido_id, esDejarDeSeguir) {
         // Guardar el estado anterior para poder revertir si hay error
         const estadoAnterior = esDejarDeSeguir;
-        
-        // Actualizar UI inmediatamente
-        actualizarBotones(seguido_id, !esDejarDeSeguir);
 
         try {
             const action = esDejarDeSeguir ? 'dejar_de_seguir_usuario' : 'seguir_usuario';
+
+            // Actualizar UI solo después de la confirmación
+            actualizarBotones(seguido_id, !esDejarDeSeguir);
+
             const response = await enviarAjax(action, {
                 seguidor_id: seguidor_id,
                 seguido_id: seguido_id
@@ -27,10 +34,8 @@ function seguir() {
 
     // Función para actualizar los botones
     function actualizarBotones(seguido_id, esDejarDeSeguir) {
-        const botones = document.querySelectorAll(
-            `.seguir[data-seguido-id="${seguido_id}"], .dejar-de-seguir[data-seguido-id="${seguido_id}"]`
-        );
-        
+        const botones = document.querySelectorAll(`.seguir[data-seguido-id="${seguido_id}"], .dejar-de-seguir[data-seguido-id="${seguido_id}"]`);
+
         botones.forEach(boton => {
             if (esDejarDeSeguir) {
                 boton.innerHTML = `<svg data-testid="geist-icon" height="14" stroke-linejoin="round" viewBox="0 0 16 16" width="14" style="color: currentcolor;"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.5 8C14.5 11.5899 11.5899 14.5 8 14.5C4.41015 14.5 1.5 11.5899 1.5 8C1.5 4.41015 4.41015 1.5 8 1.5C11.5899 1.5 14.5 4.41015 14.5 8ZM16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8ZM5 7.25H4.25V8.75H5H11H11.75V7.25H11H5Z" fill="currentColor"></path></svg>`;
@@ -41,7 +46,7 @@ function seguir() {
                 boton.classList.remove('dejar-de-seguir');
                 boton.classList.add('seguir');
             }
-            
+
             // Volver a agregar el event listener al botón actualizado
             boton.removeEventListener('click', handleClick);
             boton.addEventListener('click', handleClick);
@@ -54,7 +59,8 @@ function seguir() {
         const esDejarDeSeguir = this.classList.contains('dejar-de-seguir');
 
         if (esDejarDeSeguir) {
-            if (!confirm('¿Estás seguro de que quieres dejar de seguir a este usuario?')) {
+            const confirmado = await confirm('¿Estás seguro de que quieres dejar de seguir a este usuario?');
+            if (!confirmado) {
                 return;
             }
         }
@@ -63,7 +69,7 @@ function seguir() {
     }
 
     // Agregar event listeners iniciales
-    document.querySelectorAll('.seguir, .dejar-de-seguir').forEach(function(button) {
+    document.querySelectorAll('.seguir, .dejar-de-seguir').forEach(function (button) {
         button.addEventListener('click', handleClick);
     });
 }
