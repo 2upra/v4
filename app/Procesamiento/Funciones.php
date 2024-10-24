@@ -488,18 +488,6 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
     $postAut = get_post_meta($post_id, 'postAut', true);
     $verificado = get_post_meta($post_id, 'Verificado', true);
 
-    if ($postAut == 1 && $verificado != 1) {
-        iaLog("El post ID: {$post_id} tiene postAut en 1 y no está verificado. No se enviará el contenido a la IA.");
-        $post_content = '';
-    } else {
-        $post_content = get_post_field('post_content', $post_id);
-        if (!$post_content) {
-            iaLog("No se pudo obtener el contenido del post ID: {$post_id}");
-        } else {
-            iaLog("Contenido del post obtenido para el post ID: {$post_id}");
-        }
-    }
-
     //el prompt no hay que tocarlo esta perfecto 
     $prompt = "El usuario ya subió este audio, pero acaba de editar la descripción o lo acaba de publicar ahora mismo. "
         . "Ten muy en cuenta la descripcion. descripción:\"{$post_content}\". {$tags_usuario_texto}"
