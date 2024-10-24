@@ -408,7 +408,7 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
     }
     $index = 1;
     update_post_meta($post_id, 'postAut', true);
-    analizarYGuardarMetasAudio($post_id, $nuevo_nombre_lite, $index);
+    analizarYGuardarMetasAudio($post_id, $nuevo_nombre_lite, $index, $nombre_archivo, $carpeta, $carpeta_abuela);
 
     $audio_original_id = adjuntarArchivoAut($nuevo_nombre_original, $post_id, $file_id);
     if (is_wp_error($audio_original_id)) {

@@ -445,7 +445,7 @@ function procesarAudioLigero($post_id, $audio_id, $index)
 }
 
 #Paso 5.6
-function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
+function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index, $nombre_archivo = null, $carpeta = null, $carpeta_abuela = null)
 {
     $python_command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py \"{$nuevo_archivo_path_lite}\"");
     iaLog("Ejecutando comando de Python: {$python_command}");
@@ -482,15 +482,25 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index)
         return;
     }
 
+    // Construir la parte del prompt que contiene la información del archivo y las carpetas solo si no están vacías
+    $informacion_archivo = '';
+    if ($nombre_archivo) {
+        $informacion_archivo .= "Archivo: '{$nombre_archivo}'\n";
+    }
+    if ($carpeta) {
+        $informacion_archivo .= "Carpeta: '{$carpeta}'\n";
+    }
+    if ($carpeta_abuela) {
+        $informacion_archivo .= "Carpeta abuela: '{$carpeta_abuela}'\n";
+    }
+
     $tags_usuario = get_post_meta($post_id, 'tagsUsuario', true);
-    $tags_usuario_texto = $tags_usuario ? (is_array($tags_usuario) ? implode(', ', $tags_usuario) : $tags_usuario) : 'No se agregaron etiquetas por el usuario esta vez ';
+    $tags_usuario_texto = $tags_usuario ? (is_array($tags_usuario) ? implode(', ', $tags_usuario) : $tags_usuario) : '';
 
-    $postAut = get_post_meta($post_id, 'postAut', true);
-    $verificado = get_post_meta($post_id, 'Verificado', true);
-
-    //el prompt no hay que tocarlo esta perfecto 
+    // Formar el prompt final con los valores ya filtrados
     $prompt = "El usuario ya subió este audio, pero acaba de editar la descripción o lo acaba de publicar ahora mismo. "
         . "Ten en cuenta la descripcion, puede ser relevante. descripción:\"{$post_content}\". {$tags_usuario_texto}"
+        . "{$informacion_archivo}"
         . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON, estos son datos de ejemplo!!: "
         . '{"descripcion_ia":{"es":"(aqui iría una descripcion tuya del audio muy detallada)", "en":"(aqui en ingles)"},'
         . '"instrumentos_posibles":{"es":["Piano", "Guitarra"], "en":["Piano", "Guitar"]},'
