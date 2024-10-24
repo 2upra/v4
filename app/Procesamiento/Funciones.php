@@ -510,7 +510,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index, 
         . '"tipo_audio":{"es":["aqui necesito que puedas determinar si es un sample, un loop o un one shot"], "en":["Sample"]},'
         . '"tags_posibles":{"es":["Naturaleza", "phonk", "memphis", "oscuro"], "en":["Nature"]},'
         . '"sugerencia_busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
-        . " Nota adicional: responde solo con la estructura JSON solicitada, mantén datos vacíos si no aplica. Es crucial determinar si es un loop o un one shot, o un sample, usa tags de una palabra. Optimiza el SEO con sugerencias de búsqueda relevantes. Se muy detallado sin perder precisión";
+        . " Nota adicional: responde solo con la estructura JSON solicitada, mantén datos vacíos si no aplica. Es crucial determinar si es un loop o un one shot, o un sample, usa tags de una palabra. Optimiza el SEO con sugerencias de búsqueda relevantes, no agregues informacion del archivo en la descripcion e ignora la palabra lite. Se muy detallado sin perder precisión";
 
     $descripcion = generarDescripcionIA($nuevo_archivo_path_lite, $prompt);
 
