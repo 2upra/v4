@@ -141,6 +141,9 @@ function opcionesPost($post_id, $author_id)
     $current_user_id = get_current_user_id();
     $audio_id_lite = get_post_meta($post_id, 'post_audio_lite', true);
     $descarga_permitida = get_post_meta($post_id, 'paraDescarga', true);
+    // Comprobar si el post ya está verificado
+    $post_verificado = get_post_meta($post_id, 'Verificado', true);
+    
     ob_start();
 ?>
     <button class="HR695R8" data-post-id="<? echo $post_id; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
@@ -149,6 +152,9 @@ function opcionesPost($post_id, $author_id)
         <div class="A1806242">
             <? if (current_user_can('administrator')) : ?>
                 <button class="eliminarPost" data-post-id="<? echo $post_id; ?>">Eliminar</button>
+                <? if (!$post_verificado) : ?>
+                    <button class="verificarPost" data-post-id="<? echo $post_id; ?>">Verificar</button> 
+                <? endif; ?>
                 <button class="editarPost" data-post-id="<? echo $post_id; ?>">Editar</button>
                 <button class="banearUsuario" data-post-id="<? echo $post_id; ?>">Banear</button>
                 <? if ($audio_id_lite && $descarga_permitida != 1) : ?>
@@ -168,7 +174,7 @@ function opcionesPost($post_id, $author_id)
     </div>
 
     <div id="modalBackground4" class="modal-background submenu modalBackground2 modalBackground3" style="display: none;"></div>
-<?
+<?php
     return ob_get_clean();
 }
 
