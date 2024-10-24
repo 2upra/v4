@@ -149,6 +149,7 @@ function scriptsOrdenados()
     wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', ['chart-js'], null, true);
     wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.7.6', true);
     wp_enqueue_script('jquery');
+    wp_add_inline_script('genericAjax', 'const wpAdminUrl = "' . admin_url() . '";', 'before');
 
     // Localización de scripts
     $ajax_url = admin_url('admin-ajax.php');

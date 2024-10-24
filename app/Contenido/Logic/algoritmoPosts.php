@@ -232,7 +232,7 @@ function obtenerDatosFeed($userId)
     ];
 }
 
-// [21-Oct-2024 19:39:41 UTC] PHP Warning:  foreach() argument must be of type array|object, null given in /var/www/wordpress/wp-content/themes/2upra3v/app/Contenido/Logic/algoritmoPosts.php on line 261
+
 function calcularFeedPersonalizado($userId)
 {
     $datos = obtenerDatosFeed($userId);
@@ -313,12 +313,10 @@ function calcularFeedPersonalizado($userId)
             }
         }
 
-        // Aumentar la aleatoriedad (incrementar el rango para más variación)
-        $aleatoriedad = mt_rand(0, 60); // Aumentamos hasta 50% de variación
+        $aleatoriedad = mt_rand(0, 60); 
         $puntosFinal = $puntosFinal * $factorTiempo;
-        $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100)); // Hasta 50% de variación
+        $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100));
 
-        // Ajuste extra aleatorio (puedes ajustar el rango si deseas más variación)
         $ajusteExtra = mt_rand(-100, 100); 
         $puntosFinal += $ajusteExtra;
 

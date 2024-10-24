@@ -171,6 +171,8 @@ function opcionesPost($post_id, $author_id)
                     <button class="verificarPost" data-post-id="<? echo $post_id; ?>">Verificar</button>
                 <? endif; ?>
                 <button class="editarPost" data-post-id="<? echo $post_id; ?>">Editar</button>
+                <!-- Nuevo botón para ir al editor de WordPress -->
+                <button class="editarWordPress" data-post-id="<? echo $post_id; ?>">Editar en WordPress</button>
                 <button class="banearUsuario" data-post-id="<? echo $post_id; ?>">Banear</button>
                 <? if ($audio_id_lite && $descarga_permitida != 1) : ?>
                     <button class="permitirDescarga" data-post-id="<? echo $post_id; ?>">Permitir descarga</button>

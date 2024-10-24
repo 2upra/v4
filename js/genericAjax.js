@@ -65,6 +65,13 @@ async function banearUsuario() {
     );
 }
 
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('editarWordPress')) {
+        const postId = e.target.getAttribute('data-post-id');
+        window.open(wpAdminUrl + 'post.php?post=' + postId + '&action=edit&classic-editor', '_blank');
+    }
+});
+
 
 async function reporte() {
     modalManager.añadirModal('formularioError', '#formularioError', ['.reporte']);
