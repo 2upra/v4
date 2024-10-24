@@ -46,10 +46,15 @@ function likeAccion($postId, $userId, $accion) {
                 //guardarLog("Error al insertar el like en la base de datos para el post $postId y el usuario $userId.");
             } else {
                 //guardarLog("Like insertado correctamente en la base de datos.");
-                // Enviar notificación al autor del post
-                $autor_id = get_post_field('post_author', $postId);
-                $usuario = get_userdata($userId);
-                insertar_notificacion($autor_id, "{$usuario->display_name} le gustó tu publicación.", get_permalink($postId), $userId);
+                
+                // Obtener el ID del autor del post
+                $autorId = get_post_field('post_author', $postId);
+                
+                // Solo enviar notificación si el autor es diferente del usuario que da like
+                if ($autorId != $userId) {
+                    $usuario = get_userdata($userId);
+                    insertar_notificacion($autorId, "{$usuario->display_name} le gustó tu publicación.", get_permalink($postId), $userId);
+                }
             }
         }
     }
@@ -63,7 +68,6 @@ function likeAccion($postId, $userId, $accion) {
         }
     }
 }
-
 
 
 function obtenerLikesDelUsuario($userId, $limit = 500)
