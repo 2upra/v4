@@ -155,17 +155,17 @@ function obtenerDatosFeed($userId)
     ), OBJECT_K);
     logAlgoritmo("Intereses del usuario obtenidos: " . json_encode($interesesUsuario));
 
-    // Obtener IDs de los posts relevantes
-    $args = [
-        'post_type'      => 'social_post',
-        'posts_per_page' => 500,
-        'date_query'     => [
-            'after' => date('Y-m-d', strtotime('-100 days'))
-        ],
-        'fields'         => 'ids',
-        'no_found_rows'  => true,
-    ];
-    $posts_ids = get_posts($args);
+    // Seleccionar 500 posts aleatorios de los últimos 100 días
+    $sql_random_posts = "
+        SELECT ID
+        FROM {$wpdb->posts}
+        WHERE post_type = 'social_post'
+        AND post_status = 'publish'
+        AND post_date >= %s
+        ORDER BY RAND()
+        LIMIT 500
+    ";
+    $posts_ids = $wpdb->get_col($wpdb->prepare($sql_random_posts, date('Y-m-d', strtotime('-100 days'))));
     logAlgoritmo("Consulta de posts realizada, total de posts: " . count($posts_ids));
 
     if (empty($posts_ids)) {
@@ -189,28 +189,29 @@ function obtenerDatosFeed($userId)
         $likes_by_post[$like_row->post_id] = $like_row->likes_count;
     }
 
-    // Obtener datos de 'datosAlgoritmo' de los posts
-    $sql_datos = "
-        SELECT post_id, meta_value
+    // Obtener meta datos de los posts
+    $sql_meta = "
+        SELECT post_id, meta_key, meta_value
         FROM {$wpdb->postmeta}
-        WHERE meta_key = 'datosAlgoritmo' AND post_id IN ($placeholders)
+        WHERE meta_key IN ('datosAlgoritmo', 'Verificado', 'postAut')
+        AND post_id IN ($placeholders)
     ";
-    $datosAlgoritmo_results = $wpdb->get_results($wpdb->prepare($sql_datos, $posts_ids), OBJECT_K);
+    $meta_results = $wpdb->get_results($wpdb->prepare($sql_meta, $posts_ids));
 
-    // Obtener 'Verificado' y 'postAut' de los posts
-    $sql_verificado = "
-        SELECT post_id, meta_value
-        FROM {$wpdb->postmeta}
-        WHERE meta_key = 'Verificado' AND post_id IN ($placeholders)
-    ";
-    $verificado_results = $wpdb->get_results($wpdb->prepare($sql_verificado, $posts_ids), OBJECT_K);
+    // Organizar los meta datos por post_id y meta_key
+    $datosAlgoritmo_results = [];
+    $verificado_results = [];
+    $postAut_results = [];
 
-    $sql_postAut = "
-        SELECT post_id, meta_value
-        FROM {$wpdb->postmeta}
-        WHERE meta_key = 'postAut' AND post_id IN ($placeholders)
-    ";
-    $postAut_results = $wpdb->get_results($wpdb->prepare($sql_postAut, $posts_ids), OBJECT_K);
+    foreach ($meta_results as $meta_row) {
+        if ($meta_row->meta_key === 'datosAlgoritmo') {
+            $datosAlgoritmo_results[$meta_row->post_id] = $meta_row->meta_value;
+        } elseif ($meta_row->meta_key === 'Verificado') {
+            $verificado_results[$meta_row->post_id] = $meta_row->meta_value;
+        } elseif ($meta_row->meta_key === 'postAut') {
+            $postAut_results[$meta_row->post_id] = $meta_row->meta_value;
+        }
+    }
 
     // Obtener autores y fechas de los posts
     $sql_authors = "
@@ -231,7 +232,6 @@ function obtenerDatosFeed($userId)
         'author_results'        => $author_results,
     ];
 }
-
 
 function calcularFeedPersonalizado($userId)
 {
