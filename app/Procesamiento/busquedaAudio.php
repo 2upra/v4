@@ -72,8 +72,7 @@ function procesarAudios()
     }
 }
 
-// Paso 2 - Buscar y retornar un solo audio válido
-function buscarUnAudioValido($directorio) {
+function buscarUnAudioValido($directorio, $intentos_recursion = 3) {
     $extensiones_permitidas = ['wav', 'mp3'];
     
     // Verificar si el directorio existe y es accesible
@@ -85,9 +84,15 @@ function buscarUnAudioValido($directorio) {
         $comando1 = "sudo chmod -R o+rx {$directorio}";
         $comando2 = "sudo chown -R asley01:www-data {$directorio}";
         $comando3 = "sudo chmod -R g+rx {$directorio}";
-        exec($comando1);
-        exec($comando2);
-        exec($comando3);
+        exec($comando1, $output1, $return_var1);
+        exec($comando2, $output2, $return_var2);
+        exec($comando3, $output3, $return_var3);
+
+        // Verificar si los comandos se ejecutaron correctamente
+        if ($return_var1 !== 0 || $return_var2 !== 0 || $return_var3 !== 0) {
+            autLog("[buscarUnAudioValido] Error: No se pudieron cambiar los permisos del directorio: {$directorio}");
+            return null;
+        }
 
         // Verificar nuevamente si ahora es accesible
         if (!is_readable($directorio)) {
@@ -107,8 +112,10 @@ function buscarUnAudioValido($directorio) {
         );
 
         foreach ($iterator as $item) {
-            if ($item->isDir()) {
+            if ($item->isDir() && is_readable($item->getPathname())) {
                 $subcarpetas[] = $item->getPathname();
+            } else {
+                autLog("[buscarUnAudioValido] No se puede acceder a la carpeta: {$item->getPathname()}, omitiendo.");
             }
         }
 
@@ -139,7 +146,14 @@ function buscarUnAudioValido($directorio) {
         // Si no hay archivos válidos en esta carpeta, intentar con otra
         if (empty($archivos)) {
             autLog("[buscarUnAudioValido] No se encontraron archivos válidos en la carpeta seleccionada");
-            return buscarUnAudioValido($directorio); // Recursión para intentar con otra carpeta
+
+            // Verificar si hemos agotado los intentos de recursión
+            if ($intentos_recursion > 0) {
+                return buscarUnAudioValido($directorio, $intentos_recursion - 1); // Recursión limitada
+            } else {
+                autLog("[buscarUnAudioValido] Se alcanzó el límite de intentos de búsqueda.");
+                return null;
+            }
         }
 
         // Seleccionar un archivo aleatorio
@@ -148,7 +162,14 @@ function buscarUnAudioValido($directorio) {
 
         if (!$hash) {
             autLog("[buscarUnAudioValido] No se pudo calcular el hash para el archivo: {$archivo_seleccionado}");
-            return buscarUnAudioValido($directorio); // Intentar con otro archivo
+
+            // Verificar si hemos agotado los intentos de recursión
+            if ($intentos_recursion > 0) {
+                return buscarUnAudioValido($directorio, $intentos_recursion - 1); // Intentar con otro archivo
+            } else {
+                autLog("[buscarUnAudioValido] Se alcanzó el límite de intentos de búsqueda.");
+                return null;
+            }
         }
 
         // Verificar si debe procesarse
@@ -157,7 +178,14 @@ function buscarUnAudioValido($directorio) {
             return ['ruta' => $archivo_seleccionado, 'hash' => $hash];
         } else {
             autLog("[buscarUnAudioValido] El archivo no necesita ser procesado, buscando otro...");
-            return buscarUnAudioValido($directorio); // Intentar con otro archivo
+
+            // Verificar si hemos agotado los intentos de recursión
+            if ($intentos_recursion > 0) {
+                return buscarUnAudioValido($directorio, $intentos_recursion - 1); // Intentar con otro archivo
+            } else {
+                autLog("[buscarUnAudioValido] Se alcanzó el límite de intentos de búsqueda.");
+                return null;
+            }
         }
 
     } catch (Exception $e) {
