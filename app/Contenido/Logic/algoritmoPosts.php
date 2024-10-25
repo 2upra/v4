@@ -2,7 +2,7 @@
 
 global $wpdb;
 define('INTERES_TABLE', "{$wpdb->prefix}interes");
-define('BATCH_SIZE', 20);
+define('BATCH_SIZE', 500);
 
 
 function generarMetaDeIntereses($user_id)
@@ -158,7 +158,7 @@ function obtenerDatosFeed($userId)
     // Obtener IDs de los posts relevantes
     $args = [
         'post_type'      => 'social_post',
-        'posts_per_page' => 1000,
+        'posts_per_page' => 500,
         'date_query'     => [
             'after' => date('Y-m-d', strtotime('-100 days'))
         ],
