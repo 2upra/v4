@@ -232,11 +232,20 @@ function obtenerDatosFeed($userId)
 }
 
 
-//Tengo esto, creo, y agregar algo de aleatoridad (no tanta), ya que cuando esta cachedado siempre aparece los mismos post, tambien, necesito que me recomiendes como sería la mejor forma de implementar un mecanismo optimizado para no mostrarle los mismos post siempre, es decir, si un 
+//Tengo esto, creo que los $datos = obtenerDatosFeed($userId); se pueden cachear, (return $posts_personalizados; ya esta cacheado por 1 hora afuera) 
 function calcularFeedPersonalizado($userId)
 {
-    $datos = obtenerDatosFeed($userId);
+    // Implementar caché para obtenerDatosFeed
+    $cache_key = 'feed_datos_' . $userId;
+    $datos = wp_cache_get($cache_key);
+    
+    if (false === $datos) {
+        $datos = obtenerDatosFeed($userId);
+        // Guardar en caché por 15 minutos (900 segundos)
+        wp_cache_set($cache_key, $datos, '', 900);
+    }
 
+    // El resto del código permanece igual...
     if (empty($datos)) {
         return [];
     }
