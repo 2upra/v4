@@ -325,7 +325,7 @@ function calcularFeedPersonalizado($userId)
 
         // Decaimiento por tiempo (ajustado para reducir la importancia de la recencia)
         $horasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / 3600;
-        $factorTiempo = pow(0.99, $horasDesdePublicacion);
+        $factorTiempo = pow(0.30, $horasDesdePublicacion);
 
         // Obtener 'Verificado' y 'postAut' individualmente
         $metaVerificado = isset($datos['verificado_results'][$post_id]->meta_value) && $datos['verificado_results'][$post_id]->meta_value == '1';
@@ -353,7 +353,7 @@ function calcularFeedPersonalizado($userId)
         // Aplicar reducción de puntos si el post ha sido visto antes
         if (isset($vistas_posts_processed[$post_id])) {
             $vistas = $vistas_posts_processed[$post_id]['count'];
-            $reduccion_por_vista = 0.40; // Reducción del 40% por cada vista
+            $reduccion_por_vista = 0.20; // Reducción del 40% por cada vista
             $factorReduccion = pow(1 - $reduccion_por_vista, $vistas);
             $puntosFinal *= $factorReduccion;
         }
