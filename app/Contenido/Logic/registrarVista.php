@@ -1,28 +1,48 @@
 <?
 
-function guardarVIsta() {
-    // Verificar que se haya pasado el ID del post y las vistas del usuario
-    if (isset($_POST['id_post']) && isset($_POST['vistas_usuario'])) {
+function guardarVista() {
+    // Verificar que se haya pasado el ID del post
+    if (isset($_POST['id_post'])) {
         $idPost = intval($_POST['id_post']);
-        $vistaUsuario = intval($_POST['vistas_usuario']);
+        $userId = get_current_user_id(); // Obtener el ID del usuario actual
 
-        // Obtener la cantidad de vistas globales del post
+        if ($userId) {
+            // Obtener las vistas del usuario almacenadas en su meta
+            $vistasUsuario = get_user_meta($userId, 'vistas_posts', true);
+
+            // Si no tiene registros anteriores, inicializar el array
+            if (!$vistasUsuario) {
+                $vistasUsuario = array();
+            }
+
+            // Incrementar las vistas del post para el usuario actual
+            if (isset($vistasUsuario[$idPost])) {
+                $vistasUsuario[$idPost]++;
+            } else {
+                $vistasUsuario[$idPost] = 1; // Primera vista del post por este usuario
+            }
+
+            // Guardar la información actualizada en la meta del usuario
+            update_user_meta($userId, 'vistas_posts', $vistasUsuario);
+        }
+
+        // Obtener las vistas totales del post
         $vistaTotales = get_post_meta($idPost, 'vistas_totales', true);
 
         if (!$vistaTotales) {
             $vistaTotales = 0;
         }
 
-        // Incrementar la cantidad de vistas totales
+        // Incrementar las vistas totales del post
         $vistaTotales++;
 
-        // Actualizar las vistas totales en las metas del post
+        // Guardar las vistas totales actualizadas en las post metas
         update_post_meta($idPost, 'vistas_totales', $vistaTotales);
 
-        // Enviar una respuesta JSON
+        // Respuesta en formato JSON
         wp_send_json_success(array(
-            'vistas_usuario' => $vistaUsuario,
-            'vistas_totales' => $vistaTotales
+            'vistas_usuario' => $vistasUsuario[$idPost], // Vistas del usuario para este post
+            'vistas_totales' => $vistaTotales // Vistas totales del post
         ));
     }
 
@@ -30,6 +50,6 @@ function guardarVIsta() {
     wp_die();
 }
 
-// Registrar el handler de la acción AJAX
-add_action('wp_ajax_guardar_vistas', 'guardarVIsta');
-add_action('wp_ajax_nopriv_guardar_vistas', 'guardarVIsta');
+// Registrar el handler de la acción AJAX para usuarios logueados y no logueados
+add_action('wp_ajax_guardar_vistas', 'guardarVista');
+add_action('wp_ajax_nopriv_guardar_vistas', 'guardarVista');
