@@ -25,71 +25,42 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
     }
 }
 
+
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
-    postLog("----------START------------");
-    postLog("----------START------------");
-    postLog("----------START------------");
     $identifier = $_POST['identifier'] ?? '';
     $posts_per_page = $args['posts'];
     $similar_to = $args['similar_to'] ?? null;
     $post_not_in = $similar_to ? [$similar_to] : [];
     $cache_key = "feed_personalizado_{$current_user_id}";
 
-    postLog("Iniciando configuracionQueryArgs - Página: $paged, Usuario: $current_user_id");
-
     if ($args['post_type'] === 'social_post' && empty($identifier)) {
         // Obtener posts personalizados de caché o calcularlos
         $posts_personalizados = wp_cache_get($cache_key);
         
         if ($posts_personalizados === false) {
-            postLog("Cache miss - Calculando feed personalizado para usuario: $current_user_id");
             $posts_personalizados = calcularFeedPersonalizado($current_user_id);
             wp_cache_set($cache_key, $posts_personalizados, '', HOUR_IN_SECONDS);
-        } else {
-            postLog("Cache hit - Usando feed en caché para usuario: $current_user_id");
         }
 
         // Calcular offset y límite para la paginación
         $offset = ($paged - 1) * $posts_per_page;
         $post_ids = array_keys($posts_personalizados);
-        
-        postLog("Total posts antes de filtrar: " . count($post_ids));
-        postLog("Offset calculado: $offset");
-        postLog("Posts por página: $posts_per_page");
 
         // Eliminar posts excluidos
         if ($similar_to) {
             $post_ids = array_values(array_diff($post_ids, [$similar_to]));
-            postLog("Posts después de eliminar similar_to: " . count($post_ids));
         }
 
         // Asegurar que no haya duplicados
-        $post_ids_original_count = count($post_ids);
-        $post_ids = array_values(array_unique($post_ids));
-        $post_ids_final_count = count($post_ids);
-        
-        if ($post_ids_original_count !== $post_ids_final_count) {
-            postLog("¡Atención! Se encontraron duplicados. Original: $post_ids_original_count, Final: $post_ids_final_count");
-        }
+        $post_ids = array_unique($post_ids);
 
         // Obtener slice específico para esta página
         $paged_post_ids = array_slice($post_ids, $offset, $posts_per_page);
-        postLog("Posts seleccionados para esta página: " . implode(', ', $paged_post_ids));
 
         if (empty($paged_post_ids)) {
-            postLog("¡Advertencia! No hay posts para esta página");
+            // Si no hay posts para esta página, devolver query que no retornará resultados
             return ['post__in' => [0]];
-        }
-
-        // Verificar si hay overlap con páginas anteriores
-        $previous_offset = ($paged - 2) * $posts_per_page;
-        if ($previous_offset >= 0) {
-            $previous_posts = array_slice($post_ids, $previous_offset, $posts_per_page);
-            $overlap = array_intersect($previous_posts, $paged_post_ids);
-            if (!empty($overlap)) {
-                postLog("¡ALERTA! Encontrado overlap con página anterior. Posts duplicados: " . implode(', ', $overlap));
-            }
         }
 
         $query_args = [
@@ -97,14 +68,11 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             'posts_per_page' => $posts_per_page,
             'post__in'       => $paged_post_ids,
             'orderby'        => 'post__in',
-            'no_found_rows'  => true,
+            'no_found_rows'  => true, // Optimización si no necesitas pagination links
             'meta_query'     => [],
         ];
-
-        postLog("Query args final para social_post: " . print_r($query_args, true));
     } else {
-        postLog("Usando query estándar con identifier: $identifier");
-        
+        // Query para posts con identifier
         $query_args = [
             'post_type'      => $args['post_type'],
             'posts_per_page' => $posts_per_page,
@@ -125,17 +93,15 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         if (!empty($post_not_in)) {
             $query_args['post__not_in'] = $post_not_in;
         }
-
-        postLog("Query args final para query estándar: " . print_r($query_args, true));
     }
 
+    // Manejar publicaciones similares
     if ($similar_to) {
         $query_args = configurarSimilarTo($query_args, $similar_to);
-        postLog("Query modificada para similar_to: " . print_r($query_args, true));
     }
 
+    // Aplicar filtros adicionales
     $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
-    postLog("Query args después de filtros: " . print_r($query_args, true));
 
     return $query_args;
 }
