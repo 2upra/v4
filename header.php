@@ -195,7 +195,7 @@ if (!defined('ABSPATH')) {
                         <div class="search-container" id="filtros">
                             <input type="text" id="identifier" placeholder="Busqueda">
                             <button id="clearSearch" class="clear-search" style="display: none;">
-                                <i class="fas fa-times"></i> <!-- Si usas Font Awesome -->
+                            <? echo $GLOBALS['flechaAtras']; ?>
                             </button>
                         </div>
 
