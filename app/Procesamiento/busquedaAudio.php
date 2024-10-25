@@ -72,6 +72,14 @@ function procesarAudios()
     }
 }
 
+/*
+por alguna extraña razón a veces los directorios se bloquean cuando se suben nuevos archivos dinamicamente por mega, puede incluise estos comandos para que cuando se bloquee, de los permisos necesarios, estos son los comandos que tengo que poner cada vez que se bloquea 
+sudo chmod -R o+rx /home/asley01/MEGA/Waw/X/
+sudo chown -R asley01:www-data /home/asley01/MEGA/Waw/X/
+sudo chmod -R g+rx /home/asley01/MEGA/Waw/X/
+
+debería intentarlo cuando haya } catch (Exception $e) 
+*/
 // Paso 2 - Buscar y retornar un solo audio válido
 function buscarUnAudioValido($directorio) {
     $extensiones_permitidas = ['wav', 'mp3'];
@@ -147,28 +155,12 @@ function buscarUnAudioValido($directorio) {
 
     } catch (Exception $e) {
         autLog("[buscarUnAudioValido] Excepción al iterar directorios: " . $e->getMessage());
-
-        // Ejecutar los comandos de permisos
-        autLog("[buscarUnAudioValido] Intentando corregir permisos del directorio: {$directorio}");
-
-        // Comandos para dar los permisos necesarios
-        $output = [];
-        exec("sudo chmod -R o+rx /home/asley01/MEGA/Waw/X/ 2>&1", $output);
-        autLog("[buscarUnAudioValido] Resultado de chmod o+rx: " . implode("\n", $output));
-        
-        exec("sudo chown -R asley01:www-data /home/asley01/MEGA/Waw/X/ 2>&1", $output);
-        autLog("[buscarUnAudioValido] Resultado de chown: " . implode("\n", $output));
-
-        exec("sudo chmod -R g+rx /home/asley01/MEGA/Waw/X/ 2>&1", $output);
-        autLog("[buscarUnAudioValido] Resultado de chmod g+rx: " . implode("\n", $output));
-
-        // Reintentar la operación después de cambiar los permisos
-        autLog("[buscarUnAudioValido] Reintentando buscar un archivo de audio válido...");
-        return buscarUnAudioValido($directorio); // Recursión para reintentar después de cambiar permisos
+        return null;
     }
 
     return null;
 }
+
 // Paso 3 - Verificar si el archivo debe ser procesado
 function debeProcesarse($ruta_archivo, $file_hash)
 {
