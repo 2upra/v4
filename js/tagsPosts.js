@@ -20,14 +20,13 @@ function removeDuplicates(arr) {
 }
 
 
-function tagsPosts() {
-    document.querySelectorAll('p[id-post-algoritmo]').forEach(function(pElement) {
-        const postId = pElement.getAttribute('id-post-algoritmo');
-        let jsonData = null;
-        let rawJson = pElement.textContent;
 
-        // Aplicar la función para intentar reparar el JSON
-        jsonData = repararJson(rawJson);
+function tagsPosts() {
+    document.querySelectorAll('p[id-post-algoritmo]').forEach(pElement => {
+        const postId = pElement.getAttribute('id-post-algoritmo');
+        const rawJson = pElement.textContent;
+        const tagsContainer = document.getElementById('tags-' + postId);
+        let jsonData = repararJson(rawJson);
 
         if (!jsonData) {
             console.error(`Error al parsear el JSON para el post ${postId}.`);
@@ -35,83 +34,53 @@ function tagsPosts() {
             return;
         }
 
-        const tagsContainer = document.getElementById('tags-' + postId);
-
         if (!tagsContainer) {
             console.warn(`No se encontró el contenedor de tags para el post ${postId}`);
             return;
         }
 
-        // Limpiar el contenedor de tags antes de agregar nuevas etiquetas
-        tagsContainer.innerHTML = '';
+        tagsContainer.innerHTML = '';  // Limpiar el contenedor de tags
 
-        // Crear un array para almacenar todas las etiquetas unificadas
         let allTags = [];
 
-        // Recopilar todos los tags existentes en el JSON
-        if (jsonData.tags && Array.isArray(jsonData.tags)) {
-            allTags = allTags.concat(jsonData.tags.map(tag => capitalize(tag)));
-        }
+        // Helper para manejar etiquetas y comprobar estructura
+        const addTags = (data, field, fallbackField) => {
+            if (data && data[field]) {
+                allTags.push(...data[field].map(capitalize));
+            } else if (fallbackField && data[fallbackField]) {
+                allTags.push(...data[fallbackField].map(capitalize));
+            }
+        };
 
-        // Categoría de BPM
+        // Agregar BPM
         if (jsonData.bpm && typeof jsonData.bpm === 'number') {
             let bpmCategory = '';
             if (jsonData.bpm < 90) bpmCategory = 'Lento';
-            else if (jsonData.bpm >= 90 && jsonData.bpm < 120) bpmCategory = 'Moderado';
-            else if (jsonData.bpm >= 120 && jsonData.bpm < 150) bpmCategory = 'Rápido';
-            else if (jsonData.bpm >= 150) bpmCategory = 'Muy Rápido';
+            else if (jsonData.bpm < 120) bpmCategory = 'Moderado';
+            else if (jsonData.bpm < 150) bpmCategory = 'Rápido';
+            else bpmCategory = 'Muy Rápido';
 
-            allTags.push(bpmCategory + ' (' + jsonData.bpm + ' BPM)');
+            allTags.push(`${bpmCategory} (${jsonData.bpm} BPM)`);
         }
 
-        // Tonalidad y escala
+        // Agregar tonalidad y escala
         if (jsonData.key && jsonData.scale) {
-            allTags.push(capitalize(jsonData.key) + ' ' + capitalize(jsonData.scale));
+            allTags.push(`${capitalize(jsonData.key)} ${capitalize(jsonData.scale)}`);
         }
 
-        // Verificar si estamos usando la estructura nueva con "es" y "en"
+        // Añadir tags variados según disponibilidad de campo en ambas estructuras
         const descripcion = jsonData.descripcion_ia_pro || jsonData.descripcion_ia;
-
         if (descripcion) {
-            // Agregar instrumentos posibles (nueva estructura)
-            if (jsonData.instrumentos_posibles && jsonData.instrumentos_posibles["es"]) {
-                allTags = allTags.concat(jsonData.instrumentos_posibles["es"].map(capitalize));
-            } else if (descripcion["Instrumentos posibles"]) { // Estructura vieja
-                allTags = allTags.concat(descripcion["Instrumentos posibles"].map(capitalize));
-            }
-
-            // Agregar estados de ánimo (nueva estructura)
-            if (jsonData.estado_animo && jsonData.estado_animo["es"]) {
-                allTags = allTags.concat(jsonData.estado_animo["es"].map(capitalize));
-            } else if (descripcion["Estado de animo"]) { // Estructura vieja
-                allTags = allTags.concat(descripcion["Estado de animo"].map(capitalize));
-            }
-
-            // Agregar géneros posibles (nueva estructura)
-            if (jsonData.genero_posible && jsonData.genero_posible["es"]) {
-                allTags = allTags.concat(jsonData.genero_posible["es"].map(capitalize));
-            } else if (descripcion["Genero posible"]) { // Estructura vieja
-                allTags = allTags.concat(descripcion["Genero posible"].map(capitalize));
-            }
-
-            // Agregar tipo de audio (nueva estructura)
-            if (jsonData.tipo_audio && Array.isArray(jsonData.tipo_audio["es"])) {
-                allTags = allTags.concat(jsonData.tipo_audio["es"].map(capitalize));
-            } else if (descripcion["Tipo de audio"] && Array.isArray(descripcion["Tipo de audio"])) { // Estructura vieja
-                allTags = allTags.concat(descripcion["Tipo de audio"].map(capitalize));
-            }
-
-            // Agregar tags posibles (nueva estructura)
-            if (jsonData.tags_posibles && jsonData.tags_posibles["es"]) {
-                allTags = allTags.concat(jsonData.tags_posibles["es"].map(capitalize));
-            } else if (descripcion["Tags posibles"]) { // Estructura vieja
-                allTags = allTags.concat(descripcion["Tags posibles"].map(capitalize));
-            }
+            addTags(jsonData, 'instrumentos_posibles', 'Instrumentos posibles');
+            addTags(jsonData, 'estado_animo', 'Estado de animo');
+            addTags(jsonData, 'genero_posible', 'Genero posible');
+            addTags(jsonData, 'tipo_audio', 'Tipo de audio');
+            addTags(jsonData, 'tags_posibles', 'Tags posibles');
         }
 
-        // Eliminar duplicados globalmente y agregar al contenedor de tags
-        let uniqueTags = removeDuplicates(allTags);
-        uniqueTags.forEach(function(tag) {
+        // Eliminar duplicados y crear etiquetas
+        const uniqueTags = removeDuplicates(allTags);
+        uniqueTags.forEach(tag => {
             const tagElement = document.createElement('span');
             tagElement.classList.add('postTag');
             tagElement.textContent = tag;
