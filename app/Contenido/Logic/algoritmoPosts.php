@@ -91,9 +91,8 @@ function generarMetaDeIntereses($user_id)
 
     return actualizarIntereses($user_id, $tag_intensidad, $interesesActuales);
 
-        // Guardar el resultado en caché por 2 horas (7200 segundos)
-    set_transient($cache_key, $result, 2 * HOUR_IN_SECONDS);
-    
+    set_transient($cache_key, $result, 1 * HOUR_IN_SECONDS);
+
     return $result;
 }
 
@@ -243,7 +242,6 @@ function obtenerDatosFeed($userId)
 }
 
 
-//Tengo esto, creo que los $datos = obtenerDatosFeed($userId); se pueden cachear, (return $posts_personalizados; ya esta cacheado por 1 hora afuera) 
 function calcularFeedPersonalizado($userId)
 {
     // Implementar caché para obtenerDatosFeed
@@ -252,7 +250,7 @@ function calcularFeedPersonalizado($userId)
 
     if (false === $datos) {
         $datos = obtenerDatosFeed($userId);
-        wp_cache_set($cache_key, $datos, '', 1800);
+        wp_cache_set($cache_key, $datos, '', 800);
     }
 
     if (empty($datos)) {
