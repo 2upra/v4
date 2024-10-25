@@ -250,9 +250,9 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
     </div>
 
 
-
+    aqui necesito que si ambos aparecen al mismo tiempo, solo se vea
     <div class="verificacionPost">
-        <? if ($postAut == '1' && empty($ultimoEdit)) : ?>
+        <? if ($postAut == '1') : ?>
             <? echo $GLOBALS['robot']; ?>
         <? endif; ?>
         <? if ($verificado == '1') : ?>
