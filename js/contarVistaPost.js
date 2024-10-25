@@ -26,7 +26,7 @@ function registrarVistas() {
             }
         });
     }, {
-        threshold: 1.0 // 1.0 asegura que el post esté completamente visible en pantalla
+        threshold: 0.8 
     });
 
     // Observar cada post
