@@ -2,7 +2,7 @@
 
 global $wpdb;
 define('INTERES_TABLE', "{$wpdb->prefix}interes");
-define('BATCH_SIZE', 10);
+define('BATCH_SIZE', 20);
 
 
 function generarMetaDeIntereses($user_id)
