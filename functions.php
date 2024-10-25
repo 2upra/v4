@@ -105,6 +105,7 @@ function scriptsOrdenados()
         'seguir' => '2.0.1',
         'galleV2' => '2.0.1',
         'cambiarVistas' => '1.0.1',
+        'contarVistaPost' => '1.0.1',
     ];
 
     foreach ($script_handles as $handle => $data) {
