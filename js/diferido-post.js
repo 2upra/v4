@@ -52,22 +52,16 @@
             log('La página actual no es "sello"');
         }
     }
-
+    //
     function manejarScroll() {
         if (scrollTimeout) return;
         scrollTimeout = setTimeout(() => {
             scrollTimeout = null;
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             const alturaVentana = window.innerHeight;
-            const alturaDocumento = Math.max(
-                document.body.scrollHeight,
-                document.body.offsetHeight,
-                document.documentElement.clientHeight,
-                document.documentElement.scrollHeight,
-                document.documentElement.offsetHeight
-            );
+            const alturaDocumento = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
 
-            log('Evento de scroll detectado:', { scrollTop, alturaVentana, alturaDocumento, estaCargando });
+            log('Evento de scroll detectado:', {scrollTop, alturaVentana, alturaDocumento, estaCargando});
 
             if (scrollTop + alturaVentana > alturaDocumento - 100 && !estaCargando && hayMasContenido) {
                 log('Condiciones para cargar más contenido cumplidas');
@@ -96,15 +90,15 @@
             return;
         }
 
-        const { filtro = '', tabId = '', posttype = '' } = listaPublicaciones.dataset;
+        const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
         const idUsuario = window.idUsuarioActual || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
 
-        log('Parámetros de carga:', { filtro, tabId, identificador, idUsuario, paginaActual });
+        log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual});
 
         try {
             const respuesta = await fetch(ajaxUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: new URLSearchParams({
                     action: 'cargar_mas_publicaciones',
                     paged: paginaActual,
@@ -190,6 +184,26 @@
         window.addEventListener('scroll', manejarScroll);
     }
 
+    function mostrarIndicadorBusqueda() {
+        const inputBusqueda = document.getElementById('identifier');
+        if (inputBusqueda) {
+            // Almacenar el placeholder original para restaurarlo después
+            inputBusqueda.dataset.placeholderOriginal = inputBusqueda.placeholder;
+            inputBusqueda.placeholder = 'Buscando...';
+            inputBusqueda.disabled = true; // Opcional: Deshabilitar el input mientras busca
+        }
+    }
+
+    function ocultarIndicadorBusqueda() {
+        const inputBusqueda = document.getElementById('identifier');
+        if (inputBusqueda && inputBusqueda.dataset.placeholderOriginal) {
+            inputBusqueda.placeholder = inputBusqueda.dataset.placeholderOriginal;
+            delete inputBusqueda.dataset.placeholderOriginal; // Limpiar el dato almacenado
+            inputBusqueda.disabled = false; // Rehabilitar el input
+        }
+    }
+
+    //aqui necesito algo adicional, cuando se hace click a un postTag, en <input type="text" id="identifier" placeholder="Busqueda"> aparezca que se esta buscando, ya que si funciona pero el usuario puede perder si no ve que esta buscando
     function configurarDelegacionEventosPostTag() {
         const contenedor = document.querySelector('.social-post-list');
         if (contenedor) {
