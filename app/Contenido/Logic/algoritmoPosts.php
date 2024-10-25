@@ -145,98 +145,100 @@ function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
     }
 }
 
-function obtenerDatosFeed($userId) {
+function obtenerDatosFeed($userId)
+{
     global $wpdb;
-    
-    // Constantes y variables iniciales
-    $prefix = $wpdb->prefix;
-    $cache_key = "feed_data_user_{$userId}";
-    $cache_time = 300; // 5 minutos
-    
-    // Intentar obtener datos de caché
-    if ($cached_data = wp_cache_get($cache_key)) {
-        return $cached_data;
-    }
+    $table_likes = "{$wpdb->prefix}post_likes";
+    $table_intereses = INTERES_TABLE;
 
-    // Preparar datos básicos
+    // Usuarios que el usuario actual está siguiendo
     $siguiendo = (array) get_user_meta($userId, 'siguiendo', true);
-    generarMetaDeIntereses($userId);
 
-    // Consulta combinada para intereses
+    // Generar o actualizar los intereses del usuario
+    generarMetaDeIntereses($userId);
+    logAlgoritmo("Intereses del usuario generados para el usuario ID: $userId");
+
+    // Obtener intereses del usuario
     $interesesUsuario = $wpdb->get_results($wpdb->prepare(
-        "SELECT interest, intensity FROM " . INTERES_TABLE . " WHERE user_id = %d",
+        "SELECT interest, intensity FROM $table_intereses WHERE user_id = %d",
         $userId
     ), OBJECT_K);
+    logAlgoritmo("Intereses del usuario obtenidos: " . json_encode($interesesUsuario));
 
-    // Obtener IDs de posts recientes
-    $posts_ids = get_posts([
+    $args = [
         'post_type'      => 'social_post',
         'posts_per_page' => 10000,
-        'date_query'     => ['after' => date('Y-m-d', strtotime('-100 days'))],
+        'date_query'     => [
+            'after' => date('Y-m-d', strtotime('-100 days'))
+        ],
         'fields'         => 'ids',
         'no_found_rows'  => true,
-        'cache_results'  => true
-    ]);
+    ];
+    $posts_ids = get_posts($args);
+    logAlgoritmo("Consulta de posts realizada, total de posts: " . count($posts_ids));
 
     if (empty($posts_ids)) {
+        logAlgoritmo("No se encontraron posts para el feed del usuario ID: $userId");
         return [];
     }
 
-    // Preparar consulta en lote
-    $placeholders = implode(',', array_fill(0, count($posts_ids), '%d'));
-    
-    // Consultas combinadas para metadata
-    $queries = [
-        // Likes
-        "SELECT post_id, COUNT(*) as likes_count 
-         FROM {$prefix}post_likes 
-         WHERE post_id IN ($placeholders) 
-         GROUP BY post_id",
-         
-        // Posts y autores
-        "SELECT ID, post_author, post_date, 
-         (SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = 'datosAlgoritmo' LIMIT 1) as datos_algoritmo,
-         (SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = 'Verificado' LIMIT 1) as verificado,
-         (SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = 'postAut' LIMIT 1) as post_aut
-         FROM {$wpdb->posts} p 
-         WHERE ID IN ($placeholders)"
-    ];
+    // Preparar placeholders para consultas en lote
+    $placeholders = implode(', ', array_fill(0, count($posts_ids), '%d'));
 
-    // Ejecutar consultas
-    $results = [];
-    foreach ($queries as $query) {
-        $results[] = $wpdb->get_results($wpdb->prepare($query, ...$posts_ids));
-    }
-
-    // Procesar resultados
+    // Obtener likes de los posts
+    $sql_likes = "
+        SELECT post_id, COUNT(*) as likes_count
+        FROM $table_likes
+        WHERE post_id IN ($placeholders)
+        GROUP BY post_id
+    ";
+    $likes_results = $wpdb->get_results($wpdb->prepare($sql_likes, $posts_ids));
     $likes_by_post = [];
-    foreach ($results[0] as $row) {
-        $likes_by_post[$row->post_id] = $row->likes_count;
+    foreach ($likes_results as $like_row) {
+        $likes_by_post[$like_row->post_id] = $like_row->likes_count;
     }
 
-    $post_data = [];
-    foreach ($results[1] as $row) {
-        $post_data[$row->ID] = [
-            'author'          => $row->post_author,
-            'date'           => $row->post_date,
-            'datosAlgoritmo' => $row->datos_algoritmo,
-            'verificado'     => $row->verificado,
-            'postAut'        => $row->post_aut
-        ];
-    }
+    // Obtener datos de 'datosAlgoritmo' de los posts
+    $sql_datos = "
+        SELECT post_id, meta_value
+        FROM {$wpdb->postmeta}
+        WHERE meta_key = 'datosAlgoritmo' AND post_id IN ($placeholders)
+    ";
+    $datosAlgoritmo_results = $wpdb->get_results($wpdb->prepare($sql_datos, $posts_ids), OBJECT_K);
 
-    $data = [
-        'siguiendo'        => $siguiendo,
-        'interesesUsuario' => $interesesUsuario,
-        'posts_ids'        => $posts_ids,
-        'likes_by_post'    => $likes_by_post,
-        'post_data'        => $post_data
+    // Obtener 'Verificado' y 'postAut' de los posts
+    $sql_verificado = "
+        SELECT post_id, meta_value
+        FROM {$wpdb->postmeta}
+        WHERE meta_key = 'Verificado' AND post_id IN ($placeholders)
+    ";
+    $verificado_results = $wpdb->get_results($wpdb->prepare($sql_verificado, $posts_ids), OBJECT_K);
+
+    $sql_postAut = "
+        SELECT post_id, meta_value
+        FROM {$wpdb->postmeta}
+        WHERE meta_key = 'postAut' AND post_id IN ($placeholders)
+    ";
+    $postAut_results = $wpdb->get_results($wpdb->prepare($sql_postAut, $posts_ids), OBJECT_K);
+
+    // Obtener autores y fechas de los posts
+    $sql_authors = "
+        SELECT ID, post_author, post_date
+        FROM {$wpdb->posts}
+        WHERE ID IN ($placeholders)
+    ";
+    $author_results = $wpdb->get_results($wpdb->prepare($sql_authors, $posts_ids), OBJECT_K);
+
+    return [
+        'siguiendo'             => $siguiendo,
+        'interesesUsuario'      => $interesesUsuario,
+        'posts_ids'             => $posts_ids,
+        'likes_by_post'         => $likes_by_post,
+        'datosAlgoritmo'        => $datosAlgoritmo_results,
+        'verificado_results'    => $verificado_results,
+        'postAut_results'       => $postAut_results,
+        'author_results'        => $author_results,
     ];
-
-    // Guardar en caché
-    wp_cache_set($cache_key, $data, '', $cache_time);
-
-    return $data;
 }
 
 
