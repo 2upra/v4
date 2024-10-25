@@ -16,12 +16,12 @@ function registrarVistas() {
                     // Marcar el post como registrado y detener la observación
                     post.setAttribute('data-registrado', 'true');
                     observer.unobserve(post);
-                }, 10000); // 10 segundos en milisegundos
+                }, 5000); // 5 segundos en milisegundos
 
                 // Cancela el temporizador si el post sale de la vista antes de tiempo
                 post.timerId = timer;
             } else {
-                // Si el post sale de la vista antes de los 10 segundos, cancela el temporizador
+                // Si el post sale de la vista antes de los 5 segundos, cancela el temporizador
                 clearTimeout(entry.target.timerId);
             }
         });
