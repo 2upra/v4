@@ -31,7 +31,9 @@
         ajustarAlturaMaxima();
         habilitarCargaPorScroll();
         establecerIdUsuarioDesdeInput();
+        configurarDelegacionEventosPostTag();
 
+        reiniciarEventosPostTag();
     }
 
     function establecerIdUsuarioDesdeInput() {
@@ -190,25 +192,29 @@
     }
 
     function configurarDelegacionEventosPostTag() {
-        const contenedor = document.querySelector('.social-post-list');
-        if (contenedor) {
-            contenedor.removeEventListener('click', delegarClickPostTag);
-            contenedor.addEventListener('click', delegarClickPostTag);
-            log('Delegación de eventos de clic configurada para <span class="postTag">');
-        } else {
-            log('No se encontró el contenedor .social-post-list para delegar eventos');
-        }
+        document.removeEventListener('click', delegarClickPostTag);
+        document.addEventListener('click', delegarClickPostTag);
+        log('Delegación de eventos de clic configurada globalmente');
     }
 
     function delegarClickPostTag(e) {
         const tag = e.target.closest('.postTag');
         if (tag) {
             e.preventDefault();
+            e.stopPropagation();
             const valorTag = tag.textContent.trim();
-            log('Tag clicado mediante delegación:', valorTag);
-            identificador = valorTag;
-            resetearCarga();
-            cargarMasContenido();
+            console.log('Tag clicado:', {
+                elemento: tag,
+                valor: valorTag,
+                identificadorAnterior: identificador
+            });
+            
+            if (valorTag) {
+                identificador = valorTag;
+                console.log('Nuevo identificador establecido:', identificador);
+                resetearCarga();
+                cargarMasContenido();
+            }
         }
     }
 
