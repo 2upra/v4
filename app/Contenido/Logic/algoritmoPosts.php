@@ -364,8 +364,9 @@ function calcularFeedPersonalizado($userId)
 
         // Ajuste extra
         $ajusteExtra = mt_rand(-100, 100);
+        $puntosFinal = $puntosFinal * $factorTiempo;
         $puntosFinal += $ajusteExtra;
-
+        
         // Asegurar que los puntos finales no sean negativos
         $puntosFinal = max($puntosFinal, 0);
 
