@@ -38,16 +38,8 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
     if ($args['post_type'] === 'social_post') {
         if (empty($identifier)) {
-            // Verificar si ya tenemos el feed personalizado en caché
-            $cache_key = 'feed_personalizado_' . $current_user_id;
-            $posts_personalizados = get_transient($cache_key); // O usa $_SESSION si prefieres cachear en la sesión del usuario
-
-            // Si no está en caché, calcularlo y almacenarlo
-            if ($posts_personalizados === false) {
-                $posts_personalizados = calcularFeedPersonalizado($current_user_id);
-                set_transient($cache_key, $posts_personalizados, 1 * HOUR_IN_SECONDS); // Cachear por 12 horas
-            }
-
+            // Esto debería calcularse una sola 1 
+            $posts_personalizados = calcularFeedPersonalizado($current_user_id);
             $post_ids = array_keys($posts_personalizados);
 
             // Eliminar $similar_to de $post_ids si está presente
@@ -57,9 +49,9 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
                 });
             }
 
-            // Paginación de los resultados ya calculados
-            $offset = ($paged - 1) * $posts;
-            $post_ids = array_slice($post_ids, $offset, $posts);
+            if ($paged == 1) {
+                $post_ids = array_slice($post_ids, 0, $posts);
+            }
 
             $query_args = [
                 'post_type'      => $args['post_type'],
@@ -101,7 +93,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             'meta_query'     => [],
         ];
 
-        // Añadir exclusiones si existen
+        // Añadir eliminaciones si existen
         if (!empty($post_not_in)) {
             $query_args['post__not_in'] = $post_not_in;
         }
