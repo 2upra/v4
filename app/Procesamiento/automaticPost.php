@@ -19,7 +19,6 @@ function autProcesarAudio($audio_path)
     // Verificar si el archivo existe
     if (!file_exists($audio_path)) {
         //guardarLog("Archivo no encontrado: $audio_path");
-        //guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
 
@@ -28,7 +27,6 @@ function autProcesarAudio($audio_path)
     $directory = realpath($path_parts['dirname']);
     if ($directory === false) {
         //guardarLog("Directorio inválido: {$path_parts['dirname']}");
-        //guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
     $extension = strtolower($path_parts['extension']);
@@ -40,7 +38,6 @@ function autProcesarAudio($audio_path)
     $file_id = obtenerFileIDPorURL($audio_path);
     if ($file_id === false) {
         //guardarLog("File ID no encontrado para la ruta: $audio_path");
-        //guardarLog("Fin de la función autProcesarAudio.");
         return;
     } else {
         //guardarLog("File ID obtenido: $file_id");
@@ -55,14 +52,12 @@ function autProcesarAudio($audio_path)
     exec($comando_strip_metadata, $output_strip, $return_strip);
     if ($return_strip !== 0) {
         //guardarLog("Error al eliminar metadatos: " . implode(" | ", $output_strip));
-        //guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
 
     // Reemplazar archivo original
     if (!rename($temp_path, $audio_path)) {
         //guardarLog("No se pudo reemplazar el archivo original.");
-        //guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
     //guardarLog("Metadatos eliminados del archivo: $audio_path");
@@ -74,7 +69,6 @@ function autProcesarAudio($audio_path)
     exec($comando_lite, $output_lite, $return_lite);
     if ($return_lite !== 0) {
         //guardarLog("Error al crear versión lite: " . implode(" | ", $output_lite));
-        //guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
     //guardarLog("Versión lite creada: $lite_path");
@@ -83,7 +77,6 @@ function autProcesarAudio($audio_path)
     $nombre_limpio = generarNombreAudio($lite_path);
     if (empty($nombre_limpio)) {
         //guardarLog("Nombre limpio inválido.");
-        //guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
     //guardarLog("Nombre limpio generado: $nombre_limpio");
@@ -92,7 +85,6 @@ function autProcesarAudio($audio_path)
     $nuevo_nombre_original = "$directory/$nombre_limpio.$extension";
     if (!rename($audio_path, $nuevo_nombre_original)) {
         //guardarLog("No se pudo renombrar el archivo original.");
-        //guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
     //guardarLog("Archivo original renombrado: $nuevo_nombre_original");
@@ -101,7 +93,6 @@ function autProcesarAudio($audio_path)
     $nuevo_nombre_lite = "$directory/{$nombre_limpio}_lite.mp3";
     if (!rename($lite_path, $nuevo_nombre_lite)) {
         //guardarLog("No se pudo renombrar el archivo lite.");
-        //guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
     //guardarLog("Archivo lite renombrado: $nuevo_nombre_lite");
@@ -114,7 +105,7 @@ function autProcesarAudio($audio_path)
     if (!file_exists($target_dir_audio)) {
         if (!wp_mkdir_p($target_dir_audio)) {
             //guardarLog("No se pudo crear el directorio de uploads/audio.");
-            //guardarLog("Fin de la función autProcesarAudio.");
+
             return;
         }
     }
@@ -124,7 +115,6 @@ function autProcesarAudio($audio_path)
     // Mover archivo lite
     if (!rename($nuevo_nombre_lite, $target_path_lite)) {
         //guardarLog("No se pudo mover el archivo lite al directorio de uploads.");
-        //guardarLog("Fin de la función autProcesarAudio.");
         return;
     }
     //guardarLog("Archivo lite movido al directorio de uploads: $target_path_lite");
@@ -426,6 +416,7 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
     update_post_meta($post_id, 'rutaLiteOriginal', $nuevo_nombre_lite);
 
     update_post_meta($post_id, 'post_audio', $audio_original_id);
+    update_post_meta($post_id, 'nombreOriginal', $nombre_archivo);
     update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
     update_post_meta($post_id, 'paraDescarga', true);
 
