@@ -28,7 +28,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
     $identifier = $_POST['identifier'] ?? '';
-    $posts = $args['posts'];
+    $posts_per_page = $args['posts'];
     $similar_to = $args['similar_to'] ?? null;
     $post_not_in = $similar_to ? [$similar_to] : [];
     $cache_key = "feed_personalizado_{$current_user_id}";
