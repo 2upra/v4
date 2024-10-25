@@ -157,7 +157,7 @@ function obtenerDatosFeed($userId)
 
     $args = [
         'post_type'      => 'social_post',
-        'posts_per_page' => 1000,
+        'posts_per_page' => 10000,
         'date_query'     => [
             'after' => date('Y-m-d', strtotime('-100 days'))
         ],
@@ -232,9 +232,17 @@ function obtenerDatosFeed($userId)
 }
 
 
+//Tengo esto, creo que los $datos = obtenerDatosFeed($userId); se pueden cachear, (return $posts_personalizados; ya esta cacheado por 1 hora afuera) 
 function calcularFeedPersonalizado($userId)
 {
-    $datos = obtenerDatosFeed($userId);
+    // Implementar caché para obtenerDatosFeed
+    $cache_key = 'feed_datos_' . $userId;
+    $datos = wp_cache_get($cache_key);
+    
+    if (false === $datos) {
+        $datos = obtenerDatosFeed($userId);
+        wp_cache_set($cache_key, $datos, '', 1800);
+    }
 
     if (empty($datos)) {
         return [];
