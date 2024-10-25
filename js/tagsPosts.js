@@ -22,44 +22,46 @@ function removeDuplicates(arr) {
 
 
 function tagsPosts() {
-    document.querySelectorAll('p[id-post-algoritmo]').forEach(pElement => {
+    document.querySelectorAll('p[id-post-algoritmo]').forEach(function(pElement) {
         const postId = pElement.getAttribute('id-post-algoritmo');
-        const rawJson = pElement.textContent;
         const tagsContainer = document.getElementById('tags-' + postId);
-        let jsonData = repararJson(rawJson);
-
-        if (!jsonData) {
-            console.error(`Error al parsear el JSON para el post ${postId}.`);
-            console.log(`Contenido del JSON malformado después de la reparación: ${rawJson}`);
-            return;
-        }
-
+        
         if (!tagsContainer) {
             console.warn(`No se encontró el contenedor de tags para el post ${postId}`);
             return;
         }
 
-        tagsContainer.innerHTML = '';  // Limpiar el contenedor de tags
+        const jsonData = repararJson(pElement.textContent);
+        if (!jsonData) {
+            console.error(`Error al parsear el JSON para el post ${postId}`);
+            return;
+        }
 
+        tagsContainer.innerHTML = '';
         let allTags = [];
 
-        // Helper para manejar etiquetas y comprobar estructura
-        const addTags = (data, field, fallbackField) => {
-            if (data && data[field]) {
-                allTags.push(...data[field].map(capitalize));
-            } else if (fallbackField && data[fallbackField]) {
-                allTags.push(...data[fallbackField].map(capitalize));
+        // Función auxiliar para agregar tags desde una fuente específica
+        const addTags = (source, key) => {
+            if (source?.[key]?.["es"]) {
+                allTags = allTags.concat(source[key]["es"].map(capitalize));
+            } else if (source?.[key]) {
+                allTags = allTags.concat(source[key].map(capitalize));
             }
         };
 
-        // Agregar BPM
-        if (jsonData.bpm && typeof jsonData.bpm === 'number') {
-            let bpmCategory = '';
-            if (jsonData.bpm < 90) bpmCategory = 'Lento';
-            else if (jsonData.bpm < 120) bpmCategory = 'Moderado';
-            else if (jsonData.bpm < 150) bpmCategory = 'Rápido';
-            else bpmCategory = 'Muy Rápido';
+        // Primero agregar tipo de audio
+        addTags(jsonData, 'tipo_audio');
+        
+        // Agregar tags básicos
+        if (jsonData.tags?.length) {
+            allTags = allTags.concat(jsonData.tags.map(capitalize));
+        }
 
+        // Agregar categoría BPM
+        if (jsonData.bpm) {
+            const bpmCategory = jsonData.bpm < 90 ? 'Lento' :
+                              jsonData.bpm < 120 ? 'Moderado' :
+                              jsonData.bpm < 150 ? 'Rápido' : 'Muy Rápido';
             allTags.push(`${bpmCategory} (${jsonData.bpm} BPM)`);
         }
 
@@ -68,19 +70,35 @@ function tagsPosts() {
             allTags.push(`${capitalize(jsonData.key)} ${capitalize(jsonData.scale)}`);
         }
 
-        // Añadir tags variados según disponibilidad de campo en ambas estructuras
         const descripcion = jsonData.descripcion_ia_pro || jsonData.descripcion_ia;
-        if (descripcion) {
-            addTags(jsonData, 'instrumentos_posibles', 'Instrumentos posibles');
-            addTags(jsonData, 'estado_animo', 'Estado de animo');
-            addTags(jsonData, 'genero_posible', 'Genero posible');
-            addTags(jsonData, 'tipo_audio', 'Tipo de audio');
-            addTags(jsonData, 'tags_posibles', 'Tags posibles');
-        }
+        const isNewStructure = jsonData.instrumentos_posibles?.["es"];
 
-        // Eliminar duplicados y crear etiquetas
-        const uniqueTags = removeDuplicates(allTags);
-        uniqueTags.forEach(tag => {
+        // Agregar todos los demás tags
+        const tagCategories = [
+            'instrumentos_posibles',
+            'estado_animo',
+            'genero_posible',
+            'artista_posible',
+            'tags_posibles'
+        ];
+
+        tagCategories.forEach(category => {
+            if (isNewStructure) {
+                addTags(jsonData, category);
+            } else if (descripcion) {
+                const oldKey = {
+                    'instrumentos_posibles': 'Instrumentos posibles',
+                    'estado_animo': 'Estado de animo',
+                    'genero_posible': 'Genero posible',
+                    'artista_posible': 'Artista posible',
+                    'tags_posibles': 'Tags posibles'
+                }[category];
+                addTags(descripcion, oldKey);
+            }
+        });
+
+        // Crear y agregar tags únicos al contenedor
+        removeDuplicates(allTags).forEach(tag => {
             const tagElement = document.createElement('span');
             tagElement.classList.add('postTag');
             tagElement.textContent = tag;
