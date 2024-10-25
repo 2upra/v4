@@ -145,6 +145,7 @@ function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
     }
 }
 
+
 function obtenerDatosFeed($userId)
 {
     global $wpdb;
@@ -164,6 +165,10 @@ function obtenerDatosFeed($userId)
         $userId
     ), OBJECT_K);
     logAlgoritmo("Intereses del usuario obtenidos: " . json_encode($interesesUsuario));
+
+    // Obtener la meta 'vistas_posts' del usuario
+    $vistas_posts = get_user_meta($userId, 'vistas_posts', true);
+    logAlgoritmo("Meta 'vistas_posts' obtenida: " . json_encode($vistas_posts));
 
     $args = [
         'post_type'      => 'social_post',
@@ -229,6 +234,20 @@ function obtenerDatosFeed($userId)
     ";
     $author_results = $wpdb->get_results($wpdb->prepare($sql_authors, $posts_ids), OBJECT_K);
 
+    // Procesar la meta 'vistas_posts' si existe
+    $vistas_posts_processed = [];
+    if (!empty($vistas_posts)) {
+        foreach ($vistas_posts as $post_id => $view_data) {
+            $vistas_posts_processed[$post_id] = [
+                'count'     => $view_data['count'],
+                'last_view' => date('Y-m-d H:i:s', $view_data['last_view']),
+            ];
+        }
+        logAlgoritmo("Meta 'vistas_posts' procesada: " . json_encode($vistas_posts_processed));
+    } else {
+        logAlgoritmo("Meta 'vistas_posts' está vacía para el usuario ID: $userId");
+    }
+
     return [
         'siguiendo'             => $siguiendo,
         'interesesUsuario'      => $interesesUsuario,
@@ -238,9 +257,9 @@ function obtenerDatosFeed($userId)
         'verificado_results'    => $verificado_results,
         'postAut_results'       => $postAut_results,
         'author_results'        => $author_results,
+        'vistas_posts'          => $vistas_posts_processed,
     ];
 }
-
 
 function calcularFeedPersonalizado($userId)
 {
@@ -257,7 +276,7 @@ function calcularFeedPersonalizado($userId)
         return [];
     }
 
-    // Verify if 'author_results' exists and is an array
+    // Verificar si 'author_results' existe y es un array
     if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
         logAlgoritmo("Error: 'author_results' is not set or not an array for user ID: $userId");
         return [];
@@ -269,6 +288,9 @@ function calcularFeedPersonalizado($userId)
 
     $posts_personalizados = [];
     $resumenPuntos = [];
+    
+    // Cargar vistas de posts procesadas
+    $vistas_posts_processed = isset($datos['vistas_posts_processed']) ? $datos['vistas_posts_processed'] : [];
 
     foreach ($datos['author_results'] as $post_id => $post_data) {
         $autor_id = $post_data->post_author;
@@ -303,7 +325,6 @@ function calcularFeedPersonalizado($userId)
 
         // Decaimiento por tiempo (ajustado para reducir la importancia de la recencia)
         $horasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / 3600;
-        // Aumentar el base de decaimiento para que la recencia tenga menor impacto
         $factorTiempo = pow(0.99, $horasDesdePublicacion);
 
         // Obtener 'Verificado' y 'postAut' individualmente
@@ -329,10 +350,19 @@ function calcularFeedPersonalizado($userId)
             }
         }
 
+        // Aplicar reducción de puntos si el post ha sido visto antes
+        if (isset($vistas_posts_processed[$post_id])) {
+            $vistas = $vistas_posts_processed[$post_id]['count'];
+            $reduccion_por_vista = 0.40; // Reducción del 40% por cada vista
+            $factorReduccion = pow(1 - $reduccion_por_vista, $vistas);
+            $puntosFinal *= $factorReduccion;
+        }
+
+        // Factor de aleatoriedad
         $aleatoriedad = mt_rand(0, 60);
-        $puntosFinal = $puntosFinal * $factorTiempo;
         $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100));
 
+        // Ajuste extra
         $ajusteExtra = mt_rand(-100, 100);
         $puntosFinal += $ajusteExtra;
 
