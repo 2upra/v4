@@ -66,7 +66,6 @@ async function banearUsuario() {
 }
 
 function initEditWordPress() {
-    console.log('Se ha iniciado la función initEditWordPress');
 
     // Seleccionamos todos los botones con clase 'editarWordPress'
     const buttons = document.querySelectorAll('.editarWordPress');
@@ -76,26 +75,21 @@ function initEditWordPress() {
 
         // Añadimos un listener de click a cada botón individualmente
         buttons.forEach(button => {
-            console.log('Añadiendo listener al botón con postId:', button.dataset.postId);
-
             button.addEventListener('click', function(e) {
                 e.preventDefault(); // Prevenir cualquier comportamiento por defecto (si lo hay)
-                console.log('Clic detectado en el botón con postId:', button.dataset.postId);
 
                 const postId = button.dataset.postId;
                 if (postId) {
                     const url = `/wp-admin/post.php?post=${postId}&action=edit&classic-editor`;
-                    console.log('URL generada:', url);
 
                     window.open(url, '_blank');
-                    console.log('Se ha abierto una nueva pestaña con la URL');
                 } else {
-                    console.error('El botón clicado no tiene un "data-post-id" válido.');
+
                 }
             });
         });
     } else {
-        console.warn('No se encontraron botones con la clase editarWordPress');
+        return; 
     }
 }
 
