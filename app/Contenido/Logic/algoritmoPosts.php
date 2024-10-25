@@ -265,6 +265,7 @@ function obtenerDatosFeedConCache($userId)
     return $datos;
 }
 
+# PASO 1
 function obtenerYProcesarVistasPosts($userId)
 {
     $vistas_posts = obtenerVistasPosts($userId);
@@ -285,6 +286,32 @@ function obtenerYProcesarVistasPosts($userId)
     return $vistas_posts_processed;
 }
 
+#PASO 3
+function calcularPuntosIntereses($post_id, $datos)
+{
+    $puntosIntereses = 0;
+    $datosAlgoritmo = !empty($datos['datosAlgoritmo'][$post_id]->meta_value) ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true) : [];
+
+    foreach ($datosAlgoritmo as $key => $value) {
+        if (is_array($value)) {
+            foreach (['es', 'en'] as $lang) {
+                if (isset($value[$lang]) && is_array($value[$lang])) {
+                    foreach ($value[$lang] as $item) {
+                        if (isset($datos['interesesUsuario'][$item])) {
+                            $puntosIntereses += 1 + $datos['interesesUsuario'][$item]->intensity;
+                        }
+                    }
+                }
+            }
+        } elseif (!empty($value) && isset($datos['interesesUsuario'][$value])) {
+            $puntosIntereses += 1 + $datos['interesesUsuario'][$value]->intensity;
+        }
+    }
+
+    return $puntosIntereses;
+}
+
+#PASO 2
 function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_posts_processed)
 {
     $autor_id = $post_data->post_author;
@@ -311,13 +338,22 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
     // Calcular puntos finales
     $puntosFinal = calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin);
 
-    // Aplicar reducción por vistas si el post ha sido visto antes
+    // Aplicar reducción por vistas si corresponde
     if (isset($vistas_posts_processed[$post_id])) {
         $vistas = $vistas_posts_processed[$post_id]['count'];
         $reduccion_por_vista = 0.40; // Reducción del 40% por cada vista
         logAlgoritmo("Aplicando reducción por vistas: $reduccion_por_vista para el post ID: $post_id, vistas: $vistas");
+
+        // Factor de reducción acumulado por vistas
         $factorReduccion = pow(1 - $reduccion_por_vista, $vistas);
+        $puntosFinalAntesReduccion = $puntosFinal; // Guardar puntos antes de la reducción
+
+        // Aplicar la reducción
         $puntosFinal *= $factorReduccion;
+
+        // Calcular el porcentaje de reducción total
+        $reduccionTotal = (1 - $factorReduccion) * 100;
+        logAlgoritmo("Post ID: $post_id - Puntos antes de la reducción: $puntosFinalAntesReduccion, Puntos después de la reducción: $puntosFinal, Reducción total: " . round($reduccionTotal, 2) . "%");
     }
 
     // Aplicar aleatoriedad y ajuste extra
@@ -331,30 +367,8 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
     return max($puntosFinal, 0);
 }
 
-function calcularPuntosIntereses($post_id, $datos)
-{
-    $puntosIntereses = 0;
-    $datosAlgoritmo = !empty($datos['datosAlgoritmo'][$post_id]->meta_value) ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true) : [];
 
-    foreach ($datosAlgoritmo as $key => $value) {
-        if (is_array($value)) {
-            foreach (['es', 'en'] as $lang) {
-                if (isset($value[$lang]) && is_array($value[$lang])) {
-                    foreach ($value[$lang] as $item) {
-                        if (isset($datos['interesesUsuario'][$item])) {
-                            $puntosIntereses += 1 + $datos['interesesUsuario'][$item]->intensity;
-                        }
-                    }
-                }
-            }
-        } elseif (!empty($value) && isset($datos['interesesUsuario'][$value])) {
-            $puntosIntereses += 1 + $datos['interesesUsuario'][$value]->intensity;
-        }
-    }
-
-    return $puntosIntereses;
-}
-
+#PASO 5
 function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
 {
     if ($esAdmin) {
@@ -374,7 +388,7 @@ function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $
     return $puntosUsuario + $puntosIntereses + $puntosLikes;
 }
 
-
+# CALCULO START
 function calcularFeedPersonalizado($userId)
 {
     // Obtener datos del feed con caché

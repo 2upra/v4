@@ -60,6 +60,7 @@ function guardarVista() {
     wp_die();
 }
 
+
 function obtenerVistasPosts($userId) {
     // Obtener la meta 'vistas_posts' del usuario
     $vistas_posts = get_user_meta($userId, 'vistas_posts', true);
