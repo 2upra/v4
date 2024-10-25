@@ -321,9 +321,9 @@ function calcularPuntosIntereses($post_id, $datos)
         }
     }
 
-    // Aplicar la reducción del 50% si contiene una de las palabras clave
+    // Aplicar la reducción del 80% si contiene una de las palabras clave
     if ($esOneShot) {
-        $puntosIntereses *= 0.5;
+        $puntosIntereses *= 0.8;
     }
 
     return $puntosIntereses;
