@@ -106,6 +106,7 @@ function scriptsOrdenados()
         'galleV2' => '2.0.1',
         'cambiarVistas' => '1.0.1',
         'contarVistaPost' => '1.0.1',
+        'notificaciones' => '1.0.1'
     ];
 
     foreach ($script_handles as $handle => $data) {
@@ -151,6 +152,11 @@ function scriptsOrdenados()
     wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.7.8', true);
     wp_enqueue_script('jquery');
     wp_add_inline_script('genericAjax', 'const wpAdminUrl = "' . admin_url() . '";', 'before');
+
+    wp_localize_script('notificaciones', 'datosNotificaciones', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'usuarioID' => get_current_user_id()
+    ));
 
     // Localización de scripts
     $ajax_url = admin_url('admin-ajax.php');

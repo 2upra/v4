@@ -53,7 +53,7 @@ function likeAccion($postId, $userId, $accion) {
                 // Solo enviar notificación si el autor es diferente del usuario que da like
                 if ($autorId != $userId) {
                     $usuario = get_userdata($userId);
-                    insertar_notificacion($autorId, "{$usuario->display_name} le gustó tu publicación.", get_permalink($postId), $userId);
+                    agregarNoti($autorId, "{$usuario->display_name} le gustó tu publicación.", get_permalink($postId), $userId);
                 }
             }
         }

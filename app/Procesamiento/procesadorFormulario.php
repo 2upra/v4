@@ -403,7 +403,7 @@ function subidaDePost()
     agregar_pinkys_al_usuario($current_user_id, 1);
     guardarLog("Se ha agregado 1 Pinky al usuario con ID: {$current_user_id}");
 
-    insertar_notificacion(
+    agregarNoti(
         $current_user_id,
         '¡Tu nueva publicación ha sido creada con éxito! Has recibido un 1 Pinky',
         get_permalink($post_id),
