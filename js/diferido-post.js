@@ -32,7 +32,6 @@
         habilitarCargaPorScroll();
         establecerIdUsuarioDesdeInput();
 
-        reiniciarEventosPostTag();
     }
 
     function establecerIdUsuarioDesdeInput() {
