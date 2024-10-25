@@ -152,7 +152,7 @@ function generarNombreAudio($audio_path_lite)
     $carpeta_abuela = basename(dirname(dirname($audio_path_lite))); // Obtener la carpeta un nivel más arriba
 
     // Preparar el prompt para la IA incluyendo tanto el nombre del archivo como las carpetas
-    $prompt = "El archivo '{$nombre_archivo}' está en la carpeta '{$carpeta}', y a su vez esta carpeta está en '{$carpeta_abuela}'. Te lo enseño para que lo tomes en cuenta. A veces tendrá sentido el nombre y otras no, pero es importante considerarlo. A veces vienen con nombres de marcas, páginas, etc., hay que ignorar eso. Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, como un kick, snare, sample o efectos, vocales, percusiones, pero puede ser cualquier cosa etc. Importante: solo responde el nombre, no agregues nada adicional. Estás en un entorno automatizado, no hables con el usuario, solo estoy pidiendo el nombre corto como respuesta. Ignora la palabra lite";
+    $prompt = "El archivo '{$nombre_archivo}' está en la carpeta '{$carpeta}', y a su vez esta carpeta está en '{$carpeta_abuela}'. Te lo enseño para que lo tomes en cuenta. A veces tendrá sentido el nombre y otras no, pero es importante considerarlo. A veces vienen con nombres de marcas, páginas, etc., hay que ignorar eso. Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, como un kick, snare, sample o efectos, vocales, percusiones, pero puede ser cualquier cosa etc. Importante: solo responde el nombre, no agregues nada adicional. Estás en un entorno automatizado, no hables con el usuario, solo estoy pidiendo el nombre corto como respuesta. Ignora la palabra lite. Muchas veces los nombres deben manterse en ingles como sean mas comunes, por ejemplo snare, kick, sample, hi hats, etc.";
 
     try {
         // Registrar el prompt enviado a la IA
@@ -380,7 +380,7 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
     $carpeta_abuela = basename(dirname(dirname($lite_path))); // Obtener la carpeta un nivel más arriba
 
     // Preparar el prompt con información de la ruta original y las carpetas
-    $prompt = "Genera una descripción corta para el siguiente archivo de audio. Puede ser un sample, un fx, un loop, un sonido de un kick, puede ser cualquier cosa. El propósito es que la descripción sea corta (solo responde con la descripción, no digas nada adicional). Te doy ejemplos: Sample oscuro phonk, Fx de explosión, kick de house, sonido de sintetizador, piano melodía, guitarra acústica sample. \n\n" . 
+    $prompt = "Genera una descripción corta para el siguiente archivo de audio. Puede ser un sample, un fx, un loop, un sonido de un kick, puede ser cualquier cosa. El propósito es que la descripción sea corta (solo responde con la descripción, no digas nada adicional). Te doy ejemplos: Sample oscuro phonk, Fx de explosión, kick de house, sonido de sintetizador, piano melodía, guitarra acústica sample. Los nombres o descripciones algunas veces deben manterse en ingles como sean mas comunes, por ejemplo snare, kick, sample, hi hats, etc \n\n" . 
     "Te muestro la ruta original del archivo, su carpeta y la carpeta abuela, ya que esta información puede ser relevante para determinar sobre qué trata el audio, no agregues informacion del archivo en la descripcion e ignora la palabra lite: \n" .
     "Archivo: '{$nombre_archivo}'\nCarpeta: '{$carpeta}'\nCarpeta abuela: '{$carpeta_abuela}'.";
 
