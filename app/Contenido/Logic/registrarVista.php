@@ -60,9 +60,23 @@ function guardarVista() {
     wp_die();
 }
 
+function obtenerVistasPosts($userId) {
+    // Obtener la meta 'vistas_posts' del usuario
+    $vistas_posts = get_user_meta($userId, 'vistas_posts', true);
+
+    // Si no hay vistas almacenadas, devolver un array vacío
+    if (empty($vistas_posts)) {
+        return [];
+    }
+    $vistas_posts = limpiarVistasAntiguas($vistas_posts, 30); 
+
+    return $vistas_posts;
+}
+
 // Registrar el handler de la acción AJAX para usuarios logueados y no logueados
 add_action('wp_ajax_guardar_vistas', 'guardarVista');
 add_action('wp_ajax_nopriv_guardar_vistas', 'guardarVista');
+
 
 // Función para limpiar vistas antiguas
 function limpiarVistasAntiguas($vistas, $dias) {

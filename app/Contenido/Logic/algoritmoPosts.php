@@ -234,20 +234,6 @@ function obtenerDatosFeed($userId)
     ";
     $author_results = $wpdb->get_results($wpdb->prepare($sql_authors, $posts_ids), OBJECT_K);
 
-    // Procesar la meta 'vistas_posts' si existe
-    $vistas_posts_processed = [];
-    if (!empty($vistas_posts)) {
-        foreach ($vistas_posts as $post_id => $view_data) {
-            $vistas_posts_processed[$post_id] = [
-                'count'     => $view_data['count'],
-                'last_view' => date('Y-m-d H:i:s', $view_data['last_view']),
-            ];
-        }
-        logAlgoritmo("Meta 'vistas_posts' procesada: " . json_encode($vistas_posts_processed));
-    } else {
-        logAlgoritmo("Meta 'vistas_posts' está vacía para el usuario ID: $userId");
-    }
-
     return [
         'siguiendo'             => $siguiendo,
         'interesesUsuario'      => $interesesUsuario,
@@ -257,13 +243,12 @@ function obtenerDatosFeed($userId)
         'verificado_results'    => $verificado_results,
         'postAut_results'       => $postAut_results,
         'author_results'        => $author_results,
-        'vistas_posts'          => $vistas_posts_processed,
     ];
 }
 
 function calcularFeedPersonalizado($userId)
 {
-    // Implementar caché para obtenerDatosFeed
+    // Implementar caché para obtenerDatosFeed (pero no para vistas de posts)
     $cache_key = 'feed_datos_' . $userId;
     $datos = wp_cache_get($cache_key);
 
@@ -272,6 +257,7 @@ function calcularFeedPersonalizado($userId)
         wp_cache_set($cache_key, $datos, '', 800);
     }
 
+    // Asegurarse de que los datos existan
     if (empty($datos)) {
         return [];
     }
@@ -286,11 +272,24 @@ function calcularFeedPersonalizado($userId)
     $usuario = get_userdata($userId);
     $esAdmin = in_array('administrator', (array) $usuario->roles);
 
+    $vistas_posts = obtenerVistasPosts($userId); // Aquí usamos la función que acabamos de crear
+    $vistas_posts_processed = [];
+
+    // Procesar las vistas si existen
+    if (!empty($vistas_posts)) {
+        foreach ($vistas_posts as $post_id => $view_data) {
+            $vistas_posts_processed[$post_id] = [
+                'count'     => $view_data['count'],     // Número de veces visto
+                'last_view' => date('Y-m-d H:i:s', $view_data['last_view']), // Última vez visto, formateada
+            ];
+        }
+        logAlgoritmo("Meta 'vistas_posts' procesada: " . json_encode($vistas_posts_processed));
+    } else {
+        logAlgoritmo("Meta 'vistas_posts' está vacía para el usuario ID: $userId");
+    }
+
     $posts_personalizados = [];
     $resumenPuntos = [];
-    
-    // Cargar vistas de posts procesadas
-    $vistas_posts_processed = isset($datos['vistas_posts_processed']) ? $datos['vistas_posts_processed'] : [];
 
     foreach ($datos['author_results'] as $post_id => $post_data) {
         $autor_id = $post_data->post_author;
@@ -304,7 +303,6 @@ function calcularFeedPersonalizado($userId)
         $datosAlgoritmo = !empty($datos['datosAlgoritmo'][$post_id]->meta_value) ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true) : [];
         foreach ($datosAlgoritmo as $key => $value) {
             if (is_array($value)) {
-                // Procesar versiones en español ('es') e inglés ('en')
                 foreach (['es', 'en'] as $lang) {
                     if (isset($value[$lang]) && is_array($value[$lang])) {
                         foreach ($value[$lang] as $item) {
@@ -323,15 +321,15 @@ function calcularFeedPersonalizado($userId)
         $likes = isset($datos['likes_by_post'][$post_id]) ? $datos['likes_by_post'][$post_id] : 0;
         $puntosLikes = 5 + $likes;
 
-        // Decaimiento por tiempo (ajustado para reducir la importancia de la recencia)
+        // Decaimiento por tiempo
         $horasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / 3600;
         $factorTiempo = pow(0.99, $horasDesdePublicacion);
 
-        // Obtener 'Verificado' y 'postAut' individualmente
+        // Obtener 'Verificado' y 'postAut'
         $metaVerificado = isset($datos['verificado_results'][$post_id]->meta_value) && $datos['verificado_results'][$post_id]->meta_value == '1';
         $metaPostAut = isset($datos['postAut_results'][$post_id]->meta_value) && $datos['postAut_results'][$post_id]->meta_value == '1';
 
-        // Ajuste por metadatos, invertido si el usuario es admin
+        // Ajuste por metadatos si el usuario es admin
         if ($esAdmin) {
             if (!$metaVerificado && $metaPostAut) {
                 $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.9;
@@ -353,12 +351,12 @@ function calcularFeedPersonalizado($userId)
         // Aplicar reducción de puntos si el post ha sido visto antes
         if (isset($vistas_posts_processed[$post_id])) {
             $vistas = $vistas_posts_processed[$post_id]['count'];
-            $reduccion_por_vista = 0.20; // Reducción del 40% por cada vista
+            $reduccion_por_vista = 0.40; // Reducción del 40% por cada vista
             $factorReduccion = pow(1 - $reduccion_por_vista, $vistas);
             $puntosFinal *= $factorReduccion;
         }
 
-        // Factor de aleatoriedad
+        // Aleatoriedad
         $aleatoriedad = mt_rand(0, 60);
         $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100));
 
@@ -366,7 +364,7 @@ function calcularFeedPersonalizado($userId)
         $ajusteExtra = mt_rand(-100, 100);
         $puntosFinal = $puntosFinal * $factorTiempo;
         $puntosFinal += $ajusteExtra;
-        
+
         // Asegurar que los puntos finales no sean negativos
         $puntosFinal = max($puntosFinal, 0);
 
