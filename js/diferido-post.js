@@ -246,6 +246,7 @@
         if (e.key === 'Enter') {
             e.preventDefault();
             identificador = e.target.value.trim();
+            actualizarUIBusqueda(identificador);
             log('Enter presionado en búsqueda, valor de identificador:', identificador);
             resetearCarga();
             cargarMasContenido();
