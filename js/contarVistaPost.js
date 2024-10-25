@@ -1,18 +1,38 @@
 function registrarVistas() {
-    // Obtener todos los posts que aún no han sido procesados
-    var posts = document.querySelectorAll('.EDYQHV:not([data-registrado="true"])');
+    const posts = document.querySelectorAll('.EDYQHV:not([data-registrado="true"])');
+    
+    // Configuración de IntersectionObserver
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                const post = entry.target;
+                const postId = post.getAttribute('id-post');
 
-    // Recorrer cada post y enviar la información al servidor
-    posts.forEach(function(post) {
-        var postId = post.getAttribute('id-post');
+                // Comienza un temporizador de 10 segundos
+                const timer = setTimeout(() => {
+                    // Enviar datos al servidor
+                    actualizarVistasServidor(postId);
+                    
+                    // Marcar el post como registrado y detener la observación
+                    post.setAttribute('data-registrado', 'true');
+                    observer.unobserve(post);
+                }, 10000); // 10 segundos en milisegundos
 
-        // Enviar los datos al servidor para actualizar las vistas globales y del usuario
-        actualizarVistasServidor(postId);
-
-        // Marcar este post como procesado para no volver a registrar su vista
-        post.setAttribute('data-registrado', 'true');
+                // Cancela el temporizador si el post sale de la vista antes de tiempo
+                post.timerId = timer;
+            } else {
+                // Si el post sale de la vista antes de los 10 segundos, cancela el temporizador
+                clearTimeout(entry.target.timerId);
+            }
+        });
+    }, {
+        threshold: 1.0 // 1.0 asegura que el post esté completamente visible en pantalla
     });
+
+    // Observar cada post
+    posts.forEach((post) => observer.observe(post));
 }
+
 
 function actualizarVistasServidor(postId) {
     // Realizar una petición AJAX para enviar los datos al servidor
