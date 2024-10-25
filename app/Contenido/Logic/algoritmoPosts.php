@@ -325,7 +325,7 @@ function calcularFeedPersonalizado($userId)
 
         // Decaimiento por tiempo (ajustado para reducir la importancia de la recencia)
         $horasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / 3600;
-        $factorTiempo = pow(0.30, $horasDesdePublicacion);
+        $factorTiempo = pow(0.99, $horasDesdePublicacion);
 
         // Obtener 'Verificado' y 'postAut' individualmente
         $metaVerificado = isset($datos['verificado_results'][$post_id]->meta_value) && $datos['verificado_results'][$post_id]->meta_value == '1';
