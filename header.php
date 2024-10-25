@@ -190,9 +190,9 @@ if (!defined('ABSPATH')) {
                     <ul class="tab-links" id="adaptableTabs">
                     </ul>
 
-                    <div class="search-container" class="endmenu">
+                    <div class="endmenu">
 
-                        <div id="filtros">
+                        <div class="search-container" id="filtros">
                             <input type="text" id="identifier" placeholder="Busqueda">
                             <button id="clearSearch" class="clear-search" style="display: none;">
                                 <i class="fas fa-times"></i> <!-- Si usas Font Awesome -->
