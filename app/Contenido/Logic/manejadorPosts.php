@@ -27,6 +27,9 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
+    postLog("----------START------------");
+    postLog("----------START------------");
+    postLog("----------START------------");
     $identifier = $_POST['identifier'] ?? '';
     $posts_per_page = $args['posts'];
     $similar_to = $args['similar_to'] ?? null;
