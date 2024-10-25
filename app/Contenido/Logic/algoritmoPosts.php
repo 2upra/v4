@@ -7,12 +7,6 @@ define('BATCH_SIZE', 1000);
 
 function generarMetaDeIntereses($user_id)
 {
-    $cache_key = 'meta_intereses_' . $user_id;
-    $cached_result = get_transient($cache_key);
-    if ($cached_result !== false) {
-        return $cached_result;
-    }
-
     global $wpdb;
 
     // Obtener los likes del usuario
@@ -86,16 +80,12 @@ function generarMetaDeIntereses($user_id)
         }
     }
 
+    // Limitar a los 100 intereses más intensos
     arsort($tag_intensidad); // Ordenar por intensidad de mayor a menor
-    $tag_intensidad = array_slice($tag_intensidad, 0, 200, true);
+    $tag_intensidad = array_slice($tag_intensidad, 0, 100, true); // Quedarse con los 100 primeros
 
     return actualizarIntereses($user_id, $tag_intensidad, $interesesActuales);
-
-    set_transient($cache_key, $result, 1 * HOUR_IN_SECONDS);
-
-    return $result;
 }
-
 
 function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
 {
@@ -242,15 +232,16 @@ function obtenerDatosFeed($userId)
 }
 
 
+//Tengo esto, creo que los $datos = obtenerDatosFeed($userId); se pueden cachear, (return $posts_personalizados; ya esta cacheado por 1 hora afuera) 
 function calcularFeedPersonalizado($userId)
 {
     // Implementar caché para obtenerDatosFeed
     $cache_key = 'feed_datos_' . $userId;
     $datos = wp_cache_get($cache_key);
-
+    
     if (false === $datos) {
         $datos = obtenerDatosFeed($userId);
-        wp_cache_set($cache_key, $datos, '', 800);
+        wp_cache_set($cache_key, $datos, '', 1800);
     }
 
     if (empty($datos)) {
@@ -273,7 +264,7 @@ function calcularFeedPersonalizado($userId)
     foreach ($datos['author_results'] as $post_id => $post_data) {
         $autor_id = $post_data->post_author;
         $post_date = $post_data->post_date;
-
+        
         // Puntos por seguir al autor
         $puntosUsuario = in_array($autor_id, $datos['siguiendo']) ? 20 : 0;
 
@@ -329,11 +320,11 @@ function calcularFeedPersonalizado($userId)
             }
         }
 
-        $aleatoriedad = mt_rand(0, 60);
+        $aleatoriedad = mt_rand(0, 60); 
         $puntosFinal = $puntosFinal * $factorTiempo;
         $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100));
 
-        $ajusteExtra = mt_rand(-100, 100);
+        $ajusteExtra = mt_rand(-100, 100); 
         $puntosFinal += $ajusteExtra;
 
         // Asegurar que los puntos finales no sean negativos
