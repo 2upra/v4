@@ -1,5 +1,5 @@
 <?
-
+//estoy viendo que esto guarda varias metas vistas_posts, porque no mejor guarda una sola y va gestionandola 
 function guardarVista() {
     // Verificar que se haya pasado el ID del post
     if (isset($_POST['id_post'])) {
@@ -15,11 +15,21 @@ function guardarVista() {
                 $vistasUsuario = array();
             }
 
-            // Incrementar las vistas del post para el usuario actual
+            // Obtener la fecha actual
+            $fechaActual = time(); // Timestamp actual
+
+            // Limpiar vistas antiguas (más de 30 días)
+            $vistasUsuario = limpiarVistasAntiguas($vistasUsuario, 30);
+
+            // Incrementar o agregar la vista del post en la fecha actual
             if (isset($vistasUsuario[$idPost])) {
-                $vistasUsuario[$idPost]++;
+                $vistasUsuario[$idPost]['count']++; // Incrementar contador
+                $vistasUsuario[$idPost]['last_view'] = $fechaActual; // Actualizar fecha de última vista
             } else {
-                $vistasUsuario[$idPost] = 1; // Primera vista del post por este usuario
+                $vistasUsuario[$idPost] = array(
+                    'count' => 1,
+                    'last_view' => $fechaActual, // Registrar primera vista con la fecha actual
+                );
             }
 
             // Guardar la información actualizada en la meta del usuario
@@ -41,7 +51,7 @@ function guardarVista() {
 
         // Respuesta en formato JSON
         wp_send_json_success(array(
-            'vistas_usuario' => $vistasUsuario[$idPost], // Vistas del usuario para este post
+            'vistas_usuario' => $vistasUsuario[$idPost]['count'], // Vistas del usuario para este post
             'vistas_totales' => $vistaTotales // Vistas totales del post
         ));
     }
@@ -53,3 +63,17 @@ function guardarVista() {
 // Registrar el handler de la acción AJAX para usuarios logueados y no logueados
 add_action('wp_ajax_guardar_vistas', 'guardarVista');
 add_action('wp_ajax_nopriv_guardar_vistas', 'guardarVista');
+
+// Función para limpiar vistas antiguas
+function limpiarVistasAntiguas($vistas, $dias) {
+    $fechaLimite = time() - (86400 * $dias); // Calcular la fecha límite (30 días)
+
+    // Recorrer las vistas y eliminar las más antiguas de la fecha límite
+    foreach ($vistas as $postId => $infoVista) {
+        if ($infoVista['last_view'] < $fechaLimite) {
+            unset($vistas[$postId]); // Eliminar la vista si es más antigua que la fecha límite
+        }
+    }
+
+    return $vistas;
+}
