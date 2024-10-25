@@ -1,6 +1,7 @@
 <?
 
 // Función para controlar la indexación de social_post
+/*
 function controlar_indexacion_social_post() {
     // Verificar si estamos en un post type social_post
     if (is_singular('social_post')) {
@@ -26,6 +27,7 @@ function controlar_indexacion_social_post() {
         }
     }
 }
+    */
 add_action('wp', 'controlar_indexacion_social_post');
 
 // Opcional: Modificar el sitemap para excluir estos posts
