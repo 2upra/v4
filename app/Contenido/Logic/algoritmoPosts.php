@@ -287,11 +287,24 @@ function obtenerYProcesarVistasPosts($userId)
 }
 
 #PASO 3
+//Me gustaría que si en los datos de un post (datosAlgoritmo), contiene one shot, o one-shot, o oneshot, tenga 50% menos de punto
 function calcularPuntosIntereses($post_id, $datos)
 {
     $puntosIntereses = 0;
     $datosAlgoritmo = !empty($datos['datosAlgoritmo'][$post_id]->meta_value) ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true) : [];
 
+    // Verificar si el contenido tiene alguna palabra clave que requiera reducción de puntos
+    $oneshot = ['one shot', 'one-shot', 'oneshot'];
+    $esOneShot = false;
+
+    foreach ($oneshot as $palabra) {
+        if (stripos($datos['datosAlgoritmo'][$post_id]->meta_value, $palabra) !== false) {
+            $esOneShot = true;
+            break;
+        }
+    }
+
+    // Calcular puntos de intereses
     foreach ($datosAlgoritmo as $key => $value) {
         if (is_array($value)) {
             foreach (['es', 'en'] as $lang) {
@@ -308,8 +321,14 @@ function calcularPuntosIntereses($post_id, $datos)
         }
     }
 
+    // Aplicar la reducción del 50% si contiene una de las palabras clave
+    if ($esOneShot) {
+        $puntosIntereses *= 0.5;
+    }
+
     return $puntosIntereses;
 }
+
 
 #PASO 2
 function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_posts_processed)

@@ -26,7 +26,7 @@ function registrarVistas() {
             }
         });
     }, {
-        threshold: 0.8 
+        threshold: 0.7
     });
 
     // Observar cada post

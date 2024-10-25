@@ -73,12 +73,12 @@ function procesarAudios()
 }
 
 /*
-por alguna extraña razón a veces los directorios se bloquean cuando se suben nuevos archivos dinamicamente por mega, puede incluise estos comandos para que cuando se bloquee, de los permisos necesarios, estos son los comandos que tengo que poner cada vez que se bloquea 
+
 sudo chmod -R o+rx /home/asley01/MEGA/Waw/X/
 sudo chown -R asley01:www-data /home/asley01/MEGA/Waw/X/
 sudo chmod -R g+rx /home/asley01/MEGA/Waw/X/
 
-debería intentarlo cuando haya } catch (Exception $e) 
+
 */
 // Paso 2 - Buscar y retornar un solo audio válido
 function buscarUnAudioValido($directorio) {
