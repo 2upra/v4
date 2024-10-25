@@ -73,13 +73,9 @@ function procesarAudios()
 }
 
 // Paso 2 - Buscar y retornar un solo audio válido
-function buscarUnAudioValido($directorio)
-{
+function buscarUnAudioValido($directorio) {
     $extensiones_permitidas = ['wav', 'mp3'];
-    $archivos_encontrados = 0;
-    $archivos_evaluados = 0;
-    $archivos_validos = 0;
-
+    
     if (!is_dir($directorio) || !is_readable($directorio)) {
         autLog("[buscarUnAudioValido] Error: El directorio no existe o no es accesible: {$directorio}");
         return null;
@@ -88,59 +84,70 @@ function buscarUnAudioValido($directorio)
     autLog("[buscarUnAudioValido] Iniciando la búsqueda en el directorio: {$directorio}");
 
     try {
+        // Obtener todas las subcarpetas
+        $subcarpetas = [];
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($directorio, FilesystemIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::LEAVES_ONLY
+            RecursiveIteratorIterator::SELF_FIRST
         );
 
-        foreach ($iterator as $archivo) {
-            if ($archivo->isFile()) {
-                $archivos_encontrados++;
-                $nombreArchivo = $archivo->getFilename();
-                $rutaArchivo = $archivo->getPathname();
+        foreach ($iterator as $item) {
+            if ($item->isDir()) {
+                $subcarpetas[] = $item->getPathname();
+            }
+        }
 
-                // Omitir archivos que empiezan por "2upra_"
-                if (strpos($nombreArchivo, '2upra_') === 0) {
-                    autLog("[buscarUnAudioValido] Omitiendo archivo por prefijo '2upra_': {$rutaArchivo}");
-                    continue;
-                }
+        // Si no hay subcarpetas, usar el directorio principal
+        if (empty($subcarpetas)) {
+            $subcarpetas[] = $directorio;
+        }
 
-                $ext = strtolower($archivo->getExtension());
+        // Seleccionar una subcarpeta aleatoria
+        $carpeta_seleccionada = $subcarpetas[array_rand($subcarpetas)];
+        autLog("[buscarUnAudioValido] Carpeta seleccionada aleatoriamente: {$carpeta_seleccionada}");
 
-                // Solo procesar si la extensión está permitida
-                if (!in_array($ext, $extensiones_permitidas, true)) {
-                    autLog("[buscarUnAudioValido] Omitiendo archivo por extensión no permitida ({$ext}): {$rutaArchivo}");
-                    continue;
-                }
-
-                // Verificar si el archivo es legible
-                if (!is_readable($rutaArchivo)) {
-                    autLog("[buscarUnAudioValido] Omitiendo archivo no legible: {$rutaArchivo}");
-                    continue;
-                }
-
-                $archivos_evaluados++;
-                $hash = hash_file('sha256', $rutaArchivo);
-
-                if (!$hash) {
-                    autLog("[buscarUnAudioValido] No se pudo calcular el hash para el archivo: {$rutaArchivo}");
-                    continue;
-                }
-
-                $debeProcesarse = debeProcesarse($rutaArchivo, $hash);
-                if ($debeProcesarse) {
-                    $archivos_validos++;
-                    autLog("[buscarUnAudioValido] Archivo válido encontrado: {$rutaArchivo}");
-                    return ['ruta' => $rutaArchivo, 'hash' => $hash];
-                } else {
-                    autLog("[buscarUnAudioValido] El archivo no necesita ser procesado: {$rutaArchivo}");
+        // Obtener todos los archivos de la carpeta seleccionada
+        $archivos = [];
+        $dir_iterator = new DirectoryIterator($carpeta_seleccionada);
+        foreach ($dir_iterator as $file) {
+            if ($file->isFile()) {
+                $ext = strtolower($file->getExtension());
+                if (in_array($ext, $extensiones_permitidas, true)) {
+                    $nombreArchivo = $file->getFilename();
+                    if (strpos($nombreArchivo, '2upra_') !== 0) {
+                        $archivos[] = $file->getPathname();
+                    }
                 }
             }
         }
 
-        autLog("[buscarUnAudioValido] Búsqueda completa. Archivos encontrados: {$archivos_encontrados}, Evaluados: {$archivos_evaluados}, Válidos: {$archivos_validos}.");
+        // Si no hay archivos válidos en esta carpeta, intentar con otra
+        if (empty($archivos)) {
+            autLog("[buscarUnAudioValido] No se encontraron archivos válidos en la carpeta seleccionada");
+            return buscarUnAudioValido($directorio); // Recursión para intentar con otra carpeta
+        }
+
+        // Seleccionar un archivo aleatorio
+        $archivo_seleccionado = $archivos[array_rand($archivos)];
+        $hash = hash_file('sha256', $archivo_seleccionado);
+
+        if (!$hash) {
+            autLog("[buscarUnAudioValido] No se pudo calcular el hash para el archivo: {$archivo_seleccionado}");
+            return buscarUnAudioValido($directorio); // Intentar con otro archivo
+        }
+
+        // Verificar si debe procesarse
+        if (debeProcesarse($archivo_seleccionado, $hash)) {
+            autLog("[buscarUnAudioValido] Archivo válido encontrado: {$archivo_seleccionado}");
+            return ['ruta' => $archivo_seleccionado, 'hash' => $hash];
+        } else {
+            autLog("[buscarUnAudioValido] El archivo no necesita ser procesado, buscando otro...");
+            return buscarUnAudioValido($directorio); // Intentar con otro archivo
+        }
+
     } catch (Exception $e) {
         autLog("[buscarUnAudioValido] Excepción al iterar directorios: " . $e->getMessage());
+        return null;
     }
 
     return null;
