@@ -28,6 +28,7 @@ function controlar_indexacion_social_post() {
     }
 }
     */
+    /*
 add_action('wp', 'controlar_indexacion_social_post');
 
 // Opcional: Modificar el sitemap para excluir estos posts
@@ -58,7 +59,7 @@ function excluir_posts_del_sitemap($args, $post_type) {
     return $args;
 }
 add_filter('wp_sitemaps_posts_query_args', 'excluir_posts_del_sitemap', 10, 2);
-
+*/
 function optimizar_titulos_seo($title_parts) {
     if (is_single()) {
         // Personalizar longitud del título
