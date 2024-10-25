@@ -7,6 +7,12 @@ define('BATCH_SIZE', 1000);
 
 function generarMetaDeIntereses($user_id)
 {
+    $cache_key = 'meta_intereses_' . $user_id;
+    $cached_result = get_transient($cache_key);
+    if ($cached_result !== false) {
+        return $cached_result;
+    }
+
     global $wpdb;
 
     // Obtener los likes del usuario
@@ -80,12 +86,16 @@ function generarMetaDeIntereses($user_id)
         }
     }
 
-    // Limitar a los 100 intereses más intensos
     arsort($tag_intensidad); // Ordenar por intensidad de mayor a menor
-    $tag_intensidad = array_slice($tag_intensidad, 0, 100, true); // Quedarse con los 100 primeros
+    $tag_intensidad = array_slice($tag_intensidad, 0, 200, true);
 
     return actualizarIntereses($user_id, $tag_intensidad, $interesesActuales);
+
+    set_transient($cache_key, $result, 1 * HOUR_IN_SECONDS);
+
+    return $result;
 }
+
 
 function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
 {
@@ -135,218 +145,197 @@ function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
     }
 }
 
-function obtenerDatosFeed($userId)
-{
+function obtenerDatosFeed($userId) {
     global $wpdb;
-    $table_likes = "{$wpdb->prefix}post_likes";
-    $table_intereses = INTERES_TABLE;
+    
+    // Constantes y variables iniciales
+    $prefix = $wpdb->prefix;
+    $cache_key = "feed_data_user_{$userId}";
+    $cache_time = 300; // 5 minutos
+    
+    // Intentar obtener datos de caché
+    if ($cached_data = wp_cache_get($cache_key)) {
+        return $cached_data;
+    }
 
-    // Usuarios que el usuario actual está siguiendo
+    // Preparar datos básicos
     $siguiendo = (array) get_user_meta($userId, 'siguiendo', true);
-
-    // Generar o actualizar los intereses del usuario
     generarMetaDeIntereses($userId);
-    logAlgoritmo("Intereses del usuario generados para el usuario ID: $userId");
 
-    // Obtener intereses del usuario
+    // Consulta combinada para intereses
     $interesesUsuario = $wpdb->get_results($wpdb->prepare(
-        "SELECT interest, intensity FROM $table_intereses WHERE user_id = %d",
+        "SELECT interest, intensity FROM " . INTERES_TABLE . " WHERE user_id = %d",
         $userId
     ), OBJECT_K);
-    logAlgoritmo("Intereses del usuario obtenidos: " . json_encode($interesesUsuario));
 
-    $args = [
+    // Obtener IDs de posts recientes
+    $posts_ids = get_posts([
         'post_type'      => 'social_post',
         'posts_per_page' => 10000,
-        'date_query'     => [
-            'after' => date('Y-m-d', strtotime('-100 days'))
-        ],
+        'date_query'     => ['after' => date('Y-m-d', strtotime('-100 days'))],
         'fields'         => 'ids',
         'no_found_rows'  => true,
-    ];
-    $posts_ids = get_posts($args);
-    logAlgoritmo("Consulta de posts realizada, total de posts: " . count($posts_ids));
+        'cache_results'  => true
+    ]);
 
     if (empty($posts_ids)) {
-        logAlgoritmo("No se encontraron posts para el feed del usuario ID: $userId");
         return [];
     }
 
-    // Preparar placeholders para consultas en lote
-    $placeholders = implode(', ', array_fill(0, count($posts_ids), '%d'));
+    // Preparar consulta en lote
+    $placeholders = implode(',', array_fill(0, count($posts_ids), '%d'));
+    
+    // Consultas combinadas para metadata
+    $queries = [
+        // Likes
+        "SELECT post_id, COUNT(*) as likes_count 
+         FROM {$prefix}post_likes 
+         WHERE post_id IN ($placeholders) 
+         GROUP BY post_id",
+         
+        // Posts y autores
+        "SELECT ID, post_author, post_date, 
+         (SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = 'datosAlgoritmo' LIMIT 1) as datos_algoritmo,
+         (SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = 'Verificado' LIMIT 1) as verificado,
+         (SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = 'postAut' LIMIT 1) as post_aut
+         FROM {$wpdb->posts} p 
+         WHERE ID IN ($placeholders)"
+    ];
 
-    // Obtener likes de los posts
-    $sql_likes = "
-        SELECT post_id, COUNT(*) as likes_count
-        FROM $table_likes
-        WHERE post_id IN ($placeholders)
-        GROUP BY post_id
-    ";
-    $likes_results = $wpdb->get_results($wpdb->prepare($sql_likes, $posts_ids));
-    $likes_by_post = [];
-    foreach ($likes_results as $like_row) {
-        $likes_by_post[$like_row->post_id] = $like_row->likes_count;
+    // Ejecutar consultas
+    $results = [];
+    foreach ($queries as $query) {
+        $results[] = $wpdb->get_results($wpdb->prepare($query, ...$posts_ids));
     }
 
-    // Obtener datos de 'datosAlgoritmo' de los posts
-    $sql_datos = "
-        SELECT post_id, meta_value
-        FROM {$wpdb->postmeta}
-        WHERE meta_key = 'datosAlgoritmo' AND post_id IN ($placeholders)
-    ";
-    $datosAlgoritmo_results = $wpdb->get_results($wpdb->prepare($sql_datos, $posts_ids), OBJECT_K);
+    // Procesar resultados
+    $likes_by_post = [];
+    foreach ($results[0] as $row) {
+        $likes_by_post[$row->post_id] = $row->likes_count;
+    }
 
-    // Obtener 'Verificado' y 'postAut' de los posts
-    $sql_verificado = "
-        SELECT post_id, meta_value
-        FROM {$wpdb->postmeta}
-        WHERE meta_key = 'Verificado' AND post_id IN ($placeholders)
-    ";
-    $verificado_results = $wpdb->get_results($wpdb->prepare($sql_verificado, $posts_ids), OBJECT_K);
+    $post_data = [];
+    foreach ($results[1] as $row) {
+        $post_data[$row->ID] = [
+            'author'          => $row->post_author,
+            'date'           => $row->post_date,
+            'datosAlgoritmo' => $row->datos_algoritmo,
+            'verificado'     => $row->verificado,
+            'postAut'        => $row->post_aut
+        ];
+    }
 
-    $sql_postAut = "
-        SELECT post_id, meta_value
-        FROM {$wpdb->postmeta}
-        WHERE meta_key = 'postAut' AND post_id IN ($placeholders)
-    ";
-    $postAut_results = $wpdb->get_results($wpdb->prepare($sql_postAut, $posts_ids), OBJECT_K);
-
-    // Obtener autores y fechas de los posts
-    $sql_authors = "
-        SELECT ID, post_author, post_date
-        FROM {$wpdb->posts}
-        WHERE ID IN ($placeholders)
-    ";
-    $author_results = $wpdb->get_results($wpdb->prepare($sql_authors, $posts_ids), OBJECT_K);
-
-    return [
-        'siguiendo'             => $siguiendo,
-        'interesesUsuario'      => $interesesUsuario,
-        'posts_ids'             => $posts_ids,
-        'likes_by_post'         => $likes_by_post,
-        'datosAlgoritmo'        => $datosAlgoritmo_results,
-        'verificado_results'    => $verificado_results,
-        'postAut_results'       => $postAut_results,
-        'author_results'        => $author_results,
+    $data = [
+        'siguiendo'        => $siguiendo,
+        'interesesUsuario' => $interesesUsuario,
+        'posts_ids'        => $posts_ids,
+        'likes_by_post'    => $likes_by_post,
+        'post_data'        => $post_data
     ];
+
+    // Guardar en caché
+    wp_cache_set($cache_key, $data, '', $cache_time);
+
+    return $data;
 }
 
 
-//Tengo esto, creo que los $datos = obtenerDatosFeed($userId); se pueden cachear, (return $posts_personalizados; ya esta cacheado por 1 hora afuera) 
-function calcularFeedPersonalizado($userId)
-{
-    // Implementar caché para obtenerDatosFeed
-    $cache_key = 'feed_datos_' . $userId;
-    $datos = wp_cache_get($cache_key);
+function calcularFeedPersonalizado($userId) {
+    // Cache check
+    $cache_key = "feed_personalizado_{$userId}";
+    if ($cached_result = wp_cache_get($cache_key)) {
+        return $cached_result;
+    }
+
+    // Obtener datos necesarios
+    $datos = obtenerDatosFeed($userId);
+    if (empty($datos) || empty($datos['author_results'])) {
+        return [];
+    }
+
+    // Preparar datos de usuario
+    $esAdmin = in_array('administrator', (array) get_userdata($userId)->roles);
+    $current_time = current_time('timestamp');
     
-    if (false === $datos) {
-        $datos = obtenerDatosFeed($userId);
-        wp_cache_set($cache_key, $datos, '', 1800);
-    }
-
-    if (empty($datos)) {
-        return [];
-    }
-
-    // Verify if 'author_results' exists and is an array
-    if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
-        logAlgoritmo("Error: 'author_results' is not set or not an array for user ID: $userId");
-        return [];
-    }
-
-    // Verificar si el usuario es administrador
-    $usuario = get_userdata($userId);
-    $esAdmin = in_array('administrator', (array) $usuario->roles);
-
+    // Precomputar valores constantes
+    $siguiendo_set = array_flip($datos['siguiendo']);
     $posts_personalizados = [];
-    $resumenPuntos = [];
-
-    foreach ($datos['author_results'] as $post_id => $post_data) {
-        $autor_id = $post_data->post_author;
-        $post_date = $post_data->post_date;
+    
+    // Crear función de cálculo de puntos inline
+    $calcularPuntosIntereses = function($datosAlgoritmo, $interesesUsuario) {
+        $puntos = 0;
+        if (empty($datosAlgoritmo)) return 0;
         
-        // Puntos por seguir al autor
-        $puntosUsuario = in_array($autor_id, $datos['siguiendo']) ? 20 : 0;
-
-        // Puntos por intereses
-        $puntosIntereses = 0;
-        $datosAlgoritmo = !empty($datos['datosAlgoritmo'][$post_id]->meta_value) ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true) : [];
-        foreach ($datosAlgoritmo as $key => $value) {
+        foreach ($datosAlgoritmo as $value) {
             if (is_array($value)) {
-                // Procesar versiones en español ('es') e inglés ('en')
                 foreach (['es', 'en'] as $lang) {
                     if (isset($value[$lang]) && is_array($value[$lang])) {
                         foreach ($value[$lang] as $item) {
-                            if (isset($datos['interesesUsuario'][$item])) {
-                                $puntosIntereses += 1 + $datos['interesesUsuario'][$item]->intensity;
+                            if (isset($interesesUsuario[$item])) {
+                                $puntos += 1 + $interesesUsuario[$item]->intensity;
                             }
                         }
                     }
                 }
-            } elseif (!empty($value) && isset($datos['interesesUsuario'][$value])) {
-                $puntosIntereses += 1 + $datos['interesesUsuario'][$value]->intensity;
+            } elseif (!empty($value) && isset($interesesUsuario[$value])) {
+                $puntos += 1 + $interesesUsuario[$value]->intensity;
             }
         }
+        return $puntos;
+    };
 
-        // Puntos por likes
-        $likes = isset($datos['likes_by_post'][$post_id]) ? $datos['likes_by_post'][$post_id] : 0;
-        $puntosLikes = 5 + $likes;
+    // Procesar posts en batch
+    foreach ($datos['author_results'] as $post_id => $post_data) {
+        // Calcular puntos base
+        $puntos_base = (isset($siguiendo_set[$post_data->post_author]) ? 20 : 0) +
+                      $calcularPuntosIntereses(
+                          !empty($datos['datosAlgoritmo'][$post_id]->meta_value) ? 
+                          json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true) : [],
+                          $datos['interesesUsuario']
+                      ) +
+                      (5 + ($datos['likes_by_post'][$post_id] ?? 0));
 
-        // Decaimiento por tiempo (ajustado para reducir la importancia de la recencia)
-        $horasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / 3600;
-        // Aumentar el base de decaimiento para que la recencia tenga menor impacto
-        $factorTiempo = pow(0.99, $horasDesdePublicacion);
+        // Calcular factor tiempo
+        $factor_tiempo = pow(0.99, ($current_time - strtotime($post_data->post_date)) / 3600);
 
-        // Obtener 'Verificado' y 'postAut' individualmente
-        $metaVerificado = isset($datos['verificado_results'][$post_id]->meta_value) && $datos['verificado_results'][$post_id]->meta_value == '1';
-        $metaPostAut = isset($datos['postAut_results'][$post_id]->meta_value) && $datos['postAut_results'][$post_id]->meta_value == '1';
+        // Verificar metadata
+        $meta_verificado = !empty($datos['verificado_results'][$post_id]->meta_value);
+        $meta_post_aut = !empty($datos['postAut_results'][$post_id]->meta_value);
 
-        // Ajuste por metadatos, invertido si el usuario es admin
+        // Aplicar multiplicadores
+        $multiplicador = 1;
         if ($esAdmin) {
-            if (!$metaVerificado && $metaPostAut) {
-                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.9;
-            } elseif ($metaVerificado && !$metaPostAut) {
-                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
-            } else {
-                $puntosFinal = $puntosUsuario + $puntosIntereses + $puntosLikes;
-            }
+            if (!$meta_verificado && $meta_post_aut) $multiplicador = 1.9;
+            elseif ($meta_verificado && !$meta_post_aut) $multiplicador = 0.1;
         } else {
-            if ($metaVerificado && !$metaPostAut) {
-                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.9;
-            } elseif (!$metaVerificado && $metaPostAut) {
-                $puntosFinal = ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
-            } else {
-                $puntosFinal = $puntosUsuario + $puntosIntereses + $puntosLikes;
-            }
+            if ($meta_verificado && !$meta_post_aut) $multiplicador = 1.9;
+            elseif (!$meta_verificado && $meta_post_aut) $multiplicador = 0.1;
         }
 
-        $aleatoriedad = mt_rand(0, 60); 
-        $puntosFinal = $puntosFinal * $factorTiempo;
-        $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100));
+        // Calcular puntos finales
+        $puntos_finales = max(
+            0,
+            ($puntos_base * $multiplicador * $factor_tiempo * (1 + (mt_rand(0, 60) / 100))) + 
+            mt_rand(-100, 100)
+        );
 
-        $ajusteExtra = mt_rand(-100, 100); 
-        $puntosFinal += $ajusteExtra;
-
-        // Asegurar que los puntos finales no sean negativos
-        $puntosFinal = max($puntosFinal, 0);
-
-        $posts_personalizados[$post_id] = $puntosFinal;
-        $resumenPuntos[$post_id] = round($puntosFinal, 2);
+        $posts_personalizados[$post_id] = $puntos_finales;
     }
 
-    // Ordenar los posts de mayor a menor puntos
+    // Ordenar resultados
     arsort($posts_personalizados);
 
-    // Ordenar el resumen de puntos de mayor a menor
-    arsort($resumenPuntos);
+    // Cachear resultados
+    wp_cache_set($cache_key, $posts_personalizados, '', 300);
 
-    // Loguear la información
-    logAlgoritmo("Feed personalizado calculado para el usuario ID: $userId. Total de posts: " . count($posts_personalizados));
-    $resumen_formateado = [];
-    foreach ($resumenPuntos as $post_id => $puntos) {
-        $resumen_formateado[] = "$post_id:$puntos";
-    }
-    logAlgoritmo("Resumen de puntos - " . implode(', ', $resumen_formateado));
+    // Log resumido
+    logAlgoritmo(sprintf(
+        "Feed calculado - Usuario: %d, Posts: %d, Rango puntos: %.2f-%.2f",
+        $userId,
+        count($posts_personalizados),
+        min($posts_personalizados),
+        max($posts_personalizados)
+    ));
 
     return $posts_personalizados;
 }
