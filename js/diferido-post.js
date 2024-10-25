@@ -33,6 +33,22 @@
         establecerIdUsuarioDesdeInput();
         configurarDelegacionEventosPostTag();
 
+        // Configurar el botón de limpiar
+        const botonLimpiar = document.getElementById('clearSearch');
+        if (botonLimpiar) {
+            botonLimpiar.addEventListener('click', e => {
+                e.preventDefault();
+                limpiarBusqueda();
+            });
+        }
+
+        const busquedaInicial = obtenerBusquedaDeURL();
+        if (busquedaInicial) {
+            identificador = busquedaInicial;
+            actualizarUIBusqueda(busquedaInicial);
+            cargarMasContenido();
+        }
+
         reiniciarEventosPostTag();
     }
 
@@ -60,15 +76,9 @@
             scrollTimeout = null;
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             const alturaVentana = window.innerHeight;
-            const alturaDocumento = Math.max(
-                document.body.scrollHeight,
-                document.body.offsetHeight,
-                document.documentElement.clientHeight,
-                document.documentElement.scrollHeight,
-                document.documentElement.offsetHeight
-            );
+            const alturaDocumento = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
 
-            log('Evento de scroll detectado:', { scrollTop, alturaVentana, alturaDocumento, estaCargando });
+            log('Evento de scroll detectado:', {scrollTop, alturaVentana, alturaDocumento, estaCargando});
 
             if (scrollTop + alturaVentana > alturaDocumento - 100 && !estaCargando && hayMasContenido) {
                 log('Condiciones para cargar más contenido cumplidas');
@@ -97,15 +107,15 @@
             return;
         }
 
-        const { filtro = '', tabId = '', posttype = '' } = listaPublicaciones.dataset;
+        const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
         const idUsuario = window.idUsuarioActual || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
 
-        log('Parámetros de carga:', { filtro, tabId, identificador, idUsuario, paginaActual });
+        log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual});
 
         try {
             const respuesta = await fetch(ajaxUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: new URLSearchParams({
                     action: 'cargar_mas_publicaciones',
                     paged: paginaActual,
@@ -203,19 +213,22 @@
             e.preventDefault();
             e.stopPropagation();
             const valorTag = tag.textContent.trim();
-            console.log('Tag clicado:', {
-                elemento: tag,
-                valor: valorTag,
-                identificadorAnterior: identificador
-            });
-            
+
             if (valorTag) {
                 identificador = valorTag;
+                actualizarUIBusqueda(valorTag);
                 console.log('Nuevo identificador establecido:', identificador);
                 resetearCarga();
                 cargarMasContenido();
             }
         }
+    }
+
+    function limpiarBusqueda() {
+        identificador = '';
+        actualizarUIBusqueda('');
+        resetearCarga();
+        cargarMasContenido();
     }
 
     function configurarEventoBusqueda() {
@@ -277,4 +290,38 @@
 
     // Inicializar al cargar el script
     reiniciarCargaDiferida();
+
+    /////////////////////////////////
+    // Actualizar URL con el parámetro de búsqueda
+    function actualizarURL(busqueda) {
+        const nuevaURL = new URL(window.location);
+        if (busqueda) {
+            nuevaURL.searchParams.set('search', busqueda);
+        } else {
+            nuevaURL.searchParams.delete('search');
+        }
+        window.history.pushState({}, '', nuevaURL);
+    }
+
+    // Obtener búsqueda de la URL al cargar
+    function obtenerBusquedaDeURL() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('search') || '';
+    }
+
+    // Modificar la función actualizarUIBusqueda
+    function actualizarUIBusqueda(valor) {
+        const inputBusqueda = document.getElementById('identifier');
+        const botonLimpiar = document.getElementById('clearSearch');
+
+        if (inputBusqueda) {
+            inputBusqueda.value = valor;
+        }
+
+        if (botonLimpiar) {
+            botonLimpiar.style.display = valor ? 'block' : 'none';
+        }
+
+        actualizarURL(valor);
+    }
 })();
