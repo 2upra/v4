@@ -37,15 +37,13 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
     if ($args['post_type'] === 'social_post' && empty($identifier)) {
         // Obtener posts personalizados de caché o calcularlos
-        /*
         $posts_personalizados = wp_cache_get($cache_key);
         
         if ($posts_personalizados === false) {
             $posts_personalizados = calcularFeedPersonalizado($current_user_id);
             wp_cache_set($cache_key, $posts_personalizados, '', HOUR_IN_SECONDS);
         }
-        */
-        $posts_personalizados = calcularFeedPersonalizado($current_user_id);
+
         // Calcular offset y límite para la paginación
         $offset = ($paged - 1) * $posts_per_page;
         $post_ids = array_keys($posts_personalizados);
