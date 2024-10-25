@@ -12,7 +12,7 @@ function inicializarWaveforms() {
                             if (!container.dataset.audioLoaded) {
                                 loadAudio(postId, audioUrl, container);
                             }
-                        }, 20000); // Carga el audio después de 20 segundos de estar en el viewport
+                        }, 5000); // Carga el audio después de 20 segundos de estar en el viewport
 
                         container.dataset.loadTimeout = loadTimeout;
                         container.dataset.loadTimeoutSet = 'true';
