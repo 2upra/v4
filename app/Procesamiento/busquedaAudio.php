@@ -22,6 +22,13 @@ function definir_cron_cada_dos_minutos($schedules)
 }
 add_action('procesar_audio1_cron_event', 'procesarAudios');
 
+/*
+Por si se bloquean
+sudo chmod -R o+rx /home/asley01/MEGA/Waw/X/
+sudo chown -R asley01:www-data /home/asley01/MEGA/Waw/X/
+sudo chmod -R g+rx /home/asley01/MEGA/Waw/X/
+*/
+
 
 // Paso 1 - Ejecuta cada 4 minutos, envía un solo audio válido para autProcesarAudio
 function procesarAudios()
@@ -65,20 +72,13 @@ function procesarAudios()
     }
 }
 
-
-/*
-Por si se bloquean
-sudo chmod -R o+rx /home/asley01/MEGA/Waw/X/
-sudo chown -R asley01:www-data /home/asley01/MEGA/Waw/X/
-sudo chmod -R g+rx /home/asley01/MEGA/Waw/X/
-*/
 // Paso 2 - Buscar y retornar un solo audio válido
 function buscarUnAudioValido($directorio)
 {
     $extensiones_permitidas = ['wav', 'mp3'];
     $archivos_encontrados = 0;
     $archivos_evaluados = 0;
-    $archivos_validos = 0;
+    $archivos_validos = [];
 
     if (!is_dir($directorio) || !is_readable($directorio)) {
         autLog("[buscarUnAudioValido] Error: El directorio no existe o no es accesible: {$directorio}");
@@ -101,7 +101,6 @@ function buscarUnAudioValido($directorio)
 
                 // Omitir archivos que empiezan por "2upra_"
                 if (strpos($nombreArchivo, '2upra_') === 0) {
-                    autLog("[buscarUnAudioValido] Omitiendo archivo por prefijo '2upra_': {$rutaArchivo}");
                     continue;
                 }
 
@@ -109,13 +108,11 @@ function buscarUnAudioValido($directorio)
 
                 // Solo procesar si la extensión está permitida
                 if (!in_array($ext, $extensiones_permitidas, true)) {
-                    autLog("[buscarUnAudioValido] Omitiendo archivo por extensión no permitida ({$ext}): {$rutaArchivo}");
                     continue;
                 }
 
                 // Verificar si el archivo es legible
                 if (!is_readable($rutaArchivo)) {
-                    autLog("[buscarUnAudioValido] Omitiendo archivo no legible: {$rutaArchivo}");
                     continue;
                 }
 
@@ -123,22 +120,27 @@ function buscarUnAudioValido($directorio)
                 $hash = hash_file('sha256', $rutaArchivo);
 
                 if (!$hash) {
-                    autLog("[buscarUnAudioValido] No se pudo calcular el hash para el archivo: {$rutaArchivo}");
                     continue;
                 }
 
                 $debeProcesarse = debeProcesarse($rutaArchivo, $hash);
                 if ($debeProcesarse) {
-                    $archivos_validos++;
-                    autLog("[buscarUnAudioValido] Archivo válido encontrado: {$rutaArchivo}");
-                    return ['ruta' => $rutaArchivo, 'hash' => $hash];
-                } else {
-                    autLog("[buscarUnAudioValido] El archivo no necesita ser procesado: {$rutaArchivo}");
+                    $archivos_validos[] = ['ruta' => $rutaArchivo, 'hash' => $hash];
                 }
             }
         }
 
-        autLog("[buscarUnAudioValido] Búsqueda completa. Archivos encontrados: {$archivos_encontrados}, Evaluados: {$archivos_evaluados}, Válidos: {$archivos_validos}.");
+        $total_validos = count($archivos_validos);
+        autLog("[buscarUnAudioValido] Búsqueda completa. Archivos encontrados: {$archivos_encontrados}, Evaluados: {$archivos_evaluados}, Válidos: {$total_validos}.");
+
+        // Si hay archivos válidos, seleccionar uno al azar
+        if ($total_validos > 0) {
+            $indice_aleatorio = random_int(0, $total_validos - 1);
+            $archivo_seleccionado = $archivos_validos[$indice_aleatorio];
+            autLog("[buscarUnAudioValido] Archivo seleccionado aleatoriamente: {$archivo_seleccionado['ruta']}");
+            return $archivo_seleccionado;
+        }
+
     } catch (Exception $e) {
         autLog("[buscarUnAudioValido] Excepción al iterar directorios: " . $e->getMessage());
     }
