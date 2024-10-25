@@ -76,9 +76,24 @@ function procesarAudios()
 function buscarUnAudioValido($directorio) {
     $extensiones_permitidas = ['wav', 'mp3'];
     
+    // Verificar si el directorio existe y es accesible
     if (!is_dir($directorio) || !is_readable($directorio)) {
         autLog("[buscarUnAudioValido] Error: El directorio no existe o no es accesible: {$directorio}");
-        return null;
+        
+        // Aplicar comandos de permisos si el directorio no es accesible
+        autLog("[buscarUnAudioValido] Intentando corregir permisos...");
+        $comando1 = "sudo chmod -R o+rx {$directorio}";
+        $comando2 = "sudo chown -R asley01:www-data {$directorio}";
+        $comando3 = "sudo chmod -R g+rx {$directorio}";
+        exec($comando1);
+        exec($comando2);
+        exec($comando3);
+
+        // Verificar nuevamente si ahora es accesible
+        if (!is_readable($directorio)) {
+            autLog("[buscarUnAudioValido] Error: No se pudo corregir los permisos para el directorio: {$directorio}");
+            return null;
+        }
     }
 
     autLog("[buscarUnAudioValido] Iniciando la búsqueda en el directorio: {$directorio}");
@@ -152,6 +167,7 @@ function buscarUnAudioValido($directorio) {
 
     return null;
 }
+
 
 // Paso 3 - Verificar si el archivo debe ser procesado
 function debeProcesarse($ruta_archivo, $file_hash)
