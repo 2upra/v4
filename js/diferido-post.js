@@ -32,6 +32,7 @@
         habilitarCargaPorScroll();
         establecerIdUsuarioDesdeInput();
         configurarDelegacionEventosPostTag();
+        limpiarBusqueda();
 
         // Configurar el botón de limpiar
         const botonLimpiar = document.getElementById('clearSearch');
