@@ -20,12 +20,11 @@ function removeDuplicates(arr) {
 }
 
 
-
 function tagsPosts() {
     document.querySelectorAll('p[id-post-algoritmo]').forEach(function(pElement) {
         const postId = pElement.getAttribute('id-post-algoritmo');
         const tagsContainer = document.getElementById('tags-' + postId);
-        
+
         if (!tagsContainer) {
             console.warn(`No se encontró el contenedor de tags para el post ${postId}`);
             return;
@@ -51,11 +50,6 @@ function tagsPosts() {
 
         // Primero agregar tipo de audio
         addTags(jsonData, 'tipo_audio');
-        
-        // Agregar tags básicos
-        if (jsonData.tags?.length) {
-            allTags = allTags.concat(jsonData.tags.map(capitalize));
-        }
 
         // Agregar categoría BPM
         if (jsonData.bpm) {
@@ -70,31 +64,24 @@ function tagsPosts() {
             allTags.push(`${capitalize(jsonData.key)} ${capitalize(jsonData.scale)}`);
         }
 
-        const descripcion = jsonData.descripcion_ia_pro || jsonData.descripcion_ia;
-        const isNewStructure = jsonData.instrumentos_posibles?.["es"];
-
-        // Agregar todos los demás tags
-        const tagCategories = [
-            'instrumentos_posibles',
+        // Detectar estructura y agregar etiquetas adicionales
+        const isNewStructure = !!jsonData.instrumentos_principal?.["es"];
+        const tagCategories = isNewStructure ? [
+            'instrumentos_principal',
             'estado_animo',
             'genero_posible',
             'artista_posible',
             'tags_posibles'
+        ] : [
+            'Instrumentos posibles',
+            'Estado de animo',
+            'Genero posible',
+            'Artista posible',
+            'Tags posibles'
         ];
 
         tagCategories.forEach(category => {
-            if (isNewStructure) {
-                addTags(jsonData, category);
-            } else if (descripcion) {
-                const oldKey = {
-                    'instrumentos_posibles': 'Instrumentos posibles',
-                    'estado_animo': 'Estado de animo',
-                    'genero_posible': 'Genero posible',
-                    'artista_posible': 'Artista posible',
-                    'tags_posibles': 'Tags posibles'
-                }[category];
-                addTags(descripcion, oldKey);
-            }
+            addTags(jsonData, category);
         });
 
         // Crear y agregar tags únicos al contenedor
