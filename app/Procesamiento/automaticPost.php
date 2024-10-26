@@ -260,6 +260,11 @@ function rehacerNombreAudio($post_id, $archivo_audio)
             return null;
         }
 
+        if (get_post_meta($post_id, 'rutaPerdida', true)) {
+            iaLog("No se intentará renombrar, 'rutaPerdida' está marcada como true para el post ID: {$post_id}");
+            return null;
+        }
+
         // Actualizar la meta 'rutaOriginal' o buscar en subcarpetas si no existe la ruta
         $ruta_original = get_post_meta($post_id, 'rutaOriginal', true);
         if ($ruta_original && file_exists($ruta_original)) {
@@ -285,6 +290,7 @@ function rehacerNombreAudio($post_id, $archivo_audio)
             iaLog("No se encontró 'rutaOriginal' ni en la meta ni en las subcarpetas para el post ID: {$post_id}");
             update_post_meta($post_id, 'rutaPerdida', true);
         }
+
 
         // Actualizar la URL en base de datos si tiene idHash_audioId
         $id_hash_audio = get_post_meta($post_id, 'idHash_audioId', true);
@@ -436,7 +442,7 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
     update_post_meta($post_id, 'rutaLiteOriginal', $nuevo_nombre_lite);
 
     update_post_meta($post_id, 'post_audio', $audio_original_id);
-    
+
     update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
     update_post_meta($post_id, 'paraDescarga', true);
 
