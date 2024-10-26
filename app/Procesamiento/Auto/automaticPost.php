@@ -64,22 +64,6 @@ function autProcesarAudio($audio_path)
     $carpeta = basename(dirname($lite_path));
     $carpeta_abuela = basename(dirname(dirname($lite_path)));
 
-    // 4. Renombrar archivo original
-    $nuevo_nombre_original = "$directory/$nombre_limpio.$extension";
-    if (!rename($audio_path, $nuevo_nombre_original)) {
-        autLog("No se pudo renombrar el archivo original.");
-        return;
-    }
-    autLog("Archivo original renombrado: $nuevo_nombre_original");
-
-    // 5. Renombrar archivo lite
-    $nuevo_nombre_lite = "$directory/{$nombre_limpio}_lite.mp3";
-    if (!rename($lite_path, $nuevo_nombre_lite)) {
-        autLog("No se pudo renombrar el archivo lite.");
-        return;
-    }
-    autLog("Archivo lite renombrado: $nuevo_nombre_lite");
-
     // 6. Mover el archivo lite al directorio de uploads
     $uploads_dir = wp_upload_dir();
     $target_dir_audio = trailingslashit($uploads_dir['basedir']) . "audio/";
@@ -96,7 +80,7 @@ function autProcesarAudio($audio_path)
     $target_path_lite = $target_dir_audio . "{$nombre_limpio}_lite.mp3";
 
     // Mover archivo lite
-    if (!rename($nuevo_nombre_lite, $target_path_lite)) {
+    if (!rename($lite_path, $target_path_lite)) {
         autLog("No se pudo mover el archivo lite al directorio de uploads.");
         return;
     }
@@ -104,8 +88,8 @@ function autProcesarAudio($audio_path)
 
 
     // 7. Enviar rutas a crearAutPost
-    autLog("Enviando rutas a crearAutPost: Original - $nuevo_nombre_original, Lite - $target_path_lite");
-    crearAutPost($nuevo_nombre_original, $target_path_lite, $file_id, $lite_path);
+    autLog("Enviando rutas a crearAutPost: Original - $audio_path, Lite - $target_path_lite");
+    crearAutPost($audio_path, $target_path_lite, $file_id, $lite_path);
     autLog("Archivos enviados a crearAutPost.");
 
     autLog("--Fin de la función autProcesarAudio.--");
