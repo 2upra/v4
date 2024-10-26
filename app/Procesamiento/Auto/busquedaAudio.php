@@ -1,10 +1,10 @@
 <?
-/*
+
 add_action('init', 'iniciar_cron_procesamiento_audios');
 function iniciar_cron_procesamiento_audios()
 {
-    if (!wp_next_scheduled('procesar_audio1_cron_event')) {
-        wp_schedule_event(time(), 'cadaDosMinutos', 'procesar_audio1_cron_event');
+    if (!wp_next_scheduled('procesar_audio2_cron_event')) {
+        wp_schedule_event(time(), 'cadaDosMinutos', 'procesar_audio2_cron_event');
         //guardarLog("Cron de procesamiento de audios programado para cada 2 minutos.");
     }
 }
@@ -14,14 +14,14 @@ function definir_cron_cada_dos_minutos($schedules)
 {
     if (!isset($schedules['cadaDosMinutos'])) {
         $schedules['cadaDosMinutos'] = array(
-            'interval' => 260,
+            'interval' => 120,
             'display'  => __('Cada 2 minutos')
         );
     }
     return $schedules;
 }
-add_action('procesar_audio1_cron_event', 'procesarAudios');
-*/
+add_action('procesar_audio2_cron_event', 'procesarAudios');
+
 /*
 Por si se bloquean
 sudo chmod -R o+rx /home/asley01/MEGA/Waw/X/
@@ -34,7 +34,7 @@ sudo chmod -R g+rx /home/asley01/MEGA/Waw/X/
 function procesarAudios()
 {
     autLog("procesarAudios llamado");
-    $directorio_audios = '/home/asley01/MEGA/Waw/X';
+    $directorio_audios = '/home/asley01/MEGA/Waw/Kits';
     $lock_file = '/tmp/procesar_audios.lock';
 
     // Intentar crear y obtener un candado exclusivo
@@ -72,14 +72,7 @@ function procesarAudios()
     }
 }
 
-/*
 
-sudo chmod -R o+rx /home/asley01/MEGA/Waw/X/
-sudo chown -R asley01:www-data /home/asley01/MEGA/Waw/X/
-sudo chmod -R g+rx /home/asley01/MEGA/Waw/X/
-
-
-*/
 // Paso 2 - Buscar y retornar un solo audio válido
 function buscarUnAudioValido($directorio) {
     $extensiones_permitidas = ['wav', 'mp3'];
@@ -122,13 +115,12 @@ function buscarUnAudioValido($directorio) {
                 $ext = strtolower($file->getExtension());
                 if (in_array($ext, $extensiones_permitidas, true)) {
                     $nombreArchivo = $file->getFilename();
-                    if (strpos($nombreArchivo, '2upra_') !== 0) {
+                    if (substr($nombreArchivo, -5) !== '2upra') { // Cambiado para verificar al final
                         $archivos[] = $file->getPathname();
                     }
                 }
             }
         }
-
         // Si no hay archivos válidos en esta carpeta, intentar con otra
         if (empty($archivos)) {
             autLog("[buscarUnAudioValido] No se encontraron archivos válidos en la carpeta seleccionada");

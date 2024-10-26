@@ -1,17 +1,5 @@
 <?
 
-#Auxiliares
-
-
-
-
-
-
-
-
-// ETAPA 2 - PROCESAR EL AUDIO ENCONTRADO
-//////////////////////////////////////////////////////////////////////////////
-
 function autProcesarAudio($audio_path)
 {
     //guardarLog("--Inicio de la función autProcesarAudio.--");
@@ -71,15 +59,10 @@ function autProcesarAudio($audio_path)
         //guardarLog("Error al crear versión lite: " . implode(" | ", $output_lite));
         return;
     }
-    //guardarLog("Versión lite creada: $lite_path");
 
-    // 3. Obtener nombre limpio por IA
-    $nombre_limpio = generarNombreAudio($lite_path);
-    if (empty($nombre_limpio)) {
-        //guardarLog("Nombre limpio inválido.");
-        return;
-    }
-    //guardarLog("Nombre limpio generado: $nombre_limpio");
+    $nombre_limpio = pathinfo($lite_path, PATHINFO_FILENAME);
+    $carpeta = basename(dirname($lite_path));
+    $carpeta_abuela = basename(dirname(dirname($lite_path)));
 
     // 4. Renombrar archivo original
     $nuevo_nombre_original = "$directory/$nombre_limpio.$extension";
@@ -128,288 +111,154 @@ function autProcesarAudio($audio_path)
     //guardarLog("--Fin de la función autProcesarAudio.--");
 }
 
-function generarNombreAudio($audio_path_lite)
+function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $carpeta_abuela = null)
 {
-    // Verificar que el archivo de audio exista
-    if (!file_exists($audio_path_lite)) {
-        iaLog("ERROR: El archivo de audio no existe en la ruta especificada: {$audio_path_lite}");
-        return '2upra_Error El archivo de audio no existe';
-    }
+    $resultados = procesarArchivoAudioPython($rutaArchivo);
 
-    // Obtener el nombre del archivo, la carpeta contenedora y la carpeta un nivel arriba
-    $nombre_archivo = pathinfo($audio_path_lite, PATHINFO_FILENAME);
-    $carpeta = basename(dirname($audio_path_lite));
-    $carpeta_abuela = basename(dirname(dirname($audio_path_lite))); // Obtener la carpeta un nivel más arriba
-
-    // Preparar el prompt para la IA incluyendo tanto el nombre del archivo como las carpetas
-    $prompt = "El archivo '{$nombre_archivo}' está en la carpeta '{$carpeta}', y a su vez esta carpeta está en '{$carpeta_abuela}'. Te lo enseño para que lo tomes en cuenta. A veces tendrá sentido el nombre y otras no, pero es importante considerarlo. A veces vienen con nombres de marcas, páginas, etc, hay que ignorar eso. Escucha este audio y por favor, genera un nombre corto que lo represente. Por lo general son samples, como un kick, snare, sample o efectos, vocales, percusiones, pero puede ser cualquier cosa etc. Importante: solo responde el nombre, no agregues nada adicional. Estás en un entorno automatizado, no hables con el usuario, solo estoy pidiendo el nombre corto como respuesta. Ignora la palabra lite. Muchas veces los nombres deben manterse en ingles como sean mas comunes, por ejemplo snare, kick, sample, hi hats, etc. No uses acentos en las letras.";
-
-    try {
-        // Registrar el prompt enviado a la IA
-        iaLog("INFO: Enviando prompt a la IA: $prompt");
-
-        // Generar el nombre usando la IA
-        $nombre_generado = generarDescripcionIA($audio_path_lite, $prompt);
-
-        // Registrar la respuesta de la IA
-        iaLog("INFO: Respuesta de la IA: $nombre_generado");
-
-        // Verificar si se obtuvo una respuesta válida
-        if ($nombre_generado) {
-            // Limpiar la respuesta obtenida (eliminar espacios en blanco al inicio y al final)
-            $nombre_generado_limpio = trim($nombre_generado);
-            $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- ]/', '', $nombre_generado_limpio);
-
-            // Limitar el nombre a 60 caracteres
-            $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 70);
-
-            // Añadir el identificador único '2upra_' al inicio
-            $nombre_final = '2upra_' . $nombre_generado_limpio;
-
-            // Generar una ID aleatoria única de 4 caracteres (letras y números)
-            $id_unica = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
-
-            // Añadir la ID única al final del nombre
-            $nombre_final_con_id = $nombre_final . '_' . $id_unica;
-
-            // Asegurarse de que el nombre completo no exceda los 60 caracteres
-            $nombre_final_con_id = substr($nombre_final_con_id, 0, 60);
-
-            //guardarLog("INFO: Nombre final generado: $nombre_final_con_id");
-            return $nombre_final_con_id;
-        } else {
-            iaLog("ERROR: No se recibió una respuesta válida de la IA para el archivo de audio: {$audio_path_lite}");
-            return '2upra_Error Respuesta inesperada de la API Detalles ' . basename($audio_path_lite) . '.wav';
-        }
-    } catch (Exception $e) {
-        // Capturar y registrar cualquier excepción que ocurra durante el proceso
-        iaLog("EXCEPCIÓN: " . $e->getMessage());
-        return '2upra_Error Excepción durante la generación del nombre';
-    }
-}
-
-
-function rehacerNombreAudio($post_id, $archivo_audio)
-{
-    // Verificar si el archivo de audio existe
-    if (!file_exists($archivo_audio)) {
-        iaLog("El archivo de audio no existe en la ruta especificada: {$archivo_audio}");
-        return null;
-    }
-
-    $user_id = get_current_user_id();
-
-    if (!user_can($user_id, 'administrator')) {
-        return;
-    }
-
-    // Obtener el contenido del post
-    $post_content = get_post_field('post_content', $post_id);
-    if (!$post_content) {
-        iaLog("No se pudo obtener el contenido del post ID: {$post_id}");
-    }
-    iaLog("Contenido del post obtenido para el post ID: {$post_id}");
-
-    // Obtener el nombre del archivo a partir de la ruta
-    $nombre_archivo = pathinfo($archivo_audio, PATHINFO_FILENAME);
-
-    // Crear el prompt para la IA con el nombre del archivo incluido
-    $prompt = "El archivo se llama '{$nombre_archivo}' es un nombre viejo porque el usuario ha cambiado o mejorado la descripción, la descripción nueva que escribió el usuario es '{$post_content}'. Escucha este audio y por favor, genera un nombre corto que lo represente tomando en cuenta la descripción que generó el usuario. Por lo general son samples, loop, fx, one shot, etc. Imporante: solo responde el nombre, no agregues nada adicional, estas en un entorno automatizado, no hables con el usuario, solo estoy pidiendo el nombre corto como respuesta.";
-
-    // Generar el nombre usando la IA
-    $nombre_generado = generarDescripcionIA($archivo_audio, $prompt);
-
-    // Verificar si se obtuvo una respuesta válida
-    if ($nombre_generado) {
-        // Limpiar el nombre generado
-        $nombre_generado_limpio = trim($nombre_generado);
-        $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- ]/', '', $nombre_generado_limpio);
-        $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 60);
-        $nombre_final = '2upra_' . $nombre_generado_limpio;
-        $id_unica = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
-        $nombre_final_con_id = $nombre_final . '_' . $id_unica;
-        $nombre_final_con_id = substr($nombre_final_con_id, 0, 60);
-
-        iaLog("Nombre generado: {$nombre_final_con_id}");
-
-        // Obtener los IDs de los adjuntos desde los metadatos del post
-        $attachment_id_audio = get_post_meta($post_id, 'post_audio', true);
-        $attachment_id_audio_lite = get_post_meta($post_id, 'post_audio_lite', true);
-
-        // Verificar que los IDs de adjunto existan
-        if (!$attachment_id_audio) {
-            iaLog("No se encontró el meta 'post_audio' para el post ID: {$post_id}");
-            return null;
-        }
-
-        if (!$attachment_id_audio_lite) {
-            iaLog("No se encontró el meta 'post_audio_lite' para el post ID: {$post_id}");
-            return null;
-        }
-
-        // Renombrar los archivos adjuntos
-        $renombrado_audio = renombrar_archivo_adjunto($attachment_id_audio, $nombre_final_con_id, false);
-        if (!$renombrado_audio) {
-            iaLog("Falló al renombrar el archivo 'post_audio' para el post ID: {$post_id}");
-            return null;
-        }
-
-        $renombrado_audio_lite = renombrar_archivo_adjunto($attachment_id_audio_lite, $nombre_final_con_id, true);
-        if (!$renombrado_audio_lite) {
-            iaLog("Falló al renombrar el archivo 'post_audio_lite' para el post ID: {$post_id}");
-            return null;
-        }
-
-        if (get_post_meta($post_id, 'rutaPerdida', true)) {
-            iaLog("No se intentará renombrar, 'rutaPerdida' está marcada como true para el post ID: {$post_id}");
-            return null;
-        }
-
-        // Actualizar la meta 'rutaOriginal' o buscar en subcarpetas si no existe la ruta
-        $ruta_original = get_post_meta($post_id, 'rutaOriginal', true);
-        if ($ruta_original && file_exists($ruta_original)) {
-            $directorio_original = pathinfo($ruta_original, PATHINFO_DIRNAME);
-        } else {
-            $directorio_original = buscarArchivoEnSubcarpetas("/home/asley01/MEGA/Waw/X", basename($ruta_original));
-        }
-
-        if ($directorio_original) {
-            $ext_extension = pathinfo($ruta_original, PATHINFO_EXTENSION);
-            $nueva_ruta_original = $directorio_original . '/' . $nombre_final_con_id . '.' . $ext_extension;
-
-            if (rename($ruta_original, $nueva_ruta_original)) {
-                update_post_meta($post_id, 'rutaOriginal', $nueva_ruta_original);
-                iaLog("Meta 'rutaOriginal' actualizada a: {$nueva_ruta_original}");
-                guardarLog("Archivo renombrado en el servidor de {$ruta_original} a {$nueva_ruta_original}");
-            } else {
-                guardarLog("Error en renombrar archivo en el servidor de {$ruta_original} a {$nueva_ruta_original}");
-                iaLog("Error al renombrar el archivo en el servidor de {$ruta_original} a {$nueva_ruta_original}");
-                update_post_meta($post_id, 'rutaOriginalPerdida', true);
-            }
-        } else {
-            iaLog("No se encontró 'rutaOriginal' ni en la meta ni en las subcarpetas para el post ID: {$post_id}");
-            update_post_meta($post_id, 'rutaPerdida', true);
-        }
-
-
-        // Actualizar la URL en base de datos si tiene idHash_audioId
-        $id_hash_audio = get_post_meta($post_id, 'idHash_audioId', true);
-        if ($id_hash_audio) {
-            $nueva_url_audio = wp_get_attachment_url($attachment_id_audio);
-            actualizarUrlArchivo($id_hash_audio, $nueva_url_audio);
-            iaLog("URL de 'post_audio' actualizada para el hash ID: {$id_hash_audio}");
-        } else {
-            iaLog("Meta 'idHash_audioId' no existe para el post ID: {$post_id}");
-        }
-
-        iaLog("Renombrado completado exitosamente para el post ID: {$post_id}");
-        update_post_meta($post_id, 'Verificado', true);
-
-        return $nombre_final_con_id;
+    if ($resultados) {
+        echo "BPM: " . ($resultados['bpm'] ?? '') . "\n";
+        echo "Emotion: " . ($resultados['emotion'] ?? '') . "\n";
+        echo "Key: " . ($resultados['key'] ?? '') . "\n";
+        echo "Scale: " . ($resultados['scale'] ?? '') . "\n";
     } else {
-        iaLog("No se recibió una respuesta válida de la IA para el archivo de audio: {$archivo_audio}");
-        return null;
+        echo "Error procesando el archivo de audio.";
     }
-}
 
-// Función auxiliar para buscar archivos en subcarpetas, filtrando solo archivos de audio válidos
-function buscarArchivoEnSubcarpetas($directorio_base, $nombre_archivo)
-{
-    $iterador = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio_base));
-    foreach ($iterador as $archivo) {
-        // Obtener la extensión y el nombre del archivo
-        $extension = strtolower($archivo->getExtension());
-        $nombre = $archivo->getFilename();
+    $informacion_archivo = '';
+    if ($nombre_archivo) {
+        $informacion_archivo .= "Archivo: '{$nombre_archivo}'\n";
+    }
+    if ($carpeta) {
+        $informacion_archivo .= "Carpeta: '{$carpeta}'\n";
+    }
+    if ($carpeta_abuela) {
+        $informacion_archivo .= "Carpeta abuela: '{$carpeta_abuela}'\n";
+    }
 
-        // Ignorar archivos que no sean .wav o .mp3 y que no empiecen con "2upra"
-        if (!in_array($extension, ['wav', 'mp3']) || strpos($nombre, '2upra') !== 0) {
-            continue;
+    $prompt = "Este audio fue subido automáticamente. "
+        . "{$informacion_archivo}"
+        . "Por favor, determina una descripción precisa del audio utilizando el siguiente formato JSON. La información como el nombre y las carpetas son información super relevante para completar el JSON. Por favor, ignora cualquier nombre comercial, dominio, redes sociales o información no relevante que pueda contener el nombre o las carpetas. También ignora la palabra 'lite' o '2upra'. El 'nombre_corto' es un nuevo nombre para el archivo, y la 'descripción corta' es para entender rápidamente qué es el audio. Te incluyo la estructura JSON con datos de ejemplo, que son irrelevantes en este caso: "
+        . '{"descripcion_ia":{"es":"(aquí iría una descripción tuya del audio muy detallada)", "en":"(aquí en inglés)"},'
+        . '"instrumentos_principal":{"es":["Piano"], "en":["Piano"]},'
+        . '"nombre_corto":{"es":["Kick Vitagen One Shot"], "en":["Kick Vitagen"]},'
+        . '"descripcion_corta":{"es":["Kick Memphis"], "en":["Calm"]},'
+        . '"estado_animo":{"es":["Tranquilo"], "en":["Calm"]},'
+        . '"genero_posible":{"es":["Hip hop"], "en":["Hip hop"]},'
+        . '"artista_posible":{"es":["Freddie Dredd", "Flume"], "en":["Freddie Dredd", "Flume"]},'
+        . '"tipo_audio":{"es":["determina si es un sample, un loop o un one shot"], "en":["Sample"]},'
+        . '"tags_posibles":{"es":["Naturaleza", "phonk", "memphis", "oscuro"], "en":["Nature"]},'
+        . '"sugerencia_busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
+        . " Nota adicional: responde solo con la estructura JSON solicitada, mantén datos vacíos si no aplica. Es crucial determinar si es un loop, un one shot o un sample. Usa tags de una palabra y optimiza el SEO con sugerencias de búsqueda relevantes. Sé muy detallado sin perder precisión.";
+
+    $descripcion = generarDescripcionIA($rutaArchivo, $prompt);
+
+    if ($descripcion) {
+        // Procesar el JSON eliminando caracteres innecesarios
+        $descripcion_procesada = json_decode(trim($descripcion, "```json \n"), true);
+
+        if (isset($descripcion_procesada['descripcion_ia']) && is_array($descripcion_procesada['descripcion_ia'])) {
+            // Crear los nuevos datos con la estructura correcta
+            $nuevos_datos = [
+                'descripcion_ia' => [
+                    'es' => $descripcion_procesada['descripcion_ia']['es'] ?? '',
+                    'en' => $descripcion_procesada['descripcion_ia']['en'] ?? ''
+                ],
+                'instrumentos_principal' => [
+                    'es' => $descripcion_procesada['instrumentos_principal']['es'] ?? [],
+                    'en' => $descripcion_procesada['instrumentos_principal']['en'] ?? []
+                ],
+                'nombre_corto' => [
+                    'es' => $descripcion_procesada['nombre_corto']['es'] ?? '',  
+                    'en' => $descripcion_procesada['nombre_corto']['en'] ?? ''
+                ],
+                'descripcion_corta' => [
+                    'es' => $descripcion_procesada['descripcion_corta']['es'] ?? '',  
+                    'en' => $descripcion_procesada['descripcion_corta']['en'] ?? ''
+                ],
+                'estado_animo' => [
+                    'es' => $descripcion_procesada['estado_animo']['es'] ?? [],
+                    'en' => $descripcion_procesada['estado_animo']['en'] ?? []
+                ],
+                'artista_posible' => [
+                    'es' => $descripcion_procesada['artista_posible']['es'] ?? [],
+                    'en' => $descripcion_procesada['artista_posible']['en'] ?? []
+                ],
+                'genero_posible' => [
+                    'es' => $descripcion_procesada['genero_posible']['es'] ?? [],
+                    'en' => $descripcion_procesada['genero_posible']['en'] ?? []
+                ],
+                'tipo_audio' => [
+                    'es' => $descripcion_procesada['tipo_audio']['es'] ?? '',
+                    'en' => $descripcion_procesada['tipo_audio']['en'] ?? ''
+                ],
+                'tags_posibles' => [
+                    'es' => $descripcion_procesada['tags_posibles']['es'] ?? [],
+                    'en' => $descripcion_procesada['tags_posibles']['en'] ?? []
+                ],
+                'sugerencia_busqueda' => [
+                    'es' => $descripcion_procesada['sugerencia_busqueda']['es'] ?? [],
+                    'en' => $descripcion_procesada['sugerencia_busqueda']['en'] ?? []
+                ]
+            ];
+
+            iaLog("Descripción del audio guardada para el post ID: {$nombre_archivo}");
         }
-
-        // Si el nombre coincide exactamente con el archivo buscado, devolver la ruta del directorio
-        if ($nombre === $nombre_archivo) {
-            return $archivo->getPath();
-        }
     }
-    return false;
+
+    // Verificar que $nuevos_datos esté definido antes de usarlo
+    $nuevos_datos_algoritmo = isset($nuevos_datos) ? [
+        'bpm' => $resultados['bpm'] ?? '',
+        'emotion' => $resultados['emotion'] ?? '',
+        'key' => $resultados['key'] ?? '',
+        'scale' => $resultados['scale'] ?? '',
+
+        'descripcion_ia' => $nuevos_datos['descripcion_ia'],
+        'instrumentos_principal' => $nuevos_datos['instrumentos_principal'],
+        'nombre_corto' => $nuevos_datos['nombre_corto'],
+        'descripcion_corta' => $nuevos_datos['descripcion_corta'],
+        'estado_animo' => $nuevos_datos['estado_animo'],
+        'artista_posible' => $nuevos_datos['artista_posible'],
+        'genero_posible' => $nuevos_datos['genero_posible'],
+        'tipo_audio' => $nuevos_datos['tipo_audio'],
+        'tags_posibles' => $nuevos_datos['tags_posibles'],
+        'sugerencia_busqueda' => $nuevos_datos['sugerencia_busqueda']
+    ] : [];
+
+    return $nuevos_datos_algoritmo;
 }
-
-
-function renombrar_archivo_adjunto($attachment_id, $nuevo_nombre, $es_lite = false)
-{
-    // Obtener el path completo del archivo adjunto
-    $ruta_archivo = get_attached_file($attachment_id);
-    if (!file_exists($ruta_archivo)) {
-        iaLog("El archivo adjunto con ID {$attachment_id} no existe en la ruta: {$ruta_archivo}");
-        return false;
-    }
-
-    // Obtener la carpeta y la extensión del archivo
-    $carpeta = pathinfo($ruta_archivo, PATHINFO_DIRNAME);
-    $extension = pathinfo($ruta_archivo, PATHINFO_EXTENSION);
-    if ($es_lite) {
-        $nuevo_nombre .= '_lite';
-    }
-    $nueva_ruta = $carpeta . '/' . $nuevo_nombre . '.' . $extension;
-
-    // Renombrar el archivo
-    if (!rename($ruta_archivo, $nueva_ruta)) {
-        iaLog("Error al renombrar el archivo de {$ruta_archivo} a {$nueva_ruta}");
-        guardarLog("Error al renombrar el archivo de {$ruta_archivo} a {$nueva_ruta}");
-        return false;
-    }
-
-    iaLog("Archivo renombrado de {$ruta_archivo} a {$nueva_ruta}");
-    guardarLog("Archivo renombrado en el servidor de {$ruta_archivo} a {$nueva_ruta}");
-
-    // Actualizar la ruta del adjunto en la base de datos
-    $wp_filetype = wp_check_filetype(basename($nueva_ruta), null);
-    $attachment_data = array(
-        'ID' => $attachment_id,
-        'post_name' => sanitize_title($nuevo_nombre),
-        'guid' => home_url('/') . str_replace(ABSPATH, '', $nueva_ruta),
-    );
-
-    // Actualizar el post del adjunto
-    if (function_exists('wp_update_post')) {
-        wp_update_post($attachment_data);
-    }
-
-    update_attached_file($attachment_id, $nueva_ruta);
-
-    return true;
-}
-
-
-
-
-
 
 
 function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lite_path)
 {
     $autor_id = 44;
-
-    // Obtener el nombre del archivo, la carpeta contenedora y la carpeta abuela
     $nombre_archivo = pathinfo($lite_path, PATHINFO_FILENAME);
     $carpeta = basename(dirname($lite_path));
-    $carpeta_abuela = basename(dirname(dirname($lite_path))); // Obtener la carpeta un nivel más arriba
+    $carpeta_abuela = basename(dirname(dirname($lite_path)));
 
-    // Preparar el prompt con información de la ruta original y las carpetas
-    $prompt = "Genera una descripción corta para el siguiente archivo de audio. Puede ser un sample, un fx, un loop, un sonido de un kick, puede ser cualquier cosa. El propósito es que la descripción sea corta (solo responde con la descripción, no digas nada adicional). Te doy ejemplos: Sample oscuro phonk, Fx de explosión, kick de house, sonido de sintetizador, piano melodía, guitarra acústica sample. Los nombres o descripciones algunas veces deben manterse en ingles como sean mas comunes, por ejemplo snare, kick, sample, hi hats, etc \n\n" .
-        "Te muestro la ruta original del archivo, su carpeta y la carpeta abuela, ya que esta información puede ser relevante para determinar sobre qué trata el audio, no agregues informacion del archivo en la descripcion e ignora la palabra lite: \n" .
-        "Archivo: '{$nombre_archivo}'\nCarpeta: '{$carpeta}'\nCarpeta abuela: '{$carpeta_abuela}'.";
+    $datosAlgoritmo = automaticAudio($nuevo_nombre_lite, $nombre_archivo, $carpeta, $carpeta_abuela);
 
-    // Aquí puedes continuar el flujo para enviar este prompt a la IA y procesar la respuesta
+    $descripcion_corta_es = $datosAlgoritmo['descripcion_ia']['es'] ?? '';
+    $nombre_generado = $datosAlgoritmo['nombre_corto']['en'] ?? '';
 
-    $descripcion = generarDescripcionIA($nuevo_nombre_lite, $prompt);
-
-    if (is_wp_error($descripcion) || empty($descripcion)) {
-        return new WP_Error('descripcion_generacion_fallida', 'No se pudo generar una descripción para el audio.');
+    if ($nombre_generado) {
+        $nombre_generado_limpio = trim($nombre_generado);
+        $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- ]/', '', $nombre_generado_limpio);
+        $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 70);
+        $nombre_final =  $nombre_generado_limpio . '_2upra';
+        $id_unica = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
+        $nombre_final_con_id = $nombre_final . '_' . $id_unica;
+        $nombre_final_con_id = substr($nombre_final_con_id, 0, 60);
+        return $nombre_final_con_id;
+    } else {
+        autLog("error en generación de nombre crearAutPos");
+        eliminarHash($file_id);
+        return;
     }
 
-    $titulo = mb_substr($descripcion, 0, 60);
-    $contenido = $descripcion;
+    $titulo = mb_substr($descripcion_corta_es, 0, 60);
+    $contenido = $descripcion_corta_es;
+
+    // Crear el post
     $post_data = [
         'post_title'    => $titulo,
         'post_content'  => $contenido,
@@ -419,12 +268,28 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
     ];
 
     $post_id = wp_insert_post($post_data);
+
     if (is_wp_error($post_id)) {
         return $post_id;
     }
-    $index = 1;
+
+    update_post_meta($post_id, 'rutaOriginal', $nuevo_nombre_original);
+    update_post_meta($post_id, 'rutaLiteOriginal', $nuevo_nombre_lite);
+
+    $nuevo_nombre_original = "$directory/$nombre_final_con_id.$extension";
+    if (!rename($audio_path, $nuevo_nombre_original)) {
+        autLog("No se pudo renombrar el archivo original.");
+        return;
+    }
+
+    // 5. Renombrar archivo lite
+    $nuevo_nombre_lite = "$directory/{$nombre_final_con_id}_lite.mp3";
+    if (!rename($lite_path, $nuevo_nombre_lite)) {
+        autLog("No se pudo renombrar el archivo lite.");
+        return;
+    }
+
     update_post_meta($post_id, 'postAut', true);
-    analizarYGuardarMetasAudio($post_id, $nuevo_nombre_lite, $index, $nombre_archivo, $carpeta, $carpeta_abuela);
 
     $audio_original_id = adjuntarArchivoAut($nuevo_nombre_original, $post_id, $file_id);
     if (is_wp_error($audio_original_id)) {
@@ -437,20 +302,19 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
         return $audio_lite_id;
     }
 
-    // Guardar las rutas originales
-    update_post_meta($post_id, 'rutaOriginal', $nuevo_nombre_original);
-    update_post_meta($post_id, 'rutaLiteOriginal', $nuevo_nombre_lite);
-
     update_post_meta($post_id, 'post_audio', $audio_original_id);
-
     update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
     update_post_meta($post_id, 'paraDescarga', true);
 
-    //INFORMACION NUEVA PARA CARPETAS Y FUNCIONALIDAD DE KITS
+    // INFORMACION NUEVA PARA CARPETAS Y FUNCIONALIDAD DE KITS
     update_post_meta($post_id, 'nombreOriginal', $nombre_archivo);
     update_post_meta($post_id, 'carpetaOriginal', $carpeta);
     update_post_meta($post_id, 'carpetaAbuelaOriginal', $carpeta_abuela);
 
+    // Agregar los datos del algoritmo como meta con los datos JSON de $datosAlgoritmo
+    update_post_meta($post_id, 'datosAlgoritmo', json_encode($datosAlgoritmo));
+
+    // Devolver el ID del post
     return $post_id;
 }
 
@@ -599,31 +463,6 @@ function adjuntarArchivoAut($archivo, $post_id, $file_id = null)
     return $attach_id;
 }
 
-function rehacerDescripcionAccion($post_id)
-{
-    // Obtener el ID del audio lite del metadato 'post_audio_lite'
-    $audio_lite_id = get_post_meta($post_id, 'post_audio_lite', true);
-
-    // Verificar si existe el ID
-    if ($audio_lite_id) {
-        // Obtener la ruta completa del archivo adjunto (audio lite)
-        $archivo_audio = get_attached_file($audio_lite_id);
-
-        if ($archivo_audio) {
-            // Llamar a la función para rehacer la descripción con el archivo de audio
-            rehacerDescripcionAudio($post_id, $archivo_audio);
-            rehacerNombreAudio($post_id, $archivo_audio);
-
-            iaLog("Descripción del audio actualizada para el post ID: {$post_id} con archivo de audio en la ruta {$archivo_audio}");
-        } else {
-            iaLog("No se pudo obtener la ruta del archivo de audio lite para el post ID: {$post_id}");
-        }
-    } else {
-        iaLog("No se encontró el metadato 'post_audio_lite' para el post ID: {$post_id}");
-    }
-}
-
-
 
 function buscar_archivo_recursivo($dir, $filename)
 {
@@ -643,24 +482,7 @@ function buscar_archivo_recursivo($dir, $filename)
     return false;
 }
 
-function obtenerFileIDPorURL($url)
-{
-    global $wpdb;
 
-    $file_id = $wpdb->get_var(
-        $wpdb->prepare(
-            "SELECT id FROM {$wpdb->prefix}file_hashes WHERE file_url = %s",
-            $url
-        )
-    );
-
-    if ($file_id !== null) {
-        return (int) $file_id;
-    } else {
-        //guardarLog("No se encontró File ID para la URL: $url");
-        return false;
-    }
-}
 /*
 function actualizar_metas_posts_social() {
     // Define los argumentos para la consulta de posts
