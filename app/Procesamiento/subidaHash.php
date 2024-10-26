@@ -113,7 +113,6 @@ function antivirus($file_path, $file_id, $current_user_id) {
 // Programar la acción de WordPress
 add_action('antivirus', 'antivirus', 10, 2);
 
-
 function verificarCargaArchivoPorHash($file_hash)
 {
     // Obtener los detalles del archivo usando el hash
@@ -152,11 +151,80 @@ function verificarCargaArchivoPorHash($file_hash)
         
         return true;
     } else {
+        // Actualizar el estado a 'loss' si no se pudo cargar el archivo
+        actualizarEstadoArchivo($file_id, 'loss');
+        
         //guardarLog("Error al cargar el archivo con File ID: $file_id. Código HTTP: $http_code");
-
         return false;
     }
 }
+
+function actualizarEstadoArchivo($file_id, $status)
+{
+    global $wpdb;
+    $wpdb->update(
+        "{$wpdb->prefix}file_hashes",
+        array('status' => $status), // Nuevo estado
+        array('id' => $file_id), // Condición de ID
+        array('%s'), // Formato del estado
+        array('%d')  // Formato del ID
+    );
+}
+
+function guardarHash($hash, $url, $status = 'pending', $user_id)
+{
+    global $wpdb;
+
+    try {
+        $wpdb->insert(
+            "{$wpdb->prefix}file_hashes",
+            array(
+                'file_hash' => $hash,
+                'file_url' => $url,
+                'status' => $status,
+                'user_id' => $user_id,
+                'upload_date' => current_time('mysql')
+            ),
+            array('%s', '%s', '%s', '%d', '%s')
+        );
+        return $wpdb->insert_id;
+
+    } catch (Exception $e) {
+        // Obtener el registro existente para verificar su estado
+        $registro_existente = $wpdb->get_row($wpdb->prepare(
+            "SELECT status FROM {$wpdb->prefix}file_hashes WHERE file_hash = %s",
+            $hash
+        ), ARRAY_A);
+
+        // Si el estado es 'loss', eliminar el registro
+        if ($registro_existente && $registro_existente['status'] === 'loss') {
+            $wpdb->delete("{$wpdb->prefix}file_hashes", array('file_hash' => $hash), array('%s'));
+        } else {
+            //guardarLog("Error: el hash existe y no está en estado 'loss'.");
+            return false;
+        }
+
+        // Reintentar la inserción después de borrar el registro en estado 'loss'
+        try {
+            $wpdb->insert(
+                "{$wpdb->prefix}file_hashes",
+                array(
+                    'file_hash' => $hash,
+                    'file_url' => $url,
+                    'status' => $status,
+                    'user_id' => $user_id,
+                    'upload_date' => current_time('mysql')
+                ),
+                array('%s', '%s', '%s', '%d', '%s')
+            );
+            return $wpdb->insert_id;
+        } catch (Exception $e) {
+            //guardarLog("Error al intentar guardar el hash nuevamente: " . $e->getMessage());
+            return false;
+        }
+    }
+}
+
 
 function actualizarUrlArchivo($file_id, $new_url)
 {
@@ -195,31 +263,7 @@ function nombreUnicoFile($dir, $name, $ext)
 
 add_action('wp_ajax_file_upload', 'subidaArchivo');
 
-function obtenerHash($file_hash)
-{
-    global $wpdb;
-    return $wpdb->get_row($wpdb->prepare(
-        "SELECT * FROM {$wpdb->prefix}file_hashes WHERE file_hash = %s LIMIT 1",
-        $file_hash
-    ), ARRAY_A);
-}
 
-function guardarHash($hash, $url, $status = 'pending', $user_id)
-{
-    global $wpdb;
-    $wpdb->insert(
-        "{$wpdb->prefix}file_hashes",
-        array(
-            'file_hash' => $hash, 
-            'file_url' => $url, 
-            'status' => $status,
-            'user_id' => $user_id,  // Guardar el ID del usuario
-            'upload_date' => current_time('mysql')
-        ),
-        array('%s', '%s', '%s', '%d', '%s')  // Añadir el formato de user_id
-    );
-    return $wpdb->insert_id;
-}
 
 function confirmarHashId($file_id)
 {
