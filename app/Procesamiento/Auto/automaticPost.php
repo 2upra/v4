@@ -125,8 +125,8 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
         . "Por favor, determina una descripción precisa del audio utilizando el siguiente formato JSON. La información como el nombre y las carpetas son información super relevante para completar el JSON. Por favor, ignora cualquier nombre comercial, dominio, redes sociales o información no relevante que pueda contener el nombre o las carpetas. También ignora la palabra 'lite' o '2upra'. El 'nombre_corto' es un nuevo nombre para el archivo, y la 'descripción corta' es para entender rápidamente qué es el audio, por favor, hazla muy corta y breve ejemplo 'Memphis snare acustico', 'Sample vitagen piano', etc entre 3 a 5 palabras. Te incluyo la estructura JSON con datos de ejemplo, que son irrelevantes en este caso: "
         . '{"descripcion_ia":{"es":"(aquí iría una descripción tuya del audio muy detallada)", "en":"(aquí en inglés)"},'
         . '"instrumentos_principal":{"es":["Piano"], "en":["Piano"]},'
-        . '"nombre_corto":{"es":["Kick Vitagen One Shot"], "en":["Kick Vitagen"]},'
-        . '"descripcion_corta":{"es":["Kick Memphis"], "en":["Calm"]},'
+        . '"nombre_corto":{"es":["(maximo 3 palabras)"], "en":["Kick Vitagen"]},'
+        . '"descripcion_corta":{"es":["(entre 3 a 5 palabras)"], "en":["(en ingles)"]},'
         . '"estado_animo":{"es":["Tranquilo"], "en":["Calm"]},'
         . '"genero_posible":{"es":["Hip hop"], "en":["Hip hop"]},'
         . '"artista_posible":{"es":["Freddie Dredd", "Flume"], "en":["Freddie Dredd", "Flume"]},'
