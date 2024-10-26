@@ -81,7 +81,7 @@ function subidaArchivo()
     guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
 
     if ($movefile && !isset($movefile['error'])) {
-        $file_id = guardarHash($file_hash, $movefile['url'], 'pending', $current_user_id);
+        $file_id = guardarHash($file_hash, $movefile['url'], $current_user_id, 'pending');
         guardarLog("Carga exitosa. Hash guardado: $file_hash. URL del nuevo archivo: " . $movefile['url']);
         $file_path = $movefile['file']; // Ruta del archivo
         wp_schedule_single_event(time() + 5, 'antivirus', array($file_path, $file_id, $current_user_id)); 
@@ -180,8 +180,10 @@ function obtenerHash($file_hash)
     ), ARRAY_A);
 }
 
-
-function guardarHash($hash, $url, $status = 'pending', $user_id)
+/*
+[26-Oct-2024 16:20:32 UTC] PHP Deprecated:  Optional parameter $status declared before required parameter $user_id is implicitly treated as a required parameter in /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/subidaHash.php on line 184
+*/
+function guardarHash($hash, $url, $user_id, $status = 'pending')
 {
     global $wpdb;
 
@@ -234,6 +236,7 @@ function guardarHash($hash, $url, $status = 'pending', $user_id)
         }
     }
 }
+
 
 
 function actualizarUrlArchivo($file_id, $new_url)

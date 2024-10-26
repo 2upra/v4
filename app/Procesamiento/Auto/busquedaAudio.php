@@ -197,7 +197,7 @@ function autRevisarAudio($audio, $file_hash)
     $user_id = 44;
 
     autLog("[autRevisarAudio] Intentando guardar el hash para el archivo: {$audio} con hash: {$file_hash}");
-    if (!guardarHash($file_hash, $file_url, 'confirmed', $user_id)) {
+    if (!guardarHash($file_hash, $file_url, $user_id, 'confirmed')) {
         autLog("[autRevisarAudio] Error: No se pudo guardar el hash en la base de datos para el archivo: {$audio}");
         return;
     }
