@@ -22,15 +22,8 @@ function definir_cron_cada_dos_minutos($schedules)
 }
 add_action('audio85', 'procesarAudios');
 
-/*
-Por si se bloquean
-sudo chmod -R o+rx /home/asley01/MEGA/Waw/X/
-sudo chown -R asley01:www-data /home/asley01/MEGA/Waw/X/
-sudo chmod -R g+rx /home/asley01/MEGA/Waw/X/
-*/
 
 
-// Paso 1 - Ejecuta cada 4 minutos, envía un solo audio válido para autProcesarAudio
 function procesarAudios()
 {
     autLog("procesarAudios llamado");
@@ -50,6 +43,11 @@ function procesarAudios()
 
     try {
         autLog("Bloqueo obtenido, iniciando el procesamiento de audios.");
+        
+        // Ejecutar el comando para cambiar los permisos del directorio
+        $output = shell_exec('sudo chmod -R 770 /home/asley01/MEGA/Waw/Kits/');
+        autLog("Permisos actualizados en el directorio: " . ($output ? $output : 'Sin salida del comando'));
+
         $audio_info = buscarUnAudioValido($directorio_audios);
         if ($audio_info) {
             autLog("Audio válido encontrado: " . $audio_info['ruta']);
