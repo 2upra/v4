@@ -23,7 +23,6 @@ function definir_cron_cada_dos_minutos($schedules)
 add_action('audio85', 'procesarAudios');
 
 
-
 function procesarAudios() {
     $directorio_audios = '/home/asley01/MEGA/Waw/Kits';
     $lock_file = '/tmp/procesar_audios.lock';
@@ -38,13 +37,14 @@ function procesarAudios() {
 
     try {
         $inicio = microtime(true);
-        
-        shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
-        
+
+        // Ejecutar chmod solo si es necesario (opcional)
+        // shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
+
         $audio_info = buscarUnAudioValido($directorio_audios);
         if ($audio_info) {
             $tiempo = microtime(true) - $inicio;
-            autLog("Tiempo de búsqueda: " . number_format($tiempo, 2) . " segundos");
+            error_log("Tiempo de búsqueda: " . number_format($tiempo, 2) . " segundos");
             autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
         }
     } finally {
@@ -60,45 +60,61 @@ function buscarUnAudioValido($directorio) {
     $extensiones_permitidas = ['wav', 'mp3'];
 
     if (!is_dir($directorio) || !is_readable($directorio)) {
+        shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
         return null;
     }
 
     try {
-        $archivos_validos = [];
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($directorio, FilesystemIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::LEAVES_ONLY
-        );
+        $subcarpetas = [];
 
-        // Recorremos los archivos y almacenamos los archivos válidos
-        foreach ($iterator as $file) {
+        // Cargar todas las subcarpetas de manera no recursiva y seleccionar una al azar
+        $dir_iterator = new DirectoryIterator($directorio);
+        foreach ($dir_iterator as $item) {
+            if ($item->isDir() && !$item->isDot()) {
+                $subcarpetas[] = $item->getPathname();
+            }
+        }
+
+        // Si no hay subcarpetas, usar el directorio raíz
+        if (empty($subcarpetas)) {
+            $subcarpetas[] = $directorio;
+        }
+
+        // Seleccionar una carpeta aleatoria
+        $carpeta_seleccionada = $subcarpetas[array_rand($subcarpetas)];
+
+        // Obtener archivos válidos en la carpeta seleccionada
+        $archivos = [];
+        $dir_iterator = new DirectoryIterator($carpeta_seleccionada);
+        foreach ($dir_iterator as $file) {
             if ($file->isFile()) {
                 $ext = strtolower($file->getExtension());
                 if (in_array($ext, $extensiones_permitidas, true)) {
-                    $archivos_validos[] = $file->getPathname();
+                    $archivos[] = $file->getPathname();
                 }
             }
         }
 
-        if (empty($archivos_validos)) {
-            return null;
+        // Si no hay archivos válidos, intentar nuevamente con una carpeta diferente
+        if (empty($archivos)) {
+            return buscarUnAudioValido($directorio);
         }
 
-        // Seleccionamos un archivo aleatorio entre los válidos
-        $archivo_seleccionado = $archivos_validos[array_rand($archivos_validos)];
+        // Seleccionar un archivo aleatorio
+        $archivo_seleccionado = $archivos[array_rand($archivos)];
+
+        // Calcular hash del archivo
         $hash = hash_file('sha256', $archivo_seleccionado);
 
-        if (!$hash) {
-            return null;
-        }
-
-        if (debeProcesarse($archivo_seleccionado, $hash)) {
+        // Verificar si el archivo debe ser procesado
+        if ($hash && debeProcesarse($archivo_seleccionado, $hash)) {
             return ['ruta' => $archivo_seleccionado, 'hash' => $hash];
-        } else {
-            return null;  // No hay necesidad de volver a buscar si este archivo no es válido
         }
 
+        // Si el archivo no es válido, intentar nuevamente
+        return buscarUnAudioValido($directorio);
     } catch (Exception $e) {
+        shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
         return null;
     }
 }
@@ -112,8 +128,12 @@ function debeProcesarse($ruta_archivo, $file_hash) {
         $hash_obtenido = obtenerHash($file_hash);
         $hash_verificado = verificarCargaArchivoPorHash($file_hash);
 
-        return !($hash_obtenido || $hash_verificado);
+        // Si el hash ya ha sido procesado o cargado, no procesar
+        if ($hash_obtenido || $hash_verificado) {
+            return false;
+        }
 
+        return true;
     } catch (Exception $e) {
         return false;
     }
