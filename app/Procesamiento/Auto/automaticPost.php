@@ -111,6 +111,7 @@ function autProcesarAudio($audio_path)
     autLog("--Fin de la función autProcesarAudio.--");
 }
 
+
 function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $carpeta_abuela = null)
 {
     $resultados = procesarArchivoAudioPython($rutaArchivo);
@@ -227,18 +228,28 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
     return $nuevos_datos_algoritmo;
 }
 
-
 function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lite_path)
 {
+    autLog("Iniciando crearAutPost con nuevo_nombre_original: $nuevo_nombre_original, nuevo_nombre_lite: $nuevo_nombre_lite, file_id: $file_id, lite_path: $lite_path");
+
     $autor_id = 44;
     $nombre_archivo = pathinfo($lite_path, PATHINFO_FILENAME);
     $carpeta = basename(dirname($lite_path));
     $carpeta_abuela = basename(dirname(dirname($lite_path)));
 
+    autLog("Nombre archivo: $nombre_archivo, Carpeta: $carpeta, Carpeta abuela: $carpeta_abuela");
+
     $datosAlgoritmo = automaticAudio($nuevo_nombre_lite, $nombre_archivo, $carpeta, $carpeta_abuela);
+
+    if (!$datosAlgoritmo) {
+        autLog("Error al obtener datos del algoritmo.");
+        return;
+    }
 
     $descripcion_corta_es = $datosAlgoritmo['descripcion_ia']['es'] ?? '';
     $nombre_generado = $datosAlgoritmo['nombre_corto']['en'] ?? '';
+
+    autLog("Descripción corta ES: $descripcion_corta_es, Nombre generado: $nombre_generado");
 
     if ($nombre_generado) {
         $nombre_generado_limpio = trim($nombre_generado);
@@ -248,15 +259,19 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
         $id_unica = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
         $nombre_final_con_id = $nombre_final . '_' . $id_unica;
         $nombre_final_con_id = substr($nombre_final_con_id, 0, 60);
-        return $nombre_final_con_id;
+
+        autLog("Nombre final generado: $nombre_final_con_id");
+
     } else {
-        autLog("error en generación de nombre crearAutPos");
+        autLog("Error en la generación del nombre en crearAutPost");
         eliminarHash($file_id);
         return;
     }
 
     $titulo = mb_substr($descripcion_corta_es, 0, 60);
     $contenido = $descripcion_corta_es;
+
+    autLog("Título generado: $titulo, Contenido generado: $contenido");
 
     // Crear el post
     $post_data = [
@@ -270,20 +285,27 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
     $post_id = wp_insert_post($post_data);
 
     if (is_wp_error($post_id)) {
+        autLog("Error al crear el post: " . $post_id->get_error_message());
         return $post_id;
     }
+
+    autLog("Post creado con ID: $post_id");
 
     update_post_meta($post_id, 'rutaOriginal', $nuevo_nombre_original);
     update_post_meta($post_id, 'rutaLiteOriginal', $nuevo_nombre_lite);
 
     $nuevo_nombre_original = "$directory/$nombre_final_con_id.$extension";
+    autLog("Nuevo nombre original: $nuevo_nombre_original");
+
     if (!rename($audio_path, $nuevo_nombre_original)) {
         autLog("No se pudo renombrar el archivo original.");
         return;
     }
 
-    // 5. Renombrar archivo lite
+    // Renombrar archivo lite
     $nuevo_nombre_lite = "$directory/{$nombre_final_con_id}_lite.mp3";
+    autLog("Nuevo nombre lite: $nuevo_nombre_lite");
+
     if (!rename($lite_path, $nuevo_nombre_lite)) {
         autLog("No se pudo renombrar el archivo lite.");
         return;
@@ -293,31 +315,40 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
 
     $audio_original_id = adjuntarArchivoAut($nuevo_nombre_original, $post_id, $file_id);
     if (is_wp_error($audio_original_id)) {
+        autLog("Error al adjuntar archivo original: " . $audio_original_id->get_error_message());
         wp_delete_post($post_id, true);
         return $audio_original_id;
     }
 
+    autLog("Archivo original adjuntado con ID: $audio_original_id");
+
     $audio_lite_id = adjuntarArchivoAut($nuevo_nombre_lite, $post_id);
     if (is_wp_error($audio_lite_id)) {
+        autLog("Error al adjuntar archivo lite: " . $audio_lite_id->get_error_message());
         return $audio_lite_id;
     }
+
+    autLog("Archivo lite adjuntado con ID: $audio_lite_id");
 
     update_post_meta($post_id, 'post_audio', $audio_original_id);
     update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
     update_post_meta($post_id, 'paraDescarga', true);
 
-    // INFORMACION NUEVA PARA CARPETAS Y FUNCIONALIDAD DE KITS
+    // INFORMACIÓN NUEVA PARA CARPETAS Y FUNCIONALIDAD DE KITS
     update_post_meta($post_id, 'nombreOriginal', $nombre_archivo);
     update_post_meta($post_id, 'carpetaOriginal', $carpeta);
     update_post_meta($post_id, 'carpetaAbuelaOriginal', $carpeta_abuela);
 
+    autLog("Metadatos del post actualizados.");
+
     // Agregar los datos del algoritmo como meta con los datos JSON de $datosAlgoritmo
     update_post_meta($post_id, 'datosAlgoritmo', json_encode($datosAlgoritmo));
+
+    autLog("Datos del algoritmo guardados en el post.");
 
     // Devolver el ID del post
     return $post_id;
 }
-
 function adjuntarArchivoAut($archivo, $post_id, $file_id = null)
 {
 
