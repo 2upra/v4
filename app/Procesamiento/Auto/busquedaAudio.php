@@ -44,7 +44,7 @@ function procesarAudios() {
         $audio_info = buscarUnAudioValido($directorio_audios);
         if ($audio_info) {
             $tiempo = microtime(true) - $inicio;
-            error_log("Tiempo de búsqueda: " . number_format($tiempo, 2) . " segundos");
+            guardarLog("Tiempo de búsqueda: " . number_format($tiempo, 2) . " segundos");
             autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
         }
     } finally {
