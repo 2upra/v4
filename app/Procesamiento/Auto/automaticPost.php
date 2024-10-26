@@ -237,7 +237,6 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     if ($nombre_generado) {
         // Limpiar el nombre generado, permitiendo acentos y caracteres especiales
-        // Nota: Aquí no eliminamos acentos porque queremos mantenerlos
         $nombre_generado_limpio = trim($nombre_generado);
         $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- áéíóúÁÉÍÓÚñÑ]/u', '', $nombre_generado_limpio); // Permitimos acentos y la ñ
         $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 70);
@@ -263,8 +262,19 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     $nuevo_nombre_original = dirname($rutaOriginal) . '/' . $nombre_final_con_id . '.' . $extension_original;
     autLog("Renombrando archivo original: $rutaOriginal a $nuevo_nombre_original");
 
+    if (!file_exists($rutaOriginal)) {
+        autLog("El archivo original no existe: $rutaOriginal");
+        return;
+    }
+
     if (!rename($rutaOriginal, $nuevo_nombre_original)) {
-        autLog("No se pudo renombrar el archivo original.");
+        autLog("No se pudo renombrar el archivo original. Verifica los permisos.");
+        return;
+    }
+
+    // Verificación de la existencia del archivo lite
+    if (!file_exists($rutaWpLite)) {
+        autLog("El archivo lite no existe: $rutaWpLite");
         return;
     }
 
@@ -272,11 +282,16 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     $nuevo_nombre_lite = dirname($rutaWpLite) . '/' . $nombre_final_con_id . '_lite.' . $extension_lite;
     autLog("Renombrando archivo lite: $rutaWpLite a $nuevo_nombre_lite");
 
-    if (!rename($rutaWpLite, $nuevo_nombre_lite)) {
-        autLog("No se pudo renombrar el archivo lite.");
+    // Verificación de permisos y renombrar el archivo lite
+    if (!is_writable($rutaWpLite)) {
+        autLog("El archivo lite no tiene permisos de escritura: $rutaWpLite");
         return;
     }
 
+    if (!rename($rutaWpLite, $nuevo_nombre_lite)) {
+        autLog("No se pudo renombrar el archivo lite. Verifica los permisos.");
+        return;
+    }
 
     $titulo = mb_substr($descripcion_corta_es, 0, 60);
     $contenido = $descripcion_corta_es;
@@ -301,8 +316,8 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     autLog("Post creado con ID: $post_id");
 
-    update_post_meta($post_id, 'rutaOriginal', $rutaOriginal);
-    update_post_meta($post_id, 'rutaLiteOriginal', $rutaWpLite);
+    update_post_meta($post_id, 'rutaOriginal', $nuevo_nombre_original);
+    update_post_meta($post_id, 'rutaLiteOriginal', $nuevo_nombre_lite);
     update_post_meta($post_id, 'postAut', true);
     
     $audio_original_id = adjuntarArchivoAut($nuevo_nombre_original, $post_id, $file_id);
@@ -341,6 +356,8 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     // Devolver el ID del post
     return $post_id;
 }
+
+
 function adjuntarArchivoAut($archivo, $post_id, $file_id = null)
 {
 
