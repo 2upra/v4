@@ -7,8 +7,6 @@ function rehacerDescripcionAccion($post_id)
         $archivo_audio = get_attached_file($audio_lite_id);
         if ($archivo_audio) {
             rehacerDescripcionAudio($post_id, $archivo_audio);
-            rehacerNombreAudio($post_id, $archivo_audio);
-
             iaLog("Descripción del audio actualizada para el post ID: {$post_id} con archivo de audio en la ruta {$archivo_audio}");
         } else {
             iaLog("No se pudo obtener la ruta del archivo de audio lite para el post ID: {$post_id}");
@@ -47,7 +45,7 @@ function rehacerDescripcionAudio($post_id, $archivo_audio)
     // Crear el prompt para la IA con el contenido del post actual y los metadatos anteriores
     $prompt = "El usuario ya subió este audio, pero acaba de editar la descripción."
         . " Ten muy en cuenta la descripción nueva, es para corregir el JSON: \"{$post_content}\". "
-        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON, este es el JSON del post anterior, modifícalo según la nueva descripción del usuario: "
+        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON, este es el JSON del post anterior, modifícalo según la nueva descripción del usuario, manten los mismos datos para los bpm, etc.: "
         . json_encode($datos_actuales, JSON_UNESCAPED_UNICODE)
         . " Nota adicional: responde solo con la estructura JSON solicitada, mantén datos vacíos si no aplica. Es crucial determinar si es un loop o un one shot o un sample, usa tags de una palabra. Optimiza el SEO con sugerencias de búsqueda relevantes.";
 
