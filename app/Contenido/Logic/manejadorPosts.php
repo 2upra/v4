@@ -49,15 +49,22 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
                 });
             }
 
+            // Eliminar duplicados
+            $post_ids = array_unique($post_ids);
+
             if ($paged == 1) {
                 $post_ids = array_slice($post_ids, 0, $posts);
             }
+
+            // Asegurar que no haya conflicto entre post__in y post__not_in
+            $post_not_in = array_unique(array_merge($post_not_in, $post_ids));
 
             $query_args = [
                 'post_type'      => $args['post_type'],
                 'posts_per_page' => $posts,
                 'paged'          => $paged,
                 'post__in'       => $post_ids,
+                'post__not_in'   => $post_not_in,
                 'orderby'        => 'post__in',
                 'meta_query'     => [],
             ];
@@ -81,7 +88,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
         // Añadir exclusiones si existen
         if (!empty($post_not_in)) {
-            $query_args['post__not_in'] = $post_not_in;
+            $query_args['post__not_in'] = array_unique($post_not_in);
         }
     } else {
         $query_args = [
@@ -95,7 +102,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
         // Añadir eliminaciones si existen
         if (!empty($post_not_in)) {
-            $query_args['post__not_in'] = $post_not_in;
+            $query_args['post__not_in'] = array_unique($post_not_in);
         }
 
         // Añadir meta_query si hay un identificador
