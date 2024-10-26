@@ -249,6 +249,12 @@ function obtenerDatosFeed($userId)
 
 function obtenerDatosFeedConCache($userId)
 {
+    // Verifica si el usuario es administrador
+    if (current_user_can('administrator')) {
+        // Si el usuario es admin, devuelve los datos directamente sin caché
+        return obtenerDatosFeed($userId);
+    }
+
     $cache_key = 'feed_datos_' . $userId;
     $datos = wp_cache_get($cache_key);
 
@@ -264,6 +270,7 @@ function obtenerDatosFeedConCache($userId)
 
     return $datos;
 }
+
 
 # PASO 1
 function obtenerYProcesarVistasPosts($userId)

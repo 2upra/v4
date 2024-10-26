@@ -19,6 +19,11 @@ function removeDuplicates(arr) {
     return [...new Set(arr)];
 }
 
+/*
+
+
+*/
+
 
 function tagsPosts() {
     document.querySelectorAll('p[id-post-algoritmo]').forEach(function(pElement) {
