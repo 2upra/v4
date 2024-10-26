@@ -122,7 +122,7 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
 
     $prompt = "Este audio fue subido automáticamente. "
         . "{$informacion_archivo}"
-        . "Por favor, determina una descripción precisa del audio utilizando el siguiente formato JSON. La información como el nombre y las carpetas son información super relevante para completar el JSON. Por favor, ignora cualquier nombre comercial, dominio, redes sociales o información no relevante que pueda contener el nombre o las carpetas. También ignora la palabra 'lite' o '2upra'. El 'nombre_corto' es un nuevo nombre para el archivo, y la 'descripción corta' es para entender rápidamente qué es el audio. Te incluyo la estructura JSON con datos de ejemplo, que son irrelevantes en este caso: "
+        . "Por favor, determina una descripción precisa del audio utilizando el siguiente formato JSON. La información como el nombre y las carpetas son información super relevante para completar el JSON. Por favor, ignora cualquier nombre comercial, dominio, redes sociales o información no relevante que pueda contener el nombre o las carpetas. También ignora la palabra 'lite' o '2upra'. El 'nombre_corto' es un nuevo nombre para el archivo, y la 'descripción corta' es para entender rápidamente qué es el audio, por favor, hazla muy corta y breve. Te incluyo la estructura JSON con datos de ejemplo, que son irrelevantes en este caso: "
         . '{"descripcion_ia":{"es":"(aquí iría una descripción tuya del audio muy detallada)", "en":"(aquí en inglés)"},'
         . '"instrumentos_principal":{"es":["Piano"], "en":["Piano"]},'
         . '"nombre_corto":{"es":["Kick Vitagen One Shot"], "en":["Kick Vitagen"]},'
@@ -153,11 +153,11 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
                     'en' => $descripcion_procesada['instrumentos_principal']['en'] ?? []
                 ],
                 'nombre_corto' => [
-                    'es' => $descripcion_procesada['nombre_corto']['es'] ?? '',  
+                    'es' => $descripcion_procesada['nombre_corto']['es'] ?? '',
                     'en' => $descripcion_procesada['nombre_corto']['en'] ?? ''
                 ],
                 'descripcion_corta' => [
-                    'es' => $descripcion_procesada['descripcion_corta']['es'] ?? '',  
+                    'es' => $descripcion_procesada['descripcion_corta']['es'] ?? '',
                     'en' => $descripcion_procesada['descripcion_corta']['en'] ?? ''
                 ],
                 'estado_animo' => [
@@ -233,19 +233,24 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
     $descripcion_corta_es = $datosAlgoritmo['descripcion_ia']['es'] ?? '';
     $nombre_generado = $datosAlgoritmo['nombre_corto']['en'] ?? '';
 
+    // Verificar si $nombre_generado es un array
+    if (is_array($nombre_generado)) {
+        autLog("Nombre generado es un array: " . print_r($nombre_generado, true));
+        $nombre_generado = $nombre_generado[0] ?? ''; 
+    }
+
     autLog("Descripción corta ES: $descripcion_corta_es, Nombre generado: $nombre_generado");
 
     if ($nombre_generado) {
         $nombre_generado_limpio = trim($nombre_generado);
         $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- ]/', '', $nombre_generado_limpio);
         $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 70);
-        $nombre_final =  $nombre_generado_limpio . '_2upra';
+        $nombre_final = $nombre_generado_limpio . '_2upra';
         $id_unica = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
         $nombre_final_con_id = $nombre_final . '_' . $id_unica;
         $nombre_final_con_id = substr($nombre_final_con_id, 0, 60);
 
         autLog("Nombre final generado: $nombre_final_con_id");
-
     } else {
         autLog("Error en la generación del nombre en crearAutPost");
         eliminarHash($file_id);
