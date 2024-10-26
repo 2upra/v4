@@ -107,6 +107,7 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
         echo "Emotion: " . ($resultados['emotion'] ?? '') . "\n";
         echo "Key: " . ($resultados['key'] ?? '') . "\n";
         echo "Scale: " . ($resultados['scale'] ?? '') . "\n";
+        echo "Pitch: " . ($resultados['pitch'] ?? '') . "\n";
     } else {
         echo "Error procesando el archivo de audio.";
     }
@@ -138,12 +139,6 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
         . " Nota adicional: responde solo con la estructura JSON solicitada, mantén datos vacíos si no aplica. Es crucial determinar si es un loop, un one shot o un sample. Usa tags de una palabra y optimiza el SEO con sugerencias de búsqueda relevantes. Sé muy detallado sin perder precisión. Aunque te pido en español y en ingles, hay algunas palabras que son mejor mantenerlas en ingles cuando en español son muy frecuentes, por ejemplo, kick, snare, cowbell, etc.";
 
     $descripcion = generarDescripcionIA($rutaArchivo, $prompt);
-
-    /*
-    {"bpm":161,"emotion":"","key":"C","scale":"minor","descripcion_ia":{"es":"Audio con un decay largo, procesado con una reducciu00f3n de 600 unidades de tuneo.  Se infiere un sonido reverberante y sostenido, posiblemente un sample o loop atmosfu00e9rico.  El nombre del archivo y la estructura de carpetas sugieren un sonido experimental o de ambiente.","en":"Audio with a long decay, processed with a 600 unit tune reduction.  A reverberant and sustained sound is inferred, possibly an atmospheric sample or loop. The filename and folder structure suggest an experimental or ambient sound."},"instrumentos_principal":{"es":[],"en":[]},"nombre_corto":{"es":["Decay Largo"],"en":["Long Decay"]},"descripcion_corta":{"es":"Sample atmosfu00e9rico, decay largo","en":"Atmospheric sample, long decay"},"estado_animo":{"es":["Ambiental"],"en":["Ambient"]},"artista_posible":{"es":[],"en":[]},"genero_posible":{"es":["Ambient","Experimental"],"en":["Ambient","Experimental"]},"tipo_audio":{"es":["loop"],"en":["loop"]},"tags_posibles":{"es":["decay","largo","ambiente","atmosfu00e9rico","reverberacion"],"en":["decay","long","ambient","atmospheric","reverb"]},"sugerencia_busqueda":{"es":["loop atmosfu00e9rico","sample decay largo","sonido ambiental","textura sonora"],"en":["atmospheric loop","long decay sample","ambient sound","sound texture"]}}
-
-    ves que los acentos no se ven bien, hay alguna forma de arreglarlo
-    */
 
     if ($descripcion) {
         // Convertir a UTF-8
@@ -243,6 +238,9 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     $descripcion_corta_es = $datosAlgoritmo['descripcion_corta']['en'] ?? '';
     $nombre_generado = $datosAlgoritmo['nombre_corto']['en'] ?? '';
+    $bpm = $datosAlgoritmo['bpm'] ?? null;
+    $key = $datosAlgoritmo['key'] ?? null;
+    $scale = $datosAlgoritmo['scale'] ?? null;
 
     // Si el nombre generado es un array, tomamos el primer valor
     if (is_array($nombre_generado)) {
@@ -358,7 +356,6 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     }
 
     //autLog("Archivo lite adjuntado con ID: $audio_lite_id");
-
     update_post_meta($post_id, 'post_audio', $audio_original_id);
     update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
     update_post_meta($post_id, 'paraDescarga', true);
@@ -368,8 +365,13 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     update_post_meta($post_id, 'carpetaOriginal', $carpeta);
     update_post_meta($post_id, 'carpetaAbuelaOriginal', $carpeta_abuela);
 
-    //autLog("Metadatos del post actualizados.");
+    //////////////////////////////////////////////////////////////
+    update_post_meta($post_id, 'audio_bpm', $bpm);
+    update_post_meta($post_id, 'audio_key', $key);
+    update_post_meta($post_id, 'audio_scale', $scale);
+    //////////////////////////////////////////////////////////////
 
+    //autLog("Metadatos del post actualizados.");
     // Agregar los datos del algoritmo como meta con los datos JSON de $datosAlgoritmo
     update_post_meta($post_id, 'datosAlgoritmo', json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE));
     //autLog("Datos del algoritmo guardados en el post.");
