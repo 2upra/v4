@@ -60,7 +60,7 @@ function autProcesarAudio($rutaOriginalOne)
         return;
     }
 
-    // 6. Mover el archivo lite al directorio de uploads
+    // 3. Mover el archivo lite al directorio de uploads
     $uploads_dir = wp_upload_dir();
     $target_dir_audio = trailingslashit($uploads_dir['basedir']) . "audio/";
 
@@ -208,12 +208,6 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
 
 function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 {
-    /*
-    2024-10-26 07:26:42 - Iniciando crearAutPost con 
-    rutaOriginal: /home/asley01/MEGA/Waw/Kits/VITAGEN HIP HOP KITS/SAMPLES/Loop 60 (Kellee Patterson - You).wav, 
-    rutaWpLite: /var/www/wordpress/wp-content/uploads/audio/Loop 60 (Kellee Patterson - You)_lite_lite.mp3, 
-    file_id: 10329
-    */
     autLog("Iniciando crearAutPost con rutaOriginal: $rutaOriginal, rutaWpLite: $rutaWpLite, file_id: $file_id");
 
     $autor_id = 44;
@@ -232,8 +226,8 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     $descripcion_corta_es = $datosAlgoritmo['descripcion_corta']['es'] ?? '';
     $nombre_generado = $datosAlgoritmo['nombre_corto']['en'] ?? '';
-
-    // Verificar si $nombre_generado es un array
+    
+    // Si el nombre generado es un array, tomamos el primer valor
     if (is_array($nombre_generado)) {
         autLog("Nombre generado es un array: " . print_r($nombre_generado, true));
         $nombre_generado = $nombre_generado[0] ?? ''; 
@@ -242,21 +236,46 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     autLog("Descripción corta ES: $descripcion_corta_es, Nombre generado: $nombre_generado");
 
     if ($nombre_generado) {
+        // Limpiar el nombre generado, permitiendo acentos y caracteres especiales
+        // Nota: Aquí no eliminamos acentos porque queremos mantenerlos
         $nombre_generado_limpio = trim($nombre_generado);
-        $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- ]/', '', $nombre_generado_limpio);
+        $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- áéíóúÁÉÍÓÚñÑ]/u', '', $nombre_generado_limpio); // Permitimos acentos y la ñ
         $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 70);
+
+        // Generar el nombre final con el sufijo '_2upra'
         $nombre_final = $nombre_generado_limpio . '_2upra';
+
+        // Generar un ID único de 4 caracteres
         $id_unica = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
         $nombre_final_con_id = $nombre_final . '_' . $id_unica;
         $nombre_final_con_id = substr($nombre_final_con_id, 0, 60);
 
         autLog("Nombre final generado: $nombre_final_con_id");
+
     } else {
         autLog("Error en la generación del nombre en crearAutPost");
         eliminarHash($file_id);
         return;
     }
 
+    // Renombrar el archivo original
+    $extension_original = pathinfo($rutaOriginal, PATHINFO_EXTENSION);
+    $nuevo_nombre_original = dirname($rutaOriginal) . '/' . $nombre_final_con_id . '.' . $extension_original;
+    autLog("Renombrando archivo original: $rutaOriginal a $nuevo_nombre_original");
+
+    if (!rename($rutaOriginal, $nuevo_nombre_original)) {
+        autLog("No se pudo renombrar el archivo original.");
+        return;
+    }
+
+    $extension_lite = pathinfo($rutaWpLite, PATHINFO_EXTENSION);
+    $nuevo_nombre_lite = dirname($rutaWpLite) . '/' . $nombre_final_con_id . '_lite.' . $extension_lite;
+    autLog("Renombrando archivo lite: $rutaWpLite a $nuevo_nombre_lite");
+
+    if (!rename($rutaWpLite, $nuevo_nombre_lite)) {
+        autLog("No se pudo renombrar el archivo lite.");
+        return;
+    }
 
 
     $titulo = mb_substr($descripcion_corta_es, 0, 60);
@@ -285,8 +304,8 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     update_post_meta($post_id, 'rutaOriginal', $rutaOriginal);
     update_post_meta($post_id, 'rutaLiteOriginal', $rutaWpLite);
     update_post_meta($post_id, 'postAut', true);
-
-    $audio_original_id = adjuntarArchivoAut($rutaOriginal, $post_id, $file_id);
+    
+    $audio_original_id = adjuntarArchivoAut($nuevo_nombre_original, $post_id, $file_id);
     if (is_wp_error($audio_original_id)) {
         autLog("Error al adjuntar archivo original: " . $audio_original_id->get_error_message());
         wp_delete_post($post_id, true);
@@ -295,7 +314,7 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     autLog("Archivo original adjuntado con ID: $audio_original_id");
 
-    $audio_lite_id = adjuntarArchivoAut($rutaWpLite, $post_id);
+    $audio_lite_id = adjuntarArchivoAut($nuevo_nombre_lite, $post_id);
     if (is_wp_error($audio_lite_id)) {
         autLog("Error al adjuntar archivo lite: " . $audio_lite_id->get_error_message());
         return $audio_lite_id;
