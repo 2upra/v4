@@ -277,12 +277,13 @@ function rehacerNombreAudio($post_id, $archivo_audio)
                 iaLog("Meta 'rutaOriginal' actualizada a: {$nueva_ruta_original}");
                 guardarLog("Archivo renombrado en el servidor de {$ruta_original} a {$nueva_ruta_original}");
             } else {
-                guardarLog("error en nombrar archivo en el servidor {$ruta_original} a {$nueva_ruta_original}");
+                guardarLog("Error en renombrar archivo en el servidor de {$ruta_original} a {$nueva_ruta_original}");
                 iaLog("Error al renombrar el archivo en el servidor de {$ruta_original} a {$nueva_ruta_original}");
                 update_post_meta($post_id, 'rutaOriginalPerdida', true);
             }
         } else {
             iaLog("No se encontró 'rutaOriginal' ni en la meta ni en las subcarpetas para el post ID: {$post_id}");
+            update_post_meta($post_id, 'rutaPerdida', true);
         }
 
         // Actualizar la URL en base de datos si tiene idHash_audioId
@@ -435,10 +436,14 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
     update_post_meta($post_id, 'rutaLiteOriginal', $nuevo_nombre_lite);
 
     update_post_meta($post_id, 'post_audio', $audio_original_id);
-    update_post_meta($post_id, 'nombreOriginal', $nombre_archivo);
+    
     update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
     update_post_meta($post_id, 'paraDescarga', true);
 
+    //INFORMACION NUEVA PARA CARPETAS Y FUNCIONALIDAD DE KITS
+    update_post_meta($post_id, 'nombreOriginal', $nombre_archivo);
+    update_post_meta($post_id, 'carpetaOriginal', $carpeta);
+    update_post_meta($post_id, 'carpetaAbuelaOriginal', $carpeta_abuela);
 
     return $post_id;
 }
