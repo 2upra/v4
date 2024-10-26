@@ -645,7 +645,7 @@ function asignarTags($postId)
 
 
 
-
+/*
 function mejorarDescripcionAudioPro($post_id, $archivo_audio)
 {
     // Comprobar si tiene la meta 'postAut' en 1
@@ -766,7 +766,7 @@ function mejorarDescripcionAudioPro($post_id, $archivo_audio)
     }
 }
 
-
+*/
 function procesarUnAudio()
 {
     global $wpdb;
@@ -839,7 +839,7 @@ function procesarUnAudio()
     iaLog("Procesamiento de audio completado.");
 }
 
-
+/*
 // Función para ejecutarla cada 30 minutos
 function programarMejorarDescripcionAudioPro()
 {
@@ -864,3 +864,5 @@ add_filter('cron_schedules', 'agregarIntervaloCronPersonalizado');
 
 // Programar evento al activar el plugin o tema
 add_action('wp', 'programarMejorarDescripcionAudioPro');
+
+*/
