@@ -64,56 +64,43 @@ function buscarUnAudioValido($directorio) {
     }
 
     try {
-        $subcarpetas = [];
+        $archivos_validos = [];
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($directorio, FilesystemIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::SELF_FIRST
+            RecursiveIteratorIterator::LEAVES_ONLY
         );
 
-        foreach ($iterator as $item) {
-            if ($item->isDir()) {
-                $subcarpetas[] = $item->getPathname();
-            }
-        }
-
-        if (empty($subcarpetas)) {
-            $subcarpetas[] = $directorio;
-        }
-
-        $carpeta_seleccionada = $subcarpetas[array_rand($subcarpetas)];
-
-        $archivos = [];
-        $dir_iterator = new DirectoryIterator($carpeta_seleccionada);
-        foreach ($dir_iterator as $file) {
+        // Recorremos los archivos y almacenamos los archivos válidos
+        foreach ($iterator as $file) {
             if ($file->isFile()) {
                 $ext = strtolower($file->getExtension());
                 if (in_array($ext, $extensiones_permitidas, true)) {
-                    $archivos[] = $file->getPathname();
+                    $archivos_validos[] = $file->getPathname();
                 }
             }
         }
 
-        if (empty($archivos)) {
-            return buscarUnAudioValido($directorio);
+        if (empty($archivos_validos)) {
+            return null;
         }
 
-        $archivo_seleccionado = $archivos[array_rand($archivos)];
+        // Seleccionamos un archivo aleatorio entre los válidos
+        $archivo_seleccionado = $archivos_validos[array_rand($archivos_validos)];
         $hash = hash_file('sha256', $archivo_seleccionado);
 
         if (!$hash) {
-            return buscarUnAudioValido($directorio);
+            return null;
         }
 
         if (debeProcesarse($archivo_seleccionado, $hash)) {
             return ['ruta' => $archivo_seleccionado, 'hash' => $hash];
         } else {
-            return buscarUnAudioValido($directorio);
+            return null;  // No hay necesidad de volver a buscar si este archivo no es válido
         }
+
     } catch (Exception $e) {
         return null;
     }
-
-    return null;
 }
 
 function debeProcesarse($ruta_archivo, $file_hash) {
@@ -125,11 +112,8 @@ function debeProcesarse($ruta_archivo, $file_hash) {
         $hash_obtenido = obtenerHash($file_hash);
         $hash_verificado = verificarCargaArchivoPorHash($file_hash);
 
-        if ($hash_obtenido || $hash_verificado) {
-            return false;
-        }
+        return !($hash_obtenido || $hash_verificado);
 
-        return true;
     } catch (Exception $e) {
         return false;
     }
