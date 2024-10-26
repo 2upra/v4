@@ -234,7 +234,7 @@ function confirmarHashId($file_id)
 }
 
 
-/*
+
 function eliminarPostsSocialYAdjuntos($user_id) {
     global $wpdb;
 
@@ -263,7 +263,7 @@ function eliminarPostsSocialYAdjuntos($user_id) {
         wp_delete_post($post->ID, true); // Eliminar post permanentemente
     }
 }
-eliminarPostsSocialYAdjuntos(44); */
+eliminarPostsSocialYAdjuntos(44); 
 function eliminarHash($id) {
     global $wpdb;
     $resultado = (bool) $wpdb->delete("{$wpdb->prefix}file_hashes", array('id' => $id), array('%d'));
