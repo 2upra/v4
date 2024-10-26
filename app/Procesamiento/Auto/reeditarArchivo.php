@@ -19,7 +19,7 @@ function rehacerDescripcionAccion($post_id)
 function rehacerDescripcionAudio($post_id, $archivo_audio)
 {
     iaLog("Iniciando mejora de descripción para el post ID: {$post_id}");
-    
+
     // Obtener el contenido del post
     $post_content = get_post_field('post_content', $post_id);
     if (!$post_content) {
@@ -56,24 +56,42 @@ function rehacerDescripcionAudio($post_id, $archivo_audio)
         return;
     }
 
+    /*
+    2024-10-26 17:28:44 - Iniciando mejora de descripción para el post ID: 240374
+    2024-10-26 17:28:44 - Contenido del post obtenido para el post ID: 240374
+    2024-10-26 17:28:44 - Inicio de generarDescripcionIA con prompt: El usuario ya subió este audio, pero acaba de editar la descripción. Ten muy en cuenta la descripción nueva, es para corregir el JSON: "Percusión Memphis one shot". Por favor, determina una descripción del audio utilizando el siguiente formato JSON, este es el JSON del post anterior, modifícalo según la nueva descripción del usuario, manten los mismos datos para los bpm, etc.: {"bpm":0,"emotion":"","key":"F","scale":"minor","descripcion_ia":{"es":"Audio con un sonido de larga duración, probablemente una grabación de un instrumento o efecto sonoro.  Se caracteriza por un decay prolongado y sostenido.","en":"Audio with a long decay sound, likely a recording of an instrument or sound effect. It is characterized by a prolonged and sustained decay."},"instrumentos_principal":{"es":[],"en":[]},"nombre_corto":{"es":["Long Decay"],"en":["Long Decay"]},"descripcion_corta":{"es":"Sonido con larga reverberación","en":"Long reverb sound"},"estado_animo":{"es":["Ambiental"],"en":["Ambient"]},"artista_posible":{"es":[],"en":[]},"genero_posible":{"es":["Ambient","Experimental"],"en":["Ambient","Experimental"]},"tipo_audio":{"es":["loop"],"en":["loop"]},"tags_posibles":{"es":["Reverberacion","Decay","Largo","Ambiente"],"en":["Reverb","Decay","Long","Ambient"]},"sugerencia_busqueda":{"es":["Sonido ambiental largo","Loop de larga duración","Efecto de sonido con decay"],"en":["Long ambient sound","Long decay loop","Sound effect with long decay"]}} Nota adicional: responde solo con la estructura JSON solicitada, mantén datos vacíos si no aplica. Es crucial determinar si es un loop o un one shot o un sample, usa tags de una palabra. Optimiza el SEO con sugerencias de búsqueda relevantes.
+    2024-10-26 17:28:44 - Archivo de audio: /var/www/wordpress/wp-content/uploads/audio/2upra_PersMemphisOne_ISpY_lite.mp3
+    2024-10-26 17:28:44 - Archivo de audio cargado y convertido a base64 con éxito.
+    2024-10-26 17:28:47 - Respuesta completa de la API: {"candidates":[{"content":{"parts":[{"text":"```json\n{\"bpm\":0,\"emotion\":\"\",\"key\":\"F\",\"scale\":\"minor\",\"descripcion_ia\":{\"es\":\"One-shot de percusi\u00f3n con sonido caracter\u00edstico de Memphis.\",\"en\":\"Memphis-style percussion one-shot.\"},\"instrumentos_principal\":{\"es\":[\"Percusi\u00f3n\"],\"en\":[\"Percussion\"]},\"nombre_corto\":{\"es\":[\"Percusi\u00f3n Memphis\"],\"en\":[\"Memphis Percussion\"]},\"descripcion_corta\":{\"es\":\"One-shot de percusi\u00f3n estilo Memphis\",\"en\":\"Memphis style percussion one-shot\"},\"estado_animo\":{\"es\":[\"R\u00edtmico\"],\"en\":[\"Rhythmic\"]},\"artista_posible\":{\"es\":[],\"en\":[]},\"genero_posible\":{\"es\":[\"Hip Hop\",\"Funk\",\"Soul\"],\"en\":[\"Hip Hop\",\"Funk\",\"Soul\"]},\"tipo_audio\":{\"es\":[\"one-shot\"],\"en\":[\"one-shot\"]},\"tags_posibles\":{\"es\":[\"Percusi\u00f3n\",\"Memphis\",\"One-shot\",\"Ritmo\"],\"en\":[\"Percussion\",\"Memphis\",\"One-shot\",\"Rhythm\"]},\"sugerencia_busqueda\":{\"es\":[\"One-shot percusi\u00f3n Memphis\",\"Sonido de percusi\u00f3n Memphis\",\"Sample percusi\u00f3n Memphis\"],\"en\":[\"Memphis percussion one-shot\",\"Memphis percussion sound\",\"Memphis percussion sample\"]}\n```\n"}],"role":"model"},"finishReason":"STOP","avgLogprobs":-0.025568392793488593}],"usageMetadata":{"promptTokenCount":426,"candidatesTokenCount":263,"totalTokenCount":689},"modelVersion":"gemini-1.5-flash-002"}
+    2024-10-26 17:28:47 - Contenido generado: ```json
+    {"bpm":0,"emotion":"","key":"F","scale":"minor","descripcion_ia":{"es":"One-shot de percusión con sonido característico de Memphis.","en":"Memphis-style percussion one-shot."},"instrumentos_principal":{"es":["Percusión"],"en":["Percussion"]},"nombre_corto":{"es":["Percusión Memphis"],"en":["Memphis Percussion"]},"descripcion_corta":{"es":"One-shot de percusión estilo Memphis","en":"Memphis style percussion one-shot"},"estado_animo":{"es":["Rítmico"],"en":["Rhythmic"]},"artista_posible":{"es":[],"en":[]},"genero_posible":{"es":["Hip Hop","Funk","Soul"],"en":["Hip Hop","Funk","Soul"]},"tipo_audio":{"es":["one-shot"],"en":["one-shot"]},"tags_posibles":{"es":["Percusión","Memphis","One-shot","Ritmo"],"en":["Percussion","Memphis","One-shot","Rhythm"]},"sugerencia_busqueda":{"es":["One-shot percusión Memphis","Sonido de percusión Memphis","Sample percusión Memphis"],"en":["Memphis percussion one-shot","Memphis percussion sound","Memphis percussion sample"]}
+    ```
+    2024-10-26 17:28:47 - Error al procesar el JSON de la descripción mejorada generada por IA Pro.
+    2024-10-26 17:28:47 - Descripción del audio actualizada para el post ID: 240374 con archivo de audio en la ruta /var/www/wordpress/wp-content/uploads/audio/2upra_PersMemphisOne_ISpY_lite.mp3
+    */
+
+    // Limpiar el JSON de cualquier bloque de código que pudiese haber sido incluido.
+    $descripcion_mejorada_limpia = preg_replace('/```(?:json)?\n/', '', $descripcion_mejorada);
+    $descripcion_mejorada_limpia = preg_replace('/\n```/', '', $descripcion_mejorada_limpia);
+
     // Decodificar la descripción generada por la IA
-    $datos_actualizados = json_decode($descripcion_mejorada, true);
+    $datos_actualizados = json_decode($descripcion_mejorada_limpia, true);
     if (json_last_error() === JSON_ERROR_NONE) {
         iaLog("Nuevos datos generados para el post ID: {$post_id}");
-        
+
         // Guardar los nuevos datos en la meta 'datosAlgoritmo'
         update_post_meta($post_id, 'datosAlgoritmo', json_encode($datos_actualizados, JSON_UNESCAPED_UNICODE));
         iaLog("Metadatos actualizados para el post ID: {$post_id}");
 
         // Actualizar la fecha de la última edición
-        $fecha_actual = current_time('mysql'); 
+        $fecha_actual = current_time('mysql');
         update_post_meta($post_id, 'ultimoEdit', $fecha_actual);
         iaLog("Metadato 'ultimoEdit' agregado para el post ID: {$post_id} con fecha {$fecha_actual}");
 
         // Desactivar el procesamiento por IA
         update_post_meta($post_id, 'proIA', false);
     } else {
-        iaLog("Error al procesar el JSON de la descripción mejorada generada por IA Pro.");
+        iaLog("Error al procesar el JSON de la descripción mejorada generada");
     }
 }
 
@@ -267,4 +285,3 @@ function renombrar_archivo_adjunto($attachment_id, $nuevo_nombre, $es_lite = fal
 
     return true;
 }
-
