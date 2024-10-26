@@ -233,7 +233,7 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
         return;
     }
 
-    $descripcion_corta_es = $datosAlgoritmo['descripcion_corta']['es'] ?? '';
+    $descripcion_corta_es = $datosAlgoritmo['descripcion_corta']['en'] ?? '';
     $nombre_generado = $datosAlgoritmo['nombre_corto']['en'] ?? '';
 
     // Si el nombre generado es un array, tomamos el primer valor
