@@ -23,7 +23,7 @@ function definir_cron_cada_dos_minutos($schedules)
 add_action('audio85', 'procesarAudios');
 
 
-//teniendo en cuenta que esto se va a ejecutar cada 85 segundos, tienes alguna idea de como optimizarlo para que encuentre el archivo mas rapido cada vez que se encuente, y necesito que obligatoriamente eliga una carpeta aleatorea un archivo aleatoreo, siempre toma archivos de la misma carpeta, dame el codigo completo optimizado manteniendo la logica de enviar un archivo valido por cada busqueda
+
 function procesarAudios() {
     $directorio_audios = '/home/asley01/MEGA/Waw/Kits';
     $lock_file = '/tmp/procesar_audios.lock';
@@ -40,10 +40,11 @@ function procesarAudios() {
         $inicio = microtime(true);
         
         
+        
         $audio_info = buscarUnAudioValido($directorio_audios);
         if ($audio_info) {
             $tiempo = microtime(true) - $inicio;
-            error_log("Tiempo de búsqueda: " . number_format($tiempo, 2) . " segundos");
+            guardarLog("Tiempo de búsqueda: " . number_format($tiempo, 2) . " segundos");
             autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
         }
     } finally {
