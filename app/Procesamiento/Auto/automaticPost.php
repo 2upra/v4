@@ -201,7 +201,7 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
                 ]
             ];
 
-            iaLog("Descripción del audio guardada para el post ID: {$nombre_archivo}");
+            autLog("Descripción del audio guardada para el post ID: {$nombre_archivo}");
         }
     }
 
