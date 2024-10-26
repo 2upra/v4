@@ -139,17 +139,12 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
 
     $descripcion = generarDescripcionIA($rutaArchivo, $prompt);
 
-    /*
-    {"bpm":161,"emotion":"","key":"C","scale":"minor","descripcion_ia":{"es":"Audio con un decay largo, procesado con una reducciu00f3n de 600 unidades de tuneo.  Se infiere un sonido reverberante y sostenido, posiblemente un sample o loop atmosfu00e9rico.  El nombre del archivo y la estructura de carpetas sugieren un sonido experimental o de ambiente.","en":"Audio with a long decay, processed with a 600 unit tune reduction.  A reverberant and sustained sound is inferred, possibly an atmospheric sample or loop. The filename and folder structure suggest an experimental or ambient sound."},"instrumentos_principal":{"es":[],"en":[]},"nombre_corto":{"es":["Decay Largo"],"en":["Long Decay"]},"descripcion_corta":{"es":"Sample atmosfu00e9rico, decay largo","en":"Atmospheric sample, long decay"},"estado_animo":{"es":["Ambiental"],"en":["Ambient"]},"artista_posible":{"es":[],"en":[]},"genero_posible":{"es":["Ambient","Experimental"],"en":["Ambient","Experimental"]},"tipo_audio":{"es":["loop"],"en":["loop"]},"tags_posibles":{"es":["decay","largo","ambiente","atmosfu00e9rico","reverberacion"],"en":["decay","long","ambient","atmospheric","reverb"]},"sugerencia_busqueda":{"es":["loop atmosfu00e9rico","sample decay largo","sonido ambiental","textura sonora"],"en":["atmospheric loop","long decay sample","ambient sound","sound texture"]}}
-
-    ves que los acentos no se ven bien, hay alguna forma de arreglarlo 
-    */
-
     if ($descripcion) {
-        // Procesar el JSON eliminando caracteres innecesarios
-        $descripcion_procesada = json_decode($descripcion, true, 512, JSON_UNESCAPED_UNICODE);
-
-        if (isset($descripcion_procesada['descripcion_ia']) && is_array($descripcion_procesada['descripcion_ia'])) {
+        // Convertir a UTF-8
+        $descripcion_utf8 = mb_convert_encoding($descripcion, 'UTF-8', 'auto');
+    
+        // Procesar JSON eliminando caracteres innecesarios y asegurando que no escape los caracteres UTF-8
+        $descripcion_procesada = json_decode(trim($descripcion_utf8, "```json \n"), true, 512, JSON_UNESCAPED_UNICODE);
             // Crear los nuevos datos con la estructura correcta
             $nuevos_datos = [
                 'descripcion_ia' => [
