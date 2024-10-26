@@ -23,6 +23,7 @@ function definir_cron_cada_dos_minutos($schedules)
 add_action('audio85', 'procesarAudios');
 
 
+//teniendo en cuenta que esto se va a ejecutar cada 85 segundos, tienes alguna idea de como optimizarlo para que encuentre el archivo mas rapido cada vez que se encuente, y necesito que obligatoriamente eliga una carpeta aleatorea un archivo aleatoreo, siempre toma archivos de la misma carpeta, dame el codigo completo optimizado manteniendo la logica de enviar un archivo valido por cada busqueda
 function procesarAudios() {
     $directorio_audios = '/home/asley01/MEGA/Waw/Kits';
     $lock_file = '/tmp/procesar_audios.lock';
@@ -37,14 +38,12 @@ function procesarAudios() {
 
     try {
         $inicio = microtime(true);
-
-        // Ejecutar chmod solo si es necesario (opcional)
-        // shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
-
+        
+        
         $audio_info = buscarUnAudioValido($directorio_audios);
         if ($audio_info) {
             $tiempo = microtime(true) - $inicio;
-            autLog("Tiempo de búsqueda: " . number_format($tiempo, 2) . " segundos");
+            error_log("Tiempo de búsqueda: " . number_format($tiempo, 2) . " segundos");
             autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
         }
     } finally {
@@ -66,24 +65,23 @@ function buscarUnAudioValido($directorio) {
 
     try {
         $subcarpetas = [];
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($directorio, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST
+        );
 
-        // Cargar todas las subcarpetas de manera no recursiva y seleccionar una al azar
-        $dir_iterator = new DirectoryIterator($directorio);
-        foreach ($dir_iterator as $item) {
-            if ($item->isDir() && !$item->isDot()) {
+        foreach ($iterator as $item) {
+            if ($item->isDir()) {
                 $subcarpetas[] = $item->getPathname();
             }
         }
 
-        // Si no hay subcarpetas, usar el directorio raíz
         if (empty($subcarpetas)) {
             $subcarpetas[] = $directorio;
         }
 
-        // Seleccionar una carpeta aleatoria
         $carpeta_seleccionada = $subcarpetas[array_rand($subcarpetas)];
 
-        // Obtener archivos válidos en la carpeta seleccionada
         $archivos = [];
         $dir_iterator = new DirectoryIterator($carpeta_seleccionada);
         foreach ($dir_iterator as $file) {
@@ -95,28 +93,28 @@ function buscarUnAudioValido($directorio) {
             }
         }
 
-        // Si no hay archivos válidos, intentar nuevamente con una carpeta diferente
         if (empty($archivos)) {
             return buscarUnAudioValido($directorio);
         }
 
-        // Seleccionar un archivo aleatorio
         $archivo_seleccionado = $archivos[array_rand($archivos)];
-
-        // Calcular hash del archivo
         $hash = hash_file('sha256', $archivo_seleccionado);
 
-        // Verificar si el archivo debe ser procesado
-        if ($hash && debeProcesarse($archivo_seleccionado, $hash)) {
-            return ['ruta' => $archivo_seleccionado, 'hash' => $hash];
+        if (!$hash) {
+            return buscarUnAudioValido($directorio);
         }
 
-        // Si el archivo no es válido, intentar nuevamente
-        return buscarUnAudioValido($directorio);
+        if (debeProcesarse($archivo_seleccionado, $hash)) {
+            return ['ruta' => $archivo_seleccionado, 'hash' => $hash];
+        } else {
+            return buscarUnAudioValido($directorio);
+        }
     } catch (Exception $e) {
         shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
         return null;
     }
+
+    return null;
 }
 
 function debeProcesarse($ruta_archivo, $file_hash) {
@@ -128,7 +126,6 @@ function debeProcesarse($ruta_archivo, $file_hash) {
         $hash_obtenido = obtenerHash($file_hash);
         $hash_verificado = verificarCargaArchivoPorHash($file_hash);
 
-        // Si el hash ya ha sido procesado o cargado, no procesar
         if ($hash_obtenido || $hash_verificado) {
             return false;
         }
