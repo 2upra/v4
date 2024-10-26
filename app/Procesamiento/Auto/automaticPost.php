@@ -148,8 +148,6 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
     if ($descripcion) {
         // Convertir a UTF-8
         $descripcion_utf8 = mb_convert_encoding($descripcion, 'UTF-8', 'auto');
-    
-        // Procesar JSON eliminando caracteres innecesarios y asegurando que no escape los caracteres UTF-8
         $descripcion_procesada = json_decode(trim($descripcion_utf8, "```json \n"), true, 512, JSON_UNESCAPED_UNICODE);
 
         if (isset($descripcion_procesada['descripcion_ia']) && is_array($descripcion_procesada['descripcion_ia'])) {
@@ -201,7 +199,8 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
         }
     }
 
-    // Verificar que $nuevos_datos esté definido antes de usarlo
+    
+
     $nuevos_datos_algoritmo = isset($nuevos_datos) ? [
         'bpm' => $resultados['bpm'] ?? '',
         'emotion' => $resultados['emotion'] ?? '',
@@ -372,7 +371,8 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     //autLog("Metadatos del post actualizados.");
 
     // Agregar los datos del algoritmo como meta con los datos JSON de $datosAlgoritmo
-    update_post_meta($post_id, 'datosAlgoritmo', json_encode($datosAlgoritmo));
+    update_post_meta($post_id, 'datosAlgoritmo', json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE));
+
 
     //autLog("Datos del algoritmo guardados en el post.");
 
