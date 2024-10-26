@@ -1,8 +1,9 @@
 function repararJson(jsonString) {
     try {
-        // Escapar comillas dentro de cualquier propiedad que tenga un objeto como valor
-        jsonString = jsonString.replace(/"([^"]+?)":\s*?"({.*?})"/g, function (match, p1, p2) {
-            return `"${p1}":"${p2.replace(/"/g, '\\"')}"`;
+        // Escapar comillas dobles dentro de valores de cadenas en objetos JSON
+        jsonString = jsonString.replace(/"([^"]+?)":\s*?"([^"]*?")/g, function (match, key, value) {
+            const escapedValue = value.replace(/(?<!\\)"/g, '\\"'); // Escapa solo comillas que no están ya escapadas
+            return `"${key}": "${escapedValue}"`;
         });
 
         // Intentar parsear el JSON reparado
@@ -12,6 +13,7 @@ function repararJson(jsonString) {
         return null;
     }
 }
+
 function capitalize(word) {
     return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
 }
@@ -21,8 +23,8 @@ function removeDuplicates(arr) {
 }
 
 /*
-porque falla con esta estructura, el proposito es hacer el codigo funcione en todos los casos, este es un caso donde no ha funcionado, no dañe la logica actual
-{"bpm":"","emotion":"","key":"","scale":"","descripcion_ia":{"es":"Cuenta regresiva de audio "Countdown 03" que incluye los números 'one, two, three, four',  perteneciente a un kit de samples de hip hop.  Ideal para introducir una canción o sección musical.","en":"Audio countdown "Countdown 03" featuring the numbers 'one, two, three, four', from a hip hop sample kit. Ideal for introducing a song or musical section."},"instrumentos_principal":{"es":["Voz"],"en":["Voice"]},"nombre_corto":{"es":["Countdown 03"],"en":["Countdown 03"]},"descripcion_corta":{"es":"Cuenta regresiva: sample hip hop","en":"Countdown sample: hip hop"},"estado_animo":{"es":["Enérgico"],"en":["Energetic"]},"artista_posible":{"es":[],"en":[]},"genero_posible":{"es":["Hip hop"],"en":["Hip hop"]},"tipo_audio":{"es":["sample"],"en":["sample"]},"tags_posibles":{"es":["Countdown","Sample","HipHop","Intro"],"en":["Countdown","Sample","HipHop","Intro"]},"sugerencia_busqueda":{"es":["Sample cuenta regresiva","Intro hip hop","Sample hip hop gratis","Countdown audio"],"en":["Countdown sample","Hip hop intro","Free hip hop sample","Audio countdown"]}}
+porque falla con esta estructura, el proposito es hacer el codigo funcione en todos los casos, este es un caso donde no ha funcionado, no dañes la logica actual
+{"bpm":"","emotion":"","key":"","scale":"","descripcion_ia":{"es":"Sample de voz que dice "Don't stop!" con un tono urgente.  Ideal para añadir un elemento vocal impactante a producciones de hip hop.","en":"Vocal sample saying "Don't stop!" with an urgent tone. Ideal for adding an impactful vocal element to hip hop productions."},"instrumentos_principal":{"es":["Voz"],"en":["Vocal"]},"nombre_corto":{"es":["Voz Stop"],"en":["Stop Vocal"]},"descripcion_corta":{"es":"Sample vocal: ¡No te detengas!","en":"Vocal sample: Don't stop!"},"estado_animo":{"es":["Urgente","Enérgico"],"en":["Urgent","Energetic"]},"artista_posible":{"es":[],"en":[]},"genero_posible":{"es":["Hip Hop","Trap"],"en":["Hip Hop","Trap"]},"tipo_audio":{"es":["sample"],"en":["sample"]},"tags_posibles":{"es":["Voz","Sample","HipHop","Urgente","Energia"],"en":["Vocal","Sample","HipHop","Urgent","Energy"]},"sugerencia_busqueda":{"es":["Sample vocal urgente","Voz hip hop","Sample para trap"],"en":["Urgent vocal sample","Hip hop vocal","Trap sample"]}}
 */
 
 
