@@ -1,17 +1,17 @@
 <?
 
-function autProcesarAudio($audio_path)
+function autProcesarAudio($rutaOriginalOne)
 {
     autLog("--Inicio de la función autProcesarAudio.--");
 
     // Verificar si el archivo existe
-    if (!file_exists($audio_path)) {
-        autLog("Archivo no encontrado: $audio_path");
+    if (!file_exists($rutaOriginalOne)) {
+        autLog("Archivo no encontrado: $rutaOriginalOne");
         return;
     }
 
     // Obtener partes del path
-    $path_parts = pathinfo($audio_path);
+    $path_parts = pathinfo($rutaOriginalOne);
     $directory = realpath($path_parts['dirname']);
     if ($directory === false) {
         autLog("Directorio inválido: {$path_parts['dirname']}");
@@ -20,12 +20,12 @@ function autProcesarAudio($audio_path)
     $extension = strtolower($path_parts['extension']);
     $basename = $path_parts['filename'];
 
-    autLog("Ruta inicial: $audio_path, Directorio: $directory, Basename: $basename, Extensión: $extension");
+    autLog("Ruta inicial: $rutaOriginalOne, Directorio: $directory, Basename: $basename, Extensión: $extension");
 
     // Obtener ID del archivo por la ruta directa
-    $file_id = obtenerFileIDPorURL($audio_path);
+    $file_id = obtenerFileIDPorURL($rutaOriginalOne);
     if ($file_id === false) {
-        autLog("File ID no encontrado para la ruta: $audio_path");
+        autLog("File ID no encontrado para la ruta: $rutaOriginalOne");
         return;
     } else {
         autLog("File ID obtenido: $file_id");
@@ -35,7 +35,7 @@ function autProcesarAudio($audio_path)
     $temp_path = "$directory/{$basename}_temp.$extension";
 
     // 1. Eliminar metadatos con ffmpeg
-    $comando_strip_metadata = "/usr/bin/ffmpeg -i " . escapeshellarg($audio_path) . " -map_metadata -1 -c copy " . escapeshellarg($temp_path) . " -y";
+    $comando_strip_metadata = "/usr/bin/ffmpeg -i " . escapeshellarg($rutaOriginalOne) . " -map_metadata -1 -c copy " . escapeshellarg($temp_path) . " -y";
     autLog("Comando para eliminar metadatos: $comando_strip_metadata");
     exec($comando_strip_metadata, $output_strip, $return_strip);
     if ($return_strip !== 0) {
@@ -44,22 +44,22 @@ function autProcesarAudio($audio_path)
     }
 
     // Reemplazar archivo original
-    if (!rename($temp_path, $audio_path)) {
+    if (!rename($temp_path, $rutaOriginalOne)) {
         autLog("No se pudo reemplazar el archivo original.");
         return;
     }
-    autLog("Metadatos eliminados del archivo: $audio_path");
+    autLog("Metadatos eliminados del archivo: $rutaOriginalOne");
 
     // 2. Crear versión lite en MP3 a 128 kbps
-    $lite_path = "$directory/{$basename}_lite.mp3";
-    $comando_lite = "/usr/bin/ffmpeg -i " . escapeshellarg($audio_path) . " -b:a 128k " . escapeshellarg($lite_path) . " -y";
+    $rutaWpLiteDos = "$directory/{$basename}_lite.mp3";
+    $comando_lite = "/usr/bin/ffmpeg -i " . escapeshellarg($rutaOriginalOne) . " -b:a 128k " . escapeshellarg($rutaWpLiteDos) . " -y";
     autLog("Comando para crear versión lite: $comando_lite");
     exec($comando_lite, $output_lite, $return_lite);
     if ($return_lite !== 0) {
         autLog("Error al crear versión lite: " . implode(" | ", $output_lite));
         return;
     }
-    
+
     // 6. Mover el archivo lite al directorio de uploads
     $uploads_dir = wp_upload_dir();
     $target_dir_audio = trailingslashit($uploads_dir['basedir']) . "audio/";
@@ -68,29 +68,27 @@ function autProcesarAudio($audio_path)
     if (!file_exists($target_dir_audio)) {
         if (!wp_mkdir_p($target_dir_audio)) {
             autLog("No se pudo crear el directorio de uploads/audio.");
-
             return;
         }
     }
 
-    $target_path_lite = $target_dir_audio;
+    // Aquí se crea la ruta completa del archivo lite en el directorio de uploads
+    $rutaWpLiteOne = $target_dir_audio . "{$basename}_lite.mp3";
 
     // Mover archivo lite
-    if (!rename($lite_path, $target_path_lite)) {
+    if (!rename($rutaWpLiteDos, $rutaWpLiteOne)) {
         autLog("No se pudo mover el archivo lite al directorio de uploads.");
         return;
     }
-    autLog("Archivo lite movido al directorio de uploads: $target_path_lite");
-
+    autLog("Archivo lite movido al directorio de uploads: $rutaWpLiteOne");
 
     // 7. Enviar rutas a crearAutPost
-    autLog("Enviando rutas a crearAutPost: Original - $audio_path, Lite - $target_path_lite");
-    crearAutPost($audio_path, $target_path_lite, $file_id, $lite_path);
+    autLog("Enviando rutas a crearAutPost: Original - $rutaOriginalOne, Lite - $rutaWpLiteOne");
+    crearAutPost($rutaOriginalOne, $rutaWpLiteOne, $file_id);
     autLog("Archivos enviados a crearAutPost.");
 
     autLog("--Fin de la función autProcesarAudio.--");
 }
-
 
 function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $carpeta_abuela = null)
 {
@@ -208,21 +206,24 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
     return $nuevos_datos_algoritmo;
 }
 
-function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lite_path)
+function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 {
     /*
-    2024-10-26 07:22:59 - Iniciando crearAutPost con nuevo_nombre_original: /home/asley01/MEGA/Waw/Kits/VITAGEN HIP HOP KITS/BASS ONE SHOT/2upra_BajoMelodico_wlTK.wav, nuevo_nombre_lite: /var/www/wordpress/wp-content/uploads/audio/2upra_BajoMelodico_wlTK_lite_lite.mp3, file_id: 10327, lite_path: /home/asley01/MEGA/Waw/Kits/VITAGEN HIP HOP KITS/BASS ONE SHOT/2upra_BajoMelodico_wlTK_lite.mp3
+    2024-10-26 07:26:42 - Iniciando crearAutPost con 
+    rutaOriginal: /home/asley01/MEGA/Waw/Kits/VITAGEN HIP HOP KITS/SAMPLES/Loop 60 (Kellee Patterson - You).wav, 
+    rutaWpLite: /var/www/wordpress/wp-content/uploads/audio/Loop 60 (Kellee Patterson - You)_lite_lite.mp3, 
+    file_id: 10329
     */
-    autLog("Iniciando crearAutPost con nuevo_nombre_original: $nuevo_nombre_original, nuevo_nombre_lite: $nuevo_nombre_lite, file_id: $file_id, lite_path: $lite_path");
+    autLog("Iniciando crearAutPost con rutaOriginal: $rutaOriginal, rutaWpLite: $rutaWpLite, file_id: $file_id");
 
     $autor_id = 44;
-    $nombre_archivo = pathinfo($lite_path, PATHINFO_FILENAME);
-    $carpeta = basename(dirname($lite_path));
-    $carpeta_abuela = basename(dirname(dirname($lite_path)));
+    $nombre_archivo = pathinfo($rutaOriginal, PATHINFO_FILENAME);
+    $carpeta = basename(dirname($rutaOriginal));
+    $carpeta_abuela = basename(dirname(dirname($rutaOriginal)));
 
     autLog("Nombre archivo: $nombre_archivo, Carpeta: $carpeta, Carpeta abuela: $carpeta_abuela");
 
-    $datosAlgoritmo = automaticAudio($nuevo_nombre_lite, $nombre_archivo, $carpeta, $carpeta_abuela);
+    $datosAlgoritmo = automaticAudio($rutaWpLite, $nombre_archivo, $carpeta, $carpeta_abuela);
 
     if (!$datosAlgoritmo) {
         autLog("Error al obtener datos del algoritmo.");
@@ -256,6 +257,8 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
         return;
     }
 
+
+
     $titulo = mb_substr($descripcion_corta_es, 0, 60);
     $contenido = $descripcion_corta_es;
 
@@ -279,11 +282,11 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
 
     autLog("Post creado con ID: $post_id");
 
-    update_post_meta($post_id, 'rutaOriginal', $nuevo_nombre_original);
-    update_post_meta($post_id, 'rutaLiteOriginal', $nuevo_nombre_lite);
+    update_post_meta($post_id, 'rutaOriginal', $rutaOriginal);
+    update_post_meta($post_id, 'rutaLiteOriginal', $rutaWpLite);
     update_post_meta($post_id, 'postAut', true);
 
-    $audio_original_id = adjuntarArchivoAut($nuevo_nombre_original, $post_id, $file_id);
+    $audio_original_id = adjuntarArchivoAut($rutaOriginal, $post_id, $file_id);
     if (is_wp_error($audio_original_id)) {
         autLog("Error al adjuntar archivo original: " . $audio_original_id->get_error_message());
         wp_delete_post($post_id, true);
@@ -292,7 +295,7 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
 
     autLog("Archivo original adjuntado con ID: $audio_original_id");
 
-    $audio_lite_id = adjuntarArchivoAut($nuevo_nombre_lite, $post_id);
+    $audio_lite_id = adjuntarArchivoAut($rutaWpLite, $post_id);
     if (is_wp_error($audio_lite_id)) {
         autLog("Error al adjuntar archivo lite: " . $audio_lite_id->get_error_message());
         return $audio_lite_id;
