@@ -1,16 +1,17 @@
 function repararJson(jsonString) {
     try {
-        // Intenta corregir el JSON anidado escapando comillas en los valores de propiedades mal formadas
-        jsonString = jsonString.replace(/"descripcion_ia":"({.*?})"/g, function(match, p1) {
-            return `"descripcion_ia":"${p1.replace(/"/g, '\\"')}"`;
+        // Escapar comillas dentro de cualquier propiedad que tenga un objeto como valor
+        jsonString = jsonString.replace(/"([^"]+?)":\s*?"({.*?})"/g, function (match, p1, p2) {
+            return `"${p1}":"${p2.replace(/"/g, '\\"')}"`;
         });
 
+        // Intentar parsear el JSON reparado
         return JSON.parse(jsonString);
     } catch (e) {
+        console.error('Error al parsear el JSON:', e.message);
         return null;
     }
 }
-
 function capitalize(word) {
     return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
 }
@@ -20,13 +21,13 @@ function removeDuplicates(arr) {
 }
 
 /*
-
-
+porque falla con esta estructura, el proposito es hacer el codigo funcione en todos los casos, este es un caso donde no ha funcionado, no dañe la logica actual
+{"bpm":"","emotion":"","key":"","scale":"","descripcion_ia":{"es":"Cuenta regresiva de audio "Countdown 03" que incluye los números 'one, two, three, four',  perteneciente a un kit de samples de hip hop.  Ideal para introducir una canción o sección musical.","en":"Audio countdown "Countdown 03" featuring the numbers 'one, two, three, four', from a hip hop sample kit. Ideal for introducing a song or musical section."},"instrumentos_principal":{"es":["Voz"],"en":["Voice"]},"nombre_corto":{"es":["Countdown 03"],"en":["Countdown 03"]},"descripcion_corta":{"es":"Cuenta regresiva: sample hip hop","en":"Countdown sample: hip hop"},"estado_animo":{"es":["Enérgico"],"en":["Energetic"]},"artista_posible":{"es":[],"en":[]},"genero_posible":{"es":["Hip hop"],"en":["Hip hop"]},"tipo_audio":{"es":["sample"],"en":["sample"]},"tags_posibles":{"es":["Countdown","Sample","HipHop","Intro"],"en":["Countdown","Sample","HipHop","Intro"]},"sugerencia_busqueda":{"es":["Sample cuenta regresiva","Intro hip hop","Sample hip hop gratis","Countdown audio"],"en":["Countdown sample","Hip hop intro","Free hip hop sample","Audio countdown"]}}
 */
 
 
 function tagsPosts() {
-    document.querySelectorAll('p[id-post-algoritmo]').forEach(function(pElement) {
+    document.querySelectorAll('p[id-post-algoritmo]').forEach(function (pElement) {
         const postId = pElement.getAttribute('id-post-algoritmo');
         const tagsContainer = document.getElementById('tags-' + postId);
 
