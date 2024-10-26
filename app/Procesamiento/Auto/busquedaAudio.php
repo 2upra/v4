@@ -24,12 +24,13 @@ add_action('audio60', 'procesarAudios');
 
 
 
-function procesarAudios() {
+function procesarAudios()
+{
     $directorio_audios = '/home/asley01/MEGA/Waw/Kits';
     $lock_file = '/tmp/procesar_audios.lock';
     $max_reintentos = 5;
     $espera_segundos = 5;
-    
+
     $fp = fopen($lock_file, 'c');
     if ($fp === false) {
         // No se pudo abrir el archivo de bloqueo, se sale de la función.
@@ -70,7 +71,8 @@ function procesarAudios() {
     }
 }
 
-function buscarUnAudioValido($directorio) {
+function buscarUnAudioValido($directorio)
+{
     $extensiones_permitidas = ['wav', 'mp3'];
 
     if (!is_dir($directorio) || !is_readable($directorio)) {
@@ -103,7 +105,10 @@ function buscarUnAudioValido($directorio) {
             if ($file->isFile()) {
                 $ext = strtolower($file->getExtension());
                 if (in_array($ext, $extensiones_permitidas, true)) {
-                    $archivos[] = $file->getPathname();
+                    $nombreArchivo = $file->getFilename();
+                    if (substr($nombreArchivo, -5) !== '2upra') { 
+                        $archivos[] = $file->getPathname();
+                    }
                 }
             }
         }
@@ -132,7 +137,8 @@ function buscarUnAudioValido($directorio) {
     return null;
 }
 
-function debeProcesarse($ruta_archivo, $file_hash) {
+function debeProcesarse($ruta_archivo, $file_hash)
+{
     try {
         if (!file_exists($ruta_archivo) || !$file_hash) {
             return false;
@@ -151,7 +157,8 @@ function debeProcesarse($ruta_archivo, $file_hash) {
     }
 }
 
-function autRevisarAudio($audio, $file_hash) {
+function autRevisarAudio($audio, $file_hash)
+{
     if (!file_exists($audio)) {
         return;
     }
