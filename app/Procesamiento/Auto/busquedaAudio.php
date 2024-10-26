@@ -45,7 +45,7 @@ function procesarAudios()
         autLog("Bloqueo obtenido, iniciando el procesamiento de audios.");
         
         // Ejecutar el comando para cambiar los permisos del directorio
-        $output = shell_exec('sudo chmod -R 770 /home/asley01/MEGA/Waw/Kits/');
+        $output = shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/');
         autLog("Permisos actualizados en el directorio: " . ($output ? $output : 'Sin salida del comando'));
 
         $audio_info = buscarUnAudioValido($directorio_audios);
