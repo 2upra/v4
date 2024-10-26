@@ -219,122 +219,73 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
 
 function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 {
-    //autLog("Iniciando crearAutPost con rutaOriginal: $rutaOriginal, rutaWpLite: $rutaWpLite, file_id: $file_id");
-
+    // Configuración de variables iniciales
     $autor_id = 44;
     $nombre_archivo = pathinfo($rutaOriginal, PATHINFO_FILENAME);
     $carpeta = basename(dirname($rutaOriginal));
     $carpeta_abuela = basename(dirname(dirname($rutaOriginal)));
 
-    //autLog("Nombre archivo: $nombre_archivo, Carpeta: $carpeta, Carpeta abuela: $carpeta_abuela");
-
     $datosAlgoritmo = automaticAudio($rutaWpLite, $nombre_archivo, $carpeta, $carpeta_abuela);
-
     if (!$datosAlgoritmo) {
-        //autLog("Error al obtener datos del algoritmo.");
         eliminarHash($file_id);
         return;
     }
 
     $descripcion_corta_es = $datosAlgoritmo['descripcion_corta']['en'] ?? '';
     $nombre_generado = $datosAlgoritmo['nombre_corto']['en'] ?? '';
-    $bpm = $datosAlgoritmo['bpm'] ?? null;
-    $key = $datosAlgoritmo['key'] ?? null;
-    $scale = $datosAlgoritmo['scale'] ?? null;
 
-    // Si el nombre generado es un array, tomamos el primer valor
+    // Manejo de arrays en nombre generado
     if (is_array($nombre_generado)) {
-        //autLog("Nombre generado es un array: " . print_r($nombre_generado, true));
         $nombre_generado = $nombre_generado[0] ?? '';
     }
 
-    //autLog("Descripción corta ES: $descripcion_corta_es, Nombre generado: $nombre_generado");
-
     if ($nombre_generado) {
-        // Limpiar el nombre generado, permitiendo acentos y caracteres especiales
-        $nombre_generado_limpio = trim($nombre_generado);
-        $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- áéíóúÁÉÍÓÚñÑ]/u', '', $nombre_generado_limpio); // Permitimos acentos y la ñ
-        $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 70);
-
-        // Generar un ID único de 4 caracteres
+        $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- áéíóúÁÉÍÓÚñÑ]/u', '', trim($nombre_generado));
         $id_unica = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
-
-        // Generar el nombre final con el sufijo '_2upra'
-        $nombre_final = $nombre_generado_limpio . '_' . $id_unica . '_2upra';
-        $nombre_final = substr($nombre_final, 0, 60);
-
-        //autLog("Nombre final generado: $nombre_final");
+        $nombre_final = substr($nombre_generado_limpio . '_' . $id_unica . '_2upra', 0, 60);
     } else {
-        //autLog("Error en la generación del nombre en crearAutPost");
         eliminarHash($file_id);
         return;
     }
 
-    // Renombrar el archivo original
+    // Renombrar archivo original con verificación
     $extension_original = pathinfo($rutaOriginal, PATHINFO_EXTENSION);
     $nuevo_nombre_original = dirname($rutaOriginal) . '/' . $nombre_final . '.' . $extension_original;
-    //autLog("Renombrando archivo original: $rutaOriginal a $nuevo_nombre_original");
-
-    if (!file_exists($rutaOriginal)) {
-        //autLog("El archivo original no existe: $rutaOriginal");
+    if (!file_exists($rutaOriginal) || (file_exists($nuevo_nombre_original) && !unlink($nuevo_nombre_original))) {
         return;
     }
-
     if (!rename($rutaOriginal, $nuevo_nombre_original)) {
-        //autLog("No se pudo renombrar el archivo original. Verifica los permisos.");
         return;
     }
 
-    // Verificación de la existencia del archivo lite
-    if (!file_exists($rutaWpLite)) {
-        //autLog("El archivo lite no existe: $rutaWpLite");
-        return;
-    }
-
+    // Renombrar archivo lite con verificación
+    if (!file_exists($rutaWpLite)) return;
     $extension_lite = pathinfo($rutaWpLite, PATHINFO_EXTENSION);
     $nuevo_nombre_lite = dirname($rutaWpLite) . '/' . $nombre_final . '_lite.' . $extension_lite;
-    //autLog("Renombrando archivo lite: $rutaWpLite a $nuevo_nombre_lite");
-
-    // Verificación de permisos y renombrar el archivo lite
-    if (!is_writable($rutaWpLite)) {
-        //autLog("El archivo lite no tiene permisos de escritura: $rutaWpLite");
+    if (file_exists($nuevo_nombre_lite) && !unlink($nuevo_nombre_lite)) {
         return;
     }
-
     if (!rename($rutaWpLite, $nuevo_nombre_lite)) {
-        //autLog("No se pudo renombrar el archivo lite. Verifica los permisos.");
         return;
     }
 
-    // Asegurarse de que $descripcion_corta_es es una cadena antes de usarla
+    // Asegurar que la descripción es una cadena
     if (is_array($descripcion_corta_es)) {
-        //autLog("Descripción corta ES es un array: " . print_r($descripcion_corta_es, true));
-        $descripcion_corta_es = $descripcion_corta_es[0] ?? ''; // Tomamos el primer valor si es un array
+        $descripcion_corta_es = $descripcion_corta_es[0] ?? '';
     }
-
-    // Limitar la longitud del título a 60 caracteres
-    $titulo = mb_substr($descripcion_corta_es, 0, 60);
-    $contenido = $descripcion_corta_es;
-
-    //autLog("Título generado: $titulo, Contenido generado: $contenido");
 
     // Crear el post
+    $titulo = mb_substr($descripcion_corta_es, 0, 60);
     $post_data = [
         'post_title'    => $titulo,
-        'post_content'  => $contenido,
+        'post_content'  => $descripcion_corta_es,
         'post_status'   => 'publish',
         'post_author'   => $autor_id,
         'post_type'     => 'social_post',
     ];
-
     $post_id = wp_insert_post($post_data);
 
-    if (is_wp_error($post_id)) {
-        //autLog("Error al crear el post: " . $post_id->get_error_message());
-        return $post_id;
-    }
-
-    //autLog("Post creado con ID: $post_id");
+    if (is_wp_error($post_id)) return $post_id;
 
     update_post_meta($post_id, 'rutaOriginal', $nuevo_nombre_original);
     update_post_meta($post_id, 'rutaLiteOriginal', $nuevo_nombre_lite);
@@ -342,43 +293,28 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     $audio_original_id = adjuntarArchivoAut($nuevo_nombre_original, $post_id, $file_id);
     if (is_wp_error($audio_original_id)) {
-        //autLog("Error al adjuntar archivo original: " . $audio_original_id->get_error_message());
         wp_delete_post($post_id, true);
         return $audio_original_id;
     }
 
-    //autLog("Archivo original adjuntado con ID: $audio_original_id");
-
     $audio_lite_id = adjuntarArchivoAut($nuevo_nombre_lite, $post_id);
-    if (is_wp_error($audio_lite_id)) {
-        //autLog("Error al adjuntar archivo lite: " . $audio_lite_id->get_error_message());
-        return $audio_lite_id;
-    }
+    if (is_wp_error($audio_lite_id)) return $audio_lite_id;
 
-    //autLog("Archivo lite adjuntado con ID: $audio_lite_id");
+    // Metadatos del post
     update_post_meta($post_id, 'post_audio', $audio_original_id);
     update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
     update_post_meta($post_id, 'paraDescarga', true);
-
-    // INFORMACIÓN NUEVA PARA CARPETAS Y FUNCIONALIDAD DE KITS
     update_post_meta($post_id, 'nombreOriginal', $nombre_archivo);
     update_post_meta($post_id, 'carpetaOriginal', $carpeta);
     update_post_meta($post_id, 'carpetaAbuelaOriginal', $carpeta_abuela);
-
-    //////////////////////////////////////////////////////////////
-    update_post_meta($post_id, 'audio_bpm', $bpm);
-    update_post_meta($post_id, 'audio_key', $key);
-    update_post_meta($post_id, 'audio_scale', $scale);
-    //////////////////////////////////////////////////////////////
-
-    //autLog("Metadatos del post actualizados.");
-    // Agregar los datos del algoritmo como meta con los datos JSON de $datosAlgoritmo
+    update_post_meta($post_id, 'audio_bpm', $datosAlgoritmo['bpm'] ?? null);
+    update_post_meta($post_id, 'audio_key', $datosAlgoritmo['key'] ?? null);
+    update_post_meta($post_id, 'audio_scale', $datosAlgoritmo['scale'] ?? null);
     update_post_meta($post_id, 'datosAlgoritmo', json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE));
-    //autLog("Datos del algoritmo guardados en el post.");
 
-    // Devolver el ID del post
     return $post_id;
 }
+
 
 
 function adjuntarArchivoAut($archivo, $post_id, $file_id = null)
