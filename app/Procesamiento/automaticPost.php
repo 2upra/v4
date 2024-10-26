@@ -260,37 +260,34 @@ function rehacerNombreAudio($post_id, $archivo_audio)
             return null;
         }
 
-        // Actualizar la meta 'rutaOriginal'
+        // Actualizar la meta 'rutaOriginal' o buscar en subcarpetas si no existe la ruta
         $ruta_original = get_post_meta($post_id, 'rutaOriginal', true);
-        if ($ruta_original) {
-            // Obtener la ruta del directorio
+        if ($ruta_original && file_exists($ruta_original)) {
             $directorio_original = pathinfo($ruta_original, PATHINFO_DIRNAME);
+        } else {
+            $directorio_original = buscarArchivoEnSubcarpetas("/home/asley01/MEGA/Waw/X", basename($ruta_original));
+        }
 
-            // Construir la nueva ruta original
+        if ($directorio_original) {
             $ext_extension = pathinfo($ruta_original, PATHINFO_EXTENSION);
             $nueva_ruta_original = $directorio_original . '/' . $nombre_final_con_id . '.' . $ext_extension;
 
-            // Renombrar el archivo físico en el servidor
-            $ruta_original_completa = $ruta_original;
-            $nueva_ruta_completa = $nueva_ruta_original;
-
-            if (rename($ruta_original_completa, $nueva_ruta_completa)) {
-                // Actualizar la meta 'rutaOriginal' con la nueva ruta
-                update_post_meta($post_id, 'rutaOriginal', $nueva_ruta_completa);
-                iaLog("Meta 'rutaOriginal' actualizada a: {$nueva_ruta_completa}");
-                guardarLog("Archivo renombrado en el servidor de {$ruta_original_completa} a {$nueva_ruta_completa}");
+            if (rename($ruta_original, $nueva_ruta_original)) {
+                update_post_meta($post_id, 'rutaOriginal', $nueva_ruta_original);
+                iaLog("Meta 'rutaOriginal' actualizada a: {$nueva_ruta_original}");
+                guardarLog("Archivo renombrado en el servidor de {$ruta_original} a {$nueva_ruta_original}");
             } else {
-                guardarLog("error en nombrar archivo en el servidor {$ruta_original_completa} a {$nueva_ruta_completa}");
-                iaLog("Error al renombrar el archivo en el servidor de {$ruta_original_completa} a {$nueva_ruta_completa}");
+                guardarLog("error en nombrar archivo en el servidor {$ruta_original} a {$nueva_ruta_original}");
+                iaLog("Error al renombrar el archivo en el servidor de {$ruta_original} a {$nueva_ruta_original}");
                 update_post_meta($post_id, 'rutaOriginalPerdida', true);
             }
         } else {
-            iaLog("Meta 'rutaOriginal' no existe para el post ID: {$post_id}");
+            iaLog("No se encontró 'rutaOriginal' ni en la meta ni en las subcarpetas para el post ID: {$post_id}");
         }
 
+        // Actualizar la URL en base de datos si tiene idHash_audioId
         $id_hash_audio = get_post_meta($post_id, 'idHash_audioId', true);
         if ($id_hash_audio) {
-            // Obtener la nueva URL de 'post_audio'
             $nueva_url_audio = wp_get_attachment_url($attachment_id_audio);
             actualizarUrlArchivo($id_hash_audio, $nueva_url_audio);
             iaLog("URL de 'post_audio' actualizada para el hash ID: {$id_hash_audio}");
@@ -299,7 +296,6 @@ function rehacerNombreAudio($post_id, $archivo_audio)
         }
 
         iaLog("Renombrado completado exitosamente para el post ID: {$post_id}");
-
         update_post_meta($post_id, 'Verificado', true);
 
         return $nombre_final_con_id;
@@ -308,6 +304,29 @@ function rehacerNombreAudio($post_id, $archivo_audio)
         return null;
     }
 }
+
+// Función auxiliar para buscar archivos en subcarpetas, filtrando solo archivos de audio válidos
+function buscarArchivoEnSubcarpetas($directorio_base, $nombre_archivo)
+{
+    $iterador = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directorio_base));
+    foreach ($iterador as $archivo) {
+        // Obtener la extensión y el nombre del archivo
+        $extension = strtolower($archivo->getExtension());
+        $nombre = $archivo->getFilename();
+
+        // Ignorar archivos que no sean .wav o .mp3 y que no empiecen con "2upra"
+        if (!in_array($extension, ['wav', 'mp3']) || strpos($nombre, '2upra') !== 0) {
+            continue;
+        }
+
+        // Si el nombre coincide exactamente con el archivo buscado, devolver la ruta del directorio
+        if ($nombre === $nombre_archivo) {
+            return $archivo->getPath();
+        }
+    }
+    return false;
+}
+
 
 function renombrar_archivo_adjunto($attachment_id, $nuevo_nombre, $es_lite = false)
 {
@@ -370,9 +389,9 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
     $carpeta_abuela = basename(dirname(dirname($lite_path))); // Obtener la carpeta un nivel más arriba
 
     // Preparar el prompt con información de la ruta original y las carpetas
-    $prompt = "Genera una descripción corta para el siguiente archivo de audio. Puede ser un sample, un fx, un loop, un sonido de un kick, puede ser cualquier cosa. El propósito es que la descripción sea corta (solo responde con la descripción, no digas nada adicional). Te doy ejemplos: Sample oscuro phonk, Fx de explosión, kick de house, sonido de sintetizador, piano melodía, guitarra acústica sample. Los nombres o descripciones algunas veces deben manterse en ingles como sean mas comunes, por ejemplo snare, kick, sample, hi hats, etc \n\n" . 
-    "Te muestro la ruta original del archivo, su carpeta y la carpeta abuela, ya que esta información puede ser relevante para determinar sobre qué trata el audio, no agregues informacion del archivo en la descripcion e ignora la palabra lite: \n" .
-    "Archivo: '{$nombre_archivo}'\nCarpeta: '{$carpeta}'\nCarpeta abuela: '{$carpeta_abuela}'.";
+    $prompt = "Genera una descripción corta para el siguiente archivo de audio. Puede ser un sample, un fx, un loop, un sonido de un kick, puede ser cualquier cosa. El propósito es que la descripción sea corta (solo responde con la descripción, no digas nada adicional). Te doy ejemplos: Sample oscuro phonk, Fx de explosión, kick de house, sonido de sintetizador, piano melodía, guitarra acústica sample. Los nombres o descripciones algunas veces deben manterse en ingles como sean mas comunes, por ejemplo snare, kick, sample, hi hats, etc \n\n" .
+        "Te muestro la ruta original del archivo, su carpeta y la carpeta abuela, ya que esta información puede ser relevante para determinar sobre qué trata el audio, no agregues informacion del archivo en la descripcion e ignora la palabra lite: \n" .
+        "Archivo: '{$nombre_archivo}'\nCarpeta: '{$carpeta}'\nCarpeta abuela: '{$carpeta_abuela}'.";
 
     // Aquí puedes continuar el flujo para enviar este prompt a la IA y procesar la respuesta
 
