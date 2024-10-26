@@ -43,10 +43,11 @@ function procesarAudios()
 
     try {
         autLog("Bloqueo obtenido, iniciando el procesamiento de audios.");
-        
+
         // Ejecutar el comando para cambiar los permisos del directorio
-        $output = shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/');
+        $output = shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
         autLog("Permisos actualizados en el directorio: " . ($output ? $output : 'Sin salida del comando'));
+
 
         $audio_info = buscarUnAudioValido($directorio_audios);
         if ($audio_info) {
@@ -61,7 +62,7 @@ function procesarAudios()
         flock($fp, LOCK_UN);
         fclose($fp);
         autLog("Bloqueo liberado, proceso finalizado.");
-        
+
         // Verificar si el lock_file actual es el que se creó
         if (file_exists($lock_file)) {
             unlink($lock_file);
@@ -72,9 +73,10 @@ function procesarAudios()
 
 
 // Paso 2 - Buscar y retornar un solo audio válido
-function buscarUnAudioValido($directorio) {
+function buscarUnAudioValido($directorio)
+{
     $extensiones_permitidas = ['wav', 'mp3'];
-    
+
     if (!is_dir($directorio) || !is_readable($directorio)) {
         autLog("[buscarUnAudioValido] Error: El directorio no existe o no es accesible: {$directorio}");
         return null;
@@ -114,7 +116,7 @@ function buscarUnAudioValido($directorio) {
                 if (in_array($ext, $extensiones_permitidas, true)) {
                     $nombreArchivo = $file->getFilename();
                     // if (substr($nombreArchivo, -5) !== '2upra') { // Comentado para incluir todos los archivos
-                        $archivos[] = $file->getPathname();
+                    $archivos[] = $file->getPathname();
                     // }
                 }
             }
@@ -142,7 +144,6 @@ function buscarUnAudioValido($directorio) {
             autLog("[buscarUnAudioValido] El archivo no necesita ser procesado, buscando otro...");
             return buscarUnAudioValido($directorio); // Intentar con otro archivo
         }
-
     } catch (Exception $e) {
         autLog("[buscarUnAudioValido] Excepción al iterar directorios: " . $e->getMessage());
         return null;
