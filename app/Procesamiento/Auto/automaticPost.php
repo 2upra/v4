@@ -372,8 +372,6 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     // Agregar los datos del algoritmo como meta con los datos JSON de $datosAlgoritmo
     update_post_meta($post_id, 'datosAlgoritmo', json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE));
-
-
     //autLog("Datos del algoritmo guardados en el post.");
 
     // Devolver el ID del post
