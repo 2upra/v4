@@ -2,11 +2,11 @@
 
 function autProcesarAudio($audio_path)
 {
-    //guardarLog("--Inicio de la función autProcesarAudio.--");
+    autLog("--Inicio de la función autProcesarAudio.--");
 
     // Verificar si el archivo existe
     if (!file_exists($audio_path)) {
-        //guardarLog("Archivo no encontrado: $audio_path");
+        autLog("Archivo no encontrado: $audio_path");
         return;
     }
 
@@ -14,21 +14,21 @@ function autProcesarAudio($audio_path)
     $path_parts = pathinfo($audio_path);
     $directory = realpath($path_parts['dirname']);
     if ($directory === false) {
-        //guardarLog("Directorio inválido: {$path_parts['dirname']}");
+        autLog("Directorio inválido: {$path_parts['dirname']}");
         return;
     }
     $extension = strtolower($path_parts['extension']);
     $basename = $path_parts['filename'];
 
-    //guardarLog("Ruta inicial: $audio_path, Directorio: $directory, Basename: $basename, Extensión: $extension");
+    autLog("Ruta inicial: $audio_path, Directorio: $directory, Basename: $basename, Extensión: $extension");
 
     // Obtener ID del archivo por la ruta directa
     $file_id = obtenerFileIDPorURL($audio_path);
     if ($file_id === false) {
-        //guardarLog("File ID no encontrado para la ruta: $audio_path");
+        autLog("File ID no encontrado para la ruta: $audio_path");
         return;
     } else {
-        //guardarLog("File ID obtenido: $file_id");
+        autLog("File ID obtenido: $file_id");
     }
 
     // Ruta temporal para eliminar metadatos
@@ -36,27 +36,27 @@ function autProcesarAudio($audio_path)
 
     // 1. Eliminar metadatos con ffmpeg
     $comando_strip_metadata = "/usr/bin/ffmpeg -i " . escapeshellarg($audio_path) . " -map_metadata -1 -c copy " . escapeshellarg($temp_path) . " -y";
-    //guardarLog("Comando para eliminar metadatos: $comando_strip_metadata");
+    autLog("Comando para eliminar metadatos: $comando_strip_metadata");
     exec($comando_strip_metadata, $output_strip, $return_strip);
     if ($return_strip !== 0) {
-        //guardarLog("Error al eliminar metadatos: " . implode(" | ", $output_strip));
+        autLog("Error al eliminar metadatos: " . implode(" | ", $output_strip));
         return;
     }
 
     // Reemplazar archivo original
     if (!rename($temp_path, $audio_path)) {
-        //guardarLog("No se pudo reemplazar el archivo original.");
+        autLog("No se pudo reemplazar el archivo original.");
         return;
     }
-    //guardarLog("Metadatos eliminados del archivo: $audio_path");
+    autLog("Metadatos eliminados del archivo: $audio_path");
 
     // 2. Crear versión lite en MP3 a 128 kbps
     $lite_path = "$directory/{$basename}_lite.mp3";
     $comando_lite = "/usr/bin/ffmpeg -i " . escapeshellarg($audio_path) . " -b:a 128k " . escapeshellarg($lite_path) . " -y";
-    //guardarLog("Comando para crear versión lite: $comando_lite");
+    autLog("Comando para crear versión lite: $comando_lite");
     exec($comando_lite, $output_lite, $return_lite);
     if ($return_lite !== 0) {
-        //guardarLog("Error al crear versión lite: " . implode(" | ", $output_lite));
+        autLog("Error al crear versión lite: " . implode(" | ", $output_lite));
         return;
     }
 
@@ -67,18 +67,18 @@ function autProcesarAudio($audio_path)
     // 4. Renombrar archivo original
     $nuevo_nombre_original = "$directory/$nombre_limpio.$extension";
     if (!rename($audio_path, $nuevo_nombre_original)) {
-        //guardarLog("No se pudo renombrar el archivo original.");
+        autLog("No se pudo renombrar el archivo original.");
         return;
     }
-    //guardarLog("Archivo original renombrado: $nuevo_nombre_original");
+    autLog("Archivo original renombrado: $nuevo_nombre_original");
 
     // 5. Renombrar archivo lite
     $nuevo_nombre_lite = "$directory/{$nombre_limpio}_lite.mp3";
     if (!rename($lite_path, $nuevo_nombre_lite)) {
-        //guardarLog("No se pudo renombrar el archivo lite.");
+        autLog("No se pudo renombrar el archivo lite.");
         return;
     }
-    //guardarLog("Archivo lite renombrado: $nuevo_nombre_lite");
+    autLog("Archivo lite renombrado: $nuevo_nombre_lite");
 
     // 6. Mover el archivo lite al directorio de uploads
     $uploads_dir = wp_upload_dir();
@@ -87,7 +87,7 @@ function autProcesarAudio($audio_path)
     // Crear directorio 'audio' si no existe
     if (!file_exists($target_dir_audio)) {
         if (!wp_mkdir_p($target_dir_audio)) {
-            //guardarLog("No se pudo crear el directorio de uploads/audio.");
+            autLog("No se pudo crear el directorio de uploads/audio.");
 
             return;
         }
@@ -97,18 +97,18 @@ function autProcesarAudio($audio_path)
 
     // Mover archivo lite
     if (!rename($nuevo_nombre_lite, $target_path_lite)) {
-        //guardarLog("No se pudo mover el archivo lite al directorio de uploads.");
+        autLog("No se pudo mover el archivo lite al directorio de uploads.");
         return;
     }
-    //guardarLog("Archivo lite movido al directorio de uploads: $target_path_lite");
+    autLog("Archivo lite movido al directorio de uploads: $target_path_lite");
 
 
     // 7. Enviar rutas a crearAutPost
-    //guardarLog("Enviando rutas a crearAutPost: Original - $nuevo_nombre_original, Lite - $target_path_lite");
+    autLog("Enviando rutas a crearAutPost: Original - $nuevo_nombre_original, Lite - $target_path_lite");
     crearAutPost($nuevo_nombre_original, $target_path_lite, $file_id, $lite_path);
-    //guardarLog("Archivos enviados a crearAutPost.");
+    autLog("Archivos enviados a crearAutPost.");
 
-    //guardarLog("--Fin de la función autProcesarAudio.--");
+    autLog("--Fin de la función autProcesarAudio.--");
 }
 
 function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $carpeta_abuela = null)
@@ -497,7 +497,7 @@ function actualizar_metas_posts_social() {
     $query = new WP_Query($args);
 
     if ( !$query->have_posts() ) {
-        //guardarLog('No se encontraron posts de tipo social_post con postAut=1.');
+        autLog('No se encontraron posts de tipo social_post con postAut=1.');
         return;
     }
 
@@ -518,13 +518,13 @@ function actualizar_metas_posts_social() {
         // Obtener el ID de adjunto de post_audio
         $post_audio_id = get_post_meta( $post_id, 'post_audio', true );
         if ( !$post_audio_id ) {
-            //guardarLog("Post ID $post_id: No se encontró 'post_audio'.");
+            autLog("Post ID $post_id: No se encontró 'post_audio'.");
         }
 
         // Obtener el ID de adjunto de post_audio_lite
         $post_audio_lite_id = get_post_meta( $post_id, 'post_audio_lite', true );
         if ( !$post_audio_lite_id ) {
-            //guardarLog("Post ID $post_id: No se encontró 'post_audio_lite'.");
+            autLog("Post ID $post_id: No se encontró 'post_audio_lite'.");
         }
 
         // Actualizar 'rutaOriginal' si falta
@@ -536,10 +536,10 @@ function actualizar_metas_posts_social() {
                 if ( $ruta_completa ) {
                     update_post_meta( $post_id, 'rutaOriginal', $ruta_completa );
                 } else {
-                    //guardarLog("Post ID $post_id: No se encontró el archivo original '$filename'.");
+                    autLog("Post ID $post_id: No se encontró el archivo original '$filename'.");
                 }
             } else {
-                //guardarLog("Post ID $post_id: No se encontró el adjunto con ID $post_audio_id.");
+                autLog("Post ID $post_id: No se encontró el adjunto con ID $post_audio_id.");
             }
         }
 
@@ -551,10 +551,10 @@ function actualizar_metas_posts_social() {
                 if ( $ruta_lite ) {
                     update_post_meta( $post_id, 'rutaLiteOriginal', $ruta_lite );
                 } else {
-                    //guardarLog("Post ID $post_id: No se pudo obtener la ruta de 'post_audio_lite'.");
+                    autLog("Post ID $post_id: No se pudo obtener la ruta de 'post_audio_lite'.");
                 }
             } else {
-                //guardarLog("Post ID $post_id: No se encontró el adjunto lite con ID $post_audio_lite_id.");
+                autLog("Post ID $post_id: No se encontró el adjunto lite con ID $post_audio_lite_id.");
             }
         }
 
@@ -566,15 +566,15 @@ function actualizar_metas_posts_social() {
                 if ( $file_id ) {
                     update_post_meta( $post_id, 'idHash_audioId', $file_id );
                 } else {
-                    //guardarLog("Post ID $post_id: No se pudo obtener 'idHash_audioId' para la URL '$adjunto_url'.");
+                    autLog("Post ID $post_id: No se pudo obtener 'idHash_audioId' para la URL '$adjunto_url'.");
                 }
             } else {
-                //guardarLog("Post ID $post_id: No se pudo obtener la URL del adjunto con ID $post_audio_id.");
+                autLog("Post ID $post_id: No se pudo obtener la URL del adjunto con ID $post_audio_id.");
             }
         }
     }
 
-    //guardarLog('Actualización de metadatos de posts social_post completada.');
+    autLog('Actualización de metadatos de posts social_post completada.');
 }
 
 ejecutar_actualizar_metas_posts_social_una_vez();
