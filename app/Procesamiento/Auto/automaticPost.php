@@ -59,11 +59,7 @@ function autProcesarAudio($audio_path)
         autLog("Error al crear versión lite: " . implode(" | ", $output_lite));
         return;
     }
-
-    $nombre_limpio = pathinfo($lite_path, PATHINFO_FILENAME);
-    $carpeta = basename(dirname($lite_path));
-    $carpeta_abuela = basename(dirname(dirname($lite_path)));
-
+    
     // 6. Mover el archivo lite al directorio de uploads
     $uploads_dir = wp_upload_dir();
     $target_dir_audio = trailingslashit($uploads_dir['basedir']) . "audio/";
@@ -77,7 +73,7 @@ function autProcesarAudio($audio_path)
         }
     }
 
-    $target_path_lite = $target_dir_audio . "{$nombre_limpio}_lite.mp3";
+    $target_path_lite = $target_dir_audio;
 
     // Mover archivo lite
     if (!rename($lite_path, $target_path_lite)) {
@@ -214,6 +210,9 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
 
 function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lite_path)
 {
+    /*
+    2024-10-26 07:22:59 - Iniciando crearAutPost con nuevo_nombre_original: /home/asley01/MEGA/Waw/Kits/VITAGEN HIP HOP KITS/BASS ONE SHOT/2upra_BajoMelodico_wlTK.wav, nuevo_nombre_lite: /var/www/wordpress/wp-content/uploads/audio/2upra_BajoMelodico_wlTK_lite_lite.mp3, file_id: 10327, lite_path: /home/asley01/MEGA/Waw/Kits/VITAGEN HIP HOP KITS/BASS ONE SHOT/2upra_BajoMelodico_wlTK_lite.mp3
+    */
     autLog("Iniciando crearAutPost con nuevo_nombre_original: $nuevo_nombre_original, nuevo_nombre_lite: $nuevo_nombre_lite, file_id: $file_id, lite_path: $lite_path");
 
     $autor_id = 44;
@@ -282,24 +281,6 @@ function crearAutPost($nuevo_nombre_original, $nuevo_nombre_lite, $file_id, $lit
 
     update_post_meta($post_id, 'rutaOriginal', $nuevo_nombre_original);
     update_post_meta($post_id, 'rutaLiteOriginal', $nuevo_nombre_lite);
-
-    $nuevo_nombre_original = "$directory/$nombre_final_con_id.$extension";
-    autLog("Nuevo nombre original: $nuevo_nombre_original");
-
-    if (!rename($audio_path, $nuevo_nombre_original)) {
-        autLog("No se pudo renombrar el archivo original.");
-        return;
-    }
-
-    // Renombrar archivo lite
-    $nuevo_nombre_lite = "$directory/{$nombre_final_con_id}_lite.mp3";
-    autLog("Nuevo nombre lite: $nuevo_nombre_lite");
-
-    if (!rename($lite_path, $nuevo_nombre_lite)) {
-        autLog("No se pudo renombrar el archivo lite.");
-        return;
-    }
-
     update_post_meta($post_id, 'postAut', true);
 
     $audio_original_id = adjuntarArchivoAut($nuevo_nombre_original, $post_id, $file_id);
