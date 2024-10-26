@@ -1,9 +1,8 @@
 function repararJson(jsonString) {
     try {
-        // Escapar comillas dobles dentro de valores de cadenas en objetos JSON
-        jsonString = jsonString.replace(/"([^"]+?)":\s*?"([^"]*?")/g, function (match, key, value) {
-            const escapedValue = value.replace(/(?<!\\)"/g, '\\"'); // Escapa solo comillas que no están ya escapadas
-            return `"${key}": "${escapedValue}"`;
+        // Escapar comillas dentro de cualquier propiedad que tenga un objeto como valor
+        jsonString = jsonString.replace(/"([^"]+?)":\s*?"({.*?})"/g, function (match, p1, p2) {
+            return `"${p1}":"${p2.replace(/"/g, '\\"')}"`;
         });
 
         // Intentar parsear el JSON reparado
@@ -13,7 +12,6 @@ function repararJson(jsonString) {
         return null;
     }
 }
-
 function capitalize(word) {
     return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
 }
