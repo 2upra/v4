@@ -234,8 +234,36 @@ function confirmarHashId($file_id)
 }
 
 
-function eliminarHash($id)
-{
+function eliminarPostsSocialYAdjuntos($user_id) {
+    global $wpdb;
+
+    // Obtener los posts tipo social_post del usuario
+    $posts = get_posts(array(
+        'author' => $user_id,
+        'post_type' => 'social_post',
+        'numberposts' => -1,
+    ));
+
+    foreach ($posts as $post) {
+        // Borrar los archivos adjuntos del post
+        $attachments = get_attached_media('', $post->ID);
+        foreach ($attachments as $attachment) {
+            wp_delete_attachment($attachment->ID, true); // Eliminar adjuntos permanentemente
+        }
+
+        // Obtener el idHash_audioId del meta y eliminar el hash
+        $audio_hash_id = get_post_meta($post->ID, 'idHash_audioId', true);
+        if ($audio_hash_id) {
+            eliminarHash($audio_hash_id); // Llamada a la función que elimina el hash
+            delete_post_meta($post->ID, 'idHash_audioId'); // Opcional: Borrar el meta
+        }
+
+        // Eliminar el post principal
+        wp_delete_post($post->ID, true); // Eliminar post permanentemente
+    }
+}
+
+function eliminarHash($id) {
     global $wpdb;
     $resultado = (bool) $wpdb->delete("{$wpdb->prefix}file_hashes", array('id' => $id), array('%d'));
     if ($resultado) {
@@ -246,6 +274,10 @@ function eliminarHash($id)
     
     return $resultado;
 }
+
+// Ejecutar la función
+eliminarPostsSocialYAdjuntos(44);
+
 
 function limpiarArchivosPendientes()
 {
