@@ -113,9 +113,9 @@ function buscarUnAudioValido($directorio) {
                 $ext = strtolower($file->getExtension());
                 if (in_array($ext, $extensiones_permitidas, true)) {
                     $nombreArchivo = $file->getFilename();
-                    if (substr($nombreArchivo, -5) !== '2upra') { // Cambiado para verificar al final
+                    // if (substr($nombreArchivo, -5) !== '2upra') { // Comentado para incluir todos los archivos
                         $archivos[] = $file->getPathname();
-                    }
+                    // }
                 }
             }
         }
