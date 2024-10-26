@@ -27,20 +27,32 @@ add_action('audio60', 'procesarAudios');
 function procesarAudios() {
     $directorio_audios = '/home/asley01/MEGA/Waw/Kits';
     $lock_file = '/tmp/procesar_audios.lock';
-
+    $max_reintentos = 5;
+    $espera_segundos = 5;
+    
     $fp = fopen($lock_file, 'c');
     if ($fp === false) {
+        // No se pudo abrir el archivo de bloqueo, se sale de la función.
         return;
     }
-    if (!flock($fp, LOCK_EX | LOCK_NB)) {
-        return;
+
+    // Intentar adquirir el bloqueo hasta un número máximo de reintentos.
+    $intentos = 0;
+    while (!flock($fp, LOCK_EX | LOCK_NB)) {
+        $intentos++;
+        if ($intentos >= $max_reintentos) {
+            // Si se alcanzó el número máximo de intentos, salir.
+            fclose($fp);
+            return;
+        }
+        // Esperar 5 segundos antes de reintentar.
+        sleep($espera_segundos);
     }
 
     try {
         $inicio = microtime(true);
-        
-        
-        
+
+        // Buscar un audio válido y procesarlo
         $audio_info = buscarUnAudioValido($directorio_audios);
         if ($audio_info) {
             $tiempo = microtime(true) - $inicio;
@@ -48,8 +60,10 @@ function procesarAudios() {
             autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
         }
     } finally {
+        // Liberar el bloqueo y cerrar el archivo de bloqueo.
         flock($fp, LOCK_UN);
         fclose($fp);
+        // Eliminar el archivo de bloqueo si existe.
         if (file_exists($lock_file)) {
             unlink($lock_file);
         }
