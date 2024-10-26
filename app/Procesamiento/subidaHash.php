@@ -171,6 +171,16 @@ function actualizarEstadoArchivo($file_id, $status)
     );
 }
 
+function obtenerHash($file_hash)
+{
+    global $wpdb;
+    return $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM {$wpdb->prefix}file_hashes WHERE file_hash = %s LIMIT 1",
+        $file_hash
+    ), ARRAY_A);
+}
+
+
 function guardarHash($hash, $url, $status = 'pending', $user_id)
 {
     global $wpdb;
