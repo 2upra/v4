@@ -249,12 +249,13 @@ function obtenerDatosFeed($userId)
 
 function obtenerDatosFeedConCache($userId)
 {
+    return obtenerDatosFeed($userId);
     // Verifica si el usuario es administrador
     if (current_user_can('administrator')) {
         // Si el usuario es admin, devuelve los datos directamente sin caché
         return obtenerDatosFeed($userId);
     }
-
+    /*
     $cache_key = 'feed_datos_' . $userId;
     $datos = wp_cache_get($cache_key);
 
@@ -269,6 +270,7 @@ function obtenerDatosFeedConCache($userId)
     }
 
     return $datos;
+    */
 }
 
 
@@ -437,9 +439,9 @@ function calcularFeedPersonalizado($userId)
     // Calcular los puntos para cada post y aplicar la lógica de personalización
     foreach ($datos['author_results'] as $post_id => $post_data) {
         $puntosFinal = calcularPuntosPost(
-            $post_id, 
-            $post_data, 
-            $datos, 
+            $post_id,
+            $post_data,
+            $datos,
             $esAdmin,
             $vistas_posts_processed
         );
@@ -458,4 +460,3 @@ function calcularFeedPersonalizado($userId)
 
     return $posts_personalizados;
 }
-
