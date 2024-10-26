@@ -46,8 +46,8 @@ function tagsPosts() {
 
         // Función auxiliar para agregar tags desde una fuente específica
         const addTags = (source, key) => {
-            if (source?.[key]?.["es"]) {
-                allTags = allTags.concat(source[key]["es"].map(capitalize));
+            if (source?.[key]?.["en"]) {
+                allTags = allTags.concat(source[key]["en"].map(capitalize));
             } else if (source?.[key]) {
                 allTags = allTags.concat(source[key].map(capitalize));
             }
