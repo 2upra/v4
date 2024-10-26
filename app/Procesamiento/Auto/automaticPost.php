@@ -4,9 +4,20 @@ function autProcesarAudio($rutaOriginalOne)
 {
     autLog("--Inicio de la función autProcesarAudio.--");
 
+    // Obtener ID del archivo por la ruta directa
+    $file_id = obtenerFileIDPorURL($rutaOriginalOne);
+    if ($file_id === false) {
+        autLog("File ID no encontrado para la ruta: $rutaOriginalOne");
+        eliminarHash($file_id);
+        return;
+    } else {
+        autLog("File ID obtenido: $file_id");
+    }
+
     // Verificar si el archivo existe
     if (!file_exists($rutaOriginalOne)) {
         autLog("Archivo no encontrado: $rutaOriginalOne");
+        eliminarHash($file_id);
         return;
     }
 
@@ -15,21 +26,13 @@ function autProcesarAudio($rutaOriginalOne)
     $directory = realpath($path_parts['dirname']);
     if ($directory === false) {
         autLog("Directorio inválido: {$path_parts['dirname']}");
+        eliminarHash($file_id);
         return;
     }
     $extension = strtolower($path_parts['extension']);
     $basename = $path_parts['filename'];
 
     autLog("Ruta inicial: $rutaOriginalOne, Directorio: $directory, Basename: $basename, Extensión: $extension");
-
-    // Obtener ID del archivo por la ruta directa
-    $file_id = obtenerFileIDPorURL($rutaOriginalOne);
-    if ($file_id === false) {
-        autLog("File ID no encontrado para la ruta: $rutaOriginalOne");
-        return;
-    } else {
-        autLog("File ID obtenido: $file_id");
-    }
 
     // Ruta temporal para eliminar metadatos
     $temp_path = "$directory/{$basename}_temp.$extension";
@@ -40,12 +43,14 @@ function autProcesarAudio($rutaOriginalOne)
     exec($comando_strip_metadata, $output_strip, $return_strip);
     if ($return_strip !== 0) {
         autLog("Error al eliminar metadatos: " . implode(" | ", $output_strip));
+        eliminarHash($file_id);
         return;
     }
 
     // Reemplazar archivo original
     if (!rename($temp_path, $rutaOriginalOne)) {
         autLog("No se pudo reemplazar el archivo original.");
+        eliminarHash($file_id);
         return;
     }
     autLog("Metadatos eliminados del archivo: $rutaOriginalOne");
@@ -57,6 +62,7 @@ function autProcesarAudio($rutaOriginalOne)
     exec($comando_lite, $output_lite, $return_lite);
     if ($return_lite !== 0) {
         autLog("Error al crear versión lite: " . implode(" | ", $output_lite));
+        eliminarHash($file_id);
         return;
     }
 
@@ -68,6 +74,7 @@ function autProcesarAudio($rutaOriginalOne)
     if (!file_exists($target_dir_audio)) {
         if (!wp_mkdir_p($target_dir_audio)) {
             autLog("No se pudo crear el directorio de uploads/audio.");
+            eliminarHash($file_id);
             return;
         }
     }
@@ -78,6 +85,7 @@ function autProcesarAudio($rutaOriginalOne)
     // Mover archivo lite
     if (!rename($rutaWpLiteDos, $rutaWpLiteOne)) {
         autLog("No se pudo mover el archivo lite al directorio de uploads.");
+        eliminarHash($file_id);
         return;
     }
     autLog("Archivo lite movido al directorio de uploads: $rutaWpLiteOne");
@@ -221,6 +229,7 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     if (!$datosAlgoritmo) {
         autLog("Error al obtener datos del algoritmo.");
+        eliminarHash($file_id);
         return;
     }
 
@@ -300,7 +309,7 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     // Limitar la longitud del título a 60 caracteres
     $titulo = mb_substr($descripcion_corta_es, 0, 60);
     $contenido = $descripcion_corta_es;
-    
+
     autLog("Título generado: $titulo, Contenido generado: $contenido");
 
     // Crear el post
