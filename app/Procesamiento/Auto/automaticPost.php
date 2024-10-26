@@ -226,11 +226,11 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     $descripcion_corta_es = $datosAlgoritmo['descripcion_corta']['es'] ?? '';
     $nombre_generado = $datosAlgoritmo['nombre_corto']['en'] ?? '';
-    
+
     // Si el nombre generado es un array, tomamos el primer valor
     if (is_array($nombre_generado)) {
         autLog("Nombre generado es un array: " . print_r($nombre_generado, true));
-        $nombre_generado = $nombre_generado[0] ?? ''; 
+        $nombre_generado = $nombre_generado[0] ?? '';
     }
 
     autLog("Descripción corta ES: $descripcion_corta_es, Nombre generado: $nombre_generado");
@@ -241,16 +241,14 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
         $nombre_generado_limpio = preg_replace('/[^A-Za-z0-9\- áéíóúÁÉÍÓÚñÑ]/u', '', $nombre_generado_limpio); // Permitimos acentos y la ñ
         $nombre_generado_limpio = substr($nombre_generado_limpio, 0, 70);
 
-        // Generar el nombre final con el sufijo '_2upra'
-        $nombre_final = $nombre_generado_limpio . '_2upra';
-
         // Generar un ID único de 4 caracteres
         $id_unica = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
-        $nombre_final_con_id = $nombre_final . '_' . $id_unica;
-        $nombre_final_con_id = substr($nombre_final_con_id, 0, 60);
 
-        autLog("Nombre final generado: $nombre_final_con_id");
+        // Generar el nombre final con el sufijo '_2upra'
+        $nombre_final = $nombre_generado_limpio . '_' . $id_unica . '_2upra';
+        $nombre_final = substr($nombre_final, 0, 60);
 
+        autLog("Nombre final generado: $nombre_final");
     } else {
         autLog("Error en la generación del nombre en crearAutPost");
         eliminarHash($file_id);
@@ -259,7 +257,7 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     // Renombrar el archivo original
     $extension_original = pathinfo($rutaOriginal, PATHINFO_EXTENSION);
-    $nuevo_nombre_original = dirname($rutaOriginal) . '/' . $nombre_final_con_id . '.' . $extension_original;
+    $nuevo_nombre_original = dirname($rutaOriginal) . '/' . $nombre_final . '.' . $extension_original;
     autLog("Renombrando archivo original: $rutaOriginal a $nuevo_nombre_original");
 
     if (!file_exists($rutaOriginal)) {
@@ -279,7 +277,7 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     }
 
     $extension_lite = pathinfo($rutaWpLite, PATHINFO_EXTENSION);
-    $nuevo_nombre_lite = dirname($rutaWpLite) . '/' . $nombre_final_con_id . '_lite.' . $extension_lite;
+    $nuevo_nombre_lite = dirname($rutaWpLite) . '/' . $nombre_final . '_lite.' . $extension_lite;
     autLog("Renombrando archivo lite: $rutaWpLite a $nuevo_nombre_lite");
 
     // Verificación de permisos y renombrar el archivo lite
@@ -293,9 +291,16 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
         return;
     }
 
+    // Asegurarse de que $descripcion_corta_es es una cadena antes de usarla
+    if (is_array($descripcion_corta_es)) {
+        autLog("Descripción corta ES es un array: " . print_r($descripcion_corta_es, true));
+        $descripcion_corta_es = $descripcion_corta_es[0] ?? ''; // Tomamos el primer valor si es un array
+    }
+
+    // Limitar la longitud del título a 60 caracteres
     $titulo = mb_substr($descripcion_corta_es, 0, 60);
     $contenido = $descripcion_corta_es;
-
+    
     autLog("Título generado: $titulo, Contenido generado: $contenido");
 
     // Crear el post
@@ -319,7 +324,7 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     update_post_meta($post_id, 'rutaOriginal', $nuevo_nombre_original);
     update_post_meta($post_id, 'rutaLiteOriginal', $nuevo_nombre_lite);
     update_post_meta($post_id, 'postAut', true);
-    
+
     $audio_original_id = adjuntarArchivoAut($nuevo_nombre_original, $post_id, $file_id);
     if (is_wp_error($audio_original_id)) {
         autLog("Error al adjuntar archivo original: " . $audio_original_id->get_error_message());
