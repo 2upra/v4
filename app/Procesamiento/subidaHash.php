@@ -1,5 +1,64 @@
 <?
 
+function recalcularHash($audio_file_path) {
+    // Ejecutar el script de Python para calcular el hash basado en el contenido
+    $command = escapeshellcmd("python3 hashAudio.py " . escapeshellarg($audio_file_path));
+    $hash = shell_exec($command);
+
+    // Quitar espacios en blanco del resultado
+    return trim($hash);
+}
+
+function actualizarHashesDeTodosLosAudios() {
+    global $wpdb;
+
+    // Obtener todos los registros de la base de datos
+    $audios = $wpdb->get_results("SELECT id, file_url FROM {$wpdb->prefix}file_hashes");
+
+    foreach ($audios as $audio) {
+        // Verificar si el archivo es un .wav
+        if (preg_match('/\.wav$/', $audio->file_url)) {
+            // Recalcular el hash basado en el contenido del archivo de audio
+            $nuevo_hash = recalcularHash($audio->file_url);
+
+            if ($nuevo_hash) {
+                // Verificar si el hash ya existe en la base de datos
+                $hash_existente = $wpdb->get_var($wpdb->prepare(
+                    "SELECT id FROM {$wpdb->prefix}file_hashes WHERE file_hash = %s", 
+                    $nuevo_hash
+                ));
+
+                if ($hash_existente) {
+                    // Si el hash ya existe, actualizar el estado a 'duplicado'
+                    $wpdb->update(
+                        "{$wpdb->prefix}file_hashes",
+                        array('status' => 'duplicado'),  // Cambiar el estado a 'duplicado'
+                        array('id' => $audio->id),
+                        array('%s'),
+                        array('%d')
+                    );
+
+                    // Opcionalmente, puedes registrar un mensaje en el log de errores
+                    guardarLog("Archivo duplicado encontrado: " . $audio->file_url . " (ID duplicado: $hash_existente)");
+                    continue;  // Omite la actualización de hash para este archivo
+                }
+
+                // Si el hash es único, actualiza el hash y cambia el estado a 'procesado' o 'único'
+                $wpdb->update(
+                    "{$wpdb->prefix}file_hashes",
+                    array(
+                        'file_hash' => $nuevo_hash,
+                        'status'    => 'confirmed'  // Cambiar el estado a 'procesado' o 'único'
+                    ),
+                    array('id' => $audio->id),
+                    array('%s', '%s'),
+                    array('%d')
+                );
+            }
+        }
+    }
+}
+
 function subidaArchivo()
 {
     guardarLog("INICIO subidaArchivo");
