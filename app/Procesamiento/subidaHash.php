@@ -179,7 +179,7 @@ function actualizarHashesDeTodosLosAudios() {
     guardarLog("Proceso completado");
 }
 
-actualizarHashesDeTodosLosAudios();
+#actualizarHashesDeTodosLosAudios();
 
 //tengo esta funcion que tal vez sirva de referencia
 function actualizarEstadoArchivo($file_id, $status)
