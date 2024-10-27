@@ -1,63 +1,93 @@
 <?
 
 function recalcularHash($audio_file_path) {
-    // Ejecutar el script de Python para calcular el hash basado en el contenido
-    $command = escapeshellcmd("python3 hashAudio.py " . escapeshellarg($audio_file_path));
+    // Verificar si la URL es válida
+    if (!filter_var($audio_file_path, FILTER_VALIDATE_URL)) {
+        guardarLog("URL inválida: " . $audio_file_path);
+        return false;
+    }
+
+    // Convertir URL a ruta del sistema de archivos
+    $upload_dir = wp_upload_dir();
+    $file_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $audio_file_path);
+
+    // Verificar si el archivo existe físicamente
+    if (!file_exists($file_path)) {
+        guardarLog("Archivo no encontrado: " . $file_path);
+        return false;
+    }
+
+    // Ejecutar el script de Python
+    $command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py" . escapeshellarg($file_path));
     $hash = shell_exec($command);
 
-    // Quitar espacios en blanco del resultado
-    return trim($hash);
+    return $hash ? trim($hash) : false;
 }
 
 function actualizarHashesDeTodosLosAudios() {
     global $wpdb;
 
-    // Obtener todos los registros de la base de datos
-    $audios = $wpdb->get_results("SELECT id, file_url FROM {$wpdb->prefix}file_hashes");
+    // Obtener solo registros no confirmados, ordenados por ID descendente
+    $audios = $wpdb->get_results("
+        SELECT fh.id, fh.file_url, fh.status, p.ID as post_id 
+        FROM {$wpdb->prefix}file_hashes fh
+        LEFT JOIN {$wpdb->posts} p ON p.guid = fh.file_url
+        WHERE fh.file_url LIKE '%.wav'
+        AND fh.status != 'confirmed'
+        ORDER BY fh.id DESC
+    ");
 
     foreach ($audios as $audio) {
-        // Verificar si el archivo es un .wav
-        if (preg_match('/\.wav$/', $audio->file_url)) {
-            // Recalcular el hash basado en el contenido del archivo de audio
-            $nuevo_hash = recalcularHash($audio->file_url);
-
-            if ($nuevo_hash) {
-                // Verificar si el hash ya existe en la base de datos
-                $hash_existente = $wpdb->get_var($wpdb->prepare(
-                    "SELECT id FROM {$wpdb->prefix}file_hashes WHERE file_hash = %s", 
-                    $nuevo_hash
-                ));
-
-                if ($hash_existente) {
-                    // Si el hash ya existe, actualizar el estado a 'duplicado'
-                    $wpdb->update(
-                        "{$wpdb->prefix}file_hashes",
-                        array('status' => 'duplicado'),  // Cambiar el estado a 'duplicado'
-                        array('id' => $audio->id),
-                        array('%s'),
-                        array('%d')
-                    );
-
-                    // Opcionalmente, puedes registrar un mensaje en el log de errores
-                    guardarLog("Archivo duplicado encontrado: " . $audio->file_url . " (ID duplicado: $hash_existente)");
-                    continue;  // Omite la actualización de hash para este archivo
-                }
-
-                // Si el hash es único, actualiza el hash y cambia el estado a 'procesado' o 'único'
-                $wpdb->update(
-                    "{$wpdb->prefix}file_hashes",
-                    array(
-                        'file_hash' => $nuevo_hash,
-                        'status'    => 'confirmed'  // Cambiar el estado a 'procesado' o 'único'
-                    ),
-                    array('id' => $audio->id),
-                    array('%s', '%s'),
-                    array('%d')
-                );
-            }
+        // Si ya está confirmado, saltar
+        if ($audio->status === 'confirmed') {
+            continue;
         }
+
+        // Recalcular el hash
+        $nuevo_hash = recalcularHash($audio->file_url);
+        
+        if (!$nuevo_hash) {
+            continue;
+        }
+
+        // Verificar duplicados
+        $duplicado = $wpdb->get_row($wpdb->prepare("
+            SELECT id, file_url 
+            FROM {$wpdb->prefix}file_hashes 
+            WHERE file_hash = %s 
+            AND id != %d 
+            AND status = 'confirmed'
+            LIMIT 1
+        ", $nuevo_hash, $audio->id));
+
+        // Actualizar estado y hash
+        $wpdb->update(
+            "{$wpdb->prefix}file_hashes",
+            array(
+                'file_hash' => $nuevo_hash,
+                'status' => $duplicado ? 'duplicado' : 'confirmed'
+            ),
+            array('id' => $audio->id),
+            array('%s', '%s'),
+            array('%d')
+        );
+
+        // Si hay post_id y es duplicado, actualizar meta del post
+        if ($audio->post_id && $duplicado) {
+            update_post_meta($audio->post_id, '_audio_duplicado', array(
+                'duplicado_de' => $duplicado->file_url,
+                'hash' => $nuevo_hash
+            ));
+            
+            guardarLog("Duplicado encontrado - Original: {$duplicado->file_url}, Duplicado: {$audio->file_url}");
+        }
+
+        // Opcional: Añadir un pequeño delay para no sobrecargar el servidor
+        usleep(500000); // 0.5 segundos
     }
 }
+
+actualizarHashesDeTodosLosAudios();
 
 function subidaArchivo()
 {
