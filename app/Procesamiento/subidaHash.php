@@ -18,7 +18,7 @@ function recalcularHash($audio_file_path) {
     }
 
     // Crear el comando y registrar el comando en los logs para depuración
-    $command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py" . escapeshellarg($file_path));
+    $command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py") . ' ' . escapeshellarg($file_path);
     guardarLog("Ejecutando comando: " . $command);
 
     // Ejecutar el comando y capturar la salida y errores
@@ -438,7 +438,7 @@ function obtenerFileIDPorURL($url)
 // Ejecutar la función
 
 
-
+/*
 function limpiarArchivosPendientes()
 {
     global $wpdb;
@@ -466,3 +466,4 @@ if (!wp_next_scheduled('limpiar_archivos_pendientes')) {
     wp_schedule_event(time(), 'daily', 'limpiar_archivos_pendientes');
 }
 add_action('limpiar_archivos_pendientes', 'limpiarArchivosPendientes');
+*/
