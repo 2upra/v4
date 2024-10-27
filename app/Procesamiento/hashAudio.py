@@ -1,18 +1,20 @@
 # hashAudio.py
 import sys
-import wave
 import hashlib
+import soundfile as sf
+import numpy as np
 
 def calcular_hash_audio(audio_path):
     try:
-        # Abrir el archivo WAV
-        with wave.open(audio_path, 'rb') as wav_file:
-            # Leer todos los frames
-            frames = wav_file.readframes(wav_file.getnframes())
-            
-            # Crear hash
-            hash_obj = hashlib.sha256(frames)
-            return hash_obj.hexdigest()
+        # Leer el archivo de audio usando soundfile
+        data, samplerate = sf.read(audio_path)
+        
+        # Convertir el array a bytes
+        audio_bytes = data.tobytes()
+        
+        # Crear hash
+        hash_obj = hashlib.sha256(audio_bytes)
+        return hash_obj.hexdigest()
             
     except Exception as e:
         sys.stderr.write(f"Error procesando archivo: {str(e)}\n")

@@ -47,21 +47,40 @@ function recalcularHash($audio_file_path) {
         // Establecer timeout para este proceso específico
         set_time_limit(MAX_EXECUTION_TIME);
 
-        // Ejecutar comando con timeout
-        $output = shell_exec($command . ' 2>&1');
+        // Ejecutar comando con timeout y capturar tanto la salida estándar como los errores
+        $descriptorspec = array(
+            0 => array("pipe", "r"),  // stdin
+            1 => array("pipe", "w"),  // stdout
+            2 => array("pipe", "w")   // stderr
+        );
         
-        if ($output === null) {
-            throw new Exception("Timeout o error en la ejecución del comando");
+        $process = proc_open($command, $descriptorspec, $pipes);
+        
+        if (is_resource($process)) {
+            $output = stream_get_contents($pipes[1]);
+            $error = stream_get_contents($pipes[2]);
+            
+            foreach ($pipes as $pipe) {
+                fclose($pipe);
+            }
+            
+            $return_value = proc_close($process);
+            
+            if ($return_value !== 0) {
+                throw new Exception("Error en el proceso Python: " . $error);
+            }
+            
+            // Limpiar y validar el hash
+            $hash = trim($output);
+            if (!preg_match('/^[a-f0-9]{64}$/', $hash)) {
+                throw new Exception("Hash inválido generado: " . $output);
+            }
+            
+            guardarLog("Hash calculado correctamente: " . $hash);
+            return $hash;
         }
-
-        // Limpiar y validar el hash
-        $hash = trim($output);
-        if (!preg_match('/^[a-f0-9]{64}$/', $hash)) {
-            throw new Exception("Hash inválido generado: " . $hash);
-        }
-
-        guardarLog("Hash calculado correctamente: " . $hash);
-        return $hash;
+        
+        throw new Exception("No se pudo iniciar el proceso");
 
     } catch (Exception $e) {
         guardarLog("Error en recalcularHash: " . $e->getMessage());
