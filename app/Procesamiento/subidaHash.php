@@ -9,20 +9,32 @@ define('BATCH_SIZE', 50); // Número de archivos a procesar por lote
 ini_set('memory_limit', '256M');
 set_time_limit(0); // Sin límite para el script completo
 
-/**
- * Calcula el hash de un archivo de audio
- * 
- * @param string $audio_file_path Ruta del archivo de audio
- * @return string|false Hash del archivo o false en caso de error
- */
+function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD) {
+    if (empty($hash1) || empty($hash2)) {
+        return false;
+    }
+    
+    // Convertir hashes a valores binarios
+    $bin1 = hex2bin($hash1);
+    $bin2 = hex2bin($hash2);
+    
+    if ($bin1 === false || $bin2 === false) {
+        return false;
+    }
+    
+    // Calcular similitud usando distancia de Hamming
+    $similitud = 1 - (count(array_diff_assoc(str_split($bin1), str_split($bin2))) / strlen($bin1));
+    
+    return $similitud >= $umbral;
+}
+
 function recalcularHash($audio_file_path) {
     try {
-        // Verificar si la URL es válida
+        // Verificaciones iniciales
         if (!filter_var($audio_file_path, FILTER_VALIDATE_URL)) {
             throw new Exception("URL inválida: " . $audio_file_path);
         }
 
-        // Convertir URL a ruta del sistema de archivos
         $upload_dir = wp_upload_dir();
         $file_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $audio_file_path);
 
@@ -35,52 +47,51 @@ function recalcularHash($audio_file_path) {
             throw new Exception("No hay permisos de lectura para el archivo: " . $file_path);
         }
 
-        // Verificar script Python
         if (!file_exists(HASH_SCRIPT_PATH)) {
             throw new Exception("Script Python no encontrado en: " . HASH_SCRIPT_PATH);
         }
 
-        // Crear y ejecutar el comando
+        // Preparar y ejecutar comando
         $command = escapeshellcmd("python3 " . HASH_SCRIPT_PATH) . ' ' . escapeshellarg($file_path);
         guardarLog("Ejecutando comando: " . $command);
 
-        // Establecer timeout para este proceso específico
         set_time_limit(MAX_EXECUTION_TIME);
 
-        // Ejecutar comando con timeout y capturar tanto la salida estándar como los errores
         $descriptorspec = array(
-            0 => array("pipe", "r"),  // stdin
-            1 => array("pipe", "w"),  // stdout
-            2 => array("pipe", "w")   // stderr
+            0 => array("pipe", "r"),
+            1 => array("pipe", "w"),
+            2 => array("pipe", "w")
         );
         
         $process = proc_open($command, $descriptorspec, $pipes);
         
-        if (is_resource($process)) {
-            $output = stream_get_contents($pipes[1]);
-            $error = stream_get_contents($pipes[2]);
-            
-            foreach ($pipes as $pipe) {
-                fclose($pipe);
-            }
-            
-            $return_value = proc_close($process);
-            
-            if ($return_value !== 0) {
-                throw new Exception("Error en el proceso Python: " . $error);
-            }
-            
-            // Limpiar y validar el hash
-            $hash = trim($output);
-            if (!preg_match('/^[a-f0-9]{64}$/', $hash)) {
-                throw new Exception("Hash inválido generado: " . $output);
-            }
-            
-            guardarLog("Hash calculado correctamente: " . $hash);
-            return $hash;
+        if (!is_resource($process)) {
+            throw new Exception("No se pudo iniciar el proceso Python");
+        }
+
+        // Capturar salida y errores
+        $output = stream_get_contents($pipes[1]);
+        $error = stream_get_contents($pipes[2]);
+        
+        // Cerrar pipes
+        foreach ($pipes as $pipe) {
+            fclose($pipe);
         }
         
-        throw new Exception("No se pudo iniciar el proceso");
+        $return_value = proc_close($process);
+        
+        if ($return_value !== 0) {
+            throw new Exception("Error en el proceso Python: " . $error);
+        }
+        
+        // Validar hash
+        $hash = trim($output);
+        if (!preg_match('/^[a-f0-9]{64}$/', $hash)) {
+            throw new Exception("Hash inválido generado: " . $output);
+        }
+        
+        guardarLog("Hash calculado correctamente: " . $hash);
+        return $hash;
 
     } catch (Exception $e) {
         guardarLog("Error en recalcularHash: " . $e->getMessage());
@@ -88,47 +99,13 @@ function recalcularHash($audio_file_path) {
     }
 }
 
-/**
- * Actualiza el estado de un archivo en la base de datos
- */
-function actualizarEstadoArchivo($id, $estado) {
-    global $wpdb;
-    
-    try {
-        $actualizado = $wpdb->update(
-            "{$wpdb->prefix}file_hashes",
-            ['status' => $estado],
-            ['id' => $id],
-            ['%s'],
-            ['%d']
-        );
-
-        if ($actualizado === false) {
-            throw new Exception("Error al actualizar estado para ID: " . $id);
-        }
-
-        guardarLog("Estado actualizado para ID {$id}: {$estado}");
-        return true;
-
-    } catch (Exception $e) {
-        guardarLog("Error en actualizarEstadoArchivo: " . $e->getMessage());
-        return false;
-    }
-}
-
-/**
- * Procesa todos los archivos de audio pendientes
- */
 function actualizarHashesDeTodosLosAudios() {
     global $wpdb;
     
     try {
         guardarLog("Iniciando proceso de actualización de hashes");
-
-        // Iniciar transacción
         $wpdb->query('START TRANSACTION');
 
-        // Obtener registros que necesitan procesamiento
         $audios = $wpdb->get_results("
             SELECT fh.id, fh.file_url, fh.status, p.ID as post_id 
             FROM {$wpdb->prefix}file_hashes fh
@@ -152,12 +129,10 @@ function actualizarHashesDeTodosLosAudios() {
         foreach ($audios as $audio) {
             guardarLog("Procesando Audio ID: " . $audio->id . " (Estado actual: " . $audio->status . ")");
 
-            // Marcar como pending
             if ($audio->status !== 'pending') {
                 actualizarEstadoArchivo($audio->id, 'pending');
             }
 
-            // Recalcular hash
             $nuevo_hash = recalcularHash($audio->file_url);
             
             if (!$nuevo_hash) {
@@ -165,20 +140,25 @@ function actualizarHashesDeTodosLosAudios() {
                 continue;
             }
 
-            // Verificar duplicados
-            $duplicado = $wpdb->get_row($wpdb->prepare("
-                SELECT id, file_url 
+            // Buscar duplicados usando la función de similitud
+            $duplicados = $wpdb->get_results($wpdb->prepare("
+                SELECT id, file_url, file_hash 
                 FROM {$wpdb->prefix}file_hashes 
-                WHERE file_hash = %s 
-                AND id != %d 
+                WHERE id != %d 
                 AND status = 'confirmed'
-                LIMIT 1
-            ", $nuevo_hash, $audio->id));
+            ", $audio->id));
+
+            $duplicado = null;
+            foreach ($duplicados as $posible_duplicado) {
+                if (sonHashesSimilares($nuevo_hash, $posible_duplicado->file_hash)) {
+                    $duplicado = $posible_duplicado;
+                    break;
+                }
+            }
 
             $nuevo_estado = $duplicado ? 'duplicado' : 'confirmed';
             
-            // Actualizar registro
-            $actualizado = $wpdb->update(
+            $resultado_actualizacion = $wpdb->update(
                 "{$wpdb->prefix}file_hashes",
                 [
                     'file_hash' => $nuevo_hash,
@@ -189,23 +169,20 @@ function actualizarHashesDeTodosLosAudios() {
                 ['%d']
             );
 
-            if ($actualizado === false) {
-                throw new Exception("Error al actualizar registro ID: " . $audio->id);
+            if ($resultado_actualizacion === false) {
+                throw new Exception("Error al actualizar registro ID: " . $audio->id . " - " . $wpdb->last_error);
             }
 
-            // Actualizar meta si es duplicado
             if ($audio->post_id && $duplicado) {
                 update_post_meta($audio->post_id, '_audio_duplicado', [
                     'duplicado_de' => $duplicado->file_url,
-                    'hash' => $nuevo_hash
+                    'hash' => $nuevo_hash,
+                    'similitud' => true
                 ]);
                 guardarLog("Duplicado encontrado - Original: {$duplicado->file_url}, Duplicado: {$audio->file_url}");
             }
 
-            // Liberar memoria
             gc_collect_cycles();
-            
-            // Delay para no sobrecargar
             usleep(PROCESO_DELAY);
         }
         
@@ -233,6 +210,33 @@ function actualizarEstadoArchivo($file_id, $status)
     );
 }
 */
+/**
+ * Actualiza el estado de un archivo en la base de datos
+ */
+function actualizarEstadoArchivo($id, $estado) {
+    global $wpdb;
+    
+    try {
+        $actualizado = $wpdb->update(
+            "{$wpdb->prefix}file_hashes",
+            ['status' => $estado],
+            ['id' => $id],
+            ['%s'],
+            ['%d']
+        );
+
+        if ($actualizado === false) {
+            throw new Exception("Error al actualizar estado para ID: " . $id);
+        }
+
+        guardarLog("Estado actualizado para ID {$id}: {$estado}");
+        return true;
+
+    } catch (Exception $e) {
+        guardarLog("Error en actualizarEstadoArchivo: " . $e->getMessage());
+        return false;
+    }
+}
 
 
 function subidaArchivo()
