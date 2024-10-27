@@ -1,5 +1,52 @@
 <?
 
+/*
+2024-10-27 21:47:51 - Ejecutando comando: python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py '/var/www/wordpress/wp-content/uploads/2024/10/Memphis-Snare_G0Wx_2upra.wav'
+
+import os
+import librosa
+import numpy as np
+import hashlib
+
+def calcular_hash_audio(audio_path):
+    try:
+        # Verificar si el archivo existe
+        if not os.path.exists(audio_path):
+            print(f"Archivo no encontrado: {audio_path}")
+            return None
+
+        # Cargar el archivo de audio
+        y, sr = librosa.load(audio_path, sr=None)
+
+        # Extraer el mel-spectrogram
+        mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr)
+
+        # Tomar el logaritmo
+        log_mel_spectrogram = librosa.power_to_db(mel_spectrogram, ref=np.max)
+
+        # Convertir a bytes y calcular el hash
+        mel_bytes = log_mel_spectrogram.tobytes()
+        hash_obj = hashlib.sha256(mel_bytes)
+
+        return hash_obj.hexdigest()
+    
+    except Exception as e:
+        print(f"Error al procesar el audio {audio_path}: {e}")
+        return None
+
+
+2024-10-27 21:47:51 - Resultado del comando: 
+2024-10-27 21:47:51 - Error al calcular el hash para el archivo: /var/www/wordpress/wp-content/uploads/2024/10/Memphis-Snare_G0Wx_2upra.wav
+2024-10-27 21:47:51 - No se pudo recalcular el hash para el audio ID: 11947
+
+en otra parte ejecuto esto
+    $python_command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py \"{$nuevo_archivo_path_lite}\"");
+    iaLog("Ejecutando comando de Python: {$python_command}");
+    exec($python_command, $output, $return_var);
+
+    no se si sirve de referencia
+*/
+
 function recalcularHash($audio_file_path) {
     // Verificar si la URL es válida
     if (!filter_var($audio_file_path, FILTER_VALIDATE_URL)) {
