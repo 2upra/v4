@@ -1,19 +1,38 @@
 # hashAudio.py
 import sys
 import hashlib
-import soundfile as sf
 import numpy as np
+import librosa
 
 def calcular_hash_audio(audio_path):
     try:
-        # Leer el archivo de audio usando soundfile
-        data, samplerate = sf.read(audio_path)
+        # Cargar el audio
+        y, sr = librosa.load(audio_path, sr=None)
         
-        # Convertir el array a bytes
-        audio_bytes = data.tobytes()
+        # Calcular características que son más resistentes a cambios de formato
+        # Mel-frequency cepstral coefficients (MFCCs)
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=20)
         
-        # Crear hash
-        hash_obj = hashlib.sha256(audio_bytes)
+        # Chromagram
+        chroma = librosa.feature.chroma_stft(y=y, sr=sr)
+        
+        # Spectral Centroid
+        spectral_centroid = librosa.feature.spectral_centroid(y=y, sr=sr)
+        
+        # Combinar características y redondear para mayor estabilidad
+        features = np.concatenate([
+            np.mean(mfcc, axis=1),
+            np.mean(chroma, axis=1),
+            np.mean(spectral_centroid, axis=1)
+        ])
+        
+        # Redondear a 6 decimales para mayor estabilidad
+        features = np.round(features, 6)
+        
+        # Convertir a bytes y crear hash
+        features_bytes = features.tobytes()
+        hash_obj = hashlib.sha256(features_bytes)
+        
         return hash_obj.hexdigest()
             
     except Exception as e:
