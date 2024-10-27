@@ -28,7 +28,7 @@ function socialTabs()
                         </div>
 
                         <div class="FEDAG5">
-                            <? echo publicaciones(['filtro' => 'nada', 'posts' => 10]); ?>
+                            <? echo publicaciones(['filtro' => 'nada', 'posts' => 12]); ?>
                         </div>
                     </div>
                 </div>
