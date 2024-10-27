@@ -219,6 +219,8 @@ function actualizarHashesDeTodosLosAudios()
     }
 }
 
+actualizarHashesDeTodosLosAudios();
+
 function actualizarEstadoArchivo($id, $estado)
 {
     global $wpdb;
