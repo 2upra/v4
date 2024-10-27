@@ -27,26 +27,28 @@ set_time_limit(0); // Sin límite para el script completo
 
 */
 
-function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD) {
+function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD)
+{
     if (empty($hash1) || empty($hash2)) {
         return false;
     }
-    
+
     // Convertir hashes a valores binarios
     $bin1 = hex2bin($hash1);
     $bin2 = hex2bin($hash2);
-    
+
     if ($bin1 === false || $bin2 === false) {
         return false;
     }
-    
+
     // Calcular similitud usando distancia de Hamming
     $similitud = 1 - (count(array_diff_assoc(str_split($bin1), str_split($bin2))) / strlen($bin1));
-    
+
     return $similitud >= $umbral;
 }
 
-function recalcularHash($audio_file_path) {
+function recalcularHash($audio_file_path)
+{
     try {
         // Verificaciones iniciales
         if (!filter_var($audio_file_path, FILTER_VALIDATE_URL)) {
@@ -70,9 +72,11 @@ function recalcularHash($audio_file_path) {
         }
 
         // Preparar y ejecutar comando
-        $command = 'source /root/.bashrc && ' . 
-                  escapeshellcmd("python3 " . HASH_SCRIPT_PATH) . ' ' . 
-                  escapeshellarg($file_path);
+        $command = '/bin/bash -c ' . escapeshellarg(
+            'source /root/.bashrc && ' .
+                'python3 ' . HASH_SCRIPT_PATH . ' ' .
+                escapeshellarg($file_path)
+        );
         guardarLog("Ejecutando comando: " . $command);
 
         set_time_limit(MAX_EXECUTION_TIME);
@@ -82,9 +86,9 @@ function recalcularHash($audio_file_path) {
             1 => array("pipe", "w"),
             2 => array("pipe", "w")
         );
-        
+
         $process = proc_open($command, $descriptorspec, $pipes);
-        
+
         if (!is_resource($process)) {
             throw new Exception("No se pudo iniciar el proceso Python");
         }
@@ -92,41 +96,42 @@ function recalcularHash($audio_file_path) {
         // Capturar salida y errores
         $output = stream_get_contents($pipes[1]);
         $error = stream_get_contents($pipes[2]);
-        
+
         // Cerrar pipes
         foreach ($pipes as $pipe) {
             fclose($pipe);
         }
-        
+
         $return_value = proc_close($process);
-        
+
         if ($return_value !== 0) {
             throw new Exception("Error en el proceso Python: " . $error);
         }
-        
+
         // Validar hash
         $hash = trim($output);
         if (!preg_match('/^[a-f0-9]{64}$/', $hash)) {
             throw new Exception("Hash inválido generado: " . $output);
         }
-        
+
         guardarLog("Hash calculado correctamente: " . $hash);
         return $hash;
-
     } catch (Exception $e) {
         guardarLog("Error en recalcularHash: " . $e->getMessage());
         return false;
     }
 }
 
-function actualizarHashesDeTodosLosAudios() {
+function actualizarHashesDeTodosLosAudios()
+{
     global $wpdb;
-    
+
     try {
         guardarLog("Iniciando proceso de actualización de hashes");
         $wpdb->query('START TRANSACTION');
 
-        $audios = $wpdb->get_results("
+        $audios = $wpdb->get_results(
+            "
             SELECT fh.id, fh.file_url, fh.status, p.ID as post_id 
             FROM {$wpdb->prefix}file_hashes fh
             LEFT JOIN {$wpdb->posts} p ON p.guid = fh.file_url
@@ -154,7 +159,7 @@ function actualizarHashesDeTodosLosAudios() {
             }
 
             $nuevo_hash = recalcularHash($audio->file_url);
-            
+
             if (!$nuevo_hash) {
                 actualizarEstadoArchivo($audio->id, 'error');
                 continue;
@@ -177,7 +182,7 @@ function actualizarHashesDeTodosLosAudios() {
             }
 
             $nuevo_estado = $duplicado ? 'duplicado' : 'confirmed';
-            
+
             $resultado_actualizacion = $wpdb->update(
                 "{$wpdb->prefix}file_hashes",
                 [
@@ -205,11 +210,10 @@ function actualizarHashesDeTodosLosAudios() {
             gc_collect_cycles();
             usleep(PROCESO_DELAY);
         }
-        
+
         $wpdb->query('COMMIT');
         guardarLog("Proceso completado exitosamente");
         return true;
-
     } catch (Exception $e) {
         $wpdb->query('ROLLBACK');
         guardarLog("Error fatal en actualizarHashesDeTodosLosAudios: " . $e->getMessage());
@@ -217,9 +221,10 @@ function actualizarHashesDeTodosLosAudios() {
     }
 }
 
-function actualizarEstadoArchivo($id, $estado) {
+function actualizarEstadoArchivo($id, $estado)
+{
     global $wpdb;
-    
+
     try {
         $actualizado = $wpdb->update(
             "{$wpdb->prefix}file_hashes",
@@ -235,7 +240,6 @@ function actualizarEstadoArchivo($id, $estado) {
 
         guardarLog("Estado actualizado para ID {$id}: {$estado}");
         return true;
-
     } catch (Exception $e) {
         guardarLog("Error en actualizarEstadoArchivo: " . $e->getMessage());
         return false;
@@ -327,7 +331,7 @@ function subidaArchivo()
         $file_id = guardarHash($file_hash, $movefile['url'], $current_user_id, 'pending');
         guardarLog("Carga exitosa. Hash guardado: $file_hash. URL del nuevo archivo: " . $movefile['url']);
         $file_path = $movefile['file']; // Ruta del archivo
-        wp_schedule_single_event(time() + 5, 'antivirus', array($file_path, $file_id, $current_user_id)); 
+        wp_schedule_single_event(time() + 5, 'antivirus', array($file_path, $file_id, $current_user_id));
 
         wp_send_json_success(array('fileUrl' => $movefile['url'], 'fileId' => $file_id));
     } else {
@@ -338,7 +342,8 @@ function subidaArchivo()
     guardarLog("FIN subidaArchivo");
 }
 
-function antivirus($file_path, $file_id, $current_user_id) {
+function antivirus($file_path, $file_id, $current_user_id)
+{
     $command = escapeshellcmd("clamscan --infected --quiet " . $file_path);
     $output = shell_exec($command);
 
@@ -360,43 +365,43 @@ function verificarCargaArchivoPorHash($file_hash)
 {
     // Obtener los detalles del archivo usando el hash
     $archivo = obtenerHash($file_hash);
-    
+
     if (!$archivo) {
         //guardarLog("No se encontró ningún archivo con el hash: $file_hash");
         return false;
     }
-    
+
     $file_id = $archivo['id'];
     $file_url = $archivo['file_url'];
-    
+
     //guardarLog("Iniciando verificación de carga para File ID: $file_id con URL: $file_url");
-    
+
     // Inicializar cURL
     $ch = curl_init($file_url);
-    
+
     // Configurar opciones de cURL para realizar una solicitud HEAD
     curl_setopt($ch, CURLOPT_NOBODY, true);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_TIMEOUT, 10); // Tiempo de espera de 10 segundos
-    
+
     // Ejecutar la solicitud
     curl_exec($ch);
-    
+
     // Obtener el código de respuesta HTTP
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    
+
     // Cerrar la sesión de cURL
     curl_close($ch);
-    
+
     // Verificar el código de respuesta
     if ($http_code >= 200 && $http_code < 300) {
         //guardarLog("El archivo con File ID: $file_id se cargó correctamente. Código HTTP: $http_code");
-        
+
         return true;
     } else {
         // Actualizar el estado a 'loss' si no se pudo cargar el archivo
         actualizarEstadoArchivo($file_id, 'loss');
-        
+
         //guardarLog("Error al cargar el archivo con File ID: $file_id. Código HTTP: $http_code");
         return false;
     }
@@ -425,7 +430,6 @@ function guardarHash($hash, $url, $user_id, $status = 'pending')
             array('%s', '%s', '%s', '%d', '%s')
         );
         return $wpdb->insert_id;
-
     } catch (Exception $e) {
         // Obtener el registro existente para verificar su estado
         $registro_existente = $wpdb->get_row($wpdb->prepare(
@@ -467,10 +471,10 @@ function guardarHash($hash, $url, $user_id, $status = 'pending')
 function actualizarUrlArchivo($file_id, $new_url)
 {
     global $wpdb;
-    
+
     // Log del inicio de la operación
     guardarLog("Inicio de actualizarUrlArchivo para File ID: $file_id con nueva URL: $new_url");
-    
+
     // Intentar actualizar la URL del archivo en la base de datos
     $resultado = $wpdb->update(
         "{$wpdb->prefix}file_hashes",
@@ -517,7 +521,8 @@ function confirmarHashId($file_id)
 
 
 
-function eliminarHash($id) {
+function eliminarHash($id)
+{
     global $wpdb;
     $resultado = (bool) $wpdb->delete("{$wpdb->prefix}file_hashes", array('id' => $id), array('%d'));
     if ($resultado) {
@@ -525,24 +530,25 @@ function eliminarHash($id) {
     } else {
         guardarLog("eliminarHash: Error al eliminar el registro con ID: $id");
     }
-    
+
     return $resultado;
 }
 
-function eliminarPorHash($file_hash) {
+function eliminarPorHash($file_hash)
+{
     global $wpdb;
     $resultado = (bool) $wpdb->delete(
-        "{$wpdb->prefix}file_hashes", 
-        array('file_hash' => $file_hash), 
+        "{$wpdb->prefix}file_hashes",
+        array('file_hash' => $file_hash),
         array('%s')
     );
-    
+
     if ($resultado) {
         guardarLog("eliminarPorHash: Registro eliminado con hash: $file_hash");
     } else {
         guardarLog("eliminarPorHash: Error al eliminar el registro con hash: $file_hash");
     }
-    
+
     return $resultado;
 }
 
