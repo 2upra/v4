@@ -147,7 +147,7 @@ function actualizarHashesDeTodosLosAudios() {
     }
 }
 
-actualizarHashesDeTodosLosAudios();
+// actualizarHashesDeTodosLosAudios();
 
 function subidaArchivo()
 {
