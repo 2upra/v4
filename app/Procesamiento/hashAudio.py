@@ -1,6 +1,7 @@
 import librosa
 import numpy as np
 import hashlib
+import sys
 
 def calcular_hash_audio(audio_path):
     try:
@@ -21,8 +22,26 @@ def calcular_hash_audio(audio_path):
 
         # Devolver el hash en formato hexadecimal
         return hash_obj.hexdigest()
-    
+
     except Exception as e:
-        # Si hay un error, manejarlo y retornar None
-        print(f"Error al procesar el audio {audio_path}: {e}")
+        # Si hay un error, imprimirlo
+        print(f"Error al procesar el audio {audio_path}: {e}", file=sys.stderr)
         return None
+
+if __name__ == "__main__":
+    # Asegurarse de que se ha pasado una ruta de archivo como argumento
+    if len(sys.argv) < 2:
+        print("Uso: python3 hashAudio.py <ruta_del_archivo>")
+        sys.exit(1)
+
+    # Obtener la ruta del archivo de audio desde los argumentos
+    audio_path = sys.argv[1]
+
+    # Calcular el hash del archivo
+    hash_resultado = calcular_hash_audio(audio_path)
+
+    if hash_resultado:
+        # Si se ha calculado el hash, imprimirlo
+        print(hash_resultado)
+    else:
+        print("No se pudo calcular el hash.", file=sys.stderr)
