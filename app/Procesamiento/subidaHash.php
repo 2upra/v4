@@ -17,9 +17,17 @@ function recalcularHash($audio_file_path) {
         return false;
     }
 
-    // Ejecutar el script de Python
+    // Crear el comando y registrar el comando en los logs para depuración
     $command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py" . escapeshellarg($file_path));
-    $hash = shell_exec($command);
+    guardarLog("Ejecutando comando: " . $command);
+
+    // Ejecutar el comando y capturar la salida y errores
+    $hash = shell_exec($command . ' 2>&1');  // Redirigir errores de shell a la salida estándar
+    guardarLog("Resultado del comando: " . $hash);
+
+    if (!$hash) {
+        guardarLog("Error al calcular el hash para el archivo: " . $file_path);
+    }
 
     return $hash ? trim($hash) : false;
 }
@@ -37,6 +45,8 @@ function actualizarHashesDeTodosLosAudios() {
         ORDER BY fh.id DESC
     ");
 
+    guardarLog("Audios obtenidos: " . count($audios));
+
     foreach ($audios as $audio) {
         // Si ya está confirmado, saltar
         if ($audio->status === 'confirmed') {
@@ -47,6 +57,7 @@ function actualizarHashesDeTodosLosAudios() {
         $nuevo_hash = recalcularHash($audio->file_url);
         
         if (!$nuevo_hash) {
+            guardarLog("No se pudo recalcular el hash para el audio ID: " . $audio->id);
             continue;
         }
 
@@ -59,6 +70,8 @@ function actualizarHashesDeTodosLosAudios() {
             AND status = 'confirmed'
             LIMIT 1
         ", $nuevo_hash, $audio->id));
+
+        guardarLog("Hash calculado para el audio ID: " . $audio->id . " - Duplicado: " . ($duplicado ? 'Sí' : 'No'));
 
         // Actualizar estado y hash
         $wpdb->update(
@@ -78,7 +91,7 @@ function actualizarHashesDeTodosLosAudios() {
                 'duplicado_de' => $duplicado->file_url,
                 'hash' => $nuevo_hash
             ));
-            
+
             guardarLog("Duplicado encontrado - Original: {$duplicado->file_url}, Duplicado: {$audio->file_url}");
         }
 
