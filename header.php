@@ -1,67 +1,32 @@
-<?
+<?php
 if (!is_user_logged_in()) {
 } else {
     $usuario = wp_get_current_user();
     $user_id = get_current_user_id();
     $nombre_usuario = $usuario->display_name;
     $url_imagen_perfil = imagenPerfil($usuario->ID);
+
     if (function_exists('jetpack_photon_url')) {
         $url_imagen_perfil = jetpack_photon_url($url_imagen_perfil, array('quality' => 40, 'strip' => 'all'));
     }
 }
-
 if (!defined('ABSPATH')) {
     exit('Direct script access denied.');
 }
 ?>
+
 <!DOCTYPE html>
-<html <? language_attributes(); ?>>
+<html <?php language_attributes(); ?>>
 
 <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <?php
-    // Función para títulos optimizados
-    function get_seo_title()
-    {
-        $title = '';
 
-        // Página principal
-        if (is_home() || is_front_page()) {
-            $title = get_bloginfo('name') . ' | ' . get_bloginfo('description');
-        }
-        // Posts individuales
-        elseif (is_single()) {
-            $title = get_the_title() . ' | ' . get_bloginfo('name');
-        }
-        // Páginas
-        elseif (is_page()) {
-            $title = get_the_title() . ' | ' . get_bloginfo('name');
-        }
-        // Categorías
-        elseif (is_category()) {
-            $title = single_cat_title('', false) . ' | ' . get_bloginfo('name');
-        }
-        // Archivos
-        elseif (is_archive()) {
-            $title = get_the_archive_title() . ' | ' . get_bloginfo('name');
-        }
-        // Búsqueda
-        elseif (is_search()) {
-            $title = 'Resultados para: ' . get_search_query() . ' | ' . get_bloginfo('name');
-        }
-        // 404
-        elseif (is_404()) {
-            $title = 'Página no encontrada | ' . get_bloginfo('name');
-        }
-
-        return esc_html($title);
-    }
-    ?>
-
+    <!-- Título SEO -->
     <title><?php echo get_seo_title(); ?></title>
 
+    <!-- CSS para Preloader -->
     <style>
         #preloader {
             position: fixed;
@@ -92,9 +57,12 @@ if (!defined('ABSPATH')) {
         }
     </style>
 
-    <? wp_head(); ?>
+    <?php wp_head(); ?>
     <link rel="icon" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-96x96.png">
+    <link rel="manifest" href="<?php echo get_template_directory_uri(); ?>/assets/icons/manifest.json">
+
 </head>
+
 
 <body <? body_class(); ?>>
     <div id="preloader">
@@ -195,7 +163,7 @@ if (!defined('ABSPATH')) {
                         <div class="search-container" id="filtros">
                             <input type="text" id="identifier" placeholder="Busqueda">
                             <button id="clearSearch" class="clear-search" style="display: none;">
-                            <? echo $GLOBALS['flechaAtras']; ?>
+                                <? echo $GLOBALS['flechaAtras']; ?>
                             </button>
                         </div>
 

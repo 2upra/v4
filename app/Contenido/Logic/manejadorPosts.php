@@ -37,9 +37,30 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
         $post_not_in[] = $similar_to;
     }
 
+    /*
+    caso donde un post se repitio: 241821 en pagina 1, y luego en pagina 2 241821
+
+    2024-10-27 03:25:57 - Iniciando configuración de query args: paged=1, user_id=, current_user_id=1
+    2024-10-27 03:25:57 - Calculando feed personalizado para user_id: 1
+    2024-10-27 03:25:57 - Feed personalizado calculado y guardado en caché
+    2024-10-27 03:25:57 - IDs para página 1: 242037, 242095, 241695, 242021, 242073, 241692, 241575, 241740, 241396, 241897, 241865, 241821
+    2024-10-27 03:25:57 - query_args final: {"post_type":"social_post","posts_per_page":12,"post__in":[242037,242095,241695,242021,242073,241692,241575,241740,241396,241897,241865,241821],"orderby":"post__in","meta_query":[]}
+    2024-10-27 03:26:23 - Iniciando configuración de query args: paged=1, user_id=, current_user_id=1
+    2024-10-27 03:26:23 - query_args final: {"post_type":"colab","posts_per_page":3,"paged":1,"orderby":"date","order":"DESC","meta_query":[]}
+    2024-10-27 03:26:23 - Iniciando configuración de query args: paged=1, user_id=, current_user_id=1
+    2024-10-27 03:26:23 - Calculando feed personalizado para user_id: 1
+    2024-10-27 03:26:23 - Feed personalizado calculado y guardado en caché
+    2024-10-27 03:26:23 - IDs para página 1: 242095, 242037, 241695, 242073, 241692, 242021, 241865, 241396, 241623, 241698, 241740, 241638
+    2024-10-27 03:26:23 - query_args final: {"post_type":"social_post","posts_per_page":12,"post__in":[242095,242037,241695,242073,241692,242021,241865,241396,241623,241698,241740,241638],"orderby":"post__in","meta_query":[]}
+    2024-10-27 03:28:09 - Iniciando configuración de query args: paged=2, user_id=, current_user_id=1
+    2024-10-27 03:28:09 - Usando feed personalizado en caché para página 2
+    2024-10-27 03:28:09 - IDs para página 2: 241617, 241929, 241267, 241488, 241897, 241816, 241674, 240866, 241575, 241602, 241821, 240857
+    2024-10-27 03:28:09 - query_args final: {"post_type":"social_post","posts_per_page":12,"post__in":[241617,241929,241267,241488,241897,241816,241674,240866,241575,241602,241821,240857],"orderby":"post__in","meta_query":[],"author":""}
+    */
+
     if ($args['post_type'] === 'social_post') {
         if (empty($identifier)) {
-            // Usar transient para almacenar/recuperar IDs calculadas
+            // Nunca se usa
             $transient_key = 'feed_personalizado_one' . $current_user_id;
             $post_ids = get_transient($transient_key);
 
@@ -57,7 +78,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
                 }
                 $post_ids = array_unique($post_ids);
                 
-                // Guardar en caché por 1 hora (3600 segundos)
                 set_transient($transient_key, $post_ids, 600);
                 
                 postLog("Feed personalizado calculado y guardado en caché");
@@ -136,6 +156,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     
     return $query_args;
 }
+
 function configurarSimilarTo($query_args, $similar_to)
 {
     // Obtener los datosAlgoritmo del post similar
@@ -147,7 +168,7 @@ function configurarSimilarTo($query_args, $similar_to)
         $relation = 'OR'; 
 
         // Coincidencia de Tags en ambos idiomas
-        if (!empty($data['tags_posibles'])) {
+        if (!empty($data['tags_posibles'])) { 
             foreach (['es', 'en'] as $lang) {
                 if (!empty($data['tags_posibles'][$lang]) && is_array($data['tags_posibles'][$lang])) {
                     foreach ($data['tags_posibles'][$lang] as $tag) {

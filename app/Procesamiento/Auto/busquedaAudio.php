@@ -23,7 +23,6 @@ function definir_cron_cada_dos_minutos($schedules)
 add_action('audio60', 'procesarAudios');
 
 
-
 function procesarAudios()
 {
     $directorio_audios = '/home/asley01/MEGA/Waw/Kits';
@@ -33,38 +32,29 @@ function procesarAudios()
 
     $fp = fopen($lock_file, 'c');
     if ($fp === false) {
-        // No se pudo abrir el archivo de bloqueo, se sale de la función.
         return;
     }
-
-    // Intentar adquirir el bloqueo hasta un número máximo de reintentos.
     $intentos = 0;
     while (!flock($fp, LOCK_EX | LOCK_NB)) {
         $intentos++;
         if ($intentos >= $max_reintentos) {
-            // Si se alcanzó el número máximo de intentos, salir.
             fclose($fp);
             return;
         }
-        // Esperar 5 segundos antes de reintentar.
         sleep($espera_segundos);
     }
 
     try {
         $inicio = microtime(true);
-
-        // Buscar un audio válido y procesarlo
         $audio_info = buscarUnAudioValido($directorio_audios);
         if ($audio_info) {
             $tiempo = microtime(true) - $inicio;
             autLog("Tiempo de búsqueda: " . number_format($tiempo, 2) . " segundos");
-            autRevisarAudio($audio_info['ruta'], $audio_info['hash']);
+            enviarAudioaProcesar($audio_info['ruta'], $audio_info['hash']);
         }
     } finally {
-        // Liberar el bloqueo y cerrar el archivo de bloqueo.
         flock($fp, LOCK_UN);
         fclose($fp);
-        // Eliminar el archivo de bloqueo si existe.
         if (file_exists($lock_file)) {
             unlink($lock_file);
         }
@@ -74,7 +64,6 @@ function procesarAudios()
 function buscarUnAudioValido($directorio)
 {
     $extensiones_permitidas = ['wav', 'mp3'];
-
     if (!is_dir($directorio) || !is_readable($directorio)) {
         shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
         return null;
@@ -86,19 +75,15 @@ function buscarUnAudioValido($directorio)
             new RecursiveDirectoryIterator($directorio, FilesystemIterator::SKIP_DOTS),
             RecursiveIteratorIterator::SELF_FIRST
         );
-
         foreach ($iterator as $item) {
             if ($item->isDir()) {
                 $subcarpetas[] = $item->getPathname();
             }
         }
-
         if (empty($subcarpetas)) {
             $subcarpetas[] = $directorio;
         }
-
         $carpeta_seleccionada = $subcarpetas[array_rand($subcarpetas)];
-
         $archivos = [];
         $dir_iterator = new DirectoryIterator($carpeta_seleccionada);
         foreach ($dir_iterator as $file) {
@@ -147,7 +132,12 @@ function debeProcesarse($ruta_archivo, $file_hash)
         $hash_obtenido = obtenerHash($file_hash);
         $hash_verificado = verificarCargaArchivoPorHash($file_hash);
 
-        if ($hash_obtenido || $hash_verificado) {
+        if ($hash_obtenido && $hash_verificado) {
+            // Si el archivo existe y está verificado, lo eliminamos
+            if (file_exists($ruta_archivo)) {
+                unlink($ruta_archivo);
+                liminarPorHash($file_hash);
+            }
             return false;
         }
 
@@ -157,17 +147,22 @@ function debeProcesarse($ruta_archivo, $file_hash)
     }
 }
 
-function autRevisarAudio($audio, $file_hash)
+function obtenerHash($file_hash)
+{
+    global $wpdb;
+    return $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM {$wpdb->prefix}file_hashes WHERE file_hash = %s LIMIT 1",
+        $file_hash
+    ), ARRAY_A);
+}
+
+function enviarAudioaProcesar($audio, $file_hash)
 {
     if (!file_exists($audio)) {
         return;
     }
-
-    $upload_dir = wp_upload_dir();
-    $file_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $audio);
     $user_id = 44;
-
-    if (!guardarHash($file_hash, $file_url, $user_id, 'confirmed')) {
+    if (!guardarHash($file_hash, $audio, $user_id, 'confirmed')) {
         return;
     }
 

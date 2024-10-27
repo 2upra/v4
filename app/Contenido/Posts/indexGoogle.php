@@ -60,6 +60,33 @@ function excluir_posts_del_sitemap($args, $post_type) {
 }
 add_filter('wp_sitemaps_posts_query_args', 'excluir_posts_del_sitemap', 10, 2);
 */
+
+
+// Título SEO Optimizado
+function get_seo_title()
+{
+    $title = '';
+
+    if (is_home() || is_front_page()) {
+        $title = get_bloginfo('name') . ' | ' . get_bloginfo('description');
+    } elseif (is_single()) {
+        $title = get_the_title() . ' | ' . get_bloginfo('name');
+    } elseif (is_page()) {
+        $title = get_the_title() . ' | ' . get_bloginfo('name');
+    } elseif (is_category()) {
+        $title = single_cat_title('', false) . ' | ' . get_bloginfo('name');
+    } elseif (is_archive()) {
+        $title = get_the_archive_title() . ' | ' . get_bloginfo('name');
+    } elseif (is_search()) {
+        $title = 'Resultados para: ' . get_search_query() . ' | ' . get_bloginfo('name');
+    } elseif (is_404()) {
+        $title = 'Página no encontrada | ' . get_bloginfo('name');
+    }
+
+    return esc_html($title);
+}
+
+
 function optimizar_titulos_seo($title_parts) {
     if (is_single()) {
         // Personalizar longitud del título

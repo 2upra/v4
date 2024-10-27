@@ -325,7 +325,7 @@ function modalCarta()
 {
     ob_start();
 ?>
-    <div class="TAZFZZ" id="modalCarta" style="display: none;">
+    <div class="TAZFZZ" id="modalCarta" style="display: none;" data-nosnippet>
         <div class="XCTQCK">
             <div class="WMPVLD"> <? echo $GLOBALS['iconologo']; ?></div>
             <div class="JMEPEB">

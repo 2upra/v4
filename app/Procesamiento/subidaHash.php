@@ -171,14 +171,7 @@ function actualizarEstadoArchivo($file_id, $status)
     );
 }
 
-function obtenerHash($file_hash)
-{
-    global $wpdb;
-    return $wpdb->get_row($wpdb->prepare(
-        "SELECT * FROM {$wpdb->prefix}file_hashes WHERE file_hash = %s LIMIT 1",
-        $file_hash
-    ), ARRAY_A);
-}
+
 
 /*
 [26-Oct-2024 16:20:32 UTC] PHP Deprecated:  Optional parameter $status declared before required parameter $user_id is implicitly treated as a required parameter in /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/subidaHash.php on line 184
@@ -299,6 +292,23 @@ function eliminarHash($id) {
         guardarLog("eliminarHash: Registro eliminado con ID: $id");
     } else {
         guardarLog("eliminarHash: Error al eliminar el registro con ID: $id");
+    }
+    
+    return $resultado;
+}
+
+function eliminarPorHash($file_hash) {
+    global $wpdb;
+    $resultado = (bool) $wpdb->delete(
+        "{$wpdb->prefix}file_hashes", 
+        array('file_hash' => $file_hash), 
+        array('%s')
+    );
+    
+    if ($resultado) {
+        guardarLog("eliminarPorHash: Registro eliminado con hash: $file_hash");
+    } else {
+        guardarLog("eliminarPorHash: Error al eliminar el registro con hash: $file_hash");
     }
     
     return $resultado;
