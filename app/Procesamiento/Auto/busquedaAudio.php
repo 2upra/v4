@@ -131,41 +131,41 @@ function debeProcesarse($ruta_archivo, $file_hash)
 {
     try {
         if (!file_exists($ruta_archivo)) {
-            guardarLog("debeProcesarse: El archivo no existe en la ruta: $ruta_archivo");
+            autLog("debeProcesarse: El archivo no existe en la ruta: $ruta_archivo");
             return false;
         }
 
         if (!$file_hash) {
-            guardarLog("debeProcesarse: No se proporcionó un hash válido");
+            autLog("debeProcesarse: No se proporcionó un hash válido");
             return false;
         }
 
         $hash_obtenido = obtenerHash($file_hash);
-        guardarLog("debeProcesarse: Hash obtenido: " . ($hash_obtenido ? "SI" : "NO") . " para hash: $file_hash");
+        autLog("debeProcesarse: Hash obtenido: " . ($hash_obtenido ? "SI" : "NO") . " para hash: $file_hash");
 
         $hash_verificado = verificarCargaArchivoPorHash($file_hash);
-        guardarLog("debeProcesarse: Hash verificado: " . ($hash_verificado ? "SI" : "NO") . " para hash: $file_hash");
+        autLog("debeProcesarse: Hash verificado: " . ($hash_verificado ? "SI" : "NO") . " para hash: $file_hash");
 
         if ($hash_obtenido && $hash_verificado) {
-            guardarLog("debeProcesarse: El archivo existe y está verificado. Procediendo a eliminar.");
+            autLog("debeProcesarse: El archivo existe y está verificado. Procediendo a eliminar.");
             
             if (file_exists($ruta_archivo)) {
                 $eliminado = unlink($ruta_archivo);
-                guardarLog("debeProcesarse: Eliminación del archivo: " . ($eliminado ? "EXITOSA" : "FALLIDA") . " - Ruta: $ruta_archivo");
+                autLog("debeProcesarse: Eliminación del archivo: " . ($eliminado ? "EXITOSA" : "FALLIDA") . " - Ruta: $ruta_archivo");
                 
                 $hash_eliminado = eliminarPorHash($file_hash);
-                guardarLog("debeProcesarse: Eliminación del hash: " . ($hash_eliminado ? "EXITOSA" : "FALLIDA") . " - Hash: $file_hash");
+                autLog("debeProcesarse: Eliminación del hash: " . ($hash_eliminado ? "EXITOSA" : "FALLIDA") . " - Hash: $file_hash");
             } else {
-                guardarLog("debeProcesarse: El archivo ya no existe en la ruta: $ruta_archivo");
+                autLog("debeProcesarse: El archivo ya no existe en la ruta: $ruta_archivo");
             }
             return false;
         }
 
-        guardarLog("debeProcesarse: El archivo debe procesarse - Ruta: $ruta_archivo, Hash: $file_hash");
+        autLog("debeProcesarse: El archivo debe procesarse - Ruta: $ruta_archivo, Hash: $file_hash");
         return true;
 
     } catch (Exception $e) {
-        guardarLog("debeProcesarse: Error - " . $e->getMessage());
+        autLog("debeProcesarse: Error - " . $e->getMessage());
         return false;
     }
 }
