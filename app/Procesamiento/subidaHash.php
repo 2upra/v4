@@ -196,7 +196,7 @@ function actualizarHashesDeTodosLosAudios() {
         return false;
     }
 }
-# actualizarHashesDeTodosLosAudios();
+actualizarHashesDeTodosLosAudios();
 /*
 function actualizarEstadoArchivo($file_id, $status)
 {
