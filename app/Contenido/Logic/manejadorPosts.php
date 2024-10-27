@@ -27,10 +27,16 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
+    // Log inicial con información básica
+    postLog("Iniciando configuración de query args: paged=$paged, user_id=$user_id, current_user_id=$current_user_id, args=" . json_encode($args));
+    
     $identifier = $_POST['identifier'] ?? '';
     $posts = $args['posts'];
     $similar_to = $args['similar_to'] ?? null; 
     $post_not_in = [];
+
+    // Log de identificador y publicaciones similares
+    postLog("Identifier: $identifier, Similar to: $similar_to");
 
     if ($similar_to) {
         $post_not_in[] = $similar_to;
@@ -38,26 +44,43 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
     if ($args['post_type'] === 'social_post') {
         if (empty($identifier)) {
+            // Log antes de calcular el feed personalizado
+            postLog("Calculando feed personalizado para user_id: $current_user_id");
+
             // Solo calcular el feed personalizado si no hay un identifier
             $posts_personalizados = calcularFeedPersonalizado($current_user_id);
             $post_ids = array_keys($posts_personalizados);
+
+            // Log de IDs obtenidos del feed personalizado
+            postLog("IDs de publicaciones personalizadas obtenidas: " . implode(', ', $post_ids));
 
             // Eliminar $similar_to de $post_ids si está presente
             if ($similar_to) {
                 $post_ids = array_filter($post_ids, function($post_id) use ($similar_to) {
                     return $post_id != $similar_to;
                 });
+
+                // Log después de eliminar las publicaciones similares
+                postLog("IDs después de eliminar similar_to ($similar_to): " . implode(', ', $post_ids));
             }
 
             // Eliminar duplicados
             $post_ids = array_unique($post_ids);
 
+            // Log después de eliminar duplicados
+            postLog("IDs después de eliminar duplicados: " . implode(', ', $post_ids));
+
             if ($paged == 1) {
                 $post_ids = array_slice($post_ids, 0, $posts);
+                // Log para la paginación
+                postLog("IDs después de aplicar paginación para paged=1: " . implode(', ', $post_ids));
             }
 
             // Asegurar que no haya conflicto entre post__in y post__not_in
             $post_not_in = array_unique(array_merge($post_not_in, $post_ids));
+
+            // Log después de combinar post__in y post__not_in
+            postLog("post_not_in después de combinar: " . implode(', ', $post_not_in));
 
             $query_args = [
                 'post_type'      => $args['post_type'],
@@ -68,6 +91,9 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
                 'orderby'        => 'post__in',
                 'meta_query'     => [],
             ];
+
+            // Log de query_args después de construirlo sin identifier
+            postLog("query_args construido sin identifier: " . json_encode($query_args));
         } else {
             // Cuando hay un identifier, no usar calcularFeedPersonalizado
             $query_args = [
@@ -84,11 +110,17 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
                     ],
                 ],
             ];
+
+            // Log de query_args cuando hay un identifier
+            postLog("query_args construido con identifier: " . json_encode($query_args));
         }
 
         // Añadir exclusiones si existen
         if (!empty($post_not_in)) {
             $query_args['post__not_in'] = array_unique($post_not_in);
+
+            // Log después de añadir exclusiones
+            postLog("query_args después de añadir post__not_in: " . json_encode($query_args));
         }
     } else {
         $query_args = [
@@ -103,6 +135,9 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         // Añadir eliminaciones si existen
         if (!empty($post_not_in)) {
             $query_args['post__not_in'] = array_unique($post_not_in);
+
+            // Log después de añadir post__not_in cuando no es social_post
+            postLog("query_args después de añadir post__not_in (no social_post): " . json_encode($query_args));
         }
 
         // Añadir meta_query si hay un identificador
@@ -112,16 +147,25 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
                 'value'   => $identifier,
                 'compare' => 'LIKE',
             ];
+
+            // Log después de añadir meta_query
+            postLog("query_args después de añadir meta_query (identifier): " . json_encode($query_args));
         }
     }
 
     // Manejar publicaciones similares llamando a una función separada
     if ($similar_to) {
         $query_args = configurarSimilarTo($query_args, $similar_to);
+
+        // Log después de configurar publicaciones similares
+        postLog("query_args después de configurar publicaciones similares: " . json_encode($query_args));
     }
 
     // Aplicar filtros adicionales si existen
     $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
+
+    // Log final antes de devolver los query_args
+    postLog("query_args final: " . json_encode($query_args));
 
     return $query_args;
 }
