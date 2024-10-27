@@ -1,5 +1,54 @@
 <?
 
+/*
+import os
+import librosa
+import numpy as np
+import hashlib
+
+print("Inicio del script")  # Confirmación de que el script comienza
+
+def calcular_hash_audio(audio_path):
+    try:
+        print(f"Procesando archivo: {audio_path}")  # Depuración de ruta de archivo
+        
+        # Verificar si el archivo existe
+        if not os.path.exists(audio_path):
+            print(f"Archivo no encontrado: {audio_path}")
+            return None
+
+        # Intentar cargar el archivo
+        try:
+            y, sr = librosa.load(audio_path, sr=None)
+            print("Archivo cargado exitosamente")  # Confirmación de carga
+        except Exception as load_error:
+            print(f"Error cargando el archivo de audio: {audio_path}, {load_error}")
+            return None
+
+        # Confirmación de inicio del procesamiento de espectrograma
+        print("Iniciando cálculo de espectrograma")
+        mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr)
+        print("Espectrograma calculado")  # Confirmación de espectrograma
+        
+        log_mel_spectrogram = librosa.power_to_db(mel_spectrogram, ref=np.max)
+        print("Espectrograma logarítmico calculado")  # Confirmación de espectrograma logarítmico
+        
+        mel_bytes = log_mel_spectrogram.tobytes()
+        print("Espectrograma convertido a bytes")  # Confirmación de conversión a bytes
+        
+        hash_obj = hashlib.sha256(mel_bytes)
+        print("Hash generado exitosamente")  # Confirmación de hash
+        
+        return hash_obj.hexdigest()
+
+    except Exception as e:
+        print(f"Error en el procesamiento de hash para el archivo {audio_path}: {e}")
+        return None
+
+
+
+*/
+
 function recalcularHash($audio_file_path) {
     // Verificar si la URL es válida
     if (!filter_var($audio_file_path, FILTER_VALIDATE_URL)) {
@@ -17,57 +66,73 @@ function recalcularHash($audio_file_path) {
         return false;
     }
 
-    // Crear el comando y registrar el comando en los logs para depuración
+    // Crear y ejecutar el comando
     $command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py") . ' ' . escapeshellarg($file_path);
     guardarLog("Ejecutando comando: " . $command);
 
-    // Ejecutar el comando y capturar la salida y errores
-    $hash = shell_exec($command . ' 2>&1');  // Redirigir errores de shell a la salida estándar
-    guardarLog("Resultado del comando: " . $hash);
-
-    if (!$hash) {
-        guardarLog("Error al calcular el hash para el archivo: " . $file_path);
+    // Ejecutar el comando
+    $output = shell_exec($command . ' 2>&1');
+    
+    // Limpiar la salida y verificar que sea un hash válido
+    $hash = trim($output);
+    
+    // Verificar que el resultado sea un hash SHA-256 válido (64 caracteres hexadecimales)
+    if (preg_match('/^[a-f0-9]{64}$/', $hash)) {
+        guardarLog("Hash calculado correctamente: " . $hash);
+        return $hash;
+    } else {
+        guardarLog("Error al calcular el hash. Salida: " . $output);
+        return false;
     }
-
-    return $hash ? trim($hash) : false;
 }
+
+/*
+2024-10-27 22:46:01 - Audio ID: 11842 marcado como pendiente.
+2024-10-27 22:46:01 - Ejecutando comando: python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py '/var/www/wordpress/wp-content/uploads/2024/10/Memphis-Kick_BJ03_2upra.wav'
+2024-10-27 22:46:01 - Resultado del comando: Inicio del script
+2024-10-27 22:46:01 - Hash calculado para el audio ID: 11842 - Duplicado: Sí
+2024-10-27 22:46:01 - Audio ID: 11842 actualizado a estado: duplicado
+2024-10-27 22:46:01 - Duplicado encontrado - Original: https://2upra.com/wp-content/uploads/2024/10/Memphis-Snare_G0Wx_2upra.wav, Duplicado: https://2upra.com/wp-content/uploads/2024/10/Memphis-Kick_BJ03_2upra.wav
+
+ves que esta mal, tampoco marca el estado duplicado en la base de datus y se queda en bucle e incluso en la base datos en un hash vi que guardo "Inicio del script" en vez de hash, añade un log para ver que hash guarda y arregla todo
+*/
 
 function actualizarHashesDeTodosLosAudios() {
     global $wpdb;
 
-    // Obtener solo registros no confirmados, ordenados por ID descendente
+    // Obtener solo registros que necesitan procesamiento
     $audios = $wpdb->get_results("
         SELECT fh.id, fh.file_url, fh.status, p.ID as post_id 
         FROM {$wpdb->prefix}file_hashes fh
         LEFT JOIN {$wpdb->posts} p ON p.guid = fh.file_url
         WHERE fh.file_url LIKE '%.wav'
-        AND fh.status != 'confirmed'
+        AND (fh.status IS NULL 
+             OR fh.status = 'pending' 
+             OR fh.status = 'error')
         ORDER BY fh.id DESC
     ");
 
-    guardarLog("Audios obtenidos: " . count($audios));
+    guardarLog("Audios a procesar: " . count($audios));
 
     foreach ($audios as $audio) {
-        // Si ya está confirmado, saltar
-        if ($audio->status === 'confirmed') {
-            guardarLog("Audio ID: " . $audio->id . " ya está confirmado, omitiendo.");
-            continue;
-        }
+        guardarLog("Procesando Audio ID: " . $audio->id . " (Estado actual: " . $audio->status . ")");
 
-        // Marcar el estado como 'pending' antes de recalcular el hash
-        actualizarEstadoArchivo($audio->id, 'pending');
-        guardarLog("Audio ID: " . $audio->id . " marcado como pendiente.");
+        // Marcar como pending solo si no está ya en ese estado
+        if ($audio->status !== 'pending') {
+            actualizarEstadoArchivo($audio->id, 'pending');
+            guardarLog("Audio ID: " . $audio->id . " marcado como pendiente.");
+        }
 
         // Recalcular el hash
         $nuevo_hash = recalcularHash($audio->file_url);
         
         if (!$nuevo_hash) {
-            guardarLog("No se pudo recalcular el hash para el audio ID: " . $audio->id);
-            actualizarEstadoArchivo($audio->id, 'error');  // Marcar como error si no se puede calcular el hash
+            guardarLog("Error al calcular hash para Audio ID: " . $audio->id);
+            actualizarEstadoArchivo($audio->id, 'error');
             continue;
         }
 
-        // Verificar duplicados
+        // Verificar duplicados solo contra archivos confirmados
         $duplicado = $wpdb->get_row($wpdb->prepare("
             SELECT id, file_url 
             FROM {$wpdb->prefix}file_hashes 
@@ -77,11 +142,10 @@ function actualizarHashesDeTodosLosAudios() {
             LIMIT 1
         ", $nuevo_hash, $audio->id));
 
-        guardarLog("Hash calculado para el audio ID: " . $audio->id . " - Duplicado: " . ($duplicado ? 'Sí' : 'No'));
-
-        // Actualizar estado y hash
         $nuevo_estado = $duplicado ? 'duplicado' : 'confirmed';
-        $wpdb->update(
+        
+        // Actualizar hash y estado
+        $actualizado = $wpdb->update(
             "{$wpdb->prefix}file_hashes",
             array(
                 'file_hash' => $nuevo_hash,
@@ -92,21 +156,27 @@ function actualizarHashesDeTodosLosAudios() {
             array('%d')
         );
 
-        guardarLog("Audio ID: " . $audio->id . " actualizado a estado: " . $nuevo_estado);
+        guardarLog("Audio ID: " . $audio->id . " - Hash: " . $nuevo_hash . " - Estado: " . $nuevo_estado);
 
-        // Si hay post_id y es duplicado, actualizar meta del post
+        if ($actualizado === false) {
+            guardarLog("Error al actualizar en base de datos Audio ID: " . $audio->id);
+            continue;
+        }
+
+        // Actualizar meta si es duplicado
         if ($audio->post_id && $duplicado) {
             update_post_meta($audio->post_id, '_audio_duplicado', array(
                 'duplicado_de' => $duplicado->file_url,
                 'hash' => $nuevo_hash
             ));
-
             guardarLog("Duplicado encontrado - Original: {$duplicado->file_url}, Duplicado: {$audio->file_url}");
         }
 
-        // Opcional: Añadir un pequeño delay para no sobrecargar el servidor
-        usleep(1000000); // 1 segundo
+        // Delay para no sobrecargar
+        usleep(500000); // 0.5 segundos
     }
+    
+    guardarLog("Proceso completado");
 }
 
 # actualizarHashesDeTodosLosAudios();
