@@ -9,6 +9,24 @@ define('BATCH_SIZE', 50); // Número de archivos a procesar por lote
 ini_set('memory_limit', '256M');
 set_time_limit(0); // Sin límite para el script completo
 
+/*
+024-10-27 23:31:57 - Estado actualizado para ID 11924: error
+2024-10-27 23:31:57 - Procesando Audio ID: 11923 (Estado actual: error)
+2024-10-27 23:31:57 - Estado actualizado para ID 11923: pending
+2024-10-27 23:31:57 - Ejecutando comando: python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py '/var/www/wordpress/wp-content/uploads/2024/10/Memphis-Loop_F8Wo_2upra.wav'
+2024-10-27 23:31:58 - Error en recalcularHash: Error en el proceso Python: Error procesando archivo: cannot cache function '__o_fold': no locator available for file '/usr/local/lib/python3.9/dist-packages/librosa/core/notation.py'
+2024-10-27 23:31:58 - Estado actualizado para ID 11923: error
+2024-10-27 23:31:58 - Procesando Audio ID: 11922 (Estado actual: error)
+2024-10-27 23:31:58 - Estado actualizado para ID 11922: pending
+2024-10-27 23:31:58 - Ejecutando comando: python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py '/var/www/wordpress/wp-content/uploads/2024/10/Memphis-Snare_wIBN_2upra.wav'
+2024-10-27 23:31:59 - Error en recalcularHash: Error en el proceso Python: Error procesando archivo: cannot cache function '__o_fold': no locator available for file '/usr/local/lib/python3.9/dist-packages/librosa/core/notation.py'
+2024-10-27 23:31:59 - Estado actualizado para ID 11922: error
+2024-10-27 23:31:59 - Procesando Audio ID: 11921 (Estado actual: error)
+2024-10-27 23:31:59 - Estado actualizado para ID 11921: pending
+2024-10-27 23:31:59 - Ejecutando comando: python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py '/var/www/wordpress/wp-content/uploads/2024/10/MFS-25_UN0S_2upra.wav'
+
+*/
+
 function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD) {
     if (empty($hash1) || empty($hash2)) {
         return false;
@@ -52,7 +70,9 @@ function recalcularHash($audio_file_path) {
         }
 
         // Preparar y ejecutar comando
-        $command = escapeshellcmd("python3 " . HASH_SCRIPT_PATH) . ' ' . escapeshellarg($file_path);
+        $command = 'source /root/.bashrc && ' . 
+                  escapeshellcmd("python3 " . HASH_SCRIPT_PATH) . ' ' . 
+                  escapeshellarg($file_path);
         guardarLog("Ejecutando comando: " . $command);
 
         set_time_limit(MAX_EXECUTION_TIME);
@@ -196,23 +216,7 @@ function actualizarHashesDeTodosLosAudios() {
         return false;
     }
 }
-# actualizarHashesDeTodosLosAudios();
-/*
-function actualizarEstadoArchivo($file_id, $status)
-{
-    global $wpdb;
-    $wpdb->update(
-        "{$wpdb->prefix}file_hashes",
-        array('status' => $status), // Nuevo estado
-        array('id' => $file_id), // Condición de ID
-        array('%s'), // Formato del estado
-        array('%d')  // Formato del ID
-    );
-}
-*/
-/**
- * Actualiza el estado de un archivo en la base de datos
- */
+
 function actualizarEstadoArchivo($id, $estado) {
     global $wpdb;
     
