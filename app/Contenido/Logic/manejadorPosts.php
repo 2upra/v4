@@ -51,8 +51,17 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             $posts_personalizados = calcularFeedPersonalizado($current_user_id);
             $post_ids = array_keys($posts_personalizados);
 
-            // Log de IDs obtenidos del feed personalizado
-            postLog("IDs de publicaciones personalizadas obtenidas: " . implode(', ', $post_ids));
+            // Limitar a las primeras 50 publicaciones para logging
+            $post_ids_log = array_slice($post_ids, 0, 50);
+
+            // Log de las primeras 50 IDs obtenidas del feed personalizado
+            postLog("Primeras 50 IDs de publicaciones personalizadas: " . implode(', ', $post_ids_log));
+
+            // Detectar si hay duplicados
+            $duplicados = array_diff_assoc($post_ids, array_unique($post_ids));
+            if (!empty($duplicados)) {
+                postLog("¡Advertencia! IDs duplicados detectados: " . implode(', ', $duplicados));
+            }
 
             // Eliminar $similar_to de $post_ids si está presente
             if ($similar_to) {
@@ -61,26 +70,26 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
                 });
 
                 // Log después de eliminar las publicaciones similares
-                postLog("IDs después de eliminar similar_to ($similar_to): " . implode(', ', $post_ids));
+                postLog("IDs después de eliminar similar_to ($similar_to): " . implode(', ', array_slice($post_ids, 0, 50)));
             }
 
             // Eliminar duplicados
             $post_ids = array_unique($post_ids);
 
             // Log después de eliminar duplicados
-            postLog("IDs después de eliminar duplicados: " . implode(', ', $post_ids));
+            postLog("IDs después de eliminar duplicados (primeros 50): " . implode(', ', array_slice($post_ids, 0, 50)));
 
             if ($paged == 1) {
                 $post_ids = array_slice($post_ids, 0, $posts);
                 // Log para la paginación
-                postLog("IDs después de aplicar paginación para paged=1: " . implode(', ', $post_ids));
+                postLog("IDs después de aplicar paginación para paged=1: " . implode(', ', array_slice($post_ids, 0, 50)));
             }
 
             // Asegurar que no haya conflicto entre post__in y post__not_in
             $post_not_in = array_unique(array_merge($post_not_in, $post_ids));
 
             // Log después de combinar post__in y post__not_in
-            postLog("post_not_in después de combinar: " . implode(', ', $post_not_in));
+            postLog("post_not_in después de combinar (primeros 50): " . implode(', ', array_slice($post_not_in, 0, 50)));
 
             $query_args = [
                 'post_type'      => $args['post_type'],
