@@ -47,8 +47,9 @@ function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD)
     return $similitud >= $umbral;
 }
 
-function recalcularHash($audio_file_path)
-{
+define('WRAPPER_SCRIPT_PATH', '/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/process_audio.sh');
+
+function recalcularHash($audio_file_path) {
     try {
         // Verificaciones iniciales
         if (!filter_var($audio_file_path, FILTER_VALIDATE_URL)) {
@@ -67,55 +68,52 @@ function recalcularHash($audio_file_path)
             throw new Exception("No hay permisos de lectura para el archivo: " . $file_path);
         }
 
-        if (!file_exists(HASH_SCRIPT_PATH)) {
-            throw new Exception("Script Python no encontrado en: " . HASH_SCRIPT_PATH);
+        // Verificar script wrapper
+        if (!file_exists(WRAPPER_SCRIPT_PATH)) {
+            throw new Exception("Script wrapper no encontrado en: " . WRAPPER_SCRIPT_PATH);
         }
 
-        // Preparar y ejecutar comando
-        $command = '/bin/bash -c ' . escapeshellarg(
-            'source /root/.bashrc && ' .
-                'python3 ' . HASH_SCRIPT_PATH . ' ' .
-                escapeshellarg($file_path)
-        );
-        guardarLog("Ejecutando comando: " . $command);
+        if (!is_executable(WRAPPER_SCRIPT_PATH)) {
+            throw new Exception("Script wrapper no tiene permisos de ejecución: " . WRAPPER_SCRIPT_PATH);
+        }
 
-        set_time_limit(MAX_EXECUTION_TIME);
+        // Ejecutar el comando
+        $command = escapeshellarg(WRAPPER_SCRIPT_PATH) . ' ' . escapeshellarg($file_path);
+        guardarLog("Ejecutando comando: " . $command);
 
         $descriptorspec = array(
             0 => array("pipe", "r"),
             1 => array("pipe", "w"),
             2 => array("pipe", "w")
         );
-
+        
         $process = proc_open($command, $descriptorspec, $pipes);
-
+        
         if (!is_resource($process)) {
-            throw new Exception("No se pudo iniciar el proceso Python");
+            throw new Exception("No se pudo iniciar el proceso");
         }
 
-        // Capturar salida y errores
         $output = stream_get_contents($pipes[1]);
         $error = stream_get_contents($pipes[2]);
-
-        // Cerrar pipes
+        
         foreach ($pipes as $pipe) {
             fclose($pipe);
         }
-
+        
         $return_value = proc_close($process);
-
+        
         if ($return_value !== 0) {
             throw new Exception("Error en el proceso Python: " . $error);
         }
-
-        // Validar hash
+        
         $hash = trim($output);
         if (!preg_match('/^[a-f0-9]{64}$/', $hash)) {
             throw new Exception("Hash inválido generado: " . $output);
         }
-
+        
         guardarLog("Hash calculado correctamente: " . $hash);
         return $hash;
+
     } catch (Exception $e) {
         guardarLog("Error en recalcularHash: " . $e->getMessage());
         return false;
