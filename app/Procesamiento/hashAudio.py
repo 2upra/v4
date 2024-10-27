@@ -42,5 +42,4 @@ def calcular_hash_audio(audio_path):
         print(f"Error en el procesamiento de hash para el archivo {audio_path}: {e}")
         return None
 
-# Llamada a la función para procesar el archivo
-print(calcular_hash_audio('/var/www/wordpress/wp-content/uploads/2024/10/Drum-Loop-15_uQyO_2upra.wav'))
+
