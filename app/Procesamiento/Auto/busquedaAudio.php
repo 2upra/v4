@@ -61,8 +61,13 @@ function procesarAudios()
     }
 }
 
-function buscarUnAudioValido($directorio)
+function buscarUnAudioValido($directorio, $intentos = 0)
 {
+    $max_intentos = 10; // Número máximo de intentos recursivos
+    if ($intentos >= $max_intentos) {
+        return null;
+    }
+
     $extensiones_permitidas = ['wav', 'mp3'];
     if (!is_dir($directorio) || !is_readable($directorio)) {
         shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
@@ -91,28 +96,28 @@ function buscarUnAudioValido($directorio)
                 $ext = strtolower($file->getExtension());
                 if (in_array($ext, $extensiones_permitidas, true)) {
                     $nombreArchivo = $file->getFilename();
-                    // if (substr($nombreArchivo, -5) !== '2upra') { 
-                        $archivos[] = $file->getPathname();
+                    // if (substr($nombreArchivo, -5) !== '2upra') {
+                    $archivos[] = $file->getPathname();
                     // }
                 }
             }
         }
 
         if (empty($archivos)) {
-            return buscarUnAudioValido($directorio);
+            return buscarUnAudioValido($directorio, $intentos + 1);
         }
 
         $archivo_seleccionado = $archivos[array_rand($archivos)];
         $hash = hash_file('sha256', $archivo_seleccionado);
 
         if (!$hash) {
-            return buscarUnAudioValido($directorio);
+            return buscarUnAudioValido($directorio, $intentos + 1);
         }
 
         if (debeProcesarse($archivo_seleccionado, $hash)) {
             return ['ruta' => $archivo_seleccionado, 'hash' => $hash];
         } else {
-            return buscarUnAudioValido($directorio);
+            return buscarUnAudioValido($directorio, $intentos + 1);
         }
     } catch (Exception $e) {
         shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
