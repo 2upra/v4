@@ -80,7 +80,7 @@ function buscarUnAudioValido($directorio, $intentos = 0)
     $extensiones_permitidas = ['wav', 'mp3'];
     if (!is_dir($directorio) || !is_readable($directorio)) {
         autLog("Error: El directorio '$directorio' no existe o no es legible. Se intentará cambiar permisos.");
-        shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ && sudo /bin/chown -R asley01:www-data /home/asley01/MEGA/Waw/Kits/ 2>&1');
+        shell_exec('echo "" | sudo -S /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ && sudo -S /bin/chown -R asley01:www-data /home/asley01/MEGA/Waw/Kits/ 2>&1');
         return null;
     }
 
