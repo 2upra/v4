@@ -51,7 +51,7 @@ function recalcularHash($audio_file_path) {
         }
 
         if (!is_readable($file_path)) {
-            shell_exec('sudo /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/Auto/permisos.sh 2>&1');
+            $output = shell_exec('sudo /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/Auto/permisos.sh 2>&1');
             guardarLog("Salida de chmod: " . $output);
             throw new Exception("No hay permisos de lectura para el archivo: " . $file_path);
         }
