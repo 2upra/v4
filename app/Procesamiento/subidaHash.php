@@ -147,7 +147,7 @@ function actualizarHashesDeTodosLosAudios()
         );
 
         if (empty($audios)) {
-            guardarLog("No hay audios pendientes para procesar");
+            guardarLog("No hay audios pendientes para procesar, terminando proceso.");
             $wpdb->query('COMMIT');
             return true;
         }
@@ -157,18 +157,28 @@ function actualizarHashesDeTodosLosAudios()
         foreach ($audios as $audio) {
             guardarLog("Procesando Audio ID: " . $audio->id . " (Estado actual: " . $audio->status . ")");
 
+            // Verificar si el estado es distinto de 'pending' y actualizar si es necesario
             if ($audio->status !== 'pending') {
+                guardarLog("Audio ID: " . $audio->id . " no está en estado 'pending', actualizando estado a 'pending'.");
                 actualizarEstadoArchivo($audio->id, 'pending');
+            } else {
+                guardarLog("Audio ID: " . $audio->id . " ya está en estado 'pending'.");
             }
 
+            // Recalcular hash del archivo
+            guardarLog("Recalculando hash para el audio ID: " . $audio->id . " (URL: " . $audio->file_url . ")");
             $nuevo_hash = recalcularHash($audio->file_url);
 
             if (!$nuevo_hash) {
+                guardarLog("Error al calcular hash para audio ID: " . $audio->id . ", actualizando estado a 'error'.");
                 actualizarEstadoArchivo($audio->id, 'error');
                 continue;
             }
 
-            // Buscar duplicados usando la función de similitud
+            guardarLog("Hash calculado para audio ID: " . $audio->id . " - Hash: " . $nuevo_hash);
+
+            // Buscar posibles duplicados
+            guardarLog("Buscando duplicados para el audio ID: " . $audio->id);
             $duplicados = $wpdb->get_results($wpdb->prepare("
                 SELECT id, file_url, file_hash 
                 FROM {$wpdb->prefix}file_hashes 
@@ -179,13 +189,16 @@ function actualizarHashesDeTodosLosAudios()
             $duplicado = null;
             foreach ($duplicados as $posible_duplicado) {
                 if (sonHashesSimilares($nuevo_hash, $posible_duplicado->file_hash)) {
+                    guardarLog("Duplicado encontrado para audio ID: " . $audio->id . " - Duplicado con ID: " . $posible_duplicado->id);
                     $duplicado = $posible_duplicado;
                     break;
                 }
             }
 
             $nuevo_estado = $duplicado ? 'duplicado' : 'confirmed';
+            guardarLog("Estado final para el audio ID: " . $audio->id . " será: " . $nuevo_estado);
 
+            // Actualizar estado y hash en la base de datos
             $resultado_actualizacion = $wpdb->update(
                 "{$wpdb->prefix}file_hashes",
                 [
@@ -201,13 +214,15 @@ function actualizarHashesDeTodosLosAudios()
                 throw new Exception("Error al actualizar registro ID: " . $audio->id . " - " . $wpdb->last_error);
             }
 
+            guardarLog("Registro actualizado para audio ID: " . $audio->id . " - Estado: " . $nuevo_estado);
+
             if ($audio->post_id && $duplicado) {
                 update_post_meta($audio->post_id, '_audio_duplicado', [
                     'duplicado_de' => $duplicado->file_url,
                     'hash' => $nuevo_hash,
                     'similitud' => true
                 ]);
-                guardarLog("Duplicado encontrado - Original: {$duplicado->file_url}, Duplicado: {$audio->file_url}");
+                guardarLog("Meta data actualizada para el post ID: " . $audio->post_id . " - Audio duplicado de: {$duplicado->file_url}");
             }
 
             gc_collect_cycles();
@@ -223,14 +238,15 @@ function actualizarHashesDeTodosLosAudios()
         return false;
     }
 }
-actualizarHashesDeTodosLosAudios();
 
+actualizarHashesDeTodosLosAudios();
 
 function actualizarEstadoArchivo($id, $estado)
 {
     global $wpdb;
 
     try {
+        guardarLog("Intentando actualizar estado del archivo ID: {$id} a {$estado}");
         $actualizado = $wpdb->update(
             "{$wpdb->prefix}file_hashes",
             ['status' => $estado],
@@ -250,7 +266,6 @@ function actualizarEstadoArchivo($id, $estado)
         return false;
     }
 }
-
 
 function subidaArchivo()
 {
