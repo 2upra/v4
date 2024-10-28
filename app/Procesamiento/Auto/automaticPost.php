@@ -2,20 +2,21 @@
 
 function autProcesarAudio($rutaOriginalOne)
 {
-    guardarLog("Iniciando autProcesarAudio para el archivo: $rutaOriginalOne");
+    //autLog("--Inicio de la función autProcesarAudio.--");
 
     // Obtener ID del archivo por la ruta directa
     $file_id = obtenerFileIDPorURL($rutaOriginalOne);
     if ($file_id === false) {
-        guardarLog("Error: No se encontró el ID del archivo para $rutaOriginalOne");
+        //autLog("File ID no encontrado para la ruta: $rutaOriginalOne");
         eliminarHash($file_id);
         return;
+    } else {
+        //autLog("File ID obtenido: $file_id");
     }
-    guardarLog("ID del archivo obtenido: $file_id");
 
     // Verificar si el archivo existe
     if (!file_exists($rutaOriginalOne)) {
-        guardarLog("Error: El archivo no existe en la ruta: $rutaOriginalOne");
+        //autLog("Archivo no encontrado: $rutaOriginalOne");
         eliminarHash($file_id);
         return;
     }
@@ -24,102 +25,79 @@ function autProcesarAudio($rutaOriginalOne)
     $path_parts = pathinfo($rutaOriginalOne);
     $directory = realpath($path_parts['dirname']);
     if ($directory === false) {
-        guardarLog("Error: No se encontró el directorio para {$path_parts['dirname']}");
+        //autLog("Directorio inválido: {$path_parts['dirname']}");
         eliminarHash($file_id);
         return;
     }
     $extension = strtolower($path_parts['extension']);
     $basename = $path_parts['filename'];
-    guardarLog("Ruta inicial: $rutaOriginalOne, Directorio: $directory, Basename: $basename, Extensión: $extension");
+
+    //autLog("Ruta inicial: $rutaOriginalOne, Directorio: $directory, Basename: $basename, Extensión: $extension");
 
     // Ruta temporal para eliminar metadatos
     $temp_path = "$directory/{$basename}_temp.$extension";
 
-    // 1. Eliminar cualquier metadato y borrar imágenes adjuntas
-    $comando_strip_metadata = "/usr/bin/ffmpeg -i " . escapeshellarg($rutaOriginalOne) . " -map_metadata -1 -c copy " . escapeshellarg($temp_path) . " -y";
-    guardarLog("Ejecutando comando para eliminar metadatos: $comando_strip_metadata");
+    // 1. Eliminar metadatos con ffmpeg
+    $comando_strip_metadata = "/usr/bin/ffmpeg -i " . escapeshellarg($rutaOriginalOne) . " -map_metadata -1 -map 0:a -c:a copy " . escapeshellarg($temp_path) . " -y";
+
+    //autLog("Comando para eliminar metadatos: $comando_strip_metadata");
     exec($comando_strip_metadata, $output_strip, $return_strip);
     if ($return_strip !== 0) {
-        guardarLog("Error al eliminar metadatos: " . implode(" | ", $output_strip));
+        //autLog("Error al eliminar metadatos: " . implode(" | ", $output_strip));
         eliminarHash($file_id);
         return;
     }
-    guardarLog("Metadatos eliminados con éxito.");
 
-    // 2. Reemplazar el archivo original con el archivo sin metadatos
+    // Reemplazar archivo original
     if (!rename($temp_path, $rutaOriginalOne)) {
-        guardarLog("Error: No se pudo reemplazar el archivo original con el archivo sin metadatos.");
+        //autLog("No se pudo reemplazar el archivo original.");
         eliminarHash($file_id);
         return;
     }
-    guardarLog("Archivo original reemplazado con éxito por el archivo sin metadatos.");
+    //autLog("Metadatos eliminados del archivo: $rutaOriginalOne");
 
-    // 3. Agregar nueva imagen como metadato
-    $rutaNuevaImagen = "/var/www/wordpress/wp-content/uploads/2024/10/temporal08_1730099605.jpg";
-    $rutaFinalConImagen = "$directory/{$basename}_con_imagen.$extension";
-    $comando_add_image_metadata = "/usr/bin/ffmpeg -i " . escapeshellarg($rutaOriginalOne) . " -i " . escapeshellarg($rutaNuevaImagen) . " -map 0 -map 1 -c copy -metadata:s:v title='Album cover' -metadata:s:v comment='Cover (front)' " . escapeshellarg($rutaFinalConImagen) . " -y";
-    guardarLog("Ejecutando comando para agregar imagen: $comando_add_image_metadata");
-    exec($comando_add_image_metadata, $output_add_meta, $return_add_meta);
-    if ($return_add_meta !== 0) {
-        guardarLog("Error al agregar la imagen: " . implode(" | ", $output_add_meta));
-        eliminarHash($file_id);
-        return;
-    }
-    guardarLog("Imagen agregada exitosamente al archivo.");
-
-    // 4. Reemplazar archivo original con el archivo que contiene la nueva imagen
-    if (!rename($rutaFinalConImagen, $rutaOriginalOne)) {
-        guardarLog("Error: No se pudo reemplazar el archivo original con el archivo que contiene la nueva imagen.");
-        eliminarHash($file_id);
-        return;
-    }
-    guardarLog("Archivo reemplazado exitosamente por el archivo con nueva imagen.");
-
-    // 5. Crear versión lite en MP3 a 128 kbps
+    // 2. Crear versión lite en MP3 a 128 kbps
     $rutaWpLiteDos = "$directory/{$basename}_lite.mp3";
     $comando_lite = "/usr/bin/ffmpeg -i " . escapeshellarg($rutaOriginalOne) . " -b:a 128k " . escapeshellarg($rutaWpLiteDos) . " -y";
-    guardarLog("Ejecutando comando para crear versión lite en MP3: $comando_lite");
+    //autLog("Comando para crear versión lite: $comando_lite");
     exec($comando_lite, $output_lite, $return_lite);
     if ($return_lite !== 0) {
-        guardarLog("Error al crear versión lite: " . implode(" | ", $output_lite));
+        //autLog("Error al crear versión lite: " . implode(" | ", $output_lite));
         eliminarHash($file_id);
         return;
     }
-    guardarLog("Versión lite creada exitosamente.");
 
-    // 6. Mover el archivo lite al directorio de uploads
+    // 3. Mover el archivo lite al directorio de uploads
     $uploads_dir = wp_upload_dir();
     $target_dir_audio = trailingslashit($uploads_dir['basedir']) . "audio/";
 
     // Crear directorio 'audio' si no existe
     if (!file_exists($target_dir_audio)) {
         if (!wp_mkdir_p($target_dir_audio)) {
-            guardarLog("Error: No se pudo crear el directorio de uploads/audio.");
+            //autLog("No se pudo crear el directorio de uploads/audio.");
             eliminarHash($file_id);
             return;
         }
     }
-    guardarLog("Directorio 'audio' verificado/creado exitosamente.");
 
-    // Ruta final del archivo lite en el directorio de uploads
+    // Aquí se crea la ruta completa del archivo lite en el directorio de uploads
     $rutaWpLiteOne = $target_dir_audio . "{$basename}_lite.mp3";
 
     // Mover archivo lite
     if (!rename($rutaWpLiteDos, $rutaWpLiteOne)) {
-        guardarLog("Error: No se pudo mover el archivo lite al directorio de uploads.");
+        //autLog("No se pudo mover el archivo lite al directorio de uploads.");
         eliminarHash($file_id);
         return;
     }
-    guardarLog("Archivo lite movido exitosamente al directorio de uploads: $rutaWpLiteOne");
+    //autLog("Archivo lite movido al directorio de uploads: $rutaWpLiteOne");
 
-    // Enviar rutas a crearAutPost
-    guardarLog("Enviando rutas a crearAutPost: Original - $rutaOriginalOne, Lite - $rutaWpLiteOne");
+    // 7. Enviar rutas a crearAutPost
+    //autLog("Enviando rutas a crearAutPost: Original - $rutaOriginalOne, Lite - $rutaWpLiteOne");
     crearAutPost($rutaOriginalOne, $rutaWpLiteOne, $file_id);
-    guardarLog("Archivos enviados a crearAutPost.");
+    //autLog("Archivos enviados a crearAutPost.");
 
-    guardarLog("Finalizando autProcesarAudio.");
+    //autLog("--Fin de la función autProcesarAudio.--");
 }
-
 
 function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $carpeta_abuela = null)
 {
