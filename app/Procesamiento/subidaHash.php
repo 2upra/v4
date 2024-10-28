@@ -3,7 +3,7 @@
 define('HASH_SCRIPT_PATH', '/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py');
 define('PROCESO_DELAY', 500000); // 0.5 segundos en microsegundos
 define('MAX_EXECUTION_TIME', 30); // 30 segundos por archivo
-define('BATCH_SIZEHASH', 50); 
+define('BATCH_SIZEHASH', 10); 
 ini_set('memory_limit', '256M');
 set_time_limit(0); 
 
@@ -103,139 +103,155 @@ function recalcularHash($audio_file_path) {
         return false;
     }
 }
-/*
-dejo de funcionar esto y esta en bucle sin hacer nada parece
-[28-Oct-2024 03:08:03 UTC] WordPress database error Lock wait timeout exceeded; try restarting transaction for query UPDATE `wpsg_file_hashes` SET `file_hash` = '5ceb2fc7e4d3665227323c256b259dbec0c536d8112e12ba0785375b67882c61', `status` = 'confirmed' WHERE `id` = 11151 made by require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), include('/themes/2upra3v/functions.php'), incluirArchivos, incluirArchivos, include_once('/themes/2upra3v/app/Procesamiento/subidaHash.php'), actualizarHashesDeTodosLosAudios
-[28-Oct-2024 03:08:03 UTC] WordPress database error Lock wait timeout exceeded; try restarting transaction for query UPDATE `wpsg_file_hashes` SET `file_hash` = '5ceb2fc7e4d3665227323c256b259dbec0c536d8112e12ba0785375b67882c61', `status` = 'confirmed' WHERE `id` = 11151 made by require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), include('/themes/2upra3v/functions.php'), incluirArchivos, incluirArchivos, include_once('/themes/2upra3v/app/Procesamiento/subidaHash.php'), actualizarHashesDeTodosLosAudios
-[28-Oct-2024 03:08:03 UTC] WordPress database error Lock wait timeout exceeded; try restarting transaction for query UPDATE `wpsg_file_hashes` SET `status` = 'error' WHERE `id` = 11151 made by require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), include('/themes/2upra3v/functions.php'), incluirArchivos, incluirArchivos, include_once('/themes/2upra3v/app/Procesamiento/subidaHash.php'), actualizarHashesDeTodosLosAudios, actualizarEstadoArchivo
-*/
 function actualizarHashesDeTodosLosAudios()
 {
     global $wpdb;
 
+    // Implementar un mecanismo de bloqueo para evitar ejecuciones concurrentes.
+    if (get_transient('actualizando_hashes')) {
+        // Ya hay un proceso en ejecución
+        return false;
+    }
+    set_transient('actualizando_hashes', true, 300); // Bloqueo por 5 minutos
+
     try {
-        //guardarLog("Iniciando proceso de actualización de hashes");
-        $wpdb->query('START TRANSACTION');
-
-        $audios = $wpdb->get_results(
-            "
-            SELECT fh.id, fh.file_url, fh.status, p.ID as post_id 
-            FROM {$wpdb->prefix}file_hashes fh
-            LEFT JOIN {$wpdb->posts} p ON p.guid = fh.file_url
-            WHERE fh.file_url LIKE '%.wav'
-            AND (fh.status IS NULL 
-                 OR fh.status = 'pending' 
-                 OR fh.status = 'error')
-            ORDER BY fh.id DESC
-            LIMIT " . BATCH_SIZEHASH
-        );
-
-        if (empty($audios)) {
-            //guardarLog("No hay audios pendientes para procesar, terminando proceso.");
-            $wpdb->query('COMMIT');
-            return true;
-        }
-
-        //guardarLog("Audios a procesar: " . count($audios));
-
-        foreach ($audios as $audio) {
-            //guardarLog("Procesando Audio ID: " . $audio->id . " (Estado actual: " . $audio->status . ")");
-
-            // Verificar si el estado es distinto de 'pending' y actualizar si es necesario
-            if ($audio->status !== 'pending') {
-                //guardarLog("Audio ID: " . $audio->id . " no está en estado 'pending', actualizando estado a 'pending'.");
-                actualizarEstadoArchivo($audio->id, 'pending');
-            } else {
-                //guardarLog("Audio ID: " . $audio->id . " ya está en estado 'pending'.");
-            }
-
-            // Recalcular hash del archivo
-            //guardarLog("Recalculando hash para el audio ID: " . $audio->id . " (URL: " . $audio->file_url . ")");
-            $nuevo_hash = recalcularHash($audio->file_url);
-
-            if (!$nuevo_hash) {
-                //guardarLog("Error al calcular hash para audio ID: " . $audio->id . ", actualizando estado a 'error'.");
-                actualizarEstadoArchivo($audio->id, 'error');
-                continue;
-            }
-
-            //guardarLog("Hash calculado para audio ID: " . $audio->id . " - Hash: " . $nuevo_hash);
-
-            // Verificar si el hash ya existe en la base de datos
-            $hash_existente = $wpdb->get_var($wpdb->prepare("
-                SELECT COUNT(*) 
-                FROM {$wpdb->prefix}file_hashes 
-                WHERE file_hash = %s 
-                AND id != %d
-            ", $nuevo_hash, $audio->id));
-
-            if ($hash_existente > 0) {
-                //guardarLog("El hash ya existe para otro audio, marcando el audio ID: " . $audio->id . " como duplicado.");
-
-                // Marcar como duplicado y continuar
-                actualizarEstadoArchivo($audio->id, 'duplicado');
-                continue;
-            }
-
-            // Buscar posibles duplicados por similitud de hash
-            //guardarLog("Buscando duplicados para el audio ID: " . $audio->id);
-            $duplicados = $wpdb->get_results($wpdb->prepare("
-                SELECT id, file_url, file_hash 
-                FROM {$wpdb->prefix}file_hashes 
-                WHERE id != %d 
-                AND status = 'confirmed'
-            ", $audio->id));
-
-            $duplicado = null;
-            foreach ($duplicados as $posible_duplicado) {
-                if (sonHashesSimilares($nuevo_hash, $posible_duplicado->file_hash)) {
-                    //guardarLog("Duplicado encontrado para audio ID: " . $audio->id . " - Duplicado con ID: " . $posible_duplicado->id);
-                    $duplicado = $posible_duplicado;
-                    break;
-                }
-            }
-
-            $nuevo_estado = $duplicado ? 'duplicado' : 'confirmed';
-            guardarLog("Estado final para el audio ID: " . $audio->id . " será: " . $nuevo_estado);
-
-            // Actualizar estado y hash en la base de datos
-            $resultado_actualizacion = $wpdb->update(
-                "{$wpdb->prefix}file_hashes",
-                [
-                    'file_hash' => $nuevo_hash,
-                    'status' => $nuevo_estado
-                ],
-                ['id' => $audio->id],
-                ['%s', '%s'],
-                ['%d']
+        // Procesar audios en batches más pequeños sin una transacción global
+        while (true) {
+            // Seleccionar un batch de audios pendientes
+            $audios = $wpdb->get_results(
+                $wpdb->prepare(
+                    "
+                    SELECT fh.id, fh.file_url, fh.status, p.ID as post_id 
+                    FROM {$wpdb->prefix}file_hashes fh
+                    LEFT JOIN {$wpdb->posts} p ON p.guid = fh.file_url
+                    WHERE fh.file_url LIKE %s
+                    AND (fh.status IS NULL 
+                         OR fh.status = %s 
+                         OR fh.status = %s)
+                    ORDER BY fh.id DESC
+                    LIMIT %d
+                    ",
+                    '%.wav',
+                    'pending',
+                    'error',
+                    BATCH_SIZEHASH
+                )
             );
 
-            if ($resultado_actualizacion === false) {
-                throw new Exception("Error al actualizar registro ID: " . $audio->id . " - " . $wpdb->last_error);
+            if (empty($audios)) {
+                // No hay más audios para procesar
+                break;
             }
 
-            //guardarLog("Registro actualizado para audio ID: " . $audio->id . " - Estado: " . $nuevo_estado);
+            foreach ($audios as $audio) {
+                // Iniciar una transacción por cada audio
+                $wpdb->query('START TRANSACTION');
 
-            if ($audio->post_id && $duplicado) {
-                update_post_meta($audio->post_id, '_audio_duplicado', [
-                    'duplicado_de' => $duplicado->file_url,
-                    'hash' => $nuevo_hash,
-                    'similitud' => true
-                ]);
-                //guardarLog("Meta data actualizada para el post ID: " . $audio->post_id . " - Audio duplicado de: {$duplicado->file_url}");
+                try {
+                    // Procesamiento individual del audio
+                    if ($audio->status !== 'pending') {
+                        actualizarEstadoArchivo($audio->id, 'pending');
+                    }
+
+                    $nuevo_hash = recalcularHash($audio->file_url);
+
+                    if (!$nuevo_hash) {
+                        actualizarEstadoArchivo($audio->id, 'error');
+                        $wpdb->query('COMMIT');
+                        continue;
+                    }
+
+                    // Verificar si el hash ya existe
+                    $hash_existente = $wpdb->get_var(
+                        $wpdb->prepare(
+                            "
+                            SELECT COUNT(*) 
+                            FROM {$wpdb->prefix}file_hashes 
+                            WHERE file_hash = %s 
+                            AND id != %d
+                            ",
+                            $nuevo_hash,
+                            $audio->id
+                        )
+                    );
+
+                    if ($hash_existente > 0) {
+                        actualizarEstadoArchivo($audio->id, 'duplicado');
+                        $wpdb->query('COMMIT');
+                        continue;
+                    }
+
+                    // Buscar duplicados por similitud
+                    $duplicados = $wpdb->get_results(
+                        $wpdb->prepare(
+                            "
+                            SELECT id, file_url, file_hash 
+                            FROM {$wpdb->prefix}file_hashes 
+                            WHERE id != %d 
+                            AND status = %s
+                            ",
+                            $audio->id,
+                            'confirmed'
+                        )
+                    );
+
+                    $duplicado = null;
+                    foreach ($duplicados as $posible_duplicado) {
+                        if (sonHashesSimilares($nuevo_hash, $posible_duplicado->file_hash)) {
+                            $duplicado = $posible_duplicado;
+                            break;
+                        }
+                    }
+
+                    $nuevo_estado = $duplicado ? 'duplicado' : 'confirmed';
+
+                    // Actualizar el registro
+                    $resultado_actualizacion = $wpdb->update(
+                        "{$wpdb->prefix}file_hashes",
+                        [
+                            'file_hash' => $nuevo_hash,
+                            'status' => $nuevo_estado
+                        ],
+                        ['id' => $audio->id],
+                        ['%s', '%s'],
+                        ['%d']
+                    );
+
+                    if ($resultado_actualizacion === false) {
+                        throw new Exception("Error al actualizar registro ID: " . $audio->id . " - " . $wpdb->last_error);
+                    }
+
+                    if ($audio->post_id && $duplicado) {
+                        update_post_meta($audio->post_id, '_audio_duplicado', [
+                            'duplicado_de' => $duplicado->file_url,
+                            'hash' => $nuevo_hash,
+                            'similitud' => true
+                        ]);
+                    }
+
+                    $wpdb->query('COMMIT');
+                } catch (Exception $e) {
+                    $wpdb->query('ROLLBACK');
+                    // Opcional: registrar el error
+                    // guardarLog("Error en el procesamiento del audio ID: " . $audio->id . " - " . $e->getMessage());
+                }
+
+                gc_collect_cycles();
+                usleep(PROCESO_DELAY);
             }
-
-            gc_collect_cycles();
-            usleep(PROCESO_DELAY);
         }
 
-        $wpdb->query('COMMIT');
-        //guardarLog("Proceso completado exitosamente");
+        // Opcional: registrar que el proceso terminó exitosamente
+         guardarLog("Proceso completado exitosamente");
+
         return true;
     } catch (Exception $e) {
-        $wpdb->query('ROLLBACK');
-        //guardarLog("Error fatal en actualizarHashesDeTodosLosAudios: " . $e->getMessage());
+        // Manejar errores generales
+        // guardarLog("Error fatal en actualizarHashesDeTodosLosAudios: " . $e->getMessage());
         return false;
+    } finally {
+        // Siempre eliminar el bloqueo
+        delete_transient('actualizando_hashes');
     }
 }
 
