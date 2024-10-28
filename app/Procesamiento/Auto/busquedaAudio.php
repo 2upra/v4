@@ -109,7 +109,7 @@ function buscarUnAudioValido($directorio, $intentos = 0)
         }
 
         $archivo_seleccionado = $archivos[array_rand($archivos)];
-        $hash = hash_file('sha256', $archivo_seleccionado);
+        $hash = recalcularHash($archivo_seleccionado);
 
         if (!$hash) {
             return buscarUnAudioValido($directorio, $intentos + 1);
@@ -128,6 +128,7 @@ function buscarUnAudioValido($directorio, $intentos = 0)
     return null;
 }
 
+
 function debeProcesarse($ruta_archivo, $file_hash)
 {
     try {
@@ -141,35 +142,105 @@ function debeProcesarse($ruta_archivo, $file_hash)
             return false;
         }
 
-        $hash_obtenido = obtenerHash($file_hash);
-        autLog("debeProcesarse: Hash obtenido: " . ($hash_obtenido ? "SI" : "NO") . " para hash: $file_hash");
-
+        // Filtrar hashes existentes solo para archivos WAV o MP3
+        $hashes_existentes = obtenerHashesFiltrados(['wav', 'mp3']);
         $hash_verificado = verificarCargaArchivoPorHash($file_hash);
         autLog("debeProcesarse: Hash verificado: " . ($hash_verificado ? "SI" : "NO") . " para hash: $file_hash");
 
-        if ($hash_obtenido && $hash_verificado) {
-            autLog("debeProcesarse: El archivo existe y está verificado. Procediendo a eliminar.");
-            
-            if (file_exists($ruta_archivo)) {
-                $eliminado = unlink($ruta_archivo);
-                autLog("debeProcesarse: Eliminación del archivo: " . ($eliminado ? "EXITOSA" : "FALLIDA") . " - Ruta: $ruta_archivo");
-                
-                $hash_eliminado = eliminarPorHash($file_hash);
-                autLog("debeProcesarse: Eliminación del hash: " . ($hash_eliminado ? "EXITOSA" : "FALLIDA") . " - Hash: $file_hash");
-            } else {
-                autLog("debeProcesarse: El archivo ya no existe en la ruta: $ruta_archivo");
+        // Verificar similitud con hashes existentes y condición de carga antes de eliminar
+        foreach ($hashes_existentes as $hash_existente) {
+            if (sonHashesSimilaresAut($file_hash, $hash_existente['file_hash'])) {
+                autLog("debeProcesarse: Se encontró un hash similar en la base de datos");
+
+                if ($hash_verificado && file_exists($ruta_archivo)) {
+                    $eliminado = unlink($ruta_archivo);
+                    autLog("debeProcesarse: Eliminación del archivo: " . ($eliminado ? "EXITOSA" : "FALLIDA") . " - Ruta: $ruta_archivo");
+                    $hash_eliminado = eliminarPorHash($file_hash);
+                    autLog("debeProcesarse: Eliminación del hash: " . ($hash_eliminado ? "EXITOSA" : "FALLIDA") . " - Hash: $file_hash");
+                } else {
+                    autLog("debeProcesarse: El archivo no se puede eliminar ya que no pasó la verificación de carga.");
+                }
+                return false;
             }
-            return false;
         }
 
         autLog("debeProcesarse: El archivo debe procesarse - Ruta: $ruta_archivo, Hash: $file_hash");
         return true;
-
     } catch (Exception $e) {
         autLog("debeProcesarse: Error - " . $e->getMessage());
         return false;
     }
 }
+
+function obtenerHashesFiltrados($extensiones)
+{
+    global $wpdb;
+    $extensiones_regex = implode('|', array_map('preg_quote', $extensiones));
+    $query = $wpdb->prepare(
+        "SELECT file_hash FROM {$wpdb->prefix}file_hashes WHERE file_url REGEXP %s",
+        '\.(' . $extensiones_regex . ')$'
+    );
+    return $wpdb->get_results($query, ARRAY_A);
+}
+
+function verificarCargaArchivoPorHash($file_hash)
+{
+    // Obtener los detalles del archivo usando el hash
+    $archivo = obtenerHash($file_hash);
+
+    if (!$archivo) {
+        return false;
+    }
+
+    $file_id = $archivo['id'];
+    $file_url = $archivo['file_url'];
+
+    // Inicializar cURL para verificar la carga del archivo
+    $ch = curl_init($file_url);
+    curl_setopt($ch, CURLOPT_NOBODY, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+    curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    // Verificación de código de respuesta
+    if ($http_code >= 200 && $http_code < 300) {
+        return true;
+    } else {
+        actualizarEstadoArchivo($file_id, 'loss');
+        return false;
+    }
+}
+
+function sonHashesSimilaresAut($hash1, $hash2, $umbral = 0.80)
+{
+    if (empty($hash1) || empty($hash2)) {
+        return false;
+    }
+
+    $valores1 = array_map('hexdec', str_split($hash1, 2));
+    $valores2 = array_map('hexdec', str_split($hash2, 2));
+
+    if (count($valores1) !== count($valores2)) {
+        return false;
+    }
+
+    $suma_diferencias_cuadradas = 0;
+    $max_diferencia = 255;
+
+    for ($i = 0; $i < count($valores1); $i++) {
+        $diferencia = abs($valores1[$i] - $valores2[$i]);
+        $suma_diferencias_cuadradas += pow($diferencia, 2);
+    }
+
+    $distancia = sqrt($suma_diferencias_cuadradas);
+    $similitud = 1 - ($distancia / (sqrt(count($valores1)) * $max_diferencia));
+
+    return $similitud >= $umbral;
+}
+
 
 function obtenerHash($file_hash)
 {

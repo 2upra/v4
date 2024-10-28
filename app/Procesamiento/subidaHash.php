@@ -3,33 +3,14 @@
 define('HASH_SCRIPT_PATH', '/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py');
 define('PROCESO_DELAY', 100000); // 0.5 segundos en microsegundos
 define('MAX_EXECUTION_TIME', 30); // 30 segundos por archivo
-define('BATCH_SIZEHASH', 50); 
+define('BATCH_SIZEHASH', 500); 
 ini_set('memory_limit', '256M');
 set_time_limit(0); 
 
 if (!defined('HASH_SIMILARITY_THRESHOLD')) {
     define('HASH_SIMILARITY_THRESHOLD', 0.7);  // Ajusta el valor según tus necesidades
 }
-
-/*
-
-[28-Oct-2024 00:17:22 UTC] PHP Warning:  Constant BATCH_SIZEHASH already defined in /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/subidaHash.php on line 6
-[28-Oct-2024 00:17:27 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "HASH_SIMILARITY_THRESHOLD" in /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/subidaHash.php:30
-Stack trace:
-#0 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/subidaHash.php(176): sonHashesSimilares()
-#1 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/subidaHash.php(222): actualizarHashesDeTodosLosAudios()
-#2 /var/www/wordpress/wp-content/themes/2upra3v/functions.php(230): include_once('...')
-#3 /var/www/wordpress/wp-content/themes/2upra3v/functions.php(236): incluirArchivos()
-#4 /var/www/wordpress/wp-content/themes/2upra3v/functions.php(245): incluirArchivos()
-#5 /var/www/wordpress/wp-settings.php(668): include('...')
-#6 /var/www/wordpress/wp-config.php(121): require_once('...')
-#7 /var/www/wordpress/wp-load.php(50): require_once('...')
-#8 /var/www/wordpress/wp-admin/admin.php(34): require_once('...')
-#9 /var/www/wordpress/wp-admin/index.php(10): require_once('...')
-#10 {main}
-  thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/subidaHash.php on line 30
-
-*/
+define('WRAPPER_SCRIPT_PATH', '/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/process_audio.sh');
 
 
 function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD)
@@ -51,8 +32,6 @@ function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD)
 
     return $similitud >= $umbral;
 }
-
-define('WRAPPER_SCRIPT_PATH', '/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/process_audio.sh');
 
 function recalcularHash($audio_file_path) {
     try {
@@ -124,16 +103,6 @@ function recalcularHash($audio_file_path) {
         return false;
     }
 }
-
-/*
-2024-10-28 00:51:30 - Hash calculado correctamente: 5f9f6b365df3bcfeee5e320f5e9afa95324e48a1589fccd5859e57f6c263dea3
-2024-10-28 00:51:31 - Procesando Audio ID: 11860 (Estado actual: pending)
-2024-10-28 00:51:31 - Ejecutando comando: '/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/process_audio.sh' '/var/www/wordpress/wp-content/uploads/2024/10/Memphis-808_nKkc_2upra.wav'
-2024-10-28 00:51:35 - Hash calculado correctamente: f00faf8479cc08336e70c7d51197209ca9346c33aab56d08b37dcbfef049c091
-2024-10-28 00:51:35 - Error fatal en actualizarHashesDeTodosLosAudios: Error al actualizar registro ID: 11860 - Duplicate entry 'f00faf8479cc08336e70c7d51197209ca9346c33aab56d08b37dcbfef049c091' for key 'wpsg_file_hashes.file_hash'
-
-[28-Oct-2024 00:51:35 UTC] WordPress database error Duplicate entry 'f00faf8479cc08336e70c7d51197209ca9346c33aab56d08b37dcbfef049c091' for key 'wpsg_file_hashes.file_hash' for query UPDATE `wpsg_file_hashes` SET `file_hash` = 'f00faf8479cc08336e70c7d51197209ca9346c33aab56d08b37dcbfef049c091', `status` = 'duplicado' WHERE `id` = 11860 made by require('wp-blog-header.php'), require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), include('/themes/2upra3v/functions.php'), incluirArchivos, incluirArchivos, include_once('/themes/2upra3v/app/Procesamiento/subidaHash.php'), actualizarHashesDeTodosLosAudios
-*/
 
 function actualizarHashesDeTodosLosAudios()
 {
@@ -407,51 +376,7 @@ function antivirus($file_path, $file_id, $current_user_id)
 // Programar la acción de WordPress
 add_action('antivirus', 'antivirus', 10, 2);
 
-function verificarCargaArchivoPorHash($file_hash)
-{
-    // Obtener los detalles del archivo usando el hash
-    $archivo = obtenerHash($file_hash);
 
-    if (!$archivo) {
-        //guardarLog("No se encontró ningún archivo con el hash: $file_hash");
-        return false;
-    }
-
-    $file_id = $archivo['id'];
-    $file_url = $archivo['file_url'];
-
-    //guardarLog("Iniciando verificación de carga para File ID: $file_id con URL: $file_url");
-
-    // Inicializar cURL
-    $ch = curl_init($file_url);
-
-    // Configurar opciones de cURL para realizar una solicitud HEAD
-    curl_setopt($ch, CURLOPT_NOBODY, true);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 10); // Tiempo de espera de 10 segundos
-
-    // Ejecutar la solicitud
-    curl_exec($ch);
-
-    // Obtener el código de respuesta HTTP
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-    // Cerrar la sesión de cURL
-    curl_close($ch);
-
-    // Verificar el código de respuesta
-    if ($http_code >= 200 && $http_code < 300) {
-        //guardarLog("El archivo con File ID: $file_id se cargó correctamente. Código HTTP: $http_code");
-
-        return true;
-    } else {
-        // Actualizar el estado a 'loss' si no se pudo cargar el archivo
-        actualizarEstadoArchivo($file_id, 'loss');
-
-        //guardarLog("Error al cargar el archivo con File ID: $file_id. Código HTTP: $http_code");
-        return false;
-    }
-}
 
 
 
