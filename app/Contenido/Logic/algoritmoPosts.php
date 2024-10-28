@@ -42,7 +42,7 @@ function generarMetaDeIntereses($user_id)
     $post_data = $wpdb->get_results($sql);
 
     if (empty($post_data)) {
-        logAlgoritmo("No se encontraron datos para los posts con likes del usuario: $user_id");
+        //logAlgoritmo("No se encontraron datos para los posts con likes del usuario: $user_id");
         return false;
     }
 
@@ -136,12 +136,12 @@ function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
         }
 
         $wpdb->query('COMMIT');
-        logAlgoritmo("Intereses actualizados exitosamente para el usuario: $user_id");
+        //logAlgoritmo("Intereses actualizados exitosamente para el usuario: $user_id");
         return true;
     } catch (Exception $e) {
         $wpdb->query('ROLLBACK');
         error_log('Error al actualizar intereses: ' . $e->getMessage());
-        logAlgoritmo("Error al actualizar intereses: " . $e->getMessage());
+        //logAlgoritmo("Error al actualizar intereses: " . $e->getMessage());
         return false;
     }
 }
@@ -158,18 +158,18 @@ function obtenerDatosFeed($userId)
 
     // Generar o actualizar los intereses del usuario
     generarMetaDeIntereses($userId);
-    logAlgoritmo("Intereses del usuario generados para el usuario ID: $userId");
+    //logAlgoritmo("Intereses del usuario generados para el usuario ID: $userId");
 
     // Obtener intereses del usuario
     $interesesUsuario = $wpdb->get_results($wpdb->prepare(
         "SELECT interest, intensity FROM $table_intereses WHERE user_id = %d",
         $userId
     ), OBJECT_K);
-    logAlgoritmo("Intereses del usuario obtenidos: " . json_encode($interesesUsuario));
+    //logAlgoritmo("Intereses del usuario obtenidos: " . json_encode($interesesUsuario));
 
     // Obtener la meta 'vistas_posts' del usuario
     $vistas_posts = get_user_meta($userId, 'vistas_posts', true);
-    logAlgoritmo("Meta 'vistas_posts' obtenida: " . json_encode($vistas_posts));
+    //logAlgoritmo("Meta 'vistas_posts' obtenida: " . json_encode($vistas_posts));
 
     $args = [
         'post_type'      => 'social_post',
@@ -181,10 +181,10 @@ function obtenerDatosFeed($userId)
         'no_found_rows'  => true,
     ];
     $posts_ids = get_posts($args);
-    logAlgoritmo("Consulta de posts realizada, total de posts: " . count($posts_ids));
+    //logAlgoritmo("Consulta de posts realizada, total de posts: " . count($posts_ids));
 
     if (empty($posts_ids)) {
-        logAlgoritmo("No se encontraron posts para el feed del usuario ID: $userId");
+        //logAlgoritmo("No se encontraron posts para el feed del usuario ID: $userId");
         return [];
     }
 
@@ -265,7 +265,7 @@ function obtenerDatosFeedConCache($userId)
     }
 
     if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
-        logAlgoritmo("Error: 'author_results' is not set or not an array for user ID: $userId");
+        //logAlgoritmo("Error: 'author_results' is not set or not an array for user ID: $userId");
         return [];
     }
 
@@ -287,9 +287,9 @@ function obtenerYProcesarVistasPosts($userId)
                 'last_view' => date('Y-m-d H:i:s', $view_data['last_view']),
             ];
         }
-        logAlgoritmo("Meta 'vistas_posts' procesada: " . json_encode($vistas_posts_processed));
+        //logAlgoritmo("Meta 'vistas_posts' procesada: " . json_encode($vistas_posts_processed));
     } else {
-        logAlgoritmo("Meta 'vistas_posts' está vacía para el usuario ID: $userId");
+        //logAlgoritmo("Meta 'vistas_posts' está vacía para el usuario ID: $userId");
     }
 
     return $vistas_posts_processed;
@@ -370,7 +370,7 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
     if (isset($vistas_posts_processed[$post_id])) {
         $vistas = $vistas_posts_processed[$post_id]['count'];
         $reduccion_por_vista = 0.40; // Reducción del 40% por cada vista
-        logAlgoritmo("Aplicando reducción por vistas: $reduccion_por_vista para el post ID: $post_id, vistas: $vistas");
+        //logAlgoritmo("Aplicando reducción por vistas: $reduccion_por_vista para el post ID: $post_id, vistas: $vistas");
 
         // Factor de reducción acumulado por vistas
         $factorReduccion = pow(1 - $reduccion_por_vista, $vistas);
@@ -381,7 +381,7 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
 
         // Calcular el porcentaje de reducción total
         $reduccionTotal = (1 - $factorReduccion) * 100;
-        logAlgoritmo("Post ID: $post_id - Puntos antes de la reducción: $puntosFinalAntesReduccion, Puntos después de la reducción: $puntosFinal, Reducción total: " . round($reduccionTotal, 2) . "%");
+        //logAlgoritmo("Post ID: $post_id - Puntos antes de la reducción: $puntosFinalAntesReduccion, Puntos después de la reducción: $puntosFinal, Reducción total: " . round($reduccionTotal, 2) . "%");
     }
 
     // Aplicar aleatoriedad y ajuste extra
