@@ -3,7 +3,7 @@
 define('HASH_SCRIPT_PATH', '/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py');
 define('PROCESO_DELAY', 100000); // 0.5 segundos en microsegundos
 define('MAX_EXECUTION_TIME', 30); // 30 segundos por archivo
-define('BATCH_SIZEHASH1', 500); 
+define('BATCH_SIZEHASH', 50); 
 ini_set('memory_limit', '256M');
 set_time_limit(0); 
 
@@ -122,7 +122,7 @@ function actualizarHashesDeTodosLosAudios()
                  OR fh.status = 'pending' 
                  OR fh.status = 'error')
             ORDER BY fh.id DESC
-            LIMIT " . BATCH_SIZEHASH1
+            LIMIT " . BATCH_SIZEHASH
         );
 
         if (empty($audios)) {
