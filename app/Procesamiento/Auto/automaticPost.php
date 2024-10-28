@@ -251,11 +251,11 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     // Renombrar archivo original con verificación
     $extension_original = pathinfo($rutaOriginal, PATHINFO_EXTENSION);
-    $nuevo_nombre_original = dirname($rutaOriginal) . '/' . $nombre_final . '.' . $extension_original;
-    if (!file_exists($rutaOriginal) || (file_exists($nuevo_nombre_original) && !unlink($nuevo_nombre_original))) {
+    $nuevaRutaOriginal = dirname($rutaOriginal) . '/' . $nombre_final . '.' . $extension_original;
+    if (!file_exists($rutaOriginal) || (file_exists($nuevaRutaOriginal) && !unlink($nuevaRutaOriginal))) {
         return;
     }
-    if (!rename($rutaOriginal, $nuevo_nombre_original)) {
+    if (!rename($rutaOriginal, $nuevaRutaOriginal)) {
         return;
     }
 
@@ -288,18 +288,32 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     if (is_wp_error($post_id)) return $post_id;
 
-    update_post_meta($post_id, 'rutaOriginal', $nuevo_nombre_original);
+    update_post_meta($post_id, 'rutaOriginal', $nuevaRutaOriginal);
     update_post_meta($post_id, 'rutaLiteOriginal', $nuevo_nombre_lite);
     update_post_meta($post_id, 'postAut', true);
 
-    $audio_original_id = adjuntarArchivoAut($nuevo_nombre_original, $post_id, $file_id);
+    $audio_original_id = adjuntarArchivoAut($nuevaRutaOriginal, $post_id, $file_id);
     if (is_wp_error($audio_original_id)) {
         wp_delete_post($post_id, true);
+        eliminarHash($file_id);
+        
         return $audio_original_id;
     }
 
+    if (file_exists($nuevaRutaOriginal)) {
+        unlink($nuevaRutaOriginal);
+    }
+
     $audio_lite_id = adjuntarArchivoAut($nuevo_nombre_lite, $post_id);
-    if (is_wp_error($audio_lite_id)) return $audio_lite_id;
+    if (is_wp_error($audio_lite_id)) {
+        eliminarHash($file_id);
+        return $audio_lite_id;
+    }
+    
+
+    if (file_exists($nuevo_nombre_lite)) {
+        unlink($nuevo_nombre_lite);
+    }
 
     // Metadatos del post
     update_post_meta($post_id, 'post_audio', $audio_original_id);
