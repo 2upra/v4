@@ -296,12 +296,8 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     if (is_wp_error($audio_original_id)) {
         wp_delete_post($post_id, true);
         eliminarHash($file_id);
-        
-        return $audio_original_id;
-    }
 
-    if (file_exists($nuevaRutaOriginal)) {
-        unlink($nuevaRutaOriginal);
+        return $audio_original_id;
     }
 
     $audio_lite_id = adjuntarArchivoAut($nuevo_nombre_lite, $post_id);
@@ -310,10 +306,6 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
         return $audio_lite_id;
     }
     
-
-    if (file_exists($nuevo_nombre_lite)) {
-        unlink($nuevo_nombre_lite);
-    }
 
     // Metadatos del post
     update_post_meta($post_id, 'post_audio', $audio_original_id);
