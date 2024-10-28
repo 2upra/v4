@@ -1,56 +1,39 @@
-# hashAudio.py
 import sys
 import hashlib
 import numpy as np
 import librosa
 import os
 
-# Configurar directorio de caché de Numba para evitar problemas de permisos
 os.environ['NUMBA_CACHE_DIR'] = '/tmp'
 
 def calcular_hash_audio(audio_path):
     try:
-        # Cargar el audio
-        y, sr = librosa.load(audio_path, sr=None)
+        # Reducir la duración del audio procesado
+        duration = 30  # Solo procesar los primeros 30 segundos
+        y, sr = librosa.load(audio_path, sr=22050, duration=duration)  # Reducir sample rate
         
-        # Calcular características que son más resistentes a cambios de formato
-        # Mel-frequency cepstral coefficients (MFCCs)
-        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=20)
+        # Reducir la dimensionalidad de las características
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)  # Menos coeficientes
+        chroma = librosa.feature.chroma_stft(y=y, sr=sr, n_chroma=6)  # Menos bandas cromáticas
         
-        # Chromagram
-        chroma = librosa.feature.chroma_stft(y=y, sr=sr)
-        
-        # Spectral Centroid
-        spectral_centroid = librosa.feature.spectral_centroid(y=y, sr=sr)
-        
-        # Combinar características y redondear para mayor estabilidad
+        # Usar menos características
         features = np.concatenate([
             np.mean(mfcc, axis=1),
-            np.mean(chroma, axis=1),
-            np.mean(spectral_centroid, axis=1)
+            np.mean(chroma, axis=1)
         ])
         
-        # Redondear a 6 decimales para mayor estabilidad
-        features = np.round(features, 6)
-        
-        # Convertir a bytes y crear hash
-        features_bytes = features.tobytes()
-        hash_obj = hashlib.sha256(features_bytes)
-        
-        return hash_obj.hexdigest()
+        features = np.round(features, 4)  # Menos precisión decimal
+        return hashlib.sha256(features.tobytes()).hexdigest()
             
     except Exception as e:
-        sys.stderr.write(f"Error procesando archivo: {str(e)}\n")
+        sys.stderr.write(f"Error: {str(e)}\n")
         return None
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        sys.stderr.write("Error: Se requiere la ruta del archivo de audio\n")
         sys.exit(1)
     
-    audio_path = sys.argv[1]
-    hash_result = calcular_hash_audio(audio_path)
-    
+    hash_result = calcular_hash_audio(sys.argv[1])
     if hash_result:
         print(hash_result)
     else:
