@@ -143,7 +143,7 @@ function buscarUnAudioValido($directorio, $intentos = 0)
     return null;
 }
 
-sudo -R 770 /home/asley01/MEGA/Waw/Kits/
+
 
 function debeProcesarse($ruta_archivo, $file_hash)
 {
