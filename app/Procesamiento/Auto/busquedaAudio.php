@@ -33,12 +33,15 @@ function procesarAudios()
 
     $fp = fopen($lock_file, 'c');
     if ($fp === false) {
+        autLog("Error: No se pudo abrir el archivo de bloqueo.");
         return;
     }
+
     $intentos = 0;
     while (!flock($fp, LOCK_EX | LOCK_NB)) {
         $intentos++;
         if ($intentos >= $max_reintentos) {
+            autLog("Error: No se pudo obtener el bloqueo después de $max_reintentos intentos.");
             fclose($fp);
             return;
         }
@@ -52,7 +55,11 @@ function procesarAudios()
             $tiempo = microtime(true) - $inicio;
             autLog("Tiempo de búsqueda: " . number_format($tiempo, 2) . " segundos");
             enviarAudioaProcesar($audio_info['ruta'], $audio_info['hash']);
+        } else {
+            autLog("No se encontró un audio válido para procesar.");
         }
+    } catch (Exception $e) {
+        autLog("Error durante el procesamiento: " . $e->getMessage());
     } finally {
         flock($fp, LOCK_UN);
         fclose($fp);
@@ -66,11 +73,13 @@ function buscarUnAudioValido($directorio, $intentos = 0)
 {
     $max_intentos = 500; // Número máximo de intentos recursivos
     if ($intentos >= $max_intentos) {
+        autLog("Error: Se alcanzó el número máximo de intentos ($max_intentos) en buscarUnAudioValido.");
         return null;
     }
 
     $extensiones_permitidas = ['wav', 'mp3'];
     if (!is_dir($directorio) || !is_readable($directorio)) {
+        autLog("Error: El directorio '$directorio' no existe o no es legible. Se intentará cambiar permisos.");
         shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
         return null;
     }
@@ -112,6 +121,7 @@ function buscarUnAudioValido($directorio, $intentos = 0)
         $hash = recalcularHash($archivo_seleccionado);
 
         if (!$hash) {
+            autLog("Error: No se pudo calcular el hash del archivo '$archivo_seleccionado'. Reintentando.");
             return buscarUnAudioValido($directorio, $intentos + 1);
         }
 
@@ -121,12 +131,14 @@ function buscarUnAudioValido($directorio, $intentos = 0)
             return buscarUnAudioValido($directorio, $intentos + 1);
         }
     } catch (Exception $e) {
+        autLog("Excepción: " . $e->getMessage() . " en buscarUnAudioValido.");
         shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
         return null;
     }
 
     return null;
 }
+
 
 
 function debeProcesarse($ruta_archivo, $file_hash)
