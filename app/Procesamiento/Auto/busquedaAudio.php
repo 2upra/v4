@@ -71,7 +71,7 @@ function procesarAudios()
 
 function buscarUnAudioValido($directorio, $intentos = 0)
 {
-    $max_intentos = 500; // Número máximo de intentos recursivos
+    $max_intentos = 50; // Número máximo de intentos recursivos
     if ($intentos >= $max_intentos) {
         autLog("Error: Se alcanzó el número máximo de intentos ($max_intentos) en buscarUnAudioValido.");
         return null;
