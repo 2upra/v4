@@ -33,6 +33,9 @@ function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD)
     return $similitud >= $umbral;
 }
 
+/*
+2024-10-28 05:48:28 - Error en recalcularHash: No hay permisos de lectura para el archivo: /home/asley01/MEGA/Waw/Kits/EXAMPLE/SNARE ONE SHOT/lo-fi-style-snare-lo-fi-drums_C_major.wav
+*/
 function recalcularHash($audio_file_path) {
     try {
         // Verificaciones iniciales
@@ -48,7 +51,8 @@ function recalcularHash($audio_file_path) {
         }
 
         if (!is_readable($file_path)) {
-            shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
+            $output = shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
+            guardarLog("Salida de chmod: " . $output);
             throw new Exception("No hay permisos de lectura para el archivo: " . $file_path);
         }
 

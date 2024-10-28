@@ -132,6 +132,10 @@ function buscarUnAudioValido($directorio, $intentos = 0)
         }
     } catch (Exception $e) {
         autLog("Excepción: " . $e->getMessage() . " en buscarUnAudioValido.");
+        /*
+        sudo chmod 770 /home/asley01/MEGA/Waw/Kits/
+        sudo chown www-data:asley /home/asley01/MEGA/Waw/Kits/
+        */
         shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
         return null;
     }
@@ -139,7 +143,7 @@ function buscarUnAudioValido($directorio, $intentos = 0)
     return null;
 }
 
-
+sudo -R 770 /home/asley01/MEGA/Waw/Kits/
 
 function debeProcesarse($ruta_archivo, $file_hash)
 {
