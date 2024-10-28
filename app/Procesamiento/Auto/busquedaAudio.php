@@ -3,8 +3,8 @@
 add_action('init', 'iniciar_cron_procesamiento_audios');
 function iniciar_cron_procesamiento_audios()
 {
-    if (!wp_next_scheduled('audioa')) {
-        wp_schedule_event(time(), 'cadaDosMinutos', 'audioa');
+    if (!wp_next_scheduled('audio15')) {
+        wp_schedule_event(time(), 'cadaDosMinutos', 'audio15');
         autLog("Cron de procesamiento de audios programado para cada 2 minutos.");
     }
 }
@@ -14,14 +14,14 @@ function definir_cron_cada_dos_minutos($schedules)
 {
     if (!isset($schedules['cadaDosMinutos'])) {
         $schedules['cadaDosMinutos'] = array(
-            'interval' => 30,
+            'interval' => 15,
             'display'  => __('Cada 2 minutos')
         );
     }
     return $schedules;
 }
 
-add_action('audioa', 'procesarAudios');
+add_action('audio15', 'procesarAudios');
 
 
 function procesarAudios()
