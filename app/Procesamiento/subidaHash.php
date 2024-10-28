@@ -104,15 +104,15 @@ function recalcularHash($audio_file_path) {
     }
 }
 
-
 function actualizarHashesDeTodosLosAudios()
 {
     global $wpdb;
 
     try {
-        $wpdb->query("SET innodb_lock_wait_timeout = 100"); // Ajuste del tiempo de espera
+        // Aumentar el tiempo de espera para evitar errores de bloqueo
+        $wpdb->query("SET innodb_lock_wait_timeout = 100");
 
-        // Bloqueo de ambas tablas necesarias para el proceso
+        // Bloquear ambas tablas antes de realizar cualquier consulta
         $wpdb->query("LOCK TABLES {$wpdb->prefix}file_hashes WRITE, {$wpdb->posts} READ");
 
         $audios = $wpdb->get_results(
@@ -129,96 +129,87 @@ function actualizarHashesDeTodosLosAudios()
         );
 
         if (empty($audios)) {
-            $wpdb->query("UNLOCK TABLES"); // Desbloqueo antes de salir si no hay audios pendientes
+            $wpdb->query("UNLOCK TABLES"); // Desbloquear si no hay audios
             return true;
         }
 
         foreach ($audios as $audio) {
-            try {
-                $wpdb->query('START TRANSACTION'); // Transacción para cada audio
+            if ($audio->status !== 'pending') {
+                actualizarEstadoArchivo($audio->id, 'pending');
+            }
 
-                if ($audio->status !== 'pending') {
-                    actualizarEstadoArchivo($audio->id, 'pending');
-                }
+            $nuevo_hash = recalcularHash($audio->file_url);
 
-                $nuevo_hash = recalcularHash($audio->file_url);
-
-                if (!$nuevo_hash) {
-                    actualizarEstadoArchivo($audio->id, 'error');
-                    $wpdb->query('COMMIT');
-                    continue;
-                }
-
-                $hash_existente = $wpdb->get_var($wpdb->prepare("
-                    SELECT COUNT(*) 
-                    FROM {$wpdb->prefix}file_hashes 
-                    WHERE file_hash = %s 
-                    AND id != %d
-                ", $nuevo_hash, $audio->id));
-
-                if ($hash_existente > 0) {
-                    actualizarEstadoArchivo($audio->id, 'duplicado');
-                    $wpdb->query('COMMIT');
-                    continue;
-                }
-
-                $duplicados = $wpdb->get_results($wpdb->prepare("
-                    SELECT id, file_url, file_hash 
-                    FROM {$wpdb->prefix}file_hashes 
-                    WHERE id != %d 
-                    AND status = 'confirmed'
-                ", $audio->id));
-
-                $duplicado = null;
-                foreach ($duplicados as $posible_duplicado) {
-                    if (sonHashesSimilares($nuevo_hash, $posible_duplicado->file_hash)) {
-                        $duplicado = $posible_duplicado;
-                        break;
-                    }
-                }
-
-                $nuevo_estado = $duplicado ? 'duplicado' : 'confirmed';
-
-                $resultado_actualizacion = $wpdb->update(
-                    "{$wpdb->prefix}file_hashes",
-                    [
-                        'file_hash' => $nuevo_hash,
-                        'status' => $nuevo_estado
-                    ],
-                    ['id' => $audio->id],
-                    ['%s', '%s'],
-                    ['%d']
-                );
-
-                if ($resultado_actualizacion === false) {
-                    throw new Exception("Error al actualizar registro ID: " . $audio->id . " - " . $wpdb->last_error);
-                }
-
-                if ($audio->post_id && $duplicado) {
-                    update_post_meta($audio->post_id, '_audio_duplicado', [
-                        'duplicado_de' => $duplicado->file_url,
-                        'hash' => $nuevo_hash,
-                        'similitud' => true
-                    ]);
-                }
-
-                gc_collect_cycles();
-                usleep(PROCESO_DELAY);
-
-                $wpdb->query('COMMIT'); // Confirmar la transacción para este audio
-            } catch (Exception $e) {
-                $wpdb->query('ROLLBACK'); // Revertir cambios si hay error en un audio
+            if (!$nuevo_hash) {
+                actualizarEstadoArchivo($audio->id, 'error');
                 continue;
             }
+
+            // Verificar si el hash ya existe en la base de datos
+            $hash_existente = $wpdb->get_var($wpdb->prepare("
+                SELECT COUNT(*) 
+                FROM {$wpdb->prefix}file_hashes 
+                WHERE file_hash = %s 
+                AND id != %d
+            ", $nuevo_hash, $audio->id));
+
+            if ($hash_existente > 0) {
+                actualizarEstadoArchivo($audio->id, 'duplicado');
+                continue;
+            }
+
+            $duplicados = $wpdb->get_results($wpdb->prepare("
+                SELECT id, file_url, file_hash 
+                FROM {$wpdb->prefix}file_hashes 
+                WHERE id != %d 
+                AND status = 'confirmed'
+            ", $audio->id));
+
+            $duplicado = null;
+            foreach ($duplicados as $posible_duplicado) {
+                if (sonHashesSimilares($nuevo_hash, $posible_duplicado->file_hash)) {
+                    $duplicado = $posible_duplicado;
+                    break;
+                }
+            }
+
+            $nuevo_estado = $duplicado ? 'duplicado' : 'confirmed';
+
+            $resultado_actualizacion = $wpdb->update(
+                "{$wpdb->prefix}file_hashes",
+                [
+                    'file_hash' => $nuevo_hash,
+                    'status' => $nuevo_estado
+                ],
+                ['id' => $audio->id],
+                ['%s', '%s'],
+                ['%d']
+            );
+
+            if ($resultado_actualizacion === false) {
+                throw new Exception("Error al actualizar registro ID: " . $audio->id . " - " . $wpdb->last_error);
+            }
+
+            if ($audio->post_id && $duplicado) {
+                update_post_meta($audio->post_id, '_audio_duplicado', [
+                    'duplicado_de' => $duplicado->file_url,
+                    'hash' => $nuevo_hash,
+                    'similitud' => true
+                ]);
+            }
+
+            gc_collect_cycles();
+            usleep(PROCESO_DELAY);
         }
 
-        $wpdb->query("UNLOCK TABLES"); // Desbloquear tabla al finalizar
+        $wpdb->query("UNLOCK TABLES"); // Desbloqueo final al terminar
         return true;
     } catch (Exception $e) {
-        $wpdb->query("UNLOCK TABLES"); // Asegurarse de desbloquear en caso de fallo general
+        $wpdb->query("UNLOCK TABLES"); // Asegurar desbloqueo en caso de fallo
         return false;
     }
 }
+
 
 
 
@@ -242,7 +233,7 @@ function actualizarEstadoArchivo($id, $estado)
             throw new Exception("Error al actualizar estado para ID: " . $id);
         }
 
-        //guardarLog("Estado actualizado para ID {$id}: {$estado}");
+        guardarLog("Estado actualizado para ID {$id}: {$estado}");
         return true;
     } catch (Exception $e) {
         //guardarLog("Error en actualizarEstadoArchivo: " . $e->getMessage());
