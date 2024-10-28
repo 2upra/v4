@@ -1,7 +1,7 @@
 <?
 
 define('HASH_SCRIPT_PATH', '/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py');
-define('PROCESO_DELAY', 500000); // 0.5 segundos en microsegundos
+define('PROCESO_DELAY', 100000); // 0.5 segundos en microsegundos
 define('MAX_EXECUTION_TIME', 30); // 30 segundos por archivo
 define('BATCH_SIZEHASH', 50); 
 ini_set('memory_limit', '256M');
@@ -125,6 +125,16 @@ function recalcularHash($audio_file_path) {
     }
 }
 
+/*
+2024-10-28 00:51:30 - Hash calculado correctamente: 5f9f6b365df3bcfeee5e320f5e9afa95324e48a1589fccd5859e57f6c263dea3
+2024-10-28 00:51:31 - Procesando Audio ID: 11860 (Estado actual: pending)
+2024-10-28 00:51:31 - Ejecutando comando: '/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/process_audio.sh' '/var/www/wordpress/wp-content/uploads/2024/10/Memphis-808_nKkc_2upra.wav'
+2024-10-28 00:51:35 - Hash calculado correctamente: f00faf8479cc08336e70c7d51197209ca9346c33aab56d08b37dcbfef049c091
+2024-10-28 00:51:35 - Error fatal en actualizarHashesDeTodosLosAudios: Error al actualizar registro ID: 11860 - Duplicate entry 'f00faf8479cc08336e70c7d51197209ca9346c33aab56d08b37dcbfef049c091' for key 'wpsg_file_hashes.file_hash'
+
+[28-Oct-2024 00:51:35 UTC] WordPress database error Duplicate entry 'f00faf8479cc08336e70c7d51197209ca9346c33aab56d08b37dcbfef049c091' for key 'wpsg_file_hashes.file_hash' for query UPDATE `wpsg_file_hashes` SET `file_hash` = 'f00faf8479cc08336e70c7d51197209ca9346c33aab56d08b37dcbfef049c091', `status` = 'duplicado' WHERE `id` = 11860 made by require('wp-blog-header.php'), require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), include('/themes/2upra3v/functions.php'), incluirArchivos, incluirArchivos, include_once('/themes/2upra3v/app/Procesamiento/subidaHash.php'), actualizarHashesDeTodosLosAudios
+*/
+
 function actualizarHashesDeTodosLosAudios()
 {
     global $wpdb;
@@ -177,7 +187,23 @@ function actualizarHashesDeTodosLosAudios()
 
             guardarLog("Hash calculado para audio ID: " . $audio->id . " - Hash: " . $nuevo_hash);
 
-            // Buscar posibles duplicados
+            // Verificar si el hash ya existe en la base de datos
+            $hash_existente = $wpdb->get_var($wpdb->prepare("
+                SELECT COUNT(*) 
+                FROM {$wpdb->prefix}file_hashes 
+                WHERE file_hash = %s 
+                AND id != %d
+            ", $nuevo_hash, $audio->id));
+
+            if ($hash_existente > 0) {
+                guardarLog("El hash ya existe para otro audio, marcando el audio ID: " . $audio->id . " como duplicado.");
+
+                // Marcar como duplicado y continuar
+                actualizarEstadoArchivo($audio->id, 'duplicado');
+                continue;
+            }
+
+            // Buscar posibles duplicados por similitud de hash
             guardarLog("Buscando duplicados para el audio ID: " . $audio->id);
             $duplicados = $wpdb->get_results($wpdb->prepare("
                 SELECT id, file_url, file_hash 
