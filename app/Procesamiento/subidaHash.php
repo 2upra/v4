@@ -250,7 +250,7 @@ function actualizarEstadoArchivo($id, $estado)
         return false;
     }
 }
-actualizarHashesDeTodosLosAudios();
+
 
 function subidaArchivo()
 {
