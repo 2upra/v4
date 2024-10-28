@@ -239,7 +239,7 @@ function actualizarHashesDeTodosLosAudios()
     }
 }
 
-actualizarHashesDeTodosLosAudios();
+# actualizarHashesDeTodosLosAudios();
 
 function actualizarEstadoArchivo($id, $estado)
 {
