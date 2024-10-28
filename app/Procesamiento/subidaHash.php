@@ -63,7 +63,7 @@ function recalcularHash($audio_file_path) {
 
         // Ejecutar el comando
         $command = escapeshellarg(WRAPPER_SCRIPT_PATH) . ' ' . escapeshellarg($file_path);
-        guardarLog("Ejecutando comando: " . $command);
+        //guardarLog("Ejecutando comando: " . $command);
 
         $descriptorspec = array(
             0 => array("pipe", "r"),
@@ -95,11 +95,11 @@ function recalcularHash($audio_file_path) {
             throw new Exception("Hash inválido generado: " . $output);
         }
         
-        guardarLog("Hash calculado correctamente: " . $hash);
+        //guardarLog("Hash calculado correctamente: " . $hash);
         return $hash;
 
     } catch (Exception $e) {
-        guardarLog("Error en recalcularHash: " . $e->getMessage());
+        //guardarLog("Error en recalcularHash: " . $e->getMessage());
         return false;
     }
 }
@@ -109,7 +109,7 @@ function actualizarHashesDeTodosLosAudios()
     global $wpdb;
 
     try {
-        guardarLog("Iniciando proceso de actualización de hashes");
+        //guardarLog("Iniciando proceso de actualización de hashes");
         $wpdb->query('START TRANSACTION');
 
         $audios = $wpdb->get_results(
@@ -126,35 +126,35 @@ function actualizarHashesDeTodosLosAudios()
         );
 
         if (empty($audios)) {
-            guardarLog("No hay audios pendientes para procesar, terminando proceso.");
+            //guardarLog("No hay audios pendientes para procesar, terminando proceso.");
             $wpdb->query('COMMIT');
             return true;
         }
 
-        guardarLog("Audios a procesar: " . count($audios));
+        //guardarLog("Audios a procesar: " . count($audios));
 
         foreach ($audios as $audio) {
-            guardarLog("Procesando Audio ID: " . $audio->id . " (Estado actual: " . $audio->status . ")");
+            //guardarLog("Procesando Audio ID: " . $audio->id . " (Estado actual: " . $audio->status . ")");
 
             // Verificar si el estado es distinto de 'pending' y actualizar si es necesario
             if ($audio->status !== 'pending') {
-                guardarLog("Audio ID: " . $audio->id . " no está en estado 'pending', actualizando estado a 'pending'.");
+                //guardarLog("Audio ID: " . $audio->id . " no está en estado 'pending', actualizando estado a 'pending'.");
                 actualizarEstadoArchivo($audio->id, 'pending');
             } else {
-                guardarLog("Audio ID: " . $audio->id . " ya está en estado 'pending'.");
+                //guardarLog("Audio ID: " . $audio->id . " ya está en estado 'pending'.");
             }
 
             // Recalcular hash del archivo
-            guardarLog("Recalculando hash para el audio ID: " . $audio->id . " (URL: " . $audio->file_url . ")");
+            //guardarLog("Recalculando hash para el audio ID: " . $audio->id . " (URL: " . $audio->file_url . ")");
             $nuevo_hash = recalcularHash($audio->file_url);
 
             if (!$nuevo_hash) {
-                guardarLog("Error al calcular hash para audio ID: " . $audio->id . ", actualizando estado a 'error'.");
+                //guardarLog("Error al calcular hash para audio ID: " . $audio->id . ", actualizando estado a 'error'.");
                 actualizarEstadoArchivo($audio->id, 'error');
                 continue;
             }
 
-            guardarLog("Hash calculado para audio ID: " . $audio->id . " - Hash: " . $nuevo_hash);
+            //guardarLog("Hash calculado para audio ID: " . $audio->id . " - Hash: " . $nuevo_hash);
 
             // Verificar si el hash ya existe en la base de datos
             $hash_existente = $wpdb->get_var($wpdb->prepare("
@@ -165,7 +165,7 @@ function actualizarHashesDeTodosLosAudios()
             ", $nuevo_hash, $audio->id));
 
             if ($hash_existente > 0) {
-                guardarLog("El hash ya existe para otro audio, marcando el audio ID: " . $audio->id . " como duplicado.");
+                //guardarLog("El hash ya existe para otro audio, marcando el audio ID: " . $audio->id . " como duplicado.");
 
                 // Marcar como duplicado y continuar
                 actualizarEstadoArchivo($audio->id, 'duplicado');
@@ -173,7 +173,7 @@ function actualizarHashesDeTodosLosAudios()
             }
 
             // Buscar posibles duplicados por similitud de hash
-            guardarLog("Buscando duplicados para el audio ID: " . $audio->id);
+            //guardarLog("Buscando duplicados para el audio ID: " . $audio->id);
             $duplicados = $wpdb->get_results($wpdb->prepare("
                 SELECT id, file_url, file_hash 
                 FROM {$wpdb->prefix}file_hashes 
@@ -184,7 +184,7 @@ function actualizarHashesDeTodosLosAudios()
             $duplicado = null;
             foreach ($duplicados as $posible_duplicado) {
                 if (sonHashesSimilares($nuevo_hash, $posible_duplicado->file_hash)) {
-                    guardarLog("Duplicado encontrado para audio ID: " . $audio->id . " - Duplicado con ID: " . $posible_duplicado->id);
+                    //guardarLog("Duplicado encontrado para audio ID: " . $audio->id . " - Duplicado con ID: " . $posible_duplicado->id);
                     $duplicado = $posible_duplicado;
                     break;
                 }
@@ -209,7 +209,7 @@ function actualizarHashesDeTodosLosAudios()
                 throw new Exception("Error al actualizar registro ID: " . $audio->id . " - " . $wpdb->last_error);
             }
 
-            guardarLog("Registro actualizado para audio ID: " . $audio->id . " - Estado: " . $nuevo_estado);
+            //guardarLog("Registro actualizado para audio ID: " . $audio->id . " - Estado: " . $nuevo_estado);
 
             if ($audio->post_id && $duplicado) {
                 update_post_meta($audio->post_id, '_audio_duplicado', [
@@ -217,7 +217,7 @@ function actualizarHashesDeTodosLosAudios()
                     'hash' => $nuevo_hash,
                     'similitud' => true
                 ]);
-                guardarLog("Meta data actualizada para el post ID: " . $audio->post_id . " - Audio duplicado de: {$duplicado->file_url}");
+                //guardarLog("Meta data actualizada para el post ID: " . $audio->post_id . " - Audio duplicado de: {$duplicado->file_url}");
             }
 
             gc_collect_cycles();
@@ -225,11 +225,11 @@ function actualizarHashesDeTodosLosAudios()
         }
 
         $wpdb->query('COMMIT');
-        guardarLog("Proceso completado exitosamente");
+        //guardarLog("Proceso completado exitosamente");
         return true;
     } catch (Exception $e) {
         $wpdb->query('ROLLBACK');
-        guardarLog("Error fatal en actualizarHashesDeTodosLosAudios: " . $e->getMessage());
+        //guardarLog("Error fatal en actualizarHashesDeTodosLosAudios: " . $e->getMessage());
         return false;
     }
 }
@@ -241,7 +241,7 @@ function actualizarEstadoArchivo($id, $estado)
     global $wpdb;
 
     try {
-        guardarLog("Intentando actualizar estado del archivo ID: {$id} a {$estado}");
+        //guardarLog("Intentando actualizar estado del archivo ID: {$id} a {$estado}");
         $actualizado = $wpdb->update(
             "{$wpdb->prefix}file_hashes",
             ['status' => $estado],
@@ -254,17 +254,17 @@ function actualizarEstadoArchivo($id, $estado)
             throw new Exception("Error al actualizar estado para ID: " . $id);
         }
 
-        guardarLog("Estado actualizado para ID {$id}: {$estado}");
+        //guardarLog("Estado actualizado para ID {$id}: {$estado}");
         return true;
     } catch (Exception $e) {
-        guardarLog("Error en actualizarEstadoArchivo: " . $e->getMessage());
+        //guardarLog("Error en actualizarEstadoArchivo: " . $e->getMessage());
         return false;
     }
 }
 
 function subidaArchivo()
 {
-    guardarLog("INICIO subidaArchivo");
+    //guardarLog("INICIO subidaArchivo");
     $is_admin = current_user_can('administrator');
     $current_user_id = get_current_user_id(); // Obtener ID del usuario actual
     $file = $_FILES['file'] ?? null;
@@ -272,12 +272,12 @@ function subidaArchivo()
 
     // Verificar si se proporcionó archivo y hash
     if (!$file || !$file_hash) {
-        guardarLog("No se proporcionó archivo o hash");
+        //guardarLog("No se proporcionó archivo o hash");
         wp_send_json_error('No se proporcionó archivo o hash');
         return;
     }
 
-    guardarLog("Hash recibido: $file_hash");
+    //guardarLog("Hash recibido: $file_hash");
     $existing_file = obtenerHash($file_hash);
 
     // Si el archivo ya existe en la base de datos
@@ -289,22 +289,22 @@ function subidaArchivo()
         // Verificar si el archivo realmente existe en el servidor
         $file_path = str_replace(get_site_url(), ABSPATH, $file_url); // Convertir URL a ruta absoluta
         if (!file_exists($file_path)) {
-            guardarLog("El archivo no existe en el servidor: $file_url");
+            //guardarLog("El archivo no existe en el servidor: $file_url");
 
             // Si el archivo no existe en el servidor, permitir que se suba el archivo normalmente
             $movefile = wp_handle_upload($file, array('test_form' => false, 'unique_filename_callback' => 'nombreUnicoFile'));
-            guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
+            //guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
 
             if ($movefile && !isset($movefile['error'])) {
                 // Si el archivo estaba registrado con user_id = 0, actualizarlo con el user_id actual
                 if ($owner_id == 0) {
-                    guardarLog("Actualizando el user_id de $owner_id a $current_user_id para el archivo $file_id");
+                    //guardarLog("Actualizando el user_id de $owner_id a $current_user_id para el archivo $file_id");
                     actualizarUrlArchivo($file_id, $movefile['url']); // Actualizar URL
                 }
-                guardarLog("Carga exitosa. URL del nuevo archivo: " . $movefile['url']);
+                //guardarLog("Carga exitosa. URL del nuevo archivo: " . $movefile['url']);
                 wp_send_json_success(array('fileUrl' => $movefile['url'], 'fileId' => $file_id));
             } else {
-                guardarLog("Error en la carga: " . ($movefile['error'] ?? 'Error desconocido'));
+                //guardarLog("Error en la carga: " . ($movefile['error'] ?? 'Error desconocido'));
                 wp_send_json_error($movefile['error'] ?? 'Error desconocido');
             }
 
@@ -312,49 +312,49 @@ function subidaArchivo()
         }
         // Verificar si el archivo pertenece al usuario actual o si es administrador
         if ($owner_id != $current_user_id && !$is_admin) {
-            guardarLog("El archivo no pertenece al usuario actual.");
+            //guardarLog("El archivo no pertenece al usuario actual.");
             wp_send_json_error('No tienes permiso para reutilizar este archivo');
             return;
         }
         // Si el archivo está pendiente y el usuario no es administrador
         if ($existing_file['status'] === 'pending' && !$is_admin) {
-            guardarLog("El archivo ya está pendiente, reutilizando: " . $existing_file['file_url']);
+            //guardarLog("El archivo ya está pendiente, reutilizando: " . $existing_file['file_url']);
             wp_send_json_success(array('fileUrl' => $file_url, 'fileId' => $file_id));
             return;
         }
         // Si el archivo ya está confirmado, no es necesario volver a subirlo
         if ($existing_file['status'] === 'confirmed') {
-            guardarLog("El archivo ya está confirmado, reutilizando: " . $file_url);
+            //guardarLog("El archivo ya está confirmado, reutilizando: " . $file_url);
             wp_send_json_success(array('fileUrl' => $file_url, 'fileId' => $file_id));
             return;
         }
         // Si es administrador, permitir el uso del archivo sin eliminarlo
         if ($is_admin) {
-            guardarLog("El usuario es administrador, reutilizando archivo existente: " . $file_url);
+            //guardarLog("El usuario es administrador, reutilizando archivo existente: " . $file_url);
             wp_send_json_success(array('fileUrl' => $file_url, 'fileId' => $file_id));
             return;
         }
     }
 
-    guardarLog("No se encontró un archivo existente con este hash o el archivo está pendiente.");
+    //guardarLog("No se encontró un archivo existente con este hash o el archivo está pendiente.");
 
     // Manejar la nueva subida de archivo
     $movefile = wp_handle_upload($file, array('test_form' => false, 'unique_filename_callback' => 'nombreUnicoFile'));
-    guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
+    //guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
 
     if ($movefile && !isset($movefile['error'])) {
         $file_id = guardarHash($file_hash, $movefile['url'], $current_user_id, 'pending');
-        guardarLog("Carga exitosa. Hash guardado: $file_hash. URL del nuevo archivo: " . $movefile['url']);
+        //guardarLog("Carga exitosa. Hash guardado: $file_hash. URL del nuevo archivo: " . $movefile['url']);
         $file_path = $movefile['file']; // Ruta del archivo
         wp_schedule_single_event(time() + 5, 'antivirus', array($file_path, $file_id, $current_user_id));
 
         wp_send_json_success(array('fileUrl' => $movefile['url'], 'fileId' => $file_id));
     } else {
-        guardarLog("Error en la carga: " . ($movefile['error'] ?? 'Error desconocido'));
+        //guardarLog("Error en la carga: " . ($movefile['error'] ?? 'Error desconocido'));
         wp_send_json_error($movefile['error'] ?? 'Error desconocido');
     }
 
-    guardarLog("FIN subidaArchivo");
+    //guardarLog("FIN subidaArchivo");
 }
 
 function antivirus($file_path, $file_id, $current_user_id)
@@ -364,11 +364,11 @@ function antivirus($file_path, $file_id, $current_user_id)
 
     if ($output) {
         unlink($file_path); // Elimina el archivo infectado
-        guardarLog("Archivo infectado eliminado: $file_path");
+        //guardarLog("Archivo infectado eliminado: $file_path");
         // Restringir al usuario que subió el archivo infectado
         restringir_usuario(array($current_user_id));
     } else {
-        guardarLog("Archivo limpio confirmado: $file_path");
+        //guardarLog("Archivo limpio confirmado: $file_path");
     }
 }
 
@@ -412,7 +412,7 @@ function guardarHash($hash, $url, $user_id, $status = 'pending')
         if ($registro_existente && $registro_existente['status'] === 'loss') {
             $wpdb->delete("{$wpdb->prefix}file_hashes", array('file_hash' => $hash), array('%s'));
         } else {
-            //guardarLog("Error: el hash existe y no está en estado 'loss'.");
+            ////guardarLog("Error: el hash existe y no está en estado 'loss'.");
             return false;
         }
 
@@ -431,7 +431,7 @@ function guardarHash($hash, $url, $user_id, $status = 'pending')
             );
             return $wpdb->insert_id;
         } catch (Exception $e) {
-            //guardarLog("Error al intentar guardar el hash nuevamente: " . $e->getMessage());
+            ////guardarLog("Error al intentar guardar el hash nuevamente: " . $e->getMessage());
             return false;
         }
     }
@@ -444,7 +444,7 @@ function actualizarUrlArchivo($file_id, $new_url)
     global $wpdb;
 
     // Log del inicio de la operación
-    guardarLog("Inicio de actualizarUrlArchivo para File ID: $file_id con nueva URL: $new_url");
+    //guardarLog("Inicio de actualizarUrlArchivo para File ID: $file_id con nueva URL: $new_url");
 
     // Intentar actualizar la URL del archivo en la base de datos
     $resultado = $wpdb->update(
@@ -456,9 +456,9 @@ function actualizarUrlArchivo($file_id, $new_url)
     );
 
     if ($resultado !== false) {
-        guardarLog("URL actualizada correctamente para File ID: $file_id");
+        //guardarLog("URL actualizada correctamente para File ID: $file_id");
     } else {
-        guardarLog("Error al actualizar la URL para File ID: $file_id");
+        //guardarLog("Error al actualizar la URL para File ID: $file_id");
     }
 
     // Devolver el resultado de la actualización
@@ -497,9 +497,9 @@ function eliminarHash($id)
     global $wpdb;
     $resultado = (bool) $wpdb->delete("{$wpdb->prefix}file_hashes", array('id' => $id), array('%d'));
     if ($resultado) {
-        guardarLog("eliminarHash: Registro eliminado con ID: $id");
+        //guardarLog("eliminarHash: Registro eliminado con ID: $id");
     } else {
-        guardarLog("eliminarHash: Error al eliminar el registro con ID: $id");
+        //guardarLog("eliminarHash: Error al eliminar el registro con ID: $id");
     }
 
     return $resultado;
@@ -515,9 +515,9 @@ function eliminarPorHash($file_hash)
     );
 
     if ($resultado) {
-        guardarLog("eliminarPorHash: Registro eliminado con hash: $file_hash");
+        //guardarLog("eliminarPorHash: Registro eliminado con hash: $file_hash");
     } else {
-        guardarLog("eliminarPorHash: Error al eliminar el registro con hash: $file_hash");
+        //guardarLog("eliminarPorHash: Error al eliminar el registro con hash: $file_hash");
     }
 
     return $resultado;
@@ -537,7 +537,7 @@ function obtenerFileIDPorURL($url)
     if ($file_id !== null) {
         return (int) $file_id;
     } else {
-        //guardarLog("No se encontró File ID para la URL: $url");
+        ////guardarLog("No se encontró File ID para la URL: $url");
         return false;
     }
 }
@@ -565,7 +565,7 @@ function limpiarArchivosPendientes()
             unlink($file_path);
         }
         $wpdb->delete($table_name, array('id' => $archivo['id']));
-        guardarLog("Archivo pendiente eliminado: " . $archivo['file_url']);
+        //guardarLog("Archivo pendiente eliminado: " . $archivo['file_url']);
     }
 }
 
