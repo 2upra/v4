@@ -300,12 +300,17 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
         return $audio_original_id;
     }
 
+    if (file_exists($nuevaRutaOriginal)) {
+        unlink($nuevaRutaOriginal);
+    }
+
     $audio_lite_id = adjuntarArchivoAut($nuevo_nombre_lite, $post_id);
     if (is_wp_error($audio_lite_id)) {
         eliminarHash($file_id);
         return $audio_lite_id;
     }
     
+
 
     // Metadatos del post
     update_post_meta($post_id, 'post_audio', $audio_original_id);
