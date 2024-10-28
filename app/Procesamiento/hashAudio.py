@@ -3,6 +3,10 @@ import sys
 import hashlib
 import numpy as np
 import librosa
+import os
+
+# Configurar directorio de caché de Numba para evitar problemas de permisos
+os.environ['NUMBA_CACHE_DIR'] = '/tmp'
 
 def calcular_hash_audio(audio_path):
     try:
