@@ -99,7 +99,7 @@ function recalcularHash($audio_file_path) {
         return $hash;
 
     } catch (Exception $e) {
-        //guardarLog("Error en recalcularHash: " . $e->getMessage());
+        guardarLog("Error en recalcularHash: " . $e->getMessage());
         return false;
     }
 }
