@@ -112,8 +112,8 @@ function actualizarHashesDeTodosLosAudios()
     try {
         $wpdb->query("SET innodb_lock_wait_timeout = 100"); // Ajuste del tiempo de espera
 
-        // Bloqueo de la tabla para evitar bloqueos por acceso concurrente
-        $wpdb->query("LOCK TABLES {$wpdb->prefix}file_hashes WRITE");
+        // Bloqueo de ambas tablas necesarias para el proceso
+        $wpdb->query("LOCK TABLES {$wpdb->prefix}file_hashes WRITE, {$wpdb->posts} READ");
 
         $audios = $wpdb->get_results(
             "
@@ -219,6 +219,7 @@ function actualizarHashesDeTodosLosAudios()
         return false;
     }
 }
+
 
 
 actualizarHashesDeTodosLosAudios();
