@@ -5,7 +5,7 @@ function iniciar_cron_procesamiento_audios()
 {
     if (!wp_next_scheduled('audio60')) {
         wp_schedule_event(time(), 'cadaDosMinutos', 'audio60');
-        //autLog("Cron de procesamiento de audios programado para cada 2 minutos.");
+        autLog("Cron de procesamiento de audios programado para cada 2 minutos.");
     }
 }
 
