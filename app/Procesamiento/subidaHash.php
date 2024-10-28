@@ -52,9 +52,13 @@ function recalcularHash($audio_file_path) {
 
         if (!is_readable($file_path)) {
             $output = shell_exec('sudo /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/Auto/permisos.sh 2>&1');
-            guardarLog("Salida de chmod: " . $output);
+            guardarLog("Salida de permisos.sh: " . $output);
             throw new Exception("No hay permisos de lectura para el archivo: " . $file_path);
         }
+
+        /*
+        2024-10-28 06:19:45 - Salida de chmod: sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+        */
 
         // Verificar script wrapper
         if (!file_exists(WRAPPER_SCRIPT_PATH)) {
