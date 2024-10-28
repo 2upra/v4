@@ -1,7 +1,7 @@
 <?
 
 define('HASH_SCRIPT_PATH', '/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py');
-define('PROCESO_DELAY', 100000); // 0.5 segundos en microsegundos
+define('PROCESO_DELAY', 500000); // 0.5 segundos en microsegundos
 define('MAX_EXECUTION_TIME', 30); // 30 segundos por archivo
 define('BATCH_SIZEHASH', 50); 
 ini_set('memory_limit', '256M');
