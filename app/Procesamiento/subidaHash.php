@@ -36,12 +36,11 @@ function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD)
 function recalcularHash($audio_file_path) {
     try {
         // Verificaciones iniciales
-        if (!filter_var($audio_file_path, FILTER_VALIDATE_URL)) {
-            throw new Exception("URL inválida: " . $audio_file_path);
+        if (!is_string($audio_file_path) || empty($audio_file_path)) {
+            throw new Exception("Ruta de archivo inválida: " . $audio_file_path);
         }
 
-        $upload_dir = wp_upload_dir();
-        $file_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $audio_file_path);
+        $file_path = $audio_file_path;
 
         // Verificaciones de archivo
         if (!file_exists($file_path)) {
