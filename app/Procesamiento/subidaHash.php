@@ -3,29 +3,34 @@
 define('HASH_SCRIPT_PATH', '/var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py');
 define('PROCESO_DELAY', 500000); // 0.5 segundos en microsegundos
 define('MAX_EXECUTION_TIME', 30); // 30 segundos por archivo
-define('BATCH_SIZE', 50); // Número de archivos a procesar por lote
-
-// Configuración de memoria y tiempo de ejecución
+define('BATCH_SIZEHASH', 50); 
 ini_set('memory_limit', '256M');
-set_time_limit(0); // Sin límite para el script completo
+set_time_limit(0); 
+
+if (!defined('HASH_SIMILARITY_THRESHOLD')) {
+    define('HASH_SIMILARITY_THRESHOLD', 0.7);  // Ajusta el valor según tus necesidades
+}
 
 /*
-024-10-27 23:31:57 - Estado actualizado para ID 11924: error
-2024-10-27 23:31:57 - Procesando Audio ID: 11923 (Estado actual: error)
-2024-10-27 23:31:57 - Estado actualizado para ID 11923: pending
-2024-10-27 23:31:57 - Ejecutando comando: python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py '/var/www/wordpress/wp-content/uploads/2024/10/Memphis-Loop_F8Wo_2upra.wav'
-2024-10-27 23:31:58 - Error en recalcularHash: Error en el proceso Python: Error procesando archivo: cannot cache function '__o_fold': no locator available for file '/usr/local/lib/python3.9/dist-packages/librosa/core/notation.py'
-2024-10-27 23:31:58 - Estado actualizado para ID 11923: error
-2024-10-27 23:31:58 - Procesando Audio ID: 11922 (Estado actual: error)
-2024-10-27 23:31:58 - Estado actualizado para ID 11922: pending
-2024-10-27 23:31:58 - Ejecutando comando: python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py '/var/www/wordpress/wp-content/uploads/2024/10/Memphis-Snare_wIBN_2upra.wav'
-2024-10-27 23:31:59 - Error en recalcularHash: Error en el proceso Python: Error procesando archivo: cannot cache function '__o_fold': no locator available for file '/usr/local/lib/python3.9/dist-packages/librosa/core/notation.py'
-2024-10-27 23:31:59 - Estado actualizado para ID 11922: error
-2024-10-27 23:31:59 - Procesando Audio ID: 11921 (Estado actual: error)
-2024-10-27 23:31:59 - Estado actualizado para ID 11921: pending
-2024-10-27 23:31:59 - Ejecutando comando: python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/hashAudio.py '/var/www/wordpress/wp-content/uploads/2024/10/MFS-25_UN0S_2upra.wav'
+
+[28-Oct-2024 00:17:22 UTC] PHP Warning:  Constant BATCH_SIZEHASH already defined in /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/subidaHash.php on line 6
+[28-Oct-2024 00:17:27 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "HASH_SIMILARITY_THRESHOLD" in /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/subidaHash.php:30
+Stack trace:
+#0 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/subidaHash.php(176): sonHashesSimilares()
+#1 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/subidaHash.php(222): actualizarHashesDeTodosLosAudios()
+#2 /var/www/wordpress/wp-content/themes/2upra3v/functions.php(230): include_once('...')
+#3 /var/www/wordpress/wp-content/themes/2upra3v/functions.php(236): incluirArchivos()
+#4 /var/www/wordpress/wp-content/themes/2upra3v/functions.php(245): incluirArchivos()
+#5 /var/www/wordpress/wp-settings.php(668): include('...')
+#6 /var/www/wordpress/wp-config.php(121): require_once('...')
+#7 /var/www/wordpress/wp-load.php(50): require_once('...')
+#8 /var/www/wordpress/wp-admin/admin.php(34): require_once('...')
+#9 /var/www/wordpress/wp-admin/index.php(10): require_once('...')
+#10 {main}
+  thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/subidaHash.php on line 30
 
 */
+
 
 function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD)
 {
@@ -138,7 +143,7 @@ function actualizarHashesDeTodosLosAudios()
                  OR fh.status = 'pending' 
                  OR fh.status = 'error')
             ORDER BY fh.id DESC
-            LIMIT " . BATCH_SIZE
+            LIMIT " . BATCH_SIZEHASH
         );
 
         if (empty($audios)) {
@@ -245,7 +250,7 @@ function actualizarEstadoArchivo($id, $estado)
         return false;
     }
 }
-
+actualizarHashesDeTodosLosAudios();
 
 function subidaArchivo()
 {
