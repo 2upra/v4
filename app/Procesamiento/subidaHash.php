@@ -48,6 +48,7 @@ function recalcularHash($audio_file_path) {
         }
 
         if (!is_readable($file_path)) {
+            shell_exec('sudo /bin/chmod -R 770 /home/asley01/MEGA/Waw/Kits/ 2>&1');
             throw new Exception("No hay permisos de lectura para el archivo: " . $file_path);
         }
 
