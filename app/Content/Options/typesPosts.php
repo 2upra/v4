@@ -25,10 +25,11 @@ add_action('init', 'register_custom_post_statuses');
 // Registrar tipos de post: Samples, Álbums, Momentos y Colaboraciones
 function register_custom_post_types() {
     $post_types = [
-        'social_post' => ['Samples', 'Sample', 'sample', null],
-        'albums' => ['Albums', 'Album', 'album', null],
+        'social_post' => ['Samples', 'Sample', 'sample', 'dashicons-images-alt2'],
+        'albums' => ['Albums', 'Album', 'album', 'dashicons-format-audio'],
         'stories' => ['Momentos', 'Momento', 'momentos', 'dashicons-camera'],
-        'colab' => ['Colaboraciones', 'Colaboración', 'colab', null]
+        'colab' => ['Colaboraciones', 'Colaboración', 'colab', 'dashicons-share-alt2'],
+        'Colecciones' =>  ['Colecciones', 'Colección', 'colecciones', 'dashicons-book']  
     ];
 
     foreach ($post_types as $key => $type) {
@@ -46,7 +47,7 @@ function register_custom_post_types() {
             'has_archive' => true,
             'supports' => ['title', 'editor', 'thumbnail', 'comments', 'custom-fields'],
             'rewrite' => ['slug' => $slug],
-            'show_in_rest' => true,
+            'show_in_rest' => true, 
             'menu_icon' => $icon
         ];
 
