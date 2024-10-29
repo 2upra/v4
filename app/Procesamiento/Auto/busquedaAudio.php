@@ -26,7 +26,7 @@ add_action('sgasdgert54', 'procesarAudios');
 
 function procesarAudios()
 {
-    $directorio_audios = '/home/asley01/MEGA/Waw/Kits';
+    $directorio_audios = '/home/asley01/MEGA/Waw/Kits/MEMPHIS KIT/VOCAL MEMPHIS SAMPLE/';
     $lock_file = '/tmp/procesar_audios.lock';
     $max_reintentos = 5;
     $espera_segundos = 5;
