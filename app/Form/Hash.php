@@ -3,12 +3,12 @@
 define('HASH_SCRIPT_PATH', '/var/www/wordpress/wp-content/themes/2upra3v/app/python/hashAudio.py');
 define('PROCESO_DELAY', 500000); // 0.5 segundos en microsegundos
 define('MAX_EXECUTION_TIME', 30); // 30 segundos por archivo
-define('BATCH_SIZEHASH', 50); 
+define('BATCH_SIZEHASH', 50);
 ini_set('memory_limit', '256M');
-set_time_limit(0); 
+set_time_limit(0);
 
 if (!defined('HASH_SIMILARITY_THRESHOLD')) {
-    define('HASH_SIMILARITY_THRESHOLD', 0.7);  
+    define('HASH_SIMILARITY_THRESHOLD', 0.7);
 }
 define('WRAPPER_SCRIPT_PATH', '/var/www/wordpress/wp-content/themes/2upra3v/app/Commands/process_audio.sh');
 
@@ -33,7 +33,8 @@ function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD)
     return $similitud >= $umbral;
 }
 
-function recalcularHash($audio_file_path) {
+function recalcularHash($audio_file_path)
+{
     try {
         // Verificaciones iniciales
         if (!is_string($audio_file_path) || empty($audio_file_path)) {
@@ -70,34 +71,33 @@ function recalcularHash($audio_file_path) {
             1 => array("pipe", "w"),
             2 => array("pipe", "w")
         );
-        
+
         $process = proc_open($command, $descriptorspec, $pipes);
-        
+
         if (!is_resource($process)) {
             throw new Exception("No se pudo iniciar el proceso");
         }
 
         $output = stream_get_contents($pipes[1]);
         $error = stream_get_contents($pipes[2]);
-        
+
         foreach ($pipes as $pipe) {
             fclose($pipe);
         }
-        
+
         $return_value = proc_close($process);
-        
+
         if ($return_value !== 0) {
             throw new Exception("Error en el proceso Python: " . $error);
         }
-        
+
         $hash = trim($output);
         if (!preg_match('/^[a-f0-9]{64}$/', $hash)) {
             throw new Exception("Hash inválido generado: " . $output);
         }
-        
+
         //guardarLog("Hash calculado correctamente: " . $hash);
         return $hash;
-
     } catch (Exception $e) {
         guardarLog("Error en recalcularHash: " . $e->getMessage());
         return false;

@@ -3,8 +3,8 @@
 add_action('init', 'iniciar_cron_procesamiento_audios');
 function iniciar_cron_procesamiento_audios()
 {
-    if (!wp_next_scheduled('gsdgfsdg')) {
-        wp_schedule_event(time(), 'cadaDosMinutos', 'gsdgfsdg');
+    if (!wp_next_scheduled('dsfadsfds')) {
+        wp_schedule_event(time(), 'cadaDosMinutos', 'dsfadsfds');
         autLog("Cron de procesamiento de audios programado para cada 2 minutos.");
     }
 }
@@ -14,14 +14,14 @@ function definir_cron_cada_dos_minutos($schedules)
 {
     if (!isset($schedules['cadaDosMinutos'])) {
         $schedules['cadaDosMinutos'] = array(
-            'interval' => 60,
+            'interval' => 30,
             'display'  => __('Cada 2 minutos')
         );
     }
     return $schedules;
 }
 
-add_action('gsdgfsdg', 'procesarAudios');
+add_action('dsfadsfds', 'procesarAudios');
 
 
 function procesarAudios()
@@ -72,7 +72,9 @@ function procesarAudios()
 
 function buscarUnAudioValido($directorio, $intentos = 0)
 {
-    $max_intentos = 50; // Número máximo de intentos recursivos
+    $max_intentos = 10; // Número máximo de intentos recursivos
+    $max_intentos_hash = 3; // Número máximo de intentos para calcular el hash
+
     if ($intentos >= $max_intentos) {
         autLog("Error: Se alcanzó el número máximo de intentos ($max_intentos) en buscarUnAudioValido.");
         return null;
@@ -120,10 +122,21 @@ function buscarUnAudioValido($directorio, $intentos = 0)
         }
 
         $archivo_seleccionado = $archivos[array_rand($archivos)];
-        $hash = recalcularHash($archivo_seleccionado);
+        $hash = null;
+        $intentos_hash = 0;
+
+        while ($intentos_hash < $max_intentos_hash && !$hash) {
+            $hash = recalcularHash($archivo_seleccionado);
+            $intentos_hash++;
+            
+            if (!$hash) {
+                autLog("Error: No se pudo calcular el hash del archivo '$archivo_seleccionado'. Intento $intentos_hash.");
+            }
+        }
 
         if (!$hash) {
-            autLog("Error: No se pudo calcular el hash del archivo '$archivo_seleccionado'. Reintentando.");
+            autLog("Error: No se pudo calcular el hash después de $max_intentos_hash intentos. Eliminando archivo.");
+            unlink($archivo_seleccionado);
             return buscarUnAudioValido($directorio, $intentos + 1);
         }
 
