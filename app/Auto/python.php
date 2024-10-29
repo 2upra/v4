@@ -2,7 +2,7 @@
 
 function procesarArchivoAudioPython($rutaArchivo) {
     // Comando para ejecutar el script de Python
-    $python_command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/Procesamiento/audio.py \"{$rutaArchivo}\"");
+    $python_command = escapeshellcmd("python3 /var/www/wordpress/wp-content/themes/2upra3v/app/python/audio.py \"{$rutaArchivo}\"");
     
     // Log de la ejecución
     iaLog("Ejecutando comando de Python: {$python_command}");

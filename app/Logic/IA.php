@@ -2,8 +2,6 @@
 
 use GuzzleHttp\Client;
 
-
-
 function generarDescripcionIAConURI($audio_uri, $prompt) {
     iaLog("Generando descripción IA con prompt: " . $prompt . " y URI: " . $audio_uri);
 

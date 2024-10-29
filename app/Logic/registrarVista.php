@@ -19,7 +19,7 @@ function guardarVista() {
             $fechaActual = time(); // Timestamp actual
 
             // Limpiar vistas antiguas (más de 30 días)
-            $vistasUsuario = limpiarVistasAntiguas($vistasUsuario, 30);
+            $vistasUsuario = limpiarVistasAntiguas($vistasUsuario, 7);
 
             // Incrementar o agregar la vista del post en la fecha actual
             if (isset($vistasUsuario[$idPost])) {
@@ -69,7 +69,7 @@ function obtenerVistasPosts($userId) {
     if (empty($vistas_posts)) {
         return [];
     }
-    $vistas_posts = limpiarVistasAntiguas($vistas_posts, 30); 
+    $vistas_posts = limpiarVistasAntiguas($vistas_posts, 7); 
 
     return $vistas_posts;
 }
