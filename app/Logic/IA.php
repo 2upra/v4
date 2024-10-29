@@ -186,15 +186,16 @@ function generarDescripcionIA($archivo_path, $prompt) {
         } else {
             $error_message = "Error: Respuesta inesperada de la API. Detalles: " . json_encode($bodyGenerate);
             iaLog($error_message);
-            return $error_message;
+            return false; // retorna false en caso de error
         }
 
     } catch (Exception $e) {
         $error_message = "Error: " . $e->getMessage();
         iaLog($error_message);
-        return $error_message;
+        return false; // retorna false en caso de error
     }
 }
+
 
 add_action('wp_ajax_ai_request', 'iaSend');
 add_action('wp_ajax_nopriv_ai_request', 'iaSend');

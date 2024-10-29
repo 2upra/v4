@@ -146,56 +146,62 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
         $descripcion_utf8 = mb_convert_encoding($descripcion, 'UTF-8', 'auto');
         $descripcion_procesada = json_decode(trim($descripcion_utf8, "```json \n"), true, 512, JSON_UNESCAPED_UNICODE);
 
-        if (isset($descripcion_procesada['descripcion_ia']) && is_array($descripcion_procesada['descripcion_ia'])) {
-            // Crear los nuevos datos con la estructura correcta
-            $nuevos_datos = [
-                'descripcion_ia' => [
-                    'es' => $descripcion_procesada['descripcion_ia']['es'] ?? '',
-                    'en' => $descripcion_procesada['descripcion_ia']['en'] ?? ''
-                ],
-                'instrumentos_principal' => [
-                    'es' => $descripcion_procesada['instrumentos_principal']['es'] ?? [],
-                    'en' => $descripcion_procesada['instrumentos_principal']['en'] ?? []
-                ],
-                'nombre_corto' => [
-                    'es' => $descripcion_procesada['nombre_corto']['es'] ?? '',
-                    'en' => $descripcion_procesada['nombre_corto']['en'] ?? ''
-                ],
-                'descripcion_corta' => [
-                    'es' => $descripcion_procesada['descripcion_corta']['es'] ?? '',
-                    'en' => $descripcion_procesada['descripcion_corta']['en'] ?? ''
-                ],
-                'estado_animo' => [
-                    'es' => $descripcion_procesada['estado_animo']['es'] ?? [],
-                    'en' => $descripcion_procesada['estado_animo']['en'] ?? []
-                ],
-                'artista_posible' => [
-                    'es' => $descripcion_procesada['artista_posible']['es'] ?? [],
-                    'en' => $descripcion_procesada['artista_posible']['en'] ?? []
-                ],
-                'genero_posible' => [
-                    'es' => $descripcion_procesada['genero_posible']['es'] ?? [],
-                    'en' => $descripcion_procesada['genero_posible']['en'] ?? []
-                ],
-                'tipo_audio' => [
-                    'es' => $descripcion_procesada['tipo_audio']['es'] ?? '',
-                    'en' => $descripcion_procesada['tipo_audio']['en'] ?? ''
-                ],
-                'tags_posibles' => [
-                    'es' => $descripcion_procesada['tags_posibles']['es'] ?? [],
-                    'en' => $descripcion_procesada['tags_posibles']['en'] ?? []
-                ],
-                'sugerencia_busqueda' => [
-                    'es' => $descripcion_procesada['sugerencia_busqueda']['es'] ?? [],
-                    'en' => $descripcion_procesada['sugerencia_busqueda']['en'] ?? []
-                ]
-            ];
-
-            //autLog("Descripción del audio guardada para el post ID: {$nombre_archivo}");
+        // Comprobar que la decodificación JSON fue exitosa y que el campo 'descripcion_ia' existe
+        if (!$descripcion_procesada || !isset($descripcion_procesada['descripcion_ia']) || !is_array($descripcion_procesada['descripcion_ia'])) {
+            iaLog("Error: La descripción procesada no tiene el formato esperado.");
+            return false; // Retornar false en caso de error de formato
         }
-    }
 
-    
+        // Crear los nuevos datos con la estructura correcta
+        $nuevos_datos = [
+            'descripcion_ia' => [
+                'es' => $descripcion_procesada['descripcion_ia']['es'] ?? '',
+                'en' => $descripcion_procesada['descripcion_ia']['en'] ?? ''
+            ],
+            'instrumentos_principal' => [
+                'es' => $descripcion_procesada['instrumentos_principal']['es'] ?? [],
+                'en' => $descripcion_procesada['instrumentos_principal']['en'] ?? []
+            ],
+            'nombre_corto' => [
+                'es' => $descripcion_procesada['nombre_corto']['es'] ?? '',
+                'en' => $descripcion_procesada['nombre_corto']['en'] ?? ''
+            ],
+            'descripcion_corta' => [
+                'es' => $descripcion_procesada['descripcion_corta']['es'] ?? '',
+                'en' => $descripcion_procesada['descripcion_corta']['en'] ?? ''
+            ],
+            'estado_animo' => [
+                'es' => $descripcion_procesada['estado_animo']['es'] ?? [],
+                'en' => $descripcion_procesada['estado_animo']['en'] ?? []
+            ],
+            'artista_posible' => [
+                'es' => $descripcion_procesada['artista_posible']['es'] ?? [],
+                'en' => $descripcion_procesada['artista_posible']['en'] ?? []
+            ],
+            'genero_posible' => [
+                'es' => $descripcion_procesada['genero_posible']['es'] ?? [],
+                'en' => $descripcion_procesada['genero_posible']['en'] ?? []
+            ],
+            'tipo_audio' => [
+                'es' => $descripcion_procesada['tipo_audio']['es'] ?? '',
+                'en' => $descripcion_procesada['tipo_audio']['en'] ?? ''
+            ],
+            'tags_posibles' => [
+                'es' => $descripcion_procesada['tags_posibles']['es'] ?? [],
+                'en' => $descripcion_procesada['tags_posibles']['en'] ?? []
+            ],
+            'sugerencia_busqueda' => [
+                'es' => $descripcion_procesada['sugerencia_busqueda']['es'] ?? [],
+                'en' => $descripcion_procesada['sugerencia_busqueda']['en'] ?? []
+            ]
+        ];
+
+        //autLog("Descripción del audio guardada para el post ID: {$nombre_archivo}");
+    } else {
+        // Si no se generó ninguna descripción, retornar false
+        iaLog("Error: No se pudo generar la descripción.");
+        return false;
+    }
 
     $nuevos_datos_algoritmo = isset($nuevos_datos) ? [
         'bpm' => $resultados['bpm'] ?? '',
@@ -225,7 +231,6 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     $nombre_archivo = pathinfo($rutaOriginal, PATHINFO_FILENAME);
     $carpeta = basename(dirname($rutaOriginal));
     $carpeta_abuela = basename(dirname(dirname($rutaOriginal)));
-
     $datosAlgoritmo = automaticAudio($rutaWpLite, $nombre_archivo, $carpeta, $carpeta_abuela);
     if (!$datosAlgoritmo) {
         eliminarHash($file_id);
@@ -253,9 +258,11 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     $extension_original = pathinfo($rutaOriginal, PATHINFO_EXTENSION);
     $nuevaRutaOriginal = dirname($rutaOriginal) . '/' . $nombre_final . '.' . $extension_original;
     if (!file_exists($rutaOriginal) || (file_exists($nuevaRutaOriginal) && !unlink($nuevaRutaOriginal))) {
+        eliminarHash($file_id);
         return;
     }
     if (!rename($rutaOriginal, $nuevaRutaOriginal)) {
+        eliminarHash($file_id);
         return;
     }
 
@@ -264,9 +271,11 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     $extension_lite = pathinfo($rutaWpLite, PATHINFO_EXTENSION);
     $nuevo_nombre_lite = dirname($rutaWpLite) . '/' . $nombre_final . '_lite.' . $extension_lite;
     if (file_exists($nuevo_nombre_lite) && !unlink($nuevo_nombre_lite)) {
+        eliminarHash($file_id);
         return;
     }
     if (!rename($rutaWpLite, $nuevo_nombre_lite)) {
+        eliminarHash($file_id);
         return;
     }
 
@@ -284,10 +293,14 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
         'post_author'   => $autor_id,
         'post_type'     => 'social_post',
     ];
+
     $post_id = wp_insert_post($post_data);
-
-    if (is_wp_error($post_id)) return $post_id;
-
+    if (is_wp_error($post_id)) {
+        wp_delete_post($post_id, true);
+        eliminarHash($file_id);
+        return;
+    }
+    
     update_post_meta($post_id, 'rutaOriginal', $nuevaRutaOriginal);
     update_post_meta($post_id, 'rutaLiteOriginal', $nuevo_nombre_lite);
     update_post_meta($post_id, 'postAut', true);
@@ -296,7 +309,6 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     if (is_wp_error($audio_original_id)) {
         wp_delete_post($post_id, true);
         eliminarHash($file_id);
-
         return $audio_original_id;
     }
 
@@ -306,11 +318,10 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     $audio_lite_id = adjuntarArchivoAut($nuevo_nombre_lite, $post_id);
     if (is_wp_error($audio_lite_id)) {
+        wp_delete_post($post_id, true);
         eliminarHash($file_id);
         return $audio_lite_id;
     }
-    
-
 
     // Metadatos del post
     update_post_meta($post_id, 'post_audio', $audio_original_id);
