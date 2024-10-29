@@ -36,7 +36,7 @@ function register_custom_post_types() {
         $name = $type[0];
         $singular = $type[1];
         $slug = $type[2];
-        $icon = isset($type[3]) ? $type[3] : null; // Asegurarse que $icon tiene un valor válido
+        $icon = isset($type[3]) ? $type[3] : null; 
 
         $args = [
             'labels' => [
