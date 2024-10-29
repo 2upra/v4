@@ -10,7 +10,7 @@ set_time_limit(0);
 if (!defined('HASH_SIMILARITY_THRESHOLD')) {
     define('HASH_SIMILARITY_THRESHOLD', 0.7);  
 }
-define('WRAPPER_SCRIPT_PATH', '/var/www/wordpress/wp-content/themes/2upra3v/app/python/audio.py');
+define('WRAPPER_SCRIPT_PATH', '/var/www/wordpress/wp-content/themes/2upra3v/app/Commands/process_audio.sh');
 
 
 function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD)
