@@ -320,13 +320,13 @@ function calcularPuntosIntereses($post_id, $datos)
                 if (isset($value[$lang]) && is_array($value[$lang])) {
                     foreach ($value[$lang] as $item) {
                         if (isset($datos['interesesUsuario'][$item])) {
-                            $puntosIntereses += 1 + $datos['interesesUsuario'][$item]->intensity;
+                            $puntosIntereses += 10 + $datos['interesesUsuario'][$item]->intensity;
                         }
                     }
                 }
             }
         } elseif (!empty($value) && isset($datos['interesesUsuario'][$value])) {
-            $puntosIntereses += 1 + $datos['interesesUsuario'][$value]->intensity;
+            $puntosIntereses += 10 + $datos['interesesUsuario'][$value]->intensity;
         }
     }
 
@@ -356,8 +356,8 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
     $puntosLikes = 5 + $likes;
 
     // Decaimiento por tiempo
-    $horasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / 3600;
-    $factorTiempo = pow(0.99, $horasDesdePublicacion);
+    $diasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / (3600 * 24);
+    $factorTiempo = pow(0.99, $diasDesdePublicacion);    
 
     // Obtener 'Verificado' y 'postAut'
     $metaVerificado = isset($datos['verificado_results'][$post_id]->meta_value) && $datos['verificado_results'][$post_id]->meta_value == '1';
