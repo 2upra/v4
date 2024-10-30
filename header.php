@@ -74,9 +74,11 @@ if (!defined('ABSPATH')) {
     <link rel="manifest" href="/manifest.json">
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="https://2upra.com/wp-content/themes/2upra3v/assets/icons/ms-icon-144x144.png">
-    <meta name="theme-color" content="#ffffff"
-        <link rel="icon" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-96x96.png">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="icon" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-96x96.png">
     <link rel="manifest" href="<?php echo get_template_directory_uri(); ?>/assets/icons/manifest.json">
+    <link rel="icon" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-32x32.png" sizes="32x32" type="image/png">
+
 
 </head>
 
