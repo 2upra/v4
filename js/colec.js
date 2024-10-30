@@ -1,16 +1,27 @@
 let selectedPostId = null;
 let selectedCollectionId = null;
 
-
+// Función para manejar el modal de colecciones
 function colec() {
+    // Referencia al modal
+    const modal = document.querySelector('.modalColec');
+    let darkBackground = null; // Variable para almacenar el fondo oscuro
+
     // Función para abrir el modal
     function openModal() {
-        document.querySelector('.modalColec').style.display = 'block';
+        modal.style.display = 'block';
+        darkBackground = window.createModalDarkBackground(modal);
+        // Bloquear el scroll de la página
+        document.body.style.overflow = 'hidden';
     }
 
     // Función para cerrar el modal
     function closeModal() {
-        document.querySelector('.modalColec').style.display = 'none';
+        modal.style.display = 'none';
+        window.removeModalDarkBackground(darkBackground);
+        darkBackground = null;
+        // Restaurar el scroll de la página
+        document.body.style.overflow = '';
     }
 
     // Delegar el evento click en los botones de colección
@@ -68,10 +79,9 @@ function colec() {
         }
     });
 
-    // Manejar el cierre del modal al hacer clic fuera de él
-    window.addEventListener('click', function (e) {
-        const modal = document.querySelector('.modalColec');
-        if (e.target == modal) {
+    // Manejar el cierre del modal al hacer clic fuera de él (en el fondo oscuro)
+    document.body.addEventListener('click', function (e) {
+        if (darkBackground && e.target === darkBackground) {
             closeModal();
         }
     });
@@ -92,3 +102,6 @@ function colec() {
         });
     });
 }
+
+// Inicializar la funcionalidad de colecciones cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', colec);
