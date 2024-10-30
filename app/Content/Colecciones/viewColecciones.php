@@ -33,7 +33,13 @@ function modalColeccion($postId = null)
                 <li class="coleccion borde" id="despues">
                     <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg', 40, 'all') ?>" alt=""><span>Usar mas tarde</span>
                 </li>
+                <li class="coleccion borde" id="agregarColec">
+                    <p>Agregar nueva coleccion</p>
+                </li>
+
             </ul>
+
+            <button class="botonprincipal">Listo</button>
         </div>
     </div>
 <?
@@ -53,5 +59,3 @@ function botonColeccion($postId)
 
 <?
 }
-
-
