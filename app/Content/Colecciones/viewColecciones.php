@@ -17,7 +17,7 @@
 
 
 */
-
+//en el header
 function modalColeccion()
 {
     // Obtener el ID del usuario actual

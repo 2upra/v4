@@ -1,6 +1,8 @@
 let selectedPostId = null;
 let selectedCollectionId = null;
 
+
+//EL MODAL SE ABRE PERO NO APARECE EL BACKGROUDND OS
 function colec() {
     // Variables para almacenar el fondo oscuro y el modal
     let darkBackground = null;
@@ -138,30 +140,84 @@ function colec() {
     }
 }
 
-// Función para crear y mostrar el fondo oscuro al mismo nivel que el modal
-window.createModalDarkBackgroundColec = function(modal) {
+
+// Función para crear y mostrar el fondo oscuro al mismo nivel que el submenú
+window.createModalDarkBackgroundColec = function(submenu) {
     const darkBackground = document.createElement('div');
-    darkBackground.classList.add('modal-background');
-    document.body.appendChild(darkBackground);
+    darkBackground.classList.add('submenu-background');
+    darkBackground.style.position = 'fixed';
+    darkBackground.style.top = 0;
+    darkBackground.style.left = 0;
+    darkBackground.style.width = '100vw';
+    darkBackground.style.height = '100vh';
+    darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    darkBackground.style.zIndex = 998; // Debe estar por debajo del submenú
+    darkBackground.style.pointerEvents = 'auto';
 
-    // Forzar reflow para que la transición CSS funcione
-    void darkBackground.offsetWidth;
-
-    // Añadir la clase 'show' para la transición
-    darkBackground.classList.add('show');
+    // Insertar el background justo antes del submenu, como hermano
+    submenu.parentNode.insertBefore(darkBackground, submenu);
 
     return darkBackground;
 };
 
-// Función para remover el fondo oscuro del modal
+// Función para remover el fondo oscuro del submenú
 window.removeModalDarkBackgroundColec = function(darkBackground) {
-    if (darkBackground) {
-        darkBackground.classList.remove('show');
-        // Espera a que termine la transición antes de remover
-        darkBackground.addEventListener('transitionend', function() {
-            if (darkBackground.parentNode) {
-                darkBackground.parentNode.removeChild(darkBackground);
-            }
-        });
+    if (darkBackground && darkBackground.parentNode) {
+        darkBackground.parentNode.removeChild(darkBackground);
     }
 };
+
+
+/*
+//en el header
+function modalColeccion()
+{
+    // Obtener el ID del usuario actual
+    $current_user_id = get_current_user_id();
+
+    // Consultar las colecciones del usuario
+    $args = array(
+        'post_type'      => 'colecciones',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'author'         => $current_user_id,
+    );
+
+    $user_collections = new WP_Query($args);
+    ?>
+    <div class="modalColec modal" style="display: none;">
+        <div class="colecciones">
+            <h3>Colecciones</h3>
+            <input type="text" placeholder="Buscar colección" id="buscarColeccion">
+
+            <ul class="listaColeccion borde">
+                <li class="coleccion" id="favoritos">
+                    <img src="<?php echo esc_url('https://2upra.com/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg'); ?>" alt=""><span>Favoritos</span>
+                </li>
+                <li class="coleccion borde" id="despues">
+                    <img src="<?php echo esc_url('https://2upra.com/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg'); ?>" alt=""><span>Usar más tarde</span>
+                </li>
+
+                <?php if ($user_collections->have_posts()) : ?>
+                    <?php while ($user_collections->have_posts()) : $user_collections->the_post(); ?>
+                        <li class="coleccion borde" data-id="<?php the_ID(); ?>">
+                            <img src="<?php echo esc_url(get_the_post_thumbnail_url(get_the_ID(), 'thumbnail')); ?>" alt="">
+                            <span><?php the_title(); ?></span>
+                        </li>
+                    <?php endwhile; ?>
+                    <?php wp_reset_postdata(); ?>
+                <?php else : ?>
+                    <li class="coleccion borde"></li>
+                <?php endif; ?>
+            </ul>
+
+            <div class="XJAAHB">
+                <button class="botonsecundario">Nueva colección</button>
+                <button class="botonprincipal" id="btnListo">Listo</button>
+            </div>
+        </div>
+    </div>
+    <?php
+}
+
+*/

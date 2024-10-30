@@ -49,3 +49,4 @@ window.removeModalDarkBackground = function(darkBackground) {
         darkBackground.parentNode.removeChild(darkBackground);
     }
 };
+
