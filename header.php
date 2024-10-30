@@ -299,6 +299,9 @@ if (!defined('ABSPATH')) {
                     </div>
                 </div>
 
+                <? echo modalColeccion() ?>
+                <? echo modalCreacionColeccion() ?>
+
                 <!-- colab modal -->
                 <div id="modalcolab" class="modal gap-4" style="display: none;">
                     <textarea id="textareaColab" placeholder="Escribe un mensaje para tu solicitud de colaboración. Debes esperar que la solicitud sea aceptada." rows="2"></textarea>

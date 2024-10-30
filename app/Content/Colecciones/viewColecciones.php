@@ -18,40 +18,77 @@
 
 */
 
-function modalColeccion($postId = null)
+function modalColeccion()
 {
+    // Obtener el ID del usuario actual
+    $current_user_id = get_current_user_id();
 
-    ob_start();
-?>
-    <div class="modalColec modal">
+    // Consultar las colecciones del usuario
+    $args = array(
+        'post_type'      => 'colecciones',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'author'         => $current_user_id,
+    );
+
+    $user_collections = new WP_Query($args);
+    ?>
+    <div class="modalColec modal" style="display: none;">
         <div class="colecciones">
             <h3>Colecciones</h3>
-            <input type="text" placeholder="Buscar colección">
+            <input type="text" placeholder="Buscar colección" id="buscarColeccion">
 
             <ul class="listaColeccion borde">
                 <li class="coleccion" id="favoritos">
-                    <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg', 40, 'all') ?>" alt=""><span>Favoritos</span>
+                    <img src="<?php echo esc_url('https://2upra.com/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg'); ?>" alt=""><span>Favoritos</span>
                 </li>
                 <li class="coleccion borde" id="despues">
-                    <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg', 40, 'all') ?>" alt=""><span>Usar mas tarde</span>
+                    <img src="<?php echo esc_url('https://2upra.com/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg'); ?>" alt=""><span>Usar más tarde</span>
                 </li>
+
+                <?php if ($user_collections->have_posts()) : ?>
+                    <?php while ($user_collections->have_posts()) : $user_collections->the_post(); ?>
+                        <li class="coleccion borde" data-id="<?php the_ID(); ?>">
+                            <img src="<?php echo esc_url(get_the_post_thumbnail_url(get_the_ID(), 'thumbnail')); ?>" alt="">
+                            <span><?php the_title(); ?></span>
+                        </li>
+                    <?php endwhile; ?>
+                    <?php wp_reset_postdata(); ?>
+                <?php else : ?>
+                    <li class="coleccion borde"></li>
+                <?php endif; ?>
             </ul>
 
             <div class="XJAAHB">
-                <button class="botonsecundario">Nueva coleccion</button>
-                <button class="botonprincipal">Listo</button>
+                <button class="botonsecundario">Nueva colección</button>
+                <button class="botonprincipal" id="btnListo">Listo</button>
             </div>
         </div>
     </div>
+    <?php
+}
+
+
+function botonColeccion($postId)
+{
+    ob_start();
+?>
+    <div class="ZAQIBB botonColeccion">
+        <button class="botonColeccionBtn" data-post_id="<? esc_attr($postId) ?>" data-nonce="<? wp_create_nonce('colec_nonce') ?>">
+            <? echo $GLOBALS['iconoGuardar']; ?>
+        </button>
+    </div>
+
 <?
 }
+
 
 function modalCreacionColeccion($postId = null)
 {
 
     ob_start();
 ?>
-    <div class="modalColec crearColec modal">
+    <div class="modalColec crearColec modal" style="display: none;">
         <div class="colecciones formColec">
             <h3>Crear colección</h3>
             <div class="previewAreaArchivos previewColec" id="previewImagenColec">
@@ -63,20 +100,5 @@ function modalCreacionColeccion($postId = null)
             <button class="botonprincipal">Crear</button>
         </div>
     </div>
-<?
-}
-
-function botonColeccion($postId)
-{
-
-    ob_start();
-?>
-
-    <div class="ZAQIBB botonColeccion">
-        <button class="botonColeccionBtn" data-post_id="<? esc_attr($postId) ?>" data-nonce="<? wp_create_nonce('colec_nonce') ?>">
-            <? echo $GLOBALS['iconoGuardar']; ?>
-        </button>
-    </div>
-
 <?
 }

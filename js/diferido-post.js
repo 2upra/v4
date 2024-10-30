@@ -180,7 +180,7 @@
             listaPublicaciones.insertAdjacentHTML('beforeend', respuesta);
             log('Contenido añadido');
             paginaActual++;
-            ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas'].forEach(funcion => {
+            ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec'].forEach(funcion => {
                 if (typeof window[funcion] === 'function') window[funcion]();
             });
 
