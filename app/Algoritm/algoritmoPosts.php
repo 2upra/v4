@@ -407,9 +407,9 @@ function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $
         }
     } else {
         if ($metaVerificado && !$metaPostAut) {
-            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.5;
+            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.7;
         } elseif (!$metaVerificado && $metaPostAut) {
-            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.5;
+            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.3;
         }
     }
 
