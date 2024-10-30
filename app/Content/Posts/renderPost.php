@@ -112,6 +112,7 @@ function htmlPost($filtro)
                         <? echo botonComentar($post_id, $colab) ?>
                         <? echo botonDescarga($post_id) ?>
                         <? echo botonColab($post_id, $colab) ?>
+                        <? echo botonColeccion($post_id) ?>
                     </div>
                 </div>
             </div>

@@ -18,13 +18,14 @@
 
 */
 
-function modalColeccion($postId)
+function modalColeccion($postId = null)
 {
-    
+
     ob_start();
 ?>
     <div class="modalColec modal">
         <div class="colecciones">
+            <h3>Colecciones</h3>
             <ul class="listaColeccion">
                 <li class="coleccion" id="favoritos">
 
@@ -35,19 +36,22 @@ function modalColeccion($postId)
             </ul>
         </div>
     </div>
+<?
+}
 
+function botonColeccion($postId = null)
+{
+
+    ob_start();
+?>
+
+    <div class="TJKQGJ botonColeccion">
+        <button class="botonColeccionBtn" data-post_id="<?// esc_attr($postId) ?>" data-nonce="<?// wp_create_nonce('like_post_nonce') ?>">
+            <? echo $GLOBALS['iconoGuardar']; ?>
+        </button>
+    </div>
 
 <?
 }
 
-function botonGuardarColeccion() {
 
-    ob_start();
-    ?>
-
-    <div>
-
-    </div>
-    
-    <?
-}

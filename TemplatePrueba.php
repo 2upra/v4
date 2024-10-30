@@ -22,7 +22,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 
                 <div class="tab INICIO S4K7I3" id="Colecciones">
                     <div class="GSDKRA">
-                        <div><? echo colabTest(); ?></div>
+                        <div><? echo modalColeccion(); ?></div>
                     </div>
                 </div>
 
