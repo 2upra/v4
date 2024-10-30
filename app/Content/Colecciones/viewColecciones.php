@@ -27,7 +27,7 @@ function modalColeccion($postId = null)
         <div class="colecciones">
             <h3>Colecciones</h3>
             <input type="text" placeholder="Buscar colección">
-            
+
             <ul class="listaColeccion borde">
                 <li class="coleccion" id="favoritos">
                     <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg', 40, 'all') ?>" alt=""><span>Favoritos</span>
@@ -38,6 +38,7 @@ function modalColeccion($postId = null)
             </ul>
 
             <div class="XJAAHB">
+                <button class="botonsecundario">Nueva coleccion</button>
                 <button class="botonprincipal">Listo</button>
             </div>
         </div>
