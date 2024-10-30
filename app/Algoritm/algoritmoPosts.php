@@ -399,29 +399,23 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
 #PASO 5
 function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
 {
-    $puntosBase = $puntosUsuario + $puntosIntereses + $puntosLikes;
-
     if ($esAdmin) {
-        // Si es admin y el post está verificado, reducir su relevancia
-        if ($metaVerificado) {
-            return $puntosBase * 0.1; // Reducir relevancia para posts verificados
-        } elseif ($metaPostAut) {
-            return $puntosBase * 1.9; // Aumentar relevancia para post automaticos
+
+        if (!$metaVerificado && $metaPostAut) {
+            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.9;
+        } elseif ($metaVerificado && !$metaPostAut) {
+            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
         }
     } else {
-        // Si es usuario normal, darle más relevancia a los posts verificados
-        if ($metaVerificado) {
-            return $puntosBase * 1.9;
-        } elseif ($metaPostAut) {
-            return $puntosBase * 0.1; // Reducir relevancia para post automaticos sin verificación
+        if ($metaVerificado && $metaPostAut) {
+            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.9;
+        } elseif (!$metaVerificado && $metaPostAut) {
+            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
         }
     }
 
-    // Si no cumple ninguna de las condiciones, devolver el puntaje base
-    return $puntosBase;
+    return $puntosUsuario + $puntosIntereses + $puntosLikes;
 }
-
-
 
 # CALCULO START
 function calcularFeedPersonalizado($userId)
