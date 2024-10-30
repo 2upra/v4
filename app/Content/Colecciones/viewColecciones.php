@@ -27,6 +27,7 @@ function modalColeccion($postId = null)
         <div class="colecciones">
             <h3>Colecciones</h3>
             <input type="text" placeholder="Buscar colección">
+            
             <ul class="listaColeccion borde">
                 <li class="coleccion" id="favoritos">
                     <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg', 40, 'all') ?>" alt=""><span>Favoritos</span>
@@ -34,13 +35,11 @@ function modalColeccion($postId = null)
                 <li class="coleccion borde" id="despues">
                     <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg', 40, 'all') ?>" alt=""><span>Usar mas tarde</span>
                 </li>
-                <li class="coleccion borde" id="agregarColec">
-                    <p>Agregar nueva coleccion</p>
-                </li>
-
             </ul>
 
-            <button class="botonprincipal">Listo</button>
+            <div class="XJAAHB">
+                <button class="botonprincipal">Listo</button>
+            </div>
         </div>
     </div>
 <?
@@ -53,12 +52,12 @@ function modalCreacionColeccion($postId = null)
 ?>
     <div class="modalColec crearColec modal">
         <div class="colecciones formColec">
-            <h3>Crear coleccion</h3>
+            <h3>Crear colección</h3>
             <div class="previewAreaArchivos previewColec" id="previewImagenColec">
-                <label>Agregar imagen</label>
+                <label>Agregar imagen (opcional)</label>
             </div>
-            <input type="text" placeholder="Nombre de la coleccion">
-            <input type="text" placeholder="Descripción de la coleccion">
+            <input type="text" placeholder="Nombre de la colección">
+            <input type="text" placeholder="Descripción de la colección (opcional)">
 
             <button class="botonprincipal">Crear</button>
         </div>
