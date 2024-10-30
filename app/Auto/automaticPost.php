@@ -123,6 +123,9 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
     if ($carpeta_abuela) {
         $informacion_archivo .= "Carpeta abuela: '{$carpeta_abuela}'\n";
     }
+    if ($rutaArchivo) {
+        $informacion_archivo .= "Ruta completa: '{$rutaArchivo}'\n";
+    }
 
     $prompt = "Este audio fue subido automáticamente. "
         . "{$informacion_archivo}"
@@ -137,7 +140,7 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
         . '"tipo_audio":{"es":["determina si es un sample, un loop o un one shot"], "en":["Sample"]},'
         . '"tags_posibles":{"es":["Naturaleza", "phonk", "memphis", "oscuro"], "en":["Nature"]},'
         . '"sugerencia_busqueda":{"es":["Sonido relajante"], "en":["Relaxing sound"]}}.'
-        . " Nota adicional: responde solo con la estructura JSON solicitada, mantén datos vacíos si no aplica. Es crucial determinar si es un loop, un one shot o un sample. Usa tags de una palabra y optimiza el SEO con sugerencias de búsqueda relevantes. Sé muy detallado sin perder precisión. Aunque te pido en español y en ingles, hay algunas palabras que son mejor mantenerlas en ingles cuando en español son muy frecuentes, por ejemplo, kick, snare, cowbell, etc.";
+        . " Nota adicional: responde solo con la estructura JSON solicitada, mantén datos vacíos si no aplica. Es crucial determinar si es un loop, un one shot o un sample. Usa tags de una palabra y optimiza el SEO con sugerencias de búsqueda relevantes. Sé muy detallado sin perder precisión. Aunque te pido en español y en ingles, hay algunas palabras que son mejor mantenerlas en ingles cuando en español son muy frecuentes, por ejemplo, kick, snare, cowbell, etc. Ignora '/home/asley01/MEGA/Waw/Kits' no es relevante, el resto de la ruta si.";
 
     $descripcion = generarDescripcionIA($rutaArchivo, $prompt);
 
@@ -300,7 +303,7 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
         eliminarHash($file_id);
         return;
     }
-    
+
     update_post_meta($post_id, 'rutaOriginal', $nuevaRutaOriginal);
     update_post_meta($post_id, 'rutaLiteOriginal', $nuevo_nombre_lite);
     update_post_meta($post_id, 'postAut', true);

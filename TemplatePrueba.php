@@ -12,12 +12,19 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
         <input type="hidden" id="pagina_actual" name="pagina_actual" value="<? echo esc_attr(get_the_title()); ?>">
 
         <div id="menuData" style="display:none;" pestanaActual="">
+            <div data-tab="Colecciones"> </div>
             <div data-tab="Colab"></div>
             <div data-tab="SubirRola"></div>
         </div>
 
         <div class="tabs">
             <div class="tab-content">
+
+                <div class="tab INICIO S4K7I3" id="Colecciones">
+                    <div class="GSDKRA">
+                        <div><? echo colabTest(); ?></div>
+                    </div>
+                </div>
 
                 <div class="tab INICIO S4K7I3" id="Colab">
                     <div class="GSDKRA">

@@ -29,7 +29,7 @@ function register_custom_post_types() {
         'albums' => ['Albums', 'Album', 'album', 'dashicons-format-audio'],
         'stories' => ['Momentos', 'Momento', 'momentos', 'dashicons-camera'],
         'colab' => ['Colaboraciones', 'Colaboración', 'colab', 'dashicons-share-alt2'],
-        'Colecciones' =>  ['Colecciones', 'Colección', 'colecciones', 'dashicons-book']  
+        'colecciones' =>  ['Colecciones', 'Colección', 'colecciones', 'dashicons-book']  
     ];
 
     foreach ($post_types as $key => $type) {

@@ -125,7 +125,6 @@ function empezarColab() {
     wp_die();
 }
 
-
 function adjuntarArchivo($newPostId, $fileUrl) {
     global $wpdb;
     $attachment_id = $wpdb->get_var($wpdb->prepare(
@@ -163,10 +162,10 @@ function adjuntarArchivo($newPostId, $fileUrl) {
     if ($attachment_id) {
         update_post_meta($newPostId, 'colabFileId', $attachment_id);
         update_post_meta($newPostId, 'colabFileUrl', $fileUrl);
-        $mime_type = get_post_mime_type($attachment_id); // Obtenemos el tipo MIME
+        $mime_type = get_post_mime_type($attachment_id); 
         if (strpos($mime_type, 'audio') !== false) {
-            $audio_id = $attachment_id; // Usa el attachment_id como el audio_id
-            $index = 1; // Usamos el índice 1 según la solicitud
+            $audio_id = $attachment_id; 
+            $index = 1; 
             procesarAudioLigero($newPostId, $audio_id, $index);
         }
 
@@ -176,7 +175,6 @@ function adjuntarArchivo($newPostId, $fileUrl) {
 
     return false;
 }
-
 
 add_action('wp_ajax_empezarColab', 'empezarColab');
 
