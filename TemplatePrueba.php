@@ -34,7 +34,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 
                 <div class="tab INICIO S4K7I3" id="SubirRola">
                     <div class="GSDKRA">
-                        <div><? echo postRolaFormTest(); ?></div>
+                        <div><? echo //postRolaFormTest(); ?></div>
                     </div>
                 </div>
 
