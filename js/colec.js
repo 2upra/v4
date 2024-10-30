@@ -2,100 +2,28 @@ let selectedPostId = null;
 let selectedCollectionId = null;
 
 function colec() {
-    const modal = document.querySelector('.modalColec');
-    if (!modal) {
-        console.error('No se encontró el elemento con la clase .modalColec');
-        return;
-    }
+    initializeColec();
+}
 
-    let darkBackground = null;
-
-    const openModal = () => {
-        modal.style.display = 'block';
-        darkBackground = createDarkBackground();
-        document.body.classList.add('no-scroll');
-    };
-
-    const closeModal = () => {
-        modal.style.display = 'none';
-        removeDarkBackground();
-        document.body.classList.remove('no-scroll');
-        resetSelections();
-    };
-
-    const createDarkBackground = () => {
-        const bg = document.createElement('div');
-        bg.classList.add('submenu-background');
-        Object.assign(bg.style, {
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            width: '100vw',
-            height: '100vh',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: '998',
-            pointerEvents: 'auto'
-        });
-        document.body.appendChild(bg);
-        bg.addEventListener('click', closeModal, { once: true });
-        return bg;
-    };
-
-    const removeDarkBackground = () => {
-        if (darkBackground) {
-            darkBackground.remove();
-            darkBackground = null;
-        }
-    };
-
-    const resetSelections = () => {
-        selectedPostId = null;
-        selectedCollectionId = null;
-        document.querySelectorAll('.coleccion').forEach(item => item.classList.remove('seleccion'));
-    };
-
-    const handleCollectionClick = (coleccion) => {
-        document.querySelectorAll('.coleccion').forEach(item => item.classList.remove('seleccion'));
-        coleccion.classList.add('seleccion');
-        selectedCollectionId = coleccion.getAttribute('data-id') || coleccion.id;
-    };
-
-    const handleListoClick = () => {
-        if (selectedPostId && selectedCollectionId) {
-            console.log('Post ID:', selectedPostId);
-            console.log('Collection ID:', selectedCollectionId);
-            closeModal();
-        } else {
-            alert('Por favor, selecciona una colección.');
-        }
-    };
-
-    const filterCollections = (query) => {
-        document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
-            const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
-            coleccion.style.display = titulo.includes(query) ? 'flex' : 'none';
-        });
-    };
-
+function initializeColec() {
+    // Delegación de eventos para botones de colección
     document.body.addEventListener('click', (e) => {
         const btn = e.target.closest('.botonColeccionBtn');
         if (btn) {
             e.preventDefault();
             selectedPostId = btn.getAttribute('data-post_id');
-            openModal();
+            openColecModal();
         }
     });
 
-    const listaColecciones = document.querySelector('.listaColeccion');
-    if (listaColecciones) {
-        listaColecciones.addEventListener('click', (e) => {
-            const coleccion = e.target.closest('.coleccion');
-            if (coleccion) handleCollectionClick(coleccion);
-        });
-    } else {
-        console.error('No se encontró el elemento con la clase .listaColeccion');
-    }
+    document.addEventListener('click', (e) => {
+        const coleccion = e.target.closest('.coleccion');
+        if (coleccion && coleccion.closest('.listaColeccion')) {
+            handleCollectionClick(coleccion);
+        }
+    });
 
+    // Evento para el botón "Listo"
     const btnListo = document.getElementById('btnListo');
     if (btnListo) {
         btnListo.addEventListener('click', handleListoClick);
@@ -103,6 +31,7 @@ function colec() {
         console.error('No se encontró el botón con el ID #btnListo');
     }
 
+    // Evento para el input de búsqueda
     const buscarInput = document.getElementById('buscarColeccion');
     if (buscarInput) {
         buscarInput.addEventListener('input', () => {
@@ -112,59 +41,96 @@ function colec() {
     } else {
         console.error('No se encontró el input con el ID #buscarColeccion');
     }
+
+    // Escuchar la apertura de otros modales para resetear selecciones
+    document.addEventListener('modalOpened', () => {
+        resetSelections();
+    });
+}
+
+// Función para eliminar el fondo oscuro
+function removeDarkBackgroundColec() {
+    const darkBackground = document.querySelector('.submenu-background');
+    if (darkBackground) {
+        darkBackground.remove();
+    }
+}
+
+// Función para resetear las selecciones
+function resetSelections() {
+    selectedPostId = null;
+    selectedCollectionId = null;
+    document.querySelectorAll('.coleccion').forEach(item => item.classList.remove('seleccion'));
+}
+
+// Función para manejar el clic en una colección
+function handleCollectionClick(coleccion) {
+    document.querySelectorAll('.coleccion').forEach(item => item.classList.remove('seleccion'));
+    coleccion.classList.add('seleccion');
+    selectedCollectionId = coleccion.getAttribute('data-id') || coleccion.id;
+}
+
+// Función para manejar el clic en "Listo"
+function handleListoClick() {
+    if (selectedPostId && selectedCollectionId) {
+        console.log('Post ID:', selectedPostId);
+        console.log('Collection ID:', selectedCollectionId);
+        closeColecModal();
+    } else {
+        alert('Por favor, selecciona una colección.');
+    }
+}
+
+// Función para filtrar colecciones
+function filterCollections(query) {
+    document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
+        const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
+        coleccion.style.display = titulo.includes(query) ? 'flex' : 'none';
+    });
+}
+
+// Función para abrir el modal
+function openColecModal() {
+    const modal = document.querySelector('.modalColec');
+    if (!modal) {
+        console.error('No se encontró el elemento con la clase .modalColec');
+        return;
+    }
+    modal.style.display = 'block';
+    createDarkBackgroundColec();
+    document.body.classList.add('no-scroll');
+}
+
+// Función para cerrar el modal
+function closeColecModal() {
+    const modal = document.querySelector('.modalColec');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    removeDarkBackgroundColec();
+    document.body.classList.remove('no-scroll');
+    resetSelections();
+}
+
+// Función para crear el fondo oscuro
+function createDarkBackgroundColec() {
+    let darkBackground = document.createElement('div');
+    darkBackground.classList.add('submenu-background');
+    Object.assign(darkBackground.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        zIndex: '998',
+        pointerEvents: 'auto'
+    });
+    document.body.appendChild(darkBackground);
+    darkBackground.addEventListener('click', closeColecModal, { once: true });
+    return darkBackground;
 }
 
 
-/*
-//en el header
-function modalColeccion()
-{
-    // Obtener el ID del usuario actual
-    $current_user_id = get_current_user_id();
 
-    // Consultar las colecciones del usuario
-    $args = array(
-        'post_type'      => 'colecciones',
-        'post_status'    => 'publish',
-        'posts_per_page' => -1,
-        'author'         => $current_user_id,
-    );
 
-    $user_collections = new WP_Query($args);
-    ?>
-    <div class="modalColec modal" style="display: none;">
-        <div class="colecciones">
-            <h3>Colecciones</h3>
-            <input type="text" placeholder="Buscar colección" id="buscarColeccion">
-
-            <ul class="listaColeccion borde">
-                <li class="coleccion" id="favoritos">
-                    <img src="<?php echo esc_url('https://2upra.com/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg'); ?>" alt=""><span>Favoritos</span>
-                </li>
-                <li class="coleccion borde" id="despues">
-                    <img src="<?php echo esc_url('https://2upra.com/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg'); ?>" alt=""><span>Usar más tarde</span>
-                </li>
-
-                <?php if ($user_collections->have_posts()) : ?>
-                    <?php while ($user_collections->have_posts()) : $user_collections->the_post(); ?>
-                        <li class="coleccion borde" data-id="<?php the_ID(); ?>">
-                            <img src="<?php echo esc_url(get_the_post_thumbnail_url(get_the_ID(), 'thumbnail')); ?>" alt="">
-                            <span><?php the_title(); ?></span>
-                        </li>
-                    <?php endwhile; ?>
-                    <?php wp_reset_postdata(); ?>
-                <?php else : ?>
-                    <li class="coleccion borde"></li>
-                <?php endif; ?>
-            </ul>
-
-            <div class="XJAAHB">
-                <button class="botonsecundario">Nueva colección</button>
-                <button class="botonprincipal" id="btnListo">Listo</button>
-            </div>
-        </div>
-    </div>
-    <?php
-}
-
-*/
