@@ -24,7 +24,11 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
                     <div class="GSDKRA">
                         <div><? echo modalColeccion(); ?></div>
                     </div>
+                    <div class="GSDKRA">
+                        <div><? echo modalCreacionColeccio(); ?></div>
+                    </div>
                 </div>
+
 
                 <div class="tab INICIO S4K7I3" id="Colab">
                     <div class="GSDKRA">

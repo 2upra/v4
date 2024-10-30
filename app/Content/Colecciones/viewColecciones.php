@@ -46,6 +46,26 @@ function modalColeccion($postId = null)
 <?
 }
 
+function modalCreacionColeccion($postId = null)
+{
+
+    ob_start();
+?>
+    <div class="modalColec crearColec modal">
+        <div class="colecciones formColec">
+            <h3>Crear coleccion</h3>
+            <div class="previewAreaArchivos previewColec" id="previewImagenColec" style="display: none;">
+                <label>Agregar imagen</label>
+            </div>
+            <input type="text" placeholder="Nombre de la coleccion">
+            <input type="text" placeholder="Descripción de la coleccion">
+
+            <button class="botonprincipal">Crear</button>
+        </div>
+    </div>
+<?
+}
+
 function botonColeccion($postId)
 {
 
