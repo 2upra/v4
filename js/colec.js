@@ -1,8 +1,13 @@
 let selectedPostId = null;
 let selectedCollectionId = null;
 
+let colecInitialized = false;
+
 function colec() {
-    initializeColec();
+    if (!colecInitialized) {
+        initializeColec();
+        colecInitialized = true;
+    }
 }
 
 function initializeColec() {
@@ -52,7 +57,10 @@ function initializeColec() {
 function removeDarkBackgroundColec() {
     const darkBackground = document.querySelector('.submenu-background');
     if (darkBackground) {
+        console.log('Eliminando fondo oscuro.');
         darkBackground.remove();
+    } else {
+        console.log('No hay fondo oscuro para eliminar.');
     }
 }
 
@@ -91,6 +99,7 @@ function filterCollections(query) {
 
 // Función para abrir el modal
 function openColecModal() {
+    removeDarkBackgroundColec(); // Elimina cualquier fondo existente
     const modal = document.querySelector('.modalColec');
     if (!modal) {
         console.error('No se encontró el elemento con la clase .modalColec');
@@ -114,6 +123,13 @@ function closeColecModal() {
 
 // Función para crear el fondo oscuro
 function createDarkBackgroundColec() {
+    let existingBackground = document.querySelector('.submenu-background');
+    if (existingBackground) {
+        console.log('Fondo oscuro ya existe.');
+        return existingBackground;
+    }
+
+    console.log('Creando fondo oscuro.');
     let darkBackground = document.createElement('div');
     darkBackground.classList.add('submenu-background');
     Object.assign(darkBackground.style, {
