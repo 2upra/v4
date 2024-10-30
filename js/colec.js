@@ -15,7 +15,7 @@ function colec() {
     function openModal() {
         modal.style.display = 'block';
         // Crear el fondo oscuro
-        darkBackground = window.createModalDarkBackground(modal);
+        darkBackground = window.createModalDarkBackgroundColec(modal);
         // Bloquear el scroll de la página
         document.body.classList.add('no-scroll');
     }
@@ -24,7 +24,7 @@ function colec() {
     function closeModal() {
         modal.style.display = 'none';
         // Remover el fondo oscuro
-        window.removeModalDarkBackground(darkBackground);
+        window.removeModalDarkBackgroundColec(darkBackground);
         darkBackground = null;
         // Permitir el scroll de la página
         document.body.classList.remove('no-scroll');
@@ -154,7 +154,7 @@ window.createModalDarkBackgroundColec = function(modal) {
 };
 
 // Función para remover el fondo oscuro del modal
-window.removeModalDarkBackgroundcolec = function(darkBackground) {
+window.removeModalDarkBackgroundColec = function(darkBackground) {
     if (darkBackground) {
         darkBackground.classList.remove('show');
         // Espera a que termine la transición antes de remover
