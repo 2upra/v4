@@ -7,12 +7,17 @@ function colec() {
     const modal = document.querySelector('.modalColec');
     let darkBackground = null; // Variable para almacenar el fondo oscuro
 
+    // Obtener el input de búsqueda
+    const buscarInput = document.getElementById('buscarColeccion');
+
     // Función para abrir el modal
     function openModal() {
         modal.style.display = 'block';
         darkBackground = window.createModalDarkBackground(modal);
         // Bloquear el scroll de la página
         document.body.style.overflow = 'hidden';
+        // Enfocar el input de búsqueda
+        buscarInput.focus();
     }
 
     // Función para cerrar el modal
@@ -42,16 +47,22 @@ function colec() {
     listaColecciones.addEventListener('click', function (e) {
         const coleccion = e.target.closest('.coleccion');
         if (coleccion) {
-            // Eliminar la clase 'seleccion' de todas las colecciones
-            document.querySelectorAll('.coleccion').forEach(function (item) {
-                item.classList.remove('seleccion');
-            });
+            // Si ya está seleccionada, deseleccionarla
+            if (coleccion.classList.contains('seleccion')) {
+                coleccion.classList.remove('seleccion');
+                selectedCollectionId = null;
+            } else {
+                // Eliminar la clase 'seleccion' de todas las colecciones
+                document.querySelectorAll('.coleccion').forEach(function (item) {
+                    item.classList.remove('seleccion');
+                });
 
-            // Añadir la clase 'seleccion' a la colección clicada
-            coleccion.classList.add('seleccion');
+                // Añadir la clase 'seleccion' a la colección clicada
+                coleccion.classList.add('seleccion');
 
-            // Almacenar el ID de la colección seleccionada
-            selectedCollectionId = coleccion.getAttribute('data-id') || coleccion.id;
+                // Almacenar el ID de la colección seleccionada
+                selectedCollectionId = coleccion.getAttribute('data-id') || coleccion.id;
+            }
         }
     });
 
@@ -79,15 +90,21 @@ function colec() {
         }
     });
 
-    // Manejar el cierre del modal al hacer clic fuera de él (en el fondo oscuro)
+    // Manejar el cierre del modal al hacer clic en el fondo oscuro
     document.body.addEventListener('click', function (e) {
         if (darkBackground && e.target === darkBackground) {
             closeModal();
         }
     });
 
+    // Manejar el cierre del modal al presionar la tecla Esc
+    window.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.style.display === 'block') {
+            closeModal();
+        }
+    });
+
     // Manejar la búsqueda de colecciones
-    const buscarInput = document.getElementById('buscarColeccion');
     buscarInput.addEventListener('input', function () {
         const query = buscarInput.value.toLowerCase();
         const colecciones = document.querySelectorAll('.listaColeccion .coleccion');
@@ -104,4 +121,3 @@ function colec() {
 }
 
 // Inicializar la funcionalidad de colecciones cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', colec);
