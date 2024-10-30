@@ -39,14 +39,14 @@ function modalColeccion($postId = null)
 <?
 }
 
-function botonColeccion($postId = null)
+function botonColeccion($postId)
 {
 
     ob_start();
 ?>
 
-    <div class="TJKQGJ botonColeccion">
-        <button class="botonColeccionBtn" data-post_id="<?// esc_attr($postId) ?>" data-nonce="<?// wp_create_nonce('like_post_nonce') ?>">
+    <div class="ZAQIBB botonColeccion">
+        <button class="botonColeccionBtn" data-post_id="<? esc_attr($postId) ?>" data-nonce="<? wp_create_nonce('colec_nonce') ?>">
             <? echo $GLOBALS['iconoGuardar']; ?>
         </button>
     </div>
