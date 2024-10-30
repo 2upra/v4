@@ -54,7 +54,7 @@ function modalCreacionColeccion($postId = null)
     <div class="modalColec crearColec modal">
         <div class="colecciones formColec">
             <h3>Crear coleccion</h3>
-            <div class="previewAreaArchivos previewColec" id="previewImagenColec" style="display: none;">
+            <div class="previewAreaArchivos previewColec" id="previewImagenColec">
                 <label>Agregar imagen</label>
             </div>
             <input type="text" placeholder="Nombre de la coleccion">
