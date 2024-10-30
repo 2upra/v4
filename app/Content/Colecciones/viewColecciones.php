@@ -55,7 +55,7 @@ function modalColeccion()
                     <?php endwhile; ?>
                     <?php wp_reset_postdata(); ?>
                 <?php else : ?>
-                    <li class="coleccion borde"></li>
+                    
                 <?php endif; ?>
             </ul>
 
