@@ -31,11 +31,10 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
         }
 
         submenu.style.position = "fixed";
-        submenu.style.zIndex = 9999;
+        submenu.style.zIndex = 9999; // Asegúrate de que tenga un z-index alto
         submenu.style.top = `${Math.min(rect.bottom + adjustTop, vh - submenu.offsetHeight)}px`;
         submenu.style.left = `${Math.min(rect.left + adjustLeft, vw - submenu.offsetWidth)}px`;
-        
-        mostrar(submenu);
+        submenu.style.display = "block";
 
         submenu._darkBackground = createSubmenuDarkBackground(submenu);
 
@@ -49,24 +48,17 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
 
     function hideSubmenu(submenu) {
         if (submenu) {
-            ocultar(submenu);
+            submenu.style.display = "none";
         }
 
         removeSubmenuDarkBackground(submenu._darkBackground);
         submenu._darkBackground = null;
 
-        const activeSubmenus = Array.from(document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`))
-            .filter(menu => menu.style.display === "block");
+        const activeSubmenus = Array.from(document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`)).filter(menu => menu.style.display === "block");
 
         if (activeSubmenus.length === 0) {
             document.body.classList.remove('no-scroll');
         }
-    }
-
-    function hideAllSubmenus() {
-        document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
-            hideSubmenu(submenu);
-        });
     }
 
     triggers.forEach(trigger => {
@@ -89,13 +81,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
             submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
         });
     });
-
-    return {
-        hideAll: hideAllSubmenus
-    };
 }
-
-
 
 function initializeStaticMenus() {
     //console.log('[initializeStaticMenus] Inicializando menús estáticos');
