@@ -128,6 +128,19 @@ function editarColeccion()
     }
 }
 
+function botonColeccion($postId)
+{
+    ob_start();
+?>
+    <div class="ZAQIBB botonColeccion">
+        <button class="botonColeccionBtn" data-post_id="<? echo esc_attr($postId) ?>" data-nonce="<? echo wp_create_nonce('colec_nonce') ?>">
+            <? echo $GLOBALS['iconoGuardar']; ?>
+        </button>
+    </div>
+
+<?
+}
+
 function agregarPostAColeccion()
 {
     if (!is_user_logged_in()) {
