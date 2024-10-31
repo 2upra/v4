@@ -43,9 +43,9 @@ function iniciarColec() {
     } else {
         return;
     }
-    const volverColec = document.getElementById('btnVolverColec'); 
-    if (volverColec) {
-        volverColec.addEventListener('click', volverColec);
+    const btnvolverColec = document.getElementById('btnVolverColec'); 
+    if (btnvolverColec) {
+        btnvolverColec.addEventListener('click', volverColec);
     } else {
         return;
     }
@@ -132,9 +132,9 @@ function busquedaColec(query) {
 
 function cerrarColec() {
     const modal = document.querySelector('.modalColec');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    modal.style.display = 'none';
+    const modalCreaColec = document.querySelector('.modalCrearColec');
+    modalCreaColec.style.display = 'none';
     quitBackground();
     document.body.classList.remove('no-scroll');
     resetColec();
