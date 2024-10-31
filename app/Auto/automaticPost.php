@@ -91,7 +91,7 @@ function autProcesarAudio($rutaOriginalOne) {
 
     chmod($rutaWpLiteOne, 0644);
     
-    logAudio("Procesamiento exitoso - Original: $rutaOriginalOne, Lite: $rutaWpLiteOne");
+    //logAudio("Procesamiento exitoso - Original: $rutaOriginalOne, Lite: $rutaWpLiteOne");
     
     crearAutPost($rutaOriginalOne, $rutaWpLiteOne, $file_id);
 }
