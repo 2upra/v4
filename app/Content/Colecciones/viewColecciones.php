@@ -74,7 +74,7 @@ function botonColeccion($postId)
     ob_start();
 ?>
     <div class="ZAQIBB botonColeccion">
-        <button class="botonColeccionBtn" data-post_id="<? esc_html($postId) ?>" data-nonce="<? wp_create_nonce('colec_nonce') ?>">
+        <button class="botonColeccionBtn" data-post_id="<? echo esc_attr($postId) ?>" data-nonce="<? echo wp_create_nonce('colec_nonce') ?>">
             <? echo $GLOBALS['iconoGuardar']; ?>
         </button>
     </div>
