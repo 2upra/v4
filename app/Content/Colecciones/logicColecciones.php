@@ -4,7 +4,7 @@ function crearColeccion()
 {
     if (!is_user_logged_in()) {
         guardarLog("Error: Usuario no autenticado");
-        return json_encode(['error' => 'Usuario no autenticado']);
+        wp_send_json_error(['error' => 'Usuario no autenticado']);
     }
 
     // Verificar y sanear los datos recibidos
@@ -21,7 +21,7 @@ function crearColeccion()
     // Validar título obligatorio
     if (empty($titulo)) {
         guardarLog("Error: El título de la colección es obligatorio");
-        return json_encode(['error' => 'El título de la colección es obligatorio']);
+        wp_send_json_error(['error' => 'El título de la colección es obligatorio']);
     }
 
     // Comprobar cuántas colecciones tiene el usuario actualmente
@@ -39,7 +39,7 @@ function crearColeccion()
     // Verificar si el usuario ya tiene 50 colecciones
     if ($user_collections_count->found_posts >= 50) {
         guardarLog("Error: Límite de colecciones alcanzado para el usuario $user_id");
-        return json_encode(['error' => 'Has alcanzado el límite de 50 colecciones']);
+        wp_send_json_error(['error' => 'Has alcanzado el límite de 50 colecciones']);
     }
 
     // Crear la colección ya que no existe ninguna limitación
@@ -53,7 +53,7 @@ function crearColeccion()
 
     if (!$coleccionId) {
         guardarLog("Error: Error al crear la colección");
-        return json_encode(['error' => 'Error al crear la colección']);
+        wp_send_json_error(['message' => 'Error al crear la colección']);;
     }
 
     guardarLog("Colección creada exitosamente: ID $coleccionId");
@@ -76,8 +76,9 @@ function crearColeccion()
     // Inicializar la meta 'samples' con el postId proporcionado
     update_post_meta($coleccionId, 'samples', json_encode([$colecPostId]));
     guardarLog("Meta 'samples' inicializada con colecPostId $colecPostId para la colección $coleccionId");
-
-    return json_encode(['success' => true, 'coleccionId' => $coleccionId]);
+    
+    wp_send_json_success(['message' => 'Colección creada exitosamente']);
+    wp_die();
 }
 
 
