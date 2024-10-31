@@ -296,7 +296,6 @@ function obtenerYProcesarVistasPosts($userId)
 }
 
 #PASO 3
-//Me gustaría que si en los datos de un post (datosAlgoritmo), contiene one shot, o one-shot, o oneshot, tenga 50% menos de punto
 function calcularPuntosIntereses($post_id, $datos)
 {
     $puntosIntereses = 0;
