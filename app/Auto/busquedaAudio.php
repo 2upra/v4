@@ -14,7 +14,7 @@ function definir_cron_cada_dos_minutos($schedules)
 {
     if (!isset($schedules['cadaDosMinutos'])) {
         $schedules['cadaDosMinutos'] = array(
-            'interval' => 30,
+            'interval' => 10,
             'display'  => __('Cada 2 minutos')
         );
     }
