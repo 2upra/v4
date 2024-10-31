@@ -69,8 +69,8 @@ function scriptsOrdenados()
         'fan',
     ];
 
-// wavejs.js?ver=2.0.12.375203239:84  Spinner no está definido. Asegúrate de que la librería esté cargada correctamente. intente agregarlo manualmente en spin.js pero parece que no esta funcionando 
     $script_handles = [
+        'gloria' => '1.0.1',
         'ajaxPage' => '5.0.11',
         'autorows' => '1.0.1',
         'fan' => '1.0.36',
@@ -108,7 +108,6 @@ function scriptsOrdenados()
         'contarVistaPost' => '1.0.1',
         'notificaciones' => '1.0.1',
         'colec' => '1.0.1',
-        'gloria' => '1.0.1'
     ];
 
     foreach ($script_handles as $handle => $data) {
