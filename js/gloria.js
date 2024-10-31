@@ -8,76 +8,54 @@ PIN: ASIGNAR EVENTOS (FALTA)
 
 (function (global) {
     function pin(selector) {
-        const elementos = pun(selector);
-        if (!elementos) return null;
+        const elemento = pun(selector);
+        if (!elemento) return null;
 
         return {
+            // Método básico para agregar eventos
             en: function (evento, callback, opciones) {
-                if (elementos instanceof NodeList || Array.isArray(elementos)) {
-                    elementos.forEach(el => el.addEventListener(evento, callback, opciones));
-                } else {
-                    elementos.addEventListener(evento, callback, opciones);
-                }
+                elemento.addEventListener(evento, callback, opciones);
                 return this;
             },
 
+            // Método para delegación de eventos
             delegar: function (evento, childSelector, callback) {
-                if (elementos instanceof NodeList || Array.isArray(elementos)) {
-                    elementos.forEach(el => el.addEventListener(evento, e => {
-                        const target = e.target.closest(childSelector);
-                        if (target) {
-                            callback.call(target, e);
-                        }
-                    }));
-                } else {
-                    elementos.addEventListener(evento, e => {
-                        const target = e.target.closest(childSelector);
-                        if (target) {
-                            callback.call(target, e);
-                        }
-                    });
-                }
+                elemento.addEventListener(evento, e => {
+                    const target = e.target.closest(childSelector);
+                    if (target) {
+                        callback.call(target, e);
+                    }
+                });
                 return this;
             },
 
+            // Método para remover eventos
             ya: function (evento, callback) {
-                if (elementos instanceof NodeList || Array.isArray(elementos)) {
-                    elementos.forEach(el => el.removeEventListener(evento, callback));
-                } else {
-                    elementos.removeEventListener(evento, callback);
-                }
+                elemento.removeEventListener(evento, callback);
                 return this;
             },
 
+            // Método para eventos de una sola vez
             uno: function (evento, callback) {
-                if (elementos instanceof NodeList || Array.isArray(elementos)) {
-                    elementos.forEach(el => el.addEventListener(evento, callback, {once: true}));
-                } else {
-                    elementos.addEventListener(evento, callback, {once: true});
-                }
+                elemento.addEventListener(evento, callback, {once: true});
                 return this;
             },
 
+            // Método para emitir eventos personalizados
             emitir: function (nombreEvento, detalle = {}) {
                 const evento = new CustomEvent(nombreEvento, {
                     detail: detalle,
                     bubbles: true,
                     cancelable: true
                 });
-                if (elementos instanceof NodeList || Array.isArray(elementos)) {
-                    elementos.forEach(el => el.dispatchEvent(evento));
-                } else {
-                    elementos.dispatchEvent(evento);
-                }
+                elemento.dispatchEvent(evento);
                 return this;
             }
         };
     }
 
+    // Método estático para múltiples selectores
     pin.multiple = function (selectores, evento, callback) {
-        if (typeof selectores === 'string') {
-            selectores = selectores.split(',').map(s => s.trim());
-        }
         if (Array.isArray(selectores)) {
             selectores.forEach(selector => {
                 pin(selector)?.en(evento, callback);
@@ -86,30 +64,30 @@ PIN: ASIGNAR EVENTOS (FALTA)
         return pin;
     };
 
+    // Método estático para eventos de una sola vez
     pin.uno = function (selector, evento, callback) {
         return pin(selector)?.uno(evento, callback);
     };
 
+    // Método estático para emitir eventos
     pin.emitir = function (selector, nombreEvento, detalle = {}) {
         return pin(selector)?.emitir(nombreEvento, detalle);
     };
 
+    // Método estático para delegación global
     pin.delegar = function (evento, childSelector, callback) {
         return pin(document).delegar(evento, childSelector, callback);
     };
 
+    // Método para crear y disparar eventos personalizados rápidamente
     pin.gancho = function (selector, nombreEvento) {
-        const elementos = pun(selector);
-        if (elementos) {
+        const elemento = pun(selector);
+        if (elemento) {
             const evento = new Event(nombreEvento, {
                 bubbles: true,
                 cancelable: true
             });
-            if (Array.isArray(elementos)) {
-                elementos.forEach(el => el.dispatchEvent(evento));
-            } else {
-                elementos.dispatchEvent(evento);
-            }
+            elemento.dispatchEvent(evento);
         }
         return pin;
     };
@@ -117,17 +95,15 @@ PIN: ASIGNAR EVENTOS (FALTA)
     global.pin = pin;
 })(window);
 
-
 (function (global) {
     function pun(selector) {
         if (typeof selector === 'string') {
             const elementos = document.querySelectorAll(selector);
             if (elementos.length === 0) return null;
-            return elementos.length === 1 ? elementos[0] : Array.from(elementos); 
+            return elementos[0];
         }
         return selector;
     }
-
     function obtenerElementos(selector) {
         if (typeof selector === 'string') {
             return Array.from(document.querySelectorAll(selector));
