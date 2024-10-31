@@ -50,3 +50,94 @@ window.removeModalDarkBackground = function(darkBackground) {
     }
 };
 
+(function() {
+    const root = document.body;
+
+    // Función auxiliar para agregar transición
+    function addTransition(element, from, to) {
+        // Si ya está en transición, no hacer nada
+        if (element._isTransitioning) return;
+        
+        element._isTransitioning = true;  // Marcar el estado de transición
+
+        // Configurar el estado inicial de opacidad
+        element.style.opacity = from;
+        element.style.transition = "opacity 0.3s ease";
+        
+        // Configurar la visualización (display) adecuada
+        if (to === 0) {
+            element._previousDisplay = getComputedStyle(element).display !== 'none' ? getComputedStyle(element).display : 'block';
+            element.style.display = element._previousDisplay;  // Asegurar que se muestre antes de la transición
+        }
+
+        // Forzar reflow
+        element.offsetHeight;
+
+        // Aplicar el estado final de opacidad
+        element.style.opacity = to;
+
+        // Limpiar después de la transición
+        element.addEventListener('transitionend', function handler() {
+            element._isTransitioning = false;
+            element.removeEventListener('transitionend', handler);
+            if (to === 0) {
+                element.style.display = 'none';  // Ocultar el elemento después de la transición
+            }
+            element.style.transition = '';  // Limpiar la transición
+        }, { once: true });
+    }
+
+    // Función global para observar cambios en estilo y aplicar transiciones
+    function observarTransiciones() {
+        const observer = new MutationObserver((mutationsList) => {
+            mutationsList.forEach((mutation) => {
+                if (mutation.type === "attributes" && mutation.attributeName === "style") {
+                    const element = mutation.target;
+                    const display = getComputedStyle(element).display;
+
+                    // Guardar el valor de display si es que no es 'none'
+                    if (display !== 'none') {
+                        element._previousDisplay = display;
+                    }
+
+                    // Si cambia a 'none', iniciar la transición para ocultar
+                    if (display === 'none' && !element._isTransitioning) {
+                        element.style.display = element._previousDisplay || 'block';  // Mostrar el elemento temporalmente
+                        addTransition(element, 1, 0);  // Iniciar la transición para ocultar
+                    }
+                    // Si cambia de 'none' a visible, iniciar la transición para mostrar
+                    else if (display !== 'none' && element.style.opacity !== '1') {
+                        addTransition(element, 0, 1);  // Iniciar la transición para mostrar
+                    }
+                }
+            });
+        });
+
+        observer.observe(root, {
+            attributes: true,
+            attributeFilter: ["style"],
+            subtree: true
+        });
+    }
+
+    // Funciones helpers para mostrar y ocultar elementos manualmente
+    function mostrar(element) {
+        if (getComputedStyle(element).display === 'none') {
+            addTransition(element, 0, 1);  // Transición para mostrar
+        }
+    }
+
+    function ocultar(element) {
+        if (getComputedStyle(element).display !== 'none') {
+            addTransition(element, 1, 0);  // Transición para ocultar
+        }
+    }
+
+    // Hacer funciones globales
+    window.mostrarElemento = mostrar;
+    window.ocultarElemento = ocultar;
+    window.iniciarObservadorTransiciones = observarTransiciones;
+
+    // Iniciar observador automáticamente al cargar el script
+    observarTransiciones();
+})();
