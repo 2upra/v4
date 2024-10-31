@@ -64,6 +64,14 @@ PIN: ASIGNAR EVENTOS (FALTA)
         return pin;
     };
 
+    pin.filtrar = function(selector, criterio) {
+        const elementos = document.querySelectorAll(selector);
+        Array.from(elementos).forEach(elemento => {
+            elemento.style.display = criterio(elemento) ? '' : 'none';
+        });
+        return pin;
+    };
+
     // Método estático para eventos de una sola vez
     pin.uno = function (selector, evento, callback) {
         return pin(selector)?.uno(evento, callback);

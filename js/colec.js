@@ -1,4 +1,3 @@
-
 let colecPostId = null;
 let colecSelecionado = null;
 let colecIniciado = false;
@@ -10,10 +9,9 @@ function colec() {
     }
 }
 
-
 function iniciarColec() {
     // Delegación para botones de colección
-    pin.delegar('click', '.botonColeccionBtn', function(e) {
+    pin.delegar('click', '.botonColeccionBtn', function (e) {
         e.preventDefault();
         colecPostId = this.getAttribute('data-post_id');
         console.log('Post ID seleccionado:', colecPostId);
@@ -21,7 +19,7 @@ function iniciarColec() {
     });
 
     // Delegación para items de colección
-    pin.delegar('click', '.coleccion', function(e) {
+    pin.delegar('click', '.coleccion', function (e) {
         if (this.closest('.listaColeccion')) {
             manejarClickColec(this);
         }
@@ -33,9 +31,9 @@ function iniciarColec() {
     pin('#btnVolverColec')?.en('click', volverColec);
 
     // Evento para búsqueda
-    pin('#buscarColeccion')?.en('input', function() {
-        const query = this.value.toLowerCase();
-        busquedaColec(query);
+    pin.filtrar('.coleccion', coleccion => {
+        const nombre = coleccion.querySelector('.nombreColec').textContent.toLowerCase();
+        return nombre.includes(query);
     });
 
     // Evento para reset del modal
