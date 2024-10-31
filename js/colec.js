@@ -1,135 +1,119 @@
-let selectedPostId = null;
-let selectedCollectionId = null;
-
-let colecInitialized = false;
+let colecPostId = null;
+let colecSelecionado = null;
+let colecIniciado = false;
 
 function colec() {
-    if (!colecInitialized) {
-        initializeColec();
-        colecInitialized = true;
+    if (!colecIniciado) {
+        iniciarColec();
+        colecIniciado = true;
     }
 }
 
-function initializeColec() {
-    // Delegación de eventos para botones de colección
-    document.body.addEventListener('click', (e) => {
+function iniciarColec() {
+    document.body.addEventListener('click', e => {
         const btn = e.target.closest('.botonColeccionBtn');
         if (btn) {
             e.preventDefault();
-            selectedPostId = btn.getAttribute('data-post_id');
-            openColecModal();
+            colecPostId = btn.getAttribute('data-post_id');
+            abrirColec();
         }
     });
-
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', e => {
         const coleccion = e.target.closest('.coleccion');
         if (coleccion && coleccion.closest('.listaColeccion')) {
-            handleCollectionClick(coleccion);
+            manejarClickColec(coleccion);
         }
     });
-
-    // Evento para el botón "Listo"
     const btnListo = document.getElementById('btnListo');
     if (btnListo) {
-        btnListo.addEventListener('click', handleListoClick);
+        btnListo.addEventListener('click', manejarClickListoColec);
     } else {
-        console.error('No se encontró el botón con el ID #btnListo');
+        //console.error('No se encontró el botón con el ID #btnListo');
     }
-
-    // Evento para el input de búsqueda
     const buscarInput = document.getElementById('buscarColeccion');
     if (buscarInput) {
         buscarInput.addEventListener('input', () => {
             const query = buscarInput.value.toLowerCase();
-            filterCollections(query);
+            busquedaColec(query);
         });
     } else {
-        console.error('No se encontró el input con el ID #buscarColeccion');
+        //console.error('No se encontró el input con el ID #buscarColeccion');
     }
-
-    // Escuchar la apertura de otros modales para resetear selecciones
     document.addEventListener('modalOpened', () => {
-        resetSelections();
+        resetColec();
     });
 }
 
+function abrirColec() {
+    quitBackground();
+    const modal = document.querySelector('.modalColec');
+    if (!modal) {
+        //console.error('No se encontró el elemento con la clase .modalColec');
+        return;
+    }
+    modal.style.display = 'block';
+    crearBackgroundColec();
+    document.body.classList.add('no-scroll');
+}
+
 // Función para eliminar el fondo oscuro
-function removeDarkBackgroundColec() {
+function quitBackground() {
     const darkBackground = document.querySelector('.submenu-background');
     if (darkBackground) {
-        console.log('Eliminando fondo oscuro.');
+        //console.log('Eliminando fondo oscuro.');
         darkBackground.remove();
     } else {
-        console.log('No hay fondo oscuro para eliminar.');
+        //console.log('No hay fondo oscuro para eliminar.');
     }
 }
 
-// Función para resetear las selecciones
-function resetSelections() {
-    selectedPostId = null;
-    selectedCollectionId = null;
+function resetColec() {
+    colecPostId = null;
+    colecSelecionado = null;
     document.querySelectorAll('.coleccion').forEach(item => item.classList.remove('seleccion'));
 }
 
-// Función para manejar el clic en una colección
-function handleCollectionClick(coleccion) {
+function manejarClickColec(coleccion) {
     document.querySelectorAll('.coleccion').forEach(item => item.classList.remove('seleccion'));
     coleccion.classList.add('seleccion');
-    selectedCollectionId = coleccion.getAttribute('data-id') || coleccion.id;
+    colecSelecionado = coleccion.getAttribute('data-id') || coleccion.id;
 }
 
-// Función para manejar el clic en "Listo"
-function handleListoClick() {
-    if (selectedPostId && selectedCollectionId) {
-        console.log('Post ID:', selectedPostId);
-        console.log('Collection ID:', selectedCollectionId);
-        closeColecModal();
+function manejarClickListoColec() {
+    if (colecPostId && colecSelecionado) {
+        //console.log('Post ID:', colecPostId);
+        //console.log('Collection ID:', colecSelecionado);
+        cerrarColec();
     } else {
         alert('Por favor, selecciona una colección.');
     }
 }
 
-// Función para filtrar colecciones
-function filterCollections(query) {
+function busquedaColec(query) {
     document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
         const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
         coleccion.style.display = titulo.includes(query) ? 'flex' : 'none';
     });
 }
 
-// Función para abrir el modal
-function openColecModal() {
-    removeDarkBackgroundColec(); // Elimina cualquier fondo existente
-    const modal = document.querySelector('.modalColec');
-    if (!modal) {
-        console.error('No se encontró el elemento con la clase .modalColec');
-        return;
-    }
-    modal.style.display = 'block';
-    createDarkBackgroundColec();
-    document.body.classList.add('no-scroll');
-}
-
-// Función para cerrar el modal
-function closeColecModal() {
+function cerrarColec() {
     const modal = document.querySelector('.modalColec');
     if (modal) {
         modal.style.display = 'none';
     }
-    removeDarkBackgroundColec();
+    quitBackground();
     document.body.classList.remove('no-scroll');
-    resetSelections();
+    resetColec();
 }
 
-// Función para crear el fondo oscuro
-function createDarkBackgroundColec() {
+function crearBackgroundColec() {
     let existingBackground = document.querySelector('.submenu-background');
     if (existingBackground) {
-        console.log('Fondo oscuro ya existe.');
+        //console.log('Fondo oscuro ya existe.');
         return existingBackground;
     }
 
-    console.log('Creando fondo oscuro.');
+    //console.log('Creando fondo oscuro.');
     let darkBackground = document.createElement('div');
     darkBackground.classList.add('submenu-background');
     Object.assign(darkBackground.style, {
@@ -143,10 +127,6 @@ function createDarkBackgroundColec() {
         pointerEvents: 'auto'
     });
     document.body.appendChild(darkBackground);
-    darkBackground.addEventListener('click', closeColecModal, { once: true });
+    darkBackground.addEventListener('click', cerrarColec, {once: true});
     return darkBackground;
 }
-
-
-
-
