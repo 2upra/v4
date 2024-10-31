@@ -104,8 +104,9 @@ async function crearNuevaColec() {
         const response = await enviarAjax('crearColeccion', data);
         if (response?.success) {
             alert('Colección creada con éxito');
+            // Actualizar la lista de colecciones
+            await actualizarListaColecciones();
             cerrarColec();
-            await actualizarColecciones();
         } else {
             alert(`Error al crear la colección: ${response?.message || 'Desconocido'}`);
         }
@@ -118,26 +119,32 @@ async function crearNuevaColec() {
     }
 }
 
-// Nueva función para actualizar las colecciones
-async function actualizarColecciones() {
+// Función para actualizar la lista de colecciones
+async function actualizarListaColecciones() {
     try {
-        // Llama a enviarAjax con la acción 'actualizar_colecciones', no necesita más datos
-        const response = await enviarAjax('actualizar_colecciones');
-        
-        // Si la respuesta es exitosa, actualiza el contenido del modal
+        const response = await enviarAjax('obtener_colecciones');
         if (response?.success) {
-            const nuevoContenido = response.html; // Asumiendo que el HTML venga en la propiedad 'html'
             const listaColeccion = document.querySelector('.listaColeccion');
-            if (listaColeccion) {
-                listaColeccion.innerHTML = nuevoContenido;
-            }
+            
+            // Mantener los elementos fijos (Favoritos y Usar más tarde)
+            const elementosFijos = listaColeccion.querySelectorAll('#favoritos, #despues');
+            listaColeccion.innerHTML = ''; // Limpiar la lista
+            
+            // Agregar de nuevo los elementos fijos
+            elementosFijos.forEach(elemento => {
+                listaColeccion.appendChild(elemento);
+            });
+            
+            // Agregar las nuevas colecciones
+            listaColeccion.insertAdjacentHTML('beforeend', response.html);
         } else {
-            console.error('Error al actualizar las colecciones:', response?.message || 'Desconocido');
+            console.error('Error al obtener las colecciones:', response?.message);
         }
     } catch (error) {
-        console.error('Error en la solicitud AJAX para actualizar colecciones:', error);
+        console.error('Error al actualizar la lista de colecciones:', error);
     }
 }
+
 
 function subidaImagenColec() {
     const previewImagenColec = a('#previewImagenColec');

@@ -52,7 +52,8 @@ function modalColeccion()
 <?
 }
 
-function obtenerHtmlColec() {
+// Función para obtener el HTML de las colecciones
+function obtener_lista_colecciones() {
     $current_user_id = get_current_user_id();
     $args = array(
         'post_type'      => 'colecciones',
@@ -62,55 +63,24 @@ function obtenerHtmlColec() {
     );
 
     $user_collections = new WP_Query($args);
-
-    ob_start(); // Empieza a capturar el contenido HTML
-
-    ?>
-    <ul class="listaColeccion borde">
-        <li class="coleccion" id="favoritos" data-post_id="">
-            <img src="<? echo esc_url('https://2upra.com/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg'); ?>" alt=""><span>Favoritos</span>
-        </li>
-        <li class="coleccion borde" id="despues" data-post_id="">
-            <img src="<? echo esc_url('https://2upra.com/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg'); ?>" alt=""><span>Usar más tarde</span>
-        </li>
-
-        <? if ($user_collections->have_posts()) : ?>
-            <? while ($user_collections->have_posts()) : $user_collections->the_post(); ?>
-                <li class="coleccion borde" data-id="<? the_ID(); ?>">
-                    <img src="<? echo esc_url(get_the_post_thumbnail_url(get_the_ID(), 'thumbnail')); ?>" alt="">
-                    <span><? the_title(); ?></span>
-                </li>
-            <? endwhile; ?>
-            <? wp_reset_postdata(); ?>
-        <? endif; ?>
-    </ul>
-    <?
-
-    return ob_get_clean(); 
-}
-
-function ajax_actualizar_colecciones() {
-    // Verificamos la autenticidad o permisos del usuario si es necesario
-    $html = obtenerHtmlColec();
+    $html = '';
     
-    // Devolvemos una respuesta JSON con el HTML generado
+    if ($user_collections->have_posts()) {
+        while ($user_collections->have_posts()) {
+            $user_collections->the_post();
+            $html .= '<li class="coleccion borde" data-id_post="' . get_the_ID() . '">';
+            $html .= '<img src="' . esc_url(get_the_post_thumbnail_url(get_the_ID(), 'thumbnail')) . '" alt="">';
+            $html .= '<span>' . get_the_title() . '</span>';
+            $html .= '</li>';
+        }
+        wp_reset_postdata();
+    }
+    
     wp_send_json_success(['html' => $html]);
 }
-add_action('wp_ajax_actualizar_colecciones', 'ajax_actualizar_colecciones');
 
-function botonColeccion($postId)
-{
-    ob_start();
-?>
-    <div class="ZAQIBB botonColeccion">
-        <button class="botonColeccionBtn" data-post_id="<? echo esc_attr($postId) ?>" data-nonce="<? echo wp_create_nonce('colec_nonce') ?>">
-            <? echo $GLOBALS['iconoGuardar']; ?>
-        </button>
-    </div>
-
-<?
-}
-
+// Agregar el endpoint AJAX
+add_action('wp_ajax_obtener_colecciones', 'obtener_lista_colecciones');
 
 function modalCreacionColeccion()
 {
