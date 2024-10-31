@@ -9,15 +9,6 @@ function colec() {
     }
 }
 
-/*
-cuando se abre un boton debería selecionar un postId en colecPostId pero no lo hace
-    <div class="ZAQIBB botonColeccion">
-        <button class="botonColeccionBtn" data-post_id="<? esc_attr($postId) ?>" data-nonce="<? wp_create_nonce('colec_nonce') ?>">
-            <? echo $GLOBALS['iconoGuardar']; ?>
-        </button>
-    </div>
-*/
-
 function iniciarColec() {
     document.body.addEventListener('click', e => {
         const btn = e.target.closest('.botonColeccionBtn');
@@ -38,7 +29,25 @@ function iniciarColec() {
     if (btnListo) {
         btnListo.addEventListener('click', manejarClickListoColec);
     } else {
-        //console.error('No se encontró el botón con el ID #btnListo');
+        return;
+    }
+    const abrirModalCrearColec = document.getElementById('btnEmpezarCreaColec');
+    if (abrirModalCrearColec) {
+        abrirModalCrearColec.addEventListener('click', abrirModalCrearColec);
+    } else {
+        return;
+    }
+    const crearColec = document.getElementById('btnCrearColec');
+    if (crearColec) {
+        crearColec.addEventListener('click', crearNuevaColec);
+    } else {
+        return;
+    }
+    const volverColec = document.getElementById('btnVolverColec'); 
+    if (volverColec) {
+        volverColec.addEventListener('click', volverColec);
+    } else {
+        return;
     }
     const buscarInput = document.getElementById('buscarColeccion');
     if (buscarInput) {
@@ -47,7 +56,7 @@ function iniciarColec() {
             busquedaColec(query);
         });
     } else {
-        //console.error('No se encontró el input con el ID #buscarColeccion');
+        return;
     }
     document.addEventListener('modalOpened', () => {
         resetColec();
@@ -55,18 +64,33 @@ function iniciarColec() {
 }
 
 function abrirColec() {
-    quitBackground();
     const modal = document.querySelector('.modalColec');
-    if (!modal) {
-        //console.error('No se encontró el elemento con la clase .modalColec');
-        return;
-    }
     modal.style.display = 'block';
     crearBackgroundColec();
     document.body.classList.add('no-scroll');
 }
 
+function abrirModalCrearColec() {
+    const modal = document.querySelector('.modalColec');
+    modal.style.display = 'none';
+    const modalCreaColec = document.querySelector('.modalCrearColec');
+    modalCreaColec.style.display = 'block';
+}
+function crearNuevaColec() {
+    if (colecPostId && colecSelecionado) {
+ 
+        cerrarColec();
+    } else {
+        cerrarColec();
+    }
 
+}
+function volverColec() {
+    const modalCreaColec = document.querySelector('.modalCrearColec');
+    modalCreaColec.style.display = 'none';
+    const modal = document.querySelector('.modalColec');
+    modal.style.display = 'block';
+}
 
 function manejarClickColec(coleccion) {
     document.querySelectorAll('.coleccion').forEach(item => item.classList.remove('seleccion'));
@@ -76,14 +100,12 @@ function manejarClickColec(coleccion) {
 
 function manejarClickListoColec() {
     if (colecPostId && colecSelecionado) {
-        //console.log('Post ID:', colecPostId);
-        //console.log('Collection ID:', colecSelecionado);
+ 
         cerrarColec();
     } else {
-        alert('Por favor, selecciona una colección.');
+        cerrarColec();
     }
 }
-
 
 function resetColec() {
     colecPostId = null;
@@ -91,7 +113,6 @@ function resetColec() {
     document.querySelectorAll('.coleccion').forEach(item => item.classList.remove('seleccion'));
 }
 
-// Función para eliminar el fondo oscuro
 function quitBackground() {
     const darkBackground = document.querySelector('.submenu-background');
     if (darkBackground) {

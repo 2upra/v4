@@ -32,7 +32,7 @@ function modalColeccion()
     );
 
     $user_collections = new WP_Query($args);
-    ?>
+?>
     <div class="modalColec modal" style="display: none;">
         <div class="colecciones">
             <h3>Colecciones</h3>
@@ -55,17 +55,17 @@ function modalColeccion()
                     <?php endwhile; ?>
                     <?php wp_reset_postdata(); ?>
                 <?php else : ?>
-                    
+
                 <?php endif; ?>
             </ul>
 
             <div class="XJAAHB">
-                <button class="botonsecundario">Nueva colección</button>
+                <button class="botonsecundario" id="btnEmpezarCreaColec">Nueva colección</button>
                 <button class="botonprincipal" id="btnListo">Listo</button>
             </div>
         </div>
     </div>
-    <?php
+<?php
 }
 
 
@@ -83,12 +83,12 @@ function botonColeccion($postId)
 }
 
 
-function modalCreacionColeccion($postId = null)
+function modalCreacionColeccion()
 {
 
     ob_start();
 ?>
-    <div class="modalColec crearColec modal" style="display: none;">
+    <div class="modalColec crearColec modalCrearColec modal" style="display: none;">
         <div class="colecciones formColec">
             <h3>Crear colección</h3>
             <div class="previewAreaArchivos previewColec" id="previewImagenColec">
@@ -96,8 +96,10 @@ function modalCreacionColeccion($postId = null)
             </div>
             <input type="text" placeholder="Nombre de la colección">
             <input type="text" placeholder="Descripción de la colección (opcional)">
-
-            <button class="botonprincipal">Crear</button>
+            <div class="XJAAHB">
+                <button class="botonsecundario" id="btnVolverColec">Volver</button>
+                <button class="botonprincipal" id="btnCrearColec">Crear</button>
+            </div>
         </div>
     </div>
 <?
