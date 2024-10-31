@@ -1,19 +1,138 @@
+/*
+PROGRESO DE BIBLIOTECA PRORPIA 
+MOSTRAR: MOSTRAR ALGO (LISTO)
+OCULTAR: OCULTAR ALGO (LISTO)
+PUN: SELECIONAR COSAS (LISTO)
+PIN: ASIGNAR EVENTOS (FALTA)
+*/
+
+(function (global) {
+    function pin(selector) {
+        const elementos = pun(selector);
+        if (!elementos) return null;
+
+        return {
+            en: function (evento, callback, opciones) {
+                if (elementos instanceof NodeList || Array.isArray(elementos)) {
+                    elementos.forEach(el => el.addEventListener(evento, callback, opciones));
+                } else {
+                    elementos.addEventListener(evento, callback, opciones);
+                }
+                return this;
+            },
+
+            delegar: function (evento, childSelector, callback) {
+                if (elementos instanceof NodeList || Array.isArray(elementos)) {
+                    elementos.forEach(el => el.addEventListener(evento, e => {
+                        const target = e.target.closest(childSelector);
+                        if (target) {
+                            callback.call(target, e);
+                        }
+                    }));
+                } else {
+                    elementos.addEventListener(evento, e => {
+                        const target = e.target.closest(childSelector);
+                        if (target) {
+                            callback.call(target, e);
+                        }
+                    });
+                }
+                return this;
+            },
+
+            ya: function (evento, callback) {
+                if (elementos instanceof NodeList || Array.isArray(elementos)) {
+                    elementos.forEach(el => el.removeEventListener(evento, callback));
+                } else {
+                    elementos.removeEventListener(evento, callback);
+                }
+                return this;
+            },
+
+            uno: function (evento, callback) {
+                if (elementos instanceof NodeList || Array.isArray(elementos)) {
+                    elementos.forEach(el => el.addEventListener(evento, callback, {once: true}));
+                } else {
+                    elementos.addEventListener(evento, callback, {once: true});
+                }
+                return this;
+            },
+
+            emitir: function (nombreEvento, detalle = {}) {
+                const evento = new CustomEvent(nombreEvento, {
+                    detail: detalle,
+                    bubbles: true,
+                    cancelable: true
+                });
+                if (elementos instanceof NodeList || Array.isArray(elementos)) {
+                    elementos.forEach(el => el.dispatchEvent(evento));
+                } else {
+                    elementos.dispatchEvent(evento);
+                }
+                return this;
+            }
+        };
+    }
+
+    pin.multiple = function (selectores, evento, callback) {
+        if (typeof selectores === 'string') {
+            selectores = selectores.split(',').map(s => s.trim());
+        }
+        if (Array.isArray(selectores)) {
+            selectores.forEach(selector => {
+                pin(selector)?.en(evento, callback);
+            });
+        }
+        return pin;
+    };
+
+    pin.uno = function (selector, evento, callback) {
+        return pin(selector)?.uno(evento, callback);
+    };
+
+    pin.emitir = function (selector, nombreEvento, detalle = {}) {
+        return pin(selector)?.emitir(nombreEvento, detalle);
+    };
+
+    pin.delegar = function (evento, childSelector, callback) {
+        return pin(document).delegar(evento, childSelector, callback);
+    };
+
+    pin.gancho = function (selector, nombreEvento) {
+        const elementos = pun(selector);
+        if (elementos) {
+            const evento = new Event(nombreEvento, {
+                bubbles: true,
+                cancelable: true
+            });
+            if (Array.isArray(elementos)) {
+                elementos.forEach(el => el.dispatchEvent(evento));
+            } else {
+                elementos.dispatchEvent(evento);
+            }
+        }
+        return pin;
+    };
+
+    global.pin = pin;
+})(window);
+
+
 (function (global) {
     function pun(selector) {
         if (typeof selector === 'string') {
             const elementos = document.querySelectorAll(selector);
             if (elementos.length === 0) return null;
-            return elementos[0];
+            return elementos.length === 1 ? elementos[0] : Array.from(elementos); 
         }
         return selector;
     }
 
-    // Función auxiliar para convertir el selector en un array de elementos
     function obtenerElementos(selector) {
         if (typeof selector === 'string') {
             return Array.from(document.querySelectorAll(selector));
         }
-        return [selector]; // Si es un elemento, lo envolvemos en un array
+        return [selector];
     }
 
     pun.agregarClase = function (selector, nombreClase) {
@@ -41,7 +160,7 @@ function addTransition(element, from, to) {
     if (to === 1) {
         element.style.display = element._previousDisplay || 'block';
     }
-    element.offsetHeight;
+    element.yasetHeight;
     element.style.opacity = to;
     element.addEventListener(
         'transitionend',
@@ -53,7 +172,7 @@ function addTransition(element, from, to) {
             }
             element.style.transition = '';
         },
-        {once: true}
+        {uno: true}
     );
 }
 
