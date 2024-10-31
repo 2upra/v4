@@ -50,3 +50,38 @@ window.removeModalDarkBackground = function(darkBackground) {
     }
 };
 
+const root = document.body;
+
+// Creamos el observer
+const observer = new MutationObserver((mutationsList) => {
+  mutationsList.forEach((mutation) => {
+    if (mutation.type === "attributes" && mutation.attributeName === "style") {
+      const element = mutation.target;
+      
+      // Solo si el elemento tiene display distinto de 'none' y no tiene ya la clase 'fade-in'
+      if (getComputedStyle(element).display !== 'none' && !element.classList.contains("fade-in")) {
+        element.classList.add("fade-in"); // Agrega la clase para la transición
+        element.style.opacity = 0; // Opacidad inicial
+        requestAnimationFrame(() => { // Asegura el cambio en el próximo frame
+          element.style.transition = "opacity 0.5s";
+          element.style.opacity = 1;
+        });
+        
+        // Remueve la clase después de que la transición termina
+        element.addEventListener("transitionend", function handler() {
+          element.classList.remove("fade-in");
+          element.style.transition = ""; // Limpia la transición para otros cambios
+          element.removeEventListener("transitionend", handler); // Elimina el listener
+        });
+      }
+    }
+  });
+});
+
+// Observar cambios en el DOM y estilo
+observer.observe(root, {
+  attributes: true,
+  attributeFilter: ["style"],
+  subtree: true,
+});
+
