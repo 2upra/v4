@@ -10,38 +10,36 @@ function colec() {
     }
 }
 
+
 function iniciarColec() {
-    document.body.addEventListener('click', e => {
-        const btn = e.target.closest('.botonColeccionBtn');
-        if (btn) {
-            e.preventDefault();
-            colecPostId = btn.getAttribute('data-post_id');
-            console.log('Post ID seleccionado:', colecPostId);
-            abrirColec();
+    // Delegación para botones de colección
+    pin.delegar('click', '.botonColeccionBtn', function(e) {
+        e.preventDefault();
+        colecPostId = this.getAttribute('data-post_id');
+        console.log('Post ID seleccionado:', colecPostId);
+        abrirColec();
+    });
+
+    // Delegación para items de colección
+    pin.delegar('click', '.coleccion', function(e) {
+        if (this.closest('.listaColeccion')) {
+            manejarClickColec(this);
         }
     });
 
-    document.addEventListener('click', e => {
-        const coleccion = e.target.closest('.coleccion');
-        if (coleccion && coleccion.closest('.listaColeccion')) {
-            manejarClickColec(coleccion);
-        }
+    // Eventos para botones específicos
+    pin('#btnListo')?.en('click', manejarClickListoColec);
+    pin('#btnEmpezarCreaColec')?.en('click', abrirModalCrearColec);
+    pin('#btnVolverColec')?.en('click', volverColec);
+
+    // Evento para búsqueda
+    pin('#buscarColeccion')?.en('input', function() {
+        const query = this.value.toLowerCase();
+        busquedaColec(query);
     });
 
-    pun('#btnListo')?.addEventListener('click', manejarClickListoColec);
-    pun('#btnEmpezarCreaColec')?.addEventListener('click', abrirModalCrearColec);
-    //pun('#btnCrearColec')?.addEventListener('click', crearNuevaColec);
-    pun('#btnVolverColec')?.addEventListener('click', volverColec);
-
-    const buscarInput = pun('#buscarColeccion');
-    if (buscarInput) {
-        buscarInput.addEventListener('input', () => {
-            const query = buscarInput.value.toLowerCase();
-            busquedaColec(query);
-        });
-    }
-
-    document.addEventListener('modalOpened', resetColec);
+    // Evento para reset del modal
+    pin(document).en('modalOpened', resetColec);
 }
 
 function abrirColec() {
