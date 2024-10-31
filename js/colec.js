@@ -10,60 +10,60 @@ function colec() {
     }
 }
 
-function iniciarColec() {
-    // Delegación de eventos para los botones de colección
-    pun.delegado('click', '.botonColeccionBtn', e => {
-        e.preventDefault();
-        colecPostId = e.currentTarget.getAttribute('data-post_id');
-        console.log('Post ID seleccionado:', colecPostId);
-        abrirColec();
-    });
 
-    // Delegación para las colecciones
-    pun.delegado('click', '.coleccion', e => {
-        if (e.currentTarget.closest('.listaColeccion')) {
-            manejarClickColec(e.currentTarget);
+function iniciarColec() {
+    document.body.addEventListener('click', e => {
+        const btn = e.target.closest('.botonColeccionBtn');
+        if (btn) {
+            e.preventDefault();
+            colecPostId = btn.getAttribute('data-post_id');
+            console.log('Post ID seleccionado:', colecPostId);
+            abrirColec();
         }
     });
 
-    // Eventos individuales
-    pun('#btnListo').evento('click', manejarClickListoColec);
-    pun('#btnEmpezarCreaColec').evento('click', abrirModalCrearColec);
-    pun('#btnVolverColec').evento('click', volverColec);
-
-    // Evento input
-    pun('#buscarColeccion').evento('input', e => {
-        const query = e.currentTarget.value.toLowerCase();
-        busquedaColec(query);
+    document.addEventListener('click', e => {
+        const coleccion = e.target.closest('.coleccion');
+        if (coleccion && coleccion.closest('.listaColeccion')) {
+            manejarClickColec(coleccion);
+        }
     });
 
-    // Evento personalizado
+    a('#btnListo')?.addEventListener('click', manejarClickListoColec);
+    a('#btnEmpezarCreaColec')?.addEventListener('click', abrirModalCrearColec);
+    //a('#btnCrearColec')?.addEventListener('click', crearNuevaColec);
+    a('#btnVolverColec')?.addEventListener('click', volverColec);
+
+    const buscarInput = a('#buscarColeccion');
+    if (buscarInput) {
+        buscarInput.addEventListener('input', () => {
+            const query = buscarInput.value.toLowerCase();
+            busquedaColec(query);
+        });
+    }
+
     document.addEventListener('modalOpened', resetColec);
 }
 
 function abrirColec() {
-    const modal = pun('.modalColec');
-    if (!modal) {
-        console.error('No se encontró el elemento .modalColec');
-        return;
-    }
+    const modal = a('.modalColec');
     mostrar(modal);
     crearBackgroundColec();
-    pun.agregarClase('body', 'no-scroll');
+    a.agregarClase('body', 'no-scroll');
 }
 
 function abrirModalCrearColec() {
-    ocultar(pun('.modalColec'));
-    mostrar(pun('.modalCrearColec'));
+    ocultar(a('.modalColec'));
+    mostrar(a('.modalCrearColec'));
 }
 
 function volverColec() {
-    ocultar(pun('.modalCrearColec'));
-    mostrar(pun('.modalColec'));
+    ocultar(a('.modalCrearColec'));
+    mostrar(a('.modalColec'));
 }
 
 function busquedaColec(query) {
-    pun('.listaColeccion .coleccion').forEach(coleccion => {
+    a('.listaColeccion .coleccion').forEach(coleccion => {
         const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
         if (titulo.includes(query)) {
             mostrar(coleccion);
@@ -74,16 +74,16 @@ function busquedaColec(query) {
 }
 
 function cerrarColec() {
-    ocultar(pun('.modalColec'));
-    ocultar(pun('.modalCrearColec'));
+    ocultar(a('.modalColec'));
+    ocultar(a('.modalCrearColec'));
     quitBackground();
-    pun.removerClase('body', 'no-scroll');
+    a.removerClase('body', 'no-scroll');
     resetColec();
 }
 
 function manejarClickColec(coleccion) {
-    pun.removerClase('.coleccion', 'seleccion');
-    pun.agregarClase(coleccion, 'seleccion');
+    a.removerClase('.coleccion', 'seleccion');
+    a.agregarClase(coleccion, 'seleccion');
     colecSelecionado = coleccion.getAttribute('data-id') || coleccion.id;
 }
 
@@ -98,18 +98,18 @@ function manejarClickListoColec() {
 function resetColec() {
     colecPostId = null;
     colecSelecionado = null;
-    pun.removerClase('.coleccion', 'seleccion');
+    a.removerClase('.coleccion', 'seleccion');
 }
 
 function quitBackground() {
-    const darkBackground = pun('.submenu-background');
+    const darkBackground = a('.submenu-background');
     if (darkBackground) {
         darkBackground.remove();
     }
 }
 
 function crearBackgroundColec() {
-    if (pun('.submenu-background')) return;
+    if (a('.submenu-background')) return;
 
     const darkBackground = document.createElement('div');
     darkBackground.classList.add('submenu-background');

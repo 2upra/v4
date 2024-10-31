@@ -1,75 +1,43 @@
+/*
+PUN: SELECIONAR COSAS
+PIN: ASIGNAR EVENTOS (FALTA)
+*/
+
+/*
+
+*/
+
 (function (global) {
-    class PunElement {
-        constructor(elementos) {
-            this.elementos = Array.isArray(elementos) ? elementos : [elementos];
-        }
-
-        evento(tipo, callback) {
-            this.elementos.forEach(elemento => {
-                if (elemento) {
-                    elemento.addEventListener(tipo, callback);
-                }
-            });
-            return this;
-        }
-
-        delegado(tipo, selector, callback) {
-            this.elementos.forEach(elemento => {
-                if (elemento) {
-                    elemento.addEventListener(tipo, e => {
-                        const target = e.target.closest(selector);
-                        if (target) {
-                            callback.call(target, e);
-                        }
-                    });
-                }
-            });
-            return this;
-        }
-
-        valor(nuevoValor) {
-            if (nuevoValor === undefined) {
-                return this.elementos[0]?.value;
-            }
-            this.elementos.forEach(elemento => {
-                if (elemento) elemento.value = nuevoValor;
-            });
-            return this;
-        }
-
-        // Más métodos útiles...
-    }
-
-    function pun(selector) {
+    function a(selector) {
         if (typeof selector === 'string') {
             const elementos = document.querySelectorAll(selector);
-            return new PunElement(elementos.length === 1 ? elementos[0] : Array.from(elementos));
+            if (elementos.length === 0) return null;
+            return elementos[0];
         }
-        return new PunElement(selector);
+        return selector;
     }
 
-    pun.agregarClase = function (selector, nombreClase) {
+    // Función auxiliar para convertir el selector en un array de elementos
+    function obtenerElementos(selector) {
+        if (typeof selector === 'string') {
+            return Array.from(document.querySelectorAll(selector));
+        }
+        return [selector]; // Si es un elemento, lo envolvemos en un array
+    }
+
+    a.agregarClase = function (selector, nombreClase) {
         obtenerElementos(selector).forEach(el => el.classList.add(nombreClase));
     };
 
-    pun.removerClase = function (selector, nombreClase) {
+    a.removerClase = function (selector, nombreClase) {
         obtenerElementos(selector).forEach(el => el.classList.remove(nombreClase));
     };
 
-    pun.toggleClase = function (selector, nombreClase) {
+    a.toggleClase = function (selector, nombreClase) {
         obtenerElementos(selector).forEach(el => el.classList.toggle(nombreClase));
     };
-    // Método estático para delegación global
-    pun.delegado = function (tipo, selector, callback) {
-        document.addEventListener(tipo, e => {
-            const target = e.target.closest(selector);
-            if (target) {
-                callback.call(target, e);
-            }
-        });
-    };
 
-    global.pun = pun;
+    global.a = a;
 })(window);
 
 // Funciones para mostrar y ocultar elementos con transición
