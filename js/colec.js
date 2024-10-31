@@ -1,3 +1,4 @@
+
 let colecPostId = null;
 let colecSelecionado = null;
 let colecIniciado = false;
@@ -19,73 +20,49 @@ function iniciarColec() {
             abrirColec();
         }
     });
+
     document.addEventListener('click', e => {
         const coleccion = e.target.closest('.coleccion');
         if (coleccion && coleccion.closest('.listaColeccion')) {
             manejarClickColec(coleccion);
         }
     });
-    const btnListo = document.getElementById('btnListo');
-    if (btnListo) {
-        btnListo.addEventListener('click', manejarClickListoColec);
-    } else {
-        return;
-    }
-    const btnEmpezarCrearColec = document.getElementById('btnEmpezarCreaColec');
-    if (btnEmpezarCrearColec) {
-        btnEmpezarCrearColec.addEventListener('click', abrirModalCrearColec);
-    } else {
-        return;
-    }
-    const crearColec = document.getElementById('btnCrearColec');
-    if (crearColec) {
-        crearColec.addEventListener('click', crearNuevaColec);
-    } else {
-        return;
-    }
-    const btnvolverColec = document.getElementById('btnVolverColec'); 
-    if (btnvolverColec) {
-        btnvolverColec.addEventListener('click', volverColec);
-    } else {
-        return;
-    }
-    const buscarInput = document.getElementById('buscarColeccion');
+
+    $('#btnListo')?.addEventListener('click', manejarClickListoColec);
+    $('#btnEmpezarCreaColec')?.addEventListener('click', abrirModalCrearColec);
+    $('#btnCrearColec')?.addEventListener('click', crearNuevaColec);
+    $('#btnVolverColec')?.addEventListener('click', volverColec);
+
+    const buscarInput = $('#buscarColeccion');
     if (buscarInput) {
         buscarInput.addEventListener('input', () => {
             const query = buscarInput.value.toLowerCase();
             busquedaColec(query);
         });
-    } else {
-        return;
     }
-    document.addEventListener('modalOpened', () => {
-        resetColec();
-    });
+
+    document.addEventListener('modalOpened', resetColec);
 }
 
 function abrirColec() {
-    const modal = document.querySelector('.modalColec');
+    const modal = $('.modalColec');
     mostrar(modal);
     crearBackgroundColec();
-    document.body.classList.add('no-scroll');
+    $.agregarClase('body', 'no-scroll');
 }
 
 function abrirModalCrearColec() {
-    const modal = document.querySelector('.modalColec');
-    ocultar(modal);
-    const modalCreaColec = document.querySelector('.modalCrearColec');
-    mostrar(modalCreaColec);
+    ocultar($('.modalColec'));
+    mostrar($('.modalCrearColec'));
 }
 
 function volverColec() {
-    const modalCreaColec = document.querySelector('.modalCrearColec');
-    ocultar(modalCreaColec);
-    const modal = document.querySelector('.modalColec');
-    mostrar(modal);
+    ocultar($('.modalCrearColec'));
+    mostrar($('.modalColec'));
 }
 
 function busquedaColec(query) {
-    document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
+    $('.listaColeccion .coleccion').forEach(coleccion => {
         const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
         if (titulo.includes(query)) {
             mostrar(coleccion);
@@ -96,26 +73,21 @@ function busquedaColec(query) {
 }
 
 function cerrarColec() {
-    const modal = document.querySelector('.modalColec');
-    ocultar(modal);
-    const modalCreaColec = document.querySelector('.modalCrearColec');
-    ocultar(modalCreaColec);
+    ocultar($('.modalColec'));
+    ocultar($('.modalCrearColec'));
     quitBackground();
-    document.body.classList.remove('no-scroll');
+    $.removerClase('body', 'no-scroll');
     resetColec();
 }
 
-
-
 function manejarClickColec(coleccion) {
-    document.querySelectorAll('.coleccion').forEach(item => item.classList.remove('seleccion'));
-    coleccion.classList.add('seleccion');
+    $.removerClase('.coleccion', 'seleccion');
+    $.agregarClase(coleccion, 'seleccion');
     colecSelecionado = coleccion.getAttribute('data-id') || coleccion.id;
 }
 
 function manejarClickListoColec() {
     if (colecPostId && colecSelecionado) {
- 
         cerrarColec();
     } else {
         cerrarColec();
@@ -125,33 +97,20 @@ function manejarClickListoColec() {
 function resetColec() {
     colecPostId = null;
     colecSelecionado = null;
-    document.querySelectorAll('.coleccion').forEach(item => item.classList.remove('seleccion'));
+    $.removerClase('.coleccion', 'seleccion');
 }
 
 function quitBackground() {
-    const darkBackground = document.querySelector('.submenu-background');
+    const darkBackground = $('.submenu-background');
     if (darkBackground) {
         darkBackground.remove();
-    } else {
     }
-}
-
-function busquedaColec(query) {
-    document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
-        const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
-        coleccion.style.display = titulo.includes(query) ? 'flex' : 'none';
-    });
 }
 
 function crearBackgroundColec() {
-    let existingBackground = document.querySelector('.submenu-background');
-    if (existingBackground) {
-        //console.log('Fondo oscuro ya existe.');
-        return existingBackground;
-    }
+    if ($('.submenu-background')) return;
 
-    //console.log('Creando fondo oscuro.');
-    let darkBackground = document.createElement('div');
+    const darkBackground = document.createElement('div');
     darkBackground.classList.add('submenu-background');
     Object.assign(darkBackground.style, {
         position: 'fixed',

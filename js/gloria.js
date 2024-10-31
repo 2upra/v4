@@ -34,3 +34,24 @@ window.ocultar = function (element) {
         addTransition(element, 1, 0); 
     }
 }
+
+(function (global) {
+    function $(selector) {
+        const elementos = document.querySelectorAll(selector);
+        return elementos.length === 1 ? elementos[0] : elementos;
+    }
+
+    // Métodos adicionales
+    $.agregarClase = function (selector, nombreClase) {
+        document.querySelectorAll(selector).forEach(el => el.classList.add(nombreClase));
+    };
+
+    $.removerClase = function (selector, nombreClase) {
+        document.querySelectorAll(selector).forEach(el => el.classList.remove(nombreClase));
+    };
+
+    $.toggleClase = function (selector, nombreClase) {
+        document.querySelectorAll(selector).forEach(el => el.classList.toggle(nombreClase));
+    };
+    global.$ = $;
+})(window);
