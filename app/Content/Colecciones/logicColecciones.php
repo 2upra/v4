@@ -8,7 +8,7 @@ function crearColeccion()
     }
 
     // Verificar y sanear los datos recibidos
-    $colecPostId = isset($_POST['colecPostId']) ? intval($_POST['colecPostId']) : 0;
+    $colecSampleId = isset($_POST['colecSampleId']) ? intval($_POST['colecSampleId']) : 0;
     $imgColec = isset($_POST['imgColec']) ? $_POST['imgColec'] : '';
     // Si la imagen es http://null o null, establecerla como cadena vacía
     $imgColec = ($imgColec === 'http://null' || $imgColec === 'null') ? '' : esc_url_raw($imgColec);
@@ -16,7 +16,7 @@ function crearColeccion()
     $imgColecId = isset($_POST['imgColecId']) ? sanitize_text_field($_POST['imgColecId']) : '';
     $descripcion = isset($_POST['descripcion']) ? sanitize_textarea_field($_POST['descripcion']) : '';
 
-    guardarLog("Datos recibidos: colecPostId=$colecPostId, imgColec=$imgColec, titulo=$titulo, imgColecId=$imgColecId, descripcion=$descripcion");
+    guardarLog("Datos recibidos: colecSampleId=$colecSampleId, imgColec=$imgColec, titulo=$titulo, imgColecId=$imgColecId, descripcion=$descripcion");
 
     // Validar título obligatorio
     if (empty($titulo)) {
@@ -74,8 +74,8 @@ function crearColeccion()
     }
 
     // Inicializar la meta 'samples' con el postId proporcionado
-    update_post_meta($coleccionId, 'samples', json_encode([$colecPostId]));
-    guardarLog("Meta 'samples' inicializada con colecPostId $colecPostId para la colección $coleccionId");
+    update_post_meta($coleccionId, 'samples', json_encode([$colecSampleId]));
+    guardarLog("Meta 'samples' inicializada con colecSampleId $colecSampleId para la colección $coleccionId");
     
     wp_send_json_success(['message' => 'Colección creada exitosamente']);
     wp_die();

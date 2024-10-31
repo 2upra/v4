@@ -1,4 +1,4 @@
-let colecPostId = null;
+let colecSampleId = null;
 let colecSelecionado = null;
 let colecIniciado = false;
 let imgColec = null;
@@ -16,8 +16,8 @@ function iniciarColec() {
         const btn = e.target.closest('.botonColeccionBtn');
         if (btn) {
             e.preventDefault();
-            colecPostId = btn.getAttribute('data-post_id');
-            console.log('Post ID seleccionado:', colecPostId);
+            colecSampleId = btn.getAttribute('data-post_id');
+            // console.log('Post ID seleccionado:', colecSampleId);
             abrirColec();
         }
     });
@@ -48,11 +48,44 @@ function iniciarColec() {
     });
 }
 
-function abrirColec() {
+
+async function abrirColec() {
     const modal = a('.modalColec');
     mostrar(modal);
     crearBackgroundColec();
     a.gregar('body', 'no-scroll');
+
+    // Verificar las colecciones que contienen el sample
+    await verificarSampleEnColecciones();
+}
+
+async function verificarSampleEnColecciones() {
+    try {
+        const response = await enviarAjax('verificar_sample_en_colecciones', {
+            sample_id: colecSampleId
+        });
+
+        if (response.success) {
+            // Recorrer todas las colecciones en el modal
+            const colecciones = document.querySelectorAll('.coleccion');
+            colecciones.forEach(coleccion => {
+                const coleccionId = coleccion.dataset.post_id;
+                
+                // Verificar si esta colección contiene el sample
+                if (response.data.colecciones.includes(coleccionId)) {
+                    // Agregar indicador visual
+                    const existeSpan = document.createElement('span');
+                    existeSpan.className = 'ya-existe';
+                    existeSpan.textContent = 'Ya existe';
+                    coleccion.appendChild(existeSpan);
+                }
+            });
+        } else {
+            console.error('Error al verificar las colecciones:', response.message);
+        }
+    } catch (error) {
+        console.error('Error al verificar las colecciones:', error);
+    }
 }
 
 function abrirModalCrearColec() {
@@ -68,7 +101,7 @@ function volverColec() {
 function verificarColec() {
     const titulo = a('#tituloColec').value;
     function verificarCamposColec() {
-        if (!colecPostId) {
+        if (!colecSampleId) {
             alert('Parece que hay un error, intenta seleccionar algo para guardar nuevamente.');
             return false;
         }
@@ -89,7 +122,7 @@ async function crearNuevaColec() {
     const descripcion = a('#descripColec').value || '';
 
     const data = {
-        colecPostId,
+        colecSampleId,
         imgColec,
         titulo,
         imgColecId,
@@ -111,7 +144,7 @@ async function crearNuevaColec() {
             alert(`Error al crear la colección: ${response?.message || 'Desconocido'}`);
         }
     } catch (error) {
-        console.error('Error al enviar los datos:', error);
+        // console.error('Error al enviar los datos:', error);
         alert('Ocurrió un error durante la creación de la colección. Por favor, inténtelo de nuevo.');
     } finally {
         button.innerText = originalText;
@@ -119,20 +152,18 @@ async function crearNuevaColec() {
     }
 }
 
-// Función para actualizar la lista de colecciones
-// En JavaScript
 async function actualizarListaColecciones() {
     try {
-        console.log('Solicitando colecciones...');
+        // console.log('Solicitando colecciones...');
         const response = await enviarAjax('obtener_colecciones');
-        console.log('Respuesta recibida:', response);
+        // console.log('Respuesta recibida:', response);
         
         if (response) {
             const listaColeccion = document.querySelector('.listaColeccion');
-            console.log('Lista colección encontrada:', listaColeccion);
+            // console.log('Lista colección encontrada:', listaColeccion);
             
             const elementosFijos = listaColeccion.querySelectorAll('#favoritos, #despues');
-            console.log('Elementos fijos:', elementosFijos);
+            // console.log('Elementos fijos:', elementosFijos);
             
             listaColeccion.innerHTML = '';
             
@@ -140,13 +171,13 @@ async function actualizarListaColecciones() {
                 listaColeccion.appendChild(elemento);
             });
             
-            console.log('HTML a insertar:', response);
+            // console.log('HTML a insertar:', response);
             listaColeccion.insertAdjacentHTML('beforeend', response);
         } else {
-            console.error('No se recibió respuesta del servidor');
+            // console.error('No se recibió respuesta del servidor');
         }
     } catch (error) {
-        console.error('Error al actualizar la lista de colecciones:', error);
+        // console.error('Error al actualizar la lista de colecciones:', error);
     }
 }
 
@@ -227,7 +258,7 @@ function manejarClickColec(coleccion) {
 
 
 function manejarClickListoColec() {
-    if (colecPostId && colecSelecionado) {
+    if (colecSampleId && colecSelecionado) {
         cerrarColec();
     } else {
         cerrarColec();
@@ -235,9 +266,11 @@ function manejarClickListoColec() {
 }
 
 function resetColec() {
-    colecPostId = null;
+    colecSampleId = null;
     colecSelecionado = null;
     a.quitar('.coleccion', 'seleccion');
+    const existeSpans = document.querySelectorAll('.ya-existe');
+    existeSpans.forEach(span => span.remove());
 }
 
 function quitBackground() {
