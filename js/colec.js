@@ -122,13 +122,9 @@ async function crearNuevaColec() {
 }
 
 function busquedaColec(query) {
-    a('.listaColeccion .coleccion').forEach(coleccion => {
+    document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
         const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
-        if (titulo.includes(query)) {
-            mostrar(coleccion);
-        } else {
-            ocultar(coleccion);
-        }
+        coleccion.style.display = titulo.includes(query) ? 'flex' : 'none';
     });
 }
 
