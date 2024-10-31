@@ -92,6 +92,8 @@ function regenerarLite() {
     }
 }
 
+regenerarLite();
+
 // Registrar intervalo personalizado de 6 horas
 add_filter('cron_schedules', function($schedules) {
     $schedules['every_6_hours'] = array(
