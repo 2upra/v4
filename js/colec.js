@@ -32,15 +32,18 @@ function iniciarColec() {
     a('#btnCrearColec')?.addEventListener('click', crearNuevaColec);
     a('#btnVolverColec')?.addEventListener('click', volverColec);
 
-    const buscarInput = a('#buscarColeccion');
+    const buscarInput = document.getElementById('buscarColeccion');
     if (buscarInput) {
         buscarInput.addEventListener('input', () => {
             const query = buscarInput.value.toLowerCase();
             busquedaColec(query);
         });
+    } else {
+        return;
     }
-
-    document.addEventListener('modalOpened', resetColec);
+    document.addEventListener('modalOpened', () => {
+        resetColec();
+    });
 }
 
 function abrirColec() {
@@ -83,15 +86,14 @@ async function crearNuevaColec() {
 
     // Recolectar los datos del formulario
     const titulo = a('#tituloColec').value;
-    const descripcion = a('#descripColec').value || ''; 
-    
+    const descripcion = a('#descripColec').value || '';
 
     const data = {
-        colecPostId,       
-        colecSelecionado, 
-        imgColec,         
-        titulo,           
-        descripcion        
+        colecPostId,
+        colecSelecionado,
+        imgColec,
+        titulo,
+        descripcion
     };
     const button = a('#btnCrearColec');
     const originalText = button.innerText;
@@ -105,7 +107,7 @@ async function crearNuevaColec() {
         // Manejar la respuesta del servidor
         if (response?.success) {
             alert('Colección creada con éxito');
-            cerrarColec();        
+            cerrarColec();
         } else {
             alert(`Error al crear la colección: ${response?.message || 'Desconocido'}`);
         }
