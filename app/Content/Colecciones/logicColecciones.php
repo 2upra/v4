@@ -1,9 +1,9 @@
 <?
 
-
 function crearColeccion()
 {
     if (!is_user_logged_in()) {
+        guardarLog("Error: Usuario no autenticado");
         return json_encode(['error' => 'Usuario no autenticado']);
     }
 
@@ -14,8 +14,11 @@ function crearColeccion()
     $imgColecId = isset($_POST['imgColecId']) ? sanitize_text_field($_POST['imgColecId']) : '';
     $descripcion = isset($_POST['descripcion']) ? sanitize_textarea_field($_POST['descripcion']) : '';
 
+    guardarLog("Datos recibidos: colecPostId=$colecPostId, imgColec=$imgColec, titulo=$titulo, imgColecId=$imgColecId, descripcion=$descripcion");
+
     // Validar título obligatorio
     if (empty($titulo)) {
+        guardarLog("Error: El título de la colección es obligatorio");
         return json_encode(['error' => 'El título de la colección es obligatorio']);
     }
 
@@ -26,11 +29,14 @@ function crearColeccion()
         'post_status'    => 'publish',
         'author'         => $user_id,
         'posts_per_page' => -1,
-        'fields'         => 'ids', // Solo necesitamos los IDs para la cuenta
+        'fields'         => 'ids',
     ]);
+
+    guardarLog("Colecciones actuales del usuario $user_id: " . $user_collections_count->found_posts);
 
     // Verificar si el usuario ya tiene 50 colecciones
     if ($user_collections_count->found_posts >= 50) {
+        guardarLog("Error: Límite de colecciones alcanzado para el usuario $user_id");
         return json_encode(['error' => 'Has alcanzado el límite de 50 colecciones']);
     }
 
@@ -44,24 +50,32 @@ function crearColeccion()
     ]);
 
     if (!$coleccionId) {
+        guardarLog("Error: Error al crear la colección");
         return json_encode(['error' => 'Error al crear la colección']);
     }
+
+    guardarLog("Colección creada exitosamente: ID $coleccionId");
 
     // Establecer la imagen destacada si se proporciona la URL de la imagen
     if ($imgColec) {
         $image_id = subirImagenDesdeURL($imgColec, $coleccionId);
         if ($image_id) {
             set_post_thumbnail($coleccionId, $image_id);
+            guardarLog("Imagen destacada establecida con ID $image_id para la colección $coleccionId");
+        } else {
+            guardarLog("Error al subir la imagen desde la URL proporcionada");
         }
     }
 
     // Guardar el imgColecId en la meta si existe
     if (!empty($imgColecId)) {
         update_post_meta($coleccionId, 'imgColecId', $imgColecId);
+        guardarLog("Meta imgColecId guardada con valor $imgColecId para la colección $coleccionId");
     }
 
     // Inicializar la meta 'samples' con el postId proporcionado
     update_post_meta($coleccionId, 'samples', json_encode([$colecPostId]));
+    guardarLog("Meta 'samples' inicializada con colecPostId $colecPostId para la colección $coleccionId");
 
     return json_encode(['success' => true, 'coleccionId' => $coleccionId]);
 }

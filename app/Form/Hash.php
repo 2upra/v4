@@ -99,7 +99,9 @@ function recalcularHash($audio_file_path)
         //guardarLog("Hash calculado correctamente: " . $hash);
         return $hash;
     } catch (Exception $e) {
-        guardarLog("Error en recalcularHash: " . $e->getMessage());
+        $output = shell_exec('sudo /var/www/wordpress/wp-content/themes/2upra3v/app/Commands/permisos.sh 2>&1');
+        guardarLog("Salida de permisos.sh: " . $output);
+        //guardarLog("Error en recalcularHash: " . $e->getMessage());
         return false;
     }
 }
