@@ -30,7 +30,7 @@ function iniciarColec() {
 
     $('#btnListo')?.addEventListener('click', manejarClickListoColec);
     $('#btnEmpezarCreaColec')?.addEventListener('click', abrirModalCrearColec);
-    $('#btnCrearColec')?.addEventListener('click', crearNuevaColec);
+    //$('#btnCrearColec')?.addEventListener('click', crearNuevaColec);
     $('#btnVolverColec')?.addEventListener('click', volverColec);
 
     const buscarInput = $('#buscarColeccion');

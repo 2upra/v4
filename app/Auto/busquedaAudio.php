@@ -72,7 +72,7 @@ function procesarAudios()
 
 function buscarUnAudioValido($directorio, $intentos = 0)
 {
-    $max_intentos = 10; // Número máximo de intentos recursivos
+    $max_intentos = 25; // Número máximo de intentos recursivos
     $max_intentos_hash = 3; // Número máximo de intentos para calcular el hash
 
     if ($intentos >= $max_intentos) {
