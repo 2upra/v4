@@ -65,14 +65,14 @@ function iniciarColec() {
 
 function abrirColec() {
     const modal = document.querySelector('.modalColec');
-    modal.style.display = 'block';
+    mostrar(modal);
     crearBackgroundColec();
     document.body.classList.add('no-scroll');
 }
 
 function abrirModalCrearColec() {
     const modal = document.querySelector('.modalColec');
-    modal.style.display = 'none';
+    ocultar(modal);
     const modalCreaColec = document.querySelector('.modalCrearColec');
     modalCreaColec.style.display = 'block';
 }
@@ -116,10 +116,8 @@ function resetColec() {
 function quitBackground() {
     const darkBackground = document.querySelector('.submenu-background');
     if (darkBackground) {
-        //console.log('Eliminando fondo oscuro.');
         darkBackground.remove();
     } else {
-        //console.log('No hay fondo oscuro para eliminar.');
     }
 }
 
