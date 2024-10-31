@@ -46,6 +46,10 @@ function iniciarColec() {
 
 function abrirColec() {
     const modal = $('.modalColec');
+    if (!modal) {
+        console.error('No se encontró el elemento .modalColec');
+        return;
+    }
     mostrar(modal);
     crearBackgroundColec();
     $.agregarClase('body', 'no-scroll');

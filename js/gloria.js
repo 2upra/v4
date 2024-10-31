@@ -1,6 +1,17 @@
+/*
+
+tengo este error 
+gloria.js?ver=1.0.1.115572248:50  Uncaught TypeError: Failed to execute 'getComputedStyle' on 'Window': parameter 1 is not of type 'Element'.
+    at window.mostrar (gloria.js?ver=1.0.1.115572248:50:20)
+    at abrirColec (colec.js?ver=1.0.1.1446427058:49:5)
+    at HTMLBodyElement.<anonymous> (colec.js?ver=1.0.1.1446427058:20:13)
+
+*/
+
 (function (global) {
     function $(selector) {
         const elementos = document.querySelectorAll(selector);
+        if (elementos.length === 0) return null;
         return elementos.length === 1 ? elementos[0] : elementos;
     }
 
@@ -47,7 +58,12 @@ function addTransition(element, from, to) {
 }
 
 window.mostrar = function (element) {
-    if (element && getComputedStyle(element).display === 'none') {
+    if (!element) {
+        console.error('No se proporcionó un elemento válido');
+        return;
+    }
+    
+    if (getComputedStyle(element).display === 'none') {
         element._previousDisplay = getComputedStyle(element).display === 'none' ? 'block' : getComputedStyle(element).display;
         addTransition(element, 0, 1);
     }
@@ -58,3 +74,5 @@ window.ocultar = function (element) {
         addTransition(element, 1, 0);
     }
 }
+
+
