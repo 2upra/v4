@@ -68,8 +68,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
         actualizarIconoNotificaciones();
         iniciarPolling();
-
+        /*
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        enviarAjax('ajustar_zona_horaria', { timezone: timezone });
+        enviarAjax('ajustar_zona_horaria', { timezone: timezone }); */
     }
 });
