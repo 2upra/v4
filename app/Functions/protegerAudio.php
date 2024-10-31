@@ -92,31 +92,19 @@ function regenerarLite() {
     }
 }
 
-regenerarLite();
 
-// Registrar intervalo personalizado de 6 horas
-add_filter('cron_schedules', function($schedules) {
-    $schedules['every_6_hours'] = array(
-        'interval' => 21600, // 6 horas en segundos
-        'display' => 'Cada 6 horas'
+// Añadir intervalo de 6 horas en WordPress
+add_filter('cron_schedules', 'intervalo_cada_seis_horas');
+function intervalo_cada_seis_horas($schedules) {
+    $schedules['cada_seis_horas'] = array(
+        'interval' => 21600, // 6 horas en segundos (6 * 60 * 60)
+        'display' => __('Cada 6 Horas')
     );
     return $schedules;
-});
+}
 
-// Programar el evento si no está programado
-add_action('wp', function() {
-    if (!wp_next_scheduled('regenerar_audios_lite_event')) {
-        wp_schedule_event(time(), 'every_6_hours', 'regenerar_audios_lite_event');
-    }
-});
+if (!wp_next_scheduled('regenerar_audio_lite_evento')) {
+    wp_schedule_event(time(), 'cada_seis_horas', 'regenerar_audio_lite_evento');
+}
+add_action('regenerar_audio_lite_evento', 'regenerarLite');
 
-// Conectar el evento con la función
-add_action('regenerar_audios_lite_event', 'regenerarLite');
-
-// Limpiar el evento programado cuando se desactive el plugin
-register_deactivation_hook(__FILE__, function() {
-    $timestamp = wp_next_scheduled('regenerar_audios_lite_event');
-    if ($timestamp) {
-        wp_unschedule_event($timestamp, 'regenerar_audios_lite_event');
-    }
-});
