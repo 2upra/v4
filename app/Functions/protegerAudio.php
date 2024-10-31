@@ -76,4 +76,4 @@ function programar_verificacion_audio() {
 }
 add_action('wp', 'programar_verificacion_audio');
 add_action('verificar_audio_diario', 'verificarAudioMp3');
-add_action('init', 'verificarAudioMp3');
+//add_action('init', 'verificarAudioMp3');
