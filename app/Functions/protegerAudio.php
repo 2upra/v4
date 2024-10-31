@@ -9,74 +9,112 @@ add_filter('pre_delete_attachment', function($delete, $post) {
 }, 10, 2);
 
 
-//No se que hace esto exactamente, pero, podemos verificar la existencia de todos los adjuntos de los post que contengan un audio en esa carpeta a ver si carga
-/*
-function verificarAudioMp3() {
-    $upload_dir = wp_upload_dir();
-    $audio_dir = $upload_dir['basedir'] . '/audio/';
+function regenerarLite() {
+    global $wpdb;
     
-    if (!is_dir($audio_dir)) {
-        logAudio("Directorio de audio no existe: $audio_dir");
+    $posts_con_audio = $wpdb->get_results("
+        SELECT post_id, meta_value as audio_id 
+        FROM {$wpdb->postmeta} 
+        WHERE meta_key = 'post_audio'
+    ");
+
+    if (empty($posts_con_audio)) {
+        logAudio("No se encontraron posts con post_audio");
         return;
     }
 
-    // Verificar archivos MP3 en el directorio
-    $mp3_files = glob($audio_dir . "*.mp3");
-    if (empty($mp3_files)) {
-        logAudio("No se encontraron archivos MP3 en el directorio");
-        return;
+    $uploads_dir = wp_upload_dir();
+    $audio_dir = trailingslashit($uploads_dir['basedir']) . "audio/";
+
+    if (!file_exists($audio_dir)) {
+        wp_mkdir_p($audio_dir);
     }
 
-    foreach ($mp3_files as $file) {
-        if (!file_exists($file)) {
-            logAudio("Archivo MP3 no encontrado: $file");
+    foreach ($posts_con_audio as $post) {
+        $post_id = $post->post_id;
+        $audio_id = $post->audio_id;
+        
+        $audio_lite_id = get_post_meta($post_id, 'post_audio_lite', true);
+        $wav_file = get_attached_file($audio_id);
+        
+        if (!$wav_file || !file_exists($wav_file)) {
+            logAudio("Archivo WAV no encontrado para post_id: $post_id, audio_id: $audio_id");
             continue;
         }
 
-        // Verificar permisos
-        $perms = fileperms($file);
-        if (($perms & 0644) !== 0644) {
-            logAudio("Permisos incorrectos en archivo: $file - Permisos actuales: " . decoct($perms & 0777));
-        }
+        $wav_info = pathinfo($wav_file);
+        $mp3_filename = $wav_info['filename'] . '_lite.mp3';
+        $mp3_path = $audio_dir . $mp3_filename;
 
-        // Verificar si el archivo está vinculado a un post
-        $attachment_id = attachment_url_to_postid(str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $file));
-        if (!$attachment_id) {
-            logAudio("Archivo no vinculado a ningún post: $file");
+        $regenerar = false;
+        
+        if (!$audio_lite_id) {
+            logAudio("No existe post_audio_lite para post_id: $post_id");
+            $regenerar = true;
         } else {
-            // Verificar el post padre
-            $attachment = get_post($attachment_id);
-            if ($attachment->post_parent) {
-                $parent = get_post($attachment->post_parent);
-                if (!$parent || $parent->post_status !== 'publish') {
-                    logAudio("Post padre no publicado o no existe para: $file");
-                }
+            $lite_file = get_attached_file($audio_lite_id);
+            if (!$lite_file || !file_exists($lite_file)) {
+                logAudio("Archivo lite no encontrado para post_id: $post_id, audio_lite_id: $audio_lite_id");
+                $regenerar = true;
             }
         }
 
-        // Verificar tamaño del archivo
-        $filesize = filesize($file);
-        if ($filesize < 1024) { // menos de 1KB
-            logAudio("Archivo sospechosamente pequeño: $file - Tamaño: $filesize bytes");
-        }
-    }
+        if ($regenerar) {
+            $comando_lite = "/usr/bin/ffmpeg -i " . escapeshellarg($wav_file) . " -b:a 128k " . escapeshellarg($mp3_path) . " -y";
+            exec($comando_lite, $output_lite, $return_lite);
 
-    // Verificar archivos WAV correspondientes
-    foreach ($mp3_files as $mp3_file) {
-        $wav_file = str_replace('_lite.mp3', '.wav', $mp3_file);
-        if (!file_exists($wav_file)) {
-            logAudio("Archivo WAV correspondiente no encontrado: $wav_file");
+            if ($return_lite !== 0 || !file_exists($mp3_path)) {
+                logAudio("Error al generar MP3 para post_id: $post_id - " . implode(" | ", $output_lite));
+                continue;
+            }
+
+            $filetype = wp_check_filetype($mp3_filename, null);
+            $attachment = array(
+                'post_mime_type' => $filetype['type'],
+                'post_title' => $mp3_filename,
+                'post_content' => '',
+                'post_status' => 'inherit'
+            );
+
+            $attach_id = wp_insert_attachment($attachment, $mp3_path, $post_id);
+            
+            if (is_wp_error($attach_id)) {
+                logAudio("Error al crear attachment para post_id: $post_id - " . $attach_id->get_error_message());
+                continue;
+            }
+
+            $attach_data = wp_generate_attachment_metadata($attach_id, $mp3_path);
+            wp_update_attachment_metadata($attach_id, $attach_data);
+            update_post_meta($post_id, 'post_audio_lite', $attach_id);
+
+            logAudio("Regenerado exitosamente audio lite para post_id: $post_id, nuevo audio_lite_id: $attach_id");
         }
     }
 }
 
-function programar_verificacion_audio() {
-    if (!wp_next_scheduled('verificar_audio_diario')) {
-        wp_schedule_event(time(), 'daily', 'verificar_audio_diario');
-    }
-}
-add_action('wp', 'programar_verificacion_audio');
-add_action('verificar_audio_diario', 'verificarAudioMp3');
-//add_action('init', 'verificarAudioMp3');
+// Registrar intervalo personalizado de 6 horas
+add_filter('cron_schedules', function($schedules) {
+    $schedules['every_6_hours'] = array(
+        'interval' => 21600, // 6 horas en segundos
+        'display' => 'Cada 6 horas'
+    );
+    return $schedules;
+});
 
-*/
+// Programar el evento si no está programado
+add_action('wp', function() {
+    if (!wp_next_scheduled('regenerar_audios_lite_event')) {
+        wp_schedule_event(time(), 'every_6_hours', 'regenerar_audios_lite_event');
+    }
+});
+
+// Conectar el evento con la función
+add_action('regenerar_audios_lite_event', 'regenerarLite');
+
+// Limpiar el evento programado cuando se desactive el plugin
+register_deactivation_hook(__FILE__, function() {
+    $timestamp = wp_next_scheduled('regenerar_audios_lite_event');
+    if ($timestamp) {
+        wp_unschedule_event($timestamp, 'regenerar_audios_lite_event');
+    }
+});
