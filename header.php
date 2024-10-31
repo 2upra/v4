@@ -17,6 +17,40 @@ if (!defined('ABSPATH')) {
 
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
+<script>
+    const root = document.body;
+    const observer = new MutationObserver((mutationsList) => {
+        mutationsList.forEach((mutation) => {
+            if (mutation.type === "attributes" && mutation.attributeName === "style") {
+                const element = mutation.target;
+
+                if (element._isTransitioning) return; // Ignorar si ya está en transición
+
+                if (getComputedStyle(element).display !== 'none') {
+                    element._isTransitioning = true; // Marcar como en transición
+                    element.style.opacity = 0;
+                    element.style.transition = "opacity 1s";
+
+                    requestAnimationFrame(() => {
+                        element.style.opacity = 1;
+                    });
+
+                    element.addEventListener("transitionend", function handler() {
+                        element._isTransitioning = false; // Quitar la marca
+                        element.style.transition = ""; // Limpiar transición
+                        element.removeEventListener("transitionend", handler);
+                    });
+                }
+            }
+        });
+    });
+
+    observer.observe(root, {
+        attributes: true,
+        attributeFilter: ["style"],
+        subtree: true,
+    });
+</script>
 
 <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
