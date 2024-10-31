@@ -628,16 +628,19 @@ window.inicializarWaveform = function (containerId, audioSrc) {
 };
 
 async function selectorformtipo() {
-    // Al cargar la página, se activa el checkbox 'descargacheck' por defecto
+
     const descargacheck = document.getElementById('descargacheck');
+    const musiccheck = document.getElementById('musiccheck');
+    const exclusivocheck = document.getElementById('exclusivocheck');
+    const colabcheck = document.getElementById('colabcheck');
+
+    // Verifica si los elementos necesarios existen; si no, retorna
+    if (!descargacheck || !musiccheck || !exclusivocheck || !colabcheck) return;
+
     descargacheck.checked = true;
     const label = descargacheck.closest('label');
     label.style.color = '#ffffff';
     label.style.background = '#131313';
-
-    const musiccheck = document.getElementById('musiccheck');
-    const exclusivocheck = document.getElementById('exclusivocheck');
-    const colabcheck = document.getElementById('colabcheck');
 
     document.addEventListener('change', async function (event) {
         if (event.target.matches('.custom-checkbox input[type="checkbox"]')) {
@@ -652,10 +655,8 @@ async function selectorformtipo() {
 
             // Si se marca 'musiccheck', desmarca los demás checkboxes y pide confirmación
             if (event.target.id === 'musiccheck' && event.target.checked) {
-                // Mostrar la alerta personalizada y esperar confirmación del usuario
                 const confirmacion = await window.confirm("Vas a publicar música en nuestra plataforma y en otras plataformas de stream.");
                 if (!confirmacion) {
-                    // Si el usuario no confirma, desmarcar 'musiccheck'
                     event.target.checked = false;
                     return;
                 }
@@ -663,33 +664,33 @@ async function selectorformtipo() {
                 descargacheck.checked = false;
                 exclusivocheck.checked = false;
                 colabcheck.checked = false;
-                resetStyles(); // Restablecer estilos de los otros checkboxes
+                resetStyles(); 
             }
 
             // Si se marca 'exclusivocheck', desmarca 'colabcheck' y 'musiccheck'
             if (event.target.id === 'exclusivocheck' && event.target.checked) {
-                colabcheck.checked = false; // Desactiva 'colabcheck'
-                musiccheck.checked = false; // Desactiva 'musiccheck'
+                colabcheck.checked = false; 
+                musiccheck.checked = false; 
                 const colabLabel = colabcheck.closest('label');
                 colabLabel.style.color = '#6b6b6b';
                 colabLabel.style.background = '';
-                resetStyles(); // Restablecer estilos de los otros checkboxes
+                resetStyles();
             }
 
             // Si se marca 'colabcheck', desmarca 'exclusivocheck' y 'musiccheck'
             if (event.target.id === 'colabcheck' && event.target.checked) {
-                exclusivocheck.checked = false; // Desactiva 'exclusivocheck'
-                musiccheck.checked = false; // Desactiva 'musiccheck'
+                exclusivocheck.checked = false; 
+                musiccheck.checked = false; 
                 const exclusivocLabel = exclusivocheck.closest('label');
                 exclusivocLabel.style.color = '#6b6b6b';
                 exclusivocLabel.style.background = '';
-                resetStyles(); // Restablecer estilos de los otros checkboxes
+                resetStyles(); 
             }
 
             // Si se marca 'descargacheck', desmarca 'musiccheck'
             if (event.target.id === 'descargacheck' && event.target.checked) {
-                musiccheck.checked = false; // Desactiva 'musiccheck'
-                resetStyles(); // Restablecer estilos de los otros checkboxes
+                musiccheck.checked = false; 
+                resetStyles(); 
             }
 
             // Estilo al checkbox seleccionado
@@ -716,3 +717,4 @@ async function selectorformtipo() {
         });
     }
 }
+
