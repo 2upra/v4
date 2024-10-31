@@ -28,12 +28,12 @@ function iniciarColec() {
         }
     });
 
-    $('#btnListo')?.addEventListener('click', manejarClickListoColec);
-    $('#btnEmpezarCreaColec')?.addEventListener('click', abrirModalCrearColec);
-    //$('#btnCrearColec')?.addEventListener('click', crearNuevaColec);
-    $('#btnVolverColec')?.addEventListener('click', volverColec);
+    pun('#btnListo')?.addEventListener('click', manejarClickListoColec);
+    pun('#btnEmpezarCreaColec')?.addEventListener('click', abrirModalCrearColec);
+    //pun('#btnCrearColec')?.addEventListener('click', crearNuevaColec);
+    pun('#btnVolverColec')?.addEventListener('click', volverColec);
 
-    const buscarInput = $('#buscarColeccion');
+    const buscarInput = pun('#buscarColeccion');
     if (buscarInput) {
         buscarInput.addEventListener('input', () => {
             const query = buscarInput.value.toLowerCase();
@@ -45,28 +45,28 @@ function iniciarColec() {
 }
 
 function abrirColec() {
-    const modal = $('.modalColec');
+    const modal = pun('.modalColec');
     if (!modal) {
         console.error('No se encontró el elemento .modalColec');
         return;
     }
     mostrar(modal);
     crearBackgroundColec();
-    $.agregarClase('body', 'no-scroll');
+    pun.agregarClase('body', 'no-scroll');
 }
 
 function abrirModalCrearColec() {
-    ocultar($('.modalColec'));
-    mostrar($('.modalCrearColec'));
+    ocultar(pun('.modalColec'));
+    mostrar(pun('.modalCrearColec'));
 }
 
 function volverColec() {
-    ocultar($('.modalCrearColec'));
-    mostrar($('.modalColec'));
+    ocultar(pun('.modalCrearColec'));
+    mostrar(pun('.modalColec'));
 }
 
 function busquedaColec(query) {
-    $('.listaColeccion .coleccion').forEach(coleccion => {
+    pun('.listaColeccion .coleccion').forEach(coleccion => {
         const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
         if (titulo.includes(query)) {
             mostrar(coleccion);
@@ -77,16 +77,16 @@ function busquedaColec(query) {
 }
 
 function cerrarColec() {
-    ocultar($('.modalColec'));
-    ocultar($('.modalCrearColec'));
+    ocultar(pun('.modalColec'));
+    ocultar(pun('.modalCrearColec'));
     quitBackground();
-    $.removerClase('body', 'no-scroll');
+    pun.removerClase('body', 'no-scroll');
     resetColec();
 }
 
 function manejarClickColec(coleccion) {
-    $.removerClase('.coleccion', 'seleccion');
-    $.agregarClase(coleccion, 'seleccion');
+    pun.removerClase('.coleccion', 'seleccion');
+    pun.agregarClase(coleccion, 'seleccion');
     colecSelecionado = coleccion.getAttribute('data-id') || coleccion.id;
 }
 
@@ -101,18 +101,18 @@ function manejarClickListoColec() {
 function resetColec() {
     colecPostId = null;
     colecSelecionado = null;
-    $.removerClase('.coleccion', 'seleccion');
+    pun.removerClase('.coleccion', 'seleccion');
 }
 
 function quitBackground() {
-    const darkBackground = $('.submenu-background');
+    const darkBackground = pun('.submenu-background');
     if (darkBackground) {
         darkBackground.remove();
     }
 }
 
 function crearBackgroundColec() {
-    if ($('.submenu-background')) return;
+    if (pun('.submenu-background')) return;
 
     const darkBackground = document.createElement('div');
     darkBackground.classList.add('submenu-background');

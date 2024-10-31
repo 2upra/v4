@@ -1,5 +1,5 @@
 (function (global) {
-    function $(selector) {
+    function pun(selector) {
         if (typeof selector === 'string') {
             const elementos = document.querySelectorAll(selector);
             if (elementos.length === 0) return null;
@@ -16,19 +16,19 @@
         return [selector]; // Si es un elemento, lo envolvemos en un array
     }
 
-    $.agregarClase = function (selector, nombreClase) {
+    pun.agregarClase = function (selector, nombreClase) {
         obtenerElementos(selector).forEach(el => el.classList.add(nombreClase));
     };
 
-    $.removerClase = function (selector, nombreClase) {
+    pun.removerClase = function (selector, nombreClase) {
         obtenerElementos(selector).forEach(el => el.classList.remove(nombreClase));
     };
 
-    $.toggleClase = function (selector, nombreClase) {
+    pun.toggleClase = function (selector, nombreClase) {
         obtenerElementos(selector).forEach(el => el.classList.toggle(nombreClase));
     };
 
-    global.$ = $;
+    global.pun = pun;
 })(window);
 
 // Funciones para mostrar y ocultar elementos con transición
