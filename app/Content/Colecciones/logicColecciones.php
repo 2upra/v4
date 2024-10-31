@@ -9,7 +9,7 @@ function crearColeccion()
 
     // Verificar y sanear los datos recibidos
     $colecPostId = isset($_POST['colecPostId']) ? intval($_POST['colecPostId']) : 0;
-    $imgColec = isset($_POST['imgColec']) ? esc_url_raw($_POST['imgColec']) : '';
+    $imgColec = isset($_POST['imgColec']) && $_POST['imgColec'] !== 'http://null' ? esc_url_raw($_POST['imgColec']) : '';
     $titulo = isset($_POST['titulo']) ? sanitize_text_field($_POST['titulo']) : '';
     $imgColecId = isset($_POST['imgColecId']) ? sanitize_text_field($_POST['imgColecId']) : '';
     $descripcion = isset($_POST['descripcion']) ? sanitize_textarea_field($_POST['descripcion']) : '';
@@ -56,7 +56,7 @@ function crearColeccion()
 
     guardarLog("Colección creada exitosamente: ID $coleccionId");
 
-    // Establecer la imagen destacada si se proporciona la URL de la imagen
+    // Establecer la imagen destacada si se proporciona una URL válida
     if ($imgColec) {
         $image_id = subirImagenDesdeURL($imgColec, $coleccionId);
         if ($image_id) {

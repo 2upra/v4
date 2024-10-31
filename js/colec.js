@@ -120,7 +120,6 @@ async function crearNuevaColec() {
 function subidaImagenColec() {
     const previewImagenColec = a('#previewImagenColec');
     const formRs = a('#formRs');
-    let imgColec;
 
     const inicialSubida = event => {
         event.preventDefault();
