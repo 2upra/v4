@@ -74,23 +74,38 @@ function abrirModalCrearColec() {
     const modal = document.querySelector('.modalColec');
     ocultar(modal);
     const modalCreaColec = document.querySelector('.modalCrearColec');
-    modalCreaColec.style.display = 'block';
+    mostrar(modalCreaColec);
 }
-function crearNuevaColec() {
-    if (colecPostId && colecSelecionado) {
- 
-        cerrarColec();
-    } else {
-        cerrarColec();
-    }
 
-}
 function volverColec() {
     const modalCreaColec = document.querySelector('.modalCrearColec');
-    modalCreaColec.style.display = 'none';
+    ocultar(modalCreaColec);
     const modal = document.querySelector('.modalColec');
-    modal.style.display = 'block';
+    mostrar(modal);
 }
+
+function busquedaColec(query) {
+    document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
+        const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
+        if (titulo.includes(query)) {
+            mostrar(coleccion);
+        } else {
+            ocultar(coleccion);
+        }
+    });
+}
+
+function cerrarColec() {
+    const modal = document.querySelector('.modalColec');
+    ocultar(modal);
+    const modalCreaColec = document.querySelector('.modalCrearColec');
+    ocultar(modalCreaColec);
+    quitBackground();
+    document.body.classList.remove('no-scroll');
+    resetColec();
+}
+
+
 
 function manejarClickColec(coleccion) {
     document.querySelectorAll('.coleccion').forEach(item => item.classList.remove('seleccion'));
@@ -126,16 +141,6 @@ function busquedaColec(query) {
         const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
         coleccion.style.display = titulo.includes(query) ? 'flex' : 'none';
     });
-}
-
-function cerrarColec() {
-    const modal = document.querySelector('.modalColec');
-    modal.style.display = 'none';
-    const modalCreaColec = document.querySelector('.modalCrearColec');
-    modalCreaColec.style.display = 'none';
-    quitBackground();
-    document.body.classList.remove('no-scroll');
-    resetColec();
 }
 
 function crearBackgroundColec() {
