@@ -19,27 +19,56 @@ if (!defined('ABSPATH')) {
 <html <?php language_attributes(); ?>>
 <script>
     const root = document.body;
+
+    // Función auxiliar para agregar transición
+    function addTransition(element, from, to) {
+        // Si ya está en transición, no hacer nada
+        if (element._isTransitioning) return;
+        element._isTransitioning = true;
+
+        // Configurar el estado inicial
+        element.style.opacity = from;
+        element.style.transition = "opacity 0.3s ease";
+        element.style.display = to === 0 ? element._previousDisplay || 'block' : element._previousDisplay || 'block';
+
+        // Forzar reflow
+        element.offsetHeight;
+
+        // Aplicar el estado final
+        element.style.opacity = to;
+
+        // Limpiar después de la transición
+        element.addEventListener('transitionend', function handler() {
+            element._isTransitioning = false;
+            element.removeEventListener('transitionend', handler);
+            if (to === 0) {
+                element.style.display = 'none';
+            }
+            element.style.transition = '';
+        }, {
+            once: true
+        });
+    }
+
     const observer = new MutationObserver((mutationsList) => {
         mutationsList.forEach((mutation) => {
             if (mutation.type === "attributes" && mutation.attributeName === "style") {
                 const element = mutation.target;
+                const display = getComputedStyle(element).display;
 
-                if (element._isTransitioning) return; // Ignorar si ya está en transición
+                // Guardar el display actual si no es 'none'
+                if (display !== 'none') {
+                    element._previousDisplay = display;
+                }
 
-                if (getComputedStyle(element).display !== 'none') {
-                    element._isTransitioning = true; // Marcar como en transición
-                    element.style.opacity = 0;
-                    element.style.transition = "opacity 1s";
-
-                    requestAnimationFrame(() => {
-                        element.style.opacity = 1;
-                    });
-
-                    element.addEventListener("transitionend", function handler() {
-                        element._isTransitioning = false; // Quitar la marca
-                        element.style.transition = ""; // Limpiar transición
-                        element.removeEventListener("transitionend", handler);
-                    });
+                // Si cambia a 'none'
+                if (display === 'none' && !element._isTransitioning) {
+                    element.style.display = element._previousDisplay || 'block';
+                    addTransition(element, 1, 0);
+                }
+                // Si cambia desde 'none' a visible
+                else if (display !== 'none' && element.style.opacity !== '1') {
+                    addTransition(element, 0, 1);
                 }
             }
         });
@@ -48,8 +77,18 @@ if (!defined('ABSPATH')) {
     observer.observe(root, {
         attributes: true,
         attributeFilter: ["style"],
-        subtree: true,
+        subtree: true
     });
+
+    // Función helper para mostrar elementos
+    function showElement(element) {
+        element.style.display = element._previousDisplay || 'block';
+    }
+
+    // Función helper para ocultar elementos
+    function hideElement(element) {
+        element.style.display = 'none';
+    }
 </script>
 
 <head>
