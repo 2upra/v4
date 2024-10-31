@@ -31,9 +31,12 @@ function iniciarColec() {
     pin('#btnVolverColec')?.en('click', volverColec);
 
     // Evento para búsqueda
-    pin.filtrar('.coleccion', coleccion => {
-        const nombre = coleccion.querySelector('.nombreColec').textContent.toLowerCase();
-        return nombre.includes(query);
+    pin('#buscarColeccion')?.en('input', function() {
+        const query = this.value.toLowerCase();
+        pin.filtrar('.coleccion', coleccion => {
+            const nombreElement = coleccion.querySelector('.nombreColec');
+            return nombreElement ? nombreElement.textContent.toLowerCase().includes(query) : false;
+        });
     });
 
     // Evento para reset del modal
