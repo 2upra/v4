@@ -1,6 +1,8 @@
 let colecPostId = null;
 let colecSelecionado = null;
 let colecIniciado = false;
+let imgColec = null;
+let imgColecId = null;
 
 function colec() {
     if (!colecIniciado) {
@@ -80,11 +82,9 @@ function verificarColec() {
 }
 
 async function crearNuevaColec() {
-    // Verificar si los campos son válidos
-    const esValido = verificarColec()(); // Ejecuta la función de validación
+    const esValido = verificarColec();
     if (!esValido) return;
 
-    // Recolectar los datos del formulario
     const titulo = a('#tituloColec').value;
     const descripcion = a('#descripColec').value || '';
 
@@ -93,6 +93,7 @@ async function crearNuevaColec() {
         colecSelecionado,
         imgColec,
         titulo,
+        imgColecId,
         descripcion
     };
     const button = a('#btnCrearColec');
@@ -101,10 +102,7 @@ async function crearNuevaColec() {
     button.disabled = true;
 
     try {
-        // Enviar la petición AJAX
         const response = await enviarAjax('crearColeccion', data);
-
-        // Manejar la respuesta del servidor
         if (response?.success) {
             alert('Colección creada con éxito');
             cerrarColec();
@@ -115,11 +113,64 @@ async function crearNuevaColec() {
         console.error('Error al enviar los datos:', error);
         alert('Ocurrió un error durante la creación de la colección. Por favor, inténtelo de nuevo.');
     } finally {
-        // Restaurar el estado original del botón
         button.innerText = originalText;
         button.disabled = false;
     }
 }
+
+function subidaImagenColec() {
+    const previewImagenColec = a('#previewImagenColec');
+    const formRs = a('#formRs');
+    let imgColec;
+
+    const inicialSubida = event => {
+        event.preventDefault();
+        const file = event.dataTransfer?.files[0] || event.target.files[0];
+
+        if (!file) return;
+        if (file.size > 3 * 1024 * 1024) return alert('El archivo no puede superar los 3 MB.');
+        if (!file.type.startsWith('image/')) return alert('Por favor, seleccione una imagen.');
+
+        subidaImagen(file);
+    };
+
+    const subidaImagen = async file => {
+        try {
+            const { fileUrl, fileId } = await subidaRsBackend(file, 'barraProgresoImagen');
+            imgColec = fileUrl;
+            imgColecId = fileId;
+            updatePreviewImagen(file);
+        } catch {
+            alert('Hubo un problema al cargar la imagen. Inténtalo de nuevo.');
+        }
+    };
+
+    const updatePreviewImagen = file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            previewImagenColec.innerHTML = `<img src="${e.target.result}" alt="Preview" style="width: 100%; height: 100%; aspect-ratio: 1 / 1; object-fit: cover;">`;
+            previewImagenColec.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    };
+
+    previewImagenColec.addEventListener('click', () => {
+        const inputFile = document.createElement('input');
+        inputFile.type = 'file';
+        inputFile.accept = 'image/*';
+        inputFile.onchange = inicialSubida;
+        inputFile.click();
+    });
+
+    ['dragover', 'dragleave', 'drop'].forEach(eventName => {
+        formRs.addEventListener(eventName, e => {
+            e.preventDefault();
+            formRs.style.backgroundColor = eventName === 'dragover' ? '#e9e9e9' : '';
+            if (eventName === 'drop') inicialSubida(e);
+        });
+    });
+}
+
 
 function busquedaColec(query) {
     document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
@@ -139,8 +190,9 @@ function cerrarColec() {
 function manejarClickColec(coleccion) {
     a.quitar('.coleccion', 'seleccion');
     a.gregar(coleccion, 'seleccion');
-    colecSelecionado = coleccion.getAttribute('data-id') || coleccion.id;
+    colecSelecionado = coleccion.getAttribute('data-post_id') || coleccion.id;
 }
+
 
 function manejarClickListoColec() {
     if (colecPostId && colecSelecionado) {

@@ -39,10 +39,10 @@ function modalColeccion()
             <input type="text" placeholder="Buscar colección" id="buscarColeccion">
 
             <ul class="listaColeccion borde">
-                <li class="coleccion" id="favoritos">
+                <li class="coleccion" id="favoritos" data-post_id="">
                     <img src="<?php echo esc_url('https://2upra.com/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg'); ?>" alt=""><span>Favoritos</span>
                 </li>
-                <li class="coleccion borde" id="despues">
+                <li class="coleccion borde" id="despues" data-post_id="">
                     <img src="<?php echo esc_url('https://2upra.com/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg'); ?>" alt=""><span>Usar más tarde</span>
                 </li>
 
