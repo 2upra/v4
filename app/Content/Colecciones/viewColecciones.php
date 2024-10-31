@@ -94,8 +94,8 @@ function modalCreacionColeccion()
             <div class="previewAreaArchivos previewColec" id="previewImagenColec">
                 <label>Agregar imagen (opcional)</label>
             </div>
-            <input type="text" placeholder="Nombre de la colección">
-            <input type="text" placeholder="Descripción de la colección (opcional)">
+            <input type="text" placeholder="Nombre de la colección" id="tituloColec">
+            <input type="text" placeholder="Descripción de la colección (opcional)" id="descripColec">
             <div class="XJAAHB">
                 <button class="botonsecundario" id="btnVolverColec">Volver</button>
                 <button class="botonprincipal" id="btnCrearColec">Crear</button>

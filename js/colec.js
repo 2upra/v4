@@ -1,4 +1,3 @@
-
 let colecPostId = null;
 let colecSelecionado = null;
 let colecIniciado = false;
@@ -9,7 +8,6 @@ function colec() {
         colecIniciado = true;
     }
 }
-
 
 function iniciarColec() {
     document.body.addEventListener('click', e => {
@@ -31,7 +29,7 @@ function iniciarColec() {
 
     a('#btnListo')?.addEventListener('click', manejarClickListoColec);
     a('#btnEmpezarCreaColec')?.addEventListener('click', abrirModalCrearColec);
-    //a('#btnCrearColec')?.addEventListener('click', crearNuevaColec);
+    a('#btnCrearColec')?.addEventListener('click', crearNuevaColec);
     a('#btnVolverColec')?.addEventListener('click', volverColec);
 
     const buscarInput = a('#buscarColeccion');
@@ -60,6 +58,66 @@ function abrirModalCrearColec() {
 function volverColec() {
     ocultar(a('.modalCrearColec'));
     mostrar(a('.modalColec'));
+}
+
+function verificarColec() {
+    const titulo = a('#tituloColec').value;
+    function verificarCamposColec() {
+        if (!colecPostId && !colecSelecionado) {
+            alert('Por favor, selecciona una colección.');
+            return false;
+        }
+        if (titulo.length < 3) {
+            alert('Por favor, ingresa un nombre para tu colección.');
+            return false;
+        }
+        return true;
+    }
+    return verificarCamposColec;
+}
+
+async function crearNuevaColec() {
+    // Verificar si los campos son válidos
+    const esValido = verificarColec()(); // Ejecuta la función de validación
+    if (!esValido) return;
+
+    // Recolectar los datos del formulario
+    const titulo = a('#tituloColec').value;
+    const descripcion = a('#descripColec').value || ''; 
+    
+
+    const data = {
+        colecPostId,       
+        colecSelecionado, 
+        imgColec,         
+        titulo,           
+        descripcion        
+    };
+)
+    const button = a('#btnCrearColec');
+    const originalText = button.innerText;
+    button.innerText = 'Guardando...';
+    button.disabled = true;
+
+    try {
+        // Enviar la petición AJAX
+        const response = await enviarAjax('crearColeccion', data);
+
+        // Manejar la respuesta del servidor
+        if (response?.success) {
+            alert('Colección creada con éxito');
+            cerrarColec();        
+        } else {
+            alert(`Error al crear la colección: ${response?.message || 'Desconocido'}`);
+        }
+    } catch (error) {
+        console.error('Error al enviar los datos:', error);
+        alert('Ocurrió un error durante la creación de la colección. Por favor, inténtelo de nuevo.');
+    } finally {
+        // Restaurar el estado original del botón
+        button.innerText = originalText;
+        button.disabled = false;
+    }
 }
 
 function busquedaColec(query) {
