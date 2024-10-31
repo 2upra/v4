@@ -66,7 +66,7 @@ PIN: ASIGNAR EVENTOS (FALTA)
 
     // En tu archivo de utilidades (gloria.js)
     pin.filtrar = function (selector, criterio) {
-        const elementos = document.querySelectorAll(selector);
+        const elementos = pun(selector);
         if (elementos.length === 0) return pin; // Retorna temprano si no hay elementos
 
         Array.from(elementos).forEach(elemento => {
