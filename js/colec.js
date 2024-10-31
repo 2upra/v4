@@ -93,7 +93,6 @@ async function crearNuevaColec() {
         titulo,           
         descripcion        
     };
-)
     const button = a('#btnCrearColec');
     const originalText = button.innerText;
     button.innerText = 'Guardando...';

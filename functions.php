@@ -24,6 +24,13 @@ function escribirLog($mensaje, $archivo, $max_lineas = 200) {
     }
 }
 
+//cd /var/www/wordpress/wp-content/themes && sudo touch logAudio.log && sudo chown www-data:www-data logAudio.log && sudo chmod 664 logAudio.log
+
+
+function logAudio($log) {
+    escribirLog($log, '/var/www/wordpress/wp-content/themes/logAudio.log', 100000);
+}
+
 function chatLog($log) {
     escribirLog($log, '/var/www/wordpress/wp-content/themes/chat.log');
 }
