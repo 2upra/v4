@@ -9,12 +9,22 @@ function colec() {
     }
 }
 
+/*
+cuando se abre un boton debería selecionar un postId en colecPostId pero no lo hace
+    <div class="ZAQIBB botonColeccion">
+        <button class="botonColeccionBtn" data-post_id="<? esc_attr($postId) ?>" data-nonce="<? wp_create_nonce('colec_nonce') ?>">
+            <? echo $GLOBALS['iconoGuardar']; ?>
+        </button>
+    </div>
+*/
+
 function iniciarColec() {
     document.body.addEventListener('click', e => {
         const btn = e.target.closest('.botonColeccionBtn');
         if (btn) {
             e.preventDefault();
             colecPostId = btn.getAttribute('data-post_id');
+            console.log('Post ID seleccionado:', colecPostId);
             abrirColec();
         }
     });
@@ -56,22 +66,7 @@ function abrirColec() {
     document.body.classList.add('no-scroll');
 }
 
-// Función para eliminar el fondo oscuro
-function quitBackground() {
-    const darkBackground = document.querySelector('.submenu-background');
-    if (darkBackground) {
-        //console.log('Eliminando fondo oscuro.');
-        darkBackground.remove();
-    } else {
-        //console.log('No hay fondo oscuro para eliminar.');
-    }
-}
 
-function resetColec() {
-    colecPostId = null;
-    colecSelecionado = null;
-    document.querySelectorAll('.coleccion').forEach(item => item.classList.remove('seleccion'));
-}
 
 function manejarClickColec(coleccion) {
     document.querySelectorAll('.coleccion').forEach(item => item.classList.remove('seleccion'));
@@ -86,6 +81,24 @@ function manejarClickListoColec() {
         cerrarColec();
     } else {
         alert('Por favor, selecciona una colección.');
+    }
+}
+
+
+function resetColec() {
+    colecPostId = null;
+    colecSelecionado = null;
+    document.querySelectorAll('.coleccion').forEach(item => item.classList.remove('seleccion'));
+}
+
+// Función para eliminar el fondo oscuro
+function quitBackground() {
+    const darkBackground = document.querySelector('.submenu-background');
+    if (darkBackground) {
+        //console.log('Eliminando fondo oscuro.');
+        darkBackground.remove();
+    } else {
+        //console.log('No hay fondo oscuro para eliminar.');
     }
 }
 
