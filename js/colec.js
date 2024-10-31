@@ -68,8 +68,8 @@ function volverColec() {
 function verificarColec() {
     const titulo = a('#tituloColec').value;
     function verificarCamposColec() {
-        if (!colecPostId && !colecSelecionado) {
-            alert('Por favor, selecciona una colección.');
+        if (!colecPostId) {
+            alert('Parece que hay un error, intenta seleccionar algo para guardar nuevamente.');
             return false;
         }
         if (titulo.length < 3) {
@@ -90,7 +90,6 @@ async function crearNuevaColec() {
 
     const data = {
         colecPostId,
-        colecSelecionado,
         imgColec,
         titulo,
         imgColecId,

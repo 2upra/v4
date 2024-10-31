@@ -9,7 +9,6 @@ function crearColeccion()
 
     // Verificar y sanear los datos recibidos
     $colecPostId = isset($_POST['colecPostId']) ? intval($_POST['colecPostId']) : 0;
-    $colecSelecionado = isset($_POST['colecSelecionado']) ? sanitize_text_field($_POST['colecSelecionado']) : '';
     $imgColec = isset($_POST['imgColec']) ? esc_url_raw($_POST['imgColec']) : '';
     $titulo = isset($_POST['titulo']) ? sanitize_text_field($_POST['titulo']) : '';
     $imgColecId = isset($_POST['imgColecId']) ? sanitize_text_field($_POST['imgColecId']) : '';
@@ -20,68 +19,53 @@ function crearColeccion()
         return json_encode(['error' => 'El título de la colección es obligatorio']);
     }
 
-    // Verificar si se está usando un id o un nombre para la colección
-    $coleccionId = 0;
-    if (is_numeric($colecSelecionado)) {
-        $coleccionId = intval($colecSelecionado);
-    } else {
-        // Buscar una colección existente por título y del usuario actual
-        $query = new WP_Query([
-            'title'          => $colecSelecionado,
-            'post_type'      => 'colecciones',
-            'post_status'    => 'publish',
-            'author'         => get_current_user_id(),
-            'posts_per_page' => 1,
-        ]);
+    // Comprobar cuántas colecciones tiene el usuario actualmente
+    $user_id = get_current_user_id();
+    $user_collections_count = new WP_Query([
+        'post_type'      => 'colecciones',
+        'post_status'    => 'publish',
+        'author'         => $user_id,
+        'posts_per_page' => -1,
+        'fields'         => 'ids', // Solo necesitamos los IDs para la cuenta
+    ]);
 
-        if ($query->have_posts()) {
-            $existing_colec = $query->posts[0];
-            $coleccionId = $existing_colec->ID;
-        }
-        wp_reset_postdata();
+    // Verificar si el usuario ya tiene 50 colecciones
+    if ($user_collections_count->found_posts >= 50) {
+        return json_encode(['error' => 'Has alcanzado el límite de 50 colecciones']);
     }
 
-    // Si la colección ya existe, solo actualizar 'samples' y evitar duplicados
-    if ($coleccionId) {
-        $samples = get_post_meta($coleccionId, 'samples', true);
-        $samples = $samples ? json_decode($samples, true) : [];
-        if (!in_array($colecPostId, $samples)) {
-            $samples[] = $colecPostId;
-            update_post_meta($coleccionId, 'samples', json_encode($samples));
-        }
-    } else {
-        // Crear la colección si no existe
-        $coleccionId = wp_insert_post([
-            'post_title'    => $titulo,
-            'post_content'  => $descripcion,
-            'post_type'     => 'colecciones',
-            'post_status'   => 'publish',
-            'post_author'   => get_current_user_id(),
-        ]);
+    // Crear la colección ya que no existe ninguna limitación
+    $coleccionId = wp_insert_post([
+        'post_title'    => $titulo,
+        'post_content'  => $descripcion,
+        'post_type'     => 'colecciones',
+        'post_status'   => 'publish',
+        'post_author'   => $user_id,
+    ]);
 
-        if (!$coleccionId) {
-            return json_encode(['error' => 'Error al crear la colección']);
-        }
-
-        // Establecer la imagen destacada si se proporciona la URL de la imagen
-        if ($imgColec) {
-            $image_id = subirImagenDesdeURL($imgColec, $coleccionId);
-            if ($image_id) {
-                set_post_thumbnail($coleccionId, $image_id);
-            }
-        }
-
-        // Guardar el imgColecId en la meta si existe
-        if (!empty($imgColecId)) {
-            update_post_meta($coleccionId, 'imgColecId', $imgColecId);
-        }
-
-        // Inicializar la meta 'samples' con el postId proporcionado
-        update_post_meta($coleccionId, 'samples', json_encode([$colecPostId]));
+    if (!$coleccionId) {
+        return json_encode(['error' => 'Error al crear la colección']);
     }
+
+    // Establecer la imagen destacada si se proporciona la URL de la imagen
+    if ($imgColec) {
+        $image_id = subirImagenDesdeURL($imgColec, $coleccionId);
+        if ($image_id) {
+            set_post_thumbnail($coleccionId, $image_id);
+        }
+    }
+
+    // Guardar el imgColecId en la meta si existe
+    if (!empty($imgColecId)) {
+        update_post_meta($coleccionId, 'imgColecId', $imgColecId);
+    }
+
+    // Inicializar la meta 'samples' con el postId proporcionado
+    update_post_meta($coleccionId, 'samples', json_encode([$colecPostId]));
 
     return json_encode(['success' => true, 'coleccionId' => $coleccionId]);
 }
+
 
 
 # Ajusta editar coleccion en consecuencia, esta desactualizada
