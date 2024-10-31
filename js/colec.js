@@ -1,3 +1,4 @@
+
 let colecPostId = null;
 let colecSelecionado = null;
 let colecIniciado = false;
@@ -10,37 +11,34 @@ function colec() {
 }
 
 function iniciarColec() {
-    // Delegación para botones de colección
-    pin.delegar('click', '.botonColeccionBtn', function (e) {
+    // Delegación de eventos para los botones de colección
+    pun.delegado('click', '.botonColeccionBtn', e => {
         e.preventDefault();
-        colecPostId = this.getAttribute('data-post_id');
+        colecPostId = e.currentTarget.getAttribute('data-post_id');
         console.log('Post ID seleccionado:', colecPostId);
         abrirColec();
     });
 
-    // Delegación para items de colección
-    pin.delegar('click', '.coleccion', function (e) {
-        if (this.closest('.listaColeccion')) {
-            manejarClickColec(this);
+    // Delegación para las colecciones
+    pun.delegado('click', '.coleccion', e => {
+        if (e.currentTarget.closest('.listaColeccion')) {
+            manejarClickColec(e.currentTarget);
         }
     });
 
-    // Eventos para botones específicos
-    pin('#btnListo')?.en('click', manejarClickListoColec);
-    pin('#btnEmpezarCreaColec')?.en('click', abrirModalCrearColec);
-    pin('#btnVolverColec')?.en('click', volverColec);
+    // Eventos individuales
+    pun('#btnListo').evento('click', manejarClickListoColec);
+    pun('#btnEmpezarCreaColec').evento('click', abrirModalCrearColec);
+    pun('#btnVolverColec').evento('click', volverColec);
 
-    // Evento para búsqueda
-    pin('#buscarColeccion')?.en('input', function() {
-        const query = this.value.toLowerCase();
-        pin.filtrar('.coleccion', coleccion => {
-            const nombreElement = coleccion.querySelector('.nombreColec');
-            return nombreElement ? nombreElement.textContent.toLowerCase().includes(query) : false;
-        });
+    // Evento input
+    pun('#buscarColeccion').evento('input', e => {
+        const query = e.currentTarget.value.toLowerCase();
+        busquedaColec(query);
     });
 
-    // Evento para reset del modal
-    pin(document).en('modalOpened', resetColec);
+    // Evento personalizado
+    document.addEventListener('modalOpened', resetColec);
 }
 
 function abrirColec() {

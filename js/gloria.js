@@ -1,130 +1,51 @@
-/*
-PROGRESO DE BIBLIOTECA PRORPIA 
-MOSTRAR: MOSTRAR ALGO (LISTO)
-OCULTAR: OCULTAR ALGO (LISTO)
-PUN: SELECIONAR COSAS (LISTO)
-PIN: ASIGNAR EVENTOS (FALTA)
-*/
-
 (function (global) {
-    function pin(selector) {
-        const elemento = pun(selector);
-        if (!elemento) return null;
+    class PunElement {
+        constructor(elementos) {
+            this.elementos = Array.isArray(elementos) ? elementos : [elementos];
+        }
 
-        return {
-            // Método básico para agregar eventos
-            en: function (evento, callback, opciones) {
-                elemento.addEventListener(evento, callback, opciones);
-                return this;
-            },
+        evento(tipo, callback) {
+            this.elementos.forEach(elemento => {
+                if (elemento) {
+                    elemento.addEventListener(tipo, callback);
+                }
+            });
+            return this;
+        }
 
-            // Método para delegación de eventos
-            delegar: function (evento, childSelector, callback) {
-                elemento.addEventListener(evento, e => {
-                    const target = e.target.closest(childSelector);
-                    if (target) {
-                        callback.call(target, e);
-                    }
-                });
-                return this;
-            },
+        delegado(tipo, selector, callback) {
+            this.elementos.forEach(elemento => {
+                if (elemento) {
+                    elemento.addEventListener(tipo, e => {
+                        const target = e.target.closest(selector);
+                        if (target) {
+                            callback.call(target, e);
+                        }
+                    });
+                }
+            });
+            return this;
+        }
 
-            // Método para remover eventos
-            ya: function (evento, callback) {
-                elemento.removeEventListener(evento, callback);
-                return this;
-            },
-
-            // Método para eventos de una sola vez
-            uno: function (evento, callback) {
-                elemento.addEventListener(evento, callback, {once: true});
-                return this;
-            },
-
-            // Método para emitir eventos personalizados
-            emitir: function (nombreEvento, detalle = {}) {
-                const evento = new CustomEvent(nombreEvento, {
-                    detail: detalle,
-                    bubbles: true,
-                    cancelable: true
-                });
-                elemento.dispatchEvent(evento);
-                return this;
+        valor(nuevoValor) {
+            if (nuevoValor === undefined) {
+                return this.elementos[0]?.value;
             }
-        };
+            this.elementos.forEach(elemento => {
+                if (elemento) elemento.value = nuevoValor;
+            });
+            return this;
+        }
+
+        // Más métodos útiles...
     }
 
-    // Método estático para múltiples selectores
-    pin.multiple = function (selectores, evento, callback) {
-        if (Array.isArray(selectores)) {
-            selectores.forEach(selector => {
-                pin(selector)?.en(evento, callback);
-            });
-        }
-        return pin;
-    };
-
-    // En tu archivo de utilidades (gloria.js)
-    pin.filtrar = function (selector, criterio) {
-        const elementos = pun(selector);
-        if (elementos.length === 0) return pin; // Retorna temprano si no hay elementos
-
-        Array.from(elementos).forEach(elemento => {
-            try {
-                elemento.style.display = criterio(elemento) ? '' : 'none';
-            } catch (error) {
-                console.warn(`Error al filtrar elemento:`, error);
-                elemento.style.display = 'none'; // Por defecto ocultar en caso de error
-            }
-        });
-        return pin;
-    };
-
-    // Método estático para eventos de una sola vez
-    pin.uno = function (selector, evento, callback) {
-        return pin(selector)?.uno(evento, callback);
-    };
-
-    // Método estático para emitir eventos
-    pin.emitir = function (selector, nombreEvento, detalle = {}) {
-        return pin(selector)?.emitir(nombreEvento, detalle);
-    };
-
-    // Método estático para delegación global
-    pin.delegar = function (evento, childSelector, callback) {
-        return pin(document).delegar(evento, childSelector, callback);
-    };
-
-    // Método para crear y disparar eventos personalizados rápidamente
-    pin.gancho = function (selector, nombreEvento) {
-        const elemento = pun(selector);
-        if (elemento) {
-            const evento = new Event(nombreEvento, {
-                bubbles: true,
-                cancelable: true
-            });
-            elemento.dispatchEvent(evento);
-        }
-        return pin;
-    };
-
-    global.pin = pin;
-})(window);
-
-(function (global) {
     function pun(selector) {
         if (typeof selector === 'string') {
             const elementos = document.querySelectorAll(selector);
-            if (elementos.length === 0) return null;
-            return elementos[0];
+            return new PunElement(elementos.length === 1 ? elementos[0] : Array.from(elementos));
         }
-        return selector;
-    }
-    function obtenerElementos(selector) {
-        if (typeof selector === 'string') {
-            return Array.from(document.querySelectorAll(selector));
-        }
-        return [selector];
+        return new PunElement(selector);
     }
 
     pun.agregarClase = function (selector, nombreClase) {
@@ -137,6 +58,15 @@ PIN: ASIGNAR EVENTOS (FALTA)
 
     pun.toggleClase = function (selector, nombreClase) {
         obtenerElementos(selector).forEach(el => el.classList.toggle(nombreClase));
+    };
+    // Método estático para delegación global
+    pun.delegado = function (tipo, selector, callback) {
+        document.addEventListener(tipo, e => {
+            const target = e.target.closest(selector);
+            if (target) {
+                callback.call(target, e);
+            }
+        });
     };
 
     global.pun = pun;
@@ -152,7 +82,7 @@ function addTransition(element, from, to) {
     if (to === 1) {
         element.style.display = element._previousDisplay || 'block';
     }
-    element.yasetHeight;
+    element.offsetHeight;
     element.style.opacity = to;
     element.addEventListener(
         'transitionend',
@@ -164,7 +94,7 @@ function addTransition(element, from, to) {
             }
             element.style.transition = '';
         },
-        {uno: true}
+        {once: true}
     );
 }
 
