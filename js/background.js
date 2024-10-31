@@ -51,38 +51,32 @@ window.removeModalDarkBackground = function(darkBackground) {
 };
 
 const root = document.body;
-
-// Crear el observer
 const observer = new MutationObserver((mutationsList) => {
   mutationsList.forEach((mutation) => {
     if (mutation.type === "attributes" && mutation.attributeName === "style") {
       const element = mutation.target;
       
-      // Solo si el elemento tiene display distinto de 'none' y no tiene la clase 'fade-in'
-      if (getComputedStyle(element).display !== 'none' && !element.classList.contains("fade-in")) {
-        // Agregar la clase 'fade-in'
-        element.classList.add("fade-in");
+      if (element._isTransitioning) return; // Ignorar si ya está en transición
+      
+      if (getComputedStyle(element).display !== 'none') {
+        element._isTransitioning = true; // Marcar como en transición
+        element.style.opacity = 0;
+        element.style.transition = "opacity 0.5s";
         
-        // Forzar reflow para asegurarse de que el cambio de clase se registre
-        void element.offsetWidth;
+        requestAnimationFrame(() => {
+          element.style.opacity = 1;
+        });
         
-        // Agregar la clase 'show' para iniciar la transición
-        element.classList.add("show");
-        
-        // Escuchar el final de la transición para limpiar las clases
-        const handleTransitionEnd = () => {
-          element.classList.remove("fade-in");
-          element.classList.remove("show");
-          element.removeEventListener("transitionend", handleTransitionEnd);
-        };
-        
-        element.addEventListener("transitionend", handleTransitionEnd);
+        element.addEventListener("transitionend", function handler() {
+          element._isTransitioning = false; // Quitar la marca
+          element.style.transition = ""; // Limpiar transición
+          element.removeEventListener("transitionend", handler);
+        });
       }
     }
   });
 });
 
-// Observar cambios en el DOM y estilo
 observer.observe(root, {
   attributes: true,
   attributeFilter: ["style"],
