@@ -10,6 +10,7 @@ add_filter('pre_delete_attachment', function($delete, $post) {
 
 
 //No se que hace esto exactamente, pero, podemos verificar la existencia de todos los adjuntos de los post que contengan un audio en esa carpeta a ver si carga
+/*
 function verificarAudioMp3() {
     $upload_dir = wp_upload_dir();
     $audio_dir = $upload_dir['basedir'] . '/audio/';
@@ -77,3 +78,5 @@ function programar_verificacion_audio() {
 add_action('wp', 'programar_verificacion_audio');
 add_action('verificar_audio_diario', 'verificarAudioMp3');
 //add_action('init', 'verificarAudioMp3');
+
+*/
