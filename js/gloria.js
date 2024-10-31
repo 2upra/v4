@@ -1,42 +1,31 @@
-/*
-
-Porque dice que no es un elemeento valido, estoy haciendo mi propia biblioteca pero $ no pasa un elemento valido cuando se seleciona uno
-gloria.js?ver=1.0.1.2048570573:61  No se proporcionó un elemento válido o el elemento no es de tipo Element
-
-function abrirColec() {
-    const modal = $('.modalColec');
-    if (!modal) {
-        console.error('No se encontró el elemento .modalColec');
-        return;
-    }
-    mostrar(modal);
-    crearBackgroundColec();
-    $.agregarClase('body', 'no-scroll');
-}
-*/
-
 (function (global) {
     function $(selector) {
         if (typeof selector === 'string') {
             const elementos = document.querySelectorAll(selector);
             if (elementos.length === 0) return null;
-            // Siempre devolver el primer elemento si es una búsqueda por selector
             return elementos[0];
         }
-        return selector; // Si ya es un elemento, devolverlo tal cual
+        return selector;
     }
 
-    // Métodos adicionales para manipular clases
+    // Función auxiliar para convertir el selector en un array de elementos
+    function obtenerElementos(selector) {
+        if (typeof selector === 'string') {
+            return Array.from(document.querySelectorAll(selector));
+        }
+        return [selector]; // Si es un elemento, lo envolvemos en un array
+    }
+
     $.agregarClase = function (selector, nombreClase) {
-        document.querySelectorAll(selector).forEach(el => el.classList.add(nombreClase));
+        obtenerElementos(selector).forEach(el => el.classList.add(nombreClase));
     };
 
     $.removerClase = function (selector, nombreClase) {
-        document.querySelectorAll(selector).forEach(el => el.classList.remove(nombreClase));
+        obtenerElementos(selector).forEach(el => el.classList.remove(nombreClase));
     };
 
     $.toggleClase = function (selector, nombreClase) {
-        document.querySelectorAll(selector).forEach(el => el.classList.toggle(nombreClase));
+        obtenerElementos(selector).forEach(el => el.classList.toggle(nombreClase));
     };
 
     global.$ = $;
