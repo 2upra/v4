@@ -114,6 +114,45 @@ function verificarColec() {
     return verificarCamposColec;
 }
 
+/*
+esta funcion hay que expandirla para que guarde colecSample y colecSelecionado en el servidor
+los ajax funcionan asi ejemplo 
+const response = await enviarAjax('guardarSampleEnColec', {colecSampleId, colecSelecionado});
+
+*/
+
+async function manejarClickListoColec() {
+    if (colecSampleId && colecSelecionado) {
+        const button = a('#btnListo');
+        const originalText = button.innerText;
+        button.innerText = 'Guardando...';
+        button.disabled = true;
+
+        try {
+            const response = await enviarAjax('guardarSampleEnColec', {
+                colecSampleId,
+                colecSelecionado
+            });
+
+            if (response?.success) {
+                alert('Sample guardado en la colección con éxito');
+                cerrarColec();
+            } else {
+                alert(`Error al guardar en la colección: ${response?.message || 'Desconocido'}`);
+            }
+        } catch (error) {
+            console.error('Error al guardar el sample:', error);
+            alert('Ocurrió un error al guardar en la colección. Por favor, inténtelo de nuevo.');
+        } finally {
+            button.innerText = originalText;
+            button.disabled = false;
+        }
+    } else {
+        cerrarColec();
+    }
+}
+
+//ejemplo de como se crea una nueva coleccion
 async function crearNuevaColec() {
     const esValido = verificarColec();
     if (!esValido) return;
@@ -154,30 +193,19 @@ async function crearNuevaColec() {
 
 async function actualizarListaColecciones() {
     try {
-        // console.log('Solicitando colecciones...');
         const response = await enviarAjax('obtener_colecciones');
-        // console.log('Respuesta recibida:', response);
-        
         if (response) {
             const listaColeccion = document.querySelector('.listaColeccion');
-            // console.log('Lista colección encontrada:', listaColeccion);
-            
             const elementosFijos = listaColeccion.querySelectorAll('#favoritos, #despues');
-            // console.log('Elementos fijos:', elementosFijos);
-            
             listaColeccion.innerHTML = '';
-            
             elementosFijos.forEach(elemento => {
                 listaColeccion.appendChild(elemento);
             });
-            
-            // console.log('HTML a insertar:', response);
+        
             listaColeccion.insertAdjacentHTML('beforeend', response);
         } else {
-            // console.error('No se recibió respuesta del servidor');
         }
     } catch (error) {
-        // console.error('Error al actualizar la lista de colecciones:', error);
     }
 }
 
@@ -257,13 +285,6 @@ function manejarClickColec(coleccion) {
 }
 
 
-function manejarClickListoColec() {
-    if (colecSampleId && colecSelecionado) {
-        cerrarColec();
-    } else {
-        cerrarColec();
-    }
-}
 
 function resetColec() {
     colecSampleId = null;
