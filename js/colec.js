@@ -31,9 +31,9 @@ function iniciarColec() {
     } else {
         return;
     }
-    const abrirModalCrearColec = document.getElementById('btnEmpezarCreaColec');
-    if (abrirModalCrearColec) {
-        abrirModalCrearColec.addEventListener('click', abrirModalCrearColec);
+    const btnEmpezarCrearColec = document.getElementById('btnEmpezarCreaColec');
+    if (btnEmpezarCrearColec) {
+        btnEmpezarCrearColec.addEventListener('click', abrirModalCrearColec);
     } else {
         return;
     }
@@ -70,7 +70,7 @@ function abrirColec() {
     document.body.classList.add('no-scroll');
 }
 
-function abrirModalCrearColec() {
+function abrirModalCrearColecF() {
     const modal = document.querySelector('.modalColec');
     modal.style.display = 'none';
     const modalCreaColec = document.querySelector('.modalCrearColec');
