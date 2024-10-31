@@ -52,7 +52,7 @@ function modalColeccion()
 <?
 }
 
-function obtenerHtml() {
+function obtenerHtmlColec() {
     $current_user_id = get_current_user_id();
     $args = array(
         'post_type'      => 'colecciones',
@@ -90,8 +90,11 @@ function obtenerHtml() {
 }
 
 function ajax_actualizar_colecciones() {
-    echo obtenerHtml();
-    wp_die(); 
+    // Verificamos la autenticidad o permisos del usuario si es necesario
+    $html = obtenerHtmlColec();
+    
+    // Devolvemos una respuesta JSON con el HTML generado
+    wp_send_json_success(['html' => $html]);
 }
 add_action('wp_ajax_actualizar_colecciones', 'ajax_actualizar_colecciones');
 

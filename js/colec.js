@@ -105,7 +105,7 @@ async function crearNuevaColec() {
         if (response?.success) {
             alert('Colección creada con éxito');
             cerrarColec();
-            await actualizarColecciones(); // Nueva función para actualizar las colecciones
+            await actualizarColecciones();
         } else {
             alert(`Error al crear la colección: ${response?.message || 'Desconocido'}`);
         }
@@ -121,21 +121,21 @@ async function crearNuevaColec() {
 // Nueva función para actualizar las colecciones
 async function actualizarColecciones() {
     try {
-        const response = await fetch(ajaxurl + '?action=actualizar_colecciones', {
-            method: 'GET',
-            credentials: 'same-origin' 
-        });
-        if (response.ok) {
-            const nuevoContenido = await response.text();
+        // Llama a enviarAjax con la acción 'actualizar_colecciones', no necesita más datos
+        const response = await enviarAjax('actualizar_colecciones');
+        
+        // Si la respuesta es exitosa, actualiza el contenido del modal
+        if (response?.success) {
+            const nuevoContenido = response.html; // Asumiendo que el HTML venga en la propiedad 'html'
             const listaColeccion = document.querySelector('.listaColeccion');
             if (listaColeccion) {
                 listaColeccion.innerHTML = nuevoContenido;
             }
         } else {
-            console.error('Error al actualizar las colecciones');
+            console.error('Error al actualizar las colecciones:', response?.message || 'Desconocido');
         }
     } catch (error) {
-        console.error('Error en la solicitud AJAX:', error);
+        console.error('Error en la solicitud AJAX para actualizar colecciones:', error);
     }
 }
 
