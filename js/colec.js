@@ -70,7 +70,7 @@ function abrirColec() {
     document.body.classList.add('no-scroll');
 }
 
-function abrirModalCrearColecF() {
+function abrirModalCrearColec() {
     const modal = document.querySelector('.modalColec');
     modal.style.display = 'none';
     const modalCreaColec = document.querySelector('.modalCrearColec');
