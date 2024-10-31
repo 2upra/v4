@@ -1,11 +1,10 @@
 /*
 
 tengo este error 
-gloria.js?ver=1.0.1.115572248:50  Uncaught TypeError: Failed to execute 'getComputedStyle' on 'Window': parameter 1 is not of type 'Element'.
-    at window.mostrar (gloria.js?ver=1.0.1.115572248:50:20)
-    at abrirColec (colec.js?ver=1.0.1.1446427058:49:5)
-    at HTMLBodyElement.<anonymous> (colec.js?ver=1.0.1.1446427058:20:13)
-
+4gloria.js?ver=1.0.1.1513955390:66  Uncaught TypeError: Failed to execute 'getComputedStyle' on 'Window': parameter 1 is not of type 'Element'.
+    at window.mostrar (gloria.js?ver=1.0.1.1513955390:66:9)
+    at abrirColec (colec.js?ver=1.0.1.362106248:53:5)
+    at HTMLBodyElement.<anonymous> (colec.js?ver=1.0.1.362106248:20:13)
 */
 
 (function (global) {
@@ -58,16 +57,16 @@ function addTransition(element, from, to) {
 }
 
 window.mostrar = function (element) {
-    if (!element) {
-        console.error('No se proporcionó un elemento válido');
+    if (!element || !(element instanceof Element)) {
+        console.error('No se proporcionó un elemento válido o el elemento no es de tipo Element');
         return;
     }
-    
+
     if (getComputedStyle(element).display === 'none') {
         element._previousDisplay = getComputedStyle(element).display === 'none' ? 'block' : getComputedStyle(element).display;
         addTransition(element, 0, 1);
     }
-}
+};
 
 window.ocultar = function (element) {
     if (element && getComputedStyle(element).display !== 'none') {
