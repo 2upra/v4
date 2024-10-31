@@ -89,29 +89,42 @@
         }, 200); // Ajusta el tiempo de espera según sea necesario
     }
 
+    // Inicializar con publicaciones existentes
+    document.querySelectorAll('.social-post-list .EDYQHV').forEach(publicacion => {
+        const idPublicacion = publicacion.getAttribute('id-post')?.trim();
+        if (idPublicacion) {
+            publicacionesCargadas.add(idPublicacion);
+        }
+    });
+
     async function cargarMasContenido() {
+        if (estaCargando) {
+            log('Carga en progreso. Espera a que finalice antes de intentar nuevamente.');
+            return;
+        }
+    
         estaCargando = true;
         log('Iniciando carga de más contenido');
-
+    
         const elementoPestañaActiva = document.querySelector('.tab.active');
         if (elementoPestañaActiva?.getAttribute('ajax') === 'no') {
             log('La pestaña activa tiene ajax="no". No se cargará más contenido.');
             estaCargando = false;
             return;
         }
-
+    
         const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
         if (!listaPublicaciones) {
             log('No se encontró una pestaña activa');
             estaCargando = false;
             return;
         }
-
+    
         const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
         const idUsuario = window.idUsuarioActual || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
-
+    
         log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual});
-
+    
         try {
             const respuesta = await fetch(ajaxUrl, {
                 method: 'POST',
@@ -127,11 +140,11 @@
                     cargadas: Array.from(publicacionesCargadas).join(',')
                 })
             });
-
+    
             if (!respuesta.ok) {
                 throw new Error(`HTTP error! status: ${respuesta.status}`);
             }
-
+    
             const textoRespuesta = await respuesta.text();
             await procesarRespuesta(textoRespuesta);
         } catch (error) {
@@ -140,56 +153,70 @@
             estaCargando = false;
         }
     }
-
+    
     async function procesarRespuesta(respuesta) {
         log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
         const respuestaLimpia = respuesta.trim();
-
+    
         if (respuestaLimpia === '<div id="no-more-posts"></div>') {
             log('No hay más publicaciones');
             detenerCarga();
             return;
         }
-
+    
         if (!respuestaLimpia) {
             log('Respuesta vacía recibida');
             detenerCarga();
             return;
         }
-
+    
         const parser = new DOMParser();
         const doc = parser.parseFromString(respuesta, 'text/html');
-
+    
         const publicacionesNuevas = doc.querySelectorAll('.EDYQHV');
         if (publicacionesNuevas.length === 0) {
             log('No se encontraron publicaciones nuevas en la respuesta');
             detenerCarga();
             return;
         }
-
+    
+        // Filtrar publicaciones duplicadas
+        const publicacionesValidas = [];
         publicacionesNuevas.forEach(publicacion => {
-            const idPublicacion = publicacion.getAttribute('id-post');
-            if (idPublicacion && !publicacionesCargadas.has(idPublicacion)) {
+            const idPublicacion = publicacion.getAttribute('id-post')?.trim();
+            const existeEnDOM = document.querySelector(`.social-post-list .EDYQHV[id-post="${idPublicacion}"]`);
+    
+            if (idPublicacion && !publicacionesCargadas.has(idPublicacion) && !existeEnDOM) {
                 publicacionesCargadas.add(idPublicacion);
+                publicacionesValidas.push(publicacion.outerHTML);
                 log('Publicación añadida:', idPublicacion);
+            } else {
+                log('Publicación duplicada omitida:', idPublicacion);
             }
         });
-
-        const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
-        if (listaPublicaciones) {
-            listaPublicaciones.insertAdjacentHTML('beforeend', respuesta);
-            log('Contenido añadido');
-            paginaActual++;
-            ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec'].forEach(funcion => {
-                if (typeof window[funcion] === 'function') window[funcion]();
-            });
-
-            // Actualiza los eventos de delegación si es necesario
-            reiniciarEventosPostTag();
+    
+        if (publicacionesValidas.length > 0) {
+            const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
+            if (listaPublicaciones) {
+                listaPublicaciones.insertAdjacentHTML('beforeend', publicacionesValidas.join(''));
+                log('Contenido añadido');
+                paginaActual++;
+    
+                ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec'].forEach(funcion => {
+                    if (typeof window[funcion] === 'function') window[funcion]();
+                });
+    
+                // Actualiza los eventos de delegación si es necesario
+                reiniciarEventosPostTag();
+            } else {
+                log('No se encontró .social-post-list para añadir contenido');
+            }
         } else {
-            log('No se encontró .social-post-list para añadir contenido');
+            log('No hay publicaciones válidas para añadir');
+            detenerCarga();
         }
     }
+    
 
     function reiniciarEventosPostTag() {
         log('Reiniciando eventos de clic mediante delegación en <span class="postTag">');
