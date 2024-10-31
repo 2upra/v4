@@ -68,7 +68,7 @@ function obtener_lista_colecciones() {
     if ($user_collections->have_posts()) {
         while ($user_collections->have_posts()) {
             $user_collections->the_post();
-            $html .= '<li class="coleccion borde" data-id_post="' . get_the_ID() . '">';
+            $html .= '<li class="coleccion borde" data-id="' . get_the_ID() . '">';
             $html .= '<img src="' . esc_url(get_the_post_thumbnail_url(get_the_ID(), 'thumbnail')) . '" alt="">';
             $html .= '<span>' . get_the_title() . '</span>';
             $html .= '</li>';
@@ -76,10 +76,11 @@ function obtener_lista_colecciones() {
         wp_reset_postdata();
     }
     
-    wp_send_json_success(['html' => $html]);
+    // Devolver directamente el HTML como respuesta
+    echo $html;
+    wp_die();
 }
 
-// Agregar el endpoint AJAX
 add_action('wp_ajax_obtener_colecciones', 'obtener_lista_colecciones');
 
 function modalCreacionColeccion()

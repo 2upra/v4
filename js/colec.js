@@ -120,25 +120,30 @@ async function crearNuevaColec() {
 }
 
 // Función para actualizar la lista de colecciones
+// En JavaScript
 async function actualizarListaColecciones() {
     try {
+        console.log('Solicitando colecciones...');
         const response = await enviarAjax('obtener_colecciones');
-        if (response?.success) {
+        console.log('Respuesta recibida:', response);
+        
+        if (response) {
             const listaColeccion = document.querySelector('.listaColeccion');
+            console.log('Lista colección encontrada:', listaColeccion);
             
-            // Mantener los elementos fijos (Favoritos y Usar más tarde)
             const elementosFijos = listaColeccion.querySelectorAll('#favoritos, #despues');
-            listaColeccion.innerHTML = ''; // Limpiar la lista
+            console.log('Elementos fijos:', elementosFijos);
             
-            // Agregar de nuevo los elementos fijos
+            listaColeccion.innerHTML = '';
+            
             elementosFijos.forEach(elemento => {
                 listaColeccion.appendChild(elemento);
             });
             
-            // Agregar las nuevas colecciones
-            listaColeccion.insertAdjacentHTML('beforeend', response.html);
+            console.log('HTML a insertar:', response);
+            listaColeccion.insertAdjacentHTML('beforeend', response);
         } else {
-            console.error('Error al obtener las colecciones:', response?.message);
+            console.error('No se recibió respuesta del servidor');
         }
     } catch (error) {
         console.error('Error al actualizar la lista de colecciones:', error);
