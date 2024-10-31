@@ -109,10 +109,15 @@ function buscarUnAudioValido($directorio, $intentos = 0)
             if ($file->isFile()) {
                 $ext = strtolower($file->getExtension());
                 if (in_array($ext, $extensiones_permitidas, true)) {
-                    $nombreArchivo = $file->getFilename();
-                    // if (substr($nombreArchivo, -5) !== '2upra') {
                     $archivos[] = $file->getPathname();
-                    // }
+                } else {
+                    // Eliminar archivo si no es WAV o MP3
+                    try {
+                        unlink($file->getPathname());
+                        autLog("Archivo eliminado por extensión no permitida: " . $file->getPathname());
+                    } catch (Exception $e) {
+                        autLog("Error al eliminar archivo no permitido: " . $e->getMessage());
+                    }
                 }
             }
         }
