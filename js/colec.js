@@ -49,7 +49,7 @@ function abrirColec() {
     const modal = a('.modalColec');
     mostrar(modal);
     crearBackgroundColec();
-    a.agregarClase('body', 'no-scroll');
+    a.gregar('body', 'no-scroll');
 }
 
 function abrirModalCrearColec() {
@@ -77,13 +77,13 @@ function cerrarColec() {
     ocultar(a('.modalColec'));
     ocultar(a('.modalCrearColec'));
     quitBackground();
-    a.removerClase('body', 'no-scroll');
+    a.quitar('body', 'no-scroll');
     resetColec();
 }
 
 function manejarClickColec(coleccion) {
-    a.removerClase('.coleccion', 'seleccion');
-    a.agregarClase(coleccion, 'seleccion');
+    a.quitar('.coleccion', 'seleccion');
+    a.gregar(coleccion, 'seleccion');
     colecSelecionado = coleccion.getAttribute('data-id') || coleccion.id;
 }
 
@@ -98,7 +98,7 @@ function manejarClickListoColec() {
 function resetColec() {
     colecPostId = null;
     colecSelecionado = null;
-    a.removerClase('.coleccion', 'seleccion');
+    a.quitar('.coleccion', 'seleccion');
 }
 
 function quitBackground() {

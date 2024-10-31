@@ -25,15 +25,15 @@ PIN: ASIGNAR EVENTOS (FALTA)
         return [selector]; // Si es un elemento, lo envolvemos en un array
     }
 
-    a.agregarClase = function (selector, nombreClase) {
+    a.gregar = function (selector, nombreClase) {
         obtenerElementos(selector).forEach(el => el.classList.add(nombreClase));
     };
 
-    a.removerClase = function (selector, nombreClase) {
+    a.quitar = function (selector, nombreClase) {
         obtenerElementos(selector).forEach(el => el.classList.remove(nombreClase));
     };
 
-    a.toggleClase = function (selector, nombreClase) {
+    a.cambiar = function (selector, nombreClase) {
         obtenerElementos(selector).forEach(el => el.classList.toggle(nombreClase));
     };
 
