@@ -9,7 +9,9 @@ function crearColeccion()
 
     // Verificar y sanear los datos recibidos
     $colecPostId = isset($_POST['colecPostId']) ? intval($_POST['colecPostId']) : 0;
-    $imgColec = isset($_POST['imgColec']) && $_POST['imgColec'] !== 'http://null' ? esc_url_raw($_POST['imgColec']) : '';
+    $imgColec = isset($_POST['imgColec']) ? $_POST['imgColec'] : '';
+    // Si la imagen es http://null o null, establecerla como cadena vacía
+    $imgColec = ($imgColec === 'http://null' || $imgColec === 'null') ? '' : esc_url_raw($imgColec);
     $titulo = isset($_POST['titulo']) ? sanitize_text_field($_POST['titulo']) : '';
     $imgColecId = isset($_POST['imgColecId']) ? sanitize_text_field($_POST['imgColecId']) : '';
     $descripcion = isset($_POST['descripcion']) ? sanitize_textarea_field($_POST['descripcion']) : '';
@@ -56,19 +58,17 @@ function crearColeccion()
 
     guardarLog("Colección creada exitosamente: ID $coleccionId");
 
-    // Establecer la imagen destacada si se proporciona una URL válida
-    if ($imgColec) {
+    // Establecer la imagen destacada solo si hay una URL válida
+    if (!empty($imgColec)) {
         $image_id = subirImagenDesdeURL($imgColec, $coleccionId);
         if ($image_id) {
             set_post_thumbnail($coleccionId, $image_id);
             guardarLog("Imagen destacada establecida con ID $image_id para la colección $coleccionId");
-        } else {
-            guardarLog("Error al subir la imagen desde la URL proporcionada");
         }
     }
 
-    // Guardar el imgColecId en la meta si existe
-    if (!empty($imgColecId)) {
+    // Guardar el imgColecId en la meta si existe y no es 'null'
+    if (!empty($imgColecId) && $imgColecId !== 'null') {
         update_post_meta($coleccionId, 'imgColecId', $imgColecId);
         guardarLog("Meta imgColecId guardada con valor $imgColecId para la colección $coleccionId");
     }
@@ -79,7 +79,6 @@ function crearColeccion()
 
     return json_encode(['success' => true, 'coleccionId' => $coleccionId]);
 }
-
 
 
 # Ajusta editar coleccion en consecuencia, esta desactualizada
