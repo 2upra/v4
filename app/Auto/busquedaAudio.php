@@ -23,7 +23,7 @@ function definir_cron_cada_dos_minutos($schedules)
 
 add_action('asdfasdf', 'procesarAudios');
 
-
+/*
 function procesarAudios()
 {
     $directorio_audios = '/home/asley01/MEGA/Waw/Kits/';
@@ -69,7 +69,7 @@ function procesarAudios()
         }
     }
 }
-
+*/
 function buscarUnAudioValido($directorio, $intentos = 0)
 {
     $max_intentos = 100; // Número máximo de intentos recursivos
