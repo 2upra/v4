@@ -43,6 +43,7 @@ function iniciarColec() {
     } else {
         return;
     }
+    subidaImagenColec();
     document.addEventListener('modalOpened', () => {
         resetColec();
     });
