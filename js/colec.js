@@ -183,6 +183,8 @@ async function crearNuevaColec() {
         descripcion,
         privado
     };
+    console.log('Datos enviados:', data); // Log de la data que se envía
+
     const button = a('#btnCrearColec');
     const originalText = button.innerText;
     button.innerText = 'Guardando...';
@@ -192,20 +194,19 @@ async function crearNuevaColec() {
         const response = await enviarAjax('crearColeccion', data);
         if (response?.success) {
             alert('Colección creada con éxito');
-            // Actualizar la lista de colecciones
             await actualizarListaColecciones();
             cerrarColec();
         } else {
             alert(`Error al crear la colección: ${response?.message || 'Desconocido'}`);
         }
     } catch (error) {
-        // console.error('Error al enviar los datos:', error);
         alert('Ocurrió un error durante la creación de la colección. Por favor, inténtelo de nuevo.');
     } finally {
         button.innerText = originalText;
         button.disabled = false;
     }
 }
+
 
 async function actualizarListaColecciones() {
     try {
