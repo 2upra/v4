@@ -171,7 +171,7 @@ async function crearNuevaColec() {
 
     const titulo = a('#tituloColec').value;
     const descripcion = a('#descripColec').value || '';
-    const privadoCheck = a('privadoColec');
+    const privadoCheck = a('#privadoColec');
     const privado = privadoCheck.checked ? privadoCheck.value : 0;
 
     const data = {
