@@ -1,5 +1,5 @@
 <?
-
+/*
 add_action('init', 'iniciar_cron_procesamiento_audios');
 function iniciar_cron_procesamiento_audios()
 {
@@ -23,7 +23,7 @@ function definir_cron_cada_dos_minutos($schedules)
 
 add_action('asdfasdf', 'procesarAudios');
 
-/*
+
 function procesarAudios()
 {
     $directorio_audios = '/home/asley01/MEGA/Waw/Kits/';
