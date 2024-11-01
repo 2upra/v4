@@ -327,11 +327,10 @@ function calcularPuntosIntereses($post_id, $datos)
         }
     }
 
-    //chat gpt: aqui se supone debía de reducir un 50% pero siento que hace todo lo contrario
+    
     if ($esOneShot) {
         $puntosPrevios = $puntosIntereses;
-        $puntosIntereses *= 0.99;
-        logAlgoritmo("One-shot detectado - Puntos antes: $puntosPrevios, Puntos después: $puntosIntereses");
+        $puntosIntereses *= 0.2; //REDUCE UN 80%
     }
 
     return $puntosIntereses;
