@@ -35,11 +35,9 @@ File: C:\Users\1u\Downloads\Rhodes-Dm_rdmS_2upra (5).wav
 Code: -1 (FFFFFFFF)
 Message: Decoder was not found for this format.
 
-pero si lo descargo directamente desde el enlace funciona correctamente el archivo
+pero si lo descargo directamente desde el enlace del servidor sin token funciona correctamente el archivo
 
 */
-
-
 
 // Handler AJAX para procesar la descarga
 add_action('wp_ajax_procesarDescarga', 'procesarDescarga');
@@ -133,67 +131,77 @@ function descargaAudio() {
             }
 
             $audio_id = $token_data['audio_id'];
-            // Obtener la ruta del archivo en el sistema de archivos
             $audio_path = get_attached_file($audio_id);
             guardarLog("Ruta del audio: " . $audio_path);
 
             if ($audio_path && file_exists($audio_path) && is_readable($audio_path)) {
-                // Obtener el tipo MIME real del archivo
-                $mime_type = mime_content_type($audio_path);
-                if ($mime_type === false) {
-                    $mime_type = 'audio/wav';  // Establecer el tipo MIME explícitamente si no se detecta
-                }
-
-                // Asegurarse de que no hay contenido previo
-                if (ob_get_length()) {
+                // Limpiar cualquier salida previa
+                while (ob_get_level()) {
                     ob_end_clean();
                 }
 
-                // Desactivar la compresión de salida en el servidor (si está habilitada)
-                if (function_exists('apache_setenv')) {
-                    apache_setenv('no-gzip', '1');
-                }
+                // Configuración del servidor
                 ini_set('zlib.output_compression', 'Off');
-
-                // Establecer los encabezados adecuados
-                header('Content-Description: File Transfer');
-                header('Content-Type: ' . $mime_type);
-                header('Content-Disposition: attachment; filename="' . basename($audio_path) . '"');
-                header('Expires: 0');
-                header('Cache-Control: must-revalidate');
-                header('Pragma: public');
-                header('Content-Length: ' . filesize($audio_path));
-
-                // Evitar que el script se interrumpa
-                ignore_user_abort(true);
+                ini_set('output_buffering', 'Off');
                 set_time_limit(0);
 
-                // Abrir el archivo en modo binario
-                $handle = fopen($audio_path, 'rb');
-                if ($handle === false) {
-                    guardarLog("Error: No se pudo abrir el archivo para lectura.");
-                    wp_die('Error al procesar el archivo.');
+                // Obtener el tipo MIME y el nombre del archivo
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mime_type = finfo_file($finfo, $audio_path);
+                finfo_close($finfo);
+                
+                $filename = basename($audio_path);
+
+                // Cabeceras HTTP
+                header('Content-Type: ' . $mime_type);
+                header('Content-Disposition: attachment; filename="' . $filename . '"');
+                header('Content-Length: ' . filesize($audio_path));
+                header('Accept-Ranges: bytes');
+                header('Cache-Control: no-cache, must-revalidate');
+                header('Pragma: no-cache');
+                header('Expires: 0');
+
+                // Manejo de rangos para descarga parcial
+                if (isset($_SERVER['HTTP_RANGE'])) {
+                    list($a, $range) = explode("=", $_SERVER['HTTP_RANGE'], 2);
+                    list($range) = explode(",", $range, 2);
+                    list($range, $range_end) = explode("-", $range);
+                    $range = intval($range);
+                    $size = filesize($audio_path);
+                    $range_end = ($range_end) ? intval($range_end) : $size - 1;
+                    
+                    header('HTTP/1.1 206 Partial Content');
+                    header("Content-Range: bytes $range-$range_end/$size");
+                    header('Content-Length: ' . ($range_end - $range + 1));
+                } else {
+                    $range = 0;
                 }
 
-                guardarLog("Iniciando la descarga del archivo: " . basename($audio_path));
-
-                // Transmitir el archivo al usuario en bloques
-                while (!feof($handle)) {
-                    echo fread($handle, 65536); // Leer en bloques de 64KB
-                    flush(); // Asegurar la salida inmediata
+                // Abrir y enviar el archivo
+                $fp = fopen($audio_path, 'rb');
+                fseek($fp, $range);
+                
+                while (!feof($fp)) {
+                    print(fread($fp, 8192));
+                    flush();
+                    if (connection_status() != 0) {
+                        fclose($fp);
+                        exit;
+                    }
                 }
-                fclose($handle);
-
+                
+                fclose($fp);
+                
                 // Eliminar el token después de la descarga
                 delete_transient('descarga_token_' . $token);
-                guardarLog("Token eliminado después de la descarga.");
+                guardarLog("Descarga completada y token eliminado.");
                 exit;
             } else {
                 guardarLog("Error: El archivo no existe o no es accesible.");
                 wp_die('El archivo no existe o no es accesible.');
             }
         } else {
-            guardarLog("Error: El enlace de descarga no es válido o ha expirado.");
+            guardarLog("Error: Token inválido o expirado.");
             wp_die('El enlace de descarga no es válido o ha expirado.');
         }
     }
@@ -201,6 +209,51 @@ function descargaAudio() {
 
 add_action('template_redirect', 'descargaAudio');
 
+/*
+async function procesarDescarga(postId, usuarioId) {
+    console.log('Iniciando procesarDescarga', postId, usuarioId);
+
+    const confirmed = await new Promise(resolve => {
+        const confirmBox = confirm('Esta descarga costará 1 Pinky. ¿Deseas continuar?');
+        resolve(confirmBox);
+    });
+
+    if (!confirmed) {
+        console.log('Descarga cancelada por el usuario.');
+        return false;
+    }
+
+    try {
+        const data = {
+            post_id: postId 
+        };
+
+        // Enviar la solicitud AJAX
+        const responseData = await enviarAjax('procesarDescarga', data);
+        console.log('Datos de respuesta:', responseData);
+
+        // Verificar si la respuesta fue exitosa
+        if (responseData.success) {
+            // Acceder a la propiedad download_url dentro de responseData.data
+            if (responseData.data && responseData.data.download_url) {
+                console.log('Descarga autorizada, iniciando descarga');
+                window.location.href = responseData.data.download_url;  // Redirige a la URL de descarga
+            } else {
+                console.error('Error: download_url no está definido en la respuesta.');
+                alert('Hubo un problema obteniendo el enlace de descarga.');
+            }
+        } else {
+            console.log('No hay suficientes pinkys o error en la descarga.');
+            alert(responseData.message || 'No tienes suficientes pinkys');
+        }
+    } catch (error) {
+        console.error('Error en la solicitud:', error);
+        alert('Ocurrió un error al procesar la descarga. Por favor, intenta de nuevo.');
+    }
+
+    return false;
+}
+*/
 
 // Función para generar el botón de descarga
 function botonDescarga($post_id)
