@@ -40,6 +40,7 @@ pero si lo descargo directamente desde el enlace funciona correctamente el archi
 */
 
 
+
 // Handler AJAX para procesar la descarga
 add_action('wp_ajax_procesarDescarga', 'procesarDescarga');
 
@@ -136,9 +137,23 @@ function descargaAudio() {
             $audio_path = get_attached_file($audio_id);
             guardarLog("Ruta del audio: " . $audio_path);
 
-            if ($audio_path && file_exists($audio_path)) {
-                // Obtener el tipo MIME del archivo
-                $mime_type = 'audio/wav'; // Establecer el tipo MIME explícitamente para WAV
+            if ($audio_path && file_exists($audio_path) && is_readable($audio_path)) {
+                // Obtener el tipo MIME real del archivo
+                $mime_type = mime_content_type($audio_path);
+                if ($mime_type === false) {
+                    $mime_type = 'audio/wav';  // Establecer el tipo MIME explícitamente si no se detecta
+                }
+
+                // Asegurarse de que no hay contenido previo
+                if (ob_get_length()) {
+                    ob_end_clean();
+                }
+
+                // Desactivar la compresión de salida en el servidor (si está habilitada)
+                if (function_exists('apache_setenv')) {
+                    apache_setenv('no-gzip', '1');
+                }
+                ini_set('zlib.output_compression', 'Off');
 
                 // Establecer los encabezados adecuados
                 header('Content-Description: File Transfer');
@@ -148,11 +163,6 @@ function descargaAudio() {
                 header('Cache-Control: must-revalidate');
                 header('Pragma: public');
                 header('Content-Length: ' . filesize($audio_path));
-
-                // Asegurarse de que no hay contenido previo
-                if (ob_get_level()) {
-                    ob_end_clean();
-                }
 
                 // Evitar que el script se interrumpa
                 ignore_user_abort(true);
@@ -169,7 +179,7 @@ function descargaAudio() {
 
                 // Transmitir el archivo al usuario en bloques
                 while (!feof($handle)) {
-                    echo fread($handle, 8192); // Leer en bloques de 8KB
+                    echo fread($handle, 65536); // Leer en bloques de 64KB
                     flush(); // Asegurar la salida inmediata
                 }
                 fclose($handle);
