@@ -69,7 +69,7 @@ function guardarSampleEnColec()
 
     $sample_id = isset($_POST['colecSampleId']) ? intval($_POST['colecSampleId']) : 0;
     $coleccion_id = isset($_POST['colecSelecionado']) ? $_POST['colecSelecionado'] : '';
-    $privado = isset($_POST['privado']) ? $_POST['privado'] : '';
+    $privado = isset($_POST['privado']) ? intval($_POST['privado']) : 0;
     $current_user_id = get_current_user_id();
 
     if (!$sample_id || !$coleccion_id) {
@@ -81,7 +81,6 @@ function guardarSampleEnColec()
     if ($coleccion_id === 'favoritos' || $coleccion_id === 'despues') {
         $coleccion_especial_id = get_user_meta($current_user_id, $coleccion_id . '_coleccion_id', true);
 
-        // Si no existe la colección especial, crearla
         if (!$coleccion_especial_id) {
             $titulo = ($coleccion_id === 'favoritos') ? 'Favoritos' : 'Usar más tarde';
             $imagen_url = ($coleccion_id === 'favoritos')
@@ -96,10 +95,7 @@ function guardarSampleEnColec()
             ]);
 
             if (!is_wp_error($coleccion_especial_id)) {
-                // Guardar la ID de la colección especial en user meta
                 update_user_meta($current_user_id, $coleccion_id . '_coleccion_id', $coleccion_especial_id);
-
-                // Establecer la imagen destacada
                 $image_id = subirImagenDesdeURL($imagen_url, $coleccion_especial_id);
                 if ($image_id) {
                     set_post_thumbnail($coleccion_especial_id, $image_id);
@@ -109,7 +105,6 @@ function guardarSampleEnColec()
                 return;
             }
         }
-
         $coleccion_id = $coleccion_especial_id;
     }
 
@@ -118,6 +113,13 @@ function guardarSampleEnColec()
     if (!$coleccion || $coleccion->post_author != $current_user_id) {
         wp_send_json_error(array('message' => 'No tienes permiso para modificar esta colección'));
         return;
+    }
+
+    // Si 'privado' es 1, actualizar la meta 'privado' en la colección
+    if ($privado === 1) {
+        update_post_meta($coleccion_id, 'privado', 1);
+    } else {
+        //delete_post_meta($coleccion_id, 'privado'); // Opcional: elimina la meta si no es privada
     }
 
     // Obtener y actualizar los samples
@@ -129,20 +131,6 @@ function guardarSampleEnColec()
     if (in_array($sample_id, $samples)) {
         wp_send_json_error(array('message' => 'Este sample ya existe en la colección'));
         return;
-    }
-
-    $meta_fields = [
-        'privado'    => 'privado',
-
-    ];
-
-    foreach ($meta_fields as $meta_key => $post_key) {
-        if (isset($_POST[$post_key])) {
-            $value = $_POST[$post_key] == '1' ? 1 : 0;
-        } else {
-            $value = 0;
-        }
-        update_post_meta($coleccion_id, $meta_key, $value);
     }
 
     $samples[] = $sample_id;
@@ -157,6 +145,7 @@ function guardarSampleEnColec()
         wp_send_json_error(array('message' => 'Error al guardar el sample en la colección'));
     }
 }
+
 
 function crearColeccion()
 {
