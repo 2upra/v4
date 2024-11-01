@@ -331,7 +331,7 @@ function calcularPuntosIntereses($post_id, $datos)
 
     // Aplicar la reducción del 90% si contiene una de las palabras clave
     if ($esOneShot) {
-        $puntosIntereses *= 2;
+        $puntosIntereses *= 0;
     }
 
     return $puntosIntereses;
