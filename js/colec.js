@@ -110,12 +110,15 @@ async function verificarSampleEnColecciones() {
             colecciones.forEach(coleccion => {
                 const coleccionId = coleccion.getAttribute('data-post_id');
 
-                if (coleccionId && response.data.colecciones.includes(coleccionId)) {
-                    const existeSpan = document.createElement('span');
-                    existeSpan.className = 'ya-existe';
-                    existeSpan.textContent = 'Ya existe';
-                    coleccion.appendChild(existeSpan);
-                    console.log('Etiqueta "Ya existe" añadida a la colección con ID:', coleccionId);
+                if (coleccionId && response.data.colecciones.includes(parseInt(coleccionId))) {
+                    // Verificar si ya existe la etiqueta para no duplicarla
+                    if (!coleccion.querySelector('.ya-existe')) {
+                        const existeSpan = document.createElement('span');
+                        existeSpan.className = 'ya-existe';
+                        existeSpan.textContent = 'Ya existe';
+                        coleccion.appendChild(existeSpan);
+                        console.log('Etiqueta "Ya existe" añadida a la colección con ID:', coleccionId);
+                    }
                 } else if (!coleccionId) {
                     console.warn('Elemento sin data-post_id encontrado y omitido:', coleccion);
                 }
