@@ -63,7 +63,7 @@ function modalColeccion()
 
                 <? if ($user_collections->have_posts()) : ?>
                     <? while ($user_collections->have_posts()) : $user_collections->the_post(); ?>
-                        <li class="coleccion borde" data-id="<? the_ID(); ?>">
+                        <li class="coleccion borde" data-post_id="<? the_ID(); ?>">
                             <img src="<? echo esc_url(get_the_post_thumbnail_url(get_the_ID(), 'thumbnail')); ?>" alt="">
                             <span><? the_title(); ?></span>
                         </li>
@@ -99,7 +99,7 @@ function obtener_lista_colecciones() {
     if ($user_collections->have_posts()) {
         while ($user_collections->have_posts()) {
             $user_collections->the_post();
-            $html .= '<li class="coleccion borde" data-id="' . get_the_ID() . '">';
+            $html .= '<li class="coleccion borde" data-post_id="' . get_the_ID() . '">';
             $html .= '<img src="' . esc_url(get_the_post_thumbnail_url(get_the_ID(), 'thumbnail')) . '" alt="">';
             $html .= '<span>' . get_the_title() . '</span>';
             $html .= '</li>';
