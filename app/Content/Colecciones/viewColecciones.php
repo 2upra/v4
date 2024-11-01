@@ -6,7 +6,8 @@
 
 add_action('wp_ajax_verificar_sample_en_colecciones', 'verificar_sample_en_colecciones');
 
-function verificar_sample_en_colecciones() {
+function verificar_sample_en_colecciones()
+{
     $sample_id = isset($_POST['sample_id']) ? intval($_POST['sample_id']) : 0;
     $colecciones_con_sample = array();
 
@@ -72,11 +73,11 @@ function modalColeccion()
                         <span>Usar más tarde</span>
                     </li>
                 <? endif; ?>
-                
+
                 <? if ($user_collections->have_posts()) : ?>
                     <? while ($user_collections->have_posts()) : $user_collections->the_post(); ?>
                         <li class="coleccion borde" data-post_id="<? the_ID(); ?>">
-                            <?php 
+                            <?php
                             $thumbnail_url = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail');
                             ?>
                             <img src="<? echo esc_url($thumbnail_url ? $thumbnail_url : $default_image); ?>" alt="">
@@ -96,7 +97,8 @@ function modalColeccion()
 <?
 }
 
-function obtener_lista_colecciones() {
+function obtener_lista_colecciones()
+{
     $current_user_id = get_current_user_id();
     $args = array(
         'post_type'      => 'colecciones',
@@ -107,7 +109,7 @@ function obtener_lista_colecciones() {
 
     $user_collections = new WP_Query($args);
     $html = '';
-    $default_image = 'https://2upra.com/wp-content/uploads/2024/10/699bc48ebc970652670ff977acc0fd92.jpg'; 
+    $default_image = 'https://2upra.com/wp-content/uploads/2024/10/699bc48ebc970652670ff977acc0fd92.jpg';
 
     if ($user_collections->have_posts()) {
         while ($user_collections->have_posts()) {
@@ -120,7 +122,7 @@ function obtener_lista_colecciones() {
         }
         wp_reset_postdata();
     }
-    
+
     echo $html;
     wp_die();
 }
@@ -140,6 +142,17 @@ function modalCreacionColeccion()
             </div>
             <input type="text" placeholder="Nombre de la colección" id="tituloColec">
             <input type="text" placeholder="Descripción de la colección (opcional)" id="descripColec">
+
+            <div class="bloque flex-row"" id="opcionesColec" style="display: none">
+                <p>Opciones de post</p>
+                <div class="flex flex-row gap-2">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" id="privadoColec" name="privadoColec" value="1">
+                        <span class="checkmark"></span>
+                        <? echo $GLOBALS['iconoPrivado']; ?>
+                    </label>
+                </div>
+            </div>
             <div class="XJAAHB">
                 <button class="botonsecundario" id="btnVolverColec">Volver</button>
                 <button class="botonprincipal" id="btnCrearColec">Crear</button>

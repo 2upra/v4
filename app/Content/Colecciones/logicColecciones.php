@@ -69,6 +69,7 @@ function guardarSampleEnColec()
 
     $sample_id = isset($_POST['colecSampleId']) ? intval($_POST['colecSampleId']) : 0;
     $coleccion_id = isset($_POST['colecSelecionado']) ? $_POST['colecSelecionado'] : '';
+    $privado = isset($_POST['privado']) ? $_POST['privado'] : '';
     $current_user_id = get_current_user_id();
 
     if (!$sample_id || !$coleccion_id) {
@@ -128,6 +129,20 @@ function guardarSampleEnColec()
     if (in_array($sample_id, $samples)) {
         wp_send_json_error(array('message' => 'Este sample ya existe en la colección'));
         return;
+    }
+
+    $meta_fields = [
+        'privado'    => 'privado',
+
+    ];
+
+    foreach ($meta_fields as $meta_key => $post_key) {
+        if (isset($_POST[$post_key])) {
+            $value = $_POST[$post_key] == '1' ? 1 : 0;
+        } else {
+            $value = 0;
+        }
+        update_post_meta($coleccion_id, $meta_key, $value);
     }
 
     $samples[] = $sample_id;

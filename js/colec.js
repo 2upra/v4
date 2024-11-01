@@ -48,6 +48,14 @@ function iniciarColec() {
     });
 }
 
+function manejarClickColec(coleccion) {
+    const button = a('#btnListo');
+    a.quitar('.coleccion', 'seleccion');
+    a.gregar(coleccion, 'seleccion');
+    colecSelecionado = coleccion.getAttribute('data-post_id') || coleccion.id;
+    button.innerText = 'Guardar';
+}
+
 async function abrirColec() {
     console.log('Función abrirColec iniciada');
     const modal = a('.modalColec');
@@ -157,27 +165,22 @@ function verificarColec() {
     return verificarCamposColec;
 }
 
-/*
-esta funcion hay que expandirla para que guarde colecSample y colecSelecionado en el servidor
-los ajax funcionan asi ejemplo 
-const response = await enviarAjax('guardarSampleEnColec', {colecSampleId, colecSelecionado});
-
-*/
-
-//ejemplo de como se crea una nueva coleccion
 async function crearNuevaColec() {
     const esValido = verificarColec();
     if (!esValido) return;
 
     const titulo = a('#tituloColec').value;
     const descripcion = a('#descripColec').value || '';
+    const privadoCheck = a('privadoColec');
+    const privado = privadoCheck.checked ? privadoCheck.value : 0;
 
     const data = {
         colecSampleId,
         imgColec,
         titulo,
         imgColecId,
-        descripcion
+        descripcion,
+        privado
     };
     const button = a('#btnCrearColec');
     const originalText = button.innerText;
@@ -287,18 +290,14 @@ function cerrarColec() {
     resetColec();
 }
 
-function manejarClickColec(coleccion) {
-    a.quitar('.coleccion', 'seleccion');
-    a.gregar(coleccion, 'seleccion');
-    colecSelecionado = coleccion.getAttribute('data-post_id') || coleccion.id;
-}
-
 function resetColec() {
     colecSampleId = null;
     colecSelecionado = null;
     a.quitar('.coleccion', 'seleccion');
     const existeSpans = document.querySelectorAll('.ya-existe');
     existeSpans.forEach(span => span.remove());
+    const button = a('#btnListo');
+    button.innerText = 'Listo';
 }
 
 function quitBackground() {
