@@ -48,36 +48,75 @@ function iniciarColec() {
     });
 }
 
-
 async function abrirColec() {
+    console.log('Función abrirColec iniciada');
     const modal = a('.modalColec');
     mostrar(modal);
     crearBackgroundColec();
     a.gregar('body', 'no-scroll');
-
-    // Verificar las colecciones que contienen el sample
+    console.log('Modal mostrado y fondo creado');
     await verificarSampleEnColecciones();
+    console.log('verificarSampleEnColecciones completado');
+}
+
+async function manejarClickListoColec() {
+    console.log('Función manejarClickListoColec iniciada');
+    if (colecSampleId && colecSelecionado) {
+        console.log('colecSampleId y colecSelecionado existen:', colecSampleId, colecSelecionado);
+
+        const button = a('#btnListo');
+        const originalText = button.innerText;
+        button.innerText = 'Guardando...';
+        button.disabled = true;
+
+        try {
+            console.log('Enviando petición AJAX para guardar sample en colección');
+            const response = await enviarAjax('guardarSampleEnColec', {
+                colecSampleId,
+                colecSelecionado
+            });
+            console.log('Respuesta recibida:', response);
+
+            if (response?.success) {
+                alert('Sample guardado en la colección con éxito');
+                cerrarColec();
+            } else {
+                alert(`Error al guardar en la colección: ${response?.message || 'Desconocido'}`);
+            }
+        } catch (error) {
+            console.error('Error al guardar el sample:', error);
+            alert('Ocurrió un error al guardar en la colección. Por favor, inténtelo de nuevo.');
+        } finally {
+            button.innerText = originalText;
+            button.disabled = false;
+        }
+    } else {
+        console.log('colecSampleId o colecSelecionado faltan:', colecSampleId, colecSelecionado);
+        cerrarColec();
+    }
 }
 
 async function verificarSampleEnColecciones() {
+    console.log('Función verificarSampleEnColecciones iniciada');
     try {
+        console.log('Enviando petición AJAX para verificar sample en colecciones con ID:', colecSampleId);
         const response = await enviarAjax('verificar_sample_en_colecciones', {
             sample_id: colecSampleId
         });
+        console.log('Respuesta recibida de verificarSampleEnColecciones:', response);
 
         if (response.success) {
-            // Recorrer todas las colecciones en el modal
             const colecciones = document.querySelectorAll('.coleccion');
             colecciones.forEach(coleccion => {
                 const coleccionId = coleccion.dataset.post_id;
-                
-                // Verificar si esta colección contiene el sample
+                console.log('Verificando colección con ID:', coleccionId);
+
                 if (response.data.colecciones.includes(coleccionId)) {
-                    // Agregar indicador visual
                     const existeSpan = document.createElement('span');
                     existeSpan.className = 'ya-existe';
                     existeSpan.textContent = 'Ya existe';
                     coleccion.appendChild(existeSpan);
+                    console.log('Etiqueta "Ya existe" añadida a la colección con ID:', coleccionId);
                 }
             });
         } else {
@@ -120,37 +159,6 @@ los ajax funcionan asi ejemplo
 const response = await enviarAjax('guardarSampleEnColec', {colecSampleId, colecSelecionado});
 
 */
-
-async function manejarClickListoColec() {
-    if (colecSampleId && colecSelecionado) {
-        const button = a('#btnListo');
-        const originalText = button.innerText;
-        button.innerText = 'Guardando...';
-        button.disabled = true;
-
-        try {
-            const response = await enviarAjax('guardarSampleEnColec', {
-                colecSampleId,
-                colecSelecionado
-            });
-
-            if (response?.success) {
-                alert('Sample guardado en la colección con éxito');
-                cerrarColec();
-            } else {
-                alert(`Error al guardar en la colección: ${response?.message || 'Desconocido'}`);
-            }
-        } catch (error) {
-            console.error('Error al guardar el sample:', error);
-            alert('Ocurrió un error al guardar en la colección. Por favor, inténtelo de nuevo.');
-        } finally {
-            button.innerText = originalText;
-            button.disabled = false;
-        }
-    } else {
-        cerrarColec();
-    }
-}
 
 //ejemplo de como se crea una nueva coleccion
 async function crearNuevaColec() {
@@ -201,14 +209,12 @@ async function actualizarListaColecciones() {
             elementosFijos.forEach(elemento => {
                 listaColeccion.appendChild(elemento);
             });
-        
+
             listaColeccion.insertAdjacentHTML('beforeend', response);
         } else {
         }
-    } catch (error) {
-    }
+    } catch (error) {}
 }
-
 
 function subidaImagenColec() {
     const previewImagenColec = a('#previewImagenColec');
@@ -227,7 +233,7 @@ function subidaImagenColec() {
 
     const subidaImagen = async file => {
         try {
-            const { fileUrl, fileId } = await subidaRsBackend(file, 'barraProgresoImagen');
+            const {fileUrl, fileId} = await subidaRsBackend(file, 'barraProgresoImagen');
             imgColec = fileUrl;
             imgColecId = fileId;
             updatePreviewImagen(file);
@@ -262,7 +268,6 @@ function subidaImagenColec() {
     });
 }
 
-
 function busquedaColec(query) {
     document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
         const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
@@ -283,8 +288,6 @@ function manejarClickColec(coleccion) {
     a.gregar(coleccion, 'seleccion');
     colecSelecionado = coleccion.getAttribute('data-post_id') || coleccion.id;
 }
-
-
 
 function resetColec() {
     colecSampleId = null;
