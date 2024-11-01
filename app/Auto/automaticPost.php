@@ -25,7 +25,7 @@ function autProcesarAudio($rutaOriginalOne) {
     $extension = strtolower($path_parts['extension']);
     $basename = $path_parts['filename'];
     $temp_path = "$directory/{$basename}_temp.$extension";
-    $comando_strip_metadata = "/usr/bin/ffmpeg -i " . escapeshellarg($rutaOriginalOne) . " -map_metadata -1 -c:a pcm_s16le " . escapeshellarg($temp_path) . " -y";
+    $comando_strip_metadata = "/usr/bin/ffmpeg -i " . escapeshellarg($rutaOriginalOne) . " -map_metadata -1 -map 0:a -c:a copy " . escapeshellarg($temp_path) . " -y";
     exec($comando_strip_metadata, $output_strip, $return_strip);
     
     if ($return_strip !== 0) {
