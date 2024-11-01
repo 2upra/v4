@@ -108,15 +108,16 @@ async function verificarSampleEnColecciones() {
         if (response.success) {
             const colecciones = document.querySelectorAll('.coleccion');
             colecciones.forEach(coleccion => {
-                const coleccionId = coleccion.dataset.post_id;
-                console.log('Verificando colección con ID:', coleccionId);
+                const coleccionId = coleccion.getAttribute('data-post_id');
 
-                if (response.data.colecciones.includes(coleccionId)) {
+                if (coleccionId && response.data.colecciones.includes(coleccionId)) {
                     const existeSpan = document.createElement('span');
                     existeSpan.className = 'ya-existe';
                     existeSpan.textContent = 'Ya existe';
                     coleccion.appendChild(existeSpan);
                     console.log('Etiqueta "Ya existe" añadida a la colección con ID:', coleccionId);
+                } else if (!coleccionId) {
+                    console.warn('Elemento sin data-post_id encontrado y omitido:', coleccion);
                 }
             });
         } else {
