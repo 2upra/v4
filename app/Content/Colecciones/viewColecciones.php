@@ -143,7 +143,7 @@ function modalCreacionColeccion()
             <input type="text" placeholder="Nombre de la colección" id="tituloColec">
             <input type="text" placeholder="Descripción de la colección (opcional)" id="descripColec">
 
-            <div class="bloque flex-row"" id="opcionesColec" style="display: none">
+            <div class="bloque flex-row"" id="opcionesColec" style="display: flex">
                 <p>Opciones de post</p>
                 <div class="flex flex-row gap-2">
                     <label class="custom-checkbox">
