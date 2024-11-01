@@ -30,7 +30,7 @@ function verificarConexionReceptor() {
         $ip_cliente = $_SERVER['REMOTE_ADDR'];
 
         // Guardar en el log la IP y el receptor_id
-        guardarLog("ID del receptor recibido: " . $receptor_id . " desde la IP: " . $ip_cliente);
+        //guardarLog("ID del receptor recibido: " . $receptor_id . " desde la IP: " . $ip_cliente);
 
         $usuario = get_user_by('ID', $receptor_id);
         if ($usuario) {
