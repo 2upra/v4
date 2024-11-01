@@ -39,6 +39,11 @@ function verificar_sample_en_colecciones() {
 function modalColeccion()
 {
     $current_user_id = get_current_user_id();
+
+    // Verificar si ya existen las colecciones especiales "Favoritos" y "Usar más tarde".
+    $favoritos_id = get_user_meta($current_user_id, 'favoritos_coleccion_id', true);
+    $despues_id = get_user_meta($current_user_id, 'despues_coleccion_id', true);
+
     $args = array(
         'post_type'      => 'colecciones',
         'post_status'    => 'publish',
@@ -54,13 +59,23 @@ function modalColeccion()
             <input type="text" placeholder="Buscar colección" id="buscarColeccion">
 
             <ul class="listaColeccion borde">
-                <li class="coleccion" id="favoritos" data-post_id="favoritos">
-                    <img src="<? echo esc_url('https://2upra.com/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg'); ?>" alt=""><span>Favoritos</span>
-                </li>
-                <li class="coleccion borde" id="despues" data-post_id="despues">
-                    <img src="<? echo esc_url('https://2upra.com/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg'); ?>" alt=""><span>Usar más tarde</span>
-                </li>
+                <? if (!$favoritos_id) : ?>
+                    <!-- Solo mostramos "Favoritos" si no ha sido creada como colección personalizada -->
+                    <li class="coleccion" id="favoritos" data-post_id="favoritos">
+                        <img src="<? echo esc_url('https://2upra.com/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg'); ?>" alt="">
+                        <span>Favoritos</span>
+                    </li>
+                <? endif; ?>
 
+                <? if (!$despues_id) : ?>
+                    <!-- Solo mostramos "Usar más tarde" si no ha sido creada como colección personalizada -->
+                    <li class="coleccion borde" id="despues" data-post_id="despues">
+                        <img src="<? echo esc_url('https://2upra.com/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg'); ?>" alt="">
+                        <span>Usar más tarde</span>
+                    </li>
+                <? endif; ?>
+
+                <!-- Mostrar las colecciones creadas por el usuario -->
                 <? if ($user_collections->have_posts()) : ?>
                     <? while ($user_collections->have_posts()) : $user_collections->the_post(); ?>
                         <li class="coleccion borde" data-post_id="<? the_ID(); ?>">
@@ -70,7 +85,8 @@ function modalColeccion()
                     <? endwhile; ?>
                     <? wp_reset_postdata(); ?>
                 <? else : ?>
-
+                    <!-- Opcional: Mensaje si no hay colecciones -->
+                    <li>No tienes colecciones creadas aún.</li>
                 <? endif; ?>
             </ul>
 
