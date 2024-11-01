@@ -141,6 +141,12 @@ if (!defined('ABSPATH')) {
                             </a>
                         </div>
 
+                        <div class="menu-item iconoColec">
+                            <a href="https://2upra.com/colecciones">
+                                <? echo $GLOBALS['iconoColec']; ?>
+                            </a>
+                        </div>
+
                         <div class="menuColabs">
                             <? echo colabsResumen() ?>
                         </div>
