@@ -28,6 +28,43 @@ function restarPinkysEliminacion($post_id)
     }
 }
 
+/*
+Hay un problema grave, cuando descargo el audio desde el enlace con el token generado no funciona
+por lo general son audios wav y dan este error
+File: C:\Users\1u\Downloads\Rhodes-Dm_rdmS_2upra (5).wav
+Code: -1 (FFFFFFFF)
+Message: Decoder was not found for this format.
+
+pero si lo descargo directamente desde el enlace funciona correctamente el archiv
+
+2024-11-01 17:43:45 - Audio ID obtenido: 264969
+2024-11-01 17:43:45 - Pinkys del usuario: 9223372036854775803
+2024-11-01 17:43:45 - Restando 1 Pinky al usuario: 1
+2024-11-01 17:43:45 - Token generado: f2fffe5dd275ef597333472c5e55bc85
+2024-11-01 17:43:45 - Datos del token: Array
+(
+    [user_id] => 1
+    [audio_id] => 264969
+    [time] => 1730483025
+)
+2024-11-01 17:43:45 - Token almacenado en transients.
+2024-11-01 17:43:45 - Enlace de descarga final: https://2upra.com?descarga_token=f2fffe5dd275ef597333472c5e55bc85
+2024-11-01 17:43:45 - Enlace de descarga generado: https://2upra.com?descarga_token=f2fffe5dd275ef597333472c5e55bc85
+2024-11-01 17:43:48 - Token de descarga recibido: f2fffe5dd275ef597333472c5e55bc85
+2024-11-01 17:43:48 - Datos del token recuperados: Array
+(
+    [user_id] => 1
+    [audio_id] => 264969
+    [time] => 1730483025
+)
+2024-11-01 17:43:48 - Usuario actual: 1
+2024-11-01 17:43:48 - URL del audio: https://2upra.com/wp-content/uploads/2024/11/Rhodes-Dm_rdmS_2upra.wav
+2024-11-01 17:43:48 - Iniciando la descarga del archivo: Rhodes-Dm_rdmS_2upra.wav
+2024-11-01 17:43:48 - Token eliminado después de la descarga.
+
+*/
+
+
 // Handler AJAX para procesar la descarga
 add_action('wp_ajax_procesarDescarga', 'procesarDescarga');
 
@@ -120,16 +157,35 @@ function descargaAudio() {
             }
 
             $audio_id = $token_data['audio_id'];
-            $audio_url = wp_get_attachment_url($audio_id);
-            guardarLog("URL del audio: " . $audio_url);
+            // Obtener la ruta del archivo en el sistema de archivos
+            $audio_path = get_attached_file($audio_id);
+            guardarLog("Ruta del audio: " . $audio_path);
 
-            if ($audio_url) {
-                header('Content-Type: application/octet-stream');
-                header('Content-Disposition: attachment; filename="' . basename($audio_url) . '"');
-                guardarLog("Iniciando la descarga del archivo: " . basename($audio_url));
-                readfile($audio_url);
+            if ($audio_path && file_exists($audio_path)) {
+                // Obtener el tipo MIME del archivo
+                $mime_type = get_post_mime_type($audio_id);
+                if (!$mime_type) {
+                    $mime_type = 'application/octet-stream';
+                }
 
-                delete_transient('descarga_token_' . $token); // Eliminar el token después de usarlo
+                // Establecer los encabezados adecuados
+                header('Content-Description: File Transfer');
+                header('Content-Type: ' . $mime_type);
+                header('Content-Disposition: attachment; filename="' . basename($audio_path) . '"');
+                header('Expires: 0');
+                header('Cache-Control: must-revalidate');
+                header('Pragma: public');
+                header('Content-Length: ' . filesize($audio_path));
+
+                // Limpiar el búfer de salida para evitar corrupción
+                ob_clean();
+                flush();
+
+                // Leer el archivo y enviarlo al usuario
+                readfile($audio_path);
+
+                // Eliminar el token después de la descarga
+                delete_transient('descarga_token_' . $token);
                 guardarLog("Token eliminado después de la descarga.");
                 exit;
             } else {
@@ -143,6 +199,7 @@ function descargaAudio() {
     }
 }
 add_action('template_redirect', 'descargaAudio');
+
 
 // Función para generar el botón de descarga
 function botonDescarga($post_id)
