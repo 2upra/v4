@@ -165,7 +165,6 @@ function repararAudiosWav() {
     }
 }
 
-// Llamar a la función principal para ejecutar el proceso
-repararAudiosWav();
+
 
 
