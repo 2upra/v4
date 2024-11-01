@@ -115,7 +115,7 @@ async function verificarSampleEnColecciones() {
                     if (!coleccion.querySelector('.ya-existe')) {
                         const existeSpan = document.createElement('span');
                         existeSpan.className = 'ya-existe';
-                        existeSpan.textContent = 'Ya existe';
+                        existeSpan.textContent = 'Guardado aquí';
                         coleccion.appendChild(existeSpan);
                         console.log('Etiqueta "Ya existe" añadida a la colección con ID:', coleccionId);
                     }
