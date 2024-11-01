@@ -35,32 +35,7 @@ File: C:\Users\1u\Downloads\Rhodes-Dm_rdmS_2upra (5).wav
 Code: -1 (FFFFFFFF)
 Message: Decoder was not found for this format.
 
-pero si lo descargo directamente desde el enlace funciona correctamente el archiv
-
-2024-11-01 17:43:45 - Audio ID obtenido: 264969
-2024-11-01 17:43:45 - Pinkys del usuario: 9223372036854775803
-2024-11-01 17:43:45 - Restando 1 Pinky al usuario: 1
-2024-11-01 17:43:45 - Token generado: f2fffe5dd275ef597333472c5e55bc85
-2024-11-01 17:43:45 - Datos del token: Array
-(
-    [user_id] => 1
-    [audio_id] => 264969
-    [time] => 1730483025
-)
-2024-11-01 17:43:45 - Token almacenado en transients.
-2024-11-01 17:43:45 - Enlace de descarga final: https://2upra.com?descarga_token=f2fffe5dd275ef597333472c5e55bc85
-2024-11-01 17:43:45 - Enlace de descarga generado: https://2upra.com?descarga_token=f2fffe5dd275ef597333472c5e55bc85
-2024-11-01 17:43:48 - Token de descarga recibido: f2fffe5dd275ef597333472c5e55bc85
-2024-11-01 17:43:48 - Datos del token recuperados: Array
-(
-    [user_id] => 1
-    [audio_id] => 264969
-    [time] => 1730483025
-)
-2024-11-01 17:43:48 - Usuario actual: 1
-2024-11-01 17:43:48 - URL del audio: https://2upra.com/wp-content/uploads/2024/11/Rhodes-Dm_rdmS_2upra.wav
-2024-11-01 17:43:48 - Iniciando la descarga del archivo: Rhodes-Dm_rdmS_2upra.wav
-2024-11-01 17:43:48 - Token eliminado después de la descarga.
+pero si lo descargo directamente desde el enlace funciona correctamente el archivo
 
 */
 
@@ -163,10 +138,7 @@ function descargaAudio() {
 
             if ($audio_path && file_exists($audio_path)) {
                 // Obtener el tipo MIME del archivo
-                $mime_type = get_post_mime_type($audio_id);
-                if (!$mime_type) {
-                    $mime_type = 'application/octet-stream';
-                }
+                $mime_type = 'audio/wav'; // Establecer el tipo MIME explícitamente para WAV
 
                 // Establecer los encabezados adecuados
                 header('Content-Description: File Transfer');
@@ -177,12 +149,30 @@ function descargaAudio() {
                 header('Pragma: public');
                 header('Content-Length: ' . filesize($audio_path));
 
-                // Limpiar el búfer de salida para evitar corrupción
-                ob_clean();
-                flush();
+                // Asegurarse de que no hay contenido previo
+                if (ob_get_level()) {
+                    ob_end_clean();
+                }
 
-                // Leer el archivo y enviarlo al usuario
-                readfile($audio_path);
+                // Evitar que el script se interrumpa
+                ignore_user_abort(true);
+                set_time_limit(0);
+
+                // Abrir el archivo en modo binario
+                $handle = fopen($audio_path, 'rb');
+                if ($handle === false) {
+                    guardarLog("Error: No se pudo abrir el archivo para lectura.");
+                    wp_die('Error al procesar el archivo.');
+                }
+
+                guardarLog("Iniciando la descarga del archivo: " . basename($audio_path));
+
+                // Transmitir el archivo al usuario en bloques
+                while (!feof($handle)) {
+                    echo fread($handle, 8192); // Leer en bloques de 8KB
+                    flush(); // Asegurar la salida inmediata
+                }
+                fclose($handle);
 
                 // Eliminar el token después de la descarga
                 delete_transient('descarga_token_' . $token);
@@ -198,6 +188,7 @@ function descargaAudio() {
         }
     }
 }
+
 add_action('template_redirect', 'descargaAudio');
 
 
