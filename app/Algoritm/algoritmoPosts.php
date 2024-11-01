@@ -456,7 +456,7 @@ function calcularFeedPersonalizado($userId)
     arsort($resumenPuntos);
 
     // Loguear el resumen de puntos
-    // logResumenDePuntos($userId, $resumenPuntos);
+    logResumenDePuntos($userId, $resumenPuntos);
 
     return $posts_personalizados;
 }
