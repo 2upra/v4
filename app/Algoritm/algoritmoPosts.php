@@ -300,8 +300,6 @@ function calcularPuntosIntereses($post_id, $datos)
 {
     $puntosIntereses = 0;
     $datosAlgoritmo = !empty($datos['datosAlgoritmo'][$post_id]->meta_value) ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true) : [];
-
-    // Verificar si el contenido tiene alguna palabra clave que requiera reducción de puntos
     $oneshot = ['one shot', 'one-shot', 'oneshot'];
     $esOneShot = false;
 
@@ -329,9 +327,11 @@ function calcularPuntosIntereses($post_id, $datos)
         }
     }
 
-    // Aplicar la reducción del 90% si contiene una de las palabras clave
+    //chat gpt: aqui se supone debía de reducir un 50% pero siento que hace todo lo contrario
     if ($esOneShot) {
-        $puntosIntereses *= 0;
+        $puntosPrevios = $puntosIntereses;
+        $puntosIntereses *= 0.5;
+        logAlgoritmo("One-shot detectado - Puntos antes: $puntosPrevios, Puntos después: $puntosIntereses");
     }
 
     return $puntosIntereses;
@@ -356,7 +356,7 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
 
     // Decaimiento por tiempo
     $diasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / (3600 * 24);
-    $factorTiempo = pow(0.99, $diasDesdePublicacion);    
+    $factorTiempo = pow(0.99, $diasDesdePublicacion);
 
     // Obtener 'Verificado' y 'postAut'
     $metaVerificado = isset($datos['verificado_results'][$post_id]->meta_value) && $datos['verificado_results'][$post_id]->meta_value == '1';
