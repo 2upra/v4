@@ -40,7 +40,7 @@ function modalColeccion()
 {
     $current_user_id = get_current_user_id();
 
-    // Verificar si ya existen las colecciones especiales "Favoritos" y "Usar más tarde".
+    // ID de favoritos y usar más tarde
     $favoritos_id = get_user_meta($current_user_id, 'favoritos_coleccion_id', true);
     $despues_id = get_user_meta($current_user_id, 'despues_coleccion_id', true);
 
@@ -52,15 +52,14 @@ function modalColeccion()
     );
 
     $user_collections = new WP_Query($args);
+    $default_image = 'https://2upra.com/wp-content/uploads/2024/10/699bc48ebc970652670ff977acc0fd92.jpg'; // Imagen predeterminada
 ?>
     <div class="modalColec modal" style="display: none;">
         <div class="colecciones">
             <h3>Colecciones</h3>
             <input type="text" placeholder="Buscar colección" id="buscarColeccion">
-
             <ul class="listaColeccion borde">
                 <? if (!$favoritos_id) : ?>
-                    <!-- Solo mostramos "Favoritos" si no ha sido creada como colección personalizada -->
                     <li class="coleccion" id="favoritos" data-post_id="favoritos">
                         <img src="<? echo esc_url('https://2upra.com/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg'); ?>" alt="">
                         <span>Favoritos</span>
@@ -68,25 +67,23 @@ function modalColeccion()
                 <? endif; ?>
 
                 <? if (!$despues_id) : ?>
-                    <!-- Solo mostramos "Usar más tarde" si no ha sido creada como colección personalizada -->
                     <li class="coleccion borde" id="despues" data-post_id="despues">
                         <img src="<? echo esc_url('https://2upra.com/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg'); ?>" alt="">
                         <span>Usar más tarde</span>
                     </li>
                 <? endif; ?>
-
-                <!-- Mostrar las colecciones creadas por el usuario -->
+                
                 <? if ($user_collections->have_posts()) : ?>
                     <? while ($user_collections->have_posts()) : $user_collections->the_post(); ?>
                         <li class="coleccion borde" data-post_id="<? the_ID(); ?>">
-                            <img src="<? echo esc_url(get_the_post_thumbnail_url(get_the_ID(), 'thumbnail')); ?>" alt="">
+                            <?php 
+                            $thumbnail_url = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail');
+                            ?>
+                            <img src="<? echo esc_url($thumbnail_url ? $thumbnail_url : $default_image); ?>" alt="">
                             <span><? the_title(); ?></span>
                         </li>
                     <? endwhile; ?>
                     <? wp_reset_postdata(); ?>
-                <? else : ?>
-                    <!-- Opcional: Mensaje si no hay colecciones -->
-                    <li>No tienes colecciones creadas aún.</li>
                 <? endif; ?>
             </ul>
 
@@ -99,7 +96,6 @@ function modalColeccion()
 <?
 }
 
-// Función para obtener el HTML de las colecciones
 function obtener_lista_colecciones() {
     $current_user_id = get_current_user_id();
     $args = array(
@@ -111,19 +107,20 @@ function obtener_lista_colecciones() {
 
     $user_collections = new WP_Query($args);
     $html = '';
-    
+    $default_image = 'https://2upra.com/wp-content/uploads/2024/10/699bc48ebc970652670ff977acc0fd92.jpg'; 
+
     if ($user_collections->have_posts()) {
         while ($user_collections->have_posts()) {
             $user_collections->the_post();
+            $thumbnail_url = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail');
             $html .= '<li class="coleccion borde" data-post_id="' . get_the_ID() . '">';
-            $html .= '<img src="' . esc_url(get_the_post_thumbnail_url(get_the_ID(), 'thumbnail')) . '" alt="">';
+            $html .= '<img src="' . esc_url($thumbnail_url ? $thumbnail_url : $default_image) . '" alt="">';
             $html .= '<span>' . get_the_title() . '</span>';
             $html .= '</li>';
         }
         wp_reset_postdata();
     }
     
-    // Devolver directamente el HTML como respuesta
     echo $html;
     wp_die();
 }
