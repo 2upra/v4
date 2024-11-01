@@ -69,7 +69,7 @@ function procesarAudios()
         }
     }
 }
-*/
+
 function buscarUnAudioValido($directorio, $intentos = 0)
 {
     $max_intentos = 100; // Número máximo de intentos recursivos
