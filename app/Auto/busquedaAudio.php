@@ -191,7 +191,15 @@ function debeProcesarse($ruta_archivo, $file_hash)
                     $hash_eliminado = eliminarPorHash($file_hash);
                     autLog("debeProcesarse: Eliminación del hash: " . ($hash_eliminado ? "EXITOSA" : "FALLIDA") . " - Hash: $file_hash");
                 } else {
-                    autLog("debeProcesarse: El archivo no se puede eliminar ya que no pasó la verificación de carga.");
+                    // Mover el archivo y crear un archivo de texto con la razón
+                    $nueva_ruta = "/home/asley01/MEGA/Waw/Verificar/" . basename($ruta_archivo);
+                    if (rename($ruta_archivo, $nueva_ruta)) {
+                        $razon_no_eliminar = "Razón: No pasó la verificación de carga.\nHash del archivo: $file_hash\nRuta original: $ruta_archivo\nFecha: " . date("Y-m-d H:i:s");
+                        file_put_contents($nueva_ruta . "_razon.txt", $razon_no_eliminar);
+                        autLog("debeProcesarse: Archivo movido a $nueva_ruta y motivo de no eliminación registrado.");
+                    } else {
+                        autLog("debeProcesarse: No se pudo mover el archivo a la ruta de verificación: $nueva_ruta");
+                    }
                 }
                 return false;
             }
@@ -204,6 +212,7 @@ function debeProcesarse($ruta_archivo, $file_hash)
         return false;
     }
 }
+
 
 function obtenerHashesFiltrados($extensiones)
 {
