@@ -17,6 +17,7 @@ function iniciarColec() {
         if (btn) {
             e.preventDefault();
             colecSampleId = btn.getAttribute('data-post_id');
+            // console.log('Post ID seleccionado:', colecSampleId);
             abrirColec();
         }
     });
@@ -39,61 +40,30 @@ function iniciarColec() {
             const query = buscarInput.value.toLowerCase();
             busquedaColec(query);
         });
+    } else {
+        return;
     }
-
     subidaImagenColec();
     document.addEventListener('modalOpened', () => {
         resetColec();
     });
 }
+//necesito que cuando busque y no haya resultados o no haya coleccion selecionada, el boton de btnListo cambie a crear colección y en ese caso ejecute crearNuevaColec, el titulo sería lo que se esta buscando, el resto de data no es obligatorio, y obviamente si se borra la busqueda, regrese al estado normal, y tambien algo adicional, volver a dark click a una coleccion debería quitar la seleccion y limpiar colecSelecionado, hay que tener en cuenta que cuando una coleccion esta selecionada el boton btnListo cambia a Guardar y sirve para guardar, no tiene que alterarse eso
 
 function busquedaColec(query) {
-    const colecciones = document.querySelectorAll('.listaColeccion .coleccion');
     const button = a('#btnListo');
-    let hayResultados = false;
-
-    colecciones.forEach(coleccion => {
+    document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
         const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
-        if (titulo.includes(query)) {
-            coleccion.style.display = 'flex';
-            hayResultados = true;
-        } else {
-            coleccion.style.display = 'none';
-        }
+        coleccion.style.display = titulo.includes(query) ? 'flex' : 'none';
     });
-
-    if (!hayResultados && query) {
-        // Si no hay resultados y hay una búsqueda, cambiar el botón a "Crear colección" con el título buscado
-        button.innerText = 'Crear colección';
-        button.onclick = () => {
-            a('#tituloColec').value = query; // Asigna el título de la nueva colección
-            crearNuevaColec();  // Llama a la función para crear una nueva colección
-        };
-    } else {
-        // Si hay resultados o no hay búsqueda, restaurar el comportamiento normal del botón
-        button.innerText = colecSelecionado ? 'Guardar' : 'Listo';
-        button.onclick = colecSelecionado ? manejarClickListoColec : null;
-    }
 }
 
 function manejarClickColec(coleccion) {
     const button = a('#btnListo');
-    const seleccionada = coleccion.classList.contains('seleccion');
-
-    // Si la colección ya está seleccionada, la deseleccionamos
-    if (seleccionada) {
-        coleccion.classList.remove('seleccion');
-        colecSelecionado = null;
-        button.innerText = 'Listo';
-        button.onclick = null;
-    } else {
-        // Si no está seleccionada, deseleccionamos las demás y seleccionamos esta
-        document.querySelectorAll('.coleccion').forEach(c => c.classList.remove('seleccion'));
-        coleccion.classList.add('seleccion');
-        colecSelecionado = coleccion.getAttribute('data-post_id') || coleccion.id;
-        button.innerText = 'Guardar';
-        button.onclick = manejarClickListoColec;
-    }
+    a.quitar('.coleccion', 'seleccion');
+    a.gregar(coleccion, 'seleccion');
+    colecSelecionado = coleccion.getAttribute('data-post_id') || coleccion.id;
+    button.innerText = 'Guardar';
 }
 
 async function crearNuevaColec() {
