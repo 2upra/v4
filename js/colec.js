@@ -64,7 +64,7 @@ async function abrirColec() {
     crearBackgroundColec();
     a.gregar('body', 'no-scroll');
     console.log('Modal mostrado y fondo creado');
-    await verificarSampleEnColecciones(actualizar = false);
+    await verificarSampleEnColecciones();
     console.log('verificarSampleEnColecciones completado');
 }
 
@@ -105,52 +105,42 @@ async function manejarClickListoColec() {
     }
 }
 
-async function verificarSampleEnColecciones(actualizar = false) {
+
+
+async function verificarSampleEnColecciones() {
     console.log('Función verificarSampleEnColecciones iniciada');
-    const colecciones = document.querySelectorAll('.coleccion');
-
-    if (actualizar) {
+    try {
         console.log('Enviando petición AJAX para verificar sample en colecciones con ID:', colecSampleId);
-        try {
-            const response = await enviarAjax('verificar_sample_en_colecciones', {
-                sample_id: colecSampleId
-            });
-            console.log('Respuesta recibida de verificarSampleEnColecciones:', response);
+        const response = await enviarAjax('verificar_sample_en_colecciones', {
+            sample_id: colecSampleId
+        });
+        console.log('Respuesta recibida de verificarSampleEnColecciones:', response);
 
-            if (response.success) {
-                actualizarColeccionesEnDOM(response.data.colecciones, colecciones);
-            } else {
-                console.error('Error al verificar las colecciones:', response.message);
-            }
-        } catch (error) {
-            console.error('Error al verificar las colecciones:', error);
+        if (response.success) {
+            const colecciones = document.querySelectorAll('.coleccion');
+            colecciones.forEach(coleccion => {
+                const coleccionId = coleccion.getAttribute('data-post_id');
+
+                if (coleccionId && response.data.colecciones.includes(parseInt(coleccionId))) {
+                    // Verificar si ya existe la etiqueta para no duplicarla
+                    if (!coleccion.querySelector('.ya-existe')) {
+                        const existeSpan = document.createElement('span');
+                        existeSpan.className = 'ya-existe';
+                        existeSpan.textContent = 'Guardado aquí';
+                        coleccion.appendChild(existeSpan);
+                        console.log('Etiqueta "Ya existe" añadida a la colección con ID:', coleccionId);
+                    }
+                } else if (!coleccionId) {
+                    console.warn('Elemento sin data-post_id encontrado y omitido:', coleccion);
+                }
+            });
+        } else {
+            console.error('Error al verificar las colecciones:', response.message);
         }
-    } else {
-        console.log('Revisión local de las colecciones en el DOM sin petición al servidor');
-        const coleccionesData = Array.from(colecciones).map(coleccion => parseInt(coleccion.getAttribute('data-post_id')));
-        actualizarColeccionesEnDOM(coleccionesData, colecciones);
+    } catch (error) {
+        console.error('Error al verificar las colecciones:', error);
     }
 }
-
-function actualizarColeccionesEnDOM(coleccionesData, colecciones) {
-    colecciones.forEach(coleccion => {
-        const coleccionId = parseInt(coleccion.getAttribute('data-post_id'));
-
-        if (coleccionId && coleccionesData.includes(coleccionId)) {
-            // Verificar si ya existe la etiqueta para no duplicarla
-            if (!coleccion.querySelector('.ya-existe')) {
-                const existeSpan = document.createElement('span');
-                existeSpan.className = 'ya-existe';
-                existeSpan.textContent = 'Guardado aquí';
-                coleccion.appendChild(existeSpan);
-                console.log('Etiqueta "Ya existe" añadida a la colección con ID:', coleccionId);
-            }
-        } else if (!coleccionId) {
-            console.warn('Elemento sin data-post_id encontrado y omitido:', coleccion);
-        }
-    });
-}
-
 
 /*
 add_action('wp_ajax_verificar_sample_en_colecciones', 'verificarSampleEnColec');
@@ -306,7 +296,6 @@ async function crearNuevaColec() {
         if (response?.success) {
             alert('Colección creada con éxito');
             await actualizarListaColecciones();
-            await verificarSampleEnColecciones(actualizar = true);
             cerrarColec();
         } else {
             alert(`Error al crear la colección: ${response?.message || 'Desconocido'}`);

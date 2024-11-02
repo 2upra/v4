@@ -76,12 +76,8 @@ function modalColeccion()
 
                 <? if ($user_collections->have_posts()) : ?>
                     <? while ($user_collections->have_posts()) : $user_collections->the_post(); ?>
-                        <li class="coleccion borde"
-                            data-post_id="<? the_ID(); ?>"
-                            data-samples="<? $samples = get_post_meta(get_the_ID(), 'samples', false);
-                                            echo esc_attr(implode(',', $samples ?: []));
-                                            ?>">
-                            <?
+                        <li class="coleccion borde" data-post_id="<? the_ID(); ?>">
+                            <?php
                             $thumbnail_url = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail');
                             ?>
                             <img src="<? echo esc_url($thumbnail_url ? $thumbnail_url : $default_image); ?>" alt="">
@@ -147,7 +143,7 @@ function modalCreacionColeccion()
             <input type="text" placeholder="Nombre de la colección" id="tituloColec">
             <input type="text" placeholder="Descripción de la colección (opcional)" id="descripColec">
 
-            <div class="bloque flex-row"" id=" opcionesColec" style="display: flex">
+            <div class="bloque flex-row"" id="opcionesColec" style="display: flex">
                 <p>Opciones de post</p>
                 <div class="flex flex-row gap-2">
                     <label class="custom-checkbox">
