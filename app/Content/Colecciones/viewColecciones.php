@@ -76,7 +76,11 @@ function modalColeccion()
 
                 <? if ($user_collections->have_posts()) : ?>
                     <? while ($user_collections->have_posts()) : $user_collections->the_post(); ?>
-                        <li class="coleccion borde" data-post_id="<? the_ID(); ?>" data-samples="<? echo esc_attr(implode(',', get_post_meta(get_the_ID(), 'samples', true) ?: [])); ?>">
+                        <li class="coleccion borde"
+                            data-post_id="<? the_ID(); ?>"
+                            data-samples="<? $samples = get_post_meta(get_the_ID(), 'samples', false);
+                                            echo esc_attr(implode(',', $samples ?: []));
+                                            ?>">
                             <?
                             $thumbnail_url = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail');
                             ?>
