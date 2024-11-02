@@ -99,7 +99,7 @@ if (!defined('ABSPATH')) {
                 }
             </style>
         <? else : ?>
-            <nav id="menu1" class="menu-container nologin">
+            <nav id="menu2" class="menu-container menu2 nologin">
                 <div class="logomenu">
                     <? echo $GLOBALS['iconologo']; ?>
                 </div>
