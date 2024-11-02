@@ -111,16 +111,9 @@ add_action('regenerar_audio_lite_evento', 'regenerarLite');
 
 
 
-// Función para programar el evento de optimización de audios
-function programar_optimizacion_audios() {
-    if (!wp_next_scheduled('optimizar_audios_lote')) {
-        wp_schedule_event(time(), 'hourly', 'optimizar_audios_lote'); // Ejecuta cada hora
-    }
-}
-add_action('wp', 'programar_optimizacion_audios');
-add_action('optimizar_audios_lote', 'optimizar_audios_en_lote');
 
-function optimizar_audios_en_lote($limite = 1000) {
+
+function optimizar_audios_en_lote($limite = 500) {
     // Obtener los posts de tipo 'social_post' que no han sido optimizados
     $query = new WP_Query(array(
         'post_type' => 'social_post',
@@ -143,6 +136,7 @@ function optimizar_audios_en_lote($limite = 1000) {
 
     wp_reset_postdata();
 }
+optimizar_audios_en_lote($limite = 500);
 
 function optimizarAudioPost($post_id) {
     $audio_id = get_post_meta($post_id, 'post_audio', true);
