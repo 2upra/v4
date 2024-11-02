@@ -29,7 +29,6 @@ function iniciarColec() {
         }
     });
 
-    a('#btnListo')?.addEventListener('click', manejarClickListoColec);
     a('#btnEmpezarCreaColec')?.addEventListener('click', abrirModalCrearColec);
     a('#btnCrearColec')?.addEventListener('click', crearNuevaColec);
     a('#btnVolverColec')?.addEventListener('click', volverColec);
