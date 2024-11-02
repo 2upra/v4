@@ -110,18 +110,21 @@ add_filter('cron_schedules', 'intervalo_cada_seis_horas');
 add_action('regenerar_audio_lite_evento', 'regenerarLite');
 
 function minutos55($schedules) {
+    // 55 minutos en segundos (55 * 60)
     $schedules['cada55'] = array(
-        'interval' => 3300, // 6 horas en segundos (6 * 60 * 60)
+        'interval' => 3300, // 55 minutos en segundos
         'display' => __('Cada 55 minutos')
     );
     return $schedules;
 }
 
+add_filter('cron_schedules', 'minutos55'); // Usa el nombre correcto de la función
+
 if (!wp_next_scheduled('minutos55_evento')) {
-    wp_schedule_event(time(), 'cada55', 'regenerar_audio_lite_evento');
+    wp_schedule_event(time(), 'cada55', 'minutos55_evento'); // Asegúrate de que el nombre del evento sea consistente
 }
-add_filter('cron_schedules', 'cada55');
-add_action('minutos55_evento', 'optimizar64kAudios');
+
+add_action('minutos55_evento', 'optimizar64kAudios'); // Asegúrate de que el nombre del evento coincida
 
 
 function optimizar64kAudios($limite = 500) {
