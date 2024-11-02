@@ -232,7 +232,10 @@ function añadirSampleEnColab($collection_id, $sample_id, $user_id) {
     $samples[] = $sample_id;
     $updated = update_post_meta($collection_id, 'samples', $samples);
 
+    // Actualizar el campo de última modificación
     if ($updated) {
+        update_post_meta($collection_id, 'ultimaModificacion', current_time('mysql'));
+
         return [
             'success' => true,
             'message' => 'Sample agregado exitosamente',
@@ -245,6 +248,7 @@ function añadirSampleEnColab($collection_id, $sample_id, $user_id) {
         ];
     }
 }
+
 
 function botonColeccion($postId)
 {

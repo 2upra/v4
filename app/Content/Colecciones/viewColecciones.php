@@ -37,6 +37,7 @@ function verificarSampleEnColec()
     ));
 }
 
+// aqui puedes hacer que se ordene por ulima modificacion update_post_meta($collection_id, 'ultimaModificacion', current_time('mysql'));
 function modalColeccion()
 {
     $current_user_id = get_current_user_id();
@@ -50,6 +51,9 @@ function modalColeccion()
         'post_status'    => 'publish',
         'posts_per_page' => -1,
         'author'         => $current_user_id,
+        'meta_key'       => 'ultimaModificacion',  // Campo de última modificación
+        'orderby'        => 'meta_value',          // Ordenar por el valor del campo personalizado
+        'order'          => 'DESC'                 // Orden descendente para mostrar las más recientes primero
     );
 
     $user_collections = new WP_Query($args);
@@ -94,8 +98,9 @@ function modalColeccion()
             </div>
         </div>
     </div>
-<?
+<?php
 }
+
 
 function obtenerListaColec()
 {
@@ -105,6 +110,9 @@ function obtenerListaColec()
         'post_status'    => 'publish',
         'posts_per_page' => -1,
         'author'         => $current_user_id,
+        'meta_key'       => 'ultimaModificacion',  // Campo de última modificación
+        'orderby'        => 'meta_value',          // Ordenar por el valor del campo personalizado
+        'order'          => 'DESC'                 // Orden descendente para mostrar las más recientes primero
     );
 
     $user_collections = new WP_Query($args);
@@ -126,6 +134,7 @@ function obtenerListaColec()
     echo $html;
     wp_die();
 }
+
 
 add_action('wp_ajax_obtener_colecciones', 'obtenerListaColec');
 
