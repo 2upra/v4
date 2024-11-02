@@ -131,8 +131,8 @@ function manejarClickColec(coleccion) {
 
 // Función auxiliar para crear una nueva colección con el título de búsqueda
 function crearNuevaColecConTitulo(titulo) {
-    button.disabled = true;
     const button = a('#btnListo');
+    button.disabled = true;
     a('#tituloColec').value = titulo;
     button.innerText = 'Creando nueva colección...';
     crearNuevaColec();
