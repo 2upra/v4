@@ -129,7 +129,7 @@ function crearColeccion()
     }
 
     // Inicializar la meta 'samples' con el postId proporcionado usando la función auxiliar
-    $resultado = add_sample_to_collection($coleccionId, $colecSampleId, $user_id);
+    $resultado = añadirSampleEnColab($coleccionId, $colecSampleId, $user_id);
 
     if (!$resultado['success']) {
         guardarLog("Error al agregar el sample inicial: " . $resultado['message']);
@@ -191,7 +191,7 @@ function guardarSampleEnColec()
     }
 
     // Utilizar la función auxiliar para agregar el sample
-    $resultado = add_sample_to_collection($coleccion_id, $sample_id, $current_user_id);
+    $resultado = añadirSampleEnColab($coleccion_id, $sample_id, $current_user_id);
 
     if ($resultado['success']) {
         wp_send_json_success([
@@ -204,7 +204,7 @@ function guardarSampleEnColec()
 }
 
 
-function add_sample_to_collection($collection_id, $sample_id, $user_id) {
+function añadirSampleEnColab($collection_id, $sample_id, $user_id) {
     // Verificar que la colección existe y pertenece al usuario
     $collection = get_post($collection_id);
     if (!$collection || $collection->post_author != $user_id) {
