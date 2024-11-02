@@ -223,7 +223,7 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
     $postAut = get_post_meta($post_id, 'postAut', true);
     $ultimoEdit = get_post_meta($post_id, 'ultimoEdit', true);
     $verificado = get_post_meta($post_id, 'Verificado', true);
-    $recortado = get_post_meta($post_id, 'Recortado', true);
+    $recortado = get_post_meta($post_id, 'recortado', true);
     // Verificar si el autor es el usuario actual
     $current_user_id = (int)get_current_user_id();
     $author_id = (int)$author_id;
