@@ -227,7 +227,7 @@ if (!defined('ABSPATH')) {
                         <? echo $GLOBALS['iconologo']; ?>
                     </div>
                     <div class="nologinbotones">
-                        <button><a href="https://2upra.com/perfil/">Perfil</a></button>
+                        <button><a href="https://2upra.com/">Inicio</a></button>
                     </div>
                     <div class="nologinboton">
                         <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Iniciar sesión</button>
