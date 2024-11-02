@@ -211,7 +211,7 @@ function dev()
                         <span class="MASYTN WJTTLG">Meta final $1000</span>
                     </div>
                     <div class="LXCJWW">
-                        <button class="borde  carta">Carta</button>
+                        <button class="borde carta">Carta</button>
                         <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Iniciar sesión</button>
                     </div>
 
