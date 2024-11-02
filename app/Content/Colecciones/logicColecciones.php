@@ -204,8 +204,8 @@ function guardarSampleEnColec()
 }
 
 
-function añadirSampleEnColab($collection_id, $sample_id, $user_id) {
-    // Verificar que la colección existe y pertenece al usuario
+function añadirSampleEnColab($collection_id, $sample_id, $user_id)
+{
     $collection = get_post($collection_id);
     if (!$collection || $collection->post_author != $user_id) {
         return [
@@ -264,23 +264,26 @@ function botonColeccion($postId)
 }
 
 
-function removerPostDeColeccion()
+function eliminarSampledeColec()
 {
     if (!is_user_logged_in()) {
-        return json_encode(['error' => 'Usuario no autenticado']);
+        wp_send_json_error(['error' => 'Usuario no autenticado']);
+        return;
     }
 
-    $coleccionId = isset($_POST['coleccionId']) ? intval($_POST['coleccionId']) : 0;
-    $postId = isset($_POST['postId']) ? intval($_POST['postId']) : 0;
+    $coleccionId = isset($_POST['coleccion_id']) ? intval($_POST['coleccion_id']) : 0;
+    $postId = isset($_POST['sample_id']) ? intval($_POST['sample_id']) : 0;
     $userId = get_current_user_id();
     $coleccion = get_post($coleccionId);
 
     if (!$coleccion) {
-        return json_encode(['error' => 'Colección no encontrada']);
+        wp_send_json_error(['error' => 'Colección no encontrada']);
+        return;
     }
 
     if ($coleccion->post_author != $userId) {
-        return json_encode(['error' => 'No tienes permisos para modificar esta colección']);
+        wp_send_json_error(['error' => 'No tienes permisos para modificar esta colección']);
+        return;
     }
 
     // Obtener la meta 'samples' actual
@@ -297,9 +300,10 @@ function removerPostDeColeccion()
         unset($samples[$key]);
         $samples = array_values($samples); // Reindexar el array
         update_post_meta($coleccionId, 'samples', json_encode($samples));
-        return json_encode(['success' => true, 'samples' => $samples]);
+        wp_send_json_success(['message' => 'Sample eliminado de colección']);
     } else {
-        return json_encode(['error' => 'El post no se encuentra en la colección']);
+        wp_send_json_error(['message' => 'No se encontro el sample en la colección']);
+        return;
     }
 }
 
@@ -325,4 +329,4 @@ add_action('wp_ajax_crearColeccion', 'crearColeccion');
 add_action('wp_ajax_editarColeccion', 'editarColeccion');
 add_action('wp_ajax_eliminarColeccion', 'eliminarColeccion');
 add_action('wp_ajax_guardarSampleEnColec', 'guardarSampleEnColec');
-add_action('wp_ajax_removerPostDeColeccion', 'removerPostDeColeccion');
+add_action('wp_ajax_eliminarSampledeColec', 'eliminarSampledeColec');

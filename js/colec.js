@@ -127,8 +127,42 @@ async function verificarSampleEnColecciones() {
                         const existeSpan = document.createElement('span');
                         existeSpan.className = 'ya-existe';
                         existeSpan.textContent = 'Guardado aquí';
+
+                        // Evento para cambiar el contenido al hacer hover
+                        existeSpan.addEventListener('mouseenter', function() {
+                            this.textContent = 'Eliminar';
+                        });
+
+                        existeSpan.addEventListener('mouseleave', function() {
+                            this.textContent = 'Guardado aquí';
+                        });
+
+                        // Evento para manejar el clic en "Eliminar"
+                        existeSpan.addEventListener('click', async function() {
+                            const confirmacion = await confirm('¿Seguro que deseas eliminar este sample?');
+                            if (confirmacion) {
+                                try {
+                                    console.log('Enviando petición AJAX para eliminar el sample de la colección con ID:', coleccionId);
+                                    const eliminarResponse = await enviarAjax('eliminarSampledeColec', {
+                                        sample_id: colecSampleId,
+                                        coleccion_id: coleccionId
+                                    });
+
+                                    if (eliminarResponse.success) {
+                                        console.log('Sample eliminado correctamente de la colección con ID:', coleccionId);
+                                        // Eliminar el span de la colección
+                                        existeSpan.remove();
+                                    } else {
+                                        console.error('Error al eliminar el sample:', eliminarResponse.message);
+                                    }
+                                } catch (error) {
+                                    console.error('Error al enviar la petición para eliminar el sample:', error);
+                                }
+                            }
+                        });
+
                         coleccion.appendChild(existeSpan);
-                        console.log('Etiqueta "Ya existe" añadida a la colección con ID:', coleccionId);
+                        console.log('Etiqueta "Guardado aquí" añadida a la colección con ID:', coleccionId);
                     }
                 } else if (!coleccionId) {
                     console.warn('Elemento sin data-post_id encontrado y omitido:', coleccion);
