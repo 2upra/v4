@@ -175,8 +175,6 @@ function audioStreamEnd($data) {
     header('Cache-Control: private, max-age=' . $cache_duration);
     header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $cache_duration) . ' GMT');
 
-    // Si el usuario es admin o tiene meta `pro`, permitir caché del navegador
-
     // Manejar Ranges HTTP para streaming parcial
     if (isset($_SERVER['HTTP_RANGE'])) {
         //guardarLog("audioStreamEnd: HTTP Range solicitado: " . $_SERVER['HTTP_RANGE']);
