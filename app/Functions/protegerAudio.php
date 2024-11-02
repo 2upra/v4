@@ -60,7 +60,7 @@ function regenerarLite() {
         }
 
         if ($regenerar) {
-            $comando_lite = "/usr/bin/ffmpeg -i " . escapeshellarg($wav_file) . " -b:a 128k " . escapeshellarg($mp3_path) . " -y";
+            $comando_lite = "/usr/bin/ffmpeg -i " . escapeshellarg($wav_file) . " -b:a 64k -ar 44100 -t 20 -af 'afade=t=out:st=15:d=5' " . escapeshellarg($mp3_path) . " -y";
             exec($comando_lite, $output_lite, $return_lite);
 
             if ($return_lite !== 0 || !file_exists($mp3_path)) {
@@ -94,7 +94,7 @@ function regenerarLite() {
 
 
 // Añadir intervalo de 6 horas en WordPress
-add_filter('cron_schedules', 'intervalo_cada_seis_horas');
+
 function intervalo_cada_seis_horas($schedules) {
     $schedules['cada_seis_horas'] = array(
         'interval' => 21600, // 6 horas en segundos (6 * 60 * 60)
@@ -106,9 +106,43 @@ function intervalo_cada_seis_horas($schedules) {
 if (!wp_next_scheduled('regenerar_audio_lite_evento')) {
     wp_schedule_event(time(), 'cada_seis_horas', 'regenerar_audio_lite_evento');
 }
+add_filter('cron_schedules', 'intervalo_cada_seis_horas');
 add_action('regenerar_audio_lite_evento', 'regenerarLite');
 
 
+
+// Función para programar el evento de optimización de audios
+function programar_optimizacion_audios() {
+    if (!wp_next_scheduled('optimizar_audios_lote')) {
+        wp_schedule_event(time(), 'hourly', 'optimizar_audios_lote'); // Ejecuta cada hora
+    }
+}
+add_action('wp', 'programar_optimizacion_audios');
+add_action('optimizar_audios_lote', 'optimizar_audios_en_lote');
+
+function optimizar_audios_en_lote($limite = 1000) {
+    // Obtener los posts de tipo 'social_post' que no han sido optimizados
+    $query = new WP_Query(array(
+        'post_type' => 'social_post',
+        'meta_query' => array(
+            array(
+                'key' => 'audio_optimizado',
+                'compare' => 'NOT EXISTS' // Solo los que no tienen la meta 'audio_optimizado'
+            )
+        ),
+        'posts_per_page' => $limite, // Limitar el número de posts a procesar por ciclo
+        'fields' => 'ids', // Solo obtener los IDs de los posts
+        'no_found_rows' => true // Para optimizar la consulta
+    ));
+
+    if ($query->have_posts()) {
+        foreach ($query->posts as $post_id) {
+            optimizarAudioPost($post_id);
+        }
+    }
+
+    wp_reset_postdata();
+}
 
 function optimizarAudioPost($post_id) {
     $audio_id = get_post_meta($post_id, 'post_audio', true);
