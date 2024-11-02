@@ -49,6 +49,34 @@ function iniciarColec() {
     });
 }
 
+/*
+Cuando se crea una coleccion, se envia el colecSampleId pero si se crea desde el buscador, no se envia, en que momento se quita si se establece desde que se da click a .botonColeccionBtn
+una informacion adicional es que cerrar colec 
+si desde que se abre el modal se establece
+function iniciarColec() {
+    document.body.addEventListener('click', e => {
+        const btn = e.target.closest('.botonColeccionBtn');
+        if (btn) {
+            e.preventDefault();
+            colecSampleId = btn.getAttribute('data-post_id');
+            // console.log('Post ID seleccionado:', colecSampleId);
+            abrirColec();
+        }
+    });
+
+Datos enviados: {colecSampleId: '266705', imgColec: null, titulo: 'test 1', imgColecId: null, descripcion: '', …}colecSampleId: "266705"descripcion: ""imgColec: nullimgColecId: nullprivado: 0titulo: "test 1"[[Prototype]]: Object
+colec.js?ver=1.0.1.1987316714:143 Función abrirColec iniciada
+colec.js?ver=1.0.1.1987316714:148 Modal mostrado y fondo creado
+colec.js?ver=1.0.1.1987316714:194 Función verificarSampleEnColecciones iniciada
+colec.js?ver=1.0.1.1987316714:196 Enviando petición AJAX para verificar sample en colecciones con ID: 266705
+colec.js?ver=1.0.1.1987316714:200 Respuesta recibida de verificarSampleEnColecciones: {success: true, data: {…}}data: {colecciones: Array(1)}success: true[[Prototype]]: Object
+colec.js?ver=1.0.1.1987316714:248 Etiqueta "Guardado aquí" añadida a la colección con ID: 273488
+colec.js?ver=1.0.1.1987316714:150 verificarSampleEnColecciones completado
+colec.js?ver=1.0.1.1987316714:154 Función manejarClickListoColec iniciada
+colec.js?ver=1.0.1.1987316714:185 colecSampleId o colecSelecionado faltan: 266705 null
+colec.js?ver=1.0.1.1987316714:118 Datos enviados: {colecSampleId: null, imgColec: null, titulo: 'test 2', imgColecId: null, descripcion: '', …}
+*/
+
 function busquedaColec(query) {
     const button = a('#btnListo');
     let hayResultados = false;
@@ -141,6 +169,10 @@ async function crearNuevaColec() {
 
 async function abrirColec() {
     console.log('Función abrirColec iniciada');
+    if (!colecSampleId) {
+        console.warn('colecSampleId no está definido');
+        return; // Evitar abrir el modal sin un ID válido
+    }
     const modal = a('.modalColec');
     mostrar(modal);
     crearBackgroundColec();
@@ -149,6 +181,7 @@ async function abrirColec() {
     await verificarSampleEnColecciones();
     console.log('verificarSampleEnColecciones completado');
 }
+
 
 async function manejarClickListoColec() {
     console.log('Función manejarClickListoColec iniciada');
