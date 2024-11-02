@@ -111,6 +111,13 @@ add_action('regenerar_audio_lite_evento', 'regenerarLite');
 
 function optimizarAudioPost($post_id) {
     $audio_id = get_post_meta($post_id, 'post_audio', true);
+    $ruta_optimizada = get_post_meta($post_id, 'post_audio_lite', true);
+
+    // Si ya existe un audio optimizado en 'post_audio_lite', salimos de la función
+    if ($ruta_optimizada && file_exists($ruta_optimizada)) {
+        error_log("El audio ya ha sido optimizado previamente para el post ID $post_id.");
+        return;
+    }
 
     if ($audio_id) {
         $archivo_original = get_attached_file($audio_id);
@@ -155,8 +162,7 @@ function optimizarAudioPost($post_id) {
     }
 }
 
-
-
+optimizarAudioPost(269560);
 
 
 
