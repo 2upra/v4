@@ -99,29 +99,46 @@ function tokenAudio($audio_id) {
         return false;
     }
 
-    $expiration = time() + 15552000; // 6 months in seconds
-    $data = $audio_id . '|' . $expiration;
-    $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
+    $expiration = time() + 3600; 
+    $user_ip = $_SERVER['REMOTE_ADDR'];
+    $unique_id = uniqid();
+    $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
+    $signature = hash_hmac('sha256', $data, ($_ENV['AUDIOCLAVE']));
     return base64_encode($data . '|' . $signature);
 }
 
 // Función para verificar el token
 function verificarAudio($token) {
     $parts = explode('|', base64_decode($token));
-    if (count($parts) !== 3) return false; // Ensure there are 3 parts
-    list($audio_id, $expiration, $signature) = $parts;
+    if (count($parts) !== 5) return false; // Asegurarse de que haya 5 partes
+    list($audio_id, $expiration, $user_ip, $unique_id, $signature) = $parts;
 
+    if ($_SERVER['REMOTE_ADDR'] !== $user_ip) {
+        return false;
+    }
     if (time() > $expiration) return false;
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
         return false;
     }
+    if (tokenYaUsado($unique_id)) return false;
 
-    $data = $audio_id . '|' . $expiration;
-    $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
+    $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
+    $expected_signature = hash_hmac('sha256', $data, ($_ENV['AUDIOCLAVE']));
     
-    return hash_equals($expected_signature, $signature);
+    if (hash_equals($expected_signature, $signature)) {
+        marcarTokenComoUsado($unique_id);
+        return true;
+    }
+    return false;
 }
 
+function marcarTokenComoUsado($unique_id) {
+    set_transient('audio_token_' . $unique_id, true, 3600);
+}
+
+function tokenYaUsado($unique_id) {
+    return get_transient('audio_token_' . $unique_id) !== false;
+}
 
 
 function audioStreamEnd($data) {
@@ -170,10 +187,8 @@ function audioStreamEnd($data) {
 
     header('Content-Type: ' . get_post_mime_type($audio_id));
     header("Accept-Ranges: bytes");
-    // Set client-side caching headers
-    $cache_duration = 15552000; // 6 months in seconds
-    header('Cache-Control: private, max-age=' . $cache_duration);
-    header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $cache_duration) . ' GMT');
+
+    // Si el usuario es admin o tiene meta `pro`, permitir caché del navegador
 
     // Manejar Ranges HTTP para streaming parcial
     if (isset($_SERVER['HTTP_RANGE'])) {
