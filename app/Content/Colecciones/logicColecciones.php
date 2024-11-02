@@ -47,106 +47,7 @@ function editarColeccion()
     }
 }
 
-function botonColeccion($postId)
-{
-    ob_start();
-?>
-    <div class="ZAQIBB botonColeccion">
-        <button class="botonColeccionBtn" data-post_id="<? echo esc_attr($postId) ?>" data-nonce="<? echo wp_create_nonce('colec_nonce') ?>">
-            <? echo $GLOBALS['iconoGuardar']; ?>
-        </button>
-    </div>
-
-<?
-}
-
-function guardarSampleEnColec()
-{
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'Usuario no autorizado'));
-        return;
-    }
-
-    $sample_id = isset($_POST['colecSampleId']) ? intval($_POST['colecSampleId']) : 0;
-    $coleccion_id = isset($_POST['colecSelecionado']) ? $_POST['colecSelecionado'] : '';
-    $privado = isset($_POST['privado']) ? intval($_POST['privado']) : 0;
-    $current_user_id = get_current_user_id();
-
-    if (!$sample_id || !$coleccion_id) {
-        wp_send_json_error(array('message' => 'Datos inválidos'));
-        return;
-    }
-
-    // Manejar colecciones especiales
-    if ($coleccion_id === 'favoritos' || $coleccion_id === 'despues') {
-        $coleccion_especial_id = get_user_meta($current_user_id, $coleccion_id . '_coleccion_id', true);
-
-        if (!$coleccion_especial_id) {
-            $titulo = ($coleccion_id === 'favoritos') ? 'Favoritos' : 'Usar más tarde';
-            $imagen_url = ($coleccion_id === 'favoritos')
-                ? 'https://2upra.com/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg'
-                : 'https://2upra.com/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg';
-
-            $coleccion_especial_id = wp_insert_post([
-                'post_title'    => $titulo,
-                'post_type'     => 'colecciones',
-                'post_status'   => 'publish',
-                'post_author'   => $current_user_id,
-            ]);
-
-            if (!is_wp_error($coleccion_especial_id)) {
-                update_user_meta($current_user_id, $coleccion_id . '_coleccion_id', $coleccion_especial_id);
-                $image_id = subirImagenDesdeURL($imagen_url, $coleccion_especial_id);
-                if ($image_id) {
-                    set_post_thumbnail($coleccion_especial_id, $image_id);
-                }
-            } else {
-                wp_send_json_error(array('message' => 'Error al crear la colección especial'));
-                return;
-            }
-        }
-        $coleccion_id = $coleccion_especial_id;
-    }
-
-    // Verificar que la colección existe y pertenece al usuario
-    $coleccion = get_post($coleccion_id);
-    if (!$coleccion || $coleccion->post_author != $current_user_id) {
-        wp_send_json_error(array('message' => 'No tienes permiso para modificar esta colección'));
-        return;
-    }
-
-    // Si 'privado' es 1, actualizar la meta 'privado' en la colección
-    if ($privado === 1) {
-        update_post_meta($coleccion_id, 'privado', 1);
-    } else {
-        //delete_post_meta($coleccion_id, 'privado'); // Opcional: elimina la meta si no es privada
-    }
-
-    // Obtener y actualizar los samples
-    $samples = get_post_meta($coleccion_id, 'samples', true);
-    if (!is_array($samples)) {
-        $samples = array();
-    }
-
-    if (in_array($sample_id, $samples)) {
-        wp_send_json_error(array('message' => 'Este sample ya existe en la colección'));
-        return;
-    }
-
-    $samples[] = $sample_id;
-    $updated = update_post_meta($coleccion_id, 'samples', $samples);
-
-    if ($updated) {
-        wp_send_json_success(array(
-            'message' => 'Sample agregado exitosamente',
-            'samples' => $samples
-        ));
-    } else {
-        wp_send_json_error(array('message' => 'Error al guardar el sample en la colección'));
-    }
-}
-
-
+//para mejorar la logica, se puede simplificar crearColeccion para que guarde el sample usando guardarSampleEnColec, hay que mantener la capacidad ajax de ambas funciones
 function crearColeccion()
 {
     if (!is_user_logged_in()) {
@@ -162,6 +63,7 @@ function crearColeccion()
     $titulo = isset($_POST['titulo']) ? sanitize_text_field($_POST['titulo']) : '';
     $imgColecId = isset($_POST['imgColecId']) ? sanitize_text_field($_POST['imgColecId']) : '';
     $descripcion = isset($_POST['descripcion']) ? sanitize_textarea_field($_POST['descripcion']) : '';
+    $privado = isset($_POST['privado']) ? intval($_POST['privado']) : 0;
 
     guardarLog("Datos recibidos: colecSampleId=$colecSampleId, imgColec=$imgColec, titulo=$titulo, imgColecId=$imgColecId, descripcion=$descripcion");
 
@@ -200,7 +102,7 @@ function crearColeccion()
 
     if (!$coleccionId) {
         guardarLog("Error: Error al crear la colección");
-        wp_send_json_error(['message' => 'Error al crear la colección']);;
+        wp_send_json_error(['message' => 'Error al crear la colección']);
     }
 
     guardarLog("Colección creada exitosamente: ID $coleccionId");
@@ -214,19 +116,149 @@ function crearColeccion()
         }
     }
 
+    if ($privado === 1) {
+        update_post_meta($coleccionId, 'privado', 1);
+    } else {
+        //delete_post_meta($coleccionId, 'privado'); // Opcional: elimina la meta si no es privada
+    }
+
     // Guardar el imgColecId en la meta si existe y no es 'null'
     if (!empty($imgColecId) && $imgColecId !== 'null') {
         update_post_meta($coleccionId, 'imgColecId', $imgColecId);
         guardarLog("Meta imgColecId guardada con valor $imgColecId para la colección $coleccionId");
     }
 
-    // Inicializar la meta 'samples' con el postId proporcionado
-    update_post_meta($coleccionId, 'samples', json_encode([$colecSampleId]));
+    // Inicializar la meta 'samples' con el postId proporcionado usando la función auxiliar
+    $resultado = add_sample_to_collection($coleccionId, $colecSampleId, $user_id);
+
+    if (!$resultado['success']) {
+        guardarLog("Error al agregar el sample inicial: " . $resultado['message']);
+        wp_delete_post($coleccionId, true); // Opcional: elimina la colección si no se puede agregar el sample
+        wp_send_json_error(['message' => $resultado['message']]);
+    }
+
     guardarLog("Meta 'samples' inicializada con colecSampleId $colecSampleId para la colección $coleccionId");
 
     wp_send_json_success(['message' => 'Colección creada exitosamente']);
     wp_die();
 }
+
+function guardarSampleEnColec()
+{
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Usuario no autorizado']);
+        return;
+    }
+
+    $sample_id = isset($_POST['colecSampleId']) ? intval($_POST['colecSampleId']) : 0;
+    $coleccion_id = isset($_POST['colecSelecionado']) ? $_POST['colecSelecionado'] : '';
+    $current_user_id = get_current_user_id();
+
+    if (!$sample_id || !$coleccion_id) {
+        wp_send_json_error(['message' => 'Datos inválidos']);
+        return;
+    }
+
+    // Manejar colecciones especiales
+    if ($coleccion_id === 'favoritos' || $coleccion_id === 'despues') {
+        $coleccion_especial_id = get_user_meta($current_user_id, $coleccion_id . '_coleccion_id', true);
+
+        if (!$coleccion_especial_id) {
+            $titulo = ($coleccion_id === 'favoritos') ? 'Favoritos' : 'Usar más tarde';
+            $imagen_url = ($coleccion_id === 'favoritos')
+                ? 'https://2upra.com/wp-content/uploads/2024/10/2ed26c91a215be4ac0a1e3332482c042.jpg'
+                : 'https://2upra.com/wp-content/uploads/2024/10/b029d18ac320a9d6923cf7ca0bdc397d.jpg';
+
+            $coleccion_especial_id = wp_insert_post([
+                'post_title'    => $titulo,
+                'post_type'     => 'colecciones',
+                'post_status'   => 'publish',
+                'post_author'   => $current_user_id,
+            ]);
+
+            if (!is_wp_error($coleccion_especial_id)) {
+                update_user_meta($current_user_id, $coleccion_id . '_coleccion_id', $coleccion_especial_id);
+                $image_id = subirImagenDesdeURL($imagen_url, $coleccion_especial_id);
+                if ($image_id) {
+                    set_post_thumbnail($coleccion_especial_id, $image_id);
+                }
+            } else {
+                wp_send_json_error(['message' => 'Error al crear la colección especial']);
+                return;
+            }
+        }
+        $coleccion_id = $coleccion_especial_id;
+    }
+
+    // Utilizar la función auxiliar para agregar el sample
+    $resultado = add_sample_to_collection($coleccion_id, $sample_id, $current_user_id);
+
+    if ($resultado['success']) {
+        wp_send_json_success([
+            'message' => $resultado['message'],
+            'samples' => $resultado['samples']
+        ]);
+    } else {
+        wp_send_json_error(['message' => $resultado['message']]);
+    }
+}
+
+
+function add_sample_to_collection($collection_id, $sample_id, $user_id) {
+    // Verificar que la colección existe y pertenece al usuario
+    $collection = get_post($collection_id);
+    if (!$collection || $collection->post_author != $user_id) {
+        return [
+            'success' => false,
+            'message' => 'No tienes permiso para modificar esta colección'
+        ];
+    }
+
+    // Obtener los samples actuales
+    $samples = get_post_meta($collection_id, 'samples', true);
+    if (!is_array($samples)) {
+        $samples = array();
+    }
+
+    // Verificar si el sample ya está en la colección
+    if (in_array($sample_id, $samples)) {
+        return [
+            'success' => false,
+            'message' => 'Este sample ya existe en la colección'
+        ];
+    }
+
+    // Agregar el nuevo sample
+    $samples[] = $sample_id;
+    $updated = update_post_meta($collection_id, 'samples', $samples);
+
+    if ($updated) {
+        return [
+            'success' => true,
+            'message' => 'Sample agregado exitosamente',
+            'samples' => $samples
+        ];
+    } else {
+        return [
+            'success' => false,
+            'message' => 'Error al guardar el sample en la colección'
+        ];
+    }
+}
+
+function botonColeccion($postId)
+{
+    ob_start();
+?>
+    <div class="ZAQIBB botonColeccion">
+        <button class="botonColeccionBtn" data-post_id="<? echo esc_attr($postId) ?>" data-nonce="<? echo wp_create_nonce('colec_nonce') ?>">
+            <? echo $GLOBALS['iconoGuardar']; ?>
+        </button>
+    </div>
+
+<?
+}
+
 
 function removerPostDeColeccion()
 {
