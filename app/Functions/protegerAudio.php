@@ -109,13 +109,24 @@ if (!wp_next_scheduled('regenerar_audio_lite_evento')) {
 add_action('regenerar_audio_lite_evento', 'regenerarLite');
 
 
+
 function optimizarAudioPost($post_id) {
     $audio_id = get_post_meta($post_id, 'post_audio', true);
-    $ruta_optimizada = get_post_meta($post_id, 'post_audio_lite', true);
+    $audio_lite_id = get_post_meta($post_id, 'post_audio_lite', true);
+    $wave_cargada = get_post_meta($post_id, 'waveCargada', true);
+    $waveform_image_id = get_post_meta($post_id, 'waveform_image_id', true);
+    $waveform_image_url = get_post_meta($post_id, 'waveform_image_url', true);
+    $audio_optimizado_meta = get_post_meta($post_id, 'audio_optimizado', true);
 
-    // Si ya existe un audio optimizado en 'post_audio_lite', salimos de la función
-    if ($ruta_optimizada && file_exists($ruta_optimizada)) {
-        error_log("El audio ya ha sido optimizado previamente para el post ID $post_id.");
+    // Si ya existe un audio optimizado, salir de la función
+    if ($audio_lite_id && wp_attachment_is('audio', $audio_lite_id)) {
+        logAudio("El audio ya ha sido optimizado previamente para el post ID $post_id.");
+        return;
+    }
+
+    // Si ya tiene la meta 'audio_optimizado', salir para no optimizar de nuevo
+    if ($audio_optimizado_meta) {
+        logAudio("El audio ya tiene la meta de 'audio_optimizado' para el post ID $post_id. No se volverá a optimizar.");
         return;
     }
 
@@ -123,25 +134,32 @@ function optimizarAudioPost($post_id) {
         $archivo_original = get_attached_file($audio_id);
 
         if (!$archivo_original || !file_exists($archivo_original)) {
-            error_log("No se encontró el archivo original para el ID: $audio_id");
-            echo "No se encontró el archivo de audio para el post ID $post_id\n";
+            logAudio("No se encontró el archivo original para el ID: $audio_id");
             return;
         }
+
+        // Mover el ID actual de `post_audio_lite` a `post_audio_lite_128k` si existe
+        if ($audio_lite_id) {
+            update_post_meta($post_id, 'post_audio_lite_128k', $audio_lite_id);
+        }
+
+        // Obtener la duración original del audio
+        $duracion_original = shell_exec("/usr/bin/ffprobe -i " . escapeshellarg($archivo_original) . " -show_entries format=duration -v quiet -of csv='p=0'");
+        $duracion_original = trim($duracion_original); // Asegurarse de que esté limpio
+        update_post_meta($post_id, 'duracionAudio', $duracion_original);
 
         // Generar la ruta para el archivo optimizado
         $ruta_info = pathinfo($archivo_original);
         $ruta_optimizada = $ruta_info['dirname'] . '/' . $ruta_info['filename'] . '_optimizado.mp3';
 
-        // Comando para convertir el audio usando ffmpeg y ajustar el bitrate a 64 kbps
-        $comando = "/usr/bin/ffmpeg -i " . escapeshellarg($archivo_original) . " -b:a 64k -ar 44100 " . escapeshellarg($ruta_optimizada) . " -y";
+        // Comando para convertir el audio usando ffmpeg, ajustar a 64 kbps, limitar a 20s y aplicar desvanecimiento
+        $comando = "/usr/bin/ffmpeg -i " . escapeshellarg($archivo_original) . 
+                   " -b:a 64k -ar 44100 -t 20 -af 'afade=t=out:st=15:d=5' " . escapeshellarg($ruta_optimizada) . " -y";
         exec($comando, $output, $return_var);
 
         // Verificar si la conversión fue exitosa
         if ($return_var === 0) {
-            // Añadir o actualizar el metadato 'post_audio_lite' con el nuevo archivo optimizado
-            update_post_meta($post_id, 'post_audio_lite', $ruta_optimizada);
-
-            // Actualizar la referencia al archivo optimizado en la base de datos sin modificar 'post_audio'
+            // Insertar el nuevo adjunto optimizado y guardar su ID en `post_audio_lite`
             $nuevo_audio_id = wp_insert_attachment(array(
                 'post_mime_type' => 'audio/mpeg',
                 'post_title' => $ruta_info['filename'] . '_optimizado',
@@ -149,20 +167,39 @@ function optimizarAudioPost($post_id) {
                 'post_status' => 'inherit'
             ), $ruta_optimizada, $post_id);
 
-            // Generar y guardar los metadatos para el archivo optimizado
             if ($nuevo_audio_id) {
                 wp_update_attachment_metadata($nuevo_audio_id, wp_generate_attachment_metadata($nuevo_audio_id, $ruta_optimizada));
-            }
+                update_post_meta($post_id, 'post_audio_lite', $nuevo_audio_id);
 
+                // Si el audio original duraba más de 20 segundos y las metas de la waveform están presentes
+                if ($duracion_original > 20 && $wave_cargada == 1 && $waveform_image_id && $waveform_image_url) {
+                    // Eliminar la waveform y las metas relacionadas
+                    wp_delete_attachment($waveform_image_id, true); // Borra el adjunto del waveform
+                    delete_post_meta($post_id, 'waveCargada');
+                    delete_post_meta($post_id, 'waveform_image_id');
+                    delete_post_meta($post_id, 'waveform_image_url');
+                    logAudio("Se ha eliminado la waveform y las metas relacionadas para el post ID $post_id.");
+                }
+
+                if ($duracion_original > 20) {
+                    update_post_meta($post_id, 'recortado', true);
+                }
+
+                // Agregar la meta de 'audio_optimizado' para asegurarnos de que no se optimice de nuevo
+                update_post_meta($post_id, 'audio_optimizado', 1);
+            } else {
+                logAudio("Error al insertar el adjunto optimizado para el post ID $post_id.");
+            }
         } else {
-            error_log("Error al optimizar el archivo $archivo_original: " . implode("\n", $output));
+            logAudio("Error al optimizar el archivo $archivo_original: " . implode("\n", $output));
         }
     } else {
-        error_log("No se encontró el audio para el post ID $post_id");
+        logAudio("No se encontró el audio para el post ID $post_id");
     }
 }
 
 
+optimizarAudioPost(269560);
 
 
 
