@@ -49,33 +49,6 @@ function iniciarColec() {
     });
 }
 
-/*
-Cuando se crea una coleccion, se envia el colecSampleId pero si se crea desde el buscador, no se envia, en que momento se quita si se establece desde que se da click a .botonColeccionBtn
-una informacion adicional es que cerrar colec 
-si desde que se abre el modal se establece
-function iniciarColec() {
-    document.body.addEventListener('click', e => {
-        const btn = e.target.closest('.botonColeccionBtn');
-        if (btn) {
-            e.preventDefault();
-            colecSampleId = btn.getAttribute('data-post_id');
-            // console.log('Post ID seleccionado:', colecSampleId);
-            abrirColec();
-        }
-    });
-
-Datos enviados: {colecSampleId: '266705', imgColec: null, titulo: 'test 1', imgColecId: null, descripcion: '', …}colecSampleId: "266705"descripcion: ""imgColec: nullimgColecId: nullprivado: 0titulo: "test 1"[[Prototype]]: Object
-colec.js?ver=1.0.1.1987316714:143 Función abrirColec iniciada
-colec.js?ver=1.0.1.1987316714:148 Modal mostrado y fondo creado
-colec.js?ver=1.0.1.1987316714:194 Función verificarSampleEnColecciones iniciada
-colec.js?ver=1.0.1.1987316714:196 Enviando petición AJAX para verificar sample en colecciones con ID: 266705
-colec.js?ver=1.0.1.1987316714:200 Respuesta recibida de verificarSampleEnColecciones: {success: true, data: {…}}data: {colecciones: Array(1)}success: true[[Prototype]]: Object
-colec.js?ver=1.0.1.1987316714:248 Etiqueta "Guardado aquí" añadida a la colección con ID: 273488
-colec.js?ver=1.0.1.1987316714:150 verificarSampleEnColecciones completado
-colec.js?ver=1.0.1.1987316714:154 Función manejarClickListoColec iniciada
-colec.js?ver=1.0.1.1987316714:185 colecSampleId o colecSelecionado faltan: 266705 null
-colec.js?ver=1.0.1.1987316714:118 Datos enviados: {colecSampleId: null, imgColec: null, titulo: 'test 2', imgColecId: null, descripcion: '', …}
-*/
 
 function busquedaColec(query) {
     const button = a('#btnListo');
@@ -89,14 +62,51 @@ function busquedaColec(query) {
         if (visible) hayResultados = true; // Verificar si hay al menos un resultado visible
     });
 
+    // Configuración dinámica del botón
     if (!hayResultados && query) {
         button.innerText = 'Crear Colección';
-        button.onclick = () => {
-            crearNuevaColecConTitulo(query);
-        };
+        button.onclick = () => crearNuevaColecConTitulo(query);
     } else {
         button.innerText = colecSelecionado ? 'Guardar' : 'Listo';
         button.onclick = colecSelecionado ? manejarClickListoColec : null;
+    }
+}
+
+//Funcion para guardar 
+async function manejarClickListoColec() {
+    console.log('Función manejarClickListoColec iniciada');
+    if (colecSampleId && colecSelecionado) {
+        console.log('colecSampleId y colecSelecionado existen:', colecSampleId, colecSelecionado);
+
+        const button = a('#btnListo');
+        const originalText = button.innerText;
+        button.innerText = 'Guardando...';
+        button.disabled = true;
+
+        try {
+            console.log('Enviando petición AJAX para guardar sample en colección');
+            const response = await enviarAjax('guardarSampleEnColec', {
+                colecSampleId,
+                colecSelecionado
+            });
+            console.log('Respuesta recibida:', response);
+
+            if (response?.success) {
+                alert('Sample guardado en la colección con éxito');
+                cerrarColec();
+            } else {
+                alert(`Error al guardar en la colección: ${response?.message || 'Desconocido'}`);
+            }
+        } catch (error) {
+            console.error('Error al guardar el sample:', error);
+            alert('Ocurrió un error al guardar en la colección. Por favor, inténtelo de nuevo.');
+        } finally {
+            button.innerText = originalText;
+            button.disabled = false;
+        }
+    } else {
+        console.log('colecSampleId o colecSelecionado faltan:', colecSampleId, colecSelecionado);
+        cerrarColec();
     }
 }
 
@@ -104,13 +114,13 @@ function manejarClickColec(coleccion) {
     const button = a('#btnListo');
 
     if (coleccion.classList.contains('seleccion')) {
-        // Si ya está seleccionado, lo deseleccionamos
+        // Deseleccionar colección
         coleccion.classList.remove('seleccion');
         colecSelecionado = null;
         button.innerText = 'Listo';
         button.onclick = null; // Restablecer a su funcionalidad original
     } else {
-        // Si no está seleccionado, lo seleccionamos
+        // Seleccionar colección
         a.quitar('.coleccion', 'seleccion');
         coleccion.classList.add('seleccion');
         colecSelecionado = coleccion.getAttribute('data-post_id') || coleccion.id;
@@ -119,13 +129,14 @@ function manejarClickColec(coleccion) {
     }
 }
 
+
 // Función auxiliar para crear una nueva colección con el título de búsqueda
 function crearNuevaColecConTitulo(titulo) {
-    // Aquí establecemos el título directamente para la creación
     a('#tituloColec').value = titulo;
     crearNuevaColec();
 }
 
+// Funcion para crear colec
 async function crearNuevaColec() {
     const esValido = verificarColec();
     if (!esValido) return;
