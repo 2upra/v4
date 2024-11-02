@@ -109,11 +109,22 @@ if (!wp_next_scheduled('regenerar_audio_lite_evento')) {
 add_filter('cron_schedules', 'intervalo_cada_seis_horas');
 add_action('regenerar_audio_lite_evento', 'regenerarLite');
 
+function minutos55($schedules) {
+    $schedules['cada55'] = array(
+        'interval' => 3300, // 6 horas en segundos (6 * 60 * 60)
+        'display' => __('Cada 55 minutos')
+    );
+    return $schedules;
+}
+
+if (!wp_next_scheduled('minutos55_evento')) {
+    wp_schedule_event(time(), 'cada55', 'regenerar_audio_lite_evento');
+}
+add_filter('cron_schedules', 'cada55');
+add_action('minutos55_evento', 'optimizar64kAudios');
 
 
-
-
-function optimizar_audios_en_lote($limite = 500) {
+function optimizar64kAudios($limite = 500) {
     // Obtener los posts de tipo 'social_post' que no han sido optimizados
     $query = new WP_Query(array(
         'post_type' => 'social_post',
@@ -136,7 +147,6 @@ function optimizar_audios_en_lote($limite = 500) {
 
     wp_reset_postdata();
 }
-optimizar_audios_en_lote($limite = 500);
 
 function optimizarAudioPost($post_id) {
     $audio_id = get_post_meta($post_id, 'post_audio', true);
