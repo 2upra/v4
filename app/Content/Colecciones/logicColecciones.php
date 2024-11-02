@@ -263,49 +263,50 @@ function botonColeccion($postId)
 <?
 }
 
-
 function eliminarSampledeColec()
 {
+    // Verificar si el usuario está logueado
     if (!is_user_logged_in()) {
         wp_send_json_error(['error' => 'Usuario no autenticado']);
         return;
     }
 
+    // Obtener los datos de la petición
     $coleccionId = isset($_POST['coleccion_id']) ? intval($_POST['coleccion_id']) : 0;
-    $postId = isset($_POST['sample_id']) ? intval($_POST['sample_id']) : 0;
+    $sample_id = isset($_POST['sample_id']) ? intval($_POST['sample_id']) : 0;
     $userId = get_current_user_id();
     $coleccion = get_post($coleccionId);
 
+    // Verificar si la colección existe
     if (!$coleccion) {
         wp_send_json_error(['error' => 'Colección no encontrada']);
         return;
     }
 
+    // Verificar que el usuario sea el propietario de la colección
     if ($coleccion->post_author != $userId) {
         wp_send_json_error(['error' => 'No tienes permisos para modificar esta colección']);
         return;
     }
 
     // Obtener la meta 'samples' actual
-    $samples_json = get_post_meta($coleccionId, 'samples', true);
-    $samples = !empty($samples_json) ? json_decode($samples_json, true) : [];
-
+    $samples = get_post_meta($coleccionId, 'samples', true);
     if (!is_array($samples)) {
         $samples = [];
     }
 
-    // Buscar y remover el postId
-    $key = array_search($postId, $samples);
+    // Buscar y remover el sample_id
+    $key = array_search($sample_id, $samples);
     if ($key !== false) {
-        unset($samples[$key]);
+        unset($samples[$key]); // Remover el sample del array
         $samples = array_values($samples); // Reindexar el array
-        update_post_meta($coleccionId, 'samples', json_encode($samples));
+        update_post_meta($coleccionId, 'samples', $samples); // Actualizar el meta
         wp_send_json_success(['message' => 'Sample eliminado de colección']);
     } else {
-        wp_send_json_error(['message' => 'No se encontro el sample en la colección']);
-        return;
+        wp_send_json_error(['message' => 'No se encontró el sample en la colección']);
     }
 }
+add_action('wp_ajax_eliminarSampledeColec', 'eliminarSampledeColec');
 
 function eliminarColeccion()
 {
@@ -329,4 +330,4 @@ add_action('wp_ajax_crearColeccion', 'crearColeccion');
 add_action('wp_ajax_editarColeccion', 'editarColeccion');
 add_action('wp_ajax_eliminarColeccion', 'eliminarColeccion');
 add_action('wp_ajax_guardarSampleEnColec', 'guardarSampleEnColec');
-add_action('wp_ajax_eliminarSampledeColec', 'eliminarSampledeColec');
+

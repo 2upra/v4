@@ -139,7 +139,7 @@ async function verificarSampleEnColecciones() {
 
                         // Evento para manejar el clic en "Eliminar"
                         existeSpan.addEventListener('click', async function() {
-                            const confirmacion = await confirm('¿Seguro que deseas eliminar este sample?');
+                            const confirmacion = await confirm('¿Seguro que deseas eliminar este sample de la colección?');
                             if (confirmacion) {
                                 try {
                                     console.log('Enviando petición AJAX para eliminar el sample de la colección con ID:', coleccionId);
