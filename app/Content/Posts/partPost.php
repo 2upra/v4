@@ -56,7 +56,7 @@ function botonseguir($author_id)
         <button class="mismo-usuario" disabled>
 
         </button>
-    <?php
+    <?
         return ob_get_clean();
     }
 
@@ -73,7 +73,7 @@ function botonseguir($author_id)
         data-seguido-id="<? echo esc_attr($author_id); ?>">
         <? echo $icono_boton; ?>
     </button>
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -191,7 +191,7 @@ function opcionesPost($post_id, $author_id)
     </div>
 
     <div id="modalBackground4" class="modal-background submenu modalBackground2 modalBackground3" style="display: none;"></div>
-<?php
+<?
     return ob_get_clean();
 }
 
@@ -223,13 +223,14 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
     $postAut = get_post_meta($post_id, 'postAut', true);
     $ultimoEdit = get_post_meta($post_id, 'ultimoEdit', true);
     $verificado = get_post_meta($post_id, 'Verificado', true);
+    $recortado = get_post_meta($post_id, 'Recortado', true);
     // Verificar si el autor es el usuario actual
     $current_user_id = (int)get_current_user_id();
     $author_id = (int)$author_id;
     $is_current_user = ($current_user_id === $author_id);
     ob_start();
 ?>
-    <div class="SOVHBY <?php echo ($is_current_user ? 'miContenido' : ''); ?>">
+    <div class="SOVHBY <? echo ($is_current_user ? 'miContenido' : ''); ?>">
         <div class="CBZNGK">
             <a href="<? echo esc_url(get_author_posts_url($author_id)); ?>"></a>
             <img src="<? echo esc_url($author_avatar); ?>">
@@ -252,23 +253,29 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
     <div class="verificacionPost">
         <? if ($verificado == '1') : ?>
             <? echo $GLOBALS['check']; ?>
-        <? elseif ($postAut == '1') : ?>
+        <? elseif ($postAut == '1' && current_user_can('administrator')) : ?>
             <? echo $GLOBALS['robot']; ?>
         <? endif; ?>
     </div>
 
 
+
     <? if ($block || $colab) : ?>
         <div class="OFVWLS">
-            <?
-            if ($block) {
-                echo "Exclusivo";
-            } elseif ($colab) {
-                echo "Colab";
-            }
-            ?>
+            <? if ($recortado) : ?>
+                <div><? echo "Recortado"; ?></div>
+                <div><? echo "Exclusivo"; ?></div>
+                <div><? echo "Colab"; ?></div>
+            <? endif; ?>
+
+            <? if ($block) : ?>
+                <div><? echo "Exclusivo"; ?></div>
+            <? elseif ($colab) : ?>
+                <div><? echo "Colab"; ?></div>
+            <? endif; ?>
         </div>
     <? endif; ?>
+
 
     <div class="spin"></div>
 
@@ -370,16 +377,15 @@ function wave($audio_url, $audio_id_lite, $post_id)
         $urlAudioSegura = ''; // O establece un valor predeterminado o maneja el error de forma diferente
     }
 ?>
-    <div id="waveform-<?php echo $post_id; ?>"
+    <div id="waveform-<? echo $post_id; ?>"
         class="waveform-container without-image"
-        postIDWave="<?php echo $post_id; ?>"
-        data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
-        data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
-        <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
+        postIDWave="<? echo $post_id; ?>"
+        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
+        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
+        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
         <div class="waveform-message"></div>
         <div class="waveform-loading" style="display: none;">Cargando...</div>
     </div>
 <?
 }
 ?>
-
