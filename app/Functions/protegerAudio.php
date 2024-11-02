@@ -109,61 +109,46 @@ if (!wp_next_scheduled('regenerar_audio_lite_evento')) {
 add_action('regenerar_audio_lite_evento', 'regenerarLite');
 
 
+function optimizarAudioPost($post_id) {
+    $audio_id = get_post_meta($post_id, 'post_audio', true);
 
-function repararAudiosWav() {
-    // Configuración de consulta para obtener los últimos 5 posts de tipo "social_post" con metadato "post_audio"
-    $args = [
-        'post_type'      => 'social_post',
-        'posts_per_page' => 5,
-        'meta_query'     => [
-            [
-                'key'     => 'post_audio',
-                'compare' => 'EXISTS',
-            ],
-        ],
-        'orderby'        => 'date',
-        'order'          => 'DESC'
-    ];
+    if ($audio_id) {
+        $archivo_original = get_attached_file($audio_id);
 
-    $query = new WP_Query($args);
-
-    if ($query->have_posts()) {
-        while ($query->have_posts()) {
-            $query->the_post();
-            $audio_id = get_post_meta(get_the_ID(), 'post_audio', true);
-
-            if ($audio_id) {
-                // Intentar reparar el archivo WAV
-                $archivo_original = get_attached_file($audio_id);
-                if (!$archivo_original || !file_exists($archivo_original)) {
-                    error_log("No se encontró el archivo original para el ID: $audio_id");
-                    continue;
-                }
-
-                $ruta_reparada = str_replace('.wav', '_reparado.wav', $archivo_original);
-
-                // Comando para reparar el archivo usando ffmpeg
-                $comando = "/usr/bin/ffmpeg -i " . escapeshellarg($archivo_original) . " -c:a pcm_s16le " . escapeshellarg($ruta_reparada) . " -y";
-                exec($comando, $output, $return_var);
-
-                // Verificar si la reparación fue exitosa
-                if ($return_var === 0) {
-                    // Si la reparación fue exitosa, reemplaza el archivo original con el reparado
-                    rename($ruta_reparada, $archivo_original);
-                    echo "Archivo de audio reparado para el post ID " . get_the_ID() . "\n";
-                } else {
-                    error_log("Error al reparar el archivo $archivo_original: " . implode("\n", $output));
-                    echo "No se pudo reparar el archivo de audio para el post ID " . get_the_ID() . "\n";
-                }
-            } else {
-                echo "No se encontró el ID de audio para el post ID " . get_the_ID() . "\n";
-            }
+        if (!$archivo_original || !file_exists($archivo_original)) {
+            error_log("No se encontró el archivo original para el ID: $audio_id");
+            echo "No se encontró el archivo de audio para el post ID $post_id\n";
+            return;
         }
-        wp_reset_postdata();
+
+        // Generar la ruta para el archivo optimizado
+        $ruta_info = pathinfo($archivo_original);
+        $ruta_optimizada = $ruta_info['dirname'] . '/' . $ruta_info['filename'] . '_optimizado.mp3';
+
+        // Comando para convertir el audio usando ffmpeg y ajustar el bitrate a 64 kbps
+        $comando = "/usr/bin/ffmpeg -i " . escapeshellarg($archivo_original) . " -b:a 64k -ar 44100 " . escapeshellarg($ruta_optimizada) . " -y";
+        exec($comando, $output, $return_var);
+
+        // Verificar si la conversión fue exitosa
+        if ($return_var === 0) {
+            // Actualizar la referencia en la base de datos al nuevo archivo
+            update_attached_file($audio_id, $ruta_optimizada);
+
+            // Actualizar el tipo de archivo (MIME type)
+            wp_update_attachment_metadata($audio_id, wp_generate_attachment_metadata($audio_id, $ruta_optimizada));
+
+
+        } else {
+            error_log("Error al optimizar el archivo $archivo_original: " . implode("\n", $output));
+
+        }
     } else {
-        echo "No se encontraron posts con audios dañados.\n";
+
     }
 }
+
+// Ejecutar la función con el ID de post específico (269560)
+optimizarAudioPost(269560);
 
 
 
