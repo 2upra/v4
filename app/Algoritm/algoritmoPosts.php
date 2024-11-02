@@ -383,9 +383,9 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
     }
 
     // Aplicar aleatoriedad y ajuste extra
-    $aleatoriedad = mt_rand(0, 60);
+    $aleatoriedad = mt_rand(0, 20);
     $puntosFinal = $puntosFinal * (1 + ($aleatoriedad / 100));
-    $ajusteExtra = mt_rand(-100, 100);
+    $ajusteExtra = mt_rand(-50, 50);
     $puntosFinal = $puntosFinal * $factorTiempo;
     $puntosFinal += $ajusteExtra;
 
