@@ -7,7 +7,8 @@ $acciones = get_user_meta($user_id, 'acciones', true);
 $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 
 // Función para determinar el idioma activo
-function get_active_language() {
+function get_active_language()
+{
     $locale = get_locale();
     if (strpos($locale, 'es') === 0) {
         return 'es';
@@ -45,7 +46,7 @@ if (have_posts()) :
         }
 
         // Establecer el título de la página
-        add_filter('pre_get_document_title', function() use ($seo_title) {
+        add_filter('pre_get_document_title', function () use ($seo_title) {
             return $seo_title;
         });
 
@@ -57,7 +58,7 @@ if (have_posts()) :
         }
 
         // Establecer la meta descripción
-        add_action('wp_head', function() use ($meta_description) {
+        add_action('wp_head', function () use ($meta_description) {
             echo '<meta name="description" content="' . $meta_description . '">';
         });
 
@@ -93,18 +94,19 @@ if (have_posts()) :
         }
 
         // Imprimir el esquema JSON-LD en el head
-        add_action('wp_head', function() use ($schema) {
+        add_action('wp_head', function () use ($schema) {
             echo '<script type="application/ld+json">' . wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . '</script>';
         });
 
         // Capturar el contenido principal
         ob_start();
-        ?>
+?>
         <div id="main">
             <div id="content" class="<?php echo esc_attr($nologin_class); ?>">
                 <div class="single">
-                    <?php echo htmlPost($filtro); ?>
-
+                    <div class="fullH">
+                        <?php echo htmlPost($filtro); ?>
+                    </div>
                     <!-- Publicaciones Similares -->
                     <div class="publicaciones-similares">
                         <h3><?php echo ($active_lang === 'es') ? 'Publicaciones Similares' : 'Similar Posts'; ?></h3>
@@ -119,7 +121,7 @@ if (have_posts()) :
                 </div>
             </div>
         </div>
-        <?php
+<?php
         $contenido = ob_get_clean();
         echo $contenido;
     endwhile;
