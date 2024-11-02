@@ -239,7 +239,7 @@ if (!defined('ABSPATH')) {
 
     </header>
     <main class="clearfix ">
-        <? echo modalCarta() ?>
+        
         <? if (is_user_logged_in()) : ?>
             <div id="submenusyinfos">
 
@@ -358,6 +358,15 @@ if (!defined('ABSPATH')) {
 
             </div>
         <? else : ?>
+            <? echo modalCarta() ?>
+            <div class="CGUNVP" id="modalregistro">
+                <? echo registrar_usuario() ?>
+            </div>
+            <div class="EJRINA" id="modalsesion">
+                <? echo iniciar_sesion() ?>
+            </div>
+            <div id="fondonegro"></div>
+            
         <? endif; ?>
 
 

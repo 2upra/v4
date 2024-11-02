@@ -108,7 +108,7 @@ if (have_posts()) :
                         <?php echo htmlPost($filtro); ?>
                     </div>
                     <!-- Publicaciones Similares -->
-                    <div class="publicaciones-similares">
+                    <div class="publicaciones-similares" nosnippet>
                         <h3><?php echo ($active_lang === 'es') ? 'Publicaciones Similares' : 'Similar Posts'; ?></h3>
                         <?php
                         echo publicaciones([

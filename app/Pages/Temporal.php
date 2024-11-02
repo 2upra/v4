@@ -215,13 +215,6 @@ function dev()
                         <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Iniciar sesión</button>
                     </div>
 
-                    <div class="CGUNVP" id="modalregistro">
-                        <? echo registrar_usuario() ?>
-                    </div>
-                    <div class="EJRINA" id="modalsesion">
-                        <? echo iniciar_sesion() ?>
-                    </div>
-                    <div id="fondonegro"></div>
                 </div>
 
 
