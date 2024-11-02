@@ -351,7 +351,7 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
 
     // Puntos por likes
     $likes = isset($datos['likes_by_post'][$post_id]) ? $datos['likes_by_post'][$post_id] : 0;
-    $puntosLikes = 5 + $likes;
+    $puntosLikes = 30 + $likes;
 
     // Decaimiento por tiempo
     $diasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / (3600 * 24);
