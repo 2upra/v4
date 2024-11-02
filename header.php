@@ -99,16 +99,7 @@ if (!defined('ABSPATH')) {
                 }
             </style>
         <? else : ?>
-            <nav id="menu2" class="menu-container menu2 nologin">
-                <div class="logomenu">
-                    <? echo $GLOBALS['iconologo']; ?>
-                </div>
 
-                <div class="nologinboton">
-                    <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Iniciar sesión</button>
-                </div>
-
-            </nav>
 
             <? if (is_user_logged_in()) : ?>
 
@@ -231,6 +222,16 @@ if (!defined('ABSPATH')) {
                     </div>
                 </nav>
             <? else : ?>
+                <nav id="menu2" class="menu-container menu2 nologin">
+                    <div class="logomenu">
+                        <? echo $GLOBALS['iconologo']; ?>
+                    </div>
+
+                    <div class="nologinboton">
+                        <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Iniciar sesión</button>
+                    </div>
+
+                </nav>
             <? endif; ?>
         <? endif; ?>
 
