@@ -4,9 +4,9 @@
 
 */
 
-add_action('wp_ajax_verificar_sample_en_colecciones', 'verificar_sample_en_colecciones');
+add_action('wp_ajax_verificar_sample_en_colecciones', 'verificarSampleEnColec');
 
-function verificar_sample_en_colecciones()
+function verificarSampleEnColec()
 {
     $sample_id = isset($_POST['sample_id']) ? intval($_POST['sample_id']) : 0;
     $colecciones_con_sample = array();
@@ -76,8 +76,8 @@ function modalColeccion()
 
                 <? if ($user_collections->have_posts()) : ?>
                     <? while ($user_collections->have_posts()) : $user_collections->the_post(); ?>
-                        <li class="coleccion borde" data-post_id="<? the_ID(); ?>">
-                            <?php
+                        <li class="coleccion borde" data-post_id="<? the_ID(); ?>" data-samples="<? echo esc_attr(implode(',', get_post_meta(get_the_ID(), 'samples', true) ?: [])); ?>">
+                            <?
                             $thumbnail_url = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail');
                             ?>
                             <img src="<? echo esc_url($thumbnail_url ? $thumbnail_url : $default_image); ?>" alt="">
@@ -97,7 +97,7 @@ function modalColeccion()
 <?
 }
 
-function obtener_lista_colecciones()
+function obtenerListaColec()
 {
     $current_user_id = get_current_user_id();
     $args = array(
@@ -127,7 +127,7 @@ function obtener_lista_colecciones()
     wp_die();
 }
 
-add_action('wp_ajax_obtener_colecciones', 'obtener_lista_colecciones');
+add_action('wp_ajax_obtener_colecciones', 'obtenerListaColec');
 
 function modalCreacionColeccion()
 {
@@ -143,7 +143,7 @@ function modalCreacionColeccion()
             <input type="text" placeholder="Nombre de la colección" id="tituloColec">
             <input type="text" placeholder="Descripción de la colección (opcional)" id="descripColec">
 
-            <div class="bloque flex-row"" id="opcionesColec" style="display: flex">
+            <div class="bloque flex-row"" id=" opcionesColec" style="display: flex">
                 <p>Opciones de post</p>
                 <div class="flex flex-row gap-2">
                     <label class="custom-checkbox">
