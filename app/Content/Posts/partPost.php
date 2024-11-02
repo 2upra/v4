@@ -54,7 +54,7 @@ function botonseguir($author_id)
         ob_start();
 ?>
         <button class="mismo-usuario" disabled>
-            <? echo $GLOBALS['iconomisusuario']; ?>
+
         </button>
     <?php
         return ob_get_clean();
@@ -358,20 +358,28 @@ function audioPost($post_id)
 
 //esto ahora debe soportar varias waves, en un post (entorno wordpress), puede haber varios audio_id_lite (buscar y comprobar cuantos hay, puede haber hasta treinta), el primero ya esta puesto y llega por lo general con $audio_id_lite, pero aqui dentro de esta funcion se puede comprobar, los audio id lite se guardan asi: el primero por defecto se guarda en una meta post_audio_lite, no hay que comprobar si existe porque sino exista la funcion no activa, lo que hay que comprobar es el resto que puede ser post_audio_lite_2, post_audio_lite_3, post_audio_lite_4 hasta treinta, y en consecuencia mostrar esas wave, si mas de una wave, por favor ponerlas toda en un div con clase multiwaves
 
+
 function wave($audio_url, $audio_id_lite, $post_id)
 {
     $wave = get_post_meta($post_id, 'waveform_image_url', true);
     $waveCargada = get_post_meta($post_id, 'waveCargada', true);
     $urlAudioSegura = audioUrlSegura($audio_id_lite); // Usando la URL segura
+
+    // Verificar si $urlAudioSegura es una instancia de WP_Error
+    if (is_wp_error($urlAudioSegura)) {
+        $urlAudioSegura = ''; // O establece un valor predeterminado o maneja el error de forma diferente
+    }
 ?>
-    <div id="waveform-<? echo $post_id; ?>"
+    <div id="waveform-<?php echo $post_id; ?>"
         class="waveform-container without-image"
-        postIDWave="<? echo $post_id; ?>"
-        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
-        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
-        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
+        postIDWave="<?php echo $post_id; ?>"
+        data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
+        data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
+        <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
         <div class="waveform-message"></div>
         <div class="waveform-loading" style="display: none;">Cargando...</div>
     </div>
 <?
 }
+?>
+
