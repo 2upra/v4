@@ -17,7 +17,6 @@ function iniciarColec() {
         if (btn) {
             e.preventDefault();
             colecSampleId = btn.getAttribute('data-post_id');
-            // console.log('Post ID seleccionado:', colecSampleId);
             abrirColec();
         }
     });
@@ -40,21 +39,102 @@ function iniciarColec() {
             const query = buscarInput.value.toLowerCase();
             busquedaColec(query);
         });
-    } else {
-        return;
     }
+
     subidaImagenColec();
     document.addEventListener('modalOpened', () => {
         resetColec();
     });
 }
 
+function busquedaColec(query) {
+    const colecciones = document.querySelectorAll('.listaColeccion .coleccion');
+    const button = a('#btnListo');
+    let hayResultados = false;
+
+    colecciones.forEach(coleccion => {
+        const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
+        if (titulo.includes(query)) {
+            coleccion.style.display = 'flex';
+            hayResultados = true;
+        } else {
+            coleccion.style.display = 'none';
+        }
+    });
+
+    if (!hayResultados && query) {
+        // Si no hay resultados y hay una búsqueda, cambiar el botón a "Crear colección" con el título buscado
+        button.innerText = 'Crear colección';
+        button.onclick = () => {
+            a('#tituloColec').value = query; // Asigna el título de la nueva colección
+            crearNuevaColec();  // Llama a la función para crear una nueva colección
+        };
+    } else {
+        // Si hay resultados o no hay búsqueda, restaurar el comportamiento normal del botón
+        button.innerText = colecSelecionado ? 'Guardar' : 'Listo';
+        button.onclick = colecSelecionado ? manejarClickListoColec : null;
+    }
+}
+
 function manejarClickColec(coleccion) {
     const button = a('#btnListo');
-    a.quitar('.coleccion', 'seleccion');
-    a.gregar(coleccion, 'seleccion');
-    colecSelecionado = coleccion.getAttribute('data-post_id') || coleccion.id;
-    button.innerText = 'Guardar';
+    const seleccionada = coleccion.classList.contains('seleccion');
+
+    // Si la colección ya está seleccionada, la deseleccionamos
+    if (seleccionada) {
+        coleccion.classList.remove('seleccion');
+        colecSelecionado = null;
+        button.innerText = 'Listo';
+        button.onclick = null;
+    } else {
+        // Si no está seleccionada, deseleccionamos las demás y seleccionamos esta
+        document.querySelectorAll('.coleccion').forEach(c => c.classList.remove('seleccion'));
+        coleccion.classList.add('seleccion');
+        colecSelecionado = coleccion.getAttribute('data-post_id') || coleccion.id;
+        button.innerText = 'Guardar';
+        button.onclick = manejarClickListoColec;
+    }
+}
+
+async function crearNuevaColec() {
+    const esValido = verificarColec();
+    if (!esValido) return;
+
+    const titulo = a('#tituloColec').value;
+    const descripcion = a('#descripColec').value || '';
+    const privadoCheck = a('#privadoColec');
+    const privado = privadoCheck.checked ? privadoCheck.value : 0;
+
+    const data = {
+        colecSampleId,
+        imgColec,
+        titulo,
+        imgColecId,
+        descripcion,
+        privado
+    };
+    console.log('Datos enviados:', data); // Log de la data que se envía
+
+    const button = a('#btnCrearColec');
+    const originalText = button.innerText;
+    button.innerText = 'Guardando...';
+    button.disabled = true;
+
+    try {
+        const response = await enviarAjax('crearColeccion', data);
+        if (response?.success) {
+            alert('Colección creada con éxito');
+            await actualizarListaColecciones();
+            cerrarColec();
+        } else {
+            alert(`Error al crear la colección: ${response?.message || 'Desconocido'}`);
+        }
+    } catch (error) {
+        alert('Ocurrió un error durante la creación de la colección. Por favor, inténtelo de nuevo.');
+    } finally {
+        button.innerText = originalText;
+        button.disabled = false;
+    }
 }
 
 async function abrirColec() {
@@ -104,7 +184,6 @@ async function manejarClickListoColec() {
         cerrarColec();
     }
 }
-
 
 
 async function verificarSampleEnColecciones() {
@@ -205,47 +284,6 @@ function verificarColec() {
 
 
 
-async function crearNuevaColec() {
-    const esValido = verificarColec();
-    if (!esValido) return;
-
-    const titulo = a('#tituloColec').value;
-    const descripcion = a('#descripColec').value || '';
-    const privadoCheck = a('#privadoColec');
-    const privado = privadoCheck.checked ? privadoCheck.value : 0;
-
-    const data = {
-        colecSampleId,
-        imgColec,
-        titulo,
-        imgColecId,
-        descripcion,
-        privado
-    };
-    console.log('Datos enviados:', data); // Log de la data que se envía
-
-    const button = a('#btnCrearColec');
-    const originalText = button.innerText;
-    button.innerText = 'Guardando...';
-    button.disabled = true;
-
-    try {
-        const response = await enviarAjax('crearColeccion', data);
-        if (response?.success) {
-            alert('Colección creada con éxito');
-            await actualizarListaColecciones();
-            cerrarColec();
-        } else {
-            alert(`Error al crear la colección: ${response?.message || 'Desconocido'}`);
-        }
-    } catch (error) {
-        alert('Ocurrió un error durante la creación de la colección. Por favor, inténtelo de nuevo.');
-    } finally {
-        button.innerText = originalText;
-        button.disabled = false;
-    }
-}
-
 
 async function actualizarListaColecciones() {
     try {
@@ -316,12 +354,6 @@ function subidaImagenColec() {
     });
 }
 
-function busquedaColec(query) {
-    document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
-        const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
-        coleccion.style.display = titulo.includes(query) ? 'flex' : 'none';
-    });
-}
 
 function cerrarColec() {
     ocultar(a('.modalColec'));
