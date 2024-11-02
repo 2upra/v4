@@ -250,6 +250,17 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
         </div>
     </div>
 
+    <div class="OFVWLS">
+        <? if ($recortado) : ?>
+            <div><? echo "Preview"; ?></div>
+        <? endif; ?>
+        <? if ($block) : ?>
+            <div><? echo "Exclusivo"; ?></div>
+        <? elseif ($colab) : ?>
+            <div><? echo "Colab"; ?></div>
+        <? endif; ?>
+    </div>
+
     <div class="verificacionPost">
         <? if ($verificado == '1') : ?>
             <? echo $GLOBALS['check']; ?>
@@ -258,19 +269,6 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
         <? endif; ?>
     </div>
 
-
-
-        <div class="OFVWLS">
-            <? if ($recortado) : ?>
-                <div><? echo "Preview"; ?></div>
-            <? endif; ?>
-            <? if ($block) : ?>
-                <div><? echo "Exclusivo"; ?></div>
-            <? elseif ($colab) : ?>
-                <div><? echo "Colab"; ?></div>
-            <? endif; ?>
-        </div>
-  
 
     <div class="spin"></div>
 
