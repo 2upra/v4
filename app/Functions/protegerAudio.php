@@ -118,12 +118,6 @@ function optimizarAudioPost($post_id) {
     $waveform_image_url = get_post_meta($post_id, 'waveform_image_url', true);
     $audio_optimizado_meta = get_post_meta($post_id, 'audio_optimizado', true);
 
-    // Si ya existe un audio optimizado, salir de la función
-    if ($audio_lite_id && wp_attachment_is('audio', $audio_lite_id)) {
-        logAudio("El audio ya ha sido optimizado previamente para el post ID $post_id.");
-        return;
-    }
-
     // Si ya tiene la meta 'audio_optimizado', salir para no optimizar de nuevo
     if ($audio_optimizado_meta) {
         logAudio("El audio ya tiene la meta de 'audio_optimizado' para el post ID $post_id. No se volverá a optimizar.");
