@@ -260,7 +260,6 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
 
 
 
-    <? if ($block || $colab) : ?>
         <div class="OFVWLS">
             <? if ($recortado) : ?>
                 <div><? echo "Recortado"; ?></div>
@@ -274,8 +273,7 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
                 <div><? echo "Colab"; ?></div>
             <? endif; ?>
         </div>
-    <? endif; ?>
-
+  
 
     <div class="spin"></div>
 
