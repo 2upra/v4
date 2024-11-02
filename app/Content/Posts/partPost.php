@@ -262,11 +262,8 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
 
         <div class="OFVWLS">
             <? if ($recortado) : ?>
-                <div><? echo "Recortado"; ?></div>
-                <div><? echo "Exclusivo"; ?></div>
-                <div><? echo "Colab"; ?></div>
+                <div><? echo "Preview"; ?></div>
             <? endif; ?>
-
             <? if ($block) : ?>
                 <div><? echo "Exclusivo"; ?></div>
             <? elseif ($colab) : ?>
