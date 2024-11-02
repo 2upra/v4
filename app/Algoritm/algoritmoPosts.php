@@ -367,7 +367,7 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
     // Aplicar reducción por vistas si corresponde
     if (isset($vistas_posts_processed[$post_id])) {
         $vistas = $vistas_posts_processed[$post_id]['count'];
-        $reduccion_por_vista = 0.90; // Reducción del 40% por cada vista
+        $reduccion_por_vista = 0.60; // Reducción del 90% por cada vista
         //logAlgoritmo("Aplicando reducción por vistas: $reduccion_por_vista para el post ID: $post_id, vistas: $vistas");
 
         // Factor de reducción acumulado por vistas
