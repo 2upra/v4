@@ -143,6 +143,10 @@ function crearNuevaColecConTitulo(titulo) {
 async function crearNuevaColec() {
     const esValido = verificarColec();
     if (!esValido) return;
+    const button = a('#btnCrearColec');
+    const originalText = button.innerText;
+    button.innerText = 'Guardando...';
+    button.disabled = true;
 
     const titulo = a('#tituloColec').value;
     const descripcion = a('#descripColec').value || '';
@@ -159,10 +163,7 @@ async function crearNuevaColec() {
     };
     console.log('Datos enviados:', data); // Log de la data que se envía
 
-    const button = a('#btnCrearColec');
-    const originalText = button.innerText;
-    button.innerText = 'Guardando...';
-    button.disabled = true;
+
 
     try {
         const response = await enviarAjax('crearColeccion', data);
