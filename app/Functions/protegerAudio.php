@@ -156,8 +156,7 @@ function optimizarAudioPost($post_id) {
 }
 
 
-// Ejecutar la función con el ID de post específico (269560)
-optimizarAudioPost(269560);
+
 
 
 
