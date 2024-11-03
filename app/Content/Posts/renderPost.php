@@ -21,7 +21,7 @@ function htmlPost($filtro)
         <? if ($music): ?>
             <? renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscriptor, $post_status, $audio_url); ?>
         <? else: ?>
-            <? renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $es_suscriptor, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $post_status); ?>
+            <? renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $es_suscriptor, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $post_status, $audio_id_lite); ?>
         <? endif; ?>
     </li>
 
@@ -60,7 +60,7 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
 }
 
 
-function renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $es_suscriptor, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $post_status)
+function renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $es_suscriptor, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $post_status, $audio_id_lite)
 {
     ?>
     <div class="post-content">
@@ -83,7 +83,7 @@ function renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $a
             <? if ($block && !$es_suscriptor): ?>
                 <? renderSubscriptionPrompt($author_name, $author_id); ?>
             <? else: ?>
-                <? renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm, $datosAlgoritmo); ?>
+                <? renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $audio_id_lite); ?>
             <? endif; ?>
         </div>
 
@@ -122,7 +122,7 @@ function renderPostControls($post_id, $colab)
 
 
 
-function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm, $datosAlgoritmo)
+function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $audio_id_lite)
 {
     ?>
     <div class="NERWFB">
