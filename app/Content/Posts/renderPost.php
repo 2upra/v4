@@ -1,4 +1,5 @@
 <?
+
 function htmlPost($filtro)
 {
     $post_id = get_the_ID();
@@ -15,107 +16,18 @@ function htmlPost($filtro)
         filtro="<? echo esc_attr($filtro); ?>"
         id-post="<? echo get_the_ID(); ?>"
         autor="<? echo esc_attr($author_id); ?>">
-
         <? echo fondoPost($filtro, $block, $es_suscriptor, $post_id);  ?>
 
         <? if ($music): ?>
-            <div class="post-content">
-                <div class="MFQOYC">
-                    <? echo like($post_id) ?>
-                    <? echo opcionesRola($post_id, $post_status, $audio_url); ?>
-                </div>
-                <div class="KLYJBY">
-                    <? echo audioPost($post_id) ?>
-                </div>
-                <div class="LRKHLC">
-                    <div class="XOKALG">
-                        <p>
-                            <? echo $author_name ?>
-                        </p>
-                        <p>-</p>
-                        <? the_content(); ?>
-                    </div>
-                </div>
-                <div class="CPQBEN" style="display: none;">
-                    <div class="CPQBAU"><? echo $author_name ?></div>
-                    <div class="CPQBCO"><? the_content(); ?></div>
-                </div>
-            </div>
+            <? renderMusic($post_id, $post_status, $audio_url, $author_name) ?>
         <? else: ?>
-            <div class="post-content">
-                <div class="JNUZCN">
-                    <? if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])): ?>
-                        <? echo infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id, $block, $colab); ?>
-                    <? else: ?>
-                        <div class="XABLJI">
-                            <? echo $post_status; ?>
-                            <? echo opcionesRola($post_id, $post_status, $audio_url); ?>
-                            <div class="CPQBEN" style="display: none;">
-                                <div class="CPQBAU"><? echo $author_name ?></div>
-                                <div class="CPQBCO"><? the_content(); ?></div>
-                            </div>
-                        </div>
-                    <? endif; ?>
-                </div>
-
-                <div class="YGWCKC">
-                    <? if ($block && !$es_suscriptor): ?>
-                        <div class="ZHNDDD">
-                            <p>Suscríbete a <? echo esc_html($author_name); ?> para ver el contenido de este post</p>
-                            <? echo botonSuscribir($author_id, $author_name); ?>
-                        </div>
-                    <? else: ?>
-                        <div class="NERWFB">
-                            <div class="YWBIBG">
-                                <div class="thePostContet" data-post-id="<? echo esc_html($post_id) ?>">
-                                    <? the_content(); ?>
-                                </div>
-                                <div>
-                                    <?
-                                    //Información bpm - escala- nota 
-                                    $key_info = $key ? $key : null;
-                                    $scale_info = $scale ? $scale : null;
-                                    $bpm_info = $bpm ? round($bpm) : null;
-
-                                    $info = array_filter([$key_info, $scale_info, $bpm_info]);
-                                    if (!empty($info)) {
-                                        echo '<p class="TRZPQD">' . implode(' - ', $info) . '</p>';
-                                    }
-                                    ?>
-                                </div>
-                            </div>
-                            <? //POST GENERICO DE RS
-                            if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])): ?>
-                                <div class="ZQHOQY">
-                                    <? wave($audio_url, $audio_id_lite, $post_id); ?>
-                                </div>
-                            <? else: ?>
-                                <div class="KLYJBY">
-                                    <? echo audioPost($post_id) ?>
-                                </div>
-                            <? endif; ?>
-                            <div class="FBKMJD">
-                                <div class="UKVPJI">
-                                    <div class="tags-container" id="tags-<? echo get_the_ID(); ?>"></div>
-                                    <!-- Datos del algoritmo -->
-                                    <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;"><? echo esc_html($datosAlgoritmo); ?></p>
-
-                                </div>
-                            </div>
-                        </div>
-                    <? endif; ?>
-                </div>
-
-                <div class="IZXEPH">
-                    <div class="QSORIW">
-                        <? echo like($post_id) ?>
-                        <? echo botonComentar($post_id, $colab) ?>
-                        <? echo botonDescarga($post_id) ?>
-                        <? echo botonColab($post_id, $colab) ?>
-                        <? echo botonColeccion($post_id) ?>
-                    </div>
-                </div>
-            </div>
+        <div class="post-content">
+            <?
+            echo headerRs($post_id, $post_status, $audio_url, $author_name);
+            echo postRS($post_id, $author_name, $audio_url, $audio_id_lite, $key, $scale, $bpm, $datosAlgoritmo);
+            echo botones($post_id, $colab);
+            ?>
+        </div>
         <? endif; ?>
     </li>
 
@@ -125,8 +37,6 @@ function htmlPost($filtro)
 <?
     return ob_get_clean();
 }
-
-
 
 function nohayPost($filtro, $is_ajax)
 {
@@ -159,6 +69,109 @@ function nohayPost($filtro, $is_ajax)
 }
 
 
+
+function renderMusic($post_id, $post_status, $audio_url, $author_name)
+{
+    ob_start()
+?>
+    <div class="post-content">
+        <div class="MFQOYC">
+            <? echo like($post_id); ?>
+            <? echo opcionesRola($post_id, $post_status, $audio_url); ?>
+        </div>
+        <div class="KLYJBY">
+            <? echo audioPost($post_id); ?>
+        </div>
+        <div class="LRKHLC">
+            <div class="XOKALG">
+                <p>
+                    <? echo $author_name; ?>
+                </p>
+                <p>-</p>
+                <? the_content(); ?>
+            </div>
+        </div>
+        <div class="CPQBEN" style="display: none;">
+            <div class="CPQBAU"><? echo $author_name; ?></div>
+            <div class="CPQBCO"><? the_content(); ?></div>
+        </div>
+    </div>
+<?
+    return ob_get_clean();
+}
+
+function headerRs($post_id, $post_status, $audio_url, $author_name)
+{
+    ob_start();
+?>
+    <div class="JNUZCN">
+        <div class="XABLJI">
+            <? echo $post_status; ?>
+            <? echo opcionesRola($post_id, $post_status, $audio_url); ?>
+            <div class="CPQBEN" style="display: none;">
+                <div class="CPQBAU"><? echo $author_name; ?></div>
+                <div class="CPQBCO"><? the_content(); ?></div>
+            </div>
+        </div>
+    </div>
+<?
+    return ob_get_clean();
+}
+
+function postRS($post_id, $author_name, $audio_url, $audio_id_lite, $key, $scale, $bpm, $datosAlgoritmo)
+{
+    ob_start();
+?>
+    <div class="YGWCKC">
+        <div class="NERWFB">
+            <div class="YWBIBG">
+                <div class="thePostContet" data-post-id="<? echo esc_html($post_id); ?>">
+                    <? the_content(); ?>
+                </div>
+                <div>
+                    <?
+                    $key_info = $key ? $key : null;
+                    $scale_info = $scale ? $scale : null;
+                    $bpm_info = $bpm ? round($bpm) : null;
+
+                    $info = array_filter([$key_info, $scale_info, $bpm_info]);
+                    if (!empty($info)) {
+                        echo '<p class="TRZPQD">' . implode(' - ', $info) . '</p>';
+                    }
+                    ?>
+                </div>
+            </div>
+            <div class="KLYJBY">
+                <? echo audioPost($post_id); ?>
+            </div>
+            <div class="FBKMJD">
+                <div class="UKVPJI">
+                    <div class="tags-container" id="tags-<? echo get_the_ID(); ?>"></div>
+                    <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;"><? echo esc_html($datosAlgoritmo); ?></p>
+                </div>
+            </div>
+        </div>
+    </div>
+<?
+    return ob_get_clean();
+}
+
+function botones($post_id, $colab)
+{
+    ob_start();
+?>
+    <div class="IZXEPH">
+        <div class="QSORIW">
+            <? echo like($post_id); ?>
+            <? echo botonComentar($post_id, $colab); ?>
+            <? echo botonDescarga($post_id); ?>
+            <? echo botonColab($post_id, $colab); ?>
+            <? echo botonColeccion($post_id); ?>
+        </div>
+    </div>
+<?
+    return ob_get_clean();
+}
 
 
 
@@ -250,7 +263,7 @@ function encolar_editar_post_script()
     global $post;
     wp_register_script('editar-post-js', get_template_directory_uri() . '/js/editarpost.js', array('jquery'), '1.0.16', true);
     wp_localize_script('editar-post-js', 'ajax_params', array(
-        'ajax_url' => admin_url('admin-ajax.php'),
+        'ajax_url' => admin_url('admin-ajax.'),
     ));
     wp_enqueue_script('editar-post-js');
 }
