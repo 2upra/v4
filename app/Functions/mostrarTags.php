@@ -17,17 +17,20 @@
 2024-11-03 01:35:39 - Tags más frecuentes: []
 */
 
+
 function tagsFrecuentes() {
-    $cache_key = 'tagsFrecuentes7';
+    $cache_key = 'tagsFrecuentes8';
     $tags_frecuentes = get_transient($cache_key);
 
     if ($tags_frecuentes !== false) {
-        return $tags_frecuentes;
+        // Mezclar aleatoriamente los tags almacenados en caché y seleccionar 32
+        $tags_array = array_keys($tags_frecuentes);
+        shuffle($tags_array);
+        return array_slice($tags_frecuentes, 0, 32, true);
     }
 
     global $wpdb;
     
-    // Consulta SQL directa para mejor rendimiento
     $query = "
         SELECT pm.meta_value 
         FROM {$wpdb->postmeta} pm
@@ -40,7 +43,6 @@ function tagsFrecuentes() {
     $resultados = $wpdb->get_col($query);
     $tags_conteo = [];
     
-    // Campos a procesar
     $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
 
     foreach ($resultados as $meta_value) {
@@ -67,15 +69,24 @@ function tagsFrecuentes() {
     // Ordenar los tags por frecuencia
     arsort($tags_conteo);
 
-    // Tomar los 12 más frecuentes
-    $tags_frecuentes = array_slice($tags_conteo, 0, 32, true);
+    // Tomar los 64 más frecuentes
+    $top_64_tags = array_slice($tags_conteo, 0, 64, true);
 
-    // Guardar en caché
-    set_transient($cache_key, $tags_frecuentes, 12 * HOUR_IN_SECONDS);
+    // Seleccionar aleatoriamente 32 tags de los 64 más frecuentes
+    $keys = array_keys($top_64_tags);
+    shuffle($keys);
+    $selected_keys = array_slice($keys, 0, 32);
+    
+    $tags_frecuentes = array();
+    foreach ($selected_keys as $key) {
+        $tags_frecuentes[$key] = $top_64_tags[$key];
+    }
+
+    // Guardar en caché los 64 tags más frecuentes
+    set_transient($cache_key, $top_64_tags, 12 * HOUR_IN_SECONDS);
 
     return $tags_frecuentes;
 }
-
 
 function tagsPosts() {
     $tags_frecuentes = tagsFrecuentes();
