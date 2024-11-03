@@ -1,107 +1,138 @@
 <?
 
-function normalizar_tags_personalizados($limit = 10) {
-    // Definir las normalizaciones manuales
+function crearRespaldoYNormalizar($batch_size = 100) {
+    global $wpdb;
+    
+    // Normalizaciones
     $normalizaciones = array(
         'one-shot' => 'one shot',
         'oneshot' => 'one shot',
         'percusion' => 'percusión',
         'hiphop' => 'hip hop',
         'hip-hop' => 'hip hop',
-        'soul' => 'soul',
         'rnb' => 'r&b',
         'r&b' => 'r&b',
         'randb' => 'r&b',
         'rock&roll' => 'rock and roll',
         'rockandroll' => 'rock and roll',
         'rock-and-roll' => 'rock and roll'
-        // Añade más normalizaciones según necesites
     );
 
-    // Obtener los últimos posts
-    $args = array(
-        'post_type' => 'social_post',
-        'posts_per_page' => $limit,
-        'orderby' => 'date',
-        'order' => 'DESC',
-        'meta_key' => 'datosAlgoritmo',
-        'meta_query' => array(
-            array(
-                'key' => 'datosAlgoritmo',
-                'compare' => 'EXISTS'
-            )
-        )
-    );
+    $offset = 0;
+    $total_procesados = 0;
 
-    $posts = get_posts($args);
-    $resultados = array(
-        'procesados' => 0,
-        'actualizados' => 0,
-        'errores' => array()
-    );
+    do {
+        // Obtener posts que no tienen respaldo
+        $query = $wpdb->prepare("
+            SELECT p.ID, pm.meta_value 
+            FROM {$wpdb->posts} p
+            INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+            LEFT JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id AND pm2.meta_key = 'datosAlgoritmo_respaldo'
+            WHERE p.post_type = 'social_post'
+            AND pm.meta_key = 'datosAlgoritmo'
+            AND pm2.meta_id IS NULL
+            LIMIT %d, %d
+        ", $offset, $batch_size);
 
-    foreach ($posts as $post) {
-        $resultados['procesados']++;
+        $resultados = $wpdb->get_results($query);
         
-        // Obtener los metadatos
-        $meta_datos_json = get_post_meta($post->ID, 'datosAlgoritmo', true);
-        
-        if (empty($meta_datos_json)) {
-            $resultados['errores'][] = "Post ID {$post->ID}: No se encontraron metadatos";
-            continue;
+        if (empty($resultados)) {
+            break;
         }
 
-        $meta_datos = json_decode($meta_datos_json, true);
-        
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $resultados['errores'][] = "Post ID {$post->ID}: Error al decodificar JSON - " . json_last_error_msg();
-            continue;
-        }
+        foreach ($resultados as $row) {
+            $meta_datos = json_decode($row->meta_value, true);
+            
+            if (!is_array($meta_datos)) {
+                continue;
+            }
 
-        $fue_modificado = false;
-        $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
+            // Crear respaldo
+            add_post_meta($row->ID, 'datosAlgoritmo_respaldo', $row->meta_value);
 
-        foreach ($campos as $campo) {
-            foreach (['es', 'en'] as $idioma) {
-                if (!empty($meta_datos[$campo][$idioma]) && is_array($meta_datos[$campo][$idioma])) {
-                    foreach ($meta_datos[$campo][$idioma] as &$tag) {
-                        $tag_original = $tag;
-                        $tag_lower = strtolower(trim($tag));
-                        
-                        if (isset($normalizaciones[$tag_lower])) {
-                            $tag = $normalizaciones[$tag_lower];
-                            $fue_modificado = true;
+            // Normalizar tags
+            $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
+            $fue_modificado = false;
+
+            foreach ($campos as $campo) {
+                foreach (['es', 'en'] as $idioma) {
+                    if (!empty($meta_datos[$campo][$idioma]) && is_array($meta_datos[$campo][$idioma])) {
+                        foreach ($meta_datos[$campo][$idioma] as &$tag) {
+                            $tag_lower = strtolower(trim($tag));
+                            if (isset($normalizaciones[$tag_lower])) {
+                                $tag = $normalizaciones[$tag_lower];
+                                $fue_modificado = true;
+                            }
                         }
                     }
                 }
             }
-        }
 
-        if ($fue_modificado) {
-            $resultado = update_post_meta($post->ID, 'datosAlgoritmo', $meta_datos);
-            if ($resultado) {
-                $resultados['actualizados']++;
-            } else {
-                $resultados['errores'][] = "Post ID {$post->ID}: Error al actualizar metadatos";
+            if ($fue_modificado) {
+                update_post_meta($row->ID, 'datosAlgoritmo', $meta_datos);
             }
+
+            $total_procesados++;
         }
-    }
 
-    // Registrar resultados
-    guardarLog("Normalización de tags completada: " . 
-              "Procesados: {$resultados['procesados']}, " .
-              "Actualizados: {$resultados['actualizados']}, " .
-              "Errores: " . count($resultados['errores']));
+        $offset += $batch_size;
+        
+        // Pequeña pausa para no sobrecargar el servidor
+        if ($total_procesados % 1000 === 0) {
+            sleep(1);
+        }
 
-    if (!empty($resultados['errores'])) {
-        guardarLog("Errores durante la normalización: " . print_r($resultados['errores'], true));
-    }
+    } while (count($resultados) === $batch_size);
 
-    return $resultados;
+    return $total_procesados;
 }
 
-// Uso de la función
-// $resultados = normalizar_tags_personalizados(10);
+// Para revertir los cambios si algo sale mal
+function revertirNormalizacion($batch_size = 100) {
+    global $wpdb;
+    
+    $offset = 0;
+    $total_revertidos = 0;
 
+    do {
+        $query = $wpdb->prepare("
+            SELECT p.ID, pm.meta_value 
+            FROM {$wpdb->posts} p
+            INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+            WHERE p.post_type = 'social_post'
+            AND pm.meta_key = 'datosAlgoritmo_respaldo'
+            LIMIT %d, %d
+        ", $offset, $batch_size);
+
+        $resultados = $wpdb->get_results($query);
+        
+        if (empty($resultados)) {
+            break;
+        }
+
+        foreach ($resultados as $row) {
+            update_post_meta($row->ID, 'datosAlgoritmo', $row->meta_value);
+            delete_post_meta($row->ID, 'datosAlgoritmo_respaldo');
+            $total_revertidos++;
+        }
+
+        $offset += $batch_size;
+        
+        if ($total_revertidos % 1000 === 0) {
+            sleep(1);
+        }
+
+    } while (count($resultados) === $batch_size);
+
+    return $total_revertidos;
+}
+
+// Uso:
+$total = crearRespaldoYNormalizar(100);
+echo "Total de posts procesados: " . $total;
+
+// Si algo sale mal:
+// $revertidos = revertirNormalizacion(100);
+// echo "Total de posts revertidos: " . $revertidos;
 
 
