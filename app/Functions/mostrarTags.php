@@ -1,15 +1,8 @@
 <?
 
 function tagsFrecuentes() {
-    /*$cache_key = 'tags_mas_frecuentes';
-    $tags_frecuentes = get_transient($cache_key);
+    guardarLog("Iniciando recopilación de tags frecuentes.");
 
-    // Si los tags ya están en caché, devolverlos
-    if ($tags_frecuentes !== false) {
-        return $tags_frecuentes;
-    } */
-
-    // Si no están en caché, procesar y contar los tags
     $tags_conteo = array();
     $args = array(
         'post_type' => 'social_post', // Modifica si usas un custom post type
@@ -19,37 +12,53 @@ function tagsFrecuentes() {
 
     $query = new WP_Query($args);
 
+    guardarLog("Número de posts encontrados: " . $query->found_posts);
+
     if ($query->have_posts()) {
         while ($query->have_posts()) {
             $query->the_post();
             $post_id = get_the_ID();
+            guardarLog("Procesando post ID: " . $post_id);
+
+            // Obtener los metadatos
             $meta_datos = get_post_meta($post_id, 'datosAlgoritmo', true);
+            if (!$meta_datos) {
+                guardarLog("No se encontraron metadatos para el post ID: " . $post_id);
+                continue;
+            }
 
-            if ($meta_datos) {
-                $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
+            guardarLog("Metadatos encontrados para el post ID " . $post_id . ": " . json_encode($meta_datos));
 
-                foreach ($campos as $campo) {
-                    if (isset($meta_datos[$campo]['es'])) {
-                        foreach ($meta_datos[$campo]['es'] as $tag) {
-                            $tag_normalizado = strtolower($tag);
-                            if (!isset($tags_conteo[$tag_normalizado])) {
-                                $tags_conteo[$tag_normalizado] = 0;
-                            }
-                            $tags_conteo[$tag_normalizado]++;
+            // Campos que vamos a procesar
+            $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
+
+            foreach ($campos as $campo) {
+                if (isset($meta_datos[$campo]['es'])) {
+                    foreach ($meta_datos[$campo]['es'] as $tag) {
+                        $tag_normalizado = strtolower($tag);
+                        guardarLog("Tag encontrado: " . $tag_normalizado);
+                        if (!isset($tags_conteo[$tag_normalizado])) {
+                            $tags_conteo[$tag_normalizado] = 0;
                         }
+                        $tags_conteo[$tag_normalizado]++;
                     }
+                } else {
+                    guardarLog("Campo no encontrado en metadatos para el post ID " . $post_id . ": " . $campo);
                 }
             }
         }
         wp_reset_postdata();
+    } else {
+        guardarLog("No se encontraron posts.");
     }
 
     // Ordenar los tags por frecuencia
     arsort($tags_conteo);
 
-    // Guardar los 12 tags más frecuentes en caché por 12 horas
+    // Guardar los 12 tags más frecuentes
     $tags_frecuentes = array_slice($tags_conteo, 0, 12, true);
-    // set_transient($cache_key, $tags_frecuentes, 12 * HOUR_IN_SECONDS);
+
+    guardarLog("Tags más frecuentes: " . json_encode($tags_frecuentes));
 
     return $tags_frecuentes;
 }
