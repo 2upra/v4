@@ -68,7 +68,7 @@ function tagsFrecuentes() {
     arsort($tags_conteo);
 
     // Tomar los 12 más frecuentes
-    $tags_frecuentes = array_slice($tags_conteo, 0, 12, true);
+    $tags_frecuentes = array_slice($tags_conteo, 0, 32, true);
 
     // Guardar en caché
     set_transient($cache_key, $tags_frecuentes, 12 * HOUR_IN_SECONDS);
