@@ -101,7 +101,7 @@ function normalizar_tags_personalizados($limit = 10) {
 }
 
 // Uso de la función
-$resultados = normalizar_tags_personalizados(10);
+// $resultados = normalizar_tags_personalizados(10);
 
 
 
