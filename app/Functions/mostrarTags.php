@@ -18,7 +18,7 @@
 */
 
 function tagsFrecuentes() {
-    $cache_key = 'tagsFrecuentes5';
+    $cache_key = 'tagsFrecuentes6';
     $tags_frecuentes = get_transient($cache_key);
 
     if ($tags_frecuentes !== false) {
@@ -59,47 +59,29 @@ function tagsFrecuentes() {
 
             guardarLog("Procesando post ID: $post_id (Post #$total_posts_processed)");
 
-            $meta_datos = get_post_meta($post_id, 'datosAlgoritmo', true);
+            $meta_datos_json = get_post_meta($post_id, 'datosAlgoritmo', true);
             
-            // Verificar si meta_datos es un array
-            if (!is_array($meta_datos)) {
-                guardarLog("Meta datos no es un array para post ID: $post_id");
+            // Decodificar el JSON
+            $meta_datos = json_decode($meta_datos_json, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                guardarLog("Error al decodificar JSON para post ID: $post_id - " . json_last_error_msg());
                 continue;
             }
-
-            // Debug: Imprimir estructura de meta_datos
-            guardarLog("Estructura de meta_datos para post $post_id: " . print_r($meta_datos, true));
 
             // Campos a procesar
             $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
 
             foreach ($campos as $campo) {
-                // Verificar si el campo existe y es un array
-                if (isset($meta_datos[$campo]) && is_array($meta_datos[$campo])) {
-                    // Si es un array directo de tags
-                    if (isset($meta_datos[$campo]['es']) && is_array($meta_datos[$campo]['es'])) {
-                        foreach ($meta_datos[$campo]['es'] as $tag) {
-                            if (is_string($tag)) {
-                                $tag_normalizado = strtolower(trim($tag));
-                                if (!empty($tag_normalizado)) {
-                                    if (!isset($tags_conteo[$tag_normalizado])) {
-                                        $tags_conteo[$tag_normalizado] = 0;
-                                    }
-                                    $tags_conteo[$tag_normalizado]++;
+                if (isset($meta_datos[$campo]['es']) && is_array($meta_datos[$campo]['es'])) {
+                    foreach ($meta_datos[$campo]['es'] as $tag) {
+                        if (is_string($tag)) {
+                            $tag_normalizado = strtolower(trim($tag));
+                            if (!empty($tag_normalizado)) {
+                                if (!isset($tags_conteo[$tag_normalizado])) {
+                                    $tags_conteo[$tag_normalizado] = 0;
                                 }
-                            }
-                        }
-                    } else {
-                        // Si es un array simple
-                        foreach ($meta_datos[$campo] as $tag) {
-                            if (is_string($tag)) {
-                                $tag_normalizado = strtolower(trim($tag));
-                                if (!empty($tag_normalizado)) {
-                                    if (!isset($tags_conteo[$tag_normalizado])) {
-                                        $tags_conteo[$tag_normalizado] = 0;
-                                    }
-                                    $tags_conteo[$tag_normalizado]++;
-                                }
+                                $tags_conteo[$tag_normalizado]++;
                             }
                         }
                     }
