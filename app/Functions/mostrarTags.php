@@ -18,7 +18,7 @@
 */
 
 function tagsFrecuentes() {
-    $cache_key = 'tagsFrecuentes4';
+    $cache_key = 'tagsFrecuentes5';
     $tags_frecuentes = get_transient($cache_key);
 
     if ($tags_frecuentes !== false) {
