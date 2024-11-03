@@ -1,5 +1,67 @@
 <?
 
+// Función para normalizar un solo post
+function normalizarNuevoPost($post_id, $post, $update) {
+    // Si es una actualización o no es del tipo correcto, salimos
+    if ($update || $post->post_type !== 'social_post') {
+        return;
+    }
+
+    // Normalizaciones
+    $normalizaciones = array(
+        'one-shot' => 'one shot',
+        'oneshot' => 'one shot',
+        'percusión' => 'percusión',
+        'hiphop' => 'hip hop',
+        'hip-hop' => 'hip hop',
+        'rnb' => 'r&b',
+        'vocal' => 'vocals',
+        'r&b' => 'r&b',
+        'randb' => 'r&b',
+        'rock&roll' => 'rock and roll',
+        'rockandroll' => 'rock and roll',
+        'rock-and-roll' => 'rock and roll',
+        'campana de vaca' => 'cowbell',
+        'cowbells' => 'cowbell',
+        'drums' => 'drum',
+    );
+
+    // Obtener los datos del algoritmo
+    $meta_datos = get_post_meta($post_id, 'datosAlgoritmo', true);
+    
+    if (!is_array($meta_datos)) {
+        return;
+    }
+
+    // Crear respaldo si no existe
+    //add_post_meta($post_id, 'datosAlgoritmo_respaldo', $meta_datos, true);
+
+    // Normalizar tags
+    $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
+    $fue_modificado = false;
+
+    foreach ($campos as $campo) {
+        foreach (['es', 'en'] as $idioma) {
+            if (!empty($meta_datos[$campo][$idioma]) && is_array($meta_datos[$campo][$idioma])) {
+                foreach ($meta_datos[$campo][$idioma] as &$tag) {
+                    $tag_lower = strtolower(trim($tag));
+                    if (isset($normalizaciones[$tag_lower])) {
+                        $tag = $normalizaciones[$tag_lower];
+                        $fue_modificado = true;
+                    }
+                }
+            }
+        }
+    }
+
+    if ($fue_modificado) {
+        update_post_meta($post_id, 'datosAlgoritmo', $meta_datos);
+    }
+}
+
+// Agregar el hook para ejecutar la función cuando se crea un nuevo post
+add_action('wp_insert_post', 'normalizarNuevoPost', 10, 3);
+
 function crearRespaldoYNormalizar($batch_size = 100) {
     global $wpdb;
     
