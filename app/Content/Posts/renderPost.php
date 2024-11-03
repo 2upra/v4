@@ -9,33 +9,55 @@ function htmlPost($filtro)
     if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
         $filtro = 'rolastatus';
     }
+    $sampleList = $filtro === 'sampleList';
+    $wave = get_post_meta($post_id, 'waveform_image_url', true);
     ob_start();
-    ?>
+?>
     <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV"
         filtro="<? echo esc_attr($filtro); ?>"
         id-post="<? echo get_the_ID(); ?>"
         autor="<? echo esc_attr($author_id); ?>">
 
-        <? echo fondoPost($filtro, $block, $es_suscriptor, $post_id); ?>
 
-        <? if ($music): ?>
-            <? renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscriptor, $post_status, $audio_url); ?>
+
+        <? if ($sampleList): ?>
+            <div class="LISTSAMPLE">
+                <? echo imagenPostList($block, $es_suscriptor, $post_id) ?>
+                <div class="INFOLISTSAMPLE">
+                    <p class="CONTENTLISTSAMPLE">
+                        <? the_content(); ?>
+                    </p>
+                    <div class="TAGSLISTSAMPLE">
+                        <div class="tags-container" id="tags-<? echo get_the_ID(); ?>"></div>
+                        <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;"><? echo esc_html($datosAlgoritmo); ?></p>
+                    </div>
+                </div>
+                <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
+                <? echo renderPostControls($post_id, $colab) ?>
+            </div>
         <? else: ?>
-            <? renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $es_suscriptor, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $post_status, $audio_id_lite); ?>
+            <? echo fondoPost($filtro, $block, $es_suscriptor, $post_id); ?>
+            <? if ($music): ?>
+                <? renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscriptor, $post_status, $audio_url); ?>
+            <? else: ?>
+                <? renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $es_suscriptor, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $post_status, $audio_id_lite); ?>
+            <? endif; ?>
         <? endif; ?>
+
+
     </li>
 
     <li class="comentariosPost">
 
     </li>
-    <?
+<?
     return ob_get_clean();
 }
 
 
 function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscriptor, $post_status, $audio_url)
 {
-    ?>
+?>
     <div class="post-content">
         <div class="MFQOYC">
             <? echo like($post_id); ?>
@@ -56,13 +78,13 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
             <div class="CPQBCO"><? the_content(); ?></div>
         </div>
     </div>
-    <?
+<?
 }
 
 
 function renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $es_suscriptor, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $post_status, $audio_id_lite)
 {
-    ?>
+?>
     <div class="post-content">
         <div class="JNUZCN">
             <? if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])): ?>
@@ -91,25 +113,25 @@ function renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $a
             <? renderPostControls($post_id, $colab); ?>
         </div>
     </div>
-    <?
+<?
 }
 
 
 
 function renderSubscriptionPrompt($author_name, $author_id)
 {
-    ?>
+?>
     <div class="ZHNDDD">
         <p>Suscríbete a <? echo esc_html($author_name); ?> para ver el contenido de este post</p>
         <? echo botonSuscribir($author_id, $author_name); ?>
     </div>
-    <?
+<?
 }
 
 
 function renderPostControls($post_id, $colab)
 {
-    ?>
+?>
     <div class="QSORIW">
         <? echo like($post_id); ?>
         <? echo botonComentar($post_id, $colab); ?>
@@ -117,14 +139,14 @@ function renderPostControls($post_id, $colab)
         <? echo botonColab($post_id, $colab); ?>
         <? echo botonColeccion($post_id); ?>
     </div>
-    <?
+<?
 }
 
 
 
 function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $audio_id_lite)
 {
-    ?>
+?>
     <div class="NERWFB">
         <div class="YWBIBG">
             <div class="thePostContet" data-post-id="<? echo esc_html($post_id); ?>">
@@ -146,7 +168,7 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
         </div>
         <?
         if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])):
-            ?>
+        ?>
             <div class="ZQHOQY">
                 <? wave($audio_url, $audio_id_lite, $post_id); ?>
             </div>
@@ -163,7 +185,7 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
             </div>
         </div>
     </div>
-    <?
+<?
 }
 
 

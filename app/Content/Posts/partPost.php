@@ -317,7 +317,7 @@ function botonComentar($post_id)
     </div>
 
 
-<?
+    <?
     return ob_get_clean();
 }
 
@@ -327,10 +327,35 @@ function fondoPost($filtro, $block, $es_suscriptor, $post_id)
         $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
         $image_size = ($block && !$es_suscriptor) ? 'thumbnail' : 'large';
         $quality = ($block && !$es_suscriptor) ? 20 : 80;
-
-        echo '<div class="post-background ' . $blurred_class . '" style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(' . esc_url(imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor))) . ');"></div>';
+        ob_start();
+    ?>
+        <div class="post-background <?= $blurred_class ?>"
+            style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<? esc_url(imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor))) ?>);">
+        </div>
+    <?
+        $output = ob_get_clean();
+        return $output;
     }
+
+    return '';
 }
+
+function imagenPostList($block, $es_suscriptor, $post_id)
+{
+    $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
+    $image_size = ($block && !$es_suscriptor) ? 'thumbnail' : 'large';
+    $quality = ($block && !$es_suscriptor) ? 20 : 80;
+    ob_start();
+    ?>
+    <div class="post-image-container <?= $blurred_class ?>">
+        <img src="<?= esc_url(imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor))) ?>" alt="Post Image" />
+    </div>
+<?
+    $output = ob_get_clean();
+    return $output;
+}
+
+
 
 function audioPost($post_id)
 {
