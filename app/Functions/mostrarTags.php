@@ -1,36 +1,24 @@
 <?
 
 /*
-2024-11-03 01:35:39 - Iniciando recopilación de tags frecuentes.
-2024-11-03 01:35:39 - Número de posts encontrados en la página 1: 8809
-2024-11-03 01:35:39 - Procesando post ID: 275396 (Post #1)
-2024-11-03 01:35:39 - Procesando post ID: 275393 (Post #2)
-2024-11-03 01:35:39 - Procesando post ID: 275390 (Post #3)
-2024-11-03 01:35:39 - Procesando post ID: 275387 (Post #4)
-2024-11-03 01:35:39 - Procesando post ID: 275384 (Post #5)
-2024-11-03 01:35:39 - Procesando post ID: 275381 (Post #6)
-2024-11-03 01:35:39 - Procesando post ID: 275378 (Post #7)
-2024-11-03 01:35:39 - Procesando post ID: 275375 (Post #8)
-2024-11-03 01:35:39 - Procesando post ID: 275372 (Post #9)
-
-2024-11-03 01:35:39 - Total de posts procesados: 9
-2024-11-03 01:35:39 - Tags más frecuentes: []
+despues que se cachean, no se muestran aleatoreamente, y ya no quiero que muestre la cantidad 
 */
 
 
 function tagsFrecuentes() {
-    $cache_key = 'tagsFrecuentes9';
+    $cache_key = 'tagsFrecuentes10';
     $tags_frecuentes = get_transient($cache_key);
 
     if ($tags_frecuentes !== false) {
-        // Mezclar aleatoriamente los tags almacenados en caché y seleccionar 32
+        // Mezclar aleatoriamente las etiquetas almacenadas en caché y seleccionar 32
         $tags_array = array_keys($tags_frecuentes);
         shuffle($tags_array);
-        return array_slice($tags_frecuentes, 0, 32, true);
+        $tags_frecuentes = array_slice($tags_array, 0, 32); // Solo obtenemos las etiquetas sin conteo
+        return $tags_frecuentes;
     }
 
     global $wpdb;
-    
+
     $query = "
         SELECT pm.meta_value 
         FROM {$wpdb->postmeta} pm
@@ -42,7 +30,7 @@ function tagsFrecuentes() {
 
     $resultados = $wpdb->get_col($query);
     $tags_conteo = [];
-    
+
     $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
 
     foreach ($resultados as $meta_value) {
@@ -76,11 +64,9 @@ function tagsFrecuentes() {
     $keys = array_keys($top_64_tags);
     shuffle($keys);
     $selected_keys = array_slice($keys, 0, 32);
-    
-    $tags_frecuentes = array();
-    foreach ($selected_keys as $key) {
-        $tags_frecuentes[$key] = $top_64_tags[$key];
-    }
+
+    // Solo las etiquetas sin conteo
+    $tags_frecuentes = array_values($selected_keys);
 
     // Guardar en caché los 64 tags más frecuentes
     set_transient($cache_key, $top_64_tags, 12 * HOUR_IN_SECONDS);
@@ -93,8 +79,8 @@ function tagsPosts() {
 
     if (!empty($tags_frecuentes)) {
         echo '<div class="tags-frecuentes">';
-        foreach ($tags_frecuentes as $tag => $cantidad) {
-            echo '<span class="postTag">' . esc_html(ucwords($tag)) . ' (' . intval($cantidad) . ')</span> ';
+        foreach ($tags_frecuentes as $tag) {
+            echo '<span class="postTag">' . esc_html(ucwords($tag)) . '</span> ';
         }
         echo '</div>';
     } else {
