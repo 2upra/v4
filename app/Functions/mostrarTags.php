@@ -19,7 +19,7 @@
 
 
 function tagsFrecuentes() {
-    $cache_key = 'tagsFrecuentes8';
+    $cache_key = 'tagsFrecuentes9';
     $tags_frecuentes = get_transient($cache_key);
 
     if ($tags_frecuentes !== false) {
