@@ -1,7 +1,7 @@
 <?
 
 function tagsFrecuentes() {
-    $cache_key = 'tagsFrecuentes2';
+    $cache_key = 'tagsFrecuentes3';
     $tags_frecuentes = get_transient($cache_key);
 
     // Si los tags ya están en caché, devolverlos
