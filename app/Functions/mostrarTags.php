@@ -1,13 +1,13 @@
 <?
 
 function tagsFrecuentes() {
-    $cache_key = 'tags_mas_frecuentes';
+    /*$cache_key = 'tags_mas_frecuentes';
     $tags_frecuentes = get_transient($cache_key);
 
     // Si los tags ya están en caché, devolverlos
     if ($tags_frecuentes !== false) {
         return $tags_frecuentes;
-    }
+    } */
 
     // Si no están en caché, procesar y contar los tags
     $tags_conteo = array();
@@ -49,7 +49,7 @@ function tagsFrecuentes() {
 
     // Guardar los 12 tags más frecuentes en caché por 12 horas
     $tags_frecuentes = array_slice($tags_conteo, 0, 12, true);
-    set_transient($cache_key, $tags_frecuentes, 12 * HOUR_IN_SECONDS);
+    // set_transient($cache_key, $tags_frecuentes, 12 * HOUR_IN_SECONDS);
 
     return $tags_frecuentes;
 }
