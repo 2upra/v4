@@ -11,12 +11,15 @@ function crearRespaldoYNormalizar($batch_size = 100) {
         'hiphop' => 'hip hop',
         'hip-hop' => 'hip hop',
         'rnb' => 'r&b',
+        'vocal' => 'vocals',
         'r&b' => 'r&b',
         'randb' => 'r&b',
         'rock&roll' => 'rock and roll',
         'rockandroll' => 'rock and roll',
         'rock-and-roll' => 'rock and roll',
         'campana de vaca' => 'cowbell',
+        'cowbells' => 'cowbell',
+        'drums' => 'drum',
     );
 
     $offset = 0;
@@ -28,7 +31,6 @@ function crearRespaldoYNormalizar($batch_size = 100) {
             SELECT p.ID, pm.meta_value 
             FROM {$wpdb->posts} p
             INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-            LEFT JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id AND pm2.meta_key = 'datosAlgoritmo_respaldo'
             WHERE p.post_type = 'social_post'
             AND pm.meta_key = 'datosAlgoritmo'
             AND pm2.meta_id IS NULL
@@ -49,7 +51,7 @@ function crearRespaldoYNormalizar($batch_size = 100) {
             }
 
             // Crear respaldo
-            add_post_meta($row->ID, 'datosAlgoritmo_respaldo', $row->meta_value);
+            //add_post_meta($row->ID, 'datosAlgoritmo_respaldo', $row->meta_value);
 
             // Normalizar tags
             $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
