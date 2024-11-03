@@ -26,7 +26,14 @@ if (have_posts()) :
 
         // Obtener y decodificar los datos del algoritmo
         $datosAlgoritmo = get_post_meta($current_post_id, 'datosAlgoritmo', true);
-        $datos_decoded = !empty($datosAlgoritmo) ? json_decode($datosAlgoritmo, true) : [];
+
+        // Verifica si ya es un array y si no, intenta decodificarlo
+        $datos_decoded = is_array($datosAlgoritmo) ? $datosAlgoritmo : json_decode($datosAlgoritmo, true);
+
+        // Manejar posibles errores de json_decode si devuelve null
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $datos_decoded = [];
+        }
 
         // Obtener las sugerencias de búsqueda según el idioma activo
         $sugerencias_busqueda = isset($datos_decoded['sugerencia_busqueda'][$active_lang]) ? $datos_decoded['sugerencia_busqueda'][$active_lang] : [];
