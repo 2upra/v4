@@ -1,6 +1,20 @@
 <?php
 get_header();
 
+/*
+    [03-Nov-2024 05:11:03 UTC] PHP Fatal error:  Uncaught TypeError: json_decode(): Argument #1 ($json) must be of type string, array given in /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php:160
+    Stack trace:
+    #0 /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php(160): json_decode()
+    #1 /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php(145): configurarSimilarTo()
+    #2 /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php(17): configuracionQueryArgs()
+    #3 /var/www/wordpress/wp-content/themes/2upra3v/single-social_post.php(121): publicaciones()
+    #4 /var/www/wordpress/wp-includes/template-loader.php(106): include('...')
+    #5 /var/www/wordpress/wp-blog-header.php(19): require_once('...')
+    #6 /var/www/wordpress/index.php(17): require('...')
+    #7 {main}
+      thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php on line 160
+*/
+
 // Obtener el ID del usuario actual y otras meta
 $user_id = get_current_user_id();
 $acciones = get_user_meta($user_id, 'acciones', true);
@@ -28,10 +42,16 @@ if (have_posts()) :
         $datosAlgoritmo = get_post_meta($current_post_id, 'datosAlgoritmo', true);
 
         // Verifica si ya es un array y si no, intenta decodificarlo
-        $datos_decoded = is_array($datosAlgoritmo) ? $datosAlgoritmo : json_decode($datosAlgoritmo, true);
-
-        // Manejar posibles errores de json_decode si devuelve null
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        if (is_string($datosAlgoritmo)) {
+            $datos_decoded = json_decode($datosAlgoritmo, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                // Registro del error para depuración
+                error_log('Error al decodificar JSON en datosAlgoritmo: ' . json_last_error_msg());
+                $datos_decoded = [];
+            }
+        } elseif (is_array($datosAlgoritmo)) {
+            $datos_decoded = $datosAlgoritmo;
+        } else {
             $datos_decoded = [];
         }
 
