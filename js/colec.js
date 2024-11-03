@@ -49,6 +49,27 @@ function iniciarColec() {
 }
 
 
+function busquedaColec(query) {
+    const button = a('#btnListo');
+    let hayResultados = false;
+
+    document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
+        const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
+        const visible = titulo.includes(query);
+        coleccion.style.display = visible ? 'flex' : 'none';
+
+        if (visible) hayResultados = true; // Verificar si hay al menos un resultado visible
+    });
+
+    // Configuración dinámica del botón
+    if (!hayResultados && query) {
+        button.innerText = 'Crear Colección';
+        button.onclick = () => crearNuevaColecConTitulo(query);
+    } else {
+        button.innerText = colecSelecionado ? 'Guardar' : 'Listo';
+        button.onclick = colecSelecionado ? manejarClickListoColec : null;
+    }
+}
 
 //Funcion para guardar 
 async function manejarClickListoColec() {
@@ -88,6 +109,7 @@ async function manejarClickListoColec() {
     }
 }
 
+//Cuando se da click, el boton no se desactiva y si doy varios click se crea varias colecciones, cuando se crea cuando hay una busqueda vacía
 function manejarClickColec(coleccion) {
     const button = a('#btnListo');
 
@@ -170,7 +192,6 @@ async function abrirColec() {
     await verificarSampleEnColecciones();
     console.log('verificarSampleEnColecciones completado');
 }
-
 
 async function verificarSampleEnColecciones() {
     console.log('Función verificarSampleEnColecciones iniciada');
