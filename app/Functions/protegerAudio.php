@@ -127,7 +127,7 @@ if (!wp_next_scheduled('minutos55_evento')) {
 add_action('minutos55_evento', 'optimizar64kAudios'); // Asegúrate de que el nombre del evento coincida
 
 
-function optimizar64kAudios($limite = 500) {
+function optimizar64kAudios($limite = 10000) {
     // Obtener los posts de tipo 'social_post' que no han sido optimizados
     $query = new WP_Query(array(
         'post_type' => 'social_post',
