@@ -49,27 +49,6 @@ function iniciarColec() {
 }
 
 
-function busquedaColec(query) {
-    const button = a('#btnListo');
-    let hayResultados = false;
-
-    document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
-        const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
-        const visible = titulo.includes(query);
-        coleccion.style.display = visible ? 'flex' : 'none';
-
-        if (visible) hayResultados = true; // Verificar si hay al menos un resultado visible
-    });
-
-    // Configuración dinámica del botón
-    if (!hayResultados && query) {
-        button.innerText = 'Crear Colección';
-        button.onclick = () => crearNuevaColecConTitulo(query);
-    } else {
-        button.innerText = colecSelecionado ? 'Guardar' : 'Listo';
-        button.onclick = colecSelecionado ? manejarClickListoColec : null;
-    }
-}
 
 //Funcion para guardar 
 async function manejarClickListoColec() {
@@ -109,17 +88,37 @@ async function manejarClickListoColec() {
     }
 }
 
+//Cuando se da click, el boton no se desactiva y si doy varios click se crea varias colecciones, cuando se crea cuando hay una busqueda vacía 
+
+function busquedaColec(query) {
+    const button = a('#btnListo');
+    let hayResultados = false;
+    document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
+        const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
+        const visible = titulo.includes(query);
+        coleccion.style.display = visible ? 'flex' : 'none';
+        if (visible) hayResultados = true;
+    });
+
+    // Prevenir la creación de colecciones con búsquedas vacías o sin query
+    if (!hayResultados && query.trim()) {
+        button.innerText = 'Crear Colección';
+        button.onclick = () => crearNuevaColecConTitulo(query);
+    } else {
+        button.innerText = colecSelecionado ? 'Guardar' : 'Listo';
+        button.onclick = colecSelecionado ? manejarClickListoColec : null;
+    }
+}
+
 function manejarClickColec(coleccion) {
     const button = a('#btnListo');
 
     if (coleccion.classList.contains('seleccion')) {
-        // Deseleccionar colección
         coleccion.classList.remove('seleccion');
         colecSelecionado = null;
         button.innerText = 'Listo';
-        button.onclick = null; // Restablecer a su funcionalidad original
+        button.onclick = null; 
     } else {
-        // Seleccionar colección
         a.quitar('.coleccion', 'seleccion');
         coleccion.classList.add('seleccion');
         colecSelecionado = coleccion.getAttribute('data-post_id') || coleccion.id;
@@ -129,25 +128,37 @@ function manejarClickColec(coleccion) {
 }
 
 
-// Función auxiliar para crear una nueva colección con el título de búsqueda
-function crearNuevaColecConTitulo(titulo) {
+async function crearNuevaColecConTitulo(titulo) {
     const button = a('#btnListo');
-    button.disabled = true;
-    a('#tituloColec').value = titulo;
+
+    // Prevenir que se creen colecciones con un título vacío (aunque no debería pasar por la lógica anterior)
+    if (!titulo.trim()) {
+        alert('El título de la colección no puede estar vacío');
+        return;
+    }
+
+    button.disabled = true; // Desactiva el botón para evitar múltiples clics
     button.innerText = 'Creando nueva colección...';
-    crearNuevaColec();
+    
+    // Espera a que la colección se cree correctamente
+    await crearNuevaColec();
+
+    // Reactivar el botón solo después de que el proceso haya terminado
     button.disabled = false;
 }
+
 
 // Funcion para crear colec
 async function crearNuevaColec() {
     const esValido = verificarColec();
     if (!esValido) return;
+    
     const button = a('#btnCrearColec');
     const originalText = button.innerText;
+    
     button.innerText = 'Guardando...';
-    button.disabled = true;
-
+    button.disabled = true; // Desactiva el botón para evitar múltiples clics
+    
     const titulo = a('#tituloColec').value;
     const descripcion = a('#descripColec').value || '';
     const privadoCheck = a('#privadoColec');
@@ -163,8 +174,6 @@ async function crearNuevaColec() {
     };
     console.log('Datos enviados:', data); // Log de la data que se envía
 
-
-
     try {
         const response = await enviarAjax('crearColeccion', data);
         if (response?.success) {
@@ -178,7 +187,7 @@ async function crearNuevaColec() {
         alert('Ocurrió un error durante la creación de la colección. Por favor, inténtelo de nuevo.');
     } finally {
         button.innerText = originalText;
-        button.disabled = false;
+        button.disabled = false; // Reactiva el botón después de completar el proceso
     }
 }
 
