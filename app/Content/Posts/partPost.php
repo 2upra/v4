@@ -275,6 +275,22 @@ function obtenerImagenAleatoria($directory)
     return $images[array_rand($images)];
 }
 
+// Agrega soporte para archivos JFIF en WordPress
+function agregar_soporte_jfif($mimes) {
+    $mimes['jfif'] = 'image/jpeg';
+    return $mimes;
+}
+add_filter('upload_mimes', 'agregar_soporte_jfif');
+
+// Extiende wp_check_filetype para reconocer .jfif
+function extender_wp_check_filetype($types, $filename, $mimes) {
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    if ($ext === 'jfif') {
+        return ['ext' => 'jpeg', 'type' => 'image/jpeg'];
+    }
+    return $types;
+}
+add_filter('wp_check_filetype_and_ext', 'extender_wp_check_filetype', 10, 3);
 
 function subirImagenALibreria($file_path, $post_id)
 {
@@ -289,33 +305,39 @@ function subirImagenALibreria($file_path, $post_id)
     }
 
     // Obtener el tipo de MIME
-    $filetype = wp_check_filetype(basename($file_path), null);
-    if (!$filetype['type']) {
+    $file_ext = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
+    if ($file_ext === 'jfif') {
+        $file_ext = 'jpeg';
+        $new_file_name = pathinfo($file_path, PATHINFO_FILENAME) . '.jpeg';
+        $upload_file = wp_upload_bits($new_file_name, null, $file_contents);
+    } else {
+        $upload_file = wp_upload_bits(basename($file_path), null, $file_contents);
+    }
+
+    if ($upload_file['error']) {
         return false;
     }
 
-    // Preparar los datos para la subida
-    $upload = wp_upload_bits(basename($file_path), null, $file_contents);
-
-    if ($upload['error']) {
+    $filetype = wp_check_filetype($upload_file['file'], null);
+    if (!$filetype['type']) {
         return false;
     }
 
     $attachment = array(
         'post_mime_type' => $filetype['type'],
-        'post_title'     => sanitize_file_name(basename($file_path)),
+        'post_title'     => sanitize_file_name(pathinfo($upload_file['file'], PATHINFO_BASENAME)),
         'post_content'   => '',
         'post_status'    => 'inherit',
         'post_parent'    => $post_id,
     );
 
     // Insertar el adjunto en la base de datos
-    $attach_id = wp_insert_attachment($attachment, $upload['file'], $post_id);
+    $attach_id = wp_insert_attachment($attachment, $upload_file['file'], $post_id);
 
     if (!is_wp_error($attach_id)) {
         // Generar los metadatos de la imagen
         require_once(ABSPATH . 'wp-admin/includes/image.php');
-        $attach_data = wp_generate_attachment_metadata($attach_id, $upload['file']);
+        $attach_data = wp_generate_attachment_metadata($attach_id, $upload_file['file']);
         wp_update_attachment_metadata($attach_id, $attach_data);
 
         return $attach_id;
