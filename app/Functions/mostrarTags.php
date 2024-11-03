@@ -6,7 +6,7 @@ despues que se cachean, no se muestran aleatoreamente, y ya no quiero que muestr
 
 
 function tagsFrecuentes() {
-    $cache_key = 'tagsFrecuentes11';
+    $cache_key = 'tagsFrecuentes12';
     $tags_frecuentes = get_transient($cache_key);
 
     if ($tags_frecuentes !== false) {
@@ -31,7 +31,7 @@ function tagsFrecuentes() {
     $resultados = $wpdb->get_col($query);
     $tags_conteo = [];
 
-    $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio', artista_posible];
+    $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio', 'artista_posible'];
 
     foreach ($resultados as $meta_value) {
         $meta_datos = json_decode($meta_value, true);
