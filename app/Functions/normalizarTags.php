@@ -129,7 +129,6 @@ function revertirNormalizacion($batch_size = 100) {
 
 // Uso:
 $total = crearRespaldoYNormalizar(100);
-echo "Total de posts procesados: " . $total;
 
 // Si algo sale mal:
 // $revertidos = revertirNormalizacion(100);
