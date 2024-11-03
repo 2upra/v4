@@ -400,7 +400,7 @@ function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $
     if ($esAdmin) {
 
         if (!$metaVerificado && $metaPostAut) {
-            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 2.5;
+            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 5;
         } elseif ($metaVerificado && !$metaPostAut) {
             return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
         }
