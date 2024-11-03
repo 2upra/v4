@@ -1,7 +1,7 @@
 <?
 
 function tagsFrecuentes() {
-    $cache_key = 'tagsFrecuentes3';
+    $cache_key = 'tagsFrecuentes4';
     $tags_frecuentes = get_transient($cache_key);
 
     // Si los tags ya están en caché, devolverlos
@@ -15,10 +15,10 @@ function tagsFrecuentes() {
     $tags_conteo = array();
     $posts_per_page = 50; // Número de posts por página
     $paged = 1;  // Empezamos en la página 1
-    $total_posts = 0;
-    $max_num_pages = null;
+    $total_posts_limit = 50; // Limitar el número total de posts a procesar
+    $total_posts_processed = 0; // Contador de posts procesados
 
-    do {
+    while ($total_posts_processed < $total_posts_limit) {
         $args = array(
             'post_type' => 'social_post', // Modifica si usas un custom post type
             'posts_per_page' => $posts_per_page, // Obtener los posts en lotes
@@ -29,48 +29,50 @@ function tagsFrecuentes() {
 
         $query = new WP_Query($args);
 
-        if ($max_num_pages === null) {
-            $max_num_pages = $query->max_num_pages;
-            guardarLog("Número máximo de páginas: $max_num_pages");
+        $posts_in_this_page = $query->found_posts;
+
+        guardarLog("Número de posts encontrados en la página $paged: " . $posts_in_this_page);
+
+        if ($posts_in_this_page == 0 || !$query->have_posts()) {
+            guardarLog("No se encontraron más posts.");
+            break; // Salir del bucle si no hay más posts
         }
 
-        guardarLog("Número de posts encontrados en la página $paged: " . $query->found_posts);
-        $total_posts += $query->found_posts;
+        while ($query->have_posts() && $total_posts_processed < $total_posts_limit) {
+            $query->the_post();
+            $post_id = get_the_ID();
+            $total_posts_processed++;
 
-        if ($query->have_posts()) {
-            while ($query->have_posts()) {
-                $query->the_post();
-                $post_id = get_the_ID();
+            guardarLog("Procesando post ID: $post_id (Post #$total_posts_processed)");
 
-                // Obtener los metadatos
-                $meta_datos = get_post_meta($post_id, 'datosAlgoritmo', true);
-                if (!$meta_datos) {
-                    continue; // Saltar si no hay metadatos
-                }
+            // Obtener los metadatos
+            $meta_datos = get_post_meta($post_id, 'datosAlgoritmo', true);
+            if (!$meta_datos) {
+                guardarLog("No se encontraron metadatos para el post ID: $post_id");
+                continue; // Saltar si no hay metadatos
+            }
 
-                // Campos que vamos a procesar
-                $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
+            // Campos que vamos a procesar
+            $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
 
-                foreach ($campos as $campo) {
-                    if (isset($meta_datos[$campo]['es'])) {
-                        foreach ($meta_datos[$campo]['es'] as $tag) {
-                            $tag_normalizado = strtolower($tag);
-                            if (!isset($tags_conteo[$tag_normalizado])) {
-                                $tags_conteo[$tag_normalizado] = 0;
-                            }
-                            $tags_conteo[$tag_normalizado]++;
+            foreach ($campos as $campo) {
+                if (isset($meta_datos[$campo]['es'])) {
+                    foreach ($meta_datos[$campo]['es'] as $tag) {
+                        $tag_normalizado = strtolower($tag);
+                        if (!isset($tags_conteo[$tag_normalizado])) {
+                            $tags_conteo[$tag_normalizado] = 0;
                         }
+                        $tags_conteo[$tag_normalizado]++;
                     }
                 }
             }
-            wp_reset_postdata();
         }
 
-        // Incrementar la página para la siguiente iteración
-        $paged++;
-    } while ($paged <= $max_num_pages);
+        wp_reset_postdata();
+        $paged++; // Pasar a la siguiente página
+    }
 
-    guardarLog("Total de posts procesados: $total_posts");
+    guardarLog("Total de posts procesados: $total_posts_processed");
 
     // Ordenar los tags por frecuencia
     arsort($tags_conteo);
@@ -85,6 +87,7 @@ function tagsFrecuentes() {
 
     return $tags_frecuentes;
 }
+
 function tagsPosts() {
     $tags_frecuentes = tagsFrecuentes();
 
