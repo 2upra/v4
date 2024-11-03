@@ -131,7 +131,7 @@ function revertirNormalizacion($batch_size = 100) {
 }
 
 // Uso:
-$total = crearRespaldoYNormalizar(100);
+// $total = crearRespaldoYNormalizar(100);
 
 // Si algo sale mal:
 // $revertidos = revertirNormalizacion(100);
