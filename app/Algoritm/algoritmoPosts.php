@@ -255,7 +255,7 @@ function obtenerDatosFeedConCache($userId)
         // Si el usuario es admin, devuelve los datos directamente sin caché
         return obtenerDatosFeed($userId);
     }
-    /*
+    
     $cache_key = 'feed_datos_' . $userId;
     $datos = wp_cache_get($cache_key);
 
@@ -270,7 +270,7 @@ function obtenerDatosFeedConCache($userId)
     }
 
     return $datos;
-    */
+    
 }
 
 
