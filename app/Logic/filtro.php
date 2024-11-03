@@ -33,6 +33,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
             ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
         ],
         'sample'   => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+        'sampleList'   => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
         'colab' => fn() => $query_args['post_status'] = 'publish',
         'colabPendiente' => function () use (&$query_args) {
             $query_args['author'] = get_current_user_id();

@@ -38,15 +38,19 @@ function socialTabs()
                     <div class="OAXRVB">
 
                         <div class="FEDAG5">
-                            <div class="DHRDTAG">
-                                <? echo tagsPosts() ?>
-                            </div>
-                            <? echo publicaciones(['filtro' => 'nada', 'posts' => 12]); ?>
+                            <? echo publicaciones(['filtro' => 'sample', 'posts' => 12]); ?>
                         </div>
                     </div>
                 </div>
             </div>
-
+            <div class="tab INICIO S4K7I3" id="Samples">
+                <div class="DHRDTAG">
+                    <? echo tagsPosts() ?>
+                </div>
+                <div class="FOFDV5">
+                    <? echo publicaciones(['filtro' => 'sampleList', 'posts' => 12]); ?>
+                </div>
+            </div>
 
 
 
