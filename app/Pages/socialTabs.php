@@ -38,7 +38,9 @@ function socialTabs()
                     <div class="OAXRVB">
 
                         <div class="FEDAG5">
-                            <? echo tagsPosts() ?>
+                            <div class="DHRDTAG">
+                                <? echo tagsPosts() ?>
+                            </div>
                             <? echo publicaciones(['filtro' => 'nada', 'posts' => 12]); ?>
                         </div>
                     </div>
