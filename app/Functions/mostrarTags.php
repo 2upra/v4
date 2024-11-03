@@ -18,83 +18,51 @@
 */
 
 function tagsFrecuentes() {
-    $cache_key = 'tagsFrecuentes6';
+    $cache_key = 'tagsFrecuentes7';
     $tags_frecuentes = get_transient($cache_key);
 
     if ($tags_frecuentes !== false) {
-        guardarLog("Usando tags frecuentes desde caché.");
         return $tags_frecuentes;
     }
 
-    guardarLog("Iniciando recopilación de tags frecuentes.");
+    global $wpdb;
+    
+    // Consulta SQL directa para mejor rendimiento
+    $query = "
+        SELECT pm.meta_value 
+        FROM {$wpdb->postmeta} pm
+        INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+        WHERE pm.meta_key = 'datosAlgoritmo'
+        AND p.post_type = 'social_post'
+        LIMIT 50000
+    ";
 
-    $tags_conteo = array();
-    $posts_per_page = 9;
-    $paged = 1;
-    $total_posts_limit = 9;
-    $total_posts_processed = 0;
+    $resultados = $wpdb->get_col($query);
+    $tags_conteo = [];
+    
+    // Campos a procesar
+    $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
 
-    while ($total_posts_processed < $total_posts_limit) {
-        $args = array(
-            'post_type' => 'social_post',
-            'posts_per_page' => $posts_per_page,
-            'paged' => $paged,
-            'meta_key' => 'datosAlgoritmo',
-            'no_found_rows' => false,
-        );
-
-        $query = new WP_Query($args);
+    foreach ($resultados as $meta_value) {
+        $meta_datos = json_decode($meta_value, true);
         
-        guardarLog("Número de posts encontrados en la página $paged: " . $query->found_posts);
-
-        if (!$query->have_posts()) {
-            guardarLog("No se encontraron más posts.");
-            break;
+        if (!is_array($meta_datos)) {
+            continue;
         }
 
-        while ($query->have_posts() && $total_posts_processed < $total_posts_limit) {
-            $query->the_post();
-            $post_id = get_the_ID();
-            $total_posts_processed++;
-
-            guardarLog("Procesando post ID: $post_id (Post #$total_posts_processed)");
-
-            $meta_datos_json = get_post_meta($post_id, 'datosAlgoritmo', true);
-            
-            // Decodificar el JSON
-            $meta_datos = json_decode($meta_datos_json, true);
-            
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                guardarLog("Error al decodificar JSON para post ID: $post_id - " . json_last_error_msg());
-                continue;
-            }
-
-            // Campos a procesar
-            $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
-
-            foreach ($campos as $campo) {
-                if (isset($meta_datos[$campo]['es']) && is_array($meta_datos[$campo]['es'])) {
-                    foreach ($meta_datos[$campo]['es'] as $tag) {
-                        if (is_string($tag)) {
-                            $tag_normalizado = strtolower(trim($tag));
-                            if (!empty($tag_normalizado)) {
-                                if (!isset($tags_conteo[$tag_normalizado])) {
-                                    $tags_conteo[$tag_normalizado] = 0;
-                                }
-                                $tags_conteo[$tag_normalizado]++;
-                            }
+        foreach ($campos as $campo) {
+            if (!empty($meta_datos[$campo]['es']) && is_array($meta_datos[$campo]['es'])) {
+                foreach ($meta_datos[$campo]['es'] as $tag) {
+                    if (is_string($tag)) {
+                        $tag_normalizado = strtolower(trim($tag));
+                        if (!empty($tag_normalizado)) {
+                            $tags_conteo[$tag_normalizado] = ($tags_conteo[$tag_normalizado] ?? 0) + 1;
                         }
                     }
                 }
             }
         }
-
-        wp_reset_postdata();
-        $paged++;
     }
-
-    guardarLog("Total de posts procesados: $total_posts_processed");
-    guardarLog("Tags encontrados antes de ordenar: " . print_r($tags_conteo, true));
 
     // Ordenar los tags por frecuencia
     arsort($tags_conteo);
@@ -105,10 +73,9 @@ function tagsFrecuentes() {
     // Guardar en caché
     set_transient($cache_key, $tags_frecuentes, 12 * HOUR_IN_SECONDS);
 
-    guardarLog("Tags más frecuentes finales: " . print_r($tags_frecuentes, true));
-
     return $tags_frecuentes;
 }
+
 
 function tagsPosts() {
     $tags_frecuentes = tagsFrecuentes();
