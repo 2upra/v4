@@ -178,6 +178,7 @@ function guardarSampleEnColec()
 
             if (!is_wp_error($coleccion_especial_id)) {
                 update_user_meta($current_user_id, $coleccion_id . '_coleccion_id', $coleccion_especial_id);
+                update_post_meta($coleccion_especial_id, coleccionEspecial, $titulo);
                 $image_id = subirImagenDesdeURL($imagen_url, $coleccion_especial_id);
                 if ($image_id) {
                     set_post_thumbnail($coleccion_especial_id, $image_id);
