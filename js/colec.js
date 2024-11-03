@@ -88,28 +88,6 @@ async function manejarClickListoColec() {
     }
 }
 
-//Cuando se da click, el boton no se desactiva y si doy varios click se crea varias colecciones, cuando se crea cuando hay una busqueda vacía 
-
-function busquedaColec(query) {
-    const button = a('#btnListo');
-    let hayResultados = false;
-    document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
-        const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
-        const visible = titulo.includes(query);
-        coleccion.style.display = visible ? 'flex' : 'none';
-        if (visible) hayResultados = true;
-    });
-
-    // Prevenir la creación de colecciones con búsquedas vacías o sin query
-    if (!hayResultados && query.trim()) {
-        button.innerText = 'Crear Colección';
-        button.onclick = () => crearNuevaColecConTitulo(query);
-    } else {
-        button.innerText = colecSelecionado ? 'Guardar' : 'Listo';
-        button.onclick = colecSelecionado ? manejarClickListoColec : null;
-    }
-}
-
 function manejarClickColec(coleccion) {
     const button = a('#btnListo');
 
@@ -128,37 +106,24 @@ function manejarClickColec(coleccion) {
 }
 
 
-async function crearNuevaColecConTitulo(titulo) {
+function crearNuevaColecConTitulo(titulo) {
     const button = a('#btnListo');
-
-    // Prevenir que se creen colecciones con un título vacío (aunque no debería pasar por la lógica anterior)
-    if (!titulo.trim()) {
-        alert('El título de la colección no puede estar vacío');
-        return;
-    }
-
-    button.disabled = true; // Desactiva el botón para evitar múltiples clics
+    button.disabled = true;
+    a('#tituloColec').value = titulo;
     button.innerText = 'Creando nueva colección...';
-    
-    // Espera a que la colección se cree correctamente
-    await crearNuevaColec();
-
-    // Reactivar el botón solo después de que el proceso haya terminado
+    crearNuevaColec();
     button.disabled = false;
 }
-
 
 // Funcion para crear colec
 async function crearNuevaColec() {
     const esValido = verificarColec();
     if (!esValido) return;
-    
     const button = a('#btnCrearColec');
     const originalText = button.innerText;
-    
     button.innerText = 'Guardando...';
-    button.disabled = true; // Desactiva el botón para evitar múltiples clics
-    
+    button.disabled = true;
+
     const titulo = a('#tituloColec').value;
     const descripcion = a('#descripColec').value || '';
     const privadoCheck = a('#privadoColec');
@@ -187,7 +152,7 @@ async function crearNuevaColec() {
         alert('Ocurrió un error durante la creación de la colección. Por favor, inténtelo de nuevo.');
     } finally {
         button.innerText = originalText;
-        button.disabled = false; // Reactiva el botón después de completar el proceso
+        button.disabled = false;
     }
 }
 
@@ -205,46 +170,6 @@ async function abrirColec() {
     await verificarSampleEnColecciones();
     console.log('verificarSampleEnColecciones completado');
 }
-
-
-async function manejarClickListoColec() {
-    console.log('Función manejarClickListoColec iniciada');
-    if (colecSampleId && colecSelecionado) {
-        console.log('colecSampleId y colecSelecionado existen:', colecSampleId, colecSelecionado);
-
-        const button = a('#btnListo');
-        const originalText = button.innerText;
-        button.innerText = 'Guardando...';
-        button.disabled = true;
-
-        try {
-            console.log('Enviando petición AJAX para guardar sample en colección');
-            const response = await enviarAjax('guardarSampleEnColec', {
-                colecSampleId,
-                colecSelecionado
-            });
-            console.log('Respuesta recibida:', response);
-
-            if (response?.success) {
-                alert('Sample guardado en la colección con éxito');
-                cerrarColec();
-            } else {
-                alert(`Error al guardar en la colección: ${response?.message || 'Desconocido'}`);
-            }
-        } catch (error) {
-            console.error('Error al guardar el sample:', error);
-            alert('Ocurrió un error al guardar en la colección. Por favor, inténtelo de nuevo.');
-        } finally {
-            button.innerText = originalText;
-            button.disabled = false;
-        }
-    } else {
-        console.log('colecSampleId o colecSelecionado faltan:', colecSampleId, colecSelecionado);
-        cerrarColec();
-    }
-}
-
-
 
 
 async function verificarSampleEnColecciones() {
