@@ -49,36 +49,18 @@ function iniciarColec() {
 }
 
 
-function busquedaColec(query) {
-    const button = a('#btnListo');
-    let hayResultados = false;
 
-    document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
-        const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
-        const visible = titulo.includes(query);
-        coleccion.style.display = visible ? 'flex' : 'none';
-
-        if (visible) hayResultados = true; // Verificar si hay al menos un resultado visible
-    });
-
-    // Configuración dinámica del botón
-    if (!hayResultados && query) {
-        button.innerText = 'Crear Colección';
-        button.onclick = () => crearNuevaColecConTitulo(query);
-    } else {
-        button.innerText = colecSelecionado ? 'Guardar' : 'Listo';
-        button.onclick = colecSelecionado ? manejarClickListoColec : null;
-    }
-}
-
-//Funcion para guardar 
+//Cuando se da click, el boton no se desactiva y si doy varios click se crea varias colecciones, especialmente para el caso de busqueda vacía 
 async function manejarClickListoColec() {
     console.log('Función manejarClickListoColec iniciada');
+    
     if (colecSampleId && colecSelecionado) {
         console.log('colecSampleId y colecSelecionado existen:', colecSampleId, colecSelecionado);
 
         const button = a('#btnListo');
         const originalText = button.innerText;
+
+        // Desactivar el botón para evitar múltiples clics
         button.innerText = 'Guardando...';
         button.disabled = true;
 
@@ -92,7 +74,7 @@ async function manejarClickListoColec() {
 
             if (response?.success) {
                 alert('Sample guardado en la colección con éxito');
-                cerrarColec();
+                cerrarColec(); // Cerrar modal o interfaz de colecciones
             } else {
                 alert(`Error al guardar en la colección: ${response?.message || 'Desconocido'}`);
             }
@@ -100,16 +82,40 @@ async function manejarClickListoColec() {
             console.error('Error al guardar el sample:', error);
             alert('Ocurrió un error al guardar en la colección. Por favor, inténtelo de nuevo.');
         } finally {
+            // Reactivar el botón después de que la operación haya terminado
             button.innerText = originalText;
             button.disabled = false;
         }
     } else {
         console.log('colecSampleId o colecSelecionado faltan:', colecSampleId, colecSelecionado);
-        cerrarColec();
+        cerrarColec(); // Cerrar modal si no hay selección válida
     }
 }
 
-//Cuando se da click, el boton no se desactiva y si doy varios click se crea varias colecciones, cuando se crea cuando hay una busqueda vacía
+function busquedaColec(query) {
+    const button = a('#btnListo');
+    let hayResultados = false;
+
+    document.querySelectorAll('.listaColeccion .coleccion').forEach(coleccion => {
+        const titulo = coleccion.querySelector('span')?.innerText.toLowerCase() || '';
+        const visible = titulo.includes(query.toLowerCase());
+        coleccion.style.display = visible ? 'flex' : 'none';
+
+        if (visible) hayResultados = true; // Verificar si hay al menos un resultado visible
+    });
+
+    // Configuración dinámica del texto y acción del botón
+    if (!hayResultados && query) {
+        button.innerText = 'Crear Colección';
+        button.onclick = () => crearNuevaColecConTitulo(query);
+    } else {
+        button.innerText = colecSelecionado ? 'Guardar' : 'Listo';
+        button.onclick = colecSelecionado ? manejarClickListoColec : null;
+    }
+}
+
+
+
 function manejarClickColec(coleccion) {
     const button = a('#btnListo');
 
@@ -128,13 +134,16 @@ function manejarClickColec(coleccion) {
 }
 
 
-function crearNuevaColecConTitulo(titulo) {
+async function crearNuevaColecConTitulo(titulo) {
     const button = a('#btnListo');
+    if (button.disabled) return; // Previene múltiples clics
+
     button.disabled = true;
     a('#tituloColec').value = titulo;
     button.innerText = 'Creando nueva colección...';
-    crearNuevaColec();
-    button.disabled = false;
+    
+    await crearNuevaColec(); // Espera a que la creación termine
+    button.disabled = false; // Rehabilita el botón después de finalizar
 }
 
 // Funcion para crear colec
