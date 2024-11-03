@@ -7,7 +7,7 @@ function crearRespaldoYNormalizar($batch_size = 100) {
     $normalizaciones = array(
         'one-shot' => 'one shot',
         'oneshot' => 'one shot',
-        'percusion' => 'percusión',
+        'percusión' => 'percusión',
         'hiphop' => 'hip hop',
         'hip-hop' => 'hip hop',
         'rnb' => 'r&b',
@@ -15,7 +15,8 @@ function crearRespaldoYNormalizar($batch_size = 100) {
         'randb' => 'r&b',
         'rock&roll' => 'rock and roll',
         'rockandroll' => 'rock and roll',
-        'rock-and-roll' => 'rock and roll'
+        'rock-and-roll' => 'rock and roll',
+        'campana de vaca' => 'cowbell',
     );
 
     $offset = 0;

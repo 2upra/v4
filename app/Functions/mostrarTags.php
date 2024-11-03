@@ -53,8 +53,8 @@ function tagsFrecuentes() {
         }
 
         foreach ($campos as $campo) {
-            if (!empty($meta_datos[$campo]['es']) && is_array($meta_datos[$campo]['es'])) {
-                foreach ($meta_datos[$campo]['es'] as $tag) {
+            if (!empty($meta_datos[$campo]['en']) && is_array($meta_datos[$campo]['en'])) {
+                foreach ($meta_datos[$campo]['en'] as $tag) {
                     if (is_string($tag)) {
                         $tag_normalizado = strtolower(trim($tag));
                         if (!empty($tag_normalizado)) {
