@@ -2,12 +2,32 @@
 
 function socialTabs()
 {
+    /*
+    <div class="K51M22">
+
+    <div class="PODOVV">
+    <? // echo momentosfijos() 
+    ?>
+    </div>
+    </div>
+
+
+    <div class="M0883I">
+        <? echo // formRs(); ?>
+    </div>
+
+    <div class="tab S4K7I3" id="Proyecto">
+        <? echo devlogin(); ?>
+    </div>
+
+    */
     ob_start();
 ?>
 
     <div id="menuData" style="display:none;" pestanaActual="">
         <div data-tab="Feed"></div>
-        <div data-tab="Proyecto"></div>
+        <div data-tab="Samples"></div>
+        <div data-tab="Colecciones"></div>
     </div>
 
     <div class="tabs">
@@ -16,27 +36,16 @@ function socialTabs()
             <div class="tab INICIO S4K7I3" id="Feed">
                 <div class="OXMGLZ">
                     <div class="OAXRVB">
-                        <div class="K51M22">
-
-                            <div class="PODOVV">
-                                <? // echo momentosfijos() 
-                                ?>
-                            </div>
-                        </div>
-                        <div class="M0883I">
-                            <? echo formRs(); ?>
-                        </div>
 
                         <div class="FEDAG5">
+                            <? echo tagsPosts() ?>
                             <? echo publicaciones(['filtro' => 'nada', 'posts' => 12]); ?>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="tab S4K7I3" id="Proyecto">
-                <? echo devlogin(); ?>
-            </div>
+
 
 
         </div>
