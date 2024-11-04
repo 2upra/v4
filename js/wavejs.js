@@ -1,3 +1,40 @@
+/*
+wavejs.js?ver=2.0.12.1483168427:99  No se encontró wavesurfer para postId: 273470
+
+sucede cuando doy click a .POST-sampleList pero no reproduce el audio al menso que de click en la wave
+
+te muestro como se ve la estructura del html
+
+<li class="POST-sampleList EDYQHV" filtro="sampleList" id-post="273470" autor="44" data-registrado="true">
+
+
+
+                    <div class="LISTSAMPLE">
+                <div class="KLYJBY">
+                                    </div>
+                    <div class="post-image-container ">
+        <img src="https://2upra.com/wp-content/uploads/2024/11/Pinterest_Download-50-576x1024.jpg" alt="Post Image">
+    </div>
+                <div class="INFOLISTSAMPLE">
+                    <p class="CONTENTLISTSAMPLE">
+                        </p><p>Punchy 808 Sample</p>
+                    <p></p>
+                    <div class="TAGSLISTSAMPLE">
+
+                    </div>
+                </div>
+                <div class="ZQHOQY LISTWAVESAMPLE">
+                    <div id="waveform-273470" class="waveform-container without-image" postidwave="273470" data-wave-cargada="true" data-audio-url="https://2upra.com/wp-json/1/v1/audio-pro/273514" data-initialized="true" data-load-timeout="11" data-load-timeout-set="true" data-audio-loaded="true">
+                        <div class="waveform-background" style="background-image: url(&quot;https://2upra.com/wp-content/uploads/2024/11/273470_waveform.png&quot;); display: none;"></div>
+                        <div class="waveform-message"></div>
+                        <div class="waveform-loading" style="display: none;">Cargando...</div>
+                    <div></div></div>
+                </div>
+                    <div class="QSORIW">
+
+
+*/
+
 function inicializarWaveforms() {
     const observer = new IntersectionObserver(
         entries => {
@@ -26,7 +63,7 @@ function inicializarWaveforms() {
                 }
             });
         },
-        { threshold: 0.5 }
+        {threshold: 0.5}
     );
 
     // Inicializar waveforms observando cada contenedor
@@ -35,7 +72,7 @@ function inicializarWaveforms() {
         const audioUrl = container.getAttribute('data-audio-url');
         if (postId && audioUrl && !container.dataset.initialized) {
             container.dataset.initialized = 'true';
-            observer.observe(container);  // Observamos el contenedor de la onda
+            observer.observe(container); // Observamos el contenedor de la onda
             container.addEventListener('click', () => {
                 if (!container.dataset.audioLoaded) {
                     if (container.dataset.loadTimeoutSet) {
@@ -43,7 +80,7 @@ function inicializarWaveforms() {
                         delete container.dataset.loadTimeout;
                         delete container.dataset.loadTimeoutSet;
                     }
-                    loadAudio(postId, audioUrl, container);  // Cargamos y reproducimos el audio
+                    loadAudio(postId, audioUrl, container); // Cargamos y reproducimos el audio
                 } else {
                     // Si el audio ya está cargado, reproducir o pausar
                     const wavesurfer = window.wavesurfers[postId];
@@ -59,6 +96,7 @@ function inicializarWaveforms() {
         }
     });
 
+    // Agregar manejador de clic para los elementos POST-sampleList
     // Agregar manejador de clic para los elementos POST-sampleList
     document.querySelectorAll('.POST-sampleList').forEach(post => {
         post.addEventListener('click', () => {
@@ -85,7 +123,15 @@ function inicializarWaveforms() {
                         delete waveformContainer.dataset.loadTimeout;
                         delete waveformContainer.dataset.loadTimeoutSet;
                     }
-                    loadAudio(postId, audioUrl, waveformContainer);  // Reproducir el audio si no ha sido cargado aún
+                    loadAudio(postId, audioUrl, waveformContainer); // Cargar el audio
+
+                    // Una vez que el audio esté listo, reproducirlo
+                    const wavesurfer = window.wavesurfers[postId];
+                    if (wavesurfer) {
+                        wavesurfer.on('ready', () => {
+                            wavesurfer.play(); // Reproducir el audio cuando esté listo
+                        });
+                    }
                 } else {
                     // Si el audio ya está cargado, reproducir o pausar
                     const wavesurfer = window.wavesurfers[postId];
@@ -112,12 +158,10 @@ function loadAudio(postId, audioUrl, container) {
     }
 
     if (!container.dataset.audioLoaded) {
-        window.we(postId, audioUrl);  // Llamamos a la función we para cargar el audio
+        window.we(postId, audioUrl); // Llamamos a la función we para cargar el audio
         container.dataset.audioLoaded = 'true';
     }
 }
-
-
 
 window.we = function (postId, audioUrl) {
     const container = document.getElementById(`waveform-${postId}`);
@@ -204,7 +248,7 @@ window.we = function (postId, audioUrl) {
                             }, 1);
                         }
                     }
-                    
+
                     container.addEventListener('click', () => {
                         if (wavesurfer.isPlaying()) {
                             wavesurfer.pause();
@@ -231,14 +275,9 @@ window.we = function (postId, audioUrl) {
 // La función que inicializa WaveSurfer con los estilos y configuraciones deseados
 function initWavesurfer(container) {
     // Verifica si el contenedor o alguno de sus elementos padre tiene la clase 'LISTWAVESAMPLE'
-    const isListWaveSample = container.classList.contains('LISTWAVESAMPLE') || 
-        container.parentElement.classList.contains('LISTWAVESAMPLE');
+    const isListWaveSample = container.classList.contains('LISTWAVESAMPLE') || container.parentElement.classList.contains('LISTWAVESAMPLE');
 
-    const containerHeight = container.classList.contains('waveform-container-venta') 
-        ? 60 
-        : isListWaveSample 
-            ? 45
-            : 102;
+    const containerHeight = container.classList.contains('waveform-container-venta') ? 60 : isListWaveSample ? 45 : 102;
 
     const ctx = document.createElement('canvas').getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 500);
@@ -264,8 +303,6 @@ function initWavesurfer(container) {
         partialRender: true
     });
 }
-
-
 
 // Función para generar la imagen de la forma de onda
 function generateWaveformImage(wavesurfer) {
