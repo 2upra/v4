@@ -6,12 +6,24 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
 
+<?php
+
+// Paso 1: Definir las variables de configuración para cada log
+define('LOG_AUDIO_ENABLED', false); // Cambia a true para habilitar logAudio
+define('CHAT_LOG_ENABLED', false);    // Cambia a true para habilitar chatLog
+define('STRIPE_ERROR_ENABLED', false); // Cambia a true para habilitar stripeError
+define('AUT_LOG_ENABLED', false);      // Cambia a true para habilitar autLog
+define('GUARDAR_LOG_ENABLED', false);  // Cambia a true para habilitar guardarLog
+define('LOG_ALGORITMO_ENABLED', false); // Cambia a true para habilitar logAlgoritmo
+define('AJAX_POST_LOG_ENABLED', false); // Cambia a true para habilitar ajaxPostLog
+define('IA_LOG_ENABLED', false);        // Cambia a true para habilitar iaLog
+define('POST_LOG_ENABLED', false);      // Cambia a true para habilitar postLog
 
 function escribirLog($mensaje, $archivo, $max_lineas = 200) {
     if (is_object($mensaje) || is_array($mensaje)) {
         $mensaje = json_encode($mensaje);
     }
-    
+
     $timestamped_log = date('Y-m-d H:i:s') . ' - ' . $mensaje;
     file_put_contents($archivo, $timestamped_log . PHP_EOL, FILE_APPEND);
 
@@ -24,43 +36,58 @@ function escribirLog($mensaje, $archivo, $max_lineas = 200) {
     }
 }
 
-//cd /var/www/wordpress/wp-content/themes && sudo touch logAudio.log && sudo chown www-data:www-data logAudio.log && sudo chmod 664 logAudio.log
-
-
 function logAudio($log) {
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/logAudio.log', 100000);
+    if (LOG_AUDIO_ENABLED) {
+        escribirLog($log, '/var/www/wordpress/wp-content/themes/logAudio.log', 100000);
+    }
 }
 
 function chatLog($log) {
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/chat.log');
+    if (CHAT_LOG_ENABLED) {
+        escribirLog($log, '/var/www/wordpress/wp-content/themes/chat.log');
+    }
 }
 
 function stripeError($log) {
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/stripeError.log');
+    if (STRIPE_ERROR_ENABLED) {
+        escribirLog($log, '/var/www/wordpress/wp-content/themes/stripeError.log');
+    }
 }
 
 function autLog($log) {
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/automaticPost.log');
+    if (AUT_LOG_ENABLED) {
+        escribirLog($log, '/var/www/wordpress/wp-content/themes/automaticPost.log');
+    }
 }
 
 function guardarLog($log) {
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/logsw.txt');
+    if (GUARDAR_LOG_ENABLED) {
+        escribirLog($log, '/var/www/wordpress/wp-content/themes/logsw.txt');
+    }
 }
 
 function logAlgoritmo($log) {
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/logAlgoritmo.log', 20); // Máximo de 100 líneas
+    if (LOG_ALGORITMO_ENABLED) {
+        escribirLog($log, '/var/www/wordpress/wp-content/themes/logAlgoritmo.log', 20);
+    }
 }
 
 function ajaxPostLog($log) {
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlogAjax.txt');
+    if (AJAX_POST_LOG_ENABLED) {
+        escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlogAjax.txt');
+    }
 }
 
 function iaLog($log) {
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/iaLog.log');
+    if (IA_LOG_ENABLED) {
+        escribirLog($log, '/var/www/wordpress/wp-content/themes/iaLog.log');
+    }
 }
 
 function postLog($log) {
-    escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt');
+    if (POST_LOG_ENABLED) {
+        escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt');
+    }
 }
 
 function scriptsOrdenados()

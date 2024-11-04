@@ -128,7 +128,7 @@ function agregar_rol_restringido() {
         'delete_posts' => false, // No puede eliminar publicaciones
     ));
 }
-add_action('init', 'agregar_rol_restringido');
+//add_action('init', 'agregar_rol_restringido');
 
 
 function bloquear_ip($ip) {
@@ -170,4 +170,4 @@ function registrar_intento_acceso_fallido($username) {
     $log_entry = "Intento fallido de acceso por usuario: $username, IP: $ip, Fecha: $time\n";
     file_put_contents($log_file, $log_entry, FILE_APPEND);
 }
-add_action('wp_login_failed', 'registrar_intento_acceso_fallido');
+//add_action('wp_login_failed', 'registrar_intento_acceso_fallido');
