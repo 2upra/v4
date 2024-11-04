@@ -1,5 +1,5 @@
 <?
-define('ENABLE_BROWSER_AUDIO_CACHE', TRUE);
+define('ENABLE_BROWSER_AUDIO_CACHE', FALSE;
 // Añade esto al inicio de tu archivo
 add_action('init', function () {
     if (!defined('DOING_AJAX') && !defined('REST_REQUEST')) {
