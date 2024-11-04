@@ -531,10 +531,8 @@ function audioPostList($post_id)
     if (empty($audio_id_lite)) {
         return '';
     }
-
-    // Get the post author ID
+    $urlAudioSegura = audioUrlSegura($audio_id_lite);
     $post_author_id = get_post_field('post_author', $post_id);
-
     ob_start();
 ?>
     <div id="audio-container-<? echo $post_id; ?>" class="audio-container" data-post-id="<? echo $post_id; ?>" artista-id="<? echo $post_author_id; ?>">
@@ -543,13 +541,11 @@ function audioPostList($post_id)
             <img src="https://2upra.com/wp-content/uploads/2024/03/1.svg" alt="Play" style="width: 50px; height: 50px;">
         </div>
 
-        <audio id="audio-<? echo $post_id; ?>" src="<? echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"></audio>
+        <audio id="audio-<? echo $post_id; ?>" src="<? echo esc_url($urlAudioSegura); ?>"></audio>
     </div>
 <?
     return ob_get_clean();
 }
-
-//esto ahora debe soportar varias waves, en un post (entorno wordpress), puede haber varios audio_id_lite (buscar y comprobar cuantos hay, puede haber hasta treinta), el primero ya esta puesto y llega por lo general con $audio_id_lite, pero aqui dentro de esta funcion se puede comprobar, los audio id lite se guardan asi: el primero por defecto se guarda en una meta post_audio_lite, no hay que comprobar si existe porque sino exista la funcion no activa, lo que hay que comprobar es el resto que puede ser post_audio_lite_2, post_audio_lite_3, post_audio_lite_4 hasta treinta, y en consecuencia mostrar esas wave, si mas de una wave, por favor ponerlas toda en un div con clase multiwaves
 
 
 function wave($audio_url, $audio_id_lite, $post_id)
