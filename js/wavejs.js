@@ -73,12 +73,13 @@ window.we = function (postId, audioUrl) {
         window.audioLoading = true;
 
         fetch(audioUrl, {
+            method: 'GET', // Especifica el método
             credentials: 'include',
             headers: {
                 'X-WP-Nonce': audioSettings.nonce,
-                'X-Requested-With': 'XMLHttpRequest' 
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': '*/*'
             },
-            // cache: 'force-cache'
         })
             .then(response => {
                 if (!response.ok) {
