@@ -335,3 +335,19 @@ EOD;
     wp_add_inline_script('script-base', $script_inline);
 }
 add_action('wp_enqueue_scripts', 'scriptBasicos');
+
+function desactivar_soportes_bloques( $settings, $name ) {
+    // Lista de soportes a desactivar
+    $soportes_a_desactivar = array( 'align', 'anchor', 'customClassName', 'html', 'color', 'typography' );
+
+    if ( isset( $settings['supports'] ) && is_array( $settings['supports'] ) ) {
+        foreach ( $soportes_a_desactivar as $soporte ) {
+            if ( isset( $settings['supports'][ $soporte ] ) ) {
+                unset( $settings['supports'][ $soporte ] );
+            }
+        }
+    }
+
+    return $settings;
+}
+add_filter( 'block_type_metadata_settings', 'desactivar_soportes_bloques', 10, 2 );
