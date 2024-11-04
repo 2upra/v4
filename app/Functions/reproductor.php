@@ -80,14 +80,14 @@ function reproducciones(WP_REST_Request $request) {
         return new WP_Error('invalid_artist', 'El artista no es válido', array('status' => 400));
     }
 
-    guardarLog("Solicitud recibida: audioSrc=$audioSrc, postId=$postId, artistId=$artistId, ipAddress=$ipAddress");
+    //guardarLog("Solicitud recibida: audioSrc=$audioSrc, postId=$postId, artistId=$artistId, ipAddress=$ipAddress");
 
     // Manejar reproducción
     if ($postId) {
         $reproducciones_key = 'reproducciones_post';
         $current_count = (int) get_post_meta($postId, $reproducciones_key, true);
         update_post_meta($postId, $reproducciones_key, $current_count + 1);
-        guardarLog("Reproducción registrada para el post ID $postId");
+        //guardarLog("Reproducción registrada para el post ID $postId");
     }
 
     // Manejar oyente
@@ -105,7 +105,7 @@ function reproducciones(WP_REST_Request $request) {
         // Actualizar oyente basado en IP
         $oyentes[$ipAddress] = $current_time;
         update_option($meta_key, $oyentes);
-        guardarLog("Oyente actualizado para el artista ID $artistId desde IP $ipAddress");
+        //guardarLog("Oyente actualizado para el artista ID $artistId desde IP $ipAddress");
     }
 
     return new WP_REST_Response(['message' => 'Datos procesados correctamente'], 200);
