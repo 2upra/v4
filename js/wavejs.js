@@ -60,6 +60,7 @@ window.we = function (postId, audioUrl) {
     const container = document.getElementById(`waveform-${postId}`);
     const MAX_RETRIES = 3;
     let wavesurfer;
+    console.log('Audio URL:', audioUrl);
 
     const loadAndPlayAudioStream = (retryCount = 0) => {
         if (retryCount >= MAX_RETRIES) {
