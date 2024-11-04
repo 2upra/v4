@@ -172,7 +172,7 @@ function initWavesurfer(container) {
     const containerHeight = container.classList.contains('waveform-container-venta') 
         ? 60 
         : isListWaveSample 
-            ? 50 
+            ? 45
             : 102;
 
     const ctx = document.createElement('canvas').getContext('2d');
