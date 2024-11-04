@@ -77,7 +77,7 @@ window.we = function (postId, audioUrl) {
             headers: {
                 'X-WP-Nonce': audioSettings.nonce
             },
-            cache: 'force-cache'
+            // cache: 'force-cache'
         })
             .then(response => {
                 if (!response.ok) {
