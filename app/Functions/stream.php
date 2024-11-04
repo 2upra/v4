@@ -45,8 +45,19 @@ function bloquear_acceso_directo_archivos()
 }
 add_action('init', 'bloquear_acceso_directo_archivos');
 
+/*
+Estos son los unicos logs que muestra
+2024-11-04 20:30:55 - Generando URL segura para audio ID: 285316
+2024-11-04 20:30:55 - Generando token para audio_id: 285316
+2024-11-04 20:30:55 - URL generada para usuario normal: https://2upra.com/wp-json/1/v1/2?token=Mjg1MzE2fDE5MjQ5MDU2MDB8Y2FjaGVkfGViZWMxMjViNzE1MDMxZTNmNDZhNzRiOWIzODg0MDk4fDk5OTk5OXxlMTlhZGViMTViZDc3MzkyODU0ZGMzZTNjOGU0M2FiYTNhOTU2OGFmYjRjNzUxMzQwYjQ0ZmUwOWVlMWQ2ZDAy&_wpnonce=5877b925e6
+
+*/
+
 
 add_action('rest_api_init', function () {
+    guardarLog('Registrando rutas REST API');
+
+    // Ruta para usuarios pro
     register_rest_route('1/v1', '/audio-pro/(?P<id>\d+)', array(
         'methods' => 'GET',
         'callback' => 'audioStreamEndPro',
@@ -62,26 +73,22 @@ add_action('rest_api_init', function () {
         ),
     ));
 
-    // Endpoint original para usuarios normales
-    add_action('rest_api_init', function () {
-        guardarLog('Registrando rutas REST API');
-
-        register_rest_route('1/v1', '/2', array(
-            'methods' => 'GET',
-            'callback' => 'audioStreamEnd',
-            'args' => array(
-                'token' => array(
-                    'required' => true,
-                ),
+    // Ruta para usuarios normales
+    register_rest_route('1/v1', '/2', array(
+        'methods' => 'GET',
+        'callback' => 'audioStreamEnd',
+        'args' => array(
+            'token' => array(
+                'required' => true,
             ),
-            'permission_callback' => function ($request) {
-                guardarLog('Verificando permiso para token: ' . $request->get_param('token'));
-                return verificarAudio($request->get_param('token'));
-            }
-        ));
+        ),
+        'permission_callback' => function ($request) {
+            guardarLog('Verificando permiso para token: ' . $request->get_param('token'));
+            return verificarAudio($request->get_param('token'));
+        }
+    ));
 
-        guardarLog('Rutas REST API registradas');
-    });
+    guardarLog('Rutas REST API registradas');
 });
 
 function tokenAudio($audio_id)
@@ -124,6 +131,7 @@ function tokenAudio($audio_id)
         return $token;
     }
 }
+
 
 
 function verificarAudio($token)
