@@ -158,7 +158,7 @@ function tokenAudio($audio_id)
     $expiration = time() + 3600;
     $user_ip = $_SERVER['REMOTE_ADDR'];
     $unique_id = uniqid('', true);
-    $max_usos = 2;
+    $max_usos = 3;
     // Creamos el data sin incluir max_usos en la firma
     $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
     $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
