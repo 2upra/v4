@@ -25,6 +25,82 @@ function audioUrlSegura($audio_id)
     return site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce);
 }
 
+function proteger_endpoints()
+{
+    add_filter('rest_pre_dispatch', function ($result, $server, $request) {
+        // Verificar origen de la petición
+        if (
+            !isset($_SERVER['HTTP_REFERER']) ||
+            !preg_match('/^https?:\/\/(.*\.)?2upra\.com/', $_SERVER['HTTP_REFERER'])
+        ) {
+            return new WP_Error('unauthorized', 'Acceso no autorizado', array('status' => 403));
+        }
+
+        // Verificar rate limiting
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $rate_key = 'rate_limit_' . $ip;
+        $rate_count = get_transient($rate_key);
+
+        if ($rate_count === false) {
+            set_transient($rate_key, 1, 60); // 1 minuto
+        } else if ($rate_count > 10) { // máximo 10 peticiones por minuto
+            return new WP_Error('rate_limit', 'Demasiadas peticiones', array('status' => 429));
+        } else {
+            set_transient($rate_key, $rate_count + 1, 60);
+        }
+
+        return $result;
+    }, 10, 3);
+}
+add_action('init', 'proteger_endpoints');
+
+//HE HECHO TODO LOS POSIBLE PARA EVITAR LAS DESCARGAS DIRECTAS; PERO NADA FUNCIONA; SE PUEDE IR A LOS ARCHIVOS DIRECTAMENTE Y DESCARGARLOS; COSA QUE NO QUIERO PORQUE TENGO MI PROPIO SISTEMA DE TOKEN QUE LOS SIRVE CUANDO SE QUIEREN DESCARGAR Y NO FUNCIONA ESTO BLOQUEAR EL ACCESO A LOS WAV Y MP3, Y LOS /wp-json/1/v1/2 ; O SEA LO UNICO QUE QUIERO ES QUE NO SE ACCEDA DIRECTAMAENTE A LOS ENLACES DE DESCARGA Y EL AUDIO QUE SE SIRVE EN LA API
+function bloquear_acceso_directo_archivos()
+{
+    if (strpos($_SERVER['REQUEST_URI'], '/wp-content/uploads/') !== false) {
+        $referer = $_SERVER['HTTP_REFERER'] ?? '';
+        if (strpos($referer, home_url()) === false) {
+            wp_die('Acceso denegado: no puedes descargar este archivo directamente.', 'Acceso denegado', array('response' => 403));
+        }
+    }
+}
+add_action('init', 'bloquear_acceso_directo_archivos');
+
+
+/*
+    #WP
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+    location /wp-content/uploads/audios/ {
+        internal;
+    }
+
+    location /wp-content/uploads/ {
+        valid_referers 2upra.com *.2upra.com;
+
+        if ($invalid_referer) {
+            return 403;
+        }
+        try_files $uri $uri/ =404;
+    }
+
+    despues de estos cambios, la api ya no funciona, como hago que funcione manteniendo el bloqueo directo
+    location ~* \.(mp3|wav)$ {
+        deny all;
+        return 403;
+    }
+
+    # Bloquear acceso directo a la API excepto desde el dominio permitido
+    location /wp-json/ {
+        if ($http_referer !~ ^https?://([^/]+\.)?2upra\.com) {
+        return 403;
+    }
+        try_files $uri $uri/ /index.php?$args;
+    }
+*/
+
 // Registrar dos endpoints: uno para usuarios pro/admin y otro para usuarios normales
 add_action('rest_api_init', function () {
     // Endpoint para usuarios pro/admin
@@ -58,12 +134,6 @@ add_action('rest_api_init', function () {
     ));
 });
 
-
-/*
-Hay alguna forma de mejorar el token, lo de permitir usarlo una sola 1 vez ayuda a que no se pueda acceder directamente al enlace pero hay un problema para cuando el audio aparece 2 veces, no se que otra forma puedo cargar los audios y evitar el acceso directo al enlace pero que solo pueda cargar en el contenido de la pagina 
-me refiero a los enlaces que se ven asi https://2upra.com/wp-json/1/v1/2?token=MjgwNTExfDE3MzA2ODcwOTl8MTU2LjE0Ni41OS4xN3w2NzI4MjI2Yjg5NTlhfDkwYzYwOWNhM2E4Zjc3MWVkZDk4YzQzYmRiZmY3OTVlNDA1MGNjMmYxNGM0NjZmZDE4NDNlOWVjNDZjOTQzNGI%3D&_wpnonce=d5ed2cc714
-(entorno wordpress, nginx)
-*/
 function tokenAudio($audio_id)
 {
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
@@ -122,7 +192,7 @@ function tokenYaUsado($unique_id)
 
 function audioStreamEnd($data)
 {
-
+    if (ob_get_level()) ob_end_clean();
     $token = $data['token'];
     $parts = explode('|', base64_decode($token));
     $audio_id = $parts[0];
@@ -165,10 +235,15 @@ function audioStreamEnd($data)
     $start = 0;
     $end = $size - 1;
 
-    header('Content-Type: ' . get_post_mime_type($audio_id));
-    header("Accept-Ranges: bytes");
+    // Asegurarse de que no haya output antes de los headers
 
-    // Si el usuario es admin o tiene meta `pro`, permitir caché del navegador
+    // Modificar los headers para streaming
+    header('Content-Type: ' . get_post_mime_type($audio_id));
+    header('Accept-Ranges: bytes');
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Cache-Control: post-check=0, pre-check=0', false);
+    header('Pragma: no-cache');
+
 
     // Manejar Ranges HTTP para streaming parcial
     if (isset($_SERVER['HTTP_RANGE'])) {
@@ -311,18 +386,3 @@ function usuarioEsAdminOPro($user_id)
     //guardarLog("usuarioEsAdminOPro: Usuario no es administrador ni tiene la meta 'pro'. ID: " . $user_id);
     return false;
 }
-
-
-function bloquear_acceso_directo_archivos() {
-    // Verifica si la URL contiene "wp-content/uploads"
-    if (strpos($_SERVER['REQUEST_URI'], '/wp-content/uploads/') !== false) {
-        // Comprueba el referer
-        $referer = $_SERVER['HTTP_REFERER'] ?? '';
-        
-        // Permite solo si el referer viene de tu dominio
-        if (strpos($referer, home_url()) === false) {
-            wp_die('Acceso denegado: no puedes descargar este archivo directamente.', 'Acceso denegado', array('response' => 403));
-        }
-    }
-}
-add_action('init', 'bloquear_acceso_directo_archivos');
