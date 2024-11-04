@@ -276,14 +276,16 @@ function obtenerImagenAleatoria($directory)
 }
 
 // Agrega soporte para archivos JFIF en WordPress
-function agregar_soporte_jfif($mimes) {
+function agregar_soporte_jfif($mimes)
+{
     $mimes['jfif'] = 'image/jpeg';
     return $mimes;
 }
 add_filter('upload_mimes', 'agregar_soporte_jfif');
 
 // Extiende wp_check_filetype para reconocer .jfif
-function extender_wp_check_filetype($types, $filename, $mimes) {
+function extender_wp_check_filetype($types, $filename, $mimes)
+{
     $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
     if ($ext === 'jfif') {
         return ['ext' => 'jpeg', 'type' => 'image/jpeg'];
@@ -490,7 +492,7 @@ function imagenPostList($block, $es_suscriptor, $post_id)
     ob_start();
     ?>
     <div class="post-image-container <?= $blurred_class ?>">
-        <img src="<?= esc_url(imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), true))?>" alt="Post Image" />
+        <img src="<?= esc_url(imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), true)) ?>" alt="Post Image" />
     </div>
 <?
     $output = ob_get_clean();
@@ -533,6 +535,9 @@ function audioPostList($post_id)
     }
     $urlAudioSegura = audioUrlSegura($audio_id_lite);
     $post_author_id = get_post_field('post_author', $post_id);
+    if (is_wp_error($urlAudioSegura)) {
+        $urlAudioSegura = ''; // O establece un valor predeterminado o maneja el error de forma diferente
+    }
     ob_start();
 ?>
     <div id="audio-container-<? echo $post_id; ?>" class="audio-container" data-post-id="<? echo $post_id; ?>" artista-id="<? echo $post_author_id; ?>">

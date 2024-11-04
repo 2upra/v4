@@ -59,11 +59,6 @@ function reproductor()
 add_action('wp_footer', 'reproductor');
 
 function reproducciones(WP_REST_Request $request) {
-    // Verificar nonce
-    if (!wp_verify_nonce($request->get_header('X-WP-Nonce'), 'wp_rest')) {
-        return new WP_Error('invalid_nonce', 'Nonce inválido', array('status' => 403));
-    }
-
     // Limitar tasa de solicitudes
     if (!limitador()) {
         return new WP_Error('rate_limit_exceeded', 'Límite de solicitudes excedido', array('status' => 429));
@@ -73,11 +68,9 @@ function reproducciones(WP_REST_Request $request) {
     $audioSrc = sanitize_text_field($request->get_param('src'));
     $postId = absint($request->get_param('post_id'));
     $artistId = absint($request->get_param('artist'));
-    $userId = get_current_user_id();
 
-    if (!$userId) {
-        return new WP_Error('unauthorized', 'Usuario no autenticado', array('status' => 401));
-    }
+    // Obtener la dirección IP del cliente
+    $ipAddress = $_SERVER['REMOTE_ADDR'];
 
     // Validar que el post y el artista existan
     if (!get_post($postId)) {
@@ -87,7 +80,7 @@ function reproducciones(WP_REST_Request $request) {
         return new WP_Error('invalid_artist', 'El artista no es válido', array('status' => 400));
     }
 
-    guardarLog("Solicitud recibida: audioSrc=$audioSrc, postId=$postId, artistId=$artistId, userId=$userId");
+    guardarLog("Solicitud recibida: audioSrc=$audioSrc, postId=$postId, artistId=$artistId, ipAddress=$ipAddress");
 
     // Manejar reproducción
     if ($postId) {
@@ -109,33 +102,37 @@ function reproducciones(WP_REST_Request $request) {
             return $last_heard >= $thirty_days_ago;
         });
 
-        $oyentes[$userId] = $current_time;
+        // Actualizar oyente basado en IP
+        $oyentes[$ipAddress] = $current_time;
         update_option($meta_key, $oyentes);
-        guardarLog("Oyente actualizado para el artista ID $artistId");
+        guardarLog("Oyente actualizado para el artista ID $artistId desde IP $ipAddress");
     }
 
     return new WP_REST_Response(['message' => 'Datos procesados correctamente'], 200);
 }
 
+// Registrar la ruta de la API
 function reproduccionesAPI() {
     register_rest_route('miplugin/v1', '/reproducciones-y-oyentes/', array(
         'methods' => 'POST',
         'callback' => 'reproducciones',
         'permission_callback' => function() {
-            return is_user_logged_in();
+            return true; // Permitir todas las solicitudes sin autenticación
         }
     ));
 }
 add_action('rest_api_init', 'reproduccionesAPI');
 
+// Función de limitación de tasa basada en IP
 function limitador() {
-    $user_id = get_current_user_id();
-    $transient_name = 'rate_limit_' . $user_id;
+    // Obtener la dirección IP del cliente
+    $ip_address = $_SERVER['REMOTE_ADDR'];
+    $transient_name = 'rate_limit_' . $ip_address;
     $rate_limit = get_transient($transient_name);
 
     if (false === $rate_limit) {
-        set_transient($transient_name, 1, 20); // 1 solicitud por 20 seg
-    } elseif ($rate_limit >= 5) { // Máximo 5 solicitudes por minuto
+        set_transient($transient_name, 1, 5); // 1 solicitud por 20 segundos
+    } elseif ($rate_limit >= 15) { // Máximo 5 solicitudes por minuto
         return false;
     } else {
         set_transient($transient_name, $rate_limit + 1, 60);
