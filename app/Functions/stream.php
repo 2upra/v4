@@ -11,22 +11,23 @@ add_action('init', function () {
     }
 });
 
-function audioUrlSegura($audio_id) {
+function audioUrlSegura($audio_id)
+{
     guardarLog("Generando URL segura para audio ID: " . $audio_id);
-    
+
     $user_id = get_current_user_id();
     if (usuarioEsAdminOPro($user_id)) {
         $url = site_url("/wp-json/1/v1/audio-pro/{$audio_id}");
         guardarLog("URL generada para admin/pro: " . $url);
         return $url;
     }
-    
+
     $token = tokenAudio($audio_id);
     if (!$token) {
         guardarLog("Error generando token para audio ID: " . $audio_id);
         return new WP_Error('invalid_audio_id', 'Audio ID inválido.');
     }
-    
+
     $nonce = wp_create_nonce('wp_rest');
     $url = site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce);
     guardarLog("URL generada para usuario normal: " . $url);
@@ -64,7 +65,7 @@ add_action('rest_api_init', function () {
     // Endpoint original para usuarios normales
     add_action('rest_api_init', function () {
         guardarLog('Registrando rutas REST API');
-        
+
         register_rest_route('1/v1', '/2', array(
             'methods' => 'GET',
             'callback' => 'audioStreamEnd',
@@ -78,7 +79,7 @@ add_action('rest_api_init', function () {
                 return verificarAudio($request->get_param('token'));
             }
         ));
-        
+
         guardarLog('Rutas REST API registradas');
     });
 });
@@ -428,7 +429,7 @@ function usuarioEsAdminOPro($user_id)
 {
     // Verificar que el ID de usuario sea válido
     if (empty($user_id) || !is_numeric($user_id)) {
-        guardarLog("usuarioEsAdminOPro: Error - ID de usuario inválido.");
+        //guardarLog("usuarioEsAdminOPro: Error - ID de usuario inválido.");
         return false;
     }
 
@@ -437,31 +438,31 @@ function usuarioEsAdminOPro($user_id)
 
     // Verificar si el usuario existe
     if (!$user) {
-        guardarLog("usuarioEsAdminOPro: Error - Usuario no encontrado para el ID: " . $user_id);
+        //guardarLog("usuarioEsAdminOPro: Error - Usuario no encontrado para el ID: " . $user_id);
         return false;
     }
 
     // Verificar si el usuario tiene roles asignados
     if (empty($user->roles)) {
-        guardarLog("usuarioEsAdminOPro: Error - Usuario sin roles asignados. ID: " . $user_id);
-        guardarLog("usuarioEsAdminOPro: Información del usuario - " . print_r($user, true));
+        //guardarLog("usuarioEsAdminOPro: Error - Usuario sin roles asignados. ID: " . $user_id);
+        //guardarLog("usuarioEsAdminOPro: Información del usuario - " . print_r($user, true));
         return false;
     }
 
     // Verificar si el usuario es administrador
     if (in_array('administrator', (array) $user->roles)) {
-        guardarLog("usuarioEsAdminOPro: Usuario es administrador. ID: " . $user_id);
+        //guardarLog("usuarioEsAdminOPro: Usuario es administrador. ID: " . $user_id);
         return true;
     }
 
     // Verificar si tiene la meta `pro`
     $is_pro = get_user_meta($user_id, 'pro', true);
     if (!empty($is_pro)) {
-        guardarLog("usuarioEsAdminOPro: Usuario tiene la meta 'pro'. ID: " . $user_id);
+        //guardarLog("usuarioEsAdminOPro: Usuario tiene la meta 'pro'. ID: " . $user_id);
         return true;
     }
 
     // Si no es administrador ni tiene la meta 'pro'
-    guardarLog("usuarioEsAdminOPro: Usuario no es administrador ni tiene la meta 'pro'. ID: " . $user_id);
+    //guardarLog("usuarioEsAdminOPro: Usuario no es administrador ni tiene la meta 'pro'. ID: " . $user_id);
     return false;
 }
