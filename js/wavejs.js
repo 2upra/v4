@@ -165,16 +165,19 @@ window.we = function (postId, audioUrl) {
 
 // La función que inicializa WaveSurfer con los estilos y configuraciones deseados
 function initWavesurfer(container) {
-    // Verifica si el contenedor tiene la clase 'LISTWAVESAMPLE' y establece la altura en 50
+    // Verifica si el contenedor o alguno de sus elementos padre tiene la clase 'LISTWAVESAMPLE'
+    const isListWaveSample = container.classList.contains('LISTWAVESAMPLE') || 
+        container.parentElement.classList.contains('LISTWAVESAMPLE');
+
     const containerHeight = container.classList.contains('waveform-container-venta') 
         ? 60 
-        : container.classList.contains('LISTWAVESAMPLE') 
+        : isListWaveSample 
             ? 50 
             : 102;
 
     const ctx = document.createElement('canvas').getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 500);
-    const progressGradient = ctx.createLinearGradient(0, 0, 0, 500);  // Asegúrate de tener 4 argumentos aquí
+    const progressGradient = ctx.createLinearGradient(0, 0, 0, 500);
 
     // Configuración de los colores del gradiente
     gradient.addColorStop(0, '#FFFFFF');
@@ -196,6 +199,7 @@ function initWavesurfer(container) {
         partialRender: true
     });
 }
+
 
 
 // Función para generar la imagen de la forma de onda
