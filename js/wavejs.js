@@ -87,6 +87,15 @@ function inicializarWaveforms() {
     });
 }
 
+
+function loadAudio(postId, audioUrl, container) {
+    if (!container.dataset.audioLoaded) {
+        window.we(postId, audioUrl);
+        container.dataset.audioLoaded = 'true';
+    }
+}
+
+
 window.we = function (postId, audioUrl) {
     const container = document.getElementById(`waveform-${postId}`);
     const MAX_RETRIES = 3;
