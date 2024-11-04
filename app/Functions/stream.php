@@ -109,12 +109,70 @@ function tokenAudio($audio_id)
     }
 }
 
+/*
+Cuando la cache esta desactivida, ok, no se cachea, y esta bien, y tampoco permite acceder al enlace de los audios directamente para evitar la descarga, excelente, pero cuando la cache esta activida, si se cachea pero deja acceder directamente al enlace (algo peculiar es que si accede directamente la cache del audio no vuelve a cargar y se genera otro token al parecer, y si vuelvo acceder al mismo enlace ahora si evita el acceso), pero repito, cuando se cachea debería impedir el acceso directo al enlace, hay forma de hacer eso? 
+
+https://2upra.com/wp-json/1/v1/2?token=Mjg2MzIxfDE5MjQ5MDU2MDB8Y2FjaGVkfDE3MzI2MjRiNzlmMGVhNTVmMzIwOTgxMTY0MzNkYWZhfDk5OTk5OXwzNjgzZDFlM2Y2YzU3YWVlNDAzMzRjNjhmYmI0NjI4ZThmOWE5MDU3YTBhNzQzNmRkNzcwMTZlZDgxZDYzYWZm&_wpnonce=5877b925e6
+
+por cierto tengo esta configuracion 
+
+    location /wp-content/uploads/ {
+        valid_referers 2upra.com *.2upra.com;
+
+        if ($invalid_referer) {
+            return 403;
+        }
+        try_files $uri $uri/ =404;
+    }
+
+    location ~* \.(mp3|wav)$ {
+        deny all;
+        return 403;
+    }
+
+    location /wp-json/ {
+        add_header 'Access-Control-Allow-Origin' 'https://2upra.com';
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Conte>
+
+        if ($request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' 'https://2upra.com';
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,C>
+            add_header 'Access-Control-Max-Age' 1728000;
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+            add_header 'Content-Length' 0;
+            return 204;
+        }
+
+        if ($allow = 0) {
+            return 403;
+        }
+
+        try_files $uri $uri/ /index.php?$args;
+    }
+*/
+
 function verificarAudio($token)
 {
     guardarLog("Verificando token: $token");
 
     if (empty($token)) {
         guardarLog("Error: token vacío");
+        return false;
+    }
+
+    // Verificar referer primero, independientemente del modo de caché
+    if (!isset($_SERVER['HTTP_REFERER'])) {
+        guardarLog("Error: HTTP_REFERER no establecido");
+        return false;
+    }
+
+    $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
+    guardarLog("Referer host: $referer_host");
+    
+    if ($referer_host !== '2upra.com') {
+        guardarLog("Error: referer no válido");
         return false;
     }
 
@@ -127,15 +185,18 @@ function verificarAudio($token)
 
     list($audio_id, $expiration, $user_ip, $unique_id, $max_usos, $signature) = $parts;
 
-    // Si el cacheo del navegador está activado, verificación simplificada
-    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
-        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
-            return false;
-        }
+    // Verificación básica del audio_id para ambos modos
+    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
+        guardarLog("Error: audio_id inválido");
+        return false;
+    }
 
+    // Si el cacheo del navegador está activado
+    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
         // Verificar que el unique_id corresponde al esperado
         $expected_unique_id = md5($audio_id . $_ENV['AUDIOCLAVE']);
         if ($unique_id !== $expected_unique_id) {
+            guardarLog("Error: unique_id no válido");
             return false;
         }
 
@@ -143,9 +204,30 @@ function verificarAudio($token)
         $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
         $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
 
-        return hash_equals($expected_signature, $signature);
+        if (!hash_equals($expected_signature, $signature)) {
+            guardarLog("Error: firma no válida");
+            return false;
+        }
+
+        // Verificar si es la primera solicitud para este audio desde esta IP
+        $cache_key = 'audio_access_' . $audio_id . '_' . $_SERVER['REMOTE_ADDR'];
+        $previous_access = get_transient($cache_key);
+        
+        if ($previous_access === false) {
+            // Primera solicitud, almacenar en caché
+            set_transient($cache_key, time(), 3600); // 1 hora de caché
+            return true;
+        } else {
+            // Verificar si la solicitud viene del mismo referer
+            if (isset($_SERVER['HTTP_REFERER']) && 
+                parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST) === '2upra.com') {
+                return true;
+            }
+            guardarLog("Error: acceso directo detectado");
+            return false;
+        }
     } else {
-        // Comportamiento original de verificación
+        // Comportamiento original para modo sin caché
         if ($_SERVER['REMOTE_ADDR'] !== $user_ip) {
             guardarLog("Error: IP no coincide");
             return false;
@@ -156,21 +238,8 @@ function verificarAudio($token)
             return false;
         }
 
-        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
-            return false;
-        }
-
         $usos_restantes = get_transient('audio_token_' . $unique_id);
         if ($usos_restantes === false || $usos_restantes <= 0) {
-            return false;
-        }
-
-        if (!isset($_SERVER['HTTP_REFERER'])) {
-            return false;
-        }
-
-        $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
-        if ($referer_host !== '2upra.com') {
             return false;
         }
 
@@ -261,7 +330,7 @@ function audioStreamEnd($data)
 
     // Configurar headers de caché según la constante
     if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
-        $cache_time = 60 * 60 * 24; // 24 horas
+        $cache_time = 60 * 60 * 2190; // 24 horas
         header('Cache-Control: public, max-age=' . $cache_time);
         header('Pragma: public');
         header('ETag: ' . $etag);
