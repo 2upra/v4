@@ -133,19 +133,6 @@ add_action('rest_api_init', function () {
     ));
 });
 
-/*
-
-2024-11-04 03:06:21 - Token generado exitosamente: Mjc5MTQ2fDE3MzA2OTMxODF8MTU2LjE0Ni41OS4xN3w2NzI4M2EyZDcwZGEzNS42NzQxNDE4NXwyfDc0YzVkOWNhMjE3ZTJhN2RkOTQ5NTVlZDZlOGUxNGEyN2MyNmI3ZTg4MTYzMTI5NjdmZTQ1OWJiNjg5NTU0MjU=
-2024-11-04 03:06:39 - Verificando token: Mjc4ODE4fDE3MzA2OTMxODB8MTU2LjE0Ni41OS4xN3w2NzI4M2EyYzI4OGE2NC4xMzk0MjY5MXwyfGRkNzE3MTBiZjFjN2IwNjExZjU5MjkwMzYwYTI3MjViMDQ4OGM4OTk4NDVmOTBhZjRhNTNkOTI3ZGVmZDQ3YWY=
-2024-11-04 03:06:39 - Token decodificado: 278818|1730693180|156.146.59.17|67283a2c288a64.13942691|2|dd71710bf1c7b0611f59290360a2725b0488c899845f90af4a53d927defd47af
-2024-11-04 03:06:39 - Error: número incorrecto de partes en el token
-2024-11-04 03:06:39 - Verificando token: Mjc4ODE4fDE3MzA2OTMxODB8MTU2LjE0Ni41OS4xN3w2NzI4M2EyYzI4OGE2NC4xMzk0MjY5MXwyfGRkNzE3MTBiZjFjN2IwNjExZjU5MjkwMzYwYTI3MjViMDQ4OGM4OTk4NDVmOTBhZjRhNTNkOTI3ZGVmZDQ3YWY=
-2024-11-04 03:06:39 - Token decodificado: 278818|1730693180|156.146.59.17|67283a2c288a64.13942691|2|dd71710bf1c7b0611f59290360a2725b0488c899845f90af4a53d927defd47af
-2024-11-04 03:06:39 - Error: número incorrecto de partes en el token
-2024-11-04 03:06:44 - Verificando token: 
-*/
-
-
 function tokenAudio($audio_id)
 {
     guardarLog("Generando token para audio_id: $audio_id");
@@ -155,15 +142,19 @@ function tokenAudio($audio_id)
         return false;
     }
 
-    $expiration = time() + 3600;
+    $expiration = time() + 3600; // Token válido por 1 hora
     $user_ip = $_SERVER['REMOTE_ADDR'];
     $unique_id = uniqid('', true);
-    $max_usos = 3;
-    // Creamos el data sin incluir max_usos en la firma
+    $max_usos = 3; // Permitir 3 usos
+
+    // Datos para la firma sin incluir max_usos
     $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
     $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
     $token = base64_encode($data . '|' . $max_usos . '|' . $signature);
     
+    // Inicializar el contador de usos
+    set_transient('audio_token_' . $unique_id, $max_usos, 3600); // Almacena el número de usos restantes
+
     guardarLog("Token generado exitosamente: $token");
     return $token;
 }
@@ -204,11 +195,14 @@ function verificarAudio($token)
         return false;
     }
 
-    if (tokenYaUsado($unique_id)) {
-        guardarLog("Error: token ya usado previamente");
+    // Verificar los usos restantes
+    $usos_restantes = get_transient('audio_token_' . $unique_id);
+    if ($usos_restantes === false || $usos_restantes <= 0) {
+        guardarLog("Error: token ha alcanzado el número máximo de usos");
         return false;
     }
 
+    // Verificar el referer
     if (!isset($_SERVER['HTTP_REFERER'])) {
         guardarLog("Error: HTTP_REFERER no establecido");
         return false;
@@ -227,8 +221,8 @@ function verificarAudio($token)
     $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
 
     if (hash_equals($expected_signature, $signature)) {
-        guardarLog("Verificación exitosa - marcando token como usado");
-        marcarTokenComoUsado($unique_id);
+        guardarLog("Verificación exitosa - decrementando uso del token");
+        decrementaUsosToken($unique_id);
         return true;
     }
     
@@ -236,17 +230,22 @@ function verificarAudio($token)
     return false;
 }
 
-function marcarTokenComoUsado($unique_id)
+function decrementaUsosToken($unique_id)
 {
-    guardarLog("Marcando token como usado: $unique_id");
-    set_transient('audio_token_' . $unique_id, true, 3600);
-}
-
-function tokenYaUsado($unique_id)
-{
-    $usado = get_transient('audio_token_' . $unique_id) !== false;
-    guardarLog("Verificando si token está usado: $unique_id - Resultado: " . ($usado ? 'Sí' : 'No'));
-    return $usado;
+    guardarLog("Decrementando usos del token: $unique_id");
+    $key = 'audio_token_' . $unique_id;
+    $usos_restantes = get_transient($key);
+    
+    if ($usos_restantes !== false && $usos_restantes > 0) {
+        $usos_restantes--;
+        if ($usos_restantes > 0) {
+            set_transient($key, $usos_restantes, get_option('transient_timeout_' . $key));
+            guardarLog("Usos restantes para el token $unique_id: $usos_restantes");
+        } else {
+            delete_transient($key); // Eliminar el transient cuando no quedan usos
+            guardarLog("El token $unique_id ha alcanzado el límite de usos y se ha eliminado");
+        }
+    }
 }
 
 function audioStreamEnd($data)
