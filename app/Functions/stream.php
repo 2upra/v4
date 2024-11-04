@@ -1,7 +1,7 @@
 <?
 
 // Añade esto al inicio de tu archivo
-add_action('init', function() {
+add_action('init', function () {
     if (!defined('DOING_AJAX') && !defined('REST_REQUEST')) {
         return;
     }
@@ -11,20 +11,16 @@ add_action('init', function() {
     }
 });
 
-function audioUrlSegura($audio_id) {
+function audioUrlSegura($audio_id)
+{
     $user_id = get_current_user_id();
-    
-    // Si el usuario es admin o pro, usar una URL más simple
     if (usuarioEsAdminOPro($user_id)) {
         return site_url("/wp-json/1/v1/audio-pro/{$audio_id}");
     }
-    
-    // Para usuarios normales, mantener el sistema de tokens
     $token = tokenAudio($audio_id);
     if (!$token) {
         return new WP_Error('invalid_audio_id', 'Audio ID inválido.');
     }
-    
     $nonce = wp_create_nonce('wp_rest');
     return site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce);
 }
@@ -35,12 +31,12 @@ add_action('rest_api_init', function () {
     register_rest_route('1/v1', '/audio-pro/(?P<id>\d+)', array(
         'methods' => 'GET',
         'callback' => 'audioStreamEndPro',
-        'permission_callback' => function() {
+        'permission_callback' => function () {
             return usuarioEsAdminOPro(get_current_user_id());
         },
         'args' => array(
             'id' => array(
-                'validate_callback' => function($param) {
+                'validate_callback' => function ($param) {
                     return is_numeric($param);
                 }
             ),
@@ -56,59 +52,36 @@ add_action('rest_api_init', function () {
                 'required' => true,
             ),
         ),
-        'permission_callback' => function($request) {
+        'permission_callback' => function ($request) {
             return verificarAudio($request->get_param('token'));
         }
     ));
 });
 
-// Nueva función para streaming de audio para usuarios pro/admin
-function audioStreamEndPro($request) {
-    $audio_id = $request['id'];
-    
-    $original_file = get_attached_file($audio_id);
-    if (!file_exists($original_file)) {
-        return new WP_Error('no_audio', 'Archivo de audio no encontrado.', array('status' => 404));
-    }
 
-    // Configurar headers para caché agresivo
-    header('Content-Type: ' . get_post_mime_type($audio_id));
-    header('Accept-Ranges: bytes');
-    header('Cache-Control: public, max-age=31536000'); // 1 año
-    header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT');
-    header('Pragma: public');
-
-    // Streaming directo del archivo
-    $fp = @fopen($original_file, 'rb');
-    $size = filesize($original_file);
-    
-    // Manejar ranges si es necesario
-    if (isset($_SERVER['HTTP_RANGE'])) {
-        // [Código existente para manejar ranges...]
-    } else {
-        header('Content-Length: ' . $size);
-        fpassthru($fp);
-    }
-    
-    fclose($fp);
-    exit;
-}
-
-function tokenAudio($audio_id) {
+/*
+Hay alguna forma de mejorar el token, lo de permitir usarlo una sola 1 vez ayuda a que no se pueda acceder directamente al enlace pero hay un problema para cuando el audio aparece 2 veces, no se que otra forma puedo cargar los audios y evitar el acceso directo al enlace pero que solo pueda cargar en el contenido de la pagina 
+me refiero a los enlaces que se ven asi https://2upra.com/wp-json/1/v1/2?token=MjgwNTExfDE3MzA2ODcwOTl8MTU2LjE0Ni41OS4xN3w2NzI4MjI2Yjg5NTlhfDkwYzYwOWNhM2E4Zjc3MWVkZDk4YzQzYmRiZmY3OTVlNDA1MGNjMmYxNGM0NjZmZDE4NDNlOWVjNDZjOTQzNGI%3D&_wpnonce=d5ed2cc714
+(entorno wordpress, nginx)
+*/
+function tokenAudio($audio_id)
+{
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
         return false;
     }
 
-    $expiration = time() + 3600; 
+    $expiration = time() + 3600; // Expira en 1 hora
     $user_ip = $_SERVER['REMOTE_ADDR'];
-    $unique_id = uniqid();
-    $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
-    $signature = hash_hmac('sha256', $data, ($_ENV['AUDIOCLAVE']));
+    $unique_id = uniqid('', true);
+    $max_usos = 2; // Número máximo de usos permitidos
+    $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id . '|' . $max_usos;
+    $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
     return base64_encode($data . '|' . $signature);
 }
 
 // Función para verificar el token
-function verificarAudio($token) {
+function verificarAudio($token)
+{
     $parts = explode('|', base64_decode($token));
     if (count($parts) !== 5) return false; // Asegurarse de que haya 5 partes
     list($audio_id, $expiration, $user_ip, $unique_id, $signature) = $parts;
@@ -122,9 +95,13 @@ function verificarAudio($token) {
     }
     if (tokenYaUsado($unique_id)) return false;
 
+    if (!isset($_SERVER['HTTP_REFERER']) || !parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST) === '2upra.com') {
+        return false;
+    }
+
     $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
     $expected_signature = hash_hmac('sha256', $data, ($_ENV['AUDIOCLAVE']));
-    
+
     if (hash_equals($expected_signature, $signature)) {
         marcarTokenComoUsado($unique_id);
         return true;
@@ -132,16 +109,19 @@ function verificarAudio($token) {
     return false;
 }
 
-function marcarTokenComoUsado($unique_id) {
+function marcarTokenComoUsado($unique_id)
+{
     set_transient('audio_token_' . $unique_id, true, 3600);
 }
 
-function tokenYaUsado($unique_id) {
+function tokenYaUsado($unique_id)
+{
     return get_transient('audio_token_' . $unique_id) !== false;
 }
 
 
-function audioStreamEnd($data) {
+function audioStreamEnd($data)
+{
 
     $token = $data['token'];
     $parts = explode('|', base64_decode($token));
@@ -253,7 +233,8 @@ function audioStreamEnd($data) {
 // Registra el cron job
 add_action('wp', 'schedule_audio_cache_cleanup');
 
-function schedule_audio_cache_cleanup() {
+function schedule_audio_cache_cleanup()
+{
     if (!wp_next_scheduled('audio_cache_cleanup')) {
         wp_schedule_event(time(), 'daily', 'audio_cache_cleanup');
     }
@@ -262,7 +243,8 @@ function schedule_audio_cache_cleanup() {
 // Función para limpiar el caché
 add_action('audio_cache_cleanup', 'clean_audio_cache');
 
-function clean_audio_cache() {
+function clean_audio_cache()
+{
     $upload_dir = wp_upload_dir();
     $cache_dir = $upload_dir['basedir'] . '/audio_cache';
 
@@ -279,7 +261,8 @@ function clean_audio_cache() {
 }
 
 // Desprogramar el cron job cuando el plugin se desactiva
-function unschedule_audio_cache_cleanup() {
+function unschedule_audio_cache_cleanup()
+{
     $timestamp = wp_next_scheduled('audio_cache_cleanup');
     if ($timestamp) {
         wp_unschedule_event($timestamp, 'audio_cache_cleanup');
@@ -287,7 +270,8 @@ function unschedule_audio_cache_cleanup() {
 }
 register_deactivation_hook(__FILE__, 'unschedule_audio_cache_cleanup');
 
-function usuarioEsAdminOPro($user_id) {
+function usuarioEsAdminOPro($user_id)
+{
     // Verificar que el ID de usuario sea válido
     if (empty($user_id) || !is_numeric($user_id)) {
         //guardarLog("usuarioEsAdminOPro: Error - ID de usuario inválido.");
@@ -327,3 +311,18 @@ function usuarioEsAdminOPro($user_id) {
     //guardarLog("usuarioEsAdminOPro: Usuario no es administrador ni tiene la meta 'pro'. ID: " . $user_id);
     return false;
 }
+
+
+function bloquear_acceso_directo_archivos() {
+    // Verifica si la URL contiene "wp-content/uploads"
+    if (strpos($_SERVER['REQUEST_URI'], '/wp-content/uploads/') !== false) {
+        // Comprueba el referer
+        $referer = $_SERVER['HTTP_REFERER'] ?? '';
+        
+        // Permite solo si el referer viene de tu dominio
+        if (strpos($referer, home_url()) === false) {
+            wp_die('Acceso denegado: no puedes descargar este archivo directamente.', 'Acceso denegado', array('response' => 403));
+        }
+    }
+}
+add_action('init', 'bloquear_acceso_directo_archivos');
