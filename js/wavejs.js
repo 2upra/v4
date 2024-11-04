@@ -67,6 +67,35 @@ function inicializarWaveforms() {
             }
         });
     });
+
+    // Agregar manejador de clic para los elementos POST-sampleList
+    document.querySelectorAll('.POST-sampleList').forEach(post => {
+        post.addEventListener('click', () => {
+            const waveformContainer = post.querySelector('.waveform-container');
+            if (waveformContainer) {
+                const postId = waveformContainer.getAttribute('postIDWave');
+                const audioUrl = waveformContainer.getAttribute('data-audio-url');
+                if (!waveformContainer.dataset.audioLoaded) {
+                    if (waveformContainer.dataset.loadTimeoutSet) {
+                        clearTimeout(waveformContainer.dataset.loadTimeout);
+                        delete waveformContainer.dataset.loadTimeout;
+                        delete waveformContainer.dataset.loadTimeoutSet;
+                    }
+                    loadAudio(postId, audioUrl, waveformContainer);  // Reproducir el audio si no ha sido cargado aún
+                } else {
+                    // Si el audio ya está cargado, reproducir o pausar
+                    const wavesurfer = window.wavesurfers[postId];
+                    if (wavesurfer) {
+                        if (wavesurfer.isPlaying()) {
+                            wavesurfer.pause();
+                        } else {
+                            wavesurfer.play();
+                        }
+                    }
+                }
+            }
+        });
+    });
 }
 
 // Definición de la función loadAudio
