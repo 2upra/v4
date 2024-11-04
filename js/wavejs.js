@@ -35,7 +35,7 @@ function inicializarWaveforms() {
         const audioUrl = container.getAttribute('data-audio-url');
         if (postId && audioUrl && !container.dataset.initialized) {
             container.dataset.initialized = 'true';
-            observer.observe(container);  // Aquí usamos el observer correctamente
+            observer.observe(container);  // Observamos el contenedor de la onda
             container.addEventListener('click', () => {
                 if (!container.dataset.audioLoaded) {
                     if (container.dataset.loadTimeoutSet) {
@@ -43,29 +43,20 @@ function inicializarWaveforms() {
                         delete container.dataset.loadTimeout;
                         delete container.dataset.loadTimeoutSet;
                     }
-                    loadAudio(postId, audioUrl, container);  // Aquí llamamos a loadAudio
+                    loadAudio(postId, audioUrl, container);  // Cargamos y reproducimos el audio
+                } else {
+                    // Si el audio ya está cargado, reproducir o pausar
+                    const wavesurfer = window.wavesurfers[postId];
+                    if (wavesurfer) {
+                        if (wavesurfer.isPlaying()) {
+                            wavesurfer.pause();
+                        } else {
+                            wavesurfer.play();
+                        }
+                    }
                 }
             });
         }
-    });
-
-    // Agregar manejador de clic para los elementos LISTSAMPLE
-    document.querySelectorAll('.LISTSAMPLE').forEach(item => {
-        item.addEventListener('click', () => {
-            const waveformContainer = item.querySelector('.waveform-container');
-            if (waveformContainer) {
-                const postId = waveformContainer.getAttribute('postIDWave');
-                const audioUrl = waveformContainer.getAttribute('data-audio-url');
-                if (!waveformContainer.dataset.audioLoaded) {
-                    if (waveformContainer.dataset.loadTimeoutSet) {
-                        clearTimeout(waveformContainer.dataset.loadTimeout);
-                        delete waveformContainer.dataset.loadTimeout;
-                        delete waveformContainer.dataset.loadTimeoutSet;
-                    }
-                    loadAudio(postId, audioUrl, waveformContainer);  // Aquí también llamamos a loadAudio
-                }
-            }
-        });
     });
 
     // Agregar manejador de clic para los elementos POST-sampleList
@@ -125,6 +116,7 @@ function loadAudio(postId, audioUrl, container) {
         container.dataset.audioLoaded = 'true';
     }
 }
+
 
 
 window.we = function (postId, audioUrl) {
