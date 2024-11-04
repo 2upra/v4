@@ -85,6 +85,8 @@ window.we = function (postId, audioUrl) {
             }
         })
             .then(response => {
+                console.log('Estado de respuesta:', response.status);
+                console.log('Headers de respuesta:', [...response.headers.entries()]);
                 if (!response.ok) {
                     throw new Error('Respuesta de red no satisfactoria');
                 }

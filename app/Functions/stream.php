@@ -132,7 +132,19 @@ function tokenAudio($audio_id)
     }
 }
 
+add_action('rest_api_init', function() {
+    remove_filter('rest_pre_serve_request', 'rest_send_cors_headers');
+    add_filter('rest_pre_serve_request', function($value) {
+        header('Access-Control-Allow-Headers: X-Requested-With');
+        return $value;
+    });
+});
 
+add_action('init', function() {
+    guardarLog("Verificando estado de REST API");
+    guardarLog("rest_enabled: " . (rest_enabled() ? 'true' : 'false'));
+    guardarLog("REST URL base: " . rest_url());
+});
 
 function verificarAudio($token)
 {
@@ -148,19 +160,19 @@ function verificarAudio($token)
 
     // Verificar referer y headers
     if (!isset($_SERVER['HTTP_REFERER']) || !isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-        guardarLog("Error: Faltan headers requeridos");
-        return false;
+        guardarLog("Advertencia: Falta HTTP_REFERER pero continuando para debug");
+        //return false;
     }
 
     $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
     if ($referer_host !== '2upra.com') {
-        guardarLog("Error: referer no válido");
-        return false;
+        guardarLog("Advertencia: Falta HTTP_X_REQUESTED_WITH pero continuando para debug");
+        //return false;
     }
 
     if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
         guardarLog("Error: No es una petición AJAX");
-        return false;
+        //return false;
     }
 
     $decoded = base64_decode($token);
@@ -169,6 +181,7 @@ function verificarAudio($token)
         guardarLog("Error: número incorrecto de partes en el token");
         return false;
     }
+    guardarLog("Partes del token: " . print_r($parts, true));
 
     list($audio_id, $expiration, $user_ip, $unique_id, $max_usos, $signature) = $parts;
 
