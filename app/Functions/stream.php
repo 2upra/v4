@@ -157,22 +157,27 @@ function verificarAudio($token)
 {
     guardarLog("Verificando token: $token");
 
-    if (empty($token)) {
-        guardarLog("Error: token vacío");
-        return false;
-    }
-
-    // Verificar referer primero, independientemente del modo de caché
-    if (!isset($_SERVER['HTTP_REFERER'])) {
-        guardarLog("Error: HTTP_REFERER no establecido");
+    // Verificación estricta del referer y método de acceso
+    if (!isset($_SERVER['HTTP_REFERER']) || empty($_SERVER['HTTP_REFERER'])) {
+        guardarLog("Error: Acceso directo detectado - sin referer");
         return false;
     }
 
     $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
-    guardarLog("Referer host: $referer_host");
-    
     if ($referer_host !== '2upra.com') {
-        guardarLog("Error: referer no válido");
+        guardarLog("Error: Referer no válido - " . $referer_host);
+        return false;
+    }
+
+    // Verificar si la solicitud viene de una página específica del sitio
+    $referer_path = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_PATH);
+    if (empty($referer_path) || $referer_path === '/' || strpos($referer_path, '/wp-json/') !== false) {
+        guardarLog("Error: Acceso no permitido desde esta ruta - " . $referer_path);
+        return false;
+    }
+
+    if (empty($token)) {
+        guardarLog("Error: token vacío");
         return false;
     }
 
@@ -185,7 +190,6 @@ function verificarAudio($token)
 
     list($audio_id, $expiration, $user_ip, $unique_id, $max_usos, $signature) = $parts;
 
-    // Verificación básica del audio_id para ambos modos
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
         guardarLog("Error: audio_id inválido");
         return false;
@@ -193,7 +197,6 @@ function verificarAudio($token)
 
     // Si el cacheo del navegador está activado
     if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
-        // Verificar que el unique_id corresponde al esperado
         $expected_unique_id = md5($audio_id . $_ENV['AUDIOCLAVE']);
         if ($unique_id !== $expected_unique_id) {
             guardarLog("Error: unique_id no válido");
@@ -209,23 +212,20 @@ function verificarAudio($token)
             return false;
         }
 
-        // Verificar si es la primera solicitud para este audio desde esta IP
-        $cache_key = 'audio_access_' . $audio_id . '_' . $_SERVER['REMOTE_ADDR'];
-        $previous_access = get_transient($cache_key);
-        
-        if ($previous_access === false) {
-            // Primera solicitud, almacenar en caché
-            set_transient($cache_key, time(), 3600); // 1 hora de caché
-            return true;
-        } else {
-            // Verificar si la solicitud viene del mismo referer
-            if (isset($_SERVER['HTTP_REFERER']) && 
-                parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST) === '2upra.com') {
-                return true;
-            }
-            guardarLog("Error: acceso directo detectado");
+        // Verificar la sesión del usuario
+        if (!isset($_COOKIE['PHPSESSID'])) {
+            guardarLog("Error: No hay sesión activa");
             return false;
         }
+
+        // Verificar token de sesión
+        $session_token = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
+        if (empty($session_token) || $session_token !== 'XMLHttpRequest') {
+            guardarLog("Error: Solicitud no válida");
+            return false;
+        }
+
+        return true;
     } else {
         // Comportamiento original para modo sin caché
         if ($_SERVER['REMOTE_ADDR'] !== $user_ip) {
