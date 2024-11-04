@@ -108,10 +108,10 @@ remove_action('wp_head', 'feed_links_extra', 3);
 remove_action('wp_head', 'feed_links', 2);
 
 // Limitar el número de revisiones
-define('WP_POST_REVISIONS', 1);
+//define('WP_POST_REVISIONS', 1);
 
 // Deshabilitar autosaves
-define('AUTOSAVE_INTERVAL', 300 ); // Intervalo en segundos (5 minutos)
+//define('AUTOSAVE_INTERVAL', 300 ); // Intervalo en segundos (5 minutos)
 
 // O para deshabilitar completamente:
 function desactivar_autosave() {
