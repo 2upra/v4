@@ -1,5 +1,5 @@
 <?
-
+define('ENABLE_BROWSER_AUDIO_CACHE', TRUE);
 // Añade esto al inicio de tu archivo
 add_action('init', function () {
     if (!defined('DOING_AJAX') && !defined('REST_REQUEST')) {
@@ -24,37 +24,7 @@ function audioUrlSegura($audio_id)
     $nonce = wp_create_nonce('wp_rest');
     return site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce);
 }
-/*
-function proteger_endpoints()
-{
-    add_filter('rest_pre_dispatch', function ($result, $server, $request) {
-        // Verificar origen de la petición
-        if (
-            !isset($_SERVER['HTTP_REFERER']) ||
-            !preg_match('/^https?:\/\/(.*\.)?2upra\.com/', $_SERVER['HTTP_REFERER'])
-        ) {
-            return new WP_Error('unauthorized', 'Acceso no autorizado', array('status' => 403));
-        }
 
-        // Verificar rate limiting
-        $ip = $_SERVER['REMOTE_ADDR'];
-        $rate_key = 'rate_limit_' . $ip;
-        $rate_count = get_transient($rate_key);
-
-        if ($rate_count === false) {
-            set_transient($rate_key, 1, 60); // 1 minuto
-        } else if ($rate_count > 10) { // máximo 10 peticiones por minuto
-            return new WP_Error('rate_limit', 'Demasiadas peticiones', array('status' => 429));
-        } else {
-            set_transient($rate_key, $rate_count + 1, 60);
-        }
-
-        return $result;
-    }, 10, 3);
-}
-add_action('init', 'proteger_endpoints');
-*/
-//HE HECHO TODO LOS POSIBLE PARA EVITAR LAS DESCARGAS DIRECTAS; PERO NADA FUNCIONA; SE PUEDE IR A LOS ARCHIVOS DIRECTAMENTE Y DESCARGARLOS; COSA QUE NO QUIERO PORQUE TENGO MI PROPIO SISTEMA DE TOKEN QUE LOS SIRVE CUANDO SE QUIEREN DESCARGAR Y NO FUNCIONA ESTO BLOQUEAR EL ACCESO A LOS WAV Y MP3, Y LOS /wp-json/1/v1/2 ; O SEA LO UNICO QUE QUIERO ES QUE NO SE ACCEDA DIRECTAMAENTE A LOS ENLACES DE DESCARGA Y EL AUDIO QUE SE SIRVE EN LA API
 function bloquear_acceso_directo_archivos()
 {
     if (strpos($_SERVER['REQUEST_URI'], '/wp-content/uploads/') !== false) {
@@ -65,41 +35,6 @@ function bloquear_acceso_directo_archivos()
     }
 }
 add_action('init', 'bloquear_acceso_directo_archivos');
-
-
-/*
-    #WP
-    location / {
-        try_files $uri $uri/ /index.php?$args;
-    }
-
-    location /wp-content/uploads/audios/ {
-        internal;
-    }
-
-    location /wp-content/uploads/ {
-        valid_referers 2upra.com *.2upra.com;
-
-        if ($invalid_referer) {
-            return 403;
-        }
-        try_files $uri $uri/ =404;
-    }
-
-    despues de estos cambios, la api ya no funciona, como hago que funcione manteniendo el bloqueo directo
-    location ~* \.(mp3|wav)$ {
-        deny all;
-        return 403;
-    }
-
-    # Bloquear acceso directo a la API excepto desde el dominio permitido
-    location /wp-json/ {
-        if ($http_referer !~ ^https?://([^/]+\.)?2upra\.com) {
-        return 403;
-    }
-        try_files $uri $uri/ /index.php?$args;
-    }
-*/
 
 
 add_action('rest_api_init', function () {
@@ -136,114 +71,138 @@ add_action('rest_api_init', function () {
 function tokenAudio($audio_id)
 {
     guardarLog("Generando token para audio_id: $audio_id");
-    
+
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
         guardarLog("Error: audio_id inválido: $audio_id");
         return false;
     }
 
-    $expiration = time() + 3600; // Token válido por 1 hora
-    $user_ip = $_SERVER['REMOTE_ADDR'];
-    $unique_id = uniqid('', true);
-    $max_usos = 3; // Permitir 3 usos
+    // Si el cacheo del navegador está activado, generamos un token más persistente
+    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
+        // Usar una fecha fija para que el token sea consistente
+        $expiration = strtotime('2030-12-31'); // Fecha lejana fija
+        $user_ip = 'cached'; // No usamos IP para permitir el cacheo
+        $unique_id = md5($audio_id . $_ENV['AUDIOCLAVE']); // ID único pero consistente
+        $max_usos = 999999; // Número alto de usos
 
-    // Datos para la firma sin incluir max_usos
-    $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
-    $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
-    $token = base64_encode($data . '|' . $max_usos . '|' . $signature);
-    
-    // Inicializar el contador de usos
-    set_transient('audio_token_' . $unique_id, $max_usos, 3600); // Almacena el número de usos restantes
+        $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
+        $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
+        $token = base64_encode($data . '|' . $max_usos . '|' . $signature);
 
-    guardarLog("Token generado exitosamente: $token");
-    return $token;
+        // No necesitamos almacenar el contador de usos para tokens cacheados
+        return $token;
+    } else {
+        // Comportamiento original para cuando el cacheo está desactivado
+        $expiration = time() + 3600;
+        $user_ip = $_SERVER['REMOTE_ADDR'];
+        $unique_id = uniqid('', true);
+        $max_usos = 3;
+
+        $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
+        $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
+        $token = base64_encode($data . '|' . $max_usos . '|' . $signature);
+
+        set_transient('audio_token_' . $unique_id, $max_usos, 3600);
+
+        guardarLog("Token generado exitosamente: $token");
+        return $token;
+    }
 }
 
 function verificarAudio($token)
 {
     guardarLog("Verificando token: $token");
-    
+
     if (empty($token)) {
         guardarLog("Error: token vacío");
         return false;
     }
-    
+
     $decoded = base64_decode($token);
-    guardarLog("Token decodificado: $decoded");
-    
     $parts = explode('|', $decoded);
-    if (count($parts) !== 6) { // Ahora esperamos 6 partes
-        guardarLog("Error: número incorrecto de partes en el token (" . count($parts) . ")");
+    if (count($parts) !== 6) {
+        guardarLog("Error: número incorrecto de partes en el token");
         return false;
     }
-    
+
     list($audio_id, $expiration, $user_ip, $unique_id, $max_usos, $signature) = $parts;
-    guardarLog("Datos extraídos - Audio ID: $audio_id, Exp: $expiration, IP: $user_ip, Unique ID: $unique_id, Max Usos: $max_usos");
 
-    if ($_SERVER['REMOTE_ADDR'] !== $user_ip) {
-        guardarLog("Error: IP no coincide. Esperada: $user_ip, Actual: " . $_SERVER['REMOTE_ADDR']);
+    // Si el cacheo del navegador está activado, verificación simplificada
+    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
+            return false;
+        }
+
+        // Verificar que el unique_id corresponde al esperado
+        $expected_unique_id = md5($audio_id . $_ENV['AUDIOCLAVE']);
+        if ($unique_id !== $expected_unique_id) {
+            return false;
+        }
+
+        // Verificar la firma
+        $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
+        $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
+
+        return hash_equals($expected_signature, $signature);
+    } else {
+        // Comportamiento original de verificación
+        if ($_SERVER['REMOTE_ADDR'] !== $user_ip) {
+            guardarLog("Error: IP no coincide");
+            return false;
+        }
+
+        if (time() > $expiration) {
+            guardarLog("Error: token expirado");
+            return false;
+        }
+
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
+            return false;
+        }
+
+        $usos_restantes = get_transient('audio_token_' . $unique_id);
+        if ($usos_restantes === false || $usos_restantes <= 0) {
+            return false;
+        }
+
+        if (!isset($_SERVER['HTTP_REFERER'])) {
+            return false;
+        }
+
+        $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
+        if ($referer_host !== '2upra.com') {
+            return false;
+        }
+
+        $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
+        $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
+
+        if (hash_equals($expected_signature, $signature)) {
+            decrementaUsosToken($unique_id);
+            return true;
+        }
+
         return false;
     }
-
-    if (time() > $expiration) {
-        guardarLog("Error: token expirado");
-        return false;
-    }
-
-    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
-        guardarLog("Error: audio_id inválido en verificación");
-        return false;
-    }
-
-    // Verificar los usos restantes
-    $usos_restantes = get_transient('audio_token_' . $unique_id);
-    if ($usos_restantes === false || $usos_restantes <= 0) {
-        guardarLog("Error: token ha alcanzado el número máximo de usos");
-        return false;
-    }
-
-    // Verificar el referer
-    if (!isset($_SERVER['HTTP_REFERER'])) {
-        guardarLog("Error: HTTP_REFERER no establecido");
-        return false;
-    }
-
-    $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
-    guardarLog("Referer host: $referer_host");
-    
-    if ($referer_host !== '2upra.com') {
-        guardarLog("Error: referer no válido");
-        return false;
-    }
-
-    // Recreamos el data original sin max_usos
-    $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
-    $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
-
-    if (hash_equals($expected_signature, $signature)) {
-        guardarLog("Verificación exitosa - decrementando uso del token");
-        decrementaUsosToken($unique_id);
-        return true;
-    }
-    
-    guardarLog("Error: firma no válida");
-    return false;
 }
 
 function decrementaUsosToken($unique_id)
 {
+    // Solo decrementar si el cacheo del navegador está desactivado
+    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
+        return; // No decrementar para tokens cacheados
+    }
+
     guardarLog("Decrementando usos del token: $unique_id");
     $key = 'audio_token_' . $unique_id;
     $usos_restantes = get_transient($key);
-    
+
     if ($usos_restantes !== false && $usos_restantes > 0) {
         $usos_restantes--;
         if ($usos_restantes > 0) {
             set_transient($key, $usos_restantes, get_option('transient_timeout_' . $key));
-            guardarLog("Usos restantes para el token $unique_id: $usos_restantes");
         } else {
-            delete_transient($key); // Eliminar el transient cuando no quedan usos
-            guardarLog("El token $unique_id ha alcanzado el límite de usos y se ha eliminado");
+            delete_transient($key);
         }
     }
 }
@@ -293,14 +252,31 @@ function audioStreamEnd($data)
     $start = 0;
     $end = $size - 1;
 
-    // Asegurarse de que no haya output antes de los headers
+    // Generar ETag único para el archivo
+    $etag = '"' . md5($file . filemtime($file)) . '"';
 
-    // Modificar los headers para streaming
+    // Headers básicos
     header('Content-Type: ' . get_post_mime_type($audio_id));
     header('Accept-Ranges: bytes');
-    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-    header('Cache-Control: post-check=0, pre-check=0', false);
-    header('Pragma: no-cache');
+
+    // Configurar headers de caché según la constante
+    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
+        $cache_time = 60 * 60 * 24; // 24 horas
+        header('Cache-Control: public, max-age=' . $cache_time);
+        header('Pragma: public');
+        header('ETag: ' . $etag);
+        header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $cache_time) . ' GMT');
+
+        // Verificar si el contenido no ha cambiado
+        if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] == $etag) {
+            header('HTTP/1.1 304 Not Modified');
+            exit;
+        }
+    } else {
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Cache-Control: post-check=0, pre-check=0', false);
+        header('Pragma: no-cache');
+    }
 
 
     // Manejar Ranges HTTP para streaming parcial
