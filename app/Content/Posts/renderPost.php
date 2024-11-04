@@ -22,6 +22,9 @@ function htmlPost($filtro)
 
         <? if ($sampleList): ?>
             <div class="LISTSAMPLE">
+                <div class="KLYJBY">
+                    <? echo audioPostList($post_id); ?>
+                </div>
                 <? echo imagenPostList($block, $es_suscriptor, $post_id) ?>
                 <div class="INFOLISTSAMPLE">
                     <p class="CONTENTLISTSAMPLE">
