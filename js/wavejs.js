@@ -174,7 +174,7 @@ function initWavesurfer(container) {
 
     const ctx = document.createElement('canvas').getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 500);
-    const progressGradient = ctx.createLinearGradient(0, 0, 500);
+    const progressGradient = ctx.createLinearGradient(0, 0, 0, 500);  // Asegúrate de tener 4 argumentos aquí
 
     // Configuración de los colores del gradiente
     gradient.addColorStop(0, '#FFFFFF');
