@@ -24,7 +24,7 @@ function audioUrlSegura($audio_id)
     $nonce = wp_create_nonce('wp_rest');
     return site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce);
 }
-
+/*
 function proteger_endpoints()
 {
     add_filter('rest_pre_dispatch', function ($result, $server, $request) {
@@ -53,7 +53,7 @@ function proteger_endpoints()
     }, 10, 3);
 }
 add_action('init', 'proteger_endpoints');
-
+*/
 //HE HECHO TODO LOS POSIBLE PARA EVITAR LAS DESCARGAS DIRECTAS; PERO NADA FUNCIONA; SE PUEDE IR A LOS ARCHIVOS DIRECTAMENTE Y DESCARGARLOS; COSA QUE NO QUIERO PORQUE TENGO MI PROPIO SISTEMA DE TOKEN QUE LOS SIRVE CUANDO SE QUIEREN DESCARGAR Y NO FUNCIONA ESTO BLOQUEAR EL ACCESO A LOS WAV Y MP3, Y LOS /wp-json/1/v1/2 ; O SEA LO UNICO QUE QUIERO ES QUE NO SE ACCEDA DIRECTAMAENTE A LOS ENLACES DE DESCARGA Y EL AUDIO QUE SE SIRVE EN LA API
 function bloquear_acceso_directo_archivos()
 {
