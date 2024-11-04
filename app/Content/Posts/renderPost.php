@@ -12,11 +12,9 @@ function htmlPost($filtro)
     $sampleList = $filtro === 'sampleList';
     $wave = get_post_meta($post_id, 'waveform_image_url', true);
     $waveCargada = get_post_meta($post_id, 'waveCargada', true);
-    $urlAudioSegura = audioUrlSegura($audio_id_lite); // Usando la URL segura
-
-    // Verificar si $urlAudioSegura es una instancia de WP_Error
+    $urlAudioSegura = audioUrlSegura($audio_id_lite); 
     if (is_wp_error($urlAudioSegura)) {
-        $urlAudioSegura = ''; // O establece un valor predeterminado o maneja el error de forma diferente
+        $urlAudioSegura = ''; 
     }
     ob_start();
 ?>
