@@ -160,19 +160,19 @@ function verificarAudio($token)
 
     // Verificar referer y headers
     if (!isset($_SERVER['HTTP_REFERER']) || !isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-        guardarLog("Advertencia: Falta HTTP_REFERER pero continuando para debug");
-        //return false;
+        guardarLog("Error: Faltan headers requeridos");
+        return false;
     }
 
     $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
     if ($referer_host !== '2upra.com') {
-        guardarLog("Advertencia: Falta HTTP_X_REQUESTED_WITH pero continuando para debug");
-        //return false;
+        guardarLog("Error: referer no válido");
+        return false;
     }
 
     if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
         guardarLog("Error: No es una petición AJAX");
-        //return false;
+        return false;
     }
 
     $decoded = base64_decode($token);
