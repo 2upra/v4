@@ -97,4 +97,3 @@ function actualizar_titulos_y_slugs_social_posts() {
     wp_reset_postdata();
 }
 
-actualizar_titulos_y_slugs_social_posts();
