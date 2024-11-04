@@ -101,9 +101,8 @@ add_action('init', 'bloquear_acceso_directo_archivos');
     }
 */
 
-// Registrar dos endpoints: uno para usuarios pro/admin y otro para usuarios normales
+
 add_action('rest_api_init', function () {
-    // Endpoint para usuarios pro/admin
     register_rest_route('1/v1', '/audio-pro/(?P<id>\d+)', array(
         'methods' => 'GET',
         'callback' => 'audioStreamEndPro',
@@ -134,61 +133,108 @@ add_action('rest_api_init', function () {
     ));
 });
 
-function tokenAudio($audio_id)
-{
-    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
-        return false;
-    }
-
-    $expiration = time() + 3600; // Expira en 1 hora
-    $user_ip = $_SERVER['REMOTE_ADDR'];
-    $unique_id = uniqid('', true);
-    $max_usos = 2; // Número máximo de usos permitidos
-    $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id . '|' . $max_usos;
-    $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
-    return base64_encode($data . '|' . $signature);
+function guardarLog($mensaje) {
+    $log_file = __DIR__ . '/audio_tokens.log';
+    $timestamp = date('Y-m-d H:i:s');
+    $log_message = "[$timestamp] $mensaje\n";
+    file_put_contents($log_file, $log_message, FILE_APPEND);
 }
 
-// Función para verificar el token
+function tokenAudio($audio_id)
+{
+    guardarLog("Generando token para audio_id: $audio_id");
+    
+    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
+        guardarLog("Error: audio_id inválido: $audio_id");
+        return false;
+    }
+
+    $expiration = time() + 3600;
+    $user_ip = $_SERVER['REMOTE_ADDR'];
+    $unique_id = uniqid('', true);
+    $max_usos = 2;
+    $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id . '|' . $max_usos;
+    $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
+    $token = base64_encode($data . '|' . $signature);
+    
+    guardarLog("Token generado exitosamente: $token");
+    return $token;
+}
+
 function verificarAudio($token)
 {
-    $parts = explode('|', base64_decode($token));
-    if (count($parts) !== 5) return false; // Asegurarse de que haya 5 partes
+    guardarLog("Verificando token: $token");
+    
+    $decoded = base64_decode($token);
+    guardarLog("Token decodificado: $decoded");
+    
+    $parts = explode('|', $decoded);
+    if (count($parts) !== 5) {
+        guardarLog("Error: número incorrecto de partes en el token");
+        return false;
+    }
+    
     list($audio_id, $expiration, $user_ip, $unique_id, $signature) = $parts;
+    guardarLog("Datos extraídos - Audio ID: $audio_id, Exp: $expiration, IP: $user_ip, Unique ID: $unique_id");
 
     if ($_SERVER['REMOTE_ADDR'] !== $user_ip) {
+        guardarLog("Error: IP no coincide. Esperada: $user_ip, Actual: " . $_SERVER['REMOTE_ADDR']);
         return false;
     }
-    if (time() > $expiration) return false;
-    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
-        return false;
-    }
-    if (tokenYaUsado($unique_id)) return false;
 
-    if (!isset($_SERVER['HTTP_REFERER']) || !parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST) === '2upra.com') {
+    if (time() > $expiration) {
+        guardarLog("Error: token expirado");
+        return false;
+    }
+
+    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
+        guardarLog("Error: audio_id inválido en verificación");
+        return false;
+    }
+
+    if (tokenYaUsado($unique_id)) {
+        guardarLog("Error: token ya usado previamente");
+        return false;
+    }
+
+    if (!isset($_SERVER['HTTP_REFERER'])) {
+        guardarLog("Error: HTTP_REFERER no establecido");
+        return false;
+    }
+
+    $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
+    guardarLog("Referer host: $referer_host");
+    
+    if ($referer_host !== '2upra.com') {
+        guardarLog("Error: referer no válido");
         return false;
     }
 
     $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
-    $expected_signature = hash_hmac('sha256', $data, ($_ENV['AUDIOCLAVE']));
+    $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
 
     if (hash_equals($expected_signature, $signature)) {
+        guardarLog("Verificación exitosa - marcando token como usado");
         marcarTokenComoUsado($unique_id);
         return true;
     }
+    
+    guardarLog("Error: firma no válida");
     return false;
 }
 
 function marcarTokenComoUsado($unique_id)
 {
+    guardarLog("Marcando token como usado: $unique_id");
     set_transient('audio_token_' . $unique_id, true, 3600);
 }
 
 function tokenYaUsado($unique_id)
 {
-    return get_transient('audio_token_' . $unique_id) !== false;
+    $usado = get_transient('audio_token_' . $unique_id) !== false;
+    guardarLog("Verificando si token está usado: $unique_id - Resultado: " . ($usado ? 'Sí' : 'No'));
+    return $usado;
 }
-
 
 function audioStreamEnd($data)
 {
