@@ -75,6 +75,19 @@ function inicializarWaveforms() {
             if (waveformContainer) {
                 const postId = waveformContainer.getAttribute('postIDWave');
                 const audioUrl = waveformContainer.getAttribute('data-audio-url');
+
+                // Verificar si postId está definido
+                if (!postId) {
+                    console.error('postIDWave no está definido para el contenedor de onda.');
+                    return;
+                }
+
+                // Inicializar wavesurfers si no se ha hecho
+                if (!window.wavesurfers) {
+                    window.wavesurfers = {};
+                }
+
+                // Cargar el audio si no está cargado
                 if (!waveformContainer.dataset.audioLoaded) {
                     if (waveformContainer.dataset.loadTimeoutSet) {
                         clearTimeout(waveformContainer.dataset.loadTimeout);
@@ -91,6 +104,8 @@ function inicializarWaveforms() {
                         } else {
                             wavesurfer.play();
                         }
+                    } else {
+                        console.error(`No se encontró wavesurfer para postId: ${postId}`);
                     }
                 }
             }
@@ -100,11 +115,17 @@ function inicializarWaveforms() {
 
 // Definición de la función loadAudio
 function loadAudio(postId, audioUrl, container) {
+    if (!postId) {
+        console.error('postId no está definido en loadAudio.');
+        return;
+    }
+
     if (!container.dataset.audioLoaded) {
         window.we(postId, audioUrl);  // Llamamos a la función we para cargar el audio
         container.dataset.audioLoaded = 'true';
     }
 }
+
 
 window.we = function (postId, audioUrl) {
     const container = document.getElementById(`waveform-${postId}`);
