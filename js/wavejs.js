@@ -134,12 +134,14 @@ window.we = function (postId, audioUrl) {
                     const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
 
                     if (!waveCargada && !isMobile) {
-                        setTimeout(() => {
-                            const image = generateWaveformImage(wavesurfer);
-                            sendImageToServer(image, postId);
-                        }, 1);
+                        if (!container.closest('.LISTWAVESAMPLE')) {
+                            setTimeout(() => {
+                                const image = generateWaveformImage(wavesurfer);
+                                sendImageToServer(image, postId);
+                            }, 1);
+                        }
                     }
-
+                    
                     container.addEventListener('click', () => {
                         if (wavesurfer.isPlaying()) {
                             wavesurfer.pause();
