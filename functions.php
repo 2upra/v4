@@ -5,9 +5,6 @@ require_once __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-
-<?php
-
 // Paso 1: Definir las variables de configuración para cada log
 define('LOG_AUDIO_ENABLED', false); // Cambia a true para habilitar logAudio
 define('CHAT_LOG_ENABLED', false);    // Cambia a true para habilitar chatLog
