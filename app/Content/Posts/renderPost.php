@@ -23,7 +23,8 @@ function htmlPost($filtro)
         <? if ($sampleList): ?>
             <div class="LISTSAMPLE">
                 <div class="KLYJBY">
-                    <? echo audioPostList($post_id); ?>
+                    <? // echo audioPostList($post_id); 
+                    ?>
                 </div>
                 <? echo imagenPostList($block, $es_suscriptor, $post_id) ?>
                 <div class="INFOLISTSAMPLE">
@@ -35,7 +36,17 @@ function htmlPost($filtro)
                         <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;"><? echo esc_html($datosAlgoritmo); ?></p>
                     </div>
                 </div>
-                <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
+                <div class="ZQHOQY LISTWAVESAMPLE">
+                    <div id="waveform-<? echo $post_id; ?>"
+                        class="waveform-container without-image"
+                        postIDWave="<? echo $post_id; ?>"
+                        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
+                        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
+                        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
+                        <div class="waveform-message"></div>
+                        <div class="waveform-loading" style="display: none;">Cargando...</div>
+                    </div>
+                </div>
                 <? echo renderPostControls($post_id, $colab) ?>
             </div>
         <? else: ?>

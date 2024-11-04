@@ -19,21 +19,8 @@ function socialTabs()
     <div class="tab S4K7I3" id="Proyecto">
         <? echo devlogin(); ?>
     </div>
-
-    */
-    ob_start();
-?>
-
-    <div id="menuData" style="display:none;" pestanaActual="">
-        <div data-tab="Feed"></div>
-        <div data-tab="Samples"></div>
-        <div data-tab="Colecciones"></div>
-    </div>
-
-    <div class="tabs">
-        <div class="tab-content">
-
-            <div class="tab INICIO S4K7I3" id="Feed">
+    <div data-tab="Feed"></div
+                <div class="tab INICIO S4K7I3" id="Feed">
                 <div class="OXMGLZ">
                     <div class="OAXRVB">
 
@@ -43,6 +30,20 @@ function socialTabs()
                     </div>
                 </div>
             </div>
+    */
+    ob_start();
+?>
+
+    <div id="menuData" style="display:none;" pestanaActual="">
+        >
+        <div data-tab="Samples"></div>
+        <div data-tab="Colecciones"></div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab-content">
+
+
             <div class="tab INICIO S4K7I3" id="Samples">
                 <div class="DHRDTAG">
                     <? echo tagsPosts() ?>
