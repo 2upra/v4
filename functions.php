@@ -10,7 +10,7 @@ define('LOG_AUDIO_ENABLED', false); // Cambia a true para habilitar logAudio
 define('CHAT_LOG_ENABLED', false);    // Cambia a true para habilitar chatLog
 define('STRIPE_ERROR_ENABLED', true); // Cambia a true para habilitar stripeError
 define('AUT_LOG_ENABLED', false);      // Cambia a true para habilitar autLog
-define('GUARDAR_LOG_ENABLED', false);  // Cambia a true para habilitar guardarLog
+define('GUARDAR_LOG_ENABLED', true);  // Cambia a true para habilitar guardarLog
 define('LOG_ALGORITMO_ENABLED', false); // Cambia a true para habilitar logAlgoritmo
 define('AJAX_POST_LOG_ENABLED', false); // Cambia a true para habilitar ajaxPostLog
 define('IA_LOG_ENABLED', false);        // Cambia a true para habilitar iaLog
