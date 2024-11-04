@@ -133,6 +133,18 @@ add_action('rest_api_init', function () {
     ));
 });
 
+/*
+
+2024-11-04 03:06:21 - Token generado exitosamente: Mjc5MTQ2fDE3MzA2OTMxODF8MTU2LjE0Ni41OS4xN3w2NzI4M2EyZDcwZGEzNS42NzQxNDE4NXwyfDc0YzVkOWNhMjE3ZTJhN2RkOTQ5NTVlZDZlOGUxNGEyN2MyNmI3ZTg4MTYzMTI5NjdmZTQ1OWJiNjg5NTU0MjU=
+2024-11-04 03:06:39 - Verificando token: Mjc4ODE4fDE3MzA2OTMxODB8MTU2LjE0Ni41OS4xN3w2NzI4M2EyYzI4OGE2NC4xMzk0MjY5MXwyfGRkNzE3MTBiZjFjN2IwNjExZjU5MjkwMzYwYTI3MjViMDQ4OGM4OTk4NDVmOTBhZjRhNTNkOTI3ZGVmZDQ3YWY=
+2024-11-04 03:06:39 - Token decodificado: 278818|1730693180|156.146.59.17|67283a2c288a64.13942691|2|dd71710bf1c7b0611f59290360a2725b0488c899845f90af4a53d927defd47af
+2024-11-04 03:06:39 - Error: número incorrecto de partes en el token
+2024-11-04 03:06:39 - Verificando token: Mjc4ODE4fDE3MzA2OTMxODB8MTU2LjE0Ni41OS4xN3w2NzI4M2EyYzI4OGE2NC4xMzk0MjY5MXwyfGRkNzE3MTBiZjFjN2IwNjExZjU5MjkwMzYwYTI3MjViMDQ4OGM4OTk4NDVmOTBhZjRhNTNkOTI3ZGVmZDQ3YWY=
+2024-11-04 03:06:39 - Token decodificado: 278818|1730693180|156.146.59.17|67283a2c288a64.13942691|2|dd71710bf1c7b0611f59290360a2725b0488c899845f90af4a53d927defd47af
+2024-11-04 03:06:39 - Error: número incorrecto de partes en el token
+2024-11-04 03:06:44 - Verificando token: 
+*/
+
 
 function tokenAudio($audio_id)
 {
@@ -147,9 +159,10 @@ function tokenAudio($audio_id)
     $user_ip = $_SERVER['REMOTE_ADDR'];
     $unique_id = uniqid('', true);
     $max_usos = 2;
-    $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id . '|' . $max_usos;
+    // Creamos el data sin incluir max_usos en la firma
+    $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
     $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
-    $token = base64_encode($data . '|' . $signature);
+    $token = base64_encode($data . '|' . $max_usos . '|' . $signature);
     
     guardarLog("Token generado exitosamente: $token");
     return $token;
@@ -159,17 +172,22 @@ function verificarAudio($token)
 {
     guardarLog("Verificando token: $token");
     
+    if (empty($token)) {
+        guardarLog("Error: token vacío");
+        return false;
+    }
+    
     $decoded = base64_decode($token);
     guardarLog("Token decodificado: $decoded");
     
     $parts = explode('|', $decoded);
-    if (count($parts) !== 5) {
-        guardarLog("Error: número incorrecto de partes en el token");
+    if (count($parts) !== 6) { // Ahora esperamos 6 partes
+        guardarLog("Error: número incorrecto de partes en el token (" . count($parts) . ")");
         return false;
     }
     
-    list($audio_id, $expiration, $user_ip, $unique_id, $signature) = $parts;
-    guardarLog("Datos extraídos - Audio ID: $audio_id, Exp: $expiration, IP: $user_ip, Unique ID: $unique_id");
+    list($audio_id, $expiration, $user_ip, $unique_id, $max_usos, $signature) = $parts;
+    guardarLog("Datos extraídos - Audio ID: $audio_id, Exp: $expiration, IP: $user_ip, Unique ID: $unique_id, Max Usos: $max_usos");
 
     if ($_SERVER['REMOTE_ADDR'] !== $user_ip) {
         guardarLog("Error: IP no coincide. Esperada: $user_ip, Actual: " . $_SERVER['REMOTE_ADDR']);
@@ -204,6 +222,7 @@ function verificarAudio($token)
         return false;
     }
 
+    // Recreamos el data original sin max_usos
     $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
     $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
 
