@@ -11,18 +11,26 @@ add_action('init', function () {
     }
 });
 
-function audioUrlSegura($audio_id)
-{
+function audioUrlSegura($audio_id) {
+    guardarLog("Generando URL segura para audio ID: " . $audio_id);
+    
     $user_id = get_current_user_id();
     if (usuarioEsAdminOPro($user_id)) {
-        return site_url("/wp-json/1/v1/audio-pro/{$audio_id}");
+        $url = site_url("/wp-json/1/v1/audio-pro/{$audio_id}");
+        guardarLog("URL generada para admin/pro: " . $url);
+        return $url;
     }
+    
     $token = tokenAudio($audio_id);
     if (!$token) {
+        guardarLog("Error generando token para audio ID: " . $audio_id);
         return new WP_Error('invalid_audio_id', 'Audio ID inválido.');
     }
+    
     $nonce = wp_create_nonce('wp_rest');
-    return site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce);
+    $url = site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce);
+    guardarLog("URL generada para usuario normal: " . $url);
+    return $url;
 }
 
 function bloquear_acceso_directo_archivos()
@@ -54,18 +62,25 @@ add_action('rest_api_init', function () {
     ));
 
     // Endpoint original para usuarios normales
-    register_rest_route('1/v1', '/2', array(
-        'methods' => 'GET',
-        'callback' => 'audioStreamEnd',
-        'args' => array(
-            'token' => array(
-                'required' => true,
+    add_action('rest_api_init', function () {
+        guardarLog('Registrando rutas REST API');
+        
+        register_rest_route('1/v1', '/2', array(
+            'methods' => 'GET',
+            'callback' => 'audioStreamEnd',
+            'args' => array(
+                'token' => array(
+                    'required' => true,
+                ),
             ),
-        ),
-        'permission_callback' => function ($request) {
-            return verificarAudio($request->get_param('token'));
-        }
-    ));
+            'permission_callback' => function ($request) {
+                guardarLog('Verificando permiso para token: ' . $request->get_param('token'));
+                return verificarAudio($request->get_param('token'));
+            }
+        ));
+        
+        guardarLog('Rutas REST API registradas');
+    });
 });
 
 function tokenAudio($audio_id)
@@ -109,62 +124,13 @@ function tokenAudio($audio_id)
     }
 }
 
-/*
-Cuando la cache esta desactiivada ok, no se cachea, y esta bien, y tampoco permite acceder al enlace de los audios directamente para evitar la descarga, excelente lo bloquea desde el primer intento, pero cuando la cache esta activida, si se cachea pero deja acceder directamente al enlace (algo peculiar es que si accede directamente la cache del audio no vuelve a cargar y se genera otro token al parecer, y si vuelvo acceder al mismo enlace ahora si evita el acceso), pero repito, cuando se cachea debería impedir el acceso directo al enlace, hay forma de hacer eso? 
-
-https://2upra.com/wp-json/1/v1/2?token=Mjg2MzIxfDE5MjQ5MDU2MDB8Y2FjaGVkfDE3MzI2MjRiNzlmMGVhNTVmMzIwOTgxMTY0MzNkYWZhfDk5OTk5OXwzNjgzZDFlM2Y2YzU3YWVlNDAzMzRjNjhmYmI0NjI4ZThmOWE5MDU3YTBhNzQzNmRkNzcwMTZlZDgxZDYzYWZm&_wpnonce=5877b925e6
-
-por cierto tengo esta configuracion 
-
-    # Esto lo desactive porque no me deja cargar los audios
-    #location ~ /wp-json/1/v1/2 {
-    #    if ($http_x_requested_with != "XMLHttpRequest") {
-    #        return 403;
-    #    }
-    #    if ($http_referer !~ ^https?://2upra\.com/[^/]+) {
-    #        return 403;
-    #    }
-    #}
-
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-Content-Type-Options "nosniff";
-    add_header Referrer-Policy "strict-origin-when-cross-origin";
-
-    location /wp-json/ {
-        add_header 'Access-Control-Allow-Origin' 'https://2upra.com';
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Conte>
-
-        if ($request_method = 'OPTIONS') {
-            add_header 'Access-Control-Allow-Origin' 'https://2upra.com';
-            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,C>
-            add_header 'Access-Control-Max-Age' 1728000;
-            add_header 'Content-Type' 'text/plain; charset=utf-8';
-            add_header 'Content-Length' 0;
-            return 204;
-        }
-
-        if ($http_referer !~ ^https?://2upra\.com) {
-            return 403;
-        }
-
-        if ($request_method !~ ^(GET|POST|OPTIONS)$) {
-           return 405;
-        }
-
-
-        if ($allow = 0) {
-            return 403;
-        }
-
-        try_files $uri $uri/ /index.php?$args;
-    }
-*/
 
 function verificarAudio($token)
 {
     guardarLog("Verificando token: $token");
+    guardarLog("Iniciando verificación de audio");
+    guardarLog("Token recibido: " . $token);
+    guardarLog("Headers recibidos: " . print_r(getallheaders(), true));
 
     if (empty($token)) {
         guardarLog("Error: token vacío");
