@@ -131,7 +131,7 @@ function tokenAudio($audio_id)
         return $token;
     }
 }
-
+/*
 add_action('rest_api_init', function() {
     remove_filter('rest_pre_serve_request', 'rest_send_cors_headers');
     add_filter('rest_pre_serve_request', function($value) {
@@ -145,7 +145,7 @@ add_action('init', function() {
     guardarLog("rest_enabled: " . (rest_enabled() ? 'true' : 'false'));
     guardarLog("REST URL base: " . rest_url());
 });
-
+*/
 function verificarAudio($token)
 {
     guardarLog("Verificando token: $token");
