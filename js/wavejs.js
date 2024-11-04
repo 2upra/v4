@@ -1,3 +1,10 @@
+/*
+
+2 detalles, a veces cuando doy click a un .POST-sampleList, se produce otro post distinto, parece ser que solo es al comienzo cuando recien carga la pagina, 
+
+y lo otro es que necesito dar click 2 veces la primera vez a .POST-sampleList para que pueda reproducir, lo que es incomodo
+*/
+
 function inicializarWaveforms() {
     const observer = new IntersectionObserver(
         entries => {
@@ -42,7 +49,7 @@ function inicializarWaveforms() {
     // Agregar manejador de clic para los elementos POST-sampleList
     document.querySelectorAll('.POST-sampleList').forEach(post => {
         if (!post.dataset.clickListenerAdded) {
-            post.addEventListener('click', event => {
+            post.addEventListener('click', async event => {
                 const waveformContainer = post.querySelector('.waveform-container');
 
                 const clickedElement = event.target;
@@ -64,16 +71,18 @@ function inicializarWaveforms() {
                         return;
                     }
 
+                    // Esperar a que el audio esté completamente cargado antes de reproducir
                     if (!waveformContainer.dataset.audioLoaded) {
-                        loadAudio(postId, audioUrl, waveformContainer);
-                    } else {
-                        const wavesurfer = window.wavesurfers[postId];
-                        if (wavesurfer) {
-                            if (wavesurfer.isPlaying()) {
-                                wavesurfer.pause();
-                            } else {
-                                wavesurfer.play();
-                            }
+                        await loadAudio(postId, audioUrl, waveformContainer);
+                    }
+
+                    // Ahora que el audio está cargado, reproducir o pausar
+                    const wavesurfer = window.wavesurfers[postId];
+                    if (wavesurfer) {
+                        if (wavesurfer.isPlaying()) {
+                            wavesurfer.pause();
+                        } else {
+                            wavesurfer.play();
                         }
                     }
                 }
