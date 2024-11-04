@@ -66,37 +66,16 @@ function inicializarWaveforms() {
         {threshold: 0.5}
     );
 
-    // Inicializar waveforms observando cada contenedor
+    // Inicializar wavesurfers observando cada contenedor
     document.querySelectorAll('.waveform-container').forEach(container => {
         const postId = container.getAttribute('postIDWave');
         const audioUrl = container.getAttribute('data-audio-url');
         if (postId && audioUrl && !container.dataset.initialized) {
             container.dataset.initialized = 'true';
-            observer.observe(container); // Observamos el contenedor de la onda
-            container.addEventListener('click', () => {
-                if (!container.dataset.audioLoaded) {
-                    if (container.dataset.loadTimeoutSet) {
-                        clearTimeout(container.dataset.loadTimeout);
-                        delete container.dataset.loadTimeout;
-                        delete container.dataset.loadTimeoutSet;
-                    }
-                    loadAudio(postId, audioUrl, container); // Cargamos y reproducimos el audio
-                } else {
-                    // Si el audio ya está cargado, reproducir o pausar
-                    const wavesurfer = window.wavesurfers[postId];
-                    if (wavesurfer) {
-                        if (wavesurfer.isPlaying()) {
-                            wavesurfer.pause();
-                        } else {
-                            wavesurfer.play();
-                        }
-                    }
-                }
-            });
+            observer.observe(container);
         }
     });
 
-    // Agregar manejador de clic para los elementos POST-sampleList
     // Agregar manejador de clic para los elementos POST-sampleList
     document.querySelectorAll('.POST-sampleList').forEach(post => {
         post.addEventListener('click', () => {
@@ -105,35 +84,14 @@ function inicializarWaveforms() {
                 const postId = waveformContainer.getAttribute('postIDWave');
                 const audioUrl = waveformContainer.getAttribute('data-audio-url');
 
-                // Verificar si postId está definido
                 if (!postId) {
                     console.error('postIDWave no está definido para el contenedor de onda.');
                     return;
                 }
 
-                // Inicializar wavesurfers si no se ha hecho
-                if (!window.wavesurfers) {
-                    window.wavesurfers = {};
-                }
-
-                // Cargar el audio si no está cargado
                 if (!waveformContainer.dataset.audioLoaded) {
-                    if (waveformContainer.dataset.loadTimeoutSet) {
-                        clearTimeout(waveformContainer.dataset.loadTimeout);
-                        delete waveformContainer.dataset.loadTimeout;
-                        delete waveformContainer.dataset.loadTimeoutSet;
-                    }
-                    loadAudio(postId, audioUrl, waveformContainer); // Cargar el audio
-
-                    // Una vez que el audio esté listo, reproducirlo
-                    const wavesurfer = window.wavesurfers[postId];
-                    if (wavesurfer) {
-                        wavesurfer.on('ready', () => {
-                            wavesurfer.play(); // Reproducir el audio cuando esté listo
-                        });
-                    }
+                    loadAudio(postId, audioUrl, waveformContainer);
                 } else {
-                    // Si el audio ya está cargado, reproducir o pausar
                     const wavesurfer = window.wavesurfers[postId];
                     if (wavesurfer) {
                         if (wavesurfer.isPlaying()) {
@@ -141,8 +99,6 @@ function inicializarWaveforms() {
                         } else {
                             wavesurfer.play();
                         }
-                    } else {
-                        console.error(`No se encontró wavesurfer para postId: ${postId}`);
                     }
                 }
             }
@@ -150,23 +106,24 @@ function inicializarWaveforms() {
     });
 }
 
-// Definición de la función loadAudio
 function loadAudio(postId, audioUrl, container) {
     if (!postId) {
         console.error('postId no está definido en loadAudio.');
         return;
     }
-
     if (!container.dataset.audioLoaded) {
-        window.we(postId, audioUrl); // Llamamos a la función we para cargar el audio
+        window.we(postId, audioUrl);
         container.dataset.audioLoaded = 'true';
     }
 }
 
 window.we = function (postId, audioUrl) {
+    if (!window.wavesurfers) {
+        window.wavesurfers = {};
+    }
+
     const container = document.getElementById(`waveform-${postId}`);
     const MAX_RETRIES = 3;
-    let wavesurfer;
     console.log('Audio URL:', audioUrl);
 
     const loadAndPlayAudioStream = (retryCount = 0) => {
@@ -187,90 +144,81 @@ window.we = function (postId, audioUrl) {
                 'X-WP-Nonce': audioSettings.nonce,
                 'X-Requested-With': 'XMLHttpRequest',
                 Accept: 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8'
-                // Eliminar los headers que previenen el cacheo
-                // 'Cache-Control': 'no-cache',
-                // Pragma: 'no-cache'
             }
         })
-            .then(response => {
-                console.log('Estado de respuesta:', response.status);
-                console.log('Headers de respuesta:', [...response.headers.entries()]);
-                if (!response.ok) {
-                    throw new Error('Respuesta de red no satisfactoria');
-                }
-                return response;
-            })
-            .then(response => {
-                const reader = response.body.getReader();
-                return new ReadableStream({
-                    start(controller) {
-                        return pump();
-                        function pump() {
-                            return reader.read().then(({done, value}) => {
-                                if (done) {
-                                    controller.close();
-                                    return;
-                                }
-                                controller.enqueue(value);
-                                return pump();
-                            });
-                        }
+        .then(response => {
+            if (!response.ok) throw new Error('Respuesta de red no satisfactoria');
+            return response;
+        })
+        .then(response => {
+            const reader = response.body.getReader();
+            return new ReadableStream({
+                start(controller) {
+                    return pump();
+                    function pump() {
+                        return reader.read().then(({done, value}) => {
+                            if (done) {
+                                controller.close();
+                                return;
+                            }
+                            controller.enqueue(value);
+                            return pump();
+                        });
                     }
-                });
-            })
-            .then(stream => new Response(stream))
-            .then(response => response.blob())
-            .then(blob => {
-                const audioBlobUrl = URL.createObjectURL(blob);
+                }
+            });
+        })
+        .then(stream => new Response(stream))
+        .then(response => response.blob())
+        .then(blob => {
+            const audioBlobUrl = URL.createObjectURL(blob);
 
-                wavesurfer = initWavesurfer(container);
-                wavesurfer.load(audioBlobUrl);
+            // Inicializar wavesurfer y guardarlo en el objeto global
+            const wavesurfer = initWavesurfer(container);
+            window.wavesurfers[postId] = wavesurfer;
 
-                const waveformBackground = container.querySelector('.waveform-background');
-                if (waveformBackground) {
-                    waveformBackground.style.display = 'none';
+            wavesurfer.load(audioBlobUrl);
+
+            const waveformBackground = container.querySelector('.waveform-background');
+            if (waveformBackground) {
+                waveformBackground.style.display = 'none';
+            }
+
+            wavesurfer.on('ready', () => {
+                window.audioLoading = false;
+                container.dataset.audioLoaded = 'true';
+                container.querySelector('.waveform-loading').style.display = 'none';
+                const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
+
+                const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
+
+                if (!waveCargada && !isMobile) {
+                    if (!container.closest('.LISTWAVESAMPLE')) {
+                        setTimeout(() => {
+                            const image = generateWaveformImage(wavesurfer);
+                            sendImageToServer(image, postId);
+                        }, 1);
+                    }
                 }
 
-                wavesurfer.on('ready', () => {
-                    window.audioLoading = false;
-                    container.dataset.audioLoaded = 'true';
-                    container.querySelector('.waveform-loading').style.display = 'none';
-                    const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
+                // Reproducir automáticamente cuando esté listo
+                wavesurfer.play();
+            });
 
-                    // Detectar si el usuario está en móvil
-                    const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
-
-                    if (!waveCargada && !isMobile) {
-                        if (!container.closest('.LISTWAVESAMPLE')) {
-                            setTimeout(() => {
-                                const image = generateWaveformImage(wavesurfer);
-                                sendImageToServer(image, postId);
-                            }, 1);
-                        }
-                    }
-
-                    container.addEventListener('click', () => {
-                        if (wavesurfer.isPlaying()) {
-                            wavesurfer.pause();
-                        } else {
-                            wavesurfer.play();
-                        }
-                    });
-                });
-
-                wavesurfer.on('error', () => {
-                    console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`);
-                    setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
-                });
-            })
-            .catch(error => {
-                console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`, error);
+            wavesurfer.on('error', () => {
+                console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`);
                 setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
             });
+        })
+        .catch(error => {
+            console.error(`Error al cargar el audio. Intento ${retryCount + 1} de ${MAX_RETRIES}`, error);
+            setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
+        });
     };
 
     loadAndPlayAudioStream();
 };
+
 
 // La función que inicializa WaveSurfer con los estilos y configuraciones deseados
 function initWavesurfer(container) {
