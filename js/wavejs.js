@@ -75,13 +75,14 @@ window.we = function (postId, audioUrl) {
 
         fetch(audioUrl, {
             method: 'GET',
-            credentials: 'same-origin', // Cambiado de 'include' a 'same-origin'
+            credentials: 'same-origin',
             headers: {
                 'X-WP-Nonce': audioSettings.nonce,
                 'X-Requested-With': 'XMLHttpRequest',
-                Accept: 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8',
-                'Cache-Control': 'no-cache',
-                Pragma: 'no-cache'
+                Accept: 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8'
+                // Eliminar los headers que previenen el cacheo
+                // 'Cache-Control': 'no-cache',
+                // Pragma: 'no-cache'
             }
         })
             .then(response => {

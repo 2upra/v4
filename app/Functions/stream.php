@@ -45,14 +45,26 @@ function bloquear_acceso_directo_archivos()
 }
 add_action('init', 'bloquear_acceso_directo_archivos');
 
-/*
-Estos son los unicos logs que muestra
-2024-11-04 20:30:55 - Generando URL segura para audio ID: 285316
-2024-11-04 20:30:55 - Generando token para audio_id: 285316
-2024-11-04 20:30:55 - URL generada para usuario normal: https://2upra.com/wp-json/1/v1/2?token=Mjg1MzE2fDE5MjQ5MDU2MDB8Y2FjaGVkfGViZWMxMjViNzE1MDMxZTNmNDZhNzRiOWIzODg0MDk4fDk5OTk5OXxlMTlhZGViMTViZDc3MzkyODU0ZGMzZTNjOGU0M2FiYTNhOTU2OGFmYjRjNzUxMzQwYjQ0ZmUwOWVlMWQ2ZDAy&_wpnonce=5877b925e6
+function decrementaUsosToken($unique_id)
+{
+    // Solo decrementar si el cacheo del navegador está desactivado
+    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
+        return; // No decrementar para tokens cacheados
+    }
 
-*/
+    guardarLog("Decrementando usos del token: $unique_id");
+    $key = 'audio_token_' . $unique_id;
+    $usos_restantes = get_transient($key);
 
+    if ($usos_restantes !== false && $usos_restantes > 0) {
+        $usos_restantes--;
+        if ($usos_restantes > 0) {
+            set_transient($key, $usos_restantes, get_option('transient_timeout_' . $key));
+        } else {
+            delete_transient($key);
+        }
+    }
+}
 
 add_action('rest_api_init', function () {
     guardarLog('Registrando rutas REST API');
@@ -131,21 +143,106 @@ function tokenAudio($audio_id)
         return $token;
     }
 }
-/*
-add_action('rest_api_init', function() {
-    remove_filter('rest_pre_serve_request', 'rest_send_cors_headers');
-    add_filter('rest_pre_serve_request', function($value) {
-        header('Access-Control-Allow-Headers: X-Requested-With');
-        return $value;
-    });
-});
 
-add_action('init', function() {
-    guardarLog("Verificando estado de REST API");
-    guardarLog("rest_enabled: " . (rest_enabled() ? 'true' : 'false'));
-    guardarLog("REST URL base: " . rest_url());
-});
+/*
+
+estoy haciendo todo lo posible para que se puedan cachear los audios en el navegador y manteniendo la protección para no se accedan directamente al enlace, pero no se cachean cuando define('ENABLE_BROWSER_AUDIO_CACHE', TRUE);
+
+los audios se piden asi
+
+        fetch(audioUrl, {
+            method: 'GET',
+            credentials: 'same-origin', // Cambiado de 'include' a 'same-origin'
+            headers: {
+                'X-WP-Nonce': audioSettings.nonce,
+                'X-Requested-With': 'XMLHttpRequest',
+                Accept: 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8',
+                'Cache-Control': 'no-cache',
+                Pragma: 'no-cache'
+            }
+        })
+
+    # Bloquear acceso directo a endpoints de audio # 
+    location ~ /wp-json/1/v1/2 {
+    # Permitir OPTIONS para CORS
+        if ($request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' 'https://2upra.com';
+            add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'X-Requested-With, X-WP-Nonce';
+            add_header 'Access-Control-Max-Age' 1728000;
+            add_header 'Content-Type' 'text/plain charset=UTF-8';
+            add_header 'Content-Length' 0;
+            return 204;
+        }
+
+        # Verificar que sea una petici      n AJAX y el referer correcto
+        set $allow 1;
+
+        if ($http_x_requested_with != "XMLHttpRequest") {
+            set $allow 0;
+        }
+
+        if ($http_referer !~ ^https?://2upra\.com/) {
+            set $allow 0;
+        }
+
+        # Si no cumple las condiciones, devolver 403
+        if ($allow = 0) {
+            return 403;
+        }
+
+        # Headers CORS para peticiones v      lidas
+        add_header 'Access-Control-Allow-Origin' 'https://2upra.com' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'X-Requested-With, X-WP-Nonce' always;
+
+        # Procesar la petici      n
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+    2024-11-04 21:07:50 - URL generada para usuario normal: https://2upra.com/wp-json/1/v1/2?token=Mjc5NDMzfDE5MjQ5MDU2MDB8Y2FjaGVkfDAyMTU5ODUyYjE4MzdmMzE3OWZmMGIzOWIxOWUwNzg4fDk5OTk5OXxmMzE4YjE0YTc2ZDY2NDk0ZDlmNjdmODcxNjNjYmRhY2UxYzUyNjJkMzEzNDgyNGJlNDk3NjhhZmU1ODlkMTNl&_wpnonce=5877b925e6
+    2024-11-04 21:07:57 - Registrando rutas REST API
+    2024-11-04 21:07:57 - Rutas REST API registradas
+    2024-11-04 21:07:57 - Verificando permiso para token: Mjg3MjI2fDE5MjQ5MDU2MDB8Y2FjaGVkfDFjYzU5ZWEwMzYzNzU5YThhYWVmOGEwMjQ4YTFmZmYzfDk5OTk5OXwzZTczMWZjOGYzYTYzM2UxNTU3OWI4YmE3Y2JkOWEwNjlhM2U4MmVlNmJiODBiNTg4YmEzN2QzZmRiZjdlOGU5
+    2024-11-04 21:07:57 - Verificando token: Mjg3MjI2fDE5MjQ5MDU2MDB8Y2FjaGVkfDFjYzU5ZWEwMzYzNzU5YThhYWVmOGEwMjQ4YTFmZmYzfDk5OTk5OXwzZTczMWZjOGYzYTYzM2UxNTU3OWI4YmE3Y2JkOWEwNjlhM2U4MmVlNmJiODBiNTg4YmEzN2QzZmRiZjdlOGU5
+    2024-11-04 21:07:57 - Iniciando verificación de audio
+    2024-11-04 21:07:57 - Token recibido: Mjg3MjI2fDE5MjQ5MDU2MDB8Y2FjaGVkfDFjYzU5ZWEwMzYzNzU5YThhYWVmOGEwMjQ4YTFmZmYzfDk5OTk5OXwzZTczMWZjOGYzYTYzM2UxNTU3OWI4YmE3Y2JkOWEwNjlhM2U4MmVlNmJiODBiNTg4YmEzN2QzZmRiZjdlOGU5
+    2024-11-04 21:07:57 - Headers recibidos: Array
+(
+    [Cookie] => __stripe_mid=5e66430b-ad6a-41fc-999f-a47705efb90a48c927; cf_clearance=hGYFyhOjXKKdVaH4fyKkwKAxrZ6.WduWKylyjH5oAtc-1725223500-1.2.1.1-L0aOM9aWlCiHNTlxzYa0dKMwrRJ4otC_a0VQASaTTkj0S1CpVzh9hfdzcL01rh5t3upVC1ZmOKL5qgNyGFNkKtKITzRRjRIAgbjcMRBddYICg8k2u3aZ7KHnHZNr8D1UoGlI9XkHL3D_9.n1uj7tYC3dtS6hxem9nRRJOPO_MGKlDDj0QpmGouwQP08Ffl5OfVSd0NNWgGh5GuGMwY5FiDf9QoMRZWlli5uC7tNmFwmpqz.CZea0NFo.96VvqVm7EvHn.KptmdKevjzFa06dTeib1LCJR3u8GGtE4FjQ.KuPWToDGh_FIh2RtZQvW1_34b_3KbOUc_6ozdysFYv2p3FaUGNiwu5c3EfAIHL4LtKAD5ps_Ed9FRv5EL3l426FxJNe4UJMnz1SLIu.vyJsEg; wordpress_test_cookie=WP%20Cookie%20check; wordpress_logged_in_171212ad992468e5f38a03c9cec52973=temporal08%7C1730920768%7CFRHrZtDbOmJ6XD2DyZuvrDGh1gr32TumqNRizsr8IVh%7Cec5cc0a1dceb8bfcc6508447949fdd3961e076974431a78f733f037889041093; __stripe_sid=1e6bd3ec-916c-4092-9040-5839b790018999bfa5
+    [Accept-Language] => es-419,es;q=0.9,es-ES;q=0.8,en;q=0.7,en-GB;q=0.6,en-US;q=0.5
+    [Accept-Encoding] => gzip, deflate, br, zstd
+    [Referer] => https://2upra.com/sample/hypnotic-dark-808/
+    [Sec-Fetch-Dest] => empty
+    [Sec-Fetch-Mode] => cors
+    [Sec-Fetch-Site] => same-origin
+    [Accept] => audio/mpeg,audio/ 
+    [User-Agent] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0
+    [X-Requested-With] => XMLHttpRequest
+    [X-Wp-Nonce] => 5877b925e6
+    [Sec-Ch-Ua-Mobile] => ?0
+    [Sec-Ch-Ua] => "Chromium";v="130", "Microsoft Edge";v="130", "Not?A_Brand";v="99"
+    [Pragma] => no-cache
+    [Cache-Control] => no-cache
+    [Sec-Ch-Ua-Platform] => "Windows"
+    [Connection] => keep-alive
+    [Host] => 2upra.com
+    [Content-Length] => 
+    [Content-Type] => 
+)
+2024-11-04 21:07:57 - Partes del token: Array
+(
+    [0] => 287226
+    [1] => 1924905600
+    [2] => cached
+    [3] => 1cc59ea0363759a8aaef8a0248a1fff3
+    [4] => 999999
+    [5] => 3e731fc8f3a633e15579b8ba7cbd9a069a3e82ee6bb80b588ba37d3fdbf7e8e9
+)
+2024-11-04 21:07:57 - audioStreamEnd: Cargando audio desde el archivo en caché: /var/www/wordpress/wp-content/uploads/audio_cache/audio_287226.cache
+2024-11-04 21:07:57 - audioStreamEnd: Transmisión del audio completada para el archivo: /var/www/wordpress/wp-content/uploads/audio_cache/audio_287226.cache
 */
+
 function verificarAudio($token)
 {
     guardarLog("Verificando token: $token");
@@ -253,26 +350,7 @@ function verificarAudio($token)
     }
 }
 
-function decrementaUsosToken($unique_id)
-{
-    // Solo decrementar si el cacheo del navegador está desactivado
-    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
-        return; // No decrementar para tokens cacheados
-    }
 
-    guardarLog("Decrementando usos del token: $unique_id");
-    $key = 'audio_token_' . $unique_id;
-    $usos_restantes = get_transient($key);
-
-    if ($usos_restantes !== false && $usos_restantes > 0) {
-        $usos_restantes--;
-        if ($usos_restantes > 0) {
-            set_transient($key, $usos_restantes, get_option('transient_timeout_' . $key));
-        } else {
-            delete_transient($key);
-        }
-    }
-}
 
 function audioStreamEnd($data)
 {
