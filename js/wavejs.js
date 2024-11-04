@@ -1,41 +1,3 @@
-document.querySelectorAll('.waveform-container').forEach(container => {
-    const postId = container.getAttribute('postIDWave');
-    const audioUrl = container.getAttribute('data-audio-url');
-    if (postId && audioUrl && !container.dataset.initialized) {
-        container.dataset.initialized = 'true';
-        observer.observe(container);
-        container.addEventListener('click', () => {
-            if (!container.dataset.audioLoaded) {
-                if (container.dataset.loadTimeoutSet) {
-                    clearTimeout(container.dataset.loadTimeout);
-                    delete container.dataset.loadTimeout;
-                    delete container.dataset.loadTimeoutSet;
-                }
-                loadAudio(postId, audioUrl, container);
-            }
-        });
-    }
-});
-
-// Agregar manejador de clic para los elementos LISTSAMPLE
-document.querySelectorAll('.LISTSAMPLE').forEach(item => {
-    item.addEventListener('click', () => {
-        const waveformContainer = item.querySelector('.waveform-container');
-        if (waveformContainer) {
-            const postId = waveformContainer.getAttribute('postIDWave');
-            const audioUrl = waveformContainer.getAttribute('data-audio-url');
-            if (!waveformContainer.dataset.audioLoaded) {
-                if (waveformContainer.dataset.loadTimeoutSet) {
-                    clearTimeout(waveformContainer.dataset.loadTimeout);
-                    delete waveformContainer.dataset.loadTimeout;
-                    delete waveformContainer.dataset.loadTimeoutSet;
-                }
-                loadAudio(postId, audioUrl, waveformContainer);
-            }
-        }
-    });
-});
-
 function inicializarWaveforms() {
     const observer = new IntersectionObserver(
         entries => {
@@ -67,12 +29,13 @@ function inicializarWaveforms() {
         { threshold: 0.5 }
     );
 
+    // Inicializar waveforms observando cada contenedor
     document.querySelectorAll('.waveform-container').forEach(container => {
         const postId = container.getAttribute('postIDWave');
         const audioUrl = container.getAttribute('data-audio-url');
         if (postId && audioUrl && !container.dataset.initialized) {
             container.dataset.initialized = 'true';
-            observer.observe(container);
+            observer.observe(container);  // Aquí usamos el observer correctamente
             container.addEventListener('click', () => {
                 if (!container.dataset.audioLoaded) {
                     if (container.dataset.loadTimeoutSet) {
@@ -80,21 +43,39 @@ function inicializarWaveforms() {
                         delete container.dataset.loadTimeout;
                         delete container.dataset.loadTimeoutSet;
                     }
-                    loadAudio(postId, audioUrl, container);
+                    loadAudio(postId, audioUrl, container);  // Aquí llamamos a loadAudio
                 }
             });
         }
     });
+
+    // Agregar manejador de clic para los elementos LISTSAMPLE
+    document.querySelectorAll('.LISTSAMPLE').forEach(item => {
+        item.addEventListener('click', () => {
+            const waveformContainer = item.querySelector('.waveform-container');
+            if (waveformContainer) {
+                const postId = waveformContainer.getAttribute('postIDWave');
+                const audioUrl = waveformContainer.getAttribute('data-audio-url');
+                if (!waveformContainer.dataset.audioLoaded) {
+                    if (waveformContainer.dataset.loadTimeoutSet) {
+                        clearTimeout(waveformContainer.dataset.loadTimeout);
+                        delete waveformContainer.dataset.loadTimeout;
+                        delete waveformContainer.dataset.loadTimeoutSet;
+                    }
+                    loadAudio(postId, audioUrl, waveformContainer);  // Aquí también llamamos a loadAudio
+                }
+            }
+        });
+    });
 }
 
-
+// Definición de la función loadAudio
 function loadAudio(postId, audioUrl, container) {
     if (!container.dataset.audioLoaded) {
-        window.we(postId, audioUrl);
+        window.we(postId, audioUrl);  // Llamamos a la función we para cargar el audio
         container.dataset.audioLoaded = 'true';
     }
 }
-
 
 window.we = function (postId, audioUrl) {
     const container = document.getElementById(`waveform-${postId}`);
