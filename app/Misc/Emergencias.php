@@ -147,7 +147,7 @@ $usuarios_a_bloquear = [
     'ZAP'
 ];
 
-bloquear_y_eliminar_usuarios($usuarios_a_bloquear);
+//bloquear_y_eliminar_usuarios($usuarios_a_bloquear);
 /*
 function restringir_acceso_admin() {
     $user = wp_get_current_user();
