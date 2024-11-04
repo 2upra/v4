@@ -133,12 +133,6 @@ add_action('rest_api_init', function () {
     ));
 });
 
-function guardarLog($mensaje) {
-    $log_file = __DIR__ . '/audio_tokens.log';
-    $timestamp = date('Y-m-d H:i:s');
-    $log_message = "[$timestamp] $mensaje\n";
-    file_put_contents($log_file, $log_message, FILE_APPEND);
-}
 
 function tokenAudio($audio_id)
 {
