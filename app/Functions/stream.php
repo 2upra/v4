@@ -110,25 +110,25 @@ function tokenAudio($audio_id)
 }
 
 /*
-Cuando la cache esta desactivida, ok, no se cachea, y esta bien, y tampoco permite acceder al enlace de los audios directamente para evitar la descarga, excelente, pero cuando la cache esta activida, si se cachea pero deja acceder directamente al enlace (algo peculiar es que si accede directamente la cache del audio no vuelve a cargar y se genera otro token al parecer, y si vuelvo acceder al mismo enlace ahora si evita el acceso), pero repito, cuando se cachea debería impedir el acceso directo al enlace, hay forma de hacer eso? 
+Cuando la cache esta desactiivada ok, no se cachea, y esta bien, y tampoco permite acceder al enlace de los audios directamente para evitar la descarga, excelente lo bloquea desde el primer intento, pero cuando la cache esta activida, si se cachea pero deja acceder directamente al enlace (algo peculiar es que si accede directamente la cache del audio no vuelve a cargar y se genera otro token al parecer, y si vuelvo acceder al mismo enlace ahora si evita el acceso), pero repito, cuando se cachea debería impedir el acceso directo al enlace, hay forma de hacer eso? 
 
 https://2upra.com/wp-json/1/v1/2?token=Mjg2MzIxfDE5MjQ5MDU2MDB8Y2FjaGVkfDE3MzI2MjRiNzlmMGVhNTVmMzIwOTgxMTY0MzNkYWZhfDk5OTk5OXwzNjgzZDFlM2Y2YzU3YWVlNDAzMzRjNjhmYmI0NjI4ZThmOWE5MDU3YTBhNzQzNmRkNzcwMTZlZDgxZDYzYWZm&_wpnonce=5877b925e6
 
 por cierto tengo esta configuracion 
 
-    location /wp-content/uploads/ {
-        valid_referers 2upra.com *.2upra.com;
+    # Esto lo desactive porque no me deja cargar los audios
+    #location ~ /wp-json/1/v1/2 {
+    #    if ($http_x_requested_with != "XMLHttpRequest") {
+    #        return 403;
+    #    }
+    #    if ($http_referer !~ ^https?://2upra\.com/[^/]+) {
+    #        return 403;
+    #    }
+    #}
 
-        if ($invalid_referer) {
-            return 403;
-        }
-        try_files $uri $uri/ =404;
-    }
-
-    location ~* \.(mp3|wav)$ {
-        deny all;
-        return 403;
-    }
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+    add_header Referrer-Policy "strict-origin-when-cross-origin";
 
     location /wp-json/ {
         add_header 'Access-Control-Allow-Origin' 'https://2upra.com';
@@ -144,6 +144,15 @@ por cierto tengo esta configuracion
             add_header 'Content-Length' 0;
             return 204;
         }
+
+        if ($http_referer !~ ^https?://2upra\.com) {
+            return 403;
+        }
+
+        if ($request_method !~ ^(GET|POST|OPTIONS)$) {
+           return 405;
+        }
+
 
         if ($allow = 0) {
             return 403;
@@ -162,17 +171,20 @@ function verificarAudio($token)
         return false;
     }
 
-    // Verificar referer primero, independientemente del modo de caché
-    if (!isset($_SERVER['HTTP_REFERER'])) {
-        guardarLog("Error: HTTP_REFERER no establecido");
+    // Verificar referer y headers
+    if (!isset($_SERVER['HTTP_REFERER']) || !isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+        guardarLog("Error: Faltan headers requeridos");
         return false;
     }
 
     $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
-    guardarLog("Referer host: $referer_host");
-    
     if ($referer_host !== '2upra.com') {
         guardarLog("Error: referer no válido");
+        return false;
+    }
+
+    if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
+        guardarLog("Error: No es una petición AJAX");
         return false;
     }
 
@@ -185,20 +197,10 @@ function verificarAudio($token)
 
     list($audio_id, $expiration, $user_ip, $unique_id, $max_usos, $signature) = $parts;
 
-    // Verificación básica del audio_id para ambos modos
-    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
-        guardarLog("Error: audio_id inválido");
-        return false;
-    }
-
-    // Si el cacheo del navegador está activado
     if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
-        // Verificar que el unique_id corresponde al esperado
-        $expected_unique_id = md5($audio_id . $_ENV['AUDIOCLAVE']);
-        if ($unique_id !== $expected_unique_id) {
-            guardarLog("Error: unique_id no válido");
-            return false;
-        }
+        // Generar una clave única para esta sesión y audio
+        $session_key = 'audio_session_' . $audio_id . '_' . $_SERVER['REMOTE_ADDR'];
+        $cache_key = 'audio_access_' . $audio_id . '_' . $_SERVER['REMOTE_ADDR'];
 
         // Verificar la firma
         $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
@@ -209,21 +211,29 @@ function verificarAudio($token)
             return false;
         }
 
-        // Verificar si es la primera solicitud para este audio desde esta IP
-        $cache_key = 'audio_access_' . $audio_id . '_' . $_SERVER['REMOTE_ADDR'];
-        $previous_access = get_transient($cache_key);
-        
-        if ($previous_access === false) {
-            // Primera solicitud, almacenar en caché
-            set_transient($cache_key, time(), 3600); // 1 hora de caché
+        // Verificar sesión actual
+        $current_session = get_transient($session_key);
+
+        if ($current_session === false) {
+            // Primera solicitud en esta sesión
+            set_transient($session_key, $token, 3600); // 1 hora
+            set_transient($cache_key, 1, 3600); // Contador de accesos
             return true;
         } else {
-            // Verificar si la solicitud viene del mismo referer
-            if (isset($_SERVER['HTTP_REFERER']) && 
-                parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST) === '2upra.com') {
+            // Verificar si es una solicitud válida desde la página
+            $access_count = get_transient($cache_key);
+
+            if (
+                $access_count !== false &&
+                $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest' &&
+                strpos($_SERVER['HTTP_REFERER'], '2upra.com') !== false
+            ) {
+
+                set_transient($cache_key, $access_count + 1, 3600);
                 return true;
             }
-            guardarLog("Error: acceso directo detectado");
+
+            guardarLog("Error: acceso directo o no autorizado");
             return false;
         }
     } else {

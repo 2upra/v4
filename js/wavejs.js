@@ -75,7 +75,8 @@ window.we = function (postId, audioUrl) {
         fetch(audioUrl, {
             credentials: 'include',
             headers: {
-                'X-WP-Nonce': audioSettings.nonce
+                'X-WP-Nonce': audioSettings.nonce,
+                'X-Requested-With': 'XMLHttpRequest' 
             },
             // cache: 'force-cache'
         })
