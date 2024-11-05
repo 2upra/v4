@@ -1,6 +1,7 @@
 /*
 
-Sigue fallando, cuando doy click a reproducir un audio, a veces se reproduce otro distinto, y cuando vuelvo a llamar inicializarWaveforms porque hay un cambio ajax o algo, todos los auidos se reproducen automaticamente
+Error: TypeError: Cannot read properties of undefined (reading '258155')
+    at HTMLLIElement.<anonymous> (wavejs.js?ver=2.0.12.1585652855:104:54)
 */
 
 function inicializarWaveforms() {
@@ -19,6 +20,17 @@ function inicializarWaveforms() {
     setTimeout(() => {
         isInitializing = false;
     }, 1000);
+
+    // Remover todos los listeners antiguos sin clonar
+    document.querySelectorAll('.POST-sampleList').forEach(post => {
+        post.dataset.clickListenerAdded = 'false';
+    });
+
+    // Reiniciar los contenedores de waveform
+    document.querySelectorAll('.waveform-container').forEach(container => {
+        container.dataset.audioLoaded = 'false';
+        container.dataset.initialized = 'false';
+    });
 
     const observer = new IntersectionObserver(
         entries => {
@@ -40,7 +52,7 @@ function inicializarWaveforms() {
                     }
                 } else {
                     if (container.dataset.loadTimeoutSet) {
-                        clearTimeout(container.dataset.loadTimeout);
+                        clearTimeout(parseInt(container.dataset.loadTimeout));
                         delete container.dataset.loadTimeout;
                         delete container.dataset.loadTimeoutSet;
                     }
@@ -50,16 +62,8 @@ function inicializarWaveforms() {
         {threshold: 0.5}
     );
 
-    // Remover listeners antiguos
-    document.querySelectorAll('.POST-sampleList').forEach(post => {
-        const oldPost = post.cloneNode(true);
-        post.parentNode.replaceChild(oldPost, post);
-    });
-
-    // Inicializar wavesurfers observando cada contenedor
+    // Inicializar wavesurfers
     document.querySelectorAll('.waveform-container').forEach(container => {
-        container.dataset.audioLoaded = 'false';
-        container.dataset.initialized = 'false';
         const postId = container.getAttribute('postIDWave');
         const audioUrl = container.getAttribute('data-audio-url');
         if (postId && audioUrl) {
@@ -70,13 +74,14 @@ function inicializarWaveforms() {
 
     // Agregar nuevos listeners
     document.querySelectorAll('.POST-sampleList').forEach(post => {
-        post.addEventListener('click', async event => {
+        if (post.dataset.clickListenerAdded === 'true') return;
+
+        const clickHandler = async event => {
             if (isInitializing) return;
 
             const waveformContainer = post.querySelector('.waveform-container');
             if (!waveformContainer) return;
 
-            // Evitar clicks en elementos específicos
             const clickedElement = event.target;
             if (
                 clickedElement.closest('.tags-container') || 
@@ -87,7 +92,6 @@ function inicializarWaveforms() {
                 return;
             }
 
-            // Prevenir múltiples clicks
             if (post.dataset.processing === 'true') return;
             post.dataset.processing = 'true';
 
@@ -95,7 +99,9 @@ function inicializarWaveforms() {
                 const postId = waveformContainer.getAttribute('postIDWave');
                 const audioUrl = waveformContainer.getAttribute('data-audio-url');
 
-                if (!postId) throw new Error('postIDWave no definido');
+                if (!postId) {
+                    throw new Error('postIDWave no definido');
+                }
 
                 if (!waveformContainer.dataset.audioLoaded) {
                     await loadAudio(postId, audioUrl, waveformContainer);
@@ -103,7 +109,7 @@ function inicializarWaveforms() {
 
                 const wavesurfer = window.wavesurfers[postId];
                 if (wavesurfer) {
-                    // Pausar todos los otros audios
+                    // Pausar otros audios
                     Object.entries(window.wavesurfers).forEach(([id, ws]) => {
                         if (id !== postId && ws && ws.isPlaying()) {
                             ws.pause();
@@ -121,7 +127,10 @@ function inicializarWaveforms() {
             } finally {
                 post.dataset.processing = 'false';
             }
-        });
+        };
+
+        post.addEventListener('click', clickHandler);
+        post.dataset.clickListenerAdded = 'true';
     });
 }
 
