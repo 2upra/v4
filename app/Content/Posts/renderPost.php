@@ -37,7 +37,9 @@ function htmlPost($filtro)
                 <? echo imagenPostList($block, $es_suscriptor, $post_id); ?>
                 <div class="INFOLISTSAMPLE">
                     <p class="CONTENTLISTSAMPLE">
-                        <? the_content(); ?>
+                        <a href="<? echo esc_url(get_permalink()); ?>">
+                            <? the_content(); ?>
+                        </a>
                     </p>
                     <div class="TAGSLISTSAMPLE">
                         <div class="tags-container" id="tags-<? echo get_the_ID(); ?>"></div>

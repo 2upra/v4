@@ -377,7 +377,7 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
 
     if (isset($vistas_posts_processed[$post_id])) {
         $vistas = $vistas_posts_processed[$post_id]['count'];
-        $reduccion_por_vista = 0.50;
+        $reduccion_por_vista = 0.01;
         $factorReduccion = pow(1 - $reduccion_por_vista, $vistas);
         $puntosFinal *= $factorReduccion;
     }
@@ -504,6 +504,7 @@ function extractWordsFromDatosAlgoritmo($datosAlgoritmo)
 #PASO 5
 function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
 {
+    /*
     if ($esAdmin) {
 
         if (!$metaVerificado && $metaPostAut) {
@@ -518,6 +519,6 @@ function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $
             return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
         }
     }
-
+    */
     return $puntosUsuario + $puntosIntereses + $puntosLikes;
 }
