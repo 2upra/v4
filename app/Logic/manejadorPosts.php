@@ -104,15 +104,12 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     }
 
     $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
+    postLog("FILTRO DESPUES DE query_args : $filtro");
+    postLog("FILTROARG query_args: $filtroArg");
+    postLog("---------------------------------------");
     postLog("query_args final: " . json_encode($query_args));
     return $query_args;
-    postLog("---------------------------------------");
-    postLog("FINAL");
-    $filtro = $_POST['filtro'] ?? '';
-    $filtroArg = $args['filtro'];
-    postLog("FILTRO: $filtro");
-    postLog("FILTROARG: $filtroArg");
-    postLog("---------------------------------------");
+
 }
 
 
