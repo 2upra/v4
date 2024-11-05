@@ -195,7 +195,7 @@ function obtenerDatosFeed($userId)
     $vistas_posts = get_user_meta($userId, 'vistas_posts', true);
     $args = [
         'post_type'      => 'social_post',
-        'posts_per_page' => 1000,
+        'posts_per_page' => 2000,
         'date_query'     => [
             'after' => date('Y-m-d', strtotime('-100 days'))
         ],
