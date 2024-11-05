@@ -445,8 +445,8 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos)
     }
 
     // Definir los puntos base y bonus
-    $puntosBasePorCoincidencia = 100; // Puntos por cada palabra que coincide
-    $bonusCompleto = 300; // Bonus adicional si todas las palabras coinciden
+    $puntosBasePorCoincidencia = 500; // Puntos por cada palabra que coincide
+    $bonusCompleto = 1000; // Bonus adicional si todas las palabras coinciden
 
     // Calcular los puntos
     $puntosIdentifier = $matchedWords * $puntosBasePorCoincidencia;
