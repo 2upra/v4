@@ -45,7 +45,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
         if ($paged === 1 || $post_ids === false) {
             // Calcular feed personalizado con posibles parámetros adicionales
             postLog("Calculando feed personalizado para user_id: $current_user_id con identifier: $identifier y similar_to: $similar_to");
-            $posts_personalizados = calcularFeedPersonalizado($current_user_id);
+            $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
             $post_ids = array_keys($posts_personalizados);
             
             // Eliminar similar_to si está presente
