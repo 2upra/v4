@@ -44,9 +44,9 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     }
 
     if ($args['post_type'] === 'social_post') {
-        $transient_key = 'feed_personalizado_one' . $current_user_id;
-        $post_ids = get_transient($transient_key);
-        if ($paged === 1 || $post_ids === false) {
+        //$transient_key = 'feed_personalizado_one' . $current_user_id;
+        //$post_ids = get_transient($transient_key); / || $post_ids === false
+        if ($paged === 1) {
             $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
             $post_ids = array_keys($posts_personalizados);
             if ($similar_to) {
@@ -57,7 +57,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
             // Asegurar que todos los IDs sean únicos
             $post_ids = array_unique($post_ids);
             //postLog("IDs únicos calculados: " . implode(', ', $post_ids));
-            set_transient($transient_key, $post_ids, 600);
+            //set_transient($transient_key, $post_ids, 600);
             //postLog("Feed personalizado calculado y guardado en caché");
         } else {
             //postLog("Usando feed personalizado en caché para página $paged");
