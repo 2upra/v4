@@ -111,6 +111,29 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     return $query_args;
 
 }
+/*
+LOS FILTROS FUNCIONAN BIEN
+
+Pero, hay una confución, hay que enviar el filtro a html
+2024-11-05 17:45:25 - FILTRO ENVIADO A htmlPost : sampleList
+2024-11-05 17:45:25 - ---------------------------------------
+2024-11-05 17:47:03 - ---------------------------------------
+2024-11-05 17:47:03 - INICIO
+2024-11-05 17:47:03 - Iniciando configuración de query args: paged=1, user_id=, current_user_id=1
+2024-11-05 17:47:03 - FILTRO: sampleList
+2024-11-05 17:47:03 - FILTROARG: sampleList
+2024-11-05 17:47:03 - ---------------------------------------
+2024-11-05 17:47:05 - ---------------------------------------
+2024-11-05 17:47:05 - INICIO FILTRO EN APLICARFILTROS: Soul
+2024-11-05 17:47:05 - FINAL FILTRO EN APLICARFILTROS: Soul
+2024-11-05 17:47:05 - ---------------------------------------
+2024-11-05 17:47:05 - FILTRO DESPUES DE query_args : sampleList
+2024-11-05 17:47:05 - FILTROARG query_args: sampleList
+2024-11-05 17:47:05 - ---------------------------------------
+2024-11-05 17:47:05 - query_args final: {"post_type":"social_post","posts_per_page":12,"post__in":[287401,285436,286401,283808,265942,284542,269920,283814,266392,282366,263175,282630],"orderby":"post__in","meta_query":[],"ignore_sticky_posts":true,"author":""}
+2024-11-05 17:47:05 - FILTRO ENVIADO A htmlPost : Soul
+2024-11-05 17:47:05 - ---------------------------------------
+*/
 
 
 
@@ -124,7 +147,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     if ($query->have_posts()) {
 
 
-        $filtro = !empty($args['identifier']) ? $args['identifier'] : $args['filtro'];
+        $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
         $tipoPost = $args['post_type'];
         
         if (!wp_doing_ajax()) {
