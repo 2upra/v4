@@ -11,7 +11,7 @@ define('CHAT_LOG_ENABLED', false);    // Cambia a true para habilitar chatLog
 define('STRIPE_ERROR_ENABLED', true); // Cambia a true para habilitar stripeError
 define('AUT_LOG_ENABLED', false);      // Cambia a true para habilitar autLog
 define('GUARDAR_LOG_ENABLED', true);  // Cambia a true para habilitar guardarLog
-define('LOG_ALGORITMO_ENABLED', false); // Cambia a true para habilitar logAlgoritmo
+define('LOG_ALGORITMO_ENABLED', true); // Cambia a true para habilitar logAlgoritmo
 define('AJAX_POST_LOG_ENABLED', false); // Cambia a true para habilitar ajaxPostLog
 define('IA_LOG_ENABLED', false);        // Cambia a true para habilitar iaLog
 define('POST_LOG_ENABLED', true);      // Cambia a true para habilitar postLog
@@ -65,7 +65,7 @@ function guardarLog($log) {
 
 function logAlgoritmo($log) {
     if (LOG_ALGORITMO_ENABLED) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/logAlgoritmo.log', 20);
+        escribirLog($log, '/var/www/wordpress/wp-content/themes/logAlgoritmo.log', 100);
     }
 }
 

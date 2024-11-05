@@ -172,7 +172,6 @@ function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
 }
 
 
-
 function obtenerDatosFeed($userId)
 {
     global $wpdb;
