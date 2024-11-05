@@ -434,7 +434,7 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos)
     }
 
     // Assign points based on occurrences
-    $puntosIdentifier = $count * 200; 
+    $puntosIdentifier = $count * 500; 
     return $puntosIdentifier;
 }
 
