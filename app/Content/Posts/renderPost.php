@@ -23,48 +23,49 @@ function htmlPost($filtro)
  
  el filtro es sampleList*/
 ?>
-    <li class="POST-<?php echo esc_attr($filtro); ?> EDYQHV"
-        filtro="<?php echo esc_attr($filtro); ?>"
-        id-post="<?php echo get_the_ID(); ?>"
-        autor="<?php echo esc_attr($author_id); ?>">
+    <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV"
+        filtro="<? echo esc_attr($filtro); ?>"
+        id-post="<? echo get_the_ID(); ?>"
+        autor="<? echo esc_attr($author_id); ?>">
 
-        <?php if ($sampleList): ?>
+        <? if ($sampleList): ?>
             <div class="LISTSAMPLE">
                 <div class="KLYJBY">
-                    <?php // echo audioPostList($post_id); 
+                    <? // echo audioPostList($post_id); 
                     ?>
                 </div>
-                <?php echo imagenPostList($block, $es_suscriptor, $post_id); ?>
+                <? echo imagenPostList($block, $es_suscriptor, $post_id); ?>
                 <div class="INFOLISTSAMPLE">
                     <p class="CONTENTLISTSAMPLE">
-                        <?php the_content(); ?>
+                        <? the_content(); ?>
                     </p>
                     <div class="TAGSLISTSAMPLE">
-                        <div class="tags-container" id="tags-<?php echo get_the_ID(); ?>"></div>
-                        <p id-post-algoritmo="<?php echo get_the_ID(); ?>" style="display:none;"><?php echo esc_html($datosAlgoritmo); ?></p>
+                        <div class="tags-container" id="tags-<? echo get_the_ID(); ?>"></div>
+                        <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;"><? echo esc_html($datosAlgoritmo); ?></p>
                     </div>
                 </div>
                 <div class="ZQHOQY LISTWAVESAMPLE">
-                    <div id="waveform-<?php echo $post_id; ?>"
+                    <div id="waveform-<? echo $post_id; ?>"
                         class="waveform-container without-image"
-                        postIDWave="<?php echo $post_id; ?>"
-                        data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
-                        data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
-                        <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
+                        postIDWave="<? echo $post_id; ?>"
+                        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
+                        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
+                        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
                         <div class="waveform-message"></div>
                         <div class="waveform-loading" style="display: none;">Cargando...</div>
                     </div>
                 </div>
-                <?php echo renderPostControls($post_id, $colab); ?>
+                <? echo renderPostControls($post_id, $colab); ?>
+                <? echo opcionesPost($post_id, $author_id); ?>
             </div>
-        <?php else: ?>
-            <?php echo fondoPost($filtro, $block, $es_suscriptor, $post_id); ?>
-            <?php if ($music): ?>
-                <?php renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscriptor, $post_status, $audio_url); ?>
-            <?php else: ?>
-                <?php renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $es_suscriptor, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $post_status, $audio_id_lite); ?>
-            <?php endif; ?>
-        <?php endif; ?>
+        <? else: ?>
+            <? echo fondoPost($filtro, $block, $es_suscriptor, $post_id); ?>
+            <? if ($music): ?>
+                <? renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscriptor, $post_status, $audio_url); ?>
+            <? else: ?>
+                <? renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $es_suscriptor, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $post_status, $audio_id_lite); ?>
+            <? endif; ?>
+        <? endif; ?>
     </li>
 
     <li class="comentariosPost">
