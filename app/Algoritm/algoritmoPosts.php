@@ -296,14 +296,20 @@ function obtenerYProcesarVistasPosts($userId)
 function calcularPuntosIntereses($post_id, $datos)
 {
     $puntosIntereses = 0;
-    $datosAlgoritmo = !empty($datos['datosAlgoritmo'][$post_id]->meta_value) ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true) : [];
+    $datosAlgoritmo = (isset($datos['datosAlgoritmo'][$post_id]) && isset($datos['datosAlgoritmo'][$post_id]->meta_value))
+        ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true)
+        : [];
     $oneshot = ['one shot', 'one-shot', 'oneshot'];
     $esOneShot = false;
 
-    foreach ($oneshot as $palabra) {
-        if (stripos($datos['datosAlgoritmo'][$post_id]->meta_value, $palabra) !== false) {
-            $esOneShot = true;
-            break;
+    $metaValue = isset($datos['datosAlgoritmo'][$post_id]->meta_value) ? $datos['datosAlgoritmo'][$post_id]->meta_value : '';
+
+    if (!empty($metaValue)) {
+        foreach ($oneshot as $palabra) {
+            if (stripos($metaValue, $palabra) !== false) {
+                $esOneShot = true;
+                break;
+            }
         }
     }
 
@@ -329,6 +335,7 @@ function calcularPuntosIntereses($post_id, $datos)
 
     return $puntosIntereses;
 }
+
 
 function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_posts_processed, $identifier = '', $similar_to = null)
 {
@@ -356,8 +363,8 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
     $diasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / (3600 * 24);
     $factorTiempo = pow(0.99, $diasDesdePublicacion);
 
-    $metaVerificado = isset($datos['verificado_results'][$post_id]->meta_value) && $datos['verificado_results'][$post_id]->meta_value == '1';
-    $metaPostAut = isset($datos['postAut_results'][$post_id]->meta_value) && $datos['postAut_results'][$post_id]->meta_value == '1';
+    $metaVerificado = (isset($datos['verificado_results'][$post_id]->meta_value) && $datos['verificado_results'][$post_id]->meta_value == '1') ? true : false;
+    $metaPostAut = (isset($datos['postAut_results'][$post_id]->meta_value) && $datos['postAut_results'][$post_id]->meta_value == '1') ? true : false;
 
     $puntosFinal = calcularPuntosFinales(
         $puntosUsuario,
@@ -384,9 +391,6 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
     return max($puntosFinal, 0);
 }
 
-/*
-respecto a estas 2 funciones, en los post hay una meta de datosAlgoritmo, donde contiene la informacion valiosa sobre los datos del post que sirven para comparar la similitud de estos datos y el identifier
-*/
 
 function calcularPuntosIdentifier($post_id, $identifier, $datos)
 {
