@@ -45,7 +45,13 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
 
     if ($args['post_type'] === 'social_post') {
         $transient_key = 'feed_personalizado_one' . $current_user_id;
-        $post_ids = get_transient($transient_key);
+        
+        // Verificar si el usuario es administrador
+        $is_admin = current_user_can('administrator');
+        
+        // Si es admin, no usar caché
+        $post_ids = $is_admin ? false : get_transient($transient_key);
+        
         if ($paged === 1 || $post_ids === false) {
             $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
             $post_ids = array_keys($posts_personalizados);
@@ -56,24 +62,30 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
             }
             // Asegurar que todos los IDs sean únicos
             $post_ids = array_unique($post_ids);
-            //postLog("IDs únicos calculados: " . implode(', ', $post_ids));
-            //set_transient($transient_key, $post_ids, 600);
-            //postLog("Feed personalizado calculado y guardado en caché");
+            
+            // Guardar en caché solo si no es administrador
+            if (!$is_admin) {
+                set_transient($transient_key, $post_ids, 600);
+                postLog("Feed personalizado calculado y guardado en caché (usuario normal)");
+            } else {
+                postLog("Feed personalizado calculado sin caché (administrador)");
+            }
         } else {
-            //postLog("Usando feed personalizado en caché para página $paged");
+            postLog("Usando feed personalizado en caché para página $paged");
         }
-
 
         $posts_per_page = $posts;
         $offset = ($paged - 1) * $posts_per_page;
         $current_page_ids = array_slice($post_ids, $offset, $posts_per_page);
         $current_page_ids = array_unique($current_page_ids);
+        
         if ($paged > 1) {
             $previous_page_ids = array_slice($post_ids, 0, ($paged - 1) * $posts_per_page);
             $post_not_in = array_merge($post_not_in, $previous_page_ids);
             $post_not_in = array_unique($post_not_in);
             postLog("Excluyendo IDs de páginas anteriores: " . implode(', ', $post_not_in));
         }
+        
         $query_args = [
             'post_type'           => $args['post_type'],
             'posts_per_page'      => $posts_per_page,
@@ -100,7 +112,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
         if (!empty($post_not_in)) {
             $query_args['post__not_in'] = array_unique($post_not_in);
         }
-
     }
 
     $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
@@ -109,7 +120,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     postLog("---------------------------------------");
     postLog("query_args final: " . json_encode($query_args));
     return $query_args;
-
 }
 /*
 LOS FILTROS FUNCIONAN BIEN
