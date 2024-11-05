@@ -139,6 +139,9 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
                   data-tab-id="' . esc_attr($args['tab_id']) . '">';
         }
 
+        postLog("FILTRO ENVIADO A htmlPost : $filtro");
+        postLog("---------------------------------------");
+
         // Itera sobre los resultados de la consulta
         while ($query->have_posts()) {
             $query->the_post();
