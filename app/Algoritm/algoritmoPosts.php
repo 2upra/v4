@@ -84,35 +84,41 @@ function generarMetaDeIntereses($user_id)
 
     foreach ($post_data as $post) {
         $datosAlgoritmo = !empty($post->meta_value) ? json_decode($post->meta_value, true) : [];
-
-        foreach ($datosAlgoritmo as $key => $value) {
-            if (is_array($value)) {
-                if (isset($value['es']) && is_array($value['es'])) {
-                    foreach ($value['es'] as $item) {
-                        $item = normalizarTexto($item);
-                        $tag_intensidad[$item] = isset($tag_intensidad[$item]) ? $tag_intensidad[$item] + 1 : 1;
+        
+        // Verificar que $datosAlgoritmo sea un array antes de iterarlo
+        if (is_array($datosAlgoritmo)) {
+            foreach ($datosAlgoritmo as $key => $value) {
+                if (is_array($value)) {
+                    if (isset($value['es']) && is_array($value['es'])) {
+                        foreach ($value['es'] as $item) {
+                            $item = normalizarTexto($item);
+                            $tag_intensidad[$item] = isset($tag_intensidad[$item]) ? $tag_intensidad[$item] + 1 : 1;
+                        }
                     }
-                }
-                if (isset($value['en']) && is_array($value['en'])) {
-                    foreach ($value['en'] as $item) {
-                        $item = normalizarTexto($item);
-                        $tag_intensidad[$item] = isset($tag_intensidad[$item]) ? $tag_intensidad[$item] + 1 : 1;
+                    if (isset($value['en']) && is_array($value['en'])) {
+                        foreach ($value['en'] as $item) {
+                            $item = normalizarTexto($item);
+                            $tag_intensidad[$item] = isset($tag_intensidad[$item]) ? $tag_intensidad[$item] + 1 : 1;
+                        }
                     }
+                } elseif (!empty($value)) {
+                    $value = normalizarTexto($value);
+                    $tag_intensidad[$value] = isset($tag_intensidad[$value]) ? $tag_intensidad[$value] + 1 : 1;
                 }
-            } elseif (!empty($value)) {
-                $value = normalizarTexto($value);
-                $tag_intensidad[$value] = isset($tag_intensidad[$value]) ? $tag_intensidad[$value] + 1 : 1;
             }
         }
 
-        $content = wp_strip_all_tags($post->post_content);
-        $content = normalizarTexto($content);
-        $palabras = preg_split('/\s+/', $content);
+        // Procesar el contenido del post
+        if (!empty($post->post_content)) {
+            $content = wp_strip_all_tags($post->post_content);
+            $content = normalizarTexto($content);
+            $palabras = preg_split('/\s+/', $content);
 
-        foreach ($palabras as $palabra) {
-            $palabra = trim($palabra);
-            if (!empty($palabra)) {
-                $tag_intensidad[$palabra] = isset($tag_intensidad[$palabra]) ? $tag_intensidad[$palabra] + 1 : 1;
+            foreach ($palabras as $palabra) {
+                $palabra = trim($palabra);
+                if (!empty($palabra)) {
+                    $tag_intensidad[$palabra] = isset($tag_intensidad[$palabra]) ? $tag_intensidad[$palabra] + 1 : 1;
+                }
             }
         }
     }
@@ -120,9 +126,11 @@ function generarMetaDeIntereses($user_id)
     arsort($tag_intensidad);
     $tag_intensidad = array_slice($tag_intensidad, 0, 200, true);
 
-    return actualizarIntereses($user_id, $tag_intensidad, $interesesActuales);
-
-    set_transient($cache_key, $result, 1 * HOUR_IN_SECONDS);
+    $result = actualizarIntereses($user_id, $tag_intensidad, $interesesActuales);
+    
+    if ($result !== false) {
+        set_transient($cache_key, $result, 1 * HOUR_IN_SECONDS);
+    }
 
     return $result;
 }
