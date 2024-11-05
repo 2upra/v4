@@ -34,7 +34,10 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
             ['key' => 'momento', 'value' => '1', 'compare' => '='],
             ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
         ],
-        'sample'   => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+        'sample'   => [
+            ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+            ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
+        ],
         'sampleList'   => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
         'colab' => fn() => $query_args['post_status'] = 'publish',
         'colabPendiente' => function () use (&$query_args) {
@@ -55,7 +58,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
     if ($user_id !== null) {
         $query_args['author'] = $user_id;
     }
-    
+
     postLog("FINAL FILTRO EN APLICARFILTROS: $filtro");
     postLog("---------------------------------------");
     return $query_args;
