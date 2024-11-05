@@ -188,7 +188,7 @@ function obtenerDatosFeed($userId)
     $vistas_posts = get_user_meta($userId, 'vistas_posts', true);
     $args = [
         'post_type'      => 'social_post',
-        'posts_per_page' => 10000,
+        'posts_per_page' => 200,
         'date_query'     => [
             'after' => date('Y-m-d', strtotime('-100 days'))
         ],
@@ -202,6 +202,8 @@ function obtenerDatosFeed($userId)
     }
 
     $placeholders = implode(', ', array_fill(0, count($posts_ids), '%d'));
+    
+    // Consulta para obtener likes
     $sql_likes = "
         SELECT post_id, COUNT(*) as likes_count
         FROM $table_likes
@@ -215,6 +217,7 @@ function obtenerDatosFeed($userId)
         $likes_by_post[$like_row->post_id] = $like_row->likes_count;
     }
 
+    // Consulta para obtener datosAlgoritmo
     $sql_datos = "
         SELECT post_id, meta_value
         FROM {$wpdb->postmeta}
@@ -222,6 +225,7 @@ function obtenerDatosFeed($userId)
     ";
     $datosAlgoritmo_results = $wpdb->get_results($wpdb->prepare($sql_datos, $posts_ids), OBJECT_K);
 
+    // Consulta para obtener verificado
     $sql_verificado = "
         SELECT post_id, meta_value
         FROM {$wpdb->postmeta}
@@ -229,6 +233,7 @@ function obtenerDatosFeed($userId)
     ";
     $verificado_results = $wpdb->get_results($wpdb->prepare($sql_verificado, $posts_ids), OBJECT_K);
 
+    // Consulta para obtener postAut
     $sql_postAut = "
         SELECT post_id, meta_value
         FROM {$wpdb->postmeta}
@@ -236,12 +241,19 @@ function obtenerDatosFeed($userId)
     ";
     $postAut_results = $wpdb->get_results($wpdb->prepare($sql_postAut, $posts_ids), OBJECT_K);
 
-    $sql_authors = "
-        SELECT ID, post_author, post_date
+    // Consulta modificada para obtener autor, fecha y contenido
+    $sql_posts = "
+        SELECT ID, post_author, post_date, post_content
         FROM {$wpdb->posts}
         WHERE ID IN ($placeholders)
     ";
-    $author_results = $wpdb->get_results($wpdb->prepare($sql_authors, $posts_ids), OBJECT_K);
+    $posts_results = $wpdb->get_results($wpdb->prepare($sql_posts, $posts_ids), OBJECT_K);
+
+    // Preparar array de contenido de posts
+    $post_content = [];
+    foreach ($posts_results as $post) {
+        $post_content[$post->ID] = $post->post_content;
+    }
 
     return [
         'siguiendo'             => $siguiendo,
@@ -251,7 +263,8 @@ function obtenerDatosFeed($userId)
         'datosAlgoritmo'        => $datosAlgoritmo_results,
         'verificado_results'    => $verificado_results,
         'postAut_results'       => $postAut_results,
-        'author_results'        => $author_results,
+        'author_results'        => $posts_results,
+        'post_content'          => $post_content,    // Nuevo campo añadido
     ];
 }
 
@@ -391,21 +404,22 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
     return max($puntosFinal, 0);
 }
 
-/*
-
-Entiendo que esto por cada coincidencia encontrada, suma 200 puntos, pero no debe de ser así, supongamos que identifier es así, hip hop drum, aqui tenemos 3 palabras, habran post que tengan la palabra hip hop y ese valor se va a sumar muchas veces a pesar de que ese post no tenga la palabra drum, lo importante es que si que mientras mas palabras, mas especifico tiene que ser y darle mas punto a las coicidencias, no me explico bien pero Identifier es la busqueda que hace el usuario, debe optimizarse para que encuentre lo que necesita 
-
-*/
 
 
 function calcularPuntosIdentifier($post_id, $identifier, $datos)
 {
-    // Obtener datosAlgoritmo para el post
+    logAlgoritmo("Iniciando cálculo de puntos para post ID: $post_id");
+
+    // Obtener contenido del post y datosAlgoritmo
+    $post_content = !empty($datos['post_content'][$post_id]) 
+        ? strtolower($datos['post_content'][$post_id]) 
+        : '';
+    
     $datosAlgoritmo = !empty($datos['datosAlgoritmo'][$post_id]->meta_value)
         ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true)
         : [];
 
-    // Normalizar identificadores (convertir a minúsculas y eliminar duplicados)
+    // Normalizar identificadores
     if (is_array($identifier)) {
         $identifiers = array_unique(array_map('strtolower', $identifier));
     } else {
@@ -414,12 +428,22 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos)
 
     $totalIdentifiers = count($identifiers);
     if ($totalIdentifiers === 0) {
+        logAlgoritmo("No se encontraron identificadores válidos para post ID: $post_id");
         return 0;
     }
 
-    // Crear un conjunto único de palabras en el post para evitar contar múltiples veces la misma palabra
-    $postWords = [];
+    logAlgoritmo("Total de identificadores a buscar: $totalIdentifiers");
 
+    // Búsqueda en contenido del post
+    $contentMatches = 0;
+    foreach ($identifiers as $id_word) {
+        if (strpos($post_content, $id_word) !== false) {
+            $contentMatches++;
+        }
+    }
+
+    // Búsqueda en datos del algoritmo
+    $postWords = [];
     foreach ($datosAlgoritmo as $key => $value) {
         if (is_array($value)) {
             foreach (['es', 'en'] as $lang) {
@@ -436,25 +460,35 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos)
         }
     }
 
-    // Contar cuántas palabras del identificador están presentes en el post
-    $matchedWords = 0;
+    $dataMatches = 0;
     foreach ($identifiers as $id_word) {
         if (isset($postWords[$id_word])) {
-            $matchedWords += 1;
+            $dataMatches++;
         }
     }
 
-    // Definir los puntos base y bonus
-    $puntosBasePorCoincidencia = 500; // Puntos por cada palabra que coincide
-    $bonusCompleto = 2000; // Bonus adicional si todas las palabras coinciden
+    logAlgoritmo("Coincidencias en contenido: $contentMatches, Coincidencias en datos: $dataMatches");
 
-    // Calcular los puntos
-    $puntosIdentifier = $matchedWords * $puntosBasePorCoincidencia;
+    // Calcular puntos con pesos diferentes
+    $puntosBasePorCoincidenciaContenido = 750; // Mayor peso para coincidencias en contenido
+    $puntosBasePorCoincidenciaDatos = 250;     // Menor peso para coincidencias en datos
+    $bonusCompleto = 2000;
 
-    // Si todas las palabras coinciden, agregar el bonus
-    if ($matchedWords === $totalIdentifiers) {
+    // Calcular puntos totales
+    $puntosContenido = $contentMatches * $puntosBasePorCoincidenciaContenido;
+    $puntosDatos = $dataMatches * $puntosBasePorCoincidenciaDatos;
+    $puntosIdentifier = $puntosContenido + $puntosDatos;
+
+    // Aplicar bonus si hay coincidencia completa en cualquiera de las fuentes
+    if ($contentMatches === $totalIdentifiers) {
         $puntosIdentifier += $bonusCompleto;
+        logAlgoritmo("Bonus completo aplicado por coincidencia en contenido para post ID: $post_id");
+    } elseif ($dataMatches === $totalIdentifiers) {
+        $puntosIdentifier += ($bonusCompleto * 0.5); // Bonus reducido para coincidencias en datos
+        logAlgoritmo("Bonus parcial aplicado por coincidencia en datos para post ID: $post_id");
     }
+
+    logAlgoritmo("Puntos totales calculados para post ID $post_id: $puntosIdentifier");
 
     return $puntosIdentifier;
 }
