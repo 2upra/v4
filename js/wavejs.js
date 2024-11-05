@@ -137,12 +137,22 @@ function inicializarWaveforms() {
 // Modificar loadAudio para que sea async
 async function loadAudio(postId, audioUrl, container) {
     if (!postId) {
-        console.error('postId no está definido en loadAudio.');
+        console.error('Error: postId no está definido en loadAudio.');
         return;
     }
+    
+    if (!audioUrl) {
+        console.error('Error: audioUrl no está definido en loadAudio.');
+        return;
+    }
+
     if (!container.dataset.audioLoaded) {
-        await window.we(postId, audioUrl);
-        container.dataset.audioLoaded = 'true';
+        try {
+            await window.we(postId, audioUrl);
+            container.dataset.audioLoaded = 'true';
+        } catch (error) {
+            console.error(`Error al cargar el audio para el postId ${postId}:`, error);
+        }
     }
 }
 
@@ -153,6 +163,12 @@ window.we = function(postId, audioUrl) {
         }
 
         const container = document.getElementById(`waveform-${postId}`);
+        if (!container) {
+            console.error(`Error: No se encontró el contenedor con ID waveform-${postId}`);
+            reject(new Error('Contenedor de waveform no encontrado'));
+            return;
+        }
+
         const MAX_RETRIES = 3;
         console.log('Audio URL:', audioUrl);
 
