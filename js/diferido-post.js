@@ -244,7 +244,7 @@
             if (valorTag) {
                 identificador = valorTag;
                 actualizarUIBusqueda(valorTag);
-                console.//log('Nuevo identificador establecido:', identificador);
+                //log('Nuevo identificador establecido:', identificador);
                 resetearCarga();
                 cargarMasContenido();
             }
