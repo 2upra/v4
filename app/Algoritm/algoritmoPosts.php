@@ -474,6 +474,28 @@ function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
     return $puntosSimilarTo;
 }
 
+function extractWordsFromDatosAlgoritmo($datosAlgoritmo)
+{
+    $words = [];
+
+    foreach ($datosAlgoritmo as $key => $value) {
+        if (is_array($value)) {
+            foreach (['es', 'en'] as $lang) {
+                if (isset($value[$lang]) && is_array($value[$lang])) {
+                    foreach ($value[$lang] as $item) {
+                        $item_normalized = strtolower($item);
+                        $words[] = $item_normalized;
+                    }
+                }
+            }
+        } elseif (!empty($value)) {
+            $value_normalized = strtolower($value);
+            $words[] = $value_normalized;
+        }
+    }
+    return $words;
+}
+
 
 #PASO 5
 function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
