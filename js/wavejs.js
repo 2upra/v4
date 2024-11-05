@@ -1,8 +1,3 @@
-/*
-
-a veces cuando doy click a un .POST-sampleList, se produce otro post distinto, parece ser que solo es al comienzo cuando recien carga la pagina, y cuando se llama a inicializarWaveforms por una carga ajax para renovar, cargan todos los audios
-*/
-
 function inicializarWaveforms() {
     console.log('Inicializando waveforms...');
 
@@ -110,6 +105,44 @@ function inicializarWaveforms() {
             });
             post.dataset.clickListenerAdded = 'true';
             console.log(`Manejador de clic añadido a postId=${post.getAttribute('postIDWave')}`);
+        }
+    });
+
+    // Agregar manejador de clic para los elementos waveform-container
+    document.querySelectorAll('.waveform-container').forEach(container => {
+        if (!container.dataset.clickListenerAdded) {
+            container.addEventListener('click', () => {
+                const postId = container.getAttribute('postIDWave');
+                const audioUrl = container.getAttribute('data-audio-url');
+
+                if (!postId) {
+                    console.error('postIDWave no está definido para el contenedor de onda.');
+                    return;
+                }
+
+                console.log(`Clic en waveform-container con postId=${postId}. Verificando si el audio ya está cargado...`);
+
+                if (!container.dataset.audioLoaded) {
+                    console.log(`Audio no cargado aún para postId=${postId}. Cargando ahora...`);
+                    loadAudio(postId, audioUrl, container, true); // Cargar y reproducir
+                } else {
+                    console.log(`Audio ya cargado para postId=${postId}. Reproduciendo/Pausando...`);
+                    const wavesurfer = window.wavesurfers[postId];
+                    if (wavesurfer) {
+                        if (wavesurfer.isPlaying()) {
+                            wavesurfer.pause();
+                            console.log(`Audio pausado para postId=${postId}`);
+                        } else {
+                            wavesurfer.play();
+                            console.log(`Audio reproduciendo para postId=${postId}`);
+                        }
+                    } else {
+                        console.error(`No se encontró wavesurfer para postId=${postId}`);
+                    }
+                }
+            });
+            container.dataset.clickListenerAdded = 'true';
+            console.log(`Manejador de clic añadido a waveform-container con postId=${postId}`);
         }
     });
 }
