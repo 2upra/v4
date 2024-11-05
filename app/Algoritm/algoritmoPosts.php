@@ -330,7 +330,7 @@ function calcularPuntosIntereses($post_id, $datos)
     }
     
     if ($esOneShot) {
-        $puntosIntereses *= 0.2;
+        $puntosIntereses *= 1;
     }
     
     return $puntosIntereses;
