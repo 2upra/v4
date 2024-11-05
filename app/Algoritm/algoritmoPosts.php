@@ -391,50 +391,71 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
     return max($puntosFinal, 0);
 }
 
+/*
+
+Entiendo que esto por cada coincidencia encontrada, suma 200 puntos, pero no debe de ser así, supongamos que identifier es así, hip hop drum, aqui tenemos 3 palabras, habran post que tengan la palabra hip hop y ese valor se va a sumar muchas veces a pesar de que ese post no tenga la palabra drum, lo importante es que si que mientras mas palabras, mas especifico tiene que ser y darle mas punto a las coicidencias, no me explico bien pero Identifier es la busqueda que hace el usuario, debe optimizarse para que encuentre lo que necesita 
+
+*/
+
 
 function calcularPuntosIdentifier($post_id, $identifier, $datos)
 {
-    // Get datosAlgoritmo for the post
+    // Obtener datosAlgoritmo para el post
     $datosAlgoritmo = !empty($datos['datosAlgoritmo'][$post_id]->meta_value)
         ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true)
         : [];
 
-    // Normalize identifier(s)
+    // Normalizar identificadores (convertir a minúsculas y eliminar duplicados)
     if (is_array($identifier)) {
-        $identifiers = $identifier;
+        $identifiers = array_unique(array_map('strtolower', $identifier));
     } else {
-        $identifiers = preg_split('/\s+/', strtolower($identifier), -1, PREG_SPLIT_NO_EMPTY);
+        $identifiers = array_unique(preg_split('/\s+/', strtolower($identifier), -1, PREG_SPLIT_NO_EMPTY));
     }
 
-    $count = 0;
+    $totalIdentifiers = count($identifiers);
+    if ($totalIdentifiers === 0) {
+        return 0;
+    }
 
-    // Now go through datosAlgoritmo and count matches
+    // Crear un conjunto único de palabras en el post para evitar contar múltiples veces la misma palabra
+    $postWords = [];
+
     foreach ($datosAlgoritmo as $key => $value) {
         if (is_array($value)) {
             foreach (['es', 'en'] as $lang) {
                 if (isset($value[$lang]) && is_array($value[$lang])) {
                     foreach ($value[$lang] as $item) {
-                        $item_normalized = strtolower($item);
-                        foreach ($identifiers as $id_word) {
-                            if ($item_normalized == $id_word) {
-                                $count += 1;
-                            }
-                        }
+                        $word = strtolower($item);
+                        $postWords[$word] = true;
                     }
                 }
             }
         } elseif (!empty($value)) {
-            $value_normalized = strtolower($value);
-            foreach ($identifiers as $id_word) {
-                if ($value_normalized == $id_word) {
-                    $count += 1;
-                }
-            }
+            $word = strtolower($value);
+            $postWords[$word] = true;
         }
     }
 
-    // Assign points based on occurrences
-    $puntosIdentifier = $count * 500; 
+    // Contar cuántas palabras del identificador están presentes en el post
+    $matchedWords = 0;
+    foreach ($identifiers as $id_word) {
+        if (isset($postWords[$id_word])) {
+            $matchedWords += 1;
+        }
+    }
+
+    // Definir los puntos base y bonus
+    $puntosBasePorCoincidencia = 100; // Puntos por cada palabra que coincide
+    $bonusCompleto = 300; // Bonus adicional si todas las palabras coinciden
+
+    // Calcular los puntos
+    $puntosIdentifier = $matchedWords * $puntosBasePorCoincidencia;
+
+    // Si todas las palabras coinciden, agregar el bonus
+    if ($matchedWords === $totalIdentifiers) {
+        $puntosIdentifier += $bonusCompleto;
+    }
+
     return $puntosIdentifier;
 }
 
