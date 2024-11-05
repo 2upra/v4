@@ -256,7 +256,7 @@ function verificarCargaArchivoPorHash($file_hash)
     }
 }
 
-function sonHashesSimilaresAut($hash1, $hash2, $umbral = 0.80)
+function sonHashesSimilaresAut($hash1, $hash2, $umbral = 0.85)
 {
     if (empty($hash1) || empty($hash2)) {
         return false;
