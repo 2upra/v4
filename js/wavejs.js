@@ -1,7 +1,8 @@
 /*
+tengo este problema
 
-wavejs.js?ver=2.0.12.298012376:112  Uncaught (in promise) TypeError: Cannot read properties of undefined (reading '247802')
-    at HTMLLIElement.clickHandler (wavejs.js?ver=2.0.12.298012376:112:50)
+wavejs.js?ver=2.0.12.1789656503:112  Uncaught (in promise) TypeError: Cannot read properties of undefined (reading '247802')
+    at HTMLLIElement.clickHandler (wavejs.js?ver=2.0.12.1789656503:112:50)
 */
 
 function inicializarWaveforms() {
@@ -39,6 +40,11 @@ function inicializarWaveforms() {
                 const postId = container.getAttribute('postIDWave');
                 const audioUrl = container.getAttribute('data-audio-url');
 
+                if (!postId) {
+                    console.error('Error: postId no está definido en el contenedor (IntersectionObserver).');
+                    return;
+                }
+
                 if (entry.isIntersecting) {
                     if (!container.dataset.loadTimeoutSet) {
                         const loadTimeout = setTimeout(() => {
@@ -59,7 +65,7 @@ function inicializarWaveforms() {
                 }
             });
         },
-        {threshold: 0.5}
+        { threshold: 0.5 }
     );
 
     // Inicializar wavesurfers
@@ -69,6 +75,8 @@ function inicializarWaveforms() {
         if (postId && audioUrl) {
             container.dataset.initialized = 'true';
             observer.observe(container);
+        } else {
+            console.error('Error: El contenedor no tiene postIDWave o data-audio-url definidos.', container);
         }
     });
 
@@ -78,50 +86,51 @@ function inicializarWaveforms() {
 
         const clickHandler = async event => {
             if (isInitializing) return;
-        
+
             const waveformContainer = post.querySelector('.waveform-container');
             if (!waveformContainer) {
                 console.error('Error: No se encontró el contenedor de waveform en el post.');
                 return;
             }
-        
+
             const postId = waveformContainer.getAttribute('postIDWave');
             const audioUrl = waveformContainer.getAttribute('data-audio-url');
-        
+
             // Validar que postId y audioUrl estén definidos
             if (!postId) {
                 console.error('Error: postIDWave no está definido en el contenedor.', waveformContainer);
                 return;
             }
-        
+
             if (!audioUrl) {
                 console.error('Error: data-audio-url no está definido en el contenedor.', waveformContainer);
                 return;
             }
-        
+
             // Continuar con el procesamiento si los datos son válidos
             if (!waveformContainer.dataset.audioLoaded) {
                 try {
+                    console.log(`Cargando audio para postId ${postId}...`);
                     await loadAudio(postId, audioUrl, waveformContainer);
                 } catch (error) {
                     console.error(`Error al cargar el audio para el postId ${postId}:`, error);
                     return;
                 }
             }
-        
+
             const wavesurfer = window.wavesurfers[postId];
             if (!wavesurfer) {
                 console.error(`Error: wavesurfer no está inicializado para el postId ${postId}`);
                 return;
             }
-        
+
             // Pausar otros audios y controlar el estado de reproducción
             Object.entries(window.wavesurfers).forEach(([id, ws]) => {
                 if (id !== postId && ws && ws.isPlaying()) {
                     ws.pause();
                 }
             });
-        
+
             if (wavesurfer.isPlaying()) {
                 wavesurfer.pause();
             } else {
@@ -140,7 +149,7 @@ async function loadAudio(postId, audioUrl, container) {
         console.error('Error: postId no está definido en loadAudio.');
         return;
     }
-    
+
     if (!audioUrl) {
         console.error('Error: audioUrl no está definido en loadAudio.');
         return;
@@ -154,6 +163,7 @@ async function loadAudio(postId, audioUrl, container) {
     try {
         await window.we(postId, audioUrl);
         container.dataset.audioLoaded = 'true';
+        console.log(`Audio cargado exitosamente para el postId ${postId}.`);
     } catch (error) {
         console.error(`Error al cargar el audio para el postId ${postId}:`, error);
     }
@@ -206,7 +216,7 @@ window.we = function(postId, audioUrl) {
                         start(controller) {
                             return pump();
                             function pump() {
-                                return reader.read().then(({done, value}) => {
+                                return reader.read().then(({ done, value }) => {
                                     if (done) {
                                         controller.close();
                                         return;
