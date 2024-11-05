@@ -1,7 +1,7 @@
 /*
 
-Error: TypeError: Cannot read properties of undefined (reading '258155')
-    at HTMLLIElement.<anonymous> (wavejs.js?ver=2.0.12.1585652855:104:54)
+wavejs.js?ver=2.0.12.1251010275:126  Error: TypeError: Cannot read properties of undefined (reading '253052')
+    at HTMLLIElement.clickHandler (wavejs.js?ver=2.0.12.1251010275:110:54)
 */
 
 function inicializarWaveforms() {
@@ -77,12 +77,20 @@ function inicializarWaveforms() {
         if (post.dataset.clickListenerAdded === 'true') return;
 
         const clickHandler = async event => {
+            console.log('Click event triggered on element:', event.target);
+            console.log('Processing post:', post);
+            
             if (isInitializing) return;
-
+        
             const waveformContainer = post.querySelector('.waveform-container');
-            if (!waveformContainer) return;
-
+            if (!waveformContainer) {
+                console.error('Error: No waveform container found in the post.');
+                return;
+            }
+        
             const clickedElement = event.target;
+            console.log('Clicked element:', clickedElement);
+        
             if (
                 clickedElement.closest('.tags-container') || 
                 clickedElement.closest('.QSORIW') ||
@@ -91,36 +99,39 @@ function inicializarWaveforms() {
             ) {
                 return;
             }
-
+        
             if (post.dataset.processing === 'true') return;
             post.dataset.processing = 'true';
-
+        
             try {
                 const postId = waveformContainer.getAttribute('postIDWave');
-                const audioUrl = waveformContainer.getAttribute('data-audio-url');
-
                 if (!postId) {
-                    throw new Error('postIDWave no definido');
+                    console.error('Error: postIDWave is not defined for the clicked post.', waveformContainer);
+                    return;
                 }
-
+        
+                const audioUrl = waveformContainer.getAttribute('data-audio-url');
                 if (!waveformContainer.dataset.audioLoaded) {
                     await loadAudio(postId, audioUrl, waveformContainer);
                 }
-
+        
                 const wavesurfer = window.wavesurfers[postId];
-                if (wavesurfer) {
-                    // Pausar otros audios
-                    Object.entries(window.wavesurfers).forEach(([id, ws]) => {
-                        if (id !== postId && ws && ws.isPlaying()) {
-                            ws.pause();
-                        }
-                    });
-
-                    if (wavesurfer.isPlaying()) {
-                        wavesurfer.pause();
-                    } else {
-                        wavesurfer.play();
+                if (!wavesurfer) {
+                    console.error(`Error: wavesurfer is not initialized for postId ${postId}`);
+                    return;
+                }
+        
+                // Pausing other audio instances
+                Object.entries(window.wavesurfers).forEach(([id, ws]) => {
+                    if (id !== postId && ws && ws.isPlaying()) {
+                        ws.pause();
                     }
+                });
+        
+                if (wavesurfer.isPlaying()) {
+                    wavesurfer.pause();
+                } else {
+                    wavesurfer.play();
                 }
             } catch (error) {
                 console.error('Error:', error);
