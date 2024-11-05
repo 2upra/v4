@@ -11,7 +11,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         'posts' => 12,
         'exclude' => [],
         'post_type' => 'social_post',
-        'similar_to' => null, // Nuevo parámetro para posts similares
+        'similar_to' => null, 
     ];
     $args = array_merge($defaults, $args);
     $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);

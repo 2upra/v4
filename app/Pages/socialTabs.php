@@ -49,7 +49,7 @@ function socialTabs()
                     <? echo tagsPosts() ?>
                 </div>
                 <div class="FOFDV5">
-                    <? echo publicaciones(['filtro' => 'sampleList', 'posts' => 12]); ?>
+                    <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12]); ?>
                 </div>
             </div>
 
