@@ -149,7 +149,7 @@ if (!defined('ABSPATH')) {
                         </div>
 
                         <div class="menuColabs">
-                            <? echo colabsResumen() ?>
+                            <?// echo colabsResumen() ?>
                         </div>
 
                         <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil mipsubmenu">
