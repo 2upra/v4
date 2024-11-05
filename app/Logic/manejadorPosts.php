@@ -96,15 +96,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
             'ignore_sticky_posts' => true,
         ];
 
-        // Si identifier está presente, añadir el meta_query correspondiente
-        if (!empty($identifier)) {
-            $query_args['meta_query'][] = [
-                'key'     => 'datosAlgoritmo',
-                'value'   => $identifier,
-                'compare' => 'LIKE',
-            ];
-        }
-
         if (!empty($post_not_in)) {
             $query_args['post__not_in'] = $post_not_in;
         }
