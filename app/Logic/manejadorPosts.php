@@ -124,13 +124,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
             $query_args['post__not_in'] = array_unique($post_not_in);
         }
 
-        if (!empty($identifier)) {
-            $query_args['meta_query'][] = [
-                'key'     => 'datosAlgoritmo',
-                'value'   => $identifier,
-                'compare' => 'LIKE',
-            ];
-        }
     }
 
     $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
