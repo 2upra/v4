@@ -133,10 +133,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
         }
     }
 
-    if ($similar_to) {
-        $query_args = configurarSimilarTo($query_args, $similar_to);
-    }
-
     $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
     
     postLog("query_args final: " . json_encode($query_args));
