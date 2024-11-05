@@ -1,8 +1,8 @@
 /*
 tengo este problema
 
-wavejs.js?ver=2.0.12.1789656503:112  Uncaught (in promise) TypeError: Cannot read properties of undefined (reading '247802')
-    at HTMLLIElement.clickHandler (wavejs.js?ver=2.0.12.1789656503:112:50)
+Uncaught (in promise) TypeError: Cannot read properties of undefined (reading '248875')
+    at HTMLLIElement.clickHandler (wavejs.js?ver=2.0.12.1594142901:121:50)
 */
 
 function inicializarWaveforms() {
@@ -168,6 +168,7 @@ async function loadAudio(postId, audioUrl, container) {
         console.error(`Error al cargar el audio para el postId ${postId}:`, error);
     }
 }
+
 
 window.we = function(postId, audioUrl) {
     return new Promise((resolve, reject) => {
