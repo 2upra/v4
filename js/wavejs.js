@@ -77,66 +77,55 @@ function inicializarWaveforms() {
         if (post.dataset.clickListenerAdded === 'true') return;
 
         const clickHandler = async event => {
-            console.log('Click event triggered on element:', event.target);
-            console.log('Processing post:', post);
-            
             if (isInitializing) return;
         
             const waveformContainer = post.querySelector('.waveform-container');
             if (!waveformContainer) {
-                console.error('Error: No waveform container found in the post.');
+                console.error('Error: No se encontró el contenedor de waveform en el post.');
                 return;
             }
         
-            const clickedElement = event.target;
-            console.log('Clicked element:', clickedElement);
+            const postId = waveformContainer.getAttribute('postIDWave');
+            const audioUrl = waveformContainer.getAttribute('data-audio-url');
         
-            if (
-                clickedElement.closest('.tags-container') || 
-                clickedElement.closest('.QSORIW') ||
-                clickedElement.closest('.post-image-container') || 
-                clickedElement.closest('.CONTENTLISTSAMPLE')
-            ) {
+            // Validar que postId y audioUrl estén definidos
+            if (!postId) {
+                console.error('Error: postIDWave no está definido en el contenedor.', waveformContainer);
                 return;
             }
         
-            if (post.dataset.processing === 'true') return;
-            post.dataset.processing = 'true';
+            if (!audioUrl) {
+                console.error('Error: data-audio-url no está definido en el contenedor.', waveformContainer);
+                return;
+            }
         
-            try {
-                const postId = waveformContainer.getAttribute('postIDWave');
-                if (!postId) {
-                    console.error('Error: postIDWave is not defined for the clicked post.', waveformContainer);
-                    return;
-                }
-        
-                const audioUrl = waveformContainer.getAttribute('data-audio-url');
-                if (!waveformContainer.dataset.audioLoaded) {
+            // Continuar con el procesamiento si los datos son válidos
+            if (!waveformContainer.dataset.audioLoaded) {
+                try {
                     await loadAudio(postId, audioUrl, waveformContainer);
-                }
-        
-                const wavesurfer = window.wavesurfers[postId];
-                if (!wavesurfer) {
-                    console.error(`Error: wavesurfer is not initialized for postId ${postId}`);
+                } catch (error) {
+                    console.error(`Error al cargar el audio para el postId ${postId}:`, error);
                     return;
                 }
+            }
         
-                // Pausing other audio instances
-                Object.entries(window.wavesurfers).forEach(([id, ws]) => {
-                    if (id !== postId && ws && ws.isPlaying()) {
-                        ws.pause();
-                    }
-                });
+            const wavesurfer = window.wavesurfers[postId];
+            if (!wavesurfer) {
+                console.error(`Error: wavesurfer no está inicializado para el postId ${postId}`);
+                return;
+            }
         
-                if (wavesurfer.isPlaying()) {
-                    wavesurfer.pause();
-                } else {
-                    wavesurfer.play();
+            // Pausar otros audios y controlar el estado de reproducción
+            Object.entries(window.wavesurfers).forEach(([id, ws]) => {
+                if (id !== postId && ws && ws.isPlaying()) {
+                    ws.pause();
                 }
-            } catch (error) {
-                console.error('Error:', error);
-            } finally {
-                post.dataset.processing = 'false';
+            });
+        
+            if (wavesurfer.isPlaying()) {
+                wavesurfer.pause();
+            } else {
+                wavesurfer.play();
             }
         };
 
