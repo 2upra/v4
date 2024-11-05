@@ -26,8 +26,14 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 }
 
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
+    postLog("---------------------------------------");
+    postLog("INICIO");
     postLog("Iniciando configuración de query args: paged=$paged, user_id=$user_id, current_user_id=$current_user_id");
-    
+    $filtro = $_POST['filtro'] ?? '';
+    $filtroArg = $args['filtro'];
+    postLog("FILTRO: $filtro");
+    postLog("FILTROARG: $filtroArg");
+    postLog("---------------------------------------");
     $identifier = $_POST['identifier'] ?? '';
     $posts = $args['posts'];
     $similar_to = $args['similar_to'] ?? null;
@@ -100,6 +106,13 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
     postLog("query_args final: " . json_encode($query_args));
     return $query_args;
+    postLog("---------------------------------------");
+    postLog("FINAL");
+    $filtro = $_POST['filtro'] ?? '';
+    $filtroArg = $args['filtro'];
+    postLog("FILTRO: $filtro");
+    postLog("FILTROARG: $filtroArg");
+    postLog("---------------------------------------");
 }
 
 
