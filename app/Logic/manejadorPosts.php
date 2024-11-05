@@ -38,55 +38,36 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     }
 
     if ($args['post_type'] === 'social_post') {
-        // Siempre calcular el feed personalizado, independientemente de identifier
         $transient_key = 'feed_personalizado_one' . $current_user_id;
         $post_ids = get_transient($transient_key);
-
         if ($paged === 1 || $post_ids === false) {
-            // Calcular feed personalizado con posibles parámetros adicionales
-            postLog("Calculando feed personalizado para user_id: $current_user_id con identifier: $identifier y similar_to: $similar_to");
             $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
             $post_ids = array_keys($posts_personalizados);
-            
-            // Eliminar similar_to si está presente
             if ($similar_to) {
                 $post_ids = array_filter($post_ids, function($post_id) use ($similar_to) {
                     return $post_id != $similar_to;
                 });
             }
-            
             // Asegurar que todos los IDs sean únicos
             $post_ids = array_unique($post_ids);
-            
-            postLog("IDs únicos calculados: " . implode(', ', $post_ids));
-            
+            //postLog("IDs únicos calculados: " . implode(', ', $post_ids));
             set_transient($transient_key, $post_ids, 600);
-            postLog("Feed personalizado calculado y guardado en caché");
+            //postLog("Feed personalizado calculado y guardado en caché");
         } else {
-            postLog("Usando feed personalizado en caché para página $paged");
+            //postLog("Usando feed personalizado en caché para página $paged");
         }
 
-        // Calcular el offset basado en la página actual
+
         $posts_per_page = $posts;
         $offset = ($paged - 1) * $posts_per_page;
-        
-        // Obtener las IDs para la página actual
         $current_page_ids = array_slice($post_ids, $offset, $posts_per_page);
-        
-        // Asegurar que las IDs actuales sean únicas
         $current_page_ids = array_unique($current_page_ids);
-        
-        postLog("IDs únicos para página $paged: " . implode(', ', $current_page_ids));
-
-        // Añadir exclusiones para páginas posteriores
         if ($paged > 1) {
             $previous_page_ids = array_slice($post_ids, 0, ($paged - 1) * $posts_per_page);
             $post_not_in = array_merge($post_not_in, $previous_page_ids);
             $post_not_in = array_unique($post_not_in);
             postLog("Excluyendo IDs de páginas anteriores: " . implode(', ', $post_not_in));
         }
-
-        // Configuración base del query
         $query_args = [
             'post_type'           => $args['post_type'],
             'posts_per_page'      => $posts_per_page,
@@ -100,7 +81,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
             $query_args['post__not_in'] = $post_not_in;
         }
     } else {
-        // Configuración para otros tipos de post
         $query_args = [
             'post_type'           => $args['post_type'],
             'posts_per_page'      => $posts,
@@ -118,9 +98,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     }
 
     $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
-    
     postLog("query_args final: " . json_encode($query_args));
-    
     return $query_args;
 }
 

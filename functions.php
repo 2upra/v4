@@ -14,7 +14,7 @@ define('GUARDAR_LOG_ENABLED', true);  // Cambia a true para habilitar guardarLog
 define('LOG_ALGORITMO_ENABLED', false); // Cambia a true para habilitar logAlgoritmo
 define('AJAX_POST_LOG_ENABLED', false); // Cambia a true para habilitar ajaxPostLog
 define('IA_LOG_ENABLED', false);        // Cambia a true para habilitar iaLog
-define('POST_LOG_ENABLED', false);      // Cambia a true para habilitar postLog
+define('POST_LOG_ENABLED', true);      // Cambia a true para habilitar postLog
 
 function escribirLog($mensaje, $archivo, $max_lineas = 200) {
     if (is_object($mensaje) || is_array($mensaje)) {
