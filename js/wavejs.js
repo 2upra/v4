@@ -1,7 +1,7 @@
 /*
 
-wavejs.js?ver=2.0.12.1251010275:126  Error: TypeError: Cannot read properties of undefined (reading '253052')
-    at HTMLLIElement.clickHandler (wavejs.js?ver=2.0.12.1251010275:110:54)
+wavejs.js?ver=2.0.12.298012376:112  Uncaught (in promise) TypeError: Cannot read properties of undefined (reading '247802')
+    at HTMLLIElement.clickHandler (wavejs.js?ver=2.0.12.298012376:112:50)
 */
 
 function inicializarWaveforms() {
@@ -146,13 +146,16 @@ async function loadAudio(postId, audioUrl, container) {
         return;
     }
 
-    if (!container.dataset.audioLoaded) {
-        try {
-            await window.we(postId, audioUrl);
-            container.dataset.audioLoaded = 'true';
-        } catch (error) {
-            console.error(`Error al cargar el audio para el postId ${postId}:`, error);
-        }
+    if (container.dataset.audioLoaded === 'true') {
+        console.log(`Audio ya cargado para el postId ${postId}, no se vuelve a cargar.`);
+        return;
+    }
+
+    try {
+        await window.we(postId, audioUrl);
+        container.dataset.audioLoaded = 'true';
+    } catch (error) {
+        console.error(`Error al cargar el audio para el postId ${postId}:`, error);
     }
 }
 
