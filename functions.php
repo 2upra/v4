@@ -83,6 +83,7 @@ function iaLog($log) {
 
 function postLog($log) {
     if (POST_LOG_ENABLED) {
+        // tail -f /var/www/wordpress/wp-content/themes/wanlog.txt 
         escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt');
     }
 }
