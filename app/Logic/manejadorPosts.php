@@ -44,9 +44,9 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     }
 
     if ($args['post_type'] === 'social_post') {
-        //$transient_key = 'feed_personalizado_one' . $current_user_id;
-        //$post_ids = get_transient($transient_key); / || $post_ids === false
-        if ($paged === 1) {
+        $transient_key = 'feed_personalizado_one' . $current_user_id;
+        $post_ids = get_transient($transient_key);
+        if ($paged === 1 || $post_ids === false) {
             $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
             $post_ids = array_keys($posts_personalizados);
             if ($similar_to) {
