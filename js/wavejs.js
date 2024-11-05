@@ -1,37 +1,15 @@
 /*
-tengo este problema
 
-Uncaught (in promise) TypeError: Cannot read properties of undefined (reading '248875')
-    at HTMLLIElement.clickHandler (wavejs.js?ver=2.0.12.1594142901:121:50)
+a veces cuando doy click a un .POST-sampleList, se produce otro post distinto, parece ser que solo es al comienzo cuando recien carga la pagina, 
+
 */
 
 function inicializarWaveforms() {
-    // Detener y destruir todos los wavesurfers existentes
-    if (window.wavesurfers) {
-        Object.values(window.wavesurfers).forEach(wavesurfer => {
-            if (wavesurfer) {
-                wavesurfer.pause();
-                wavesurfer.destroy();
-            }
-        });
-        window.wavesurfers = {};
-    }
 
     let isInitializing = true;
     setTimeout(() => {
         isInitializing = false;
     }, 1000);
-
-    // Remover todos los listeners antiguos sin clonar
-    document.querySelectorAll('.POST-sampleList').forEach(post => {
-        post.dataset.clickListenerAdded = 'false';
-    });
-
-    // Reiniciar los contenedores de waveform
-    document.querySelectorAll('.waveform-container').forEach(container => {
-        container.dataset.audioLoaded = 'false';
-        container.dataset.initialized = 'false';
-    });
 
     const observer = new IntersectionObserver(
         entries => {
@@ -39,11 +17,6 @@ function inicializarWaveforms() {
                 const container = entry.target;
                 const postId = container.getAttribute('postIDWave');
                 const audioUrl = container.getAttribute('data-audio-url');
-
-                if (!postId) {
-                    console.error('Error: postId no está definido en el contenedor (IntersectionObserver).');
-                    return;
-                }
 
                 if (entry.isIntersecting) {
                     if (!container.dataset.loadTimeoutSet) {
@@ -58,117 +31,89 @@ function inicializarWaveforms() {
                     }
                 } else {
                     if (container.dataset.loadTimeoutSet) {
-                        clearTimeout(parseInt(container.dataset.loadTimeout));
+                        clearTimeout(container.dataset.loadTimeout);
                         delete container.dataset.loadTimeout;
                         delete container.dataset.loadTimeoutSet;
                     }
                 }
             });
         },
-        { threshold: 0.5 }
+        {threshold: 0.5}
     );
 
-    // Inicializar wavesurfers
+    // Inicializar wavesurfers observando cada contenedor
     document.querySelectorAll('.waveform-container').forEach(container => {
         const postId = container.getAttribute('postIDWave');
         const audioUrl = container.getAttribute('data-audio-url');
-        if (postId && audioUrl) {
+        if (postId && audioUrl && !container.dataset.initialized) {
             container.dataset.initialized = 'true';
             observer.observe(container);
-        } else {
-            console.error('Error: El contenedor no tiene postIDWave o data-audio-url definidos.', container);
         }
     });
 
-    // Agregar nuevos listeners
+    // Agregar manejador de clic para los elementos POST-sampleList
     document.querySelectorAll('.POST-sampleList').forEach(post => {
-        if (post.dataset.clickListenerAdded === 'true') return;
+        if (!post.dataset.clickListenerAdded) {
+            post.addEventListener('click', async event => {
+                const waveformContainer = post.querySelector('.waveform-container');
 
-        const clickHandler = async event => {
-            if (isInitializing) return;
-
-            const waveformContainer = post.querySelector('.waveform-container');
-            if (!waveformContainer) {
-                console.error('Error: No se encontró el contenedor de waveform en el post.');
-                return;
-            }
-
-            const postId = waveformContainer.getAttribute('postIDWave');
-            const audioUrl = waveformContainer.getAttribute('data-audio-url');
-
-            // Validar que postId y audioUrl estén definidos
-            if (!postId) {
-                console.error('Error: postIDWave no está definido en el contenedor.', waveformContainer);
-                return;
-            }
-
-            if (!audioUrl) {
-                console.error('Error: data-audio-url no está definido en el contenedor.', waveformContainer);
-                return;
-            }
-
-            // Continuar con el procesamiento si los datos son válidos
-            if (!waveformContainer.dataset.audioLoaded) {
-                try {
-                    console.log(`Cargando audio para postId ${postId}...`);
-                    await loadAudio(postId, audioUrl, waveformContainer);
-                } catch (error) {
-                    console.error(`Error al cargar el audio para el postId ${postId}:`, error);
+                // Evitar múltiples clicks mientras se procesa
+                if (post.dataset.processing === 'true') {
                     return;
                 }
-            }
+                                if (isInitializing) {
+                    return;
+                }
 
-            const wavesurfer = window.wavesurfers[postId];
-            if (!wavesurfer) {
-                console.error(`Error: wavesurfer no está inicializado para el postId ${postId}`);
-                return;
-            }
+                const clickedElement = event.target;
+                if (clickedElement.closest('.tags-container') || clickedElement.closest('.QSORIW') || clickedElement.closest('.post-image-container') || clickedElement.closest('.CONTENTLISTSAMPLE')) {
+                    return;
+                }
 
-            // Pausar otros audios y controlar el estado de reproducción
-            Object.entries(window.wavesurfers).forEach(([id, ws]) => {
-                if (id !== postId && ws && ws.isPlaying()) {
-                    ws.pause();
+                if (waveformContainer) {
+                    post.dataset.processing = 'true';
+                    const postId = waveformContainer.getAttribute('postIDWave');
+                    const audioUrl = waveformContainer.getAttribute('data-audio-url');
+
+                    if (!postId) {
+                        console.error('postIDWave no está definido para el contenedor de onda.');
+                        post.dataset.processing = 'false';
+                        return;
+                    }
+
+                    if (!waveformContainer.dataset.audioLoaded) {
+                        await loadAudio(postId, audioUrl, waveformContainer);
+                        // Esperar un momento para asegurarse de que el audio esté listo
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+
+                    const wavesurfer = window.wavesurfers[postId];
+                    if (wavesurfer) {
+                        if (wavesurfer.isPlaying()) {
+                            wavesurfer.pause();
+                        } else {
+                            wavesurfer.play();
+                        }
+                    }
+                    post.dataset.processing = 'false';
                 }
             });
-
-            if (wavesurfer.isPlaying()) {
-                wavesurfer.pause();
-            } else {
-                wavesurfer.play();
-            }
-        };
-
-        post.addEventListener('click', clickHandler);
-        post.dataset.clickListenerAdded = 'true';
+            post.dataset.clickListenerAdded = 'true';
+        }
     });
 }
 
 // Modificar loadAudio para que sea async
 async function loadAudio(postId, audioUrl, container) {
     if (!postId) {
-        console.error('Error: postId no está definido en loadAudio.');
+        console.error('postId no está definido en loadAudio.');
         return;
     }
-
-    if (!audioUrl) {
-        console.error('Error: audioUrl no está definido en loadAudio.');
-        return;
-    }
-
-    if (container.dataset.audioLoaded === 'true') {
-        console.log(`Audio ya cargado para el postId ${postId}, no se vuelve a cargar.`);
-        return;
-    }
-
-    try {
+    if (!container.dataset.audioLoaded) {
         await window.we(postId, audioUrl);
         container.dataset.audioLoaded = 'true';
-        console.log(`Audio cargado exitosamente para el postId ${postId}.`);
-    } catch (error) {
-        console.error(`Error al cargar el audio para el postId ${postId}:`, error);
     }
 }
-
 
 window.we = function(postId, audioUrl) {
     return new Promise((resolve, reject) => {
@@ -177,12 +122,6 @@ window.we = function(postId, audioUrl) {
         }
 
         const container = document.getElementById(`waveform-${postId}`);
-        if (!container) {
-            console.error(`Error: No se encontró el contenedor con ID waveform-${postId}`);
-            reject(new Error('Contenedor de waveform no encontrado'));
-            return;
-        }
-
         const MAX_RETRIES = 3;
         console.log('Audio URL:', audioUrl);
 
@@ -217,7 +156,7 @@ window.we = function(postId, audioUrl) {
                         start(controller) {
                             return pump();
                             function pump() {
-                                return reader.read().then(({ done, value }) => {
+                                return reader.read().then(({done, value}) => {
                                     if (done) {
                                         controller.close();
                                         return;
