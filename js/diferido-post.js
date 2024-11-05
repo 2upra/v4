@@ -61,12 +61,12 @@
                 const contenedorPerfil = document.querySelector('.custom-uprofile-container');
                 contenedorPerfil?.setAttribute('data-author-id', idUsuario);
                 window.idUsuarioActual = idUsuario;
-                //log('ID de usuario establecido:', idUsuario);
+                log('ID de usuario establecido:', idUsuario);
             } else {
-                //log('No se encontró el input de user_id');
+                log('No se encontró el input de user_id');
             }
         } else {
-            //log('La página actual no es "sello"');
+            log('La página actual no es "sello"');
         }
     }
 
@@ -78,13 +78,13 @@
             const alturaVentana = window.innerHeight;
             const alturaDocumento = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
 
-            //log('Evento de scroll detectado:', {scrollTop, alturaVentana, alturaDocumento, estaCargando});
+            log('Evento de scroll detectado:', {scrollTop, alturaVentana, alturaDocumento, estaCargando});
 
             if (scrollTop + alturaVentana > alturaDocumento - 100 && !estaCargando && hayMasContenido) {
                 log('Condiciones para cargar más contenido cumplidas');
                 cargarMasContenido();
             } else {
-                //log('Condiciones para cargar más contenido no cumplidas');
+                log('Condiciones para cargar más contenido no cumplidas');
             }
         }, 200); // Ajusta el tiempo de espera según sea necesario
     }
@@ -99,16 +99,16 @@
 
     async function cargarMasContenido() {
         if (estaCargando) {
-            //log('Carga en progreso. Espera a que finalice antes de intentar nuevamente.');
+            log('Carga en progreso. Espera a que finalice antes de intentar nuevamente.');
             return;
         }
     
         estaCargando = true;
-        //log('Iniciando carga de más contenido');
+        log('Iniciando carga de más contenido');
     
         const elementoPestañaActiva = document.querySelector('.tab.active');
         if (elementoPestañaActiva?.getAttribute('ajax') === 'no') {
-            //log('La pestaña activa tiene ajax="no". No se cargará más contenido.');
+            log('La pestaña activa tiene ajax="no". No se cargará más contenido.');
             estaCargando = false;
             return;
         }
@@ -148,24 +148,24 @@
             const textoRespuesta = await respuesta.text();
             await procesarRespuesta(textoRespuesta);
         } catch (error) {
-            //log('Error en la petición AJAX:', error);
+            log('Error en la petición AJAX:', error);
         } finally {
             estaCargando = false;
         }
     }
     
     async function procesarRespuesta(respuesta) {
-        //log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
+        log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
         const respuestaLimpia = respuesta.trim();
     
         if (respuestaLimpia === '<div id="no-more-posts"></div>') {
-            //log('No hay más publicaciones');
+            log('No hay más publicaciones');
             detenerCarga();
             return;
         }
     
         if (!respuestaLimpia) {
-            //log('Respuesta vacía recibida');
+            log('Respuesta vacía recibida');
             detenerCarga();
             return;
         }
@@ -175,7 +175,7 @@
     
         const publicacionesNuevas = doc.querySelectorAll('.EDYQHV');
         if (publicacionesNuevas.length === 0) {
-            //log('No se encontraron publicaciones nuevas en la respuesta');
+            log('No se encontraron publicaciones nuevas en la respuesta');
             detenerCarga();
             return;
         }
@@ -189,9 +189,9 @@
             if (idPublicacion && !publicacionesCargadas.has(idPublicacion) && !existeEnDOM) {
                 publicacionesCargadas.add(idPublicacion);
                 publicacionesValidas.push(publicacion.outerHTML);
-                //log('Publicación añadida:', idPublicacion);
+                log('Publicación añadida:', idPublicacion);
             } else {
-                //log('Publicación duplicada omitida:', idPublicacion);
+                log('Publicación duplicada omitida:', idPublicacion);
             }
         });
     
@@ -209,29 +209,29 @@
                 // Actualiza los eventos de delegación si es necesario
                 reiniciarEventosPostTag();
             } else {
-                //log('No se encontró .social-post-list para añadir contenido');
+                log('No se encontró .social-post-list para añadir contenido');
             }
         } else {
-            //log('No hay publicaciones válidas para añadir');
+            log('No hay publicaciones válidas para añadir');
             detenerCarga();
         }
     }
     
 
     function reiniciarEventosPostTag() {
-        //log('Reiniciando eventos de clic mediante delegación en <span class="postTag">');
+        log('Reiniciando eventos de clic mediante delegación en <span class="postTag">');
         configurarDelegacionEventosPostTag();
     }
 
     function habilitarCargaPorScroll() {
-        //log('Configurando evento de scroll');
+        log('Configurando evento de scroll');
         window.addEventListener('scroll', manejarScroll);
     }
 
     function configurarDelegacionEventosPostTag() {
         document.removeEventListener('click', delegarClickPostTag);
         document.addEventListener('click', delegarClickPostTag);
-        //log('Delegación de eventos de clic configurada globalmente');
+        log('Delegación de eventos de clic configurada globalmente');
     }
 
     function delegarClickPostTag(e) {
@@ -244,7 +244,7 @@
             if (valorTag) {
                 identificador = valorTag;
                 actualizarUIBusqueda(valorTag);
-                //log('Nuevo identificador establecido:', identificador);
+                log('Nuevo identificador establecido:', identificador);
                 resetearCarga();
                 cargarMasContenido();
             }
@@ -263,9 +263,9 @@
         if (inputBusqueda) {
             inputBusqueda.removeEventListener('keypress', manejadorEventoBusqueda);
             inputBusqueda.addEventListener('keypress', manejadorEventoBusqueda);
-            //log('Evento de búsqueda configurado para el input #identifier');
+            log('Evento de búsqueda configurado para el input #identifier');
         } else {
-            //log('No se encontró el elemento input de búsqueda');
+            log('No se encontró el elemento input de búsqueda');
         }
     }
 
@@ -274,14 +274,14 @@
             e.preventDefault();
             identificador = e.target.value.trim();
             actualizarUIBusqueda(identificador);
-            //log('Enter presionado en búsqueda, valor de identificador:', identificador);
+            log('Enter presionado en búsqueda, valor de identificador:', identificador);
             resetearCarga();
             cargarMasContenido();
         }
     }
 
     function resetearCarga() {
-        //log('Ejecutando resetearCarga');
+        log('Ejecutando resetearCarga');
         paginaActual = 1;
         publicacionesCargadas.clear();
         hayMasContenido = true;
@@ -290,7 +290,7 @@
         if (listaPublicaciones) {
             listaPublicaciones.innerHTML = '';
         } else {
-            //log('No se encontró .social-post-list para limpiar contenido');
+            log('No se encontró .social-post-list para limpiar contenido');
         }
 
         // Opcional: Scroll hacia la parte superior
@@ -298,7 +298,7 @@
     }
 
     function detenerCarga() {
-        //log('Carga detenida');
+        log('Carga detenida');
         hayMasContenido = false;
         window.removeEventListener('scroll', manejarScroll);
     }
@@ -308,9 +308,9 @@
         const elemento = contenedor?.querySelector('li[filtro="rolastatus"]');
         if (contenedor && elemento) {
             contenedor.style.maxHeight = `${elemento.offsetHeight + 40}px`;
-            //log('Altura máxima ajustada');
+            log('Altura máxima ajustada');
         } else {
-            //log('No se encontró contenedor o elemento para ajustar altura máxima');
+            log('No se encontró contenedor o elemento para ajustar altura máxima');
         }
     }
 
