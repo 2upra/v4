@@ -328,11 +328,11 @@ function calcularPuntosIntereses($post_id, $datos)
             $puntosIntereses += 10 + $datos['interesesUsuario'][$value]->intensity;
         }
     }
-    /*
+    
     if ($esOneShot) {
         $puntosIntereses *= 0.2;
     }
-    */
+    
     return $puntosIntereses;
 }
 
