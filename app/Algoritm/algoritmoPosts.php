@@ -149,13 +149,14 @@ function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
 
 function obtenerDatosFeedConCache($userId)
 {
-    $cache_key = 'feed_datos_' . $userId;
+    $datos = obtenerDatosFeed($userId);
+    /* $cache_key = 'feed_datos_' . $userId;
     $datos = wp_cache_get($cache_key);
     if ($datos === false) {
         $datos = obtenerDatosFeed($userId);
         wp_cache_set($cache_key, $datos, '', 3600); // Cache por 1 hora
-    }
-    return $datos;
+    }*/
+    return $datos; 
 }
 
 function obtenerDatosFeed($userId)
