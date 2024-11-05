@@ -38,78 +38,70 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     }
 
     if ($args['post_type'] === 'social_post') {
-        if (empty($identifier)) {
-            // Nunca se usa
-            $transient_key = 'feed_personalizado_one' . $current_user_id;
-            $post_ids = get_transient($transient_key);
+        // Siempre calcular el feed personalizado, independientemente de identifier
+        $transient_key = 'feed_personalizado_one' . $current_user_id;
+        $post_ids = get_transient($transient_key);
 
-            if ($paged === 1 || $post_ids === false) {
-                // Calcular feed personalizado solo en la primera página o si no hay datos en caché
-                postLog("Calculando feed personalizado para user_id: $current_user_id");
-                $posts_personalizados = calcularFeedPersonalizado($current_user_id);
-                $post_ids = array_keys($posts_personalizados);
-                
-                // Eliminar similar_to si está presente
-                if ($similar_to) {
-                    $post_ids = array_filter($post_ids, function($post_id) use ($similar_to) {
-                        return $post_id != $similar_to;
-                    });
-                }
-                
-                // Asegurar que todos los IDs sean únicos
-                $post_ids = array_unique($post_ids);
-                
-                postLog("IDs únicos calculados: " . implode(', ', $post_ids));
-                
-                set_transient($transient_key, $post_ids, 600);
-                postLog("Feed personalizado calculado y guardado en caché");
-            } else {
-                postLog("Usando feed personalizado en caché para página $paged");
+        if ($paged === 1 || $post_ids === false) {
+            // Calcular feed personalizado con posibles parámetros adicionales
+            postLog("Calculando feed personalizado para user_id: $current_user_id con identifier: $identifier y similar_to: $similar_to");
+            $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
+            $post_ids = array_keys($posts_personalizados);
+            
+            // Eliminar similar_to si está presente
+            if ($similar_to) {
+                $post_ids = array_filter($post_ids, function($post_id) use ($similar_to) {
+                    return $post_id != $similar_to;
+                });
             }
-
-            // Calcular el offset basado en la página actual
-            $posts_per_page = $posts;
-            $offset = ($paged - 1) * $posts_per_page;
             
-            // Obtener las IDs para la página actual
-            $current_page_ids = array_slice($post_ids, $offset, $posts_per_page);
+            // Asegurar que todos los IDs sean únicos
+            $post_ids = array_unique($post_ids);
             
-            // Asegurar que las IDs actuales sean únicas
-            $current_page_ids = array_unique($current_page_ids);
+            postLog("IDs únicos calculados: " . implode(', ', $post_ids));
             
-            postLog("IDs únicos para página $paged: " . implode(', ', $current_page_ids));
-
-            // Añadir exclusiones para páginas posteriores
-            if ($paged > 1) {
-                $previous_page_ids = array_slice($post_ids, 0, ($paged - 1) * $posts_per_page);
-                $post_not_in = array_merge($post_not_in, $previous_page_ids);
-                $post_not_in = array_unique($post_not_in);
-                postLog("Excluyendo IDs de páginas anteriores: " . implode(', ', $post_not_in));
-            }
-
-            $query_args = [
-                'post_type'           => $args['post_type'],
-                'posts_per_page'      => $posts_per_page,
-                'post__in'            => $current_page_ids,
-                'orderby'             => 'post__in',
-                'meta_query'          => [],
-                'ignore_sticky_posts' => true,
-            ];
+            set_transient($transient_key, $post_ids, 600);
+            postLog("Feed personalizado calculado y guardado en caché");
         } else {
-            // Configuración para búsqueda por identifier
-            $query_args = [
-                'post_type'      => $args['post_type'],
-                'posts_per_page' => $posts,
-                'paged'          => $paged,
-                'orderby'        => 'date',
-                'order'          => 'DESC',
-                'meta_query'     => [
-                    [
-                        'key'     => 'datosAlgoritmo',
-                        'value'   => $identifier,
-                        'compare' => 'LIKE',
-                    ],
-                ],
+            postLog("Usando feed personalizado en caché para página $paged");
+        }
+
+        // Calcular el offset basado en la página actual
+        $posts_per_page = $posts;
+        $offset = ($paged - 1) * $posts_per_page;
+        
+        // Obtener las IDs para la página actual
+        $current_page_ids = array_slice($post_ids, $offset, $posts_per_page);
+        
+        // Asegurar que las IDs actuales sean únicas
+        $current_page_ids = array_unique($current_page_ids);
+        
+        postLog("IDs únicos para página $paged: " . implode(', ', $current_page_ids));
+
+        // Añadir exclusiones para páginas posteriores
+        if ($paged > 1) {
+            $previous_page_ids = array_slice($post_ids, 0, ($paged - 1) * $posts_per_page);
+            $post_not_in = array_merge($post_not_in, $previous_page_ids);
+            $post_not_in = array_unique($post_not_in);
+            postLog("Excluyendo IDs de páginas anteriores: " . implode(', ', $post_not_in));
+        }
+
+        // Configuración base del query
+        $query_args = [
+            'post_type'           => $args['post_type'],
+            'posts_per_page'      => $posts_per_page,
+            'post__in'            => $current_page_ids,
+            'orderby'             => 'post__in',
+            'meta_query'          => [],
+            'ignore_sticky_posts' => true,
+        ];
+
+        // Si identifier está presente, añadir el meta_query correspondiente
+        if (!empty($identifier)) {
+            $query_args['meta_query'][] = [
+                'key'     => 'datosAlgoritmo',
+                'value'   => $identifier,
+                'compare' => 'LIKE',
             ];
         }
 
@@ -152,123 +144,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     return $query_args;
 }
 
-function configurarSimilarTo($query_args, $similar_to)
-{
-    // Obtener los datosAlgoritmo del post similar
-    $datosAlgoritmo = get_post_meta($similar_to, 'datosAlgoritmo', true);
-    if ($datosAlgoritmo) {
-        $data = json_decode($datosAlgoritmo, true);
-
-        $meta_queries = [];
-        $relation = 'OR'; 
-
-        // Coincidencia de Tags en ambos idiomas
-        if (!empty($data['tags_posibles'])) { 
-            foreach (['es', 'en'] as $lang) {
-                if (!empty($data['tags_posibles'][$lang]) && is_array($data['tags_posibles'][$lang])) {
-                    foreach ($data['tags_posibles'][$lang] as $tag) {
-                        $meta_queries[] = [
-                            'key'     => 'datosAlgoritmo',
-                            'value'   => '"' . $tag . '"',
-                            'compare' => 'LIKE',
-                        ];
-                    }
-                }
-            }
-        }
-
-
-        // Función auxiliar para obtener datos de varias claves
-        function get_meta_field($data, $keys, $lang) {
-            foreach ($keys as $key) {
-                if (isset($data[$key][$lang]) && is_array($data[$key][$lang])) {
-                    return $data[$key][$lang];
-                }
-            }
-            return []; // Devuelve un arreglo vacío si no se encuentra ninguna clave válida
-        }
-
-        if (!empty($data)) {
-            // Definir las posibles claves para cada categoría
-            $descripcion_keys = ['descripcion_ia_pro', 'descripcion_ia'];
-            $estado_animo_keys = ['estado_animo']; // Asumo que 'estado_animo' es consistente
-            $artista_posible_keys = ['artista_posible']; // Asumo que 'artista_posible' es consistente
-
-            // Obtener los datos de descripción en ambos idiomas
-            $descripcion_es = get_meta_field($data, $descripcion_keys, 'es');
-            $descripcion_en = get_meta_field($data, $descripcion_keys, 'en');
-
-            // Obtener los datos de estado_animo en ambos idiomas
-            $estado_animo_es = get_meta_field($data, $estado_animo_keys, 'es');
-            $estado_animo_en = get_meta_field($data, $estado_animo_keys, 'en');
-
-            // Obtener los datos de artista_posible en ambos idiomas
-            $artista_posible_es = get_meta_field($data, $artista_posible_keys, 'es');
-            $artista_posible_en = get_meta_field($data, $artista_posible_keys, 'en');
-
-            // Combinar todos los datos en una sola cadena
-            $combined_data = implode(' ', array_merge(
-                $descripcion_es,
-                $descripcion_en,
-                $estado_animo_es,
-                $estado_animo_en,
-                $artista_posible_es,
-                $artista_posible_en
-            ));
-
-            // Asegurarse de que $combined_data no esté vacío antes de agregar a meta_queries
-            if (!empty($combined_data)) {
-                $meta_queries[] = [
-                    'key'     => 'datosAlgoritmo',
-                    'value'   => $combined_data,
-                    'compare' => 'LIKE',
-                ];
-            }
-        }
-
-        if (!empty($meta_queries)) {
-            // Ajustar la relación si hay múltiples condiciones
-            if (count($meta_queries) > 1) {
-                $meta_query = [
-                    'relation' => $relation,
-                ];
-                // Agregar cada consulta individual
-                foreach ($meta_queries as $mq) {
-                    $meta_query[] = $mq;
-                }
-            } else {
-                $meta_query = $meta_queries[0];
-            }
-
-            // Combinar las meta_queries existentes con las nuevas
-            if (!empty($query_args['meta_query'])) {
-                // Si 'meta_query' ya es una matriz con 'relation', necesitamos combinar correctamente
-                if (isset($query_args['meta_query']['relation'])) {
-                    // Añadir nuevas consultas manteniendo la relación existente
-                    foreach ($meta_queries as $mq) {
-                        $query_args['meta_query'][] = $mq;
-                    }
-                } else {
-                    // Si 'meta_query' no tiene 'relation', añadir como condiciones OR
-                    $query_args['meta_query'] = array_merge($query_args['meta_query'], $meta_queries);
-                }
-            } else {
-                $query_args['meta_query'] = [$meta_query];
-            }
-
-            // Asegurarse de que $similar_to ya esté en post__not_in
-            if (isset($query_args['post__not_in'])) {
-                if (!in_array($similar_to, $query_args['post__not_in'])) {
-                    $query_args['post__not_in'][] = $similar_to;
-                }
-            } else {
-                $query_args['post__not_in'] = [$similar_to];
-            }
-        }
-    }
-
-    return $query_args;
-}
 
 
 
