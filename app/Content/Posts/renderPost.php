@@ -10,8 +10,13 @@ function htmlPost($filtro)
         $filtro = 'rolastatus';
     }
     $sampleList = $filtro === 'sampleList';
+    //llevar sample list
     $wave = get_post_meta($post_id, 'waveform_image_url', true);
     $waveCargada = get_post_meta($post_id, 'waveCargada', true);
+    $postAut = get_post_meta($post_id, 'postAut', true);
+    $verificado = get_post_meta($post_id, 'Verificado', true);
+    $recortado = get_post_meta($post_id, 'recortado', true);
+
     $urlAudioSegura = audioUrlSegura($audio_id_lite);
     if (is_wp_error($urlAudioSegura)) {
         $urlAudioSegura = '';
