@@ -438,7 +438,7 @@ function calcularPuntosIntereses($post_id, $datos)
 }
 
 
-function calcularPuntosPostOptimizado(
+function calcularPuntosPost(
     $post_id, 
     $post_data, 
     $datos, 
