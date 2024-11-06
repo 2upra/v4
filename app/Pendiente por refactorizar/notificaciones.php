@@ -137,7 +137,7 @@ function iconoNotificaciones()
 
     return $html_completo;
 }
-add_shortcode('mostrar_notificaciones', 'iconoNotificaciones');
+
 
 
 

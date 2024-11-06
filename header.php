@@ -173,7 +173,7 @@ if (!defined('ABSPATH')) {
 
                         <div class="xaxa1 menu-item">
                             <a>
-                                <? echo do_shortcode('[mostrar_notificaciones]'); ?>
+                                <? echo iconoNotificaciones() ?>
                             </a>
                         </div>
 
