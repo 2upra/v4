@@ -2,8 +2,7 @@
 
 function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
 {
-    $filtro = $args['identifier'] ?? $args['filtro'];
-    postLog("---------------------------------------");
+    $filtro = $args['filtro'];
     postLog("INICIO FILTRO EN APLICARFILTROS: $filtro");
 
     $rolaEstado = function ($status) use (&$query_args) {
@@ -60,6 +59,5 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
     }
 
     postLog("FINAL FILTRO EN APLICARFILTROS: $filtro");
-    postLog("---------------------------------------");
     return $query_args;
 }
