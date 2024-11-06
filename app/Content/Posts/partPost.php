@@ -498,7 +498,9 @@ function imagenPostList($block, $es_suscriptor, $post_id)
     ob_start();
     ?>
     <div class="post-image-container <?= $blurred_class ?>">
-        <img src="<?= esc_url(imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), true)) ?>" alt="Post Image" />
+        <a href="<? echo esc_url(get_permalink()); ?>">
+            <img src="<?= esc_url(imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), true)) ?>" alt="Post Image" />
+        </a>
     </div>
 <?
     $output = ob_get_clean();
