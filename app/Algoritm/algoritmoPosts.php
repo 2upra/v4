@@ -63,8 +63,7 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
                 $vistas_posts_processed,
                 $identifier,
                 $similar_to, 
-                $current_timestamp,
-                $userId
+                $current_timestamp
             );
 
             if (is_numeric($puntosFinal)) {
@@ -387,52 +386,23 @@ function obtenerYProcesarVistasPosts($userId)
 }
 
 
-function calcularPuntosIntereses($post_id, $datos, $user_id) {
-    // Si no hay usuario, no tiene sentido cachear
-    if (!$user_id) {
-        return 0;
-    }
-
-    // Clave única para el caché que incluye post_id y user_id
-    $cache_key = "puntos_intereses_{$user_id}_{$post_id}";
-    
-    // Intentar obtener el resultado desde el caché
-    $cached_result = get_transient($cache_key);
-    if ($cached_result !== false) {
-        return $cached_result;
-    }
-
+function calcularPuntosIntereses($post_id, $datos)
+{
     $puntosIntereses = 0;
     
+    // Verificar si existen los índices necesarios
     if (!isset($datos['datosAlgoritmo'][$post_id]) || 
         !isset($datos['datosAlgoritmo'][$post_id]->meta_value)) {
         return $puntosIntereses;
     }
 
-    // El JSON del post puede cachearse independientemente del usuario
-    // ya que es el mismo para todos
-    $json_cache_key = "json_data_post_{$post_id}";
-    $datosAlgoritmo = get_transient($json_cache_key);
-    
-    if ($datosAlgoritmo === false) {
-        $datosAlgoritmo = json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true);
-        
-        if (json_last_error() === JSON_ERROR_NONE && is_array($datosAlgoritmo)) {
-            // Cachear los datos del post por más tiempo ya que cambian menos
-            set_transient($json_cache_key, $datosAlgoritmo, WEEK_IN_SECONDS);
-        } else {
-            return $puntosIntereses;
-        }
-    }
+    /*El JSON decadoe tarda mucho tiempo porque son muchos post, de que forma se puede mejorar esto para que no tenga que decodificar siempre, esto siempre recibe los mismos datos de los mismos post_id, muy pocas veces van cambiar, hay que tener en cuenta ciertas cosas, son muchos post, estamos hablando que ahora son 20.000, pero mas adelante pueden ser 1.000.000, el entorno es wordpress, si necesitas mas contexto para encontrar una solucion clave, me lo indica y lo solucionamos con calma, probe usar redis pero no fue muy eficiente no se porque, creo que mejor la cache de wordpress (24 horas), y que saber que los datos son igual */
 
-    // Cachear los intereses del usuario
-    $intereses_cache_key = "intereses_usuario_{$user_id}";
-    $interesesUsuario = get_transient($intereses_cache_key);
+    $datosAlgoritmo = json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true);
     
-    if ($interesesUsuario === false) {
-        $interesesUsuario = $datos['interesesUsuario'];
-        // Cachear los intereses por menos tiempo ya que podrían actualizarse
-        set_transient($intereses_cache_key, $interesesUsuario, DAY_IN_SECONDS);
+    // Verificar si el json_decode fue exitoso
+    if (json_last_error() !== JSON_ERROR_NONE || !is_array($datosAlgoritmo)) {
+        return $puntosIntereses;
     }
 
     $oneshot = ['one shot', 'one-shot', 'oneshot'];
@@ -448,64 +418,29 @@ function calcularPuntosIntereses($post_id, $datos, $user_id) {
         }
     }
 
-    // Usar los intereses cacheados del usuario
     foreach ($datosAlgoritmo as $key => $value) {
         if (is_array($value)) {
             foreach (['es', 'en'] as $lang) {
                 if (isset($value[$lang]) && is_array($value[$lang])) {
                     foreach ($value[$lang] as $item) {
-                        if (isset($interesesUsuario[$item])) {
-                            $puntosIntereses += 10 + $interesesUsuario[$item]->intensity;
+                        if (isset($datos['interesesUsuario'][$item])) {
+                            $puntosIntereses += 10 + $datos['interesesUsuario'][$item]->intensity;
                         }
                     }
                 }
             }
-        } elseif (!empty($value) && isset($interesesUsuario[$value])) {
-            $puntosIntereses += 10 + $interesesUsuario[$value]->intensity;
+        } elseif (!empty($value) && isset($datos['interesesUsuario'][$value])) {
+            $puntosIntereses += 10 + $datos['interesesUsuario'][$value]->intensity;
         }
     }
     
     if ($esOneShot) {
         $puntosIntereses *= 1;
     }
-
-    // Guardar el resultado final en caché
-    set_transient($cache_key, $puntosIntereses, DAY_IN_SECONDS);
     
     return $puntosIntereses;
 }
 
-// Función para invalidar el caché cuando el usuario actualiza sus intereses
-function invalidar_cache_usuario($user_id) {
-    // Eliminar caché de intereses
-    delete_transient("intereses_usuario_{$user_id}");
-    
-    // Opcionalmente, eliminar todos los puntos calculados para este usuario
-    global $wpdb;
-    $like = $wpdb->esc_like("puntos_intereses_{$user_id}_") . '%';
-    $wpdb->query($wpdb->prepare(
-        "DELETE FROM $wpdb->options WHERE option_name LIKE %s",
-        $like
-    ));
-}
-
-// Función para invalidar el caché cuando se actualiza un post
-function invalidar_cache_post($post_id) {
-    // Eliminar caché del JSON del post
-    delete_transient("json_data_post_{$post_id}");
-    
-    // Opcionalmente, eliminar todos los puntos calculados para este post
-    global $wpdb;
-    $like = $wpdb->esc_like("%_{$post_id}");
-    $wpdb->query($wpdb->prepare(
-        "DELETE FROM $wpdb->options WHERE option_name LIKE %s",
-        $like
-    ));
-}
-
-// Hooks para invalidar caché
-add_action('profile_update', 'invalidar_cache_usuario');
-add_action('save_post', 'invalidar_cache_post');
 
 function calcularPuntosPost(
     $post_id, 
@@ -515,8 +450,7 @@ function calcularPuntosPost(
     $vistas_posts_processed, 
     $identifier = '', 
     $similar_to = null,
-    $current_timestamp = null,
-    $user_id = null // New parameter
+    $current_timestamp = null // New parameter
 ) {
 
     if ($current_timestamp === null) {
@@ -542,7 +476,7 @@ function calcularPuntosPost(
     $puntosUsuario = in_array($autor_id, $datos['siguiendo']) ? 20 : 0;
 
     // Calculate puntosIntereses
-    $puntosIntereses = calcularPuntosIntereses($post_id, $datos, $user_id);
+    $puntosIntereses = calcularPuntosIntereses($post_id, $datos);
 
     // Calculate puntosIdentifier
     $puntosIdentifier = 0;
