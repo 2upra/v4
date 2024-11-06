@@ -10,17 +10,18 @@ require_once ABSPATH . 'wp-content/stripe/init.php';
 require_once __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
+//
+define('STRIPE_ERROR_ENABLED', true);
 
-
-define('LOG_AUDIO_ENABLED', true);
+//
+define('LOG_AUDIO_ENABLED', false);
 define('CHAT_LOG_ENABLED', false);   
-define('STRIPE_ERROR_ENABLED', true); 
-define('AUT_LOG_ENABLED', true);     
-define('GUARDAR_LOG_ENABLED', true);  
-define('LOG_ALGORITMO_ENABLED', true); 
+define('AUT_LOG_ENABLED', false);     
+define('GUARDAR_LOG_ENABLED', false);  
+define('LOG_ALGORITMO_ENABLED', false); 
 define('AJAX_POST_LOG_ENABLED', false); 
 define('IA_LOG_ENABLED', false);        
-define('POST_LOG_ENABLED', true);      
+define('POST_LOG_ENABLED', false);      
 define('SEO_LOG_ENABLED', true);
 
 function escribirLog($mensaje, $archivo, $max_lineas = 1000)
