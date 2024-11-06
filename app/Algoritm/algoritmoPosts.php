@@ -5,11 +5,12 @@ global $wpdb;
 define('INTERES_TABLE', "{$wpdb->prefix}interes");
 define('BATCH_SIZE', 1000);
 
+
 function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
 {
     // Validar que el userId sea válido
     if (empty($userId) || !is_numeric($userId)) {
-        error_log("Usuario ID inválido: " . print_r($userId, true));
+        error_log("Usuario ID inválido Feed: " . print_r($userId, true));
         return [];
     }
 

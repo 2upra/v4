@@ -26,14 +26,13 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 }
 
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
-    postLog("---------------------------------------");
-    postLog("INICIO");
-    postLog("Iniciando configuración de query args: paged=$paged, user_id=$user_id, current_user_id=$current_user_id");
-    $filtro = $_POST['filtro'] ?? '';
-    $filtroArg = $args['filtro'];
-    postLog("FILTRO: $filtro");
-    postLog("FILTROARG: $filtroArg");
-    postLog("---------------------------------------");
+    define('FALLBACK_USER_ID', 44);
+    
+    // Si el usuario no está autenticado o el ID es 0, usar el ID fallback
+    if (!$current_user_id || $current_user_id == 0) {
+        $current_user_id = FALLBACK_USER_ID;
+    }
+    
     $identifier = $_POST['identifier'] ?? '';
     $posts = $args['posts'];
     $similar_to = $args['similar_to'] ?? null;
@@ -45,33 +44,24 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
 
     if ($args['post_type'] === 'social_post') {
         $transient_key = 'feed_personalizado_one' . $current_user_id;
-        
-        // Verificar si el usuario es administrador
         $is_admin = current_user_can('administrator');
-        
-        // Si es admin, no usar caché
-        $post_ids = $is_admin ? false : get_transient($transient_key);
+        $post_ids = ($is_admin || $current_user_id == FALLBACK_USER_ID) ? false : get_transient($transient_key);
         
         if ($paged === 1 || $post_ids === false) {
             $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
             $post_ids = array_keys($posts_personalizados);
+            
             if ($similar_to) {
                 $post_ids = array_filter($post_ids, function($post_id) use ($similar_to) {
                     return $post_id != $similar_to;
                 });
             }
-            // Asegurar que todos los IDs sean únicos
+            
             $post_ids = array_unique($post_ids);
             
-            // Guardar en caché solo si no es administrador
-            if (!$is_admin) {
+            if (!$is_admin && $current_user_id != FALLBACK_USER_ID) {
                 set_transient($transient_key, $post_ids, 600);
-                postLog("Feed personalizado calculado y guardado en caché (usuario normal)");
-            } else {
-                postLog("Feed personalizado calculado sin caché (administrador)");
             }
-        } else {
-            postLog("Usando feed personalizado en caché para página $paged");
         }
 
         $posts_per_page = $posts;
@@ -83,7 +73,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
             $previous_page_ids = array_slice($post_ids, 0, ($paged - 1) * $posts_per_page);
             $post_not_in = array_merge($post_not_in, $previous_page_ids);
             $post_not_in = array_unique($post_not_in);
-            postLog("Excluyendo IDs de páginas anteriores: " . implode(', ', $post_not_in));
         }
         
         $query_args = [
@@ -114,12 +103,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
         }
     }
 
-    $query_args = aplicarFiltros($query_args, $args, $user_id, $current_user_id);
-    postLog("FILTRO DESPUES DE query_args : $filtro");
-    postLog("FILTROARG query_args: $filtroArg");
-    postLog("---------------------------------------");
-    postLog("query_args final: " . json_encode($query_args));
-    return $query_args;
+    return aplicarFiltros($query_args, $args, $user_id, $current_user_id);
 }
 
 
