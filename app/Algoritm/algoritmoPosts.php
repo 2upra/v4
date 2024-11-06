@@ -438,82 +438,72 @@ function calcularPuntosIntereses($post_id, $datos)
 }
 
 
-function calcularPuntosPost(
-    $post_id,
-    $post_data,
-    $datos,
-    $esAdmin,
-    $vistas_posts_processed,
-    $identifier = '',
+function calcularPuntosPostOptimizado(
+    $post_id, 
+    $post_data, 
+    $datos, 
+    $esAdmin, 
+    $vistas_posts_processed, 
+    $identifier = '', 
     $similar_to = null,
-    $current_timestamp = null // Added parameter to pass current time
+    $current_timestamp = null // New parameter
 ) {
-    // Static cache for factorTiempo to avoid recalculating for the same diasDesdePublicacion
-    static $factorTiempoCache = [];
-
-    // If current_timestamp is not provided, get it once and reuse
+    // Retrieve current timestamp once
     if ($current_timestamp === null) {
         $current_timestamp = current_time('timestamp');
     }
 
     $autor_id = $post_data->post_author;
-    
-    // Use get_post_time with 'U' format to get UNIX timestamp directly
-    // This avoids using strtotime which is slower
-    $post_timestamp = get_post_time('U', false, $post_data);
+    $post_date = $post_data->post_date;
 
-    // Calculate days since publication as integer for simpler exponentiation and caching
-    $diasDesdePublicacion = floor(($current_timestamp - $post_timestamp) / (3600 * 24));
-
-    // Ensure diasDesdePublicacion is non-negative
-    $diasDesdePublicacion = max($diasDesdePublicacion, 0);
-
-    // Check if the factorTiempo for this diasDesdePublicacion is already cached
-    if (isset($factorTiempoCache[$diasDesdePublicacion])) {
-        $factorTiempo = $factorTiempoCache[$diasDesdePublicacion];
+    // If $post_date is not already a timestamp, convert it once
+    if (is_string($post_date)) {
+        $post_timestamp = strtotime($post_date);
     } else {
-        // Precompute log(0.99) to avoid calculating it every time
-        static $log_099 = null;
-        if ($log_099 === null) {
-            $log_099 = log(0.99);
-        }
-
-        // Calculate factorTiempo using exp instead of pow for performance
-        // This is mathematically equivalent: 0.99^dias = e^(dias * ln(0.99))
-        $factorTiempo = exp($log_099 * $diasDesdePublicacion);
-
-        // Cache the computed factorTiempo for future use
-        $factorTiempoCache[$diasDesdePublicacion] = $factorTiempo;
+        $post_timestamp = $post_date; // Assume it's already a timestamp
     }
 
-    // Determine puntosUsuario based on whether the author is being followed
-    $puntosUsuario = in_array($autor_id, $datos['siguiendo'], true) ? 20 : 0;
+    // Calculate days since publication
+    $diasDesdePublicacion = ($current_timestamp - $post_timestamp) / (3600 * 24);
+    $diasDesdePublicacion = (int) floor($diasDesdePublicacion);
+    $factorTiempo = getDecayFactor($diasDesdePublicacion); // Using the precomputed decay factor
 
-    // Calculate puntosIntereses (assuming this function is optimized)
+    // Calculate puntosUsuario
+    $puntosUsuario = in_array($autor_id, $datos['siguiendo']) ? 20 : 0;
+
+    // Calculate puntosIntereses
     $puntosIntereses = calcularPuntosIntereses($post_id, $datos);
 
-    // Calculate puntosIdentifier if identifier is provided and necessary data exists
+    // Calculate puntosIdentifier
     $puntosIdentifier = 0;
-    if (!empty($identifier) && isset($datos['post_content'], $datos['datosAlgoritmo'])) {
+    if (!empty($identifier) && isset($datos['post_content']) && isset($datos['datosAlgoritmo'])) {
         $puntosIdentifier = calcularPuntosIdentifier($post_id, $identifier, $datos);
     }
-
-    // Apply pesoIdentifier if necessary (currently set to 1.0, so this is optional)
-    $pesoIdentifier = 1.0;
+    $pesoIdentifier = 1.0; 
     $puntosIdentifier *= $pesoIdentifier;
 
-    // Calculate puntosSimilarTo if similar_to is provided
-    $puntosSimilarTo = !empty($similar_to) ? calcularPuntosSimilarTo($post_id, $similar_to, $datos) : 0;
+    // Calculate puntosSimilarTo
+    $puntosSimilarTo = 0;
+    if (!empty($similar_to)) {
+        $puntosSimilarTo = calcularPuntosSimilarTo($post_id, $similar_to, $datos);
+    }
 
-    // Calculate puntosLikes with a default value if not set
-    $likes = $datos['likes_by_post'][$post_id] ?? 0;
+    // Calculate puntosLikes
+    $likes = isset($datos['likes_by_post'][$post_id]) ? $datos['likes_by_post'][$post_id] : 0;
     $puntosLikes = 30 + $likes;
 
-    // Determine metaVerificado and metaPostAut efficiently
-    $metaVerificado = isset($datos['verificado_results'][$post_id]->meta_value) && $datos['verificado_results'][$post_id]->meta_value === '1';
-    $metaPostAut = isset($datos['postAut_results'][$post_id]->meta_value) && $datos['postAut_results'][$post_id]->meta_value === '1';
+    // Access meta data efficiently
+    $verificado_result = isset($datos['verificado_results'][$post_id]->meta_value) 
+        ? $datos['verificado_results'][$post_id]->meta_value 
+        : null;
+    $metaVerificado = ($verificado_result === '1');
 
-    // Calculate puntosFinal using the optimized puntosFinales function
+    $postAut_result = isset($datos['postAut_results'][$post_id]->meta_value) 
+        ? $datos['postAut_results'][$post_id]->meta_value 
+        : null;
+    $metaPostAut = ($postAut_result === '1');
+
+    // Calculate puntosFinal
     $puntosFinal = calcularPuntosFinales(
         $puntosUsuario,
         $puntosIntereses + $puntosSimilarTo,
@@ -523,35 +513,40 @@ function calcularPuntosPost(
         $esAdmin
     );
 
-    // Add puntosIdentifier to the final points
     $puntosFinal += $puntosIdentifier;
 
-    // Apply reduction based on post views if available
+    // Apply reduction based on views
     if (isset($vistas_posts_processed[$post_id])) {
         $vistas = $vistas_posts_processed[$post_id]['count'];
         $reduccion_por_vista = 0.01;
-
-        // To optimize, ensure that (1 - reduccion_por_vista) is precomputed if possible
-        $baseReduction = 1 - $reduccion_por_vista;
-
-        // Calculate factorReduccion using pow
-        // Consider caching if same number of vistas occur frequently
-        $factorReduccion = pow($baseReduction, $vistas);
+        $factorReduccion = pow(1 - $reduccion_por_vista, $vistas);
         $puntosFinal *= $factorReduccion;
     }
 
-    // Apply randomness in a more optimized way
-    // Combine multiple operations to reduce the number of multiplications
+    // Apply randomness and time factor
     $aleatoriedad = mt_rand(0, 20);
-    $aleatoriedadFactor = 1 + ($aleatoriedad / 100);
-
     $ajusteExtra = mt_rand(-50, 50);
+    $puntosFinal = ($puntosFinal * (1 + ($aleatoriedad / 100))) * $factorTiempo;
+    $puntosFinal += $ajusteExtra;
 
-    // Combine multiplications to minimize operations
-    $puntosFinal = ($puntosFinal * $aleatoriedadFactor * $factorTiempo) + $ajusteExtra;
-
-    // Ensure puntosFinal is not negative
     return max($puntosFinal, 0);
+}
+
+// Helper function for decay factors
+function getDecayFactor($days) {
+    static $decay_factors = [];
+
+    // Populate the decay factors up to 365 days
+    if (empty($decay_factors)) {
+        for ($d = 0; $d <= 365; $d++) {
+            $decay_factors[$d] = pow(0.99, $d);
+        }
+    }
+
+    // Cap days to 365 to prevent undefined index
+    $days = min(max(0, (int) $days), 365);
+
+    return $decay_factors[$days];
 }
 
 
