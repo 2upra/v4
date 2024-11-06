@@ -63,7 +63,8 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
                 $vistas_posts_processed,
                 $identifier,
                 $similar_to, 
-                $current_timestamp
+                $current_timestamp,
+                $userId
             );
 
             if (is_numeric($puntosFinal)) {
@@ -514,7 +515,8 @@ function calcularPuntosPost(
     $vistas_posts_processed, 
     $identifier = '', 
     $similar_to = null,
-    $current_timestamp = null // New parameter
+    $current_timestamp = null,
+    $user_id = null // New parameter
 ) {
 
     if ($current_timestamp === null) {
@@ -540,7 +542,7 @@ function calcularPuntosPost(
     $puntosUsuario = in_array($autor_id, $datos['siguiendo']) ? 20 : 0;
 
     // Calculate puntosIntereses
-    $puntosIntereses = calcularPuntosIntereses($post_id, $datos);
+    $puntosIntereses = calcularPuntosIntereses($post_id, $datos, $user_id);
 
     // Calculate puntosIdentifier
     $puntosIdentifier = 0;
