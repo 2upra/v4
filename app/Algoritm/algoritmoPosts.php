@@ -520,7 +520,6 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos) {
     $totalIdentifiers = count($identifiers);
 
     if ($totalIdentifiers === 0) {
-        logAlgoritmo("RESUMEN ID $post_id: Sin identificadores válidos");
         return 0;
     }
 
@@ -533,10 +532,15 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos) {
         ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true)
         : [];
 
-    // Calcular coincidencias
+    // Inicializar arrays para tracking de coincidencias
+    $contentMatches = [];
+    $dataMatches = [];
+
+    // Calcular coincidencias en contenido
     foreach ($identifiers as $id_word) {
         if (strpos($post_content, $id_word) !== false) {
             $resumen['matches']['content']++;
+            $contentMatches[] = $id_word;
         }
     }
 
@@ -556,9 +560,11 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos) {
         }
     }
 
+    // Calcular coincidencias en datos
     foreach ($identifiers as $id_word) {
         if (isset($postWords[$id_word])) {
             $resumen['matches']['data']++;
+            $dataMatches[] = $id_word;
         }
     }
 
@@ -581,21 +587,45 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos) {
                                  $resumen['puntos']['datos'] + 
                                  $resumen['puntos']['bonus'];
 
-    // Loguear resumen
-    logAlgoritmo(sprintf(
-        "RESUMEN ID %d: [Identifiers: %s] [Matches: Content=%d, Data=%d] [Puntos: Contenido=%d, Datos=%d, Bonus=%d, Total=%d]",
-        $post_id,
-        implode(',', $identifiers),
-        $resumen['matches']['content'],
-        $resumen['matches']['data'],
-        $resumen['puntos']['contenido'],
-        $resumen['puntos']['datos'],
-        $resumen['puntos']['bonus'],
-        $resumen['puntos']['total']
-    ));
+    // Solo loguear si hay puntos
+    if ($resumen['puntos']['total'] > 0) {
+        $mensaje = sprintf(
+            "POST ID %d - Análisis de relevancia:\n" .
+            "→ Palabras buscadas: %s\n" .
+            "→ Coincidencias en contenido (%d): %s\n" .
+            "→ Coincidencias en datos (%d): %s\n" .
+            "→ Puntuación desglosada:\n" .
+            "   • Contenido: %d pts (%d coincidencias × %d pts)\n" .
+            "   • Datos: %d pts (%d coincidencias × %d pts)\n" .
+            "   • Bonus: %d pts %s\n" .
+            "   • TOTAL: %d pts",
+            $post_id,
+            implode(', ', $identifiers),
+            $resumen['matches']['content'],
+            $contentMatches ? implode(', ', $contentMatches) : 'ninguna',
+            $resumen['matches']['data'],
+            $dataMatches ? implode(', ', $dataMatches) : 'ninguna',
+            $resumen['puntos']['contenido'],
+            $resumen['matches']['content'],
+            $puntosBasePorCoincidenciaContenido,
+            $resumen['puntos']['datos'],
+            $resumen['matches']['data'],
+            $puntosBasePorCoincidenciaDatos,
+            $resumen['puntos']['bonus'],
+            $resumen['puntos']['bonus'] > 0 
+                ? ($resumen['puntos']['bonus'] === $bonusCompleto 
+                    ? "(bonus completo por coincidencia total en contenido)" 
+                    : "(bonus parcial por coincidencia total en datos)")
+                : "(sin bonus)",
+            $resumen['puntos']['total']
+        );
+
+        logAlgoritmo($mensaje);
+    }
 
     return $resumen['puntos']['total'];
 }
+
 function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
 {
     // Get datosAlgoritmo for the current post
