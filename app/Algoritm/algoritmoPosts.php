@@ -87,8 +87,14 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
 
 
 
-function generarMetaDeIntereses($user_id)
-{
+function generarMetaDeIntereses($user_id) {
+    // Validación inicial del user_id
+    if (empty($user_id) || !is_numeric($user_id)) {
+        error_log("ID de usuario inválido en generarMetaDeIntereses: " . print_r($user_id, true));
+        return false;
+    }
+
+    // Verificar cache
     $cache_key = 'meta_intereses_' . $user_id;
     $cached_result = get_transient($cache_key);
     if ($cached_result !== false) {
@@ -97,83 +103,116 @@ function generarMetaDeIntereses($user_id)
 
     global $wpdb;
     $likePost = obtenerLikesDelUsuario($user_id, 500);
-    if (empty($likePost)) {
+    if (empty($likePost) || !is_array($likePost)) {
+        error_log("No se encontraron likes para el usuario: " . $user_id);
         return false;
     }
 
+    // Obtener intereses actuales
     $interesesActuales = $wpdb->get_results($wpdb->prepare(
         "SELECT interest, intensity FROM " . INTERES_TABLE . " WHERE user_id = %d",
         $user_id
     ), OBJECT_K);
 
-    $placeholders = implode(', ', array_fill(0, count($likePost), '%d'));
+    // Preparar la consulta para los posts
+    try {
+        // Convertir array de IDs a string de placeholders
+        $placeholders = implode(',', array_map(function() { return '%d'; }, $likePost));
+        
+        $query = "
+            SELECT p.ID, p.post_content, pm.meta_value
+            FROM {$wpdb->posts} p
+            LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = 'datosAlgoritmo'
+            WHERE p.ID IN ($placeholders)
+        ";
+        
+        // Preparar la consulta con los valores
+        $sql = $wpdb->prepare($query, $likePost);
+        $post_data = $wpdb->get_results($sql);
 
-    $query = "
-        SELECT p.ID, p.post_content, pm.meta_value
-        FROM {$wpdb->posts} p
-        LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = 'datosAlgoritmo'
-        WHERE p.ID IN ($placeholders)
-    ";
-    $sql = $wpdb->prepare($query, $likePost);
-    $post_data = $wpdb->get_results($sql);
+        if (empty($post_data)) {
+            error_log("No se encontraron datos de posts para los likes del usuario: " . $user_id);
+            return false;
+        }
 
-    if (empty($post_data)) {
+        $tag_intensidad = [];
+
+        foreach ($post_data as $post) {
+            // Procesar datosAlgoritmo
+            if (!empty($post->meta_value)) {
+                $datosAlgoritmo = json_decode($post->meta_value, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    error_log("Error al decodificar JSON para post ID " . $post->ID . ": " . json_last_error_msg());
+                    continue;
+                }
+
+                if (is_array($datosAlgoritmo)) {
+                    foreach ($datosAlgoritmo as $key => $value) {
+                        if (is_array($value)) {
+                            foreach (['es', 'en'] as $lang) {
+                                if (isset($value[$lang]) && is_array($value[$lang])) {
+                                    foreach ($value[$lang] as $item) {
+                                        if (is_string($item)) {
+                                            $item = normalizarTexto($item);
+                                            $tag_intensidad[$item] = ($tag_intensidad[$item] ?? 0) + 1;
+                                        }
+                                    }
+                                }
+                            }
+                        } elseif (is_string($value) && !empty($value)) {
+                            $value = normalizarTexto($value);
+                            $tag_intensidad[$value] = ($tag_intensidad[$value] ?? 0) + 1;
+                        }
+                    }
+                }
+            }
+
+            // Procesar contenido del post
+            if (!empty($post->post_content)) {
+                $content = wp_strip_all_tags($post->post_content);
+                $content = normalizarTexto($content);
+                $palabras = preg_split('/\s+/', $content, -1, PREG_SPLIT_NO_EMPTY);
+
+                foreach ($palabras as $palabra) {
+                    $palabra = trim($palabra);
+                    if (!empty($palabra)) {
+                        $tag_intensidad[$palabra] = ($tag_intensidad[$palabra] ?? 0) + 1;
+                    }
+                }
+            }
+        }
+
+        if (empty($tag_intensidad)) {
+            error_log("No se generaron tags de intensidad para el usuario: " . $user_id);
+            return false;
+        }
+
+        arsort($tag_intensidad);
+        $tag_intensidad = array_slice($tag_intensidad, 0, 200, true);
+
+        $result = actualizarIntereses($user_id, $tag_intensidad, $interesesActuales);
+        
+        if ($result !== false) {
+            set_transient($cache_key, $result, HOUR_IN_SECONDS);
+        }
+
+        return $result;
+
+    } catch (Exception $e) {
+        error_log("Error en generarMetaDeIntereses: " . $e->getMessage());
         return false;
     }
+}
 
-    $tag_intensidad = [];
-
-    foreach ($post_data as $post) {
-        $datosAlgoritmo = !empty($post->meta_value) ? json_decode($post->meta_value, true) : [];
-        
-        // Verificar que $datosAlgoritmo sea un array antes de iterarlo
-        if (is_array($datosAlgoritmo)) {
-            foreach ($datosAlgoritmo as $key => $value) {
-                if (is_array($value)) {
-                    if (isset($value['es']) && is_array($value['es'])) {
-                        foreach ($value['es'] as $item) {
-                            $item = normalizarTexto($item);
-                            $tag_intensidad[$item] = isset($tag_intensidad[$item]) ? $tag_intensidad[$item] + 1 : 1;
-                        }
-                    }
-                    if (isset($value['en']) && is_array($value['en'])) {
-                        foreach ($value['en'] as $item) {
-                            $item = normalizarTexto($item);
-                            $tag_intensidad[$item] = isset($tag_intensidad[$item]) ? $tag_intensidad[$item] + 1 : 1;
-                        }
-                    }
-                } elseif (!empty($value)) {
-                    $value = normalizarTexto($value);
-                    $tag_intensidad[$value] = isset($tag_intensidad[$value]) ? $tag_intensidad[$value] + 1 : 1;
-                }
-            }
-        }
-
-        // Procesar el contenido del post
-        if (!empty($post->post_content)) {
-            $content = wp_strip_all_tags($post->post_content);
-            $content = normalizarTexto($content);
-            $palabras = preg_split('/\s+/', $content);
-
-            foreach ($palabras as $palabra) {
-                $palabra = trim($palabra);
-                if (!empty($palabra)) {
-                    $tag_intensidad[$palabra] = isset($tag_intensidad[$palabra]) ? $tag_intensidad[$palabra] + 1 : 1;
-                }
-            }
-        }
+// Función auxiliar para normalizar texto
+function normalizarTexto($texto) {
+    if (!is_string($texto)) {
+        return '';
     }
-
-    arsort($tag_intensidad);
-    $tag_intensidad = array_slice($tag_intensidad, 0, 200, true);
-
-    $result = actualizarIntereses($user_id, $tag_intensidad, $interesesActuales);
     
-    if ($result !== false) {
-        set_transient($cache_key, $result, 1 * HOUR_IN_SECONDS);
-    }
-
-    return $result;
+    $texto = trim(strtolower($texto));
+    $texto = preg_replace('/[^a-z0-9\s-]/', '', $texto);
+    return $texto;
 }
 
 function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
