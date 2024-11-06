@@ -26,6 +26,7 @@ add_action('59', 'procesarAudios');
 
 function procesarAudios()
 {
+    autLog("procesarAudios start ");
     $directorio_audios = '/home/asley01/MEGA/Waw/Kits/';
     $lock_file = '/tmp/procesar_audios.lock';
     $max_reintentos = 5;
