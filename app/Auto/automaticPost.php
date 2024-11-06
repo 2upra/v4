@@ -96,19 +96,36 @@ function autProcesarAudio($rutaOriginalOne) {
     crearAutPost($rutaOriginalOne, $rutaWpLiteOne, $file_id);
 }
 
+/*
+
+[06-Nov-2024 01:07:00 UTC] PHP Warning:  Array to string conversion in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/automaticPost.php on line 109
+
+
+*/
+
 
 function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $carpeta_abuela = null)
 {
     $resultados = procesarArchivoAudioPython($rutaArchivo);
 
-    if ($resultados) {
-        echo "BPM: " . ($resultados['bpm'] ?? '') . "\n";
-        echo "Emotion: " . ($resultados['emotion'] ?? '') . "\n";
-        echo "Key: " . ($resultados['key'] ?? '') . "\n";
-        echo "Scale: " . ($resultados['scale'] ?? '') . "\n";
-        echo "Pitch: " . ($resultados['pitch'] ?? '') . "\n";
+    if ($resultados && is_array($resultados)) {
+        // Create an output array to store the results
+        $output = [];
+        
+        // Safely access array elements with null coalescing operator
+        $output[] = "BPM: " . (isset($resultados['bpm']) ? $resultados['bpm'] : 'N/A');
+        $output[] = "Emotion: " . (isset($resultados['emotion']) ? $resultados['emotion'] : 'N/A');
+        $output[] = "Key: " . (isset($resultados['key']) ? $resultados['key'] : 'N/A');
+        $output[] = "Scale: " . (isset($resultados['scale']) ? $resultados['scale'] : 'N/A');
+        $output[] = "Pitch: " . (isset($resultados['pitch']) ? $resultados['pitch'] : 'N/A');
+
+        // Join the output array with newlines and return or echo
+        echo implode("\n", $output);
+        
+        // Optionally return the results array
+        return $resultados;
     } else {
-        echo "Error procesando el archivo de audio.";
+        error_log("Error procesando el archivo de audio en procesarArchivoAudioPython.");
     }
 
     $informacion_archivo = '';
