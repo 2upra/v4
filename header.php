@@ -361,13 +361,13 @@ if (!defined('ABSPATH')) {
             </div>
         <? else : ?>
             <? echo modalCarta() ?>
-            <div class="CGUNVP" id="modalregistro">
+            <div class="CGUNVP" id="modalregistro" data-nosnippet>
                 <? echo registrar_usuario() ?>
             </div>
-            <div class="EJRINA" id="modalsesion">
+            <div class="EJRINA" id="modalsesion" data-nosnippet>
                 <? echo iniciar_sesion() ?>
             </div>
-            <div id="fondonegro"></div>
+            <div id="fondonegro"></div data-nosnippet>
 
         <? endif; ?>
 
