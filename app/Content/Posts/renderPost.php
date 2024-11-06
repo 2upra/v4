@@ -46,6 +46,26 @@ function htmlPost($filtro)
                         <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;"><? echo esc_html($datosAlgoritmo); ?></p>
                     </div>
                 </div>
+                <div class="infoListPost">
+                    <div class="verificacionPost">
+                        <? if ($verificado == '1') : ?>
+                            <? echo $GLOBALS['check']; ?>
+                        <? elseif ($postAut == '1' && current_user_can('administrator')) : ?>
+                            <? echo $GLOBALS['robot']; ?>
+                        <? endif; ?>
+                    </div>
+
+                    <div class="OFVWLS">
+                        <? if ($recortado) : ?>
+                            <div><? echo "Preview"; ?></div>
+                        <? endif; ?>
+                        <? if ($block) : ?>
+                            <div><? echo "Exclusivo"; ?></div>
+                        <? elseif ($colab) : ?>
+                            <div><? echo "Colab"; ?></div>
+                        <? endif; ?>
+                    </div>
+                </div>
                 <div class="ZQHOQY LISTWAVESAMPLE">
                     <div id="waveform-<? echo $post_id; ?>"
                         class="waveform-container without-image"
