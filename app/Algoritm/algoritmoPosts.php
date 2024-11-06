@@ -344,7 +344,8 @@ function obtenerDatosFeed($userId)
         'verificado_results'    => $verificado_results,
         'postAut_results'       => $postAut_results,
         'author_results'        => $posts_results,
-        'post_content'          => $post_content,    // Nuevo campo añadido
+        'post_content'          => $post_content,    
+        'user_id'               => $userId  
     ];
 }
 
@@ -388,36 +389,67 @@ function obtenerYProcesarVistasPosts($userId)
 
 function calcularPuntosIntereses($post_id, $datos)
 {
+    // Caché estática para almacenar datos decodificados
+    static $decodedDatosAlgoritmoCache = [];
+
     $puntosIntereses = 0;
     
-    // Verificar si existen los índices necesarios
-    if (!isset($datos['datosAlgoritmo'][$post_id]) || 
-        !isset($datos['datosAlgoritmo'][$post_id]->meta_value)) {
+    // Asegurarse de que el user_id esté presente
+    // Supongo que el user_id está incluido en $datos['user_id']
+    $user_id = isset($datos['user_id']) ? $datos['user_id'] : null;
+    if ($user_id === null) {
         return $puntosIntereses;
     }
 
-    /*El JSON decadoe tarda mucho tiempo porque son muchos post, de que forma se puede mejorar esto para que no tenga que decodificar siempre, esto siempre recibe los mismos datos de los mismos post_id, muy pocas veces van cambiar, hay que tener en cuenta ciertas cosas, son muchos post, estamos hablando que ahora son 20.000, pero mas adelante pueden ser 1.000.000, el entorno es wordpress, si necesitas mas contexto para encontrar una solucion clave, me lo indica y lo solucionamos con calma, probe usar redis pero no fue muy eficiente no se porque, creo que mejor la cache de wordpress (24 horas), y que saber que los datos son igual */
+    // Crear una clave única para la caché basada en post_id y user_id
+    $cacheKey = $post_id . '_' . $user_id;
 
-    $datosAlgoritmo = json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true);
-    
-    // Verificar si el json_decode fue exitoso
-    if (json_last_error() !== JSON_ERROR_NONE || !is_array($datosAlgoritmo)) {
-        return $puntosIntereses;
-    }
+    if (isset($decodedDatosAlgoritmoCache[$cacheKey])) {
+        // Recuperar datos de la caché
+        $datosAlgoritmo = $decodedDatosAlgoritmoCache[$cacheKey]['datosAlgoritmo'];
+        $esOneShot = $decodedDatosAlgoritmoCache[$cacheKey]['esOneShot'];
+    } else {
+        // Verificar si existen los índices necesarios
+        if (!isset($datos['datosAlgoritmo'][$post_id]) || 
+            !isset($datos['datosAlgoritmo'][$post_id]->meta_value)) {
+            return $puntosIntereses;
+        }
 
-    $oneshot = ['one shot', 'one-shot', 'oneshot'];
-    $esOneShot = false;
-    $metaValue = $datos['datosAlgoritmo'][$post_id]->meta_value;
+        $metaValue = $datos['datosAlgoritmo'][$post_id]->meta_value;
 
-    if (!empty($metaValue)) {
-        foreach ($oneshot as $palabra) {
-            if (stripos($metaValue, $palabra) !== false) {
-                $esOneShot = true;
-                break;
+        // Verificar si "one shot" está presente en metaValue
+        $oneshot = ['one shot', 'one-shot', 'oneshot'];
+        $esOneShot = false;
+
+        if (!empty($metaValue)) {
+            foreach ($oneshot as $palabra) {
+                if (stripos($metaValue, $palabra) !== false) {
+                    $esOneShot = true;
+                    break;
+                }
             }
         }
+
+        // Decodificar el JSON
+        $datosAlgoritmo = json_decode($metaValue, true);
+
+        // Verificar si la decodificación fue exitosa
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($datosAlgoritmo)) {
+            return $puntosIntereses;
+        }
+
+        // Almacenar en la caché
+        $decodedDatosAlgoritmoCache[$cacheKey] = [
+            'datosAlgoritmo' => $datosAlgoritmo,
+            'esOneShot' => $esOneShot
+        ];
     }
 
+    // Utilizar los datos decodificados de la caché
+    $datosAlgoritmo = $decodedDatosAlgoritmoCache[$cacheKey]['datosAlgoritmo'];
+    $esOneShot = $decodedDatosAlgoritmoCache[$cacheKey]['esOneShot'];
+
+    // Calcular los puntos de interés
     foreach ($datosAlgoritmo as $key => $value) {
         if (is_array($value)) {
             foreach (['es', 'en'] as $lang) {
@@ -435,7 +467,7 @@ function calcularPuntosIntereses($post_id, $datos)
     }
     
     if ($esOneShot) {
-        $puntosIntereses *= 1;
+        $puntosIntereses *= 1; 
     }
     
     return $puntosIntereses;
