@@ -1,5 +1,47 @@
 <?
 
+function renderNoti($usuario_id)
+{
+    $notificaciones = getNoti($usuario_id);
+    $html_notificaciones = '';
+    $cache_imagenes = []; // Caché para almacenar las URLs de las imágenes de perfil
+
+    foreach ($notificaciones as $notificacion) {
+        $clase_leida = $notificacion->leida ? 'notificacion-leida' : 'notificacion-no-leida';
+        $texto_notificacion = wp_kses($notificacion->texto, array('a' => array('href' => array())));
+
+        // Verificamos si ya tenemos la imagen en caché
+        if (!isset($cache_imagenes[$notificacion->actor_id])) {
+            // Si no está en caché, la obtenemos y la almacenamos
+            $cache_imagenes[$notificacion->actor_id] = imagenPerfil($notificacion->actor_id);
+        }
+
+        $imagen_perfil_url = $cache_imagenes[$notificacion->actor_id];
+        $perfil_url = "/perfil/" . $notificacion->actor_id;
+
+        $html_notificaciones .= sprintf(
+            '<div class="notificacion %s">' .
+                '<a href="%s" class="notificacion-imagen">' .
+                '<img src="%s" alt="Imagen de perfil" class="imagen-perfil-notificacion">' .
+                '</a>' .
+                '<a href="%s" class="notificacion-contenido">' .
+                '<div class="notificacion-texto">%s</div>' .
+                '<div class="notificacion-fecha">%s</div>' .
+                '</a>' .
+                '</div>',
+            $clase_leida,
+            esc_url($perfil_url),
+            esc_url($imagen_perfil_url),
+            esc_url($notificacion->enlace),
+            $texto_notificacion,
+            TiempoRelativoNoti($notificacion->fecha)
+        );
+    }
+    return $html_notificaciones;
+}
+
+//te muestro el resto del codig para que tengas contexto
+
 
 function hayNotiNoLeidas($usuario_id)
 {
@@ -42,13 +84,20 @@ function agregarNoti($usuario_id, $texto, $enlace, $actor_id)
     }
 }
 
-function getNotiNoLeidas($usuario_id)
+function getNotiConPerfiles($usuario_id)
 {
     global $wpdb;
-    return $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM wp_notificaciones WHERE usuario_id = %d AND leida = 0 ORDER BY fecha DESC",
-        $usuario_id
-    ), OBJECT);
+    return $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT n.*, u.imagen_perfil_url 
+            FROM wp_notificaciones n 
+            LEFT JOIN wp_usuarios u ON n.actor_id = u.id 
+            WHERE n.usuario_id = %d 
+            ORDER BY n.fecha DESC",
+            $usuario_id
+        ),
+        OBJECT
+    );
 }
 
 function marcarLeidoNoti($usuario_id)
@@ -88,37 +137,6 @@ function getNoti($usuario_id)
     );
 }
 
-function renderNoti($usuario_id)
-{
-    $notificaciones = getNoti($usuario_id);
-    $html_notificaciones = '';
-    foreach ($notificaciones as $notificacion) {
-        $clase_leida = $notificacion->leida ? 'notificacion-leida' : 'notificacion-no-leida';
-        $texto_notificacion = wp_kses($notificacion->texto, array('a' => array('href' => array())));
-
-        $imagen_perfil_url = imagenPerfil($notificacion->actor_id);
-        $perfil_url = "/perfil/" . $notificacion->actor_id;
-
-        $html_notificaciones .= sprintf(
-            '<div class="notificacion %s">' .
-                '<a href="%s" class="notificacion-imagen">' .
-                '<img src="%s" alt="Imagen de perfil" class="imagen-perfil-notificacion">' .
-                '</a>' .
-                '<a href="%s" class="notificacion-contenido">' .
-                '<div class="notificacion-texto">%s</div>' .
-                '<div class="notificacion-fecha">%s</div>' .
-                '</a>' .
-                '</div>',
-            $clase_leida,
-            esc_url($perfil_url),
-            esc_url($imagen_perfil_url),
-            esc_url($notificacion->enlace),
-            $texto_notificacion,
-            TiempoRelativoNoti($notificacion->fecha)
-        );
-    }
-    return $html_notificaciones;
-}
 
 function iconoNotificaciones()
 {
@@ -137,10 +155,6 @@ function iconoNotificaciones()
 
     return $html_completo;
 }
-
-
-
-
 
 
 function borrarNotiAntiguas()
