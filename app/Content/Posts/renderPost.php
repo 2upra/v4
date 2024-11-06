@@ -46,7 +46,7 @@ function htmlPost($filtro)
                         <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;"><? echo esc_html($datosAlgoritmo); ?></p>
                     </div>
                 </div>
-                <div class="infoListPost">
+                <div class="INFOTYPELIST">
                     <div class="verificacionPost">
                         <? if ($verificado == '1') : ?>
                             <? echo $GLOBALS['check']; ?>
