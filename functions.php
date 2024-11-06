@@ -23,30 +23,50 @@ define('IA_LOG_ENABLED', false);        // Cambia a true para habilitar iaLog
 define('POST_LOG_ENABLED', true);      // Cambia a true para habilitar postLog
 
 function escribirLog($mensaje, $archivo, $max_lineas = 200) {
-    // Verificar si WordPress está inicializado y si el usuario es administrador
+    // Verificaciones iniciales de seguridad
     if (!function_exists('current_user_can') || !current_user_can('administrator')) {
-        return;
+        return false;
     }
 
-    if (is_object($mensaje) || is_array($mensaje)) {
-        $mensaje = json_encode($mensaje);
+    // Verificar si el archivo es escribible
+    if (!is_writable(dirname($archivo))) {
+        return false;
     }
 
-    $timestamped_log = date('Y-m-d H:i:s') . ' - ' . $mensaje;
-    file_put_contents($archivo, $timestamped_log . PHP_EOL, FILE_APPEND);
+    try {
+        // Formatear el mensaje
+        if (is_object($mensaje) || is_array($mensaje)) {
+            $mensaje = print_r($mensaje, true); // Más legible que json_encode
+        }
 
-    // Limitar la cantidad de líneas en el archivo
-    $line_count = count(file($archivo));
-    if ($line_count > $max_lineas) {
-        $lines = file($archivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        $new_lines = array_slice($lines, -$max_lineas);
-        file_put_contents($archivo, implode(PHP_EOL, $new_lines) . PHP_EOL);
-    }
-}
+        $timestamped_log = date('Y-m-d H:i:s') . ' - ' . $mensaje;
 
-function logAudio($log) {
-    if (LOG_AUDIO_ENABLED && current_user_can('administrator')) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/logAudio.log', 100000);
+        // Usar un bloqueo de archivo para evitar problemas de concurrencia
+        $fp = fopen($archivo, 'a');
+        if (flock($fp, LOCK_EX)) {
+            fwrite($fp, $timestamped_log . PHP_EOL);
+            
+            // Gestionar el límite de líneas solo ocasionalmente (por ejemplo, 1 de cada 10 veces)
+            if (rand(1, 10) === 1) {
+                // Leer el archivo
+                $lines = file($archivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                if (count($lines) > $max_lineas) {
+                    // Mantener solo las últimas líneas
+                    $lines = array_slice($lines, -$max_lineas);
+                    
+                    // Reescribir el archivo
+                    file_put_contents($archivo, implode(PHP_EOL, $lines) . PHP_EOL);
+                }
+            }
+
+            flock($fp, LOCK_UN);
+        }
+        fclose($fp);
+        return true;
+
+    } catch (Exception $e) {
+        error_log("Error escribiendo log: " . $e->getMessage());
+        return false;
     }
 }
 
@@ -97,6 +117,7 @@ function postLog($log) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt');
     }
 }
+
 function scriptsOrdenados()
 {
     $dev_mode = true;

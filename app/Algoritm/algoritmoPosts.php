@@ -569,7 +569,7 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos) {
     }
 
     // Calcular puntos
-    $puntosBasePorCoincidenciaContenido = 750;
+    $puntosBasePorCoincidenciaContenido = 1000;
     $puntosBasePorCoincidenciaDatos = 250;
     $bonusCompleto = 2000;
 
