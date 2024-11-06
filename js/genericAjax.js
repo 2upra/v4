@@ -278,38 +278,46 @@ async function handleAllRequests() {
 
 // Función genérica para manejar acciones con confirmación y AJAX
 async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
-    const buttons = document.querySelectorAll(selector); // Selecciona los botones.
+    const elements = document.querySelectorAll(selector); // Selecciona cualquier elemento que coincida con el selector
 
-    buttons.forEach(button => {
+    elements.forEach(element => {
         // Verifica si el listener ya fue añadido
-        if (!button.dataset.listenerAdded) {
-            button.addEventListener('click', async event => { // Añade evento 'click'.
-                const post_id = event.currentTarget.dataset.postId || event.currentTarget.getAttribute('data-post-id'); // Obtiene el post_id.
-                const tipoContenido = event.currentTarget.dataset.tipoContenido; // Obtiene el tipo de contenido.
+        if (!element.dataset.listenerAdded) {
+            element.addEventListener('click', async event => {
+                // Previene comportamiento por defecto si es un botón
+                if (element.tagName.toLowerCase() === 'button') {
+                    event.preventDefault();
+                }
 
-                if (!post_id) { // Verifica si post_id existe.
-                    console.error('No se encontró post_id en el botón');
+                // Obtiene el post_id del elemento actual
+                const post_id = event.currentTarget.dataset.postId || 
+                              event.currentTarget.getAttribute('data-post-id');
+                              
+                const tipoContenido = event.currentTarget.dataset.tipoContenido;
+
+                if (!post_id) {
+                    console.error('No se encontró post_id en el elemento');
                     return;
                 }
 
-                const confirmed = await confirm(confirmMessage); // Cuadro de confirmación.
+                const confirmed = await confirm(confirmMessage);
 
                 if (confirmed) {
-                    const detalles = document.getElementById('mensajeError')?.value || ''; // Obtiene detalles (si aplica).
-                    const descripcion = document.getElementById('mensajeEdit')?.value || ''; // Obtiene descripción (si aplica).
+                    const detalles = document.getElementById('mensajeError')?.value || '';
+                    const descripcion = document.getElementById('mensajeEdit')?.value || '';
 
                     try {
-                        const data = await enviarAjax(action, { // Envía datos vía AJAX.
-                            post_id, 
+                        const data = await enviarAjax(action, {
+                            post_id,
                             tipoContenido,
                             detalles,
                             descripcion
                         });
 
                         if (data.success) {
-                            successCallback(null, data, post_id); // Llama a callback en caso de éxito.
+                            successCallback(null, data, post_id);
                         } else {
-                            console.error(`Error: ${data.message}`); // Muestra error.
+                            console.error(`Error: ${data.message}`);
                             alert('Error al enviar petición: ' + (data.message || 'Error desconocido'));
                         }
                     } catch (error) {
@@ -318,8 +326,14 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
                     }
                 }
             });
-            // Marca el botón para indicar que ya tiene un listener
-            button.dataset.listenerAdded = 'true';
+            
+            // Añade cursor pointer si es un div u otro elemento que no sea botón
+            if (element.tagName.toLowerCase() !== 'button') {
+                element.style.cursor = 'pointer';
+            }
+            
+            // Marca el elemento para indicar que ya tiene un listener
+            element.dataset.listenerAdded = 'true';
         }
     });
 }
