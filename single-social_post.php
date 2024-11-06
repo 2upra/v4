@@ -5,13 +5,22 @@ $acciones = get_user_meta($user_id, 'acciones', true);
 $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 
 // Función para determinar el idioma activo
-function get_active_language()
-{
-    $locale = get_locale();
-    if (strpos($locale, 'es') === 0) {
-        return 'es';
+function get_user_browser_language() {
+    if (!isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+        return 'en';
     }
-    return 'en';
+
+    $accepted_languages = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
+    $language_codes = [];
+
+    foreach ($accepted_languages as $language) {
+        $lang = substr($language, 0, 2);
+        if (in_array($lang, ['es', 'en'])) {
+            return $lang;
+        }
+    }
+
+    return 'en'; // idioma por defecto
 }
 
 // Función de debugging para meta descriptions
