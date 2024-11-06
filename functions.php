@@ -23,7 +23,7 @@ define('IA_LOG_ENABLED', false);
 define('POST_LOG_ENABLED', true);      
 define('SEO_LOG_ENABLED', true);
 
-function escribirLog($mensaje, $archivo, $max_lineas = 200)
+function escribirLog($mensaje, $archivo, $max_lineas = 1000)
 {
     // Verificaciones iniciales de seguridad
     if (!is_writable(dirname($archivo))) {
