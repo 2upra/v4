@@ -32,8 +32,11 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     $is_authenticated = $current_user_id && $current_user_id != 0;
     $is_admin = current_user_can('administrator');
     
+    error_log("Usuario - Auth: " . ($is_authenticated ? 'Sí' : 'No') . ", Admin: " . ($is_admin ? 'Sí' : 'No') . ", ID: $current_user_id");
+    
     if (!$is_authenticated) {
         $current_user_id = FALLBACK_USER_ID;
+        error_log("Usuario no autenticado, usando FALLBACK_USER_ID: $current_user_id");
     }
     
     $identifier = $_POST['identifier'] ?? '';
@@ -53,12 +56,22 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
             $transient_key = 'feed_personalizado_user_' . $current_user_id . '_' . $identifier;
         }
         
+        error_log("Clave de caché: $transient_key");
+        
         // Solo usar caché para usuarios no administradores
         $use_cache = !$is_admin;
-        $cached_data = $use_cache ? get_transient($transient_key) : false;
+        error_log("¿Usar caché?: " . ($use_cache ? 'Sí' : 'No'));
+        
+        $cached_data = false;
+        if ($use_cache) {
+            $cached_data = get_transient($transient_key);
+            error_log("Datos en caché: " . ($cached_data ? 'Encontrados' : 'No encontrados'));
+        }
         
         // Si no hay caché o es primera página, calcular feed
         if ($paged === 1 || $cached_data === false) {
+            error_log("Calculando nuevo feed - Página: $paged, Caché existente: " . ($cached_data ? 'Sí' : 'No'));
+            
             $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
             
             // Estructura de datos a cachear
@@ -69,14 +82,17 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
             
             // Guardar en caché para usuarios no administradores
             if ($use_cache) {
-                set_transient($transient_key, $cache_data, 600); // 10 minutos
+                $cache_set = set_transient($transient_key, $cache_data, 600);
+                error_log("Intentando guardar en caché: " . ($cache_set ? 'Éxito' : 'Fallo'));
             }
         } else {
+            error_log("Usando datos de caché existentes");
             $posts_personalizados = $cached_data['posts'];
         }
         
         // Obtener IDs de posts
         $post_ids = array_keys($posts_personalizados);
+        error_log("Número total de posts: " . count($post_ids));
         
         if ($similar_to) {
             $post_ids = array_filter($post_ids, function($post_id) use ($similar_to) {
@@ -91,10 +107,13 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
         $current_page_ids = array_slice($post_ids, $offset, $posts_per_page);
         $current_page_ids = array_unique($current_page_ids);
         
+        error_log("Posts para página actual: " . count($current_page_ids));
+        
         if ($paged > 1) {
             $previous_page_ids = array_slice($post_ids, 0, ($paged - 1) * $posts_per_page);
             $post_not_in = array_merge($post_not_in, $previous_page_ids);
             $post_not_in = array_unique($post_not_in);
+            error_log("Posts excluidos de páginas anteriores: " . count($post_not_in));
         }
         
         $query_args = [
@@ -111,6 +130,8 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
         }
     } else {
         // Lógica original para otros tipos de post
+        error_log("Usando configuración estándar para tipo de post: " . $args['post_type']);
+        
         $query_args = [
             'post_type'           => $args['post_type'],
             'posts_per_page'      => $posts,
@@ -126,9 +147,9 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
         }
     }
 
+    error_log("Query Args finales: " . print_r($query_args, true));
     return aplicarFiltros($query_args, $args, $user_id, $current_user_id);
 }
-
 
 
 function procesarPublicaciones($query_args, $args, $is_ajax)
