@@ -12,7 +12,7 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
 // Paso 1: Definir las variables de configuración para cada log
-define('LOG_AUDIO_ENABLED', false); // Cambia a true para habilitar logAudio
+define('LOG_AUDIO_ENABLED', true); // Cambia a true para habilitar logAudio
 define('CHAT_LOG_ENABLED', false);    // Cambia a true para habilitar chatLog
 define('STRIPE_ERROR_ENABLED', true); // Cambia a true para habilitar stripeError
 define('AUT_LOG_ENABLED', true);      // Cambia a true para habilitar autLog
@@ -22,7 +22,8 @@ define('AJAX_POST_LOG_ENABLED', false); // Cambia a true para habilitar ajaxPost
 define('IA_LOG_ENABLED', false);        // Cambia a true para habilitar iaLog
 define('POST_LOG_ENABLED', true);      // Cambia a true para habilitar postLog
 
-function escribirLog($mensaje, $archivo, $max_lineas = 200) {
+function escribirLog($mensaje, $archivo, $max_lineas = 200)
+{
     // Verificaciones iniciales de seguridad
     // Verificar si el archivo es escribible
     if (!is_writable(dirname($archivo))) {
@@ -41,7 +42,7 @@ function escribirLog($mensaje, $archivo, $max_lineas = 200) {
         $fp = fopen($archivo, 'a');
         if (flock($fp, LOCK_EX)) {
             fwrite($fp, $timestamped_log . PHP_EOL);
-            
+
             // Gestionar el límite de líneas solo ocasionalmente (por ejemplo, 1 de cada 10 veces)
             if (rand(1, 10) === 1) {
                 // Leer el archivo
@@ -49,7 +50,7 @@ function escribirLog($mensaje, $archivo, $max_lineas = 200) {
                 if (count($lines) > $max_lineas) {
                     // Mantener solo las últimas líneas
                     $lines = array_slice($lines, -$max_lineas);
-                    
+
                     // Reescribir el archivo
                     file_put_contents($archivo, implode(PHP_EOL, $lines) . PHP_EOL);
                 }
@@ -59,56 +60,70 @@ function escribirLog($mensaje, $archivo, $max_lineas = 200) {
         }
         fclose($fp);
         return true;
-
     } catch (Exception $e) {
         error_log("Error escribiendo log: " . $e->getMessage());
         return false;
     }
 }
 
-function chatLog($log) {
+function logAudio($log)
+{
+    if (LOG_AUDIO_ENABLED) {
+        escribirLog($log, '/var/www/wordpress/wp-content/themes/logAudio.log');
+    }
+}
+
+function chatLog($log)
+{
     if (CHAT_LOG_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/chat.log');
     }
 }
 
-function stripeError($log) {
+function stripeError($log)
+{
     if (STRIPE_ERROR_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/stripeError.log');
     }
 }
 
-function autLog($log) {
+function autLog($log)
+{
     if (AUT_LOG_ENABLED) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/automaticPost.log');
     }
 }
 
-function guardarLog($log) {
+function guardarLog($log)
+{
     if (GUARDAR_LOG_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/logsw.txt');
     }
 }
 
-function logAlgoritmo($log) {
+function logAlgoritmo($log)
+{
     if (LOG_ALGORITMO_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/logAlgoritmo.log', 100);
     }
 }
 
-function ajaxPostLog($log) {
+function ajaxPostLog($log)
+{
     if (AJAX_POST_LOG_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlogAjax.txt');
     }
 }
 
-function iaLog($log) {
+function iaLog($log)
+{
     if (IA_LOG_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/iaLog.log');
     }
 }
 
-function postLog($log) {
+function postLog($log)
+{
     if (POST_LOG_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt');
     }
@@ -132,10 +147,10 @@ function scriptsOrdenados()
         'ajaxPage' => '5.0.11',
         'autorows' => '1.0.1',
         'fan' => '1.0.36',
-        'stripeAccion' => '1.0.6', 
+        'stripeAccion' => '1.0.6',
         'reproductor' => '2.1.2',
-        'stripepro' => '1.0.8',  
-        'progreso' => '1.0.23',  
+        'stripepro' => '1.0.8',
+        'progreso' => '1.0.23',
         'modal' => '1.0.22',
         'alert' => '1.0.4',
         'submenu' => '1.2.15',
@@ -148,8 +163,8 @@ function scriptsOrdenados()
         'registro' => '1.0.12',
         'colab' => '1.0.2',
         'grained' => '1.0.3',
-        'subida' => '1.1.21',     
-        'RS' => '1.0.1',         
+        'subida' => '1.1.21',
+        'RS' => '1.0.1',
         'tagsPosts' => '1.0.1',
         'hashs' => '1.0.1',
         'background' => '1.0.1',
@@ -232,7 +247,7 @@ function scriptsOrdenados()
         'nonce' => wp_create_nonce('wp_rest'),
         'restUrl' => rest_url()
     ));
-    
+
 
     wp_localize_script('wavejs', 'ajax_params', ['ajaxurl' => $ajax_url]);
     wp_localize_script('form-script', 'wpData', ['isAdmin' => current_user_can('administrator')]);
@@ -274,7 +289,8 @@ if (!wp_next_scheduled('clean_log_files_hook')) {
 add_action('clean_log_files_hook', 'limpiarLogs');
 
 
-function custom_site_icon($meta_tags) {
+function custom_site_icon($meta_tags)
+{
     $meta_tags[] = sprintf('<link rel="icon" href="%s">', 'https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-96x96.png');
     return $meta_tags;
 }
@@ -362,4 +378,3 @@ EOD;
     wp_add_inline_script('script-base', $script_inline);
 }
 add_action('wp_enqueue_scripts', 'scriptBasicos');
-
