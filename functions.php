@@ -24,10 +24,6 @@ define('POST_LOG_ENABLED', true);      // Cambia a true para habilitar postLog
 
 function escribirLog($mensaje, $archivo, $max_lineas = 200) {
     // Verificaciones iniciales de seguridad
-    if (!function_exists('current_user_can') || !current_user_can('administrator')) {
-        return false;
-    }
-
     // Verificar si el archivo es escribible
     if (!is_writable(dirname($archivo))) {
         return false;
