@@ -28,8 +28,10 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     define('FALLBACK_USER_ID', 44);
     
-    // Si el usuario no está autenticado o el ID es 0, usar el ID fallback
-    if (!$current_user_id || $current_user_id == 0) {
+    $is_authenticated = $current_user_id && $current_user_id != 0;
+    
+    // Si el usuario no está autenticado, usar el ID fallback
+    if (!$is_authenticated) {
         $current_user_id = FALLBACK_USER_ID;
     }
     
@@ -44,10 +46,21 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
 
     if ($args['post_type'] === 'social_post') {
         $is_admin = current_user_can('administrator');
-        $transient_key = 'feed_personalizado_one_' . $current_user_id;
         
-        // Solo verificamos si es admin para el caché
-        $post_ids = $is_admin ? false : get_transient($transient_key);
+        // Definir la clave de caché según el tipo de usuario
+        if (!$is_authenticated) {
+            // Caché compartida para usuarios no autenticados
+            $transient_key = 'feed_personalizado_anonymous';
+        } else {
+            // Caché individual para cada usuario autenticado
+            $transient_key = 'feed_personalizado_user_' . $current_user_id;
+        }
+        
+        // Los administradores siempre obtienen resultados frescos
+        $post_ids = false;
+        if (!$is_admin) {
+            $post_ids = get_transient($transient_key);
+        }
         
         if ($paged === 1 || $post_ids === false) {
             $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
@@ -61,7 +74,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
             
             $post_ids = array_unique($post_ids);
             
-            // Solo verificamos si es admin para guardar el caché
+            // Guardar en caché solo si no es administrador
             if (!$is_admin) {
                 set_transient($transient_key, $post_ids, 600);
             }
