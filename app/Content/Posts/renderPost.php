@@ -204,25 +204,7 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
             <div class="UKVPJI">
                 <div class="tags-container" id="tags-<? echo get_the_ID(); ?>"></div>
                 <!-- Datos del algoritmo -->
-                <?
-                function limpiarJSON($json_data)
-                {
-                    // Si es una cadena y empieza y termina con comillas
-                    if (is_string($json_data) && substr($json_data, 0, 1) === '"' && substr($json_data, -1) === '"') {
-                        // Eliminar las comillas extras y decodificar los caracteres escapados
-                        $json_data = json_decode($json_data);
-                    }
 
-                    // Si es un array u objeto, convertirlo a JSON
-                    if (is_array($json_data) || is_object($json_data)) {
-                        $json_data = json_encode($json_data);
-                    }
-
-                    return $json_data;
-                }
-
-                // Luego en tu HTML:
-                ?>
                 <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;">
                     <? echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
                 </p>
@@ -232,6 +214,22 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
 <?
 }
 
+
+function limpiarJSON($json_data)
+{
+    // Si es una cadena y empieza y termina con comillas
+    if (is_string($json_data) && substr($json_data, 0, 1) === '"' && substr($json_data, -1) === '"') {
+        // Eliminar las comillas extras y decodificar los caracteres escapados
+        $json_data = json_decode($json_data);
+    }
+
+    // Si es un array u objeto, convertirlo a JSON
+    if (is_array($json_data) || is_object($json_data)) {
+        $json_data = json_encode($json_data);
+    }
+
+    return $json_data;
+}
 
 
 function nohayPost($filtro, $is_ajax)
