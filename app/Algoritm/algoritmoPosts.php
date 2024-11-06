@@ -51,7 +51,8 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
         error_log("author_results no es válido para usuario ID: " . $userId);
         return [];
     }
-
+    $current_timestamp = current_time('timestamp');
+    
     foreach ($datos['author_results'] as $post_id => $post_data) {
         try {
             $puntosFinal = calcularPuntosPost(
@@ -61,7 +62,8 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
                 $esAdmin,
                 $vistas_posts_processed,
                 $identifier,
-                $similar_to
+                $similar_to, 
+                $current_timestamp
             );
 
             if (is_numeric($puntosFinal)) {
@@ -448,7 +450,7 @@ function calcularPuntosPost(
     $similar_to = null,
     $current_timestamp = null // New parameter
 ) {
-    // Retrieve current timestamp once
+
     if ($current_timestamp === null) {
         $current_timestamp = current_time('timestamp');
     }
