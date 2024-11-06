@@ -39,7 +39,7 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
     arsort($posts_personalizados);
     arsort($resumenPuntos);
 
-    logResumenDePuntos($userId, $resumenPuntos);
+    //logResumenDePuntos($userId, $resumenPuntos);
 
     return $posts_personalizados;
 }
@@ -195,7 +195,7 @@ function obtenerDatosFeed($userId)
     $vistas_posts = get_user_meta($userId, 'vistas_posts', true);
     $args = [
         'post_type'      => 'social_post',
-        'posts_per_page' => 2000,
+        'posts_per_page' => 10000,
         'date_query'     => [
             'after' => date('Y-m-d', strtotime('-100 days'))
         ],
@@ -413,11 +413,37 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
 
 
 
-function calcularPuntosIdentifier($post_id, $identifier, $datos)
-{
-    logAlgoritmo("Iniciando cálculo de puntos para post ID: $post_id");
+function calcularPuntosIdentifier($post_id, $identifier, $datos) {
+    $resumen = [
+        'post_id' => $post_id,
+        'identifiers' => [],
+        'matches' => [
+            'content' => 0,
+            'data' => 0
+        ],
+        'puntos' => [
+            'contenido' => 0,
+            'datos' => 0,
+            'bonus' => 0,
+            'total' => 0
+        ]
+    ];
 
-    // Obtener contenido del post y datosAlgoritmo
+    // Normalizar identificadores
+    if (is_array($identifier)) {
+        $identifiers = array_unique(array_map('strtolower', $identifier));
+    } else {
+        $identifiers = array_unique(preg_split('/\s+/', strtolower($identifier), -1, PREG_SPLIT_NO_EMPTY));
+    }
+    $resumen['identifiers'] = $identifiers;
+    $totalIdentifiers = count($identifiers);
+
+    if ($totalIdentifiers === 0) {
+        logAlgoritmo("RESUMEN ID $post_id: Sin identificadores válidos");
+        return 0;
+    }
+
+    // Obtener contenido y datos
     $post_content = !empty($datos['post_content'][$post_id]) 
         ? strtolower($datos['post_content'][$post_id]) 
         : '';
@@ -426,80 +452,69 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos)
         ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true)
         : [];
 
-    // Normalizar identificadores
-    if (is_array($identifier)) {
-        $identifiers = array_unique(array_map('strtolower', $identifier));
-    } else {
-        $identifiers = array_unique(preg_split('/\s+/', strtolower($identifier), -1, PREG_SPLIT_NO_EMPTY));
-    }
-
-    $totalIdentifiers = count($identifiers);
-    if ($totalIdentifiers === 0) {
-        logAlgoritmo("No se encontraron identificadores válidos para post ID: $post_id");
-        return 0;
-    }
-
-    logAlgoritmo("Total de identificadores a buscar: $totalIdentifiers");
-
-    // Búsqueda en contenido del post
-    $contentMatches = 0;
+    // Calcular coincidencias
     foreach ($identifiers as $id_word) {
         if (strpos($post_content, $id_word) !== false) {
-            $contentMatches++;
+            $resumen['matches']['content']++;
         }
     }
 
-    // Búsqueda en datos del algoritmo
+    // Procesar datosAlgoritmo
     $postWords = [];
-    foreach ($datosAlgoritmo as $key => $value) {
+    foreach ($datosAlgoritmo as $value) {
         if (is_array($value)) {
             foreach (['es', 'en'] as $lang) {
                 if (isset($value[$lang]) && is_array($value[$lang])) {
                     foreach ($value[$lang] as $item) {
-                        $word = strtolower($item);
-                        $postWords[$word] = true;
+                        $postWords[strtolower($item)] = true;
                     }
                 }
             }
         } elseif (!empty($value)) {
-            $word = strtolower($value);
-            $postWords[$word] = true;
+            $postWords[strtolower($value)] = true;
         }
     }
 
-    $dataMatches = 0;
     foreach ($identifiers as $id_word) {
         if (isset($postWords[$id_word])) {
-            $dataMatches++;
+            $resumen['matches']['data']++;
         }
     }
 
-    logAlgoritmo("Coincidencias en contenido: $contentMatches, Coincidencias en datos: $dataMatches");
-
-    // Calcular puntos con pesos diferentes
-    $puntosBasePorCoincidenciaContenido = 750; // Mayor peso para coincidencias en contenido
-    $puntosBasePorCoincidenciaDatos = 250;     // Menor peso para coincidencias en datos
+    // Calcular puntos
+    $puntosBasePorCoincidenciaContenido = 750;
+    $puntosBasePorCoincidenciaDatos = 250;
     $bonusCompleto = 2000;
 
-    // Calcular puntos totales
-    $puntosContenido = $contentMatches * $puntosBasePorCoincidenciaContenido;
-    $puntosDatos = $dataMatches * $puntosBasePorCoincidenciaDatos;
-    $puntosIdentifier = $puntosContenido + $puntosDatos;
+    $resumen['puntos']['contenido'] = $resumen['matches']['content'] * $puntosBasePorCoincidenciaContenido;
+    $resumen['puntos']['datos'] = $resumen['matches']['data'] * $puntosBasePorCoincidenciaDatos;
 
-    // Aplicar bonus si hay coincidencia completa en cualquiera de las fuentes
-    if ($contentMatches === $totalIdentifiers) {
-        $puntosIdentifier += $bonusCompleto;
-        logAlgoritmo("Bonus completo aplicado por coincidencia en contenido para post ID: $post_id");
-    } elseif ($dataMatches === $totalIdentifiers) {
-        $puntosIdentifier += ($bonusCompleto * 0.5); // Bonus reducido para coincidencias en datos
-        logAlgoritmo("Bonus parcial aplicado por coincidencia en datos para post ID: $post_id");
+    // Aplicar bonus
+    if ($resumen['matches']['content'] === $totalIdentifiers) {
+        $resumen['puntos']['bonus'] = $bonusCompleto;
+    } elseif ($resumen['matches']['data'] === $totalIdentifiers) {
+        $resumen['puntos']['bonus'] = $bonusCompleto * 0.5;
     }
 
-    logAlgoritmo("Puntos totales calculados para post ID $post_id: $puntosIdentifier");
+    $resumen['puntos']['total'] = $resumen['puntos']['contenido'] + 
+                                 $resumen['puntos']['datos'] + 
+                                 $resumen['puntos']['bonus'];
 
-    return $puntosIdentifier;
+    // Loguear resumen
+    logAlgoritmo(sprintf(
+        "RESUMEN ID %d: [Identifiers: %s] [Matches: Content=%d, Data=%d] [Puntos: Contenido=%d, Datos=%d, Bonus=%d, Total=%d]",
+        $post_id,
+        implode(',', $identifiers),
+        $resumen['matches']['content'],
+        $resumen['matches']['data'],
+        $resumen['puntos']['contenido'],
+        $resumen['puntos']['datos'],
+        $resumen['puntos']['bonus'],
+        $resumen['puntos']['total']
+    ));
+
+    return $resumen['puntos']['total'];
 }
-
 function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
 {
     // Get datosAlgoritmo for the current post
