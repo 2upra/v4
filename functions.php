@@ -11,21 +11,21 @@ require_once __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-// Paso 1: Definir las variables de configuración para cada log
-define('LOG_AUDIO_ENABLED', true); // Cambia a true para habilitar logAudio
-define('CHAT_LOG_ENABLED', false);    // Cambia a true para habilitar chatLog
-define('STRIPE_ERROR_ENABLED', true); // Cambia a true para habilitar stripeError
-define('AUT_LOG_ENABLED', true);      // Cambia a true para habilitar autLog
-define('GUARDAR_LOG_ENABLED', true);  // Cambia a true para habilitar guardarLog
-define('LOG_ALGORITMO_ENABLED', true); // Cambia a true para habilitar logAlgoritmo
-define('AJAX_POST_LOG_ENABLED', false); // Cambia a true para habilitar ajaxPostLog
-define('IA_LOG_ENABLED', false);        // Cambia a true para habilitar iaLog
-define('POST_LOG_ENABLED', true);      // Cambia a true para habilitar postLog
+
+define('LOG_AUDIO_ENABLED', true);
+define('CHAT_LOG_ENABLED', false);   
+define('STRIPE_ERROR_ENABLED', true); 
+define('AUT_LOG_ENABLED', true);     
+define('GUARDAR_LOG_ENABLED', true);  
+define('LOG_ALGORITMO_ENABLED', true); 
+define('AJAX_POST_LOG_ENABLED', false); 
+define('IA_LOG_ENABLED', false);        
+define('POST_LOG_ENABLED', true);      
+define('SEO_LOG_ENABLED', true);
 
 function escribirLog($mensaje, $archivo, $max_lineas = 200)
 {
     // Verificaciones iniciales de seguridad
-    // Verificar si el archivo es escribible
     if (!is_writable(dirname($archivo))) {
         return false;
     }
@@ -65,6 +65,17 @@ function escribirLog($mensaje, $archivo, $max_lineas = 200)
         return false;
     }
 }
+
+// sudo touch /var/www/wordpress/wp-content/themes/seoLog.log && sudo chown www-data:www-data /var/www/wordpress/wp-content/themes/seoLog.log && sudo chmod 664 /var/www/wordpress/wp-content/themes/seoLog.log
+
+
+function seoLog($log)
+{
+    if (SEO_LOG_ENABLED) {
+        escribirLog($log, '/var/www/wordpress/wp-content/themes/seoLog.log');
+    }
+}
+
 
 function logAudio($log)
 {

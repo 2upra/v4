@@ -19,7 +19,7 @@ function debug_meta_description()
 {
     global $wp_filter;
     if (isset($wp_filter['wp_head'])) {
-        error_log('WP Head Hooks: ' . print_r($wp_filter['wp_head'], true));
+        seoLog('WP Head Hooks: ' . print_r($wp_filter['wp_head'], true));
     }
 }
 add_action('init', 'debug_meta_description');
@@ -35,13 +35,13 @@ if (have_posts()) :
         $datosAlgoritmo = get_post_meta($current_post_id, 'datosAlgoritmo', true);
 
         // Log de datos originales
-        error_log('Datos Algoritmo Original: ' . print_r($datosAlgoritmo, true));
+        // seoLog('Datos Algoritmo Original: ' . print_r($datosAlgoritmo, true));
 
         // Verifica si ya es un array y si no, intenta decodificarlo
         if (is_string($datosAlgoritmo)) {
             $datos_decoded = json_decode($datosAlgoritmo, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                error_log('Error al decodificar JSON en datosAlgoritmo en single post: ' . json_last_error_msg());
+                seoLog('Error al decodificar JSON en datosAlgoritmo en single post: ' . json_last_error_msg());
                 $datos_decoded = [];
             }
         } elseif (is_array($datosAlgoritmo)) {
@@ -51,7 +51,7 @@ if (have_posts()) :
         }
 
         // Log de datos decodificados
-        error_log('Datos Decodificados: ' . print_r($datos_decoded, true));
+        // seoLog('Datos Decodificados: ' . print_r($datos_decoded, true));
 
         // Obtener las sugerencias de búsqueda
         $sugerencias_busqueda = isset($datos_decoded['sugerencia_busqueda'][$active_lang])
@@ -80,10 +80,10 @@ if (have_posts()) :
         // Obtener y verificar la meta descripción
         if (isset($datos_decoded['descripcion_ia'][$active_lang])) {
             $meta_description = esc_attr($datos_decoded['descripcion_ia'][$active_lang]);
-            error_log('Meta Description from IA: ' . $meta_description);
+            seoLog('Meta Description from IA: ' . $meta_description);
         } else {
             $meta_description = esc_attr(wp_trim_words(get_the_content(), 25));
-            error_log('Using fallback meta description');
+            seoLog('Using fallback meta description');
         }
 
         // Establecer meta descripción con debugging
@@ -99,7 +99,7 @@ if (have_posts()) :
             if (!empty($meta_description)) {
                 echo '<meta name="description" content="' . $meta_description . '">';
             } else {
-                error_log('Warning: Meta description is empty');
+                seoLog('Warning: Meta description is empty');
             }
         }, 1);
 
@@ -184,7 +184,7 @@ function verify_meta_description()
 {
     $html = get_echo('wp_head');
     if (strpos($html, 'meta name="description"') === false) {
-        error_log('Meta description tag not found in wp_head');
+        seoLog('Meta description tag not found in wp_head');
     }
 }
 add_action('shutdown', 'verify_meta_description');
