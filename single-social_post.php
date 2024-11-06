@@ -1,4 +1,5 @@
 <?php
+get_header();
 // Obtener el ID del usuario actual y otras meta
 $user_id = get_current_user_id();
 $acciones = get_user_meta($user_id, 'acciones', true);
