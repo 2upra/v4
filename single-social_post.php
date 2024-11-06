@@ -1,12 +1,12 @@
 <?php
-get_header();
 // Obtener el ID del usuario actual y otras meta
 $user_id = get_current_user_id();
 $acciones = get_user_meta($user_id, 'acciones', true);
 $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 
 // Función para determinar el idioma activo
-function get_active_language() {
+function get_active_language()
+{
     $locale = get_locale();
     if (strpos($locale, 'es') === 0) {
         return 'es';
@@ -15,7 +15,8 @@ function get_active_language() {
 }
 
 // Función de debugging para meta descriptions
-function debug_meta_description() {
+function debug_meta_description()
+{
     global $wp_filter;
     if (isset($wp_filter['wp_head'])) {
         error_log('WP Head Hooks: ' . print_r($wp_filter['wp_head'], true));
@@ -40,7 +41,7 @@ if (have_posts()) :
         if (is_string($datosAlgoritmo)) {
             $datos_decoded = json_decode($datosAlgoritmo, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                error_log('Error al decodificar JSON en datosAlgoritmo: ' . json_last_error_msg());
+                error_log('Error al decodificar JSON en datosAlgoritmo en single post: ' . json_last_error_msg());
                 $datos_decoded = [];
             }
         } elseif (is_array($datosAlgoritmo)) {
@@ -53,8 +54,8 @@ if (have_posts()) :
         error_log('Datos Decodificados: ' . print_r($datos_decoded, true));
 
         // Obtener las sugerencias de búsqueda
-        $sugerencias_busqueda = isset($datos_decoded['sugerencia_busqueda'][$active_lang]) 
-            ? $datos_decoded['sugerencia_busqueda'][$active_lang] 
+        $sugerencias_busqueda = isset($datos_decoded['sugerencia_busqueda'][$active_lang])
+            ? $datos_decoded['sugerencia_busqueda'][$active_lang]
             : [];
         $sugerencias_busqueda = is_array($sugerencias_busqueda) ? array_slice($sugerencias_busqueda, 0, 2) : [];
 
@@ -131,8 +132,8 @@ if (have_posts()) :
         // Imprimir el esquema JSON-LD con debugging
         add_action('wp_head', function () use ($schema) {
             echo "<!-- Schema Debug Start -->\n";
-            echo '<script type="application/ld+json">' . 
-                wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . 
+            echo '<script type="application/ld+json">' .
+                wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) .
                 '</script>';
             echo "\n<!-- Schema Debug End -->";
         }, 2);
@@ -147,7 +148,7 @@ if (have_posts()) :
             echo "\n<!-- Meta Tags Verification End -->";
         }, 3);
 
-        // Capturar el contenido principal
+        get_header();
         ob_start();
 ?>
         <div id="main">
@@ -179,7 +180,8 @@ else :
 endif;
 
 // Función para verificar la presencia de meta descriptions
-function verify_meta_description() {
+function verify_meta_description()
+{
     $html = get_echo('wp_head');
     if (strpos($html, 'meta name="description"') === false) {
         error_log('Meta description tag not found in wp_head');
@@ -188,7 +190,8 @@ function verify_meta_description() {
 add_action('shutdown', 'verify_meta_description');
 
 // Función helper para capturar output
-function get_echo($function) {
+function get_echo($function)
+{
     ob_start();
     $function();
     return ob_get_clean();
