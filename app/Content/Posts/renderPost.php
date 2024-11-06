@@ -56,18 +56,9 @@ function htmlPost($filtro)
                         <? if ($verificado == '1') : ?>
                             <? echo $GLOBALS['check']; ?>
                         <? elseif ($postAut == '1' && current_user_can('administrator')) : ?>
+                            <div class="verificarPost"> 
                             <? echo $GLOBALS['robot']; ?>
-                        <? endif; ?>
-                    </div>
-
-                    <div class="OFVWLS">
-                        <? if ($recortado) : ?>
-                            <div><? echo "Preview"; ?></div>
-                        <? endif; ?>
-                        <? if ($block) : ?>
-                            <div><? echo "Exclusivo"; ?></div>
-                        <? elseif ($colab) : ?>
-                            <div><? echo "Colab"; ?></div>
+                            </div>
                         <? endif; ?>
                     </div>
                 </div>
