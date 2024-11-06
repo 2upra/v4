@@ -29,6 +29,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     define('FALLBACK_USER_ID', 44);
     
     $is_authenticated = $current_user_id && $current_user_id != 0;
+    $is_admin = current_user_can('administrator');
     
     // Si el usuario no está autenticado, usar el ID fallback
     if (!$is_authenticated) {
@@ -45,8 +46,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     }
 
     if ($args['post_type'] === 'social_post') {
-        $is_admin = current_user_can('administrator');
-        
         // Definir la clave de caché según el tipo de usuario
         if (!$is_authenticated) {
             // Caché compartida para usuarios no autenticados
@@ -56,12 +55,11 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
             $transient_key = 'feed_personalizado_user_' . $current_user_id;
         }
         
-        // Los administradores siempre obtienen resultados frescos
-        $post_ids = false;
-        if (!$is_admin) {
-            $post_ids = get_transient($transient_key);
-        }
+        // Obtener datos de la caché si no es administrador
+        $use_cache = !$is_admin;
+        $post_ids = $use_cache ? get_transient($transient_key) : false;
         
+        // Si no hay caché o es primera página, calcular feed
         if ($paged === 1 || $post_ids === false) {
             $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
             $post_ids = array_keys($posts_personalizados);
@@ -74,9 +72,9 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
             
             $post_ids = array_unique($post_ids);
             
-            // Guardar en caché solo si no es administrador
-            if (!$is_admin) {
-                set_transient($transient_key, $post_ids, 600);
+            // Guardar en caché para todos excepto administradores
+            if ($use_cache) {
+                set_transient($transient_key, $post_ids, 600); // 10 minutos de caché
             }
         }
 
@@ -104,6 +102,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
             $query_args['post__not_in'] = $post_not_in;
         }
     } else {
+        // Para otros tipos de post, mantener la lógica original
         $query_args = [
             'post_type'           => $args['post_type'],
             'posts_per_page'      => $posts,
@@ -121,7 +120,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
 
     return aplicarFiltros($query_args, $args, $user_id, $current_user_id);
 }
-
 
 
 
