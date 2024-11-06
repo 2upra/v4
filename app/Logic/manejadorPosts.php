@@ -43,9 +43,11 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     }
 
     if ($args['post_type'] === 'social_post') {
-        $transient_key = 'feed_personalizado_one' . $current_user_id;
         $is_admin = current_user_can('administrator');
-        $post_ids = ($is_admin || $current_user_id == FALLBACK_USER_ID) ? false : get_transient($transient_key);
+        $transient_key = 'feed_personalizado_one_' . $current_user_id;
+        
+        // Solo verificamos si es admin para el caché
+        $post_ids = $is_admin ? false : get_transient($transient_key);
         
         if ($paged === 1 || $post_ids === false) {
             $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
@@ -59,7 +61,8 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
             
             $post_ids = array_unique($post_ids);
             
-            if (!$is_admin && $current_user_id != FALLBACK_USER_ID) {
+            // Solo verificamos si es admin para guardar el caché
+            if (!$is_admin) {
                 set_transient($transient_key, $post_ids, 600);
             }
         }

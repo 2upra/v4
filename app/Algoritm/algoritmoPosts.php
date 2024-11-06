@@ -63,7 +63,8 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
                 $vistas_posts_processed,
                 $identifier,
                 $similar_to, 
-                $current_timestamp
+                $current_timestamp,
+                $userId
             );
 
             if (is_numeric($puntosFinal)) {
@@ -86,6 +87,27 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
 
     return $posts_personalizados;
 }
+
+function obtenerDatosFeedConCache($userId)
+{
+    return obtenerDatosFeed($userId);
+    if (current_user_can('administrator')) {
+        return obtenerDatosFeed($userId);
+    }
+    $cache_key = 'feed_datos_' . $userId;
+    $datos = wp_cache_get($cache_key);
+    if (false === $datos) {
+        $datos = obtenerDatosFeed($userId);
+        wp_cache_set($cache_key, $datos, '', 800);
+    }
+    if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
+        return [];
+    }
+
+    return $datos;
+    
+}
+
 
 
 
@@ -345,28 +367,7 @@ function obtenerDatosFeed($userId)
         'postAut_results'       => $postAut_results,
         'author_results'        => $posts_results,
         'post_content'          => $post_content,    
-        'user_id'               => $userId  
     ];
-}
-
-function obtenerDatosFeedConCache($userId)
-{
-    return obtenerDatosFeed($userId);
-    if (current_user_can('administrator')) {
-        return obtenerDatosFeed($userId);
-    }
-    $cache_key = 'feed_datos_' . $userId;
-    $datos = wp_cache_get($cache_key);
-    if (false === $datos) {
-        $datos = obtenerDatosFeed($userId);
-        wp_cache_set($cache_key, $datos, '', 800);
-    }
-    if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
-        return [];
-    }
-
-    return $datos;
-    
 }
 
 function obtenerYProcesarVistasPosts($userId)
@@ -389,67 +390,34 @@ function obtenerYProcesarVistasPosts($userId)
 
 function calcularPuntosIntereses($post_id, $datos)
 {
-    // Caché estática para almacenar datos decodificados
-    static $decodedDatosAlgoritmoCache = [];
-
     $puntosIntereses = 0;
     
-    // Asegurarse de que el user_id esté presente
-    // Supongo que el user_id está incluido en $datos['user_id']
-    $user_id = isset($datos['user_id']) ? $datos['user_id'] : null;
-    if ($user_id === null) {
+    // Verificar si existen los índices necesarios
+    if (!isset($datos['datosAlgoritmo'][$post_id]) || 
+        !isset($datos['datosAlgoritmo'][$post_id]->meta_value)) {
         return $puntosIntereses;
     }
 
-    // Crear una clave única para la caché basada en post_id y user_id
-    $cacheKey = $post_id . '_' . $user_id;
-
-    if (isset($decodedDatosAlgoritmoCache[$cacheKey])) {
-        // Recuperar datos de la caché
-        $datosAlgoritmo = $decodedDatosAlgoritmoCache[$cacheKey]['datosAlgoritmo'];
-        $esOneShot = $decodedDatosAlgoritmoCache[$cacheKey]['esOneShot'];
-    } else {
-        // Verificar si existen los índices necesarios
-        if (!isset($datos['datosAlgoritmo'][$post_id]) || 
-            !isset($datos['datosAlgoritmo'][$post_id]->meta_value)) {
-            return $puntosIntereses;
-        }
-
-        $metaValue = $datos['datosAlgoritmo'][$post_id]->meta_value;
-
-        // Verificar si "one shot" está presente en metaValue
-        $oneshot = ['one shot', 'one-shot', 'oneshot'];
-        $esOneShot = false;
-
-        if (!empty($metaValue)) {
-            foreach ($oneshot as $palabra) {
-                if (stripos($metaValue, $palabra) !== false) {
-                    $esOneShot = true;
-                    break;
-                }
-            }
-        }
-
-        // Decodificar el JSON
-        $datosAlgoritmo = json_decode($metaValue, true);
-
-        // Verificar si la decodificación fue exitosa
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($datosAlgoritmo)) {
-            return $puntosIntereses;
-        }
-
-        // Almacenar en la caché
-        $decodedDatosAlgoritmoCache[$cacheKey] = [
-            'datosAlgoritmo' => $datosAlgoritmo,
-            'esOneShot' => $esOneShot
-        ];
+    $datosAlgoritmo = json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true);
+    
+    // Verificar si el json_decode fue exitoso
+    if (json_last_error() !== JSON_ERROR_NONE || !is_array($datosAlgoritmo)) {
+        return $puntosIntereses;
     }
 
-    // Utilizar los datos decodificados de la caché
-    $datosAlgoritmo = $decodedDatosAlgoritmoCache[$cacheKey]['datosAlgoritmo'];
-    $esOneShot = $decodedDatosAlgoritmoCache[$cacheKey]['esOneShot'];
+    $oneshot = ['one shot', 'one-shot', 'oneshot'];
+    $esOneShot = false;
+    $metaValue = $datos['datosAlgoritmo'][$post_id]->meta_value;
 
-    // Calcular los puntos de interés
+    if (!empty($metaValue)) {
+        foreach ($oneshot as $palabra) {
+            if (stripos($metaValue, $palabra) !== false) {
+                $esOneShot = true;
+                break;
+            }
+        }
+    }
+
     foreach ($datosAlgoritmo as $key => $value) {
         if (is_array($value)) {
             foreach (['es', 'en'] as $lang) {
@@ -467,7 +435,7 @@ function calcularPuntosIntereses($post_id, $datos)
     }
     
     if ($esOneShot) {
-        $puntosIntereses *= 1; 
+        $puntosIntereses *= 1;
     }
     
     return $puntosIntereses;
@@ -482,7 +450,8 @@ function calcularPuntosPost(
     $vistas_posts_processed, 
     $identifier = '', 
     $similar_to = null,
-    $current_timestamp = null // New parameter
+    $current_timestamp = null,
+    $user_id = null
 ) {
 
     if ($current_timestamp === null) {
