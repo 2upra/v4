@@ -20,11 +20,6 @@ function removeDuplicates(arr) {
     return [...new Set(arr)];
 }
 
-/*
-porque falla con esta estructura, el proposito es hacer el codigo funcione en todos los casos, este es un caso donde no ha funcionado, no dañes la logica actual
-{"bpm":"","emotion":"","key":"","scale":"","descripcion_ia":{"es":"Sample de voz que dice "Don't stop!" con un tono urgente.  Ideal para añadir un elemento vocal impactante a producciones de hip hop.","en":"Vocal sample saying "Don't stop!" with an urgent tone. Ideal for adding an impactful vocal element to hip hop productions."},"instrumentos_principal":{"es":["Voz"],"en":["Vocal"]},"nombre_corto":{"es":["Voz Stop"],"en":["Stop Vocal"]},"descripcion_corta":{"es":"Sample vocal: ¡No te detengas!","en":"Vocal sample: Don't stop!"},"estado_animo":{"es":["Urgente","Enérgico"],"en":["Urgent","Energetic"]},"artista_posible":{"es":[],"en":[]},"genero_posible":{"es":["Hip Hop","Trap"],"en":["Hip Hop","Trap"]},"tipo_audio":{"es":["sample"],"en":["sample"]},"tags_posibles":{"es":["Voz","Sample","HipHop","Urgente","Energia"],"en":["Vocal","Sample","HipHop","Urgent","Energy"]},"sugerencia_busqueda":{"es":["Sample vocal urgente","Voz hip hop","Sample para trap"],"en":["Urgent vocal sample","Hip hop vocal","Trap sample"]}}
-*/
-
 
 function tagsPosts() {
     document.querySelectorAll('p[id-post-algoritmo]').forEach(function (pElement) {
@@ -54,8 +49,25 @@ function tagsPosts() {
             }
         };
 
+        // Detectar estructura
+        const isNewStructure = !!jsonData.instrumentos_principal?.["es"];
+
         // Primero agregar tipo de audio
         addTags(jsonData, 'tipo_audio');
+
+        // Agregar instrumentos
+        if (isNewStructure) {
+            addTags(jsonData, 'instrumentos_principal');
+        } else {
+            addTags(jsonData, 'Instrumentos posibles');
+        }
+
+        // Agregar género
+        if (isNewStructure) {
+            addTags(jsonData, 'genero_posible');
+        } else {
+            addTags(jsonData, 'Genero posible');
+        }
 
         // Agregar categoría BPM
         if (jsonData.bpm) {
@@ -70,23 +82,18 @@ function tagsPosts() {
             allTags.push(`${capitalize(jsonData.key)} ${capitalize(jsonData.scale)}`);
         }
 
-        // Detectar estructura y agregar etiquetas adicionales
-        const isNewStructure = !!jsonData.instrumentos_principal?.["es"];
-        const tagCategories = isNewStructure ? [
-            'instrumentos_principal',
+        // Agregar las categorías restantes
+        const remainingCategories = isNewStructure ? [
             'estado_animo',
-            'genero_posible',
             'artista_posible',
             'tags_posibles'
         ] : [
-            'Instrumentos posibles',
             'Estado de animo',
-            'Genero posible',
             'Artista posible',
             'Tags posibles'
         ];
 
-        tagCategories.forEach(category => {
+        remainingCategories.forEach(category => {
             addTags(jsonData, category);
         });
 
