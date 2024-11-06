@@ -449,10 +449,16 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
     // Calculate points based on identifier matches
     $puntosIdentifier = 0;
     if (!empty($identifier)) {
-        $puntosIdentifier = calcularPuntosIdentifier($post_id, $identifier, $datos);
+        // Validar que $datos contenga las claves necesarias
+        if (isset($datos['post_content']) && isset($datos['datosAlgoritmo'])) {
+            $puntosIdentifier = calcularPuntosIdentifier($post_id, $identifier, $datos);
+        }
     }
 
-    // Calculate points based on similarity to the specified post
+    // Posiblemente ajustar el peso de puntosIdentifier
+    $pesoIdentifier = 1.0; // Factor de peso para los puntos del identifier
+    $puntosIdentifier *= $pesoIdentifier;
+
     $puntosSimilarTo = 0;
     if (!empty($similar_to)) {
         $puntosSimilarTo = calcularPuntosSimilarTo($post_id, $similar_to, $datos);
@@ -464,17 +470,21 @@ function calcularPuntosPost($post_id, $post_data, $datos, $esAdmin, $vistas_post
     $diasDesdePublicacion = (current_time('timestamp') - strtotime($post_date)) / (3600 * 24);
     $factorTiempo = pow(0.99, $diasDesdePublicacion);
 
-    $metaVerificado = (isset($datos['verificado_results'][$post_id]->meta_value) && $datos['verificado_results'][$post_id]->meta_value == '1') ? true : false;
-    $metaPostAut = (isset($datos['postAut_results'][$post_id]->meta_value) && $datos['postAut_results'][$post_id]->meta_value == '1') ? true : false;
+    $metaVerificado = (isset($datos['verificado_results'][$post_id]->meta_value) && $datos['verificado_results'][$post_id]->meta_value == '1');
+    $metaPostAut = (isset($datos['postAut_results'][$post_id]->meta_value) && $datos['postAut_results'][$post_id]->meta_value == '1');
 
+    // Considerar separar los puntos del identifier en el cálculo final
     $puntosFinal = calcularPuntosFinales(
         $puntosUsuario,
-        $puntosIntereses + $puntosIdentifier + $puntosSimilarTo,
+        $puntosIntereses + $puntosSimilarTo,
         $puntosLikes,
         $metaVerificado,
         $metaPostAut,
         $esAdmin
     );
+
+    // Añadir los puntos del identifier después del cálculo principal
+    $puntosFinal += $puntosIdentifier;
 
     if (isset($vistas_posts_processed[$post_id])) {
         $vistas = $vistas_posts_processed[$post_id]['count'];
@@ -586,42 +596,6 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos) {
     $resumen['puntos']['total'] = $resumen['puntos']['contenido'] + 
                                  $resumen['puntos']['datos'] + 
                                  $resumen['puntos']['bonus'];
-
-    // Solo loguear si hay puntos
-    if ($resumen['puntos']['total'] > 0) {
-        $mensaje = sprintf(
-            "POST ID %d - Análisis de relevancia:\n" .
-            "→ Palabras buscadas: %s\n" .
-            "→ Coincidencias en contenido (%d): %s\n" .
-            "→ Coincidencias en datos (%d): %s\n" .
-            "→ Puntuación desglosada:\n" .
-            "   • Contenido: %d pts (%d coincidencias × %d pts)\n" .
-            "   • Datos: %d pts (%d coincidencias × %d pts)\n" .
-            "   • Bonus: %d pts %s\n" .
-            "   • TOTAL: %d pts",
-            $post_id,
-            implode(', ', $identifiers),
-            $resumen['matches']['content'],
-            $contentMatches ? implode(', ', $contentMatches) : 'ninguna',
-            $resumen['matches']['data'],
-            $dataMatches ? implode(', ', $dataMatches) : 'ninguna',
-            $resumen['puntos']['contenido'],
-            $resumen['matches']['content'],
-            $puntosBasePorCoincidenciaContenido,
-            $resumen['puntos']['datos'],
-            $resumen['matches']['data'],
-            $puntosBasePorCoincidenciaDatos,
-            $resumen['puntos']['bonus'],
-            $resumen['puntos']['bonus'] > 0 
-                ? ($resumen['puntos']['bonus'] === $bonusCompleto 
-                    ? "(bonus completo por coincidencia total en contenido)" 
-                    : "(bonus parcial por coincidencia total en datos)")
-                : "(sin bonus)",
-            $resumen['puntos']['total']
-        );
-
-        logAlgoritmo($mensaje);
-    }
 
     return $resumen['puntos']['total'];
 }
