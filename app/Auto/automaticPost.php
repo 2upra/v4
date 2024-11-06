@@ -1,6 +1,7 @@
 <?
 
 function autProcesarAudio($rutaOriginalOne) {
+    logAudio("autProcesarAudio start");
     $file_id = obtenerFileIDPorURL($rutaOriginalOne);
     if ($file_id === false) {
         eliminarHash($file_id);
