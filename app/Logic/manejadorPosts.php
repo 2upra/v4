@@ -68,10 +68,11 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
             error_log("Datos en caché: " . ($cached_data ? 'Encontrados' : 'No encontrados'));
         }
         
-        // Si no hay caché o es primera página, calcular feed
-        if ($paged === 1 || $cached_data === false) {
-            error_log("Calculando nuevo feed - Página: $paged, Caché existente: " . ($cached_data ? 'Sí' : 'No'));
-            
+        if ($cached_data) {
+            error_log("Usando datos de caché existentes");
+            $posts_personalizados = $cached_data['posts'];
+        } else {
+            error_log("Calculando nuevo feed - No hay caché disponible");
             $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
             
             // Estructura de datos a cachear
@@ -85,9 +86,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
                 $cache_set = set_transient($transient_key, $cache_data, 600);
                 error_log("Intentando guardar en caché: " . ($cache_set ? 'Éxito' : 'Fallo'));
             }
-        } else {
-            error_log("Usando datos de caché existentes");
-            $posts_personalizados = $cached_data['posts'];
         }
         
         // Obtener IDs de posts
