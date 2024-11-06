@@ -12,6 +12,13 @@ function variablesPosts($post_id = null)
     $autores_suscritos = get_user_meta($current_user_id, 'offering_user_ids', true);
     $author_id = get_post_field('post_author', $post_id);
 
+    // Obtener datosAlgoritmo y su respaldo
+    $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
+    $datos_algoritmo_respaldo = get_post_meta($post_id, 'datosAlgoritmo_respaldo', true);
+
+    // Usar el respaldo si datosAlgoritmo está vacío
+    $datos_algoritmo_final = empty($datos_algoritmo) ? $datos_algoritmo_respaldo : $datos_algoritmo;
+
     return [
         'current_user_id' => $current_user_id,
         'autores_suscritos' => $autores_suscritos,
@@ -32,10 +39,9 @@ function variablesPosts($post_id = null)
         'key' => get_post_meta($post_id, 'audio_key', true),
         'scale' => get_post_meta($post_id, 'audio_scale', true),
         'detallesIA' => get_post_meta($post_id, 'audio_descripcion', true),
-        'datosAlgoritmo' => get_post_meta($post_id, 'datosAlgoritmo', true),
+        'datosAlgoritmo' => $datos_algoritmo_final,
         'postAut' => get_post_meta($post_id, 'postAut', true),
         'ultimoEdit' => get_post_meta($post_id, 'ultimoEdit', true),
-
     ];
 }
 

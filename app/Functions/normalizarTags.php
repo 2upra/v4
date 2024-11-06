@@ -34,7 +34,7 @@ function normalizarNuevoPost($post_id, $post, $update) {
     }
 
     // Crear respaldo si no existe
-    //add_post_meta($post_id, 'datosAlgoritmo_respaldo', $meta_datos, true);
+    add_post_meta($post_id, 'datosAlgoritmo_respaldo', $meta_datos, true);
 
     // Normalizar tags
     $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
@@ -112,8 +112,8 @@ function crearRespaldoYNormalizar($batch_size = 100) {
                 continue;
             }
 
-            // Crear respaldo
-            //add_post_meta($row->ID, 'datosAlgoritmo_respaldo', $row->meta_value);
+
+            add_post_meta($row->ID, 'datosAlgoritmo_respaldo', $row->meta_value);
 
             // Normalizar tags
             $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
