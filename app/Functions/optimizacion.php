@@ -1,5 +1,5 @@
  <?
-/*
+
 function desactivar_todos_soportes_bloques( $settings, $name ) {
     // Lista completa de soportes a desactivar
     $soportes_a_desactivar = array(
@@ -167,4 +167,3 @@ function eliminar_ajustes_discusion() {
 }
 add_action( 'admin_menu', 'eliminar_ajustes_discusion' );
 
-*/
