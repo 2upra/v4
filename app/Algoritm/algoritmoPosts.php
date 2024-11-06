@@ -204,16 +204,6 @@ function generarMetaDeIntereses($user_id) {
     }
 }
 
-// Función auxiliar para normalizar texto
-function normalizarTexto($texto) {
-    if (!is_string($texto)) {
-        return '';
-    }
-    
-    $texto = trim(strtolower($texto));
-    $texto = preg_replace('/[^a-z0-9\s-]/', '', $texto);
-    return $texto;
-}
 
 function actualizarIntereses($user_id, $tag_intensidad, $interesesActuales)
 {
