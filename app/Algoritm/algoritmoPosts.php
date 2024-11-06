@@ -52,7 +52,7 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
         return [];
     }
     $current_timestamp = current_time('timestamp');
-    
+
     foreach ($datos['author_results'] as $post_id => $post_data) {
         try {
             $puntosFinal = calcularPuntosPost(
@@ -386,57 +386,194 @@ function obtenerYProcesarVistasPosts($userId)
 }
 
 
-function calcularPuntosIntereses($post_id, $datos)
-{
-    $puntosIntereses = 0;
-    
-    // Verificar si existen los índices necesarios
-    if (!isset($datos['datosAlgoritmo'][$post_id]) || 
-        !isset($datos['datosAlgoritmo'][$post_id]->meta_value)) {
-        return $puntosIntereses;
+class PuntosInteresesCalculator {
+    private static $instance = null;
+    private $cache_group = 'puntos_intereses';
+    private $cache_time = 86400; // 24 horas en segundos
+    private $decoded_cache = [];
+
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
     }
 
-    $datosAlgoritmo = json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true);
-    
-    // Verificar si el json_decode fue exitoso
-    if (json_last_error() !== JSON_ERROR_NONE || !is_array($datosAlgoritmo)) {
-        return $puntosIntereses;
-    }
-
-    $oneshot = ['one shot', 'one-shot', 'oneshot'];
-    $esOneShot = false;
-    $metaValue = $datos['datosAlgoritmo'][$post_id]->meta_value;
-
-    if (!empty($metaValue)) {
-        foreach ($oneshot as $palabra) {
-            if (stripos($metaValue, $palabra) !== false) {
-                $esOneShot = true;
-                break;
+    /**
+     * Calcula los puntos de intereses para un post específico
+     */
+    public function calcularPuntosIntereses($post_id, $datos) {
+        try {
+            // Intentar obtener del caché primero
+            $puntos = $this->getCachedPoints($post_id);
+            if ($puntos !== false) {
+                return $puntos;
             }
+
+            // Si no está en caché, calcular
+            $puntos = $this->calculatePoints($post_id, $datos);
+            
+            // Guardar en caché
+            $this->cachePoints($post_id, $puntos);
+            
+            return $puntos;
+
+        } catch (Exception $e) {
+            $this->logError('Error calculando puntos de intereses', [
+                'post_id' => $post_id,
+                'error' => $e->getMessage()
+            ]);
+            return 0;
         }
     }
 
-    foreach ($datosAlgoritmo as $key => $value) {
-        if (is_array($value)) {
-            foreach (['es', 'en'] as $lang) {
-                if (isset($value[$lang]) && is_array($value[$lang])) {
-                    foreach ($value[$lang] as $item) {
-                        if (isset($datos['interesesUsuario'][$item])) {
-                            $puntosIntereses += 10 + $datos['interesesUsuario'][$item]->intensity;
+    /**
+     * Obtiene los puntos desde caché
+     */
+    private function getCachedPoints($post_id) {
+        $cache_key = $this->getCacheKey($post_id);
+        return wp_cache_get($cache_key, $this->cache_group);
+    }
+
+    /**
+     * Guarda los puntos en caché
+     */
+    private function cachePoints($post_id, $puntos) {
+        $cache_key = $this->getCacheKey($post_id);
+        wp_cache_set($cache_key, $puntos, $this->cache_group, $this->cache_time);
+    }
+
+    /**
+     * Calcula los puntos para un post
+     */
+    private function calculatePoints($post_id, $datos) {
+        $puntosIntereses = 0;
+
+        // Verificar datos necesarios
+        if (!isset($datos['datosAlgoritmo'][$post_id]) || 
+            !isset($datos['datosAlgoritmo'][$post_id]->meta_value)) {
+            return $puntosIntereses;
+        }
+
+        // Usar caché estático para JSON decodificado
+        if (!isset($this->decoded_cache[$post_id])) {
+            $this->decoded_cache[$post_id] = json_decode(
+                $datos['datosAlgoritmo'][$post_id]->meta_value, 
+                true
+            );
+        }
+
+        $datosAlgoritmo = $this->decoded_cache[$post_id];
+
+        // Verificar JSON válido
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($datosAlgoritmo)) {
+            $this->logError('Error decodificando JSON', [
+                'post_id' => $post_id,
+                'json_error' => json_last_error_msg()
+            ]);
+            return $puntosIntereses;
+        }
+
+        // Verificar si es oneshot
+        $esOneShot = $this->checkIfOneShot($datos['datosAlgoritmo'][$post_id]->meta_value);
+
+        // Calcular puntos
+        $puntosIntereses = $this->processDatosAlgoritmo($datosAlgoritmo, $datos['interesesUsuario']);
+
+        // Aplicar modificador oneshot
+        if ($esOneShot) {
+            $puntosIntereses *= 1;
+        }
+
+        return $puntosIntereses;
+    }
+
+    /**
+     * Procesa los datos del algoritmo
+     */
+    private function processDatosAlgoritmo($datosAlgoritmo, $interesesUsuario) {
+        $puntos = 0;
+
+        foreach ($datosAlgoritmo as $key => $value) {
+            if (is_array($value)) {
+                foreach (['es', 'en'] as $lang) {
+                    if (isset($value[$lang]) && is_array($value[$lang])) {
+                        foreach ($value[$lang] as $item) {
+                            if (isset($interesesUsuario[$item])) {
+                                $puntos += 10 + $interesesUsuario[$item]->intensity;
+                            }
                         }
                     }
                 }
+            } elseif (!empty($value) && isset($interesesUsuario[$value])) {
+                $puntos += 10 + $interesesUsuario[$value]->intensity;
             }
-        } elseif (!empty($value) && isset($datos['interesesUsuario'][$value])) {
-            $puntosIntereses += 10 + $datos['interesesUsuario'][$value]->intensity;
+        }
+
+        return $puntos;
+    }
+
+    /**
+     * Verifica si es oneshot
+     */
+    private function checkIfOneShot($metaValue) {
+        $oneshot = ['one shot', 'one-shot', 'oneshot'];
+        
+        if (empty($metaValue)) {
+            return false;
+        }
+
+        foreach ($oneshot as $palabra) {
+            if (stripos($metaValue, $palabra) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Genera la clave de caché
+     */
+    private function getCacheKey($post_id) {
+        return "pi_${post_id}_v1"; // v1 para versionado de caché
+    }
+
+    /**
+     * Registra errores
+     */
+    private function logError($message, $context = []) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log(sprintf(
+                '[PuntosIntereses] %s: %s',
+                $message,
+                json_encode($context)
+            ));
         }
     }
-    
-    if ($esOneShot) {
-        $puntosIntereses *= 1;
+
+    /**
+     * Invalida el caché para un post
+     */
+    public function invalidateCache($post_id) {
+        $cache_key = $this->getCacheKey($post_id);
+        wp_cache_delete($cache_key, $this->cache_group);
+        unset($this->decoded_cache[$post_id]);
     }
-    
-    return $puntosIntereses;
+}
+
+// Hooks para invalidación de caché
+add_action('save_post', function($post_id) {
+    PuntosInteresesCalculator::getInstance()->invalidateCache($post_id);
+});
+
+add_action('deleted_post', function($post_id) {
+    PuntosInteresesCalculator::getInstance()->invalidateCache($post_id);
+});
+
+// Uso:
+function calcularPuntosIntereses($post_id, $datos) {
+    return PuntosInteresesCalculator::getInstance()->calcularPuntosIntereses($post_id, $datos);
 }
 
 
