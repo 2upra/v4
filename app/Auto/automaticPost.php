@@ -93,7 +93,7 @@ function autProcesarAudio($rutaOriginalOne) {
     chmod($rutaWpLiteOne, 0644);
     
     //logAudio("Procesamiento exitoso - Original: $rutaOriginalOne, Lite: $rutaWpLiteOne");
-    
+    logAudio("autProcesarAudio end");
     crearAutPost($rutaOriginalOne, $rutaWpLiteOne, $file_id);
 }
 
@@ -107,6 +107,7 @@ function autProcesarAudio($rutaOriginalOne) {
 
 function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $carpeta_abuela = null)
 {
+    logAudio("automaticAudio start");
     $resultados = procesarArchivoAudioPython($rutaArchivo);
 
     if ($resultados && is_array($resultados)) {
@@ -246,12 +247,13 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
         'tags_posibles' => $nuevos_datos['tags_posibles'],
         'sugerencia_busqueda' => $nuevos_datos['sugerencia_busqueda']
     ] : [];
-
+    logAudio("automaticAudio end");
     return $nuevos_datos_algoritmo;
 }
 
 function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 {
+    logAudio("crearAutPost start");
     // Configuración de variables iniciales
     $autor_id = 44;
     $nombre_archivo = pathinfo($rutaOriginal, PATHINFO_FILENAME);
@@ -362,6 +364,7 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     update_post_meta($post_id, 'datosAlgoritmo', json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE));
 
     return $post_id;
+    logAudio("crearAutPost end");
 }
 
 
