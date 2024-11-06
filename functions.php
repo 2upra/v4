@@ -17,6 +17,11 @@ define('IA_LOG_ENABLED', false);        // Cambia a true para habilitar iaLog
 define('POST_LOG_ENABLED', true);      // Cambia a true para habilitar postLog
 
 function escribirLog($mensaje, $archivo, $max_lineas = 200) {
+    // Verificar si WordPress está inicializado y si el usuario es administrador
+    if (!function_exists('current_user_can') || !current_user_can('administrator')) {
+        return;
+    }
+
     if (is_object($mensaje) || is_array($mensaje)) {
         $mensaje = json_encode($mensaje);
     }
@@ -34,60 +39,58 @@ function escribirLog($mensaje, $archivo, $max_lineas = 200) {
 }
 
 function logAudio($log) {
-    if (LOG_AUDIO_ENABLED) {
+    if (LOG_AUDIO_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/logAudio.log', 100000);
     }
 }
 
 function chatLog($log) {
-    if (CHAT_LOG_ENABLED) {
+    if (CHAT_LOG_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/chat.log');
     }
 }
 
 function stripeError($log) {
-    if (STRIPE_ERROR_ENABLED) {
+    if (STRIPE_ERROR_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/stripeError.log');
     }
 }
 
 function autLog($log) {
-    if (AUT_LOG_ENABLED) {
+    if (AUT_LOG_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/automaticPost.log');
     }
 }
 
 function guardarLog($log) {
-    if (GUARDAR_LOG_ENABLED) {
+    if (GUARDAR_LOG_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/logsw.txt');
     }
 }
 
 function logAlgoritmo($log) {
-    if (LOG_ALGORITMO_ENABLED) {
+    if (LOG_ALGORITMO_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/logAlgoritmo.log', 100);
     }
 }
 
 function ajaxPostLog($log) {
-    if (AJAX_POST_LOG_ENABLED) {
+    if (AJAX_POST_LOG_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlogAjax.txt');
     }
 }
 
 function iaLog($log) {
-    if (IA_LOG_ENABLED) {
+    if (IA_LOG_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/iaLog.log');
     }
 }
 
 function postLog($log) {
-    if (POST_LOG_ENABLED) {
-        // tail -f /var/www/wordpress/wp-content/themes/wanlog.txt 
+    if (POST_LOG_ENABLED && current_user_can('administrator')) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt');
     }
 }
-
 function scriptsOrdenados()
 {
     $dev_mode = true;
