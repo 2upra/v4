@@ -1,6 +1,7 @@
 <?
 
-function autProcesarAudio($rutaOriginalOne) {
+function autProcesarAudio($rutaOriginalOne)
+{
     logAudio("autProcesarAudio start");
     $file_id = obtenerFileIDPorURL($rutaOriginalOne);
     if ($file_id === false) {
@@ -22,13 +23,13 @@ function autProcesarAudio($rutaOriginalOne) {
         logAudio("Directorio inválido: {$path_parts['dirname']}");
         return;
     }
-    
+
     $extension = strtolower($path_parts['extension']);
     $basename = $path_parts['filename'];
     $temp_path = "$directory/{$basename}_temp.$extension";
     $comando_strip_metadata = "/usr/bin/ffmpeg -i " . escapeshellarg($rutaOriginalOne) . " -map_metadata -1 -map 0:a -c:a copy " . escapeshellarg($temp_path) . " -y";
     exec($comando_strip_metadata, $output_strip, $return_strip);
-    
+
     if ($return_strip !== 0) {
         eliminarHash($file_id);
         logAudio("Error al eliminar metadatos: " . implode(" | ", $output_strip));
@@ -91,7 +92,7 @@ function autProcesarAudio($rutaOriginalOne) {
     }
 
     chmod($rutaWpLiteOne, 0644);
-    
+
     //logAudio("Procesamiento exitoso - Original: $rutaOriginalOne, Lite: $rutaWpLiteOne");
     logAudio("autProcesarAudio end");
     crearAutPost($rutaOriginalOne, $rutaWpLiteOne, $file_id);
@@ -107,13 +108,30 @@ function autProcesarAudio($rutaOriginalOne) {
 
 function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $carpeta_abuela = null)
 {
-    logAudio("automaticAudio start");
+    // Antes de procesar el archivo
+    logAudio("Intentando procesar archivo: " . $rutaArchivo);
+
     $resultados = procesarArchivoAudioPython($rutaArchivo);
 
+    // Después de obtener resultados
+    logAudio("Resultados obtenidos: " . print_r($resultados, true));
+
+    // Verificar el tipo de $resultados
+    logAudio("Tipo de resultados: " . gettype($resultados));
+
     if ($resultados && is_array($resultados)) {
+        logAudio("Entrando en el bloque de procesamiento de resultados");
+
         // Create an output array to store the results
         $output = [];
-        
+
+        // Log cada elemento que intentamos acceder
+        logAudio("Accediendo a BPM: " . (isset($resultados['bpm']) ? $resultados['bpm'] : 'No existe'));
+        logAudio("Accediendo a Emotion: " . (isset($resultados['emotion']) ? $resultados['emotion'] : 'No existe'));
+        logAudio("Accediendo a Key: " . (isset($resultados['key']) ? $resultados['key'] : 'No existe'));
+        logAudio("Accediendo a Scale: " . (isset($resultados['scale']) ? $resultados['scale'] : 'No existe'));
+        logAudio("Accediendo a Pitch: " . (isset($resultados['pitch']) ? $resultados['pitch'] : 'No existe'));
+
         // Safely access array elements with null coalescing operator
         $output[] = "BPM: " . (isset($resultados['bpm']) ? $resultados['bpm'] : 'N/A');
         $output[] = "Emotion: " . (isset($resultados['emotion']) ? $resultados['emotion'] : 'N/A');
@@ -121,13 +139,21 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
         $output[] = "Scale: " . (isset($resultados['scale']) ? $resultados['scale'] : 'N/A');
         $output[] = "Pitch: " . (isset($resultados['pitch']) ? $resultados['pitch'] : 'N/A');
 
+        // Log el array final
+        logAudio("Array de salida final: " . print_r($output, true));
+
         // Join the output array with newlines and return or echo
         echo implode("\n", $output);
-        
+
+        // Log antes de retornar
+        logAudio("Retornando resultados procesados");
+
         // Optionally return the results array
         return $resultados;
     } else {
-        error_log("Error procesando el archivo de audio en procesarArchivoAudioPython.");
+        logAudio("Error: Los resultados no son válidos");
+        logAudio("Valor de resultados: " . print_r($resultados, true));
+        logAudio("Error procesando el archivo de audio en procesarArchivoAudioPython.");
     }
 
     $informacion_archivo = '';
