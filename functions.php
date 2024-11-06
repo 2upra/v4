@@ -1,5 +1,11 @@
 <?
+if (!defined('ABSPATH')) {
+    exit;
+}
 
+require_once ABSPATH . 'wp-admin/includes/media.php';
+require_once ABSPATH . 'wp-admin/includes/file.php';
+require_once ABSPATH . 'wp-admin/includes/image.php';
 require_once ABSPATH . 'wp-content/stripe/init.php';
 require_once __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);

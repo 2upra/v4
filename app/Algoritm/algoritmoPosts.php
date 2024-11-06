@@ -316,13 +316,23 @@ function obtenerYProcesarVistasPosts($userId)
 function calcularPuntosIntereses($post_id, $datos)
 {
     $puntosIntereses = 0;
-    $datosAlgoritmo = (isset($datos['datosAlgoritmo'][$post_id]) && isset($datos['datosAlgoritmo'][$post_id]->meta_value))
-        ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true)
-        : [];
+    
+    // Verificar si existen los índices necesarios
+    if (!isset($datos['datosAlgoritmo'][$post_id]) || 
+        !isset($datos['datosAlgoritmo'][$post_id]->meta_value)) {
+        return $puntosIntereses;
+    }
+
+    $datosAlgoritmo = json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true);
+    
+    // Verificar si el json_decode fue exitoso
+    if (json_last_error() !== JSON_ERROR_NONE || !is_array($datosAlgoritmo)) {
+        return $puntosIntereses;
+    }
+
     $oneshot = ['one shot', 'one-shot', 'oneshot'];
     $esOneShot = false;
-
-    $metaValue = isset($datos['datosAlgoritmo'][$post_id]->meta_value) ? $datos['datosAlgoritmo'][$post_id]->meta_value : '';
+    $metaValue = $datos['datosAlgoritmo'][$post_id]->meta_value;
 
     if (!empty($metaValue)) {
         foreach ($oneshot as $palabra) {
@@ -557,25 +567,31 @@ function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
 function extractWordsFromDatosAlgoritmo($datosAlgoritmo)
 {
     $words = [];
+    
+    // Verificar si $datosAlgoritmo es null o no es array
+    if (empty($datosAlgoritmo) || !is_array($datosAlgoritmo)) {
+        return $words;
+    }
 
     foreach ($datosAlgoritmo as $key => $value) {
         if (is_array($value)) {
             foreach (['es', 'en'] as $lang) {
                 if (isset($value[$lang]) && is_array($value[$lang])) {
                     foreach ($value[$lang] as $item) {
-                        $item_normalized = strtolower($item);
-                        $words[] = $item_normalized;
+                        if (is_string($item)) {  // Verificar que sea string
+                            $item_normalized = strtolower($item);
+                            $words[] = $item_normalized;
+                        }
                     }
                 }
             }
-        } elseif (!empty($value)) {
+        } elseif (!empty($value) && is_string($value)) {  // Verificar que sea string
             $value_normalized = strtolower($value);
             $words[] = $value_normalized;
         }
     }
     return $words;
 }
-
 
 #PASO 5
 function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
