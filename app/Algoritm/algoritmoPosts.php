@@ -5,44 +5,85 @@ global $wpdb;
 define('INTERES_TABLE', "{$wpdb->prefix}interes");
 define('BATCH_SIZE', 1000);
 
-
-
 function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
 {
-    $datos = obtenerDatosFeedConCache($userId);
-    if (empty($datos)) {
+    // Validar que el userId sea válido
+    if (empty($userId) || !is_numeric($userId)) {
+        error_log("Usuario ID inválido: " . print_r($userId, true));
         return [];
     }
 
+    $datos = obtenerDatosFeedConCache($userId);
+    if (empty($datos)) {
+        error_log("Datos vacíos para usuario ID: " . $userId);
+        return [];
+    }
+
+    // Obtener y validar datos del usuario
     $usuario = get_userdata($userId);
-    $esAdmin = in_array('administrator', (array) $usuario->roles);
+    if (!$usuario || !is_object($usuario)) {
+        error_log("No se pudo obtener datos del usuario ID: " . $userId);
+        return [];
+    }
+
+    // Validar roles del usuario
+    $esAdmin = false;
+    if (isset($usuario->roles) && is_array($usuario->roles)) {
+        $esAdmin = in_array('administrator', $usuario->roles);
+    } else {
+        $roles = array_map('strtolower', (array) $usuario->roles);
+        $esAdmin = in_array('administrator', $roles);
+    }
+
+    // Obtener y validar vistas de posts
     $vistas_posts_processed = obtenerYProcesarVistasPosts($userId);
+    if ($vistas_posts_processed === false) {
+        error_log("Error al procesar vistas de posts para usuario ID: " . $userId);
+        return [];
+    }
 
     $posts_personalizados = [];
     $resumenPuntos = [];
 
-    foreach ($datos['author_results'] as $post_id => $post_data) {
-        $puntosFinal = calcularPuntosPost(
-            $post_id,
-            $post_data,
-            $datos,
-            $esAdmin,
-            $vistas_posts_processed,
-            $identifier,
-            $similar_to
-        );
+    // Validar que author_results sea un array
+    if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
+        error_log("author_results no es válido para usuario ID: " . $userId);
+        return [];
+    }
 
-        $posts_personalizados[$post_id] = $puntosFinal;
-        $resumenPuntos[$post_id] = round($puntosFinal, 2);
+    foreach ($datos['author_results'] as $post_id => $post_data) {
+        try {
+            $puntosFinal = calcularPuntosPost(
+                $post_id,
+                $post_data,
+                $datos,
+                $esAdmin,
+                $vistas_posts_processed,
+                $identifier,
+                $similar_to
+            );
+
+            if (is_numeric($puntosFinal)) {
+                $posts_personalizados[$post_id] = $puntosFinal;
+                $resumenPuntos[$post_id] = round($puntosFinal, 2);
+            }
+        } catch (Exception $e) {
+            error_log("Error al calcular puntos para post ID {$post_id}: " . $e->getMessage());
+            continue;
+        }
+    }
+
+    if (empty($posts_personalizados)) {
+        error_log("No se generaron posts personalizados para usuario ID: " . $userId);
+        return [];
     }
 
     arsort($posts_personalizados);
     arsort($resumenPuntos);
 
-    //logResumenDePuntos($userId, $resumenPuntos);
-
     return $posts_personalizados;
 }
+
 
 
 
