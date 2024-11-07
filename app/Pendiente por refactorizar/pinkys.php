@@ -1,114 +1,89 @@
 <?
 
 // Función para agregar pinkys al usuario
-function agregarPinkys($usuario_id, $cantidad)
+function agregarPinkys($userID, $cantidad)
 {
-    $monedas_actuales = (int) get_user_meta($usuario_id, 'pinky', true);
+    $monedas_actuales = (int) get_user_meta($userID, 'pinky', true);
     $nuevas_monedas = $monedas_actuales + $cantidad;
-    update_user_meta($usuario_id, 'pinky', $nuevas_monedas);
+    update_user_meta($userID, 'pinky', $nuevas_monedas);
 }
 
 // Función para restar pinkys al usuario
-function restarPinkys($usuario_id, $cantidad)
+function restarPinkys($userID, $cantidad)
 {
-    $monedas_actuales = (int) get_user_meta($usuario_id, 'pinky', true);
+    $monedas_actuales = (int) get_user_meta($userID, 'pinky', true);
     $nuevas_monedas = $monedas_actuales - $cantidad;
-    update_user_meta($usuario_id, 'pinky', $nuevas_monedas);
+    update_user_meta($userID, 'pinky', $nuevas_monedas);
 }
 
 // Acción para restar pinkys al eliminar un post
 add_action('before_delete_post', 'restarPinkysEliminacion');
-function restarPinkysEliminacion($post_id)
+function restarPinkysEliminacion($postID)
 {
-    $post = get_post($post_id);
-    $usuario_id = $post->post_author;
+    $post = get_post($postID);
+    $userID = $post->post_author;
 
-    if ($usuario_id) {
-        restarPinkys($usuario_id, 1);
+    if ($userID) {
+        restarPinkys($userID, 1);
     }
 }
-
-/*
-Hay un problema grave, cuando descargo el audio desde el enlace con el token generado no funciona
-por lo general son audios wav y dan este error
-File: C:\Users\1u\Downloads\Rhodes-Dm_rdmS_2upra (5).wav
-Code: -1 (FFFFFFFF)
-Message: Decoder was not found for this format.
-
-pero si lo descargo directamente desde el enlace del servidor sin token funciona correctamente el archivo
-
-*/
-
-// Handler AJAX para procesar la descarga
 add_action('wp_ajax_procesarDescarga', 'procesarDescarga');
 
 function procesarDescarga() {
-    $usuario_id = get_current_user_id();
-    guardarLog("Usuario ID: " . $usuario_id);
-
-    if (!$usuario_id) {
-        guardarLog("Error: Usuario no autorizado.");
+    $userID = get_current_user_id();
+    if (!$userID) {
         wp_send_json_error(['message' => 'No autorizado.']);
     }
-
-    $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
-    guardarLog("Post ID recibido: " . $post_id);
-
-    // Comprobación actualizada del post
-    $post = get_post($post_id);
-    guardarLog("Post obtenido: " . print_r($post, true));
-
+    $postID = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+    $post = get_post($postID);
     if (!$post || $post->post_status !== 'publish') {
-        guardarLog('Post no válido o no publicado: ' . $post_id);
         wp_send_json_error(['message' => 'Post no válido.']);
     }
-
-    $audio_id = get_post_meta($post_id, 'post_audio', true);
-    guardarLog("Audio ID obtenido: " . $audio_id);
-
-    if (!$audio_id) {
-        guardarLog("Error: Audio no encontrado para el Post ID: " . $post_id);
+    $audioID = get_post_meta($postID, 'post_audio', true);
+    if (!$audioID) {
         wp_send_json_error(['message' => 'Audio no encontrado.']);
     }
-
-    $pinky = (int)get_user_meta($usuario_id, 'pinky', true);
-    guardarLog("Pinkys del usuario: " . $pinky);
-
-    if ($pinky >= 1) {
-        guardarLog("Restando 1 Pinky al usuario: " . $usuario_id);
-        restarPinkys($usuario_id, 1);
-
-        $download_url = generarEnlaceDescarga($usuario_id, $audio_id);
-        guardarLog("Enlace de descarga generado: " . $download_url);
-
-        // agregarNoti($usuario_id, 'Descarga disponible', $download_url, $usuario_id);
-        wp_send_json_success(['download_url' => $download_url]);
-    } else {
-        guardarLog("Error: No suficientes Pinkys para el usuario: " . $usuario_id);
-        // agregarNoti($usuario_id, 'No tienes suficientes Pinkys para esta descarga.', 'https://2upra.com', $usuario_id);
-        wp_send_json_error(['message' => 'No tienes suficientes Pinkys para esta descarga.']);
+    $descargasAnteriores = get_user_meta($userID, 'descargas', true);
+    if (!$descargasAnteriores) {
+        $descargasAnteriores = [];
     }
+    $yaDescargado = isset($descargasAnteriores[$postID]);
+    if (!$yaDescargado) {
+        $pinky = (int)get_user_meta($userID, 'pinky', true);
+        if ($pinky < 1) {
+            wp_send_json_error(['message' => 'No tienes suficientes Pinkys para esta descarga.']);
+        }
+        restarPinkys($userID, 1);
+    }
+    if (!$yaDescargado) {
+        $descargasAnteriores[$postID] = 1;
+    } else {
+        $descargasAnteriores[$postID]++;
+    }
+    update_user_meta($userID, 'descargas', $descargasAnteriores);
+    $total_descargas = (int)get_post_meta($postID, 'totalDescargas', true);
+    $total_descargas++;
+    update_post_meta($postID, 'totalDescargas', $total_descargas);
+    $download_url = generarEnlaceDescarga($userID, $audioID);
+    wp_send_json_success(['download_url' => $download_url]);
 }
 
-function generarEnlaceDescarga($usuario_id, $audio_id) {
+
+function generarEnlaceDescarga($userID, $audioID) {
     $token = bin2hex(random_bytes(16));
-    guardarLog("Token generado: " . $token);
 
     $token_data = array(
-        'user_id' => $usuario_id,
-        'audio_id' => $audio_id,
+        'user_id' => $userID,
+        'audio_id' => $audioID,
         'time' => time(),
     );
-    guardarLog("Datos del token: " . print_r($token_data, true));
 
     set_transient('descarga_token_' . $token, $token_data, HOUR_IN_SECONDS); // válido por 1 hora
-    guardarLog("Token almacenado en transients.");
 
     $enlaceDescarga = add_query_arg([
         'descarga_token' => $token,
     ], home_url());
 
-    guardarLog("Enlace de descarga final: " . $enlaceDescarga);
 
     return $enlaceDescarga;
 }
@@ -116,23 +91,18 @@ function generarEnlaceDescarga($usuario_id, $audio_id) {
 function descargaAudio() {
     if (isset($_GET['descarga_token'])) {
         $token = sanitize_text_field($_GET['descarga_token']);
-        guardarLog("Token de descarga recibido: " . $token);
 
         $token_data = get_transient('descarga_token_' . $token);
-        guardarLog("Datos del token recuperados: " . print_r($token_data, true));
 
         if ($token_data) {
-            $usuario_id = get_current_user_id();
-            guardarLog("Usuario actual: " . $usuario_id);
+            $userID = get_current_user_id();
 
-            if ($usuario_id != $token_data['user_id']) {
-                guardarLog("Error: El usuario no tiene permiso para descargar este archivo.");
+            if ($userID != $token_data['user_id']) {
                 wp_die('No tienes permiso para descargar este archivo.');
             }
 
-            $audio_id = $token_data['audio_id'];
-            $audio_path = get_attached_file($audio_id);
-            guardarLog("Ruta del audio: " . $audio_path);
+            $audioID = $token_data['audio_id'];
+            $audio_path = get_attached_file($audioID);
 
             if ($audio_path && file_exists($audio_path) && is_readable($audio_path)) {
                 // Limpiar cualquier salida previa
@@ -194,14 +164,11 @@ function descargaAudio() {
                 
                 // Eliminar el token después de la descarga
                 delete_transient('descarga_token_' . $token);
-                guardarLog("Descarga completada y token eliminado.");
                 exit;
             } else {
-                guardarLog("Error: El archivo no existe o no es accesible.");
                 wp_die('El archivo no existe o no es accesible.');
             }
         } else {
-            guardarLog("Error: Token inválido o expirado.");
             wp_die('El enlace de descarga no es válido o ha expirado.');
         }
     }
@@ -256,18 +223,25 @@ async function procesarDescarga(postId, usuarioId) {
 */
 
 // Función para generar el botón de descarga
-function botonDescarga($post_id)
+function botonDescarga($postID)
 {
     ob_start();
 
-    $paraDescarga = get_post_meta($post_id, 'paraDescarga', true);
-    $usuario_id = get_current_user_id();
+
+    $paraDescarga = get_post_meta($postID, 'paraDescarga', true);
+    $userID = get_current_user_id();
 
     if ($paraDescarga == '1') {
-        if ($usuario_id) {
+        if ($userID) {
+            // Obtener descargas previas del usuario
+            $descargas_anteriores = get_user_meta($userID, 'descargas', true);
+            $yaDescargado = isset($descargas_anteriores[$postID]);
+            $claseExtra = $yaDescargado ? 'yaDescargado' : '';
+
             ?>
             <div class="ZAQIBB">
-                <button onclick="return procesarDescarga('<? echo esc_js($post_id); ?>', '<? echo esc_js($usuario_id); ?>')">
+                <button class="icon-arrow-down <? echo esc_attr($claseExtra); ?>"
+                        onclick="return procesarDescarga('<? echo esc_js($postID); ?>', '<? echo esc_js($userID); ?>')">
                     <? echo $GLOBALS['descargaicono']; ?>
                 </button>
             </div>
@@ -282,9 +256,9 @@ function botonDescarga($post_id)
             <?
         }
     }
+
     return ob_get_clean();
 }
-
 // Agregar pinkys al registrarse un nuevo usuario
 function pinkysRegistro($user_id)
 {
@@ -301,10 +275,10 @@ function restablecerPinkys()
     ));
 
     if (!empty($usuarios_query->results)) {
-        foreach ($usuarios_query->results as $usuario_id) {
-            $monedas_actuales = (int) get_user_meta($usuario_id, 'pinky', true);
+        foreach ($usuarios_query->results as $userID) {
+            $monedas_actuales = (int) get_user_meta($userID, 'pinky', true);
             if ($monedas_actuales < 10) {
-                update_user_meta($usuario_id, 'pinky', 10);
+                update_user_meta($userID, 'pinky', 10);
             }
         }
     }
