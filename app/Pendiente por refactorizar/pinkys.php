@@ -227,7 +227,6 @@ function botonDescarga($postID)
 {
     ob_start();
 
-
     $paraDescarga = get_post_meta($postID, 'paraDescarga', true);
     $userID = get_current_user_id();
 
@@ -240,20 +239,21 @@ function botonDescarga($postID)
 
             ?>
             <div class="ZAQIBB">
-                <button class="icon-arrow-down <? echo esc_attr($claseExtra); ?>"
-                        onclick="return procesarDescarga('<? echo esc_js($postID); ?>', '<? echo esc_js($userID); ?>')">
-                    <? echo $GLOBALS['descargaicono']; ?>
+                <button class="icon-arrow-down <?php echo esc_attr($claseExtra); ?>"
+                        data-post-id="<?php echo esc_attr($postID); ?>"
+                        onclick="return procesarDescarga('<?php echo esc_js($postID); ?>', '<?php echo esc_js($userID); ?>')">
+                    <?php echo $GLOBALS['descargaicono']; ?>
                 </button>
             </div>
-            <?
+            <?php
         } else {
             ?>
             <div class="ZAQIBB">
                 <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down">
-                    <? echo $GLOBALS['descargaicono']; ?>
+                    <?php echo $GLOBALS['descargaicono']; ?>
                 </button>
             </div>
-            <?
+            <?php
         }
     }
 
