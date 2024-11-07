@@ -33,7 +33,7 @@ function debug_meta_description()
 }
 add_action('init', 'debug_meta_description');
 
-$active_lang = get_active_language();
+$active_lang = get_user_browser_language();
 
 if (have_posts()) :
     while (have_posts()) : the_post();
