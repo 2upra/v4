@@ -32,9 +32,7 @@ async function procesarDescarga(postId, usuarioId) {
                 // Actualizar el botón visualmente para indicar que ya se descargó
                 const button = document.querySelector(`button[data-post-id="${postId}"]`);
                 if (button) {
-                    button.classList.add('ya-descargado');
-                    button.setAttribute('disabled', 'disabled');  // Deshabilitar el botón si deseas
-                    button.textContent = 'Ya descargado';  // Cambiar el texto del botón
+                    button.classList.add('yaDescargado');
                 }
             } else {
                 console.error('Error: download_url no está definido en la respuesta.');
