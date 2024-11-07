@@ -26,17 +26,41 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
     
 }
+
+/*
+
+[07-Nov-2024 02:21:48 UTC] PHP Stack trace:
+[07-Nov-2024 02:21:48 UTC] PHP   1. {main}() /var/www/wordpress/index.php:0
+[07-Nov-2024 02:21:48 UTC] PHP   2. require() /var/www/wordpress/index.php:17
+[07-Nov-2024 02:21:48 UTC] PHP   3. require_once() /var/www/wordpress/wp-blog-header.php:19
+[07-Nov-2024 02:21:48 UTC] PHP   4. include() /var/www/wordpress/wp-includes/template-loader.php:106
+[07-Nov-2024 02:21:48 UTC] PHP   5. publicaciones($args = ['filtro' => 'nada', 'posts' => 10, 'similar_to' => 289724], $is_ajax = *uninitialized*, $paged = *uninitialized*) /var/www/wordpress/wp-content/themes/2upra3v/single-social_post.php:165
+[07-Nov-2024 02:21:48 UTC] PHP   6. configuracionQueryArgs($args = ['filtro' => 'nada', 'tab_id' => '', 'posts' => 10, 'exclude' => [], 'post_type' => 'social_post', 'similar_to' => 289724], $paged = 1, $user_id = NULL, $current_user_id = 44) /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php:17
+[07-Nov-2024 02:21:48 UTC] PHP   7. define($constant_name = 'FALLBACK_USER_ID', $value = 44) /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php:30
+[07-Nov-2024 02:22:02 UTC] PHP Warning:  Constant FALLBACK_USER_ID already defined in /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php on line 30
+[07-Nov-2024 02:22:02 UTC] PHP Stack trace:
+[07-Nov-2024 02:22:02 UTC] PHP   1. {main}() /var/www/wordpress/index.php:0
+[07-Nov-2024 02:22:02 UTC] PHP   2. require() /var/www/wordpress/index.php:17
+[07-Nov-2024 02:22:02 UTC] PHP   3. require_once() /var/www/wordpress/wp-blog-header.php:19
+[07-Nov-2024 02:22:02 UTC] PHP   4. include() /var/www/wordpress/wp-includes/template-loader.php:106
+[07-Nov-2024 02:22:02 UTC] PHP   5. publicaciones($args = ['filtro' => 'nada', 'posts' => 10, 'similar_to' => 289724], $is_ajax = *uninitialized*, $paged = *uninitialized*) /var/www/wordpress/wp-content/themes/2upra3v/single-social_post.php:165
+[07-Nov-2024 02:22:02 UTC] PHP   6. configuracionQueryArgs($args = ['filtro' => 'nada', 'tab_id' => '', 'posts' => 10, 'exclude' => [], 'post_type' => 'social_post', 'similar_to' => 289724], $paged = 1, $user_id = NULL, $current_user_id = 44) /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php:17
+[07-Nov-2024 02:22:02 UTC] PHP   7. define($constant_name = 'FALLBACK_USER_ID', $value = 44) /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php:30
+
+*/
+
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
-    define('FALLBACK_USER_ID', 44);
+    // Usar una variable global en lugar de una constante
+    global $FALLBACK_USER_ID;
+    if (!isset($FALLBACK_USER_ID)) {
+        $FALLBACK_USER_ID = 44;
+    }
     
     $is_authenticated = $current_user_id && $current_user_id != 0;
     $is_admin = current_user_can('administrator');
     
-    //error_log("Usuario - Auth: " . ($is_authenticated ? 'Sí' : 'No') . ", Admin: " . ($is_admin ? 'Sí' : 'No') . ", ID: $current_user_id");
-    
     if (!$is_authenticated) {
-        $current_user_id = FALLBACK_USER_ID;
-        //error_log("Usuario no autenticado, usando FALLBACK_USER_ID: $current_user_id");
+        $current_user_id = $FALLBACK_USER_ID;
     }
     
     $identifier = $_POST['identifier'] ?? '';
@@ -46,51 +70,40 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     
     if ($similar_to) {
         $post_not_in[] = $similar_to;
+        // Crear una clave de caché específica para similar_to
+        $cache_suffix = "_similar_" . $similar_to;
+    } else {
+        $cache_suffix = "";
     }
 
     if ($args['post_type'] === 'social_post') {
-        // Definir la clave de caché
-        if (!$is_authenticated) {
-            $transient_key = 'feed_personalizado_anonymous_' . $identifier;
-        } else {
-            $transient_key = 'feed_personalizado_user_' . $current_user_id . '_' . $identifier;
-        }
+        // Clave de caché modificada para incluir similar_to
+        $transient_key = !$is_authenticated 
+            ? "feed_personalizado_anonymous_{$identifier}{$cache_suffix}"
+            : "feed_personalizado_user_{$current_user_id}_{$identifier}{$cache_suffix}";
         
-        //error_log("Clave de caché: $transient_key");
-        
-        // Solo usar caché para usuarios no administradores
         $use_cache = !$is_admin;
-        //error_log("¿Usar caché?: " . ($use_cache ? 'Sí' : 'No'));
-        
-        $cached_data = false;
-        if ($use_cache) {
-            $cached_data = get_transient($transient_key);
-            //error_log("Datos en caché: " . ($cached_data ? 'Encontrados' : 'No encontrados'));
-        }
+        $cached_data = $use_cache ? get_transient($transient_key) : false;
         
         if ($cached_data) {
-            //error_log("Usando datos de caché existentes");
             $posts_personalizados = $cached_data['posts'];
         } else {
-            //error_log("Calculando nuevo feed - No hay caché disponible");
             $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
             
-            // Estructura de datos a cachear
-            $cache_data = [
-                'posts' => $posts_personalizados,
-                'timestamp' => time()
-            ];
-            
-            // Guardar en caché para usuarios no administradores
             if ($use_cache) {
-                $cache_set = set_transient($transient_key, $cache_data, 86400); //guardar por un día
-                //error_log("Intentando guardar en caché: " . ($cache_set ? 'Éxito' : 'Fallo'));
+                $cache_data = [
+                    'posts' => $posts_personalizados,
+                    'timestamp' => time()
+                ];
+                
+                // Tiempo de caché diferente para similar_to
+                $cache_time = $similar_to ? 3600 : 86400; // 1 hora para similar_to, 1 día para el resto
+                set_transient($transient_key, $cache_data, $cache_time);
             }
         }
         
-        // Obtener IDs de posts
+        // Procesar los post IDs
         $post_ids = array_keys($posts_personalizados);
-        //error_log("Número total de posts: " . count($post_ids));
         
         if ($similar_to) {
             $post_ids = array_filter($post_ids, function($post_id) use ($similar_to) {
@@ -99,44 +112,36 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
         }
         
         $post_ids = array_unique($post_ids);
-        
         $posts_per_page = $posts;
         $offset = ($paged - 1) * $posts_per_page;
         $current_page_ids = array_slice($post_ids, $offset, $posts_per_page);
-        $current_page_ids = array_unique($current_page_ids);
-        
-        //error_log("Posts para página actual: " . count($current_page_ids));
         
         if ($paged > 1) {
             $previous_page_ids = array_slice($post_ids, 0, ($paged - 1) * $posts_per_page);
             $post_not_in = array_merge($post_not_in, $previous_page_ids);
-            $post_not_in = array_unique($post_not_in);
-            //error_log("Posts excluidos de páginas anteriores: " . count($post_not_in));
         }
         
         $query_args = [
-            'post_type'           => $args['post_type'],
-            'posts_per_page'      => $posts_per_page,
-            'post__in'            => $current_page_ids,
-            'orderby'             => 'post__in',
-            'meta_query'          => [],
+            'post_type' => $args['post_type'],
+            'posts_per_page' => $posts_per_page,
+            'post__in' => $current_page_ids,
+            'orderby' => 'post__in',
+            'meta_query' => [],
             'ignore_sticky_posts' => true,
         ];
 
         if (!empty($post_not_in)) {
-            $query_args['post__not_in'] = $post_not_in;
+            $query_args['post__not_in'] = array_unique($post_not_in);
         }
     } else {
-        // Lógica original para otros tipos de post
-        //error_log("Usando configuración estándar para tipo de post: " . $args['post_type']);
-        
+        // Configuración estándar para otros tipos de post
         $query_args = [
-            'post_type'           => $args['post_type'],
-            'posts_per_page'      => $posts,
-            'paged'               => $paged,
-            'orderby'             => 'date',
-            'order'               => 'DESC',
-            'meta_query'          => [],
+            'post_type' => $args['post_type'],
+            'posts_per_page' => $posts,
+            'paged' => $paged,
+            'orderby' => 'date',
+            'order' => 'DESC',
+            'meta_query' => [],
             'ignore_sticky_posts' => true,
         ];
 
@@ -145,7 +150,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
         }
     }
 
-    //error_log("Query Args finales: " . print_r($query_args, true));
     return aplicarFiltros($query_args, $args, $user_id, $current_user_id);
 }
 
