@@ -13,24 +13,24 @@ add_action('init', function () {
 
 function audioUrlSegura($audio_id)
 {
-    guardarLog("Generando URL segura para audio ID: " . $audio_id);
+    streamLog("Generando URL segura para audio ID: " . $audio_id);
 
     $user_id = get_current_user_id();
     if (usuarioEsAdminOPro($user_id)) {
         $url = site_url("/wp-json/1/v1/audio-pro/{$audio_id}");
-        guardarLog("URL generada para admin/pro: " . $url);
+        streamLog("URL generada para admin/pro: " . $url);
         return $url;
     }
 
     $token = tokenAudio($audio_id);
     if (!$token) {
-        guardarLog("Error generando token para audio ID: " . $audio_id);
+        streamLog("Error generando token para audio ID: " . $audio_id);
         return new WP_Error('invalid_audio_id', 'Audio ID inválido.');
     }
 
     $nonce = wp_create_nonce('wp_rest');
     $url = site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce);
-    guardarLog("URL generada para usuario normal: " . $url);
+    streamLog("URL generada para usuario normal: " . $url);
     return $url;
 }
 
@@ -52,7 +52,7 @@ function decrementaUsosToken($unique_id)
         return; // No decrementar para tokens cacheados
     }
 
-    guardarLog("Decrementando usos del token: $unique_id");
+    streamLog("Decrementando usos del token: $unique_id");
     $key = 'audio_token_' . $unique_id;
     $usos_restantes = get_transient($key);
 
@@ -67,7 +67,7 @@ function decrementaUsosToken($unique_id)
 }
 
 add_action('rest_api_init', function () {
-    guardarLog('Registrando rutas REST API');
+    streamLog('Registrando rutas REST API');
 
     // Ruta para usuarios pro
     register_rest_route('1/v1', '/audio-pro/(?P<id>\d+)', array(
@@ -95,20 +95,20 @@ add_action('rest_api_init', function () {
             ),
         ),
         'permission_callback' => function ($request) {
-            guardarLog('Verificando permiso para token: ' . $request->get_param('token'));
+            streamLog('Verificando permiso para token: ' . $request->get_param('token'));
             return verificarAudio($request->get_param('token'));
         }
     ));
 
-    guardarLog('Rutas REST API registradas');
+    streamLog('Rutas REST API registradas');
 });
 
 function tokenAudio($audio_id)
 {
-    guardarLog("Generando token para audio_id: $audio_id");
+    streamLog("Generando token para audio_id: $audio_id");
 
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
-        guardarLog("Error: audio_id inválido: $audio_id");
+        streamLog("Error: audio_id inválido: $audio_id");
         return false;
     }
 
@@ -139,7 +139,7 @@ function tokenAudio($audio_id)
 
         set_transient('audio_token_' . $unique_id, $max_usos, 3600);
 
-        guardarLog("Token generado exitosamente: $token");
+        streamLog("Token generado exitosamente: $token");
         return $token;
     }
 }
@@ -147,41 +147,66 @@ function tokenAudio($audio_id)
 
 function verificarAudio($token)
 {
-    guardarLog("Verificando token: $token");
-    guardarLog("Iniciando verificación de audio");
-    guardarLog("Token recibido: " . $token);
-    guardarLog("Headers recibidos: " . print_r(getallheaders(), true));
+    streamLog("Verificando token: $token");
+    streamLog("Iniciando verificación de audio");
+    streamLog("Token recibido: " . $token);
+    streamLog("Headers recibidos: " . print_r(getallheaders(), true));
 
     if (empty($token)) {
-        guardarLog("Error: token vacío");
+        streamLog("Error: token vacío");
         return false;
     }
-    
+
+    // Verificar headers esenciales
+    $required_headers = [
+        'HTTP_X_REQUESTED_WITH',
+        'HTTP_REFERER',
+        'HTTP_ORIGIN'
+    ];
+
+    foreach ($required_headers as $header) {
+        if (!isset($_SERVER[$header])) {
+            streamLog("Error: Falta header requerido: $header");
+            return false;
+        }
+    }
+
+    // Verificar Origin
+    if ($_SERVER['HTTP_ORIGIN'] !== 'https://2upra.com') {
+        streamLog("Error: Origin no válido");
+        return false;
+    }
+
+    // Verificar nonce de WordPress
+    if (!check_ajax_referer('wp_rest', '_wpnonce', false)) {
+        streamLog("Error: Nonce no válido");
+        return false;
+    }
 
     // Verificar referer y headers
     if (!isset($_SERVER['HTTP_REFERER']) || !isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-        guardarLog("Error: Faltan headers requeridos");
+        streamLog("Error: Faltan headers requeridos");
         return false;
     }
 
     $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
     if ($referer_host !== '2upra.com') {
-        guardarLog("Error: referer no válido");
+        streamLog("Error: referer no válido");
         return false;
     }
 
     if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
-        guardarLog("Error: No es una petición AJAX");
+        streamLog("Error: No es una petición AJAX");
         return false;
     }
 
     $decoded = base64_decode($token);
     $parts = explode('|', $decoded);
     if (count($parts) !== 6) {
-        guardarLog("Error: número incorrecto de partes en el token");
+        streamLog("Error: número incorrecto de partes en el token");
         return false;
     }
-    guardarLog("Partes del token: " . print_r($parts, true));
+    streamLog("Partes del token: " . print_r($parts, true));
 
     list($audio_id, $expiration, $user_ip, $unique_id, $max_usos, $signature) = $parts;
 
@@ -195,7 +220,7 @@ function verificarAudio($token)
         $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
 
         if (!hash_equals($expected_signature, $signature)) {
-            guardarLog("Error: firma no válida");
+            streamLog("Error: firma no válida");
             return false;
         }
 
@@ -221,18 +246,18 @@ function verificarAudio($token)
                 return true;
             }
 
-            guardarLog("Error: acceso directo o no autorizado");
+            streamLog("Error: acceso directo o no autorizado");
             return false;
         }
     } else {
         // Comportamiento original para modo sin caché
         if ($_SERVER['REMOTE_ADDR'] !== $user_ip) {
-            guardarLog("Error: IP no coincide");
+            streamLog("Error: IP no coincide");
             return false;
         }
 
         if (time() > $expiration) {
-            guardarLog("Error: token expirado");
+            streamLog("Error: token expirado");
             return false;
         }
 
@@ -272,26 +297,26 @@ function audioStreamEnd($data)
     $cache_file = $cache_dir . '/audio_' . $audio_id . '.cache';
 
     if (file_exists($cache_file) && (time() - filemtime($cache_file) < 24 * 60 * 60)) {
-        guardarLog("audioStreamEnd: Cargando audio desde el archivo en caché: $cache_file");
+        streamLog("audioStreamEnd: Cargando audio desde el archivo en caché: $cache_file");
         $file = $cache_file;
     } else {
         $original_file = get_attached_file($audio_id);
         if (!file_exists($original_file)) {
-            guardarLog("audioStreamEnd: Error - Archivo de audio original no encontrado para el audio ID: $audio_id");
+            streamLog("audioStreamEnd: Error - Archivo de audio original no encontrado para el audio ID: $audio_id");
             return new WP_Error('no_audio', 'Archivo de audio no encontrado.', array('status' => 404));
         }
         if (!@copy($original_file, $cache_file)) {
-            guardarLog("audioStreamEnd: Error - Fallo al copiar el archivo de audio al caché.");
+            streamLog("audioStreamEnd: Error - Fallo al copiar el archivo de audio al caché.");
             return new WP_Error('copy_failed', 'Error al copiar el archivo de audio al caché.', array('status' => 500));
         }
 
-        guardarLog("audioStreamEnd: Archivo de audio copiado exitosamente al caché: $cache_file");
+        streamLog("audioStreamEnd: Archivo de audio copiado exitosamente al caché: $cache_file");
         $file = $cache_file;
     }
 
     $fp = @fopen($file, 'rb');
     if (!$fp) {
-        guardarLog("audioStreamEnd: Error - No se pudo abrir el archivo de audio: $file");
+        streamLog("audioStreamEnd: Error - No se pudo abrir el archivo de audio: $file");
         return new WP_Error('file_open_error', 'No se pudo abrir el archivo de audio.', array('status' => 500));
     }
 
@@ -329,12 +354,12 @@ function audioStreamEnd($data)
 
     // Manejar Ranges HTTP para streaming parcial
     if (isset($_SERVER['HTTP_RANGE'])) {
-        guardarLog("audioStreamEnd: HTTP Range solicitado: " . $_SERVER['HTTP_RANGE']);
+        streamLog("audioStreamEnd: HTTP Range solicitado: " . $_SERVER['HTTP_RANGE']);
         $c_start = $start;
         $c_end = $end;
         list(, $range) = explode('=', $_SERVER['HTTP_RANGE'], 2);
         if (strpos($range, ',') !== false) {
-            guardarLog("audioStreamEnd: Error - Rango solicitado no soportado.");
+            streamLog("audioStreamEnd: Error - Rango solicitado no soportado.");
             header('HTTP/1.1 416 Requested Range Not Satisfiable');
             header("Content-Range: bytes $start-$end/$size");
             exit;
@@ -348,7 +373,7 @@ function audioStreamEnd($data)
         }
         $c_end = ($c_end > $end) ? $end : $c_end;
         if ($c_start > $c_end || $c_start > $size - 1 || $c_end >= $size) {
-            guardarLog("audioStreamEnd: Error - Rango solicitado fuera de los límites.");
+            streamLog("audioStreamEnd: Error - Rango solicitado fuera de los límites.");
             header('HTTP/1.1 416 Requested Range Not Satisfiable');
             header("Content-Range: bytes $start-$end/$size");
             exit;
@@ -380,7 +405,7 @@ function audioStreamEnd($data)
         }
     }
 
-    guardarLog("audioStreamEnd: Transmisión del audio completada para el archivo: $file");
+    streamLog("audioStreamEnd: Transmisión del audio completada para el archivo: $file");
     fclose($fp);
     exit();
 }
@@ -431,7 +456,7 @@ function usuarioEsAdminOPro($user_id)
 {
     // Verificar que el ID de usuario sea válido
     if (empty($user_id) || !is_numeric($user_id)) {
-        //guardarLog("usuarioEsAdminOPro: Error - ID de usuario inválido.");
+        //streamLog("usuarioEsAdminOPro: Error - ID de usuario inválido.");
         return false;
     }
 
@@ -440,31 +465,31 @@ function usuarioEsAdminOPro($user_id)
 
     // Verificar si el usuario existe
     if (!$user) {
-        //guardarLog("usuarioEsAdminOPro: Error - Usuario no encontrado para el ID: " . $user_id);
+        //streamLog("usuarioEsAdminOPro: Error - Usuario no encontrado para el ID: " . $user_id);
         return false;
     }
 
     // Verificar si el usuario tiene roles asignados
     if (empty($user->roles)) {
-        //guardarLog("usuarioEsAdminOPro: Error - Usuario sin roles asignados. ID: " . $user_id);
-        //guardarLog("usuarioEsAdminOPro: Información del usuario - " . print_r($user, true));
+        //streamLog("usuarioEsAdminOPro: Error - Usuario sin roles asignados. ID: " . $user_id);
+        //streamLog("usuarioEsAdminOPro: Información del usuario - " . print_r($user, true));
         return false;
     }
 
     // Verificar si el usuario es administrador
     if (in_array('administrator', (array) $user->roles)) {
-        //guardarLog("usuarioEsAdminOPro: Usuario es administrador. ID: " . $user_id);
+        //streamLog("usuarioEsAdminOPro: Usuario es administrador. ID: " . $user_id);
         return true;
     }
 
     // Verificar si tiene la meta `pro`
     $is_pro = get_user_meta($user_id, 'pro', true);
     if (!empty($is_pro)) {
-        //guardarLog("usuarioEsAdminOPro: Usuario tiene la meta 'pro'. ID: " . $user_id);
+        //streamLog("usuarioEsAdminOPro: Usuario tiene la meta 'pro'. ID: " . $user_id);
         return true;
     }
 
     // Si no es administrador ni tiene la meta 'pro'
-    //guardarLog("usuarioEsAdminOPro: Usuario no es administrador ni tiene la meta 'pro'. ID: " . $user_id);
+    //streamLog("usuarioEsAdminOPro: Usuario no es administrador ni tiene la meta 'pro'. ID: " . $user_id);
     return false;
 }
