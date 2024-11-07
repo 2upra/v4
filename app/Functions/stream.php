@@ -143,10 +143,7 @@ function tokenAudio($audio_id)
         return $token;
     }
 }
-
-
-function verificarAudio($token)
-{
+function verificarAudio($token) {
     streamLog("Verificando token: $token");
     streamLog("Iniciando verificación de audio");
     streamLog("Token recibido: " . $token);
@@ -157,24 +154,37 @@ function verificarAudio($token)
         return false;
     }
 
-    // Verificar headers esenciales
-    $required_headers = [
-        'HTTP_X_REQUESTED_WITH',
-        'HTTP_REFERER',
-        'HTTP_ORIGIN'
-    ];
-
-    foreach ($required_headers as $header) {
-        if (!isset($_SERVER[$header])) {
-            streamLog("Error: Falta header requerido: $header");
-            return false;
-        }
+    // Verificar headers esenciales mínimos
+    if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || !isset($_SERVER['HTTP_REFERER'])) {
+        streamLog("Error: Faltan headers básicos requeridos");
+        return false;
     }
 
-    // Verificar Origin
-    if ($_SERVER['HTTP_ORIGIN'] !== 'https://2upra.com') {
-        streamLog("Error: Origin no válido");
+    // Verificar que sea una petición AJAX
+    if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
+        streamLog("Error: No es una petición AJAX");
         return false;
+    }
+
+    // Verificar el origen de la petición
+    $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
+    if ($referer_host !== '2upra.com') {
+        streamLog("Error: referer no válido");
+        return false;
+    }
+
+    // Verificar Origin si está presente, si no, verificar Referer
+    if (isset($_SERVER['HTTP_ORIGIN'])) {
+        if ($_SERVER['HTTP_ORIGIN'] !== 'https://2upra.com') {
+            streamLog("Error: Origin no válido");
+            return false;
+        }
+    } else {
+        // Si no hay Origin, verificamos que el Referer sea del mismo dominio
+        if (!preg_match('/^https?:\/\/2upra\.com\//', $_SERVER['HTTP_REFERER'])) {
+            streamLog("Error: Referer no válido para same-origin request");
+            return false;
+        }
     }
 
     // Verificar nonce de WordPress
@@ -183,24 +193,13 @@ function verificarAudio($token)
         return false;
     }
 
-    // Verificar referer y headers
-    if (!isset($_SERVER['HTTP_REFERER']) || !isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-        streamLog("Error: Faltan headers requeridos");
-        return false;
-    }
-
-    $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
-    if ($referer_host !== '2upra.com') {
-        streamLog("Error: referer no válido");
-        return false;
-    }
-
-    if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
-        streamLog("Error: No es una petición AJAX");
-        return false;
-    }
-
+    // Decodificar y verificar token
     $decoded = base64_decode($token);
+    if ($decoded === false) {
+        streamLog("Error: token no es base64 válido");
+        return false;
+    }
+
     $parts = explode('|', $decoded);
     if (count($parts) !== 6) {
         streamLog("Error: número incorrecto de partes en el token");
@@ -211,11 +210,11 @@ function verificarAudio($token)
     list($audio_id, $expiration, $user_ip, $unique_id, $max_usos, $signature) = $parts;
 
     if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
-        // Generar una clave única para esta sesión y audio
+        // Lógica para modo caché
         $session_key = 'audio_session_' . $audio_id . '_' . $_SERVER['REMOTE_ADDR'];
         $cache_key = 'audio_access_' . $audio_id . '_' . $_SERVER['REMOTE_ADDR'];
 
-        // Verificar la firma
+        // Verificar firma
         $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
         $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
 
@@ -224,33 +223,25 @@ function verificarAudio($token)
             return false;
         }
 
-        // Verificar sesión actual
         $current_session = get_transient($session_key);
-
         if ($current_session === false) {
-            // Primera solicitud en esta sesión
-            set_transient($session_key, $token, 3600); // 1 hora
-            set_transient($cache_key, 1, 3600); // Contador de accesos
+            set_transient($session_key, $token, 3600);
+            set_transient($cache_key, 1, 3600);
+            streamLog("Nueva sesión iniciada para audio_id: $audio_id");
             return true;
-        } else {
-            // Verificar si es una solicitud válida desde la página
-            $access_count = get_transient($cache_key);
-
-            if (
-                $access_count !== false &&
-                $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest' &&
-                strpos($_SERVER['HTTP_REFERER'], '2upra.com') !== false
-            ) {
-
-                set_transient($cache_key, $access_count + 1, 3600);
-                return true;
-            }
-
-            streamLog("Error: acceso directo o no autorizado");
-            return false;
         }
+
+        $access_count = get_transient($cache_key);
+        if ($access_count !== false) {
+            set_transient($cache_key, $access_count + 1, 3600);
+            streamLog("Acceso permitido - Contador: " . ($access_count + 1));
+            return true;
+        }
+
+        streamLog("Error: acceso no autorizado");
+        return false;
     } else {
-        // Comportamiento original para modo sin caché
+        // Lógica para modo sin caché
         if ($_SERVER['REMOTE_ADDR'] !== $user_ip) {
             streamLog("Error: IP no coincide");
             return false;
@@ -263,6 +254,7 @@ function verificarAudio($token)
 
         $usos_restantes = get_transient('audio_token_' . $unique_id);
         if ($usos_restantes === false || $usos_restantes <= 0) {
+            streamLog("Error: sin usos restantes");
             return false;
         }
 
@@ -271,9 +263,11 @@ function verificarAudio($token)
 
         if (hash_equals($expected_signature, $signature)) {
             decrementaUsosToken($unique_id);
+            streamLog("Acceso permitido - Modo sin caché");
             return true;
         }
 
+        streamLog("Error: firma no válida en modo sin caché");
         return false;
     }
 }
