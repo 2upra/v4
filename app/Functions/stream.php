@@ -103,6 +103,13 @@ add_action('rest_api_init', function () {
     streamLog('Rutas REST API registradas');
 });
 
+/*
+estos son los unicos logs que muestar y no parece que verifique 
+2024-11-07 21:48:23 - Generando URL segura para audio ID: 279146
+2024-11-07 21:48:23 - Generando token para audio_id: 279146
+2024-11-07 21:48:23 - URL generada para usuario normal: https://2upra.com/wp-json/1/v1/2?token=Mjc5MTQ2fDE5MjQ5MDU2MDB8Y2FjaGVkfDQ3MjYxMjg0Yjk0OGE2NDhhMzZlNjFmNzZjYTM0N2Q3fDk5OTk5OXwzNzU2YWY1OWE3Y2ZlMjEyMTgxZDNmMmUzOGRiNzUzZTliYmMzODNmYmQ0ZjdmNTE0NjEyOWU2ZjEwM2NkZjUy&_wpnonce=03421337c
+*/
+
 function tokenAudio($audio_id)
 {
     streamLog("Generando token para audio_id: $audio_id");
@@ -145,135 +152,58 @@ function tokenAudio($audio_id)
 }
 
 
-function verificarAudio($token)
-{
-    streamLog("Verificando token: $token");
-    streamLog("Iniciando verificación de audio");
+function verificarAudio($token) {
+    streamLog("=== INICIO VERIFICACIÓN DE AUDIO ===");
     streamLog("Token recibido: " . $token);
-    streamLog("Headers recibidos: " . print_r(getallheaders(), true));
-
-    if (empty($token)) {
-        streamLog("Error: token vacío");
-        return false;
-    }
-
-    // Verificar headers esenciales
-    $required_headers = [
-        'HTTP_X_REQUESTED_WITH',
-        'HTTP_REFERER',
-        'HTTP_ORIGIN'
-    ];
-
-    foreach ($required_headers as $header) {
-        if (!isset($_SERVER[$header])) {
-            streamLog("Error: Falta header requerido: $header");
+    
+    try {
+        // Verificar token vacío
+        if (empty($token)) {
+            streamLog("Error: Token vacío");
             return false;
         }
-    }
 
-    // Verificar Origin
-    if ($_SERVER['HTTP_ORIGIN'] !== 'https://2upra.com') {
-        streamLog("Error: Origin no válido");
-        return false;
-    }
+        // Decodificar token
+        $decoded = base64_decode($token);
+        if ($decoded === false) {
+            streamLog("Error: Token no es base64 válido");
+            return false;
+        }
 
-    // Verificar nonce de WordPress
-    if (!check_ajax_referer('wp_rest', '_wpnonce', false)) {
-        streamLog("Error: Nonce no válido");
-        return false;
-    }
+        $parts = explode('|', $decoded);
+        streamLog("Partes del token decodificado: " . print_r($parts, true));
+        
+        if (count($parts) !== 6) {
+            streamLog("Error: Token tiene " . count($parts) . " partes, se esperaban 6");
+            return false;
+        }
 
-    // Verificar referer y headers
-    if (!isset($_SERVER['HTTP_REFERER']) || !isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-        streamLog("Error: Faltan headers requeridos");
-        return false;
-    }
-
-    $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
-    if ($referer_host !== '2upra.com') {
-        streamLog("Error: referer no válido");
-        return false;
-    }
-
-    if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
-        streamLog("Error: No es una petición AJAX");
-        return false;
-    }
-
-    $decoded = base64_decode($token);
-    $parts = explode('|', $decoded);
-    if (count($parts) !== 6) {
-        streamLog("Error: número incorrecto de partes en el token");
-        return false;
-    }
-    streamLog("Partes del token: " . print_r($parts, true));
-
-    list($audio_id, $expiration, $user_ip, $unique_id, $max_usos, $signature) = $parts;
-
-    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
-        // Generar una clave única para esta sesión y audio
-        $session_key = 'audio_session_' . $audio_id . '_' . $_SERVER['REMOTE_ADDR'];
-        $cache_key = 'audio_access_' . $audio_id . '_' . $_SERVER['REMOTE_ADDR'];
-
-        // Verificar la firma
+        list($audio_id, $expiration, $user_ip, $unique_id, $max_usos, $signature) = $parts;
+        
+        // Log de valores importantes
+        streamLog("Audio ID: $audio_id");
+        streamLog("Expiración: " . date('Y-m-d H:i:s', $expiration));
+        streamLog("IP Usuario: $user_ip");
+        streamLog("ID Único: $unique_id");
+        streamLog("Usos Máximos: $max_usos");
+        
+        // Verificar firma
         $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
         $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
-
+        
+        streamLog("Firma esperada: $expected_signature");
+        streamLog("Firma recibida: $signature");
+        
         if (!hash_equals($expected_signature, $signature)) {
-            streamLog("Error: firma no válida");
+            streamLog("Error: Firma no válida");
             return false;
         }
 
-        // Verificar sesión actual
-        $current_session = get_transient($session_key);
+        streamLog("=== VERIFICACIÓN EXITOSA ===");
+        return true;
 
-        if ($current_session === false) {
-            // Primera solicitud en esta sesión
-            set_transient($session_key, $token, 3600); // 1 hora
-            set_transient($cache_key, 1, 3600); // Contador de accesos
-            return true;
-        } else {
-            // Verificar si es una solicitud válida desde la página
-            $access_count = get_transient($cache_key);
-
-            if (
-                $access_count !== false &&
-                $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest' &&
-                strpos($_SERVER['HTTP_REFERER'], '2upra.com') !== false
-            ) {
-
-                set_transient($cache_key, $access_count + 1, 3600);
-                return true;
-            }
-
-            streamLog("Error: acceso directo o no autorizado");
-            return false;
-        }
-    } else {
-        // Comportamiento original para modo sin caché
-        if ($_SERVER['REMOTE_ADDR'] !== $user_ip) {
-            streamLog("Error: IP no coincide");
-            return false;
-        }
-
-        if (time() > $expiration) {
-            streamLog("Error: token expirado");
-            return false;
-        }
-
-        $usos_restantes = get_transient('audio_token_' . $unique_id);
-        if ($usos_restantes === false || $usos_restantes <= 0) {
-            return false;
-        }
-
-        $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
-        $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
-
-        if (hash_equals($expected_signature, $signature)) {
-            decrementaUsosToken($unique_id);
-            return true;
-        }
-
+    } catch (Exception $e) {
+        streamLog("Error en verificación: " . $e->getMessage());
         return false;
     }
 }
