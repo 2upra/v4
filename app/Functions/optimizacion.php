@@ -1,5 +1,5 @@
  <?
-/*
+
 function desactivar_todos_soportes_bloques( $settings, $name ) {
     // Lista completa de soportes a desactivar
     $soportes_a_desactivar = array(
@@ -118,7 +118,7 @@ function desactivar_autosave() {
     wp_deregister_script( 'autosave' );
 }
 add_action( 'wp_print_scripts', 'desactivar_autosave' );
-
+/*
 function eliminar_comentarios_support() {
     // Quitar soporte de comentarios de tipos de post
     foreach ( get_post_types() as $post_type ) {
@@ -146,7 +146,7 @@ function eliminar_comentarios_support() {
     });
 }
 add_action( 'init', 'eliminar_comentarios_support' );
-
+*/
 function eliminar_widgets_innecesarios() {
     unregister_widget( 'WP_Widget_Calendar' );
     unregister_widget( 'WP_Widget_Meta' );
@@ -167,4 +167,3 @@ function eliminar_ajustes_discusion() {
 }
 add_action( 'admin_menu', 'eliminar_ajustes_discusion' );
 
-*/
