@@ -81,11 +81,11 @@ function procesarDescarga() {
         $download_url = generarEnlaceDescarga($usuario_id, $audio_id);
         guardarLog("Enlace de descarga generado: " . $download_url);
 
-        agregarNoti($usuario_id, 'Descarga disponible', $download_url, $usuario_id);
+        // agregarNoti($usuario_id, 'Descarga disponible', $download_url, $usuario_id);
         wp_send_json_success(['download_url' => $download_url]);
     } else {
         guardarLog("Error: No suficientes Pinkys para el usuario: " . $usuario_id);
-        agregarNoti($usuario_id, 'No tienes suficientes Pinkys para esta descarga.', 'https://2upra.com', $usuario_id);
+        // agregarNoti($usuario_id, 'No tienes suficientes Pinkys para esta descarga.', 'https://2upra.com', $usuario_id);
         wp_send_json_error(['message' => 'No tienes suficientes Pinkys para esta descarga.']);
     }
 }
