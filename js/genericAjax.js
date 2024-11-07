@@ -1,7 +1,5 @@
 const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
 
-
-
 //ejemplo de algunas acciones
 async function eliminarPost() {
     await accionClick(
@@ -26,7 +24,6 @@ async function eliminarPost() {
     );
 }
 
-
 async function verificarPost() {
     await accionClick(
         '.verificarPost',
@@ -34,14 +31,14 @@ async function verificarPost() {
         'Verificar este post tilin',
         async (statusElement, data, post_id) => {
             actualizarElemento(statusElement, data.new_status);
-            
+
             // Seleccionar el div específico de verificarPost usando el post_id
             const verificarPostDiv = document.querySelector(`.verificarPost[data-post-id="${post_id}"]`);
-            
+
             if (verificarPostDiv) {
                 // Limpiar el contenido actual
                 verificarPostDiv.innerHTML = '';
-                
+
                 // Agregar el nuevo SVG
                 const newSvg = `
                     <svg data-testid="geist-icon" height="16" stroke-linejoin="round" viewBox="0 0 16 16" width="16" style="color: currentcolor;">
@@ -51,13 +48,12 @@ async function verificarPost() {
                 `;
                 verificarPostDiv.innerHTML = newSvg;
             }
-            
+
             await alert('Actualizado');
         },
         '.EDYQHV'
     );
 }
-
 
 // Función genérica para manejar acciones con confirmación y AJAX
 async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
@@ -73,9 +69,12 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
                 }
 
                 // Obtiene el post_id del elemento actual
-                const post_id = event.currentTarget.dataset.postId || 
-                              event.currentTarget.getAttribute('data-post-id');
-                              
+                const post_id = event.currentTarget.getAttribute('data-post-id') || event.currentTarget.dataset.postId || element.closest('[data-post-id]')?.getAttribute('data-post-id');
+
+                if (!post_id) {
+                    console.error('No se pudo obtener el post_id');
+                }
+
                 const tipoContenido = event.currentTarget.dataset.tipoContenido;
 
                 if (!post_id) {
@@ -109,19 +108,19 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
                     }
                 }
             });
-            
+
             // Añade cursor pointer si es un div u otro elemento que no sea botón
             if (element.tagName.toLowerCase() !== 'button') {
                 element.style.cursor = 'pointer';
             }
-            
+
             // Marca el elemento para indicar que ya tiene un listener
             element.dataset.listenerAdded = 'true';
         }
     });
 }
 
-async function permitirDescarga() {	
+async function permitirDescarga() {
     await accionClick(
         '.permitirDescarga',
         'permitirDescarga',
@@ -133,8 +132,6 @@ async function permitirDescarga() {
         '.EDYQHV'
     );
 }
-
-
 
 async function banearUsuario() {
     await accionClick(
@@ -150,16 +147,15 @@ async function banearUsuario() {
 }
 
 function initEditWordPress() {
-
     // Seleccionamos todos los botones con clase 'editarWordPress'
     const buttons = document.querySelectorAll('.editarWordPress');
-    
+
     if (buttons.length > 0) {
         console.log('Botones encontrados:', buttons.length);
 
         // Añadimos un listener de click a cada botón individualmente
         buttons.forEach(button => {
-            button.addEventListener('click', function(e) {
+            button.addEventListener('click', function (e) {
                 e.preventDefault(); // Prevenir cualquier comportamiento por defecto (si lo hay)
 
                 const postId = button.dataset.postId;
@@ -168,12 +164,11 @@ function initEditWordPress() {
 
                     window.open(url, '_blank');
                 } else {
-
                 }
             });
         });
     } else {
-        return; 
+        return;
     }
 }
 
@@ -212,8 +207,6 @@ async function reporte() {
     }
 }
 
-
-
 async function bloqueos() {
     async function bloquearUsuario(event, response, post_id) {
         const button = document.querySelector(`.bloquear[data-post-id="${post_id}"]`);
@@ -223,7 +216,7 @@ async function bloqueos() {
             button.classList.remove('bloquear');
             button.classList.add('desbloquear');
         } else {
-            return; 
+            return;
         }
     }
     accionClick('.bloquear', 'guardarBloqueo', '¿Estás seguro de bloquear este usuario?', bloquearUsuario);
@@ -236,7 +229,7 @@ async function bloqueos() {
             button.classList.remove('desbloquear');
             button.classList.add('bloquear');
         } else {
-            return; 
+            return;
         }
     }
     accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
@@ -246,10 +239,10 @@ async function bloqueos() {
 async function editarPost() {
     // Añade el modal de edición si aún no está presente
     modalManager.añadirModal('editarPost', '#editarPost', ['.editarPost']);
-    
+
     // Selecciona todos los botones de edición
     const editButtons = document.querySelectorAll('.editarPost');
-    
+
     if (editButtons.length === 0) {
         return;
     }
@@ -269,19 +262,19 @@ async function editarPost() {
         if (!enviarEditBtn.dataset.listenerAdded) {
             enviarEditBtn.addEventListener('click', async function () {
                 const postId = this.dataset.postId;
-                
+
                 if (!postId) {
                     console.error('No se encontró post_id en el botón enviarEdit');
                     return;
                 }
-                
+
                 // Muestra una confirmación al usuario
                 const confirmed = await confirm('¿Estás seguro de que quieres editar este post?');
                 if (!confirmed) return;
 
                 // Obtiene la descripción editada del textarea
                 const descripcion = document.getElementById('mensajeEdit')?.value.trim() || '';
-                
+
                 try {
                     // Envía la solicitud AJAX para actualizar la descripción
                     const data = await enviarAjax('cambiarDescripcion', {
@@ -327,7 +320,7 @@ function abrirModalEditarPost(idContenido) {
 
     // Intenta buscar primero en .thePostContent
     let postContentDiv = document.querySelector(`.thePostContet[data-post-id="${idContenido}"]`);
-    
+
     // Si no lo encuentra, busca en .CONTENTLISTSAMPLE
     if (!postContentDiv) {
         postContentDiv = document.querySelector(`.CONTENTLISTSAMPLE a[id-post="${idContenido}"]`);
@@ -352,9 +345,7 @@ function abrirModalEditarPost(idContenido) {
     }
 }
 
-
 async function corregirTags() {
-
     modalManager.añadirModal('corregirTags', '#corregirTags', ['.corregirTags']);
     const editButtons = document.querySelectorAll('.corregirTags');
     if (editButtons.length === 0) {
@@ -373,17 +364,17 @@ async function corregirTags() {
         if (!enviarEditBtn.dataset.listenerAdded) {
             enviarEditBtn.addEventListener('click', async function () {
                 const postId = this.dataset.postId;
-                
+
                 if (!postId) {
                     console.error('No se encontró post_id en el botón enviarEdit');
                     return;
                 }
-                
+
                 const confirmed = await confirm('¿Estás seguro de que quieres corregir los tags de este post?');
                 if (!confirmed) return;
 
                 const descripcion = document.getElementById('corregirEdit')?.value.trim() || '';
-                
+
                 try {
                     const data = await enviarAjax('corregirTags', {
                         post_id: postId,
@@ -442,8 +433,6 @@ async function handleAllRequests() {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }
 }
-
-
 
 async function requestDeletion() {
     await accionClick(
@@ -517,7 +506,6 @@ async function rejectPost() {
     );
 }
 
-
 //GENERIC FETCH
 async function enviarAjax(action, data = {}) {
     try {
@@ -548,7 +536,7 @@ async function enviarAjax(action, data = {}) {
             });
             responseData = responseText;
         }
-        return responseData; 
+        return responseData;
     } catch (error) {
         console.error('Error en la solicitud AJAX:', {
             error: error,
@@ -556,7 +544,7 @@ async function enviarAjax(action, data = {}) {
             requestData: data,
             ajaxUrl: ajaxUrl
         });
-        return { success: false, message: error.message }; 
+        return {success: false, message: error.message};
     }
 }
 
@@ -578,5 +566,3 @@ function actualizarElemento(element, newStatus) {
         element.textContent = newStatus;
     }
 }
-
-

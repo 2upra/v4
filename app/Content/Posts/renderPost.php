@@ -56,7 +56,7 @@ function htmlPost($filtro)
                         <? if ($verificado == '1') : ?>
                             <? echo $GLOBALS['check']; ?>
                         <? elseif ($postAut == '1' && current_user_can('administrator')) : ?>
-                            <div class="verificarPost" data-post-id="<? echo $post_id; ?> style="cursor: pointer;"> 
+                            <div class="verificarPost" data-post-id="<? echo $post_id; ?>" style="cursor: pointer;">
                             <? echo $GLOBALS['robot']; ?>
                             </div>
                         <? endif; ?>
