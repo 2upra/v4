@@ -72,6 +72,7 @@ function agregarNoti($usuario_id, $texto, $enlace, $actor_id)
         $actor_id,
         $fecha_limite
     ));
+
     if ($notificaciones_existentes == 0) {
         $wpdb->insert('wp_notificaciones', [
             'usuario_id' => $usuario_id,
@@ -81,6 +82,10 @@ function agregarNoti($usuario_id, $texto, $enlace, $actor_id)
             'fecha' => gmdate('Y-m-d H:i:s'),
             'leida' => 0
         ]);
+
+        // Invalida la caché una vez que se ha agregado la notificación
+        $cache_key = 'notificaciones_usuario_' . $usuario_id;
+        wp_cache_delete($cache_key);
     }
 }
 
@@ -99,6 +104,16 @@ function getNotiConPerfiles($usuario_id)
         OBJECT
     );
 }
+
+function getNotiNoLeidas($usuario_id)
+{
+    global $wpdb;
+    return $wpdb->get_results($wpdb->prepare(
+        "SELECT * FROM wp_notificaciones WHERE usuario_id = %d AND leida = 0 ORDER BY fecha DESC",
+        $usuario_id
+    ), OBJECT);
+}
+
 
 function marcarLeidoNoti($usuario_id)
 {
@@ -127,14 +142,26 @@ add_action('wp_ajax_cargar_notificaciones', 'manejarNoti');
 
 function getNoti($usuario_id)
 {
-    global $wpdb;
-    return $wpdb->get_results(
-        $wpdb->prepare(
-            "SELECT * FROM wp_notificaciones WHERE usuario_id = %d ORDER BY fecha DESC",
-            $usuario_id
-        ),
-        OBJECT
-    );
+    // Intenta obtener las notificaciones desde la caché
+    $cache_key = 'notificaciones_usuario_' . $usuario_id;
+    $notificaciones = wp_cache_get($cache_key);
+
+    // Si no hay caché, hacemos la consulta a la base de datos y la almacenamos en caché
+    if ($notificaciones === false) {
+        global $wpdb;
+        $notificaciones = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM wp_notificaciones WHERE usuario_id = %d ORDER BY fecha DESC",
+                $usuario_id
+            ),
+            OBJECT
+        );
+
+
+        wp_cache_set($cache_key, $notificaciones, '', 86000);
+    }
+
+    return $notificaciones;
 }
 
 
