@@ -16,9 +16,86 @@ function rehacerDescripcionAccion($post_id)
     }
 }
 
+function rehacerJsonPost($post_id, $descripcion)
+{
+    $audio_lite_id = get_post_meta($post_id, 'post_audio_lite', true);
+    if ($audio_lite_id) {
+        $archivo_audio = get_attached_file($audio_lite_id);
+        if ($archivo_audio) {
+            rehacerJson($post_id, $archivo_audio, $descripcion);
+            iaLog("Descripción del audio actualizada para el post ID: {$post_id} con archivo de audio en la ruta {$archivo_audio}");
+        } else {
+            iaLog("No se pudo obtener la ruta del archivo de audio lite para el post ID: {$post_id}");
+        }
+    } else {
+        iaLog("No se encontró el metadato 'post_audio_lite' para el post ID: {$post_id}");
+    }
+}
+
+function rehacerJson($post_id, $archivo_audio, $descripcion)
+{
+    iaLog("Iniciando reajusteJson para el post ID: {$post_id}");
+
+    // Obtener el contenido del post
+
+    iaLog("Contenido del post obtenido para el post ID: {$post_id}");
+
+    // Obtener los metadatos actuales del post, incluyendo 'datosAlgoritmo'
+    $datosAlgoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
+    if (!$datosAlgoritmo) {
+        iaLog("No se encontraron metadatos previos para el post ID: {$post_id}");
+        return;
+    }
+
+    // Decodificar el JSON de 'datosAlgoritmo'
+    $datos_actuales = json_decode($datosAlgoritmo, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        iaLog("rehacerJson: Error al decodificar el JSON de 'datosAlgoritmo' para el post ID: {$post_id}: " . json_last_error_msg());
+        return;
+    }
+
+    // Crear el prompt para la IA con el contenido del post actual y los metadatos anteriores
+    $prompt = "El usuario ya subió este audio, pero esta pidiendo corregir los tags o informacion del siguiente json"
+        . " Este es el mensaje, usa la informacion para corregir el JSON: \"{$descripcion}\". "
+        . "Por favor, determina una descripción del audio utilizando el siguiente formato JSON, este es el JSON del post anterior, modifícalo según la nueva indicacion del usuario y corrije cualquier cosa, manten los mismos datos para los bpm, etc.: "
+        . json_encode($datos_actuales, JSON_UNESCAPED_UNICODE)
+        . " Nota adicional: responde solo con la estructura JSON solicitada, mantén datos vacíos si no aplica. No cambies las cosas si el usuario no lo pidio, sigue sus instrucciones. Muchas veces el usuario no se explicará bien, hay que intuir que hay que ajustar del json, generalmente es para cambiar uno o dos tags. Es crucial determinar si es un loop o un one shot o un sample, usa tags de una palabra. Optimiza el SEO con sugerencias de búsqueda relevantes.";
+
+    // Generar la nueva descripción usando la IA
+    $descripcion_mejorada = generarDescripcionIA($archivo_audio, $prompt);
+    if (!$descripcion_mejorada) {
+        iaLog("No se pudo generar la descripción mejorada para el post ID: {$post_id}");
+        return;
+    }
+
+    // Limpiar el JSON de cualquier bloque de código que pudiese haber sido incluido.
+    $descripcion_mejorada_limpia = preg_replace('/```(?:json)?\n/', '', $descripcion_mejorada);
+    $descripcion_mejorada_limpia = preg_replace('/\n```/', '', $descripcion_mejorada_limpia);
+
+    // Decodificar la descripción generada por la IA
+    $datos_actualizados = json_decode($descripcion_mejorada_limpia, true);
+    if (json_last_error() === JSON_ERROR_NONE) {
+        iaLog("Nuevos datos generados para el post ID: {$post_id}");
+
+        // Guardar los nuevos datos en la meta 'datosAlgoritmo'
+        update_post_meta($post_id, 'datosAlgoritmo', json_encode($datos_actualizados, JSON_UNESCAPED_UNICODE));
+        iaLog("Metadatos actualizados para el post ID: {$post_id}");
+
+        // Actualizar la fecha de la última edición
+        $fecha_actual = current_time('mysql');
+        update_post_meta($post_id, 'ultimoEdit', $fecha_actual);
+        iaLog("Metadato 'ultimoEdit' agregado para el post ID: {$post_id} con fecha {$fecha_actual}");
+
+        // Desactivar el procesamiento por IA
+        update_post_meta($post_id, 'proIA', false);
+    } else {
+        iaLog("Error al procesar el JSON de la descripción mejorada generada");
+    }
+}
+
 function rehacerDescripcionAudio($post_id, $archivo_audio)
 {
-    iaLog("Iniciando mejora de descripción para el post ID: {$post_id}");
+    iaLog("rehacerDescripcionAudio: Iniciando mejora de descripción para el post ID: {$post_id}");
 
     // Obtener el contenido del post
     $post_content = get_post_field('post_content', $post_id);

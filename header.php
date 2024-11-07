@@ -262,6 +262,12 @@ if (!defined('ABSPATH')) {
                     <button id="enviarEdit" class="borde">Editar</button>
                 </div>
 
+                <div id="corregirTags" class="editarPostModal modal" style="display: none;">
+                    <textarea id="corregirEdit" placeholder="Explica a la IA concretamente que cosas debe corregir de los tags."></textarea>
+                    <button id="enviarCorregir" class="borde">Corregir</button>
+                </div>
+
+
 
 
                 <!-- Enviar mensaje de error -->

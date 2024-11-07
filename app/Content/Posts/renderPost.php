@@ -42,7 +42,7 @@ function htmlPost($filtro)
                 <? echo imagenPostList($block, $es_suscriptor, $post_id); ?>
                 <div class="INFOLISTSAMPLE">
                     <p class="CONTENTLISTSAMPLE">
-                        <a href="<? echo esc_url(get_permalink()); ?>">
+                        <a href="<? echo esc_url(get_permalink()); ?>" id-post="<? echo get_the_ID(); ?>">
                             <? the_content(); ?>
                         </a>
                     </p>

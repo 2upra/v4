@@ -57,6 +57,8 @@ async function verificarPost() {
         '.EDYQHV'
     );
 }
+
+
 // Función genérica para manejar acciones con confirmación y AJAX
 async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
     const elements = document.querySelectorAll(selector); // Selecciona cualquier elemento que coincida con el selector
@@ -291,7 +293,12 @@ async function editarPost() {
                         alert('Post editado correctamente');
 
                         // Actualiza el contenido de la publicación en el DOM
-                        const postContentDiv = document.querySelector(`.thePostContet[data-post-id="${postId}"]`);
+                        let postContentDiv = document.querySelector(`.thePostContet[data-post-id="${postId}"]`);
+
+                        if (!postContentDiv) {
+                            postContentDiv = document.querySelector(`.CONTENTLISTSAMPLE a[id-post="${idContenido}"]`);
+                        }
+
                         if (postContentDiv) {
                             postContentDiv.textContent = descripcion; // Usa textContent para evitar inyecciones de HTML
                         }
@@ -318,8 +325,15 @@ function abrirModalEditarPost(idContenido) {
     // Muestra el modal
     modalManager.toggleModal('editarPost', true);
 
-    // Busca el contenido del post correspondiente en el DOM
-    const postContentDiv = document.querySelector(`.thePostContet[data-post-id="${idContenido}"]`);
+    // Intenta buscar primero en .thePostContent
+    let postContentDiv = document.querySelector(`.thePostContet[data-post-id="${idContenido}"]`);
+    
+    // Si no lo encuentra, busca en .CONTENTLISTSAMPLE
+    if (!postContentDiv) {
+        postContentDiv = document.querySelector(`.CONTENTLISTSAMPLE a[id-post="${idContenido}"]`);
+    }
+
+    // Obtiene el contenido, si existe
     let postContent = postContentDiv ? postContentDiv.innerHTML.trim() : '';
 
     // Elimina todas las etiquetas HTML para obtener solo el texto
@@ -333,6 +347,83 @@ function abrirModalEditarPost(idContenido) {
 
     // Asigna el ID de la publicación al botón de enviar mediante un atributo de datos
     const enviarEditBtn = document.getElementById('enviarEdit');
+    if (enviarEditBtn) {
+        enviarEditBtn.dataset.postId = idContenido;
+    }
+}
+
+
+async function corregirTags() {
+    // Añade el modal de edición si aún no está presente
+    modalManager.añadirModal('corregirTags', '#corregirTags', ['.corregirTags']);
+    
+    // Selecciona todos los botones de edición
+    const editButtons = document.querySelectorAll('.corregirTags');
+    
+    if (editButtons.length === 0) {
+        return;
+    }
+
+    // Agrega un event listener a cada botón de edición
+    editButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            const postId = this.getAttribute('data-post-id');
+            abrirModalcorregirTags(postId);
+        });
+    });
+
+    // Configura el botón de enviar una vez
+    const enviarEditBtn = document.getElementById('enviarCorregir');
+    if (enviarEditBtn) {
+        // Verifica si ya se ha añadido el listener para evitar duplicados
+        if (!enviarEditBtn.dataset.listenerAdded) {
+            enviarEditBtn.addEventListener('click', async function () {
+                const postId = this.dataset.postId;
+                
+                if (!postId) {
+                    console.error('No se encontró post_id en el botón enviarEdit');
+                    return;
+                }
+                
+                // Muestra una confirmación al usuario
+                const confirmed = await confirm('¿Estás seguro de que quieres corregir los tags de este post?');
+                if (!confirmed) return;
+
+                // Obtiene la descripción editada del textarea
+                const descripcion = document.getElementById('corregirEdit')?.value.trim() || '';
+                
+                try {
+                    // Envía la solicitud AJAX para actualizar la descripción
+                    const data = await enviarAjax('corregirTags', {
+                        post_id: postId,
+                        descripcion: descripcion
+                    });
+
+                    if (data.success) {
+                        alert('Post editado correctamente');
+
+                        modalManager.toggleModal('corregirTags', false);
+                    } else {
+                        console.error(`Error: ${data.message}`);
+                        alert('Error al enviar petición: ' + (data.message || 'Error desconocido'));
+                    }
+                } catch (error) {
+                    console.error('Error al editar el post:', error);
+                    alert('Ocurrió un error al editar el post.');
+                }
+            });
+            // Marca que el listener ya ha sido añadido
+            enviarEditBtn.dataset.listenerAdded = 'true';
+        }
+    }
+}
+
+function abrirModalcorregirTags(idContenido) {
+    // Muestra el modal
+    modalManager.toggleModal('corregirTags', true);
+
+    // Asigna el ID de la publicación al botón de enviar mediante un atributo de datos
+    const enviarEditBtn = document.getElementById('enviarCorregir');
     if (enviarEditBtn) {
         enviarEditBtn.dataset.postId = idContenido;
     }
@@ -353,6 +444,7 @@ async function handleAllRequests() {
         await editarPost();
         await permitirDescarga();
         await verificarPost();
+        await corregirTags();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }

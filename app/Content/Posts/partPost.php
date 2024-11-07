@@ -176,6 +176,7 @@ function opcionesPost($post_id, $author_id)
                 <? if (!$post_verificado) : ?>
                     <button class="verificarPost" data-post-id="<? echo $post_id; ?>">Verificar</button>
                 <? endif; ?>
+                <button class="corregirTags" data-post-id="<? echo $post_id; ?>">Corregir tags</button>
                 <button class="editarPost" data-post-id="<? echo $post_id; ?>">Editar</button>
                 <!-- Nuevo botón para ir al editor de WordPress -->
                 <button class="editarWordPress" data-post-id="<? echo $post_id; ?>">Editar en WordPress</button>
@@ -184,6 +185,7 @@ function opcionesPost($post_id, $author_id)
                     <button class="permitirDescarga" data-post-id="<? echo $post_id; ?>">Permitir descarga</button>
                 <? endif; ?>
             <? elseif ($current_user_id == $author_id) : ?>
+                <button class="corregirTags" data-post-id="<? echo $post_id; ?>">Corregir tags</button>
                 <button class="editarPost" data-post-id="<? echo $post_id; ?>">Editar</button>
                 <button class="eliminarPost" data-post-id="<? echo $post_id; ?>">Eliminar</button>
                 <? if ($audio_id_lite && $descarga_permitida != 1) : ?>
