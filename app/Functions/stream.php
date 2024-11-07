@@ -143,7 +143,8 @@ function tokenAudio($audio_id)
         return $token;
     }
 }
-function verificarAudio($token) {
+function verificarAudio($token)
+{
     streamLog("Verificando token: $token");
     streamLog("Iniciando verificación de audio");
     streamLog("Token recibido: " . $token);
@@ -225,8 +226,11 @@ function verificarAudio($token) {
 
         $current_session = get_transient($session_key);
         if ($current_session === false) {
-            set_transient($session_key, $token, 3600);
-            set_transient($cache_key, 1, 3600);
+            set_transient($session_key, $token, 7776000);
+            set_transient($cache_key, 1, 7776000);
+            header('Cache-Control: public, max-age=7776000');
+            header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 7776000) . ' GMT');
+            header('Last-Modified: ' . gmdate('D, d M Y H:i:s', time()) . ' GMT');
             streamLog("Nueva sesión iniciada para audio_id: $audio_id");
             return true;
         }
