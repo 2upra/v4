@@ -143,7 +143,8 @@ function postLog($log)
 
 function scriptsOrdenados()
 {
-    $dev_mode = true;
+    // Verificar si el usuario actual es administrador
+    $dev_mode = current_user_can('administrator');
     $error_log = [];
 
     // Definir scripts que no se deben cargar si el usuario no está logueado
