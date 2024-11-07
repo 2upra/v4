@@ -1,5 +1,5 @@
 <?
-/*
+
 add_action('init', 'iniciar_cron_procesamiento_audios');
 function iniciar_cron_procesamiento_audios()
 {
@@ -21,7 +21,7 @@ function definir_cron_cada_dos_minutos($schedules)
     return $schedules;
 }
 
-add_action('59', 'procesarAudios'); */
+add_action('59', 'procesarAudios'); 
 
 
 function procesarAudios()
