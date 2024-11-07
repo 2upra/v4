@@ -49,8 +49,8 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
 */
 
+
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
-    // Usar una variable global en lugar de una constante
     global $FALLBACK_USER_ID;
     if (!isset($FALLBACK_USER_ID)) {
         $FALLBACK_USER_ID = 44;
@@ -70,14 +70,12 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     
     if ($similar_to) {
         $post_not_in[] = $similar_to;
-        // Crear una clave de caché específica para similar_to
         $cache_suffix = "_similar_" . $similar_to;
     } else {
         $cache_suffix = "";
     }
 
     if ($args['post_type'] === 'social_post') {
-        // Clave de caché modificada para incluir similar_to
         $transient_key = !$is_authenticated 
             ? "feed_personalizado_anonymous_{$identifier}{$cache_suffix}"
             : "feed_personalizado_user_{$current_user_id}_{$identifier}{$cache_suffix}";
@@ -88,7 +86,17 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
         if ($cached_data) {
             $posts_personalizados = $cached_data['posts'];
         } else {
-            $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
+            // Solo calcular el feed personalizado si estamos en la página 1
+            if ($paged === 1) {
+                $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
+            } else {
+                // Para otras páginas, intentar obtener datos de caché expirada
+                $posts_personalizados = get_option($transient_key . '_backup', []);
+                if (empty($posts_personalizados)) {
+                    // Si no hay backup, calcular de todos modos
+                    $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
+                }
+            }
             
             if ($use_cache) {
                 $cache_data = [
@@ -96,13 +104,14 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
                     'timestamp' => time()
                 ];
                 
-                // Tiempo de caché diferente para similar_to
-                $cache_time = $similar_to ? 3600 : 86400; // 1 hora para similar_to, 1 día para el resto
+                $cache_time = $similar_to ? 3600 : 86400;
                 set_transient($transient_key, $cache_data, $cache_time);
+                // Guardar un backup en wp_options
+                update_option($transient_key . '_backup', $posts_personalizados);
             }
         }
         
-        // Procesar los post IDs
+        // Resto del código igual...
         $post_ids = array_keys($posts_personalizados);
         
         if ($similar_to) {
@@ -134,7 +143,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
             $query_args['post__not_in'] = array_unique($post_not_in);
         }
     } else {
-        // Configuración estándar para otros tipos de post
+        // Configuración estándar para otros tipos de post...
         $query_args = [
             'post_type' => $args['post_type'],
             'posts_per_page' => $posts,

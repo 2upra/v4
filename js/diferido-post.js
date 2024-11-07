@@ -86,7 +86,7 @@
             } else {
                 log('Condiciones para cargar más contenido no cumplidas');
             }
-        }, 200); // Ajusta el tiempo de espera según sea necesario
+        }, 20);
     }
 
     // Inicializar con publicaciones existentes
