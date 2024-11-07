@@ -25,7 +25,17 @@ async function procesarDescarga(postId, usuarioId) {
             // Acceder a la propiedad download_url dentro de responseData.data
             if (responseData.data && responseData.data.download_url) {
                 console.log('Descarga autorizada, iniciando descarga');
-                window.location.href = responseData.data.download_url;  // Redirige a la URL de descarga
+                
+                // Redirige a la URL de descarga
+                window.location.href = responseData.data.download_url;
+
+                // Actualizar el botón visualmente para indicar que ya se descargó
+                const button = document.querySelector(`button[data-post-id="${postId}"]`);
+                if (button) {
+                    button.classList.add('ya-descargado');
+                    button.setAttribute('disabled', 'disabled');  // Deshabilitar el botón si deseas
+                    button.textContent = 'Ya descargado';  // Cambiar el texto del botón
+                }
             } else {
                 console.error('Error: download_url no está definido en la respuesta.');
                 alert('Hubo un problema obteniendo el enlace de descarga.');
