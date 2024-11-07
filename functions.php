@@ -23,6 +23,7 @@ define('AJAX_POST_LOG_ENABLED', false);
 define('IA_LOG_ENABLED', false);        
 define('POST_LOG_ENABLED', false);      
 define('SEO_LOG_ENABLED', true);
+define('STREAM_LOG_ENABLED', true);
 
 function escribirLog($mensaje, $archivo, $max_lineas = 1000)
 {
@@ -67,7 +68,14 @@ function escribirLog($mensaje, $archivo, $max_lineas = 1000)
     }
 }
 
-// sudo touch /var/www/wordpress/wp-content/themes/seoLog.log && sudo chown www-data:www-data /var/www/wordpress/wp-content/themes/seoLog.log && sudo chmod 664 /var/www/wordpress/wp-content/themes/seoLog.log
+// sudo touch /var/www/wordpress/wp-content/themes/streamLog.log && sudo chown www-data:www-data /var/www/wordpress/wp-content/themes/streamLog.log && sudo chmod 664 /var/www/wordpress/wp-content/themes/streamLog.log
+
+function streamLog($log)
+{
+    if (STREAM_LOG_ENABLED) {
+        escribirLog($log, '/var/www/wordpress/wp-content/themes/streamLog.log');
+    }
+}
 
 
 function seoLog($log)
