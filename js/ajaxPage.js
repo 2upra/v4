@@ -1,5 +1,21 @@
 const pageCache = {};
 
+const isFirefox = typeof InstallTrigger !== 'undefined';
+
+if (isFirefox) {
+  // Agrega la clase "firefox" al body
+  document.body.classList.add('firefox');
+
+  // Inserta el SVG para el filtro de desenfoque
+  const svg = `
+    <svg style="display: none;">
+      <filter id="blur-effect">
+        <feGaussianBlur stdDeviation="10" />
+      </filter>
+    </svg>`;
+  document.body.insertAdjacentHTML('afterbegin', svg);
+}
+
 function inicializarScripts() {
     ['inicializarWaveforms', 'inicializarReproductorAudio', 'minimizarform', 'selectorformtipo', 'ajax_submit', 'borrarcomentario', 'colab', 'configuser', 'deletepost', 'diferidopost', 'editarcomentario', 'like', 'notificacioncolab', 'busqueda', 'updateBackgroundColor', 'presentacionmusic', 'seguir', 'registro', 'comentarios', 'botoneditarpost', 'fan', 'perfilpanel', 'smooth', 'navpanel', 'borderborder', 'initializeFormFunctions', 'initializeModalregistro', 'submenu', 'selectortipousuario', 'empezarcolab', 'subidaRolaForm', 'avances', 'updateDates', 'initializeProgressSegments', 'initializeCustomTooltips', 'fondoAcciones', 'pestanasgroup', 'manejoDeLogs', 'progresosinteractive', 'setupScrolling', 'inicializarDescargas', 'handleAllRequests', 'textflux', 'autoFillUserInfo', 'inicializarPestanas', 'meta', 'reporteScript', 'generarGrafico', 'grafico', 'IniciadoresConfigPerfil', 'proyectoForm', 'inicializarAlerta', 'autoRows', 'iniciarRS', 'initializeUI', 'tagsPosts', 'vistaPost', 'initEditWordPress', 'reiniciarCargaDiferida', 'registrarVistas', 'colec',].forEach(func => {
         if (typeof window[func] === 'function') {
