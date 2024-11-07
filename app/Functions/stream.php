@@ -157,6 +157,32 @@ function verificarAudio($token)
         return false;
     }
 
+    // Verificar headers esenciales
+    $required_headers = [
+        'HTTP_X_REQUESTED_WITH',
+        'HTTP_REFERER',
+        'HTTP_ORIGIN'
+    ];
+
+    foreach ($required_headers as $header) {
+        if (!isset($_SERVER[$header])) {
+            guardarLog("Error: Falta header requerido: $header");
+            return false;
+        }
+    }
+
+    // Verificar Origin
+    if ($_SERVER['HTTP_ORIGIN'] !== 'https://2upra.com') {
+        guardarLog("Error: Origin no válido");
+        return false;
+    }
+
+    // Verificar nonce de WordPress
+    if (!check_ajax_referer('wp_rest', '_wpnonce', false)) {
+        guardarLog("Error: Nonce no válido");
+        return false;
+    }
+
     // Verificar referer y headers
     if (!isset($_SERVER['HTTP_REFERER']) || !isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
         guardarLog("Error: Faltan headers requeridos");

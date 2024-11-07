@@ -188,9 +188,11 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             headers: {
                 'X-WP-Nonce': audioSettings.nonce,
                 'X-Requested-With': 'XMLHttpRequest',
-                Accept: isFirefox ? 'audio/mpeg' : 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8'
+                'Accept': isFirefox ? 'audio/mpeg' : 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8',
+                'Referer': 'https://2upra.com',
+                'Origin': 'https://2upra.com'
             }
-        })        
+        })     
         .then(response => {
             if (!response.ok) throw new Error('Respuesta de red no satisfactoria');
             return response;
