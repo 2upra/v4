@@ -1,9 +1,14 @@
 <?
-
-// Función para normalizar un solo post
 function normalizarNuevoPost($post_id, $post, $update) {
-    // Si es una actualización o no es del tipo correcto, salimos
-    if ($update || $post->post_type !== 'social_post') {
+    // Verificar si es el tipo de post correcto
+    if ('social_post' !== get_post_type($post_id)) {
+        return;
+    }
+
+    // Obtener los datos del algoritmo
+    $meta_datos = get_post_meta($post_id, 'datosAlgoritmo', true);
+    
+    if (!is_array($meta_datos)) {
         return;
     }
 
@@ -26,15 +31,11 @@ function normalizarNuevoPost($post_id, $post, $update) {
         'drums' => 'drum',
     );
 
-    // Obtener los datos del algoritmo
-    $meta_datos = get_post_meta($post_id, 'datosAlgoritmo', true);
-    
-    if (!is_array($meta_datos)) {
-        return;
+    // Verificar si ya existe un respaldo antes de crear uno nuevo
+    $respaldo_existente = get_post_meta($post_id, 'datosAlgoritmo_respaldo', true);
+    if (empty($respaldo_existente)) {
+        add_post_meta($post_id, 'datosAlgoritmo_respaldo', $meta_datos, true);
     }
-
-    // Crear respaldo si no existe
-    add_post_meta($post_id, 'datosAlgoritmo_respaldo', $meta_datos, true);
 
     // Normalizar tags
     $campos = ['instrumentos_principal', 'tags_posibles', 'estado_animo', 'genero_posible', 'tipo_audio'];
@@ -57,11 +58,54 @@ function normalizarNuevoPost($post_id, $post, $update) {
     if ($fue_modificado) {
         update_post_meta($post_id, 'datosAlgoritmo', $meta_datos);
     }
+
+    // Verificar y restaurar después de la normalización
+    verificarYRestaurarDatos($post_id);
 }
 
-// Agregar el hook para ejecutar la función cuando se crea un nuevo post
+// Hook para cuando se crea o actualiza un post
 add_action('wp_insert_post', 'normalizarNuevoPost', 10, 3);
 
+// Función específica para manejar actualizaciones
+function normalizarPostActualizado($post_id, $post_after, $post_before) {
+    // Verificar si es el tipo de post correcto
+    if ('social_post' !== get_post_type($post_id)) {
+        return;
+    }
+
+    // Verificar si el contenido ha cambiado
+    if ($post_before->post_content === $post_after->post_content) {
+        return;
+    }
+
+    // Llamar a la función principal de normalización
+    normalizarNuevoPost($post_id, $post_after, true);
+
+    // Verificar y restaurar después de la normalización
+    verificarYRestaurarDatos($post_id);
+}
+
+// Hook adicional para cuando se actualiza un post
+add_action('post_updated', 'normalizarPostActualizado', 10, 3);
+
+// Función para verificar y restaurar datos
+function verificarYRestaurarDatos($post_id) {
+    // Verificar si datosAlgoritmo existe
+    $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
+    
+    if (empty($datos_algoritmo)) {
+        // Intentar restaurar desde el respaldo
+        $respaldo = get_post_meta($post_id, 'datosAlgoritmo_respaldo', true);
+        
+        if (!empty($respaldo)) {
+            // Restaurar los datos desde el respaldo
+            update_post_meta($post_id, 'datosAlgoritmo', $respaldo);
+            
+            // Opcional: Registrar la restauración
+            error_log("Datos restaurados para el post ID: " . $post_id);
+        }
+    }
+}
 function crearRespaldoYNormalizar($batch_size = 100) {
     global $wpdb;
     

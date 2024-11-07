@@ -124,7 +124,7 @@ if (!wp_next_scheduled('minutos55_evento')) {
     wp_schedule_event(time(), 'cada55', 'minutos55_evento'); // Asegúrate de que el nombre del evento sea consistente
 }
 
-add_action('minutos55_evento', 'optimizar64kAudios'); // Asegúrate de que el nombre del evento coincida
+add_action('minutos55_evento', 'optimizar64kAudios'); 
 
 
 function optimizar64kAudios($limite = 10000) {
