@@ -235,19 +235,16 @@ async function bloqueos() {
     accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
 }
 
-// Inicializa la funcionalidad de edición de publicaciones
+
 async function editarPost() {
-    // Añade el modal de edición si aún no está presente
     modalManager.añadirModal('editarPost', '#editarPost', ['.editarPost']);
 
-    // Selecciona todos los botones de edición
     const editButtons = document.querySelectorAll('.editarPost');
 
     if (editButtons.length === 0) {
         return;
     }
 
-    // Agrega un event listener a cada botón de edición
     editButtons.forEach(function (button) {
         button.addEventListener('click', function () {
             const postId = this.getAttribute('data-post-id');
@@ -255,64 +252,57 @@ async function editarPost() {
         });
     });
 
-    // Configura el botón de enviar una vez
     const enviarEditBtn = document.getElementById('enviarEdit');
-    if (enviarEditBtn) {
-        // Verifica si ya se ha añadido el listener para evitar duplicados
-        if (!enviarEditBtn.dataset.listenerAdded) {
-            enviarEditBtn.addEventListener('click', async function () {
-                const postId = this.dataset.postId;
+    if (enviarEditBtn && !enviarEditBtn.dataset.listenerAdded) {
+        enviarEditBtn.addEventListener('click', async function () {
+            const postId = this.dataset.postId;
 
-                if (!postId) {
-                    console.error('No se encontró post_id en el botón enviarEdit');
-                    return;
-                }
+            if (!postId) {
+                console.error('No se encontró post_id en el botón enviarEdit');
+                return;
+            }
 
-                // Muestra una confirmación al usuario
-                const confirmed = await confirm('¿Estás seguro de que quieres editar este post?');
-                if (!confirmed) return;
+            const confirmed = await confirm('¿Estás seguro de que quieres editar este post?');
+            if (!confirmed) return;
 
-                // Obtiene la descripción editada del textarea
-                const descripcion = document.getElementById('mensajeEdit')?.value.trim() || '';
+            const descripcion = document.getElementById('mensajeEdit')?.value.trim() || '';
 
-                try {
-                    // Envía la solicitud AJAX para actualizar la descripción
-                    const data = await enviarAjax('cambiarDescripcion', {
-                        post_id: postId,
-                        descripcion: descripcion
-                    });
+            try {
+                const data = await enviarAjax('cambiarDescripcion', {
+                    post_id: postId,
+                    descripcion: descripcion
+                });
 
-                    if (data.success) {
-                        alert('Post editado correctamente');
+                if (data.success) {
+                    alert('Post editado correctamente');
 
-                        // Actualiza el contenido de la publicación en el DOM
-                        let postContentDiv = document.querySelector(`.thePostContet[data-post-id="${postId}"]`);
+                    // Intenta encontrar el elemento primero por thePostContet
+                    let postContentDiv = document.querySelector(`.thePostContet[data-post-id="${postId}"]`);
 
-                        if (!postContentDiv) {
-                            postContentDiv = document.querySelector(`.CONTENTLISTSAMPLE a[id-post="${idContenido}"]`);
-                        }
-
-                        if (postContentDiv) {
-                            postContentDiv.textContent = descripcion; // Usa textContent para evitar inyecciones de HTML
-                        }
-
-                        // Cierra el modal
-                        modalManager.toggleModal('editarPost', false);
-                    } else {
-                        console.error(`Error: ${data.message}`);
-                        alert('Error al enviar petición: ' + (data.message || 'Error desconocido'));
+                    // Si no lo encuentra, busca en CONTENTLISTSAMPLE
+                    if (!postContentDiv) {
+                        postContentDiv = document.querySelector(`.CONTENTLISTSAMPLE a[id-post="${postId}"]`);
                     }
-                } catch (error) {
-                    console.error('Error al editar el post:', error);
-                    alert('Ocurrió un error al editar el post.');
+
+                    if (postContentDiv) {
+                        postContentDiv.textContent = descripcion;
+                    } else {
+                        console.warn('No se encontró el elemento para actualizar el contenido');
+                    }
+
+                    modalManager.toggleModal('editarPost', false);
+                } else {
+                    console.error(`Error: ${data.message}`);
+                    alert('Error al enviar petición: ' + (data.message || 'Error desconocido'));
                 }
-            });
-            // Marca que el listener ya ha sido añadido
-            enviarEditBtn.dataset.listenerAdded = 'true';
-        }
+            } catch (error) {
+                console.error('Error al editar el post:', error);
+                alert('Ocurrió un error al editar el post.');
+            }
+        });
+        enviarEditBtn.dataset.listenerAdded = 'true';
     }
 }
-
 
 function abrirModalEditarPost(idContenido) {
     modalManager.toggleModal('editarPost', true);
