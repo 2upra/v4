@@ -241,6 +241,7 @@ function botonDescarga($postID)
             <div class="ZAQIBB">
                 <button class="icon-arrow-down <?php echo esc_attr($claseExtra); ?>"
                         data-post-id="<?php echo esc_attr($postID); ?>"
+                        id="download-button-<?php echo esc_attr($postID); ?>"
                         onclick="return procesarDescarga('<?php echo esc_js($postID); ?>', '<?php echo esc_js($userID); ?>')">
                     <?php echo $GLOBALS['descargaicono']; ?>
                 </button>

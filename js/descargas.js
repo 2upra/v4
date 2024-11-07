@@ -30,9 +30,12 @@ async function procesarDescarga(postId, usuarioId) {
                 window.location.href = responseData.data.download_url;
 
                 // Actualizar el botón visualmente para indicar que ya se descargó
-                const button = document.querySelector(`button[data-post-id="${postId}"]`);
+                const button = document.querySelector(`button[data-post-id="${postId}"]`) || document.getElementById(`download-button-${postId}`);
                 if (button) {
                     button.classList.add('yaDescargado');
+                    console.log('Clase yaDescargado añadida al botón');
+                } else {
+                    console.error('No se encontró el botón de descarga.');
                 }
             } else {
                 console.error('Error: download_url no está definido en la respuesta.');
