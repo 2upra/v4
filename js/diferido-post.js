@@ -153,7 +153,7 @@
             estaCargando = false;
         }
     }
-    
+    const MAX_POSTS = 34; 
     async function procesarRespuesta(respuesta) {
         log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
         const respuestaLimpia = respuesta.trim();
@@ -202,6 +202,22 @@
                 log('Contenido añadido');
                 paginaActual++;
     
+                // Limitar el número de publicaciones en el DOM
+                const publicacionesEnDOM = listaPublicaciones.querySelectorAll('.EDYQHV');
+                if (publicacionesEnDOM.length > MAX_POSTS) {
+                    const exceso = publicacionesEnDOM.length - MAX_POSTS;
+                    for (let i = 0; i < exceso; i++) {
+                        const elementoAEliminar = publicacionesEnDOM[i];
+                        const idPublicacion = elementoAEliminar.getAttribute('id-post')?.trim();
+                        if (idPublicacion) {
+                            publicacionesCargadas.delete(idPublicacion);
+                        }
+                        listaPublicaciones.removeChild(elementoAEliminar);
+                        log('Publicación eliminada para mantener el límite:', idPublicacion);
+                    }
+                }
+    
+                // Inicializar funciones necesarias
                 ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec'].forEach(funcion => {
                     if (typeof window[funcion] === 'function') window[funcion]();
                 });
