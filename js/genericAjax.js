@@ -354,17 +354,13 @@ function abrirModalEditarPost(idContenido) {
 
 
 async function corregirTags() {
-    // Añade el modal de edición si aún no está presente
+
     modalManager.añadirModal('corregirTags', '#corregirTags', ['.corregirTags']);
-    
-    // Selecciona todos los botones de edición
     const editButtons = document.querySelectorAll('.corregirTags');
-    
     if (editButtons.length === 0) {
         return;
     }
 
-    // Agrega un event listener a cada botón de edición
     editButtons.forEach(function (button) {
         button.addEventListener('click', function () {
             const postId = this.getAttribute('data-post-id');
@@ -372,10 +368,8 @@ async function corregirTags() {
         });
     });
 
-    // Configura el botón de enviar una vez
     const enviarEditBtn = document.getElementById('enviarCorregir');
     if (enviarEditBtn) {
-        // Verifica si ya se ha añadido el listener para evitar duplicados
         if (!enviarEditBtn.dataset.listenerAdded) {
             enviarEditBtn.addEventListener('click', async function () {
                 const postId = this.dataset.postId;
@@ -385,15 +379,12 @@ async function corregirTags() {
                     return;
                 }
                 
-                // Muestra una confirmación al usuario
                 const confirmed = await confirm('¿Estás seguro de que quieres corregir los tags de este post?');
                 if (!confirmed) return;
 
-                // Obtiene la descripción editada del textarea
                 const descripcion = document.getElementById('corregirEdit')?.value.trim() || '';
                 
                 try {
-                    // Envía la solicitud AJAX para actualizar la descripción
                     const data = await enviarAjax('corregirTags', {
                         post_id: postId,
                         descripcion: descripcion
@@ -401,7 +392,9 @@ async function corregirTags() {
 
                     if (data.success) {
                         alert('Post editado correctamente');
-
+                        if (textareaElement) {
+                            textareaElement.value = '';
+                        }
                         modalManager.toggleModal('corregirTags', false);
                     } else {
                         console.error(`Error: ${data.message}`);
@@ -412,7 +405,7 @@ async function corregirTags() {
                     alert('Ocurrió un error al editar el post.');
                 }
             });
-            // Marca que el listener ya ha sido añadido
+
             enviarEditBtn.dataset.listenerAdded = 'true';
         }
     }
