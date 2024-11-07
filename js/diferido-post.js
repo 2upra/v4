@@ -102,29 +102,29 @@
             log('Carga en progreso. Espera a que finalice antes de intentar nuevamente.');
             return;
         }
-
+    
         estaCargando = true;
         log('Iniciando carga de más contenido');
-
+    
         const elementoPestañaActiva = document.querySelector('.tab.active');
         if (elementoPestañaActiva?.getAttribute('ajax') === 'no') {
             log('La pestaña activa tiene ajax="no". No se cargará más contenido.');
             estaCargando = false;
             return;
         }
-
+    
         const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
         if (!listaPublicaciones) {
             log('No se encontró una pestaña activa');
             estaCargando = false;
             return;
         }
-
+    
         const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
         const idUsuario = window.idUsuarioActual || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
-
+    
         log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual});
-
+    
         try {
             const respuesta = await fetch(ajaxUrl, {
                 method: 'POST',
@@ -140,11 +140,11 @@
                     cargadas: Array.from(publicacionesCargadas).join(',')
                 })
             });
-
+    
             if (!respuesta.ok) {
                 throw new Error(`HTTP error! status: ${respuesta.status}`);
             }
-
+    
             const textoRespuesta = await respuesta.text();
             await procesarRespuesta(textoRespuesta);
         } catch (error) {
@@ -153,109 +153,39 @@
             estaCargando = false;
         }
     }
-
-    class VirtualScroller {
-        constructor(container, itemHeight) {
-            this.container = container;
-            this.itemHeight = itemHeight;
-            this.items = [];
-            this.visibleItems = new Map();
-
-            this.viewport = document.createElement('div');
-            this.viewport.style.position = 'relative';
-            this.container.appendChild(this.viewport);
-
-            this.setupScroll();
-        }
-
-        setupScroll() {
-            window.addEventListener('scroll', () => {
-                this.updateVisibleItems();
-            });
-        }
-
-        updateVisibleItems() {
-            const scrollTop = window.scrollY;
-            const viewportHeight = window.innerHeight;
-
-            // Calcular qué elementos deberían ser visibles
-            const startIndex = Math.floor(scrollTop / this.itemHeight);
-            const endIndex = Math.ceil((scrollTop + viewportHeight) / this.itemHeight);
-
-            // Buffer para pre-renderizar algunos elementos extra
-            const buffer = 5;
-            const visibleIndexes = new Set();
-
-            for (let i = Math.max(0, startIndex - buffer); i < Math.min(this.items.length, endIndex + buffer); i++) {
-                visibleIndexes.add(i);
-            }
-
-            // Eliminar elementos que ya no son visibles
-            for (const [index, element] of this.visibleItems.entries()) {
-                if (!visibleIndexes.has(index)) {
-                    element.remove();
-                    this.visibleItems.delete(index);
-                }
-            }
-
-            // Añadir nuevos elementos visibles
-            visibleIndexes.forEach(index => {
-                if (!this.visibleItems.has(index) && this.items[index]) {
-                    const element = this.renderItem(this.items[index], index);
-                    this.visibleItems.set(index, element);
-                    this.viewport.appendChild(element);
-                }
-            });
-        }
-
-        renderItem(item, index) {
-            const element = document.createElement('div');
-            element.className = 'EDYQHV';
-            element.innerHTML = item;
-            element.style.position = 'absolute';
-            element.style.top = `${index * this.itemHeight}px`;
-            return element;
-        }
-
-        setItems(newItems) {
-            this.items = newItems;
-            this.viewport.style.height = `${this.items.length * this.itemHeight}px`;
-            this.updateVisibleItems();
-        }
-    }
-
+    
     async function procesarRespuesta(respuesta) {
         log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
         const respuestaLimpia = respuesta.trim();
-
+    
         if (respuestaLimpia === '<div id="no-more-posts"></div>') {
             log('No hay más publicaciones');
             detenerCarga();
             return;
         }
-
+    
         if (!respuestaLimpia) {
             log('Respuesta vacía recibida');
             detenerCarga();
             return;
         }
-
+    
         const parser = new DOMParser();
         const doc = parser.parseFromString(respuesta, 'text/html');
-
+    
         const publicacionesNuevas = doc.querySelectorAll('.EDYQHV');
         if (publicacionesNuevas.length === 0) {
             log('No se encontraron publicaciones nuevas en la respuesta');
             detenerCarga();
             return;
         }
-
+    
         // Filtrar publicaciones duplicadas
         const publicacionesValidas = [];
         publicacionesNuevas.forEach(publicacion => {
             const idPublicacion = publicacion.getAttribute('id-post')?.trim();
             const existeEnDOM = document.querySelector(`.social-post-list .EDYQHV[id-post="${idPublicacion}"]`);
-
+    
             if (idPublicacion && !publicacionesCargadas.has(idPublicacion) && !existeEnDOM) {
                 publicacionesCargadas.add(idPublicacion);
                 publicacionesValidas.push(publicacion.outerHTML);
@@ -264,35 +194,29 @@
                 log('Publicación duplicada omitida:', idPublicacion);
             }
         });
-
+    
         if (publicacionesValidas.length > 0) {
-            if (!window.virtualScroller) {
-                const container = document.querySelector('.tab.active .social-post-list');
-                window.virtualScroller = new VirtualScroller(container, 500); // 500px es un ejemplo de altura
-                window.virtualScroller.setItems([]);
+            const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
+            if (listaPublicaciones) {
+                listaPublicaciones.insertAdjacentHTML('beforeend', publicacionesValidas.join(''));
+                log('Contenido añadido');
+                paginaActual++;
+    
+                ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec'].forEach(funcion => {
+                    if (typeof window[funcion] === 'function') window[funcion]();
+                });
+    
+                // Actualiza los eventos de delegación si es necesario
+                reiniciarEventosPostTag();
+            } else {
+                log('No se encontró .social-post-list para añadir contenido');
             }
-    
-            // Añadir nuevos items al scroller virtual
-            const itemsActuales = [...window.virtualScroller.items];
-            window.virtualScroller.setItems([...itemsActuales, ...publicacionesValidas]);
-    
-            paginaActual++;
-            
-            // Ejecutar funciones necesarias solo para elementos visibles
-            ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 
-             'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 
-             'registrarVistas', 'colec'].forEach(funcion => {
-                if (typeof window[funcion] === 'function') {
-                    window[funcion]();
-                }
-            });
-    
-            reiniciarEventosPostTag();
         } else {
             log('No hay publicaciones válidas para añadir');
             detenerCarga();
         }
     }
+    
 
     function reiniciarEventosPostTag() {
         log('Reiniciando eventos de clic mediante delegación en <span class="postTag">');
