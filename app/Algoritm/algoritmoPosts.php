@@ -723,21 +723,21 @@ function extractWordsFromDatosAlgoritmo($datosAlgoritmo)
 #PASO 5
 function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
 {
-    /*
+    
     if ($esAdmin) {
 
         if (!$metaVerificado && $metaPostAut) {
             return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 10;
         } elseif ($metaVerificado && !$metaPostAut) {
-            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
+            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1;
         }
     } else {
         if ($metaVerificado && $metaPostAut) {
             return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 2;
         } elseif (!$metaVerificado && $metaPostAut) {
-            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
+            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1;
         }
     }
-    */
+    
     return $puntosUsuario + $puntosIntereses + $puntosLikes;
 }
