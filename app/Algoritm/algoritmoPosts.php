@@ -1,5 +1,5 @@
 <?
-/*
+
 
 global $wpdb;
 define('INTERES_TABLE', "{$wpdb->prefix}interes");
@@ -723,7 +723,7 @@ function extractWordsFromDatosAlgoritmo($datosAlgoritmo)
 #PASO 5
 function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
 {
-
+    /*
     if ($esAdmin) {
 
         if (!$metaVerificado && $metaPostAut) {
@@ -738,7 +738,6 @@ function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $
             return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 0.1;
         }
     }
-
+    */
     return $puntosUsuario + $puntosIntereses + $puntosLikes;
 }
-*/
