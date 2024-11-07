@@ -41,11 +41,16 @@ function htmlPost($filtro)
                 </div>
                 <? echo imagenPostList($block, $es_suscriptor, $post_id); ?>
                 <div class="INFOLISTSAMPLE">
-                    <p class="CONTENTLISTSAMPLE">
-                        <a href="<? echo esc_url(get_permalink()); ?>" id-post="<? echo get_the_ID(); ?>">
-                            <? the_content(); ?>
+                    <div class="CONTENTLISTSAMPLE">
+                        <a href="<?php echo esc_url(get_permalink()); ?>" id-post="<?php echo get_the_ID(); ?>">
+                            <?php
+                            // Obtener y limpiar el contenido
+                            $content = get_the_content();
+                            $content = wp_trim_words($content, 20, '...'); // Opcional: limitar palabras
+                            echo wp_kses_post($content);
+                            ?>
                         </a>
-                    </p>
+                    </div>
                     <div class="TAGSLISTSAMPLE">
                         <div class="tags-container" id="tags-<? echo get_the_ID(); ?>"></div>
                         <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;"><? echo esc_html($datosAlgoritmo); ?></p>
@@ -57,7 +62,7 @@ function htmlPost($filtro)
                             <? echo $GLOBALS['check']; ?>
                         <? elseif ($postAut == '1' && current_user_can('administrator')) : ?>
                             <div class="verificarPost" data-post-id="<? echo $post_id; ?>" style="cursor: pointer;">
-                            <? echo $GLOBALS['robot']; ?>
+                                <? echo $GLOBALS['robot']; ?>
                             </div>
                         <? endif; ?>
                     </div>

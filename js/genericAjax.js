@@ -313,32 +313,41 @@ async function editarPost() {
     }
 }
 
-// Abre el modal de edición y rellena el contenido correspondiente
+
 function abrirModalEditarPost(idContenido) {
-    // Muestra el modal
     modalManager.toggleModal('editarPost', true);
 
-    // Intenta buscar primero en .thePostContent
-    let postContentDiv = document.querySelector(`.thePostContet[data-post-id="${idContenido}"]`);
+    // Busca el contenido usando múltiples selectores
+    let postContent = '';
+    
+    // Intenta diferentes selectores en orden
+    const selectors = [
+        `.thePostContet[data-post-id="${idContenido}"]`,
+        `.CONTENTLISTSAMPLE a[id-post="${idContenido}"]`,
+        `#post-${idContenido} .CONTENTLISTSAMPLE`
+    ];
 
-    // Si no lo encuentra, busca en .CONTENTLISTSAMPLE
-    if (!postContentDiv) {
-        postContentDiv = document.querySelector(`.CONTENTLISTSAMPLE a[id-post="${idContenido}"]`);
+    for (const selector of selectors) {
+        const element = document.querySelector(selector);
+        if (element) {
+            postContent = element.innerHTML.trim();
+            break;
+        }
     }
 
-    // Obtiene el contenido, si existe
-    let postContent = postContentDiv ? postContentDiv.innerHTML.trim() : '';
+    // Limpia el contenido HTML
+    postContent = postContent
+        .replace(/<\/?[^>]+(>|$)/g, '') // Elimina etiquetas HTML
+        .replace(/&nbsp;/g, ' ')        // Reemplaza &nbsp; por espacios
+        .trim();                        // Elimina espacios extra
 
-    // Elimina todas las etiquetas HTML para obtener solo el texto
-    postContent = postContent.replace(/<[^>]+>/g, '');
-
-    // Inserta el contenido limpio en el textarea del modal
+    // Actualiza el textarea
     const mensajeEditTextarea = document.getElementById('mensajeEdit');
     if (mensajeEditTextarea) {
         mensajeEditTextarea.value = postContent;
     }
 
-    // Asigna el ID de la publicación al botón de enviar mediante un atributo de datos
+    // Actualiza el ID del post en el botón
     const enviarEditBtn = document.getElementById('enviarEdit');
     if (enviarEditBtn) {
         enviarEditBtn.dataset.postId = idContenido;
@@ -373,7 +382,8 @@ async function corregirTags() {
                 const confirmed = await confirm('¿Estás seguro de que quieres corregir los tags de este post?');
                 if (!confirmed) return;
 
-                const descripcion = document.getElementById('corregirEdit')?.value.trim() || '';
+                const textareaElement = document.getElementById('corregirEdit');
+                const descripcion = textareaElement?.value.trim() || '';
 
                 try {
                     const data = await enviarAjax('corregirTags', {
