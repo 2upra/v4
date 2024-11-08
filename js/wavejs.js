@@ -227,6 +227,29 @@ function showError(container, message) {
     }
 }
 
+function loadAudio(postId, audioUrl, container, playOnLoad) {
+    if (!postId || container.dataset.audioLoaded) return;
+
+    console.log('Cargando audio:', {postId, audioUrl});
+
+    const loadWithServiceWorker = async () => {
+        try {
+            if (navigator.serviceWorker.controller) {
+                console.log('Usando Service Worker para cargar audio');
+                await window.we(postId, audioUrl, container, playOnLoad);
+            } else {
+                console.log('Service Worker no disponible, usando carga normal');
+                await window.we(postId, audioUrl, container, playOnLoad);
+            }
+            container.dataset.audioLoaded = 'true';
+        } catch (error) {
+            console.error('Error cargando audio:', error);
+        }
+    };
+
+    loadWithServiceWorker();
+}
+
 window.we = function (postId, audioUrl, container, playOnLoad = false) {
     // Verificaciones iniciales
     verifyAudioSettings();
@@ -253,7 +276,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 urlObj.searchParams.append('_wpnonce', audioSettings.nonce);
             }
             const finalAudioUrl = urlObj.toString();
-
+    
             const response = await fetch(finalAudioUrl, {
                 method: 'GET',
                 credentials: 'same-origin',
@@ -264,100 +287,120 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     'Range': 'bytes=0-'
                 }
             });
-
-            if (!response.ok) {
+    
+            if (!response.ok && response.status !== 206) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
-            // Manejar la respuesta encriptada si es necesario
-            const arrayBuffer = await response.arrayBuffer();
-
-            // Si hay encriptación, obtener el IV y desencriptar
+    
+            // Obtener el contenido como blob directamente
+            const blob = await response.blob();
+            let audioBlob = blob;
+    
+            // Si hay encriptación, manejarla
             const iv = response.headers.get('X-Encryption-IV');
-            let audioData = arrayBuffer;
-
-            if (iv) {
-                // Desencriptar usando Web Crypto API
-                const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(audioSettings.key), {name: 'AES-CBC'}, false, ['decrypt']);
-
-                audioData = await crypto.subtle.decrypt(
-                    {
-                        name: 'AES-CBC',
-                        iv: new Uint8Array(
-                            atob(iv)
-                                .split('')
-                                .map(c => c.charCodeAt(0))
-                        )
-                    },
-                    key,
-                    arrayBuffer
-                );
+            if (iv && audioSettings.key) {
+                try {
+                    const arrayBuffer = await blob.arrayBuffer();
+                    const keyMaterial = await crypto.subtle.importKey(
+                        'raw',
+                        new TextEncoder().encode(audioSettings.key),
+                        { name: 'AES-CBC', length: 256 },
+                        false,
+                        ['decrypt']
+                    );
+    
+                    const ivArray = new Uint8Array(
+                        atob(iv)
+                            .split('')
+                            .map(c => c.charCodeAt(0))
+                    );
+    
+                    const decryptedData = await crypto.subtle.decrypt(
+                        {
+                            name: 'AES-CBC',
+                            iv: ivArray
+                        },
+                        keyMaterial,
+                        arrayBuffer
+                    );
+    
+                    audioBlob = new Blob([decryptedData], { type: 'audio/mpeg' });
+                } catch (decryptError) {
+                    console.error('Error en la desencriptación:', decryptError);
+                    // Si falla la desencriptación, intentamos usar el blob original
+                    audioBlob = blob;
+                }
             }
-
-            // Asegurarse de que el contenido sea tratado como audio
-            const audioBlob = new Blob([audioData], { type: 'audio/mpeg' });
+    
             const blobUrl = URL.createObjectURL(audioBlob);
-
-            // Crear un elemento de audio para verificar si el archivo es válido
-            const audio = new Audio();
-            audio.src = blobUrl;
-
-            // Esperar a que el audio se pueda reproducir
-            await new Promise((resolve, reject) => {
-                audio.addEventListener('canplaythrough', resolve);
-                audio.addEventListener('error', reject);
-                audio.load();
+    
+            // Inicializar wavesurfer con configuración optimizada
+            const wavesurfer = WaveSurfer.create({
+                container: container,
+                waveColor: '#D1D6DA',
+                progressColor: '#2D5BFF',
+                cursorColor: '#2D5BFF',
+                barWidth: 2,
+                barRadius: 3,
+                cursorWidth: 1,
+                height: 100,
+                barGap: 3,
+                normalize: true,
+                responsive: true,
+                fillParent: true,
+                backend: 'MediaElement',
+                mediaControls: true,
+                xhr: {
+                    cache: true,
+                    mode: 'cors',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }
             });
-
-            // Inicializar wavesurfer
-            const wavesurfer = initWavesurfer(container);
+    
             window.wavesurfers[postId] = wavesurfer;
-
-            // Cargar el audio usando la URL del blob
-            wavesurfer.load(blobUrl);
-
-            const waveformBackground = container.querySelector('.waveform-background');
-            if (waveformBackground) {
-                waveformBackground.style.display = 'none';
-            }
-
-            wavesurfer.on('ready', () => {
-                window.audioLoading = false;
-                container.dataset.audioLoaded = 'true';
-                const loadingElement = container.querySelector('.waveform-loading');
-                if (loadingElement) {
-                    loadingElement.style.display = 'none';
-                }
-
-                const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
-                const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
-
-                if (!waveCargada && !isMobile && !container.closest('.LISTWAVESAMPLE')) {
-                    setTimeout(() => {
-                        const image = generateWaveformImage(wavesurfer);
-                        sendImageToServer(image, postId);
-                    }, 1);
-                }
-
-                if (playOnLoad) {
-                    wavesurfer.play();
-                }
-            });
-
-            // Limpiar URL del blob cuando se destruya wavesurfer
-            wavesurfer.on('destroy', () => {
-                URL.revokeObjectURL(blobUrl);
-            });
-
+    
+            // Manejar eventos de wavesurfer
             wavesurfer.on('error', error => {
                 console.error('WaveSurfer error:', error);
                 if (retryCount < MAX_RETRIES) {
                     setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
                 }
             });
+    
+            // Cargar el audio
+            wavesurfer.load(blobUrl);
+    
+            wavesurfer.on('ready', () => {
+                window.audioLoading = false;
+                container.dataset.audioLoaded = 'true';
+                
+                const loadingElement = container.querySelector('.waveform-loading');
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
+    
+                const waveformBackground = container.querySelector('.waveform-background');
+                if (waveformBackground) {
+                    waveformBackground.style.display = 'none';
+                }
+    
+                if (playOnLoad) {
+                    wavesurfer.play();
+                }
+            });
+    
+            // Limpiar recursos cuando se destruya
+            wavesurfer.on('destroy', () => {
+                URL.revokeObjectURL(blobUrl);
+            });
+    
         } catch (error) {
             console.error('Load error:', error);
             if (retryCount < MAX_RETRIES) {
+                console.log(`Reintentando (${retryCount + 1}/${MAX_RETRIES})...`);
                 setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
             } else {
                 showError(container, 'Error al cargar el audio.');
