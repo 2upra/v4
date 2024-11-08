@@ -28,8 +28,8 @@ function audioUrlSegura($audio_id)
         return new WP_Error('invalid_audio_id', 'Audio ID inválido.');
     }
 
-    // Eliminar la adición manual del nonce
-    $url = site_url("/wp-json/1/v1/2?token=" . urlencode($token));
+    $nonce = wp_create_nonce('wp_rest');
+    $url = site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce);
     guardarLog("URL generada para usuario normal: " . $url);
     return $url;
 }
