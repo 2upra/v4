@@ -1,5 +1,6 @@
 <?
-define('ENABLE_BROWSER_AUDIO_CACHE', FALSE);
+define('ENABLE_BROWSER_AUDIO_CACHE', true);
+define('ENABLE_AUDIO_ENCRYPTION', true);
 // Añade esto al inicio de tu archivo
 add_action('init', function () {
     if (!defined('DOING_AJAX') && !defined('REST_REQUEST')) {
@@ -10,35 +11,6 @@ add_action('init', function () {
         wp_set_current_user($user_id);
     }
 });
-
-/*
-me indicaron aplicar esto
-
-function audioUrlSegura($audio_id) {
-    $timestamp = time();
-    $signature = hash_hmac('sha256', "$audio_id|$timestamp", $_ENV['AUDIOCLAVE']);
-    
-    return add_query_arg([
-        'ts' => $timestamp,
-        'sig' => $signature
-    ], site_url("/wp-json/1/v1/2"));
-}
-
-function verificarFirma($request) {
-    $timestamp = $request->get_param('ts');
-    $signature = $request->get_param('sig');
-    $audio_id = $request->get_param('audio_id');
-    
-    // Verificar que la firma no haya expirado
-    if (time() - $timestamp > 3600) {
-        return false;
-    }
-    
-    $expected_signature = hash_hmac('sha256', "$audio_id|$timestamp", $_ENV['AUDIOCLAVE']);
-  
-
-    a esto, ayudame
-*/
 
 function audioUrlSegura($audio_id)
 {
@@ -65,12 +37,13 @@ function audioUrlSegura($audio_id)
     // Generar nonce para la seguridad de la URL
     $nonce = wp_create_nonce('wp_rest');
     $url = site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce . '&ts=' . $timestamp . '&sig=' . $signature);
-    
+
     streamLog("URL generada para usuario normal: " . $url);
     return $url;
 }
 
-function verificarFirma($request) {
+function verificarFirma($request)
+{
     $timestamp = $request->get_param('ts');
     $signature = $request->get_param('sig');
     $audio_id = $request->get_param('audio_id');
@@ -127,9 +100,7 @@ function decrementaUsosToken($unique_id)
 }
 
 add_action('rest_api_init', function () {
-    streamLog('Registrando rutas REST API');
 
-    // Ruta para usuarios pro
     register_rest_route('1/v1', '/audio-pro/(?P<id>\d+)', array(
         'methods' => 'GET',
         'callback' => 'audioStreamEndPro',
@@ -144,24 +115,8 @@ add_action('rest_api_init', function () {
             ),
         ),
     ));
-
-    // Ruta para usuarios normales
-    register_rest_route('1/v1', '/2', array(
-        'methods' => 'GET',
-        'callback' => 'audioStreamEnd',
-        'args' => array(
-            'token' => array(
-                'required' => true,
-            ),
-        ),
-        'permission_callback' => function ($request) {
-            streamLog('Verificando permiso para token: ' . $request->get_param('token'));
-            return verificarAudio($request->get_param('token'));
-        }
-    ));
-
-    streamLog('Rutas REST API registradas');
 });
+
 
 function tokenAudio($audio_id)
 {
@@ -338,142 +293,228 @@ function verificarAudio($token)
     }
 }
 
+register_rest_route('1/v1', '/2', array(
+    'methods' => 'GET',
+    'callback' => 'audioStreamEnd',
+    'args' => array(
+        'token' => array(
+            'required' => true,
+            'validate_callback' => function ($param) {
+                return !empty($param) && is_string($param);
+            }
+        ),
+    ),
+    'permission_callback' => function ($request) {
+        streamLog('Verificando permiso para token: ' . $request->get_param('token'));
+        return verificarAudio($request->get_param('token'));
+    }
+));
 
+register_rest_route('1/v1', '/2', array(
+    'methods' => 'GET',
+    'callback' => 'audioStreamEnd',
+    'args' => array(
+        'token' => array(
+            'required' => true,
+            'validate_callback' => function ($param) {
+                return !empty($param) && is_string($param);
+            }
+        ),
+    ),
+    'permission_callback' => function ($request) {
+        streamLog('Verificando permiso para token: ' . $request->get_param('token'));
+        return verificarAudio($request->get_param('token'));
+    }
+));
 
 function audioStreamEnd($data)
 {
     if (ob_get_level()) ob_end_clean();
-    $token = $data['token'];
-    $parts = explode('|', base64_decode($token));
-    $audio_id = $parts[0];
 
-    // Directorio de caché
-    $upload_dir = wp_upload_dir();
-    $cache_dir = $upload_dir['basedir'] . '/audio_cache';
-    if (!file_exists($cache_dir)) {
-        wp_mkdir_p($cache_dir);
-    }
-
-    $cache_file = $cache_dir . '/audio_' . $audio_id . '.cache';
-
-    if (file_exists($cache_file) && (time() - filemtime($cache_file) < 24 * 60 * 60)) {
-        streamLog("audioStreamEnd: Cargando audio desde el archivo en caché: $cache_file");
-        $file = $cache_file;
-    } else {
-        $original_file = get_attached_file($audio_id);
-        if (!file_exists($original_file)) {
-            streamLog("audioStreamEnd: Error - Archivo de audio original no encontrado para el audio ID: $audio_id");
-            return new WP_Error('no_audio', 'Archivo de audio no encontrado.', array('status' => 404));
-        }
-        if (!@copy($original_file, $cache_file)) {
-            streamLog("audioStreamEnd: Error - Fallo al copiar el archivo de audio al caché.");
-            return new WP_Error('copy_failed', 'Error al copiar el archivo de audio al caché.', array('status' => 500));
+    try {
+        // Decodificar y validar token
+        $token = $data['token'];
+        $decoded = base64_decode($token);
+        if ($decoded === false) {
+            throw new Exception('Token inválido');
         }
 
-        streamLog("audioStreamEnd: Archivo de audio copiado exitosamente al caché: $cache_file");
-        $file = $cache_file;
-    }
-
-    $fp = @fopen($file, 'rb');
-    if (!$fp) {
-        streamLog("audioStreamEnd: Error - No se pudo abrir el archivo de audio: $file");
-        return new WP_Error('file_open_error', 'No se pudo abrir el archivo de audio.', array('status' => 500));
-    }
-
-    $size = filesize($file);
-    $length = $size;
-    $start = 0;
-    $end = $size - 1;
-
-    // Generar ETag único para el archivo
-    $etag = '"' . md5($file . filemtime($file)) . '"';
-
-    // Headers básicos
-    header('Content-Type: ' . get_post_mime_type($audio_id));
-    header('Accept-Ranges: bytes');
-
-    // Configurar headers de caché según la constante
-    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
-        $cache_time = 60 * 60 * 2190; // 24 horas
-        header('Cache-Control: public, max-age=' . $cache_time);
-        header('Pragma: public');
-        header('ETag: ' . $etag);
-        header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $cache_time) . ' GMT');
-
-        // Verificar si el contenido no ha cambiado
-        if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] == $etag) {
-            header('HTTP/1.1 304 Not Modified');
-            exit;
+        $parts = explode('|', $decoded);
+        if (count($parts) < 1) {
+            throw new Exception('Formato de token inválido');
         }
-    } else {
-        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-        header('Cache-Control: post-check=0, pre-check=0', false);
-        header('Pragma: no-cache');
-    }
 
+        $audio_id = $parts[0];
 
-    // Manejar Ranges HTTP para streaming parcial
-    if (isset($_SERVER['HTTP_RANGE'])) {
-        streamLog("audioStreamEnd: HTTP Range solicitado: " . $_SERVER['HTTP_RANGE']);
-        $c_start = $start;
-        $c_end = $end;
-        list(, $range) = explode('=', $_SERVER['HTTP_RANGE'], 2);
-        if (strpos($range, ',') !== false) {
-            streamLog("audioStreamEnd: Error - Rango solicitado no soportado.");
-            header('HTTP/1.1 416 Requested Range Not Satisfiable');
-            header("Content-Range: bytes $start-$end/$size");
-            exit;
+        // Gestión de caché
+        $upload_dir = wp_upload_dir();
+        $cache_dir = $upload_dir['basedir'] . '/audio_cache';
+        if (!file_exists($cache_dir)) {
+            wp_mkdir_p($cache_dir);
         }
-        if ($range == '-') {
-            $c_start = $size - substr($range, 1);
+
+        $cache_file = $cache_dir . '/audio_' . $audio_id . '.cache';
+        $file = null;
+
+        // Verificar caché
+        if (file_exists($cache_file) && (time() - filemtime($cache_file) < 24 * 60 * 60)) {
+            streamLog("Usando archivo cacheado: $cache_file");
+            $file = $cache_file;
         } else {
-            $range = explode('-', $range);
-            $c_start = $range[0];
-            $c_end = (isset($range[1]) && is_numeric($range[1])) ? $range[1] : $size;
+            $original_file = get_attached_file($audio_id);
+            if (!file_exists($original_file)) {
+                throw new Exception('Archivo de audio no encontrado');
+            }
+
+            if (!@copy($original_file, $cache_file)) {
+                throw new Exception('Error al cachear el archivo');
+            }
+
+            $file = $cache_file;
         }
-        $c_end = ($c_end > $end) ? $end : $c_end;
-        if ($c_start > $c_end || $c_start > $size - 1 || $c_end >= $size) {
-            streamLog("audioStreamEnd: Error - Rango solicitado fuera de los límites.");
-            header('HTTP/1.1 416 Requested Range Not Satisfiable');
-            header("Content-Range: bytes $start-$end/$size");
-            exit;
+
+        // Abrir archivo
+        $fp = @fopen($file, 'rb');
+        if (!$fp) {
+            throw new Exception('No se pudo abrir el archivo');
         }
-        $start = $c_start;
-        $end = $c_end;
-        $length = $end - $start + 1;
-        fseek($fp, $start);
-        header('HTTP/1.1 206 Partial Content');
+
+        // Configuración de streaming
+        $size = filesize($file);
+        $length = $size;
+        $start = 0;
+        $end = $size - 1;
+        $etag = '"' . md5($file . filemtime($file)) . '"';
+
+        // Headers básicos
+        header('Content-Type: audio/mpeg');
+        header('Accept-Ranges: bytes');
+
+        // Gestión de caché del navegador
+        if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
+            $cache_time = 60 * 60 * 24; // 24 horas
+            header('Cache-Control: private, must-revalidate, max-age=' . $cache_time);
+            header('ETag: ' . $etag);
+
+            if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] == $etag) {
+                header('HTTP/1.1 304 Not Modified');
+                exit;
+            }
+        } else {
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+        }
+
+        // Manejo de ranges para streaming
+        if (isset($_SERVER['HTTP_RANGE'])) {
+            list(, $range) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+
+            if (strpos($range, ',') !== false) {
+                header('HTTP/1.1 416 Requested Range Not Satisfiable');
+                header("Content-Range: bytes $start-$end/$size");
+                exit;
+            }
+
+            if ($range == '-') {
+                $c_start = $size - substr($range, 1);
+                $c_end = $end;
+            } else {
+                $range = explode('-', $range);
+                $c_start = $range[0];
+                $c_end = (isset($range[1]) && is_numeric($range[1])) ? $range[1] : $size;
+            }
+
+            $c_end = ($c_end > $end) ? $end : $c_end;
+
+            if ($c_start > $c_end || $c_start > $size - 1 || $c_end >= $size) {
+                header('HTTP/1.1 416 Requested Range Not Satisfiable');
+                header("Content-Range: bytes $start-$end/$size");
+                exit;
+            }
+
+            $start = $c_start;
+            $end = $c_end;
+            $length = $end - $start + 1;
+            fseek($fp, $start);
+            header('HTTP/1.1 206 Partial Content');
+        }
+
+        // Headers de contenido
+        header("Content-Range: bytes $start-$end/$size");
+        header("Content-Length: " . $length);
+
+        // Configuración de encriptación
+        $iv = openssl_random_pseudo_bytes(16);
+        header('X-Encryption-IV: ' . base64_encode($iv));
+
+        // Streaming con control de velocidad
+        $buffer_size = 8192; // 8KB
+        $sent = 0;
+
+        // Configuración de límite de velocidad
+        $rate_limit = 512 * 1024; // 512KB por segundo
+        $sleep_time = ($buffer_size / $rate_limit) * 1000000; // Convertir a microsegundos
+
+        while (!feof($fp) && $sent < $length) {
+            // Calcular cuánto queda por enviar
+            $remaining = $length - $sent;
+            $chunk_size = min($buffer_size, $remaining);
+
+            $chunk = fread($fp, $chunk_size);
+            if ($chunk === false) {
+                break;
+            }
+
+            // Encriptar chunk si está habilitado
+            if (defined('ENABLE_AUDIO_ENCRYPTION') && ENABLE_AUDIO_ENCRYPTION) {
+                $encrypted_chunk = openssl_encrypt(
+                    $chunk,
+                    'AES-256-CBC',
+                    $_ENV['AUDIOCLAVE'],
+                    OPENSSL_RAW_DATA,
+                    $iv
+                );
+
+                if ($encrypted_chunk === false) {
+                    throw new Exception('Error en la encriptación');
+                }
+
+                echo $encrypted_chunk;
+                $sent += strlen($encrypted_chunk);
+            } else {
+                echo $chunk;
+                $sent += strlen($chunk);
+            }
+
+            // Flush buffer y control de velocidad
+            flush();
+            if ($sleep_time > 0) {
+                usleep($sleep_time);
+            }
+        }
+
+        // Logging y limpieza
+        streamLog("Transmisión completada: $sent bytes enviados");
+        fclose($fp);
+        exit();
+    } catch (Exception $e) {
+        streamLog("Error en audioStreamEnd: " . $e->getMessage());
+
+        // Limpiar cualquier output previo
+        if (ob_get_level()) ob_end_clean();
+
+        // Enviar respuesta de error
+        header('HTTP/1.1 500 Internal Server Error');
+        header('Content-Type: application/json');
+        echo json_encode([
+            'error' => true,
+            'message' => $e->getMessage()
+        ]);
+        exit();
     }
-
-    header("Content-Range: bytes $start-$end/$size");
-    header("Content-Length: " . $length);
-
-    $iv = openssl_random_pseudo_bytes(16); // AES-256-CBC requiere un IV de 16 bytes
-    
-    // Guardar el IV en un header para que el cliente pueda desencriptar
-    header('X-Encryption-IV: ' . base64_encode($iv));
-
-    // Streaming con rate limiting
-    $buffer = 1024 * 8; // 8 KB
-    $sleep = 1000; // Microsegundos de espera entre cada envío de buffer
-    $sent = 0;
-    while(!feof($fp)) {
-        $chunk = fread($fp, 8192);
-        $encrypted_chunk = openssl_encrypt(
-            $chunk,
-            'AES-256-CBC',
-            $_ENV['AUDIOCLAVE'],
-            OPENSSL_RAW_DATA,
-            $iv
-        );
-        echo $encrypted_chunk;
-        flush();
-    }
-
-    streamLog("audioStreamEnd: Transmisión del audio completada para el archivo: $file");
-    fclose($fp);
-    exit();
 }
+
+
 
 
 // Registra el cron job

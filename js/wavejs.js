@@ -235,7 +235,10 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             window.audioLoading = true;
     
             const urlObj = new URL(audioUrl);
-            urlObj.searchParams.append('_wpnonce', audioSettings.nonce);
+            // Evitar duplicar el nonce
+            if (!urlObj.searchParams.has('_wpnonce')) {
+                urlObj.searchParams.append('_wpnonce', audioSettings.nonce);
+            }
             const finalAudioUrl = urlObj.toString();
     
             const response = await fetch(finalAudioUrl, {
@@ -244,7 +247,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 headers: {
                     'X-WP-Nonce': audioSettings.nonce,
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8',
+                    'Accept': 'audio/mpeg',
                     'Referer': 'https://2upra.com/',
                     'Origin': 'https://2upra.com'
                 }
@@ -254,31 +257,16 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
     
-            // Verificar el tipo de contenido
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('audio')) {
-                throw new Error('Invalid content type');
-            }
+            // Usar blob en lugar de arrayBuffer
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
     
-            // Convertir la respuesta a ArrayBuffer para WaveSurfer
-            const arrayBuffer = await response.arrayBuffer();
-    
-            // Crear un nuevo AudioContext
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            
-            // Decodificar el audio
-            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    
-            // Inicializar WaveSurfer con el contexto de audio
-            const wavesurfer = initWavesurfer(container, {
-                backend: 'WebAudio',
-                audioContext: audioContext
-            });
-            
+            // Inicializar wavesurfer
+            const wavesurfer = initWavesurfer(container);
             window.wavesurfers[postId] = wavesurfer;
     
-            // Cargar el buffer de audio
-            wavesurfer.loadDecodedBuffer(audioBuffer);
+            // Cargar el audio usando la URL del blob
+            wavesurfer.load(blobUrl);
     
             const waveformBackground = container.querySelector('.waveform-background');
             if (waveformBackground) {
@@ -288,7 +276,10 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             wavesurfer.on('ready', () => {
                 window.audioLoading = false;
                 container.dataset.audioLoaded = 'true';
-                container.querySelector('.waveform-loading').style.display = 'none';
+                const loadingElement = container.querySelector('.waveform-loading');
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
     
                 const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
                 const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -305,7 +296,12 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 }
             });
     
-            wavesurfer.on('error', (error) => {
+            // Limpiar URL del blob cuando se destruya wavesurfer
+            wavesurfer.on('destroy', () => {
+                URL.revokeObjectURL(blobUrl);
+            });
+    
+            wavesurfer.on('error', error => {
                 console.error('WaveSurfer error:', error);
                 if (retryCount < MAX_RETRIES) {
                     setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
@@ -320,7 +316,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 showError(container, 'Error al cargar el audio.');
             }
         }
-    };
+    }
     
 
     // Iniciar la carga
