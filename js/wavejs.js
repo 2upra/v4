@@ -261,7 +261,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'audio/mpeg',
                         'Range': 'bytes=0-',
-                        'Cache-Control': 'max-age=31536000' // 1 año
+                        'Cache-Control': 'max-age=86400' 
                     }
                 });
     

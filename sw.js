@@ -48,7 +48,7 @@ self.addEventListener('fetch', event => {
                             'Accept': 'audio/mpeg',
                             'Range': 'bytes=0-',
                             'X-WP-Nonce': event.request.headers.get('X-WP-Nonce'),
-                            'Cache-Control': 'max-age=31536000'
+                            'Cache-Control': 'max-age=86400'
                         }
                     });
 
