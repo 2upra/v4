@@ -270,141 +270,158 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     async function loadAndPlayAudioStream(retryCount = 0) {
         try {
             window.audioLoading = true;
-    
-            const urlObj = new URL(audioUrl);
-            if (!urlObj.searchParams.has('_wpnonce')) {
-                urlObj.searchParams.append('_wpnonce', audioSettings.nonce);
-            }
-            const finalAudioUrl = urlObj.toString();
-    
+
+            // Construir la URL final del audio
+            const finalAudioUrl = buildAudioUrl(audioUrl, audioSettings.nonce);
+
             const response = await fetch(finalAudioUrl, {
                 method: 'GET',
                 credentials: 'same-origin',
                 headers: {
                     'X-WP-Nonce': audioSettings.nonce,
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'audio/mpeg',
-                    'Range': 'bytes=0-'
+                    Accept: 'audio/mpeg',
+                    Range: 'bytes=0-'
                 }
             });
-    
-            if (!response.ok && response.status !== 206) {
+
+            if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-    
-            // Obtener el contenido como blob directamente
-            const blob = await response.blob();
-            let audioBlob = blob;
-    
-            // Si hay encriptación, manejarla
+
+            // Obtener los datos encriptados
+            const arrayBuffer = await response.arrayBuffer();
+
+            // Si hay encriptación, obtener IV y desencriptar
             const iv = response.headers.get('X-Encryption-IV');
-            if (iv && audioSettings.key) {
-                try {
-                    const arrayBuffer = await blob.arrayBuffer();
-                    const keyMaterial = await crypto.subtle.importKey(
-                        'raw',
-                        new TextEncoder().encode(audioSettings.key),
-                        { name: 'AES-CBC', length: 256 },
-                        false,
-                        ['decrypt']
-                    );
-    
-                    const ivArray = new Uint8Array(
-                        atob(iv)
-                            .split('')
-                            .map(c => c.charCodeAt(0))
-                    );
-    
-                    const decryptedData = await crypto.subtle.decrypt(
-                        {
-                            name: 'AES-CBC',
-                            iv: ivArray
-                        },
-                        keyMaterial,
-                        arrayBuffer
-                    );
-    
-                    audioBlob = new Blob([decryptedData], { type: 'audio/mpeg' });
-                } catch (decryptError) {
-                    console.error('Error en la desencriptación:', decryptError);
-                    // Si falla la desencriptación, intentamos usar el blob original
-                    audioBlob = blob;
-                }
+            let audioData = arrayBuffer;
+
+            if (iv) {
+                // Intentar desencriptar los datos
+                audioData = await decryptAudioData(arrayBuffer, iv, audioSettings.key);
             }
-    
-            const blobUrl = URL.createObjectURL(audioBlob);
-    
-            // Inicializar wavesurfer con configuración optimizada
-            const wavesurfer = WaveSurfer.create({
-                container: container,
-                waveColor: '#D1D6DA',
-                progressColor: '#2D5BFF',
-                cursorColor: '#2D5BFF',
-                barWidth: 2,
-                barRadius: 3,
-                cursorWidth: 1,
-                height: 100,
-                barGap: 3,
-                normalize: true,
-                responsive: true,
-                fillParent: true,
-                backend: 'MediaElement',
-                mediaControls: true,
-                xhr: {
-                    cache: true,
-                    mode: 'cors',
-                    credentials: 'same-origin',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                }
-            });
-    
+
+            // Convertir los datos desencriptados en un blob de audio
+            const blobUrl = createAudioBlobUrl(audioData);
+            await validateAudio(blobUrl);
+
+            // Inicializar y cargar Wavesurfer
+            const wavesurfer = initWavesurfer(container);
             window.wavesurfers[postId] = wavesurfer;
-    
-            // Manejar eventos de wavesurfer
-            wavesurfer.on('error', error => {
-                console.error('WaveSurfer error:', error);
-                if (retryCount < MAX_RETRIES) {
-                    setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
-                }
-            });
-    
-            // Cargar el audio
+
+            // Cargar el audio usando la URL del blob
             wavesurfer.load(blobUrl);
-    
-            wavesurfer.on('ready', () => {
-                window.audioLoading = false;
-                container.dataset.audioLoaded = 'true';
-                
-                const loadingElement = container.querySelector('.waveform-loading');
-                if (loadingElement) {
-                    loadingElement.style.display = 'none';
-                }
-    
-                const waveformBackground = container.querySelector('.waveform-background');
-                if (waveformBackground) {
-                    waveformBackground.style.display = 'none';
-                }
-    
-                if (playOnLoad) {
-                    wavesurfer.play();
-                }
-            });
-    
-            // Limpiar recursos cuando se destruya
-            wavesurfer.on('destroy', () => {
-                URL.revokeObjectURL(blobUrl);
-            });
-    
+
+            handleWaveSurferEvents(wavesurfer, container, postId, blobUrl);
         } catch (error) {
-            console.error('Load error:', error);
-            if (retryCount < MAX_RETRIES) {
-                console.log(`Reintentando (${retryCount + 1}/${MAX_RETRIES})...`);
-                setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
-            } else {
-                showError(container, 'Error al cargar el audio.');
+            handleLoadError(error, retryCount, container);
+        }
+    }
+
+    // Función para construir la URL de audio
+    function buildAudioUrl(audioUrl, nonce) {
+        const urlObj = new URL(audioUrl);
+        if (!urlObj.searchParams.has('_wpnonce')) {
+            urlObj.searchParams.append('_wpnonce', nonce);
+        }
+        return urlObj.toString();
+    }
+
+    // Función para desencriptar los datos de audio
+    async function decryptAudioData(arrayBuffer, iv, key) {
+        try {
+            console.log('IV before decryption:', iv);
+
+            const ivArray = new Uint8Array(
+                atob(iv)
+                    .split('')
+                    .map(c => c.charCodeAt(0))
+            );
+
+            const cryptoKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(key), {name: 'AES-CBC'}, false, ['decrypt']);
+
+            const decryptedData = await crypto.subtle.decrypt({name: 'AES-CBC', iv: ivArray}, cryptoKey, arrayBuffer);
+
+            return decryptedData;
+        } catch (error) {
+            console.error('Error during decryption:', error);
+            throw new Error('Error en la desencriptación');
+        }
+    }
+
+
+    function createAudioBlobUrl(audioData) {
+        const audioBlob = new Blob([audioData], {type: 'audio/mpeg'});
+        return URL.createObjectURL(audioBlob);
+    }
+
+    async function validateAudio(blobUrl) {
+        const audio = new Audio();
+        audio.src = blobUrl;
+
+        await new Promise((resolve, reject) => {
+            audio.addEventListener('canplaythrough', resolve);
+            audio.addEventListener('error', reject);
+            audio.load();
+        });
+    }
+
+    // Función para manejar los eventos de Wavesurfer
+    function handleWaveSurferEvents(wavesurfer, container, postId, blobUrl) {
+        const waveformBackground = container.querySelector('.waveform-background');
+        if (waveformBackground) {
+            waveformBackground.style.display = 'none';
+        }
+
+        wavesurfer.on('ready', () => {
+            window.audioLoading = false;
+            container.dataset.audioLoaded = 'true';
+            const loadingElement = container.querySelector('.waveform-loading');
+            if (loadingElement) {
+                loadingElement.style.display = 'none';
             }
+
+            // Generar y enviar la imagen de la forma de onda
+            handleWaveformGeneration(wavesurfer, container, postId);
+
+            // Reproducir si es necesario
+            if (playOnLoad) {
+                wavesurfer.play();
+            }
+        });
+
+        wavesurfer.on('destroy', () => {
+            URL.revokeObjectURL(blobUrl);
+        });
+
+        wavesurfer.on('error', error => {
+            console.error('WaveSurfer error:', error);
+            if (retryCount < MAX_RETRIES) {
+                setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
+            }
+        });
+    }
+
+    // Función para manejar errores de carga
+    function handleLoadError(error, retryCount, container) {
+        console.error('Load error:', error);
+        if (retryCount < MAX_RETRIES) {
+            setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
+        } else {
+            showError(container, 'Error al cargar el audio.');
+        }
+    }
+
+    // Función para manejar la generación de la forma de onda
+    function handleWaveformGeneration(wavesurfer, container, postId) {
+        const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
+
+        if (!waveCargada && !isMobile && !container.closest('.LISTWAVESAMPLE')) {
+            setTimeout(() => {
+                const image = generateWaveformImage(wavesurfer);
+                sendImageToServer(image, postId);
+            }, 1);
         }
     }
 
