@@ -151,16 +151,16 @@ function postLog($log)
 
 // Encolar el archivo sw.js
 function encolar_sw_js() {
-    // Registrar y encolar el archivo sw.js
     wp_enqueue_script(
-        'sw-js',                        // Identificador único
-        get_template_directory_uri() . '/sw.js',  // Ruta del archivo
-        array(),                        // Dependencias (vacío si no tiene)
-        null,                           // Versión del archivo (puedes usar null para evitar caché)
-        true                            // Cargar al final de la página (recomendado para scripts)
+        'sw-js',
+        home_url('/sw.js'),  // Ruta absoluta desde la raíz del dominio
+        array(),
+        null,
+        true
     );
 }
 add_action('wp_enqueue_scripts', 'encolar_sw_js');
+
 
 
 function scriptsOrdenados()
