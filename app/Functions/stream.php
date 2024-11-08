@@ -309,8 +309,8 @@ function audioStreamEnd($data)
     // Configurar headers de caché según la constante
     if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
         $cache_time = 60 * 60 * 2190; // 24 horas
-        # header('Cache-Control: public, max-age=' . $cache_time);
-        # header('Pragma: public');
+        header('Cache-Control: public, max-age=' . $cache_time);
+        header('Pragma: public');
         header('ETag: ' . $etag);
         header('Expires: ' . gmdate('D, d M Y H:i:s', time() + $cache_time) . ' GMT');
 
