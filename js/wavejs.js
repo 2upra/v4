@@ -356,12 +356,12 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     
         try {
             // Extraer la longitud y los datos encriptados del chunk
-            const dataView = new DataView(arrayBuffer);
-            const chunkLength = dataView.getUint32(0);
-            const encryptedData = arrayBuffer.slice(4);
-    
+            const dataView = new DataView(value.buffer, value.byteOffset, value.byteLength);
+            const chunkLength = dataView.getUint32(0, false); // Asegurarse de que sea big-endian
+            const encryptedData = value.subarray(4);
+                
             console.log('Procesando chunk:', {
-                totalLength: arrayBuffer.byteLength,
+                totalLength: value.byteLength,
                 chunkLength: chunkLength,
                 dataLength: encryptedData.byteLength
             });
