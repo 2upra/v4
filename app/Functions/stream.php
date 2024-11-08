@@ -324,7 +324,7 @@ function encryptChunk($chunk, $iv, $key)
         $final_data = $length_prefix . $encrypted;
 
         $encrypted_length = strlen($final_data);
-        header('Content-Length: ' . $encrypted_length);
+        //header('Content-Length: ' . $encrypted_length);
         header('X-Encrypted-Length: ' . $encrypted_length);
         header('X-Original-Length: ' . strlen($chunk));
 
@@ -401,13 +401,12 @@ function audioStreamEnd($data)
         $etag = '"' . md5($file . filemtime($file)) . '"';
 
         streamLog("Tamaño del archivo: $size bytes");
-        header("Content-Range: bytes $start-$end/$size");
-        header("Content-Length: " . $length);
-
-        // Headers básicos
         header('Content-Type: audio/mpeg');
         header('Accept-Ranges: bytes');
         header('X-Content-Type-Options: nosniff');
+        header("Content-Length: " . $length);
+        header("Content-Range: bytes $start-$end/$size");
+        streamLog("Encabezados establecidos: Content-Length = " . $length . ", Content-Range = bytes $start-$end/$size");
 
         // Gestión de caché del navegador
         if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
