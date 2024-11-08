@@ -291,11 +291,12 @@ function verificarAudio($token)
 }
 
 // Primero, define la función encryptChunk fuera del flujo principal
-function encryptChunk($chunk, $iv, $key) {
+function encryptChunk($chunk, $iv, $key)
+{
     try {
         streamLog("Iniciando encriptación de chunk");
         streamLog("Tamaño original del chunk: " . strlen($chunk));
-        
+
         // Convertir clave hex a binario
         $binary_key = hex2bin($key);
         if ($binary_key === false) {
@@ -307,10 +308,10 @@ function encryptChunk($chunk, $iv, $key) {
         $block_size = 16;
         $pad = $block_size - (strlen($chunk) % $block_size);
         $padded_chunk = $chunk . str_repeat(chr($pad), $pad);
-        
+
         streamLog("Padding añadido: $pad bytes");
         streamLog("Tamaño después del padding: " . strlen($padded_chunk));
-        
+
         // Encriptar usando AES-256-CBC
         $encrypted = openssl_encrypt(
             $padded_chunk,
@@ -319,16 +320,16 @@ function encryptChunk($chunk, $iv, $key) {
             OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING,
             $iv
         );
-        
+
         if ($encrypted === false) {
             $error = openssl_error_string();
             streamLog("Error de encriptación OpenSSL: " . $error);
             throw new Exception("Error en la encriptación: " . $error);
         }
-        
+
         streamLog("Encriptación exitosa");
         streamLog("Tamaño de datos encriptados: " . strlen($encrypted));
-        
+
         return $encrypted;
     } catch (Exception $e) {
         streamLog("Error en encryptChunk: " . $e->getMessage());
@@ -344,7 +345,7 @@ if (defined('ENABLE_AUDIO_ENCRYPTION') && ENABLE_AUDIO_ENCRYPTION) {
         if ($iv === false) {
             throw new Exception('No se pudo generar el IV');
         }
-        
+
         $iv_base64 = base64_encode($iv);
         header('X-Encryption-IV: ' . $iv_base64);
         streamLog("IV generado (base64): " . $iv_base64);
@@ -354,14 +355,14 @@ if (defined('ENABLE_AUDIO_ENCRYPTION') && ENABLE_AUDIO_ENCRYPTION) {
         if (!isset($_ENV['AUDIOCLAVE'])) {
             throw new Exception('Clave de encriptación no configurada');
         }
-        
+
         $key = $_ENV['AUDIOCLAVE'];
-        
+
         // Validar formato hexadecimal
         if (!ctype_xdigit($key)) {
             throw new Exception('La clave debe estar en formato hexadecimal');
         }
-        
+
         // Validar longitud de la clave
         if (strlen($key) !== 64) {
             throw new Exception('La clave debe tener exactamente 64 caracteres hexadecimales');
@@ -378,13 +379,12 @@ if (defined('ENABLE_AUDIO_ENCRYPTION') && ENABLE_AUDIO_ENCRYPTION) {
 
         // Encriptar todo el contenido de una vez
         $encrypted_content = encryptChunk($fileContent, $iv, $key);
-        
+
         // Enviar el contenido encriptado
         echo $encrypted_content;
         $sent = strlen($encrypted_content);
-        
-        streamLog("Contenido total encriptado y enviado: " . $sent . " bytes");
 
+        streamLog("Contenido total encriptado y enviado: " . $sent . " bytes");
     } catch (Exception $e) {
         streamLog("Error en el proceso de encriptación: " . $e->getMessage());
         throw $e;
@@ -522,57 +522,52 @@ function audioStreamEnd($data)
         $sleep_time = ($buffer_size / $rate_limit) * 1000000; // Convertir a microsegundos
 
         if (defined('ENABLE_AUDIO_ENCRYPTION') && ENABLE_AUDIO_ENCRYPTION) {
-            try {
-                // Generar IV único para esta sesión
-                $iv = openssl_random_pseudo_bytes(16);
-                if ($iv === false) {
-                    throw new Exception('No se pudo generar el IV');
-                }
-                
-                $iv_base64 = base64_encode($iv);
-                header('X-Encryption-IV: ' . $iv_base64);
-                streamLog("IV generado (base64): " . $iv_base64);
-                streamLog("IV (hex): " . bin2hex($iv));
-        
-                // Validar y preparar la clave
-                if (!isset($_ENV['AUDIOCLAVE'])) {
-                    throw new Exception('Clave de encriptación no configurada');
-                }
-                
-                $key = $_ENV['AUDIOCLAVE'];
-                
-                // Validar formato hexadecimal
-                if (!ctype_xdigit($key)) {
-                    throw new Exception('La clave debe estar en formato hexadecimal');
-                }
-                
-                // Validar longitud de la clave
-                if (strlen($key) !== 64) {
-                    throw new Exception('La clave debe tener exactamente 64 caracteres hexadecimales');
-                }
-        
-                streamLog("Clave validada correctamente");
-                streamLog("Longitud de la clave: " . strlen($key) . " caracteres");
-        
-                // Leer todo el archivo primero
-                $fileContent = fread($fp, $length);
-                if ($fileContent === false) {
-                    throw new Exception("Error al leer el archivo completo");
-                }
-        
-                // Encriptar todo el contenido de una vez
-                $encrypted_content = encryptChunk($fileContent, $iv, $key);
-                
-                // Enviar el contenido encriptado
-                echo $encrypted_content;
-                $sent = strlen($encrypted_content);
-                
-                streamLog("Contenido total encriptado y enviado: " . $sent . " bytes");
-        
-            } catch (Exception $e) {
-                streamLog("Error en el proceso de encriptación: " . $e->getMessage());
-                throw $e;
+
+            // Generar IV único para esta sesión
+            $iv = openssl_random_pseudo_bytes(16);
+            if ($iv === false) {
+                throw new Exception('No se pudo generar el IV');
             }
+
+            $iv_base64 = base64_encode($iv);
+            header('X-Encryption-IV: ' . $iv_base64);
+            streamLog("IV generado (base64): " . $iv_base64);
+            streamLog("IV (hex): " . bin2hex($iv));
+
+            // Validar y preparar la clave
+            if (!isset($_ENV['AUDIOCLAVE'])) {
+                throw new Exception('Clave de encriptación no configurada');
+            }
+
+            $key = $_ENV['AUDIOCLAVE'];
+
+            // Validar formato hexadecimal
+            if (!ctype_xdigit($key)) {
+                throw new Exception('La clave debe estar en formato hexadecimal');
+            }
+
+            // Validar longitud de la clave
+            if (strlen($key) !== 64) {
+                throw new Exception('La clave debe tener exactamente 64 caracteres hexadecimales');
+            }
+
+            streamLog("Clave validada correctamente");
+            streamLog("Longitud de la clave: " . strlen($key) . " caracteres");
+
+            // Leer todo el archivo primero
+            $fileContent = fread($fp, $length);
+            if ($fileContent === false) {
+                throw new Exception("Error al leer el archivo completo");
+            }
+
+            // Encriptar todo el contenido de una vez
+            $encrypted_content = encryptChunk($fileContent, $iv, $key);
+
+            // Enviar el contenido encriptado
+            echo $encrypted_content;
+            $sent = strlen($encrypted_content);
+
+            streamLog("Contenido total encriptado y enviado: " . $sent . " bytes");
         } else {
             // Transmisión sin encriptación
             while (!feof($fp) && $sent < $length) {
