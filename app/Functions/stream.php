@@ -324,7 +324,7 @@ function encryptChunk($chunk, $iv, $key)
         $final_data = $length_prefix . $encrypted;
 
         $encrypted_length = strlen($final_data);
-        // header('Content-Length: ' . $encrypted_length);
+        header('Content-Length: ' . $encrypted_length);
         header('X-Encrypted-Length: ' . $encrypted_length);
         header('X-Original-Length: ' . strlen($chunk));
 
@@ -458,9 +458,6 @@ function audioStreamEnd($data)
             streamLog("Rango ajustado: $start - $end");
             header('HTTP/1.1 206 Partial Content');
         }
-
-        // Headers de contenido
-
 
         // Configuración de encriptación
         $buffer_size = 8192; // 8KB
