@@ -241,11 +241,20 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     const MAX_RETRIES = 0;
     console.log(`Iniciando carga de audio - PostID: ${postId}`);
 
+    /*
+    Verificando configuración de audio: 
+    Object { nonce: "Presente", url: "https://2upra.com/sample/jazzy-hammond-organ-sample/", origin: "https://2upra.com" }
+    wavejs.js:174:13
+    Iniciando carga de audio - PostID: 266762 wavejs.js:242:13
+    Content-Length obtenido: -1 wavejs.js:272:21
+    Error en loadAndPlayAudioStream: ReferenceError: ivArray is not defined
+    */
+
     async function loadAndPlayAudioStream(retryCount = 0) {
         try {
             window.audioLoading = true;
             const finalAudioUrl = buildAudioUrl(audioUrl, audioSettings.nonce);
-
+    
             const response = await fetch(finalAudioUrl, {
                 method: 'GET',
                 credentials: 'same-origin',
@@ -256,119 +265,136 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     Range: 'bytes=0-'
                 }
             });
-
+    
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
+    
             const reader = response.body.getReader();
             const iv = response.headers.get('X-Encryption-IV');
-
+    
+            // Verifica que hayas recibido el IV
+            if (!iv) {
+                throw new Error('No se recibió el IV en los encabezados de la respuesta');
+            }
+    
+            // Convertir IV de Base64 a Uint8Array
+            const ivArray = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
+            let currentIV = ivArray;
+    
             // Ajuste en la línea donde se obtiene contentLength
             const contentLengthHeader = response.headers.get('Content-Length');
             const contentLength = contentLengthHeader ? parseInt(contentLengthHeader) : -1; // -1 para indicar longitud desconocida
-
+    
             // Log para revisar el valor obtenido
             console.log(`Content-Length obtenido: ${contentLength}`);
-
+    
             // Array para almacenar los datos desencriptados
-            let currentIV = ivArray;
             let decryptedChunks = [];
             let receivedLength = 0;
-            
-
+    
             while (true) {
-                const {done, value} = await reader.read();
-                console.log('Chunk leído:', {done, value});
-
+                const { done, value } = await reader.read();
+                console.log('Chunk leído:', { done, value });
+    
                 if (done) {
                     console.log('Transmisión completa');
                     break;
                 }
-
-                // Desencriptar el chunk
-                const decryptedData = await decryptAudioData(value.buffer, currentIV, audioSettings.key);
-
-                // Actualizar el IV para el siguiente chunk
-                currentIV = new Uint8Array(value.buffer.slice(-16));
-
-                // Desencriptar cada chunk individualmente
+    
                 if (value && value.length > 0) {
                     let chunkData = value.buffer;
-                    if (iv && audioSettings.key) {
-                        try {
-                            const decryptedChunk = await decryptAudioData(chunkData, iv, audioSettings.key);
-                            decryptedChunks.push(new Uint8Array(decryptedChunk));
-                        } catch (error) {
-                            console.error('Error desencriptando chunk:', error);
-                            continue;
-                        }
+    
+                    try {
+                        // Desencriptar el chunk usando el currentIV
+                        const decryptedChunk = await decryptAudioData(chunkData, currentIV, audioSettings.key);
+                        decryptedChunks.push(new Uint8Array(decryptedChunk));
+    
+                        // Actualizar el IV para el siguiente chunk
+                        // Puedes obtener los últimos 16 bytes del ciphertext para usar como nuevo IV
+                        currentIV = new Uint8Array(value.buffer.slice(-16));
+    
+                        receivedLength += value.length;
+                        console.log(`Procesado ${receivedLength} de ${contentLength} bytes`);
+                    } catch (error) {
+                        console.error('Error desencriptando chunk:', error);
+                        continue;
                     }
-                    receivedLength += value.length;
-                    console.log(`Procesado ${receivedLength} de ${contentLength} bytes`);
                 }
             }
-
+    
             // Combinar todos los chunks desencriptados
             let totalLength = decryptedChunks.reduce((acc, chunk) => acc + chunk.length, 0);
             const finalAudioData = new Uint8Array(totalLength);
             let offset = 0;
-
+    
             for (const chunk of decryptedChunks) {
                 finalAudioData.set(chunk, offset);
                 offset += chunk.length;
             }
-
+    
             console.log('Audio final combinado:', {
                 totalLength: finalAudioData.length,
                 chunks: decryptedChunks.length
             });
-
+    
             // Crear blob y cargar wavesurfer
             const blobUrl = createAudioBlobUrl(finalAudioData);
             await validateAudio(blobUrl);
-
+    
             const wavesurfer = initWavesurfer(container);
             window.wavesurfers[postId] = wavesurfer;
-
+    
             // Esperar a que wavesurfer esté listo antes de cargar
             await new Promise(resolve => {
                 wavesurfer.once('ready', resolve);
                 wavesurfer.load(blobUrl);
             });
-
+    
             handleWaveSurferEvents(wavesurfer, container, postId, blobUrl);
         } catch (error) {
             console.error('Error en loadAndPlayAudioStream:', error);
             handleLoadError(error, retryCount, container);
         }
     }
-
-    async function decryptAudioData(arrayBuffer, iv, key) {
-        let ivArray, keyArray;
-
+    
+    async function decryptAudioData(arrayBuffer, ivArray, key) {
+        let keyArray;
+    
         try {
             // Extraer la longitud y los datos encriptados del chunk
             const dataView = new DataView(arrayBuffer);
             const chunkLength = dataView.getUint32(0);
             const encryptedData = arrayBuffer.slice(4);
-
+    
             console.log('Procesando chunk:', {
                 totalLength: arrayBuffer.byteLength,
                 chunkLength: chunkLength,
                 dataLength: encryptedData.byteLength
             });
-
-            // Convertir IV y key
-            ivArray = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
-            keyArray = new Uint8Array(key.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-
+    
+            // Convertir la clave de hex a Uint8Array si aún no lo has hecho
+            if (!window.cachedKeyArray) {
+                window.cachedKeyArray = new Uint8Array(key.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+            }
+            keyArray = window.cachedKeyArray;
+    
             // Importar la clave
-            const cryptoKey = await crypto.subtle.importKey('raw', keyArray.buffer, {name: 'AES-CBC', length: 256}, false, ['decrypt']);
-
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw',
+                keyArray.buffer,
+                { name: 'AES-CBC', length: 256 },
+                false,
+                ['decrypt']
+            );
+    
             // Desencriptar chunk
-            const decryptedData = await crypto.subtle.decrypt({name: 'AES-CBC', iv: ivArray}, cryptoKey, encryptedData);
-
+            const decryptedData = await crypto.subtle.decrypt(
+                { name: 'AES-CBC', iv: ivArray },
+                cryptoKey,
+                encryptedData
+            );
+    
             return decryptedData;
         } catch (error) {
             console.error('Error en desencriptación de chunk:', error);
