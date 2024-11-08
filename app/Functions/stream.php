@@ -324,7 +324,7 @@ function encryptChunk($chunk, $iv, $key)
         $final_data = $length_prefix . $encrypted;
 
         $encrypted_length = strlen($final_data);
-        header('Content-Length: ' . $encrypted_length);
+        // header('Content-Length: ' . $encrypted_length);
         header('X-Encrypted-Length: ' . $encrypted_length);
         header('X-Original-Length: ' . strlen($chunk));
 
