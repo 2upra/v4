@@ -142,34 +142,58 @@ function inicializarWaveforms() {
     });
 }
 
-// Registrar el Service Worker
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', async () => {
+async function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
         try {
+            console.log('Intentando registrar Service Worker...');
             const registration = await navigator.serviceWorker.register('/sw.js', {
-                scope: '/'
+                scope: '/',
+                updateViaCache: 'none'
             });
-            console.log('ServiceWorker registrado:', registration);
-        } catch (error) {
-            console.error('Error al registrar ServiceWorker:', error);
-        }
-    });
-}
-// Modificar la función loadAudio
-function loadAudio(postId, audioUrl, container, playOnLoad) {
-    if (!postId) return;
+            console.log('Service Worker registrado:', registration);
 
-    if (!container.dataset.audioLoaded) {
-        // Verificar si el Service Worker está activo
-        if (navigator.serviceWorker.controller) {
-            window.we(postId, audioUrl, container, playOnLoad);
-            container.dataset.audioLoaded = 'true';
-        } else {
-            // Fallback si el Service Worker no está disponible
-            window.we(postId, audioUrl, container, playOnLoad);
+            registration.addEventListener('statechange', (e) => {
+                console.log('Service Worker state changed:', e.target.state);
+            });
+
+            return registration;
+        } catch (error) {
+            console.error('Error registrando Service Worker:', error);
+            return null;
         }
     }
+    return null;
 }
+
+// Inicializar cuando el documento esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    registerServiceWorker();
+});
+
+// Modificar loadAudio para usar el Service Worker
+function loadAudio(postId, audioUrl, container, playOnLoad) {
+    if (!postId || container.dataset.audioLoaded) return;
+
+    console.log('Cargando audio:', { postId, audioUrl });
+
+    const loadWithServiceWorker = async () => {
+        try {
+            if (navigator.serviceWorker.controller) {
+                console.log('Usando Service Worker para cargar audio');
+                await window.we(postId, audioUrl, container, playOnLoad);
+            } else {
+                console.log('Service Worker no disponible, usando carga normal');
+                await window.we(postId, audioUrl, container, playOnLoad);
+            }
+            container.dataset.audioLoaded = 'true';
+        } catch (error) {
+            console.error('Error cargando audio:', error);
+        }
+    };
+
+    loadWithServiceWorker();
+}
+
 function verifyAudioSettings() {
     console.log('Verificando configuración de audio:', {
         nonce: audioSettings?.nonce ? 'Presente' : 'Ausente',
