@@ -1,5 +1,5 @@
 <?
-define('ENABLE_BROWSER_AUDIO_CACHE', TRUE);
+define('ENABLE_BROWSER_AUDIO_CACHE', FALSE);
 // Añade esto al inicio de tu archivo
 add_action('init', function () {
     if (!defined('DOING_AJAX') && !defined('REST_REQUEST')) {
@@ -233,6 +233,11 @@ function verificarAudio($token)
 
     $current_session = get_transient($session_key);
     if ($current_session === false) {
+        # set_transient($session_key, $token, 7776000);
+        # set_transient($cache_key, 1, 7776000);
+        # header('Cache-Control: public, max-age=7776000');
+        # header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 7776000) . ' GMT');
+        # header('Last-Modified: ' . gmdate('D, d M Y H:i:s', time()) . ' GMT');
         streamLog("Nueva sesión iniciada para audio_id: $audio_id");
         return true;
     }
@@ -320,7 +325,6 @@ function audioStreamEnd($data)
         header('Cache-Control: post-check=0, pre-check=0', false);
         header('Pragma: no-cache');
     }
-
 
     // Manejar Ranges HTTP para streaming parcial
     if (isset($_SERVER['HTTP_RANGE'])) {
