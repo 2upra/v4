@@ -380,13 +380,18 @@ function audioStreamEnd($data)
         // Gestión de caché del navegador
         if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
             $cache_time = 60 * 60 * 24; // 24 horas
+            $etag = '"' . md5($file . filemtime($file) . $token) . '"';
+            
+            // Configuración de caché
             header('Cache-Control: private, must-revalidate, max-age=' . $cache_time);
             header('ETag: ' . $etag);
-
-            if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] == $etag) {
+            
+            // Verificar si el contenido ha cambiado
+            if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
                 header('HTTP/1.1 304 Not Modified');
                 exit;
             }
+
         } else {
             header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
             header('Pragma: no-cache');
