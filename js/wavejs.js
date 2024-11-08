@@ -241,6 +241,14 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     const MAX_RETRIES = 0;
     console.log(`Iniciando carga de audio - PostID: ${postId}`);
 
+    /*
+    Iniciando carga de audio - PostID: 266762 wavejs.js:242:13
+    Content-Length obtenido: -1 wavejs.js:283:21
+    Chunk leído: 
+    Object { done: false, value: Uint8Array(32028) }
+    wavejs.js:291:25
+    Error en desencriptación de chunk: ReferenceError: value is not defined
+    */
    
 
     async function loadAndPlayAudioStream(retryCount = 0) {
@@ -351,20 +359,29 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
         }
     }
     
-    async function decryptAudioData(arrayBuffer, ivArray, key) {
+    async function decryptAudioData(value, ivArray, key) {
         let keyArray;
     
         try {
-            // Extraer la longitud y los datos encriptados del chunk
+            // Crear DataView considerando el byteOffset y byteLength
             const dataView = new DataView(value.buffer, value.byteOffset, value.byteLength);
-            const chunkLength = dataView.getUint32(0, false); // Asegurarse de que sea big-endian
+    
+            // Leer el chunkLength
+            const chunkLength = dataView.getUint32(0, false); // Big-endian
+    
+            // Obtener los datos encriptados
             const encryptedData = value.subarray(4);
-                
+    
             console.log('Procesando chunk:', {
                 totalLength: value.byteLength,
                 chunkLength: chunkLength,
                 dataLength: encryptedData.byteLength
             });
+    
+            // Verificar que chunkLength coincide con dataLength
+            if (chunkLength !== encryptedData.byteLength) {
+                throw new Error('El chunkLength no coincide con el tamaño de los datos encriptados');
+            }
     
             // Convertir la clave de hex a Uint8Array si aún no lo has hecho
             if (!window.cachedKeyArray) {
