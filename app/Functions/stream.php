@@ -310,23 +310,6 @@ register_rest_route('1/v1', '/2', array(
     }
 ));
 
-register_rest_route('1/v1', '/2', array(
-    'methods' => 'GET',
-    'callback' => 'audioStreamEnd',
-    'args' => array(
-        'token' => array(
-            'required' => true,
-            'validate_callback' => function ($param) {
-                return !empty($param) && is_string($param);
-            }
-        ),
-    ),
-    'permission_callback' => function ($request) {
-        streamLog('Verificando permiso para token: ' . $request->get_param('token'));
-        return verificarAudio($request->get_param('token'));
-    }
-));
-
 function audioStreamEnd($data)
 {
     if (ob_get_level()) ob_end_clean();
