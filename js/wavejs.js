@@ -280,37 +280,22 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
         }
     }
 
-    // Función para desencriptar los datos de audio
-    // Cliente: decryptAudioData
     async function decryptAudioData(arrayBuffer, iv, key) {
         try {
             console.log('Iniciando desencriptación...');
-            console.log('Tamaño de datos encriptados:', arrayBuffer.byteLength);
-            console.log('IV (base64):', iv);
-            console.log('Key (hex):', key);
-    
-            // Asegurarse de que los datos están en el formato correcto
-            const encryptedData = new Uint8Array(arrayBuffer);
-            console.log('Primeros bytes de datos encriptados:', Array.from(encryptedData.slice(0, 16)));
-    
-            // Decodificar el IV
-            const ivArray = new Uint8Array(
-                atob(iv)
-                    .split('')
-                    .map(c => c.charCodeAt(0))
-            );
-            console.log('IV decodificado:', Array.from(ivArray));
-    
-            // Convertir la clave hex a ArrayBuffer
-            const keyBytes = new Uint8Array(
+            
+            // Convertir IV de base64 a ArrayBuffer
+            const ivArray = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
+            
+            // Convertir key hex a ArrayBuffer
+            const keyArray = new Uint8Array(
                 key.match(/.{1,2}/g).map(byte => parseInt(byte, 16))
             );
-            console.log('Key bytes:', Array.from(keyBytes));
-    
+            
             // Importar la clave
             const cryptoKey = await crypto.subtle.importKey(
                 'raw',
-                keyBytes,
+                keyArray.buffer,
                 {
                     name: 'AES-CBC',
                     length: 256
@@ -318,8 +303,9 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 false,
                 ['decrypt']
             );
-    
-            console.log('Intentando desencriptar...');
+            
+            // Asegurarse de que los datos están alineados correctamente
+            const encryptedData = new Uint8Array(arrayBuffer);
             
             // Desencriptar
             const decryptedData = await crypto.subtle.decrypt(
@@ -330,34 +316,19 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 cryptoKey,
                 encryptedData
             );
-    
-            console.log('Desencriptación exitosa, tamaño:', decryptedData.byteLength);
-    
-            // Remover padding PKCS7 si existe
-            const dataView = new Uint8Array(decryptedData);
-            const paddingLength = dataView[dataView.length - 1];
             
-            if (paddingLength > 0 && paddingLength <= 16) {
-                return decryptedData.slice(0, decryptedData.byteLength - paddingLength);
-            }
-    
             return decryptedData;
         } catch (error) {
-            console.error('Error detallado durante la desencriptación:', {
-                name: error.name,
-                message: error.message,
-                stack: error.stack,
-                data: {
-                    arrayBufferLength: arrayBuffer.byteLength,
-                    ivLength: iv ? iv.length : 0,
-                    keyLength: key ? key.length : 0
-                }
+            console.error('Error en desencriptación:', error);
+            console.error('Detalles:', {
+                ivLength: iv.length,
+                keyLength: key.length,
+                dataLength: arrayBuffer.byteLength
             });
             throw error;
         }
     }
 
- 
 
     // Función para construir la URL de audio
     function buildAudioUrl(audioUrl, nonce) {

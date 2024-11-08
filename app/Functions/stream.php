@@ -293,7 +293,6 @@ function verificarAudio($token)
 function encryptChunk($chunk, $iv, $key) {
     try {
         streamLog("Iniciando encriptación de chunk");
-        streamLog("Tamaño original del chunk: " . strlen($chunk));
         
         // Convertir clave hex a binario
         $binary_key = hex2bin($key);
@@ -301,19 +300,9 @@ function encryptChunk($chunk, $iv, $key) {
             throw new Exception('Error al convertir la clave hexadecimal a binario');
         }
         
-        // Aplicar padding PKCS7
-        $block_size = 16;
-        $pad = $block_size - (strlen($chunk) % $block_size);
-        $padded_chunk = $chunk . str_repeat(chr($pad), $pad);
-        
-        // Verificar que el IV tenga el tamaño correcto
-        if (strlen($iv) !== 16) {
-            throw new Exception('IV debe ser de 16 bytes');
-        }
-        
-        // Encriptar usando AES-256-CBC
+        // No aplicar padding manual, dejar que openssl_encrypt lo maneje
         $encrypted = openssl_encrypt(
-            $padded_chunk,
+            $chunk,
             'AES-256-CBC',
             $binary_key,
             OPENSSL_RAW_DATA,
