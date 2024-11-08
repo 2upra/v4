@@ -115,6 +115,23 @@ add_action('rest_api_init', function () {
             ),
         ),
     ));
+
+    register_rest_route('1/v1', '/2', array(
+        'methods' => 'GET',
+        'callback' => 'audioStreamEnd',
+        'args' => array(
+            'token' => array(
+                'required' => true,
+                'validate_callback' => function ($param) {
+                    return !empty($param) && is_string($param);
+                }
+            ),
+        ),
+        'permission_callback' => function ($request) {
+            streamLog('Verificando permiso para token: ' . $request->get_param('token'));
+            return verificarAudio($request->get_param('token'));
+        }
+    ));
 });
 
 
@@ -293,22 +310,7 @@ function verificarAudio($token)
     }
 }
 
-register_rest_route('1/v1', '/2', array(
-    'methods' => 'GET',
-    'callback' => 'audioStreamEnd',
-    'args' => array(
-        'token' => array(
-            'required' => true,
-            'validate_callback' => function ($param) {
-                return !empty($param) && is_string($param);
-            }
-        ),
-    ),
-    'permission_callback' => function ($request) {
-        streamLog('Verificando permiso para token: ' . $request->get_param('token'));
-        return verificarAudio($request->get_param('token'));
-    }
-));
+
 
 function audioStreamEnd($data)
 {
