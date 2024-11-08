@@ -603,6 +603,16 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos) {
         if (strpos($post_content, $id_word) !== false) {
             $resumen['matches']['content']++;
             $contentMatches[] = $id_word;
+        } else {
+            // Comparación difusa si no hay coincidencia exacta
+            foreach (explode(" ", $post_content) as $word) {
+                similar_text($id_word, $word, $percent);
+                if ($percent > 75) { // Umbral de similitud
+                    $resumen['matches']['content']++;
+                    $contentMatches[] = $id_word;
+                    break;
+                }
+            }
         }
     }
 
@@ -627,6 +637,16 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos) {
         if (isset($postWords[$id_word])) {
             $resumen['matches']['data']++;
             $dataMatches[] = $id_word;
+        } else {
+            // Comparación difusa en caso de no coincidencia exacta
+            foreach (array_keys($postWords) as $word) {
+                similar_text($id_word, $word, $percent);
+                if ($percent > 75) { // Umbral de similitud
+                    $resumen['matches']['data']++;
+                    $dataMatches[] = $id_word;
+                    break;
+                }
+            }
         }
     }
 
@@ -654,71 +674,81 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos) {
 
 function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
 {
-    // Get datosAlgoritmo for the current post
-    $datosAlgoritmo_1 = !empty($datos['datosAlgoritmo'][$post_id]->meta_value)
-        ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true)
-        : [];
+    // Obtener y normalizar contenido del post
+    $contenido_post_1 = isset($datos['post_content'][$post_id]) ? strtolower($datos['post_content'][$post_id]) : '';
+    $contenido_post_2 = isset($datos['post_content'][$similar_to]) ? strtolower($datos['post_content'][$similar_to]) : '';
 
-    // Get datosAlgoritmo for the post to compare with
-    if (isset($datos['datosAlgoritmo'][$similar_to])) {
-        $datosAlgoritmo_2 = json_decode($datos['datosAlgoritmo'][$similar_to]->meta_value, true);
-    } else {
-        // Fetch datosAlgoritmo for 'similar_to' post if not already in $datos
-        $datosAlgoritmo_meta = get_post_meta($similar_to, 'datosAlgoritmo', true);
-        $datosAlgoritmo_2 = !empty($datosAlgoritmo_meta) ? json_decode($datosAlgoritmo_meta, true) : [];
-    }
+    // Extraer palabras clave de datosAlgoritmo para cada post
+    $datosAlgoritmo_1 = !empty($datos['datosAlgoritmo'][$post_id]->meta_value) 
+        ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true) : [];
+    $datosAlgoritmo_2 = isset($datos['datosAlgoritmo'][$similar_to]) 
+        ? json_decode($datos['datosAlgoritmo'][$similar_to]->meta_value, true) 
+        : json_decode(get_post_meta($similar_to, 'datosAlgoritmo', true), true) ?? [];
 
-    // Convert datosAlgoritmo to flat arrays of words
-    $words_in_post_1 = extractWordsFromDatosAlgoritmo($datosAlgoritmo_1);
-    $words_in_post_2 = extractWordsFromDatosAlgoritmo($datosAlgoritmo_2);
+    $words_in_post_1 = array_merge(
+        extractWordsFromDatosAlgoritmo($datosAlgoritmo_1),
+        extractWordsFromContent($contenido_post_1)
+    );
+    $words_in_post_2 = array_merge(
+        extractWordsFromDatosAlgoritmo($datosAlgoritmo_2),
+        extractWordsFromContent($contenido_post_2)
+    );
 
     if (empty($words_in_post_1) || empty($words_in_post_2)) {
         return 0;
     }
 
-    // Compute similarity as the Jaccard index
+    // Convertir arrays en conjuntos únicos
     $set1 = array_unique($words_in_post_1);
     $set2 = array_unique($words_in_post_2);
 
+    // Calcular índice de Jaccard
     $intersection = array_intersect($set1, $set2);
     $union = array_unique(array_merge($set1, $set2));
 
-    $similarity = count($intersection) / count($union);
+    // Asignar pesos diferentes a las coincidencias en el contenido principal
+    $contentWeight = 1.5; // Peso adicional para coincidencias en el contenido
+    $contenidoMatches = count(array_intersect(extractWordsFromContent($contenido_post_1), extractWordsFromContent($contenido_post_2)));
+    $similarity = (count($intersection) + $contenidoMatches * $contentWeight) / count($union);
 
-    // Assign points based on similarity
-    $puntosSimilarTo = $similarity * 100; // Scale to 0-100 points
+    // Escalar puntos con un factor personalizado
+    $puntosSimilarTo = $similarity * 150; // Escala para obtener hasta 150 puntos
 
     return $puntosSimilarTo;
 }
 
-function extractWordsFromDatosAlgoritmo($datosAlgoritmo)
-{
+// Función para extraer palabras de datosAlgoritmo
+function extractWordsFromDatosAlgoritmo($datosAlgoritmo) {
     $words = [];
-    
-    // Verificar si $datosAlgoritmo es null o no es array
-    if (empty($datosAlgoritmo) || !is_array($datosAlgoritmo)) {
-        return $words;
-    }
-
-    foreach ($datosAlgoritmo as $key => $value) {
+    foreach ($datosAlgoritmo as $value) {
         if (is_array($value)) {
             foreach (['es', 'en'] as $lang) {
                 if (isset($value[$lang]) && is_array($value[$lang])) {
                     foreach ($value[$lang] as $item) {
-                        if (is_string($item)) {  // Verificar que sea string
-                            $item_normalized = strtolower($item);
-                            $words[] = $item_normalized;
-                        }
+                        $words[] = strtolower($item);
                     }
                 }
             }
-        } elseif (!empty($value) && is_string($value)) {  // Verificar que sea string
-            $value_normalized = strtolower($value);
-            $words[] = $value_normalized;
+        } elseif (!empty($value)) {
+            $words[] = strtolower($value);
         }
     }
     return $words;
 }
+
+// Función para extraer palabras de contenido (usando stemming para mejorar coincidencias)
+function extractWordsFromContent($content) {
+    $words = preg_split('/\s+/', strtolower($content), -1, PREG_SPLIT_NO_EMPTY);
+    $stemmedWords = array_map('stemWord', $words); // Aplicar stemming a cada palabra
+    return $stemmedWords;
+}
+
+// Función de stemming básica (puedes usar una librería específica de stemming para mejores resultados)
+function stemWord($word) {
+    // Ejemplo básico de stemming: eliminar sufijos comunes (puedes mejorar esta función)
+    return preg_replace('/(s|ed|ing)$/', '', $word); // Simplificación de ejemplo
+}
+
 
 #PASO 5
 function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
