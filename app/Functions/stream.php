@@ -293,37 +293,26 @@ function verificarAudio($token)
 function encryptChunk($chunk, $iv, $key)
 {
     try {
-        // Convertir clave hex a binario
         $binary_key = hex2bin($key);
-        streamLog("Longitud de la clave binaria: " . strlen($binary_key));
-
         if ($binary_key === false) {
             throw new Exception('Error al convertir la clave hexadecimal a binario');
         }
-
-        // Encriptar sin padding manual (usar el padding automático de OpenSSL)
         $encrypted = openssl_encrypt(
             $chunk,
             'AES-256-CBC',
             $binary_key,
-            OPENSSL_RAW_DATA,  // Solo usar OPENSSL_RAW_DATA
+            OPENSSL_RAW_DATA,
             $iv
         );
-
         if ($encrypted === false) {
             throw new Exception("Error en la encriptación: " . openssl_error_string());
         }
-
-        // Agregar información de longitud al inicio del chunk encriptado
-        $length_prefix = pack('N', strlen($encrypted));  // 4 bytes para la longitud
+        $length_prefix = pack('N', strlen($encrypted));
         $final_data = $length_prefix . $encrypted;
-
-        streamLog("Encriptación exitosa - Longitud datos encriptados: " . strlen($final_data));
-        streamLog("Primeros bytes encriptados (hex): " . bin2hex(substr($encrypted, 0, 16)));
-
-        return $final_data;
+        // Obtener el nuevo IV (último bloque de texto cifrado)
+        $new_iv = substr($encrypted, -16);
+        return array('data' => $final_data, 'iv' => $new_iv);
     } catch (Exception $e) {
-        streamLog("Error en encryptChunk: " . $e->getMessage());
         throw $e;
     }
 }
@@ -484,17 +473,17 @@ function audioStreamEnd($data)
                         break;
                     }
                 
-                    $encrypted_chunk = encryptChunk($chunk, $iv, $key);
+                    // Encriptar el chunk y obtener el nuevo IV
+                    $encrypt_result = encryptChunk($chunk, $iv, $key);
+                    $encrypted_chunk = $encrypt_result['data'];
+                    $iv = $encrypt_result['iv']; // Actualizar el IV para el próximo chunk
+                
                     echo $encrypted_chunk;
                 
                     $sent += strlen($chunk);
                 
-                    // Asegurarse de enviar el buffer de salida
                     flush();
                     ob_flush();
-                
-                    // Si usas limitación de velocidad, podrías mantener usleep
-                    // usleep($sleep_time);
                 }
             }
         } else {

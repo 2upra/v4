@@ -241,14 +241,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     const MAX_RETRIES = 0;
     console.log(`Iniciando carga de audio - PostID: ${postId}`);
 
-    /*
-    Verificando configuración de audio: 
-    Object { nonce: "Presente", url: "https://2upra.com/sample/jazzy-hammond-organ-sample/", origin: "https://2upra.com" }
-    wavejs.js:174:13
-    Iniciando carga de audio - PostID: 266762 wavejs.js:242:13
-    Content-Length obtenido: -1 wavejs.js:272:21
-    Error en loadAndPlayAudioStream: ReferenceError: ivArray is not defined
-    */
+   
 
     async function loadAndPlayAudioStream(retryCount = 0) {
         try {
