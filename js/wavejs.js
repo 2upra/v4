@@ -259,10 +259,9 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     headers: {
                         'X-WP-Nonce': audioSettings.nonce,
                         'X-Requested-With': 'XMLHttpRequest',
-                        
-                        //'Accept': 'audio/mpeg',
-                        //'Range': 'bytes=0-',
-                        'Cache-Control': 'max-age=86400' 
+                        // 'Accept': 'audio/mpeg',
+                        // 'Range': 'bytes=0-',
+                        'Cache-Control': 'max-age=86400'
                     }
                 });
     
@@ -271,7 +270,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     await cache.put(finalAudioUrl, response.clone());
                 }
             }
-    
     
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -295,7 +293,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             let buffer = new Uint8Array(0);
             let receivedLength = 0;
     
-            // **Agrega esta línea para declarar decryptedChunks**
             let decryptedChunks = [];
     
             while (true) {
@@ -368,22 +365,27 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     console.log(`Procesado ${receivedLength} bytes`);
                 }
             }
-
+    
             const audioBuffer = concatenateUint8Arrays(decryptedChunks);
-            const audioBlob = new Blob([audioBuffer], { type: 'audio/mpeg' });
-            const blobUrl = URL.createObjectURL(audioBlob);
-            
-            await validateAudio(blobUrl);
-            
-            const wavesurfer = initWavesurfer(container);
+    
+            // Crear un AudioContext
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+            // Decodificar los datos de audio desencriptados
+            const decodedAudioData = await audioContext.decodeAudioData(audioBuffer.buffer);
+    
+            // Inicializar WaveSurfer con el AudioContext existente
+            const wavesurfer = initWavesurfer(container, audioContext);
             window.wavesurfers[postId] = wavesurfer;
-            
+    
+            // Cargar el buffer de audio decodificado en WaveSurfer
+            wavesurfer.loadDecodedBuffer(decodedAudioData);
+    
             await new Promise(resolve => {
                 wavesurfer.once('ready', resolve);
-                wavesurfer.load(blobUrl);
             });
-            
-            handleWaveSurferEvents(wavesurfer, container, postId, blobUrl);
+    
+            handleWaveSurferEvents(wavesurfer, container, postId);
     
         } catch (error) {
             console.error('Error en loadAndPlayAudioStream:', error);
@@ -506,7 +508,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
 };
 
 // La función que inicializa WaveSurfer con los estilos y configuraciones deseados
-function initWavesurfer(container) {
+function initWavesurfer(container, audioContext) {
     const isListWaveSample = container.classList.contains('LISTWAVESAMPLE') || container.parentElement.classList.contains('LISTWAVESAMPLE');
 
     const containerHeight = container.classList.contains('waveform-container-venta') ? 60 : isListWaveSample ? 45 : 102;
@@ -528,7 +530,8 @@ function initWavesurfer(container) {
         container: container,
         waveColor: gradient,
         progressColor: progressGradient,
-        backend: 'MediaElement',
+        audioContext: audioContext,
+        backend: 'WebAudio',
         interact: true,
         barWidth: 2,
         height: containerHeight,
