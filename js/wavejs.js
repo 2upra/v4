@@ -34,7 +34,7 @@ function inicializarWaveforms() {
                 }
             });
         },
-        { threshold: 0.5 }
+        {threshold: 0.5}
     );
 
     // Inicializar wavesurfers observando cada contenedor
@@ -62,12 +62,7 @@ function inicializarWaveforms() {
                 const waveformContainer = post.querySelector('.waveform-container');
 
                 const clickedElement = event.target;
-                if (
-                    clickedElement.closest('.tags-container') ||
-                    clickedElement.closest('.QSORIW') ||
-                    clickedElement.closest('.post-image-container') ||
-                    clickedElement.closest('.CONTENTLISTSAMPLE')
-                ) {
+                if (clickedElement.closest('.tags-container') || clickedElement.closest('.QSORIW') || clickedElement.closest('.post-image-container') || clickedElement.closest('.CONTENTLISTSAMPLE')) {
                     //console.log('Clic ignorado por estar dentro de un contenedor excluido.');
                     return;
                 }
@@ -147,21 +142,34 @@ function inicializarWaveforms() {
     });
 }
 
-function loadAudio(postId, audioUrl, container, playOnLoad) {
-    if (!postId) {
-        //console.error('postId no está definido en loadAudio.');
-        return;
-    }
-
-    if (!container.dataset.audioLoaded) {
-        //console.log(`Iniciando carga de audio: postId=${postId}`);
-        window.we(postId, audioUrl, container, playOnLoad);
-        container.dataset.audioLoaded = 'true';
-    } else {
-        //console.log(`Audio ya estaba cargado para postId=${postId}`);
-    }
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker
+            .register('/sw.js')
+            .then(registration => {
+                console.log('ServiceWorker registrado:', registration);
+            })
+            .catch(error => {
+                console.error('Error al registrar ServiceWorker:', error);
+            });
+    });
 }
 
+// Modificar la función loadAudio
+function loadAudio(postId, audioUrl, container, playOnLoad) {
+    if (!postId) return;
+
+    if (!container.dataset.audioLoaded) {
+        // Verificar si el Service Worker está activo
+        if (navigator.serviceWorker.controller) {
+            window.we(postId, audioUrl, container, playOnLoad);
+            container.dataset.audioLoaded = 'true';
+        } else {
+            // Fallback si el Service Worker no está disponible
+            window.we(postId, audioUrl, container, playOnLoad);
+        }
+    }
+}
 function verifyAudioSettings() {
     console.log('Verificando configuración de audio:', {
         nonce: audioSettings?.nonce ? 'Presente' : 'Ausente',
@@ -173,7 +181,7 @@ function verifyAudioSettings() {
 function showError(container, message) {
     const loadingEl = container.querySelector('.waveform-loading');
     const messageEl = container.querySelector('.waveform-message');
-    
+
     if (loadingEl) loadingEl.style.display = 'none';
     if (messageEl) {
         messageEl.style.display = 'block';
@@ -181,10 +189,10 @@ function showError(container, message) {
     }
 }
 
-window.we = function(postId, audioUrl, container, playOnLoad = false) {
+window.we = function (postId, audioUrl, container, playOnLoad = false) {
     // Verificaciones iniciales
     verifyAudioSettings();
-    
+
     if (!audioSettings || !audioSettings.nonce) {
         console.error('audioSettings no está configurado correctamente');
         showError(container, 'Error de configuración');
@@ -213,19 +221,16 @@ window.we = function(postId, audioUrl, container, playOnLoad = false) {
             urlObj.searchParams.append('_wpnonce', audioSettings.nonce);
             const finalAudioUrl = urlObj.toString();
 
-            const isFirefox = typeof InstallTrigger !== 'undefined';
-            
-            console.log(`Intento ${retryCount + 1}/${MAX_RETRIES} - Cargando audio...`);
-
+            // Usar fetch con las mismas opciones
             const response = await fetch(finalAudioUrl, {
                 method: 'GET',
                 credentials: 'same-origin',
                 headers: {
                     'X-WP-Nonce': audioSettings.nonce,
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': isFirefox ? 'audio/mpeg' : 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8',
-                    'Referer': 'https://2upra.com/',
-                    'Origin': 'https://2upra.com'
+                    Accept: 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8',
+                    Referer: 'https://2upra.com/',
+                    Origin: 'https://2upra.com'
                 }
             });
 
@@ -240,20 +245,27 @@ window.we = function(postId, audioUrl, container, playOnLoad = false) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
+            const iv = Uint8Array.from(
+                atob(response.headers.get('X-Encryption-IV')), 
+                c => c.charCodeAt(0)
+            );
+
             const reader = response.body.getReader();
-            const stream = new ReadableStream({
-                start(controller) {
-                    function pump() {
-                        return reader.read().then(({done, value}) => {
-                            if (done) {
-                                controller.close();
-                                return;
-                            }
-                            controller.enqueue(value);
-                            return pump();
-                        });
+            const decryptedStream = new ReadableStream({
+                async start(controller) {
+                    const decoder = new TextDecoder();
+                    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(audioSettings.encryptionKey), {name: 'AES-CBC'}, false, ['decrypt']);
+
+                    while (true) {
+                        const {done, value} = await reader.read();
+                        if (done) break;
+
+                        const decrypted = await crypto.subtle.decrypt({name: 'AES-CBC', iv}, key, value);
+
+                        controller.enqueue(new Uint8Array(decrypted));
                     }
-                    return pump();
+
+                    controller.close();
                 }
             });
 
@@ -295,11 +307,10 @@ window.we = function(postId, audioUrl, container, playOnLoad = false) {
                 }
             });
 
-            wavesurfer.on('error', (error) => {
+            wavesurfer.on('error', error => {
                 console.error(`Error en wavesurfer - PostID: ${postId}`, error);
                 setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
             });
-
         } catch (error) {
             console.error(`Error en la carga - PostID: ${postId}`, error);
             if (retryCount < MAX_RETRIES) {
@@ -314,8 +325,6 @@ window.we = function(postId, audioUrl, container, playOnLoad = false) {
     // Iniciar la carga
     loadAndPlayAudioStream();
 };
-
-
 
 // La función que inicializa WaveSurfer con los estilos y configuraciones deseados
 function initWavesurfer(container) {

@@ -1,5 +1,5 @@
 <?
-define('ENABLE_BROWSER_AUDIO_CACHE', TRUE);
+define('ENABLE_BROWSER_AUDIO_CACHE', FALSE);
 // Añade esto al inicio de tu archivo
 add_action('init', function () {
     if (!defined('DOING_AJAX') && !defined('REST_REQUEST')) {
@@ -10,6 +10,35 @@ add_action('init', function () {
         wp_set_current_user($user_id);
     }
 });
+
+/*
+me indicaron aplicar esto
+
+function audioUrlSegura($audio_id) {
+    $timestamp = time();
+    $signature = hash_hmac('sha256', "$audio_id|$timestamp", $_ENV['AUDIOCLAVE']);
+    
+    return add_query_arg([
+        'ts' => $timestamp,
+        'sig' => $signature
+    ], site_url("/wp-json/1/v1/2"));
+}
+
+function verificarFirma($request) {
+    $timestamp = $request->get_param('ts');
+    $signature = $request->get_param('sig');
+    $audio_id = $request->get_param('audio_id');
+    
+    // Verificar que la firma no haya expirado
+    if (time() - $timestamp > 3600) {
+        return false;
+    }
+    
+    $expected_signature = hash_hmac('sha256', "$audio_id|$timestamp", $_ENV['AUDIOCLAVE']);
+  
+
+    a esto, ayudame
+*/
 
 function audioUrlSegura($audio_id)
 {
@@ -22,17 +51,48 @@ function audioUrlSegura($audio_id)
         return $url;
     }
 
+    // Generación del token de audio
     $token = tokenAudio($audio_id);
     if (!$token) {
         streamLog("Error generando token para audio ID: " . $audio_id);
         return new WP_Error('invalid_audio_id', 'Audio ID inválido.');
     }
 
+    // Generar timestamp y firma para la URL segura
+    $timestamp = time();
+    $signature = hash_hmac('sha256', "$audio_id|$timestamp", $_ENV['AUDIOCLAVE']);
+
+    // Generar nonce para la seguridad de la URL
     $nonce = wp_create_nonce('wp_rest');
-    $url = site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce);
+    $url = site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce . '&ts=' . $timestamp . '&sig=' . $signature);
+    
     streamLog("URL generada para usuario normal: " . $url);
     return $url;
 }
+
+function verificarFirma($request) {
+    $timestamp = $request->get_param('ts');
+    $signature = $request->get_param('sig');
+    $audio_id = $request->get_param('audio_id');
+
+    // Verificar que la firma no haya expirado (tiempo de 1 hora)
+    if (time() - $timestamp > 3600) {
+        streamLog("Firma expiró para audio ID: " . $audio_id);
+        return false;
+    }
+
+    // Generar la firma esperada y compararla con la recibida
+    $expected_signature = hash_hmac('sha256', "$audio_id|$timestamp", $_ENV['AUDIOCLAVE']);
+    if (!hash_equals($expected_signature, $signature)) {
+        streamLog("Firma no válida para audio ID: " . $audio_id);
+        return false;
+    }
+
+    streamLog("Firma verificada con éxito para audio ID: " . $audio_id);
+    return true;
+}
+
+
 
 function bloquear_acceso_directo_archivos()
 {
@@ -131,7 +191,7 @@ function tokenAudio($audio_id)
         $expiration = time() + 3600;
         $user_ip = $_SERVER['REMOTE_ADDR'];
         $unique_id = uniqid('', true);
-        $max_usos = 3;
+        $max_usos = 1;
 
         $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
         $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
@@ -144,13 +204,6 @@ function tokenAudio($audio_id)
     }
 }
 
-/*
-aqui sucede algo muy raro, al principio cuando cargo el audio, tiene un solo &_wpnonce=15d7d107c6 , y luego cuando recargo la pagina tiene &_wpnonce=15d7d107c6&_wpnonce=15d7d107c6 , osea el nonce 2 veces, lo curioso de esto es que si el usuario accede al enlace con los 2 nonce, el audio carga y se salta toda la seguridad (cosa que no debería de suceder) 
-
-https://2upra.com/wp-json/1/v1/2?token=MzAwNzY1fDE5MjQ5MDU2MDB8Y2FjaGVkfGZkYTU3NDVjMzkwNzY4ODRmYjcwOGNmMjM0OWNjNTQ1fDk5OTk5OXw4OTM5ZGRmZGNmZjlkMDhjOWY5ZTBmMmI2OGVmN2E2MGNmMWY1YjEwMGU3NjZkNzgwYzkxMzY1MjMyMzliNGM2&_wpnonce=15d7d107c6&_wpnonce=15d7d107c6
-
-https://2upra.com/wp-json/1/v1/2?token=MzAwNzY1fDE5MjQ5MDU2MDB8Y2FjaGVkfGZkYTU3NDVjMzkwNzY4ODRmYjcwOGNmMjM0OWNjNTQ1fDk5OTk5OXw4OTM5ZGRmZGNmZjlkMDhjOWY5ZTBmMmI2OGVmN2E2MGNmMWY1YjEwMGU3NjZkNzgwYzkxMzY1MjMyMzliNGM2&_wpnonce=15d7d107c6
-*/
 
 function verificarAudio($token)
 {
@@ -219,38 +272,70 @@ function verificarAudio($token)
 
     list($audio_id, $expiration, $user_ip, $unique_id, $max_usos, $signature) = $parts;
 
-    $session_key = 'audio_session_' . $audio_id . '_' . $_SERVER['REMOTE_ADDR'];
-    $cache_key = 'audio_access_' . $audio_id . '_' . $_SERVER['REMOTE_ADDR'];
+    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
+        // Lógica para modo caché
+        $session_key = 'audio_session_' . $audio_id . '_' . $_SERVER['REMOTE_ADDR'];
+        $cache_key = 'audio_access_' . $audio_id . '_' . $_SERVER['REMOTE_ADDR'];
 
-    // Verificar firma
-    $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
-    $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
+        // Verificar firma
+        $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
+        $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
 
-    if (!hash_equals($expected_signature, $signature)) {
-        streamLog("Error: firma no válida");
+        if (!hash_equals($expected_signature, $signature)) {
+            streamLog("Error: firma no válida");
+            return false;
+        }
+
+        $current_session = get_transient($session_key);
+        if ($current_session === false) {
+            set_transient($session_key, $token, 7776000);
+            set_transient($cache_key, 1, 7776000);
+            header('Cache-Control: public, max-age=7776000');
+            header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 7776000) . ' GMT');
+            header('Last-Modified: ' . gmdate('D, d M Y H:i:s', time()) . ' GMT');
+            streamLog("Nueva sesión iniciada para audio_id: $audio_id");
+            return true;
+        }
+
+        $access_count = get_transient($cache_key);
+        if ($access_count !== false) {
+            set_transient($cache_key, $access_count + 1, 3600);
+            streamLog("Acceso permitido - Contador: " . ($access_count + 1));
+            return true;
+        }
+
+        streamLog("Error: acceso no autorizado");
+        return false;
+    } else {
+        // Lógica para modo sin caché
+        if ($_SERVER['REMOTE_ADDR'] !== $user_ip) {
+            streamLog("Error: IP no coincide");
+            return false;
+        }
+
+        if (time() > $expiration) {
+            streamLog("Error: token expirado");
+            return false;
+        }
+
+        $usos_restantes = get_transient('audio_token_' . $unique_id);
+        if ($usos_restantes === false || $usos_restantes <= 0) {
+            streamLog("Error: sin usos restantes");
+            return false;
+        }
+
+        $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
+        $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
+
+        if (hash_equals($expected_signature, $signature)) {
+            decrementaUsosToken($unique_id);
+            streamLog("Acceso permitido - Modo sin caché");
+            return true;
+        }
+
+        streamLog("Error: firma no válida en modo sin caché");
         return false;
     }
-
-    $current_session = get_transient($session_key);
-    if ($current_session === false) {
-        # set_transient($session_key, $token, 7776000);
-        # set_transient($cache_key, 1, 7776000);
-        # header('Cache-Control: public, max-age=7776000');
-        # header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 7776000) . ' GMT');
-        # header('Last-Modified: ' . gmdate('D, d M Y H:i:s', time()) . ' GMT');
-        streamLog("Nueva sesión iniciada para audio_id: $audio_id");
-        return true;
-    }
-
-    $access_count = get_transient($cache_key);
-    if ($access_count !== false) {
-        set_transient($cache_key, $access_count + 1, 3600);
-        streamLog("Acceso permitido - Contador: " . ($access_count + 1));
-        return true;
-    }
-
-    streamLog("Error: acceso no autorizado");
-    return false;
 }
 
 
@@ -326,6 +411,7 @@ function audioStreamEnd($data)
         header('Pragma: no-cache');
     }
 
+
     // Manejar Ranges HTTP para streaming parcial
     if (isset($_SERVER['HTTP_RANGE'])) {
         streamLog("audioStreamEnd: HTTP Range solicitado: " . $_SERVER['HTTP_RANGE']);
@@ -362,28 +448,32 @@ function audioStreamEnd($data)
     header("Content-Range: bytes $start-$end/$size");
     header("Content-Length: " . $length);
 
+    $iv = openssl_random_pseudo_bytes(16); // AES-256-CBC requiere un IV de 16 bytes
+    
+    // Guardar el IV en un header para que el cliente pueda desencriptar
+    header('X-Encryption-IV: ' . base64_encode($iv));
+
     // Streaming con rate limiting
     $buffer = 1024 * 8; // 8 KB
     $sleep = 1000; // Microsegundos de espera entre cada envío de buffer
     $sent = 0;
-    while (!feof($fp) && ($p = ftell($fp)) <= $end) {
-        if ($p + $buffer > $end) {
-            $buffer = $end - $p + 1;
-        }
-        echo fread($fp, $buffer);
-        $sent += $buffer;
+    while(!feof($fp)) {
+        $chunk = fread($fp, 8192);
+        $encrypted_chunk = openssl_encrypt(
+            $chunk,
+            'AES-256-CBC',
+            $_ENV['AUDIOCLAVE'],
+            OPENSSL_RAW_DATA,
+            $iv
+        );
+        echo $encrypted_chunk;
         flush();
-        if ($sent >= 64 * 1024) { // Cada 64 KB
-            usleep($sleep);
-            $sent = 0;
-        }
     }
 
     streamLog("audioStreamEnd: Transmisión del audio completada para el archivo: $file");
     fclose($fp);
     exit();
 }
-
 
 
 // Registra el cron job

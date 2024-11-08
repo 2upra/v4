@@ -193,7 +193,7 @@ function scriptsOrdenados()
         'ajax-submit' => '2.1.38',
         'formscript' => '1.1.11',
         'genericAjax' => '2.1.13',
-        'wavejs' => ['2.0.13', ['jquery', 'wavesurfer']],
+        'wavejs' => ['2.0.14', ['jquery', 'wavesurfer']],
         'inversores' => '1.0.4',
         'likes' => '2.0.1',
         'seguir' => '2.0.1',
@@ -202,6 +202,7 @@ function scriptsOrdenados()
         'contarVistaPost' => '1.0.1',
         'notificaciones' => '1.0.1',
         'colec' => '1.0.1',
+        'sw.js' => '1.0.2',
     ];
 
     foreach ($script_handles as $handle => $data) {
@@ -266,6 +267,7 @@ function scriptsOrdenados()
 
     wp_localize_script('wavejs', 'audioSettings', array(
         'nonce' => wp_create_nonce('wp_rest'),
+        'encryptionKey' => $_ENV['AUDIOCLAVE'],
         'restUrl' => rest_url()
     ));
 
