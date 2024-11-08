@@ -293,11 +293,6 @@ function verificarAudio($token)
 function encryptChunk($chunk, $iv, $key)
 {
     try {
-        streamLog("Iniciando encriptación de chunk con parámetros:");
-        streamLog("Longitud del chunk: " . strlen($chunk));
-        streamLog("Longitud del IV: " . strlen($iv));
-        streamLog("Longitud de la clave hex: " . strlen($key));
-
         // Convertir clave hex a binario
         $binary_key = hex2bin($key);
         streamLog("Longitud de la clave binaria: " . strlen($binary_key));
@@ -322,11 +317,6 @@ function encryptChunk($chunk, $iv, $key)
         // Agregar información de longitud al inicio del chunk encriptado
         $length_prefix = pack('N', strlen($encrypted));  // 4 bytes para la longitud
         $final_data = $length_prefix . $encrypted;
-
-        $encrypted_length = strlen($final_data);
-        header('Content-Length: ' . $encrypted_length);
-        header('X-Encrypted-Length: ' . $encrypted_length);
-        header('X-Original-Length: ' . strlen($chunk));
 
         streamLog("Encriptación exitosa - Longitud datos encriptados: " . strlen($final_data));
         streamLog("Primeros bytes encriptados (hex): " . bin2hex(substr($encrypted, 0, 16)));
