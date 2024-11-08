@@ -382,9 +382,18 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             const audioBuffer = concatenateUint8Arrays(decryptedChunks);
             const audioBlob = new Blob([audioBuffer], { type: 'audio/mpeg' });
             const audioUrl = URL.createObjectURL(audioBlob);
-            const audioElement = document.createElement('audio');
-            audioElement.src = audioUrl;
-            audioElement.play();
+            await validateAudio(audioUrl);
+    
+            const wavesurfer = initWavesurfer(container);
+            window.wavesurfers[postId] = wavesurfer;
+    
+            // Esperar a que wavesurfer esté listo antes de cargar
+            await new Promise(resolve => {
+                wavesurfer.once('ready', resolve);
+                wavesurfer.load(blobUrl);
+            });
+    
+            handleWaveSurferEvents(wavesurfer, container, postId, blobUrl);
     
         } catch (error) {
             console.error('Error en loadAndPlayAudioStream:', error);
