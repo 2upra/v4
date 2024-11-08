@@ -9,43 +9,40 @@ self.addEventListener('activate', event => {
     event.waitUntil(clients.claim());
 });
 
-// sw.js
 self.addEventListener('fetch', event => {
+    // Intercepta solo las solicitudes de audio específicas
     if (event.request.url.includes('/wp-json/1/v1/2')) {
-        event.respondWith(
-            caches.open(CACHE_NAME).then(async cache => {
-                try {
-                    const response = await fetch(event.request.clone(), {
-                        credentials: 'same-origin',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            //'Accept': 'audio/mpeg',
-                            //'Range': 'bytes=0-',
-                            'X-WP-Nonce': event.request.headers.get('X-WP-Nonce')
-                        }
-                    });
+        event.respondWith(async function() {
+            const cache = await caches.open(CACHE_NAME);
+            const cachedResponse = await cache.match(event.request);
 
-                    if (!response.ok && response.status !== 206) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
+            // Si existe en cache y está autorizado, úsalo
+            if (cachedResponse && isValidRequest(event.request)) {
+                return cachedResponse;
+            }
 
-                    // No cachear respuestas parciales
-                    if (response.status === 206) {
-                        return response;
+            // Si no está en cache o no es válida, intenta fetch
+            try {
+                const networkResponse = await fetch(event.request.clone(), {
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-WP-Nonce': event.request.headers.get('X-WP-Nonce')
                     }
+                });
 
-                    const clonedResponse = response.clone();
-                    cache.put(event.request, clonedResponse);
-                    return response;
-                } catch (error) {
-                    console.error('Fetch error:', error);
-                    const cachedResponse = await cache.match(event.request);
-                    if (cachedResponse) {
-                        return cachedResponse;
-                    }
-                    throw error;
+                if (networkResponse.ok && isValidResponse(networkResponse)) {
+                    const responseClone = networkResponse.clone();
+                    cache.put(event.request, responseClone);
+                    return networkResponse;
+                } else {
+                    throw new Error('Respuesta de red no válida');
                 }
-            })
-        );
+            } catch (error) {
+                // Manejar el error, volver a cache si existe una respuesta válida
+                if (cachedResponse) return cachedResponse;
+                throw error;
+            }
+        }());
     }
 });

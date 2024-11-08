@@ -34,12 +34,12 @@ function audioUrlSegura($audio_id)
     return $url;
 }
 
-function bloquear_acceso_directo_archivos()
-{
+function bloquear_acceso_directo_archivos() {
     if (strpos($_SERVER['REQUEST_URI'], '/wp-content/uploads/') !== false) {
-        $referer = $_SERVER['HTTP_REFERER'] ?? '';
-        if (strpos($referer, home_url()) === false) {
-            wp_die('Acceso denegado: no puedes descargar este archivo directamente.', 'Acceso denegado', array('response' => 403));
+        // Check for a valid token, maybe in a query parameter or cookie
+        $token = $_GET['token'] ?? $_COOKIE['audio_token'] ?? null;
+        if (!$token || !verificarAudio($token)) {
+            wp_die('Acceso denegado', 'Acceso denegado', array('response' => 403));
         }
     }
 }
