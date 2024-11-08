@@ -295,9 +295,8 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             }
 
             // Asegurarse de que el contenido sea tratado como audio
-            // const blob = await response.blob();
-            const audioBlob = new Blob([blob], {type: 'audio/mpeg'});
-            const blobUrl = URL.createObjectURL(audioBlob);
+            const audioBlob = new Blob([audioData], { type: 'audio/mpeg' });
+        const blobUrl = URL.createObjectURL(audioBlob);
 
             // Crear un elemento de audio para verificar si el archivo es válido
             const audio = new Audio();
