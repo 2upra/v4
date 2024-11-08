@@ -187,7 +187,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             headers: {
                 'X-WP-Nonce': audioSettings.nonce,
                 'X-Requested-With': 'XMLHttpRequest',
-                Accept: 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8'
+                //Accept: 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8'
             }
         })
         .then(response => {
