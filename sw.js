@@ -9,41 +9,42 @@ self.addEventListener('activate', event => {
     event.waitUntil(clients.claim());
 });
 
+// sw.js
 self.addEventListener('fetch', event => {
     if (event.request.url.includes('/wp-json/1/v1/2')) {
         event.respondWith(
             caches.open(CACHE_NAME).then(async cache => {
-                // Verificar caché
-                const cachedResponse = await cache.match(event.request);
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
-
-                // Clonar la solicitud original
-                const fetchRequest = event.request.clone();
-
                 try {
-                    const response = await fetch(fetchRequest, {
+                    const response = await fetch(event.request.clone(), {
                         credentials: 'same-origin',
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
-                            'X-WP-Nonce': fetchRequest.headers.get('X-WP-Nonce'),
                             'Accept': 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8'
                         }
                     });
 
-                    if (response.ok) {
-                        cache.put(event.request, response.clone());
-                        return response;
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                    
-                    throw new Error(`HTTP error! status: ${response.status}`);
+
+                    // Verificar que el tipo de contenido sea correcto
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('audio/')) {
+                        throw new Error('Invalid content type');
+                    }
+
+                    // Clonar y cachear la respuesta
+                    const responseToCache = response.clone();
+                    cache.put(event.request, responseToCache);
+
+                    return response;
                 } catch (error) {
                     console.error('Fetch error:', error);
-                    return new Response('Error loading audio', {
-                        status: 500,
-                        headers: { 'Content-Type': 'audio/mpeg' }
-                    });
+                    const cachedResponse = await cache.match(event.request);
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
+                    throw error;
                 }
             })
         );

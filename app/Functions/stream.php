@@ -316,6 +316,7 @@ function audioStreamEnd($data)
 {
     if (ob_get_level()) ob_end_clean();
 
+
     try {
         // Decodificar y validar token
         $token = $data['token'];
@@ -374,7 +375,8 @@ function audioStreamEnd($data)
         // Headers básicos
         header('Content-Type: audio/mpeg');
         header('Accept-Ranges: bytes');
-
+        header('X-Content-Type-Options: nosniff');
+        
         // Gestión de caché del navegador
         if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
             $cache_time = 60 * 60 * 24; // 24 horas
