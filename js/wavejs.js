@@ -212,18 +212,6 @@ function loadAudio(postId, audioUrl, container, playOnLoad) {
     loadWithServiceWorker();
 }
 
-/*
-logs del cliente
-aqui hay un problema y es que no carga el audio completo 
-Procesando chunk: 
-Object { totalLength: 8212, chunkLength: 8208, dataLength: 8208 }
-wavejs.js:363:21
-Procesado 8212 de NaN bytes wavejs.js:314:29
-Transmisión completa wavejs.js:297:29
-Audio final combinado: 
-Object { totalLength: 8192, chunks: 1 
-*/
-
 window.we = function (postId, audioUrl, container, playOnLoad = false) {
     // Verificaciones iniciales
     verifyAudioSettings();
@@ -241,15 +229,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     const MAX_RETRIES = 0;
     console.log(`Iniciando carga de audio - PostID: ${postId}`);
 
-    /*
-    Chunk leído: 
-    Object { done: false, value: Uint8Array(15649) }
-    wavejs.js:294:25
-    Procesando chunk: 
-    Object { totalLength: 15649, chunkLength: 8208, dataLength: 8208 }
-    wavejs.js:323:37
-    Error desencriptando chunk: ReferenceError: decryptedChunks is not defined
-    */
 
     function concatenateUint8Arrays(arrays) {
         let totalLength = arrays.reduce((acc, value) => acc + value.length, 0);
@@ -264,13 +243,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
         return result;
     }
    
-    /*
-    Verificando configuración de audio: 
-    Object { nonce: "Presente", url: "https://2upra.com/sample/jazzy-hammond-organ-sample/", origin: "https://2upra.com" }
-    wavejs.js:174:13
-    Iniciando carga de audio - PostID: 266762 wavejs.js:242:13
-    Error en loadAndPlayAudioStream: ReferenceError: can't access lexical declaration 'audioUrl' before initialization
-    */
 
     async function loadAndPlayAudioStream(retryCount = 0) {
         try {
@@ -383,21 +355,41 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     console.log(`Procesado ${receivedLength} bytes`);
                 }
             }
-    
+
+            /*
+            Procesando chunk: 
+            Object { totalLength: 20936, chunkLength: 8208, dataLength: 8208 }
+            wavejs.js:347:37
+            Procesado 160540 bytes wavejs.js:383:29
+            Chunk leído: 
+            Object { done: true, value: undefined }
+            wavejs.js:318:25
+            Transmisión completa wavejs.js:321:29
+            GET
+            https://2upra.com/sample/jazzy-hammond-organ-sample/[object Blob]
+            NS_BINDING_ABORTED
+
+            Error en loadAndPlayAudioStream: 
+            error { target: audio, isTrusted: true, srcElement: audio, currentTarget: audio, eventPhase: 2, bubbles: false, cancelable: false, returnValue: true, defaultPrevented: false, composed: false, … }
+            wavejs.js:404:21
+            Load error: 
+            error { target: audio, isTrusted: true, srcElement: audio, currentTarget: audio, eventPhase: 2, bubbles: false, cancelable: false, returnValue: true, defaultPrevented: false, composed: false, … }
+            */
+
             const audioBuffer = concatenateUint8Arrays(decryptedChunks);
             const audioBlob = new Blob([audioBuffer], { type: 'audio/mpeg' });
-
-            await validateAudio(audioBlob);
-    
+            const blobUrl = URL.createObjectURL(audioBlob);
+            
+            await validateAudio(blobUrl);
+            
             const wavesurfer = initWavesurfer(container);
             window.wavesurfers[postId] = wavesurfer;
-    
-            // Esperar a que wavesurfer esté listo antes de cargar
+            
             await new Promise(resolve => {
                 wavesurfer.once('ready', resolve);
                 wavesurfer.load(blobUrl);
             });
-    
+            
             handleWaveSurferEvents(wavesurfer, container, postId, blobUrl);
     
         } catch (error) {
