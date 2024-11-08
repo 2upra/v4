@@ -19,7 +19,8 @@ self.addEventListener('fetch', event => {
                         credentials: 'same-origin',
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8'
+                            'Accept': 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8',
+                            'X-WP-Nonce': event.request.headers.get('X-WP-Nonce')
                         }
                     });
 
@@ -27,16 +28,24 @@ self.addEventListener('fetch', event => {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
 
-                    // Verificar que el tipo de contenido sea correcto
+                    // Verificar y transformar la respuesta si es necesario
                     const contentType = response.headers.get('content-type');
                     if (!contentType || !contentType.includes('audio/')) {
-                        throw new Error('Invalid content type');
+                        // Intentar convertir la respuesta a un formato de audio válido
+                        const blob = await response.blob();
+                        const audioBlob = new Blob([blob], { type: 'audio/mpeg' });
+                        const newResponse = new Response(audioBlob, {
+                            status: 200,
+                            headers: new Headers({
+                                'Content-Type': 'audio/mpeg'
+                            })
+                        });
+                        
+                        cache.put(event.request, newResponse.clone());
+                        return newResponse;
                     }
 
-                    // Clonar y cachear la respuesta
-                    const responseToCache = response.clone();
-                    cache.put(event.request, responseToCache);
-
+                    cache.put(event.request, response.clone());
                     return response;
                 } catch (error) {
                     console.error('Fetch error:', error);

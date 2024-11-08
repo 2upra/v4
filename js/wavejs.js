@@ -152,7 +152,7 @@ async function registerServiceWorker() {
             });
             console.log('Service Worker registrado:', registration);
 
-            registration.addEventListener('statechange', (e) => {
+            registration.addEventListener('statechange', e => {
                 console.log('Service Worker state changed:', e.target.state);
             });
 
@@ -170,11 +170,25 @@ document.addEventListener('DOMContentLoaded', () => {
     registerServiceWorker();
 });
 
-// Modificar loadAudio para usar el Service Worker
+/*
+tengo este problema
+Service Worker registrado: 
+ServiceWorkerRegistration { installing: null, waiting: null, active: ServiceWorker, navigationPreload: NavigationPreloadManager, scope: "https://2upra.com/", updateViaCache: "none", onupdatefound: null, pushManager: PushManager }
+wavejs.js:153:21
+Cargando audio: 
+Object { postId: "301085", audioUrl: "https://2upra.com/wp-json/1/v1/2?token=MzAxMDkyfDE5MjQ5MDU2MDB8Y2FjaGVkfDQ4NGI1NzljNjc5NzhhM2YwYjIzMzkwMmJlYmQ1MTJjfDk5OTk5OXw2M2ViOTg1ZGJiZmU4OTQ2YjEwNDNhMDhlNThjMzFmMzIxN2ZjNWFmNjFhMmQ2YzgxNzNiYWE0MGZkZjJjZTRl&_wpnonce=15d7d107c6&ts=1731039933&sig=61eeffd397a52481edc5ee0d5ab88fa3fb16f64d7f604a8d9d9b3376201d8aa3" }
+wavejs.js:177:13
+Usando Service Worker para cargar audio wavejs.js:182:25
+Verificando configuración de audio: 
+Object { nonce: "Presente", url: "https://2upra.com/sample/mellow-autumnal-melody/", origin: "https://2upra.com" }
+wavejs.js:198:13
+Iniciando carga de audio - PostID: 301085 wavejs.js:231:13
+Uncaught (in promise) DOMException: The buffer passed to decodeAudioData contains an unknown content type. 
+*/
 function loadAudio(postId, audioUrl, container, playOnLoad) {
     if (!postId || container.dataset.audioLoaded) return;
 
-    console.log('Cargando audio:', { postId, audioUrl });
+    console.log('Cargando audio:', {postId, audioUrl});
 
     const loadWithServiceWorker = async () => {
         try {
@@ -233,46 +247,55 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     async function loadAndPlayAudioStream(retryCount = 0) {
         try {
             window.audioLoading = true;
-    
+
             const urlObj = new URL(audioUrl);
-            // Evitar duplicar el nonce
             if (!urlObj.searchParams.has('_wpnonce')) {
                 urlObj.searchParams.append('_wpnonce', audioSettings.nonce);
             }
             const finalAudioUrl = urlObj.toString();
-    
+
             const response = await fetch(finalAudioUrl, {
                 method: 'GET',
                 credentials: 'same-origin',
                 headers: {
                     'X-WP-Nonce': audioSettings.nonce,
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'audio/mpeg',
-                    'Referer': 'https://2upra.com/',
-                    'Origin': 'https://2upra.com'
+                    Accept: 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8'
                 }
             });
-    
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-    
-            // Usar blob en lugar de arrayBuffer
+
+            // Asegurarse de que el contenido sea tratado como audio
             const blob = await response.blob();
-            const blobUrl = URL.createObjectURL(blob);
-    
+            const audioBlob = new Blob([blob], {type: 'audio/mpeg'});
+            const blobUrl = URL.createObjectURL(audioBlob);
+
+            // Crear un elemento de audio para verificar si el archivo es válido
+            const audio = new Audio();
+            audio.src = blobUrl;
+
+            // Esperar a que el audio se pueda reproducir
+            await new Promise((resolve, reject) => {
+                audio.addEventListener('canplaythrough', resolve);
+                audio.addEventListener('error', reject);
+                audio.load();
+            });
+
             // Inicializar wavesurfer
             const wavesurfer = initWavesurfer(container);
             window.wavesurfers[postId] = wavesurfer;
-    
+
             // Cargar el audio usando la URL del blob
             wavesurfer.load(blobUrl);
-    
+
             const waveformBackground = container.querySelector('.waveform-background');
             if (waveformBackground) {
                 waveformBackground.style.display = 'none';
             }
-    
+
             wavesurfer.on('ready', () => {
                 window.audioLoading = false;
                 container.dataset.audioLoaded = 'true';
@@ -280,34 +303,33 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 if (loadingElement) {
                     loadingElement.style.display = 'none';
                 }
-    
+
                 const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
                 const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
-    
+
                 if (!waveCargada && !isMobile && !container.closest('.LISTWAVESAMPLE')) {
                     setTimeout(() => {
                         const image = generateWaveformImage(wavesurfer);
                         sendImageToServer(image, postId);
                     }, 1);
                 }
-    
+
                 if (playOnLoad) {
                     wavesurfer.play();
                 }
             });
-    
+
             // Limpiar URL del blob cuando se destruya wavesurfer
             wavesurfer.on('destroy', () => {
                 URL.revokeObjectURL(blobUrl);
             });
-    
+
             wavesurfer.on('error', error => {
                 console.error('WaveSurfer error:', error);
                 if (retryCount < MAX_RETRIES) {
                     setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
                 }
             });
-    
         } catch (error) {
             console.error('Load error:', error);
             if (retryCount < MAX_RETRIES) {
@@ -317,7 +339,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             }
         }
     }
-    
 
     // Iniciar la carga
     loadAndPlayAudioStream();
@@ -325,7 +346,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
 
 // La función que inicializa WaveSurfer con los estilos y configuraciones deseados
 function initWavesurfer(container) {
-
     const isListWaveSample = container.classList.contains('LISTWAVESAMPLE') || container.parentElement.classList.contains('LISTWAVESAMPLE');
 
     const containerHeight = container.classList.contains('waveform-container-venta') ? 60 : isListWaveSample ? 45 : 102;
@@ -347,7 +367,7 @@ function initWavesurfer(container) {
         container: container,
         waveColor: gradient,
         progressColor: progressGradient,
-        backend: 'WebAudio',
+        backend: 'MediaElement',
         interact: true,
         barWidth: 2,
         height: containerHeight,
