@@ -248,17 +248,29 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
         try {
             window.audioLoading = true;
             const finalAudioUrl = buildAudioUrl(audioUrl, audioSettings.nonce);
+            const cache = await caches.open(CACHE_NAME);
+            let response = await cache.match(finalAudioUrl);
     
-            const response = await fetch(finalAudioUrl, {
-                method: 'GET',
-                credentials: 'same-origin',
-                headers: {
-                    'X-WP-Nonce': audioSettings.nonce,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    Accept: 'audio/mpeg',
-                    Range: 'bytes=0-'
+            if (!response) {
+                // Si no está en caché, hacer la petición
+                response = await fetch(finalAudioUrl, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-WP-Nonce': audioSettings.nonce,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'audio/mpeg',
+                        'Range': 'bytes=0-',
+                        'Cache-Control': 'max-age=31536000' // 1 año
+                    }
+                });
+    
+                // Guardar en caché
+                if (response.ok) {
+                    await cache.put(finalAudioUrl, response.clone());
                 }
-            });
+            }
+    
     
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
