@@ -401,6 +401,8 @@ function audioStreamEnd($data)
         $etag = '"' . md5($file . filemtime($file)) . '"';
 
         streamLog("Tamaño del archivo: $size bytes");
+        header("Content-Range: bytes $start-$end/$size");
+        header("Content-Length: " . $length);
 
         // Headers básicos
         header('Content-Type: audio/mpeg');
@@ -459,8 +461,7 @@ function audioStreamEnd($data)
         }
 
         // Headers de contenido
-        header("Content-Range: bytes $start-$end/$size");
-        header("Content-Length: " . $length);
+
 
         // Configuración de encriptación
         $buffer_size = 8192; // 8KB
