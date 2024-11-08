@@ -271,7 +271,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             window.audioLoading = true;
             const finalAudioUrl = buildAudioUrl(audioUrl, audioSettings.nonce);
             
-            // Crear un ReadableStream para procesar los chunks
             const response = await fetch(finalAudioUrl, {
                 method: 'GET',
                 credentials: 'same-origin',
@@ -291,8 +290,8 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             const contentLength = parseInt(response.headers.get('Content-Length'));
             const iv = response.headers.get('X-Encryption-IV');
     
-            // Acumular chunks
-            let chunks = [];
+            // Array para almacenar los datos desencriptados
+            let decryptedChunks = [];
             let receivedLength = 0;
     
             while(true) {
@@ -303,34 +302,51 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     break;
                 }
     
-                chunks.push(value);
-                receivedLength += value.length;
-                console.log(`Recibido ${receivedLength} de ${contentLength} bytes`);
+                // Desencriptar cada chunk individualmente
+                if (value && value.length > 0) {
+                    let chunkData = value.buffer;
+                    if (iv && audioSettings.key) {
+                        try {
+                            const decryptedChunk = await decryptAudioData(chunkData, iv, audioSettings.key);
+                            decryptedChunks.push(new Uint8Array(decryptedChunk));
+                        } catch (error) {
+                            console.error('Error desencriptando chunk:', error);
+                            continue;
+                        }
+                    }
+                    receivedLength += value.length;
+                    console.log(`Procesado ${receivedLength} de ${contentLength} bytes`);
+                }
             }
     
-            // Combinar todos los chunks en un único ArrayBuffer
-            const allChunks = new Uint8Array(receivedLength);
-            let position = 0;
-            for(const chunk of chunks) {
-                allChunks.set(chunk, position);
-                position += chunk.length;
+            // Combinar todos los chunks desencriptados
+            let totalLength = decryptedChunks.reduce((acc, chunk) => acc + chunk.length, 0);
+            const finalAudioData = new Uint8Array(totalLength);
+            let offset = 0;
+            
+            for (const chunk of decryptedChunks) {
+                finalAudioData.set(chunk, offset);
+                offset += chunk.length;
             }
     
-            // Procesar datos completos
-            let audioData = allChunks.buffer;
-            if (iv && audioSettings.key) {
-                console.log('Iniciando proceso de desencriptación del archivo completo');
-                audioData = await decryptAudioData(audioData, iv, audioSettings.key);
-            }
+            console.log('Audio final combinado:', {
+                totalLength: finalAudioData.length,
+                chunks: decryptedChunks.length
+            });
     
             // Crear blob y cargar wavesurfer
-            const blobUrl = createAudioBlobUrl(audioData);
+            const blobUrl = createAudioBlobUrl(finalAudioData);
             await validateAudio(blobUrl);
     
             const wavesurfer = initWavesurfer(container);
             window.wavesurfers[postId] = wavesurfer;
     
-            wavesurfer.load(blobUrl);
+            // Esperar a que wavesurfer esté listo antes de cargar
+            await new Promise((resolve) => {
+                wavesurfer.once('ready', resolve);
+                wavesurfer.load(blobUrl);
+            });
+    
             handleWaveSurferEvents(wavesurfer, container, postId, blobUrl);
     
         } catch (error) {
@@ -341,100 +357,42 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
 
     async function decryptAudioData(arrayBuffer, iv, key) {
         let ivArray, keyArray;
-
+    
         try {
-            // Extraer la longitud y los datos encriptados
+            // Extraer la longitud y los datos encriptados del chunk
             const dataView = new DataView(arrayBuffer);
-            const encryptedLength = dataView.getUint32(0);
-            const encryptedData = arrayBuffer.slice(4); // Extraer datos después del prefijo de longitud
-
-            console.log('Iniciando desencriptación con parámetros:', {
+            const chunkLength = dataView.getUint32(0);
+            const encryptedData = arrayBuffer.slice(4);
+    
+            console.log('Procesando chunk:', {
                 totalLength: arrayBuffer.byteLength,
-                encryptedLength: encryptedLength,
-                actualDataLength: encryptedData.byteLength,
-                ivBase64: iv,
-                keyHex: key
+                chunkLength: chunkLength,
+                dataLength: encryptedData.byteLength
             });
-
-            // Convertir IV de base64 a ArrayBuffer
+    
+            // Convertir IV y key
             ivArray = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
-            console.log('IV convertido:', {
-                originalLength: iv.length,
-                decodedLength: ivArray.length,
-                ivArrayHex: Array.from(ivArray)
-                    .map(b => b.toString(16).padStart(2, '0'))
-                    .join('')
-            });
-
-            // Convertir key hex a ArrayBuffer
             keyArray = new Uint8Array(key.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-
+    
             // Importar la clave
             const cryptoKey = await crypto.subtle.importKey(
                 'raw',
                 keyArray.buffer,
-                {
-                    name: 'AES-CBC',
-                    length: 256
-                },
+                { name: 'AES-CBC', length: 256 },
                 false,
                 ['decrypt']
             );
-
-            // Verificar datos encriptados
-            const encryptedBytes = new Uint8Array(encryptedData); // Usar los datos extraídos
-            console.log('Datos encriptados:', {
-                length: encryptedData.byteLength,
-                firstBytesHex: Array.from(encryptedBytes.slice(0, 16))
-                    .map(b => b.toString(16).padStart(2, '0'))
-                    .join('')
-            });
-
-            // Desencriptar usando encryptedData en lugar de arrayBuffer
-            try {
-                const decryptedData = await crypto.subtle.decrypt(
-                    {
-                        name: 'AES-CBC',
-                        iv: ivArray
-                    },
-                    cryptoKey,
-                    encryptedData // Usar los datos extraídos
-                );
-
-                return decryptedData;
-            } catch (decryptError) {
-                console.error('Error específico en decrypt:', {
-                    error: decryptError,
-                    params: {
-                        ivLength: ivArray.length,
-                        keyType: cryptoKey.type,
-                        dataLength: encryptedData.byteLength,
-                        expectedLength: encryptedLength,
-                        firstBytesHex: Array.from(encryptedBytes.slice(0, 16))
-                            .map(b => b.toString(16).padStart(2, '0'))
-                            .join('')
-                    }
-                });
-                throw decryptError;
-            }
+    
+            // Desencriptar chunk
+            const decryptedData = await crypto.subtle.decrypt(
+                { name: 'AES-CBC', iv: ivArray },
+                cryptoKey,
+                encryptedData
+            );
+    
+            return decryptedData;
         } catch (error) {
-            console.error('Error detallado en desencriptación:', {
-                errorName: error.name,
-                errorMessage: error.message,
-                ivDetails: {
-                    originalIV: iv,
-                    ivLength: iv?.length,
-                    decodedIVLength: ivArray?.length
-                },
-                keyDetails: {
-                    keyLength: key?.length,
-                    decodedKeyLength: keyArray?.length
-                },
-                dataDetails: {
-                    totalLength: arrayBuffer?.byteLength,
-                    isArrayBuffer: arrayBuffer instanceof ArrayBuffer
-                }
-            });
+            console.error('Error en desencriptación de chunk:', error);
             throw error;
         }
     }
