@@ -290,21 +290,30 @@ function verificarAudio($token)
     }
 }
 
-function encryptChunk($chunk, $iv, $key)
-{
+function encryptChunk($chunk, $iv, $key) {
     try {
-        // Asegurar que el chunk tenga el padding correcto
+        // Asegurar que la clave tenga 32 bytes
+        $key = str_pad(hex2bin($key), 32, "\0");
+        streamLog("Longitud de la clave después del padding: " . strlen($key) . " bytes");
+
+        // Aplicar padding PKCS7
         $block_size = 16;
         $pad = $block_size - (strlen($chunk) % $block_size);
         $chunk .= str_repeat(chr($pad), $pad);
 
-        streamLog("Tamaño del chunk antes de encriptar: " . strlen($chunk));
+        streamLog("Tamaño original del chunk: " . (strlen($chunk) - $pad) . " bytes");
         streamLog("Padding añadido: " . $pad . " bytes");
+        streamLog("Tamaño final del chunk con padding: " . strlen($chunk) . " bytes");
+
+        // Verificar que el tamaño sea múltiplo de 16
+        if (strlen($chunk) % 16 !== 0) {
+            throw new Exception("Error en el padding: el tamaño no es múltiplo de 16");
+        }
 
         $encrypted = openssl_encrypt(
             $chunk,
             'AES-256-CBC',
-            hex2bin($key),
+            $key,
             OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING,
             $iv
         );
@@ -315,7 +324,13 @@ function encryptChunk($chunk, $iv, $key)
             throw new Exception("Error en la encriptación: " . $error);
         }
 
-        streamLog("Tamaño del chunk después de encriptar: " . strlen($encrypted));
+        streamLog("Tamaño del chunk encriptado: " . strlen($encrypted) . " bytes");
+        
+        // Verificar que el resultado sea múltiplo de 16
+        if (strlen($encrypted) % 16 !== 0) {
+            throw new Exception("Error: el resultado encriptado no es múltiplo de 16");
+        }
+
         return $encrypted;
     } catch (Exception $e) {
         streamLog("Error en encryptChunk: " . $e->getMessage());
@@ -467,6 +482,11 @@ function audioStreamEnd($data)
             }
             $key = $_ENV['AUDIOCLAVE'];
             streamLog("Longitud de la clave (hex): " . strlen($key));
+            if (!ctype_xdigit($key)) {
+                throw new Exception('La clave debe estar en formato hexadecimal');
+            }
+            streamLog("Clave original (hex): " . $key);
+            streamLog("Longitud de la clave original: " . strlen($key) . " caracteres");
 
             // Transmisión encriptada
             while (!feof($fp) && $sent < $length) {

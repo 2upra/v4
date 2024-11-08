@@ -288,41 +288,37 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             console.log('Tamaño de datos encriptados:', arrayBuffer.byteLength);
             console.log('IV (base64):', iv);
             console.log('Key (hex):', key);
-
+    
             // Validar que tengamos todos los datos necesarios
             if (!arrayBuffer || !iv || !key) {
                 throw new Error('Faltan datos necesarios para la desencriptación');
             }
-
-            // Validar que los datos encriptados sean múltiplo de 16
-            if (arrayBuffer.byteLength % 16 !== 0) {
-                console.error('Tamaño de datos no válido:', arrayBuffer.byteLength);
-                throw new Error('Los datos encriptados deben ser múltiplo de 16 bytes');
-            }
-
+    
             // Decodificar el IV de base64 a Uint8Array
             const ivArray = new Uint8Array(
                 atob(iv)
                     .split('')
                     .map(c => c.charCodeAt(0))
             );
-
+    
             console.log('IV decodificado (bytes):', Array.from(ivArray));
             console.log('IV length:', ivArray.length);
-
+    
             if (ivArray.length !== 16) {
                 throw new Error('El IV tiene un tamaño incorrecto. Debe ser de 16 bytes para AES-CBC.');
             }
-
-            // Convertir y validar la clave
-            const keyArray = hexToArrayBuffer(key);
-            console.log('Key length (bytes):', keyArray.length);
-
-            if (keyArray.length !== 32) {
-                // 256 bits = 32 bytes
-                throw new Error('La clave debe ser de 256 bits (32 bytes)');
+    
+            // Ajustar la clave si es necesario
+            let adjustedKey = key;
+            if (key.length < 64) { // Asegurarse de que la clave tenga 32 bytes (64 caracteres hex)
+                adjustedKey = key.padEnd(64, '0');
+                console.log('Clave ajustada a 32 bytes:', adjustedKey);
             }
-
+    
+            // Convertir y validar la clave
+            const keyArray = hexToArrayBuffer(adjustedKey);
+            console.log('Key length (bytes):', keyArray.length);
+    
             // Importar la clave
             console.log('Importando clave...');
             const cryptoKey = await crypto.subtle.importKey(
@@ -335,9 +331,9 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 false,
                 ['decrypt']
             );
-
+    
             console.log('Clave importada correctamente, procediendo a desencriptar...');
-
+            
             // Desencriptar los datos
             const decryptedData = await crypto.subtle.decrypt(
                 {
@@ -347,9 +343,14 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 cryptoKey,
                 arrayBuffer
             );
-
-            console.log('Desencriptación completada. Tamaño de datos desencriptados:', decryptedData.byteLength);
-            return decryptedData;
+    
+            // Eliminar el padding PKCS7
+            const paddingByte = new Uint8Array(decryptedData)[decryptedData.byteLength - 1];
+            const unpaddedData = decryptedData.slice(0, decryptedData.byteLength - paddingByte);
+    
+            console.log('Desencriptación completada. Tamaño final:', unpaddedData.byteLength);
+            return unpaddedData;
+    
         } catch (error) {
             console.error('Error detallado durante la desencriptación:', {
                 name: error.name,
@@ -359,7 +360,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             throw error;
         }
     }
-
     function hexToArrayBuffer(hexString) {
         if (!/^[0-9a-fA-F]+$/.test(hexString)) {
             throw new Error('La clave debe estar en formato hexadecimal válido');
