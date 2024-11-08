@@ -306,9 +306,6 @@ function encryptChunk($chunk, $iv, $key) {
         $pad = $block_size - (strlen($chunk) % $block_size);
         $padded_chunk = $chunk . str_repeat(chr($pad), $pad);
         
-        streamLog("Padding añadido: $pad bytes");
-        streamLog("Tamaño después del padding: " . strlen($padded_chunk));
-        
         // Verificar que el IV tenga el tamaño correcto
         if (strlen($iv) !== 16) {
             throw new Exception('IV debe ser de 16 bytes');
@@ -319,19 +316,13 @@ function encryptChunk($chunk, $iv, $key) {
             $padded_chunk,
             'AES-256-CBC',
             $binary_key,
-            OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING,
+            OPENSSL_RAW_DATA,
             $iv
         );
         
         if ($encrypted === false) {
-            $error = openssl_error_string();
-            streamLog("Error de encriptación OpenSSL: " . $error);
-            throw new Exception("Error en la encriptación: " . $error);
+            throw new Exception("Error en la encriptación: " . openssl_error_string());
         }
-        
-        streamLog("Encriptación exitosa");
-        streamLog("Tamaño de datos encriptados: " . strlen($encrypted));
-        streamLog("Primeros bytes encriptados (hex): " . bin2hex(substr($encrypted, 0, 16)));
         
         return $encrypted;
     } catch (Exception $e) {
@@ -339,6 +330,7 @@ function encryptChunk($chunk, $iv, $key) {
         throw $e;
     }
 }
+
 
 
 function audioStreamEnd($data)
@@ -472,41 +464,31 @@ function audioStreamEnd($data)
         $sleep_time = ($buffer_size / $rate_limit) * 1000000; // Convertir a microsegundos
 
         if (defined('ENABLE_AUDIO_ENCRYPTION') && ENABLE_AUDIO_ENCRYPTION) {
-            // Generar IV único para esta sesión
             $iv = openssl_random_pseudo_bytes(16);
             if ($iv === false) {
                 throw new Exception('No se pudo generar el IV');
             }
             header('X-Encryption-IV: ' . base64_encode($iv));
-            streamLog("IV generado (base64): " . base64_encode($iv));
-
+            
             if (!isset($_ENV['AUDIOCLAVE'])) {
                 throw new Exception('Clave de encriptación no configurada');
             }
             $key = $_ENV['AUDIOCLAVE'];
-            streamLog("Longitud de la clave (hex): " . strlen($key));
-            if (!ctype_xdigit($key)) {
-                throw new Exception('La clave debe estar en formato hexadecimal');
-            }
-            streamLog("Clave original (hex): " . $key);
-            streamLog("Longitud de la clave original: " . strlen($key) . " caracteres");
-
+            
             // Transmisión encriptada
             while (!feof($fp) && $sent < $length) {
                 $remaining = $length - $sent;
                 $chunk_size = min($buffer_size, $remaining);
                 $chunk = fread($fp, $chunk_size);
-
+        
                 if ($chunk === false) {
-                    streamLog("Error al leer el archivo");
                     break;
                 }
-
+        
                 $encrypted_chunk = encryptChunk($chunk, $iv, $key);
                 echo $encrypted_chunk;
                 $sent += strlen($encrypted_chunk);
-                streamLog("Chunk encriptado enviado: " . strlen($encrypted_chunk) . " bytes");
-
+        
                 flush();
                 if ($sleep_time > 0) {
                     usleep($sleep_time);
