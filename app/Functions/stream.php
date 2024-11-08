@@ -290,45 +290,48 @@ function verificarAudio($token)
     }
 }
 
-function encryptChunk($chunk, $iv, $key) {
+function encryptChunk($chunk, $iv, $key)
+{
     try {
         streamLog("Iniciando encriptación de chunk con parámetros:");
         streamLog("Longitud del chunk: " . strlen($chunk));
         streamLog("Longitud del IV: " . strlen($iv));
         streamLog("Longitud de la clave hex: " . strlen($key));
-        
-        
+
         // Convertir clave hex a binario
         $binary_key = hex2bin($key);
         streamLog("Longitud de la clave binaria: " . strlen($binary_key));
-        
+
         if ($binary_key === false) {
             throw new Exception('Error al convertir la clave hexadecimal a binario');
         }
-        
-        // Asegurar que el padding sea consistente
-        $blockSize = 16;
-        $pad = $blockSize - (strlen($chunk) % $blockSize);
-        $chunk = $chunk . str_repeat(chr($pad), $pad);
-        
-        // Encriptar
+
+        // Encriptar sin padding manual (usar el padding automático de OpenSSL)
         $encrypted = openssl_encrypt(
             $chunk,
             'AES-256-CBC',
             $binary_key,
-            OPENSSL_RAW_DATA, // Remover OPENSSL_ZERO_PADDING
+            OPENSSL_RAW_DATA,  // Solo usar OPENSSL_RAW_DATA
             $iv
         );
-        
+
         if ($encrypted === false) {
             throw new Exception("Error en la encriptación: " . openssl_error_string());
         }
+
+        // Agregar información de longitud al inicio del chunk encriptado
+        $length_prefix = pack('N', strlen($encrypted));  // 4 bytes para la longitud
+        $final_data = $length_prefix . $encrypted;
+
+        $encrypted_length = strlen($final_data);
+        header('Content-Length: ' . $encrypted_length);
+        header('X-Encrypted-Length: ' . $encrypted_length);
         header('X-Original-Length: ' . strlen($chunk));
-        header('X-Encrypted-Length: ' . strlen($encrypted));
-        streamLog("Encriptación exitosa - Longitud datos encriptados: " . strlen($encrypted));
+
+        streamLog("Encriptación exitosa - Longitud datos encriptados: " . strlen($final_data));
         streamLog("Primeros bytes encriptados (hex): " . bin2hex(substr($encrypted, 0, 16)));
-        
-        return $encrypted;
+
+        return $final_data;
     } catch (Exception $e) {
         streamLog("Error en encryptChunk: " . $e->getMessage());
         throw $e;
@@ -464,7 +467,7 @@ function audioStreamEnd($data)
         $sent = 0;
         $rate_limit = 512 * 1024; // 512KB por segundo
         $sleep_time = ($buffer_size / $rate_limit) * 1000000; // Convertir a microsegundos
-        
+
 
         if (defined('ENABLE_AUDIO_ENCRYPTION') && ENABLE_AUDIO_ENCRYPTION) {
             $iv = openssl_random_pseudo_bytes(16);
@@ -472,30 +475,36 @@ function audioStreamEnd($data)
                 throw new Exception('No se pudo generar el IV');
             }
             header('X-Encryption-IV: ' . base64_encode($iv));
-            
+
             if (!isset($_ENV['AUDIOCLAVE'])) {
                 throw new Exception('Clave de encriptación no configurada');
             }
             $key = $_ENV['AUDIOCLAVE'];
-            
-            
-            // Transmisión encriptada
-            while (!feof($fp) && $sent < $length) {
-                $remaining = $length - $sent;
-                $chunk_size = min($buffer_size, $remaining);
-                $chunk = fread($fp, $chunk_size);
-        
-                if ($chunk === false) {
-                    break;
-                }
-        
+
+
+            if ($length <= $buffer_size) {
+                $chunk = fread($fp, $length);
                 $encrypted_chunk = encryptChunk($chunk, $iv, $key);
                 echo $encrypted_chunk;
-                $sent += strlen($encrypted_chunk);
-        
-                flush();
-                if ($sleep_time > 0) {
-                    usleep($sleep_time);
+            } else {
+                // Para archivos grandes, procesar en chunks
+                while (!feof($fp) && $sent < $length) {
+                    $remaining = $length - $sent;
+                    $chunk_size = min($buffer_size, $remaining);
+                    $chunk = fread($fp, $chunk_size);
+
+                    if ($chunk === false) {
+                        break;
+                    }
+
+                    $encrypted_chunk = encryptChunk($chunk, $iv, $key);
+                    echo $encrypted_chunk;
+                    $sent += strlen($chunk);  // Usar la longitud del chunk original
+
+                    flush();
+                    if ($sleep_time > 0) {
+                        usleep($sleep_time);
+                    }
                 }
             }
         } else {

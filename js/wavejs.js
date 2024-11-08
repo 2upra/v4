@@ -232,10 +232,10 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     async function loadAndPlayAudioStream(retryCount = 0) {
         try {
             window.audioLoading = true;
-    
+
             // Construir la URL final del audio
             const finalAudioUrl = buildAudioUrl(audioUrl, audioSettings.nonce);
-    
+
             const response = await fetch(finalAudioUrl, {
                 method: 'GET',
                 credentials: 'same-origin',
@@ -246,42 +246,48 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     Range: 'bytes=0-'
                 }
             });
-    
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-    
+
             // Obtener los datos encriptados
+            const expectedLength = parseInt(response.headers.get('Content-Length'));
             const arrayBuffer = await response.arrayBuffer();
-    
+
+            // Verificar que recibimos todos los datos
+            if (arrayBuffer.byteLength !== expectedLength) {
+                throw new Error(`Datos incompletos: recibidos ${arrayBuffer.byteLength} de ${expectedLength} bytes`);
+            }
+
             // Verificar headers y obtener IV
             console.log('Headers recibidos:', Object.fromEntries(response.headers));
             const iv = response.headers.get('X-Encryption-IV');
             console.log('IV recibido:', iv);
-    
+
             // Verificar si tenemos el IV necesario
             if (!iv && audioSettings.key) {
                 console.error('Se esperaba IV para desencriptación pero no se recibió');
                 throw new Error('No se recibió el IV en los headers');
             }
-    
+
             // Procesar los datos
             let audioData = arrayBuffer;
             if (iv && audioSettings.key) {
                 console.log('Iniciando proceso de desencriptación');
                 audioData = await decryptAudioData(arrayBuffer, iv, audioSettings.key);
             }
-    
+
             // Convertir los datos en blob
             const blobUrl = createAudioBlobUrl(audioData);
             await validateAudio(blobUrl);
-    
+
             // Inicializar y cargar Wavesurfer
             const wavesurfer = initWavesurfer(container);
             window.wavesurfers[postId] = wavesurfer;
-    
+
             wavesurfer.load(blobUrl);
-    
+
             handleWaveSurferEvents(wavesurfer, container, postId, blobUrl);
         } catch (error) {
             console.error('Error en loadAndPlayAudioStream:', error);
@@ -291,27 +297,34 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
 
     async function decryptAudioData(arrayBuffer, iv, key) {
         let ivArray, keyArray;
-        
+
         try {
+            // Extraer la longitud y los datos encriptados
+            const dataView = new DataView(arrayBuffer);
+            const encryptedLength = dataView.getUint32(0);
+            const encryptedData = arrayBuffer.slice(4); // Extraer datos después del prefijo de longitud
+
             console.log('Iniciando desencriptación con parámetros:', {
-                arrayBufferLength: arrayBuffer.byteLength,
+                totalLength: arrayBuffer.byteLength,
+                encryptedLength: encryptedLength,
+                actualDataLength: encryptedData.byteLength,
                 ivBase64: iv,
                 keyHex: key
             });
-            
+
             // Convertir IV de base64 a ArrayBuffer
             ivArray = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
             console.log('IV convertido:', {
                 originalLength: iv.length,
                 decodedLength: ivArray.length,
-                ivArrayHex: Array.from(ivArray).map(b => b.toString(16).padStart(2, '0')).join('')
+                ivArrayHex: Array.from(ivArray)
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('')
             });
-            
+
             // Convertir key hex a ArrayBuffer
-            keyArray = new Uint8Array(
-                key.match(/.{1,2}/g).map(byte => parseInt(byte, 16))
-            );
-            
+            keyArray = new Uint8Array(key.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+
             // Importar la clave
             const cryptoKey = await crypto.subtle.importKey(
                 'raw',
@@ -323,17 +336,17 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 false,
                 ['decrypt']
             );
-            
+
             // Verificar datos encriptados
-            const encryptedBytes = new Uint8Array(arrayBuffer);
+            const encryptedBytes = new Uint8Array(encryptedData); // Usar los datos extraídos
             console.log('Datos encriptados:', {
-                length: arrayBuffer.byteLength,
+                length: encryptedData.byteLength,
                 firstBytesHex: Array.from(encryptedBytes.slice(0, 16))
                     .map(b => b.toString(16).padStart(2, '0'))
                     .join('')
             });
-            
-            // Desencriptar
+
+            // Desencriptar usando encryptedData en lugar de arrayBuffer
             try {
                 const decryptedData = await crypto.subtle.decrypt(
                     {
@@ -341,9 +354,9 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                         iv: ivArray
                     },
                     cryptoKey,
-                    arrayBuffer
+                    encryptedData // Usar los datos extraídos
                 );
-                // Remover el manejo manual del padding
+
                 return decryptedData;
             } catch (decryptError) {
                 console.error('Error específico en decrypt:', {
@@ -351,7 +364,8 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     params: {
                         ivLength: ivArray.length,
                         keyType: cryptoKey.type,
-                        dataLength: arrayBuffer.byteLength,
+                        dataLength: encryptedData.byteLength,
+                        expectedLength: encryptedLength,
                         firstBytesHex: Array.from(encryptedBytes.slice(0, 16))
                             .map(b => b.toString(16).padStart(2, '0'))
                             .join('')
@@ -373,7 +387,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     decodedKeyLength: keyArray?.length
                 },
                 dataDetails: {
-                    dataLength: arrayBuffer?.byteLength,
+                    totalLength: arrayBuffer?.byteLength,
                     isArrayBuffer: arrayBuffer instanceof ArrayBuffer
                 }
             });
