@@ -149,6 +149,20 @@ function postLog($log)
     }
 }
 
+// Encolar el archivo sw.js
+function encolar_sw_js() {
+    // Registrar y encolar el archivo sw.js
+    wp_enqueue_script(
+        'sw-js',                        // Identificador único
+        get_template_directory_uri() . '/sw.js',  // Ruta del archivo
+        array(),                        // Dependencias (vacío si no tiene)
+        null,                           // Versión del archivo (puedes usar null para evitar caché)
+        true                            // Cargar al final de la página (recomendado para scripts)
+    );
+}
+add_action('wp_enqueue_scripts', 'encolar_sw_js');
+
+
 function scriptsOrdenados()
 {
     // Verificar si el usuario actual es administrador
@@ -202,7 +216,6 @@ function scriptsOrdenados()
         'contarVistaPost' => '1.0.1',
         'notificaciones' => '1.0.1',
         'colec' => '1.0.1',
-        'sw.js' => '1.0.3',
     ];
 
     foreach ($script_handles as $handle => $data) {
