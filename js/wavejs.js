@@ -142,19 +142,19 @@ function inicializarWaveforms() {
     });
 }
 
+// Registrar el Service Worker
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker
-            .register('/sw.js')
-            .then(registration => {
-                console.log('ServiceWorker registrado:', registration);
-            })
-            .catch(error => {
-                console.error('Error al registrar ServiceWorker:', error);
+    window.addEventListener('load', async () => {
+        try {
+            const registration = await navigator.serviceWorker.register('/sw.js', {
+                scope: '/'
             });
+            console.log('ServiceWorker registrado:', registration);
+        } catch (error) {
+            console.error('Error al registrar ServiceWorker:', error);
+        }
     });
 }
-
 // Modificar la función loadAudio
 function loadAudio(postId, audioUrl, container, playOnLoad) {
     if (!postId) return;
