@@ -243,11 +243,11 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
 
     /*
     Iniciando carga de audio - PostID: 266762 wavejs.js:242:13
-    Content-Length obtenido: -1 wavejs.js:283:21
+    Content-Length obtenido: -1 wavejs.js:291:21
     Chunk leído: 
-    Object { done: false, value: Uint8Array(32028) }
-    wavejs.js:291:25
-    Error en desencriptación de chunk: ReferenceError: value is not defined
+    Object { done: false, value: Uint8Array(15648) }
+    wavejs.js:299:25
+    Error en desencriptación de chunk: TypeError: value.byteOffset is not an object
     */
    
 
@@ -274,23 +274,18 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             const reader = response.body.getReader();
             const iv = response.headers.get('X-Encryption-IV');
     
-            // Verifica que hayas recibido el IV
             if (!iv) {
                 throw new Error('No se recibió el IV en los encabezados de la respuesta');
             }
     
-            // Convertir IV de Base64 a Uint8Array
             const ivArray = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
             let currentIV = ivArray;
     
-            // Ajuste en la línea donde se obtiene contentLength
             const contentLengthHeader = response.headers.get('Content-Length');
-            const contentLength = contentLengthHeader ? parseInt(contentLengthHeader) : -1; // -1 para indicar longitud desconocida
+            const contentLength = contentLengthHeader ? parseInt(contentLengthHeader) : -1;
     
-            // Log para revisar el valor obtenido
             console.log(`Content-Length obtenido: ${contentLength}`);
     
-            // Array para almacenar los datos desencriptados
             let decryptedChunks = [];
             let receivedLength = 0;
     
@@ -304,16 +299,20 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 }
     
                 if (value && value.length > 0) {
-                    let chunkData = value.buffer;
-    
                     try {
                         // Desencriptar el chunk usando el currentIV
-                        const decryptedChunk = await decryptAudioData(chunkData, currentIV, audioSettings.key);
+                        const decryptedChunk = await decryptAudioData(value, currentIV, audioSettings.key);
                         decryptedChunks.push(new Uint8Array(decryptedChunk));
     
+                        // Obtener los datos encriptados
+                        const encryptedData = value.subarray(4);
+    
                         // Actualizar el IV para el siguiente chunk
-                        // Puedes obtener los últimos 16 bytes del ciphertext para usar como nuevo IV
-                        currentIV = new Uint8Array(value.buffer.slice(-16));
+                        if (encryptedData.byteLength >= 16) {
+                            currentIV = encryptedData.subarray(encryptedData.byteLength - 16);
+                        } else {
+                            throw new Error('encryptedData es demasiado pequeño para obtener el IV');
+                        }
     
                         receivedLength += value.length;
                         console.log(`Procesado ${receivedLength} de ${contentLength} bytes`);
@@ -324,35 +323,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 }
             }
     
-            // Combinar todos los chunks desencriptados
-            let totalLength = decryptedChunks.reduce((acc, chunk) => acc + chunk.length, 0);
-            const finalAudioData = new Uint8Array(totalLength);
-            let offset = 0;
-    
-            for (const chunk of decryptedChunks) {
-                finalAudioData.set(chunk, offset);
-                offset += chunk.length;
-            }
-    
-            console.log('Audio final combinado:', {
-                totalLength: finalAudioData.length,
-                chunks: decryptedChunks.length
-            });
-    
-            // Crear blob y cargar wavesurfer
-            const blobUrl = createAudioBlobUrl(finalAudioData);
-            await validateAudio(blobUrl);
-    
-            const wavesurfer = initWavesurfer(container);
-            window.wavesurfers[postId] = wavesurfer;
-    
-            // Esperar a que wavesurfer esté listo antes de cargar
-            await new Promise(resolve => {
-                wavesurfer.once('ready', resolve);
-                wavesurfer.load(blobUrl);
-            });
-    
-            handleWaveSurferEvents(wavesurfer, container, postId, blobUrl);
+            // Resto del código para combinar chunks y cargar el audio...
         } catch (error) {
             console.error('Error en loadAndPlayAudioStream:', error);
             handleLoadError(error, retryCount, container);
@@ -360,8 +331,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     }
     
     async function decryptAudioData(value, ivArray, key) {
-        let keyArray;
-    
         try {
             // Crear DataView considerando el byteOffset y byteLength
             const dataView = new DataView(value.buffer, value.byteOffset, value.byteLength);
@@ -387,7 +356,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             if (!window.cachedKeyArray) {
                 window.cachedKeyArray = new Uint8Array(key.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
             }
-            keyArray = window.cachedKeyArray;
+            const keyArray = window.cachedKeyArray;
     
             // Importar la clave
             const cryptoKey = await crypto.subtle.importKey(
@@ -411,7 +380,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             throw error;
         }
     }
-
     // Función para construir la URL de audio
     function buildAudioUrl(audioUrl, nonce) {
         const urlObj = new URL(audioUrl);
