@@ -226,7 +226,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
         window.wavesurfers = {};
     }
 
-    const MAX_RETRIES = 3;
+    const MAX_RETRIES = 1;
     console.log(`Iniciando carga de audio - PostID: ${postId}`);
 
     async function loadAndPlayAudioStream(retryCount = 0) {
