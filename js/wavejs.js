@@ -289,41 +289,28 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             console.log('IV (base64):', iv);
             console.log('Key (hex):', key);
     
-            // Validar que tengamos todos los datos necesarios
-            if (!arrayBuffer || !iv || !key) {
-                throw new Error('Faltan datos necesarios para la desencriptación');
-            }
+            // Asegurarse de que los datos están en el formato correcto
+            const encryptedData = new Uint8Array(arrayBuffer);
+            console.log('Primeros bytes de datos encriptados:', Array.from(encryptedData.slice(0, 16)));
     
-            // Decodificar el IV de base64 a Uint8Array
+            // Decodificar el IV
             const ivArray = new Uint8Array(
                 atob(iv)
                     .split('')
                     .map(c => c.charCodeAt(0))
             );
+            console.log('IV decodificado:', Array.from(ivArray));
     
-            console.log('IV decodificado (bytes):', Array.from(ivArray));
-            console.log('IV length:', ivArray.length);
-    
-            if (ivArray.length !== 16) {
-                throw new Error('El IV tiene un tamaño incorrecto. Debe ser de 16 bytes para AES-CBC.');
-            }
-    
-            // Ajustar la clave si es necesario
-            let adjustedKey = key;
-            if (key.length < 64) { // Asegurarse de que la clave tenga 32 bytes (64 caracteres hex)
-                adjustedKey = key.padEnd(64, '0');
-                console.log('Clave ajustada a 32 bytes:', adjustedKey);
-            }
-    
-            // Convertir y validar la clave
-            const keyArray = hexToArrayBuffer(adjustedKey);
-            console.log('Key length (bytes):', keyArray.length);
+            // Convertir la clave hex a ArrayBuffer
+            const keyBytes = new Uint8Array(
+                key.match(/.{1,2}/g).map(byte => parseInt(byte, 16))
+            );
+            console.log('Key bytes:', Array.from(keyBytes));
     
             // Importar la clave
-            console.log('Importando clave...');
             const cryptoKey = await crypto.subtle.importKey(
                 'raw',
-                keyArray,
+                keyBytes,
                 {
                     name: 'AES-CBC',
                     length: 256
@@ -332,45 +319,45 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 ['decrypt']
             );
     
-            console.log('Clave importada correctamente, procediendo a desencriptar...');
+            console.log('Intentando desencriptar...');
             
-            // Desencriptar los datos
+            // Desencriptar
             const decryptedData = await crypto.subtle.decrypt(
                 {
                     name: 'AES-CBC',
                     iv: ivArray
                 },
                 cryptoKey,
-                arrayBuffer
+                encryptedData
             );
     
-            // Eliminar el padding PKCS7
-            const paddingByte = new Uint8Array(decryptedData)[decryptedData.byteLength - 1];
-            const unpaddedData = decryptedData.slice(0, decryptedData.byteLength - paddingByte);
+            console.log('Desencriptación exitosa, tamaño:', decryptedData.byteLength);
     
-            console.log('Desencriptación completada. Tamaño final:', unpaddedData.byteLength);
-            return unpaddedData;
+            // Remover padding PKCS7 si existe
+            const dataView = new Uint8Array(decryptedData);
+            const paddingLength = dataView[dataView.length - 1];
+            
+            if (paddingLength > 0 && paddingLength <= 16) {
+                return decryptedData.slice(0, decryptedData.byteLength - paddingLength);
+            }
     
+            return decryptedData;
         } catch (error) {
             console.error('Error detallado durante la desencriptación:', {
                 name: error.name,
                 message: error.message,
-                stack: error.stack
+                stack: error.stack,
+                data: {
+                    arrayBufferLength: arrayBuffer.byteLength,
+                    ivLength: iv ? iv.length : 0,
+                    keyLength: key ? key.length : 0
+                }
             });
             throw error;
         }
     }
-    function hexToArrayBuffer(hexString) {
-        if (!/^[0-9a-fA-F]+$/.test(hexString)) {
-            throw new Error('La clave debe estar en formato hexadecimal válido');
-        }
-        const length = hexString.length / 2;
-        const buffer = new Uint8Array(length);
-        for (let i = 0; i < length; i++) {
-            buffer[i] = parseInt(hexString.substr(i * 2, 2), 16);
-        }
-        return buffer;
-    }
+
+ 
 
     // Función para construir la URL de audio
     function buildAudioUrl(audioUrl, nonce) {
