@@ -19,33 +19,23 @@ self.addEventListener('fetch', event => {
                         credentials: 'same-origin',
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8',
+                            'Accept': 'audio/mpeg',
+                            'Range': 'bytes=0-',
                             'X-WP-Nonce': event.request.headers.get('X-WP-Nonce')
                         }
                     });
 
-                    if (!response.ok) {
+                    if (!response.ok && response.status !== 206) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
 
-                    // Verificar y transformar la respuesta si es necesario
-                    const contentType = response.headers.get('content-type');
-                    if (!contentType || !contentType.includes('audio/')) {
-                        // Intentar convertir la respuesta a un formato de audio válido
-                        const blob = await response.blob();
-                        const audioBlob = new Blob([blob], { type: 'audio/mpeg' });
-                        const newResponse = new Response(audioBlob, {
-                            status: 200,
-                            headers: new Headers({
-                                'Content-Type': 'audio/mpeg'
-                            })
-                        });
-                        
-                        cache.put(event.request, newResponse.clone());
-                        return newResponse;
+                    // No cachear respuestas parciales
+                    if (response.status === 206) {
+                        return response;
                     }
 
-                    cache.put(event.request, response.clone());
+                    const clonedResponse = response.clone();
+                    cache.put(event.request, clonedResponse);
                     return response;
                 } catch (error) {
                     console.error('Fetch error:', error);

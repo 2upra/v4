@@ -247,7 +247,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     async function loadAndPlayAudioStream(retryCount = 0) {
         try {
             window.audioLoading = true;
-
+    
             const urlObj = new URL(audioUrl);
             if (!urlObj.searchParams.has('_wpnonce')) {
                 urlObj.searchParams.append('_wpnonce', audioSettings.nonce);
@@ -260,7 +260,8 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 headers: {
                     'X-WP-Nonce': audioSettings.nonce,
                     'X-Requested-With': 'XMLHttpRequest',
-                    Accept: 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8'
+                    'Accept': 'audio/mpeg',
+                    'Range': 'bytes=0-'
                 }
             });
 
@@ -268,8 +269,33 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
+            // Manejar la respuesta encriptada si es necesario
+            const arrayBuffer = await response.arrayBuffer();
+
+            // Si hay encriptación, obtener el IV y desencriptar
+            const iv = response.headers.get('X-Encryption-IV');
+            let audioData = arrayBuffer;
+
+            if (iv) {
+                // Desencriptar usando Web Crypto API
+                const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(audioSettings.key), {name: 'AES-CBC'}, false, ['decrypt']);
+
+                audioData = await crypto.subtle.decrypt(
+                    {
+                        name: 'AES-CBC',
+                        iv: new Uint8Array(
+                            atob(iv)
+                                .split('')
+                                .map(c => c.charCodeAt(0))
+                        )
+                    },
+                    key,
+                    arrayBuffer
+                );
+            }
+
             // Asegurarse de que el contenido sea tratado como audio
-            const blob = await response.blob();
+            // const blob = await response.blob();
             const audioBlob = new Blob([blob], {type: 'audio/mpeg'});
             const blobUrl = URL.createObjectURL(audioBlob);
 
