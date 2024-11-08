@@ -264,6 +264,13 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
         return result;
     }
    
+    /*
+    Verificando configuración de audio: 
+    Object { nonce: "Presente", url: "https://2upra.com/sample/jazzy-hammond-organ-sample/", origin: "https://2upra.com" }
+    wavejs.js:174:13
+    Iniciando carga de audio - PostID: 266762 wavejs.js:242:13
+    Error en loadAndPlayAudioStream: ReferenceError: can't access lexical declaration 'audioUrl' before initialization
+    */
 
     async function loadAndPlayAudioStream(retryCount = 0) {
         try {
@@ -377,12 +384,10 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 }
             }
     
-            // Resto del código para combinar chunks y cargar el audio...
-            // Por ejemplo, crear un Blob con los chunks desencriptados y reproducirlo
             const audioBuffer = concatenateUint8Arrays(decryptedChunks);
             const audioBlob = new Blob([audioBuffer], { type: 'audio/mpeg' });
-            const audioUrl = URL.createObjectURL(audioBlob);
-            await validateAudio(audioUrl);
+
+            await validateAudio(audioBlob);
     
             const wavesurfer = initWavesurfer(container);
             window.wavesurfers[postId] = wavesurfer;
