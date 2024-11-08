@@ -5,16 +5,19 @@ define('ENABLE_AUDIO_ENCRYPTION', true);
 
 function audioUrlSegura($audio_id)
 {
+    streamLog("Generando URL segura para audio ID: " . $audio_id);
 
     $user_id = get_current_user_id();
     if (usuarioEsAdminOPro($user_id)) {
         $url = site_url("/wp-json/1/v1/audio-pro/{$audio_id}");
+        streamLog("URL generada para admin/pro: " . $url);
         return $url;
     }
 
     // Generación del token de audio
     $token = tokenAudio($audio_id);
     if (!$token) {
+        streamLog("Error generando token para audio ID: " . $audio_id);
         return new WP_Error('invalid_audio_id', 'Audio ID inválido.');
     }
 
@@ -26,6 +29,7 @@ function audioUrlSegura($audio_id)
     $nonce = wp_create_nonce('wp_rest');
     $url = site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce . '&ts=' . $timestamp . '&sig=' . $signature);
 
+    streamLog("URL generada para usuario normal: " . $url);
     return $url;
 }
 
@@ -37,15 +41,18 @@ function verificarFirma($request)
 
     // Verificar que la firma no haya expirado (tiempo de 1 hora)
     if (time() - $timestamp > 3600) {
+        streamLog("Firma expiró para audio ID: " . $audio_id);
         return false;
     }
 
     // Generar la firma esperada y compararla con la recibida
     $expected_signature = hash_hmac('sha256', "$audio_id|$timestamp", $_ENV['AUDIOCLAVE']);
     if (!hash_equals($expected_signature, $signature)) {
+        streamLog("Firma no válida para audio ID: " . $audio_id);
         return false;
     }
 
+    streamLog("Firma verificada con éxito para audio ID: " . $audio_id);
     return true;
 }
 
@@ -53,8 +60,10 @@ function verificarFirma($request)
 
 function tokenAudio($audio_id)
 {
+    streamLog("Generando token para audio_id: $audio_id");
 
     if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
+        streamLog("Error: audio_id inválido: $audio_id");
         return false;
     }
 
@@ -85,6 +94,7 @@ function tokenAudio($audio_id)
 
         set_transient('audio_token_' . $unique_id, $max_usos, 3600);
 
+        streamLog("Token generado exitosamente: $token");
         return $token;
     }
 }
@@ -120,6 +130,7 @@ add_action('rest_api_init', function () {
             ),
         ),
         'permission_callback' => function ($request) {
+            streamLog('Verificando permiso para token: ' . $request->get_param('token'));
             return verificarAudio($request->get_param('token'));
         }
     ));
@@ -133,6 +144,7 @@ function decrementaUsosToken($unique_id)
         return; // No decrementar para tokens cacheados
     }
 
+    streamLog("Decrementando usos del token: $unique_id");
     $key = 'audio_token_' . $unique_id;
     $usos_restantes = get_transient($key);
 
@@ -147,54 +159,68 @@ function decrementaUsosToken($unique_id)
 }
 function verificarAudio($token)
 {
+    streamLog("Verificando token: $token");
+    streamLog("Iniciando verificación de audio");
+    streamLog("Token recibido: " . $token);
+    streamLog("Headers recibidos: " . print_r(getallheaders(), true));
 
     if (empty($token)) {
+        streamLog("Error: token vacío");
         return false;
     }
 
     // Verificar headers esenciales mínimos
     if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || !isset($_SERVER['HTTP_REFERER'])) {
+        streamLog("Error: Faltan headers básicos requeridos");
         return false;
     }
 
     // Verificar que sea una petición AJAX
     if (strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
+        streamLog("Error: No es una petición AJAX");
         return false;
     }
 
     // Verificar el origen de la petición
     $referer_host = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST);
     if ($referer_host !== '2upra.com') {
+        streamLog("Error: referer no válido");
         return false;
     }
 
     // Verificar Origin si está presente, si no, verificar Referer
     if (isset($_SERVER['HTTP_ORIGIN'])) {
         if ($_SERVER['HTTP_ORIGIN'] !== 'https://2upra.com') {
+            streamLog("Error: Origin no válido");
             return false;
         }
     } else {
         // Si no hay Origin, verificamos que el Referer sea del mismo dominio
         if (!preg_match('/^https?:\/\/2upra\.com\//', $_SERVER['HTTP_REFERER'])) {
+            streamLog("Error: Referer no válido para same-origin request");
             return false;
         }
     }
 
     // Verificar nonce de WordPress
     if (!check_ajax_referer('wp_rest', '_wpnonce', false)) {
+        streamLog("Error: Nonce no válido");
         return false;
     }
 
     // Decodificar y verificar token
     $decoded = base64_decode($token);
     if ($decoded === false) {
+        streamLog("Error: token no es base64 válido");
         return false;
     }
 
     $parts = explode('|', $decoded);
     if (count($parts) !== 6) {
+        streamLog("Error: número incorrecto de partes en el token");
         return false;
     }
+    streamLog("Partes del token: " . print_r($parts, true));
 
     list($audio_id, $expiration, $user_ip, $unique_id, $max_usos, $signature) = $parts;
 
@@ -208,6 +234,7 @@ function verificarAudio($token)
         $expected_signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
 
         if (!hash_equals($expected_signature, $signature)) {
+            streamLog("Error: firma no válida");
             return false;
         }
 
@@ -218,28 +245,34 @@ function verificarAudio($token)
             header('Cache-Control: public, max-age=7776000');
             header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 7776000) . ' GMT');
             header('Last-Modified: ' . gmdate('D, d M Y H:i:s', time()) . ' GMT');
+            streamLog("Nueva sesión iniciada para audio_id: $audio_id");
             return true;
         }
 
         $access_count = get_transient($cache_key);
         if ($access_count !== false) {
             set_transient($cache_key, $access_count + 1, 3600);
+            streamLog("Acceso permitido - Contador: " . ($access_count + 1));
             return true;
         }
 
+        streamLog("Error: acceso no autorizado");
         return false;
     } else {
         // Lógica para modo sin caché
         if ($_SERVER['REMOTE_ADDR'] !== $user_ip) {
+            streamLog("Error: IP no coincide");
             return false;
         }
 
         if (time() > $expiration) {
+            streamLog("Error: token expirado");
             return false;
         }
 
         $usos_restantes = get_transient('audio_token_' . $unique_id);
         if ($usos_restantes === false || $usos_restantes <= 0) {
+            streamLog("Error: sin usos restantes");
             return false;
         }
 
@@ -248,9 +281,11 @@ function verificarAudio($token)
 
         if (hash_equals($expected_signature, $signature)) {
             decrementaUsosToken($unique_id);
+            streamLog("Acceso permitido - Modo sin caché");
             return true;
         }
 
+        streamLog("Error: firma no válida en modo sin caché");
         return false;
     }
 }
@@ -258,17 +293,25 @@ function verificarAudio($token)
 function encryptChunk($chunk, $iv, $key)
 {
     try {
+        streamLog("Iniciando encriptación de chunk con parámetros:");
+        streamLog("Longitud del chunk: " . strlen($chunk));
+        streamLog("Longitud del IV: " . strlen($iv));
+        streamLog("Longitud de la clave hex: " . strlen($key));
 
+        // Convertir clave hex a binario
         $binary_key = hex2bin($key);
+        streamLog("Longitud de la clave binaria: " . strlen($binary_key));
+
         if ($binary_key === false) {
             throw new Exception('Error al convertir la clave hexadecimal a binario');
         }
 
+        // Encriptar sin padding manual (usar el padding automático de OpenSSL)
         $encrypted = openssl_encrypt(
             $chunk,
             'AES-256-CBC',
             $binary_key,
-            OPENSSL_RAW_DATA,
+            OPENSSL_RAW_DATA,  // Solo usar OPENSSL_RAW_DATA
             $iv
         );
 
@@ -276,11 +319,18 @@ function encryptChunk($chunk, $iv, $key)
             throw new Exception("Error en la encriptación: " . openssl_error_string());
         }
 
-        $length_prefix = pack('N', strlen($encrypted));
+        // Agregar información de longitud al inicio del chunk encriptado
+        $length_prefix = pack('N', strlen($encrypted));  // 4 bytes para la longitud
         $final_data = $length_prefix . $encrypted;
+
         $encrypted_length = strlen($final_data);
         header('Content-Length: ' . $encrypted_length);
+        header('X-Encrypted-Length: ' . $encrypted_length);
+        header('X-Original-Length: ' . strlen($chunk));
+
         streamLog("Encriptación exitosa - Longitud datos encriptados: " . strlen($final_data));
+        streamLog("Primeros bytes encriptados (hex): " . bin2hex(substr($encrypted, 0, 16)));
+
         return $final_data;
     } catch (Exception $e) {
         streamLog("Error en encryptChunk: " . $e->getMessage());
@@ -293,7 +343,7 @@ function audioStreamEnd($data)
     if (ob_get_level()) ob_end_clean();
 
     try {
-        // Procesar token
+        // Decodificar y validar token
         $token = $data['token'];
         $decoded = base64_decode($token);
         if ($decoded === false) {
@@ -306,11 +356,14 @@ function audioStreamEnd($data)
         }
 
         $audio_id = $parts[0];
+        streamLog("Procesando transmisión para audio_id: $audio_id");
 
+        // Gestión de caché
         $upload_dir = wp_upload_dir();
         $cache_dir = $upload_dir['basedir'] . '/audio_cache';
         if (!file_exists($cache_dir)) {
             wp_mkdir_p($cache_dir);
+            streamLog("Directorio de caché creado: $cache_dir");
         }
 
         $cache_file = $cache_dir . '/audio_' . $audio_id . '.cache';
@@ -318,15 +371,19 @@ function audioStreamEnd($data)
 
         // Verificar caché
         if (file_exists($cache_file) && (time() - filemtime($cache_file) < 24 * 60 * 60)) {
+            streamLog("Usando archivo cacheado: $cache_file");
             $file = $cache_file;
         } else {
             $original_file = get_attached_file($audio_id);
             if (!file_exists($original_file)) {
                 throw new Exception('Archivo de audio no encontrado');
             }
+
             if (!@copy($original_file, $cache_file)) {
                 throw new Exception('Error al cachear el archivo');
             }
+
+            streamLog("Archivo cacheado correctamente: $cache_file");
             $file = $cache_file;
         }
 
@@ -343,10 +400,14 @@ function audioStreamEnd($data)
         $end = $size - 1;
         $etag = '"' . md5($file . filemtime($file)) . '"';
 
+        streamLog("Tamaño del archivo: $size bytes");
+
+        // Headers básicos
         header('Content-Type: audio/mpeg');
         header('Accept-Ranges: bytes');
         header('X-Content-Type-Options: nosniff');
 
+        // Gestión de caché del navegador
         if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
             $cache_time = 60 * 60 * 24; // 24 horas
             header('Cache-Control: private, must-revalidate, max-age=' . $cache_time);
@@ -361,8 +422,10 @@ function audioStreamEnd($data)
             header('Pragma: no-cache');
         }
 
+        // Manejo de ranges para streaming
         if (isset($_SERVER['HTTP_RANGE'])) {
             list(, $range) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+            streamLog("Solicitando rango: $range");
 
             if (strpos($range, ',') !== false) {
                 header('HTTP/1.1 416 Requested Range Not Satisfiable');
@@ -391,6 +454,7 @@ function audioStreamEnd($data)
             $end = $c_end;
             $length = $end - $start + 1;
             fseek($fp, $start);
+            streamLog("Rango ajustado: $start - $end");
             header('HTTP/1.1 206 Partial Content');
         }
 
@@ -398,15 +462,12 @@ function audioStreamEnd($data)
         header("Content-Range: bytes $start-$end/$size");
         header("Content-Length: " . $length);
 
-        // Logging de Content-Range y Content-Length
-        streamLog("Content-Range: bytes $start-$end/$size");
-        streamLog("Content-Length: $length");
-
         // Configuración de encriptación
         $buffer_size = 8192; // 8KB
         $sent = 0;
         $rate_limit = 512 * 1024; // 512KB por segundo
         $sleep_time = ($buffer_size / $rate_limit) * 1000000; // Convertir a microsegundos
+
 
         if (defined('ENABLE_AUDIO_ENCRYPTION') && ENABLE_AUDIO_ENCRYPTION) {
             $iv = openssl_random_pseudo_bytes(16);
@@ -420,29 +481,30 @@ function audioStreamEnd($data)
             }
             $key = $_ENV['AUDIOCLAVE'];
 
-            while (!feof($fp) && $sent < $length) {
-                $remaining = $length - $sent;
-                $chunk_size = min($buffer_size, $remaining);
-                $chunk = fread($fp, $chunk_size);
 
-                if ($chunk === false) {
-                    break;
-                }
-
-                // Encriptar chunk
+            if ($length <= $buffer_size) {
+                $chunk = fread($fp, $length);
                 $encrypted_chunk = encryptChunk($chunk, $iv, $key);
                 echo $encrypted_chunk;
+            } else {
+                // Para archivos grandes, procesar en chunks
+                while (!feof($fp) && $sent < $length) {
+                    $remaining = $length - $sent;
+                    $chunk_size = min($buffer_size, $remaining);
+                    $chunk = fread($fp, $chunk_size);
 
-                // Actualizar el total enviado usando longitud de chunk encriptado
-                $sent += strlen($encrypted_chunk);
+                    if ($chunk === false) {
+                        break;
+                    }
 
-                // Log de depuración
-                streamLog("Bytes enviados en este ciclo: " . strlen($encrypted_chunk) . " / Total enviados: $sent de $length");
+                    $encrypted_chunk = encryptChunk($chunk, $iv, $key);
+                    echo $encrypted_chunk;
+                    $sent += strlen($chunk);  // Usar la longitud del chunk original
 
-                // Control de envío
-                flush();
-                if ($sleep_time > 0) {
-                    usleep($sleep_time);
+                    flush();
+                    if ($sleep_time > 0) {
+                        usleep($sleep_time);
+                    }
                 }
             }
         } else {
@@ -453,11 +515,13 @@ function audioStreamEnd($data)
                 $chunk = fread($fp, $chunk_size);
 
                 if ($chunk === false) {
+                    streamLog("Error al leer el archivo");
                     break;
                 }
 
                 echo $chunk;
                 $sent += strlen($chunk);
+                streamLog("Chunk sin encriptar enviado: " . strlen($chunk) . " bytes");
 
                 flush();
                 if ($sleep_time > 0) {
@@ -466,11 +530,12 @@ function audioStreamEnd($data)
             }
         }
 
-
         // Logging y limpieza
+        streamLog("Transmisión completada: $sent bytes enviados");
         fclose($fp);
         exit();
     } catch (Exception $e) {
+        streamLog("Error en audioStreamEnd: " . $e->getMessage());
 
         if (ob_get_level()) ob_end_clean();
         header('HTTP/1.1 500 Internal Server Error');
@@ -530,6 +595,7 @@ function usuarioEsAdminOPro($user_id)
 {
     // Verificar que el ID de usuario sea válido
     if (empty($user_id) || !is_numeric($user_id)) {
+        //streamLog("usuarioEsAdminOPro: Error - ID de usuario inválido.");
         return false;
     }
 
@@ -538,26 +604,32 @@ function usuarioEsAdminOPro($user_id)
 
     // Verificar si el usuario existe
     if (!$user) {
+        //streamLog("usuarioEsAdminOPro: Error - Usuario no encontrado para el ID: " . $user_id);
         return false;
     }
 
     // Verificar si el usuario tiene roles asignados
     if (empty($user->roles)) {
+        //streamLog("usuarioEsAdminOPro: Error - Usuario sin roles asignados. ID: " . $user_id);
+        //streamLog("usuarioEsAdminOPro: Información del usuario - " . print_r($user, true));
         return false;
     }
 
     // Verificar si el usuario es administrador
     if (in_array('administrator', (array) $user->roles)) {
+        //streamLog("usuarioEsAdminOPro: Usuario es administrador. ID: " . $user_id);
         return true;
     }
 
     // Verificar si tiene la meta `pro`
     $is_pro = get_user_meta($user_id, 'pro', true);
     if (!empty($is_pro)) {
+        //streamLog("usuarioEsAdminOPro: Usuario tiene la meta 'pro'. ID: " . $user_id);
         return true;
     }
 
     // Si no es administrador ni tiene la meta 'pro'
+    //streamLog("usuarioEsAdminOPro: Usuario no es administrador ni tiene la meta 'pro'. ID: " . $user_id);
     return false;
 }
 
