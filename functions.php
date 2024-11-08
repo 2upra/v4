@@ -281,6 +281,7 @@ function scriptsOrdenados()
     wp_localize_script('wavejs', 'audioSettings', array(
         'nonce' => wp_create_nonce('wp_rest'),
         'encryptionKey' => $_ENV['AUDIOCLAVE'],
+        'key' => $_ENV['AUDIOCLAVE'],
         'restUrl' => rest_url()
     ));
 
