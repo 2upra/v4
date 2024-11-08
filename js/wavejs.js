@@ -239,13 +239,12 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
 
         try {
             window.audioLoading = true;
-
+        
             // Preparar URL con nonce
             const urlObj = new URL(audioUrl);
             urlObj.searchParams.append('_wpnonce', audioSettings.nonce);
             const finalAudioUrl = urlObj.toString();
-
-            // Usar fetch con las mismas opciones
+        
             const response = await fetch(finalAudioUrl, {
                 method: 'GET',
                 credentials: 'same-origin',
@@ -257,7 +256,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     Origin: 'https://2upra.com'
                 }
             });
-
+        
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('Error de respuesta:', {
@@ -268,55 +267,73 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 });
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
-            const iv = Uint8Array.from(
-                atob(response.headers.get('X-Encryption-IV')), 
-                c => c.charCodeAt(0)
-            );
-
-            const reader = response.body.getReader();
-            const decryptedStream = new ReadableStream({
-                async start(controller) {
-                    const decoder = new TextDecoder();
-                    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(audioSettings.encryptionKey), {name: 'AES-CBC'}, false, ['decrypt']);
-
-                    while (true) {
-                        const {done, value} = await reader.read();
-                        if (done) break;
-
-                        const decrypted = await crypto.subtle.decrypt({name: 'AES-CBC', iv}, key, value);
-
-                        controller.enqueue(new Uint8Array(decrypted));
+        
+            // Obtener el IV del header si existe
+            let decryptedStream;
+            if (response.headers.has('X-Encryption-IV')) {
+                const iv = Uint8Array.from(
+                    atob(response.headers.get('X-Encryption-IV')), 
+                    c => c.charCodeAt(0)
+                );
+        
+                const reader = response.body.getReader();
+                decryptedStream = new ReadableStream({
+                    async start(controller) {
+                        const decoder = new TextDecoder();
+                        const key = await crypto.subtle.importKey(
+                            'raw', 
+                            new TextEncoder().encode(audioSettings.encryptionKey), 
+                            {name: 'AES-CBC'}, 
+                            false, 
+                            ['decrypt']
+                        );
+        
+                        while (true) {
+                            const {done, value} = await reader.read();
+                            if (done) break;
+        
+                            const decrypted = await crypto.subtle.decrypt(
+                                {name: 'AES-CBC', iv}, 
+                                key, 
+                                value
+                            );
+        
+                            controller.enqueue(new Uint8Array(decrypted));
+                        }
+        
+                        controller.close();
                     }
-
-                    controller.close();
-                }
-            });
-
-            const audioResponse = new Response(stream);
+                });
+            } else {
+                // Si no hay encriptación, usar el stream directamente
+                decryptedStream = response.body;
+            }
+        
+            // Crear respuesta con el stream correcto
+            const audioResponse = new Response(decryptedStream);
             const blob = await audioResponse.blob();
             const audioBlobUrl = URL.createObjectURL(blob);
-
+        
             // Inicializar wavesurfer
             const wavesurfer = initWavesurfer(container);
             window.wavesurfers[postId] = wavesurfer;
-
+        
             wavesurfer.load(audioBlobUrl);
-
+        
             const waveformBackground = container.querySelector('.waveform-background');
             if (waveformBackground) {
                 waveformBackground.style.display = 'none';
             }
-
+        
             wavesurfer.on('ready', () => {
                 window.audioLoading = false;
                 container.dataset.audioLoaded = 'true';
                 container.querySelector('.waveform-loading').style.display = 'none';
                 console.log(`Audio cargado exitosamente - PostID: ${postId}`);
-
+        
                 const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
                 const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
-
+        
                 if (!waveCargada && !isMobile && !container.closest('.LISTWAVESAMPLE')) {
                     setTimeout(() => {
                         const image = generateWaveformImage(wavesurfer);
@@ -324,17 +341,18 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                         console.log(`Waveform generado - PostID: ${postId}`);
                     }, 1);
                 }
-
+        
                 if (playOnLoad) {
                     wavesurfer.play();
                     console.log(`Reproducción iniciada - PostID: ${postId}`);
                 }
             });
-
+        
             wavesurfer.on('error', error => {
                 console.error(`Error en wavesurfer - PostID: ${postId}`, error);
                 setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
             });
+        
         } catch (error) {
             console.error(`Error en la carga - PostID: ${postId}`, error);
             if (retryCount < MAX_RETRIES) {
