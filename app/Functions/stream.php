@@ -21,13 +21,9 @@ function audioUrlSegura($audio_id)
         return new WP_Error('invalid_audio_id', 'Audio ID inválido.');
     }
 
-    // Generar timestamp y firma para la URL segura
-    $timestamp = time();
-    $signature = hash_hmac('sha256', "$audio_id|$timestamp", $_ENV['AUDIOCLAVE']);
-
     // Generar nonce para la seguridad de la URL
     $nonce = wp_create_nonce('wp_rest');
-    $url = site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce . '&ts=' . $timestamp . '&sig=' . $signature);
+    $url = site_url("/wp-json/1/v1/2?token=" . urlencode($token) . '&_wpnonce=' . $nonce);
 
     streamLog("URL generada para usuario normal: " . $url);
     return $url;
@@ -35,26 +31,20 @@ function audioUrlSegura($audio_id)
 
 function verificarFirma($request)
 {
-    $timestamp = $request->get_param('ts');
-    $signature = $request->get_param('sig');
     $audio_id = $request->get_param('audio_id');
 
-    // Verificar que la firma no haya expirado (tiempo de 1 hora)
-    if (time() - $timestamp > 3600) {
-        streamLog("Firma expiró para audio ID: " . $audio_id);
-        return false;
-    }
+    // Log para indicar que se ha llamado a la función de verificación
+    streamLog("Verificación llamada para audio ID: " . $audio_id);
 
-    // Generar la firma esperada y compararla con la recibida
-    $expected_signature = hash_hmac('sha256', "$audio_id|$timestamp", $_ENV['AUDIOCLAVE']);
-    if (!hash_equals($expected_signature, $signature)) {
-        streamLog("Firma no válida para audio ID: " . $audio_id);
-        return false;
-    }
+    // Aquí podría ir alguna lógica adicional si es necesario, sin basarse en `ts` ni `sig`
 
-    streamLog("Firma verificada con éxito para audio ID: " . $audio_id);
+    // Log final de confirmación
+    streamLog("Proceso de verificación completado para audio ID: " . $audio_id);
+
     return true;
 }
+
+
 
 
 

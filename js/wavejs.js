@@ -356,26 +356,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 }
             }
 
-            /*
-            Procesando chunk: 
-            Object { totalLength: 20936, chunkLength: 8208, dataLength: 8208 }
-            wavejs.js:347:37
-            Procesado 160540 bytes wavejs.js:383:29
-            Chunk leído: 
-            Object { done: true, value: undefined }
-            wavejs.js:318:25
-            Transmisión completa wavejs.js:321:29
-            GET
-            https://2upra.com/sample/jazzy-hammond-organ-sample/[object Blob]
-            NS_BINDING_ABORTED
-
-            Error en loadAndPlayAudioStream: 
-            error { target: audio, isTrusted: true, srcElement: audio, currentTarget: audio, eventPhase: 2, bubbles: false, cancelable: false, returnValue: true, defaultPrevented: false, composed: false, … }
-            wavejs.js:404:21
-            Load error: 
-            error { target: audio, isTrusted: true, srcElement: audio, currentTarget: audio, eventPhase: 2, bubbles: false, cancelable: false, returnValue: true, defaultPrevented: false, composed: false, … }
-            */
-
             const audioBuffer = concatenateUint8Arrays(decryptedChunks);
             const audioBlob = new Blob([audioBuffer], { type: 'audio/mpeg' });
             const blobUrl = URL.createObjectURL(audioBlob);
