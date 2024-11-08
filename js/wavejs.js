@@ -213,18 +213,40 @@ function loadAudio(postId, audioUrl, container, playOnLoad) {
 }
 
 /*
-2024-11-08 07:33:59 - Content-Length: 160540
-2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
-2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
-2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
-2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
-2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
-2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
-2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
-2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
-2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
+logs del cliente
+2024-11-08 07:43:41 - Content-Range: bytes 0-160539/160540
+2024-11-08 07:43:41 - Content-Length: 160540
+2024-11-08 07:43:41 - Encriptación exitosa - Longitud datos encriptados: 8212
+2024-11-08 07:43:41 - Bytes enviados en este ciclo: 8212 / Total enviados: 8212 de 160540
+2024-11-08 07:43:41 - Encriptación exitosa - Longitud datos encriptados: 8212
+2024-11-08 07:43:41 - Bytes enviados en este ciclo: 8212 / Total enviados: 16424 de 160540
+2024-11-08 07:43:41 - Encriptación exitosa - Longitud datos encriptados: 8212
+2024-11-08 07:43:41 - Bytes enviados en este ciclo: 8212 / Total enviados: 24636 de 160540
+2024-11-08 07:43:41 - Encriptación exitosa - Longitud datos encriptados: 8212
+2024-11-08 07:43:41 - Bytes enviados en este ciclo: 8212 / Total enviados: 32848 de 160540
+2024-11-08 07:43:41 - Encriptación exitosa - Longitud datos encriptados: 8212
+2024-11-08 07:43:41 - Bytes enviados en este ciclo: 8212 / Total enviados: 41060 de 160540
 
 hay un problema grave, solo se carga los primeros segundos, enfoquemos logs a entender porque no se procesa el resto
+
+voy a suponer que waveform no espera que cargue todo e inmediatamente con el primer dato genera la wave
+
+logs del servidor
+
+Headers recibidos: 
+Object { "accept-ranges": "bytes", "access-control-allow-headers": "Authorization, X-WP-Nonce, Content-Disposition, Content-MD5, Content-Type, X-Requested-With, X-WP-Nonce", "access-control-allow-methods": "GET, OPTIONS", "access-control-allow-origin": "https://2upra.com", "access-control-expose-headers": "X-WP-Total, X-WP-TotalPages, Link", "cache-control": "private, must-revalidate, max-age=86400, private, must-revalidate, max-age=3600", connection: "keep-alive", "content-length": "8212", "content-range": "bytes 0-160539/160540", "content-type": "audio/mpeg", … }
+wavejs.js:279:21
+IV recibido: IrQSP4U0ZYWoPMee8D2tOQ== wavejs.js:281:21
+Iniciando proceso de desencriptación wavejs.js:292:25
+Iniciando desencriptación con parámetros: 
+Object { totalLength: 8212, encryptedLength: 8208, actualDataLength: 8208, ivBase64: "IrQSP4U0ZYWoPMee8D2tOQ==", keyHex: "bdd01e7d03b1593a09af2fa5f7f996201dfadf98bcc34637e53efe72e1d78bb9" }
+wavejs.js:322:21
+IV convertido: 
+Object { originalLength: 24, decodedLength: 16, ivArrayHex: "22b4123f85346585a83cc79ef03dad39" }
+wavejs.js:332:21
+Datos encriptados: 
+Object { length: 8208, firstBytesHex: "175e8df2ac8a40e0b0df3686247a1107" }
+
 */
 
 window.we = function (postId, audioUrl, container, playOnLoad = false) {
@@ -247,10 +269,9 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     async function loadAndPlayAudioStream(retryCount = 0) {
         try {
             window.audioLoading = true;
-
-            // Construir la URL final del audio
             const finalAudioUrl = buildAudioUrl(audioUrl, audioSettings.nonce);
-
+            
+            // Crear un ReadableStream para procesar los chunks
             const response = await fetch(finalAudioUrl, {
                 method: 'GET',
                 credentials: 'same-origin',
@@ -261,49 +282,57 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     Range: 'bytes=0-'
                 }
             });
-
+    
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
-            // Obtener los datos encriptados
-            const expectedLength = parseInt(response.headers.get('Content-Length'));
-            const arrayBuffer = await response.arrayBuffer();
-
-            // Verificar que recibimos todos los datos
-            if (arrayBuffer.byteLength !== expectedLength) {
-                throw new Error(`Datos incompletos: recibidos ${arrayBuffer.byteLength} de ${expectedLength} bytes`);
-            }
-
-            // Verificar headers y obtener IV
-            console.log('Headers recibidos:', Object.fromEntries(response.headers));
+    
+            const reader = response.body.getReader();
+            const contentLength = parseInt(response.headers.get('Content-Length'));
             const iv = response.headers.get('X-Encryption-IV');
-            console.log('IV recibido:', iv);
-
-            // Verificar si tenemos el IV necesario
-            if (!iv && audioSettings.key) {
-                console.error('Se esperaba IV para desencriptación pero no se recibió');
-                throw new Error('No se recibió el IV en los headers');
+    
+            // Acumular chunks
+            let chunks = [];
+            let receivedLength = 0;
+    
+            while(true) {
+                const {done, value} = await reader.read();
+                
+                if (done) {
+                    console.log('Transmisión completa');
+                    break;
+                }
+    
+                chunks.push(value);
+                receivedLength += value.length;
+                console.log(`Recibido ${receivedLength} de ${contentLength} bytes`);
             }
-
-            // Procesar los datos
-            let audioData = arrayBuffer;
+    
+            // Combinar todos los chunks en un único ArrayBuffer
+            const allChunks = new Uint8Array(receivedLength);
+            let position = 0;
+            for(const chunk of chunks) {
+                allChunks.set(chunk, position);
+                position += chunk.length;
+            }
+    
+            // Procesar datos completos
+            let audioData = allChunks.buffer;
             if (iv && audioSettings.key) {
-                console.log('Iniciando proceso de desencriptación');
-                audioData = await decryptAudioData(arrayBuffer, iv, audioSettings.key);
+                console.log('Iniciando proceso de desencriptación del archivo completo');
+                audioData = await decryptAudioData(audioData, iv, audioSettings.key);
             }
-
-            // Convertir los datos en blob
+    
+            // Crear blob y cargar wavesurfer
             const blobUrl = createAudioBlobUrl(audioData);
             await validateAudio(blobUrl);
-
-            // Inicializar y cargar Wavesurfer
+    
             const wavesurfer = initWavesurfer(container);
             window.wavesurfers[postId] = wavesurfer;
-
+    
             wavesurfer.load(blobUrl);
-
             handleWaveSurferEvents(wavesurfer, container, postId, blobUrl);
+    
         } catch (error) {
             console.error('Error en loadAndPlayAudioStream:', error);
             handleLoadError(error, retryCount, container);
