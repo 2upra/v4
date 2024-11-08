@@ -254,6 +254,12 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             // Obtener los datos encriptados
             const arrayBuffer = await response.arrayBuffer();
 
+            // En el cliente, verifica que el header X-Encryption-IV existe
+            console.log('Headers recibidos:', Object.fromEntries(response.headers));
+
+            if (!iv) {
+                throw new Error('No se recibió el IV en los headers');
+            }
             // Si hay encriptación, obtener IV y desencriptar
             const iv = response.headers.get('X-Encryption-IV');
             let audioData = arrayBuffer;
@@ -282,16 +288,28 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
 
     async function decryptAudioData(arrayBuffer, iv, key) {
         try {
-            console.log('Iniciando desencriptación...');
-            
+            console.log('Iniciando desencriptación con parámetros:', {
+                arrayBufferLength: arrayBuffer.byteLength,
+                ivBase64: iv,
+                keyHex: key
+            });
+
             // Convertir IV de base64 a ArrayBuffer
             const ivArray = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
-            
+            console.log('IV convertido:', {
+                originalLength: iv.length,
+                decodedLength: ivArray.length,
+                ivArray: Array.from(ivArray)
+            });
+
             // Convertir key hex a ArrayBuffer
-            const keyArray = new Uint8Array(
-                key.match(/.{1,2}/g).map(byte => parseInt(byte, 16))
-            );
-            
+            const keyArray = new Uint8Array(key.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+            console.log('Key convertida:', {
+                originalLength: key.length,
+                decodedLength: keyArray.length,
+                keyArray: Array.from(keyArray)
+            });
+
             // Importar la clave
             const cryptoKey = await crypto.subtle.importKey(
                 'raw',
@@ -303,10 +321,14 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 false,
                 ['decrypt']
             );
-            
-            // Asegurarse de que los datos están alineados correctamente
-            const encryptedData = new Uint8Array(arrayBuffer);
-            
+            console.log('Clave importada exitosamente');
+
+            // Verificar datos encriptados
+            console.log('Datos encriptados:', {
+                length: arrayBuffer.byteLength,
+                firstBytes: new Uint8Array(arrayBuffer.slice(0, 16))
+            });
+
             // Desencriptar
             const decryptedData = await crypto.subtle.decrypt(
                 {
@@ -314,21 +336,36 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     iv: ivArray
                 },
                 cryptoKey,
-                encryptedData
+                arrayBuffer
             );
-            
+
+            console.log('Desencriptación exitosa:', {
+                decryptedLength: decryptedData.byteLength,
+                firstDecryptedBytes: new Uint8Array(decryptedData.slice(0, 16))
+            });
+
             return decryptedData;
         } catch (error) {
-            console.error('Error en desencriptación:', error);
-            console.error('Detalles:', {
-                ivLength: iv.length,
-                keyLength: key.length,
-                dataLength: arrayBuffer.byteLength
+            console.error('Error detallado en desencriptación:', {
+                errorName: error.name,
+                errorMessage: error.message,
+                ivDetails: {
+                    originalIV: iv,
+                    ivLength: iv?.length,
+                    decodedIVLength: ivArray?.length
+                },
+                keyDetails: {
+                    keyLength: key?.length,
+                    decodedKeyLength: keyArray?.length
+                },
+                dataDetails: {
+                    dataLength: arrayBuffer?.byteLength,
+                    isArrayBuffer: arrayBuffer instanceof ArrayBuffer
+                }
             });
             throw error;
         }
     }
-
 
     // Función para construir la URL de audio
     function buildAudioUrl(audioUrl, nonce) {

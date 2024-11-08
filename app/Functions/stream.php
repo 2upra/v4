@@ -292,15 +292,20 @@ function verificarAudio($token)
 
 function encryptChunk($chunk, $iv, $key) {
     try {
-        streamLog("Iniciando encriptación de chunk");
+        streamLog("Iniciando encriptación de chunk con parámetros:");
+        streamLog("Longitud del chunk: " . strlen($chunk));
+        streamLog("Longitud del IV: " . strlen($iv));
+        streamLog("Longitud de la clave hex: " . strlen($key));
         
         // Convertir clave hex a binario
         $binary_key = hex2bin($key);
+        streamLog("Longitud de la clave binaria: " . strlen($binary_key));
+        
         if ($binary_key === false) {
             throw new Exception('Error al convertir la clave hexadecimal a binario');
         }
         
-        // No aplicar padding manual, dejar que openssl_encrypt lo maneje
+        // Encriptar
         $encrypted = openssl_encrypt(
             $chunk,
             'AES-256-CBC',
@@ -313,13 +318,13 @@ function encryptChunk($chunk, $iv, $key) {
             throw new Exception("Error en la encriptación: " . openssl_error_string());
         }
         
+        streamLog("Encriptación exitosa - Longitud datos encriptados: " . strlen($encrypted));
         return $encrypted;
     } catch (Exception $e) {
         streamLog("Error en encryptChunk: " . $e->getMessage());
         throw $e;
     }
 }
-
 
 
 function audioStreamEnd($data)
