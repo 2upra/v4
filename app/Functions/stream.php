@@ -489,19 +489,22 @@ function audioStreamEnd($data)
                     $remaining = $length - $sent;
                     $chunk_size = min($buffer_size, $remaining);
                     $chunk = fread($fp, $chunk_size);
-
+                
                     if ($chunk === false) {
                         break;
                     }
-
+                
                     $encrypted_chunk = encryptChunk($chunk, $iv, $key);
                     echo $encrypted_chunk;
-                    $sent += strlen($chunk);  // Usar la longitud del chunk original
-
+                
+                    $sent += strlen($chunk);
+                
+                    // Asegurarse de enviar el buffer de salida
                     flush();
-                    if ($sleep_time > 0) {
-                        usleep($sleep_time);
-                    }
+                    ob_flush();
+                
+                    // Si usas limitación de velocidad, podrías mantener usleep
+                    // usleep($sleep_time);
                 }
             }
         } else {
