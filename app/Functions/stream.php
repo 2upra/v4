@@ -379,17 +379,32 @@ function audioStreamEnd($data)
 
         // Gestión de caché del navegador
         if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
-            $cache_time = 60 * 60 * 24; // 24 horas
             $etag = '"' . md5($file . filemtime($file) . $token) . '"';
             
-            // Configuración de caché
-            header('Cache-Control: private, must-revalidate, max-age=' . $cache_time);
-            header('ETag: ' . $etag);
+            // Generar ETag único
+            $etag = '"' . md5($audio_id . $token . filemtime($file)) . '"';
             
-            // Verificar si el contenido ha cambiado
-            if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
-                header('HTTP/1.1 304 Not Modified');
-                exit;
+            // Verificar If-None-Match
+            if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
+                if (trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
+                    header('HTTP/1.1 304 Not Modified');
+                    exit;
+                }
+            }
+
+            // Headers de caché
+            header('Cache-Control: private, must-revalidate, max-age=86400');
+            header('ETag: ' . $etag);
+            header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 86400) . ' GMT');
+            header('Last-Modified: ' . gmdate('D, d M Y H:i:s', filemtime($file)) . ' GMT');
+            
+            // Verificar If-Modified-Since
+            if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE'])) {
+                $if_modified_since = strtotime(preg_replace('/;.*$/', '', $_SERVER['HTTP_IF_MODIFIED_SINCE']));
+                if ($if_modified_since >= filemtime($file)) {
+                    header('HTTP/1.1 304 Not Modified');
+                    exit;
+                }
             }
 
         } else {
