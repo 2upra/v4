@@ -34,7 +34,7 @@ function inicializarWaveforms() {
                 }
             });
         },
-        {threshold: 0.5}
+        { threshold: 0.5 }
     );
 
     // Inicializar wavesurfers observando cada contenedor
@@ -62,7 +62,12 @@ function inicializarWaveforms() {
                 const waveformContainer = post.querySelector('.waveform-container');
 
                 const clickedElement = event.target;
-                if (clickedElement.closest('.tags-container') || clickedElement.closest('.QSORIW') || clickedElement.closest('.post-image-container') || clickedElement.closest('.CONTENTLISTSAMPLE')) {
+                if (
+                    clickedElement.closest('.tags-container') ||
+                    clickedElement.closest('.QSORIW') ||
+                    clickedElement.closest('.post-image-container') ||
+                    clickedElement.closest('.CONTENTLISTSAMPLE')
+                ) {
                     //console.log('Clic ignorado por estar dentro de un contenedor excluido.');
                     return;
                 }
@@ -142,358 +147,132 @@ function inicializarWaveforms() {
     });
 }
 
-async function registerServiceWorker() {
-    if ('serviceWorker' in navigator) {
-        try {
-            console.log('Intentando registrar Service Worker...');
-            const registration = await navigator.serviceWorker.register('/sw.js', {
-                scope: '/',
-                updateViaCache: 'none'
-            });
-            console.log('Service Worker registrado:', registration);
-
-            registration.addEventListener('statechange', e => {
-                console.log('Service Worker state changed:', e.target.state);
-            });
-
-            return registration;
-        } catch (error) {
-            console.error('Error registrando Service Worker:', error);
-            return null;
-        }
-    }
-    return null;
-}
-
-// Inicializar cuando el documento esté listo
-document.addEventListener('DOMContentLoaded', () => {
-    registerServiceWorker();
-});
-
-function verifyAudioSettings() {
-    console.log('Verificando configuración de audio:', {
-        nonce: audioSettings?.nonce ? 'Presente' : 'Ausente',
-        url: window.location.href,
-        origin: window.location.origin
-    });
-}
-
-function showError(container, message) {
-    const loadingEl = container.querySelector('.waveform-loading');
-    const messageEl = container.querySelector('.waveform-message');
-
-    if (loadingEl) loadingEl.style.display = 'none';
-    if (messageEl) {
-        messageEl.style.display = 'block';
-        messageEl.textContent = message;
-    }
-}
-
 function loadAudio(postId, audioUrl, container, playOnLoad) {
-    if (!postId || container.dataset.audioLoaded) return;
-
-    console.log('Cargando audio:', {postId, audioUrl});
-
-    const loadWithServiceWorker = async () => {
-        try {
-            if (navigator.serviceWorker.controller) {
-                console.log('Usando Service Worker para cargar audio');
-                await window.we(postId, audioUrl, container, playOnLoad);
-            } else {
-                console.log('Service Worker no disponible, usando carga normal');
-                await window.we(postId, audioUrl, container, playOnLoad);
-            }
-            container.dataset.audioLoaded = 'true';
-        } catch (error) {
-            console.error('Error cargando audio:', error);
-        }
-    };
-
-    loadWithServiceWorker();
-}
-
-window.we = function (postId, audioUrl, container, playOnLoad = false) {
-    // Verificaciones iniciales
-    verifyAudioSettings();
-
-    if (!audioSettings || !audioSettings.nonce) {
-        console.error('audioSettings no está configurado correctamente');
-        showError(container, 'Error de configuración');
+    if (!postId) {
+        //console.error('postId no está definido en loadAudio.');
         return;
     }
 
+    if (!container.dataset.audioLoaded) {
+        //console.log(`Iniciando carga de audio: postId=${postId}`);
+        window.we(postId, audioUrl, container, playOnLoad);
+        container.dataset.audioLoaded = 'true';
+    } else {
+        //console.log(`Audio ya estaba cargado para postId=${postId}`);
+    }
+}
+
+window.we = function (postId, audioUrl, container, playOnLoad = false) {
     if (!window.wavesurfers) {
         window.wavesurfers = {};
     }
 
-    const MAX_RETRIES = 0;
-    console.log(`Iniciando carga de audio - PostID: ${postId}`);
+    const MAX_RETRIES = 3;
+    //console.log(`Intentando cargar audio para postId=${postId}, URL=${audioUrl}`);
 
-    function concatenateUint8Arrays(arrays) {
-        let totalLength = arrays.reduce((acc, value) => acc + value.length, 0);
-        let result = new Uint8Array(totalLength);
-        let offset = 0;
-
-        for (let array of arrays) {
-            result.set(array, offset);
-            offset += array.length;
+    const loadAndPlayAudioStream = (retryCount = 0) => {
+        if (retryCount >= MAX_RETRIES) {
+            //console.error(`No se pudo cargar el audio para postId=${postId} después de varios intentos`);
+            container.querySelector('.waveform-loading').style.display = 'none';
+            container.querySelector('.waveform-message').style.display = 'block';
+            container.querySelector('.waveform-message').textContent = 'Error al cargar el audio.';
+            return;
         }
 
-        return result;
-    }
+        window.audioLoading = true;
 
-    async function loadAndPlayAudioStream(retryCount = 0) {
-        try {
-            window.audioLoading = true;
-            const finalAudioUrl = buildAudioUrl(audioUrl, audioSettings.nonce);
-
-            const response = await fetch(finalAudioUrl, {
-                method: 'GET',
-                credentials: 'same-origin',
-                headers: {
-                    'X-WP-Nonce': audioSettings.nonce,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    Accept: 'audio/mpeg',
-                    Range: 'bytes=0-'
+        fetch(audioUrl, {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: {
+                'X-WP-Nonce': audioSettings.nonce,
+                'X-Requested-With': 'XMLHttpRequest',
+                Accept: 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8'
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Respuesta de red no satisfactoria');
+            return response;
+        })
+        .then(response => {
+            const reader = response.body.getReader();
+            return new ReadableStream({
+                start(controller) {
+                    return pump();
+                    function pump() {
+                        return reader.read().then(({ done, value }) => {
+                            if (done) {
+                                controller.close();
+                                return;
+                            }
+                            controller.enqueue(value);
+                            return pump();
+                        });
+                    }
                 }
             });
+        })
+        .then(stream => new Response(stream))
+        .then(response => response.blob())
+        .then(blob => {
+            const audioBlobUrl = URL.createObjectURL(blob);
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const reader = response.body.getReader();
-            const iv = response.headers.get('X-Encryption-IV');
-
-            if (!iv) {
-                throw new Error('No se recibió el IV en los encabezados de la respuesta');
-            }
-
-            const ivArray = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
-            let currentIV = ivArray;
-
-            const contentLengthHeader = response.headers.get('Content-Length');
-            const contentLength = contentLengthHeader ? parseInt(contentLengthHeader) : -1;
-
-            console.log(`Content-Length obtenido: ${contentLength}`);
-
-            let buffer = new Uint8Array(0);
-            let receivedLength = 0;
-
-            // **Agrega esta línea para declarar decryptedChunks**
-            let decryptedChunks = [];
-
-            while (true) {
-                const {done, value} = await reader.read();
-                console.log('Chunk leído:', {done, value});
-
-                if (done) {
-                    console.log('Transmisión completa');
-                    break;
-                }
-
-                if (value && value.length > 0) {
-                    // Añadir los nuevos datos al buffer
-                    let tmp = new Uint8Array(buffer.length + value.length);
-                    tmp.set(buffer, 0);
-                    tmp.set(value, buffer.length);
-                    buffer = tmp;
-
-                    receivedLength += value.length;
-
-                    // Procesar el buffer
-                    let offset = 0;
-
-                    while (buffer.length - offset >= 4) {
-                        // Leer el prefijo de longitud
-                        const lengthView = new DataView(buffer.buffer, buffer.byteOffset + offset, 4);
-                        const chunkLength = lengthView.getUint32(0, false); // Big-endian
-
-                        // Verificar si tenemos suficientes datos para procesar el chunk
-                        if (buffer.length - offset >= 4 + chunkLength) {
-                            // Extraer los datos encriptados
-                            const encryptedData = buffer.subarray(offset + 4, offset + 4 + chunkLength);
-
-                            console.log('Procesando chunk:', {
-                                totalLength: buffer.byteLength,
-                                chunkLength: chunkLength,
-                                dataLength: encryptedData.byteLength
-                            });
-
-                            try {
-                                // Desencriptar el chunk
-                                const decryptedData = await decryptAudioData(encryptedData, currentIV, audioSettings.key);
-                                decryptedChunks.push(new Uint8Array(decryptedData));
-
-                                // Actualizar el IV (últimos 16 bytes de encryptedData)
-                                if (encryptedData.byteLength >= 16) {
-                                    currentIV = encryptedData.subarray(encryptedData.byteLength - 16);
-                                } else {
-                                    throw new Error('encryptedData es demasiado pequeño para obtener el IV');
-                                }
-                            } catch (error) {
-                                console.error('Error desencriptando chunk:', error);
-                                throw error;
-                            }
-
-                            // Mover el offset más allá de este chunk
-                            offset += 4 + chunkLength;
-                        } else {
-                            // No tenemos suficientes datos aún
-                            break;
-                        }
-                    }
-
-                    // Eliminar los datos procesados del buffer
-                    if (offset > 0) {
-                        buffer = buffer.subarray(offset);
-                    }
-
-                    console.log(`Procesado ${receivedLength} bytes`);
-                }
-            }
-
-            const audioBuffer = concatenateUint8Arrays(decryptedChunks);
-
-            // Convierte el audioBuffer a una cadena Base64
-            function arrayBufferToBase64(buffer) {
-                let binary = '';
-                const bytes = new Uint8Array(buffer);
-                const len = bytes.byteLength;
-                for (let i = 0; i < len; i++) {
-                    binary += String.fromCharCode(bytes[i]);
-                }
-                return btoa(binary);
-            }
-
-            const base64Audio = arrayBufferToBase64(audioBuffer);
-            const dataUri = `data:audio/mpeg;base64,${base64Audio}`;
-
-            // Opcional: Validar el audio utilizando el Data URI
-            await validateAudio(dataUri);
-
-            // Inicializar Wavesurfer y cargar el audio usando el Data URI
+            // Inicializar wavesurfer y guardarlo en el objeto global
             const wavesurfer = initWavesurfer(container);
             window.wavesurfers[postId] = wavesurfer;
 
-            await new Promise(resolve => {
-                wavesurfer.once('ready', resolve);
-                wavesurfer.load(dataUri);
+            wavesurfer.load(audioBlobUrl);
+
+            const waveformBackground = container.querySelector('.waveform-background');
+            if (waveformBackground) {
+                waveformBackground.style.display = 'none';
+            }
+
+            wavesurfer.on('ready', () => {
+                window.audioLoading = false;
+                container.dataset.audioLoaded = 'true';
+                container.querySelector('.waveform-loading').style.display = 'none';
+                //console.log(`Audio listo para postId=${postId}`);
+
+                const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
+                const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
+
+                if (!waveCargada && !isMobile) {
+                    if (!container.closest('.LISTWAVESAMPLE')) {
+                        setTimeout(() => {
+                            const image = generateWaveformImage(wavesurfer);
+                            sendImageToServer(image, postId);
+                            //console.log(`Imagen de waveform enviada para postId=${postId}`);
+                        }, 1);
+                    }
+                }
+
+                // Reproducir solo si fue cargado por un clic
+                if (playOnLoad) {
+                    wavesurfer.play();
+                    //console.log(`Audio reproduciendo automáticamente para postId=${postId}`);
+                } else {
+                    //console.log(`Audio cargado pero no reproducido para postId=${postId}, esperando interacción del usuario.`);
+                }
             });
 
-            handleWaveSurferEvents(wavesurfer, container, postId);
-        } catch (error) {
-            console.error('Error en loadAndPlayAudioStream:', error);
-            handleLoadError(error, retryCount, container);
-        }
-    }
-
-
-    async function decryptAudioData(encryptedData, ivArray, key) {
-        try {
-            // Convertir la clave hexadecimal a Uint8Array si aún no la has cacheado
-            if (!window.cachedKeyArray) {
-                window.cachedKeyArray = new Uint8Array(key.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-            }
-            const keyArray = window.cachedKeyArray;
-
-            // Importar la clave
-            const cryptoKey = await crypto.subtle.importKey('raw', keyArray.buffer, {name: 'AES-CBC', length: 256}, false, ['decrypt']);
-
-            // Desencriptar los datos
-            const decryptedData = await crypto.subtle.decrypt({name: 'AES-CBC', iv: ivArray}, cryptoKey, encryptedData);
-
-            return decryptedData;
-        } catch (error) {
-            console.error('Error en desencriptación de chunk:', error);
-            throw error;
-        }
-    }
-
-    // Función para construir la URL de audio
-    function buildAudioUrl(audioUrl, nonce) {
-        const urlObj = new URL(audioUrl);
-        if (!urlObj.searchParams.has('_wpnonce')) {
-            urlObj.searchParams.append('_wpnonce', nonce);
-        }
-        return urlObj.toString();
-    }
-
-    function createAudioBlobUrl(audioData) {
-        const audioBlob = new Blob([audioData], {type: 'audio/mpeg'});
-        return URL.createObjectURL(audioBlob);
-    }
-
-    async function validateAudio(blobUrl) {
-        const audio = new Audio();
-        audio.src = blobUrl;
-
-        await new Promise((resolve, reject) => {
-            audio.addEventListener('canplaythrough', resolve);
-            audio.addEventListener('error', reject);
-            audio.load();
-        });
-    }
-
-    // Función para manejar los eventos de Wavesurfer
-    function handleWaveSurferEvents(wavesurfer, container, postId) {
-        const waveformBackground = container.querySelector('.waveform-background');
-        if (waveformBackground) {
-            waveformBackground.style.display = 'none';
-        }
-
-        wavesurfer.on('ready', () => {
-            window.audioLoading = false;
-            container.dataset.audioLoaded = 'true';
-            const loadingElement = container.querySelector('.waveform-loading');
-            if (loadingElement) {
-                loadingElement.style.display = 'none';
-            }
-
-            // Generar y enviar la imagen de la forma de onda
-            handleWaveformGeneration(wavesurfer, container, postId);
-
-            // Reproducir si es necesario
-            if (playOnLoad) {
-                wavesurfer.play();
-            }
-
-            // Revocar el Blob URL si ya no es necesario
-            URL.revokeObjectURL(wavesurfer.getCurrentSrc());
-        });
-
-        // No almacenar blobUrl en ningún lugar
-    }
-
-    // Función para manejar errores de carga
-    function handleLoadError(error, retryCount, container) {
-        console.error('Load error:', error);
-        if (retryCount < MAX_RETRIES) {
+            wavesurfer.on('error', () => {
+                //console.error(`Error al cargar el audio para postId=${postId}. Intento ${retryCount + 1} de ${MAX_RETRIES}`);
+                setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
+            });
+        })
+        .catch(error => {
+            //console.error(`Error al cargar el audio para postId=${postId}. Intento ${retryCount + 1} de ${MAX_RETRIES}`, error);
             setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
-        } else {
-            showError(container, 'Error al cargar el audio.');
-        }
-    }
+        });
+    };
 
-    // Función para manejar la generación de la forma de onda
-    function handleWaveformGeneration(wavesurfer, container, postId) {
-        const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
-        const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
-
-        if (!waveCargada && !isMobile && !container.closest('.LISTWAVESAMPLE')) {
-            setTimeout(() => {
-                const image = generateWaveformImage(wavesurfer);
-                sendImageToServer(image, postId);
-            }, 1);
-        }
-    }
-
-    // Iniciar la carga
     loadAndPlayAudioStream();
 };
 
 // La función que inicializa WaveSurfer con los estilos y configuraciones deseados
 function initWavesurfer(container) {
+    // Verifica si el contenedor o alguno de sus elementos padre tiene la clase 'LISTWAVESAMPLE'
     const isListWaveSample = container.classList.contains('LISTWAVESAMPLE') || container.parentElement.classList.contains('LISTWAVESAMPLE');
 
     const containerHeight = container.classList.contains('waveform-container-venta') ? 60 : isListWaveSample ? 45 : 102;
@@ -515,7 +294,7 @@ function initWavesurfer(container) {
         container: container,
         waveColor: gradient,
         progressColor: progressGradient,
-        backend: 'MediaElement',
+        backend: 'WebAudio',
         interact: true,
         barWidth: 2,
         height: containerHeight,
