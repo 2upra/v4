@@ -297,6 +297,7 @@ function encryptChunk($chunk, $iv, $key) {
         streamLog("Longitud del IV: " . strlen($iv));
         streamLog("Longitud de la clave hex: " . strlen($key));
         
+        
         // Convertir clave hex a binario
         $binary_key = hex2bin($key);
         streamLog("Longitud de la clave binaria: " . strlen($binary_key));
@@ -315,14 +316,15 @@ function encryptChunk($chunk, $iv, $key) {
             $chunk,
             'AES-256-CBC',
             $binary_key,
-            OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING,
+            OPENSSL_RAW_DATA, // Remover OPENSSL_ZERO_PADDING
             $iv
         );
         
         if ($encrypted === false) {
             throw new Exception("Error en la encriptación: " . openssl_error_string());
         }
-        
+        header('X-Original-Length: ' . strlen($chunk));
+        header('X-Encrypted-Length: ' . strlen($encrypted));
         streamLog("Encriptación exitosa - Longitud datos encriptados: " . strlen($encrypted));
         streamLog("Primeros bytes encriptados (hex): " . bin2hex(substr($encrypted, 0, 16)));
         
@@ -462,6 +464,7 @@ function audioStreamEnd($data)
         $sent = 0;
         $rate_limit = 512 * 1024; // 512KB por segundo
         $sleep_time = ($buffer_size / $rate_limit) * 1000000; // Convertir a microsegundos
+        
 
         if (defined('ENABLE_AUDIO_ENCRYPTION') && ENABLE_AUDIO_ENCRYPTION) {
             $iv = openssl_random_pseudo_bytes(16);
@@ -474,6 +477,7 @@ function audioStreamEnd($data)
                 throw new Exception('Clave de encriptación no configurada');
             }
             $key = $_ENV['AUDIOCLAVE'];
+            
             
             // Transmisión encriptada
             while (!feof($fp) && $sent < $length) {

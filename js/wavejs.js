@@ -226,7 +226,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
         window.wavesurfers = {};
     }
 
-    const MAX_RETRIES = 1;
+    const MAX_RETRIES = 0;
     console.log(`Iniciando carga de audio - PostID: ${postId}`);
 
     async function loadAndPlayAudioStream(retryCount = 0) {
@@ -343,18 +343,8 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     cryptoKey,
                     arrayBuffer
                 );
-                
-                // Remover padding PKCS7
-                const decryptedArray = new Uint8Array(decryptedData);
-                const paddingLength = decryptedArray[decryptedArray.length - 1];
-                const unpaddedData = decryptedData.slice(0, decryptedData.byteLength - paddingLength);
-                
-                console.log('Desencriptación exitosa:', {
-                    originalLength: decryptedData.byteLength,
-                    unpaddedLength: unpaddedData.byteLength
-                });
-                
-                return unpaddedData;
+                // Remover el manejo manual del padding
+                return decryptedData;
             } catch (decryptError) {
                 console.error('Error específico en decrypt:', {
                     error: decryptError,
