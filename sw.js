@@ -1,50 +1,41 @@
-// sw.js
 const CACHE_NAME = 'audio-cache-v1';
 
-// Log helper
-const swLog = (message) => {
-    console.log(`[ServiceWorker] ${message}`);
-};
-
-self.addEventListener('install', event => {
-    swLog('Installing...');
+self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
-self.addEventListener('activate', event => {
-    swLog('Activating...');
+self.addEventListener('activate', (event) => {
     event.waitUntil(clients.claim());
 });
 
-self.addEventListener('fetch', event => {
-    if (!event.request.url.includes('/wp-json/1/v1/2')) {
-        return;
-    }
+self.addEventListener('fetch', (event) => {
+    if (event.request.url.includes('/wp-json/1/v1/2')) {
+        event.respondWith(
+            caches.open(CACHE_NAME)
+                .then(async (cache) => {
+                    // Intentar obtener desde caché
+                    const cachedResponse = await cache.match(event.request);
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
 
-    swLog(`Interceptando petición: ${event.request.url}`);
-    
-    event.respondWith(
-        caches.open(CACHE_NAME)
-            .then(cache => {
-                return cache.match(event.request)
-                    .then(cachedResponse => {
-                        if (cachedResponse) {
-                            swLog('Retornando respuesta cacheada');
-                            return cachedResponse;
+                    // Si no está en caché, hacer la petición
+                    try {
+                        const networkResponse = await fetch(event.request);
+                        if (networkResponse.ok) {
+                            // Clonar la respuesta antes de cachear
+                            cache.put(event.request, networkResponse.clone());
+                            return networkResponse;
                         }
-
-                        swLog('Haciendo petición a la red');
-                        return fetch(event.request)
-                            .then(networkResponse => {
-                                swLog('Cacheando nueva respuesta');
-                                cache.put(event.request, networkResponse.clone());
-                                return networkResponse;
-                            })
-                            .catch(error => {
-                                swLog(`Error en fetch: ${error}`);
-                                throw error;
-                            });
-                    });
-            })
-    );
+                        throw new Error('Network response was not ok');
+                    } catch (error) {
+                        console.error('Fetch error:', error);
+                        return new Response('Error loading audio', {
+                            status: 500,
+                            headers: { 'Content-Type': 'text/plain' }
+                        });
+                    }
+                })
+        );
+    }
 });
