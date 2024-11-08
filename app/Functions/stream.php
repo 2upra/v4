@@ -290,6 +290,39 @@ function verificarAudio($token)
     }
 }
 
+function encryptChunk($chunk, $iv, $key)
+{
+    try {
+        // Asegurar que el chunk tenga el padding correcto
+        $block_size = 16;
+        $pad = $block_size - (strlen($chunk) % $block_size);
+        $chunk .= str_repeat(chr($pad), $pad);
+
+        streamLog("Tamaño del chunk antes de encriptar: " . strlen($chunk));
+        streamLog("Padding añadido: " . $pad . " bytes");
+
+        $encrypted = openssl_encrypt(
+            $chunk,
+            'AES-256-CBC',
+            hex2bin($key),
+            OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING,
+            $iv
+        );
+
+        if ($encrypted === false) {
+            $error = openssl_error_string();
+            streamLog("Error de encriptación OpenSSL: " . $error);
+            throw new Exception("Error en la encriptación: " . $error);
+        }
+
+        streamLog("Tamaño del chunk después de encriptar: " . strlen($encrypted));
+        return $encrypted;
+    } catch (Exception $e) {
+        streamLog("Error en encryptChunk: " . $e->getMessage());
+        throw $e;
+    }
+}
+
 function audioStreamEnd($data)
 {
     if (ob_get_level()) ob_end_clean();
@@ -308,7 +341,6 @@ function audioStreamEnd($data)
         }
 
         $audio_id = $parts[0];
-
         streamLog("Procesando transmisión para audio_id: $audio_id");
 
         // Gestión de caché
@@ -378,7 +410,6 @@ function audioStreamEnd($data)
         // Manejo de ranges para streaming
         if (isset($_SERVER['HTTP_RANGE'])) {
             list(, $range) = explode('=', $_SERVER['HTTP_RANGE'], 2);
-
             streamLog("Solicitando rango: $range");
 
             if (strpos($range, ',') !== false) {
@@ -408,9 +439,7 @@ function audioStreamEnd($data)
             $end = $c_end;
             $length = $end - $start + 1;
             fseek($fp, $start);
-
             streamLog("Rango ajustado: $start - $end");
-
             header('HTTP/1.1 206 Partial Content');
         }
 
@@ -419,56 +448,67 @@ function audioStreamEnd($data)
         header("Content-Length: " . $length);
 
         // Configuración de encriptación
-        $iv = openssl_random_pseudo_bytes(16);
-        header('X-Encryption-IV: ' . base64_encode($iv));
-        streamLog("Encriptando con IV: " . base64_encode($iv));
-
-        // Streaming con control de velocidad
         $buffer_size = 8192; // 8KB
         $sent = 0;
-
-        // Configuración de límite de velocidad
         $rate_limit = 512 * 1024; // 512KB por segundo
         $sleep_time = ($buffer_size / $rate_limit) * 1000000; // Convertir a microsegundos
 
-        while (!feof($fp) && $sent < $length) {
-            // Calcular cuánto queda por enviar
-            $remaining = $length - $sent;
-            $chunk_size = min($buffer_size, $remaining);
-
-            $chunk = fread($fp, $chunk_size);
-            if ($chunk === false) {
-                streamLog("Error al leer el archivo");
-                break;
+        if (defined('ENABLE_AUDIO_ENCRYPTION') && ENABLE_AUDIO_ENCRYPTION) {
+            // Generar IV único para esta sesión
+            $iv = openssl_random_pseudo_bytes(16);
+            if ($iv === false) {
+                throw new Exception('No se pudo generar el IV');
             }
+            header('X-Encryption-IV: ' . base64_encode($iv));
+            streamLog("IV generado (base64): " . base64_encode($iv));
 
-            // Encriptar chunk si está habilitado
-            if (defined('ENABLE_AUDIO_ENCRYPTION') && ENABLE_AUDIO_ENCRYPTION) {
-                $encrypted_chunk = openssl_encrypt(
-                    $chunk,
-                    'AES-256-CBC',
-                    $_ENV['AUDIOCLAVE'],
-                    OPENSSL_RAW_DATA,
-                    $iv
-                );
-                streamLog("Usando clave: " . bin2hex($_ENV['AUDIOCLAVE']));
-                if ($encrypted_chunk === false) {
-                    throw new Exception('Error en la encriptación');
+            if (!isset($_ENV['AUDIOCLAVE'])) {
+                throw new Exception('Clave de encriptación no configurada');
+            }
+            $key = $_ENV['AUDIOCLAVE'];
+            streamLog("Longitud de la clave (hex): " . strlen($key));
+
+            // Transmisión encriptada
+            while (!feof($fp) && $sent < $length) {
+                $remaining = $length - $sent;
+                $chunk_size = min($buffer_size, $remaining);
+                $chunk = fread($fp, $chunk_size);
+
+                if ($chunk === false) {
+                    streamLog("Error al leer el archivo");
+                    break;
                 }
 
+                $encrypted_chunk = encryptChunk($chunk, $iv, $key);
                 echo $encrypted_chunk;
                 $sent += strlen($encrypted_chunk);
                 streamLog("Chunk encriptado enviado: " . strlen($encrypted_chunk) . " bytes");
-            } else {
+
+                flush();
+                if ($sleep_time > 0) {
+                    usleep($sleep_time);
+                }
+            }
+        } else {
+            // Transmisión sin encriptación
+            while (!feof($fp) && $sent < $length) {
+                $remaining = $length - $sent;
+                $chunk_size = min($buffer_size, $remaining);
+                $chunk = fread($fp, $chunk_size);
+
+                if ($chunk === false) {
+                    streamLog("Error al leer el archivo");
+                    break;
+                }
+
                 echo $chunk;
                 $sent += strlen($chunk);
                 streamLog("Chunk sin encriptar enviado: " . strlen($chunk) . " bytes");
-            }
 
-            // Flush buffer y control de velocidad
-            flush();
-            if ($sleep_time > 0) {
-                usleep($sleep_time);
+                flush();
+                if ($sleep_time > 0) {
+                    usleep($sleep_time);
+                }
             }
         }
 
@@ -479,10 +519,7 @@ function audioStreamEnd($data)
     } catch (Exception $e) {
         streamLog("Error en audioStreamEnd: " . $e->getMessage());
 
-        // Limpiar cualquier output previo
         if (ob_get_level()) ob_end_clean();
-
-        // Enviar respuesta de error
         header('HTTP/1.1 500 Internal Server Error');
         header('Content-Type: application/json');
         echo json_encode([

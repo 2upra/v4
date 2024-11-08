@@ -170,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
     registerServiceWorker();
 });
 
-
 function verifyAudioSettings() {
     console.log('Verificando configuración de audio:', {
         nonce: audioSettings?.nonce ? 'Presente' : 'Ausente',
@@ -282,57 +281,97 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     }
 
     // Función para desencriptar los datos de audio
+    // Cliente: decryptAudioData
     async function decryptAudioData(arrayBuffer, iv, key) {
         try {
-            console.log('IV before decryption:', iv);
-    
+            console.log('Iniciando desencriptación...');
+            console.log('Tamaño de datos encriptados:', arrayBuffer.byteLength);
+            console.log('IV (base64):', iv);
+            console.log('Key (hex):', key);
+
+            // Validar que tengamos todos los datos necesarios
+            if (!arrayBuffer || !iv || !key) {
+                throw new Error('Faltan datos necesarios para la desencriptación');
+            }
+
+            // Validar que los datos encriptados sean múltiplo de 16
+            if (arrayBuffer.byteLength % 16 !== 0) {
+                console.error('Tamaño de datos no válido:', arrayBuffer.byteLength);
+                throw new Error('Los datos encriptados deben ser múltiplo de 16 bytes');
+            }
+
             // Decodificar el IV de base64 a Uint8Array
             const ivArray = new Uint8Array(
-                atob(iv)  // Decodifica de base64 a string
+                atob(iv)
                     .split('')
-                    .map(c => c.charCodeAt(0))  // Convierte cada carácter a código UTF-16
+                    .map(c => c.charCodeAt(0))
             );
-    
-            // Verificación de longitud del IV
-            console.log('IV length:', ivArray.length); // El IV debe tener 16 bytes
+
+            console.log('IV decodificado (bytes):', Array.from(ivArray));
+            console.log('IV length:', ivArray.length);
+
             if (ivArray.length !== 16) {
                 throw new Error('El IV tiene un tamaño incorrecto. Debe ser de 16 bytes para AES-CBC.');
             }
-    
-            // Convertir clave hexadecimal a ArrayBuffer
-            function hexToArrayBuffer(hexString) {
-                const length = hexString.length / 2;
-                const buffer = new Uint8Array(length);
-                for (let i = 0; i < length; i++) {
-                    buffer[i] = parseInt(hexString.substr(i * 2, 2), 16);
-                }
-                return buffer;
+
+            // Convertir y validar la clave
+            const keyArray = hexToArrayBuffer(key);
+            console.log('Key length (bytes):', keyArray.length);
+
+            if (keyArray.length !== 32) {
+                // 256 bits = 32 bytes
+                throw new Error('La clave debe ser de 256 bits (32 bytes)');
             }
-    
-            // Importar la clave encriptada en formato hexadecimal
+
+            // Importar la clave
+            console.log('Importando clave...');
             const cryptoKey = await crypto.subtle.importKey(
                 'raw',
-                hexToArrayBuffer(key), // Convertimos la clave hexadecimal a ArrayBuffer
-                { name: 'AES-CBC' },
+                keyArray,
+                {
+                    name: 'AES-CBC',
+                    length: 256
+                },
                 false,
                 ['decrypt']
             );
-    
+
+            console.log('Clave importada correctamente, procediendo a desencriptar...');
+
             // Desencriptar los datos
             const decryptedData = await crypto.subtle.decrypt(
-                { name: 'AES-CBC', iv: ivArray },
+                {
+                    name: 'AES-CBC',
+                    iv: ivArray
+                },
                 cryptoKey,
                 arrayBuffer
             );
-    
+
+            console.log('Desencriptación completada. Tamaño de datos desencriptados:', decryptedData.byteLength);
             return decryptedData;
         } catch (error) {
-            console.error('Error during decryption:', error);
-            throw new Error('Error en la desencriptación');
+            console.error('Error detallado durante la desencriptación:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
+            throw error;
         }
     }
-    
-    
+
+    function hexToArrayBuffer(hexString) {
+        if (!/^[0-9a-fA-F]+$/.test(hexString)) {
+            throw new Error('La clave debe estar en formato hexadecimal válido');
+        }
+        const length = hexString.length / 2;
+        const buffer = new Uint8Array(length);
+        for (let i = 0; i < length; i++) {
+            buffer[i] = parseInt(hexString.substr(i * 2, 2), 16);
+        }
+        return buffer;
+    }
+
     // Función para construir la URL de audio
     function buildAudioUrl(audioUrl, nonce) {
         const urlObj = new URL(audioUrl);
@@ -341,7 +380,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
         }
         return urlObj.toString();
     }
-
 
     function createAudioBlobUrl(audioData) {
         const audioBlob = new Blob([audioData], {type: 'audio/mpeg'});
