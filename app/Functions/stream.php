@@ -1,16 +1,7 @@
 <?
 define('ENABLE_BROWSER_AUDIO_CACHE', true);
 define('ENABLE_AUDIO_ENCRYPTION', true);
-// Añade esto al inicio de tu archivo
-add_action('init', function () {
-    if (!defined('DOING_AJAX') && !defined('REST_REQUEST')) {
-        return;
-    }
-    $user_id = wp_validate_auth_cookie('', 'logged_in');
-    if ($user_id) {
-        wp_set_current_user($user_id);
-    }
-});
+
 
 function audioUrlSegura($audio_id)
 {
@@ -66,75 +57,7 @@ function verificarFirma($request)
 }
 
 
-
-function bloquear_acceso_directo_archivos()
-{
-    if (strpos($_SERVER['REQUEST_URI'], '/wp-content/uploads/') !== false) {
-        $referer = $_SERVER['HTTP_REFERER'] ?? '';
-        if (strpos($referer, home_url()) === false) {
-            wp_die('Acceso denegado: no puedes descargar este archivo directamente.', 'Acceso denegado', array('response' => 403));
-        }
-    }
-}
-add_action('init', 'bloquear_acceso_directo_archivos');
-
-function decrementaUsosToken($unique_id)
-{
-    // Solo decrementar si el cacheo del navegador está desactivado
-    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
-        return; // No decrementar para tokens cacheados
-    }
-
-    streamLog("Decrementando usos del token: $unique_id");
-    $key = 'audio_token_' . $unique_id;
-    $usos_restantes = get_transient($key);
-
-    if ($usos_restantes !== false && $usos_restantes > 0) {
-        $usos_restantes--;
-        if ($usos_restantes > 0) {
-            set_transient($key, $usos_restantes, get_option('transient_timeout_' . $key));
-        } else {
-            delete_transient($key);
-        }
-    }
-}
-
-add_action('rest_api_init', function () {
-
-    register_rest_route('1/v1', '/audio-pro/(?P<id>\d+)', array(
-        'methods' => 'GET',
-        'callback' => 'audioStreamEndPro',
-        'permission_callback' => function () {
-            return usuarioEsAdminOPro(get_current_user_id());
-        },
-        'args' => array(
-            'id' => array(
-                'validate_callback' => function ($param) {
-                    return is_numeric($param);
-                }
-            ),
-        ),
-    ));
-
-    register_rest_route('1/v1', '/2', array(
-        'methods' => 'GET',
-        'callback' => 'audioStreamEnd',
-        'args' => array(
-            'token' => array(
-                'required' => true,
-                'validate_callback' => function ($param) {
-                    return !empty($param) && is_string($param);
-                }
-            ),
-        ),
-        'permission_callback' => function ($request) {
-            streamLog('Verificando permiso para token: ' . $request->get_param('token'));
-            return verificarAudio($request->get_param('token'));
-        }
-    ));
-});
-
-
+/*
 function tokenAudio($audio_id)
 {
     streamLog("Generando token para audio_id: $audio_id");
@@ -175,8 +98,65 @@ function tokenAudio($audio_id)
         return $token;
     }
 }
+*/
 
 
+add_action('rest_api_init', function () {
+
+    register_rest_route('1/v1', '/audio-pro/(?P<id>\d+)', array(
+        'methods' => 'GET',
+        'callback' => 'audioStreamEndPro',
+        'permission_callback' => function () {
+            return usuarioEsAdminOPro(get_current_user_id());
+        },
+        'args' => array(
+            'id' => array(
+                'validate_callback' => function ($param) {
+                    return is_numeric($param);
+                }
+            ),
+        ),
+    ));
+
+    register_rest_route('1/v1', '/2', array(
+        'methods' => 'GET',
+        'callback' => 'audioStreamEnd',
+        'args' => array(
+            'token' => array(
+                'required' => true,
+                'validate_callback' => function ($param) {
+                    return !empty($param) && is_string($param);
+                }
+            ),
+        ),
+        'permission_callback' => function ($request) {
+            streamLog('Verificando permiso para token: ' . $request->get_param('token'));
+            return verificarAudio($request->get_param('token'));
+        }
+    ));
+});
+
+
+function decrementaUsosToken($unique_id)
+{
+    // Solo decrementar si el cacheo del navegador está desactivado
+    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
+        return; // No decrementar para tokens cacheados
+    }
+
+    streamLog("Decrementando usos del token: $unique_id");
+    $key = 'audio_token_' . $unique_id;
+    $usos_restantes = get_transient($key);
+
+    if ($usos_restantes !== false && $usos_restantes > 0) {
+        $usos_restantes--;
+        if ($usos_restantes > 0) {
+            set_transient($key, $usos_restantes, get_option('transient_timeout_' . $key));
+        } else {
+            delete_transient($key);
+        }
+    }
+}
 function verificarAudio($token)
 {
     streamLog("Verificando token: $token");
@@ -310,12 +290,9 @@ function verificarAudio($token)
     }
 }
 
-
-
 function audioStreamEnd($data)
 {
     if (ob_get_level()) ob_end_clean();
-
 
     try {
         // Decodificar y validar token
@@ -332,11 +309,14 @@ function audioStreamEnd($data)
 
         $audio_id = $parts[0];
 
+        streamLog("Procesando transmisión para audio_id: $audio_id");
+
         // Gestión de caché
         $upload_dir = wp_upload_dir();
         $cache_dir = $upload_dir['basedir'] . '/audio_cache';
         if (!file_exists($cache_dir)) {
             wp_mkdir_p($cache_dir);
+            streamLog("Directorio de caché creado: $cache_dir");
         }
 
         $cache_file = $cache_dir . '/audio_' . $audio_id . '.cache';
@@ -356,6 +336,7 @@ function audioStreamEnd($data)
                 throw new Exception('Error al cachear el archivo');
             }
 
+            streamLog("Archivo cacheado correctamente: $cache_file");
             $file = $cache_file;
         }
 
@@ -372,11 +353,13 @@ function audioStreamEnd($data)
         $end = $size - 1;
         $etag = '"' . md5($file . filemtime($file)) . '"';
 
+        streamLog("Tamaño del archivo: $size bytes");
+
         // Headers básicos
         header('Content-Type: audio/mpeg');
         header('Accept-Ranges: bytes');
         header('X-Content-Type-Options: nosniff');
-        
+
         // Gestión de caché del navegador
         if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
             $cache_time = 60 * 60 * 24; // 24 horas
@@ -395,6 +378,8 @@ function audioStreamEnd($data)
         // Manejo de ranges para streaming
         if (isset($_SERVER['HTTP_RANGE'])) {
             list(, $range) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+
+            streamLog("Solicitando rango: $range");
 
             if (strpos($range, ',') !== false) {
                 header('HTTP/1.1 416 Requested Range Not Satisfiable');
@@ -423,6 +408,9 @@ function audioStreamEnd($data)
             $end = $c_end;
             $length = $end - $start + 1;
             fseek($fp, $start);
+
+            streamLog("Rango ajustado: $start - $end");
+
             header('HTTP/1.1 206 Partial Content');
         }
 
@@ -433,6 +421,7 @@ function audioStreamEnd($data)
         // Configuración de encriptación
         $iv = openssl_random_pseudo_bytes(16);
         header('X-Encryption-IV: ' . base64_encode($iv));
+        streamLog("Encriptando con IV: " . base64_encode($iv));
 
         // Streaming con control de velocidad
         $buffer_size = 8192; // 8KB
@@ -449,6 +438,7 @@ function audioStreamEnd($data)
 
             $chunk = fread($fp, $chunk_size);
             if ($chunk === false) {
+                streamLog("Error al leer el archivo");
                 break;
             }
 
@@ -461,16 +451,18 @@ function audioStreamEnd($data)
                     OPENSSL_RAW_DATA,
                     $iv
                 );
-
+                streamLog("Usando clave: " . bin2hex($_ENV['AUDIOCLAVE']));
                 if ($encrypted_chunk === false) {
                     throw new Exception('Error en la encriptación');
                 }
 
                 echo $encrypted_chunk;
                 $sent += strlen($encrypted_chunk);
+                streamLog("Chunk encriptado enviado: " . strlen($encrypted_chunk) . " bytes");
             } else {
                 echo $chunk;
                 $sent += strlen($chunk);
+                streamLog("Chunk sin encriptar enviado: " . strlen($chunk) . " bytes");
             }
 
             // Flush buffer y control de velocidad
@@ -585,3 +577,24 @@ function usuarioEsAdminOPro($user_id)
     //streamLog("usuarioEsAdminOPro: Usuario no es administrador ni tiene la meta 'pro'. ID: " . $user_id);
     return false;
 }
+
+function bloquear_acceso_directo_archivos()
+{
+    if (strpos($_SERVER['REQUEST_URI'], '/wp-content/uploads/') !== false) {
+        $referer = $_SERVER['HTTP_REFERER'] ?? '';
+        if (strpos($referer, home_url()) === false) {
+            wp_die('Acceso denegado: no puedes descargar este archivo directamente.', 'Acceso denegado', array('response' => 403));
+        }
+    }
+}
+
+add_action('init', function () {
+    if (!defined('DOING_AJAX') && !defined('REST_REQUEST')) {
+        return;
+    }
+    $user_id = wp_validate_auth_cookie('', 'logged_in');
+    if ($user_id) {
+        wp_set_current_user($user_id);
+    }
+});
+add_action('init', 'bloquear_acceso_directo_archivos');
