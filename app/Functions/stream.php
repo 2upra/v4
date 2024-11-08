@@ -446,10 +446,7 @@ function audioStreamEnd($data)
 
 
         if (defined('ENABLE_AUDIO_ENCRYPTION') && ENABLE_AUDIO_ENCRYPTION) {
-            $iv = openssl_random_pseudo_bytes(16);
-            if ($iv === false) {
-                throw new Exception('No se pudo generar el IV');
-            }
+            $iv = substr(hash('sha256', 'iv_prefix_' . $audio_id, true), 0, 16);
             header('X-Encryption-IV: ' . base64_encode($iv));
 
             if (!isset($_ENV['AUDIOCLAVE'])) {
