@@ -170,43 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
     registerServiceWorker();
 });
 
-/*
-tengo este problema
-Service Worker registrado: 
-ServiceWorkerRegistration { installing: null, waiting: null, active: ServiceWorker, navigationPreload: NavigationPreloadManager, scope: "https://2upra.com/", updateViaCache: "none", onupdatefound: null, pushManager: PushManager }
-wavejs.js:153:21
-Cargando audio: 
-Object { postId: "301085", audioUrl: "https://2upra.com/wp-json/1/v1/2?token=MzAxMDkyfDE5MjQ5MDU2MDB8Y2FjaGVkfDQ4NGI1NzljNjc5NzhhM2YwYjIzMzkwMmJlYmQ1MTJjfDk5OTk5OXw2M2ViOTg1ZGJiZmU4OTQ2YjEwNDNhMDhlNThjMzFmMzIxN2ZjNWFmNjFhMmQ2YzgxNzNiYWE0MGZkZjJjZTRl&_wpnonce=15d7d107c6&ts=1731039933&sig=61eeffd397a52481edc5ee0d5ab88fa3fb16f64d7f604a8d9d9b3376201d8aa3" }
-wavejs.js:177:13
-Usando Service Worker para cargar audio wavejs.js:182:25
-Verificando configuración de audio: 
-Object { nonce: "Presente", url: "https://2upra.com/sample/mellow-autumnal-melody/", origin: "https://2upra.com" }
-wavejs.js:198:13
-Iniciando carga de audio - PostID: 301085 wavejs.js:231:13
-Uncaught (in promise) DOMException: The buffer passed to decodeAudioData contains an unknown content type. 
-*/
-function loadAudio(postId, audioUrl, container, playOnLoad) {
-    if (!postId || container.dataset.audioLoaded) return;
-
-    console.log('Cargando audio:', {postId, audioUrl});
-
-    const loadWithServiceWorker = async () => {
-        try {
-            if (navigator.serviceWorker.controller) {
-                console.log('Usando Service Worker para cargar audio');
-                await window.we(postId, audioUrl, container, playOnLoad);
-            } else {
-                console.log('Service Worker no disponible, usando carga normal');
-                await window.we(postId, audioUrl, container, playOnLoad);
-            }
-            container.dataset.audioLoaded = 'true';
-        } catch (error) {
-            console.error('Error cargando audio:', error);
-        }
-    };
-
-    loadWithServiceWorker();
-}
 
 function verifyAudioSettings() {
     console.log('Verificando configuración de audio:', {
@@ -323,24 +286,33 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
         try {
             console.log('IV before decryption:', iv);
     
-            // Decodificar el IV de base64
+            // Decodificar el IV de base64 a Uint8Array
             const ivArray = new Uint8Array(
-                atob(iv)
+                atob(iv)  // Decodifica de base64 a string
                     .split('')
-                    .map(c => c.charCodeAt(0))
+                    .map(c => c.charCodeAt(0))  // Convierte cada carácter a código UTF-16
             );
     
-            // Verificar el tamaño del IV
+            // Verificación de longitud del IV
             console.log('IV length:', ivArray.length); // El IV debe tener 16 bytes
-    
             if (ivArray.length !== 16) {
                 throw new Error('El IV tiene un tamaño incorrecto. Debe ser de 16 bytes para AES-CBC.');
             }
     
-            // Importar la clave
+            // Convertir clave hexadecimal a ArrayBuffer
+            function hexToArrayBuffer(hexString) {
+                const length = hexString.length / 2;
+                const buffer = new Uint8Array(length);
+                for (let i = 0; i < length; i++) {
+                    buffer[i] = parseInt(hexString.substr(i * 2, 2), 16);
+                }
+                return buffer;
+            }
+    
+            // Importar la clave encriptada en formato hexadecimal
             const cryptoKey = await crypto.subtle.importKey(
                 'raw',
-                new TextEncoder().encode(key), // Convertir la clave a ArrayBuffer
+                hexToArrayBuffer(key), // Convertimos la clave hexadecimal a ArrayBuffer
                 { name: 'AES-CBC' },
                 false,
                 ['decrypt']
@@ -359,6 +331,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             throw new Error('Error en la desencriptación');
         }
     }
+    
     // Función para construir la URL de audio
     function buildAudioUrl(audioUrl, nonce) {
         const urlObj = new URL(audioUrl);
