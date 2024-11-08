@@ -214,35 +214,14 @@ function loadAudio(postId, audioUrl, container, playOnLoad) {
 
 /*
 logs del cliente
-2024-11-08 07:54:23 - Content-Length: 160540
-2024-11-08 07:54:23 - Encriptación exitosa - Longitud datos encriptados: 8212
-2024-11-08 07:54:23 - Bytes enviados en este ciclo: 8212 / Total enviados: 8212 de 160540
-2024-11-08 07:54:23 - Encriptación exitosa - Longitud datos encriptados: 8212
-2024-11-08 07:54:23 - Bytes enviados en este ciclo: 8212 / Total enviados: 16424 de 160540
-2024-11-08 07:54:23 - Encriptación exitosa - Longitud datos encriptados: 8212
-
-hay un problema grave, solo se carga los primeros segundos, enfoquemos logs a entender porque no se procesa el resto
-
-voy a suponer que waveform no espera que cargue todo e inmediatamente con el primer dato genera la wave
-
-logs del servidor
-
-Headers recibidos: 
-Cargando audio: 
-Object { postId: "266762", audioUrl: "https://2upra.com/wp-json/1/v1/2?token=MjcyNDk5fDE5MjQ5MDU2MDB8Y2FjaGVkfDI5MjEwNWYxMDI5ODg1OGU3MWZkNWZmNzE4YjJlNWYxfDk5OTk5OXxlNTVmYWZkYzZiNWI5MDg5YjdhZmFkZTg3ODM4N2RmYWY0MjhkZmEwYWJkNDI1ZTdlMjU2NjcwOWQ5YWYzMGNh&_wpnonce=15d7d107c6&ts=1731052453&sig=282c50349f3e42694ec58ed7299b7378bdb10aa45ace7b225d3a8ed55c8a84a6" }
-wavejs.js:195:13
-Usando Service Worker para cargar audio wavejs.js:200:25
-Verificando configuración de audio: 
-Object { nonce: "Presente", url: "https://2upra.com/sample/jazzy-hammond-organ-sample/", origin: "https://2upra.com" }
-wavejs.js:174:13
-Iniciando carga de audio - PostID: 266762 wavejs.js:267:13
+aqui hay un problema y es que no carga el audio completo 
 Procesando chunk: 
 Object { totalLength: 8212, chunkLength: 8208, dataLength: 8208 }
-wavejs.js:367:21
-Procesado 8212 de 8212 bytes wavejs.js:318:29
-Transmisión completa wavejs.js:301:29
+wavejs.js:363:21
+Procesado 8212 de NaN bytes wavejs.js:314:29
+Transmisión completa wavejs.js:297:29
 Audio final combinado: 
-Object { totalLength: 8192, chunks: 1 }
+Object { totalLength: 8192, chunks: 1 
 */
 
 window.we = function (postId, audioUrl, container, playOnLoad = false) {
@@ -283,8 +262,15 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             }
     
             const reader = response.body.getReader();
-            const contentLength = parseInt(response.headers.get('Content-Length'));
             const iv = response.headers.get('X-Encryption-IV');
+
+            // Ajuste en la línea donde se obtiene contentLength
+            const contentLengthHeader = response.headers.get('Content-Length');
+            const contentLength = contentLengthHeader ? parseInt(contentLengthHeader) : -1;  // -1 para indicar longitud desconocida
+
+            // Log para revisar el valor obtenido
+            console.log(`Content-Length obtenido: ${contentLength}`);
+
     
             // Array para almacenar los datos desencriptados
             let decryptedChunks = [];
