@@ -232,10 +232,10 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     async function loadAndPlayAudioStream(retryCount = 0) {
         try {
             window.audioLoading = true;
-
+    
             // Construir la URL final del audio
             const finalAudioUrl = buildAudioUrl(audioUrl, audioSettings.nonce);
-
+    
             const response = await fetch(finalAudioUrl, {
                 method: 'GET',
                 credentials: 'same-origin',
@@ -246,42 +246,45 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     Range: 'bytes=0-'
                 }
             });
-
+    
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
+    
             // Obtener los datos encriptados
             const arrayBuffer = await response.arrayBuffer();
-
-            // En el cliente, verifica que el header X-Encryption-IV existe
+    
+            // Verificar headers y obtener IV
             console.log('Headers recibidos:', Object.fromEntries(response.headers));
-
-            if (!iv) {
+            const iv = response.headers.get('X-Encryption-IV');
+            console.log('IV recibido:', iv);
+    
+            // Verificar si tenemos el IV necesario
+            if (!iv && audioSettings.key) {
+                console.error('Se esperaba IV para desencriptación pero no se recibió');
                 throw new Error('No se recibió el IV en los headers');
             }
-            // Si hay encriptación, obtener IV y desencriptar
-            const iv = response.headers.get('X-Encryption-IV');
+    
+            // Procesar los datos
             let audioData = arrayBuffer;
-
-            if (iv) {
-                // Intentar desencriptar los datos
+            if (iv && audioSettings.key) {
+                console.log('Iniciando proceso de desencriptación');
                 audioData = await decryptAudioData(arrayBuffer, iv, audioSettings.key);
             }
-
-            // Convertir los datos desencriptados en un blob de audio
+    
+            // Convertir los datos en blob
             const blobUrl = createAudioBlobUrl(audioData);
             await validateAudio(blobUrl);
-
+    
             // Inicializar y cargar Wavesurfer
             const wavesurfer = initWavesurfer(container);
             window.wavesurfers[postId] = wavesurfer;
-
-            // Cargar el audio usando la URL del blob
+    
             wavesurfer.load(blobUrl);
-
+    
             handleWaveSurferEvents(wavesurfer, container, postId, blobUrl);
         } catch (error) {
+            console.error('Error en loadAndPlayAudioStream:', error);
             handleLoadError(error, retryCount, container);
         }
     }
