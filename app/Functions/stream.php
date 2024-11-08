@@ -57,7 +57,7 @@ function verificarFirma($request)
 }
 
 
-/*
+
 function tokenAudio($audio_id)
 {
     streamLog("Generando token para audio_id: $audio_id");
@@ -98,7 +98,7 @@ function tokenAudio($audio_id)
         return $token;
     }
 }
-*/
+
 
 
 add_action('rest_api_init', function () {
