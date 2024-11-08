@@ -272,8 +272,10 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             console.log(`Content-Length obtenido: ${contentLength}`);
 
             // Array para almacenar los datos desencriptados
+            let currentIV = ivArray;
             let decryptedChunks = [];
             let receivedLength = 0;
+            
 
             while (true) {
                 const {done, value} = await reader.read();
