@@ -212,6 +212,21 @@ function loadAudio(postId, audioUrl, container, playOnLoad) {
     loadWithServiceWorker();
 }
 
+/*
+2024-11-08 07:33:59 - Content-Length: 160540
+2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
+2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
+2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
+2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
+2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
+2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
+2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
+2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
+2024-11-08 07:33:59 - Encriptación exitosa - Longitud datos encriptados: 8212
+
+hay un problema grave, solo se carga los primeros segundos, enfoquemos logs a entender porque no se procesa el resto
+*/
+
 window.we = function (postId, audioUrl, container, playOnLoad = false) {
     // Verificaciones iniciales
     verifyAudioSettings();

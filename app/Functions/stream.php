@@ -258,18 +258,17 @@ function verificarAudio($token)
 function encryptChunk($chunk, $iv, $key)
 {
     try {
-        // Mantener solo log de Content-Length y tamaño de datos encriptados
+
         $binary_key = hex2bin($key);
         if ($binary_key === false) {
             throw new Exception('Error al convertir la clave hexadecimal a binario');
         }
 
-        // Encriptar sin padding manual (usar el padding automático de OpenSSL)
         $encrypted = openssl_encrypt(
             $chunk,
             'AES-256-CBC',
             $binary_key,
-            OPENSSL_RAW_DATA,  // Solo usar OPENSSL_RAW_DATA
+            OPENSSL_RAW_DATA,
             $iv
         );
 
@@ -277,16 +276,11 @@ function encryptChunk($chunk, $iv, $key)
             throw new Exception("Error en la encriptación: " . openssl_error_string());
         }
 
-        // Agregar información de longitud al inicio del chunk encriptado
-        $length_prefix = pack('N', strlen($encrypted));  // 4 bytes para la longitud
+        $length_prefix = pack('N', strlen($encrypted));
         $final_data = $length_prefix . $encrypted;
-
         $encrypted_length = strlen($final_data);
         header('Content-Length: ' . $encrypted_length);
-        
-        // Mantener log para verificar longitud
         streamLog("Encriptación exitosa - Longitud datos encriptados: " . strlen($final_data));
-
         return $final_data;
     } catch (Exception $e) {
         streamLog("Error en encryptChunk: " . $e->getMessage());
@@ -408,14 +402,11 @@ function audioStreamEnd($data)
         streamLog("Content-Range: bytes $start-$end/$size");
         streamLog("Content-Length: $length");
 
-
-
         // Configuración de encriptación
         $buffer_size = 8192; // 8KB
         $sent = 0;
         $rate_limit = 512 * 1024; // 512KB por segundo
         $sleep_time = ($buffer_size / $rate_limit) * 1000000; // Convertir a microsegundos
-
 
         if (defined('ENABLE_AUDIO_ENCRYPTION') && ENABLE_AUDIO_ENCRYPTION) {
             $iv = openssl_random_pseudo_bytes(16);
@@ -429,30 +420,29 @@ function audioStreamEnd($data)
             }
             $key = $_ENV['AUDIOCLAVE'];
 
+            while (!feof($fp) && $sent < $length) {
+                $remaining = $length - $sent;
+                $chunk_size = min($buffer_size, $remaining);
+                $chunk = fread($fp, $chunk_size);
 
-            if ($length <= $buffer_size) {
-                $chunk = fread($fp, $length);
+                if ($chunk === false) {
+                    break;
+                }
+
+                // Encriptar chunk
                 $encrypted_chunk = encryptChunk($chunk, $iv, $key);
                 echo $encrypted_chunk;
-            } else {
-                // Para archivos grandes, procesar en chunks
-                while (!feof($fp) && $sent < $length) {
-                    $remaining = $length - $sent;
-                    $chunk_size = min($buffer_size, $remaining);
-                    $chunk = fread($fp, $chunk_size);
 
-                    if ($chunk === false) {
-                        break;
-                    }
+                // Actualizar el total enviado usando longitud de chunk encriptado
+                $sent += strlen($encrypted_chunk);
 
-                    $encrypted_chunk = encryptChunk($chunk, $iv, $key);
-                    echo $encrypted_chunk;
-                    $sent += strlen($chunk);  // Usar la longitud del chunk original
+                // Log de depuración
+                streamLog("Bytes enviados en este ciclo: " . strlen($encrypted_chunk) . " / Total enviados: $sent de $length");
 
-                    flush();
-                    if ($sleep_time > 0) {
-                        usleep($sleep_time);
-                    }
+                // Control de envío
+                flush();
+                if ($sleep_time > 0) {
+                    usleep($sleep_time);
                 }
             }
         } else {
@@ -475,6 +465,7 @@ function audioStreamEnd($data)
                 }
             }
         }
+
 
         // Logging y limpieza
         fclose($fp);
