@@ -255,27 +255,23 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 // Si no está en caché, hacer la petición
                 response = await fetch(finalAudioUrl, {
                     method: 'GET',
-                    credentials: 'same-origin',
+                    credentials: 'omit', // Cambiado de 'same-origin' a 'omit'
                     headers: {
                         'X-WP-Nonce': audioSettings.nonce,
                         'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'audio/mpeg',
-                        'Range': 'bytes=0-',
-                        'Cache-Control': 'max-age=86400'
+                        
+                        //'Accept': 'audio/mpeg',
+                        //'Range': 'bytes=0-',
+                        'Cache-Control': 'max-age=86400' 
                     }
                 });
     
-                // Guardar la respuesta encriptada en caché
+                // Guardar en caché
                 if (response.ok) {
-                    const responseToCache = new Response(response.clone().body, {
-                        headers: {
-                            ...Object.fromEntries(response.headers),
-                            'cache-time': Date.now().toString()
-                        }
-                    });
-                    await cache.put(finalAudioUrl, responseToCache);
+                    await cache.put(finalAudioUrl, response.clone());
                 }
             }
+    
     
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -298,6 +294,8 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     
             let buffer = new Uint8Array(0);
             let receivedLength = 0;
+    
+            // **Agrega esta línea para declarar decryptedChunks**
             let decryptedChunks = [];
     
             while (true) {
@@ -310,6 +308,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 }
     
                 if (value && value.length > 0) {
+                    // Añadir los nuevos datos al buffer
                     let tmp = new Uint8Array(buffer.length + value.length);
                     tmp.set(buffer, 0);
                     tmp.set(value, buffer.length);
@@ -317,13 +316,17 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     
                     receivedLength += value.length;
     
+                    // Procesar el buffer
                     let offset = 0;
     
                     while (buffer.length - offset >= 4) {
+                        // Leer el prefijo de longitud
                         const lengthView = new DataView(buffer.buffer, buffer.byteOffset + offset, 4);
-                        const chunkLength = lengthView.getUint32(0, false);
+                        const chunkLength = lengthView.getUint32(0, false); // Big-endian
     
+                        // Verificar si tenemos suficientes datos para procesar el chunk
                         if (buffer.length - offset >= 4 + chunkLength) {
+                            // Extraer los datos encriptados
                             const encryptedData = buffer.subarray(offset + 4, offset + 4 + chunkLength);
     
                             console.log('Procesando chunk:', {
@@ -333,9 +336,11 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                             });
     
                             try {
+                                // Desencriptar el chunk
                                 const decryptedData = await decryptAudioData(encryptedData, currentIV, audioSettings.key);
                                 decryptedChunks.push(new Uint8Array(decryptedData));
     
+                                // Actualizar el IV (últimos 16 bytes de encryptedData)
                                 if (encryptedData.byteLength >= 16) {
                                     currentIV = encryptedData.subarray(encryptedData.byteLength - 16);
                                 } else {
@@ -347,12 +352,15 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                                 throw error;
                             }
     
+                            // Mover el offset más allá de este chunk
                             offset += 4 + chunkLength;
                         } else {
+                            // No tenemos suficientes datos aún
                             break;
                         }
                     }
     
+                    // Eliminar los datos procesados del buffer
                     if (offset > 0) {
                         buffer = buffer.subarray(offset);
                     }
@@ -360,27 +368,11 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     console.log(`Procesado ${receivedLength} bytes`);
                 }
             }
-    
+
             const audioBuffer = concatenateUint8Arrays(decryptedChunks);
+            const audioBlob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+            const blobUrl = URL.createObjectURL(audioBlob);
             
-            // Verificar la integridad del audio
-            const integrity = await verifyAudioIntegrity(audioBuffer);
-            console.log('Audio integrity hash:', integrity);
-    
-            const audioBlob = new Blob([audioBuffer], { 
-                type: 'audio/mpeg',
-                customProperty: 'encrypted'
-            });
-    
-            // Crear URL del blob con timestamp y hash de integridad
-            const blobUrl = URL.createObjectURL(audioBlob) + '#t=' + Date.now() + '&hash=' + integrity;
-    
-            // Limpiar URLs anteriores
-            if (window.previousBlobUrl) {
-                URL.revokeObjectURL(window.previousBlobUrl);
-            }
-            window.previousBlobUrl = blobUrl;
-    
             await validateAudio(blobUrl);
             
             const wavesurfer = initWavesurfer(container);
@@ -393,27 +385,10 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             
             handleWaveSurferEvents(wavesurfer, container, postId, blobUrl);
     
-            // Programar limpieza automática
-           /* setTimeout(() => {
-                if (window.previousBlobUrl === blobUrl) {
-                    URL.revokeObjectURL(blobUrl);
-                    window.previousBlobUrl = null;
-                }
-            }, 3600000); // Limpiar después de 1 hora */
-    
         } catch (error) {
             console.error('Error en loadAndPlayAudioStream:', error);
             handleLoadError(error, retryCount, container);
-        } finally {
-            window.audioLoading = false;
         }
-    }
-    
-    // Función auxiliar para verificar la integridad
-    async function verifyAudioIntegrity(audioBuffer) {
-        const hashBuffer = await crypto.subtle.digest('SHA-256', audioBuffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
     
     async function decryptAudioData(encryptedData, ivArray, key) {
