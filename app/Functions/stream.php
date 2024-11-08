@@ -305,12 +305,17 @@ function encryptChunk($chunk, $iv, $key) {
             throw new Exception('Error al convertir la clave hexadecimal a binario');
         }
         
+        // Asegurar que el padding sea consistente
+        $blockSize = 16;
+        $pad = $blockSize - (strlen($chunk) % $blockSize);
+        $chunk = $chunk . str_repeat(chr($pad), $pad);
+        
         // Encriptar
         $encrypted = openssl_encrypt(
             $chunk,
             'AES-256-CBC',
             $binary_key,
-            OPENSSL_RAW_DATA,
+            OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING,
             $iv
         );
         
@@ -319,13 +324,14 @@ function encryptChunk($chunk, $iv, $key) {
         }
         
         streamLog("Encriptación exitosa - Longitud datos encriptados: " . strlen($encrypted));
+        streamLog("Primeros bytes encriptados (hex): " . bin2hex(substr($encrypted, 0, 16)));
+        
         return $encrypted;
     } catch (Exception $e) {
         streamLog("Error en encryptChunk: " . $e->getMessage());
         throw $e;
     }
 }
-
 
 function audioStreamEnd($data)
 {

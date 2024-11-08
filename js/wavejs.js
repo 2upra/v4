@@ -304,18 +304,13 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             console.log('IV convertido:', {
                 originalLength: iv.length,
                 decodedLength: ivArray.length,
-                ivArray: Array.from(ivArray)
+                ivArrayHex: Array.from(ivArray).map(b => b.toString(16).padStart(2, '0')).join('')
             });
             
             // Convertir key hex a ArrayBuffer
             keyArray = new Uint8Array(
                 key.match(/.{1,2}/g).map(byte => parseInt(byte, 16))
             );
-            console.log('Key convertida:', {
-                originalLength: key.length,
-                decodedLength: keyArray.length,
-                keyArray: Array.from(keyArray)
-            });
             
             // Importar la clave
             const cryptoKey = await crypto.subtle.importKey(
@@ -328,30 +323,52 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 false,
                 ['decrypt']
             );
-            console.log('Clave importada exitosamente');
             
             // Verificar datos encriptados
+            const encryptedBytes = new Uint8Array(arrayBuffer);
             console.log('Datos encriptados:', {
                 length: arrayBuffer.byteLength,
-                firstBytes: new Uint8Array(arrayBuffer.slice(0, 16))
+                firstBytesHex: Array.from(encryptedBytes.slice(0, 16))
+                    .map(b => b.toString(16).padStart(2, '0'))
+                    .join('')
             });
             
             // Desencriptar
-            const decryptedData = await crypto.subtle.decrypt(
-                {
-                    name: 'AES-CBC',
-                    iv: ivArray
-                },
-                cryptoKey,
-                arrayBuffer
-            );
-            
-            console.log('Desencriptación exitosa:', {
-                decryptedLength: decryptedData.byteLength,
-                firstDecryptedBytes: new Uint8Array(decryptedData.slice(0, 16))
-            });
-            
-            return decryptedData;
+            try {
+                const decryptedData = await crypto.subtle.decrypt(
+                    {
+                        name: 'AES-CBC',
+                        iv: ivArray
+                    },
+                    cryptoKey,
+                    arrayBuffer
+                );
+                
+                // Remover padding PKCS7
+                const decryptedArray = new Uint8Array(decryptedData);
+                const paddingLength = decryptedArray[decryptedArray.length - 1];
+                const unpaddedData = decryptedData.slice(0, decryptedData.byteLength - paddingLength);
+                
+                console.log('Desencriptación exitosa:', {
+                    originalLength: decryptedData.byteLength,
+                    unpaddedLength: unpaddedData.byteLength
+                });
+                
+                return unpaddedData;
+            } catch (decryptError) {
+                console.error('Error específico en decrypt:', {
+                    error: decryptError,
+                    params: {
+                        ivLength: ivArray.length,
+                        keyType: cryptoKey.type,
+                        dataLength: arrayBuffer.byteLength,
+                        firstBytesHex: Array.from(encryptedBytes.slice(0, 16))
+                            .map(b => b.toString(16).padStart(2, '0'))
+                            .join('')
+                    }
+                });
+                throw decryptError;
+            }
         } catch (error) {
             console.error('Error detallado en desencriptación:', {
                 errorName: error.name,
@@ -367,8 +384,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 },
                 dataDetails: {
                     dataLength: arrayBuffer?.byteLength,
-                    isArrayBuffer: arrayBuffer instanceof ArrayBuffer,
-                    firstBytes: arrayBuffer ? Array.from(new Uint8Array(arrayBuffer.slice(0, 16))) : null
+                    isArrayBuffer: arrayBuffer instanceof ArrayBuffer
                 }
             });
             throw error;
