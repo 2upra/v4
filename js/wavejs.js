@@ -318,6 +318,47 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
         }
     }
 
+    // Función para desencriptar los datos de audio
+    async function decryptAudioData(arrayBuffer, iv, key) {
+        try {
+            console.log('IV before decryption:', iv);
+    
+            // Decodificar el IV de base64
+            const ivArray = new Uint8Array(
+                atob(iv)
+                    .split('')
+                    .map(c => c.charCodeAt(0))
+            );
+    
+            // Verificar el tamaño del IV
+            console.log('IV length:', ivArray.length); // El IV debe tener 16 bytes
+    
+            if (ivArray.length !== 16) {
+                throw new Error('El IV tiene un tamaño incorrecto. Debe ser de 16 bytes para AES-CBC.');
+            }
+    
+            // Importar la clave
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw',
+                new TextEncoder().encode(key), // Convertir la clave a ArrayBuffer
+                { name: 'AES-CBC' },
+                false,
+                ['decrypt']
+            );
+    
+            // Desencriptar los datos
+            const decryptedData = await crypto.subtle.decrypt(
+                { name: 'AES-CBC', iv: ivArray },
+                cryptoKey,
+                arrayBuffer
+            );
+    
+            return decryptedData;
+        } catch (error) {
+            console.error('Error during decryption:', error);
+            throw new Error('Error en la desencriptación');
+        }
+    }
     // Función para construir la URL de audio
     function buildAudioUrl(audioUrl, nonce) {
         const urlObj = new URL(audioUrl);
@@ -325,28 +366,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             urlObj.searchParams.append('_wpnonce', nonce);
         }
         return urlObj.toString();
-    }
-
-    // Función para desencriptar los datos de audio
-    async function decryptAudioData(arrayBuffer, iv, key) {
-        try {
-            console.log('IV before decryption:', iv);
-
-            const ivArray = new Uint8Array(
-                atob(iv)
-                    .split('')
-                    .map(c => c.charCodeAt(0))
-            );
-
-            const cryptoKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(key), {name: 'AES-CBC'}, false, ['decrypt']);
-
-            const decryptedData = await crypto.subtle.decrypt({name: 'AES-CBC', iv: ivArray}, cryptoKey, arrayBuffer);
-
-            return decryptedData;
-        } catch (error) {
-            console.error('Error during decryption:', error);
-            throw new Error('Error en la desencriptación');
-        }
     }
 
 
