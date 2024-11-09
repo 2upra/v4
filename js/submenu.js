@@ -93,12 +93,14 @@ function initializeStaticMenus() {
 // Esto se reinicia cada vez que cargan nuevos posts
 function submenu() {
     //boton clase - submenu id - posicon x - posicion y
-    createSubmenu(".filtrosboton", "filtrosMenu-default", 0, 0);
+    createSubmenu(".filtrosboton", "filtrosMenu", 0, 0);
     createSubmenu(".mipsubmenu", "submenuperfil", 0, 120);
     createSubmenu(".HR695R7", "opcionesrola", 100, 0);
     createSubmenu(".HR695R8", "opcionespost", 60, 0);
     createSubmenu(".submenucolab", "opcionescolab", 60, 0);
 }
+
+// PORQUE SI TENGO ESTE BOTON <button class="filtrosboton">Filtros<? echo $GLOBALS['filtro']; ?></button> Y ESTE SUBMENU 
 
 document.addEventListener('DOMContentLoaded', () => {
     //console.log('[DOMContentLoaded] Documento cargado, inicializando menús estáticos');

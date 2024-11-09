@@ -114,7 +114,7 @@ function socialTabs()
                             <?
                             $filtroTiempo = get_user_meta(get_current_user_id(), 'filtroTiempo', true);
                             ?>
-                            <div class="A1806241" id="filtrosMenu">
+                            <div class="A1806241" id="filtrosMenu-default">
                                 <div class="A1806242">
                                     <button class="filtroFeed <? echo ($filtroTiempo == 0 || $filtroTiempo === '') ? 'filtroSelec' : ''; ?>">Para mí</button>
                                     <button class="filtroReciente <? echo ($filtroTiempo == 1) ? 'filtroSelec' : ''; ?>">Recientes</button>
