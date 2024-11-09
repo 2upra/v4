@@ -45,11 +45,13 @@ function socialTabs()
 
 
             <div class="tab INICIO S4K7I3" id="Samples">
-                <div class="DHRDTAG">
-                    <? echo tagsPosts() ?>
-                </div>
-                <div class="FOFDV5">
-                    <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12]); ?>
+                <div class="BPLBDE">
+                    <div class="DHRDTAG">
+                        <? echo tagsPosts() ?>
+                    </div>
+                    <div class="FOFDV5">
+                        <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12]); ?>
+                    </div>
                 </div>
             </div>
 
