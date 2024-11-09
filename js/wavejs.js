@@ -275,15 +275,15 @@ function initWavesurfer(container) {
     // Verifica si el contenedor o alguno de sus elementos padre tiene la clase 'LISTWAVESAMPLE'
     const isListWaveSample = container.classList.contains('LISTWAVESAMPLE') || container.parentElement.classList.contains('LISTWAVESAMPLE');
 
-    const containerHeight = container.classList.contains('waveform-container-venta') ? 60 : isListWaveSample ? 45 : 102;
+    const containerHeight = container.classList.contains('waveform-container-venta') ? 60 : isListWaveSample ? 40 : 102;
 
     const ctx = document.createElement('canvas').getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 500);
     const progressGradient = ctx.createLinearGradient(0, 0, 0, 500);
 
     // Configuración de los colores del gradiente
-    gradient.addColorStop(0, '#FFFFFF');
-    gradient.addColorStop(0.55, '#FFFFFF');
+    gradient.addColorStop(0, '#848484');
+    gradient.addColorStop(0.55, '#848484');
     gradient.addColorStop(0.551, '#d43333');
     gradient.addColorStop(1, '#d43333');
 
