@@ -15,13 +15,13 @@ define('STRIPE_ERROR_ENABLED', true);
 
 //
 define('LOG_AUDIO_ENABLED', false);
-define('CHAT_LOG_ENABLED', false);   
-define('AUT_LOG_ENABLED', true);     
-define('GUARDAR_LOG_ENABLED', false);  
-define('LOG_ALGORITMO_ENABLED', false); 
-define('AJAX_POST_LOG_ENABLED', false); 
-define('IA_LOG_ENABLED', false);        
-define('POST_LOG_ENABLED', false);      
+define('CHAT_LOG_ENABLED', false);
+define('AUT_LOG_ENABLED', true);
+define('GUARDAR_LOG_ENABLED', false);
+define('LOG_ALGORITMO_ENABLED', false);
+define('AJAX_POST_LOG_ENABLED', false);
+define('IA_LOG_ENABLED', false);
+define('POST_LOG_ENABLED', false);
 define('SEO_LOG_ENABLED', true);
 define('STREAM_LOG_ENABLED', true);
 
@@ -109,9 +109,7 @@ function stripeError($log)
 
 function autLog($log)
 {
-    if (AUT_LOG_ENABLED) {
-        escribirLog($log, '/var/www/wordpress/wp-content/themes/automaticPost.log');
-    }
+    escribirLog($log, '/var/www/wordpress/wp-content/themes/automaticPost.log');
 }
 
 function guardarLog($log)
@@ -150,7 +148,8 @@ function postLog($log)
 }
 
 // Encolar el archivo sw.js
-function encolar_sw_js() {
+function encolar_sw_js()
+{
     wp_enqueue_script(
         'sw-js',
         home_url('/sw.js'),  // Ruta absoluta desde la raíz del dominio
@@ -297,7 +296,8 @@ function scriptsOrdenados()
 
 add_action('wp_enqueue_scripts', 'scriptsOrdenados');
 
-function limpiarLogs() {
+function limpiarLogs()
+{
     $log_files = array(
         ABSPATH . 'wp-content/themes/wanlog.txt',
         ABSPATH . 'wp-content/themes/wanlogAjax.txt',
@@ -309,29 +309,29 @@ function limpiarLogs() {
     foreach ($log_files as $file) {
         if (file_exists($file)) {
             $file_size = filesize($file) / (1024 * 1024); // Size in MB
-            
+
             if ($file_size > 1) {
                 // Use SplFileObject for memory-efficient file handling
                 try {
                     $temp_file = $file . '.temp';
                     $fp_out = fopen($temp_file, 'w');
-                    
+
                     if ($fp_out === false) {
                         continue;
                     }
 
                     $file_obj = new SplFileObject($file, 'r');
-                    
+
                     // Move file pointer to end
                     $file_obj->seek(PHP_INT_MAX);
                     $total_lines = $file_obj->key();
-                    
+
                     // Calculate start position for last 2000 lines
                     $start_line = max(0, $total_lines - 2000);
-                    
+
                     // Reset pointer
                     $file_obj->rewind();
-                    
+
                     $current_line = 0;
                     while (!$file_obj->eof()) {
                         if ($current_line >= $start_line) {
@@ -340,19 +340,18 @@ function limpiarLogs() {
                         $file_obj->next();
                         $current_line++;
                     }
-                    
+
                     fclose($fp_out);
-                    
+
                     // Replace original file with temp file
                     if (file_exists($temp_file)) {
                         unlink($file);
                         rename($temp_file, $file);
                     }
-                    
                 } catch (Exception $e) {
                     // Log error or handle exception
                     error_log("Error processing log file {$file}: " . $e->getMessage());
-                    
+
                     // Clean up temp file if it exists
                     if (isset($temp_file) && file_exists($temp_file)) {
                         unlink($temp_file);
