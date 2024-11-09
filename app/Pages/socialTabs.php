@@ -53,7 +53,7 @@ function socialTabs()
                         <p id="resultadosPost">Resultados: </p>
                         <div class="OPCDGED">
 
-                            <span class="filtrosboton">Filtros<? echo $GLOBALS['filtro']; ?></span>
+                            <button class="filtrosboton">Filtros<? echo $GLOBALS['filtro']; ?></button>
 
                             <!--
 
