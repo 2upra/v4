@@ -49,6 +49,12 @@ function socialTabs()
                     <div class="DHRDTAG">
                         <? echo tagsPosts() ?>
                     </div>
+                    <div class="FDGEDF">
+                        <p id="resultadosPost">Resultados: </p>
+                        <div class="OPCDGED">
+                            <span id="ORDENPOSTSL"><? echo $GLOBALS['flechaAbajo']; ?></span>                            
+                        </div>
+                    </div>
                     <div class="FOFDV5">
                         <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12]); ?>
                     </div>
