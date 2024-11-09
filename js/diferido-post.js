@@ -13,6 +13,7 @@
     let scrollTimeout = null;
 
     // Función que se llama cada vez que se cambia de página mediante AJAX
+    window.reiniciarCargaDiferida = reiniciarCargaDiferida;
     function reiniciarCargaDiferida() {
         log('Reiniciando carga diferida');
         window.removeEventListener('scroll', manejarScroll);
