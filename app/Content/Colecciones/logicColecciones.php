@@ -215,7 +215,7 @@ function añadirSampleEnColab($collection_id, $sample_id, $user_id)
         ];
     }
 
-    // Obtener los samples actuales
+    // Obtener los samples actuales en la colección
     $samples = get_post_meta($collection_id, 'samples', true);
     if (!is_array($samples)) {
         $samples = array();
@@ -233,9 +233,18 @@ function añadirSampleEnColab($collection_id, $sample_id, $user_id)
     $samples[] = $sample_id;
     $updated = update_post_meta($collection_id, 'samples', $samples);
 
-    // Actualizar el campo de última modificación
     if ($updated) {
+
         update_post_meta($collection_id, 'ultimaModificacion', current_time('mysql'));
+        $samplesGuardados = get_user_meta($user_id, 'samplesGuardados', true);
+        if (!is_array($samplesGuardados)) {
+            $samplesGuardados = array();
+        }
+        if (!isset($samplesGuardados[$sample_id])) {
+            $samplesGuardados[$sample_id] = [];
+        }
+        $samplesGuardados[$sample_id][] = $collection_id;
+        update_user_meta($user_id, 'samplesGuardados', $samplesGuardados);
 
         return [
             'success' => true,
@@ -249,6 +258,7 @@ function añadirSampleEnColab($collection_id, $sample_id, $user_id)
         ];
     }
 }
+
 
 
 function botonColeccion($postId)
@@ -296,17 +306,38 @@ function eliminarSampledeColec()
         $samples = [];
     }
 
-    // Buscar y remover el sample_id
+    // Buscar y remover el sample_id de la colección
     $key = array_search($sample_id, $samples);
     if ($key !== false) {
         unset($samples[$key]); // Remover el sample del array
         $samples = array_values($samples); // Reindexar el array
         update_post_meta($coleccionId, 'samples', $samples); // Actualizar el meta
+
+        // Eliminar el registro del sample en los metadatos del usuario
+        $samplesGuardados = get_user_meta($userId, 'samplesGuardados', true);
+        if (isset($samplesGuardados[$sample_id])) {
+            // Buscar y eliminar la colección específica del sample
+            $index = array_search($coleccionId, $samplesGuardados[$sample_id]);
+            if ($index !== false) {
+                unset($samplesGuardados[$sample_id][$index]);
+                $samplesGuardados[$sample_id] = array_values($samplesGuardados[$sample_id]); // Reindexar el array
+
+                // Si no quedan colecciones para el sample, eliminar la entrada del sample en los metadatos
+                if (empty($samplesGuardados[$sample_id])) {
+                    unset($samplesGuardados[$sample_id]);
+                }
+            }
+        }
+
+        // Actualizar los metadatos del usuario
+        update_user_meta($userId, 'samplesGuardados', $samplesGuardados);
+
         wp_send_json_success(['message' => 'Sample eliminado de colección']);
     } else {
         wp_send_json_error(['message' => 'No se encontró el sample en la colección']);
     }
 }
+
 add_action('wp_ajax_eliminarSampledeColec', 'eliminarSampledeColec');
 
 function eliminarColeccion()
@@ -320,7 +351,36 @@ function eliminarColeccion()
     $coleccion = get_post($coleccionId);
 
     if ($coleccion && $coleccion->post_author == $userId) {
+        // Obtener todos los samples de la colección antes de eliminarla
+        $samples = get_post_meta($coleccionId, 'samples', true);
+        if (!is_array($samples)) {
+            $samples = [];
+        }
+
+        // Eliminar la colección de los metadatos del usuario para cada sample
+        $samplesGuardados = get_user_meta($userId, 'samplesGuardados', true);
+        foreach ($samples as $sample_id) {
+            if (isset($samplesGuardados[$sample_id])) {
+                // Buscar y eliminar la colección específica del sample
+                $index = array_search($coleccionId, $samplesGuardados[$sample_id]);
+                if ($index !== false) {
+                    unset($samplesGuardados[$sample_id][$index]);
+                    $samplesGuardados[$sample_id] = array_values($samplesGuardados[$sample_id]); // Reindexar el array
+
+                    // Si no quedan colecciones para el sample, eliminar la entrada del sample en los metadatos
+                    if (empty($samplesGuardados[$sample_id])) {
+                        unset($samplesGuardados[$sample_id]);
+                    }
+                }
+            }
+        }
+
+        // Actualizar los metadatos del usuario
+        update_user_meta($userId, 'samplesGuardados', $samplesGuardados);
+
+        // Eliminar la colección
         wp_delete_post($coleccionId, true);
+
         return json_encode(['success' => true]);
     } else {
         return json_encode(['error' => 'No tienes permisos para eliminar esta colección']);

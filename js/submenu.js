@@ -92,7 +92,8 @@ function initializeStaticMenus() {
 
 // Esto se reinicia cada vez que cargan nuevos posts
 function submenu() {
-    //console.log('[submenu] Inicializando menús dinámicos');
+    //boton clase - submenu id - posicon x - posicion y
+    createSubmenu(".filtrosboton", "filtrosMenu", 0, 0);
     createSubmenu(".mipsubmenu", "submenuperfil", 0, 120);
     createSubmenu(".HR695R7", "opcionesrola", 100, 0);
     createSubmenu(".HR695R8", "opcionespost", 60, 0);

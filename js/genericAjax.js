@@ -566,3 +566,46 @@ function actualizarElemento(element, newStatus) {
         element.textContent = newStatus;
     }
 }
+
+function cambiarFiltroTiempo() {
+    const filtroButtons = document.querySelectorAll('.filtroFeed, .filtroReciente, .filtroSemanal, .filtroMensual');
+
+    if (!filtroButtons) {
+        return;
+    }
+
+    filtroButtons.forEach(button => {
+        button.addEventListener('click', async (event) => {
+            event.preventDefault();
+
+            let filtroTiempo;
+            switch (button.className) {
+                case 'filtroFeed':
+                    filtroTiempo = 0;
+                    break;
+                case 'filtroReciente':
+                    filtroTiempo = 1;
+                    break;
+                case 'filtroSemanal':
+                    filtroTiempo = 2;
+                    break;
+                case 'filtroMensual':
+                    filtroTiempo = 3;
+                    break;
+                default:
+                    filtroTiempo = 0;
+            }
+
+            const resultado = await enviarAjax('guardarFiltro', { filtroTiempo: filtroTiempo });
+            if (resultado.success) {
+                filtroButtons.forEach(btn => btn.classList.remove('filtroSelec'));
+                button.classList.add('filtroSelec');
+                window.reiniciarCargaDiferida();
+            } else {
+                console.error('Error al guardar el filtro:', resultado.message);
+            }
+        });
+    });
+}
+
+

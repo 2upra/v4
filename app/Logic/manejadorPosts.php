@@ -27,130 +27,114 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
     
 }
 
-/*
-
-[07-Nov-2024 02:21:48 UTC] PHP Stack trace:
-[07-Nov-2024 02:21:48 UTC] PHP   1. {main}() /var/www/wordpress/index.php:0
-[07-Nov-2024 02:21:48 UTC] PHP   2. require() /var/www/wordpress/index.php:17
-[07-Nov-2024 02:21:48 UTC] PHP   3. require_once() /var/www/wordpress/wp-blog-header.php:19
-[07-Nov-2024 02:21:48 UTC] PHP   4. include() /var/www/wordpress/wp-includes/template-loader.php:106
-[07-Nov-2024 02:21:48 UTC] PHP   5. publicaciones($args = ['filtro' => 'nada', 'posts' => 10, 'similar_to' => 289724], $is_ajax = *uninitialized*, $paged = *uninitialized*) /var/www/wordpress/wp-content/themes/2upra3v/single-social_post.php:165
-[07-Nov-2024 02:21:48 UTC] PHP   6. configuracionQueryArgs($args = ['filtro' => 'nada', 'tab_id' => '', 'posts' => 10, 'exclude' => [], 'post_type' => 'social_post', 'similar_to' => 289724], $paged = 1, $user_id = NULL, $current_user_id = 44) /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php:17
-[07-Nov-2024 02:21:48 UTC] PHP   7. define($constant_name = 'FALLBACK_USER_ID', $value = 44) /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php:30
-[07-Nov-2024 02:22:02 UTC] PHP Warning:  Constant FALLBACK_USER_ID already defined in /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php on line 30
-[07-Nov-2024 02:22:02 UTC] PHP Stack trace:
-[07-Nov-2024 02:22:02 UTC] PHP   1. {main}() /var/www/wordpress/index.php:0
-[07-Nov-2024 02:22:02 UTC] PHP   2. require() /var/www/wordpress/index.php:17
-[07-Nov-2024 02:22:02 UTC] PHP   3. require_once() /var/www/wordpress/wp-blog-header.php:19
-[07-Nov-2024 02:22:02 UTC] PHP   4. include() /var/www/wordpress/wp-includes/template-loader.php:106
-[07-Nov-2024 02:22:02 UTC] PHP   5. publicaciones($args = ['filtro' => 'nada', 'posts' => 10, 'similar_to' => 289724], $is_ajax = *uninitialized*, $paged = *uninitialized*) /var/www/wordpress/wp-content/themes/2upra3v/single-social_post.php:165
-[07-Nov-2024 02:22:02 UTC] PHP   6. configuracionQueryArgs($args = ['filtro' => 'nada', 'tab_id' => '', 'posts' => 10, 'exclude' => [], 'post_type' => 'social_post', 'similar_to' => 289724], $paged = 1, $user_id = NULL, $current_user_id = 44) /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php:17
-[07-Nov-2024 02:22:02 UTC] PHP   7. define($constant_name = 'FALLBACK_USER_ID', $value = 44) /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php:30
-
-*/
-
-
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     global $FALLBACK_USER_ID;
     if (!isset($FALLBACK_USER_ID)) {
         $FALLBACK_USER_ID = 44;
     }
-    
     $is_authenticated = $current_user_id && $current_user_id != 0;
     $is_admin = current_user_can('administrator');
-    
+
     if (!$is_authenticated) {
         $current_user_id = $FALLBACK_USER_ID;
     }
-    
     $identifier = $_POST['identifier'] ?? '';
     $posts = $args['posts'];
     $similar_to = $args['similar_to'] ?? null;
+
+    // Obtener el valor de filtroTiempo y verificar su valor
+    $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
+    $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
+
+    return aplicarFiltros($query_args, $args, $user_id, $current_user_id);
+}
+
+
+function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to) {
+    global $wpdb;
     $post_not_in = [];
-    
-    if ($similar_to) {
-        $post_not_in[] = $similar_to;
-        $cache_suffix = "_similar_" . $similar_to;
-    } else {
-        $cache_suffix = "";
+    $query_args = [];
+
+    // Crear una clave de caché única por usuario y por filtroTiempo
+    $cache_key = 'user_' . $current_user_id . '_filtroTiempo_' . $filtroTiempo;
+    $cached_query_args = get_transient($cache_key);
+
+    if ($cached_query_args) {
+        return $cached_query_args;
     }
 
     if ($args['post_type'] === 'social_post') {
-        $transient_key = !$is_authenticated 
-            ? "feed_personalizado_anonymous_{$identifier}{$cache_suffix}"
-            : "feed_personalizado_user_{$current_user_id}_{$identifier}{$cache_suffix}";
-        
-        $use_cache = !$is_admin;
-        $cached_data = $use_cache ? get_transient($transient_key) : false;
-        
-        if ($cached_data) {
-            $posts_personalizados = $cached_data['posts'];
-        } else {
-            // Solo calcular el feed personalizado si estamos en la página 1
-            if ($paged === 1) {
-                $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
-            } else {
-                // Para otras páginas, intentar obtener datos de caché expirada
-                $posts_personalizados = get_option($transient_key . '_backup', []);
-                if (empty($posts_personalizados)) {
-                    // Si no hay backup, calcular de todos modos
-                    $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
-                }
-            }
-            
-            if ($use_cache) {
-                $cache_data = [
-                    'posts' => $posts_personalizados,
-                    'timestamp' => time()
-                ];
-                
-                $cache_time = $similar_to ? 3600 : 86400;
-                set_transient($transient_key, $cache_data, $cache_time);
-                // Guardar un backup en wp_options
-                update_option($transient_key . '_backup', $posts_personalizados);
-            }
-        }
-        
-        // Resto del código igual...
-        $post_ids = array_keys($posts_personalizados);
-        
-        if ($similar_to) {
-            $post_ids = array_filter($post_ids, function($post_id) use ($similar_to) {
-                return $post_id != $similar_to;
-            });
-        }
-        
-        $post_ids = array_unique($post_ids);
-        $posts_per_page = $posts;
-        $offset = ($paged - 1) * $posts_per_page;
-        $current_page_ids = array_slice($post_ids, $offset, $posts_per_page);
-        
-        if ($paged > 1) {
-            $previous_page_ids = array_slice($post_ids, 0, ($paged - 1) * $posts_per_page);
-            $post_not_in = array_merge($post_not_in, $previous_page_ids);
-        }
-        
-        $query_args = [
-            'post_type' => $args['post_type'],
-            'posts_per_page' => $posts_per_page,
-            'post__in' => $current_page_ids,
-            'orderby' => 'post__in',
-            'meta_query' => [],
-            'ignore_sticky_posts' => true,
-        ];
+        // Determinar el tipo de consulta basada en filtroTiempo
+        if ($filtroTiempo === 1) { // Post recientes
+            $query_args = [
+                'post_type' => $args['post_type'],
+                'posts_per_page' => $posts,
+                'paged' => $paged,
+                'orderby' => 'date',
+                'order' => 'DESC',
+                'ignore_sticky_posts' => true,
+            ];
+        } elseif ($filtroTiempo === 2 || $filtroTiempo === 3) { // Top semanal o mensual
+            $likes_table = $wpdb->prefix . 'post_likes';
 
-        if (!empty($post_not_in)) {
-            $query_args['post__not_in'] = array_unique($post_not_in);
+            // Determinar el período de tiempo
+            $time_condition = '';
+            if ($filtroTiempo === 2) {
+                $time_condition = "AND pl.like_date >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
+            } elseif ($filtroTiempo === 3) {
+                $time_condition = "AND pl.like_date >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
+            }
+
+            // Subconsulta para contar likes en el periodo especificado
+            $posts_with_likes = $wpdb->get_results("
+                SELECT p.ID, COUNT(pl.post_id) as like_count 
+                FROM {$wpdb->posts} p 
+                LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
+                WHERE p.post_type = 'social_post' 
+                AND p.post_status = 'publish'
+                {$time_condition}
+                GROUP BY p.ID
+                ORDER BY like_count DESC
+                LIMIT " . ($posts * $paged),
+                ARRAY_A
+            );
+
+            $post_ids = wp_list_pluck($posts_with_likes, 'ID');
+
+            $query_args = [
+                'post_type' => $args['post_type'],
+                'posts_per_page' => $posts,
+                'paged' => $paged,
+                'post__in' => $post_ids,
+                'orderby' => 'post__in', 
+                'ignore_sticky_posts' => true,
+            ];
+
+            set_transient($cache_key, $query_args, 24 * HOUR_IN_SECONDS);
+        } else { // Filtro personalizado u otro
+            $personalized_feed = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
+            $post_ids = $personalized_feed['post_ids'];
+            $post_not_in = $personalized_feed['post_not_in'];
+
+            $query_args = [
+                'post_type' => $args['post_type'],
+                'posts_per_page' => $posts,
+                'post__in' => $post_ids,
+                'orderby' => 'post__in',
+                'ignore_sticky_posts' => true,
+            ];
+
+            if (!empty($post_not_in)) {
+                $query_args['post__not_in'] = array_unique($post_not_in);
+            }
         }
     } else {
-        // Configuración estándar para otros tipos de post...
         $query_args = [
             'post_type' => $args['post_type'],
             'posts_per_page' => $posts,
             'paged' => $paged,
             'orderby' => 'date',
             'order' => 'DESC',
-            'meta_query' => [],
             'ignore_sticky_posts' => true,
         ];
 
@@ -159,8 +143,9 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
         }
     }
 
-    return aplicarFiltros($query_args, $args, $user_id, $current_user_id);
+    return $query_args;
 }
+
 
 
 function procesarPublicaciones($query_args, $args, $is_ajax)

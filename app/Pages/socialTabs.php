@@ -52,7 +52,88 @@ function socialTabs()
                     <div class="FDGEDF">
                         <p id="resultadosPost">Resultados: </p>
                         <div class="OPCDGED">
-                            <span id="ORDENPOSTSL"><? echo $GLOBALS['flechaAbajo']; ?></span>                            
+
+                            <span class="filtrosboton">Filtros<? echo $GLOBALS['filtro']; ?></span>
+
+                            <!--
+
+                            hay que hacer un script y una funcion
+
+                            Aqui el usuario tiene que poder elegir, guardar en la meta del usuario filtro tiempo
+
+                            1 = Post Recientes, 2 = Top Semanal, 3 = TopMensual (por defecto 0 o ninguna = Feed normal (para mi))
+                            al dar click al span aparece el submenu (esto ya esta programado lo de abir el submenu)
+
+                            al dar click tiene que guardar en la meta del usuario filtroTiempo el valor correspondiente a la eleccion y al final despues de guardarse llamar window.reiniciarCargaDiferida()
+
+                            usa enviarAjax /no puedes cambiar enviarAjax) para simplificar el script - entorno wordpress
+
+                            async function enviarAjax(action, data = {}) {
+                                try {
+                                    const body = new URLSearchParams({
+                                        action: action,
+                                        ...data
+                                    });
+                                    const response = await fetch(ajaxUrl, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/x-www-form-urlencoded'
+                                        },
+                                        body: body
+                                    });
+                                    if (!response.ok) {
+                                        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+                                    }
+                                    let responseData;
+                                    const responseText = await response.text();
+                                    try {
+                                        responseData = JSON.parse(responseText);
+                                    } catch (jsonError) {
+                                        console.error('No se pudo interpretar la respuesta como JSON:', {
+                                            error: jsonError,
+                                            responseText: responseText,
+                                            action: action,
+                                            requestData: data
+                                        });
+                                        responseData = responseText;
+                                    }
+                                    return responseData;
+                                } catch (error) {
+                                    console.error('Error en la solicitud AJAX:', {
+                                        error: error,
+                                        action: action,
+                                        requestData: data,
+                                        ajaxUrl: ajaxUrl
+                                    });
+                                    return {success: false, message: error.message};
+                                }
+                            }
+
+                            -->
+
+                            <?
+                            $filtroTiempo = get_user_meta(get_current_user_id(), 'filtroTiempo', true);
+                            ?>
+                            <div class="A1806241" id="filtrosMenu">
+                                <div class="A1806242">
+                                    <button class="filtroFeed <? echo ($filtroTiempo == 0 || $filtroTiempo === '') ? 'filtroSelec' : ''; ?>">Para mí</button>
+                                    <button class="filtroReciente <? echo ($filtroTiempo == 1) ? 'filtroSelec' : ''; ?>">Recientes</button>
+                                    <button class="filtroSemanal <? echo ($filtroTiempo == 2) ? 'filtroSelec' : ''; ?>">Top Semanal</button>
+                                    <button class="filtroMensual <? echo ($filtroTiempo == 3) ? 'filtroSelec' : ''; ?>">Top Mensual</button>
+                                </div>
+                            </div>
+                            
+
+                            <span id="ORDENPOSTSL"><? echo $GLOBALS['flechaAbajo']; ?></span>
+
+                            <!--
+
+                            Aqui los filtros tienen que ser: (por defecto desactivado)
+                            [ocultarDescargados, ocultarEnColeccion, mostrarMeGustan]
+                            
+
+                            -->
+
                         </div>
                     </div>
                     <div class="FOFDV5">
