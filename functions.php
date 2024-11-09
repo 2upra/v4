@@ -16,7 +16,7 @@ define('STRIPE_ERROR_ENABLED', true);
 //
 define('LOG_AUDIO_ENABLED', false);
 define('CHAT_LOG_ENABLED', false);   
-define('AUT_LOG_ENABLED', false);     
+define('AUT_LOG_ENABLED', true);     
 define('GUARDAR_LOG_ENABLED', false);  
 define('LOG_ALGORITMO_ENABLED', false); 
 define('AJAX_POST_LOG_ENABLED', false); 
