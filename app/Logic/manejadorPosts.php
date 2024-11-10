@@ -107,11 +107,10 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     echo '<!-- Número de publicaciones procesadas en esta página: ' . $posts_count . ' -->';
     echo '<!-- Total de publicaciones sin paginación: ' . $total_posts . ' -->';
     echo '<input type="hidden" class="post-count" value="' . esc_attr($posts_count) . '" />';
-    echo '<input type="hidden" class="total-posts" value="' . esc_attr($total_posts) . '" />';
+    echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($filtro) . '" value="' . esc_attr($total_posts) . '" />';
 
     return ob_get_clean();
 }
-
 
 function obtenerUserId($is_ajax)
 {

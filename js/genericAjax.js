@@ -726,3 +726,12 @@ function filtrosPost() {
     // Iniciar la carga de filtros
     cargarFiltrosGuardados();
 }
+
+function contadorDeSamples() {
+    const resultadosElement = document.getElementById('resultadosPost-sampleList');
+    const totalPostsElement = document.querySelector('.total-posts-sampleList');
+    if (resultadosElement && totalPostsElement) {
+      const totalPosts = totalPostsElement.value;
+      resultadosElement.textContent = 'Resultados: ' + totalPosts;
+    }
+  }

@@ -42,7 +42,7 @@ function socialTabs()
 
     <div class="tabs">
         <div class="tab-content">
-
+        
 
             <div class="tab INICIO S4K7I3" id="Samples">
                 <div class="BPLBDE">
@@ -50,11 +50,11 @@ function socialTabs()
                         <? echo tagsPosts() ?>
                     </div>
                     <div class="FDGEDF">
-                        <p id="resultadosPost">Resultados: </p>
+                        <p id="resultadosPost-sampleList">Resultados: </p>
                         <div class="OPCDGED">
 
                             <button class="restablecerBusqueda" style="display: none;">Restablecer filtros</button>
-                            
+
                             <button class="filtrosboton">Orden<? echo $GLOBALS['tiempo']; ?></button>
                             <?
                             $filtroTiempo = get_user_meta(get_current_user_id(), 'filtroTiempo', true);
