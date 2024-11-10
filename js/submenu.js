@@ -100,7 +100,6 @@ function submenu() {
     createSubmenu(".submenucolab", "opcionescolab", 60, 0);
 }
 
-// PORQUE SI TENGO ESTE BOTON <button class="filtrosboton">Filtros<? echo $GLOBALS['filtro']; ?></button> Y ESTE SUBMENU 
 
 document.addEventListener('DOMContentLoaded', () => {
     //console.log('[DOMContentLoaded] Documento cargado, inicializando menús estáticos');

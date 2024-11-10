@@ -601,6 +601,7 @@ function cambiarFiltroTiempo() {
                 filtroButtons.forEach(btn => btn.classList.remove('filtroSelec'));
                 button.classList.add('filtroSelec');
                 window.reiniciarCargaDiferida();
+                window.resetearCarga();
             } else {
                 console.error('Error al guardar el filtro:', resultado.message);
             }

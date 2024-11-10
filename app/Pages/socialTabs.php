@@ -131,6 +131,7 @@ function socialTabs()
                             Aqui los filtros tienen que ser: (por defecto desactivado)
                             [ocultarDescargados, ocultarEnColeccion, mostrarMeGustan]
                             
+                            
 
                             -->
 
