@@ -624,10 +624,12 @@ async function actualizarBotonFiltro() {
         console.log('Respuesta completa del servidor:', response);
         
         if (response.success) {
-            const filtroActual = response.filtroTiempo;
+            // Corregimos el acceso a los datos
+            const filtroActual = response.data.filtroTiempo;
             console.log('Filtro actual obtenido:', filtroActual);
             
-            const nombreFiltro = getNombreFiltro(filtroActual);
+            // También podríamos usar directamente el nombreFiltro que viene del servidor
+            const nombreFiltro = response.data.nombreFiltro || getNombreFiltro(filtroActual);
             console.log('Nombre del filtro obtenido:', nombreFiltro);
             
             const botonFiltro = document.querySelector('.filtrosboton');
