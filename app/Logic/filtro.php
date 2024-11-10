@@ -155,11 +155,9 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     $query_args = [
         'post_type' => $args['post_type'],
         'posts_per_page' => $posts,
-        'paged' => $paged, // Aquí es donde estamos asegurándonos de que se use el valor de paginación correcto
-        'author' => $current_user_id,
-        // Otros parámetros de la consulta
+        'paged' => $paged,
+        'ignore_sticky_posts' => true,
     ];
-
 
     // Manejar diferentes tipos de ordenamiento
     if ($args['post_type'] === 'social_post') {
