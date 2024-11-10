@@ -32,17 +32,26 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     if (!isset($FALLBACK_USER_ID)) {
         $FALLBACK_USER_ID = 44;
     }
+
     $is_authenticated = $current_user_id && $current_user_id != 0;
     $is_admin = current_user_can('administrator');
     if (!$is_authenticated) {
         $current_user_id = $FALLBACK_USER_ID;
     }
+
     $identifier = $_POST['identifier'] ?? '';
     $posts = $args['posts'];
     $similar_to = $args['similar_to'] ?? null;
     $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
+
+    // Construir los argumentos de consulta base
     $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
-    return aplicarFiltros($query_args, $args, $user_id, $current_user_id);
+    // Aplicar filtros personalizados del usuario
+    $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+    // Aplicar filtro global basado en el argumento 'filtro'
+    $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id);
+
+    return $query_args;
 }
 
 

@@ -108,8 +108,6 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                 // Determinar el intervalo
                 $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
                 postLog("Caso $filtroTiempo: Usando intervalo de $interval");
-
-                // Consulta SQL modificada para filtrar por likes en el intervalo
                 $sql = "
                     SELECT p.ID, 
                            COUNT(pl.post_id) as like_count 
@@ -124,26 +122,16 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                 ";
 
                 postLog("SQL Query: " . $sql);
-
-                // Ejecutar la consulta
                 $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
-
                 postLog("Resultados encontrados: " . count($posts_with_likes));
                 
                 if (!empty($posts_with_likes)) {
                     foreach ($posts_with_likes as $post) {
-                        postLog("Post ID: {$post['ID']}, Likes: {$post['like_count']}");
+                        //postLog("Post ID: {$post['ID']}, Likes: {$post['like_count']}");
                     }
-                    
-                    // Obtener todos los IDs ordenados
                     $post_ids = wp_list_pluck($posts_with_likes, 'ID');
-                    
-                    // Calcular el offset para la paginación
                     $offset = ($paged - 1) * $posts;
-                    
-                    // Tomar solo los IDs necesarios para esta página
                     $paged_post_ids = array_slice($post_ids, $offset, $posts);
-                    
                     if (!empty($paged_post_ids)) {
                         $query_args['post__in'] = $paged_post_ids;
                         $query_args['orderby'] = 'post__in';
@@ -152,7 +140,6 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                     postLog("IDs de posts para esta página: " . implode(', ', $paged_post_ids));
                 } else {
                     postLog("No se encontraron posts con likes en el período especificado");
-                    // Si no hay posts con likes, mostrar los más recientes
                     $query_args['orderby'] = 'date';
                     $query_args['order'] = 'DESC';
                 }
@@ -180,8 +167,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
 
 
 
-function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
-{
+function aplicarFiltrosUsuario($query_args, $current_user_id) {
     // Obtener los filtros personalizados del usuario
     $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
 
@@ -221,6 +207,10 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
         }
     }
 
+    return $query_args;
+}
+
+function aplicarFiltroGlobal($query_args, $args, $current_user_id) {
     // Aplicar el filtro original de `$filtro`
     $filtro = $args['filtro'] ?? 'nada';
     $meta_query_conditions = [
@@ -263,10 +253,6 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
         }
     }
 
-    // Definir autor si se proporciona el user_id
-    if ($user_id !== null) {
-        $query_args['author'] = $user_id;
-    }
-
     return $query_args;
 }
+
