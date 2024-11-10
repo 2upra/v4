@@ -272,7 +272,7 @@
     }
 
     function limpiarBusqueda() {
-        publicacionesCargadas = new Set();
+        publicacionesCargadas.clear();
         identificador = '';
         actualizarUIBusqueda('');
         resetearCarga();
