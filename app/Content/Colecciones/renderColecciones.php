@@ -143,7 +143,7 @@ function modalCreacionColeccion()
 
     ob_start();
 ?>
-    <div class="modalColec crearColec modalCrearColec modal" style="display: none;">
+    <div class="modalColec crearColec modalCrearColec modal" id="modalCrearColec" style="display: none;">
         <div class="colecciones formColec">
             <h3>Crear colección</h3>
             <div class="previewAreaArchivos previewColec" id="previewImagenColec">

@@ -320,7 +320,7 @@ async function actualizarListaColecciones() {
 
 function subidaImagenColec() {
     const previewImagenColec = a('#previewImagenColec');
-    const formRs = a('#formRs');
+    const modalCrearColec = a('#modalCrearColec');
 
     const inicialSubida = event => {
         event.preventDefault();
@@ -362,9 +362,9 @@ function subidaImagenColec() {
     });
 
     ['dragover', 'dragleave', 'drop'].forEach(eventName => {
-        formRs.addEventListener(eventName, e => {
+        modalCrearColec.addEventListener(eventName, e => {
             e.preventDefault();
-            formRs.style.backgroundColor = eventName === 'dragover' ? '#e9e9e9' : '';
+            modalCrearColec.style.backgroundColor = eventName === 'dragover' ? '#e9e9e9' : '';
             if (eventName === 'drop') inicialSubida(e);
         });
     });
