@@ -1,5 +1,5 @@
 <?
-
+//Solo cargan la primera pagina, en total de post sale 12, no donde esta el problema, el problema supongo que sucede en alguna parte de construirQueryArgs
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
     $user_id = obtenerUserId($is_ajax);
@@ -46,6 +46,92 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
     //$query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
     //$query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id);
+    return $query_args;
+}
+
+function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to) {
+    global $wpdb;
+    $likes_table = $wpdb->prefix . 'post_likes';
+    $query_args = [];
+
+    postLog("Iniciando construirQueryArgs con filtroTiempo: $filtroTiempo");
+
+    // Configuración base
+    $query_args = [
+        'post_type' => $args['post_type'],
+        'posts_per_page' => $posts,
+        'paged' => $paged,
+        'ignore_sticky_posts' => true,
+    ];
+
+    // Manejar diferentes tipos de ordenamiento
+    if ($args['post_type'] === 'social_post') {
+        switch ($filtroTiempo) {
+            case 1: // Posts recientes
+                $query_args['orderby'] = 'date';
+                $query_args['order'] = 'DESC';
+                postLog("Caso 1: Ordenando por fecha reciente");
+                break;
+
+            case 2: // Top semanal
+            case 3: // Top mensual
+                // Determinar el intervalo
+                $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
+                postLog("Caso $filtroTiempo: Usando intervalo de $interval");
+                $sql = "
+                    SELECT p.ID, 
+                           COUNT(pl.post_id) as like_count 
+                    FROM {$wpdb->posts} p 
+                    LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
+                    WHERE p.post_type = 'social_post' 
+                    AND p.post_status = 'publish'
+                    AND pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval)
+                    GROUP BY p.ID
+                    HAVING like_count > 0
+                    ORDER BY like_count DESC, p.post_date DESC
+                ";
+
+                postLog("SQL Query: " . $sql);
+                $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
+                postLog("Resultados encontrados: " . count($posts_with_likes));
+                
+                if (!empty($posts_with_likes)) {
+                    foreach ($posts_with_likes as $post) {
+                        //postLog("Post ID: {$post['ID']}, Likes: {$post['like_count']}");
+                    }
+                    $post_ids = wp_list_pluck($posts_with_likes, 'ID');
+                    $offset = ($paged - 1) * $posts;
+                    $paged_post_ids = array_slice($post_ids, $offset, $posts);
+                    if (!empty($paged_post_ids)) {
+                        $query_args['post__in'] = $paged_post_ids;
+                        $query_args['orderby'] = 'post__in';
+                    }
+                    
+                    postLog("IDs de posts para esta página: " . implode(', ', $paged_post_ids));
+                } else {
+                    postLog("No se encontraron posts con likes en el período especificado");
+                    $query_args['orderby'] = 'date';
+                    $query_args['order'] = 'DESC';
+                }
+                break;
+
+            default:
+                postLog("Caso default: Obteniendo feed personalizado");
+                $personalized_feed = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
+                if (!empty($personalized_feed['post_ids'])) {
+                    $query_args['post__in'] = $personalized_feed['post_ids'];
+                    $query_args['orderby'] = 'post__in';
+                    postLog("Feed personalizado IDs: " . implode(', ', $personalized_feed['post_ids']));
+                }
+                if (!empty($personalized_feed['post_not_in'])) {
+                    $query_args['post__not_in'] = array_unique($personalized_feed['post_not_in']);
+                    postLog("Posts excluidos: " . implode(', ', $personalized_feed['post_not_in']));
+                }
+                break;
+        }
+    }
+
+    postLog("Query args finales: " . print_r($query_args, true));
     return $query_args;
 }
 
@@ -111,6 +197,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     echo '<!-- Total de publicaciones sin paginación: ' . $total_posts . ' -->';
     echo '<input type="hidden" class="post-count" value="' . esc_attr($posts_count) . '" />';
     echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($filtro) . '" value="' . esc_attr($total_posts) . '" />';
+    postLog("Total de publicaciones encontradas: " . $total_posts);
 
     return ob_get_clean();
 }
