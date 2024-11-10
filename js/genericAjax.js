@@ -235,7 +235,6 @@ async function bloqueos() {
     accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
 }
 
-
 async function editarPost() {
     modalManager.añadirModal('editarPost', '#editarPost', ['.editarPost']);
 
@@ -309,13 +308,9 @@ function abrirModalEditarPost(idContenido) {
 
     // Busca el contenido usando múltiples selectores
     let postContent = '';
-    
+
     // Intenta diferentes selectores en orden
-    const selectors = [
-        `.thePostContet[data-post-id="${idContenido}"]`,
-        `.CONTENTLISTSAMPLE a[id-post="${idContenido}"]`,
-        `#post-${idContenido} .CONTENTLISTSAMPLE`
-    ];
+    const selectors = [`.thePostContet[data-post-id="${idContenido}"]`, `.CONTENTLISTSAMPLE a[id-post="${idContenido}"]`, `#post-${idContenido} .CONTENTLISTSAMPLE`];
 
     for (const selector of selectors) {
         const element = document.querySelector(selector);
@@ -328,8 +323,8 @@ function abrirModalEditarPost(idContenido) {
     // Limpia el contenido HTML
     postContent = postContent
         .replace(/<\/?[^>]+(>|$)/g, '') // Elimina etiquetas HTML
-        .replace(/&nbsp;/g, ' ')        // Reemplaza &nbsp; por espacios
-        .trim();                        // Elimina espacios extra
+        .replace(/&nbsp;/g, ' ') // Reemplaza &nbsp; por espacios
+        .trim(); // Elimina espacios extra
 
     // Actualiza el textarea
     const mensajeEditTextarea = document.getElementById('mensajeEdit');
@@ -575,7 +570,7 @@ function cambiarFiltroTiempo() {
     }
 
     filtroButtons.forEach(button => {
-        button.addEventListener('click', async (event) => {
+        button.addEventListener('click', async event => {
             event.preventDefault();
 
             let filtroTiempo;
@@ -596,7 +591,7 @@ function cambiarFiltroTiempo() {
                     filtroTiempo = 0;
             }
 
-            const resultado = await enviarAjax('guardarFiltro', { filtroTiempo: filtroTiempo });
+            const resultado = await enviarAjax('guardarFiltro', {filtroTiempo: filtroTiempo});
             if (resultado.success) {
                 filtroButtons.forEach(btn => btn.classList.remove('filtroSelec'));
                 button.classList.add('filtroSelec');
@@ -608,4 +603,63 @@ function cambiarFiltroTiempo() {
     });
 }
 
+function filtrosPost() {
 
+    const filtrosPost = document.getElementById('filtrosPost');
+    let filtrosActivos = []; 
+
+
+    cargarFiltrosGuardados();
+
+    const checkboxes = filtrosPost.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            if (this.checked) {
+                if (!filtrosActivos.includes(this.name)) {
+                    filtrosActivos.push(this.name);
+                }
+            } else {
+                filtrosActivos = filtrosActivos.filter(filtro => filtro !== this.name);
+            }
+        });
+    });
+
+    const botonGuardar = filtrosPost.querySelector('.botonprincipal');
+    botonGuardar.addEventListener('click', async function () {
+        const respuesta = await enviarAjax('guardar_filtros_post', {
+            filtros: JSON.stringify(filtrosActivos)
+        });
+
+        if (respuesta.success) {
+            window.limpiarBusqueda();
+        }
+    });
+
+    // Botón restablecer
+    const botonRestablecer = filtrosPost.querySelector('.botonsecundario');
+    botonRestablecer.addEventListener('click', async function () {
+        filtrosActivos = [];
+        checkboxes.forEach(checkbox => (checkbox.checked = false));
+
+        const respuesta = await enviarAjax('guardar_filtros_post', {
+            filtros: JSON.stringify([])
+        });
+
+        if (respuesta.success) {
+            window.limpiarBusqueda();
+        }
+    });
+
+
+    async function cargarFiltrosGuardados() {
+        const respuesta = await enviarAjax('obtener_filtros_post');
+        if (respuesta.success && respuesta.filtros) {
+            filtrosActivos = respuesta.filtros;
+
+            filtrosActivos.forEach(filtro => {
+                const checkbox = document.getElementById(filtro);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+    }
+}

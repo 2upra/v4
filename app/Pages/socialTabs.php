@@ -122,18 +122,128 @@ function socialTabs()
                                     <button class="filtroMensual <? echo ($filtroTiempo == 3) ? 'filtroSelec' : ''; ?>">Top Mensual</button>
                                 </div>
                             </div>
-                            
 
-                            <button id="ORDENPOSTSL">Opciones<? echo $GLOBALS['flechaAbajo']; ?></button>
+
+                            <button class="ORDENPOSTSL" id="ORDENPOSTSL">Opciones<? echo $GLOBALS['flechaAbajo']; ?></button>
 
                             <!--
 
-                            Aqui los filtros tienen que ser: (por defecto desactivado)
+                            el usuario tendra una meta llamada filtroPost que sera un array que indique cuales filtros estan encendidos: 
                             [ocultarDescargados, ocultarEnColeccion, mostrarMeGustan]
+                                                        
+                            simplemente un array que coloque ese valor cuando es true, y cuando es false lo elimina
                             
-                            
+                            falta hacer un js que envie al servidor la peticion para guardar la informacion en la meta del usuario y el codigo php que trabaja la solicitud
 
+                            usa enviarAjax /no puedes cambiar enviarAjax) para simplificar el script - entorno wordpress
+
+                            async function enviarAjax(action, data = {}) {
+                                try {
+                                    const body = new URLSearchParams({
+                                        action: action,
+                                        ...data
+                                    });
+                                    const response = await fetch(ajaxUrl, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/x-www-form-urlencoded'
+                                        },
+                                        body: body
+                                    });
+                                    if (!response.ok) {
+                                        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+                                    }
+                                    let responseData;
+                                    const responseText = await response.text();
+                                    try {
+                                        responseData = JSON.parse(responseText);
+                                    } catch (jsonError) {
+                                        console.error('No se pudo interpretar la respuesta como JSON:', {
+                                            error: jsonError,
+                                            responseText: responseText,
+                                            action: action,
+                                            requestData: data
+                                        });
+                                        responseData = responseText;
+                                    }
+                                    return responseData;
+                                } catch (error) {
+                                    console.error('Error en la solicitud AJAX:', {
+                                        error: error,
+                                        action: action,
+                                        requestData: data,
+                                        ajaxUrl: ajaxUrl
+                                    });
+                                    return {success: false, message: error.message};
+                                }
+                            }
+
+                            para que tenga referncia asi se van a procesar los filtros para entenderlos y filtrar
+
+                                // Obtener los filtros personalizados del usuario
+                            $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
+                            
+                            // Aplicar filtros según la configuración del usuario en 'FiltroPost'
+                            if (!empty($filtrosUsuario)) {
+                                // Filtrar publicaciones ya descargadas
+                                if (in_array('ocultarDescargados', $filtrosUsuario)) {
+                                    $descargasAnteriores = get_user_meta($current_user_id, 'descargas', true) ?: [];
+                                    if (!empty($descargasAnteriores)) {
+                                        $query_args['post__not_in'] = array_merge(
+                                            $query_args['post__not_in'] ?? [], 
+                                            array_keys($descargasAnteriores)
+                                        );
+                                    }
+                                }
+
+                                // Filtrar publicaciones guardadas en colección
+                                if (in_array('ocultarEnColeccion', $filtrosUsuario)) {
+                                y el resto lo omiti... ya lo tengo hecho
                             -->
+
+                            <div class="opcionCheckBox modal" id="filtrosPost" style="display: none;">
+
+                                <div class="opcionCheck">
+                                    <div>
+                                        <label>Ocultar ya descargadas</label>
+                                        <p class="description">No se mostraran los samples que ya hayas descargado</p>
+                                    </div>
+
+
+                                    <label class="switch">
+                                        <input type="checkbox" name="ocultarDescargados" id="ocultarDescargados">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="opcionCheck">
+                                    <div>
+                                        <label>Ocultar guardados en coleccion</label>
+                                        <p class="description">No se mostraran los samples que esten guardadas en algunas de colecciones</p>
+                                    </div>
+
+                                    <label class="switch">
+                                        <input type="checkbox" name="ocultarEnColeccion" id="ocultarEnColeccion">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="opcionCheck">
+                                    <div>
+                                        <label>Mostrar solo con likes</label>
+                                        <p class="description">Solo se mostraran los samples con tu like marcado</p>
+                                    </div>
+
+                                    <label class="switch">
+                                        <input type="checkbox" name="mostrarMeGustan" id="mostrarMeGustan">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+
+                                <button class="botonsecundario borde left">Restablecer</button>
+                                <button class="botonprincipal">Guardar</button>
+                            </div>
 
                         </div>
                     </div>

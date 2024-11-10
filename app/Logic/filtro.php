@@ -1,53 +1,45 @@
 <?
 
-/*
-ahora los filtros nuevo deben ser mas dinamicos y aplicarse independiente de la condicion 
+// Añadir al functions.php o archivo similar
 
-El usuario tiene las opciones nueva de: (por defecto desactivado)
-Ocultar ya descargadas 
-Ocultar guardados en coleccion 
-Mostrar solo los que me gustan
-
-el usuario tendra una meta llamada FiltroPost que sera un array que indique cuales filtros estan encendidos: 
-[ocultarDescargados, ocultarEnColeccion, mostrarMeGustan]
-
-para saber la informacion necesarias, 
-
-asi se guardan las descargas (en la meta del usuario)
-    $descargasAnteriores = get_user_meta($userID, 'descargas', true);
-    if (!$descargasAnteriores) {
-        $descargasAnteriores = [];
+add_action('wp_ajax_guardar_filtros_post', 'guardar_filtros_post_callback');
+function guardar_filtros_post_callback() {
+    // Verificar nonce y permisos si es necesario
+    if (!is_user_logged_in()) {
+        wp_send_json_error('Usuario no autenticado');
+        return;
     }
-    $yaDescargado = isset($descargasAnteriores[$postID]);
-    if (!$yaDescargado) {
-        $pinky = (int)get_user_meta($userID, 'pinky', true);
-        if ($pinky < 1) {
-            wp_send_json_error(['message' => 'No tienes suficientes Pinkys para esta descarga.']);
-        }
-        restarPinkys($userID, 1);
-    }
-    if (!$yaDescargado) {
-        $descargasAnteriores[$postID] = 1;
+
+    $filtros = json_decode(stripslashes($_POST['filtros']), true);
+    $user_id = get_current_user_id();
+
+    // Guardar los filtros en la meta del usuario
+    $actualizado = update_user_meta($user_id, 'filtroPost', $filtros);
+
+    if ($actualizado) {
+        wp_send_json_success(['message' => 'Filtros guardados correctamente']);
     } else {
-        $descargasAnteriores[$postID]++;
+        wp_send_json_error('Error al guardar los filtros');
     }
-    update_user_meta($userID, 'descargas', $descargasAnteriores);
-
-asi se guarda los samples en coleccioens
-$samplesGuardados = get_user_meta($user_id, 'samplesGuardados', true);
-if (!is_array($samplesGuardados)) {
-    $samplesGuardados = array();
 }
-if (!isset($samplesGuardados[$sample_id])) {
-    $samplesGuardados[$sample_id] = [];
+
+// Acción para obtener filtros
+add_action('wp_ajax_obtener_filtros_post', 'obtener_filtros_post_callback');
+function obtener_filtros_post_callback() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error('Usuario no autenticado');
+        return;
+    }
+
+    $user_id = get_current_user_id();
+    $filtros = get_user_meta($user_id, 'filtroPost', true);
+
+    if ($filtros === '') {
+        $filtros = [];
+    }
+
+    wp_send_json_success(['filtros' => $filtros]);
 }
-$samplesGuardados[$sample_id][] = $collection_id;
-update_user_meta($user_id, 'samplesGuardados', $samplesGuardados);
-
-
-*/
-
-
 
 
 //Para tiempo
@@ -71,7 +63,7 @@ add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
 function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
 {
     // Obtener los filtros personalizados del usuario
-    $filtrosUsuario = get_user_meta($current_user_id, 'FiltroPost', true);
+    $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
     
     // Aplicar filtros según la configuración del usuario en 'FiltroPost'
     if (!empty($filtrosUsuario)) {
