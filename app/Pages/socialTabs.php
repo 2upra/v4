@@ -124,7 +124,7 @@ function socialTabs()
                             </div>
                             
 
-                            <span id="ORDENPOSTSL">Opciones<? echo $GLOBALS['flechaAbajo']; ?></span>
+                            <button id="ORDENPOSTSL">Opciones<? echo $GLOBALS['flechaAbajo']; ?></button>
 
                             <!--
 
