@@ -55,6 +55,9 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 {
     ob_start();
 
+    // Hacer log de los argumentos de la consulta para depuración
+    postLog("Query args: " . print_r($query_args, true));
+
     $query = new WP_Query($query_args);
     $posts_count = 0;  // Inicializamos el contador de publicaciones para la página actual
     $total_posts = $query->found_posts;  // Total de publicaciones sin paginar
