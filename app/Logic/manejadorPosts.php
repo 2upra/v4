@@ -44,8 +44,8 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     $similar_to = $args['similar_to'] ?? null;
     $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
     $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
-    $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
-    $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id);
+    //$query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+    //$query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id);
     return $query_args;
 }
 
