@@ -59,91 +59,13 @@ function guardarFiltro() {
 add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
 
 
-/* no se esta ordenado por la cantidad de like en el top semanal o mensual  
-
-function manejarLike() {
-    if (!is_user_logged_in()) {
-        echo 'not_logged_in';
-        wp_die();
-    }
-
-    $userId = get_current_user_id();
-    $postId = $_POST['post_id'] ?? '';
-    $likeEstado = $_POST['like_state'] ?? false;
-
-
-    if (empty($postId)) {
-        echo 'error';
-        wp_die();
-    }
-
-    $accion = $likeEstado ? 'like' : 'unlike';
-    likeAccion($postId, $userId, $accion);
-    $contadorLike = contarLike($postId);
-    echo $contadorLike;
-    wp_die();
-}
-
-add_action('wp_ajax_like', 'manejarLike');
-
-
-function likeAccion($postId, $userId, $accion) {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'post_likes';
-
-    if ($accion === 'like') {
-        if (chequearLike($postId, $userId)) {
-            $accion = 'unlike';  
-        } else {
-            $insert_result = $wpdb->insert($table_name, ['user_id' => $userId, 'post_id' => $postId]);
-            if ($insert_result === false) {
-            } else {
-                
-                $autorId = get_post_field('post_author', $postId);
-                
-                if ($autorId != $userId) {
-                    $usuario = get_userdata($userId);
-                    
-                }
-            }
-        }
-    }
-
-    if ($accion === 'unlike') {
-        $delete_result = $wpdb->delete($table_name, ['user_id' => $userId, 'post_id' => $postId]);
-        if ($delete_result === false) {
-        } else {
-        }
-    }
-}
-
-
-*/
-
-function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
-    global $FALLBACK_USER_ID;
-    if (!isset($FALLBACK_USER_ID)) {
-        $FALLBACK_USER_ID = 44;
-    }
-    $is_authenticated = $current_user_id && $current_user_id != 0;
-    $is_admin = current_user_can('administrator');
-    if (!$is_authenticated) {
-        $current_user_id = $FALLBACK_USER_ID;
-    }
-    $identifier = $_POST['identifier'] ?? '';
-    $posts = $args['posts'];
-    $similar_to = $args['similar_to'] ?? null;
-    $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
-    $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
-    return aplicarFiltros($query_args, $args, $user_id, $current_user_id);
-}
-
 
 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to) {
     global $wpdb;
     $likes_table = $wpdb->prefix . 'post_likes';
-    
+    $query_args = [];
+
     // Configuración base
     $query_args = [
         'post_type' => $args['post_type'],
@@ -152,6 +74,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
         'ignore_sticky_posts' => true,
     ];
 
+    // Manejar diferentes tipos de ordenamiento
     if ($args['post_type'] === 'social_post') {
         switch ($filtroTiempo) {
             case 1: // Posts recientes
@@ -161,33 +84,25 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
 
             case 2: // Top semanal
             case 3: // Top mensual
-                $interval = ($filtroTiempo === 2) ? '7 DAY' : '30 DAY';
-                $offset = ($paged - 1) * $posts;
-
-                // Consulta simplificada que cuenta todos los likes
+                $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
+                
+                // Obtener posts ordenados por likes en el período
                 $posts_with_likes = $wpdb->get_results($wpdb->prepare("
                     SELECT p.ID, COUNT(pl.post_id) as like_count 
                     FROM {$wpdb->posts} p 
                     LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
                     WHERE p.post_type = 'social_post' 
                     AND p.post_status = 'publish'
-                    AND p.post_date >= DATE_SUB(NOW(), INTERVAL {$interval})
+                    AND pl.like_date >= DATE_SUB(NOW(), INTERVAL %s)
                     GROUP BY p.ID
                     ORDER BY like_count DESC, p.post_date DESC
-                    LIMIT %d OFFSET %d
-                ", $posts, $offset), ARRAY_A);
+                    LIMIT %d
+                ", $interval, $posts * $paged), ARRAY_A);
 
                 if (!empty($posts_with_likes)) {
-                    // Crear array de IDs manteniendo el orden por likes
-                    $post_ids = array_map(function($post) {
-                        return $post['ID'];
-                    }, $posts_with_likes);
-
+                    $post_ids = wp_list_pluck($posts_with_likes, 'ID');
                     $query_args['post__in'] = $post_ids;
                     $query_args['orderby'] = 'post__in';
-                } else {
-                    $query_args['orderby'] = 'date';
-                    $query_args['order'] = 'DESC';
                 }
                 break;
 
