@@ -205,7 +205,7 @@ function socialTabs()
 
                                 <div class="opcionCheck">
                                     <div>
-                                        <label>Ocultar ya descargadas</label>
+                                        <label>Ocultar ya descargados</label>
                                         <p class="description">No se mostraran los samples que ya hayas descargado</p>
                                     </div>
 
@@ -240,9 +240,10 @@ function socialTabs()
                                     </label>
                                 </div>
 
-
-                                <button class="botonsecundario borde left">Restablecer</button>
-                                <button class="botonprincipal">Guardar</button>
+                                <div class="XJAAHB">
+                                    <button class="botonsecundario borde">Restablecer</button>
+                                    <button class="botonprincipal">Guardar</button>
+                                </div>
                             </div>
 
                         </div>
