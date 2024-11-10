@@ -165,7 +165,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     return $query_args;
 }
 
-
+//aqui hay un problema, cuando los filtros de top mensual o semanal estan activos y activo el de mostrarMeGustan, se dejan de ordenar de mayor like a menor like o tal vez no se que es lo que pasa exactamente, no debería aplicarFiltrosUsuario cambiar el orden de los post 
 
 function aplicarFiltrosUsuario($query_args, $current_user_id) {
     // Obtener los filtros personalizados del usuario
@@ -177,6 +177,7 @@ function aplicarFiltrosUsuario($query_args, $current_user_id) {
         if (in_array('ocultarDescargados', $filtrosUsuario)) {
             $descargasAnteriores = get_user_meta($current_user_id, 'descargas', true) ?: [];
             if (!empty($descargasAnteriores)) {
+                // Agregar las publicaciones descargadas a `post__not_in` sin afectar `post__in`
                 $query_args['post__not_in'] = array_merge(
                     $query_args['post__not_in'] ?? [],
                     array_keys($descargasAnteriores)
@@ -189,6 +190,7 @@ function aplicarFiltrosUsuario($query_args, $current_user_id) {
             $samplesGuardados = get_user_meta($current_user_id, 'samplesGuardados', true) ?: [];
             if (!empty($samplesGuardados)) {
                 $guardadosIDs = array_keys($samplesGuardados);
+                // Agregar las publicaciones guardadas a `post__not_in` sin afectar `post__in`
                 $query_args['post__not_in'] = array_merge(
                     $query_args['post__not_in'] ?? [],
                     $guardadosIDs
@@ -200,8 +202,19 @@ function aplicarFiltrosUsuario($query_args, $current_user_id) {
         if (in_array('mostrarMeGustan', $filtrosUsuario)) {
             $userLikedPostIds = obtenerLikesDelUsuario($current_user_id);
             if (!empty($userLikedPostIds)) {
-                $query_args['post__in'] = $userLikedPostIds;
+                // Si ya existen posts en 'post__in', hacer una intersección para conservar el orden original
+                if (isset($query_args['post__in'])) {
+                    $query_args['post__in'] = array_intersect($query_args['post__in'], $userLikedPostIds);
+                } else {
+                    $query_args['post__in'] = $userLikedPostIds;
+                }
+                
+                // Si la intersección da como resultado un conjunto vacío, establecer `posts_per_page` a 0
+                if (empty($query_args['post__in'])) {
+                    $query_args['posts_per_page'] = 0;
+                }
             } else {
+                // Si el usuario no tiene posts con 'me gusta', establecer `posts_per_page` a 0
                 $query_args['posts_per_page'] = 0;
             }
         }
@@ -209,6 +222,7 @@ function aplicarFiltrosUsuario($query_args, $current_user_id) {
 
     return $query_args;
 }
+
 
 function aplicarFiltroGlobal($query_args, $args, $current_user_id) {
     // Aplicar el filtro original de `$filtro`
