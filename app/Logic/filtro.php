@@ -1,6 +1,6 @@
 <?
-
-function obtenerFiltroTiempo() {
+//saber el filtro tiempo
+function obtenerFiltroActual() {
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'Usuario no autenticado']);
         return;
@@ -8,17 +8,17 @@ function obtenerFiltroTiempo() {
 
     $user_id = get_current_user_id();
     $filtro_tiempo = get_user_meta($user_id, 'filtroTiempo', true);
-
-    if ($filtro_tiempo === false) {
-        wp_send_json_error(['message' => 'No se encontró filtro para este usuario']);
-        return;
+    
+    // Si no hay filtro guardado, usar el valor predeterminado (0)
+    if ($filtro_tiempo === '') {
+        $filtro_tiempo = 0;
     }
 
     wp_send_json_success([
-        'filtroTiempo' => intval($filtro_tiempo),
+        'filtroTiempo' => intval($filtro_tiempo)
     ]);
 }
-add_action('wp_ajax_obtenerFiltroTiempo', 'obtenerFiltroTiempo');
+add_action('wp_ajax_obtenerFiltroActual', 'obtenerFiltroActual');
 
 function restablecerFiltros()
 {
