@@ -38,7 +38,7 @@ function obtenerFiltros() {
 
     wp_send_json_success(['filtros' => $filtros]);
 }
-add_action('wp_ajax_obtenerFiltros', 'obtener_obtenerFiltros');
+add_action('wp_ajax_obtenerFiltros', 'obtenerFiltros');
 
 //Para tiempo
 function guardarFiltro() {
