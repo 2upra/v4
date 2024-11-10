@@ -112,12 +112,15 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                 }
                 break;
 
-            default:
+                default:
                 postLog("Caso default: Obteniendo feed personalizado");
                 $personalized_feed = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
                 if (!empty($personalized_feed['post_ids'])) {
+                    // No limitamos la cantidad de IDs en 'post__in'
                     $query_args['post__in'] = $personalized_feed['post_ids'];
-                    $query_args['orderby'] = 'post__in';
+                    // Puedes definir el orden que necesites, o dejar que WordPress lo maneje
+                    // $query_args['orderby'] = 'date';
+                    // $query_args['order'] = 'DESC';
                     postLog("Feed personalizado IDs: " . implode(', ', $personalized_feed['post_ids']));
                 }
                 if (!empty($personalized_feed['post_not_in'])) {
