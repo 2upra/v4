@@ -56,7 +56,8 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     ob_start();
 
     $query = new WP_Query($query_args);
-    $posts_count = 0;  // Inicializamos el contador de publicaciones
+    $posts_count = 0;  // Inicializamos el contador de publicaciones para la página actual
+    $total_posts = $query->found_posts;  // Total de publicaciones sin paginar
 
     if ($query->have_posts()) {
         $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
@@ -80,7 +81,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
         // Itera sobre los resultados de la consulta
         while ($query->have_posts()) {
             $query->the_post();
-            $posts_count++; // Incrementamos el contador por cada post procesado
+            $posts_count++; // Incrementamos el contador por cada post procesado (solo en la página actual)
 
             if ($tipoPost === 'social_post') {
                 echo htmlPost($filtro);
@@ -103,8 +104,10 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     wp_reset_postdata();
 
     // Agregar el conteo de publicaciones al final dentro de un campo oculto o un comentario
-    echo '<!-- Número de publicaciones procesadas: ' . $posts_count . ' -->';
+    echo '<!-- Número de publicaciones procesadas en esta página: ' . $posts_count . ' -->';
+    echo '<!-- Total de publicaciones sin paginación: ' . $total_posts . ' -->';
     echo '<input type="hidden" class="post-count" value="' . esc_attr($posts_count) . '" />';
+    echo '<input type="hidden" class="total-posts" value="' . esc_attr($total_posts) . '" />';
 
     return ob_get_clean();
 }
