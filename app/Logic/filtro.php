@@ -9,17 +9,27 @@ function obtenerFiltroActual() {
     $user_id = get_current_user_id();
     $filtro_tiempo = get_user_meta($user_id, 'filtroTiempo', true);
     
-    // Si no hay filtro guardado, usar el valor predeterminado (0)
     if ($filtro_tiempo === '') {
         $filtro_tiempo = 0;
     }
 
+    // Array de nombres de filtros
+    $nombres_filtros = array(
+        0 => 'Feed',
+        1 => 'Reciente',
+        2 => 'Semanal',
+        3 => 'Mensual'
+    );
+
+    $filtro_tiempo = intval($filtro_tiempo);
+    $nombre_filtro = isset($nombres_filtros[$filtro_tiempo]) ? $nombres_filtros[$filtro_tiempo] : 'Feed';
+
     wp_send_json_success([
-        'filtroTiempo' => intval($filtro_tiempo)
+        'filtroTiempo' => $filtro_tiempo,
+        'nombreFiltro' => $nombre_filtro
     ]);
 }
 add_action('wp_ajax_obtenerFiltroActual', 'obtenerFiltroActual');
-
 function restablecerFiltros()
 {
     if (!is_user_logged_in()) {

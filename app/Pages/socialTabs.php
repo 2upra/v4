@@ -55,25 +55,22 @@ function socialTabs()
 
                             <button class="restablecerBusqueda" style="display: none;">Restablecer filtros</button>
 
-                            <?
-                            $user_id = get_current_user_id();
-                            $filtro_tiempo = get_user_meta($user_id, 'filtroTiempo', true);
-                            $filtro_tiempo = $filtro_tiempo === '' ? 0 : intval($filtro_tiempo);
-
-                            // Array de nombres de filtros
-                            $nombres_filtros = array(
-                                0 => 'Feed',
-                                1 => 'Reciente',
-                                2 => 'Semanal',
-                                3 => 'Mensual'
-                            );
-
-                            // Obtener el nombre del filtro actual
-                            $nombre_filtro = isset($nombres_filtros[$filtro_tiempo]) ? $nombres_filtros[$filtro_tiempo] : 'Feed';
-                            ?>
-
                             <button class="filtrosboton">
-                                <?php echo $GLOBALS['iconoflechaArriAba'] . ' ' . $nombre_filtro; ?>
+                                <?
+                                $user_id = get_current_user_id();
+                                $filtro_tiempo = get_user_meta($user_id, 'filtroTiempo', true);
+                                $filtro_tiempo = $filtro_tiempo === '' ? 0 : intval($filtro_tiempo);
+
+                                $nombres_filtros = array(
+                                    0 => 'Feed',
+                                    1 => 'Reciente',
+                                    2 => 'Semanal',
+                                    3 => 'Mensual'
+                                );
+
+                                $nombre_filtro = isset($nombres_filtros[$filtro_tiempo]) ? $nombres_filtros[$filtro_tiempo] : 'Feed';
+                                echo $nombre_filtro . ' ' . $GLOBALS['iconoflechaArriAba'];
+                                ?>
                             </button>
 
                             <?
