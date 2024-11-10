@@ -562,6 +562,58 @@ async function enviarAjax(action, data = {}) {
     }
 }
 
+// Función para verificar si hay filtros activados y mostrar el botón si es necesario
+async function establecerFiltros() {
+    try {
+        const response = await enviarAjax('obtenerFiltrosTotal'); 
+
+        // Verificamos si la respuesta es exitosa
+        if (response.success) {
+            const { filtroPost, filtroTiempo } = response.data;
+
+            // Verificamos si hay filtros activados
+            const hayFiltrosActivados = filtroTiempo !== 0 || filtroPost !== 'a:0:{}';
+
+            // Si hay filtros activados, mostramos el botón
+            const botonRestablecer = document.querySelector('.restablecerBusqueda');
+            if (hayFiltrosActivados) {
+                botonRestablecer.style.display = 'block';
+
+                // Solo agregamos el event listener una vez
+                if (!botonRestablecer.dataset.listenerAdded) {
+                    botonRestablecer.addEventListener('click', async function () {
+                        try {
+                            const restablecerResponse = await enviarAjax('restablecerFiltros');
+                            if (restablecerResponse.success) {
+                                alert(restablecerResponse.data.message);
+                                // Ocultamos el botón después de restablecer
+                                botonRestablecer.style.display = 'none';
+                            } else {
+                                alert('Error: ' + (restablecerResponse.data?.message || 'No se pudo restablecer los filtros'));
+                            }
+                        } catch (error) {
+                            console.error('Error al restablecer filtros:', error);
+                            alert('Hubo un error en la solicitud. Por favor, inténtalo de nuevo.');
+                        }
+                    });
+
+                    // Marcamos que ya hemos agregado el listener para evitar duplicaciones
+                    botonRestablecer.dataset.listenerAdded = true;
+                }
+            } else {
+                // Si no hay filtros activados, ocultamos el botón
+                botonRestablecer.style.display = 'none';
+            }
+        } else {
+            console.error('Error al obtener los filtros:', response.data?.message || 'Error desconocido');
+        }
+    } catch (error) {
+        console.error('Error en la solicitud AJAX para obtener filtros:', error);
+    }
+}
+
+
+
 async function cambiarFiltroTiempo() {
     const filtroButtons = document.querySelectorAll('.filtroFeed, .filtroReciente, .filtroSemanal, .filtroMensual');
 
@@ -569,6 +621,7 @@ async function cambiarFiltroTiempo() {
         console.log('No se encontraron botones de filtro');
         return;
     }
+    establecerFiltros();
 
     filtroButtons.forEach(button => {
         button.addEventListener('click', async event => {
@@ -603,25 +656,6 @@ async function cambiarFiltroTiempo() {
     });
 }
 
-/*
-PHP
-function guardarFiltro() {
-
-    if (!is_user_logged_in()) {
-        wp_send_json_error(['message' => 'Usuario no autenticado']);
-        return;
-    }
-    if (!isset($_POST['filtroTiempo'])) {
-        wp_send_json_error(['message' => 'Valor de filtroTiempo no especificado']);
-        return;
-    }
-    $user_id = get_current_user_id();
-    $filtro_tiempo = intval($_POST['filtroTiempo']); 
-    update_user_meta($user_id, 'filtroTiempo', $filtro_tiempo);
-    wp_send_json_success(['message' => 'Filtro guardado correctamente']);
-}
-add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
-*/
 
 function filtrosPost() {
     console.log('Iniciando filtrosPost()');

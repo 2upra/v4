@@ -53,64 +53,9 @@ function socialTabs()
                         <p id="resultadosPost">Resultados: </p>
                         <div class="OPCDGED">
 
+                            <button class="restablecerBusqueda" style="display: none;">Restablecer filtros</button>
+                            
                             <button class="filtrosboton">Orden<? echo $GLOBALS['tiempo']; ?></button>
-
-                            <!--
-
-                            hay que hacer un script y una funcion
-
-                            Aqui el usuario tiene que poder elegir, guardar en la meta del usuario filtro tiempo
-
-                            1 = Post Recientes, 2 = Top Semanal, 3 = TopMensual (por defecto 0 o ninguna = Feed normal (para mi))
-                            al dar click al span aparece el submenu (esto ya esta programado lo de abir el submenu)
-
-                            al dar click tiene que guardar en la meta del usuario filtroTiempo el valor correspondiente a la eleccion y al final despues de guardarse llamar window.reiniciarCargaDiferida()
-
-                            usa enviarAjax /no puedes cambiar enviarAjax) para simplificar el script - entorno wordpress
-
-                            async function enviarAjax(action, data = {}) {
-                                try {
-                                    const body = new URLSearchParams({
-                                        action: action,
-                                        ...data
-                                    });
-                                    const response = await fetch(ajaxUrl, {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/x-www-form-urlencoded'
-                                        },
-                                        body: body
-                                    });
-                                    if (!response.ok) {
-                                        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
-                                    }
-                                    let responseData;
-                                    const responseText = await response.text();
-                                    try {
-                                        responseData = JSON.parse(responseText);
-                                    } catch (jsonError) {
-                                        console.error('No se pudo interpretar la respuesta como JSON:', {
-                                            error: jsonError,
-                                            responseText: responseText,
-                                            action: action,
-                                            requestData: data
-                                        });
-                                        responseData = responseText;
-                                    }
-                                    return responseData;
-                                } catch (error) {
-                                    console.error('Error en la solicitud AJAX:', {
-                                        error: error,
-                                        action: action,
-                                        requestData: data,
-                                        ajaxUrl: ajaxUrl
-                                    });
-                                    return {success: false, message: error.message};
-                                }
-                            }
-
-                            -->
-
                             <?
                             $filtroTiempo = get_user_meta(get_current_user_id(), 'filtroTiempo', true);
                             ?>
@@ -122,85 +67,7 @@ function socialTabs()
                                     <button class="filtroMensual <? echo ($filtroTiempo == 3) ? 'filtroSelec' : ''; ?>">Top Mensual</button>
                                 </div>
                             </div>
-
-
                             <button class="ORDENPOSTSL" id="ORDENPOSTSL">Opciones<? echo $GLOBALS['flechaAbajo']; ?></button>
-
-                            <!--
-
-                            el usuario tendra una meta llamada filtroPost que sera un array que indique cuales filtros estan encendidos: 
-                            [ocultarDescargados, ocultarEnColeccion, mostrarMeGustan]
-                                                        
-                            simplemente un array que coloque ese valor cuando es true, y cuando es false lo elimina
-                            
-                            falta hacer un js que envie al servidor la peticion para guardar la informacion en la meta del usuario y el codigo php que trabaja la solicitud
-
-                            usa enviarAjax /no puedes cambiar enviarAjax) para simplificar el script - entorno wordpress
-
-                            async function enviarAjax(action, data = {}) {
-                                try {
-                                    const body = new URLSearchParams({
-                                        action: action,
-                                        ...data
-                                    });
-                                    const response = await fetch(ajaxUrl, {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/x-www-form-urlencoded'
-                                        },
-                                        body: body
-                                    });
-                                    if (!response.ok) {
-                                        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
-                                    }
-                                    let responseData;
-                                    const responseText = await response.text();
-                                    try {
-                                        responseData = JSON.parse(responseText);
-                                    } catch (jsonError) {
-                                        console.error('No se pudo interpretar la respuesta como JSON:', {
-                                            error: jsonError,
-                                            responseText: responseText,
-                                            action: action,
-                                            requestData: data
-                                        });
-                                        responseData = responseText;
-                                    }
-                                    return responseData;
-                                } catch (error) {
-                                    console.error('Error en la solicitud AJAX:', {
-                                        error: error,
-                                        action: action,
-                                        requestData: data,
-                                        ajaxUrl: ajaxUrl
-                                    });
-                                    return {success: false, message: error.message};
-                                }
-                            }
-
-                            para que tenga referncia asi se van a procesar los filtros para entenderlos y filtrar
-
-                                // Obtener los filtros personalizados del usuario
-                            $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
-                            
-                            // Aplicar filtros según la configuración del usuario en 'FiltroPost'
-                            if (!empty($filtrosUsuario)) {
-                                // Filtrar publicaciones ya descargadas
-                                if (in_array('ocultarDescargados', $filtrosUsuario)) {
-                                    $descargasAnteriores = get_user_meta($current_user_id, 'descargas', true) ?: [];
-                                    if (!empty($descargasAnteriores)) {
-                                        $query_args['post__not_in'] = array_merge(
-                                            $query_args['post__not_in'] ?? [], 
-                                            array_keys($descargasAnteriores)
-                                        );
-                                    }
-                                }
-
-                                // Filtrar publicaciones guardadas en colección
-                                if (in_array('ocultarEnColeccion', $filtrosUsuario)) {
-                                y el resto lo omiti... ya lo tengo hecho
-                            -->
-
                             <div class="opcionCheckBox modal" id="filtrosPost" style="display: none;">
 
                                 <div class="opcionCheck">

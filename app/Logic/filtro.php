@@ -1,6 +1,40 @@
 <?
 
-// Añadir al functions.php o archivo similar
+function restablecerFiltros()
+{
+    if (!is_user_logged_in()) {
+        wp_send_json_error('Usuario no autenticado');
+        return;
+    }
+
+    $user_id = get_current_user_id();
+    $resultado_post = delete_user_meta($user_id, 'filtroPost');
+    $resultado_tiempo = delete_user_meta($user_id, 'filtroTiempo');
+    if ($resultado_post && $resultado_tiempo) {
+        wp_send_json_success(['message' => 'Filtros restablecidos correctamente']);
+    } else {
+        wp_send_json_error('Error al restablecer los filtros');
+    }
+}
+add_action('wp_ajax_restablecerFiltros', 'restablecerFiltros');
+
+// Función para obtener los filtros del usuario
+function obtenerFiltrosTotal() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error('Usuario no autenticado');
+        return;
+    }
+
+    $user_id = get_current_user_id();
+    $filtro_post = get_user_meta($user_id, 'filtroPost', true);
+    $filtro_tiempo = get_user_meta($user_id, 'filtroTiempo', true);
+
+    wp_send_json_success([
+        'filtroPost' => $filtro_post ? $filtro_post : 'a:0:{}', // Valor por defecto si no existe
+        'filtroTiempo' => $filtro_tiempo ? $filtro_tiempo : 0,   // Valor por defecto si no existe
+    ]);
+}
+add_action('wp_ajax_obtenerFiltrosTotal', 'obtenerFiltrosTotal');
 
 
 function guardarFiltroPost()
