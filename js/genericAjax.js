@@ -501,6 +501,25 @@ async function rejectPost() {
     );
 }
 
+//REMOVER POST
+function removerPost(selector, postId) {
+    console.log('Buscando elemento para remover:', selector, postId);
+    const element = document.querySelector(`${selector}[id-post="${postId}"]`);
+    if (element) {
+        console.log('Elemento encontrado, removiendo...');
+        element.remove();
+    } else {
+        console.log('No se encontró el elemento para remover');
+    }
+}
+
+//GENERIC CAMBIAR DOM
+function actualizarElemento(element, newStatus) {
+    if (element) {
+        element.textContent = newStatus;
+    }
+}
+
 //GENERIC FETCH
 async function enviarAjax(action, data = {}) {
     try {
@@ -543,29 +562,11 @@ async function enviarAjax(action, data = {}) {
     }
 }
 
-//REMOVER POST
-function removerPost(selector, postId) {
-    console.log('Buscando elemento para remover:', selector, postId);
-    const element = document.querySelector(`${selector}[id-post="${postId}"]`);
-    if (element) {
-        console.log('Elemento encontrado, removiendo...');
-        element.remove();
-    } else {
-        console.log('No se encontró el elemento para remover');
-    }
-}
-
-//GENERIC CAMBIAR DOM
-function actualizarElemento(element, newStatus) {
-    if (element) {
-        element.textContent = newStatus;
-    }
-}
-
-function cambiarFiltroTiempo() {
+async function cambiarFiltroTiempo() {
     const filtroButtons = document.querySelectorAll('.filtroFeed, .filtroReciente, .filtroSemanal, .filtroMensual');
 
     if (!filtroButtons) {
+        console.log('No se encontraron botones de filtro');
         return;
     }
 
@@ -574,28 +575,26 @@ function cambiarFiltroTiempo() {
             event.preventDefault();
 
             let filtroTiempo;
-            switch (button.className) {
-                case 'filtroFeed':
-                    filtroTiempo = 0;
-                    break;
-                case 'filtroReciente':
-                    filtroTiempo = 1;
-                    break;
-                case 'filtroSemanal':
-                    filtroTiempo = 2;
-                    break;
-                case 'filtroMensual':
-                    filtroTiempo = 3;
-                    break;
-                default:
-                    filtroTiempo = 0;
+            if (button.classList.contains('filtroFeed')) {
+                filtroTiempo = 0;
+            } else if (button.classList.contains('filtroReciente')) {
+                filtroTiempo = 1;
+            } else if (button.classList.contains('filtroSemanal')) {
+                filtroTiempo = 2;
+            } else if (button.classList.contains('filtroMensual')) {
+                filtroTiempo = 3;
+            } else {
+                filtroTiempo = 0;
             }
 
+            console.log('Enviando filtroTiempo:', filtroTiempo);
+
             const resultado = await enviarAjax('guardarFiltro', {filtroTiempo: filtroTiempo});
+            console.log('Resultado:', resultado);
+
             if (resultado.success) {
                 filtroButtons.forEach(btn => btn.classList.remove('filtroSelec'));
                 button.classList.add('filtroSelec');
-                //window.reiniciarCargaDiferida();
                 window.limpiarBusqueda();
             } else {
                 console.error('Error al guardar el filtro:', resultado.message);
@@ -604,11 +603,31 @@ function cambiarFiltroTiempo() {
     });
 }
 
+/*
+PHP
+function guardarFiltro() {
+
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Usuario no autenticado']);
+        return;
+    }
+    if (!isset($_POST['filtroTiempo'])) {
+        wp_send_json_error(['message' => 'Valor de filtroTiempo no especificado']);
+        return;
+    }
+    $user_id = get_current_user_id();
+    $filtro_tiempo = intval($_POST['filtroTiempo']); 
+    update_user_meta($user_id, 'filtroTiempo', $filtro_tiempo);
+    wp_send_json_success(['message' => 'Filtro guardado correctamente']);
+}
+add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
+*/
+
 function filtrosPost() {
     console.log('Iniciando filtrosPost()');
 
     const filtrosPost = document.getElementById('filtrosPost');
-    let filtrosActivos = []; 
+    let filtrosActivos = [];
 
     async function cargarFiltrosGuardados() {
         console.log('Cargando filtros guardados...');
@@ -676,12 +695,9 @@ function filtrosPost() {
         if (respuesta.success) {
             //window.reiniciarCargaDiferida();
             window.limpiarBusqueda();
-            
         }
     });
 
     // Iniciar la carga de filtros
     cargarFiltrosGuardados();
 }
-
-

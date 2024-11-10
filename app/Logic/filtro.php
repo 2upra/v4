@@ -42,19 +42,39 @@ add_action('wp_ajax_obtenerFiltros', 'obtenerFiltros');
 
 //Para tiempo
 function guardarFiltro() {
+    error_log('Iniciando guardarFiltro');
 
     if (!is_user_logged_in()) {
+        error_log('Usuario no autenticado');
         wp_send_json_error(['message' => 'Usuario no autenticado']);
         return;
     }
+
     if (!isset($_POST['filtroTiempo'])) {
+        error_log('filtroTiempo no especificado');
         wp_send_json_error(['message' => 'Valor de filtroTiempo no especificado']);
         return;
     }
+
     $user_id = get_current_user_id();
     $filtro_tiempo = intval($_POST['filtroTiempo']); 
-    update_user_meta($user_id, 'filtroTiempo', $filtro_tiempo);
-    wp_send_json_success(['message' => 'Filtro guardado correctamente']);
+
+    error_log('Guardando filtroTiempo: ' . $filtro_tiempo . ' para usuario: ' . $user_id);
+
+    $resultado = update_user_meta($user_id, 'filtroTiempo', $filtro_tiempo);
+
+    if ($resultado === false) {
+        error_log('Error al guardar el filtro');
+        wp_send_json_error(['message' => 'Error al guardar el filtro']);
+        return;
+    }
+
+    error_log('Filtro guardado correctamente');
+    wp_send_json_success([
+        'message' => 'Filtro guardado correctamente',
+        'filtroTiempo' => $filtro_tiempo,
+        'userId' => $user_id
+    ]);
 }
 add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
 
