@@ -230,7 +230,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     return $query_args;
 }
 
-//aqui hay un problema, cuando los filtros de top mensual o semanal estan activos y activo el de mostrarMeGustan, se dejan de ordenar de mayor like a menor like o tal vez no se que es lo que pasa exactamente, no debería aplicarFiltrosUsuario cambiar el orden de los post 
+
 
 function aplicarFiltrosUsuario($query_args, $current_user_id) {
     // Obtener los filtros personalizados del usuario
@@ -273,12 +273,10 @@ function aplicarFiltrosUsuario($query_args, $current_user_id) {
                 } else {
                     $query_args['post__in'] = $userLikedPostIds;
                 }
-        
+                
                 // Si la intersección da como resultado un conjunto vacío, establecer `posts_per_page` a 0
-                // Aquí en lugar de hacer posts_per_page = 0, podrías manejar esto de otra manera, como mostrar un mensaje o asegurar que al menos algún post se muestre
                 if (empty($query_args['post__in'])) {
-                    postLog("No hay intersección entre los posts del filtro y los que le gustan al usuario.");
-                    // Puedes manejar esto de forma más flexible, como lanzar una advertencia o mostrar un conjunto mínimo de posts
+                    $query_args['posts_per_page'] = 0;
                 }
             } else {
                 // Si el usuario no tiene posts con 'me gusta', establecer `posts_per_page` a 0
