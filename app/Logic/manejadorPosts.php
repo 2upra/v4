@@ -1,5 +1,5 @@
 <?
-//Solo cargan la primera pagina, en total de post sale 12, no donde esta el problema, el problema supongo que sucede en alguna parte de construirQueryArgs
+//Solo cargan la primera pagina, en total de post sale 12, no se donde esta el problema, el problema supongo que sucede en alguna parte de construirQueryArgs
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
     $user_id = obtenerUserId($is_ajax);
@@ -94,20 +94,17 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                 postLog("SQL Query: " . $sql);
                 $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
                 postLog("Resultados encontrados: " . count($posts_with_likes));
-                
+
                 if (!empty($posts_with_likes)) {
-                    foreach ($posts_with_likes as $post) {
-                        //postLog("Post ID: {$post['ID']}, Likes: {$post['like_count']}");
-                    }
                     $post_ids = wp_list_pluck($posts_with_likes, 'ID');
-                    $offset = ($paged - 1) * $posts;
-                    $paged_post_ids = array_slice($post_ids, $offset, $posts);
-                    if (!empty($paged_post_ids)) {
-                        $query_args['post__in'] = $paged_post_ids;
+
+                    // En lugar de hacer manualmente el slicing de los posts, dejamos que WordPress maneje la paginación.
+                    if (!empty($post_ids)) {
+                        $query_args['post__in'] = $post_ids;
                         $query_args['orderby'] = 'post__in';
                     }
-                    
-                    postLog("IDs de posts para esta página: " . implode(', ', $paged_post_ids));
+
+                    postLog("IDs de posts para esta página: " . implode(', ', $post_ids));
                 } else {
                     postLog("No se encontraron posts con likes en el período especificado");
                     $query_args['orderby'] = 'date';
@@ -134,7 +131,6 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     postLog("Query args finales: " . print_r($query_args, true));
     return $query_args;
 }
-
 
 
 function procesarPublicaciones($query_args, $args, $is_ajax)
