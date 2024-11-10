@@ -609,23 +609,40 @@ function getNombreFiltro(filtroTiempo) {
         2: 'Semanal',
         3: 'Mensual'
     };
-    return filtros[filtroTiempo] || 'Feed';
+    console.log('Valor de filtroTiempo recibido:', filtroTiempo);
+    console.log('Tipo de filtroTiempo:', typeof filtroTiempo);
+    const nombreFiltro = filtros[filtroTiempo] || 'Feed';
+    console.log('Nombre de filtro seleccionado:', nombreFiltro);
+    return nombreFiltro;
 }
 
 // Función para actualizar el texto del botón
 async function actualizarBotonFiltro() {
+    console.log('Iniciando actualizarBotonFiltro');
     try {
         const response = await enviarAjax('obtenerFiltroActual', {});
+        console.log('Respuesta completa del servidor:', response);
+        
         if (response.success) {
             const filtroActual = response.filtroTiempo;
+            console.log('Filtro actual obtenido:', filtroActual);
+            
             const nombreFiltro = getNombreFiltro(filtroActual);
+            console.log('Nombre del filtro obtenido:', nombreFiltro);
+            
             const botonFiltro = document.querySelector('.filtrosboton');
+            console.log('Botón encontrado:', botonFiltro);
+            
             if (botonFiltro) {
-                botonFiltro.innerHTML = `${nombreFiltro} ${FLECHA_SVG}`;
+                const nuevoContenido = `${nombreFiltro} ${FLECHA_SVG}`;
+                console.log('Nuevo contenido del botón:', nuevoContenido);
+                botonFiltro.innerHTML = nuevoContenido;
             }
+        } else {
+            console.log('La respuesta no fue exitosa:', response);
         }
     } catch (error) {
-        console.error('Error al obtener el filtro actual:', error);
+        console.error('Error en actualizarBotonFiltro:', error);
     }
 }
 

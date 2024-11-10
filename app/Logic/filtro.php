@@ -30,6 +30,7 @@ function obtenerFiltroActual() {
     ]);
 }
 add_action('wp_ajax_obtenerFiltroActual', 'obtenerFiltroActual');
+
 function restablecerFiltros()
 {
     if (!is_user_logged_in()) {
