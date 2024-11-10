@@ -732,6 +732,6 @@ function contadorDeSamples() {
     const totalPostsElement = document.querySelector('.total-posts-sampleList');
     if (resultadosElement && totalPostsElement) {
       const totalPosts = totalPostsElement.value;
-      resultadosElement.textContent = 'Resultados: ' + totalPosts;
+      resultadosElement.textContent = totalPosts + 'resultados';
     }
   }
