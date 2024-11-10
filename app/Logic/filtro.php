@@ -8,13 +8,9 @@ function guardarFiltroPost() {
         wp_send_json_error('Usuario no autenticado');
         return;
     }
-
     $filtros = json_decode(stripslashes($_POST['filtros']), true);
     $user_id = get_current_user_id();
-
-    // Guardar los filtros en la meta del usuario
     $actualizado = update_user_meta($user_id, 'filtroPost', $filtros);
-
     if ($actualizado) {
         wp_send_json_success(['message' => 'Filtros guardados correctamente']);
     } else {
@@ -80,11 +76,12 @@ add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
 
 
 
-
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to) {
     global $wpdb;
     $likes_table = $wpdb->prefix . 'post_likes';
     $query_args = [];
+
+    postLog("Iniciando construirQueryArgs con filtroTiempo: $filtroTiempo");
 
     // Configuración base
     $query_args = [
@@ -100,14 +97,16 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
             case 1: // Posts recientes
                 $query_args['orderby'] = 'date';
                 $query_args['order'] = 'DESC';
+                postLog("Caso 1: Ordenando por fecha reciente");
                 break;
 
             case 2: // Top semanal
             case 3: // Top mensual
                 $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
-                
-                // Obtener posts ordenados por likes en el período
-                $posts_with_likes = $wpdb->get_results($wpdb->prepare("
+                postLog("Caso $filtroTiempo: Usando intervalo de $interval");
+
+                // Construir y ejecutar la consulta SQL
+                $sql = $wpdb->prepare("
                     SELECT p.ID, COUNT(pl.post_id) as like_count 
                     FROM {$wpdb->posts} p 
                     LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
@@ -117,28 +116,46 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                     GROUP BY p.ID
                     ORDER BY like_count DESC, p.post_date DESC
                     LIMIT %d
-                ", $interval, $posts * $paged), ARRAY_A);
+                ", $interval, $posts * $paged);
 
+                postLog("SQL Query: " . $sql);
+
+                $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
+                
+                postLog("Resultados encontrados: " . count($posts_with_likes));
+                
                 if (!empty($posts_with_likes)) {
+                    foreach ($posts_with_likes as $post) {
+                        postLog("Post ID: {$post['ID']}, Likes: {$post['like_count']}");
+                    }
+                    
                     $post_ids = wp_list_pluck($posts_with_likes, 'ID');
                     $query_args['post__in'] = $post_ids;
                     $query_args['orderby'] = 'post__in';
+                    
+                    postLog("IDs de posts ordenados: " . implode(', ', $post_ids));
+                } else {
+                    postLog("No se encontraron posts con likes en el período especificado");
                 }
                 break;
 
             default:
+                postLog("Caso default: Obteniendo feed personalizado");
                 $personalized_feed = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
                 if (!empty($personalized_feed['post_ids'])) {
                     $query_args['post__in'] = $personalized_feed['post_ids'];
                     $query_args['orderby'] = 'post__in';
+                    postLog("Feed personalizado IDs: " . implode(', ', $personalized_feed['post_ids']));
                 }
                 if (!empty($personalized_feed['post_not_in'])) {
                     $query_args['post__not_in'] = array_unique($personalized_feed['post_not_in']);
+                    postLog("Posts excluidos: " . implode(', ', $personalized_feed['post_not_in']));
                 }
                 break;
         }
     }
 
+    postLog("Query args finales: " . print_r($query_args, true));
     return $query_args;
 }
 

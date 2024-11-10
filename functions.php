@@ -21,7 +21,7 @@ define('GUARDAR_LOG_ENABLED', false);
 define('LOG_ALGORITMO_ENABLED', false);
 define('AJAX_POST_LOG_ENABLED', false);
 define('IA_LOG_ENABLED', false);
-define('POST_LOG_ENABLED', false);
+define('POST_LOG_ENABLED', true);
 define('SEO_LOG_ENABLED', true);
 define('STREAM_LOG_ENABLED', true);
 
