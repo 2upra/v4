@@ -595,7 +595,7 @@ function cambiarFiltroTiempo() {
             if (resultado.success) {
                 filtroButtons.forEach(btn => btn.classList.remove('filtroSelec'));
                 button.classList.add('filtroSelec');
-                window.reiniciarCargaDiferida();
+                //window.reiniciarCargaDiferida();
                 window.limpiarBusqueda();
             } else {
                 console.error('Error al guardar el filtro:', resultado.message);
@@ -659,7 +659,7 @@ function filtrosPost() {
         });
 
         if (respuesta.success) {
-            window.reiniciarCargaDiferida();
+            //window.reiniciarCargaDiferida();
             window.limpiarBusqueda();
         }
     });
@@ -674,7 +674,7 @@ function filtrosPost() {
         });
 
         if (respuesta.success) {
-            window.reiniciarCargaDiferida();
+            //window.reiniciarCargaDiferida();
             window.limpiarBusqueda();
             
         }
