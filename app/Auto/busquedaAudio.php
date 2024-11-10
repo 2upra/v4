@@ -3,25 +3,26 @@
 add_action('init', 'iniciar_cron_procesamiento_audios');
 function iniciar_cron_procesamiento_audios()
 {
-    if (!wp_next_scheduled('15')) {
-        wp_schedule_event(time(), 'cadaDosMinutos', '15');
-        autLog("Cron de procesamiento de audios programado para cada 2 minutos.");
+    if (!wp_next_scheduled('cada15seg')) {
+        wp_schedule_event(time(), 'cada15segundos', 'cada15seg');
+        autLog("Cron de procesamiento de audios programado para cada 15 segundos.");
     }
 }
 
-add_filter('cron_schedules', 'definir_cron_cada_dos_minutos');
-function definir_cron_cada_dos_minutos($schedules)
+add_filter('cron_schedules', 'definir_cron_cada_15_segundos');
+function definir_cron_cada_15_segundos($schedules)
 {
-    if (!isset($schedules['cadaDosMinutos'])) {
-        $schedules['cadaDosMinutos'] = array(
-            'interval' => 15,
-            'display'  => __('Cada 2 minutos')
+    if (!isset($schedules['cada15segundos'])) {
+        $schedules['cada15segundos'] = array(
+            'interval' => 15, // 15 segundos
+            'display'  => __('Cada 15 segundos')
         );
     }
     return $schedules;
 }
 
-add_action('15', 'procesarAudios'); 
+// Conecta el evento cron a la función de procesamiento de audios
+add_action('cada15seg', 'procesarAudios');
 
 
 function procesarAudios()
