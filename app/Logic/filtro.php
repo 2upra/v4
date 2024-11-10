@@ -79,8 +79,7 @@ add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
 
 
 
-function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
-{
+function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to) {
     global $wpdb;
     $likes_table = $wpdb->prefix . 'post_likes';
     $query_args = [];
@@ -109,38 +108,53 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                 $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
                 postLog("Caso $filtroTiempo: Usando intervalo de $interval");
 
-                // Consulta SQL sin LIMIT para obtener todos los posts ordenados por likes
+                // Consulta SQL modificada
                 $sql = $wpdb->prepare("
-                    SELECT p.ID, COUNT(pl.post_id) as like_count 
+                    SELECT p.ID, 
+                           COUNT(CASE 
+                               WHEN pl.like_date >= DATE_SUB(NOW(), INTERVAL %s) 
+                               THEN pl.post_id 
+                               END) as like_count 
                     FROM {$wpdb->posts} p 
                     LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
                     WHERE p.post_type = 'social_post' 
                     AND p.post_status = 'publish'
-                    AND pl.like_date >= DATE_SUB(NOW(), INTERVAL %s)
                     GROUP BY p.ID
+                    HAVING like_count > 0
                     ORDER BY like_count DESC, p.post_date DESC
                 ", $interval);
 
                 postLog("SQL Query: " . $sql);
 
                 $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
-
+                
                 postLog("Resultados encontrados: " . count($posts_with_likes));
-
+                
                 if (!empty($posts_with_likes)) {
                     foreach ($posts_with_likes as $post) {
                         postLog("Post ID: {$post['ID']}, Likes: {$post['like_count']}");
                     }
-
+                    
+                    // Obtener todos los IDs ordenados
                     $post_ids = wp_list_pluck($posts_with_likes, 'ID');
+                    
+                    // Calcular el offset para la paginación
                     $offset = ($paged - 1) * $posts;
+                    
+                    // Tomar solo los IDs necesarios para esta página
                     $paged_post_ids = array_slice($post_ids, $offset, $posts);
-                    $query_args['post__in'] = $paged_post_ids;
-                    $query_args['orderby'] = 'post__in';
-
+                    
+                    if (!empty($paged_post_ids)) {
+                        $query_args['post__in'] = $paged_post_ids;
+                        $query_args['orderby'] = 'post__in';
+                    }
+                    
                     postLog("IDs de posts para esta página: " . implode(', ', $paged_post_ids));
                 } else {
                     postLog("No se encontraron posts con likes en el período especificado");
+                    // Si no hay posts con likes, mostrar los más recientes
+                    $query_args['orderby'] = 'date';
+                    $query_args['order'] = 'DESC';
                 }
                 break;
 
