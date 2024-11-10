@@ -59,89 +59,69 @@ function guardarFiltro() {
 add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
 
 
-//hay un pequeño desajuste que no se porque sucede, cuando el filtro de mostrar solo los post que me gusta esta activado al mismo tiempo que tol mensual
-
+//Los filtros funcionan muy mal, cosas que suelo notar: cuando tengo el filtro de solo ver mis samples con like, y el top semanal, no aparece de primero los post que se suponen que deben de estar de primer con mas like igual con top semanal, dame el codigo completo
 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to) {
     global $wpdb;
-    $post_not_in = [];
+    $likes_table = $wpdb->prefix . 'post_likes';
     $query_args = [];
 
+    // Configuración base
+    $query_args = [
+        'post_type' => $args['post_type'],
+        'posts_per_page' => $posts,
+        'paged' => $paged,
+        'ignore_sticky_posts' => true,
+    ];
+
+    // Manejar diferentes tipos de ordenamiento
     if ($args['post_type'] === 'social_post') {
-        // Determinar el tipo de consulta basada en filtroTiempo
-        if ($filtroTiempo === 1) { // Post recientes
-            $query_args = [
-                'post_type' => $args['post_type'],
-                'posts_per_page' => $posts,
-                'paged' => $paged,
-                'orderby' => 'date',
-                'order' => 'DESC',
-                'ignore_sticky_posts' => true,
-            ];
-        } elseif ($filtroTiempo === 2 || $filtroTiempo === 3) { // Top semanal o mensual
-            $likes_table = $wpdb->prefix . 'post_likes';
+        switch ($filtroTiempo) {
+            case 1: // Posts recientes
+                $query_args['orderby'] = 'date';
+                $query_args['order'] = 'DESC';
+                break;
 
-            // Determinar el período de tiempo
-            $time_condition = '';
-            if ($filtroTiempo === 2) {
-                $time_condition = "AND pl.like_date >= DATE_SUB(NOW(), INTERVAL 1 WEEK)";
-            } elseif ($filtroTiempo === 3) {
-                $time_condition = "AND pl.like_date >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
-            }
+            case 2: // Top semanal
+            case 3: // Top mensual
+                $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
+                
+                // Obtener posts ordenados por likes en el período
+                $posts_with_likes = $wpdb->get_results($wpdb->prepare("
+                    SELECT p.ID, COUNT(pl.post_id) as like_count 
+                    FROM {$wpdb->posts} p 
+                    LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
+                    WHERE p.post_type = 'social_post' 
+                    AND p.post_status = 'publish'
+                    AND pl.like_date >= DATE_SUB(NOW(), INTERVAL %s)
+                    GROUP BY p.ID
+                    HAVING like_count > 0
+                    ORDER BY like_count DESC, p.post_date DESC
+                    LIMIT %d
+                ", $interval, $posts * $paged), ARRAY_A);
 
-            // Subconsulta para contar likes en el periodo especificado
-            $posts_with_likes = $wpdb->get_results("
-                SELECT p.ID, COUNT(pl.post_id) as like_count 
-                FROM {$wpdb->posts} p 
-                LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
-                WHERE p.post_type = 'social_post' 
-                AND p.post_status = 'publish'
-                {$time_condition}
-                GROUP BY p.ID
-                ORDER BY like_count DESC
-                LIMIT " . ($posts * $paged),
-                ARRAY_A
-            );
+                if (!empty($posts_with_likes)) {
+                    $post_ids = wp_list_pluck($posts_with_likes, 'ID');
+                    $query_args['post__in'] = $post_ids;
+                    // Ajuste importante: asegúrate de que el orden sea por el número de likes
+                    $query_args['orderby'] = 'post__in'; 
+                } else {
+                    // Si no hay posts con likes, devolver una consulta vacía
+                    $query_args['posts_per_page'] = 0;
+                }
+                break;
 
-            $post_ids = wp_list_pluck($posts_with_likes, 'ID');
-
-            $query_args = [
-                'post_type' => $args['post_type'],
-                'posts_per_page' => $posts,
-                'paged' => $paged,
-                'post__in' => $post_ids,
-                'orderby' => 'post__in', 
-                'ignore_sticky_posts' => true,
-            ];
-        } else { // Filtro personalizado u otro
-            $personalized_feed = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
-            $post_ids = $personalized_feed['post_ids'];
-            $post_not_in = $personalized_feed['post_not_in'];
-
-            $query_args = [
-                'post_type' => $args['post_type'],
-                'posts_per_page' => $posts,
-                'post__in' => $post_ids,
-                'orderby' => 'post__in',
-                'ignore_sticky_posts' => true,
-            ];
-
-            if (!empty($post_not_in)) {
-                $query_args['post__not_in'] = array_unique($post_not_in);
-            }
-        }
-    } else {
-        $query_args = [
-            'post_type' => $args['post_type'],
-            'posts_per_page' => $posts,
-            'paged' => $paged,
-            'orderby' => 'date',
-            'order' => 'DESC',
-            'ignore_sticky_posts' => true,
-        ];
-
-        if (!empty($post_not_in)) {
-            $query_args['post__not_in'] = array_unique($post_not_in);
+            default:
+                // Si no es un filtro de tiempo específico, usar el feed personalizado
+                $personalized_feed = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
+                if (!empty($personalized_feed['post_ids'])) {
+                    $query_args['post__in'] = $personalized_feed['post_ids'];
+                    $query_args['orderby'] = 'post__in';
+                }
+                if (!empty($personalized_feed['post_not_in'])) {
+                    $query_args['post__not_in'] = array_unique($personalized_feed['post_not_in']);
+                }
+                break;
         }
     }
 
@@ -154,7 +134,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
     // Obtener los filtros personalizados del usuario
     $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
     
-    // Aplicar filtros según la configuración del usuario en 'FiltroPost'
+    // Aplicar filtros según la configuración del usuario en 'filtroPost'
     if (!empty($filtrosUsuario)) {
         // Filtrar publicaciones ya descargadas
         if (in_array('ocultarDescargados', $filtrosUsuario)) {
@@ -183,8 +163,18 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
         if (in_array('mostrarMeGustan', $filtrosUsuario)) {
             $userLikedPostIds = obtenerLikesDelUsuario($current_user_id);
             if (!empty($userLikedPostIds)) {
-                $query_args['post__in'] = $userLikedPostIds;
+                // Si ya hay un filtro de 'post__in', sólo mostrar los posts que estén en ambas listas
+                if (isset($query_args['post__in'])) {
+                    $query_args['post__in'] = array_intersect($query_args['post__in'], $userLikedPostIds);
+                    // Si no hay intersección, forzar la consulta vacía
+                    if (empty($query_args['post__in'])) {
+                        $query_args['posts_per_page'] = 0;
+                    }
+                } else {
+                    $query_args['post__in'] = $userLikedPostIds;
+                }
             } else {
+                // Si el usuario no tiene likes, devolver una consulta vacía
                 $query_args['posts_per_page'] = 0;
             }
         }
@@ -232,7 +222,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
         }
     }
 
-    // Definir autor si se proporciona el user_id
+    // Si se proporciona el user_id, ajustar el autor de los posts
     if ($user_id !== null) {
         $query_args['author'] = $user_id;
     }

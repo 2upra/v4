@@ -34,18 +34,14 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     }
     $is_authenticated = $current_user_id && $current_user_id != 0;
     $is_admin = current_user_can('administrator');
-
     if (!$is_authenticated) {
         $current_user_id = $FALLBACK_USER_ID;
     }
     $identifier = $_POST['identifier'] ?? '';
     $posts = $args['posts'];
     $similar_to = $args['similar_to'] ?? null;
-
-    // Obtener el valor de filtroTiempo y verificar su valor
     $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
     $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
-
     return aplicarFiltros($query_args, $args, $user_id, $current_user_id);
 }
 
