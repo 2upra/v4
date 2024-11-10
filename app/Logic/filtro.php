@@ -3,7 +3,8 @@
 // Añadir al functions.php o archivo similar
 
 
-function guardarFiltroPost() {
+function guardarFiltroPost()
+{
     if (!is_user_logged_in()) {
         wp_send_json_error('Usuario no autenticado');
         return;
@@ -19,7 +20,8 @@ function guardarFiltroPost() {
 }
 add_action('wp_ajax_guardarFiltroPost', 'guardarFiltroPost');
 
-function obtenerFiltros() {
+function obtenerFiltros()
+{
     if (!is_user_logged_in()) {
         wp_send_json_error('Usuario no autenticado');
         return;
@@ -37,7 +39,8 @@ function obtenerFiltros() {
 add_action('wp_ajax_obtenerFiltros', 'obtenerFiltros');
 
 //Para tiempo
-function guardarFiltro() {
+function guardarFiltro()
+{
     error_log('Iniciando guardarFiltro');
 
     if (!is_user_logged_in()) {
@@ -53,7 +56,7 @@ function guardarFiltro() {
     }
 
     $user_id = get_current_user_id();
-    $filtro_tiempo = intval($_POST['filtroTiempo']); 
+    $filtro_tiempo = intval($_POST['filtroTiempo']);
 
     error_log('Guardando filtroTiempo: ' . $filtro_tiempo . ' para usuario: ' . $user_id);
 
@@ -76,7 +79,8 @@ add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
 
 
 
-function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to) {
+function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
+{
     global $wpdb;
     $likes_table = $wpdb->prefix . 'post_likes';
     $query_args = [];
@@ -105,7 +109,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                 $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
                 postLog("Caso $filtroTiempo: Usando intervalo de $interval");
 
-                // Construir y ejecutar la consulta SQL
+                // Consulta SQL sin LIMIT para obtener todos los posts ordenados por likes
                 $sql = $wpdb->prepare("
                     SELECT p.ID, COUNT(pl.post_id) as like_count 
                     FROM {$wpdb->posts} p 
@@ -115,25 +119,26 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                     AND pl.like_date >= DATE_SUB(NOW(), INTERVAL %s)
                     GROUP BY p.ID
                     ORDER BY like_count DESC, p.post_date DESC
-                    LIMIT %d
-                ", $interval, $posts * $paged);
+                ", $interval);
 
                 postLog("SQL Query: " . $sql);
 
                 $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
-                
+
                 postLog("Resultados encontrados: " . count($posts_with_likes));
-                
+
                 if (!empty($posts_with_likes)) {
                     foreach ($posts_with_likes as $post) {
                         postLog("Post ID: {$post['ID']}, Likes: {$post['like_count']}");
                     }
-                    
+
                     $post_ids = wp_list_pluck($posts_with_likes, 'ID');
-                    $query_args['post__in'] = $post_ids;
+                    $offset = ($paged - 1) * $posts;
+                    $paged_post_ids = array_slice($post_ids, $offset, $posts);
+                    $query_args['post__in'] = $paged_post_ids;
                     $query_args['orderby'] = 'post__in';
-                    
-                    postLog("IDs de posts ordenados: " . implode(', ', $post_ids));
+
+                    postLog("IDs de posts para esta página: " . implode(', ', $paged_post_ids));
                 } else {
                     postLog("No se encontraron posts con likes en el período especificado");
                 }
@@ -164,7 +169,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
 {
     // Obtener los filtros personalizados del usuario
     $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
-    
+
     // Aplicar filtros según la configuración del usuario en 'FiltroPost'
     if (!empty($filtrosUsuario)) {
         // Filtrar publicaciones ya descargadas
@@ -172,7 +177,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
             $descargasAnteriores = get_user_meta($current_user_id, 'descargas', true) ?: [];
             if (!empty($descargasAnteriores)) {
                 $query_args['post__not_in'] = array_merge(
-                    $query_args['post__not_in'] ?? [], 
+                    $query_args['post__not_in'] ?? [],
                     array_keys($descargasAnteriores)
                 );
             }
@@ -184,7 +189,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
             if (!empty($samplesGuardados)) {
                 $guardadosIDs = array_keys($samplesGuardados);
                 $query_args['post__not_in'] = array_merge(
-                    $query_args['post__not_in'] ?? [], 
+                    $query_args['post__not_in'] ?? [],
                     $guardadosIDs
                 );
             }
@@ -250,4 +255,3 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
 
     return $query_args;
 }
-
