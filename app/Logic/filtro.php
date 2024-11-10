@@ -3,7 +3,8 @@
 // Añadir al functions.php o archivo similar
 
 
-function guardarFiltroPost() {
+function guardarFiltroPost()
+{
     if (!is_user_logged_in()) {
         wp_send_json_error('Usuario no autenticado');
         return;
@@ -23,7 +24,8 @@ function guardarFiltroPost() {
 }
 add_action('wp_ajax_guardarFiltroPost', 'guardarFiltroPost');
 
-function obtenerFiltros() {
+function obtenerFiltros()
+{
     if (!is_user_logged_in()) {
         wp_send_json_error('Usuario no autenticado');
         return;
@@ -41,7 +43,8 @@ function obtenerFiltros() {
 add_action('wp_ajax_obtenerFiltros', 'obtenerFiltros');
 
 //Para tiempo
-function guardarFiltro() {
+function guardarFiltro()
+{
 
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'Usuario no autenticado']);
@@ -52,16 +55,18 @@ function guardarFiltro() {
         return;
     }
     $user_id = get_current_user_id();
-    $filtro_tiempo = intval($_POST['filtroTiempo']); 
+    $filtro_tiempo = intval($_POST['filtroTiempo']);
     update_user_meta($user_id, 'filtroTiempo', $filtro_tiempo);
     wp_send_json_success(['message' => 'Filtro guardado correctamente']);
 }
 add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
 
 
-//Los filtros funcionan muy mal, cosas que suelo notar: cuando tengo el filtro de solo ver mis samples con like, y el top semanal, no aparece de primero los post que se suponen que deben de estar de primer con mas like igual con top semanal, dame el codigo completo
+//El problema sigue igual, se supone que si activo el filtro de mostrar solo los post que me gustan + el filtro de top mensual o semanal, el orden debería ser segun lo que dicta el top mensual y semanal (el que tiene mas like primero), el filtro de mostrar solo me gusta junto a los demás no deben de modificar el ordenamiento de ninguna manera, cada funcion debe hacer su su trabajo independientemente del otro
 
-function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to) {
+//FUNCION PARA EL ORDEN 
+function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
+{
     global $wpdb;
     $likes_table = $wpdb->prefix . 'post_likes';
     $query_args = [];
@@ -85,7 +90,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
             case 2: // Top semanal
             case 3: // Top mensual
                 $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
-                
+
                 // Obtener posts ordenados por likes en el período
                 $posts_with_likes = $wpdb->get_results($wpdb->prepare("
                     SELECT p.ID, COUNT(pl.post_id) as like_count 
@@ -103,8 +108,8 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                 if (!empty($posts_with_likes)) {
                     $post_ids = wp_list_pluck($posts_with_likes, 'ID');
                     $query_args['post__in'] = $post_ids;
-                    // Ajuste importante: asegúrate de que el orden sea por el número de likes
-                    $query_args['orderby'] = 'post__in'; 
+                    // Asegurar que el orden sea por el número de likes
+                    $query_args['orderby'] = 'post__in';
                 } else {
                     // Si no hay posts con likes, devolver una consulta vacía
                     $query_args['posts_per_page'] = 0;
@@ -128,12 +133,12 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     return $query_args;
 }
 
-
+//FUNCION PARA FILTRAR 
 function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
 {
     // Obtener los filtros personalizados del usuario
     $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
-    
+
     // Aplicar filtros según la configuración del usuario en 'filtroPost'
     if (!empty($filtrosUsuario)) {
         // Filtrar publicaciones ya descargadas
@@ -141,7 +146,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
             $descargasAnteriores = get_user_meta($current_user_id, 'descargas', true) ?: [];
             if (!empty($descargasAnteriores)) {
                 $query_args['post__not_in'] = array_merge(
-                    $query_args['post__not_in'] ?? [], 
+                    $query_args['post__not_in'] ?? [],
                     array_keys($descargasAnteriores)
                 );
             }
@@ -153,7 +158,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
             if (!empty($samplesGuardados)) {
                 $guardadosIDs = array_keys($samplesGuardados);
                 $query_args['post__not_in'] = array_merge(
-                    $query_args['post__not_in'] ?? [], 
+                    $query_args['post__not_in'] ?? [],
                     $guardadosIDs
                 );
             }
@@ -163,12 +168,11 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
         if (in_array('mostrarMeGustan', $filtrosUsuario)) {
             $userLikedPostIds = obtenerLikesDelUsuario($current_user_id);
             if (!empty($userLikedPostIds)) {
-                // Si ya hay un filtro de 'post__in', sólo mostrar los posts que estén en ambas listas
+                // Aquí no cambiamos el orden, solo limitamos los resultados a los que le gustan al usuario
                 if (isset($query_args['post__in'])) {
                     $query_args['post__in'] = array_intersect($query_args['post__in'], $userLikedPostIds);
-                    // Si no hay intersección, forzar la consulta vacía
                     if (empty($query_args['post__in'])) {
-                        $query_args['posts_per_page'] = 0;
+                        $query_args['posts_per_page'] = 0; // Si no hay intersección, la consulta será vacía
                     }
                 } else {
                     $query_args['post__in'] = $userLikedPostIds;
@@ -229,4 +233,3 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
 
     return $query_args;
 }
-
