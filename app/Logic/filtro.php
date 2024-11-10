@@ -59,7 +59,68 @@ function guardarFiltro() {
 add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
 
 
-//Los filtros funcionan muy mal, cosas que suelo notar: cuando tengo el filtro de solo ver mis samples con like, y el top semanal, no aparece de primero los post que se suponen que deben de estar de primer con mas like igual con top semanal, 
+/* no se esta ordenado por la cantidad de like en el top semanal o mensual  
+
+asi funciona los likes
+
+function manejarLike() {
+    if (!is_user_logged_in()) {
+        echo 'not_logged_in';
+        wp_die();
+    }
+
+    $userId = get_current_user_id();
+    $postId = $_POST['post_id'] ?? '';
+    $likeEstado = $_POST['like_state'] ?? false;
+
+
+    if (empty($postId)) {
+        echo 'error';
+        wp_die();
+    }
+
+    $accion = $likeEstado ? 'like' : 'unlike';
+    likeAccion($postId, $userId, $accion);
+    $contadorLike = contarLike($postId);
+    echo $contadorLike;
+    wp_die();
+}
+
+add_action('wp_ajax_like', 'manejarLike');
+
+
+function likeAccion($postId, $userId, $accion) {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'post_likes';
+
+    if ($accion === 'like') {
+        if (chequearLike($postId, $userId)) {
+            $accion = 'unlike';  
+        } else {
+            $insert_result = $wpdb->insert($table_name, ['user_id' => $userId, 'post_id' => $postId]);
+            if ($insert_result === false) {
+            } else {
+                
+                $autorId = get_post_field('post_author', $postId);
+                
+                if ($autorId != $userId) {
+                    $usuario = get_userdata($userId);
+                    
+                }
+            }
+        }
+    }
+
+    if ($accion === 'unlike') {
+        $delete_result = $wpdb->delete($table_name, ['user_id' => $userId, 'post_id' => $postId]);
+        if ($delete_result === false) {
+        } else {
+        }
+    }
+}
+
+
+*/
 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to) {
     global $wpdb;
@@ -91,13 +152,14 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                     SELECT p.ID, COUNT(pl.post_id) as like_count 
                     FROM {$wpdb->posts} p 
                     LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
-                    WHERE p.post_type = 'social_post' 
+                    WHERE p.post_type = %s
                     AND p.post_status = 'publish'
                     AND pl.like_date >= DATE_SUB(NOW(), INTERVAL %s)
                     GROUP BY p.ID
                     ORDER BY like_count DESC, p.post_date DESC
                     LIMIT %d
-                ", $interval, $posts * $paged), ARRAY_A);
+            ", 'social_post', $interval, $posts * $paged), ARRAY_A);
+            
 
                 if (!empty($posts_with_likes)) {
                     $post_ids = wp_list_pluck($posts_with_likes, 'ID');
