@@ -73,8 +73,8 @@ function procesarAudios()
 
 function buscarUnAudioValido($directorio, $intentos = 0)
 {
-    $max_intentos = 100; // Número máximo de intentos recursivos
-    $max_intentos_hash = 3; // Número máximo de intentos para calcular el hash
+    $max_intentos = 100;
+    $max_intentos_hash = 3;
 
     if ($intentos >= $max_intentos) {
         autLog("Error: Se alcanzó el número máximo de intentos ($max_intentos) en buscarUnAudioValido.");
@@ -103,22 +103,36 @@ function buscarUnAudioValido($directorio, $intentos = 0)
         if (empty($subcarpetas)) {
             $subcarpetas[] = $directorio;
         }
+        
         $carpeta_seleccionada = $subcarpetas[array_rand($subcarpetas)];
         $archivos = [];
         $dir_iterator = new DirectoryIterator($carpeta_seleccionada);
+        
         foreach ($dir_iterator as $file) {
             if ($file->isFile()) {
                 $ext = strtolower($file->getExtension());
                 if (in_array($ext, $extensiones_permitidas, true)) {
                     $archivos[] = $file->getPathname();
                 } else {
-                    // Eliminar archivo si no es WAV o MP3
                     try {
                         unlink($file->getPathname());
                         autLog("Archivo eliminado por extensión no permitida: " . $file->getPathname());
                     } catch (Exception $e) {
                         autLog("Error al eliminar archivo no permitido: " . $e->getMessage());
                     }
+                }
+            }
+        }
+
+        // Borrar carpeta si está vacía
+        foreach ($subcarpetas as $subcarpeta) {
+            $carpeta_vacia = !(new FilesystemIterator($subcarpeta))->valid();
+            if ($carpeta_vacia) {
+                try {
+                    rmdir($subcarpeta);
+                    autLog("Carpeta vacía eliminada: " . $subcarpeta);
+                } catch (Exception $e) {
+                    autLog("Error al eliminar carpeta vacía: " . $e->getMessage());
                 }
             }
         }
@@ -134,7 +148,6 @@ function buscarUnAudioValido($directorio, $intentos = 0)
         while ($intentos_hash < $max_intentos_hash && !$hash) {
             $hash = recalcularHash($archivo_seleccionado);
             $intentos_hash++;
-            
             if (!$hash) {
                 autLog("Error: No se pudo calcular el hash del archivo '$archivo_seleccionado'. Intento $intentos_hash.");
             }
@@ -160,6 +173,7 @@ function buscarUnAudioValido($directorio, $intentos = 0)
 
     return null;
 }
+
 
 
 
