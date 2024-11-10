@@ -15,6 +15,7 @@
     // Función que se llama cada vez que se cambia de página mediante AJAX
     window.reiniciarCargaDiferida = reiniciarCargaDiferida;
     window.resetearCarga = resetearCarga;
+    window.limpiarBusqueda = limpiarBusqueda;
     function reiniciarCargaDiferida() {
         log('Reiniciando carga diferida');
         window.removeEventListener('scroll', manejarScroll);
