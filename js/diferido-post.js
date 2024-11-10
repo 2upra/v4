@@ -156,7 +156,8 @@
             estaCargando = false;
         }
     }
-    const MAX_POSTS = 34; 
+    const MAX_POSTS = 50; 
+    
     async function procesarRespuesta(respuesta) {
         log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
         const respuestaLimpia = respuesta.trim();
@@ -271,6 +272,7 @@
     }
 
     function limpiarBusqueda() {
+        publicacionesCargadas = new Set();
         identificador = '';
         actualizarUIBusqueda('');
         resetearCarga();

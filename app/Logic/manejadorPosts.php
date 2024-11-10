@@ -43,14 +43,9 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     $posts = $args['posts'];
     $similar_to = $args['similar_to'] ?? null;
     $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
-
-    // Construir los argumentos de consulta base
     $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
-    // Aplicar filtros personalizados del usuario
     $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
-    // Aplicar filtro global basado en el argumento 'filtro'
     $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id);
-
     return $query_args;
 }
 
@@ -61,9 +56,9 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     ob_start();
 
     $query = new WP_Query($query_args);
+    $posts_count = 0;  // Inicializamos el contador de publicaciones
+
     if ($query->have_posts()) {
-
-
         $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
         $tipoPost = $args['post_type'];
         
@@ -85,6 +80,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
         // Itera sobre los resultados de la consulta
         while ($query->have_posts()) {
             $query->the_post();
+            $posts_count++; // Incrementamos el contador por cada post procesado
 
             if ($tipoPost === 'social_post') {
                 echo htmlPost($filtro);
@@ -105,6 +101,11 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     }
 
     wp_reset_postdata();
+
+    // Agregar el conteo de publicaciones al final dentro de un campo oculto o un comentario
+    echo '<!-- Número de publicaciones procesadas: ' . $posts_count . ' -->';
+    echo '<input type="hidden" class="post-count" value="' . esc_attr($posts_count) . '" />';
+
     return ob_get_clean();
 }
 
