@@ -167,4 +167,3 @@ function eliminar_ajustes_discusion() {
 }
 add_action( 'admin_menu', 'eliminar_ajustes_discusion' );
 
-*/
