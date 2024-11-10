@@ -67,14 +67,6 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     $post_not_in = [];
     $query_args = [];
 
-    // Crear una clave de caché única por usuario y por filtroTiempo
-    $cache_key = 'user_' . $current_user_id . '_filtroTiempo_' . $filtroTiempo;
-    $cached_query_args = get_transient($cache_key);
-
-    if ($cached_query_args) {
-        return $cached_query_args;
-    }
-
     if ($args['post_type'] === 'social_post') {
         // Determinar el tipo de consulta basada en filtroTiempo
         if ($filtroTiempo === 1) { // Post recientes
@@ -121,8 +113,6 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                 'orderby' => 'post__in', 
                 'ignore_sticky_posts' => true,
             ];
-
-            set_transient($cache_key, $query_args, 24 * HOUR_IN_SECONDS);
         } else { // Filtro personalizado u otro
             $personalized_feed = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
             $post_ids = $personalized_feed['post_ids'];
