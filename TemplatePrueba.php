@@ -30,9 +30,12 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
                 <div class="tab INICIO S4K7I3" id="Colecciones">
                     <div class="GSDKRA">
                         <div class="form-container">
-                            <h3>Email Notifications</h3>
-                            <form id="notificationForm" method="POST">
-                                <div class="form-item">
+
+
+
+                            <div class="opcionCheckBox modal">
+                                
+                                <div class="opcionCheck-item">
                                     <div>
                                         <label>Marketing emails</label>
                                         <p class="description">Receive emails about new products, features, and more.</p>
@@ -43,7 +46,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
                                     </label>
                                 </div>
 
-                                <div class="form-item">
+                                <div class="opcionCheck">
                                     <div>
                                         <label>Security emails</label>
                                         <p class="description">Receive emails about your account security.</p>
@@ -55,35 +58,34 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
                                 </div>
 
                                 <button type="submit">Submit</button>
-                            </form>
+                            </div>
+
+                            <div id="toast" style="display: none; position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 15px; border-radius: 5px;"></div>
+
                         </div>
-
-                        <div id="toast" style="display: none; position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 15px; border-radius: 5px;"></div>
-
+                        <div class="GSDKRA">
+                            <div><? echo modalCreacionColeccion(); ?></div>
+                        </div>
                     </div>
-                    <div class="GSDKRA">
-                        <div><? echo modalCreacionColeccion(); ?></div>
+
+
+                    <div class="tab INICIO S4K7I3" id="Colab">
+                        <div class="GSDKRA">
+                            <div><? echo colabTest(); ?></div>
+                        </div>
                     </div>
+
+                    <div class="tab INICIO S4K7I3" id="SubirRola">
+                        <div class="GSDKRA">
+
+                        </div>
+                    </div>
+
                 </div>
-
-
-                <div class="tab INICIO S4K7I3" id="Colab">
-                    <div class="GSDKRA">
-                        <div><? echo colabTest(); ?></div>
-                    </div>
-                </div>
-
-                <div class="tab INICIO S4K7I3" id="SubirRola">
-                    <div class="GSDKRA">
-
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
-</div>
 
-<?
-get_footer();
-?>
+    <?
+    get_footer();
+    ?>
