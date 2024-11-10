@@ -29,7 +29,37 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 
                 <div class="tab INICIO S4K7I3" id="Colecciones">
                     <div class="GSDKRA">
-                        <div><? echo modalColeccion(); ?></div>
+                        <div class="form-container">
+                            <h3>Email Notifications</h3>
+                            <form id="notificationForm" method="POST">
+                                <div class="form-item">
+                                    <div>
+                                        <label>Marketing emails</label>
+                                        <p class="description">Receive emails about new products, features, and more.</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" name="marketing_emails" id="marketing_emails">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="form-item">
+                                    <div>
+                                        <label>Security emails</label>
+                                        <p class="description">Receive emails about your account security.</p>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" name="security_emails" id="security_emails" checked disabled>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <button type="submit">Submit</button>
+                            </form>
+                        </div>
+
+                        <div id="toast" style="display: none; position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 15px; border-radius: 5px;"></div>
+
                     </div>
                     <div class="GSDKRA">
                         <div><? echo modalCreacionColeccion(); ?></div>
