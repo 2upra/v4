@@ -55,7 +55,7 @@ function socialTabs()
 
                             <button class="restablecerBusqueda" style="display: none;">Restablecer filtros</button>
 
-                            <button class="filtrosboton"><span id="nombreFiltro">Cargando...</span> <? echo $GLOBALS['iconoflechaArri&Aba']; ?> </button>
+                            <button class="filtrosboton"><? echo $GLOBALS['iconoflechaArri&Aba']; ?> </button>
                             <?
                             $filtroTiempo = get_user_meta(get_current_user_id(), 'filtroTiempo', true);
                             ?>
