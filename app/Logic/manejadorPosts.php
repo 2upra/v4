@@ -27,24 +27,6 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
     
 }
 
-function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
-    global $FALLBACK_USER_ID;
-    if (!isset($FALLBACK_USER_ID)) {
-        $FALLBACK_USER_ID = 44;
-    }
-    $is_authenticated = $current_user_id && $current_user_id != 0;
-    $is_admin = current_user_can('administrator');
-    if (!$is_authenticated) {
-        $current_user_id = $FALLBACK_USER_ID;
-    }
-    $identifier = $_POST['identifier'] ?? '';
-    $posts = $args['posts'];
-    $similar_to = $args['similar_to'] ?? null;
-    $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
-    $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
-    return aplicarFiltros($query_args, $args, $user_id, $current_user_id);
-}
-
 
 
 function procesarPublicaciones($query_args, $args, $is_ajax)
