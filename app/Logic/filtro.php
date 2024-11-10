@@ -59,6 +59,69 @@ function guardarFiltro() {
 add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
 
 
+/* no se esta ordenado por la cantidad de like en el top semanal o mensual  
+
+asi funciona los likes
+
+function manejarLike() {
+    if (!is_user_logged_in()) {
+        echo 'not_logged_in';
+        wp_die();
+    }
+
+    $userId = get_current_user_id();
+    $postId = $_POST['post_id'] ?? '';
+    $likeEstado = $_POST['like_state'] ?? false;
+
+
+    if (empty($postId)) {
+        echo 'error';
+        wp_die();
+    }
+
+    $accion = $likeEstado ? 'like' : 'unlike';
+    likeAccion($postId, $userId, $accion);
+    $contadorLike = contarLike($postId);
+    echo $contadorLike;
+    wp_die();
+}
+
+add_action('wp_ajax_like', 'manejarLike');
+
+
+function likeAccion($postId, $userId, $accion) {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'post_likes';
+
+    if ($accion === 'like') {
+        if (chequearLike($postId, $userId)) {
+            $accion = 'unlike';  
+        } else {
+            $insert_result = $wpdb->insert($table_name, ['user_id' => $userId, 'post_id' => $postId]);
+            if ($insert_result === false) {
+            } else {
+                
+                $autorId = get_post_field('post_author', $postId);
+                
+                if ($autorId != $userId) {
+                    $usuario = get_userdata($userId);
+                    
+                }
+            }
+        }
+    }
+
+    if ($accion === 'unlike') {
+        $delete_result = $wpdb->delete($table_name, ['user_id' => $userId, 'post_id' => $postId]);
+        if ($delete_result === false) {
+        } else {
+        }
+    }
+}
+
+
+*/
+
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to) {
     global $wpdb;
     $likes_table = $wpdb->prefix . 'post_likes';
@@ -72,7 +135,6 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
         'ignore_sticky_posts' => true,
     ];
 
-    // Manejar diferentes tipos de ordenamiento
     if ($args['post_type'] === 'social_post') {
         switch ($filtroTiempo) {
             case 1: // Posts recientes
@@ -84,27 +146,32 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
             case 3: // Top mensual
                 $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
                 $offset = ($paged - 1) * $posts;
-
-                // Obtener posts ordenados por likes en el período
+                
+                // Consulta modificada para contar likes correctamente
                 $posts_with_likes = $wpdb->get_results($wpdb->prepare("
-                    SELECT p.ID, COUNT(pl.post_id) as like_count 
+                    SELECT p.ID, 
+                           COUNT(DISTINCT pl.id) as like_count 
                     FROM {$wpdb->posts} p 
                     LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
-                    WHERE p.post_type = %s
+                    WHERE p.post_type = 'social_post'
                     AND p.post_status = 'publish'
-                    AND pl.like_date >= DATE_SUB(NOW(), INTERVAL %s)
+                    AND (pl.like_date IS NULL OR pl.like_date >= DATE_SUB(NOW(), INTERVAL {$interval}))
                     GROUP BY p.ID
+                    HAVING like_count > 0
                     ORDER BY like_count DESC, p.post_date DESC
-                    LIMIT %d, %d
-                ", 'social_post', $interval, $offset, $posts), ARRAY_A);
+                    LIMIT %d OFFSET %d
+                ", $posts, $offset), ARRAY_A);
 
                 if (!empty($posts_with_likes)) {
                     $post_ids = wp_list_pluck($posts_with_likes, 'ID');
                     $query_args['post__in'] = $post_ids;
                     $query_args['orderby'] = 'post__in';
+                    // Guardamos el conteo de likes para posible uso posterior
+                    $query_args['likes_count'] = wp_list_pluck($posts_with_likes, 'like_count', 'ID');
                 } else {
-                    // Manejar el caso cuando no hay posts con likes en el período
-                    $query_args['post__in'] = [0]; // Retorna ningún post
+                    // Si no hay posts con likes, mostrar los más recientes
+                    $query_args['orderby'] = 'date';
+                    $query_args['order'] = 'DESC';
                 }
                 break;
 
