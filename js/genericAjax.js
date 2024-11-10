@@ -7,15 +7,15 @@ async function eliminarPost() {
         'eliminarPostRs',
         '¿Estás seguro que quieres eliminar este post?',
         async (statusElement, data, postId) => {
-            //console.log('Respuesta del servidor:', data);
+            console.log('Respuesta del servidor:', data);
             if (data.success) {
                 const idToRemove = data.post_id || postId;
-                //console.log('Intentando remover post con ID:', idToRemove);
+                console.log('Intentando remover post con ID:', idToRemove);
                 removerPost('.EDYQHV', idToRemove);
-                //console.log('¿Se removió el post?');
+                console.log('¿Se removió el post?');
                 await alert('El post ha sido eliminado');
             } else {
-                //console.log('Error al eliminar post');
+                console.log('Error al eliminar post');
                 actualizarElemento(statusElement, data.new_status);
                 await alert('Hubo un error al eliminar el post');
             }
@@ -151,7 +151,7 @@ function initEditWordPress() {
     const buttons = document.querySelectorAll('.editarWordPress');
 
     if (buttons.length > 0) {
-        //console.log('Botones encontrados:', buttons.length);
+        console.log('Botones encontrados:', buttons.length);
 
         // Añadimos un listener de click a cada botón individualmente
         buttons.forEach(button => {
@@ -176,7 +176,7 @@ async function reporte() {
     modalManager.añadirModal('formularioError', '#formularioError', ['.reporte']);
     const reportButtons = document.querySelectorAll('.reporte');
     if (reportButtons.length === 0) {
-        //console.log('No se encontraron botones de reporte');
+        console.log('No se encontraron botones de reporte');
         return;
     }
 
@@ -503,13 +503,13 @@ async function rejectPost() {
 
 //REMOVER POST
 function removerPost(selector, postId) {
-    //console.log('Buscando elemento para remover:', selector, postId);
+    console.log('Buscando elemento para remover:', selector, postId);
     const element = document.querySelector(`${selector}[id-post="${postId}"]`);
     if (element) {
-        //console.log('Elemento encontrado, removiendo...');
+        console.log('Elemento encontrado, removiendo...');
         element.remove();
     } else {
-        //console.log('No se encontró el elemento para remover');
+        console.log('No se encontró el elemento para remover');
     }
 }
 
@@ -609,39 +609,40 @@ function getNombreFiltro(filtroTiempo) {
         2: 'Semanal',
         3: 'Mensual'
     };
-    //console.log('Valor de filtroTiempo recibido:', filtroTiempo);
-    //console.log('Tipo de filtroTiempo:', typeof filtroTiempo);
+    console.log('Valor de filtroTiempo recibido:', filtroTiempo);
+    console.log('Tipo de filtroTiempo:', typeof filtroTiempo);
     const nombreFiltro = filtros[filtroTiempo] || 'Feed';
-    //console.log('Nombre de filtro seleccionado:', nombreFiltro);
+    console.log('Nombre de filtro seleccionado:', nombreFiltro);
     return nombreFiltro;
 }
 
+
 // Función para actualizar el texto del botón
 async function actualizarBotonFiltro() {
-    //console.log('Iniciando actualizarBotonFiltro');
+    console.log('Iniciando actualizarBotonFiltro');
     try {
         const response = await enviarAjax('obtenerFiltroActual', {});
-        //console.log('Respuesta completa del servidor:', response);
+        console.log('Respuesta completa del servidor:', response);
         
         if (response.success) {
             // Corregimos el acceso a los datos
             const filtroActual = response.data.filtroTiempo;
-            //console.log('Filtro actual obtenido:', filtroActual);
+            console.log('Filtro actual obtenido:', filtroActual);
             
             // También podríamos usar directamente el nombreFiltro que viene del servidor
             const nombreFiltro = response.data.nombreFiltro || getNombreFiltro(filtroActual);
-            //console.log('Nombre del filtro obtenido:', nombreFiltro);
+            console.log('Nombre del filtro obtenido:', nombreFiltro);
             
             const botonFiltro = document.querySelector('.filtrosboton');
-            //console.log('Botón encontrado:', botonFiltro);
+            console.log('Botón encontrado:', botonFiltro);
             
             if (botonFiltro) {
                 const nuevoContenido = `${nombreFiltro} ${FLECHA_SVG}`;
-                //console.log('Nuevo contenido del botón:', nuevoContenido);
+                console.log('Nuevo contenido del botón:', nuevoContenido);
                 botonFiltro.innerHTML = nuevoContenido;
             }
         } else {
-            //console.log('La respuesta no fue exitosa:', response);
+            console.log('La respuesta no fue exitosa:', response);
         }
     } catch (error) {
         console.error('Error en actualizarBotonFiltro:', error);
@@ -654,7 +655,7 @@ async function cambiarFiltroTiempo() {
     const filtroButtons = document.querySelectorAll('.filtroFeed, .filtroReciente, .filtroSemanal, .filtroMensual');
 
     if (!filtroButtons) {
-        //console.log('No se encontraron botones de filtro');
+        console.log('No se encontraron botones de filtro');
         return;
     }
 
@@ -675,10 +676,10 @@ async function cambiarFiltroTiempo() {
                 filtroTiempo = 0;
             }
 
-            //console.log('Enviando filtroTiempo:', filtroTiempo);
+            console.log('Enviando filtroTiempo:', filtroTiempo);
 
             const resultado = await enviarAjax('guardarFiltro', {filtroTiempo: filtroTiempo});
-            //console.log('Resultado:', resultado);
+            console.log('Resultado:', resultado);
 
             if (resultado.success) {
                 filtroButtons.forEach(btn => btn.classList.remove('filtroSelec'));
@@ -694,29 +695,29 @@ async function cambiarFiltroTiempo() {
 }
 
 function filtrosPost() {
-    //console.log('Iniciando filtrosPost()');
+    console.log('Iniciando filtrosPost()');
 
     const filtrosPost = document.getElementById('filtrosPost');
     let filtrosActivos = [];
 
     async function cargarFiltrosGuardados() {
-        //console.log('Cargando filtros guardados...');
+        console.log('Cargando filtros guardados...');
         try {
             const respuesta = await enviarAjax('obtenerFiltros');
-            //console.log('Respuesta obtenerFiltros:', respuesta);
+            console.log('Respuesta obtenerFiltros:', respuesta);
 
             if (respuesta.success && respuesta.data && respuesta.data.filtros) {
                 filtrosActivos = respuesta.data.filtros; // Nota el cambio aquí para acceder a data.filtros
-                //console.log('Filtros a activar:', filtrosActivos);
+                console.log('Filtros a activar:', filtrosActivos);
 
                 // Forzar un pequeño retraso para asegurar que el DOM está listo
                 setTimeout(() => {
                     filtrosActivos.forEach(filtro => {
                         const checkbox = document.querySelector(`input[name="${filtro}"]`);
-                        //console.log('Buscando checkbox para filtro:', filtro, 'Encontrado:', checkbox);
+                        console.log('Buscando checkbox para filtro:', filtro, 'Encontrado:', checkbox);
                         if (checkbox) {
                             checkbox.checked = true;
-                            //console.log('Checkbox marcado:', filtro);
+                            console.log('Checkbox marcado:', filtro);
                         }
                     });
                 }, 100);
@@ -729,7 +730,7 @@ function filtrosPost() {
     const checkboxes = filtrosPost.querySelectorAll('input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function () {
-            //console.log('Checkbox cambiado:', this.name, 'Estado:', this.checked);
+            console.log('Checkbox cambiado:', this.name, 'Estado:', this.checked);
             if (this.checked) {
                 if (!filtrosActivos.includes(this.name)) {
                     filtrosActivos.push(this.name);
@@ -737,7 +738,7 @@ function filtrosPost() {
             } else {
                 filtrosActivos = filtrosActivos.filter(filtro => filtro !== this.name);
             }
-            //console.log('filtrosActivos actualizados:', filtrosActivos);
+            console.log('filtrosActivos actualizados:', filtrosActivos);
         });
     });
 
