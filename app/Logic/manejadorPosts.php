@@ -115,24 +115,78 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                 default:
                 postLog("Caso default: Obteniendo feed personalizado");
                 $personalized_feed = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
+            
                 if (!empty($personalized_feed['post_ids'])) {
-                    // No limitamos la cantidad de IDs en 'post__in'
                     $query_args['post__in'] = $personalized_feed['post_ids'];
-                    // Puedes definir el orden que necesites, o dejar que WordPress lo maneje
-                    // $query_args['orderby'] = 'date';
-                    // $query_args['order'] = 'DESC';
+                    // Opcionalmente puedes establecer el orden
+                    $query_args['orderby'] = 'date'; // O el criterio que desees
+                    $query_args['order'] = 'DESC';
                     postLog("Feed personalizado IDs: " . implode(', ', $personalized_feed['post_ids']));
                 }
-                if (!empty($personalized_feed['post_not_in'])) {
-                    $query_args['post__not_in'] = array_unique($personalized_feed['post_not_in']);
-                    postLog("Posts excluidos: " . implode(', ', $personalized_feed['post_not_in']));
-                }
+                
                 break;
         }
     }
 
     postLog("Query args finales: " . print_r($query_args, true));
     return $query_args;
+}
+
+function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page) {
+    $post_not_in = [];
+    
+    if ($similar_to) {
+        $post_not_in[] = $similar_to;
+        $cache_suffix = "_similar_" . $similar_to;
+    } else {
+        $cache_suffix = "";
+    }
+    
+    $transient_key = $current_user_id == 44
+        ? "feed_personalizado_anonymous_{$identifier}{$cache_suffix}"
+        : "feed_personalizado_user_{$current_user_id}_{$identifier}{$cache_suffix}";
+    $use_cache = !$is_admin;
+    $cached_data = $use_cache ? get_transient($transient_key) : false;
+    if ($cached_data) {
+        $posts_personalizados = $cached_data['posts'];
+    } else {
+        if ($paged === 1) {
+            $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
+        } else {
+            $posts_personalizados = get_option($transient_key . '_backup', []);
+            if (empty($posts_personalizados)) {
+                $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
+            }
+        }
+        if ($use_cache) {
+            $cache_data = ['posts' => $posts_personalizados, 'timestamp' => time()];
+            $cache_time = $similar_to ? 3600 : 86400;
+            set_transient($transient_key, $cache_data, $cache_time);
+            update_option($transient_key . '_backup', $posts_personalizados);
+        }
+    }
+    $post_ids = array_keys($posts_personalizados);
+    if ($similar_to) {
+        $post_ids = array_filter($post_ids, function($post_id) use ($similar_to) {
+            return $post_id != $similar_to;
+        });
+    }
+    $post_ids = array_keys($posts_personalizados);
+    if ($similar_to) {
+        $post_ids = array_filter($post_ids, function($post_id) use ($similar_to) {
+            return $post_id != $similar_to;
+        });
+    }
+    $post_ids = array_unique($post_ids);
+    // No hacemos el slicing aquí
+    // $offset = ($paged - 1) * $posts_per_page;
+    // $current_page_ids = array_slice($post_ids, $offset, $posts_per_page);
+
+    // Retornamos todos los IDs de posts
+    return [
+        'post_ids' => $post_ids,
+        'post_not_in' => [],  // Ya no necesitamos post_not_in
+    ];
 }
 
 
