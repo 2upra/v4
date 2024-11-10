@@ -607,29 +607,45 @@ function filtrosPost() {
     console.log('Iniciando filtrosPost()');
 
     const filtrosPost = document.getElementById('filtrosPost');
-    console.log('Elemento filtrosPost:', filtrosPost);
-
     let filtrosActivos = []; 
-    console.log('filtrosActivos inicial:', filtrosActivos);
 
-    // Llamada inicial a cargarFiltrosGuardados
-    cargarFiltrosGuardados();
+    async function cargarFiltrosGuardados() {
+        console.log('Cargando filtros guardados...');
+        try {
+            const respuesta = await enviarAjax('obtenerFiltros');
+            console.log('Respuesta obtenerFiltros:', respuesta);
+
+            if (respuesta.success && respuesta.data && respuesta.data.filtros) {
+                filtrosActivos = respuesta.data.filtros; // Nota el cambio aquí para acceder a data.filtros
+                console.log('Filtros a activar:', filtrosActivos);
+
+                // Forzar un pequeño retraso para asegurar que el DOM está listo
+                setTimeout(() => {
+                    filtrosActivos.forEach(filtro => {
+                        const checkbox = document.querySelector(`input[name="${filtro}"]`);
+                        console.log('Buscando checkbox para filtro:', filtro, 'Encontrado:', checkbox);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                            console.log('Checkbox marcado:', filtro);
+                        }
+                    });
+                }, 100);
+            }
+        } catch (error) {
+            console.error('Error al cargar filtros:', error);
+        }
+    }
 
     const checkboxes = filtrosPost.querySelectorAll('input[type="checkbox"]');
-    console.log('Checkboxes encontrados:', checkboxes);
-
     checkboxes.forEach(checkbox => {
-        console.log('Configurando checkbox:', checkbox.name);
         checkbox.addEventListener('change', function () {
             console.log('Checkbox cambiado:', this.name, 'Estado:', this.checked);
             if (this.checked) {
                 if (!filtrosActivos.includes(this.name)) {
                     filtrosActivos.push(this.name);
-                    console.log('Filtro agregado:', this.name);
                 }
             } else {
                 filtrosActivos = filtrosActivos.filter(filtro => filtro !== this.name);
-                console.log('Filtro removido:', this.name);
             }
             console.log('filtrosActivos actualizados:', filtrosActivos);
         });
@@ -637,11 +653,9 @@ function filtrosPost() {
 
     const botonGuardar = filtrosPost.querySelector('.botonprincipal');
     botonGuardar.addEventListener('click', async function () {
-        console.log('Guardando filtros:', filtrosActivos);
         const respuesta = await enviarAjax('guardarFiltroPost', {
             filtros: JSON.stringify(filtrosActivos)
         });
-        console.log('Respuesta guardar:', respuesta);
 
         if (respuesta.success) {
             window.limpiarBusqueda();
@@ -650,42 +664,20 @@ function filtrosPost() {
 
     const botonRestablecer = filtrosPost.querySelector('.botonsecundario');
     botonRestablecer.addEventListener('click', async function () {
-        console.log('Restableciendo filtros');
         filtrosActivos = [];
         checkboxes.forEach(checkbox => (checkbox.checked = false));
 
         const respuesta = await enviarAjax('guardarFiltroPost', {
             filtros: JSON.stringify([])
         });
-        console.log('Respuesta restablecer:', respuesta);
 
         if (respuesta.success) {
             window.limpiarBusqueda();
         }
     });
 
-    async function cargarFiltrosGuardados() {
-        console.log('Cargando filtros guardados...');
-        try {
-            const respuesta = await enviarAjax('obtenerFiltros');
-            console.log('Respuesta obtenerFiltros:', respuesta);
-
-            if (respuesta.success && respuesta.filtros) {
-                filtrosActivos = respuesta.filtros;
-                console.log('Filtros cargados:', filtrosActivos);
-
-                filtrosActivos.forEach(filtro => {
-                    const checkbox = document.getElementById(filtro);
-                    console.log('Buscando checkbox para filtro:', filtro, 'Encontrado:', checkbox);
-                    if (checkbox) {
-                        checkbox.checked = true;
-                        console.log('Checkbox marcado:', filtro);
-                    }
-                });
-            }
-        } catch (error) {
-            console.error('Error al cargar filtros:', error);
-        }
-    }
+    // Iniciar la carga de filtros
+    cargarFiltrosGuardados();
 }
+
 
