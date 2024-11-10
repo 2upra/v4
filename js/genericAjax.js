@@ -424,7 +424,6 @@ async function handleAllRequests() {
         await permitirDescarga();
         await verificarPost();
         await corregirTags();
-        await filtrosPost();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }
