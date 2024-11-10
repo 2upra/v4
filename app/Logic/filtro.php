@@ -105,29 +105,29 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
 
             case 2: // Top semanal
             case 3: // Top mensual
+                // Determinar el intervalo
                 $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
                 postLog("Caso $filtroTiempo: Usando intervalo de $interval");
 
-                // Consulta SQL modificada
-                $sql = $wpdb->prepare("
+                // Consulta SQL modificada para filtrar por likes en el intervalo
+                $sql = "
                     SELECT p.ID, 
-                           COUNT(CASE 
-                               WHEN pl.like_date >= DATE_SUB(NOW(), INTERVAL %s) 
-                               THEN pl.post_id 
-                               END) as like_count 
+                           COUNT(pl.post_id) as like_count 
                     FROM {$wpdb->posts} p 
                     LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
                     WHERE p.post_type = 'social_post' 
                     AND p.post_status = 'publish'
+                    AND pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval)
                     GROUP BY p.ID
                     HAVING like_count > 0
                     ORDER BY like_count DESC, p.post_date DESC
-                ", $interval);
+                ";
 
                 postLog("SQL Query: " . $sql);
 
+                // Ejecutar la consulta
                 $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
-                
+
                 postLog("Resultados encontrados: " . count($posts_with_likes));
                 
                 if (!empty($posts_with_likes)) {
@@ -177,6 +177,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     postLog("Query args finales: " . print_r($query_args, true));
     return $query_args;
 }
+
 
 
 function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
