@@ -2,9 +2,8 @@
 
 // Añadir al functions.php o archivo similar
 
-add_action('wp_ajax_guardar_filtros_post', 'guardar_filtros_post_callback');
-function guardar_filtros_post_callback() {
-    // Verificar nonce y permisos si es necesario
+
+function guardarFiltroPost() {
     if (!is_user_logged_in()) {
         wp_send_json_error('Usuario no autenticado');
         return;
@@ -22,10 +21,9 @@ function guardar_filtros_post_callback() {
         wp_send_json_error('Error al guardar los filtros');
     }
 }
+add_action('wp_ajax_guardarFiltroPost', 'guardarFiltroPost');
 
-// Acción para obtener filtros
-add_action('wp_ajax_obtener_filtros_post', 'obtener_filtros_post_callback');
-function obtener_filtros_post_callback() {
+function obtenerFiltros() {
     if (!is_user_logged_in()) {
         wp_send_json_error('Usuario no autenticado');
         return;
@@ -40,7 +38,7 @@ function obtener_filtros_post_callback() {
 
     wp_send_json_success(['filtros' => $filtros]);
 }
-
+add_action('wp_ajax_obtenerFiltros', 'obtener_obtenerFiltros');
 
 //Para tiempo
 function guardarFiltro() {
