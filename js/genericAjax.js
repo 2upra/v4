@@ -599,6 +599,46 @@ async function establecerFiltros() {
         console.error('Error en la solicitud AJAX para obtener filtros:', error);
     }
 }
+async function obtenerFiltroUsuario() {
+    try {
+        const response = await enviarAjax('obtenerFiltroTiempo', {}); 
+        if (response.success) {
+            return response.filtroTiempo;
+        } else {
+            console.error('Error al obtener el filtro del usuario:', response.message);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error en la solicitud de obtener filtro:', error);
+        return null;
+    }
+}
+
+function nombreFiltro(filtroTiempo) {
+    switch (filtroTiempo) {
+        case 0:
+            return 'Feed';
+        case 1:
+            return 'Reciente';
+        case 2:
+            return 'Semanal';
+        case 3:
+            return 'Mensual';
+        default:
+            return 'Feed'; // Valor por defecto
+    }
+}
+
+async function actualizarBotonFiltro() {
+    const filtroTiempo = await obtenerFiltroUsuario();  // Obtener el filtro actual del usuario
+    if (filtroTiempo !== null) {
+        const nombre = nombreFiltro(filtroTiempo);  // Obtener el nombre del filtro
+        const botonFiltro = document.querySelector('.filtrosboton #nombreFiltro');
+        if (botonFiltro) {
+            botonFiltro.textContent = nombre;  // Actualizar el texto del botón sin quitar el ícono
+        }
+    }
+}
 
 async function cambiarFiltroTiempo() {
     const filtroButtons = document.querySelectorAll('.filtroFeed, .filtroReciente, .filtroSemanal, .filtroMensual');
@@ -627,7 +667,7 @@ async function cambiarFiltroTiempo() {
 
             console.log('Enviando filtroTiempo:', filtroTiempo);
 
-            const resultado = await enviarAjax('guardarFiltro', {filtroTiempo: filtroTiempo});
+            const resultado = await enviarAjax('guardarFiltro', { filtroTiempo: filtroTiempo });
             console.log('Resultado:', resultado);
 
             if (resultado.success) {
@@ -635,12 +675,14 @@ async function cambiarFiltroTiempo() {
                 button.classList.add('filtroSelec');
                 window.limpiarBusqueda();
                 establecerFiltros();
+                actualizarBotonFiltro();  // Actualizamos el botón también
             } else {
                 console.error('Error al guardar el filtro:', resultado.message);
             }
         });
     });
 }
+
 
 function filtrosPost() {
     console.log('Iniciando filtrosPost()');

@@ -1,5 +1,25 @@
 <?
 
+function obtenerFiltroTiempo() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Usuario no autenticado']);
+        return;
+    }
+
+    $user_id = get_current_user_id();
+    $filtro_tiempo = get_user_meta($user_id, 'filtroTiempo', true);
+
+    if ($filtro_tiempo === false) {
+        wp_send_json_error(['message' => 'No se encontró filtro para este usuario']);
+        return;
+    }
+
+    wp_send_json_success([
+        'filtroTiempo' => intval($filtro_tiempo),
+    ]);
+}
+add_action('wp_ajax_obtenerFiltroTiempo', 'obtenerFiltroTiempo');
+
 function restablecerFiltros()
 {
     if (!is_user_logged_in()) {
