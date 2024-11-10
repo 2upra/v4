@@ -34,8 +34,8 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 
 
                             <div class="opcionCheckBox modal">
-                                
-                                <div class="opcionCheck-item">
+
+                                <div class="opcionCheck">
                                     <div>
                                         <label>Marketing emails</label>
                                         <p class="description">Receive emails about new products, features, and more.</p>
