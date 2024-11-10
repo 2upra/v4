@@ -620,13 +620,16 @@ async function actualizarBotonFiltro() {
             const nombreFiltro = getNombreFiltro(filtroActual);
             const botonFiltro = document.querySelector('.filtrosboton');
             if (botonFiltro) {
-                botonFiltro.innerHTML = `${GLOBALS.iconoflechaArriAba} ${nombreFiltro}`;
+                // Asegúrate de que el icono esté presente
+                const icono = botonFiltro.querySelector('svg') || GLOBALS.iconoflechaArriAba;
+                botonFiltro.innerHTML = `${icono} ${nombreFiltro}`;
             }
         }
     } catch (error) {
         console.error('Error al obtener el filtro actual:', error);
     }
 }
+
 
 // Modificar la función cambiarFiltroTiempo para actualizar el botón
 async function cambiarFiltroTiempo() {
