@@ -292,6 +292,7 @@
     function manejadorEventoBusqueda(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
+            enviarAjax('guardarFiltro', {filtroTiempo: 0});
             identificador = e.target.value.trim();
             actualizarUIBusqueda(identificador);
             log('Enter presionado en búsqueda, valor de identificador:', identificador);
