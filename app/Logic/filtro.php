@@ -62,9 +62,6 @@ function guardarFiltro()
 add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
 
 
-//El problema sigue igual, se supone que si activo el filtro de mostrar solo los post que me gustan + el filtro de top mensual o semanal, el orden debería ser segun lo que dicta el top mensual y semanal (el que tiene mas like primero), el filtro de mostrar solo me gusta junto a los demás no deben de modificar el ordenamiento de ninguna manera, cada funcion debe hacer su su trabajo independientemente del otro
-
-//FUNCION PARA EL ORDEN 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
 {
     global $wpdb;
@@ -100,7 +97,6 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                     AND p.post_status = 'publish'
                     AND pl.like_date >= DATE_SUB(NOW(), INTERVAL %s)
                     GROUP BY p.ID
-                    HAVING like_count > 0
                     ORDER BY like_count DESC, p.post_date DESC
                     LIMIT %d
                 ", $interval, $posts * $paged), ARRAY_A);
@@ -108,16 +104,11 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                 if (!empty($posts_with_likes)) {
                     $post_ids = wp_list_pluck($posts_with_likes, 'ID');
                     $query_args['post__in'] = $post_ids;
-                    // Asegurar que el orden sea por el número de likes
                     $query_args['orderby'] = 'post__in';
-                } else {
-                    // Si no hay posts con likes, devolver una consulta vacía
-                    $query_args['posts_per_page'] = 0;
                 }
                 break;
 
             default:
-                // Si no es un filtro de tiempo específico, usar el feed personalizado
                 $personalized_feed = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
                 if (!empty($personalized_feed['post_ids'])) {
                     $query_args['post__in'] = $personalized_feed['post_ids'];
@@ -133,13 +124,12 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     return $query_args;
 }
 
-//FUNCION PARA FILTRAR 
 function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
 {
     // Obtener los filtros personalizados del usuario
     $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
 
-    // Aplicar filtros según la configuración del usuario en 'filtroPost'
+    // Aplicar filtros según la configuración del usuario en 'FiltroPost'
     if (!empty($filtrosUsuario)) {
         // Filtrar publicaciones ya descargadas
         if (in_array('ocultarDescargados', $filtrosUsuario)) {
@@ -168,22 +158,24 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
         if (in_array('mostrarMeGustan', $filtrosUsuario)) {
             $userLikedPostIds = obtenerLikesDelUsuario($current_user_id);
             if (!empty($userLikedPostIds)) {
-                // Aquí no cambiamos el orden, solo limitamos los resultados a los que le gustan al usuario
+                // Si ya existen posts en post__in, hacemos una intersección
                 if (isset($query_args['post__in'])) {
                     $query_args['post__in'] = array_intersect($query_args['post__in'], $userLikedPostIds);
-                    if (empty($query_args['post__in'])) {
-                        $query_args['posts_per_page'] = 0; // Si no hay intersección, la consulta será vacía
-                    }
                 } else {
                     $query_args['post__in'] = $userLikedPostIds;
                 }
+
+                // Si la intersección da como resultado un conjunto vacío, no mostramos ningún post
+                if (empty($query_args['post__in'])) {
+                    $query_args['posts_per_page'] = 0;
+                }
             } else {
-                // Si el usuario no tiene likes, devolver una consulta vacía
+                // Si no hay posts que le gusten al usuario, no mostramos ningún post
                 $query_args['posts_per_page'] = 0;
             }
         }
     }
-
+    
     // Aplicar el filtro original de `$filtro`
     $filtro = $args['filtro'] ?? 'nada';
     $meta_query_conditions = [
@@ -226,7 +218,7 @@ function aplicarFiltros($query_args, $args, $user_id, $current_user_id)
         }
     }
 
-    // Si se proporciona el user_id, ajustar el autor de los posts
+    // Definir autor si se proporciona el user_id
     if ($user_id !== null) {
         $query_args['author'] = $user_id;
     }
