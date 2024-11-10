@@ -562,31 +562,22 @@ async function enviarAjax(action, data = {}) {
     }
 }
 
-// Función para verificar si hay filtros activados y mostrar el botón si es necesario
 async function establecerFiltros() {
     try {
         const response = await enviarAjax('obtenerFiltrosTotal'); 
-
-        // Verificamos si la respuesta es exitosa
         if (response.success) {
             const { filtroPost, filtroTiempo } = response.data;
-
-            // Verificamos si hay filtros activados
             const hayFiltrosActivados = filtroTiempo !== 0 || filtroPost !== 'a:0:{}';
-
-            // Si hay filtros activados, mostramos el botón
             const botonRestablecer = document.querySelector('.restablecerBusqueda');
             if (hayFiltrosActivados) {
                 botonRestablecer.style.display = 'block';
-
-                // Solo agregamos el event listener una vez
                 if (!botonRestablecer.dataset.listenerAdded) {
                     botonRestablecer.addEventListener('click', async function () {
                         try {
                             const restablecerResponse = await enviarAjax('restablecerFiltros');
                             if (restablecerResponse.success) {
                                 alert(restablecerResponse.data.message);
-                                // Ocultamos el botón después de restablecer
+                                window.limpiarBusqueda();
                                 botonRestablecer.style.display = 'none';
                             } else {
                                 alert('Error: ' + (restablecerResponse.data?.message || 'No se pudo restablecer los filtros'));
@@ -596,12 +587,9 @@ async function establecerFiltros() {
                             alert('Hubo un error en la solicitud. Por favor, inténtalo de nuevo.');
                         }
                     });
-
-                    // Marcamos que ya hemos agregado el listener para evitar duplicaciones
                     botonRestablecer.dataset.listenerAdded = true;
                 }
             } else {
-                // Si no hay filtros activados, ocultamos el botón
                 botonRestablecer.style.display = 'none';
             }
         } else {
@@ -621,7 +609,7 @@ async function cambiarFiltroTiempo() {
         console.log('No se encontraron botones de filtro');
         return;
     }
-    establecerFiltros();
+   
 
     filtroButtons.forEach(button => {
         button.addEventListener('click', async event => {
@@ -649,6 +637,7 @@ async function cambiarFiltroTiempo() {
                 filtroButtons.forEach(btn => btn.classList.remove('filtroSelec'));
                 button.classList.add('filtroSelec');
                 window.limpiarBusqueda();
+                establecerFiltros();
             } else {
                 console.error('Error al guardar el filtro:', resultado.message);
             }
@@ -714,6 +703,7 @@ function filtrosPost() {
         if (respuesta.success) {
             //window.reiniciarCargaDiferida();
             window.limpiarBusqueda();
+            establecerFiltros();
         }
     });
 
@@ -729,6 +719,7 @@ function filtrosPost() {
         if (respuesta.success) {
             //window.reiniciarCargaDiferida();
             window.limpiarBusqueda();
+            establecerFiltros();
         }
     });
 
