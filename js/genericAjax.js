@@ -564,9 +564,9 @@ async function enviarAjax(action, data = {}) {
 
 async function establecerFiltros() {
     try {
-        const response = await enviarAjax('obtenerFiltrosTotal'); 
+        const response = await enviarAjax('obtenerFiltrosTotal');
         if (response.success) {
-            const { filtroPost, filtroTiempo } = response.data;
+            const {filtroPost, filtroTiempo} = response.data;
             const hayFiltrosActivados = filtroTiempo !== 0 || filtroPost !== 'a:0:{}';
             const botonRestablecer = document.querySelector('.restablecerBusqueda');
             if (hayFiltrosActivados) {
@@ -600,8 +600,6 @@ async function establecerFiltros() {
     }
 }
 
-
-
 async function cambiarFiltroTiempo() {
     const filtroButtons = document.querySelectorAll('.filtroFeed, .filtroReciente, .filtroSemanal, .filtroMensual');
 
@@ -609,7 +607,6 @@ async function cambiarFiltroTiempo() {
         console.log('No se encontraron botones de filtro');
         return;
     }
-   
 
     filtroButtons.forEach(button => {
         button.addEventListener('click', async event => {
@@ -644,7 +641,6 @@ async function cambiarFiltroTiempo() {
         });
     });
 }
-
 
 function filtrosPost() {
     console.log('Iniciando filtrosPost()');
@@ -731,7 +727,9 @@ function contadorDeSamples() {
     const resultadosElement = document.getElementById('resultadosPost-sampleList');
     const totalPostsElement = document.querySelector('.total-posts-sampleList');
     if (resultadosElement && totalPostsElement) {
-      const totalPosts = totalPostsElement.value;
-      resultadosElement.textContent = totalPosts + ' resultados';
+        const totalPosts = parseInt(totalPostsElement.value, 10);
+        const formattedTotalPosts = totalPosts.toLocaleString('es-ES'); // Usamos 'es-ES' para formato de miles con puntos
+        resultadosElement.textContent = formattedTotalPosts + ' resultados';
     }
-  }
+}
+
