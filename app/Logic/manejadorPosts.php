@@ -125,7 +125,7 @@ function obtenerDatosFeed($userId)
     ];
 }
 
-function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null, $paged = 1, $posts_per_page = 12)
+function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
 {
     $datos = obtenerDatosFeedConCache($userId); #Aqui se obtiene obtenerDatosFeed
     if (empty($datos)) {
@@ -161,13 +161,10 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
         $decay_factors 
     );
 
-    // No necesitas filtrar nuevamente los IDs aquí si ya están paginados
-    $post_ids = $posts_personalizados['post_ids'];
-
-    return [
-        'post_ids' => $post_ids,
-        'post_not_in' => $post_not_in,
-    ];
+    if (!empty($puntos_por_post)) {
+        arsort($puntos_por_post);
+    }
+    return $puntos_por_post;
 }
 
 function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts)
@@ -218,9 +215,8 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
             }
             break;
 
-            default: // Feed personalizado
-            $posts_per_page = $query_args['posts']; // Asume que 'posts' define el número por página
-            $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page);
+        default: // Feed personalizado
+            $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
             
             if (!empty($feed_result['post_ids'])) {
                 $query_args['post__in'] = $feed_result['post_ids'];
@@ -229,9 +225,6 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                 if (!empty($feed_result['post_not_in'])) {
                     $query_args['post__not_in'] = $feed_result['post_not_in'];
                 }
-    
-                // Eliminar 'no_found_rows' si está presente, ya que estamos paginando correctamente
-                unset($query_args['no_found_rows']);
             } else {
                 $query_args['orderby'] = 'date';
                 $query_args['order'] = 'DESC';
@@ -306,9 +299,6 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
         'post_not_in' => $post_not_in,
     ];
 }
-
-
-
 
 
 
