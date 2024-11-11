@@ -246,7 +246,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     ob_start();
     $user_id = get_current_user_id();
     $cache_key = 'posts_' . md5(serialize($query_args)) . '_user_' . $user_id;
-    $posts_count = 0;
+    $cache_timeout = 12 * HOUR_IN_SECONDS;
 
     // Verificar que query_args no esté vacío y sea un array
     if (empty($query_args) || !is_array($query_args)) {
@@ -254,51 +254,42 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
         return '';
     }
 
-    // Intentar obtener los resultados de caché
-    $cached_data = get_transient($cache_key);
-    if ($cached_data !== false) {
-        $query = $cached_data['query'];
-        $total_posts = $cached_data['total_posts'];
+    // Intentar obtener los resultados de la caché
+    $cached_results = get_transient($cache_key);
+    if ($cached_results !== false) {
+        $query = new WP_Query($cached_results);
     } else {
-        // Optimizar query_args
-        $query_args['no_found_rows'] = true; // Evita calcular el total de posts
-        $query_args['fields'] = 'ids'; // Solo obtener IDs si es posible
-
-        // Crear la consulta
+        $query_args['no_found_rows'] = false;
         $query = new WP_Query($query_args);
-        if (!is_a($query, 'WP_Query')) {
-            error_log('Error al crear WP_Query');
+
+        if ($query instanceof WP_Query) {
+            set_transient($cache_key, $query->query_vars, $cache_timeout);
+        } else {
+            error_log('Error al crear WP_Query en procesarPublicaciones');
             return '';
         }
-
-        $total_posts = $query->post_count; // Como no usamos found_posts
-
-        // Almacenar en caché
-        set_transient($cache_key, ['query' => $query, 'total_posts' => $total_posts], 12 * HOUR_IN_SECONDS);
     }
 
+    // Obtener el conteo total, ya sea de la consulta o de la caché
+    $total_posts = $query->found_posts;
+
+    // Mostrar el campo oculto con el total de posts
     echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
 
     if ($query->have_posts()) {
-        $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
+        $filtro = !empty($args['filtro']) ? $args['filtro'] : 'default_filtro';
         $tipoPost = $args['post_type'];
 
         if (!wp_doing_ajax()) {
-            $clase_extra = 'clase-' . esc_attr($filtro);
-            if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
-                $clase_extra = 'clase-rolastatus';
-            }
-
+            $clase_extra = in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes']) ? 'clase-rolastatus' : 'clase-' . esc_attr($filtro);
             echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
-                  data-filtro="' . esc_attr($filtro) . '" 
-                  data-posttype="' . esc_attr($tipoPost) . '" 
-                  data-tab-id="' . esc_attr($args['tab_id']) . '">';
+                      data-filtro="' . esc_attr($filtro) . '" 
+                      data-posttype="' . esc_attr($tipoPost) . '" 
+                      data-tab-id="' . esc_attr($args['tab_id']) . '">';
         }
 
-        // Bucle optimizado
-        foreach ($query->posts as $post_id) {
-            setup_postdata(get_post($post_id));
-            $posts_count++;
+        while ($query->have_posts()) {
+            $query->the_post();
 
             if ($tipoPost === 'social_post') {
                 echo htmlPost($filtro);
@@ -315,6 +306,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     } else {
         echo nohayPost($filtro, $is_ajax);
     }
+
     wp_reset_postdata();
     return ob_get_clean();
 }
