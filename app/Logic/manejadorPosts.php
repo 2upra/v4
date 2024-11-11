@@ -202,14 +202,17 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     unset($total_query_args['paged']); // Quitamos la paginación para contar todo
     
     $total_query = new WP_Query($total_query_args);
-    $total_posts = $total_query->found_posts;
+    $total_posts = $total_query->found_posts;  // Obtiene el conteo dinámico real
     wp_reset_postdata();
 
     // Ahora realizamos la consulta paginada para las publicaciones que queremos mostrar
     $query = new WP_Query($query_args);
     $posts_count = 0;
 
-    echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
+    // Solo si no es AJAX, renderizamos el input oculto con el total
+    if (!$is_ajax) {
+        echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
+    }
 
     if ($query->have_posts()) {
         $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
@@ -254,8 +257,19 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 
     wp_reset_postdata();
 
-    return ob_get_clean();
+    $output = ob_get_clean();
+
+    // Si es AJAX, devolvemos un array con el HTML y el total de publicaciones
+    if ($is_ajax) {
+        return [
+            'html' => $output,
+            'total_posts' => $total_posts
+        ];
+    }
+
+    return $output;
 }
+
 
 
 
@@ -273,7 +287,8 @@ function publicacionAjax()
         : array();
     $similar_to = isset($_POST['similar_to']) ? intval($_POST['similar_to']) : null; 
 
-    publicaciones(
+    // Llamamos a publicaciones con AJAX activado
+    $result = publicaciones(
         array(
             'filtro' => $filtro,
             'post_type' => $tipoPost,
@@ -286,6 +301,9 @@ function publicacionAjax()
         true,
         $paged
     );
+
+    // Respondemos en JSON para actualizar tanto HTML como el total de publicaciones
+    wp_send_json($result);
 }
 
 add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
