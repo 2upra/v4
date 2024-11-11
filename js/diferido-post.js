@@ -285,6 +285,7 @@
         actualizarUIBusqueda('');
         resetearCarga();
         cargarMasContenido();
+        contadorDeSamples();
     }
 
     function configurarEventoBusqueda() {
