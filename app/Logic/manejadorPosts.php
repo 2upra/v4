@@ -63,7 +63,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
         'paged' => $paged,
         'ignore_sticky_posts' => true,
     ];
-
+    //porque esto no funciona y regresa nada
     if (!empty($identifier)) {
         $terms = explode(' ', $identifier);
         $search_terms = array_map('trim', $terms);
@@ -76,43 +76,66 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
         $query_args['s'] = $identifier;
 
         // Agregamos la lógica de búsqueda personalizada
-        add_filter('posts_where', function ($where) use ($search_terms, $wpdb) {
-            $where_conditions = [];
-
-            foreach ($search_terms as $term) {
-                $like_term = '%' . $wpdb->esc_like($term) . '%';
-                $soundex_term = soundex($term);
-                $metaphone_term = metaphone($term);
-
-                $where_conditions[] = $wpdb->prepare("(
-                    {$wpdb->posts}.post_title LIKE %s OR
-                    {$wpdb->posts}.post_content LIKE %s OR
-                    SOUNDEX({$wpdb->posts}.post_title) = SOUNDEX(%s) OR
-                    SOUNDEX({$wpdb->posts}.post_content) = SOUNDEX(%s) OR
-                    METAPHONE({$wpdb->posts}.post_title, 4) = METAPHONE(%s, 4) OR
-                    METAPHONE({$wpdb->posts}.post_content, 4) = METAPHONE(%s, 4) OR
-                    EXISTS (
-                        SELECT 1 FROM {$wpdb->postmeta}
-                        WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
-                        AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'
-                        AND (
-                            {$wpdb->postmeta}.meta_value LIKE %s OR
-                            SOUNDEX({$wpdb->postmeta}.meta_value) = SOUNDEX(%s) OR
-                            METAPHONE({$wpdb->postmeta}.meta_value, 4) = METAPHONE(%s, 4)
-                        )
-                    )
-                )", $like_term, $like_term, $term, $term, $term, $term, $like_term, $term, $term);
+        function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
+        {
+            global $wpdb;
+            $likes_table = $wpdb->prefix . 'post_likes';
+            $query_args = [];
+        
+            postLog("Iniciando construirQueryArgs con filtroTiempo: $filtroTiempo");
+        
+            // Configuración base
+            $query_args = [
+                'post_type' => $args['post_type'],
+                'posts_per_page' => $posts,
+                'paged' => $paged,
+                'ignore_sticky_posts' => true,
+            ];
+        
+            if (!empty($identifier)) {
+                $terms = explode(' ', $identifier);
+                $search_terms = array_map('trim', $terms);
+                $search_terms = array_filter($search_terms);
+        
+                // Removemos el parámetro 's' por defecto para evitar conflictos
+                unset($query_args['s']);
+        
+                // Usamos 's' para una búsqueda básica
+                $query_args['s'] = $identifier;
+        
+                // Agregamos la lógica de búsqueda personalizada
+                add_filter('posts_where', function ($where) use ($search_terms, $wpdb) {
+                    $where_conditions = [];
+        
+                    foreach ($search_terms as $term) {
+                        $like_term = '%' . $wpdb->esc_like($term) . '%';
+        
+                        $where_conditions[] = $wpdb->prepare("(
+                            {$wpdb->posts}.post_title LIKE %s OR
+                            {$wpdb->posts}.post_content LIKE %s OR
+                            SOUNDEX({$wpdb->posts}.post_title) = SOUNDEX(%s) OR
+                            SOUNDEX({$wpdb->posts}.post_content) = SOUNDEX(%s) OR
+                            EXISTS (
+                                SELECT 1 FROM {$wpdb->postmeta}
+                                WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
+                                AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'
+                                AND (
+                                    {$wpdb->postmeta}.meta_value LIKE %s OR
+                                    SOUNDEX({$wpdb->postmeta}.meta_value) = SOUNDEX(%s)
+                                )
+                            )
+                        )", $like_term, $like_term, $term, $term, $like_term, $term);
+                    }
+        
+                    if (!empty($where_conditions)) {
+                        $where .= ' AND (' . implode(' OR ', $where_conditions) . ')';
+                    }
+        
+                    return $where;
+                });
             }
 
-            if (!empty($where_conditions)) {
-                $where .= ' AND (' . implode(' OR ', $where_conditions) . ')';
-            }
-
-            return $where;
-        });
-    }
-
-    // Manejo de diferentes tipos de ordenamiento
+    // Manejar diferentes tipos de ordenamiento
     if ($args['post_type'] === 'social_post') {
         switch ($filtroTiempo) {
             case 1: // Posts recientes
@@ -127,20 +150,20 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                 $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
                 postLog("Caso $filtroTiempo: Usando intervalo de $interval");
 
-                // Modificar la consulta SQL para filtrar por likes y fecha de publicación
-                $sql = $wpdb->prepare("
+                // Modificar la consulta SQL para filtrar tanto por la fecha de "likes" como por la fecha de publicación del post
+                $sql = "
                     SELECT p.ID, 
                            COUNT(pl.post_id) as like_count 
                     FROM {$wpdb->posts} p 
                     LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
-                    WHERE p.post_type = %s 
-                    AND p.post_status = %s
+                    WHERE p.post_type = 'social_post' 
+                    AND p.post_status = 'publish'
                     AND p.post_date >= DATE_SUB(NOW(), INTERVAL $interval)  
                     AND pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval) 
                     GROUP BY p.ID
                     HAVING like_count > 0
                     ORDER BY like_count DESC, p.post_date DESC
-                ", 'social_post', 'publish');
+                ";
 
                 postLog("SQL Query: " . $sql);
                 $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
