@@ -5,7 +5,6 @@ global $wpdb;
 define('INTERES_TABLE', "{$wpdb->prefix}interes");
 define('BATCH_SIZE', 1000);
 
-//aqui necesito que cuando se reciba un identifier (que es una busqueda), excluir todos los post que no tengan ese valor en titulo, contenido o meta "datosAlgoritmo" antes calcularPuntosPost para ahorrar calculo, pero tiene ser flexible, o sea si el identifier es drum, entonces drums es valido (ejemplo)
 function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
 {
     // Validar que el userId sea válido
