@@ -216,57 +216,72 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 }
 
 
-function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page)
+function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
 {
-    $post_not_in = [];
+    postLog("Iniciando cálculo de feed personalizado para usuario: $userId");
 
-    if ($similar_to) {
-        $post_not_in[] = $similar_to;
-        $cache_suffix = "_similar_" . $similar_to;
-    } else {
-        $cache_suffix = "";
+    // Validaciones iniciales
+    if (empty($userId) || !is_numeric($userId)) {
+        postLog("Error: Usuario ID inválido");
+        return [];
     }
 
-    $transient_key = $current_user_id == 44
-        ? "feed_personalizado_anonymous_{$identifier}{$cache_suffix}"
-        : "feed_personalizado_user_{$current_user_id}_{$identifier}{$cache_suffix}";
-    $use_cache = !$is_admin;
-    $cached_data = $use_cache ? get_transient($transient_key) : false;
-    if ($cached_data) {
-        $posts_personalizados = $cached_data['posts'];
-    } else {
-        if ($paged === 1) {
-            $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
-        } else {
-            $posts_personalizados = get_option($transient_key . '_backup', []);
-            if (empty($posts_personalizados)) {
-                $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
+    $datos = obtenerDatosFeedConCache($userId);
+    if (empty($datos)) {
+        postLog("Error: No hay datos disponibles para el usuario");
+        return [];
+    }
+
+    $usuario = get_userdata($userId);
+    if (!$usuario || !is_object($usuario)) {
+        postLog("Error: No se pudo obtener datos del usuario");
+        return [];
+    }
+
+    // Calcular puntuación para cada post
+    $posts_personalizados = [];
+    $current_timestamp = current_time('timestamp');
+    $vistas_posts_processed = obtenerYProcesarVistasPosts($userId);
+    $esAdmin = in_array('administrator', (array)$usuario->roles);
+
+    foreach ($datos['author_results'] as $post_id => $post_data) {
+        try {
+            // Verificar si el post sigue siendo válido
+            $post = get_post($post_id);
+            if (!$post || $post->post_status !== 'publish') {
+                continue;
             }
+
+            $puntosFinal = calcularPuntosPost(
+                $post_id,
+                $post_data,
+                $datos,
+                $esAdmin,
+                $vistas_posts_processed,
+                $identifier,
+                $similar_to,
+                $current_timestamp,
+                $userId
+            );
+
+            if (is_numeric($puntosFinal) && $puntosFinal > 0) {
+                $posts_personalizados[$post_id] = $puntosFinal;
+            }
+        } catch (Exception $e) {
+            postLog("Error al procesar post ID $post_id: " . $e->getMessage());
+            continue;
         }
-        if ($use_cache) {
-            $cache_data = ['posts' => $posts_personalizados, 'timestamp' => time()];
-            $cache_time = $similar_to ? 3600 : 86400;
-            set_transient($transient_key, $cache_data, $cache_time);
-            update_option($transient_key . '_backup', $posts_personalizados);
-        }
     }
-    $post_ids = array_keys($posts_personalizados);
-    if ($similar_to) {
-        $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
-            return $post_id != $similar_to;
-        });
+
+    // Ordenar posts por puntuación
+    if (!empty($posts_personalizados)) {
+        arsort($posts_personalizados);
+        postLog("Feed personalizado calculado exitosamente con " . count($posts_personalizados) . " posts");
+    } else {
+        postLog("No se encontraron posts relevantes para el feed personalizado");
     }
-    $post_ids = array_keys($posts_personalizados);
-    if ($similar_to) {
-        $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
-            return $post_id != $similar_to;
-        });
-    }
-    $post_ids = array_unique($post_ids);
-    return [
-        'post_ids' => $post_ids,
-        'post_not_in' => [],
-    ];
+
+    return $posts_personalizados;
 }
 
 function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
