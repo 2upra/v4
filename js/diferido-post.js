@@ -279,7 +279,7 @@
         }
     }
 
-    function limpiarBusqueda() {
+    window.limpiarBusqueda = function() {
         publicacionesCargadas.clear();
         identificador = '';
         actualizarUIBusqueda('');
