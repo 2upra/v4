@@ -12,7 +12,6 @@
     let eventoBusquedaConfigurado = false;
     let scrollTimeout = null;
 
-    // Función que se llama cada vez que se cambia de página mediante AJAX
     function reiniciarCargaDiferida() {
         log('Reiniciando carga diferida');
         window.removeEventListener('scroll', manejarScroll);
@@ -69,7 +68,7 @@
             log('La página actual no es "sello"');
         }
     }
-
+    //resto del codigo omitido...
     function manejarScroll() {
         if (scrollTimeout) return;
         scrollTimeout = setTimeout(() => {
@@ -280,7 +279,7 @@
         }
     }
 
-    function limpiarBusqueda() {
+    window.limpiarBusqueda = function() {
         //publicacionesCargadas = new Set();
         identificador = '';
         actualizarUIBusqueda('');
