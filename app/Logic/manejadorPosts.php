@@ -26,7 +26,6 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
     }
 }
 
-#PASO2
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
     global $FALLBACK_USER_ID;
@@ -50,6 +49,66 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
     $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id);
     return $query_args;
 }
+
+function procesarPublicaciones($query_args, $args, $is_ajax)
+{
+    ob_start();
+
+    // Asegúrate de que 'no_found_rows' esté establecido en false para obtener el conteo total
+    $query_args['no_found_rows'] = false;
+
+    // Realizamos la consulta paginada para las publicaciones que queremos mostrar
+    $query = new WP_Query($query_args);
+    $posts_count = 0;
+
+    // Obtenemos el total de publicaciones directamente desde la propiedad 'found_posts'
+    $total_posts = $query->found_posts;
+
+    echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
+
+    if ($query->have_posts()) {
+        $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
+        $tipoPost = $args['post_type'];
+
+        if (!wp_doing_ajax()) {
+            $clase_extra = 'clase-' . esc_attr($filtro);
+            if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
+                $clase_extra = 'clase-rolastatus';
+            }
+
+            echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
+                  data-filtro="' . esc_attr($filtro) . '" 
+                  data-posttype="' . esc_attr($tipoPost) . '" 
+                  data-tab-id="' . esc_attr($args['tab_id']) . '">';
+        }
+
+        while ($query->have_posts()) {
+            $query->the_post();
+            $posts_count++;
+
+            if ($tipoPost === 'social_post') {
+                echo htmlPost($filtro);
+            } elseif ($tipoPost === 'colab') {
+                echo htmlColab($filtro);
+            } else {
+                echo '<p>Tipo de publicación no reconocido.</p>';
+            }
+        }
+
+        if (!wp_doing_ajax()) {
+            echo '</ul>';
+        }
+    } else {
+        echo nohayPost($filtro, $is_ajax);
+    }
+
+    wp_reset_postdata();
+
+    return ob_get_clean();
+}
+
+#PASO2
+
 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
 {
@@ -277,70 +336,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
 
 
 
-function procesarPublicaciones($query_args, $args, $is_ajax)
-{
-    ob_start();
 
-    //postLog("Query args: " . print_r($query_args, true));
-
-    // Realiza una consulta sin paginación para obtener el total de publicaciones
-    $total_query_args = $query_args;
-    unset($total_query_args['posts_per_page']); // Para obtener el conteo total sin limitar el número de posts
-    unset($total_query_args['paged']); // Quitamos la paginación para contar todo
-
-    $total_query = new WP_Query($total_query_args);
-    $total_posts = $total_query->found_posts;
-    wp_reset_postdata();
-
-    // Ahora realizamos la consulta paginada para las publicaciones que queremos mostrar
-    $query = new WP_Query($query_args);
-    $posts_count = 0;
-
-    echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
-
-    if ($query->have_posts()) {
-        $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
-        $tipoPost = $args['post_type'];
-
-        if (!wp_doing_ajax()) {
-            $clase_extra = 'clase-' . esc_attr($filtro);
-            if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
-                $clase_extra = 'clase-rolastatus';
-            }
-
-            echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
-                  data-filtro="' . esc_attr($filtro) . '" 
-                  data-posttype="' . esc_attr($tipoPost) . '" 
-                  data-tab-id="' . esc_attr($args['tab_id']) . '">';
-        }
-
-        //postLog("FILTRO ENVIADO A htmlPost : $filtro");
-        //postLog("---------------------------------------");
-
-        while ($query->have_posts()) {
-            $query->the_post();
-            $posts_count++;
-
-            if ($tipoPost === 'social_post') {
-                echo htmlPost($filtro);
-            } elseif ($tipoPost === 'colab') {
-                echo htmlColab($filtro);
-            } else {
-                echo '<p>Tipo de publicación no reconocido.</p>';
-            }
-        }
-
-        if (!wp_doing_ajax()) {
-            echo '</ul>';
-        }
-    } else {
-        echo nohayPost($filtro, $is_ajax);
-    }
-
-    wp_reset_postdata();
-
-    return ob_get_clean();
-}
 
 
 
