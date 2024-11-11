@@ -257,7 +257,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
         : "feed_personalizado_user_{$current_user_id}_{$identifier}{$cache_suffix}";
 
     // Definir el tiempo de caché: 5 minutos para admin, 12 horas para usuarios normales
-    $cache_time = $is_admin ? 300 : 43200;  // 300 segundos = 5 minutos, 43200 segundos = 12 horas
+    $cache_time = $is_admin ? 7200 : 43200;  // 300 segundos = 5 minutos, 43200 segundos = 12 horas
 
     $cached_data = get_transient($transient_key);
 
