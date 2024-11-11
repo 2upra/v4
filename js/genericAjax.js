@@ -561,7 +561,7 @@ async function enviarAjax(action, data = {}) {
         return {success: false, message: error.message};
     }
 }
-
+/*
 async function establecerFiltros() {
     try {
         const response = await enviarAjax('obtenerFiltrosTotal');
@@ -620,7 +620,7 @@ function getNombreFiltro(filtroTiempo) {
 
 
 // Función para actualizar el texto del botón
-/*
+
 async function actualizarBotonFiltro() {
     console.log('Iniciando actualizarBotonFiltro');
     try {
@@ -777,7 +777,7 @@ function filtrosPost() {
     // Iniciar la carga de filtros
     cargarFiltrosGuardados();
 }
-*/
+
 window.contadorDeSamples = () => {
     const resultadosElement = document.getElementById('resultadosPost-sampleList');
     const totalPostsElement = document.querySelector('.total-posts-sampleList');
@@ -788,3 +788,4 @@ window.contadorDeSamples = () => {
     }
 }
 
+*/
