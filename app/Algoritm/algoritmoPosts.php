@@ -25,11 +25,6 @@ function obtenerDatosFeedConCache($userId)
     
 }
 
-
-
-
-
-
 function calcularPuntosPostBatch(
     $posts_data,
     $datos,

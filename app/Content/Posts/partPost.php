@@ -7,16 +7,11 @@ function variablesPosts($post_id = null)
         global $post;
         $post_id = $post->ID;
     }
-
     $current_user_id = get_current_user_id();
     $autores_suscritos = get_user_meta($current_user_id, 'offering_user_ids', true);
     $author_id = get_post_field('post_author', $post_id);
-
-    // Obtener datosAlgoritmo y su respaldo
     $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
     $datos_algoritmo_respaldo = get_post_meta($post_id, 'datosAlgoritmo_respaldo', true);
-
-    // Usar el respaldo si datosAlgoritmo está vacío
     $datos_algoritmo_final = empty($datos_algoritmo) ? $datos_algoritmo_respaldo : $datos_algoritmo;
 
     return [
@@ -50,12 +45,9 @@ function botonseguir($author_id)
 {
     $author_id = (int) $author_id;
     $current_user_id = get_current_user_id();
-
     if ($current_user_id === 0) {
-        return ''; // Usuario no autenticado
+        return '';
     }
-
-    // Si el usuario está viendo su propio perfil, añadimos una clase de deshabilitado
     if ($current_user_id === $author_id) {
         ob_start();
 ?>
@@ -83,35 +75,20 @@ function botonseguir($author_id)
     return ob_get_clean();
 }
 
-/*
-	$GLOBALS["iconorestar"] = '<svg data-testid="geist-icon" height="14" stroke-linejoin="round" viewBox="0 0 16 16" width="14" style="color: currentcolor;"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.5 8C14.5 11.5899 11.5899 14.5 8 14.5C4.41015 14.5 1.5 11.5899 1.5 8C1.5 4.41015 4.41015 1.5 8 1.5C11.5899 1.5 14.5 4.41015 14.5 8ZM16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8ZM5 7.25H4.25V8.75H5H11H11.75V7.25H11H5Z" fill="currentColor"></path></svg>';
-
-	//SUMAR
-	$GLOBALS["iconosumar"] = '<svg data-testid="geist-icon" height="14" stroke-linejoin="round" viewBox="0 0 16 16" width="14" style="color: currentcolor;"><path fill-rule="evenodd" clip-rule="evenodd" d="M14.5 8C14.5 11.5899 11.5899 14.5 8 14.5C4.41015 14.5 1.5 11.5899 1.5 8C1.5 4.41015 4.41015 1.5 8 1.5C11.5899 1.5 14.5 4.41015 14.5 8ZM16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8ZM8.75 4.25V5V7.25H11H11.75V8.75H11H8.75V11V11.75L7.25 11.75V11V8.75H5H4.25V7.25H5H7.25V5V4.25H8.75Z" fill="currentColor"></path></svg>';
-
-*/
-
-
 function botonSeguirPerfilBanner($author_id)
 {
-    // Asegurarse de que $author_id sea un entero
+
     $author_id = (int) $author_id;
     $current_user_id = get_current_user_id();
-
-    // No mostrar el botón si el usuario no está conectado o es el mismo autor
     if ($current_user_id === 0 || $current_user_id === $author_id) {
         return '';
     }
-
     $siguiendo = get_user_meta($current_user_id, 'siguiendo', true);
     $siguiendo = is_array($siguiendo) ? $siguiendo : array();
     $es_seguido = in_array($author_id, $siguiendo);
-
-    // Determinar la clase y el texto del botón
     $clase_boton = $es_seguido ? 'dejar-de-seguir' : 'seguir';
     $texto_boton = $es_seguido ? 'Dejar de seguir' : 'Seguir';
 
-    // Generar el botón con el texto correspondiente
     ob_start();
 ?>
     <button class="borde <? echo esc_attr($clase_boton); ?>"
@@ -363,10 +340,7 @@ function img($url, $quality = 40, $strip = 'all') {
  */
 function ejecutarScriptPermisos()
 {
-    // Ejecutar el script de permisos y capturar la salida
     $output = shell_exec('sudo /var/www/wordpress/wp-content/themes/2upra3v/app/Commands/permisos.sh 2>&1');
-
-    // Opcional: Puedes registrar el output para depuración
     error_log('Script de permisos ejecutado: ' . $output);
 }
 
@@ -378,7 +352,6 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
     $ultimoEdit = get_post_meta($post_id, 'ultimoEdit', true);
     $verificado = get_post_meta($post_id, 'Verificado', true);
     $recortado = get_post_meta($post_id, 'recortado', true);
-    // Verificar si el autor es el usuario actual
     $current_user_id = (int)get_current_user_id();
     $author_id = (int)$author_id;
     $is_current_user = ($current_user_id === $author_id);
@@ -499,12 +472,9 @@ function fondoPost($filtro, $block, $es_suscriptor, $post_id)
 function audioPost($post_id)
 {
     $audio_id_lite = get_post_meta($post_id, 'post_audio_lite', true);
-
     if (empty($audio_id_lite)) {
         return '';
     }
-
-    // Get the post author ID
     $post_author_id = get_post_field('post_author', $post_id);
 
     ob_start();
