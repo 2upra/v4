@@ -186,14 +186,8 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 
         default:
             postLog("Caso default: Obteniendo feed personalizado");
-            $personalized_feed = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
-
-            if (!empty($personalized_feed['post_ids'])) {
-                $query_args['post__in'] = $personalized_feed['post_ids'];
-                $query_args['orderby'] = 'date';
-                $query_args['order'] = 'DESC';
-                postLog("Feed personalizado IDs: " . implode(', ', $personalized_feed['post_ids']));
-            }
+            obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
+                
             break;
     }
 
@@ -248,14 +242,9 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
         });
     }
     $post_ids = array_unique($post_ids);
-    // No hacemos el slicing aquí
-    // $offset = ($paged - 1) * $posts_per_page;
-    // $current_page_ids = array_slice($post_ids, $offset, $posts_per_page);
-
-    // Retornamos todos los IDs de posts
     return [
         'post_ids' => $post_ids,
-        'post_not_in' => [],  // Ya no necesitamos post_not_in
+        'post_not_in' => [],  
     ];
 }
 
