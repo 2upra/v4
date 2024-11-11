@@ -182,49 +182,39 @@ function opcionesPost($post_id, $author_id)
 
 //MOSTRAR IMAGEN
 
-
 function imagenPostList($block, $es_suscriptor, $post_id)
 {
     $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
     $image_size = ($block && !$es_suscriptor) ? 'thumbnail' : 'large';
     $quality = ($block && !$es_suscriptor) ? 20 : 80;
+
+    // Verifica si el post tiene imagen destacada
+    if (has_post_thumbnail($post_id)) {
+        // Si tiene imagen destacada, obtenemos la URL de la imagen
+        $image_url = imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), false);
+    } else {
+        // Si no tiene imagen destacada, usamos el avatar por defecto con el ID del post
+        $image_url = "https://avatar.vercel.sh/{$post_id}";
+    }
+
     ob_start();
     ?>
     <div class="post-image-container <?= $blurred_class ?>">
-        <a href="<? echo esc_url(get_permalink()); ?>">
-            <img src="<?= esc_url(imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), false)) ?>" alt="Post Image" />
+        <a href="<?php echo esc_url(get_permalink($post_id)); ?>">
+            <img src="<?= esc_url($image_url) ?>" alt="Post Image" />
         </a>
     </div>
-<?
+    <?php
     $output = ob_get_clean();
     return $output;
 }
 
 
-function imagenPost($post_id, $size = 'medium', $quality = 50, $strip = 'all', $pixelated = false, $use_temp = false)
+function imagenPost($post_id, $size = 'medium', $quality = 50, $strip = 'all', $pixelated = false)
 {
     $post_thumbnail_id = get_post_thumbnail_id($post_id);
     if ($post_thumbnail_id) {
         $url = wp_get_attachment_image_url($post_thumbnail_id, $size);
-    } elseif ($use_temp) {
-        $temp_image_id = get_post_meta($post_id, 'imagenTemporal', true);
-        if ($temp_image_id) {
-            $url = wp_get_attachment_image_url($temp_image_id, $size);
-        } else {
-            $random_image_path = obtenerImagenAleatoria('/home/asley01/MEGA/Waw/random');
-
-            if (!$random_image_path) {
-                ejecutarScriptPermisos();
-                return false;
-            }
-            $temp_image_id = subirImagenALibreria($random_image_path, $post_id);
-            if (!$temp_image_id) {
-                ejecutarScriptPermisos();
-                return false;
-            }
-            update_post_meta($post_id, 'imagenTemporal', $temp_image_id);
-            $url = wp_get_attachment_image_url($temp_image_id, $size);
-        }
     } else {
         return false;
     }
@@ -240,80 +230,6 @@ function imagenPost($post_id, $size = 'medium', $quality = 50, $strip = 'all', $
     return $url;
 }
 
-function obtenerImagenAleatoria($directory)
-{
-    if (!is_dir($directory)) {
-        return false;
-    }
-    $images = glob(rtrim($directory, '/') . '/*.{jpg,jpeg,png,gif,jfif}', GLOB_BRACE);
-
-    if (!$images) {
-        return false;
-    }
-    return $images[array_rand($images)];
-}
-
-// Agrega soporte para archivos JFIF en WordPress
-function agregar_soporte_jfif($mimes)
-{
-    $mimes['jfif'] = 'image/jpeg';
-    return $mimes;
-}
-add_filter('upload_mimes', 'agregar_soporte_jfif');
-
-// Extiende wp_check_filetype para reconocer .jfif
-function extender_wp_check_filetype($types, $filename, $mimes)
-{
-    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-    if ($ext === 'jfif') {
-        return ['ext' => 'jpeg', 'type' => 'image/jpeg'];
-    }
-    return $types;
-}
-add_filter('wp_check_filetype_and_ext', 'extender_wp_check_filetype', 10, 3);
-
-function subirImagenALibreria($file_path, $post_id)
-{
-    if (!file_exists($file_path)) {
-        return false;
-    }
-    $file_contents = file_get_contents($file_path);
-    if ($file_contents === false) {
-        return false;
-    }
-    $file_ext = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
-    if ($file_ext === 'jfif') {
-        $file_ext = 'jpeg';
-        $new_file_name = pathinfo($file_path, PATHINFO_FILENAME) . '.jpeg';
-        $upload_file = wp_upload_bits($new_file_name, null, $file_contents);
-    } else {
-        $upload_file = wp_upload_bits(basename($file_path), null, $file_contents);
-    }
-
-    if ($upload_file['error']) {
-        return false;
-    }
-    $filetype = wp_check_filetype($upload_file['file'], null);
-    if (!$filetype['type']) {
-        return false;
-    }
-    $attachment = array(
-        'post_mime_type' => $filetype['type'],
-        'post_title'     => sanitize_file_name(pathinfo($upload_file['file'], PATHINFO_BASENAME)),
-        'post_content'   => '',
-        'post_status'    => 'inherit',
-        'post_parent'    => $post_id,
-    );
-    $attach_id = wp_insert_attachment($attachment, $upload_file['file'], $post_id);
-    if (!is_wp_error($attach_id)) {
-        require_once(ABSPATH . 'wp-admin/includes/image.php');
-        $attach_data = wp_generate_attachment_metadata($attach_id, $upload_file['file']);
-        wp_update_attachment_metadata($attach_id, $attach_data);
-
-        return $attach_id;
-    }
-    return false;
-}
 
 function img($url, $quality = 40, $strip = 'all') {
     if ($url === null || $url === '') {
