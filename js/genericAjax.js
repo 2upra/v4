@@ -779,12 +779,33 @@ function filtrosPost() {
 }
 
 window.contadorDeSamples = () => {
-    const resultadosElement = document.getElementById('resultadosPost-sampleList');
-    const totalPostsElement = document.querySelector('.total-posts-sampleList');
-    if (resultadosElement && totalPostsElement) {
+    console.log('Función contadorDeSamples iniciada.');
+    
+    setTimeout(() => {
+        const resultadosElement = document.getElementById('resultadosPost-sampleList');
+        const totalPostsElement = document.querySelector('.total-posts-sampleList');
+
+        // Verificación de existencia de elementos
+        if (!resultadosElement) {
+            console.error('Error: No se encontró el elemento con id "resultadosPost-sampleList".');
+            return;
+        }
+        if (!totalPostsElement) {
+            console.error('Error: No se encontró el elemento con la clase "total-posts-sampleList".');
+            return;
+        }
+
+        // Verificación de valor del input
         const totalPosts = parseInt(totalPostsElement.value, 10);
-        const formattedTotalPosts = totalPosts.toLocaleString('es-ES'); // Usamos 'es-ES' para formato de miles con puntos
-        resultadosElement.textContent = formattedTotalPosts + ' resultados';
-    }
-}
+        if (isNaN(totalPosts)) {
+            console.error('Error: El valor de totalPosts no es un número válido. Valor recibido:', totalPostsElement.value);
+            return;
+        }
+
+        // Formateo y asignación del texto
+        const formattedTotalPosts = totalPosts.toLocaleString('es-ES');
+        resultadosElement.textContent = `${formattedTotalPosts} resultados`;
+        console.log('Texto actualizado correctamente:', resultadosElement.textContent);
+    }, 1000); // Retardo de 1 segundo
+};
 
