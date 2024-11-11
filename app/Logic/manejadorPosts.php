@@ -75,20 +75,21 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     return $query_args;
 }
 
-function filtrarIdentifier($identifier, $query_args) {
+function filtrarIdentifier($identifier, $query_args)
+{
     global $wpdb;
 
     // Normalizar el término de búsqueda
     $identifier = strtolower(trim($identifier));
-    
+
     // Remover 's' final si existe (para manejar plurales)
     $terms = explode(' ', $identifier);
     $normalized_terms = array();
-    
+
     foreach ($terms as $term) {
         $term = trim($term);
         if (empty($term)) continue;
-        
+
         // Agregar tanto la versión singular como plural
         $normalized_terms[] = $term;
         if (substr($term, -1) === 's') {
@@ -97,7 +98,7 @@ function filtrarIdentifier($identifier, $query_args) {
             $normalized_terms[] = $term . 's'; // Versión plural
         }
     }
-    
+
     $normalized_terms = array_unique($normalized_terms);
     $query_args['s'] = $identifier;
 
@@ -108,7 +109,7 @@ function filtrarIdentifier($identifier, $query_args) {
 
         $search = '';
         $search_conditions = array();
-        
+
         // Construir condición OR para cada término y sus variaciones
         $term_conditions = array();
         foreach ($normalized_terms as $term) {
@@ -124,7 +125,7 @@ function filtrarIdentifier($identifier, $query_args) {
                 )
             ", $like_term, $like_term, $like_term);
         }
-        
+
         if (!empty($term_conditions)) {
             $search .= ' AND (' . implode(' OR ', $term_conditions) . ')';
         }
@@ -184,10 +185,30 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
             }
             break;
 
-        default:
+        default: // Feed personalizado
             postLog("Caso default: Obteniendo feed personalizado");
-            obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
-                
+
+            $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
+
+            if (!empty($feed_result['post_ids'])) {
+                $query_args['post__in'] = $feed_result['post_ids'];
+                $query_args['orderby'] = 'post__in';
+
+                if (!empty($feed_result['post_not_in'])) {
+                    $query_args['post__not_in'] = $feed_result['post_not_in'];
+                }
+
+                // Limit results to the specified posts per page
+                $offset = ($paged - 1) * $posts;
+                $query_args['post__in'] = array_slice($feed_result['post_ids'], $offset, $posts);
+
+                postLog("Feed personalizado: " . count($query_args['post__in']) . " posts encontrados");
+            } else {
+                // Fallback to recent posts if no personalized feed is available
+                postLog("No se encontró feed personalizado, usando posts recientes como fallback");
+                $query_args['orderby'] = 'date';
+                $query_args['order'] = 'DESC';
+            }
             break;
     }
 
@@ -244,8 +265,90 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
     $post_ids = array_unique($post_ids);
     return [
         'post_ids' => $post_ids,
-        'post_not_in' => [],  
+        'post_not_in' => [],
     ];
+}
+
+function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
+{
+    // Validar que el userId sea válido
+    if (empty($userId) || !is_numeric($userId)) {
+        error_log("Usuario ID inválido Feed: " . print_r($userId, true));
+        return [];
+    }
+
+    $datos = obtenerDatosFeedConCache($userId);
+    if (empty($datos)) {
+        error_log("Datos vacíos para usuario ID: " . $userId);
+        return [];
+    }
+
+    // Obtener y validar datos del usuario
+    $usuario = get_userdata($userId);
+    if (!$usuario || !is_object($usuario)) {
+        error_log("No se pudo obtener datos del usuario ID: " . $userId);
+        return [];
+    }
+
+    // Validar roles del usuario
+    $esAdmin = false;
+    if (isset($usuario->roles) && is_array($usuario->roles)) {
+        $esAdmin = in_array('administrator', $usuario->roles);
+    } else {
+        $roles = array_map('strtolower', (array) $usuario->roles);
+        $esAdmin = in_array('administrator', $roles);
+    }
+
+    // Obtener y validar vistas de posts
+    $vistas_posts_processed = obtenerYProcesarVistasPosts($userId);
+    if ($vistas_posts_processed === false) {
+        error_log("Error al procesar vistas de posts para usuario ID: " . $userId);
+        return [];
+    }
+
+    $posts_personalizados = [];
+    $resumenPuntos = [];
+
+    // Validar que author_results sea un array
+    if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
+        error_log("author_results no es válido para usuario ID: " . $userId);
+        return [];
+    }
+    $current_timestamp = current_time('timestamp');
+
+    foreach ($datos['author_results'] as $post_id => $post_data) {
+        try {
+            $puntosFinal = calcularPuntosPost(
+                $post_id,
+                $post_data,
+                $datos,
+                $esAdmin,
+                $vistas_posts_processed,
+                $identifier,
+                $similar_to,
+                $current_timestamp,
+                $userId
+            );
+
+            if (is_numeric($puntosFinal)) {
+                $posts_personalizados[$post_id] = $puntosFinal;
+                $resumenPuntos[$post_id] = round($puntosFinal, 2);
+            }
+        } catch (Exception $e) {
+            error_log("Error al calcular puntos para post ID {$post_id}: " . $e->getMessage());
+            continue;
+        }
+    }
+
+    if (empty($posts_personalizados)) {
+        error_log("No se generaron posts personalizados para usuario ID: " . $userId);
+        return [];
+    }
+
+    arsort($posts_personalizados);
+    arsort($resumenPuntos);
+
+    return $posts_personalizados;
 }
 
 
