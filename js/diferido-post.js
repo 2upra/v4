@@ -101,6 +101,7 @@
     });
 
     async function cargarMasContenido() {
+        log("CARGAR MAS CONTENIDO LLAMADO");
         if (estaCargando) {
             log('Carga en progreso. Espera a que finalice antes de intentar nuevamente.');
             return;
@@ -283,6 +284,7 @@
     }
 
     function limpiarBusqueda() {
+        log("Limpiando busqueda LLAMADO");
         publicacionesCargadas.clear();
         identificador = '';
         actualizarUIBusqueda('');
