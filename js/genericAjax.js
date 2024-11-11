@@ -561,7 +561,7 @@ async function enviarAjax(action, data = {}) {
         return {success: false, message: error.message};
     }
 }
-/*
+
 async function establecerFiltros() {
     try {
         const response = await enviarAjax('obtenerFiltrosTotal');
@@ -788,4 +788,3 @@ window.contadorDeSamples = () => {
     }
 }
 
-*/
