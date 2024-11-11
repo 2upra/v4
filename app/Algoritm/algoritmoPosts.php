@@ -716,9 +716,14 @@ function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
     return $puntosSimilarTo;
 }
 
-// Función para extraer palabras de datosAlgoritmo
 function extractWordsFromDatosAlgoritmo($datosAlgoritmo) {
     $words = [];
+    
+    // Verificar si $datosAlgoritmo es null o no es array
+    if (!is_array($datosAlgoritmo)) {
+        return $words;
+    }
+
     foreach ($datosAlgoritmo as $value) {
         if (is_array($value)) {
             foreach (['es', 'en'] as $lang) {
@@ -734,7 +739,6 @@ function extractWordsFromDatosAlgoritmo($datosAlgoritmo) {
     }
     return $words;
 }
-
 // Función para extraer palabras de contenido (usando stemming para mejorar coincidencias)
 function extractWordsFromContent($content) {
     $words = preg_split('/\s+/', strtolower($content), -1, PREG_SPLIT_NO_EMPTY);
