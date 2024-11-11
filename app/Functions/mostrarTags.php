@@ -1,9 +1,5 @@
 <?
 
-/*
-despues que se cachean, no se muestran aleatoreamente, y ya no quiero que muestre la cantidad 
-*/
-
 
 function tagsFrecuentes() {
     $cache_key = 'tagsFrecuentes12';

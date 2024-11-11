@@ -143,7 +143,7 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
     $decay_factors = [];
     foreach ($datos['author_results'] as $post_data) {
         $post_date = $post_data->post_date;
-        $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date; 
+        $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date;
         $diasDesdePublicacion = floor(($current_timestamp - $post_timestamp) / (3600 * 24));
         if (!isset($decay_factors[$diasDesdePublicacion])) {
             $decay_factors[$diasDesdePublicacion] = getDecayFactor($diasDesdePublicacion);
@@ -159,7 +159,7 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
         $similar_to,
         $current_timestamp,
         $userId,
-        $decay_factors 
+        $decay_factors
     );
 
     if (!empty($puntos_por_post)) {
@@ -179,7 +179,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
     }
 
     switch ($filtroTiempo) {
-        case 1: 
+        case 1:
             $query_args['orderby'] = 'date';
             $query_args['order'] = 'DESC';
             break;
@@ -187,7 +187,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
         case 2: // Top semanal
         case 3: // Top mensual
             $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
-            
+
             $sql = "
                 SELECT p.ID, 
                        COUNT(pl.post_id) as like_count 
@@ -218,11 +218,11 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 
         default: // Feed personalizado
             $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
-            
+
             if (!empty($feed_result['post_ids'])) {
                 $query_args['post__in'] = $feed_result['post_ids'];
                 $query_args['orderby'] = 'post__in';
-                
+
                 if (!empty($feed_result['post_not_in'])) {
                     $query_args['post__not_in'] = $feed_result['post_not_in'];
                 }
@@ -241,8 +241,6 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 
     return $query_args;
 }
-
-
 function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page)
 {
     $post_not_in = [];
@@ -257,7 +255,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
     $transient_key = $current_user_id == 44
         ? "feed_personalizado_anonymous_{$identifier}{$cache_suffix}"
         : "feed_personalizado_user_{$current_user_id}_{$identifier}{$cache_suffix}";
-    
+
     // Definir el tiempo de caché: 5 minutos para admin, 12 horas para usuarios normales
     $cache_time = $is_admin ? 300 : 43200;  // 300 segundos = 5 minutos, 43200 segundos = 12 horas
 
@@ -275,24 +273,24 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
                 $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
             }
 
-        $cache_data = ['posts' => $posts_personalizados, 'timestamp' => time()];
-        set_transient($transient_key, $cache_data, $cache_time);
-        update_option($transient_key . '_backup', $posts_personalizados);
-    }
+            $cache_data = ['posts' => $posts_personalizados, 'timestamp' => time()];
+            set_transient($transient_key, $cache_data, $cache_time);
+            update_option($transient_key . '_backup', $posts_personalizados);
+        }
 
-    $post_ids = array_keys($posts_personalizados);
-    if ($similar_to) {
-        $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
-            return $post_id != $similar_to;
-        });
-    }
+        $post_ids = array_keys($posts_personalizados);
+        if ($similar_to) {
+            $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
+                return $post_id != $similar_to;
+            });
+        }
 
-    return [
-        'post_ids' => $post_ids,
-        'post_not_in' => $post_not_in,
-    ];
+        return [
+            'post_ids' => $post_ids,
+            'post_not_in' => $post_not_in,
+        ];
+    }
 }
-
 function reiniciarFeed($current_user_id)
 {
     global $wpdb;
@@ -320,14 +318,13 @@ function reiniciarFeed($current_user_id)
 
     return count($query); // Retorna cuántos transients se eliminaron
 }
-
 function procesarPublicaciones($query_args, $args, $is_ajax)
 {
     ob_start();
     $user_id = get_current_user_id();
     $cache_key = 'posts_count_' . md5(serialize($query_args)) . '_user_' . $user_id;
     $posts_count = 0;
-    
+
     // Verificar que query_args no esté vacío
     if (empty($query_args)) {
         error_log('Query args está vacío en procesarPublicaciones');
@@ -343,17 +340,17 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     $total_posts = get_transient($cache_key);
     if ($total_posts === false) {
         $query_args['no_found_rows'] = false;
-        
+
         // Crear la consulta con manejo de errores
         try {
             $query = new WP_Query($query_args);
-            
+
             // Verificar si la consulta es válida
             if (!is_a($query, 'WP_Query')) {
                 error_log('Error al crear WP_Query');
                 return '';
             }
-            
+
             $total_posts = $query->found_posts;
             set_transient($cache_key, $total_posts, 12 * HOUR_IN_SECONDS);
         } catch (Exception $e) {
@@ -411,7 +408,6 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     wp_reset_postdata();
     return ob_get_clean();
 }
-
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
 {
     global $wpdb;
@@ -430,10 +426,6 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     }
     return $query_args;
 }
-
-
-
-
 function filtrarIdentifier($identifier, $query_args)
 {
     global $wpdb;
@@ -446,7 +438,7 @@ function filtrarIdentifier($identifier, $query_args)
         if (empty($term)) continue;
         $normalized_terms[] = $term;
         if (substr($term, -1) === 's') {
-            $normalized_terms[] = substr($term, 0, -1); 
+            $normalized_terms[] = substr($term, 0, -1);
         } else {
             $normalized_terms[] = $term . 's';
         }
@@ -484,18 +476,6 @@ function filtrarIdentifier($identifier, $query_args)
 
     return $query_args;
 }
-
-
-
-
-
-
-
-
-
-
-
-
 function publicacionAjax()
 {
     $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
@@ -523,10 +503,8 @@ function publicacionAjax()
         $paged
     );
 }
-
 add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
 add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
-
 
 function obtenerUserId($is_ajax)
 {
@@ -552,12 +530,8 @@ function obtenerUserId($is_ajax)
     return null;
 }
 
-
-
 /*
-
 TEST 
-
 function publicar_en_threads($post_id) {
     // Obtener el contenido del post de WordPress
     $post = get_post($post_id);
