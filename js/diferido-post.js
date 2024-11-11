@@ -280,7 +280,7 @@
     }
 
     window.limpiarBusqueda = function() {
-        //publicacionesCargadas = new Set();
+        publicacionesCargadas.clear();
         identificador = '';
         actualizarUIBusqueda('');
         resetearCarga();
