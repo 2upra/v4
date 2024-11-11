@@ -1,8 +1,6 @@
 <?
-/* 
-es normal? que la consulta query en procesarPublicaciones dure más que la de obtenerDatosFeed($userId)? una dura 0.7 seg (procesarPublicaciones) y la otra 0.6 (obtenerDatosFeed), y yo siento que la de obtenerDatosFeed es mas compleja
-*/
 
+tengo un problema
 
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
@@ -170,21 +168,148 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
     return $puntos_por_post;
 }
 
+function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts)
+{
+    global $wpdb;
+    $likes_table = $wpdb->prefix . 'post_likes';
+
+    // Asegúrate de que query_args sea un array
+    if (!is_array($query_args)) {
+        $query_args = array();
+    }
+
+    switch ($filtroTiempo) {
+        case 1: 
+            $query_args['orderby'] = 'date';
+            $query_args['order'] = 'DESC';
+            break;
+
+        case 2: // Top semanal
+        case 3: // Top mensual
+            $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
+            
+            $sql = "
+                SELECT p.ID, 
+                       COUNT(pl.post_id) as like_count 
+                FROM {$wpdb->posts} p 
+                LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
+                WHERE p.post_type = 'social_post' 
+                AND p.post_status = 'publish'
+                AND p.post_date >= DATE_SUB(NOW(), INTERVAL $interval)  
+                AND pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval) 
+                GROUP BY p.ID
+                HAVING like_count > 0
+                ORDER BY like_count DESC, p.post_date DESC
+            ";
+
+            $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
+
+            if (!empty($posts_with_likes)) {
+                $post_ids = wp_list_pluck($posts_with_likes, 'ID');
+                if (!empty($post_ids)) {
+                    $query_args['post__in'] = $post_ids;
+                    $query_args['orderby'] = 'post__in';
+                }
+            } else {
+                $query_args['orderby'] = 'date';
+                $query_args['order'] = 'DESC';
+            }
+            break;
+
+        default: // Feed personalizado
+            $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
+            
+            if (!empty($feed_result['post_ids'])) {
+                $query_args['post__in'] = $feed_result['post_ids'];
+                $query_args['orderby'] = 'post__in';
+                
+                if (!empty($feed_result['post_not_in'])) {
+                    $query_args['post__not_in'] = $feed_result['post_not_in'];
+                }
+            } else {
+                $query_args['orderby'] = 'date';
+                $query_args['order'] = 'DESC';
+            }
+            break;
+    }
+
+    // Asegúrate de que siempre haya un orderby por defecto
+    if (empty($query_args['orderby'])) {
+        $query_args['orderby'] = 'date';
+        $query_args['order'] = 'DESC';
+    }
+
+    return $query_args;
+}
+
+/*
+
+tengo este error, sucede cuanto activo el filtro 2 o 3 (top mensual o semanal)
+[11-Nov-2024 10:19:43 UTC] PHP Fatal error:  Uncaught Error: Call to a member function have_posts() on null in /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php:188
+Stack trace:
+#0 /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php(22): procesarPublicaciones()
+#1 /var/www/wordpress/wp-content/themes/2upra3v/app/Pages/socialTabs.php(138): publicaciones()
+#2 /var/www/wordpress/wp-content/themes/2upra3v/TemplateInicio.php(19): socialTabs()
+#3 /var/www/wordpress/wp-includes/template-loader.php(106): include('...')
+#4 /var/www/wordpress/wp-blog-header.php(19): require_once('...')
+#5 /var/www/wordpress/index.php(17): require('...')
+#6 {main}
+  thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Logic/manejadorPosts.php on line 188
+
+*/
+
 function procesarPublicaciones($query_args, $args, $is_ajax)
 {
     ob_start();
     $user_id = get_current_user_id();
     $cache_key = 'posts_count_' . md5(serialize($query_args)) . '_user_' . $user_id;
     $posts_count = 0;
+    
+    // Verificar que query_args no esté vacío
+    if (empty($query_args)) {
+        error_log('Query args está vacío en procesarPublicaciones');
+        return '';
+    }
+
+    // Asegurarse de que query_args sea un array
+    if (!is_array($query_args)) {
+        error_log('Query args no es un array en procesarPublicaciones');
+        return '';
+    }
+
     $total_posts = get_transient($cache_key);
     if ($total_posts === false) {
-        $query_args['no_found_rows'] = false; 
+        $query_args['no_found_rows'] = false;
+        
+        // Crear la consulta con manejo de errores
+        try {
+            $query = new WP_Query($query_args);
+            
+            // Verificar si la consulta es válida
+            if (!is_a($query, 'WP_Query')) {
+                error_log('Error al crear WP_Query');
+                return '';
+            }
+            
+            $total_posts = $query->found_posts;
+            set_transient($cache_key, $total_posts, 12 * HOUR_IN_SECONDS);
+        } catch (Exception $e) {
+            error_log('Error en WP_Query: ' . $e->getMessage());
+            return '';
+        }
+    } else {
+        // Si usamos el caché, aún necesitamos crear la consulta
         $query = new WP_Query($query_args);
-        $total_posts = $query->found_posts;
-        set_transient($cache_key, $total_posts, 12 * HOUR_IN_SECONDS);
+    }
+
+    // Verificar que $query sea válido antes de continuar
+    if (!is_object($query) || !method_exists($query, 'have_posts')) {
+        error_log('Query inválido en procesarPublicaciones');
+        return '';
     }
 
     echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
+
     if ($query->have_posts()) {
         $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
         $tipoPost = $args['post_type'];
@@ -297,80 +422,7 @@ function filtrarIdentifier($identifier, $query_args)
     return $query_args;
 }
 
-function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts)
-{
-    global $wpdb;
-    $likes_table = $wpdb->prefix . 'post_likes';
 
-    switch ($filtroTiempo) {
-        case 1: 
-            $query_args['orderby'] = 'date';
-            $query_args['order'] = 'DESC';
-            break;
-
-        case 2: // Top semanal
-        case 3: // Top mensual
-            $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
-            //postLog("Caso $filtroTiempo: Usando intervalo de $interval");
-
-            $sql = "
-                SELECT p.ID, 
-                       COUNT(pl.post_id) as like_count 
-                FROM {$wpdb->posts} p 
-                LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
-                WHERE p.post_type = 'social_post' 
-                AND p.post_status = 'publish'
-                AND p.post_date >= DATE_SUB(NOW(), INTERVAL $interval)  
-                AND pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval) 
-                GROUP BY p.ID
-                HAVING like_count > 0
-                ORDER BY like_count DESC, p.post_date DESC
-            ";
-
-            //postLog("SQL Query: " . $sql);
-            $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
-            //postLog("Resultados encontrados: " . count($posts_with_likes));
-
-            if (!empty($posts_with_likes)) {
-                $post_ids = wp_list_pluck($posts_with_likes, 'ID');
-                if (!empty($post_ids)) {
-                    $query_args['post__in'] = $post_ids;
-                    $query_args['orderby'] = 'post__in';
-                }
-                //postLog("IDs de posts para esta página: " . implode(', ', $post_ids));
-            } else {
-                //postLog("No se encontraron posts con likes en el período especificado");
-                $query_args['orderby'] = 'date';
-                $query_args['order'] = 'DESC';
-            }
-            break;
-
-            default: // Feed personalizado
-            //postLog("Caso default: Obteniendo feed personalizado");
-            
-            $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
-            
-            if (!empty($feed_result['post_ids'])) {
-                // Establecer todos los IDs de posts sin limitar
-                $query_args['post__in'] = $feed_result['post_ids'];
-                $query_args['orderby'] = 'post__in';
-                
-                if (!empty($feed_result['post_not_in'])) {
-                    $query_args['post__not_in'] = $feed_result['post_not_in'];
-                }
-                
-                // La paginación se manejará automáticamente por WP_Query usando 'posts_per_page' y 'paged'
-                //postLog("Feed personalizado: " . count($feed_result['post_ids']) . " posts totales disponibles");
-            } else {
-                //postLog("No se encontró feed personalizado, usando posts recientes como fallback");
-                $query_args['orderby'] = 'date';
-                $query_args['order'] = 'DESC';
-            }
-            break;
-    }
-
-    return $query_args;
-}
 
 function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page)
 {
