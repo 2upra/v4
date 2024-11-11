@@ -59,7 +59,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
         'posts_per_page' => $posts,
         'paged' => $paged,
         'ignore_sticky_posts' => true,
-        'no_found_rows' => true, // Mejora el rendimiento cuando no necesitas pagination info
+        'no_found_rows' => false, // Mejora el rendimiento cuando no necesitas pagination info
         'cache_results' => true,
         'update_post_meta_cache' => true, // Solo activar si necesitas meta datos
         'update_post_term_cache' => false, // Solo activar si necesitas términos
