@@ -240,6 +240,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 
     return $query_args;
 }
+
 function procesarPublicaciones($query_args, $args, $is_ajax) {
     ob_start();
     $user_id = get_current_user_id();
@@ -251,34 +252,37 @@ function procesarPublicaciones($query_args, $args, $is_ajax) {
         return '';
     }
 
-    // Consulta sin caché para los primeros 300 posts
+    // Limitar la carga de memoria: Solo obtener los IDs
+    $query_args['fields'] = 'ids'; 
     $query_args['posts_per_page'] = 200;
-    $query_recientes = new WP_Query($query_args);
+    $query_args['no_found_rows'] = true;
 
+    // Consulta inicial para los primeros 200 posts
+    $query_recientes = new WP_Query($query_args);
     if (!is_a($query_recientes, 'WP_Query')) {
-        error_log('Error al crear WP_Query para primeros 300 posts');
+        error_log('Error al crear WP_Query para primeros 200 posts');
         return '';
     }
 
-    // Renderizar los primeros 300 posts
+    // Renderizar los primeros 200 posts
     if ($query_recientes->have_posts()) {
         renderizarPosts($query_recientes, $args, $is_ajax, $posts_count);
     }
     wp_reset_postdata();
+    unset($query_recientes);
+    gc_collect_cycles();  // Recolecta memoria
 
-    // Cacheo y procesamiento del resto de los posts en grupos
-    $total_posts = 0;
-    $grupo_tamano = 200; // Definir el tamaño del grupo
-    for ($offset = 300; ; $offset += $grupo_tamano) {
+    // Procesamiento del resto de los posts en grupos de 100
+    $grupo_tamano = 100;
+    for ($offset = 200; ; $offset += $grupo_tamano) {
         $cache_key = 'posts_grupo_' . $offset . '_user_' . $user_id;
         $posts_en_grupo = get_transient($cache_key);
 
-        // Solo ejecuta la consulta si no está en caché
         if ($posts_en_grupo === false) {
             $query_args['offset'] = $offset;
             $query_args['posts_per_page'] = $grupo_tamano;
-            $query_grupo = new WP_Query($query_args);
 
+            $query_grupo = new WP_Query($query_args);
             if (!$query_grupo->have_posts()) {
                 break; // Termina si no hay más posts
             }
@@ -289,19 +293,17 @@ function procesarPublicaciones($query_args, $args, $is_ajax) {
             renderizarPosts($query_grupo, $args, $is_ajax, $posts_count);
             wp_reset_postdata();
 
-            // Liberación manual de variables para evitar saturación de memoria
+            // Liberación de memoria
             unset($query_grupo);
-        } else {
-            $total_posts += $posts_en_grupo;
+            gc_collect_cycles();
         }
     }
 
     return ob_get_clean();
 }
 
-
 function renderizarPosts($query, $args, $is_ajax, &$posts_count) {
-    $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
+    $filtro = !empty($args['filtro']) ? $args['filtro'] : 'general';
     $tipoPost = $args['post_type'];
 
     if (!wp_doing_ajax()) {
@@ -315,6 +317,7 @@ function renderizarPosts($query, $args, $is_ajax, &$posts_count) {
     while ($query->have_posts()) {
         $query->the_post();
         $posts_count++;
+
         if ($tipoPost === 'social_post') {
             echo htmlPost($filtro);
         } elseif ($tipoPost === 'colab') {
@@ -328,6 +331,7 @@ function renderizarPosts($query, $args, $is_ajax, &$posts_count) {
         echo '</ul>';
     }
 }
+
 
 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
