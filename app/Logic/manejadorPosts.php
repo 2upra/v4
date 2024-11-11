@@ -91,8 +91,12 @@ function filtrarIdentifier($identifier, $query_args)
     if (file_exists($template_dir . '/vendor/autoload.php')) {
         error_log("Autoload file exists");
         require_once $template_dir . '/vendor/autoload.php';
+        
+        // Inicializar el stemmer
+        $stemmer = new \Wamania\Snowball\Spanish(); // Asegúrate de que esta es la clase correcta para tu stemmer
     } else {
         error_log("Autoload file does not exist");
+        $stemmer = null;
     }
     
     // Obtener términos y aplicar stemming
@@ -102,9 +106,11 @@ function filtrarIdentifier($identifier, $query_args)
         $term = trim($term);
         if (!empty($term)) {
             // Obtener la raíz de la palabra
-            $stemmed_term = $stemmer->stem($term);
+            if ($stemmer !== null) {
+                $stemmed_term = $stemmer->stem($term);
+                $search_terms[] = $stemmed_term;
+            }
             $search_terms[] = $term;
-            $search_terms[] = $stemmed_term;
             
             // Agregar variaciones comunes
             if (substr($term, -1) === 's') {
