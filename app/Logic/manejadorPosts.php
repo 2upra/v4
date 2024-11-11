@@ -194,14 +194,21 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 {
     ob_start();
 
-    // Hacer log de los argumentos de la consulta para depuración
     postLog("Query args: " . print_r($query_args, true));
 
-    $query = new WP_Query($query_args);
-    $posts_count = 0;  // Inicializamos el contador de publicaciones para la página actual
-    $total_posts = $query->found_posts;  // Total de publicaciones sin paginar
+    // Realiza una consulta sin paginación para obtener el total de publicaciones
+    $total_query_args = $query_args;
+    unset($total_query_args['posts_per_page']); // Para obtener el conteo total sin limitar el número de posts
+    unset($total_query_args['paged']); // Quitamos la paginación para contar todo
+    
+    $total_query = new WP_Query($total_query_args);
+    $total_posts = $total_query->found_posts;
+    wp_reset_postdata();
 
-    // Aquí imprimimos el input oculto con el total de publicaciones antes del <ul>
+    // Ahora realizamos la consulta paginada para las publicaciones que queremos mostrar
+    $query = new WP_Query($query_args);
+    $posts_count = 0;
+
     echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
 
     if ($query->have_posts()) {
@@ -214,7 +221,6 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
                 $clase_extra = 'clase-rolastatus';
             }
 
-            // Imprimir la lista <ul> con la clase adecuada
             echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
                   data-filtro="' . esc_attr($filtro) . '" 
                   data-posttype="' . esc_attr($tipoPost) . '" 
@@ -224,10 +230,9 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
         postLog("FILTRO ENVIADO A htmlPost : $filtro");
         postLog("---------------------------------------");
 
-        // Itera sobre los resultados de la consulta
         while ($query->have_posts()) {
             $query->the_post();
-            $posts_count++; // Incrementamos el contador por cada post procesado (solo en la página actual)
+            $posts_count++; 
 
             if ($tipoPost === 'social_post') {
                 echo htmlPost($filtro);
@@ -249,14 +254,43 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 
     wp_reset_postdata();
 
-    // Agregar el conteo de publicaciones al final dentro de un campo oculto o un comentario
-    echo '<!-- Número de publicaciones procesadas en esta página: ' . $posts_count . ' -->';
-    echo '<!-- Total de publicaciones sin paginación: ' . $total_posts . ' -->';
-    echo '<input type="hidden" class="post-count" value="' . esc_attr($posts_count) . '" />';
-    postLog("Total de publicaciones encontradas: " . $total_posts);
-
     return ob_get_clean();
 }
+
+
+
+
+function publicacionAjax()
+{
+    $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
+    $filtro = isset($_POST['filtro']) ? sanitize_text_field($_POST['filtro']) : '';
+    $tipoPost = isset($_POST['posttype']) ? sanitize_text_field($_POST['posttype']) : '';
+    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : '';
+    $tab_id = isset($_POST['tab_id']) ? sanitize_text_field($_POST['tab_id']) : '';
+    $user_id = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
+    $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas'])
+        ? array_map('intval', $_POST['cargadas'])
+        : array();
+    $similar_to = isset($_POST['similar_to']) ? intval($_POST['similar_to']) : null; 
+
+    publicaciones(
+        array(
+            'filtro' => $filtro,
+            'post_type' => $tipoPost,
+            'tab_id' => $tab_id,
+            'user_id' => $user_id,
+            'identifier' => $data_identifier,
+            'exclude' => $publicacionesCargadas,
+            'similar_to' => $similar_to, 
+        ),
+        true,
+        $paged
+    );
+}
+
+add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
+add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
+
 
 function obtenerUserId($is_ajax)
 {
@@ -283,36 +317,6 @@ function obtenerUserId($is_ajax)
 }
 
 
-function publicacionAjax()
-{
-    $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
-    $filtro = isset($_POST['filtro']) ? sanitize_text_field($_POST['filtro']) : '';
-    $tipoPost = isset($_POST['posttype']) ? sanitize_text_field($_POST['posttype']) : '';
-    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : '';
-    $tab_id = isset($_POST['tab_id']) ? sanitize_text_field($_POST['tab_id']) : '';
-    $user_id = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
-    $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas'])
-        ? array_map('intval', $_POST['cargadas'])
-        : array();
-    $similar_to = isset($_POST['similar_to']) ? intval($_POST['similar_to']) : null; // Nuevo parámetro
-
-    publicaciones(
-        array(
-            'filtro' => $filtro,
-            'post_type' => $tipoPost,
-            'tab_id' => $tab_id,
-            'user_id' => $user_id,
-            'identifier' => $data_identifier,
-            'exclude' => $publicacionesCargadas,
-            'similar_to' => $similar_to, // Pasar el parámetro a la función
-        ),
-        true,
-        $paged
-    );
-}
-
-add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
-add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
 
 /*
 
