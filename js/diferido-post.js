@@ -13,9 +13,6 @@
     let scrollTimeout = null;
 
     // Función que se llama cada vez que se cambia de página mediante AJAX
-    window.reiniciarCargaDiferida = reiniciarCargaDiferida;
-    window.resetearCarga = resetearCarga;
-    window.limpiarBusqueda = limpiarBusqueda;
     function reiniciarCargaDiferida() {
         log('Reiniciando carga diferida');
         window.removeEventListener('scroll', manejarScroll);
@@ -105,29 +102,29 @@
             log('Carga en progreso. Espera a que finalice antes de intentar nuevamente.');
             return;
         }
-
+    
         estaCargando = true;
         log('Iniciando carga de más contenido');
-
+    
         const elementoPestañaActiva = document.querySelector('.tab.active');
         if (elementoPestañaActiva?.getAttribute('ajax') === 'no') {
             log('La pestaña activa tiene ajax="no". No se cargará más contenido.');
             estaCargando = false;
             return;
         }
-
+    
         const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
         if (!listaPublicaciones) {
             log('No se encontró una pestaña activa');
             estaCargando = false;
             return;
         }
-
+    
         const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
         const idUsuario = window.idUsuarioActual || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
-
+    
         log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual});
-
+    
         try {
             const respuesta = await fetch(ajaxUrl, {
                 method: 'POST',
@@ -143,11 +140,11 @@
                     cargadas: Array.from(publicacionesCargadas).join(',')
                 })
             });
-
+    
             if (!respuesta.ok) {
                 throw new Error(`HTTP error! status: ${respuesta.status}`);
             }
-
+    
             const textoRespuesta = await respuesta.text();
             await procesarRespuesta(textoRespuesta);
         } catch (error) {
@@ -156,52 +153,39 @@
             estaCargando = false;
         }
     }
-    const MAX_POSTS = 50;
-
+    const MAX_POSTS = 34; 
     async function procesarRespuesta(respuesta) {
         log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
         const respuestaLimpia = respuesta.trim();
-
+    
         if (respuestaLimpia === '<div id="no-more-posts"></div>') {
             log('No hay más publicaciones');
             detenerCarga();
             return;
         }
-
+    
         if (!respuestaLimpia) {
             log('Respuesta vacía recibida');
             detenerCarga();
             return;
         }
-
+    
         const parser = new DOMParser();
         const doc = parser.parseFromString(respuesta, 'text/html');
-
-        // Extraer y actualizar el valor de total-posts-sampleList de la respuesta
-        const totalPostsInputFromResponse = doc.querySelector('.total-posts-sampleList');
-        if (totalPostsInputFromResponse) {
-            const totalPostsValue = totalPostsInputFromResponse.getAttribute('value');
-            const totalPostsInputInDOM = document.querySelector('.total-posts-sampleList');
-            if (totalPostsInputInDOM) {
-                totalPostsInputInDOM.value = totalPostsValue;
-                log('Campo total-posts-sampleList actualizado desde la respuesta:', totalPostsValue);
-                
-            }
-        }
-
+    
         const publicacionesNuevas = doc.querySelectorAll('.EDYQHV');
         if (publicacionesNuevas.length === 0) {
             log('No se encontraron publicaciones nuevas en la respuesta');
             detenerCarga();
             return;
         }
-
+    
         // Filtrar publicaciones duplicadas
         const publicacionesValidas = [];
         publicacionesNuevas.forEach(publicacion => {
             const idPublicacion = publicacion.getAttribute('id-post')?.trim();
             const existeEnDOM = document.querySelector(`.social-post-list .EDYQHV[id-post="${idPublicacion}"]`);
-
+    
             if (idPublicacion && !publicacionesCargadas.has(idPublicacion) && !existeEnDOM) {
                 publicacionesCargadas.add(idPublicacion);
                 publicacionesValidas.push(publicacion.outerHTML);
@@ -210,14 +194,14 @@
                 log('Publicación duplicada omitida:', idPublicacion);
             }
         });
-
+    
         if (publicacionesValidas.length > 0) {
             const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
             if (listaPublicaciones) {
                 listaPublicaciones.insertAdjacentHTML('beforeend', publicacionesValidas.join(''));
                 log('Contenido añadido');
                 paginaActual++;
-
+    
                 // Limitar el número de publicaciones en el DOM
                 const publicacionesEnDOM = listaPublicaciones.querySelectorAll('.EDYQHV');
                 if (publicacionesEnDOM.length > MAX_POSTS) {
@@ -232,12 +216,12 @@
                         log('Publicación eliminada para mantener el límite:', idPublicacion);
                     }
                 }
-
+    
                 // Inicializar funciones necesarias
                 ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec'].forEach(funcion => {
                     if (typeof window[funcion] === 'function') window[funcion]();
                 });
-
+    
                 // Actualiza los eventos de delegación si es necesario
                 reiniciarEventosPostTag();
             } else {
@@ -284,7 +268,6 @@
     }
 
     function limpiarBusqueda() {
-        //publicacionesCargadas = new Set();
         identificador = '';
         actualizarUIBusqueda('');
         resetearCarga();
