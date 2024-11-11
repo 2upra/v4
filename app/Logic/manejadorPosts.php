@@ -52,18 +52,20 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
 function procesarPublicaciones($query_args, $args, $is_ajax)
 {
-    // Optimización: Obtener el conteo total de publicaciones sin consulta completa
-    $total_posts = wp_count_posts($args['post_type'])->publish;
+    ob_start();
 
-    // Consulta paginada para obtener las publicaciones
+    // Asegúrate de que 'no_found_rows' esté establecido en false para obtener el conteo total
+    $query_args['no_found_rows'] = false;
+
+    // Realizamos la consulta paginada para las publicaciones que queremos mostrar
     $query = new WP_Query($query_args);
     $posts_count = 0;
-    $output = '';
 
-    // Agregar el input oculto de total de publicaciones
-    $output .= '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
+    // Obtenemos el total de publicaciones directamente desde la propiedad 'found_posts'
+    $total_posts = $query->found_posts;
 
-    // Generar la lista de publicaciones solo si hay resultados
+    echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
+
     if ($query->have_posts()) {
         $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
         $tipoPost = $args['post_type'];
@@ -74,31 +76,35 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
                 $clase_extra = 'clase-rolastatus';
             }
 
-            $output .= '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
-                        data-filtro="' . esc_attr($filtro) . '" 
-                        data-posttype="' . esc_attr($tipoPost) . '" 
-                        data-tab-id="' . esc_attr($args['tab_id']) . '">';
+            echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
+                  data-filtro="' . esc_attr($filtro) . '" 
+                  data-posttype="' . esc_attr($tipoPost) . '" 
+                  data-tab-id="' . esc_attr($args['tab_id']) . '">';
         }
 
         while ($query->have_posts()) {
             $query->the_post();
             $posts_count++;
 
-            // Agregar el HTML generado por las funciones según el tipo de post
-            $output .= $tipoPost === 'social_post' ? htmlPost($filtro) : ($tipoPost === 'colab' ? htmlColab($filtro) : '<p>Tipo de publicación no reconocido.</p>');
+            if ($tipoPost === 'social_post') {
+                echo htmlPost($filtro);
+            } elseif ($tipoPost === 'colab') {
+                echo htmlColab($filtro);
+            } else {
+                echo '<p>Tipo de publicación no reconocido.</p>';
+            }
         }
 
         if (!wp_doing_ajax()) {
-            $output .= '</ul>';
+            echo '</ul>';
         }
     } else {
-        // Mensaje en caso de no haber publicaciones
-        $output .= nohayPost($filtro, $is_ajax);
+        echo nohayPost($filtro, $is_ajax);
     }
 
     wp_reset_postdata();
 
-    return $output;
+    return ob_get_clean();
 }
 
 #PASO2
