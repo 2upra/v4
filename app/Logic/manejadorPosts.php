@@ -75,108 +75,98 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     return $query_args;
 }
 
-//porque si busco drum, arroja 1500 resultados, y si busco drums, arroja 3000, no debería importar la palabra exacta que se usa, pero veo que tiene mucha relevancia, puede hacer esto mas flexible, ya instale nlp-tools, por favor, aplicalo aca (manten el codigo funcional)
-function filtrarIdentifier($identifier, $query_args)
-{
+
+function filtrarIdentifier($identifier, $query_args) {
     global $wpdb;
-    
-    $identifier = strtolower(trim($identifier));
-    $template_dir = get_template_directory();    
-    if (file_exists($template_dir . '/vendor/autoload.php')) {
-        require_once $template_dir . '/vendor/autoload.php';
-        
-        $spanishStemmer = new \Wamania\Snowball\Spanish();
-        $englishStemmer = new \Wamania\Snowball\English();
-    } else {
+
+    // Si el identificador está vacío, retornar los argumentos sin modificar
+    if (empty($identifier)) {
         return $query_args;
     }
+
+    // Normalizar el término de búsqueda
+    $identifier = sanitize_text_field(strtolower(trim($identifier)));
     
-    $terms = explode(' ', $identifier);
-    $search_terms = array();
+    // Procesar términos de búsqueda
+    $terms = array_filter(explode(' ', $identifier), 'strlen');
+    $normalized_terms = [];
     
     foreach ($terms as $term) {
         $term = trim($term);
-        if (!empty($term)) {
-            // Término original
-            $search_terms[] = $term;
-            
-            // Aplicar ambos stemmers
-            $search_terms[] = $spanishStemmer->stem($term);
-            $search_terms[] = $englishStemmer->stem($term);
-            
-            // Variaciones básicas
-            if (substr($term, -1) === 's') {
-                $search_terms[] = substr($term, 0, -1);
-            } else {
-                $search_terms[] = $term . 's';
+        if (strlen($term) < 2) continue; // Ignorar términos muy cortos
+        
+        // Manejar variaciones singular/plural
+        $normalized_terms[] = $term;
+        if (substr($term, -1) === 's') {
+            $singular = substr($term, 0, -1);
+            if (strlen($singular) >= 2) {
+                $normalized_terms[] = $singular;
             }
+        } else {
+            $normalized_terms[] = $term . 's';
         }
+
+        // Manejar variaciones con/sin acentos
+        $normalized_terms[] = remove_accents($term);
     }
-    // Eliminar duplicados y términos vacíos
-    $search_terms = array_unique(array_filter($search_terms));
     
+    // Eliminar duplicados y valores vacíos
+    $normalized_terms = array_unique(array_filter($normalized_terms));
+
+    // Mantener el término de búsqueda original para la consulta principal
     $query_args['s'] = $identifier;
 
-    add_filter('posts_search', function ($search, $wp_query) use ($search_terms, $wpdb) {
-        if (empty($search_terms)) {
+    // Añadir filtro personalizado para la búsqueda
+    add_filter('posts_search', function ($search, $wp_query) use ($normalized_terms, $wpdb) {
+        // Si no hay términos normalizados o no es la consulta principal
+        if (empty($normalized_terms) || !$wp_query->is_main_query()) {
             return $search;
         }
 
-        $search = '';
+        $search_conditions = [];
         
-        // Construir condiciones de búsqueda con OR entre términos relacionados
-        $term_groups = array();
-        foreach ($search_terms as $term) {
+        // Construir condiciones de búsqueda para cada término
+        foreach ($normalized_terms as $term) {
+            if (empty($term)) continue;
+
             $like_term = '%' . $wpdb->esc_like($term) . '%';
-            $term_groups[] = $wpdb->prepare("(
-                {$wpdb->posts}.post_title LIKE %s OR
-                {$wpdb->posts}.post_content LIKE %s OR
-                EXISTS (
-                    SELECT 1 FROM {$wpdb->postmeta}
-                    WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
-                    AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'
-                    AND {$wpdb->postmeta}.meta_value LIKE %s
+            
+            // Preparar consulta segura con múltiples condiciones
+            $term_condition = $wpdb->prepare("
+                {$wpdb->posts}.post_title LIKE %s 
+                OR {$wpdb->posts}.post_content LIKE %s 
+                OR {$wpdb->posts}.post_excerpt LIKE %s
+                OR EXISTS (
+                    SELECT 1 
+                    FROM {$wpdb->postmeta} 
+                    WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID 
+                    AND (
+                        ({$wpdb->postmeta}.meta_key = 'datosAlgoritmo' AND {$wpdb->postmeta}.meta_value LIKE %s)
+                        OR ({$wpdb->postmeta}.meta_key = '_sku' AND {$wpdb->postmeta}.meta_value LIKE %s)
+                    )
                 )
-            )", $like_term, $like_term, $like_term);
+            ", $like_term, $like_term, $like_term, $like_term, $like_term);
+
+            $search_conditions[] = "($term_condition)";
         }
 
-        if (!empty($term_groups)) {
-            // Usar OR entre términos relacionados para mayor flexibilidad
-            $search .= ' AND (' . implode(' OR ', $term_groups) . ')';
+        // Construir la cláusula WHERE final
+        if (!empty($search_conditions)) {
+            $search = " AND (" . implode(" OR ", $search_conditions) . ")";
         }
 
         return $search;
     }, 10, 2);
 
-    // Agregar relevancia personalizada
-    add_filter('posts_orderby', function ($orderby, $wp_query) use ($search_terms, $wpdb) {
-        if (empty($search_terms)) {
-            return $orderby;
-        }
-
-        $relevance_parts = array();
-        foreach ($search_terms as $term) {
-            $like_term = '%' . $wpdb->esc_like($term) . '%';
-            $relevance_parts[] = $wpdb->prepare("
-                (CASE 
-                    WHEN {$wpdb->posts}.post_title LIKE %s THEN 10
-                    WHEN {$wpdb->posts}.post_content LIKE %s THEN 5
-                    WHEN EXISTS (
-                        SELECT 1 FROM {$wpdb->postmeta}
-                        WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
-                        AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'
-                        AND {$wpdb->postmeta}.meta_value LIKE %s
-                    ) THEN 3
-                    ELSE 0
-                END)", $like_term, $like_term, $like_term);
-        }
-
-        $relevance = "(" . implode(" + ", $relevance_parts) . ")";
-        return "$relevance DESC, " . $orderby;
-    }, 10, 2);
+    // Optimizar la consulta
+    $query_args['cache_results'] = true;
+    $query_args['update_post_meta_cache'] = true;
+    $query_args['update_post_term_cache'] = true;
 
     return $query_args;
 }
+
+
 
 function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts)
 {
