@@ -1,4 +1,3 @@
-/*
 (function () {
     'use strict';
 
@@ -186,7 +185,7 @@
             if (totalPostsInputInDOM) {
                 totalPostsInputInDOM.value = totalPostsValue;
                 log('Campo total-posts-sampleList actualizado desde la respuesta:', totalPostsValue);
-                window.contadorDeSamples();
+                
             }
         }
 
@@ -386,5 +385,3 @@
         actualizarURL(valor);
     }
 })();
-
-*/
