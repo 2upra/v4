@@ -78,6 +78,8 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                 // Determinar el intervalo
                 $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
                 postLog("Caso $filtroTiempo: Usando intervalo de $interval");
+
+                // Modificar la consulta SQL para filtrar tanto por la fecha de "likes" como por la fecha de publicación del post
                 $sql = "
                     SELECT p.ID, 
                            COUNT(pl.post_id) as like_count 
@@ -85,7 +87,8 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                     LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
                     WHERE p.post_type = 'social_post' 
                     AND p.post_status = 'publish'
-                    AND pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval)
+                    AND p.post_date >= DATE_SUB(NOW(), INTERVAL $interval)  
+                    AND pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval) 
                     GROUP BY p.ID
                     HAVING like_count > 0
                     ORDER BY like_count DESC, p.post_date DESC
@@ -97,8 +100,6 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
 
                 if (!empty($posts_with_likes)) {
                     $post_ids = wp_list_pluck($posts_with_likes, 'ID');
-
-                    // En lugar de hacer manualmente el slicing de los posts, dejamos que WordPress maneje la paginación.
                     if (!empty($post_ids)) {
                         $query_args['post__in'] = $post_ids;
                         $query_args['orderby'] = 'post__in';
@@ -112,14 +113,13 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                 }
                 break;
 
-                default:
+            default:
                 postLog("Caso default: Obteniendo feed personalizado");
                 $personalized_feed = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
             
                 if (!empty($personalized_feed['post_ids'])) {
                     $query_args['post__in'] = $personalized_feed['post_ids'];
-                    // Opcionalmente puedes establecer el orden
-                    $query_args['orderby'] = 'date'; // O el criterio que desees
+                    $query_args['orderby'] = 'date'; 
                     $query_args['order'] = 'DESC';
                     postLog("Feed personalizado IDs: " . implode(', ', $personalized_feed['post_ids']));
                 }
