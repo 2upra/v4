@@ -84,8 +84,16 @@ function filtrarIdentifier($identifier, $query_args)
     $identifier = strtolower(trim($identifier));
     
     // Cargar el stemmer para español
-    require_once('vendor/autoload.php');
-    $stemmer = new \NlpTools\Stemmers\PorterStemmer();
+    $template_dir = get_template_directory();
+    error_log("Template directory: " . $template_dir);
+    error_log("Attempting to load: " . $template_dir . '/vendor/autoload.php');
+    
+    if (file_exists($template_dir . '/vendor/autoload.php')) {
+        error_log("Autoload file exists");
+        require_once $template_dir . '/vendor/autoload.php';
+    } else {
+        error_log("Autoload file does not exist");
+    }
     
     // Obtener términos y aplicar stemming
     $terms = explode(' ', $identifier);
