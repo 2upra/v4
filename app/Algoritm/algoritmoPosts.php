@@ -50,10 +50,35 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
         error_log("author_results no es válido para usuario ID: " . $userId);
         return [];
     }
+
     $current_timestamp = current_time('timestamp');
 
+    // Si hay un 'identifier', convertirlo en minúsculas para hacer una búsqueda case-insensitive
+    if (!empty($identifier)) {
+        $identifier = strtolower($identifier);
+    }
+
     foreach ($datos['author_results'] as $post_id => $post_data) {
+
+        // Filtrar primero por el 'identifier' si está presente
+        if (!empty($identifier)) {
+            $titulo = isset($post_data['titulo']) ? strtolower($post_data['titulo']) : '';
+            $contenido = isset($post_data['contenido']) ? strtolower($post_data['contenido']) : '';
+            $metaDatosAlgoritmo = isset($post_data['datosAlgoritmo']) ? strtolower($post_data['datosAlgoritmo']) : '';
+
+            // Verificar si el 'identifier' aparece en el título, contenido o meta "datosAlgoritmo"
+            if (
+                strpos($titulo, $identifier) === false &&
+                strpos($contenido, $identifier) === false &&
+                strpos($metaDatosAlgoritmo, $identifier) === false
+            ) {
+                // Si no se encuentra el identifier en ninguno de estos campos, pasar al siguiente post
+                continue;
+            }
+        }
+
         try {
+            // Solo calcular puntos si pasa el filtro del 'identifier'
             $puntosFinal = calcularPuntosPost(
                 $post_id,
                 $post_data,
