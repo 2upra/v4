@@ -1,6 +1,5 @@
 <?
 
-#PASO 1 
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
     $user_id = obtenerUserId($is_ajax);
@@ -54,18 +53,27 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 {
     ob_start();
 
-    // Asegúrate de que 'no_found_rows' esté establecido en false para obtener el conteo total
-    $query_args['no_found_rows'] = false;
-
-    // Realizamos la consulta paginada para las publicaciones que queremos mostrar
-    $query = new WP_Query($query_args);
+    // Generar una clave de cache única para el usuario actual y los argumentos de la consulta
+    $user_id = get_current_user_id();
+    $cache_key = 'posts_count_' . md5(serialize($query_args)) . '_user_' . $user_id;
     $posts_count = 0;
 
-    // Obtenemos el total de publicaciones directamente desde la propiedad 'found_posts'
-    $total_posts = $query->found_posts;
+    // Intentar obtener el conteo de cache si existe
+    $total_posts = get_transient($cache_key);
+
+    // Si no hay cache, ejecuta el WP_Query y guarda el resultado
+    if ($total_posts === false) {
+        $query_args['no_found_rows'] = false;  // obtener el conteo total
+        $query = new WP_Query($query_args);
+        $total_posts = $query->found_posts;
+
+        // Guardar el conteo total en un cache transitorio de 12 horas (43200 segundos)
+        set_transient($cache_key, $total_posts, 12 * HOUR_IN_SECONDS);
+    }
 
     echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
 
+    // Resto del procesamiento de publicaciones
     if ($query->have_posts()) {
         $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
         $tipoPost = $args['post_type'];
@@ -107,8 +115,6 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     return ob_get_clean();
 }
 
-#PASO2
-
 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
 {
@@ -136,6 +142,9 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     //postLog("Query args finales: " . print_r($query_args, true));
     return $query_args;
 }
+
+
+
 
 function filtrarIdentifier($identifier, $query_args)
 {
