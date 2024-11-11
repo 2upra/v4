@@ -174,19 +174,41 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 {
     ob_start();
     $user_id = get_current_user_id();
-    $cache_key = 'posts_count_' . md5(serialize($query_args)) . '_user_' . $user_id;
-    $posts_count = 0;
+
+    // Generamos una clave de caché eficiente utilizando elementos relevantes de $query_args
+    $cache_key_parts = [
+        'posts_per_page' => isset($query_args['posts_per_page']) ? $query_args['posts_per_page'] : '',
+        'paged' => isset($query_args['paged']) ? $query_args['paged'] : '',
+        'post_type' => isset($query_args['post_type']) ? $query_args['post_type'] : '',
+        'meta_query' => isset($query_args['meta_query']) ? md5(serialize($query_args['meta_query'])) : '',
+        'tax_query' => isset($query_args['tax_query']) ? md5(serialize($query_args['tax_query'])) : '',
+        's' => isset($query_args['s']) ? $query_args['s'] : '',
+        'user_id' => $user_id,
+        'filtro' => isset($args['filtro']) ? $args['filtro'] : '',
+    ];
+    $cache_key = 'posts_count_' . md5(implode('_', $cache_key_parts));
+
+    // Intentamos obtener el total de publicaciones del caché
     $total_posts = get_transient($cache_key);
+
     if ($total_posts === false) {
-        $query_args['no_found_rows'] = false; 
+        // Si no está en caché, establecemos 'no_found_rows' en false para obtener el total de publicaciones
+        $query_args['no_found_rows'] = false;
         $query = new WP_Query($query_args);
         $total_posts = $query->found_posts;
+        // Guardamos el total de publicaciones en un transiente
         set_transient($cache_key, $total_posts, 12 * HOUR_IN_SECONDS);
+    } else {
+        // Si ya tenemos el total en caché, establecemos 'no_found_rows' en true para mejorar el rendimiento
+        $query_args['no_found_rows'] = true;
+        $query = new WP_Query($query_args);
     }
 
+    // Mostramos el total de publicaciones
     echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
+
     if ($query->have_posts()) {
-        $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
+        $filtro = !empty($args['filtro']) ? $args['filtro'] : '';
         $tipoPost = $args['post_type'];
 
         if (!wp_doing_ajax()) {
@@ -203,7 +225,6 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 
         while ($query->have_posts()) {
             $query->the_post();
-            $posts_count++;
 
             if ($tipoPost === 'social_post') {
                 echo htmlPost($filtro);
@@ -218,8 +239,10 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
             echo '</ul>';
         }
     } else {
+        $filtro = !empty($args['filtro']) ? $args['filtro'] : '';
         echo nohayPost($filtro, $is_ajax);
     }
+
     wp_reset_postdata();
     return ob_get_clean();
 }
