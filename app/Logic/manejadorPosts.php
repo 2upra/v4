@@ -243,7 +243,6 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 function procesarPublicaciones($query_args, $args, $is_ajax) {
     ob_start();
     $user_id = get_current_user_id();
-    $cache_key = 'posts_count_' . md5(serialize($query_args)) . '_user_' . $user_id;
     $posts_count = 0;
 
     // Validaciones iniciales
@@ -252,62 +251,54 @@ function procesarPublicaciones($query_args, $args, $is_ajax) {
         return '';
     }
 
-    // Asegurar que 'no_found_rows' sea false para obtener el recuento total
-    $query_args['no_found_rows'] = false;
+    // Consulta sin caché para los primeros 300 posts
+    $query_args['posts_per_page'] = 300;
+    $query_recientes = new WP_Query($query_args);
 
-    // Clonar los argumentos de consulta para usarlos por separado
-    $query_args_first_300 = $query_args;
-    $query_args_rest = $query_args;
-
-    // Consulta para los primeros 300 posts
-    $query_args_first_300['posts_per_page'] = 300;
-    $query_args_first_300['offset'] = 0;
-    $query_recientes = new WP_Query($query_args_first_300);
     if (!is_a($query_recientes, 'WP_Query')) {
         error_log('Error al crear WP_Query para primeros 300 posts');
         return '';
     }
 
-    // Obtener el total de posts
-    $total_posts = $query_recientes->found_posts;
-
-    // Almacenar en caché el recuento total de posts si es necesario
-    set_transient($cache_key, $total_posts, 12 * HOUR_IN_SECONDS);
-
-    echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
-
     // Renderizar los primeros 300 posts
     if ($query_recientes->have_posts()) {
         renderizarPosts($query_recientes, $args, $is_ajax, $posts_count);
     }
-
     wp_reset_postdata();
 
-    // Procesar los posts restantes en lotes
-    $posts_per_batch = 100; // Puedes ajustar este valor según tus necesidades
-    $offset = 300;
+    // Cacheo y procesamiento del resto de los posts en grupos
+    $total_posts = 0;
+    $grupo_tamano = 300; // Definir el tamaño del grupo
+    for ($offset = 300; ; $offset += $grupo_tamano) {
+        $cache_key = 'posts_grupo_' . $offset . '_user_' . $user_id;
+        $posts_en_grupo = get_transient($cache_key);
 
-    while ($offset < $total_posts) {
-        $query_args_rest['posts_per_page'] = $posts_per_batch;
-        $query_args_rest['offset'] = $offset;
+        // Solo ejecuta la consulta si no está en caché
+        if ($posts_en_grupo === false) {
+            $query_args['offset'] = $offset;
+            $query_args['posts_per_page'] = $grupo_tamano;
+            $query_grupo = new WP_Query($query_args);
 
-        $query_resto = new WP_Query($query_args_rest);
-        if (!is_a($query_resto, 'WP_Query')) {
-            error_log('Error al crear WP_Query para posts adicionales');
-            break;
+            if (!$query_grupo->have_posts()) {
+                break; // Termina si no hay más posts
+            }
+
+            set_transient($cache_key, $query_grupo->found_posts, 12 * HOUR_IN_SECONDS);
+
+            // Renderiza posts de este grupo
+            renderizarPosts($query_grupo, $args, $is_ajax, $posts_count);
+            wp_reset_postdata();
+
+            // Liberación manual de variables para evitar saturación de memoria
+            unset($query_grupo);
+        } else {
+            $total_posts += $posts_en_grupo;
         }
-
-        if ($query_resto->have_posts()) {
-            renderizarPosts($query_resto, $args, $is_ajax, $posts_count);
-        }
-
-        wp_reset_postdata();
-
-        $offset += $posts_per_batch;
     }
 
     return ob_get_clean();
 }
+
 
 function renderizarPosts($query, $args, $is_ajax, &$posts_count) {
     $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
