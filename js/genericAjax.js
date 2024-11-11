@@ -565,7 +565,7 @@ async function enviarAjax(action, data = {}) {
 async function establecerFiltros() {
     try {
         const response = await enviarAjax('obtenerFiltrosTotal');
-        contadorDeSamples();
+        
         if (response.success) {
             const {filtroPost, filtroTiempo} = response.data;
             const hayFiltrosActivados = filtroTiempo !== 0 || filtroPost !== 'a:0:{}';
@@ -777,7 +777,7 @@ function filtrosPost() {
     cargarFiltrosGuardados();
 }
 
-function contadorDeSamples() {
+window.contadorDeSamples = () => {
     const resultadosElement = document.getElementById('resultadosPost-sampleList');
     const totalPostsElement = document.querySelector('.total-posts-sampleList');
     if (resultadosElement && totalPostsElement) {

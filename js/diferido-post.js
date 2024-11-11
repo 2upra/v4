@@ -272,6 +272,7 @@
     }
 
     function limpiarBusqueda() {
+        window.contadorDeSamples();
         publicacionesCargadas.clear();
         identificador = '';
         actualizarUIBusqueda('');
