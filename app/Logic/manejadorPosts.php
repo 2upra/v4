@@ -80,47 +80,38 @@ function filtrarIdentifier($identifier, $query_args)
 {
     global $wpdb;
     
-    // Procesamiento inicial del identificador
     $identifier = strtolower(trim($identifier));
-    
-    // Cargar el stemmer para español
-    $template_dir = get_template_directory();
-    error_log("Template directory: " . $template_dir);
-    error_log("Attempting to load: " . $template_dir . '/vendor/autoload.php');
-    
+    $template_dir = get_template_directory();    
     if (file_exists($template_dir . '/vendor/autoload.php')) {
-        error_log("Autoload file exists");
         require_once $template_dir . '/vendor/autoload.php';
         
-        // Inicializar el stemmer
-        $stemmer = new \Wamania\Snowball\Spanish(); // Asegúrate de que esta es la clase correcta para tu stemmer
+        $spanishStemmer = new \Wamania\Snowball\Spanish();
+        $englishStemmer = new \Wamania\Snowball\English();
     } else {
-        error_log("Autoload file does not exist");
-        $stemmer = null;
+        return $query_args;
     }
     
-    // Obtener términos y aplicar stemming
     $terms = explode(' ', $identifier);
     $search_terms = array();
+    
     foreach ($terms as $term) {
         $term = trim($term);
         if (!empty($term)) {
-            // Obtener la raíz de la palabra
-            if ($stemmer !== null) {
-                $stemmed_term = $stemmer->stem($term);
-                $search_terms[] = $stemmed_term;
-            }
+            // Término original
             $search_terms[] = $term;
             
-            // Agregar variaciones comunes
+            // Aplicar ambos stemmers
+            $search_terms[] = $spanishStemmer->stem($term);
+            $search_terms[] = $englishStemmer->stem($term);
+            
+            // Variaciones básicas
             if (substr($term, -1) === 's') {
-                $search_terms[] = substr($term, 0, -1); // singular
+                $search_terms[] = substr($term, 0, -1);
             } else {
-                $search_terms[] = $term . 's'; // plural
+                $search_terms[] = $term . 's';
             }
         }
     }
-    
     // Eliminar duplicados y términos vacíos
     $search_terms = array_unique(array_filter($search_terms));
     
