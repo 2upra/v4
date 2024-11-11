@@ -75,98 +75,65 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     return $query_args;
 }
 
-
 function filtrarIdentifier($identifier, $query_args) {
     global $wpdb;
 
-    // Si el identificador está vacío, retornar los argumentos sin modificar
-    if (empty($identifier)) {
-        return $query_args;
-    }
-
     // Normalizar el término de búsqueda
-    $identifier = sanitize_text_field(strtolower(trim($identifier)));
+    $identifier = strtolower(trim($identifier));
     
-    // Procesar términos de búsqueda
-    $terms = array_filter(explode(' ', $identifier), 'strlen');
-    $normalized_terms = [];
+    // Remover 's' final si existe (para manejar plurales)
+    $terms = explode(' ', $identifier);
+    $normalized_terms = array();
     
     foreach ($terms as $term) {
         $term = trim($term);
-        if (strlen($term) < 2) continue; // Ignorar términos muy cortos
+        if (empty($term)) continue;
         
-        // Manejar variaciones singular/plural
+        // Agregar tanto la versión singular como plural
         $normalized_terms[] = $term;
         if (substr($term, -1) === 's') {
-            $singular = substr($term, 0, -1);
-            if (strlen($singular) >= 2) {
-                $normalized_terms[] = $singular;
-            }
+            $normalized_terms[] = substr($term, 0, -1); // Versión singular
         } else {
-            $normalized_terms[] = $term . 's';
+            $normalized_terms[] = $term . 's'; // Versión plural
         }
-
-        // Manejar variaciones con/sin acentos
-        $normalized_terms[] = remove_accents($term);
     }
     
-    // Eliminar duplicados y valores vacíos
-    $normalized_terms = array_unique(array_filter($normalized_terms));
-
-    // Mantener el término de búsqueda original para la consulta principal
+    $normalized_terms = array_unique($normalized_terms);
     $query_args['s'] = $identifier;
 
-    // Añadir filtro personalizado para la búsqueda
     add_filter('posts_search', function ($search, $wp_query) use ($normalized_terms, $wpdb) {
-        // Si no hay términos normalizados o no es la consulta principal
-        if (empty($normalized_terms) || !$wp_query->is_main_query()) {
+        if (empty($normalized_terms)) {
             return $search;
         }
 
-        $search_conditions = [];
+        $search = '';
+        $search_conditions = array();
         
-        // Construir condiciones de búsqueda para cada término
+        // Construir condición OR para cada término y sus variaciones
+        $term_conditions = array();
         foreach ($normalized_terms as $term) {
-            if (empty($term)) continue;
-
             $like_term = '%' . $wpdb->esc_like($term) . '%';
-            
-            // Preparar consulta segura con múltiples condiciones
-            $term_condition = $wpdb->prepare("
-                {$wpdb->posts}.post_title LIKE %s 
-                OR {$wpdb->posts}.post_content LIKE %s 
-                OR {$wpdb->posts}.post_excerpt LIKE %s
-                OR EXISTS (
-                    SELECT 1 
-                    FROM {$wpdb->postmeta} 
-                    WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID 
-                    AND (
-                        ({$wpdb->postmeta}.meta_key = 'datosAlgoritmo' AND {$wpdb->postmeta}.meta_value LIKE %s)
-                        OR ({$wpdb->postmeta}.meta_key = '_sku' AND {$wpdb->postmeta}.meta_value LIKE %s)
-                    )
+            $term_conditions[] = $wpdb->prepare("
+                {$wpdb->posts}.post_title LIKE %s OR
+                {$wpdb->posts}.post_content LIKE %s OR
+                EXISTS (
+                    SELECT 1 FROM {$wpdb->postmeta}
+                    WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
+                    AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'
+                    AND {$wpdb->postmeta}.meta_value LIKE %s
                 )
-            ", $like_term, $like_term, $like_term, $like_term, $like_term);
-
-            $search_conditions[] = "($term_condition)";
+            ", $like_term, $like_term, $like_term);
         }
-
-        // Construir la cláusula WHERE final
-        if (!empty($search_conditions)) {
-            $search = " AND (" . implode(" OR ", $search_conditions) . ")";
+        
+        if (!empty($term_conditions)) {
+            $search .= ' AND (' . implode(' OR ', $term_conditions) . ')';
         }
 
         return $search;
     }, 10, 2);
 
-    // Optimizar la consulta
-    $query_args['cache_results'] = true;
-    $query_args['update_post_meta_cache'] = true;
-    $query_args['update_post_term_cache'] = true;
-
     return $query_args;
 }
-
-
 
 function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts)
 {
