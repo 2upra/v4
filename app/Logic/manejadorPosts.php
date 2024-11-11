@@ -11,7 +11,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         'posts' => 12,
         'exclude' => [],
         'post_type' => 'social_post',
-        'similar_to' => null, 
+        'similar_to' => null,
     ];
     $args = array_merge($defaults, $args);
     $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
@@ -23,11 +23,10 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
     } else {
         return $output;
     }
-
-    
 }
 
-function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
+function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
+{
     global $FALLBACK_USER_ID;
     if (!isset($FALLBACK_USER_ID)) {
         $FALLBACK_USER_ID = 44;
@@ -49,7 +48,8 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id) {
     return $query_args;
 }
 
-function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to) {
+function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
+{
     global $wpdb;
     $likes_table = $wpdb->prefix . 'post_likes';
     $query_args = [];
@@ -63,6 +63,48 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
         'paged' => $paged,
         'ignore_sticky_posts' => true,
     ];
+
+
+    // Si hay un identifier, añadir búsqueda flexible
+    if (!empty($identifier)) {
+        $query_args['meta_query'] = array('relation' => 'OR');
+
+        // Búsqueda en título y contenido
+        $query_args['s'] = $identifier;
+
+        // Búsqueda en meta datosAlgoritmo
+        $query_args['meta_query'][] = array(
+            'key' => 'datosAlgoritmo',
+            'value' => $identifier,
+            'compare' => 'LIKE'
+        );
+
+        // Hacer la búsqueda más flexible
+        add_filter('posts_where', function ($where) use ($identifier) {
+            global $wpdb;
+            $terms = explode(' ', $identifier);
+
+            foreach ($terms as $term) {
+                $like_term = '%' . $wpdb->esc_like($term) . '%';
+                $where .= $wpdb->prepare(
+                    " AND (
+                        {$wpdb->posts}.post_title LIKE %s 
+                        OR {$wpdb->posts}.post_content LIKE %s 
+                        OR EXISTS (
+                            SELECT 1 FROM {$wpdb->postmeta} 
+                            WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID 
+                            AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo' 
+                            AND {$wpdb->postmeta}.meta_value LIKE %s
+                        )
+                    )",
+                    $like_term,
+                    $like_term,
+                    $like_term
+                );
+            }
+            return $where;
+        });
+    }
 
     // Manejar diferentes tipos de ordenamiento
     if ($args['post_type'] === 'social_post') {
@@ -116,14 +158,14 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
             default:
                 postLog("Caso default: Obteniendo feed personalizado");
                 $personalized_feed = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
-            
+
                 if (!empty($personalized_feed['post_ids'])) {
                     $query_args['post__in'] = $personalized_feed['post_ids'];
-                    $query_args['orderby'] = 'date'; 
+                    $query_args['orderby'] = 'date';
                     $query_args['order'] = 'DESC';
                     postLog("Feed personalizado IDs: " . implode(', ', $personalized_feed['post_ids']));
                 }
-                
+
                 break;
         }
     }
@@ -133,16 +175,17 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
 }
 
 
-function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page) {
+function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page)
+{
     $post_not_in = [];
-    
+
     if ($similar_to) {
         $post_not_in[] = $similar_to;
         $cache_suffix = "_similar_" . $similar_to;
     } else {
         $cache_suffix = "";
     }
-    
+
     $transient_key = $current_user_id == 44
         ? "feed_personalizado_anonymous_{$identifier}{$cache_suffix}"
         : "feed_personalizado_user_{$current_user_id}_{$identifier}{$cache_suffix}";
@@ -168,13 +211,13 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
     }
     $post_ids = array_keys($posts_personalizados);
     if ($similar_to) {
-        $post_ids = array_filter($post_ids, function($post_id) use ($similar_to) {
+        $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
             return $post_id != $similar_to;
         });
     }
     $post_ids = array_keys($posts_personalizados);
     if ($similar_to) {
-        $post_ids = array_filter($post_ids, function($post_id) use ($similar_to) {
+        $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
             return $post_id != $similar_to;
         });
     }
@@ -201,7 +244,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     $total_query_args = $query_args;
     unset($total_query_args['posts_per_page']); // Para obtener el conteo total sin limitar el número de posts
     unset($total_query_args['paged']); // Quitamos la paginación para contar todo
-    
+
     $total_query = new WP_Query($total_query_args);
     $total_posts = $total_query->found_posts;
     wp_reset_postdata();
@@ -215,7 +258,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     if ($query->have_posts()) {
         $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
         $tipoPost = $args['post_type'];
-        
+
         if (!wp_doing_ajax()) {
             $clase_extra = 'clase-' . esc_attr($filtro);
             if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
@@ -233,15 +276,13 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 
         while ($query->have_posts()) {
             $query->the_post();
-            $posts_count++; 
+            $posts_count++;
 
             if ($tipoPost === 'social_post') {
                 echo htmlPost($filtro);
-            } 
-            elseif ($tipoPost === 'colab') {
+            } elseif ($tipoPost === 'colab') {
                 echo htmlColab($filtro);
-            }
-            else {
+            } else {
                 echo '<p>Tipo de publicación no reconocido.</p>';
             }
         }
@@ -272,7 +313,7 @@ function publicacionAjax()
     $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas'])
         ? array_map('intval', $_POST['cargadas'])
         : array();
-    $similar_to = isset($_POST['similar_to']) ? intval($_POST['similar_to']) : null; 
+    $similar_to = isset($_POST['similar_to']) ? intval($_POST['similar_to']) : null;
 
     publicaciones(
         array(
@@ -282,7 +323,7 @@ function publicacionAjax()
             'user_id' => $user_id,
             'identifier' => $data_identifier,
             'exclude' => $publicacionesCargadas,
-            'similar_to' => $similar_to, 
+            'similar_to' => $similar_to,
         ),
         true,
         $paged
