@@ -1,5 +1,6 @@
 <?
-//Solo cargan la primera pagina, en total de post sale 12, no se donde esta el problema, el problema supongo que sucede en alguna parte de construirQueryArgs
+
+#PASO 1 
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
     $user_id = obtenerUserId($is_ajax);
@@ -25,6 +26,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
     }
 }
 
+#PASO2
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
     global $FALLBACK_USER_ID;
@@ -42,6 +44,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
     $posts = $args['posts'];
     $similar_to = $args['similar_to'] ?? null;
     $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
+
     $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
     $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
     $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id);
@@ -274,40 +277,25 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
 
 function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
 {
-    //postLog("Iniciando cálculo de feed personalizado para usuario: $userId");
-
-    // Validaciones iniciales
-    if (empty($userId) || !is_numeric($userId)) {
-        //postLog("Error: Usuario ID inválido");
-        return [];
-    }
-
     $datos = obtenerDatosFeedConCache($userId);
     if (empty($datos)) {
-        //postLog("Error: No hay datos disponibles para el usuario");
         return [];
     }
 
     $usuario = get_userdata($userId);
     if (!$usuario || !is_object($usuario)) {
-        //postLog("Error: No se pudo obtener datos del usuario");
         return [];
     }
 
-    // Calcular puntuación para cada post
+    // Preparar variables necesarias
     $posts_personalizados = [];
     $current_timestamp = current_time('timestamp');
     $vistas_posts_processed = obtenerYProcesarVistasPosts($userId);
     $esAdmin = in_array('administrator', (array)$usuario->roles);
 
+    // Procesar directamente los posts
     foreach ($datos['author_results'] as $post_id => $post_data) {
         try {
-            // Verificar si el post sigue siendo válido
-            $post = get_post($post_id);
-            if (!$post || $post->post_status !== 'publish') {
-                continue;
-            }
-
             $puntosFinal = calcularPuntosPost(
                 $post_id,
                 $post_data,
@@ -324,22 +312,16 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
                 $posts_personalizados[$post_id] = $puntosFinal;
             }
         } catch (Exception $e) {
-            //postLog("Error al procesar post ID $post_id: " . $e->getMessage());
             continue;
         }
     }
 
-    // Ordenar posts por puntuación
     if (!empty($posts_personalizados)) {
         arsort($posts_personalizados);
-        //postLog("Feed personalizado calculado exitosamente con " . count($posts_personalizados) . " posts");
-    } else {
-        //postLog("No se encontraron posts relevantes para el feed personalizado");
     }
 
     return $posts_personalizados;
 }
-
 
 
 
