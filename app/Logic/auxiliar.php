@@ -7,6 +7,7 @@
  * @param string $string Cadena de entrada
  * @return string Cadena sin acentos
  */
+/*
 function remove_accents($string) {
     if (!preg_match('/[\x80-\xff]/', $string)) {
         return $string;
@@ -45,6 +46,7 @@ function remove_accents($string) {
 
     return strtr($string, $chars);
 }
+    */
 
 
 function normalizarTexto($texto)
