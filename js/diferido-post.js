@@ -156,6 +156,7 @@
 
     async function procesarRespuesta(respuesta) {
         log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
+        contadorDeSamples();
         const respuestaLimpia = respuesta.trim();
 
         if (respuestaLimpia === '<div id="no-more-posts"></div>') {
@@ -285,7 +286,6 @@
         actualizarUIBusqueda('');
         resetearCarga();
         cargarMasContenido();
-        contadorDeSamples();
     }
 
     function configurarEventoBusqueda() {
