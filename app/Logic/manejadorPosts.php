@@ -1,4 +1,8 @@
 <?
+/* 
+es normal? que la consulta query en procesarPublicaciones dure más que la de obtenerDatosFeed($userId)? una dura 0.7 seg (procesarPublicaciones) y la otra 0.6 (obtenerDatosFeed), y yo siento que la de obtenerDatosFeed es mas compleja
+*/
+
 
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
@@ -49,33 +53,172 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
     return $query_args;
 }
 
-function procesarPublicaciones($query_args, $args, $is_ajax)
+function obtenerDatosFeed($userId)
 {
-    ob_start();
+    global $wpdb;
+    $table_likes = "{$wpdb->prefix}post_likes";
+    $table_intereses = INTERES_TABLE;
+    $siguiendo = (array) get_user_meta($userId, 'siguiendo', true);
+    $interesesUsuario = $wpdb->get_results($wpdb->prepare(
+        "SELECT interest, intensity FROM $table_intereses WHERE user_id = %d",
+        $userId
+    ), OBJECT_K);
+    $vistas_posts = get_user_meta($userId, 'vistas_posts', true);
 
-    // Generar una clave de cache única para el usuario actual y los argumentos de la consulta
-    $user_id = get_current_user_id();
-    $cache_key = 'posts_count_' . md5(serialize($query_args)) . '_user_' . $user_id;
-    $posts_count = 0;
+    $args = [
+        'post_type'      => 'social_post',
+        'posts_per_page' => 5000,
+        'date_query'     => [
+            'after' => date('Y-m-d', strtotime('-100 days'))
+        ],
+        'fields'         => 'ids',
+        'no_found_rows'  => true,
+    ];
+    $posts_ids = get_posts($args);
 
-    // Intentar obtener el conteo de cache si existe
-    $total_posts = get_transient($cache_key);
+    if (empty($posts_ids)) {
+        return [];
+    }
+    $placeholders = implode(', ', array_fill(0, count($posts_ids), '%d'));
+    $meta_keys = ['datosAlgoritmo', 'Verificado', 'postAut'];
+    $meta_keys_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
+    $sql_meta = "
+        SELECT post_id, meta_key, meta_value
+        FROM {$wpdb->postmeta}
+        WHERE meta_key IN ($meta_keys_placeholders) AND post_id IN ($placeholders)
+    ";
 
-    // Si no hay cache, ejecuta el WP_Query y guarda el resultado
-    if ($total_posts === false) {
-        $query_args['no_found_rows'] = false;  // obtener el conteo total
-        $query = new WP_Query($query_args);
-        $total_posts = $query->found_posts;
+    $prepared_sql_meta = $wpdb->prepare($sql_meta, array_merge($meta_keys, $posts_ids));
+    $meta_results = $wpdb->get_results($prepared_sql_meta);
+    $meta_data = [];
+    foreach ($meta_results as $meta_row) {
+        $meta_data[$meta_row->post_id][$meta_row->meta_key] = $meta_row->meta_value;
+    }
+    $sql_likes = "
+        SELECT post_id, COUNT(*) as likes_count
+        FROM $table_likes
+        WHERE post_id IN ($placeholders)
+        GROUP BY post_id
+    ";
 
-        // Guardar el conteo total en un cache transitorio de 12 horas (43200 segundos)
-        set_transient($cache_key, $total_posts, 12 * HOUR_IN_SECONDS);
+    $likes_results = $wpdb->get_results($wpdb->prepare($sql_likes, $posts_ids));
+    $likes_by_post = [];
+    foreach ($likes_results as $like_row) {
+        $likes_by_post[$like_row->post_id] = $like_row->likes_count;
+    }
+    $sql_posts = "
+        SELECT ID, post_author, post_date, post_content
+        FROM {$wpdb->posts}
+        WHERE ID IN ($placeholders)
+    ";
+    $posts_results = $wpdb->get_results($wpdb->prepare($sql_posts, $posts_ids), OBJECT_K);
+    $post_content = [];
+    foreach ($posts_results as $post) {
+        $post_content[$post->ID] = $post->post_content;
     }
 
-    echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
+    return [
+        'siguiendo'        => $siguiendo,
+        'interesesUsuario' => $interesesUsuario,
+        'posts_ids'        => $posts_ids,
+        'likes_by_post'    => $likes_by_post,
+        'meta_data'        => $meta_data,
+        'author_results'   => $posts_results,
+        'post_content'     => $post_content,
+    ];
+}
 
-    // Resto del procesamiento de publicaciones
-    if ($query->have_posts()) {
-        $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
+function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
+{
+    $datos = obtenerDatosFeedConCache($userId); #Aqui se obtiene obtenerDatosFeed
+    if (empty($datos)) {
+        return [];
+    }
+    $usuario = get_userdata($userId);
+    if (!$usuario || !is_object($usuario)) {
+        return [];
+    }
+    $posts_personalizados = [];
+    $current_timestamp = current_time('timestamp');
+    $vistas_posts_processed = obtenerYProcesarVistasPosts($userId);
+    $esAdmin = in_array('administrator', (array)$usuario->roles);
+    $decay_factors = [];
+    foreach ($datos['author_results'] as $post_data) {
+        $post_date = $post_data->post_date;
+        $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date; 
+        $diasDesdePublicacion = floor(($current_timestamp - $post_timestamp) / (3600 * 24));
+        if (!isset($decay_factors[$diasDesdePublicacion])) {
+            $decay_factors[$diasDesdePublicacion] = getDecayFactor($diasDesdePublicacion);
+        }
+    }
+    $posts_data = $datos['author_results'];
+    $puntos_por_post = calcularPuntosPostBatch(
+        $posts_data,
+        $datos,
+        $esAdmin,
+        $vistas_posts_processed,
+        $identifier,
+        $similar_to,
+        $current_timestamp,
+        $userId,
+        $decay_factors 
+    );
+
+    if (!empty($puntos_por_post)) {
+        arsort($puntos_por_post);
+    }
+    return $puntos_por_post;
+}
+
+function procesarPublicaciones($query_args, $args, $is_ajax) {
+    $user_id = get_current_user_id();
+    
+    // 1. Crear una clave única para el cache
+    $cache_key = 'html_posts_' . md5(serialize($query_args) . $user_id . $is_ajax);
+    
+    // 2. Intentar obtener del cache
+    $cached_html = get_transient($cache_key);
+    if ($cached_html !== false) {
+        return $cached_html;
+    }
+
+    // 3. Si no está en cache, procesar
+    ob_start();
+    
+    // 4. Optimizar la consulta
+    global $wpdb;
+    
+    // Determinar si necesitamos el conteo total para paginación
+    $need_pagination = isset($args['paged']) && $args['paged'] > 0;
+    
+    if ($need_pagination) {
+        // Consulta para obtener el total de posts
+        $count_query = str_replace('SELECT *', 'SELECT COUNT(*)', $query_args['query']);
+        $total_posts = $wpdb->get_var($count_query);
+        echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . 
+             '" value="' . esc_attr($total_posts) . '" />';
+    }
+
+    // 5. Consulta SQL directa para obtener los posts
+    $posts_per_page = $query_args['posts_per_page'] ?? 12;
+    $offset = (($query_args['paged'] ?? 1) - 1) * $posts_per_page;
+    
+    $sql = $wpdb->prepare(
+        "SELECT p.ID, p.post_author, p.post_date, p.post_content, p.post_title
+         FROM {$wpdb->posts} p
+         WHERE p.post_type = %s
+         AND p.post_status = 'publish'
+         ORDER BY p.post_date DESC
+         LIMIT %d OFFSET %d",
+        $args['post_type'],
+        $posts_per_page,
+        $offset
+    );
+
+    $posts = $wpdb->get_results($sql);
+
+    if (!empty($posts)) {
+        $filtro = !empty($args['filtro']) ? $args['filtro'] : '';
         $tipoPost = $args['post_type'];
 
         if (!wp_doing_ajax()) {
@@ -90,16 +233,15 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
                   data-tab-id="' . esc_attr($args['tab_id']) . '">';
         }
 
-        while ($query->have_posts()) {
-            $query->the_post();
-            $posts_count++;
-
+        // 6. Procesar cada post
+        foreach ($posts as $post) {
+            // Configurar el post global para compatibilidad
+            setup_postdata($GLOBALS['post'] =& get_post($post->ID));
+            
             if ($tipoPost === 'social_post') {
                 echo htmlPost($filtro);
             } elseif ($tipoPost === 'colab') {
                 echo htmlColab($filtro);
-            } else {
-                echo '<p>Tipo de publicación no reconocido.</p>';
             }
         }
 
@@ -111,10 +253,40 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     }
 
     wp_reset_postdata();
-
-    return ob_get_clean();
+    
+    // 7. Obtener el HTML generado
+    $output = ob_get_clean();
+    
+    // 8. Guardar en cache
+    set_transient($cache_key, $output, 5 * MINUTE_IN_SECONDS); // Cache por 5 minutos
+    
+    return $output;
 }
 
+// Función auxiliar para obtener meta datos en batch
+function obtenerMetadataBatch($post_ids) {
+    global $wpdb;
+    
+    if (empty($post_ids)) return [];
+    
+    $placeholders = implode(',', array_fill(0, count($post_ids), '%d'));
+    $sql = $wpdb->prepare(
+        "SELECT post_id, meta_key, meta_value 
+         FROM {$wpdb->postmeta} 
+         WHERE post_id IN ($placeholders) 
+         AND meta_key IN ('meta_key1', 'meta_key2')", // Especifica las meta keys que necesitas
+        $post_ids
+    );
+    
+    $results = $wpdb->get_results($sql);
+    $metadata = [];
+    
+    foreach ($results as $row) {
+        $metadata[$row->post_id][$row->meta_key] = $row->meta_value;
+    }
+    
+    return $metadata;
+}
 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
 {
@@ -126,20 +298,12 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
         'ignore_sticky_posts' => true,
         'suppress_filters' => false,
     ];
-
-    //postLog("Iniciando construirQueryArgs con filtroTiempo: $filtroTiempo");
-
-    // Aplicar filtro de identificador
     if (!empty($identifier)) {
         $query_args = filtrarIdentifier($identifier, $query_args);
     }
-
-    // Aplicar ordenamiento
     if ($args['post_type'] === 'social_post') {
         $query_args = ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
     }
-
-    //postLog("Query args finales: " . print_r($query_args, true));
     return $query_args;
 }
 
@@ -150,29 +314,21 @@ function filtrarIdentifier($identifier, $query_args)
 {
     global $wpdb;
 
-    // Normalizar el término de búsqueda
     $identifier = strtolower(trim($identifier));
-
-    // Remover 's' final si existe (para manejar plurales)
     $terms = explode(' ', $identifier);
     $normalized_terms = array();
-
     foreach ($terms as $term) {
         $term = trim($term);
         if (empty($term)) continue;
-
-        // Agregar tanto la versión singular como plural
         $normalized_terms[] = $term;
         if (substr($term, -1) === 's') {
-            $normalized_terms[] = substr($term, 0, -1); // Versión singular
+            $normalized_terms[] = substr($term, 0, -1); 
         } else {
-            $normalized_terms[] = $term . 's'; // Versión plural
+            $normalized_terms[] = $term . 's';
         }
     }
-
     $normalized_terms = array_unique($normalized_terms);
     $query_args['s'] = $identifier;
-
     add_filter('posts_search', function ($search, $wp_query) use ($normalized_terms, $wpdb) {
         if (empty($normalized_terms)) {
             return $search;
@@ -180,8 +336,6 @@ function filtrarIdentifier($identifier, $query_args)
 
         $search = '';
         $search_conditions = array();
-
-        // Construir condición OR para cada término y sus variaciones
         $term_conditions = array();
         foreach ($normalized_terms as $term) {
             $like_term = '%' . $wpdb->esc_like($term) . '%';
@@ -213,10 +367,9 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
     $likes_table = $wpdb->prefix . 'post_likes';
 
     switch ($filtroTiempo) {
-        case 1: // Posts recientes
+        case 1: 
             $query_args['orderby'] = 'date';
             $query_args['order'] = 'DESC';
-            //postLog("Caso 1: Ordenando por fecha reciente");
             break;
 
         case 2: // Top semanal
