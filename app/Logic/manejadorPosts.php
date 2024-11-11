@@ -1,7 +1,5 @@
 <?
 
-tengo un problema
-
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
     $user_id = obtenerUserId($is_ajax);
