@@ -156,7 +156,7 @@
 
     async function procesarRespuesta(respuesta) {
         log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
-        contadorDeSamples();
+        
         const respuestaLimpia = respuesta.trim();
 
         if (respuestaLimpia === '<div id="no-more-posts"></div>') {
@@ -182,7 +182,7 @@
             if (totalPostsInputInDOM) {
                 totalPostsInputInDOM.value = totalPostsValue;
                 log('Campo total-posts-sampleList actualizado desde la respuesta:', totalPostsValue);
-                
+                contadorDeSamples();
             }
         }
 
