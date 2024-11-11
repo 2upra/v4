@@ -207,64 +207,40 @@ function opcionesPost($post_id, $author_id)
 
 function imagenPost($post_id, $size = 'medium', $quality = 50, $strip = 'all', $pixelated = false, $use_temp = false)
 {
-    // Intentar obtener la imagen destacada del post
     $post_thumbnail_id = get_post_thumbnail_id($post_id);
-
     if ($post_thumbnail_id) {
-        // Si existe una imagen destacada, procesarla normalmente
         $url = wp_get_attachment_image_url($post_thumbnail_id, $size);
     } elseif ($use_temp) {
-        // Si no hay imagen destacada y se permite usar imagen temporal
-
-        // Intentar obtener la imagen temporal del meta del post
         $temp_image_id = get_post_meta($post_id, 'imagenTemporal', true);
-
         if ($temp_image_id) {
-            // Si ya existe una imagen temporal, obtener su URL
             $url = wp_get_attachment_image_url($temp_image_id, $size);
         } else {
-            // Si no existe una imagen temporal, seleccionar una aleatoria de la carpeta
             $random_image_path = obtenerImagenAleatoria('/home/asley01/MEGA/Waw/random');
 
             if (!$random_image_path) {
-                // Si no se pudo obtener una imagen, intentar ejecutar el script de permisos
                 ejecutarScriptPermisos();
                 return false;
             }
-
-            // Intentar subir la imagen a la biblioteca de medios
             $temp_image_id = subirImagenALibreria($random_image_path, $post_id);
-
             if (!$temp_image_id) {
-                // Si falló la subida, intentar ejecutar el script de permisos
                 ejecutarScriptPermisos();
                 return false;
             }
-
-            // Guardar la ID de la imagen temporal en el meta del post
             update_post_meta($post_id, 'imagenTemporal', $temp_image_id);
-
-            // Obtener la URL de la imagen recién subida
             $url = wp_get_attachment_image_url($temp_image_id, $size);
         }
     } else {
-        // Si no hay imagen destacada y no se permite usar temporal, retornar false
         return false;
     }
-
-    // Procesar la URL con Jetpack Photon si está disponible
     if (function_exists('jetpack_photon_url') && $url) {
         $args = array('quality' => $quality, 'strip' => $strip);
-
         if ($pixelated) {
-            $args['w'] = 50; // Reducir el ancho a 50 píxeles
-            $args['h'] = 50; // Reducir el alto a 50 píxeles
-            $args['zoom'] = 2; // Ampliar la imagen pequeña
+            $args['w'] = 50; 
+            $args['h'] = 50; 
+            $args['zoom'] = 2; 
         }
-
         return jetpack_photon_url($url, $args);
     }
-
     return $url;
 }
 
@@ -273,13 +249,11 @@ function obtenerImagenAleatoria($directory)
     if (!is_dir($directory)) {
         return false;
     }
-
     $images = glob(rtrim($directory, '/') . '/*.{jpg,jpeg,png,gif,jfif}', GLOB_BRACE);
 
     if (!$images) {
         return false;
     }
-
     return $images[array_rand($images)];
 }
 
@@ -307,14 +281,10 @@ function subirImagenALibreria($file_path, $post_id)
     if (!file_exists($file_path)) {
         return false;
     }
-
-    // Obtener el contenido del archivo
     $file_contents = file_get_contents($file_path);
     if ($file_contents === false) {
         return false;
     }
-
-    // Obtener el tipo de MIME
     $file_ext = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
     if ($file_ext === 'jfif') {
         $file_ext = 'jpeg';
@@ -327,12 +297,10 @@ function subirImagenALibreria($file_path, $post_id)
     if ($upload_file['error']) {
         return false;
     }
-
     $filetype = wp_check_filetype($upload_file['file'], null);
     if (!$filetype['type']) {
         return false;
     }
-
     $attachment = array(
         'post_mime_type' => $filetype['type'],
         'post_title'     => sanitize_file_name(pathinfo($upload_file['file'], PATHINFO_BASENAME)),
@@ -340,20 +308,35 @@ function subirImagenALibreria($file_path, $post_id)
         'post_status'    => 'inherit',
         'post_parent'    => $post_id,
     );
-
-    // Insertar el adjunto en la base de datos
     $attach_id = wp_insert_attachment($attachment, $upload_file['file'], $post_id);
-
     if (!is_wp_error($attach_id)) {
-        // Generar los metadatos de la imagen
         require_once(ABSPATH . 'wp-admin/includes/image.php');
         $attach_data = wp_generate_attachment_metadata($attach_id, $upload_file['file']);
         wp_update_attachment_metadata($attach_id, $attach_data);
 
         return $attach_id;
     }
-
     return false;
+}
+
+function img($url, $quality = 40, $strip = 'all') {
+    if ($url === null || $url === '') {
+        return ''; 
+    }
+    $parsed_url = parse_url($url);
+    if (strpos($url, 'https://i0.wp.com/') === 0) {
+        $cdn_url = $url;
+    } else {
+        $path = isset($parsed_url['host']) ? $parsed_url['host'] . $parsed_url['path'] : ltrim($parsed_url['path'], '/');
+        $cdn_url = 'https://i0.wp.com/' . $path;
+    }
+    
+    $query = [
+        'quality' => $quality,
+        'strip' => $strip,
+    ];
+    
+    return add_query_arg($query, $cdn_url);
 }
 
 /**
