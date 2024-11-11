@@ -47,21 +47,8 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
     $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
     $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
     $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id);
-    
-    // Optimización: Limitar la cantidad de IDs y configurar ordenación eficiente
-    if (isset($query_args['post__in']) && is_array($query_args['post__in'])) {
-        // Limitar a 5000 IDs máximos
-        $query_args['post__in'] = array_slice($query_args['post__in'], 0, 5000);
-        
-        // Usar paginación para manejar un gran número de IDs
-        $query_args['posts_per_page'] = $args['posts'];
-        $query_args['paged'] = $paged;
-        $query_args['orderby'] = 'post__in'; // Esto sigue siendo costoso; consideraremos alternativas más adelante
-    }
-
     return $query_args;
 }
-
 
 function obtenerDatosFeed($userId)
 {
@@ -138,7 +125,7 @@ function obtenerDatosFeed($userId)
     ];
 }
 
-function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
+function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null, $paged = 1, $posts_per_page = 12)
 {
     $datos = obtenerDatosFeedConCache($userId); #Aqui se obtiene obtenerDatosFeed
     if (empty($datos)) {
@@ -174,10 +161,13 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
         $decay_factors 
     );
 
-    if (!empty($puntos_por_post)) {
-        arsort($puntos_por_post);
-    }
-    return $puntos_por_post;
+    // No necesitas filtrar nuevamente los IDs aquí si ya están paginados
+    $post_ids = $posts_personalizados['post_ids'];
+
+    return [
+        'post_ids' => $post_ids,
+        'post_not_in' => $post_not_in,
+    ];
 }
 
 function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts)
@@ -228,8 +218,9 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
             }
             break;
 
-        default: // Feed personalizado
-            $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
+            default: // Feed personalizado
+            $posts_per_page = $query_args['posts']; // Asume que 'posts' define el número por página
+            $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page);
             
             if (!empty($feed_result['post_ids'])) {
                 $query_args['post__in'] = $feed_result['post_ids'];
@@ -238,6 +229,9 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                 if (!empty($feed_result['post_not_in'])) {
                     $query_args['post__not_in'] = $feed_result['post_not_in'];
                 }
+    
+                // Eliminar 'no_found_rows' si está presente, ya que estamos paginando correctamente
+                unset($query_args['no_found_rows']);
             } else {
                 $query_args['orderby'] = 'date';
                 $query_args['order'] = 'DESC';
@@ -254,6 +248,87 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
     return $query_args;
 }
 
+function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page)
+{
+    $post_not_in = [];
+
+    if ($similar_to) {
+        $post_not_in[] = $similar_to;
+        $cache_suffix = "_similar_" . $similar_to;
+    } else {
+        $cache_suffix = "";
+    }
+
+    $transient_key = $current_user_id == 44
+        ? "feed_personalizado_anonymous_{$identifier}{$cache_suffix}"
+        : "feed_personalizado_user_{$current_user_id}_{$identifier}{$cache_suffix}";
+    
+    $use_cache = !$is_admin;
+    $cached_data = $use_cache ? get_transient($transient_key) : false;
+    
+    if ($cached_data) {
+        $posts_personalizados = $cached_data['posts'];
+    } else {
+        if ($paged === 1) {
+            $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
+        } else {
+            $posts_personalizados = get_option($transient_key . '_backup', []);
+            if (empty($posts_personalizados)) {
+                $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
+            }
+        }
+        if ($use_cache) {
+            $cache_data = ['posts' => $posts_personalizados, 'timestamp' => time()];
+            $cache_time = $similar_to ? 3600 : 86400;
+            set_transient($transient_key, $cache_data, $cache_time);
+            update_option($transient_key . '_backup', $posts_personalizados);
+        }
+    }
+
+    $post_ids = array_keys($posts_personalizados);
+    if ($similar_to) {
+        $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
+            return $post_id != $similar_to;
+        });
+    }
+    $post_ids = array_keys($posts_personalizados);
+    if ($similar_to) {
+        $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
+            return $post_id != $similar_to;
+        });
+    }
+    $post_ids = array_unique($post_ids);
+    
+    //postLog("Total de posts personalizados encontrados: " . count($post_ids));
+    
+    return [
+        'post_ids' => $post_ids,
+        'post_not_in' => $post_not_in,
+    ];
+}
+
+
+
+La consulta que hace esta parte de codigo es la que mas tarda, introduce 5000 post de una vez, cosa que no se porque pasa, no se pagina?
+
+para el caso de default en ordenamientoQuery
+
+SELECT SQL_CALC_FOUND_ROWS wpsg_posts.ID
+FROM wpsg_posts
+INNER JOIN wpsg_postmeta
+ON ( wpsg_posts.ID = wpsg_postmeta.post_id )
+WHERE 1=1
+AND wpsg_posts.ID IN (307769,309722,307100,304417,(omiti el resto de id pero son muchas, como unas 5000 y a veces pueden ser 10.000 20.000))
+AND ( ( wpsg_postmeta.meta_key = 'paraDescarga'
+AND wpsg_postmeta.meta_value = '1' ) )
+AND ((wpsg_posts.post_type = 'social_post'
+AND (wpsg_posts.post_status = 'publish'
+OR wpsg_posts.post_status = 'rejected'
+OR wpsg_posts.post_status = 'private')))
+GROUP BY wpsg_posts.ID
+ORDER BY FIELD(wpsg_posts.ID,307769,309722,307100,304417,310215,( aqui tambien omiti el resto de id pero son muchas, como unas 5000 y a veces pueden ser 10.000 20.000))
+LIMIT 0, 12
+
 
 
 
@@ -263,27 +338,33 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     $user_id = get_current_user_id();
     $cache_key = 'posts_count_' . md5(serialize($query_args)) . '_user_' . $user_id;
     $posts_count = 0;
+    
+    // Verificar que query_args no esté vacío
+    if (empty($query_args)) {
+        error_log('Query args está vacío en procesarPublicaciones');
+        return '';
+    }
 
-    // Verificar que query_args no esté vacío y sea un array
-    if (empty($query_args) || !is_array($query_args)) {
-        error_log('Query args está vacío o no es un array en procesarPublicaciones');
+    // Asegurarse de que query_args sea un array
+    if (!is_array($query_args)) {
+        error_log('Query args no es un array en procesarPublicaciones');
         return '';
     }
 
     $total_posts = get_transient($cache_key);
     if ($total_posts === false) {
         $query_args['no_found_rows'] = false;
-
+        
         // Crear la consulta con manejo de errores
         try {
             $query = new WP_Query($query_args);
-
+            
             // Verificar si la consulta es válida
             if (!is_a($query, 'WP_Query')) {
                 error_log('Error al crear WP_Query');
                 return '';
             }
-
+            
             $total_posts = $query->found_posts;
             set_transient($cache_key, $total_posts, 12 * HOUR_IN_SECONDS);
         } catch (Exception $e) {
@@ -304,7 +385,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
 
     if ($query->have_posts()) {
-        $filtro = !empty($args['filtro']) ? $args['filtro'] : '';
+        $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
         $tipoPost = $args['post_type'];
 
         if (!wp_doing_ajax()) {
@@ -417,64 +498,6 @@ function filtrarIdentifier($identifier, $query_args)
 
 
 
-function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page)
-{
-    $post_not_in = [];
-
-    if ($similar_to) {
-        $post_not_in[] = $similar_to;
-        $cache_suffix = "_similar_" . $similar_to;
-    } else {
-        $cache_suffix = "";
-    }
-
-    $transient_key = $current_user_id == 44
-        ? "feed_personalizado_anonymous_{$identifier}{$cache_suffix}"
-        : "feed_personalizado_user_{$current_user_id}_{$identifier}{$cache_suffix}";
-    
-    $use_cache = !$is_admin;
-    $cached_data = $use_cache ? get_transient($transient_key) : false;
-    
-    if ($cached_data) {
-        $posts_personalizados = $cached_data['posts'];
-    } else {
-        if ($paged === 1) {
-            $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
-        } else {
-            $posts_personalizados = get_option($transient_key . '_backup', []);
-            if (empty($posts_personalizados)) {
-                $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
-            }
-        }
-        if ($use_cache) {
-            $cache_data = ['posts' => $posts_personalizados, 'timestamp' => time()];
-            $cache_time = $similar_to ? 3600 : 86400;
-            set_transient($transient_key, $cache_data, $cache_time);
-            update_option($transient_key . '_backup', $posts_personalizados);
-        }
-    }
-
-    $post_ids = array_keys($posts_personalizados);
-    if ($similar_to) {
-        $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
-            return $post_id != $similar_to;
-        });
-    }
-    $post_ids = array_keys($posts_personalizados);
-    if ($similar_to) {
-        $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
-            return $post_id != $similar_to;
-        });
-    }
-    $post_ids = array_unique($post_ids);
-    
-    //postLog("Total de posts personalizados encontrados: " . count($post_ids));
-    
-    return [
-        'post_ids' => $post_ids,
-        'post_not_in' => $post_not_in,
-    ];
-}
 
 
 
