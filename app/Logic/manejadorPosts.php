@@ -202,17 +202,14 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     unset($total_query_args['paged']); // Quitamos la paginación para contar todo
     
     $total_query = new WP_Query($total_query_args);
-    $total_posts = $total_query->found_posts;  // Obtiene el conteo dinámico real
+    $total_posts = $total_query->found_posts;
     wp_reset_postdata();
 
     // Ahora realizamos la consulta paginada para las publicaciones que queremos mostrar
     $query = new WP_Query($query_args);
     $posts_count = 0;
 
-    // Solo si no es AJAX, renderizamos el input oculto con el total
-    if (!$is_ajax) {
-        echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
-    }
+    echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
 
     if ($query->have_posts()) {
         $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
@@ -257,19 +254,8 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 
     wp_reset_postdata();
 
-    $output = ob_get_clean();
-
-    // Si es AJAX, devolvemos un array con el HTML y el total de publicaciones
-    if ($is_ajax) {
-        return [
-            'html' => $output,
-            'total_posts' => $total_posts
-        ];
-    }
-
-    return $output;
+    return ob_get_clean();
 }
-
 
 
 
@@ -287,9 +273,7 @@ function publicacionAjax()
         : array();
     $similar_to = isset($_POST['similar_to']) ? intval($_POST['similar_to']) : null; 
 
-    // Llamamos a publicaciones con AJAX activado
-    ob_start(); // Iniciamos el buffer para capturar el output de HTML
-    $output = publicaciones(
+    publicaciones(
         array(
             'filtro' => $filtro,
             'post_type' => $tipoPost,
@@ -302,28 +286,7 @@ function publicacionAjax()
         true,
         $paged
     );
-    $html = ob_get_clean(); // Capturamos el HTML generado
-
-    // Recalculamos el total de publicaciones dinámicamente si es necesario
-    $query_args = configuracionQueryArgs(array(
-        'filtro' => $filtro,
-        'post_type' => $tipoPost,
-        'tab_id' => $tab_id,
-        'user_id' => $user_id,
-        'identifier' => $data_identifier,
-        'exclude' => $publicacionesCargadas,
-        'similar_to' => $similar_to,
-    ), $paged, $user_id, get_current_user_id());
-    $total_query = new WP_Query($query_args);
-    $total_posts = $total_query->found_posts;
-
-    // Respondemos en JSON para actualizar tanto HTML como el total de publicaciones
-    wp_send_json(array(
-        'html' => $html,
-        'total_posts' => $total_posts
-    ));
 }
-
 
 add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
 add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');

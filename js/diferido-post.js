@@ -123,15 +123,15 @@
             return;
         }
     
-        const { filtro = '', tabId = '', posttype = '' } = listaPublicaciones.dataset;
+        const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
         const idUsuario = window.idUsuarioActual || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
     
-        log('Parámetros de carga:', { filtro, tabId, identificador, idUsuario, paginaActual });
+        log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual});
     
         try {
             const respuesta = await fetch(ajaxUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: new URLSearchParams({
                     action: 'cargar_mas_publicaciones',
                     paged: paginaActual,
@@ -148,31 +148,34 @@
                 throw new Error(`HTTP error! status: ${respuesta.status}`);
             }
     
-            // Cambiamos a respuesta.json() porque la respuesta ahora es un JSON
-            const datosRespuesta = await respuesta.json();
-            await procesarRespuesta(datosRespuesta);
+            const textoRespuesta = await respuesta.text();
+            await procesarRespuesta(textoRespuesta);
         } catch (error) {
             log('Error en la petición AJAX:', error);
         } finally {
             estaCargando = false;
         }
     }
+    const MAX_POSTS = 50; 
     
-    const MAX_POSTS = 50;
+    async function procesarRespuesta(respuesta) {
+        log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
+        const respuestaLimpia = respuesta.trim();
     
-    async function procesarRespuesta(datosRespuesta) {
-        log('Respuesta recibida:', datosRespuesta);
+        if (respuestaLimpia === '<div id="no-more-posts"></div>') {
+            log('No hay más publicaciones');
+            detenerCarga();
+            return;
+        }
     
-        const { html, total_posts } = datosRespuesta;
-    
-        if (!html || html.trim() === '') {
-            log('Respuesta vacía o sin HTML.');
+        if (!respuestaLimpia) {
+            log('Respuesta vacía recibida');
             detenerCarga();
             return;
         }
     
         const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
+        const doc = parser.parseFromString(respuesta, 'text/html');
     
         const publicacionesNuevas = doc.querySelectorAll('.EDYQHV');
         if (publicacionesNuevas.length === 0) {
@@ -181,6 +184,7 @@
             return;
         }
     
+        // Filtrar publicaciones duplicadas
         const publicacionesValidas = [];
         publicacionesNuevas.forEach(publicacion => {
             const idPublicacion = publicacion.getAttribute('id-post')?.trim();
@@ -201,9 +205,6 @@
                 listaPublicaciones.insertAdjacentHTML('beforeend', publicacionesValidas.join(''));
                 log('Contenido añadido');
                 paginaActual++;
-    
-                // Actualiza el contador de publicaciones totales
-                document.querySelector('.total-posts').value = total_posts;
     
                 // Limitar el número de publicaciones en el DOM
                 const publicacionesEnDOM = listaPublicaciones.querySelectorAll('.EDYQHV');
@@ -235,7 +236,6 @@
             detenerCarga();
         }
     }
-    
     
 
     function reiniciarEventosPostTag() {
