@@ -240,49 +240,39 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 
     return $query_args;
 }
-
 function procesarPublicaciones($query_args, $args, $is_ajax) {
     ob_start();
     $user_id = get_current_user_id();
     $cache_key = 'posts_count_' . md5(serialize($query_args)) . '_user_' . $user_id;
     $posts_count = 0;
-    
+
     // Validaciones iniciales
     if (empty($query_args) || !is_array($query_args)) {
         error_log('Query args está vacío o no es un array en procesarPublicaciones');
         return '';
     }
 
-    // Separar lógica de consulta para primeros 300 posts y el resto
+    // Asegurar que 'no_found_rows' sea false para obtener el recuento total
     $query_args['no_found_rows'] = false;
 
-    // Consulta sin caché para los primeros 300 posts
-    $query_args['posts_per_page'] = 300;
-    $query_recientes = new WP_Query($query_args);
+    // Clonar los argumentos de consulta para usarlos por separado
+    $query_args_first_300 = $query_args;
+    $query_args_rest = $query_args;
+
+    // Consulta para los primeros 300 posts
+    $query_args_first_300['posts_per_page'] = 300;
+    $query_args_first_300['offset'] = 0;
+    $query_recientes = new WP_Query($query_args_first_300);
     if (!is_a($query_recientes, 'WP_Query')) {
         error_log('Error al crear WP_Query para primeros 300 posts');
         return '';
     }
 
-    // Consulta con caché para el resto de los posts
-    $total_posts = get_transient($cache_key);
-    if ($total_posts === false) {
-        $query_args['offset'] = 300;
-        $query_args['posts_per_page'] = -1; // Recuperar todos los posts restantes
-        
-        try {
-            $query_resto = new WP_Query($query_args);
-            if (!is_a($query_resto, 'WP_Query')) {
-                error_log('Error al crear WP_Query para posts adicionales');
-                return '';
-            }
-            $total_posts = $query_resto->found_posts + $query_recientes->found_posts;
-            set_transient($cache_key, $total_posts, 12 * HOUR_IN_SECONDS);
-        } catch (Exception $e) {
-            error_log('Error en WP_Query: ' . $e->getMessage());
-            return '';
-        }
-    }
+    // Obtener el total de posts
+    $total_posts = $query_recientes->found_posts;
+
+    // Almacenar en caché el recuento total de posts si es necesario
+    set_transient($cache_key, $total_posts, 12 * HOUR_IN_SECONDS);
 
     echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
 
@@ -291,12 +281,31 @@ function procesarPublicaciones($query_args, $args, $is_ajax) {
         renderizarPosts($query_recientes, $args, $is_ajax, $posts_count);
     }
 
-    // Renderizar el resto de posts si la caché lo permite
-    if ($query_resto && $query_resto->have_posts()) {
-        renderizarPosts($query_resto, $args, $is_ajax, $posts_count);
+    wp_reset_postdata();
+
+    // Procesar los posts restantes en lotes
+    $posts_per_batch = 100; // Puedes ajustar este valor según tus necesidades
+    $offset = 300;
+
+    while ($offset < $total_posts) {
+        $query_args_rest['posts_per_page'] = $posts_per_batch;
+        $query_args_rest['offset'] = $offset;
+
+        $query_resto = new WP_Query($query_args_rest);
+        if (!is_a($query_resto, 'WP_Query')) {
+            error_log('Error al crear WP_Query para posts adicionales');
+            break;
+        }
+
+        if ($query_resto->have_posts()) {
+            renderizarPosts($query_resto, $args, $is_ajax, $posts_count);
+        }
+
+        wp_reset_postdata();
+
+        $offset += $posts_per_batch;
     }
 
-    wp_reset_postdata();
     return ob_get_clean();
 }
 
