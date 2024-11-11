@@ -252,7 +252,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax) {
     }
 
     // Consulta sin caché para los primeros 300 posts
-    $query_args['posts_per_page'] = 300;
+    $query_args['posts_per_page'] = 200;
     $query_recientes = new WP_Query($query_args);
 
     if (!is_a($query_recientes, 'WP_Query')) {
@@ -268,7 +268,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax) {
 
     // Cacheo y procesamiento del resto de los posts en grupos
     $total_posts = 0;
-    $grupo_tamano = 300; // Definir el tamaño del grupo
+    $grupo_tamano = 200; // Definir el tamaño del grupo
     for ($offset = 300; ; $offset += $grupo_tamano) {
         $cache_key = 'posts_grupo_' . $offset . '_user_' . $user_id;
         $posts_en_grupo = get_transient($cache_key);
