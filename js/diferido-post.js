@@ -228,6 +228,15 @@
     
                 // Actualiza los eventos de delegación si es necesario
                 reiniciarEventosPostTag();
+    
+                // Actualizar el valor del campo oculto con el total de publicaciones actuales
+                const totalPostsInput = document.querySelector('.total-posts-sampleList');
+                if (totalPostsInput) {
+                    totalPostsInput.value = publicacionesEnDOM.length;
+                    log('Campo total-posts-sampleList actualizado:', totalPostsInput.value);
+                } else {
+                    log('No se encontró el campo total-posts-sampleList para actualizar');
+                }
             } else {
                 log('No se encontró .social-post-list para añadir contenido');
             }
@@ -236,6 +245,7 @@
             detenerCarga();
         }
     }
+    
     
 
     function reiniciarEventosPostTag() {
