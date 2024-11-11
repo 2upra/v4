@@ -57,55 +57,54 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
 
     postLog("Iniciando construirQueryArgs con filtroTiempo: $filtroTiempo");
 
-    // Configuración base
     $query_args = [
         'post_type' => $args['post_type'],
         'posts_per_page' => $posts,
         'paged' => $paged,
         'ignore_sticky_posts' => true,
+        'suppress_filters' => false,
     ];
 
     if (!empty($identifier)) {
+        // Separamos los términos de búsqueda
         $terms = explode(' ', $identifier);
         $search_terms = array_map('trim', $terms);
         $search_terms = array_filter($search_terms);
 
-        // Removemos el parámetro 's' por defecto para evitar conflictos
-        unset($query_args['s']);
-
-        // Usamos 's' para una búsqueda básica
+        // Usamos 's' para la cadena completa de búsqueda
         $query_args['s'] = $identifier;
 
-        // Agregamos la lógica de búsqueda personalizada
-        add_filter('posts_where', function ($where) use ($search_terms, $wpdb) {
-            $where_conditions = [];
+        // Agregamos el filtro 'posts_search' para modificar la consulta de búsqueda
+        add_filter('posts_search', function ($search, $wp_query) use ($search_terms, $wpdb) {
+            if (empty($search_terms)) {
+                return $search;
+            }
 
+            $search = '';
+
+            // Construimos las condiciones de búsqueda
+            $search_conditions = array();
             foreach ($search_terms as $term) {
                 $like_term = '%' . $wpdb->esc_like($term) . '%';
-
-                $where_conditions[] = $wpdb->prepare("(
-                            {$wpdb->posts}.post_title LIKE %s OR
-                            {$wpdb->posts}.post_content LIKE %s OR
-                            SOUNDEX({$wpdb->posts}.post_title) = SOUNDEX(%s) OR
-                            SOUNDEX({$wpdb->posts}.post_content) = SOUNDEX(%s) OR
-                            EXISTS (
-                                SELECT 1 FROM {$wpdb->postmeta}
-                                WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
-                                AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'
-                                AND (
-                                    {$wpdb->postmeta}.meta_value LIKE %s OR
-                                    SOUNDEX({$wpdb->postmeta}.meta_value) = SOUNDEX(%s)
-                                )
-                            )
-                        )", $like_term, $like_term, $term, $term, $like_term, $term);
+                $search_conditions[] = $wpdb->prepare("(
+                    {$wpdb->posts}.post_title LIKE %s OR
+                    {$wpdb->posts}.post_content LIKE %s OR
+                    EXISTS (
+                        SELECT 1 FROM {$wpdb->postmeta}
+                        WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
+                        AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'
+                        AND {$wpdb->postmeta}.meta_value LIKE %s
+                    )
+                )", $like_term, $like_term, $like_term);
             }
 
-            if (!empty($where_conditions)) {
-                $where .= ' AND (' . implode(' OR ', $where_conditions) . ')';
+            if (!empty($search_conditions)) {
+                // Usamos AND para priorizar posts que coinciden con todos los términos
+                $search .= ' AND (' . implode(' AND ', $search_conditions) . ')';
             }
 
-            return $where;
-        });
+            return $search;
+        }, 10, 2);
     }
 
     // Manejar diferentes tipos de ordenamiento
