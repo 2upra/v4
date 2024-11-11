@@ -7,10 +7,7 @@ define('BATCH_SIZE', 1000);
 
 function obtenerDatosFeedConCache($userId)
 {
-    return obtenerDatosFeed($userId);
-    if (current_user_can('administrator')) {
-        return obtenerDatosFeed($userId);
-    }
+
     $cache_key = 'feed_datos_' . $userId;
     $datos = wp_cache_get($cache_key);
     if (false === $datos) {

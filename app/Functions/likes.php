@@ -1,5 +1,7 @@
 <?
 
+
+
 function manejarLike() {
     if (!is_user_logged_in()) {
         echo 'not_logged_in';
@@ -30,19 +32,28 @@ function likeAccion($postId, $userId, $accion) {
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';
 
+    // Obtener el contador de likes actual del usuario
+    $like_count = (int) get_user_meta($userId, 'like_count', true);
+
     if ($accion === 'like') {
         if (chequearLike($postId, $userId)) {
             $accion = 'unlike';  
         } else {
             $insert_result = $wpdb->insert($table_name, ['user_id' => $userId, 'post_id' => $postId]);
-            if ($insert_result === false) {
-            } else {
+            if ($insert_result !== false) {
+                // Incrementar el contador de likes
+                $like_count++;
+                update_user_meta($userId, 'like_count', $like_count);
+
+                // Verificar si el contador es múltiplo de 2
+                if ($like_count % 2 === 0) {
+                    reiniciarFeed($userId);
+                }
                 
                 $autorId = get_post_field('post_author', $postId);
-                
                 if ($autorId != $userId) {
                     $usuario = get_userdata($userId);
-                    
+                    // Aquí puedes enviar notificaciones o realizar otras acciones
                 }
             }
         }
@@ -50,12 +61,18 @@ function likeAccion($postId, $userId, $accion) {
 
     if ($accion === 'unlike') {
         $delete_result = $wpdb->delete($table_name, ['user_id' => $userId, 'post_id' => $postId]);
-        if ($delete_result === false) {
-        } else {
+        if ($delete_result !== false) {
+            // Decrementar el contador de likes
+            $like_count = max(0, $like_count - 1);  // Evitamos que baje de 0
+            update_user_meta($userId, 'like_count', $like_count);
+
+            // Verificar si el contador es múltiplo de 2
+            if ($like_count % 2 === 0 && $like_count > 0) {
+                reiniciarFeed($userId);
+            }
         }
     }
 }
-
 
 function obtenerLikesDelUsuario($userId, $limit = 500)
 {

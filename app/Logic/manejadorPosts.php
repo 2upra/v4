@@ -64,7 +64,7 @@ function obtenerDatosFeed($userId)
 
     $args = [
         'post_type'      => 'social_post',
-        'posts_per_page' => 5000,
+        'posts_per_page' => 15000,
         'date_query'     => [
             'after' => date('Y-m-d', strtotime('-100 days'))
         ],
@@ -86,6 +86,7 @@ function obtenerDatosFeed($userId)
     ";
 
     $prepared_sql_meta = $wpdb->prepare($sql_meta, array_merge($meta_keys, $posts_ids));
+
     $meta_results = $wpdb->get_results($prepared_sql_meta);
     $meta_data = [];
     foreach ($meta_results as $meta_row) {
@@ -241,6 +242,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
     return $query_args;
 }
 
+
 function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page)
 {
     $post_not_in = [];
@@ -256,9 +258,12 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
         ? "feed_personalizado_anonymous_{$identifier}{$cache_suffix}"
         : "feed_personalizado_user_{$current_user_id}_{$identifier}{$cache_suffix}";
     
-    $use_cache = !$is_admin;
-    $cached_data = $use_cache ? get_transient($transient_key) : false;
-    
+    // Definir el tiempo de caché: 5 minutos para admin, 12 horas para usuarios normales
+    $cache_time = $is_admin ? 300 : 43200;  // 300 segundos = 5 minutos, 43200 segundos = 12 horas
+
+    $cached_data = get_transient($transient_key);
+
+
     if ($cached_data) {
         $posts_personalizados = $cached_data['posts'];
     } else {
@@ -269,13 +274,10 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             if (empty($posts_personalizados)) {
                 $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
             }
-        }
-        if ($use_cache) {
-            $cache_data = ['posts' => $posts_personalizados, 'timestamp' => time()];
-            $cache_time = $similar_to ? 3600 : 86400;
-            set_transient($transient_key, $cache_data, $cache_time);
-            update_option($transient_key . '_backup', $posts_personalizados);
-        }
+
+        $cache_data = ['posts' => $posts_personalizados, 'timestamp' => time()];
+        set_transient($transient_key, $cache_data, $cache_time);
+        update_option($transient_key . '_backup', $posts_personalizados);
     }
 
     $post_ids = array_keys($posts_personalizados);
@@ -284,23 +286,40 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             return $post_id != $similar_to;
         });
     }
-    $post_ids = array_keys($posts_personalizados);
-    if ($similar_to) {
-        $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
-            return $post_id != $similar_to;
-        });
-    }
-    $post_ids = array_unique($post_ids);
-    
-    //postLog("Total de posts personalizados encontrados: " . count($post_ids));
-    
+
     return [
         'post_ids' => $post_ids,
         'post_not_in' => $post_not_in,
     ];
 }
 
+function reiniciarFeed($current_user_id)
+{
+    global $wpdb;
 
+    // Obtener todos los transients relacionados con el usuario actual
+    $transient_pattern = '_transient_feed_personalizado_user_' . $current_user_id . '_%';
+    $backup_pattern = '_transient_feed_personalizado_user_' . $current_user_id . '_backup%';
+
+    // Consulta para obtener transients que coincidan con el patrón
+    $query = $wpdb->get_col($wpdb->prepare(
+        "SELECT option_name FROM $wpdb->options WHERE option_name LIKE %s OR option_name LIKE %s",
+        $transient_pattern,
+        $backup_pattern
+    ));
+
+    // Borrar transients y sus backups
+    foreach ($query as $option_name) {
+        // Eliminar el transient
+        $transient_name = str_replace('_transient_', '', $option_name); // Eliminar el prefijo '_transient_'
+        delete_transient($transient_name);
+
+        // Eliminar el backup relacionado en las opciones
+        delete_option($option_name . '_backup');
+    }
+
+    return count($query); // Retorna cuántos transients se eliminaron
+}
 
 function procesarPublicaciones($query_args, $args, $is_ajax)
 {

@@ -1,5 +1,5 @@
 <?
-//estoy viendo que esto guarda varias metas vistas_posts, porque no mejor guarda una sola y va gestionandola 
+
 function guardarVista() {
     // Verificar que se haya pasado el ID del post
     if (isset($_POST['id_post'])) {
@@ -9,10 +9,16 @@ function guardarVista() {
         if ($userId) {
             // Obtener las vistas del usuario almacenadas en su meta
             $vistasUsuario = get_user_meta($userId, 'vistas_posts', true);
+            $vistasTotalesUsuario = get_user_meta($userId, 'vistas_totales_usuario', true); // Total de vistas del usuario
 
             // Si no tiene registros anteriores, inicializar el array
             if (!$vistasUsuario) {
                 $vistasUsuario = array();
+            }
+
+            // Si no tiene un contador total de vistas, inicializarlo
+            if (!$vistasTotalesUsuario) {
+                $vistasTotalesUsuario = 0;
             }
 
             // Obtener la fecha actual
@@ -32,8 +38,17 @@ function guardarVista() {
                 );
             }
 
+            // Incrementar el total de vistas del usuario
+            $vistasTotalesUsuario++;
+
             // Guardar la información actualizada en la meta del usuario
             update_user_meta($userId, 'vistas_posts', $vistasUsuario);
+            update_user_meta($userId, 'vistas_totales_usuario', $vistasTotalesUsuario);
+
+            // Si el usuario ha alcanzado 5 vistas, reiniciamos el feed
+            if ($vistasTotalesUsuario % 5 === 0) {
+                reiniciarFeed($userId); // Reiniciar el feed del usuario
+            }
         }
 
         // Obtener las vistas totales del post
@@ -59,7 +74,6 @@ function guardarVista() {
     // Finalizar la ejecución
     wp_die();
 }
-
 
 function obtenerVistasPosts($userId) {
     // Obtener la meta 'vistas_posts' del usuario
