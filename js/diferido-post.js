@@ -285,7 +285,7 @@
 
     function limpiarBusqueda() {
         log("Limpiando busqueda LLAMADO");
-        publicacionesCargadas.clear();
+        //publicacionesCargadas.clear();
         identificador = '';
         actualizarUIBusqueda('');
         resetearCarga();
