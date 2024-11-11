@@ -271,13 +271,13 @@ function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
     // Extraer palabras clave de datosAlgoritmo para cada post
     $datosAlgoritmo_1 = !empty($datos['datosAlgoritmo'][$post_id]->meta_value) 
         ? (is_array($datos['datosAlgoritmo'][$post_id]->meta_value) 
-            ? $datos['datosAlgoritmo'][$post_id]->meta_value  // Si ya es un array, úsalo directamente
+            ? $datos['datosAlgoritmo'][$post_id]->meta_value  // Si ya es un array, no aplicar json_decode
             : json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true)) 
         : [];
 
     $datosAlgoritmo_2 = isset($datos['datosAlgoritmo'][$similar_to]) 
         ? (is_array($datos['datosAlgoritmo'][$similar_to]->meta_value) 
-            ? $datos['datosAlgoritmo'][$similar_to]->meta_value  // Si ya es un array, úsalo directamente
+            ? $datos['datosAlgoritmo'][$similar_to]->meta_value  // Si ya es un array, no aplicar json_decode
             : json_decode($datos['datosAlgoritmo'][$similar_to]->meta_value, true)) 
         : json_decode(get_post_meta($similar_to, 'datosAlgoritmo', true), true) ?? [];
 
@@ -314,7 +314,6 @@ function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
 
     return $puntosSimilarTo;
 }
-
 function extractWordsFromDatosAlgoritmo($datosAlgoritmo)
 {
     $words = [];
