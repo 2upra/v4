@@ -275,54 +275,6 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
 }
 
 
-function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
-{
-    $datos = obtenerDatosFeedConCache($userId);
-    if (empty($datos)) {
-        return [];
-    }
-
-    $usuario = get_userdata($userId);
-    if (!$usuario || !is_object($usuario)) {
-        return [];
-    }
-
-    // Preparar variables necesarias
-    $posts_personalizados = [];
-    $current_timestamp = current_time('timestamp');
-    $vistas_posts_processed = obtenerYProcesarVistasPosts($userId);
-    $esAdmin = in_array('administrator', (array)$usuario->roles);
-
-    // Procesar directamente los posts
-    foreach ($datos['author_results'] as $post_id => $post_data) {
-        try {
-            $puntosFinal = calcularPuntosPost(
-                $post_id,
-                $post_data,
-                $datos,
-                $esAdmin,
-                $vistas_posts_processed,
-                $identifier,
-                $similar_to,
-                $current_timestamp,
-                $userId
-            );
-
-            if (is_numeric($puntosFinal) && $puntosFinal > 0) {
-                $posts_personalizados[$post_id] = $puntosFinal;
-            }
-        } catch (Exception $e) {
-            continue;
-        }
-    }
-
-    if (!empty($posts_personalizados)) {
-        arsort($posts_personalizados);
-    }
-
-    return $posts_personalizados;
-}
-
 
 
 function procesarPublicaciones($query_args, $args, $is_ajax)
