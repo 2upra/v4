@@ -1,5 +1,6 @@
 <?
 
+
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
     $user_id = obtenerUserId($is_ajax);
@@ -262,52 +263,15 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     $user_id = get_current_user_id();
     $cache_key = 'posts_count_' . md5(serialize($query_args)) . '_user_' . $user_id;
     $posts_count = 0;
-    
-    // Verificar que query_args no esté vacío
-    if (empty($query_args)) {
-        error_log('Query args está vacío en procesarPublicaciones');
-        return '';
-    }
-
-    // Asegurarse de que query_args sea un array
-    if (!is_array($query_args)) {
-        error_log('Query args no es un array en procesarPublicaciones');
-        return '';
-    }
-
     $total_posts = get_transient($cache_key);
     if ($total_posts === false) {
-        $query_args['no_found_rows'] = false;
-        
-        // Crear la consulta con manejo de errores
-        try {
-            $query = new WP_Query($query_args);
-            
-            // Verificar si la consulta es válida
-            if (!is_a($query, 'WP_Query')) {
-                error_log('Error al crear WP_Query');
-                return '';
-            }
-            
-            $total_posts = $query->found_posts;
-            set_transient($cache_key, $total_posts, 12 * HOUR_IN_SECONDS);
-        } catch (Exception $e) {
-            error_log('Error en WP_Query: ' . $e->getMessage());
-            return '';
-        }
-    } else {
-        // Si usamos el caché, aún necesitamos crear la consulta
+        $query_args['no_found_rows'] = false; 
         $query = new WP_Query($query_args);
-    }
-
-    // Verificar que $query sea válido antes de continuar
-    if (!is_object($query) || !method_exists($query, 'have_posts')) {
-        error_log('Query inválido en procesarPublicaciones');
-        return '';
+        $total_posts = $query->found_posts;
+        set_transient($cache_key, $total_posts, 12 * HOUR_IN_SECONDS);
     }
 
     echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
-
     if ($query->have_posts()) {
         $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
         $tipoPost = $args['post_type'];
