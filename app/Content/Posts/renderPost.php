@@ -46,7 +46,7 @@ function htmlPost($filtro)
                             <?php
                             // Obtener y limpiar el contenido
                             $content = get_the_content();
-                            $content = wp_trim_words($content, 20, '...'); // Opcional: limitar palabras
+                            $content = wp_trim_words($content, 20, '...');
                             echo wp_kses_post($content);
                             ?>
                         </a>

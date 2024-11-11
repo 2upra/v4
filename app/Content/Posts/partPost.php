@@ -205,6 +205,25 @@ function opcionesPost($post_id, $author_id)
 
 //MOSTRAR IMAGEN
 
+
+function imagenPostList($block, $es_suscriptor, $post_id)
+{
+    $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
+    $image_size = ($block && !$es_suscriptor) ? 'thumbnail' : 'large';
+    $quality = ($block && !$es_suscriptor) ? 20 : 80;
+    ob_start();
+    ?>
+    <div class="post-image-container <?= $blurred_class ?>">
+        <a href="<? echo esc_url(get_permalink()); ?>">
+            <img src="<?= esc_url(imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), false)) ?>" alt="Post Image" />
+        </a>
+    </div>
+<?
+    $output = ob_get_clean();
+    return $output;
+}
+
+
 function imagenPost($post_id, $size = 'medium', $quality = 50, $strip = 'all', $pixelated = false, $use_temp = false)
 {
     $post_thumbnail_id = get_post_thumbnail_id($post_id);
@@ -473,23 +492,6 @@ function fondoPost($filtro, $block, $es_suscriptor, $post_id)
     }
 
     return '';
-}
-
-function imagenPostList($block, $es_suscriptor, $post_id)
-{
-    $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
-    $image_size = ($block && !$es_suscriptor) ? 'thumbnail' : 'large';
-    $quality = ($block && !$es_suscriptor) ? 20 : 80;
-    ob_start();
-    ?>
-    <div class="post-image-container <?= $blurred_class ?>">
-        <a href="<? echo esc_url(get_permalink()); ?>">
-            <img src="<?= esc_url(imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), true)) ?>" alt="Post Image" />
-        </a>
-    </div>
-<?
-    $output = ob_get_clean();
-    return $output;
 }
 
 
