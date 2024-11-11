@@ -52,104 +52,123 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
 {
     global $wpdb;
     $likes_table = $wpdb->prefix . 'post_likes';
+    $query_args = [];
 
-    // Configuración base con valores mínimos necesarios
+    postLog("Iniciando construirQueryArgs con filtroTiempo: $filtroTiempo");
+
+    // Configuración base
     $query_args = [
         'post_type' => $args['post_type'],
         'posts_per_page' => $posts,
         'paged' => $paged,
         'ignore_sticky_posts' => true,
-        'no_found_rows' => false, // Mejora el rendimiento cuando no necesitas pagination info
-        'cache_results' => true,
-        'update_post_meta_cache' => true, // Solo activar si necesitas meta datos
-        'update_post_term_cache' => false, // Solo activar si necesitas términos
     ];
 
-    // Optimización de búsqueda
     if (!empty($identifier)) {
-        // Usar una única consulta JOIN en lugar de múltiples subconsultas
-        add_filter('posts_where', function ($where) use ($identifier, $wpdb) {
-            $terms = array_filter(explode(' ', $identifier));
-            if (empty($terms)) return $where;
+        $query_args['meta_query'] = array('relation' => 'OR');
 
-            $conditions = [];
+        // Búsqueda en título y contenido
+        $query_args['s'] = $identifier;
+
+        // Búsqueda en meta datosAlgoritmo
+        $query_args['meta_query'][] = array(
+            'key' => 'datosAlgoritmo',
+            'value' => $identifier,
+            'compare' => 'LIKE'
+        );
+
+        // Hacer la búsqueda más flexible
+        add_filter('posts_where', function ($where) use ($identifier) {
+            global $wpdb;
+            $terms = explode(' ', $identifier);
+
             foreach ($terms as $term) {
                 $like_term = '%' . $wpdb->esc_like($term) . '%';
-                $conditions[] = $wpdb->prepare(
-                    "({$wpdb->posts}.post_title LIKE %s OR 
-                      {$wpdb->posts}.post_content LIKE %s OR 
-                      pm.meta_value LIKE %s)",
+                $where .= $wpdb->prepare(
+                    " AND (
+                        {$wpdb->posts}.post_title LIKE %s 
+                        OR {$wpdb->posts}.post_content LIKE %s 
+                        OR EXISTS (
+                            SELECT 1 FROM {$wpdb->postmeta} 
+                            WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID 
+                            AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo' 
+                            AND {$wpdb->postmeta}.meta_value LIKE %s
+                        )
+                    )",
                     $like_term,
                     $like_term,
                     $like_term
                 );
             }
-
-            return $where . " AND (" . implode(" OR ", $conditions) . ")";
-        });
-
-        add_filter('posts_join', function ($join) use ($wpdb) {
-            return $join . " LEFT JOIN {$wpdb->postmeta} pm ON ({$wpdb->posts}.ID = pm.post_id AND pm.meta_key = 'datosAlgoritmo')";
-        });
-
-        add_filter('posts_distinct', function ($distinct) {
-            return "DISTINCT";
+            return $where;
         });
     }
 
-    // Optimización de ordenamiento para social_post
+    // Manejar diferentes tipos de ordenamiento
     if ($args['post_type'] === 'social_post') {
         switch ($filtroTiempo) {
             case 1: // Posts recientes
                 $query_args['orderby'] = 'date';
                 $query_args['order'] = 'DESC';
+                postLog("Caso 1: Ordenando por fecha reciente");
                 break;
 
             case 2: // Top semanal
             case 3: // Top mensual
+                // Determinar el intervalo
                 $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
+                postLog("Caso $filtroTiempo: Usando intervalo de $interval");
 
-                // Consulta optimizada con índices
-                $sql = $wpdb->prepare("
-                    SELECT p.ID
-                    FROM {$wpdb->posts} p
-                    LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id
-                    WHERE p.post_type = %s 
+                // Modificar la consulta SQL para filtrar tanto por la fecha de "likes" como por la fecha de publicación del post
+                $sql = "
+                    SELECT p.ID, 
+                           COUNT(pl.post_id) as like_count 
+                    FROM {$wpdb->posts} p 
+                    LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
+                    WHERE p.post_type = 'social_post' 
                     AND p.post_status = 'publish'
-                    AND p.post_date >= DATE_SUB(NOW(), INTERVAL {$interval})
-                    AND (pl.like_date IS NULL OR pl.like_date >= DATE_SUB(NOW(), INTERVAL {$interval}))
+                    AND p.post_date >= DATE_SUB(NOW(), INTERVAL $interval)  
+                    AND pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval) 
                     GROUP BY p.ID
-                    ORDER BY COUNT(pl.post_id) DESC, p.post_date DESC
-                    LIMIT %d
-                ", 'social_post', $posts * $paged);
+                    HAVING like_count > 0
+                    ORDER BY like_count DESC, p.post_date DESC
+                ";
 
-                $post_ids = $wpdb->get_col($sql);
+                postLog("SQL Query: " . $sql);
+                $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
+                postLog("Resultados encontrados: " . count($posts_with_likes));
 
-                if (!empty($post_ids)) {
-                    $query_args['post__in'] = $post_ids;
-                    $query_args['orderby'] = 'post__in';
+                if (!empty($posts_with_likes)) {
+                    $post_ids = wp_list_pluck($posts_with_likes, 'ID');
+                    if (!empty($post_ids)) {
+                        $query_args['post__in'] = $post_ids;
+                        $query_args['orderby'] = 'post__in';
+                    }
+
+                    postLog("IDs de posts para esta página: " . implode(', ', $post_ids));
+                } else {
+                    postLog("No se encontraron posts con likes en el período especificado");
+                    $query_args['orderby'] = 'date';
+                    $query_args['order'] = 'DESC';
                 }
                 break;
 
             default:
-                // Feed personalizado
-                $personalized_feed = obtenerFeedPersonalizado(
-                    $current_user_id,
-                    $identifier,
-                    $similar_to,
-                    $paged,
-                    $is_admin,
-                    $posts
-                );
+                postLog("Caso default: Obteniendo feed personalizado");
+                $personalized_feed = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
 
                 if (!empty($personalized_feed['post_ids'])) {
                     $query_args['post__in'] = $personalized_feed['post_ids'];
-                    $query_args['orderby'] = 'post__in';
+                    $query_args['orderby'] = 'date';
+                    $query_args['order'] = 'DESC';
+                    postLog("Feed personalizado IDs: " . implode(', ', $personalized_feed['post_ids']));
                 }
+
                 break;
         }
     }
 
+    postLog("Query args finales: " . print_r($query_args, true));
     return $query_args;
 }
 
