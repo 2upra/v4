@@ -185,6 +185,7 @@
             if (totalPostsInputInDOM) {
                 totalPostsInputInDOM.value = totalPostsValue;
                 log('Campo total-posts-sampleList actualizado desde la respuesta:', totalPostsValue);
+                window.contadorDeSamples();
             }
         }
 
@@ -282,7 +283,6 @@
     }
 
     function limpiarBusqueda() {
-        window.contadorDeSamples();
         publicacionesCargadas.clear();
         identificador = '';
         actualizarUIBusqueda('');
