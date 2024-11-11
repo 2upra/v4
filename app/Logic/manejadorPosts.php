@@ -59,7 +59,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
         'suppress_filters' => false,
     ];
 
-    postLog("Iniciando construirQueryArgs con filtroTiempo: $filtroTiempo");
+    //postLog("Iniciando construirQueryArgs con filtroTiempo: $filtroTiempo");
 
     // Aplicar filtro de identificador
     if (!empty($identifier)) {
@@ -71,7 +71,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
         $query_args = ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
     }
 
-    postLog("Query args finales: " . print_r($query_args, true));
+    //postLog("Query args finales: " . print_r($query_args, true));
     return $query_args;
 }
 
@@ -145,13 +145,13 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
         case 1: // Posts recientes
             $query_args['orderby'] = 'date';
             $query_args['order'] = 'DESC';
-            postLog("Caso 1: Ordenando por fecha reciente");
+            //postLog("Caso 1: Ordenando por fecha reciente");
             break;
 
         case 2: // Top semanal
         case 3: // Top mensual
             $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
-            postLog("Caso $filtroTiempo: Usando intervalo de $interval");
+            //postLog("Caso $filtroTiempo: Usando intervalo de $interval");
 
             $sql = "
                 SELECT p.ID, 
@@ -167,9 +167,9 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                 ORDER BY like_count DESC, p.post_date DESC
             ";
 
-            postLog("SQL Query: " . $sql);
+            //postLog("SQL Query: " . $sql);
             $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
-            postLog("Resultados encontrados: " . count($posts_with_likes));
+            //postLog("Resultados encontrados: " . count($posts_with_likes));
 
             if (!empty($posts_with_likes)) {
                 $post_ids = wp_list_pluck($posts_with_likes, 'ID');
@@ -177,16 +177,16 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                     $query_args['post__in'] = $post_ids;
                     $query_args['orderby'] = 'post__in';
                 }
-                postLog("IDs de posts para esta página: " . implode(', ', $post_ids));
+                //postLog("IDs de posts para esta página: " . implode(', ', $post_ids));
             } else {
-                postLog("No se encontraron posts con likes en el período especificado");
+                //postLog("No se encontraron posts con likes en el período especificado");
                 $query_args['orderby'] = 'date';
                 $query_args['order'] = 'DESC';
             }
             break;
 
             default: // Feed personalizado
-            postLog("Caso default: Obteniendo feed personalizado");
+            //postLog("Caso default: Obteniendo feed personalizado");
             
             $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
             
@@ -200,9 +200,9 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                 }
                 
                 // La paginación se manejará automáticamente por WP_Query usando 'posts_per_page' y 'paged'
-                postLog("Feed personalizado: " . count($feed_result['post_ids']) . " posts totales disponibles");
+                //postLog("Feed personalizado: " . count($feed_result['post_ids']) . " posts totales disponibles");
             } else {
-                postLog("No se encontró feed personalizado, usando posts recientes como fallback");
+                //postLog("No se encontró feed personalizado, usando posts recientes como fallback");
                 $query_args['orderby'] = 'date';
                 $query_args['order'] = 'DESC';
             }
@@ -263,7 +263,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
     }
     $post_ids = array_unique($post_ids);
     
-    postLog("Total de posts personalizados encontrados: " . count($post_ids));
+    //postLog("Total de posts personalizados encontrados: " . count($post_ids));
     
     return [
         'post_ids' => $post_ids,
@@ -274,23 +274,23 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
 
 function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
 {
-    postLog("Iniciando cálculo de feed personalizado para usuario: $userId");
+    //postLog("Iniciando cálculo de feed personalizado para usuario: $userId");
 
     // Validaciones iniciales
     if (empty($userId) || !is_numeric($userId)) {
-        postLog("Error: Usuario ID inválido");
+        //postLog("Error: Usuario ID inválido");
         return [];
     }
 
     $datos = obtenerDatosFeedConCache($userId);
     if (empty($datos)) {
-        postLog("Error: No hay datos disponibles para el usuario");
+        //postLog("Error: No hay datos disponibles para el usuario");
         return [];
     }
 
     $usuario = get_userdata($userId);
     if (!$usuario || !is_object($usuario)) {
-        postLog("Error: No se pudo obtener datos del usuario");
+        //postLog("Error: No se pudo obtener datos del usuario");
         return [];
     }
 
@@ -324,7 +324,7 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
                 $posts_personalizados[$post_id] = $puntosFinal;
             }
         } catch (Exception $e) {
-            postLog("Error al procesar post ID $post_id: " . $e->getMessage());
+            //postLog("Error al procesar post ID $post_id: " . $e->getMessage());
             continue;
         }
     }
@@ -332,9 +332,9 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
     // Ordenar posts por puntuación
     if (!empty($posts_personalizados)) {
         arsort($posts_personalizados);
-        postLog("Feed personalizado calculado exitosamente con " . count($posts_personalizados) . " posts");
+        //postLog("Feed personalizado calculado exitosamente con " . count($posts_personalizados) . " posts");
     } else {
-        postLog("No se encontraron posts relevantes para el feed personalizado");
+        //postLog("No se encontraron posts relevantes para el feed personalizado");
     }
 
     return $posts_personalizados;
@@ -347,7 +347,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 {
     ob_start();
 
-    postLog("Query args: " . print_r($query_args, true));
+    //postLog("Query args: " . print_r($query_args, true));
 
     // Realiza una consulta sin paginación para obtener el total de publicaciones
     $total_query_args = $query_args;
@@ -380,8 +380,8 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
                   data-tab-id="' . esc_attr($args['tab_id']) . '">';
         }
 
-        postLog("FILTRO ENVIADO A htmlPost : $filtro");
-        postLog("---------------------------------------");
+        //postLog("FILTRO ENVIADO A htmlPost : $filtro");
+        //postLog("---------------------------------------");
 
         while ($query->have_posts()) {
             $query->the_post();
