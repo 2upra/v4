@@ -201,6 +201,9 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     $posts_count = 0;  // Inicializamos el contador de publicaciones para la página actual
     $total_posts = $query->found_posts;  // Total de publicaciones sin paginar
 
+    // Aquí imprimimos el input oculto con el total de publicaciones antes del <ul>
+    echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
+
     if ($query->have_posts()) {
         $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
         $tipoPost = $args['post_type'];
@@ -211,6 +214,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
                 $clase_extra = 'clase-rolastatus';
             }
 
+            // Imprimir la lista <ul> con la clase adecuada
             echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
                   data-filtro="' . esc_attr($filtro) . '" 
                   data-posttype="' . esc_attr($tipoPost) . '" 
@@ -249,7 +253,6 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     echo '<!-- Número de publicaciones procesadas en esta página: ' . $posts_count . ' -->';
     echo '<!-- Total de publicaciones sin paginación: ' . $total_posts . ' -->';
     echo '<input type="hidden" class="post-count" value="' . esc_attr($posts_count) . '" />';
-    echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($filtro) . '" value="' . esc_attr($total_posts) . '" />';
     postLog("Total de publicaciones encontradas: " . $total_posts);
 
     return ob_get_clean();
