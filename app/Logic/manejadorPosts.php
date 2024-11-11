@@ -309,26 +309,6 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
 
 
 
-La consulta que hace esta parte de codigo es la que mas tarda, introduce 5000 post de una vez, cosa que no se porque pasa, no se pagina?
-
-para el caso de default en ordenamientoQuery
-
-SELECT SQL_CALC_FOUND_ROWS wpsg_posts.ID
-FROM wpsg_posts
-INNER JOIN wpsg_postmeta
-ON ( wpsg_posts.ID = wpsg_postmeta.post_id )
-WHERE 1=1
-AND wpsg_posts.ID IN (307769,309722,307100,304417,(omiti el resto de id pero son muchas, como unas 5000 y a veces pueden ser 10.000 20.000))
-AND ( ( wpsg_postmeta.meta_key = 'paraDescarga'
-AND wpsg_postmeta.meta_value = '1' ) )
-AND ((wpsg_posts.post_type = 'social_post'
-AND (wpsg_posts.post_status = 'publish'
-OR wpsg_posts.post_status = 'rejected'
-OR wpsg_posts.post_status = 'private')))
-GROUP BY wpsg_posts.ID
-ORDER BY FIELD(wpsg_posts.ID,307769,309722,307100,304417,310215,( aqui tambien omiti el resto de id pero son muchas, como unas 5000 y a veces pueden ser 10.000 20.000))
-LIMIT 0, 12
-
 
 
 
