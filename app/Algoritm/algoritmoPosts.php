@@ -262,12 +262,6 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos)
     return $resumen['puntos']['total'];
 }
 
-/*
-
-Tengo este problema 
-[11-Nov-2024 23:27:30 UTC] PHP Fatal error:  Uncaught TypeError: json_decode(): Argument #1 ($json) must be of type string, array given in /var/www/wordpress/wp-content/themes/2upra3v/app/Algoritm/algoritmoPosts.php:275
-*/
-
 function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
 {
     // Obtener y normalizar contenido del post
@@ -275,18 +269,24 @@ function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
     $contenido_post_2 = isset($datos['post_content'][$similar_to]) ? strtolower($datos['post_content'][$similar_to]) : '';
 
     // Extraer palabras clave de datosAlgoritmo para cada post
-    $datosAlgoritmo_1 = !empty($datos['datosAlgoritmo'][$post_id]->meta_value) && is_string($datos['datosAlgoritmo'][$post_id]->meta_value)
-        ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true) : [];
+    $datosAlgoritmo_1 = !empty($datos['datosAlgoritmo'][$post_id]->meta_value) 
+        ? (is_array($datos['datosAlgoritmo'][$post_id]->meta_value) 
+            ? $datos['datosAlgoritmo'][$post_id]->meta_value  // Si ya es un array, úsalo directamente
+            : json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true)) 
+        : [];
 
-    $datosAlgoritmo_2 = isset($datos['datosAlgoritmo'][$similar_to]) && is_string($datos['datosAlgoritmo'][$similar_to]->meta_value)
-        ? json_decode($datos['datosAlgoritmo'][$similar_to]->meta_value, true)
+    $datosAlgoritmo_2 = isset($datos['datosAlgoritmo'][$similar_to]) 
+        ? (is_array($datos['datosAlgoritmo'][$similar_to]->meta_value) 
+            ? $datos['datosAlgoritmo'][$similar_to]->meta_value  // Si ya es un array, úsalo directamente
+            : json_decode($datos['datosAlgoritmo'][$similar_to]->meta_value, true)) 
         : json_decode(get_post_meta($similar_to, 'datosAlgoritmo', true), true) ?? [];
 
-
+    // Extraer palabras clave para comparar
     $words_in_post_1 = array_merge(
         extractWordsFromDatosAlgoritmo($datosAlgoritmo_1),
         extractWordsFromContent($contenido_post_1)
     );
+
     $words_in_post_2 = array_merge(
         extractWordsFromDatosAlgoritmo($datosAlgoritmo_2),
         extractWordsFromContent($contenido_post_2)
