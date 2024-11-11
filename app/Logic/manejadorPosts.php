@@ -252,19 +252,20 @@ function procesarPublicaciones($query_args, $args, $is_ajax) {
         return '';
     }
 
-    // Limitar la carga de memoria: Solo obtener los IDs
+    // Limitar la carga de memoria: Solo obtener los IDs y desactivar caché de consultas
     $query_args['fields'] = 'ids'; 
-    $query_args['posts_per_page'] = 200;
+    $query_args['posts_per_page'] = 50;  // Reducir el tamaño de los grupos aún más
     $query_args['no_found_rows'] = true;
+    $query_args['cache_results'] = false;
 
-    // Consulta inicial para los primeros 200 posts
+    // Consulta inicial para los primeros 50 posts
     $query_recientes = new WP_Query($query_args);
     if (!is_a($query_recientes, 'WP_Query')) {
-        error_log('Error al crear WP_Query para primeros 200 posts');
+        error_log('Error al crear WP_Query para primeros 50 posts');
         return '';
     }
 
-    // Renderizar los primeros 200 posts
+    // Renderizar los primeros 50 posts
     if ($query_recientes->have_posts()) {
         renderizarPosts($query_recientes, $args, $is_ajax, $posts_count);
     }
@@ -272,16 +273,16 @@ function procesarPublicaciones($query_args, $args, $is_ajax) {
     unset($query_recientes);
     gc_collect_cycles();  // Recolecta memoria
 
-    // Procesamiento del resto de los posts en grupos de 100
-    $grupo_tamano = 100;
-    for ($offset = 200; ; $offset += $grupo_tamano) {
-        $cache_key = 'posts_grupo_' . $offset . '_user_' . $user_id;
+    // Procesamiento del resto de los posts usando paginación para evitar offsets
+    $grupo_tamano = 50;
+    $pagina = 2; // Empezar desde la segunda página
+
+    while (true) {
+        $query_args['paged'] = $pagina; // Usar paginación en lugar de offset
+        $cache_key = 'posts_grupo_pagina_' . $pagina . '_user_' . $user_id;
         $posts_en_grupo = get_transient($cache_key);
 
         if ($posts_en_grupo === false) {
-            $query_args['offset'] = $offset;
-            $query_args['posts_per_page'] = $grupo_tamano;
-
             $query_grupo = new WP_Query($query_args);
             if (!$query_grupo->have_posts()) {
                 break; // Termina si no hay más posts
@@ -297,6 +298,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax) {
             unset($query_grupo);
             gc_collect_cycles();
         }
+        $pagina++;
     }
 
     return ob_get_clean();
