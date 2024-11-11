@@ -170,55 +170,23 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
     return $puntos_por_post;
 }
 
-function procesarPublicaciones($query_args, $args, $is_ajax) {
-    $user_id = get_current_user_id();
-    
-    // 1. Crear una clave única para el cache
-    $cache_key = 'html_posts_' . md5(serialize($query_args) . $user_id . $is_ajax);
-    
-    // 2. Intentar obtener del cache
-    $cached_html = get_transient($cache_key);
-    if ($cached_html !== false) {
-        return $cached_html;
-    }
-
-    // 3. Si no está en cache, procesar
+function procesarPublicaciones($query_args, $args, $is_ajax)
+{
     ob_start();
-    
-    // 4. Optimizar la consulta
-    global $wpdb;
-    
-    // Determinar si necesitamos el conteo total para paginación
-    $need_pagination = isset($args['paged']) && $args['paged'] > 0;
-    
-    if ($need_pagination) {
-        // Consulta para obtener el total de posts
-        $count_query = str_replace('SELECT *', 'SELECT COUNT(*)', $query_args['query']);
-        $total_posts = $wpdb->get_var($count_query);
-        echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . 
-             '" value="' . esc_attr($total_posts) . '" />';
+    $user_id = get_current_user_id();
+    $cache_key = 'posts_count_' . md5(serialize($query_args)) . '_user_' . $user_id;
+    $posts_count = 0;
+    $total_posts = get_transient($cache_key);
+    if ($total_posts === false) {
+        $query_args['no_found_rows'] = false; 
+        $query = new WP_Query($query_args);
+        $total_posts = $query->found_posts;
+        set_transient($cache_key, $total_posts, 12 * HOUR_IN_SECONDS);
     }
 
-    // 5. Consulta SQL directa para obtener los posts
-    $posts_per_page = $query_args['posts_per_page'] ?? 12;
-    $offset = (($query_args['paged'] ?? 1) - 1) * $posts_per_page;
-    
-    $sql = $wpdb->prepare(
-        "SELECT p.ID, p.post_author, p.post_date, p.post_content, p.post_title
-         FROM {$wpdb->posts} p
-         WHERE p.post_type = %s
-         AND p.post_status = 'publish'
-         ORDER BY p.post_date DESC
-         LIMIT %d OFFSET %d",
-        $args['post_type'],
-        $posts_per_page,
-        $offset
-    );
-
-    $posts = $wpdb->get_results($sql);
-
-    if (!empty($posts)) {
-        $filtro = !empty($args['filtro']) ? $args['filtro'] : '';
+    echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
+    if ($query->have_posts()) {
+        $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
         $tipoPost = $args['post_type'];
 
         if (!wp_doing_ajax()) {
@@ -233,15 +201,16 @@ function procesarPublicaciones($query_args, $args, $is_ajax) {
                   data-tab-id="' . esc_attr($args['tab_id']) . '">';
         }
 
-        // 6. Procesar cada post
-        foreach ($posts as $post) {
-            // Configurar el post global para compatibilidad
-            setup_postdata($GLOBALS['post'] =& get_post($post->ID));
-            
+        while ($query->have_posts()) {
+            $query->the_post();
+            $posts_count++;
+
             if ($tipoPost === 'social_post') {
                 echo htmlPost($filtro);
             } elseif ($tipoPost === 'colab') {
                 echo htmlColab($filtro);
+            } else {
+                echo '<p>Tipo de publicación no reconocido.</p>';
             }
         }
 
@@ -251,41 +220,8 @@ function procesarPublicaciones($query_args, $args, $is_ajax) {
     } else {
         echo nohayPost($filtro, $is_ajax);
     }
-
     wp_reset_postdata();
-    
-    // 7. Obtener el HTML generado
-    $output = ob_get_clean();
-    
-    // 8. Guardar en cache
-    set_transient($cache_key, $output, 5 * MINUTE_IN_SECONDS); // Cache por 5 minutos
-    
-    return $output;
-}
-
-// Función auxiliar para obtener meta datos en batch
-function obtenerMetadataBatch($post_ids) {
-    global $wpdb;
-    
-    if (empty($post_ids)) return [];
-    
-    $placeholders = implode(',', array_fill(0, count($post_ids), '%d'));
-    $sql = $wpdb->prepare(
-        "SELECT post_id, meta_key, meta_value 
-         FROM {$wpdb->postmeta} 
-         WHERE post_id IN ($placeholders) 
-         AND meta_key IN ('meta_key1', 'meta_key2')", // Especifica las meta keys que necesitas
-        $post_ids
-    );
-    
-    $results = $wpdb->get_results($sql);
-    $metadata = [];
-    
-    foreach ($results as $row) {
-        $metadata[$row->post_id][$row->meta_key] = $row->meta_value;
-    }
-    
-    return $metadata;
+    return ob_get_clean();
 }
 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
