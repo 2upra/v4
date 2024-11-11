@@ -39,7 +39,7 @@ function htmlPost($filtro)
                     <? // echo audioPostList($post_id); 
                     ?>
                 </div>
-                <? echo imagenPostList($block, $es_suscriptor, $post_id); ?>
+                <?// echo imagenPostList($block, $es_suscriptor, $post_id); ?>
                 <div class="INFOLISTSAMPLE">
                     <div class="CONTENTLISTSAMPLE">
                         <a href="<?php echo esc_url(get_permalink()); ?>" id-post="<?php echo get_the_ID(); ?>">

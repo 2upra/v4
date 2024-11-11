@@ -7,11 +7,16 @@ function variablesPosts($post_id = null)
         global $post;
         $post_id = $post->ID;
     }
+
     $current_user_id = get_current_user_id();
     $autores_suscritos = get_user_meta($current_user_id, 'offering_user_ids', true);
     $author_id = get_post_field('post_author', $post_id);
+
+    // Obtener datosAlgoritmo y su respaldo
     $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
     $datos_algoritmo_respaldo = get_post_meta($post_id, 'datosAlgoritmo_respaldo', true);
+
+    // Usar el respaldo si datosAlgoritmo está vacío
     $datos_algoritmo_final = empty($datos_algoritmo) ? $datos_algoritmo_respaldo : $datos_algoritmo;
 
     return [
@@ -45,9 +50,12 @@ function botonseguir($author_id)
 {
     $author_id = (int) $author_id;
     $current_user_id = get_current_user_id();
+
     if ($current_user_id === 0) {
-        return '';
+        return ''; // Usuario no autenticado
     }
+
+    // Si el usuario está viendo su propio perfil, añadimos una clase de deshabilitado
     if ($current_user_id === $author_id) {
         ob_start();
 ?>
@@ -88,6 +96,7 @@ function botonSeguirPerfilBanner($author_id)
     $es_seguido = in_array($author_id, $siguiendo);
     $clase_boton = $es_seguido ? 'dejar-de-seguir' : 'seguir';
     $texto_boton = $es_seguido ? 'Dejar de seguir' : 'Seguir';
+
 
     ob_start();
 ?>
@@ -182,54 +191,150 @@ function opcionesPost($post_id, $author_id)
 
 //MOSTRAR IMAGEN
 
+
 function imagenPostList($block, $es_suscriptor, $post_id)
 {
     $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
     $image_size = ($block && !$es_suscriptor) ? 'thumbnail' : 'large';
     $quality = ($block && !$es_suscriptor) ? 20 : 80;
-
-    // Verifica si el post tiene imagen destacada
-    if (has_post_thumbnail($post_id)) {
-        // Si tiene imagen destacada, obtenemos la URL de la imagen
-        $image_url = imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), false);
-    } else {
-
-  
-    }
-
     ob_start();
     ?>
     <div class="post-image-container <?= $blurred_class ?>">
-        <a href="<?php echo esc_url(get_permalink($post_id)); ?>">
-            <img src="<?= esc_url($image_url) ?>" alt="Post Image" />
+        <a href="<? echo esc_url(get_permalink()); ?>">
+            <img src="<?= esc_url(imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), false)) ?>" alt="Post Image" />
         </a>
     </div>
-    <?php
+<?
     $output = ob_get_clean();
     return $output;
 }
 
-
-function imagenPost($post_id, $size = 'medium', $quality = 50, $strip = 'all', $pixelated = false)
+//esto funciona muy mal porque cuando es use temp true, en vez de usar de las imagenes que ya se subio, vuelve a subir aunque exista, no esta nada optimizado aunque funcione, es uy lento y ocupa espacio resubiendo las mismas imagenes
+function imagenPost($post_id, $size = 'medium', $quality = 50, $strip = 'all', $pixelated = false, $use_temp = false)
 {
     $post_thumbnail_id = get_post_thumbnail_id($post_id);
     if ($post_thumbnail_id) {
         $url = wp_get_attachment_image_url($post_thumbnail_id, $size);
+    } elseif ($use_temp) {
+        $temp_image_id = get_post_meta($post_id, 'imagenTemporal', true);
+        
+        // Si existe una imagen temporal, úsala
+        if ($temp_image_id && wp_attachment_is_image($temp_image_id)) {
+            $url = wp_get_attachment_image_url($temp_image_id, $size);
+        } else {
+            // Si no existe imagen temporal, sube una nueva
+            $random_image_path = obtenerImagenAleatoria('/home/asley01/MEGA/Waw/random');
+            if (!$random_image_path) {
+                ejecutarScriptPermisos();
+                return false;
+            }
+            $temp_image_id = subirImagenALibreria($random_image_path, $post_id);
+            if (!$temp_image_id) {
+                ejecutarScriptPermisos();
+                return false;
+            }
+            update_post_meta($post_id, 'imagenTemporal', $temp_image_id);
+            $url = wp_get_attachment_image_url($temp_image_id, $size);
+        }
     } else {
         return false;
     }
+
     if (function_exists('jetpack_photon_url') && $url) {
         $args = array('quality' => $quality, 'strip' => $strip);
         if ($pixelated) {
-            $args['w'] = 50; 
-            $args['h'] = 50; 
-            $args['zoom'] = 2; 
+            $args['w'] = 50;
+            $args['h'] = 50;
+            $args['zoom'] = 2;
         }
         return jetpack_photon_url($url, $args);
     }
     return $url;
 }
 
+function obtenerImagenAleatoria($directory)
+{
+    static $cache = array();
+
+    if (isset($cache[$directory])) {
+        return $cache[$directory][array_rand($cache[$directory])];
+    }
+
+    if (!is_dir($directory)) {
+        return false;
+    }
+    
+    $images = glob(rtrim($directory, '/') . '/*.{jpg,jpeg,png,gif,jfif}', GLOB_BRACE);
+    
+    if (!$images) {
+        return false;
+    }
+
+    $cache[$directory] = $images;
+    return $images[array_rand($images)];
+}
+
+
+function agregar_soporte_jfif($mimes)
+{
+    $mimes['jfif'] = 'image/jpeg';
+    return $mimes;
+}
+add_filter('upload_mimes', 'agregar_soporte_jfif');
+
+// Extiende wp_check_filetype para reconocer .jfif
+function extender_wp_check_filetype($types, $filename, $mimes)
+{
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    if ($ext === 'jfif') {
+        return ['ext' => 'jpeg', 'type' => 'image/jpeg'];
+    }
+    return $types;
+}
+add_filter('wp_check_filetype_and_ext', 'extender_wp_check_filetype', 10, 3);
+
+function subirImagenALibreria($file_path, $post_id)
+{
+    if (!file_exists($file_path)) {
+        return false;
+    }
+    $file_contents = file_get_contents($file_path);
+    if ($file_contents === false) {
+        return false;
+    }
+    $file_ext = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
+    if ($file_ext === 'jfif') {
+        $file_ext = 'jpeg';
+        $new_file_name = pathinfo($file_path, PATHINFO_FILENAME) . '.jpeg';
+        $upload_file = wp_upload_bits($new_file_name, null, $file_contents);
+    } else {
+        $upload_file = wp_upload_bits(basename($file_path), null, $file_contents);
+    }
+
+    if ($upload_file['error']) {
+        return false;
+    }
+    $filetype = wp_check_filetype($upload_file['file'], null);
+    if (!$filetype['type']) {
+        return false;
+    }
+    $attachment = array(
+        'post_mime_type' => $filetype['type'],
+        'post_title'     => sanitize_file_name(pathinfo($upload_file['file'], PATHINFO_BASENAME)),
+        'post_content'   => '',
+        'post_status'    => 'inherit',
+        'post_parent'    => $post_id,
+    );
+    $attach_id = wp_insert_attachment($attachment, $upload_file['file'], $post_id);
+    if (!is_wp_error($attach_id)) {
+        require_once(ABSPATH . 'wp-admin/includes/image.php');
+        $attach_data = wp_generate_attachment_metadata($attach_id, $upload_file['file']);
+        wp_update_attachment_metadata($attach_id, $attach_data);
+
+        return $attach_id;
+    }
+    return false;
+}
 
 function img($url, $quality = 40, $strip = 'all') {
     if ($url === null || $url === '') {
@@ -256,7 +361,10 @@ function img($url, $quality = 40, $strip = 'all') {
  */
 function ejecutarScriptPermisos()
 {
+    // Ejecutar el script de permisos y capturar la salida
     $output = shell_exec('sudo /var/www/wordpress/wp-content/themes/2upra3v/app/Commands/permisos.sh 2>&1');
+
+    // Opcional: Puedes registrar el output para depuración
     error_log('Script de permisos ejecutado: ' . $output);
 }
 
@@ -268,6 +376,7 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
     $ultimoEdit = get_post_meta($post_id, 'ultimoEdit', true);
     $verificado = get_post_meta($post_id, 'Verificado', true);
     $recortado = get_post_meta($post_id, 'recortado', true);
+    // Verificar si el autor es el usuario actual
     $current_user_id = (int)get_current_user_id();
     $author_id = (int)$author_id;
     $is_current_user = ($current_user_id === $author_id);
@@ -388,9 +497,12 @@ function fondoPost($filtro, $block, $es_suscriptor, $post_id)
 function audioPost($post_id)
 {
     $audio_id_lite = get_post_meta($post_id, 'post_audio_lite', true);
+
     if (empty($audio_id_lite)) {
         return '';
     }
+
+    // Get the post author ID
     $post_author_id = get_post_field('post_author', $post_id);
 
     ob_start();
