@@ -65,45 +65,51 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     ];
 
 
-    // Si hay un identifier, añadir búsqueda flexible
+    // Si hay identifier, aplicar búsqueda con caché
     if (!empty($identifier)) {
-        $query_args['meta_query'] = array('relation' => 'OR');
+        $cache_key = 'search_results_' . md5($identifier . $paged . $posts);
+        $cached_results = wp_cache_get($cache_key);
 
-        // Búsqueda en título y contenido
-        $query_args['s'] = $identifier;
+        if ($cached_results !== false) {
+            // Usar resultados cacheados
+            $query_args['post__in'] = $cached_results;
+            $query_args['orderby'] = 'post__in';
+        } else {
+            // Realizar búsqueda optimizada
+            $search_query = "
+            SELECT DISTINCT p.ID
+            FROM {$wpdb->posts} p
+            LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+            WHERE p.post_type = %s
+            AND p.post_status = 'publish'
+            AND (
+                p.post_title LIKE %s
+                OR p.post_content LIKE %s
+                OR (pm.meta_key = 'datosAlgoritmo' AND pm.meta_value LIKE %s)
+            )
+            ORDER BY p.post_date DESC
+        ";
 
-        // Búsqueda en meta datosAlgoritmo
-        $query_args['meta_query'][] = array(
-            'key' => 'datosAlgoritmo',
-            'value' => $identifier,
-            'compare' => 'LIKE'
-        );
+            $search_term = '%' . $wpdb->esc_like($identifier) . '%';
+            $post_ids = $wpdb->get_col($wpdb->prepare(
+                $search_query,
+                $args['post_type'],
+                $search_term,
+                $search_term,
+                $search_term
+            ));
 
-        // Hacer la búsqueda más flexible
-        add_filter('posts_where', function ($where) use ($identifier) {
-            global $wpdb;
-            $terms = explode(' ', $identifier);
+            // Guardar en caché por 1 hora
+            wp_cache_set($cache_key, $post_ids, '', HOUR_IN_SECONDS);
 
-            foreach ($terms as $term) {
-                $like_term = '%' . $wpdb->esc_like($term) . '%';
-                $where .= $wpdb->prepare(
-                    " AND (
-                        {$wpdb->posts}.post_title LIKE %s 
-                        OR {$wpdb->posts}.post_content LIKE %s 
-                        OR EXISTS (
-                            SELECT 1 FROM {$wpdb->postmeta} 
-                            WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID 
-                            AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo' 
-                            AND {$wpdb->postmeta}.meta_value LIKE %s
-                        )
-                    )",
-                    $like_term,
-                    $like_term,
-                    $like_term
-                );
+            if (!empty($post_ids)) {
+                $query_args['post__in'] = $post_ids;
+                $query_args['orderby'] = 'post__in';
+            } else {
+                // Si no hay resultados, forzar que no devuelva nada
+                $query_args['post__in'] = [0];
             }
-            return $where;
-        });
+        }
     }
 
     // Manejar diferentes tipos de ordenamiento
