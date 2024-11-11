@@ -19,7 +19,6 @@ function obtenerDatosFeedConCache($userId)
     }
 
     return $datos;
-    
 }
 
 function calcularPuntosPostBatch(
@@ -50,7 +49,7 @@ function calcularPuntosPostBatch(
             $autor_id = $post_data->post_author;
             $post_date = $post_data->post_date;
 
-            $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date; 
+            $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date;
 
             $diasDesdePublicacion = floor(($current_timestamp - $post_timestamp) / (3600 * 24));
             $factorTiempo = $decay_factors[$diasDesdePublicacion] ?? getDecayFactor($diasDesdePublicacion);
@@ -66,7 +65,7 @@ function calcularPuntosPostBatch(
             if (!empty($identifier)) {
                 $puntosIdentifier = calcularPuntosIdentifier($post_id, $identifier, $datos);
             }
-            $pesoIdentifier = 1.0; 
+            $pesoIdentifier = 1.0;
             $puntosIdentifier *= $pesoIdentifier;
 
             // Calculate puntosSimilarTo
@@ -127,7 +126,8 @@ function calcularPuntosPostBatch(
 
 
 // Helper function for decay factors
-function getDecayFactor($days) {
+function getDecayFactor($days)
+{
     static $decay_factors = [];
 
     // Populate the decay factors up to 365 days
@@ -145,7 +145,8 @@ function getDecayFactor($days) {
 
 
 
-function calcularPuntosIdentifier($post_id, $identifier, $datos) {
+function calcularPuntosIdentifier($post_id, $identifier, $datos)
+{
     $resumen = [
         'post_id' => $post_id,
         'identifiers' => [],
@@ -175,10 +176,10 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos) {
     }
 
     // Obtener contenido y datos
-    $post_content = !empty($datos['post_content'][$post_id]) 
-        ? strtolower($datos['post_content'][$post_id]) 
+    $post_content = !empty($datos['post_content'][$post_id])
+        ? strtolower($datos['post_content'][$post_id])
         : '';
-    
+
     $datosAlgoritmo = !empty($datos['datosAlgoritmo'][$post_id]->meta_value)
         ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true)
         : [];
@@ -254,12 +255,18 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos) {
         $resumen['puntos']['bonus'] = $bonusCompleto * 0.5;
     }
 
-    $resumen['puntos']['total'] = $resumen['puntos']['contenido'] + 
-                                 $resumen['puntos']['datos'] + 
-                                 $resumen['puntos']['bonus'];
+    $resumen['puntos']['total'] = $resumen['puntos']['contenido'] +
+        $resumen['puntos']['datos'] +
+        $resumen['puntos']['bonus'];
 
     return $resumen['puntos']['total'];
 }
+
+/*
+
+Tengo este problema 
+[11-Nov-2024 23:27:30 UTC] PHP Fatal error:  Uncaught TypeError: json_decode(): Argument #1 ($json) must be of type string, array given in /var/www/wordpress/wp-content/themes/2upra3v/app/Algoritm/algoritmoPosts.php:275
+*/
 
 function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
 {
@@ -268,11 +275,13 @@ function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
     $contenido_post_2 = isset($datos['post_content'][$similar_to]) ? strtolower($datos['post_content'][$similar_to]) : '';
 
     // Extraer palabras clave de datosAlgoritmo para cada post
-    $datosAlgoritmo_1 = !empty($datos['datosAlgoritmo'][$post_id]->meta_value) 
+    $datosAlgoritmo_1 = !empty($datos['datosAlgoritmo'][$post_id]->meta_value) && is_string($datos['datosAlgoritmo'][$post_id]->meta_value)
         ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true) : [];
-    $datosAlgoritmo_2 = isset($datos['datosAlgoritmo'][$similar_to]) 
-        ? json_decode($datos['datosAlgoritmo'][$similar_to]->meta_value, true) 
+
+    $datosAlgoritmo_2 = isset($datos['datosAlgoritmo'][$similar_to]) && is_string($datos['datosAlgoritmo'][$similar_to]->meta_value)
+        ? json_decode($datos['datosAlgoritmo'][$similar_to]->meta_value, true)
         : json_decode(get_post_meta($similar_to, 'datosAlgoritmo', true), true) ?? [];
+
 
     $words_in_post_1 = array_merge(
         extractWordsFromDatosAlgoritmo($datosAlgoritmo_1),
@@ -306,9 +315,10 @@ function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
     return $puntosSimilarTo;
 }
 
-function extractWordsFromDatosAlgoritmo($datosAlgoritmo) {
+function extractWordsFromDatosAlgoritmo($datosAlgoritmo)
+{
     $words = [];
-    
+
     // Verificar si $datosAlgoritmo es null o no es array
     if (!is_array($datosAlgoritmo)) {
         return $words;
@@ -329,24 +339,24 @@ function extractWordsFromDatosAlgoritmo($datosAlgoritmo) {
     }
     return $words;
 }
-// Función para extraer palabras de contenido (usando stemming para mejorar coincidencias)
-function extractWordsFromContent($content) {
+
+function extractWordsFromContent($content)
+{
     $words = preg_split('/\s+/', strtolower($content), -1, PREG_SPLIT_NO_EMPTY);
-    $stemmedWords = array_map('stemWord', $words); // Aplicar stemming a cada palabra
+    $stemmedWords = array_map('stemWord', $words);
     return $stemmedWords;
 }
 
-// Función de stemming básica (puedes usar una librería específica de stemming para mejores resultados)
-function stemWord($word) {
-    // Ejemplo básico de stemming: eliminar sufijos comunes (puedes mejorar esta función)
-    return preg_replace('/(s|ed|ing)$/', '', $word); // Simplificación de ejemplo
+function stemWord($word)
+{
+    return preg_replace('/(s|ed|ing)$/', '', $word);
 }
 
 
 #PASO 5
 function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
 {
-    
+
     if ($esAdmin) {
 
         if (!$metaVerificado && $metaPostAut) {
@@ -361,7 +371,7 @@ function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $
             return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1;
         }
     }
-    
+
     return $puntosUsuario + $puntosIntereses + $puntosLikes;
 }
 
