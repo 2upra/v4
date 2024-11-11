@@ -193,8 +193,8 @@ function imagenPostList($block, $es_suscriptor, $post_id)
         // Si tiene imagen destacada, obtenemos la URL de la imagen
         $image_url = imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), false);
     } else {
-        // Si no tiene imagen destacada, usamos el avatar por defecto con el ID del post
-        $image_url = "https://avatar.vercel.sh/{$post_id}";
+
+  
     }
 
     ob_start();
