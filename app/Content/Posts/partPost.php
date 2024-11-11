@@ -201,7 +201,7 @@ function imagenPostList($block, $es_suscriptor, $post_id)
     ?>
     <div class="post-image-container <?= $blurred_class ?>">
         <a href="<? echo esc_url(get_permalink()); ?>">
-            <img src="<?= esc_url(imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), false)) ?>" alt="Post Image" />
+            <img src="<?= esc_url(imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), true)) ?>" alt="Post Image" />
         </a>
     </div>
 <?
