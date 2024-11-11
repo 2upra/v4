@@ -48,6 +48,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
     return $query_args;
 }
 
+
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
 {
     global $wpdb;
@@ -63,7 +64,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
         'paged' => $paged,
         'ignore_sticky_posts' => true,
     ];
-    //porque esto no funciona y regresa nada
+
     if (!empty($identifier)) {
         $terms = explode(' ', $identifier);
         $search_terms = array_map('trim', $terms);
@@ -76,41 +77,13 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
         $query_args['s'] = $identifier;
 
         // Agregamos la lógica de búsqueda personalizada
-        function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
-        {
-            global $wpdb;
-            $likes_table = $wpdb->prefix . 'post_likes';
-            $query_args = [];
-        
-            postLog("Iniciando construirQueryArgs con filtroTiempo: $filtroTiempo");
-        
-            // Configuración base
-            $query_args = [
-                'post_type' => $args['post_type'],
-                'posts_per_page' => $posts,
-                'paged' => $paged,
-                'ignore_sticky_posts' => true,
-            ];
-        
-            if (!empty($identifier)) {
-                $terms = explode(' ', $identifier);
-                $search_terms = array_map('trim', $terms);
-                $search_terms = array_filter($search_terms);
-        
-                // Removemos el parámetro 's' por defecto para evitar conflictos
-                unset($query_args['s']);
-        
-                // Usamos 's' para una búsqueda básica
-                $query_args['s'] = $identifier;
-        
-                // Agregamos la lógica de búsqueda personalizada
-                add_filter('posts_where', function ($where) use ($search_terms, $wpdb) {
-                    $where_conditions = [];
-        
-                    foreach ($search_terms as $term) {
-                        $like_term = '%' . $wpdb->esc_like($term) . '%';
-        
-                        $where_conditions[] = $wpdb->prepare("(
+        add_filter('posts_where', function ($where) use ($search_terms, $wpdb) {
+            $where_conditions = [];
+
+            foreach ($search_terms as $term) {
+                $like_term = '%' . $wpdb->esc_like($term) . '%';
+
+                $where_conditions[] = $wpdb->prepare("(
                             {$wpdb->posts}.post_title LIKE %s OR
                             {$wpdb->posts}.post_content LIKE %s OR
                             SOUNDEX({$wpdb->posts}.post_title) = SOUNDEX(%s) OR
@@ -125,15 +98,15 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                                 )
                             )
                         )", $like_term, $like_term, $term, $term, $like_term, $term);
-                    }
-        
-                    if (!empty($where_conditions)) {
-                        $where .= ' AND (' . implode(' OR ', $where_conditions) . ')';
-                    }
-        
-                    return $where;
-                });
             }
+
+            if (!empty($where_conditions)) {
+                $where .= ' AND (' . implode(' OR ', $where_conditions) . ')';
+            }
+
+            return $where;
+        });
+    }
 
     // Manejar diferentes tipos de ordenamiento
     if ($args['post_type'] === 'social_post') {
