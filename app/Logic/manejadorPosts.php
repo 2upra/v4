@@ -185,26 +185,23 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
             }
             break;
 
-        default: // Feed personalizado
+            default: // Feed personalizado
             postLog("Caso default: Obteniendo feed personalizado");
-
+            
             $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
-
+            
             if (!empty($feed_result['post_ids'])) {
+                // Establecer todos los IDs de posts sin limitar
                 $query_args['post__in'] = $feed_result['post_ids'];
                 $query_args['orderby'] = 'post__in';
-
+                
                 if (!empty($feed_result['post_not_in'])) {
                     $query_args['post__not_in'] = $feed_result['post_not_in'];
                 }
-
-                // Limit results to the specified posts per page
-                $offset = ($paged - 1) * $posts;
-                $query_args['post__in'] = array_slice($feed_result['post_ids'], $offset, $posts);
-
-                postLog("Feed personalizado: " . count($query_args['post__in']) . " posts encontrados");
+                
+                // La paginación se manejará automáticamente por WP_Query usando 'posts_per_page' y 'paged'
+                postLog("Feed personalizado: " . count($feed_result['post_ids']) . " posts totales disponibles");
             } else {
-                // Fallback to recent posts if no personalized feed is available
                 postLog("No se encontró feed personalizado, usando posts recientes como fallback");
                 $query_args['orderby'] = 'date';
                 $query_args['order'] = 'DESC';
@@ -229,8 +226,10 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
     $transient_key = $current_user_id == 44
         ? "feed_personalizado_anonymous_{$identifier}{$cache_suffix}"
         : "feed_personalizado_user_{$current_user_id}_{$identifier}{$cache_suffix}";
+    
     $use_cache = !$is_admin;
     $cached_data = $use_cache ? get_transient($transient_key) : false;
+    
     if ($cached_data) {
         $posts_personalizados = $cached_data['posts'];
     } else {
@@ -249,6 +248,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             update_option($transient_key . '_backup', $posts_personalizados);
         }
     }
+
     $post_ids = array_keys($posts_personalizados);
     if ($similar_to) {
         $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
@@ -262,9 +262,12 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
         });
     }
     $post_ids = array_unique($post_ids);
+    
+    postLog("Total de posts personalizados encontrados: " . count($post_ids));
+    
     return [
         'post_ids' => $post_ids,
-        'post_not_in' => [],
+        'post_not_in' => $post_not_in,
     ];
 }
 
