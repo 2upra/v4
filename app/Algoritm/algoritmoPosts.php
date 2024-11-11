@@ -25,10 +25,10 @@ function obtenerDatosFeedConCache($userId)
     
 }
 
-//esto hay que optmizarlo, mi primera duda es que si enviar por lote a calcularPuntosPost es mas eficiente que enviar 1 por 1, habría que restructurar algunas cosas, me gustaría que calculara los primeros 2500 post, y el esto los hiciera de fondo 
+
 function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
 {
-    $datos = obtenerDatosFeedConCache($userId);
+    $datos = obtenerDatosFeedConCache($userId); // Assuming this function handles caching appropriately
     if (empty($datos)) {
         return [];
     }
@@ -44,34 +44,38 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
     $vistas_posts_processed = obtenerYProcesarVistasPosts($userId);
     $esAdmin = in_array('administrator', (array)$usuario->roles);
 
-    // Procesar directamente los posts
-    foreach ($datos['author_results'] as $post_id => $post_data) {
-        try {
-            $puntosFinal = calcularPuntosPost(
-                $post_id,
-                $post_data,
-                $datos,
-                $esAdmin,
-                $vistas_posts_processed,
-                $identifier,
-                $similar_to,
-                $current_timestamp,
-                $userId
-            );
+    // Precompute decay factors
+    $decay_factors = [];
+    foreach ($datos['author_results'] as $post_data) {
+        $post_date = $post_data->post_date;
+        $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date; 
 
-            if (is_numeric($puntosFinal) && $puntosFinal > 0) {
-                $posts_personalizados[$post_id] = $puntosFinal;
-            }
-        } catch (Exception $e) {
-            continue;
+        $diasDesdePublicacion = floor(($current_timestamp - $post_timestamp) / (3600 * 24));
+
+        if (!isset($decay_factors[$diasDesdePublicacion])) {
+            $decay_factors[$diasDesdePublicacion] = getDecayFactor($diasDesdePublicacion);
         }
     }
 
-    if (!empty($posts_personalizados)) {
-        arsort($posts_personalizados);
+    // Process posts in batches
+    $posts_data = $datos['author_results'];
+    $puntos_por_post = calcularPuntosPostBatch(
+        $posts_data,
+        $datos,
+        $esAdmin,
+        $vistas_posts_processed,
+        $identifier,
+        $similar_to,
+        $current_timestamp,
+        $userId,
+        $decay_factors // Pass the precomputed decay factors
+    );
+
+    if (!empty($puntos_por_post)) {
+        arsort($puntos_por_post);
     }
 
-    return $posts_personalizados;
+    return $puntos_por_post;
 }
 
 function obtenerDatosFeed($userId)
@@ -81,12 +85,17 @@ function obtenerDatosFeed($userId)
     $table_intereses = INTERES_TABLE;
     $siguiendo = (array) get_user_meta($userId, 'siguiendo', true);
     generarMetaDeIntereses($userId);
+
+    // Fetch user interests
     $interesesUsuario = $wpdb->get_results($wpdb->prepare(
         "SELECT interest, intensity FROM $table_intereses WHERE user_id = %d",
         $userId
     ), OBJECT_K);
 
+    // Fetch post views
     $vistas_posts = get_user_meta($userId, 'vistas_posts', true);
+
+    // Get recent posts
     $args = [
         'post_type'      => 'social_post',
         'posts_per_page' => 5000,
@@ -103,8 +112,27 @@ function obtenerDatosFeed($userId)
     }
 
     $placeholders = implode(', ', array_fill(0, count($posts_ids), '%d'));
-    
-    // Consulta para obtener likes
+
+    // Combine all meta queries into one
+    $meta_keys = ['datosAlgoritmo', 'Verificado', 'postAut'];
+    $meta_keys_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
+
+    $sql_meta = "
+        SELECT post_id, meta_key, meta_value
+        FROM {$wpdb->postmeta}
+        WHERE meta_key IN ($meta_keys_placeholders) AND post_id IN ($placeholders)
+    ";
+
+    $prepared_sql_meta = $wpdb->prepare($sql_meta, array_merge($meta_keys, $posts_ids));
+    $meta_results = $wpdb->get_results($prepared_sql_meta);
+
+    // Process meta results
+    $meta_data = [];
+    foreach ($meta_results as $meta_row) {
+        $meta_data[$meta_row->post_id][$meta_row->meta_key] = $meta_row->meta_value;
+    }
+
+    // Fetch likes in one query
     $sql_likes = "
         SELECT post_id, COUNT(*) as likes_count
         FROM $table_likes
@@ -118,31 +146,7 @@ function obtenerDatosFeed($userId)
         $likes_by_post[$like_row->post_id] = $like_row->likes_count;
     }
 
-    // Consulta para obtener datosAlgoritmo
-    $sql_datos = "
-        SELECT post_id, meta_value
-        FROM {$wpdb->postmeta}
-        WHERE meta_key = 'datosAlgoritmo' AND post_id IN ($placeholders)
-    ";
-    $datosAlgoritmo_results = $wpdb->get_results($wpdb->prepare($sql_datos, $posts_ids), OBJECT_K);
-
-    // Consulta para obtener verificado
-    $sql_verificado = "
-        SELECT post_id, meta_value
-        FROM {$wpdb->postmeta}
-        WHERE meta_key = 'Verificado' AND post_id IN ($placeholders)
-    ";
-    $verificado_results = $wpdb->get_results($wpdb->prepare($sql_verificado, $posts_ids), OBJECT_K);
-
-    // Consulta para obtener postAut
-    $sql_postAut = "
-        SELECT post_id, meta_value
-        FROM {$wpdb->postmeta}
-        WHERE meta_key = 'postAut' AND post_id IN ($placeholders)
-    ";
-    $postAut_results = $wpdb->get_results($wpdb->prepare($sql_postAut, $posts_ids), OBJECT_K);
-
-    // Consulta modificada para obtener autor, fecha y contenido
+    // Fetch posts data
     $sql_posts = "
         SELECT ID, post_author, post_date, post_content
         FROM {$wpdb->posts}
@@ -150,117 +154,124 @@ function obtenerDatosFeed($userId)
     ";
     $posts_results = $wpdb->get_results($wpdb->prepare($sql_posts, $posts_ids), OBJECT_K);
 
-    // Preparar array de contenido de posts
+    // Prepare array of post content
     $post_content = [];
     foreach ($posts_results as $post) {
         $post_content[$post->ID] = $post->post_content;
     }
 
     return [
-        'siguiendo'             => $siguiendo,
-        'interesesUsuario'      => $interesesUsuario,
-        'posts_ids'             => $posts_ids,
-        'likes_by_post'         => $likes_by_post,
-        'datosAlgoritmo'        => $datosAlgoritmo_results,
-        'verificado_results'    => $verificado_results,
-        'postAut_results'       => $postAut_results,
-        'author_results'        => $posts_results,
-        'post_content'          => $post_content,    
+        'siguiendo'        => $siguiendo,
+        'interesesUsuario' => $interesesUsuario,
+        'posts_ids'        => $posts_ids,
+        'likes_by_post'    => $likes_by_post,
+        'meta_data'        => $meta_data,
+        'author_results'   => $posts_results,
+        'post_content'     => $post_content,
     ];
 }
 
-function calcularPuntosPost(
-    $post_id, 
-    $post_data, 
-    $datos, 
-    $esAdmin, 
-    $vistas_posts_processed, 
-    $identifier = '', 
+function calcularPuntosPostBatch(
+    $posts_data,
+    $datos,
+    $esAdmin,
+    $vistas_posts_processed,
+    $identifier = '',
     $similar_to = null,
     $current_timestamp = null,
-    $user_id = null
+    $user_id = null,
+    $decay_factors = []
 ) {
- 
     if ($current_timestamp === null) {
         $current_timestamp = current_time('timestamp');
     }
 
-    $autor_id = $post_data->post_author;
-    $post_date = $post_data->post_date;
+    $posts_puntos = [];
 
-    // If $post_date is not already a timestamp, convert it once
-    if (is_string($post_date)) {
-        $post_timestamp = strtotime($post_date);
-    } else {
-        $post_timestamp = $post_date; // Assume it's already a timestamp
+    // Precompute interests if needed
+    $interesesUsuario = $datos['interesesUsuario'];
+    $siguiendo = $datos['siguiendo'];
+    $likes_by_post = $datos['likes_by_post'];
+    $meta_data = $datos['meta_data'];
+
+    foreach ($posts_data as $post_id => $post_data) {
+        try {
+            $autor_id = $post_data->post_author;
+            $post_date = $post_data->post_date;
+
+            $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date; 
+
+            $diasDesdePublicacion = floor(($current_timestamp - $post_timestamp) / (3600 * 24));
+            $factorTiempo = $decay_factors[$diasDesdePublicacion] ?? getDecayFactor($diasDesdePublicacion);
+
+            // Calculate puntosUsuario
+            $puntosUsuario = in_array($autor_id, $siguiendo) ? 20 : 0;
+
+            // Calculate puntosIntereses
+            $puntosIntereses = calcularPuntosIntereses($post_id, $datos);
+
+            // Calculate puntosIdentifier
+            $puntosIdentifier = 0;
+            if (!empty($identifier)) {
+                $puntosIdentifier = calcularPuntosIdentifier($post_id, $identifier, $datos);
+            }
+            $pesoIdentifier = 1.0; 
+            $puntosIdentifier *= $pesoIdentifier;
+
+            // Calculate puntosSimilarTo
+            $puntosSimilarTo = 0;
+            if (!empty($similar_to)) {
+                $puntosSimilarTo = calcularPuntosSimilarTo($post_id, $similar_to, $datos);
+            }
+
+            // Calculate puntosLikes
+            $likes = $likes_by_post[$post_id] ?? 0;
+            $puntosLikes = 30 + $likes;
+
+            // Access meta data
+            $metaVerificado = isset($meta_data[$post_id]['Verificado']) && ($meta_data[$post_id]['Verificado'] === '1');
+            $metaPostAut = isset($meta_data[$post_id]['postAut']) && ($meta_data[$post_id]['postAut'] === '1');
+
+            // Calculate puntosFinal
+            $puntosFinal = calcularPuntosFinales(
+                $puntosUsuario,
+                $puntosIntereses + $puntosSimilarTo,
+                $puntosLikes,
+                $metaVerificado,
+                $metaPostAut,
+                $esAdmin
+            );
+
+            $puntosFinal += $puntosIdentifier;
+
+            // Apply reduction based on views
+            if (isset($vistas_posts_processed[$post_id])) {
+                $vistas = $vistas_posts_processed[$post_id]['count'];
+                $reduccion_por_vista = 0.01;
+                $factorReduccion = pow(1 - $reduccion_por_vista, $vistas);
+                $puntosFinal *= $factorReduccion;
+            }
+
+            // Adjust randomness outside tight loops if possible
+            $aleatoriedad = mt_rand(0, 20);
+            $ajusteExtra = mt_rand(-50, 50);
+            $puntosFinal = ($puntosFinal * (1 + ($aleatoriedad / 100))) * $factorTiempo;
+            $puntosFinal += $ajusteExtra;
+
+            if (is_numeric($puntosFinal) && $puntosFinal > 0) {
+                $posts_puntos[$post_id] = max($puntosFinal, 0);
+            }
+        } catch (Exception $e) {
+            continue;
+        }
     }
 
-    // Calculate days since publication
-    $diasDesdePublicacion = ($current_timestamp - $post_timestamp) / (3600 * 24);
-    $diasDesdePublicacion = (int) floor($diasDesdePublicacion);
-    $factorTiempo = getDecayFactor($diasDesdePublicacion); // Using the precomputed decay factor
-
-    // Calculate puntosUsuario
-    $puntosUsuario = in_array($autor_id, $datos['siguiendo']) ? 20 : 0;
-
-    // Calculate puntosIntereses
-    $puntosIntereses = calcularPuntosIntereses($post_id, $datos);
-
-    // Calculate puntosIdentifier
-    $puntosIdentifier = 0;
-    if (!empty($identifier) && isset($datos['post_content']) && isset($datos['datosAlgoritmo'])) {
-        $puntosIdentifier = calcularPuntosIdentifier($post_id, $identifier, $datos);
-    }
-    $pesoIdentifier = 1.0; 
-    $puntosIdentifier *= $pesoIdentifier;
-
-    // Calculate puntosSimilarTo
-    $puntosSimilarTo = 0;
-    if (!empty($similar_to)) {
-        $puntosSimilarTo = calcularPuntosSimilarTo($post_id, $similar_to, $datos);
-    }
-
-    // Calculate puntosLikes
-    $likes = isset($datos['likes_by_post'][$post_id]) ? $datos['likes_by_post'][$post_id] : 0;
-    $puntosLikes = 30 + $likes;
-
-    // Access meta data efficiently
-    $verificado_result = isset($datos['verificado_results'][$post_id]->meta_value) 
-        ? $datos['verificado_results'][$post_id]->meta_value 
-        : null;
-    $metaVerificado = ($verificado_result === '1');
-
-    $postAut_result = isset($datos['postAut_results'][$post_id]->meta_value) 
-        ? $datos['postAut_results'][$post_id]->meta_value 
-        : null;
-    $metaPostAut = ($postAut_result === '1');
-
-    // Calculate puntosFinal
-    $puntosFinal = calcularPuntosFinales(
-        $puntosUsuario,
-        $puntosIntereses + $puntosSimilarTo,
-        $puntosLikes,
-        $metaVerificado,
-        $metaPostAut,
-        $esAdmin
-    );
-
-    $puntosFinal += $puntosIdentifier;
-
-    // Apply reduction based on views
-    if (isset($vistas_posts_processed[$post_id])) {
-        $vistas = $vistas_posts_processed[$post_id]['count'];
-        $reduccion_por_vista = 0.01;
-        $factorReduccion = pow(1 - $reduccion_por_vista, $vistas);
-        $puntosFinal *= $factorReduccion;
-    }
-    $aleatoriedad = mt_rand(0, 20);
-    $ajusteExtra = mt_rand(-50, 50);
-    $puntosFinal = ($puntosFinal * (1 + ($aleatoriedad / 100))) * $factorTiempo;
-    $puntosFinal += $ajusteExtra;
-
-    return max($puntosFinal, 0);
+    return $posts_puntos;
 }
+
+
+
+
 
 
 
