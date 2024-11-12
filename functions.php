@@ -25,16 +25,47 @@ define('IA_LOG_ENABLED', false);
 define('POST_LOG_ENABLED', false);
 define('STREAM_LOG_ENABLED', false);
 
+// Añadir iconos personalizados en el <head> de todas las páginas
+function headIconos()
+{
+?>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="apple-touch-icon" sizes="57x57" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-16x16.png">
+    <link rel="manifest" href="<? echo get_template_directory_uri(); ?>/assets/icons/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="https://2upra.com/wp-content/themes/2upra3v/assets/icons/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+
+<?
+}
+add_action('wp_head', 'headIconos');
+
+
+
 
 function encolar_sw_js()
 {
-wp_enqueue_script(
-'sw-js',
-home_url('/sw.js'), // Ruta absoluta desde la raíz del dominio
-array(),
-'1.0.2',
-true
-);
+    wp_enqueue_script(
+        'sw-js',
+        home_url('/sw.js'), // Ruta absoluta desde la raíz del dominio
+        array(),
+        '1.0.2',
+        true
+    );
 }
 add_action('wp_enqueue_scripts', 'encolar_sw_js');
 

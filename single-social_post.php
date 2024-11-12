@@ -2,8 +2,10 @@
 <html <? language_attributes(); ?>>
 
 <head>
-    <!-- Ejemplo de meta para pruebas -->
+
     <meta name="robots" content="index, follow">
+
+
 
     <? wp_head(); ?>
 </head>
