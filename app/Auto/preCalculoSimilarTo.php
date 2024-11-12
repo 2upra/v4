@@ -1,5 +1,5 @@
 <?
-
+/*
 define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_feed_progress');
 define('SIMILAR_TO_PROCESS_LOCK', 'similar_to_process_lock');
 
@@ -98,3 +98,4 @@ function limpiar_bloqueo_similar_to() {
     delete_transient(SIMILAR_TO_PROCESS_LOCK);
     guardarLog("Bloqueo de proceso similar_to limpiado manualmente");
 }
+    */
