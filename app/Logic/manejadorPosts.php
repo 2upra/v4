@@ -278,17 +278,14 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
     $vistas_posts_processed = obtenerYProcesarVistasPosts($userId);
     $esAdmin = in_array('administrator', (array)$usuario->roles);
     $decay_factors = [];
-    
     foreach ($datos['author_results'] as $post_data) {
         $post_date = $post_data->post_date;
         $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date;
         $diasDesdePublicacion = floor(($current_timestamp - $post_timestamp) / (3600 * 24));
-        
         if (!isset($decay_factors[$diasDesdePublicacion])) {
             $decay_factors[$diasDesdePublicacion] = getDecayFactor($diasDesdePublicacion);
         }
     }
-
     $posts_data = $datos['author_results'];
     $puntos_por_post = calcularPuntosPostBatch(
         $posts_data,
@@ -304,19 +301,9 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
 
     if (!empty($puntos_por_post)) {
         arsort($puntos_por_post);
-        
-        // Limita el array a los primeros 2500 elementos
-        $puntos_por_post = array_slice($puntos_por_post, 0, 2500, true);
-
-        // Log para verificar el número de posts después del recorte
-        $total_posts = count($puntos_por_post);
-        guardarLog("Número de posts después del recorte: $total_posts");
     }
-
     return $puntos_por_post;
 }
-
-
 
 function reiniciarFeed($current_user_id)
 {
@@ -389,9 +376,6 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
         $query = new WP_Query($query_args);
     }
 
-    // Log para verificar la cantidad de posts que se reciben para procesar
-    guardarLog("Cantidad de posts a procesar: $total_posts");
-
     // Verificar que $query sea válido antes de continuar
     if (!is_object($query) || !method_exists($query, 'have_posts')) {
         error_log('Query inválido en procesarPublicaciones');
@@ -438,7 +422,6 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     wp_reset_postdata();
     return ob_get_clean();
 }
-
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
 {
     global $wpdb;
