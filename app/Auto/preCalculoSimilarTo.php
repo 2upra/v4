@@ -2,7 +2,7 @@
 
 define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_feed_progress');  // Opción para guardar progreso
 define('SIMILAR_TO_PROCESS_LOCK', 'similar_to_process_lock');  // Bloqueo de proceso
-define('SIMILAR_TO_MAX_LOCK_TIME', 300);  // 5 minutos de bloqueo máximo
+define('SIMILAR_TO_MAX_LOCK_TIME', 60);  // 5 minutos de bloqueo máximo
 
 /*
 ESTO NO FUNCIONA BIEN SE QUEDA EN BUCLE
@@ -40,6 +40,7 @@ function recalcularSimilarToFeed() {
         global $wpdb;
         
         while (true) {
+            // Preparar y ejecutar la consulta para obtener el siguiente post a procesar
             $query = $wpdb->prepare(
                 "SELECT p.ID 
                 FROM {$wpdb->posts} p
@@ -63,41 +64,50 @@ function recalcularSimilarToFeed() {
 
             guardarLog("Siguiente post ID: $post_id");
 
+            // Generar la clave de caché para el post actual
             $similar_to_cache_key = "similar_to_{$post_id}";
+            
             if (get_transient($similar_to_cache_key)) {
+                // Si ya tiene caché, actualizar el progreso y continuar al siguiente post
                 guardarLog("Post ID: $post_id ya tiene caché, avanzando al siguiente post");
                 update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);
                 guardarLog("Progreso actualizado a post ID: $post_id");
                 $last_processed_post_id = $post_id;
                 // Continuar el bucle para verificar el siguiente post
             } else {
+                // Si no tiene caché, procesarlo
                 guardarLog("Procesando post ID: $post_id");
+                
                 $posts_personalizados = calcularFeedPersonalizado(44, '', $post_id);
 
                 if ($posts_personalizados) {
+                    // Guardar el resultado en caché por 15 días
                     set_transient($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);
                     guardarLog("Feed calculado y guardado en caché para post ID: $post_id");
                 } else {
                     guardarLog("Error al calcular feed para post ID: $post_id");
                 }
 
+                // Actualizar el progreso con el último post procesado
                 update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);
                 guardarLog("Proceso completado para post ID: $post_id");
-                break;  // Terminar después de procesar un post
+                
+                // Romper el ciclo después de procesar un post para limitar la carga por ejecución
+                break;
             }
         }
 
     } catch (Exception $e) {
         guardarLog("Error en el proceso: " . $e->getMessage());
     } finally {
-        // Eliminar bloqueo
+        // Siempre eliminar el bloqueo al finalizar
         delete_transient(SIMILAR_TO_PROCESS_LOCK);
     }
 }
 
 function agregar_cron_30_segundos($schedules) {
     $schedules['every_30_seconds'] = [
-        'interval' => 30,
+        'interval' => 15,
         'display'  => 'Cada 30 segundos',
     ];
     return $schedules;
