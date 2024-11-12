@@ -24,7 +24,7 @@ function recalcularSimilarToFeed() {
         
         global $wpdb;
         
-        // Buscar el siguiente post que no tenga caché
+        // Buscar el siguiente post que necesite caché
         $query = $wpdb->prepare(
             "SELECT p.ID 
             FROM {$wpdb->posts} p
@@ -52,7 +52,7 @@ function recalcularSimilarToFeed() {
         if (get_transient($similar_to_cache_key)) {
             // Si ya tiene caché, actualizar el progreso y pasar al siguiente post en la próxima ejecución
             guardarLog("Post ID: $post_id ya tiene caché, saltando");
-            update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);
+            update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);  // Avanzar el progreso aunque esté en caché
         } else {
             // Si no tiene caché, procesarlo
             guardarLog("Procesando post ID: $post_id");
