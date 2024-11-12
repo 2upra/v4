@@ -59,6 +59,8 @@ add_action('init', 'debug_meta_description');
 
 $active_lang = get_user_browser_language();
 
+get_header();
+
 if (have_posts()) :
     while (have_posts()) : the_post();
         $current_post_id = get_the_ID();
@@ -147,6 +149,7 @@ if (have_posts()) :
                 wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) .
                 '</script>' . "\n";
         }, 2);
+
         ob_start();
 ?>
 
