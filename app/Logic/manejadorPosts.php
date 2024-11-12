@@ -364,9 +364,6 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
         return '';
     }
 
-    // Limitar la cantidad de posts a procesar a 2500
-    $query_args['posts_per_page'] = 2500;
-
     $total_posts = get_transient($cache_key);
     if ($total_posts === false) {
         $query_args['no_found_rows'] = false;
@@ -441,7 +438,6 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     wp_reset_postdata();
     return ob_get_clean();
 }
-
 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
 {
