@@ -434,23 +434,11 @@ function loadingBar()
 add_action('wp_head', 'loadingBar');
 
 //CALCULAR ALTURA CORRECTA CON SCRIPT
-function scriptBasicos()
+function innerHeight()
 {
     wp_register_script('script-base', '');
     wp_enqueue_script('script-base');
     $script_inline = <<<EOD
-document.addEventListener('DOMContentLoaded', function() {
-    var backButton = document.getElementById('backButton');
-    if(backButton) {
-        backButton.addEventListener('click', function() {
-            if (window.innerWidth <= 640) {
-                document.querySelector('.galle-chat-text-block').style.display = 'none'; 
-                document.querySelector('.user-conversations-block').style.display = 'flex'; 
-                console.log('Mostrando la lista de conversaciones y ocultando el chat para dispositivos móviles.');
-            }
-        });
-    }
-
     function setVHVariable() {
         let vh = window.innerHeight * 0.01;
         document.documentElement.style.setProperty('--vh', vh + 'px');
@@ -462,4 +450,4 @@ document.addEventListener('DOMContentLoaded', function() {
 EOD;
     wp_add_inline_script('script-base', $script_inline);
 }
-add_action('wp_enqueue_scripts', 'scriptBasicos');
+add_action('wp_enqueue_scripts', 'innerHeight');
