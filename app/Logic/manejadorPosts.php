@@ -305,12 +305,17 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
     if (!empty($puntos_por_post)) {
         arsort($puntos_por_post);
         
-        // Toma solo los primeros 2500 posts con más puntos
+        // Limita el array a los primeros 2500 elementos
         $puntos_por_post = array_slice($puntos_por_post, 0, 2500, true);
+
+        // Log para verificar el número de posts después del recorte
+        $total_posts = count($puntos_por_post);
+        guardarLog("Número de posts después del recorte: $total_posts");
     }
 
     return $puntos_por_post;
 }
+
 
 
 function reiniciarFeed($current_user_id)
