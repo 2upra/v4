@@ -16,15 +16,17 @@ function recalcularSimilarToFeed() {
         delete_transient(SIMILAR_TO_PROCESS_LOCK);
     }
 
-    // Establecer bloqueo con la marca de tiempo actual
+    // Establecer bloqueo con la marca de tiempo actual para evitar ejecuciones simultáneas
     set_transient(SIMILAR_TO_PROCESS_LOCK, time(), SIMILAR_TO_MAX_LOCK_TIME);
 
     try {
-        $last_processed_post_id = get_option(SIMILAR_TO_PROGRESS_OPTION, 0);  // Obtener el ID del último post procesado
-        
+        // Obtener el ID del último post procesado, por defecto 0 si no se ha procesado ninguno
+        $last_processed_post_id = get_option(SIMILAR_TO_PROGRESS_OPTION, 0);  
+        guardarLog("Último post procesado ID: $last_processed_post_id");
+
         global $wpdb;
         
-        // Buscar el siguiente post en orden secuencial
+        // Buscar el siguiente post después del último procesado que tenga 'datosAlgoritmo'
         $query = $wpdb->prepare(
             "SELECT p.ID 
             FROM {$wpdb->posts} p
@@ -40,12 +42,14 @@ function recalcularSimilarToFeed() {
         
         $post_id = $wpdb->get_var($query);  // Obtener el siguiente post ID
 
+        // Si no hay más posts que procesar, reiniciar el progreso
         if (!$post_id) {
-            // Si no se encuentran más posts, reiniciar el progreso
             guardarLog("No se encontraron más posts, reiniciando progreso");
             update_option(SIMILAR_TO_PROGRESS_OPTION, 0);
             return;
         }
+
+        guardarLog("Siguiente post ID: $post_id");
 
         // Verificar si el post ya tiene caché
         $similar_to_cache_key = "similar_to_{$post_id}";
