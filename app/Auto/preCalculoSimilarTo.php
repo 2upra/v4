@@ -1,4 +1,4 @@
-<?
+<?php
 
 // Definir el nombre de la opción para hacer seguimiento del progreso
 define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_feed_progress');
@@ -26,11 +26,22 @@ function recalcularSimilarToFeed() {
             $similar_to_cache_key = "similar_to_{$similar_to}";
             $cached_data = get_transient($similar_to_cache_key);
 
-            // Si no está cacheado, realizar el cálculo
-            if (!$cached_data) {
-                // Realizar el cálculo y guardar en cache
+            // Verificar si la caché está disponible
+            if ($cached_data) {
+                error_log("Cache encontrada para 'similar_to_{$similar_to}'", 0); // Log si la caché es encontrada
+            } else {
+                error_log("No hay cache para 'similar_to_{$similar_to}', calculando feed...", 0); // Log si no se encuentra caché
+
+                // Realizar el cálculo y guardar en caché
                 $posts_personalizados = calcularFeedPersonalizado(0, '', $similar_to);
-                set_transient($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);
+                
+                // Verificar si los posts fueron correctamente calculados
+                if ($posts_personalizados) {
+                    set_transient($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);
+                    error_log("Cache guardada para 'similar_to_{$similar_to}'", 0); // Log cuando la caché es guardada
+                } else {
+                    error_log("Error al calcular el feed para 'similar_to_{$similar_to}'", 0); // Log si hay un error en el cálculo
+                }
             }
 
             // Actualizar el progreso: guardar el último post procesado
