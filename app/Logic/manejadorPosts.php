@@ -364,7 +364,10 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
         return '';
     }
 
+    // Limitar la cantidad total de posts a 2500
+    $max_posts = 2500;
     $total_posts = get_transient($cache_key);
+
     if ($total_posts === false) {
         $query_args['no_found_rows'] = false;
 
@@ -398,46 +401,55 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
         return '';
     }
 
-    echo '<input type="hidden" class="total-posts total-posts-' . esc_attr($args['filtro']) . '" value="' . esc_attr($total_posts) . '" />';
+    // Controlar la paginación
+    $current_page = isset($_GET['paged']) ? (int)$_GET['paged'] : 1; // Obtener la página actual
+    $posts_processed = 0;  // Contador de posts procesados hasta ahora
 
-    if ($query->have_posts()) {
-        $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
-        $tipoPost = $args['post_type'];
+    // Iterar sobre las páginas
+    while ($posts_processed < $max_posts) {
+        // Establecer el número de posts por página
+        $query_args['posts_per_page'] = 12;
+        $query_args['paged'] = $current_page;
 
-        if (!wp_doing_ajax()) {
-            $clase_extra = 'clase-' . esc_attr($filtro);
-            if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
-                $clase_extra = 'clase-rolastatus';
-            }
+        // Realizar la consulta
+        $query = new WP_Query($query_args);
 
-            echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
-                  data-filtro="' . esc_attr($filtro) . '" 
-                  data-posttype="' . esc_attr($tipoPost) . '" 
-                  data-tab-id="' . esc_attr($args['tab_id']) . '">';
+        if (!$query->have_posts()) {
+            break; // Salir si no hay más posts
         }
 
+        // Procesar los posts
         while ($query->have_posts()) {
             $query->the_post();
-            $posts_count++;
+            $posts_processed++;
 
-            if ($tipoPost === 'social_post') {
-                echo htmlPost($filtro);
-            } elseif ($tipoPost === 'colab') {
-                echo htmlColab($filtro);
+            // Limitar a 2500 posts
+            if ($posts_processed > $max_posts) {
+                break 2; // Salir del bucle si se supera el límite
+            }
+
+            if ($args['post_type'] === 'social_post') {
+                echo htmlPost($args['filtro']);
+            } elseif ($args['post_type'] === 'colab') {
+                echo htmlColab($args['filtro']);
             } else {
                 echo '<p>Tipo de publicación no reconocido.</p>';
             }
         }
 
-        if (!wp_doing_ajax()) {
-            echo '</ul>';
+        // Si se procesaron 2500 posts, salir
+        if ($posts_processed >= $max_posts) {
+            break;
         }
-    } else {
-        echo nohayPost($filtro, $is_ajax);
+
+        // Incrementar la página para la siguiente iteración
+        $current_page++;
     }
+
     wp_reset_postdata();
     return ob_get_clean();
 }
+
 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
 {
