@@ -25,6 +25,16 @@ if (!defined('ABSPATH')) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Título SEO -->
     <title><?php echo get_seo_title(); ?></title>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for (let registration of registrations) {
+                    registration.unregister();
+                    console.log('Service Worker desregistrado');
+                }
+            });
+        }
+    </script>
 
     <!-- CSS para Preloader -->
     <style>
@@ -148,7 +158,8 @@ if (!defined('ABSPATH')) {
                         </div>
 
                         <div class="menuColabs">
-                            <?// echo colabsResumen() ?>
+                            <? // echo colabsResumen() 
+                            ?>
                         </div>
 
                         <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil mipsubmenu">
@@ -244,7 +255,9 @@ if (!defined('ABSPATH')) {
         <? if (is_user_logged_in()) : ?>
             <div id="submenusyinfos">
 
-                <? //echo publicaciones(['post_type' => 'colab', 'filtro' => 'colab', 'posts' => 3]); ?>
+
+                <? //echo publicaciones(['post_type' => 'colab', 'filtro' => 'colab', 'posts' => 3]); 
+                ?>
                 <!-- Fondo oscuro para los submenus -->
                 <div id="modalBackground2" class="modal-background submenu modalBackground2" style="display: none;"></div>
 
