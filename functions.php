@@ -12,18 +12,18 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 //
 define('STRIPE_ERROR_ENABLED', true);
+define('SEO_LOG_ENABLED', true);
+define('GUARDAR_LOG_ENABLED', true);
 
 //
 define('LOG_AUDIO_ENABLED', false);
 define('CHAT_LOG_ENABLED', false);
-define('AUT_LOG_ENABLED', true);
-define('GUARDAR_LOG_ENABLED', false);
+define('AUT_LOG_ENABLED', false);
 define('LOG_ALGORITMO_ENABLED', false);
 define('AJAX_POST_LOG_ENABLED', false);
 define('IA_LOG_ENABLED', false);
-define('POST_LOG_ENABLED', true);
-define('SEO_LOG_ENABLED', true);
-define('STREAM_LOG_ENABLED', true);
+define('POST_LOG_ENABLED', false);
+define('STREAM_LOG_ENABLED', false);
 
 function escribirLog($mensaje, $archivo, $max_lineas = 1000)
 {
@@ -114,7 +114,7 @@ function autLog($log)
 
 function guardarLog($log)
 {
-    if (GUARDAR_LOG_ENABLED && current_user_can('administrator')) {
+    if (GUARDAR_LOG_ENABLED) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/logsw.txt');
     }
 }

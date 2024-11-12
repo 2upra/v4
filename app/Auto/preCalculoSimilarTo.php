@@ -1,11 +1,13 @@
 <?
 
 define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_feed_progress');
-
+//agrega guardarLog("log de ejemplo $variable") para ver que esta pasando aqui detalladamente
 function recalcularSimilarToFeed() {
+    guardarLog("Iniciando ejecución del cron 'recalcular_similar_to_feed_cron'");
     error_log("Cron 'recalcular_similar_to_feed_cron' se está ejecutando.");
     
     $last_processed_post_id = get_option(SIMILAR_TO_PROGRESS_OPTION, 0);
+    guardarLog("Último post procesado ID: $last_processed_post_id");
     
     $args = [
         'numberposts' => 1,
@@ -15,45 +17,68 @@ function recalcularSimilarToFeed() {
     ];
     
     $posts_to_process = get_posts($args);
+    guardarLog("Cantidad de posts encontrados para procesar: " . count($posts_to_process));
     
     if ($posts_to_process) {
         $post = $posts_to_process[0];
+        guardarLog("Procesando post ID: " . $post->ID);
 
         if ($post->ID) {
             $similar_to = $post->ID;
             $similar_to_cache_key = "similar_to_{$similar_to}";
+            guardarLog("Verificando cache key: $similar_to_cache_key");
+            
             $cached_data = get_transient($similar_to_cache_key);
 
             if (!$cached_data) {
+                guardarLog("Cache no encontrada, calculando feed personalizado para similar_to: $similar_to");
                 $posts_personalizados = calcularFeedPersonalizado(44, '', $similar_to);
+                
                 if (!$posts_personalizados) {
+                    guardarLog("Error: No se pudo calcular el feed para 'similar_to_{$similar_to}'");
                     error_log("Error al calcular el feed para 'similar_to_{$similar_to}'");
+                } else {
+                    guardarLog("Feed calculado exitosamente, guardando en caché");
+                    set_transient($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);
                 }
-                set_transient($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);
+            } else {
+                guardarLog("Cache encontrada para $similar_to_cache_key");
             }
 
+            guardarLog("Actualizando opción de progreso a ID: " . $post->ID);
             update_option(SIMILAR_TO_PROGRESS_OPTION, $post->ID);
         }
     } else {
+        guardarLog("No se encontraron más posts para procesar, reiniciando progreso");
         delete_option(SIMILAR_TO_PROGRESS_OPTION);
     }
+    guardarLog("Finalización de la ejecución del cron");
 }
 
 function agregarCron30Segundos() {
+    guardarLog("Verificando programación del cron de 30 segundos");
     if (!wp_next_scheduled('recalcular_similar_to_feed_cron_30sec')) {
+        guardarLog("Programando nuevo evento cron");
         $scheduled = wp_schedule_event(time(), 'every_30_seconds', 'recalcular_similar_to_feed_cron_30sec');
         if (!$scheduled) {
+            guardarLog("Error: No se pudo programar el evento cron");
             error_log("Error al programar el evento cron.");
+        } else {
+            guardarLog("Evento cron programado exitosamente");
         }
+    } else {
+        guardarLog("El cron ya está programado");
     }
 }
 
 function agregar_cron_30_segundos($schedules) {
+    guardarLog("Agregando intervalo de 30 segundos a los schedules");
     if (!isset($schedules['every_30_seconds'])) {
         $schedules['every_30_seconds'] = [
             'interval' => 30,
             'display' => 'Cada 30 segundos',
         ];
+        guardarLog("Intervalo de 30 segundos agregado exitosamente");
     }
     return $schedules;
 }
