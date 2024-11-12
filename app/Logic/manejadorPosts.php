@@ -64,7 +64,7 @@ function obtenerDatosFeed($userId)
 
     $args = [
         'post_type'      => 'social_post',
-        'posts_per_page' => 15000,
+        'posts_per_page' => 50000,
         'date_query'     => [
             'after' => date('Y-m-d', strtotime('-100 days'))
         ],
@@ -126,47 +126,6 @@ function obtenerDatosFeed($userId)
     ];
 }
 
-function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
-{
-    $datos = obtenerDatosFeedConCache($userId); #Aqui se obtiene obtenerDatosFeed
-    if (empty($datos)) {
-        return [];
-    }
-    $usuario = get_userdata($userId);
-    if (!$usuario || !is_object($usuario)) {
-        return [];
-    }
-    $posts_personalizados = [];
-    $current_timestamp = current_time('timestamp');
-    $vistas_posts_processed = obtenerYProcesarVistasPosts($userId);
-    $esAdmin = in_array('administrator', (array)$usuario->roles);
-    $decay_factors = [];
-    foreach ($datos['author_results'] as $post_data) {
-        $post_date = $post_data->post_date;
-        $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date;
-        $diasDesdePublicacion = floor(($current_timestamp - $post_timestamp) / (3600 * 24));
-        if (!isset($decay_factors[$diasDesdePublicacion])) {
-            $decay_factors[$diasDesdePublicacion] = getDecayFactor($diasDesdePublicacion);
-        }
-    }
-    $posts_data = $datos['author_results'];
-    $puntos_por_post = calcularPuntosPostBatch(
-        $posts_data,
-        $datos,
-        $esAdmin,
-        $vistas_posts_processed,
-        $identifier,
-        $similar_to,
-        $current_timestamp,
-        $userId,
-        $decay_factors
-    );
-
-    if (!empty($puntos_por_post)) {
-        arsort($puntos_por_post);
-    }
-    return $puntos_por_post;
-}
 
 function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts)
 {
@@ -241,6 +200,16 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 
     return $query_args;
 }
+
+/* 
+
+hay que optimizar en el caso de que haya un similar_to, la cuestion es que cada vez que se abre un post, tarda mucho en calcular los post similares ya que en calcularFeedPersonalizado se hacen calculos complejos para ordenar los post similares (similar_to es un id de un post), no se si esos calculos se cachean en el caso de haya un similar_to, pero hay tratarlos de forma diferente, los similar_to deben ser iguales para todos los usuarios, es decir un cache global, los similar_to no contienen identifier y en caso de que tengan uno, ignorarlo directamente, tambien, me gustaría un proceso en fondo que se encargue de cachear el calculo de cada similar to (son muchos calculos realmente no se cuanto espacio ocupa y que tipo de espacio ocupa), la cache key de los similar to deberia ser similar_to_$similar_to y todos los usuarios deben usarla por igual. 
+
+El proceso de fondo buscuría los post mas reciente, hace el calculo y guarda la cache, sin ser bloqueando o sobresaturar el servidor, son muchos post asi que tiene que ir rapido pero sin sobresaturar, y cada vez que haya un nuevo post debe recalcularse y guardar la cache. 
+
+Hay que asegurarse que no repita el calculo, o sea, si se hace un calculo y se guarda la cache, no hacerlo de nuevo. La cache de similar_to, debe durar 15 días 
+
+*/
 function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page)
 {
     $post_not_in = [];
@@ -248,6 +217,18 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
     if ($similar_to) {
         $post_not_in[] = $similar_to;
         $cache_suffix = "_similar_" . $similar_to;
+        
+        // Usar cache global para similar_to
+        $similar_to_cache_key = "similar_to_{$similar_to}";
+        $cached_data = get_transient($similar_to_cache_key);
+
+        if ($cached_data) {
+            $posts_personalizados = $cached_data;
+        } else {
+            // Si no está cacheado, calcular y cachear
+            $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
+            set_transient($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);
+        }
     } else {
         $cache_suffix = "";
     }
@@ -256,11 +237,8 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
         ? "feed_personalizado_anonymous_{$identifier}{$cache_suffix}"
         : "feed_personalizado_user_{$current_user_id}_{$identifier}{$cache_suffix}";
 
-    // Definir el tiempo de caché: 5 minutos para admin, 12 horas para usuarios normales
-    $cache_time = $is_admin ? 7200 : 43200;  // 300 segundos = 5 minutos, 43200 segundos = 12 horas
-
+    $cache_time = $is_admin ? 7200 : 43200;  
     $cached_data = get_transient($transient_key);
-
 
     if ($cached_data) {
         $posts_personalizados = $cached_data['posts'];
@@ -277,20 +255,124 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             set_transient($transient_key, $cache_data, $cache_time);
             update_option($transient_key . '_backup', $posts_personalizados);
         }
+    }
 
-        $post_ids = array_keys($posts_personalizados);
-        if ($similar_to) {
-            $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
-                return $post_id != $similar_to;
-            });
+    $post_ids = array_keys($posts_personalizados);
+    if ($similar_to) {
+        $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
+            return $post_id != $similar_to;
+        });
+    }
+
+    return [
+        'post_ids' => $post_ids,
+        'post_not_in' => $post_not_in,
+    ];
+}
+
+// Definir el nombre de la opción para hacer seguimiento del progreso
+define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_feed_progress');
+
+// Función que se ejecutará en cada cron
+function recalcularSimilarToFeed() {
+    // Recuperar el progreso de la última ejecución (post ID)
+    $last_processed_post_id = get_option(SIMILAR_TO_PROGRESS_OPTION, 0);
+    
+    // Buscar el siguiente post a procesar
+    $args = [
+        'numberposts' => 1,
+        'orderby' => 'date',
+        'order' => 'ASC', // Desde el más antiguo
+        'post__gt' => $last_processed_post_id, // Solo obtener los que no han sido procesados
+    ];
+    
+    $posts_to_process = get_posts($args);
+    
+    if ($posts_to_process) {
+        $post = $posts_to_process[0]; // Tomamos el primer post
+
+        if ($post->ID) {
+            $similar_to = $post->ID;
+            $similar_to_cache_key = "similar_to_{$similar_to}";
+            $cached_data = get_transient($similar_to_cache_key);
+
+            // Si no está cacheado, realizar el cálculo
+            if (!$cached_data) {
+                // Realizar el cálculo y guardar en cache
+                $posts_personalizados = calcularFeedPersonalizado(0, '', $similar_to);
+                set_transient($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);
+            }
+
+            // Actualizar el progreso: guardar el último post procesado
+            update_option(SIMILAR_TO_PROGRESS_OPTION, $post->ID);
         }
-
-        return [
-            'post_ids' => $post_ids,
-            'post_not_in' => $post_not_in,
-        ];
+    } else {
+        // Si no hay más posts para procesar, reiniciar el progreso
+        delete_option(SIMILAR_TO_PROGRESS_OPTION);
     }
 }
+
+// Agregar a cron para ejecutar cada 30 segundos
+if (!wp_next_scheduled('recalcular_similar_to_feed_cron')) {
+    wp_schedule_event(time(), 'every_30_seconds', 'recalcular_similar_to_feed_cron');
+}
+
+// Función para registrar el cron con intervalo de 30 segundos
+add_filter('cron_schedules', 'agregar_cron_30_segundos');
+function agregar_cron_30_segundos($schedules) {
+    $schedules['every_30_seconds'] = [
+        'interval' => 30, // cada 30 segundos
+        'display' => 'Cada 30 segundos',
+    ];
+    return $schedules;
+}
+
+// Registrar el hook del cron
+add_action('recalcular_similar_to_feed_cron', 'recalcularSimilarToFeed');
+
+
+function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
+{
+    $datos = obtenerDatosFeedConCache($userId); #Aqui se obtiene obtenerDatosFeed
+    if (empty($datos)) {
+        return [];
+    }
+    $usuario = get_userdata($userId);
+    if (!$usuario || !is_object($usuario)) {
+        return [];
+    }
+    $posts_personalizados = [];
+    $current_timestamp = current_time('timestamp');
+    $vistas_posts_processed = obtenerYProcesarVistasPosts($userId);
+    $esAdmin = in_array('administrator', (array)$usuario->roles);
+    $decay_factors = [];
+    foreach ($datos['author_results'] as $post_data) {
+        $post_date = $post_data->post_date;
+        $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date;
+        $diasDesdePublicacion = floor(($current_timestamp - $post_timestamp) / (3600 * 24));
+        if (!isset($decay_factors[$diasDesdePublicacion])) {
+            $decay_factors[$diasDesdePublicacion] = getDecayFactor($diasDesdePublicacion);
+        }
+    }
+    $posts_data = $datos['author_results'];
+    $puntos_por_post = calcularPuntosPostBatch(
+        $posts_data,
+        $datos,
+        $esAdmin,
+        $vistas_posts_processed,
+        $identifier,
+        $similar_to,
+        $current_timestamp,
+        $userId,
+        $decay_factors
+    );
+
+    if (!empty($puntos_por_post)) {
+        arsort($puntos_por_post);
+    }
+    return $puntos_por_post;
+}
+
 function reiniciarFeed($current_user_id)
 {
     global $wpdb;
