@@ -264,21 +264,19 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos)
 
 function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
 {
-    // Obtener y normalizar contenido del post
+
     $contenido_post_1 = isset($datos['post_content'][$post_id]) ? strtolower($datos['post_content'][$post_id]) : '';
     $contenido_post_2 = isset($datos['post_content'][$similar_to]) ? strtolower($datos['post_content'][$similar_to]) : '';
 
-    // Verificar y extraer los datosAlgoritmo para post_id
     $datosAlgoritmo_1 = isset($datos['datosAlgoritmo'][$post_id]->meta_value)
         ? procesarMetaValue($datos['datosAlgoritmo'][$post_id]->meta_value)
         : [];
 
-    // Verificar y extraer los datosAlgoritmo para similar_to
     $datosAlgoritmo_2 = isset($datos['datosAlgoritmo'][$similar_to]->meta_value)
         ? procesarMetaValue($datos['datosAlgoritmo'][$similar_to]->meta_value)
         : procesarMetaValue(get_post_meta($similar_to, 'datosAlgoritmo', true));
 
-    // Extraer palabras clave para comparar
+
     $words_in_post_1 = array_merge(
         extractWordsFromDatosAlgoritmo($datosAlgoritmo_1),
         extractWordsFromContent($contenido_post_1)
@@ -292,51 +290,35 @@ function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
     if (empty($words_in_post_1) || empty($words_in_post_2)) {
         return 0;
     }
-
-    // Convertir arrays en conjuntos únicos
     $set1 = array_unique($words_in_post_1);
     $set2 = array_unique($words_in_post_2);
-
-    // Calcular índice de Jaccard
     $intersection = array_intersect($set1, $set2);
     $union = array_unique(array_merge($set1, $set2));
-
-    // Asignar pesos diferentes a las coincidencias en el contenido principal
     $contentWeight = 1.5;
     $contenidoMatches = count(array_intersect(extractWordsFromContent($contenido_post_1), extractWordsFromContent($contenido_post_2)));
     $similarity = (count($intersection) + $contenidoMatches * $contentWeight) / count($union);
-
-    // Escalar puntos con un factor personalizado
-    $puntosSimilarTo = $similarity * 150; // Escala para obtener hasta 150 puntos
-
+    $puntosSimilarTo = $similarity * 150; 
     return $puntosSimilarTo;
 }
 
-// Función auxiliar para procesar `meta_value`
+
 function procesarMetaValue($meta_value)
 {
-    // Si ya es un array, lo devolvemos directamente
     if (is_array($meta_value)) {
         return $meta_value;
     }
-
-    // Si es una cadena, intentamos decodificarla como JSON
     if (is_string($meta_value)) {
         $decoded_value = json_decode($meta_value, true);
-
-        // Verificar si json_decode fue exitoso
         if (json_last_error() === JSON_ERROR_NONE) {
             return $decoded_value;
         } else {
-            error_log("Error al decodificar JSON: " . json_last_error_msg() . " - Valor: " . $meta_value);
             return [];
         }
     }
-
-    // Si no es ni array ni cadena, devolvemos un array vacío y registramos un error
     error_log("meta_value no es un array ni una cadena, es de tipo: " . gettype($meta_value));
     return [];
 }
+
 function extractWordsFromDatosAlgoritmo($datosAlgoritmo)
 {
     $words = [];

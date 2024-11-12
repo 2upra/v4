@@ -265,7 +265,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
 
 function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
 {
-    $datos = obtenerDatosFeedConCache($userId); #Aqui se obtiene obtenerDatosFeed
+    $datos = obtenerDatosFeedConCache($userId); 
     if (empty($datos)) {
         return [];
     }
