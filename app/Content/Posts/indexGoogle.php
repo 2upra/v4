@@ -175,7 +175,7 @@ function optimizar_recursos() {
     remove_action('wp_print_styles', 'print_emoji_styles');
 }
 add_action('wp_enqueue_scripts', 'optimizar_recursos');
-
+/*
 function crear_sitemap() {
     $posts = get_posts(array(
         'numberposts' => -1,
@@ -197,7 +197,7 @@ function crear_sitemap() {
     file_put_contents(ABSPATH . 'sitemap.xml', $sitemap);
 }
 add_action('save_post', 'crear_sitemap');
-
+*/
 function optimizar_headers($headers) {
     $headers['X-Content-Type-Options'] = 'nosniff';
     $headers['X-Frame-Options'] = 'SAMEORIGIN';
