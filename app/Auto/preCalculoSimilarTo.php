@@ -1,19 +1,26 @@
 <?
 
 define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_feed_progress');
-//agrega guardarLog("log de ejemplo $variable") para ver que esta pasando aqui detalladamente
+
 function recalcularSimilarToFeed() {
     guardarLog("Iniciando ejecución del cron 'recalcular_similar_to_feed_cron'");
-    error_log("Cron 'recalcular_similar_to_feed_cron' se está ejecutando.");
     
     $last_processed_post_id = get_option(SIMILAR_TO_PROGRESS_OPTION, 0);
     guardarLog("Último post procesado ID: $last_processed_post_id");
     
     $args = [
         'numberposts' => 1,
+        'post_type' => 'social_post',
+        'post_status' => 'publish',
         'orderby' => 'date',
         'order' => 'ASC',
         'post__gt' => $last_processed_post_id,
+        'meta_query' => array(
+            array(
+                'key' => 'datosAlgoritmo',
+                'compare' => 'EXISTS'
+            )
+        )
     ];
     
     $posts_to_process = get_posts($args);
@@ -36,7 +43,6 @@ function recalcularSimilarToFeed() {
                 
                 if (!$posts_personalizados) {
                     guardarLog("Error: No se pudo calcular el feed para 'similar_to_{$similar_to}'");
-                    error_log("Error al calcular el feed para 'similar_to_{$similar_to}'");
                 } else {
                     guardarLog("Feed calculado exitosamente, guardando en caché");
                     set_transient($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);
@@ -55,34 +61,30 @@ function recalcularSimilarToFeed() {
     guardarLog("Finalización de la ejecución del cron");
 }
 
+// Para evitar el bucle en los logs, modificamos estas funciones
 function agregarCron30Segundos() {
-    guardarLog("Verificando programación del cron de 30 segundos");
+    // Solo logueamos si realmente vamos a hacer algo
     if (!wp_next_scheduled('recalcular_similar_to_feed_cron_30sec')) {
-        guardarLog("Programando nuevo evento cron");
+        guardarLog("Programando nuevo evento cron de 30 segundos");
         $scheduled = wp_schedule_event(time(), 'every_30_seconds', 'recalcular_similar_to_feed_cron_30sec');
         if (!$scheduled) {
             guardarLog("Error: No se pudo programar el evento cron");
-            error_log("Error al programar el evento cron.");
-        } else {
-            guardarLog("Evento cron programado exitosamente");
         }
-    } else {
-        guardarLog("El cron ya está programado");
     }
 }
 
 function agregar_cron_30_segundos($schedules) {
-    guardarLog("Agregando intervalo de 30 segundos a los schedules");
+    // Eliminamos los logs de esta función ya que se llama frecuentemente
     if (!isset($schedules['every_30_seconds'])) {
         $schedules['every_30_seconds'] = [
             'interval' => 30,
             'display' => 'Cada 30 segundos',
         ];
-        guardarLog("Intervalo de 30 segundos agregado exitosamente");
     }
     return $schedules;
 }
 
+// Movemos estas acciones a un archivo que se cargue solo una vez
 add_action('init', 'agregarCron30Segundos');
 add_filter('cron_schedules', 'agregar_cron_30_segundos');
 add_action('recalcular_similar_to_feed_cron_30sec', 'recalcularSimilarToFeed');
