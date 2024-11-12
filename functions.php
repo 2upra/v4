@@ -25,6 +25,19 @@ define('IA_LOG_ENABLED', false);
 define('POST_LOG_ENABLED', false);
 define('STREAM_LOG_ENABLED', false);
 
+
+function encolar_sw_js()
+{
+wp_enqueue_script(
+'sw-js',
+home_url('/sw.js'), // Ruta absoluta desde la raíz del dominio
+array(),
+'1.0.2',
+true
+);
+}
+add_action('wp_enqueue_scripts', 'encolar_sw_js');
+
 function escribirLog($mensaje, $archivo, $max_lineas = 1000)
 {
     // Verificaciones iniciales de seguridad
