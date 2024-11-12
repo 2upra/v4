@@ -1,4 +1,4 @@
-// sw.js
+/*
 const CACHE_NAME = 'audio-cache-v1';
 
 self.addEventListener('install', event => {
@@ -46,3 +46,4 @@ self.addEventListener('fetch', event => {
         }());
     }
 });
+*/

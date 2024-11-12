@@ -164,6 +164,9 @@ add_action('wp_enqueue_scripts', 'encolar_sw_js');
 
 function scriptsOrdenados()
 {
+    // Definir la versión global
+    $global_version = '3.0.1'; // Cambia esta versión cuando desees actualizar todos los scripts
+
     // Verificar si el usuario actual es administrador
     $dev_mode = current_user_can('administrator');
     $error_log = [];
@@ -223,7 +226,8 @@ function scriptsOrdenados()
             continue; // No cargar el script si el usuario no está logueado
         }
 
-        $version = is_array($data) ? $data[0] : $data;
+        // Usar la versión global en lugar de la definida en $script_handles
+        $version = $global_version; // Esta es la única versión que usaremos para todos los scripts
         $deps = is_array($data) && isset($data[1]) ? $data[1] : [];
         $version = $dev_mode ? $version . '.' . mt_rand() : $version;
 
@@ -284,7 +288,6 @@ function scriptsOrdenados()
         'restUrl' => rest_url()
     ));
 
-
     wp_localize_script('wavejs', 'ajax_params', ['ajaxurl' => $ajax_url]);
     wp_localize_script('form-script', 'wpData', ['isAdmin' => current_user_can('administrator')]);
 
@@ -293,6 +296,7 @@ function scriptsOrdenados()
         error_log("Errores en scriptsOrdenados: " . print_r($error_log, true));
     }
 }
+
 
 add_action('wp_enqueue_scripts', 'scriptsOrdenados');
 
