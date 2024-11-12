@@ -1,5 +1,5 @@
 <?
-/*
+
 // Definiciones de constantes
 define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_feed_progress');    // Opción para guardar progreso
 define('SIMILAR_TO_PROCESS_LOCK', 'similar_to_process_lock');        // Bloqueo de proceso
