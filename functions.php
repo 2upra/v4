@@ -147,18 +147,6 @@ function postLog($log)
     }
 }
 
-// Encolar el archivo sw.js
-function encolar_sw_js()
-{
-    wp_enqueue_script(
-        'sw-js',
-        home_url('/sw.js'),  // Ruta absoluta desde la raíz del dominio
-        array(),
-        null,
-        true
-    );
-}
-add_action('wp_enqueue_scripts', 'encolar_sw_js');
 
 
 
