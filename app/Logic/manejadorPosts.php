@@ -389,6 +389,9 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
         $query = new WP_Query($query_args);
     }
 
+    // Log para verificar la cantidad de posts que se reciben para procesar
+    guardarLog("Cantidad de posts a procesar: $total_posts");
+
     // Verificar que $query sea válido antes de continuar
     if (!is_object($query) || !method_exists($query, 'have_posts')) {
         error_log('Query inválido en procesarPublicaciones');
@@ -435,6 +438,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     wp_reset_postdata();
     return ob_get_clean();
 }
+
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
 {
     global $wpdb;
