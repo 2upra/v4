@@ -3,6 +3,7 @@
 Template Name: Inicio
 */
 ?>
+
 <head>
     <meta name="robots" content="index, follow">
     <? wp_head(); ?>
@@ -11,7 +12,7 @@ Template Name: Inicio
 get_header();
 $user_id = get_current_user_id();
 $acciones = get_user_meta($user_id, 'acciones', true);
-$nologin_class = !is_user_logged_in() ? ' nologin' : ''; 
+$nologin_class = !is_user_logged_in() ? ' nologin' : '';
 ?>
 
 <div id="main">
