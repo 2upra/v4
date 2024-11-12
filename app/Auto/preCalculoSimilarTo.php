@@ -29,7 +29,7 @@ function recalcularSimilarToFeed() {
             // Si no está cacheado, realizar el cálculo
             if (!$cached_data) {
                 // Realizar el cálculo y guardar en cache
-                $posts_personalizados = calcularFeedPersonalizado(44, '', $similar_to);
+                $posts_personalizados = calcularFeedPersonalizado(0, '', $similar_to);
                 set_transient($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);
             }
 

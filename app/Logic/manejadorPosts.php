@@ -201,15 +201,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
     return $query_args;
 }
 
-/* 
 
-hay que optimizar en el caso de que haya un similar_to, la cuestion es que cada vez que se abre un post, tarda mucho en calcular los post similares ya que en calcularFeedPersonalizado se hacen calculos complejos para ordenar los post similares (similar_to es un id de un post), no se si esos calculos se cachean en el caso de haya un similar_to, pero hay tratarlos de forma diferente, los similar_to deben ser iguales para todos los usuarios, es decir un cache global, los similar_to no contienen identifier y en caso de que tengan uno, ignorarlo directamente, tambien, me gustaría un proceso en fondo que se encargue de cachear el calculo de cada similar to (son muchos calculos realmente no se cuanto espacio ocupa y que tipo de espacio ocupa), la cache key de los similar to deberia ser similar_to_$similar_to y todos los usuarios deben usarla por igual. 
-
-El proceso de fondo buscuría los post mas reciente, hace el calculo y guarda la cache, sin ser bloqueando o sobresaturar el servidor, son muchos post asi que tiene que ir rapido pero sin sobresaturar, y cada vez que haya un nuevo post debe recalcularse y guardar la cache. 
-
-Hay que asegurarse que no repita el calculo, o sea, si se hace un calculo y se guarda la cache, no hacerlo de nuevo. La cache de similar_to, debe durar 15 días 
-
-*/
 function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page)
 {
     $post_not_in = [];
