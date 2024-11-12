@@ -200,7 +200,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 
             if (!empty($feed_result['post_ids'])) {
                 $query_args['post__in'] = $feed_result['post_ids'];
-                //$query_args['orderby'] = 'post__in';
+                $query_args['orderby'] = 'post__in';
                 $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, 2500);
 
                 if (!empty($feed_result['post_not_in'])) {
