@@ -18,10 +18,6 @@ if (!defined('ABSPATH')) {
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 
-<head>
-    <? wp_head(); ?>
-</head>
-
 <body <? body_class(); ?>>
     <div id="preloader">
         <div class="loader-content">

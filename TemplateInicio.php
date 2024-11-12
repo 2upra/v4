@@ -2,7 +2,12 @@
 /*
 Template Name: Inicio
 */
-
+?>
+<head>
+    <meta name="robots" content="index, follow">
+    <? wp_head(); ?>
+</head>
+<?
 get_header();
 $user_id = get_current_user_id();
 $acciones = get_user_meta($user_id, 'acciones', true);
