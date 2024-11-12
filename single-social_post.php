@@ -9,6 +9,7 @@
 
     <? wp_head(); ?>
 </head>
+<? get_header(); ?>
 
 <body <? body_class(); ?>>
 
