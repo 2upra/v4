@@ -18,78 +18,11 @@ if (!defined('ABSPATH')) {
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 
-
 <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Título SEO -->
-    <title><?php echo get_seo_title(); ?></title>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for (let registration of registrations) {
-                    registration.unregister();
-                    console.log('Service Worker desregistrado');
-                }
-            });
-        }
-    </script>
-
-    <!-- CSS para Preloader -->
-    <style>
-        #preloader {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            z-index: 99999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-
-        .loader-content {
-            text-align: center;
-        }
-
-        /* Ocultar el preloader cuando la página esté cargada */
-        body.loaded #preloader {
-            display: none;
-        }
-
-        /* Ocultar el overflow del body mientras carga */
-        body:not(.loaded) {
-            overflow: hidden;
-        }
-    </style>
-
-
-    <link rel="apple-touch-icon" sizes="57x57" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-57x57.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-60x60.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons//apple-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons//apple-icon-76x76.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-114x114.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-120x120.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/apple-icon-180x180.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/android-icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-16x16.png">
-    <link rel="manifest" href="/manifest.json">
-    <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="msapplication-TileImage" content="https://2upra.com/wp-content/themes/2upra3v/assets/icons/ms-icon-144x144.png">
-    <meta name="theme-color" content="#ffffff">
-    <link rel="icon" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-96x96.png">
-    <link rel="manifest" href="<?php echo get_template_directory_uri(); ?>/assets/icons/manifest.json">
-    <link rel="icon" href="https://2upra.com/wp-content/themes/2upra3v/assets/icons/favicon-32x32.png" sizes="32x32" type="image/png">
-
-<? wp_head(); ?>
+    <? wp_head(); ?>
 </head>
 
 
