@@ -80,8 +80,8 @@ function obtenerDatosFeed($userId)
         $userId
     ), OBJECT_K);
     $vistas_posts = get_user_meta($userId, 'vistas_posts', true);
-    
-    // esto aqui calcula muchos post para saber como ordenarlos eficientemente, esto tengo que dejarlo asi, es necesario, tienen que ser 50.000 para calcularlos todos 
+    generarMetaDeIntereses($userId);
+
     $args = [
         'post_type'      => 'social_post',
         'posts_per_page' => 50000,
@@ -425,6 +425,24 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     return ob_get_clean();
 }
 
+function obtenerDatosFeedConCache($userId)
+{
+    $cache_key = 'feed_datos_' . $userId;
+    $datos = wp_cache_get($cache_key);
+    
+    if (false === $datos) {
+        $datos = obtenerDatosFeed($userId);
+        // Establecer la caché con una expiración de 12 horas (43200 segundos)
+        wp_cache_set($cache_key, $datos, '', 43200);
+    }
+    
+    if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
+        return [];
+    }
+
+    return $datos;
+}
+
 function reiniciarFeed($current_user_id)
 {
     global $wpdb;
@@ -449,6 +467,9 @@ function reiniciarFeed($current_user_id)
         // Eliminar el backup relacionado en las opciones
         delete_option($option_name . '_backup');
     }
+
+    // Eliminar la caché específica del usuario
+    wp_cache_delete('feed_datos_' . $current_user_id);
 
     return count($query); // Retorna cuántos transients se eliminaron
 }

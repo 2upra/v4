@@ -5,21 +5,7 @@ global $wpdb;
 define('INTERES_TABLE', "{$wpdb->prefix}interes");
 define('BATCH_SIZE', 1000);
 
-function obtenerDatosFeedConCache($userId)
-{
 
-    $cache_key = 'feed_datos_' . $userId;
-    $datos = wp_cache_get($cache_key);
-    if (false === $datos) {
-        $datos = obtenerDatosFeed($userId);
-        wp_cache_set($cache_key, $datos, '', 800);
-    }
-    if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
-        return [];
-    }
-
-    return $datos;
-}
 
 function calcularPuntosPostBatch(
     $posts_data,
