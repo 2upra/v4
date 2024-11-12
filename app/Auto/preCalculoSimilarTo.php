@@ -1,7 +1,8 @@
 <?
-/*
+
 define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_feed_progress');
 define('SIMILAR_TO_PROCESS_LOCK', 'similar_to_process_lock');
+
 
 function recalcularSimilarToFeed() {
     // Verificar si hay un proceso en ejecución
@@ -10,62 +11,50 @@ function recalcularSimilarToFeed() {
         return;
     }
 
-    // Establecer bloqueo por 30 segundos
+    // Establecer bloqueo
     set_transient(SIMILAR_TO_PROCESS_LOCK, true, 30);
 
     try {
         $last_processed_post_id = get_option(SIMILAR_TO_PROGRESS_OPTION, 0);
         
-        // Buscar el siguiente post sin caché
         global $wpdb;
-        $found_uncached_post = false;
         
-        while (!$found_uncached_post) {
-            $query = $wpdb->prepare(
-                "SELECT ID 
-                FROM {$wpdb->posts} p
-                INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-                WHERE p.post_type = 'social_post'
-                AND p.post_status = 'publish'
-                AND p.ID > %d
-                AND pm.meta_key = 'datosAlgoritmo'
-                ORDER BY p.ID ASC
-                LIMIT 1",
-                $last_processed_post_id
-            );
-            
-            $post_id = $wpdb->get_var($query);
-            
-            if (!$post_id) {
-                guardarLog("No se encontraron más posts, reiniciando progreso");
-                update_option(SIMILAR_TO_PROGRESS_OPTION, 0);
-                return;
-            }
-
-            $similar_to_cache_key = "similar_to_{$post_id}";
-            $cached_data = get_transient($similar_to_cache_key);
-
-            if (!$cached_data) {
-                guardarLog("Encontrado post sin caché ID: $post_id");
-                $found_uncached_post = true;
-                
-                guardarLog("Calculando feed para post ID: $post_id");
-                $posts_personalizados = calcularFeedPersonalizado(44, '', $post_id);
-                
-                if ($posts_personalizados) {
-                    set_transient($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);
-                    guardarLog("Feed calculado y guardado en caché");
-                } else {
-                    guardarLog("Error al calcular feed para post ID: $post_id");
-                }
-            }
-
-            update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);
-            
-            if (!$found_uncached_post) {
-                guardarLog("Post $post_id ya tiene caché, continuando búsqueda");
-            }
+        // Buscar el siguiente post que necesite caché
+        $query = $wpdb->prepare(
+            "SELECT p.ID 
+            FROM {$wpdb->posts} p
+            INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+            WHERE p.post_type = 'social_post'
+            AND p.post_status = 'publish'
+            AND p.ID > %d
+            AND pm.meta_key = 'datosAlgoritmo'
+            ORDER BY p.ID ASC
+            LIMIT 1",
+            $last_processed_post_id
+        );
+        
+        $post_id = $wpdb->get_var($query);
+        
+        if (!$post_id) {
+            guardarLog("No se encontraron más posts, reiniciando progreso");
+            update_option(SIMILAR_TO_PROGRESS_OPTION, 0);
+            return;
         }
+
+        // Procesar el post independientemente de si tiene caché o no
+        guardarLog("Procesando post ID: $post_id");
+        $posts_personalizados = calcularFeedPersonalizado(44, '', $post_id);
+        
+        if ($posts_personalizados) {
+            set_transient("similar_to_{$post_id}", $posts_personalizados, 15 * DAY_IN_SECONDS);
+            guardarLog("Feed calculado y guardado en caché para post ID: $post_id");
+        } else {
+            guardarLog("Error al calcular feed para post ID: $post_id");
+        }
+
+        // Actualizar el último ID procesado
+        update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);
+        guardarLog("Proceso completado para post ID: $post_id");
 
     } catch (Exception $e) {
         guardarLog("Error en el proceso: " . $e->getMessage());
@@ -98,4 +87,4 @@ function limpiar_bloqueo_similar_to() {
     delete_transient(SIMILAR_TO_PROCESS_LOCK);
     guardarLog("Bloqueo de proceso similar_to limpiado manualmente");
 }
-    */
+ 
