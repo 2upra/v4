@@ -81,7 +81,7 @@ function obtenerDatosFeed($userId)
     ), OBJECT_K);
     $vistas_posts = get_user_meta($userId, 'vistas_posts', true);
     
-    chatgpt: esto aqui calcula muchos post para saber como ordenarlos eficientemente, esto tengo que dejarlo asi, es necesario, tienen que ser 50.000 para calcularlos todos 
+    // esto aqui calcula muchos post para saber como ordenarlos eficientemente, esto tengo que dejarlo asi, es necesario, tienen que ser 50.000 para calcularlos todos 
     $args = [
         'post_type'      => 'social_post',
         'posts_per_page' => 50000,
@@ -327,13 +327,13 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
 
     if (!empty($puntos_por_post)) {
         arsort($puntos_por_post);
-        ya hice esto aca pero por alguna razon siguen procesando el total en procesarPublicaciones
+        //ya hice esto aca pero por alguna razon siguen procesando el total en procesarPublicaciones
         // Limitar a los primeros 2,500 posts
         $puntos_por_post = array_slice($puntos_por_post, 0, 2500, true);
     }
     return $puntos_por_post;
 }
-pero aca al final solo necesito los 2.500 primeros en todos los casos, como sería (la paginacion es 12 post, pero el total que se carga el resultado de obtenerDatosFeed en muchos casos)
+//pero aca al final solo necesito los 2.500 primeros en todos los casos, como sería (la paginacion es 12 post, pero el total que se carga el resultado de obtenerDatosFeed en muchos casos)
 function procesarPublicaciones($query_args, $args, $is_ajax)
 {
     ob_start();
