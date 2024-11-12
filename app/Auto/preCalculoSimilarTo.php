@@ -4,6 +4,19 @@ define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_feed_progress');  // Opción pa
 define('SIMILAR_TO_PROCESS_LOCK', 'similar_to_process_lock');  // Bloqueo de proceso
 define('SIMILAR_TO_MAX_LOCK_TIME', 300);  // 5 minutos de bloqueo máximo
 
+/*
+ESTO NO FUNCIONA BIEN SE QUEDA EN BUCLE
+2024-11-12 05:09:38 - Último post procesado ID: 240218
+2024-11-12 05:09:38 - Siguiente post ID: 240221
+2024-11-12 05:09:38 - Post ID: 240221 ya tiene caché, avanzando al siguiente post
+2024-11-12 05:10:02 - Último post procesado ID: 240218
+2024-11-12 05:10:02 - Siguiente post ID: 240221
+2024-11-12 05:10:02 - Post ID: 240221 ya tiene caché, avanzando al siguiente post
+2024-11-12 05:10:04 - Último post procesado ID: 240218
+2024-11-12 05:10:04 - Siguiente post ID: 240221
+2024-11-12 05:10:04 - Post ID: 240221 ya tiene caché, avanzando al siguiente post
+*/
+
 function recalcularSimilarToFeed() {
     // Verificar si un proceso ya está en ejecución basado en el tiempo de bloqueo
     $lock_time = get_transient(SIMILAR_TO_PROCESS_LOCK);
@@ -26,58 +39,58 @@ function recalcularSimilarToFeed() {
 
         global $wpdb;
         
-        // Buscar el siguiente post después del último procesado que tenga 'datosAlgoritmo'
-        $query = $wpdb->prepare(
-            "SELECT p.ID 
-            FROM {$wpdb->posts} p
-            INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-            WHERE p.post_type = 'social_post'
-            AND p.post_status = 'publish'
-            AND p.ID > %d
-            AND pm.meta_key = 'datosAlgoritmo'
-            ORDER BY p.ID ASC
-            LIMIT 1",
-            $last_processed_post_id
-        );
-        
-        $post_id = $wpdb->get_var($query);  // Obtener el siguiente post ID
+        while (true) {
+            $query = $wpdb->prepare(
+                "SELECT p.ID 
+                FROM {$wpdb->posts} p
+                INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+                WHERE p.post_type = 'social_post'
+                AND p.post_status = 'publish'
+                AND p.ID > %d
+                AND pm.meta_key = 'datosAlgoritmo'
+                ORDER BY p.ID ASC
+                LIMIT 1",
+                $last_processed_post_id
+            );
+            
+            $post_id = $wpdb->get_var($query);  // Obtener el siguiente post ID
 
-        // Si no hay más posts que procesar, reiniciar el progreso
-        if (!$post_id) {
-            guardarLog("No se encontraron más posts, reiniciando progreso");
-            update_option(SIMILAR_TO_PROGRESS_OPTION, 0);
-            return;
-        }
-
-        guardarLog("Siguiente post ID: $post_id");
-
-        // Verificar si el post ya tiene caché
-        $similar_to_cache_key = "similar_to_{$post_id}";
-        if (get_transient($similar_to_cache_key)) {
-            // Si ya tiene caché, avanzar el progreso al siguiente post
-            guardarLog("Post ID: $post_id ya tiene caché, avanzando al siguiente post");
-            update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);  // Avanzar el progreso
-        } else {
-            // Si no tiene caché, procesarlo
-            guardarLog("Procesando post ID: $post_id");
-            $posts_personalizados = calcularFeedPersonalizado(44, '', $post_id);
-
-            if ($posts_personalizados) {
-                set_transient($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);  // Guardar en caché por 15 días
-                guardarLog("Feed calculado y guardado en caché para post ID: $post_id");
-            } else {
-                guardarLog("Error al calcular feed para post ID: $post_id");
+            if (!$post_id) {
+                guardarLog("No se encontraron más posts, reiniciando progreso");
+                update_option(SIMILAR_TO_PROGRESS_OPTION, 0);
+                break;
             }
 
-            // Actualizar el progreso con el último post procesado
-            update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);
-            guardarLog("Proceso completado para post ID: $post_id");
+            guardarLog("Siguiente post ID: $post_id");
+
+            $similar_to_cache_key = "similar_to_{$post_id}";
+            if (get_transient($similar_to_cache_key)) {
+                guardarLog("Post ID: $post_id ya tiene caché, avanzando al siguiente post");
+                update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);
+                guardarLog("Progreso actualizado a post ID: $post_id");
+                $last_processed_post_id = $post_id;
+                // Continuar el bucle para verificar el siguiente post
+            } else {
+                guardarLog("Procesando post ID: $post_id");
+                $posts_personalizados = calcularFeedPersonalizado(44, '', $post_id);
+
+                if ($posts_personalizados) {
+                    set_transient($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);
+                    guardarLog("Feed calculado y guardado en caché para post ID: $post_id");
+                } else {
+                    guardarLog("Error al calcular feed para post ID: $post_id");
+                }
+
+                update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);
+                guardarLog("Proceso completado para post ID: $post_id");
+                break;  // Terminar después de procesar un post
+            }
         }
 
     } catch (Exception $e) {
         guardarLog("Error en el proceso: " . $e->getMessage());
     } finally {
-        // Siempre eliminar el bloqueo al finalizar
+        // Eliminar bloqueo
         delete_transient(SIMILAR_TO_PROCESS_LOCK);
     }
 }
