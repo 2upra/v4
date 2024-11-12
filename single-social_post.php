@@ -147,8 +147,6 @@ if (have_posts()) :
                 wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) .
                 '</script>' . "\n";
         }, 2);
-
-        get_header();
         ob_start();
 ?>
 
