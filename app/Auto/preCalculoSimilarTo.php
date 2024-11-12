@@ -1,18 +1,23 @@
-<?
+<?php
 
 define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_feed_progress');
 define('SIMILAR_TO_PROCESS_LOCK', 'similar_to_process_lock');
-
+define('SIMILAR_TO_MAX_LOCK_TIME', 300); // 5 minutos de máximo bloqueo
 
 function recalcularSimilarToFeed() {
-    // Verificar si hay un proceso en ejecución
-    if (get_transient(SIMILAR_TO_PROCESS_LOCK)) {
+    // Verificar si hay un proceso en ejecución y si el bloqueo no está estancado
+    $lock_time = get_transient(SIMILAR_TO_PROCESS_LOCK);
+    if ($lock_time && (time() - $lock_time < SIMILAR_TO_MAX_LOCK_TIME)) {
         guardarLog("Proceso ya en ejecución, saltando esta iteración");
         return;
+    } elseif ($lock_time) {
+        // Si el bloqueo ha excedido el tiempo máximo, limpiamos el bloqueo
+        guardarLog("El bloqueo ha estado activo demasiado tiempo, limpiando el bloqueo");
+        delete_transient(SIMILAR_TO_PROCESS_LOCK);
     }
 
-    // Establecer bloqueo
-    set_transient(SIMILAR_TO_PROCESS_LOCK, true, 30);
+    // Establecer bloqueo con la marca de tiempo actual
+    set_transient(SIMILAR_TO_PROCESS_LOCK, time(), SIMILAR_TO_MAX_LOCK_TIME);
 
     try {
         $last_processed_post_id = get_option(SIMILAR_TO_PROGRESS_OPTION, 0);
@@ -59,6 +64,7 @@ function recalcularSimilarToFeed() {
     } catch (Exception $e) {
         guardarLog("Error en el proceso: " . $e->getMessage());
     } finally {
+        // Asegurarse de eliminar el bloqueo al final del proceso
         delete_transient(SIMILAR_TO_PROCESS_LOCK);
     }
 }
@@ -66,7 +72,7 @@ function recalcularSimilarToFeed() {
 function agregar_cron_30_segundos($schedules) {
     $schedules['every_30_seconds'] = [
         'interval' => 30,
-        'display' => 'Cada 30 segundos',
+        'display'  => 'Cada 30 segundos',
     ];
     return $schedules;
 }
@@ -87,4 +93,3 @@ function limpiar_bloqueo_similar_to() {
     delete_transient(SIMILAR_TO_PROCESS_LOCK);
     guardarLog("Bloqueo de proceso similar_to limpiado manualmente");
 }
- 
