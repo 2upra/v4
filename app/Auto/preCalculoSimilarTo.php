@@ -1,5 +1,5 @@
 <?
-
+/*
 // Definiciones de constantes
 define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_feed_progress');    // Opción para guardar progreso
 define('SIMILAR_TO_PROCESS_LOCK', 'similar_to_process_lock');        // Bloqueo de proceso
@@ -13,9 +13,7 @@ define('SIMILAR_TO_STOP_DURATION', 6 * HOUR_IN_SECONDS);            // Duración
 
 
 
-/**
- * Función principal para recalcular el feed similar.
- */
+
 function recalcularSimilarToFeed() {
     // Verificar si hay una detención prolongada activa
     $stop_until = get_option(SIMILAR_TO_STOP_UNTIL_OPTION, 0);
@@ -167,18 +165,14 @@ function inicializar_cron() {
 }
 add_action('init', 'inicializar_cron');
 
-/**
- * Asignar la función 'recalcularSimilarToFeed' al evento cron.
- */
+
 add_action('recalcular_similar_to_feed_cron', 'recalcularSimilarToFeed');
 
-/**
- * Función para limpiar el bloqueo manualmente.
- * Puedes llamar a esta función desde cualquier lugar (por ejemplo, un botón en el admin) para limpiar el bloqueo.
- */
+
 function limpiar_bloqueo_similar_to() {
     delete_transient(SIMILAR_TO_PROCESS_LOCK);
     guardarLog("Bloqueo de proceso similar_to limpiado manualmente.");
 }
 // Puedes asignar esta función a una acción específica si lo deseas, por ejemplo:
 add_action('admin_post_limpia_bloqueo_similar_to', 'limpiar_bloqueo_similar_to');
+*/
