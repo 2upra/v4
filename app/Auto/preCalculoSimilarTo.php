@@ -1,17 +1,17 @@
 <?php
 
-define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_feed_progress');
-define('SIMILAR_TO_PROCESS_LOCK', 'similar_to_process_lock');
-define('SIMILAR_TO_MAX_LOCK_TIME', 300); // 5 minutos de máximo bloqueo
+define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_feed_progress');  // Opción para guardar progreso
+define('SIMILAR_TO_PROCESS_LOCK', 'similar_to_process_lock');  // Bloqueo de proceso
+define('SIMILAR_TO_MAX_LOCK_TIME', 300);  // 5 minutos de bloqueo máximo
 
 function recalcularSimilarToFeed() {
-    // Verificar si hay un proceso en ejecución y si el bloqueo no está estancado
+    // Verificar si un proceso ya está en ejecución basado en el tiempo de bloqueo
     $lock_time = get_transient(SIMILAR_TO_PROCESS_LOCK);
     if ($lock_time && (time() - $lock_time < SIMILAR_TO_MAX_LOCK_TIME)) {
         guardarLog("Proceso ya en ejecución, saltando esta iteración");
         return;
     } elseif ($lock_time) {
-        // Si el bloqueo ha excedido el tiempo máximo, limpiamos el bloqueo
+        // Si el bloqueo ha excedido el tiempo máximo permitido, limpiar el bloqueo
         guardarLog("El bloqueo ha estado activo demasiado tiempo, limpiando el bloqueo");
         delete_transient(SIMILAR_TO_PROCESS_LOCK);
     }
@@ -20,11 +20,11 @@ function recalcularSimilarToFeed() {
     set_transient(SIMILAR_TO_PROCESS_LOCK, time(), SIMILAR_TO_MAX_LOCK_TIME);
 
     try {
-        $last_processed_post_id = get_option(SIMILAR_TO_PROGRESS_OPTION, 0);
+        $last_processed_post_id = get_option(SIMILAR_TO_PROGRESS_OPTION, 0);  // Obtener el ID del último post procesado
         
         global $wpdb;
         
-        // Buscar el siguiente post que necesite caché
+        // Buscar el siguiente post que no tenga caché
         $query = $wpdb->prepare(
             "SELECT p.ID 
             FROM {$wpdb->posts} p
@@ -38,33 +38,42 @@ function recalcularSimilarToFeed() {
             $last_processed_post_id
         );
         
-        $post_id = $wpdb->get_var($query);
-        
+        $post_id = $wpdb->get_var($query);  // Obtener el siguiente post ID
+
         if (!$post_id) {
+            // Si no se encuentran más posts, reiniciar el progreso
             guardarLog("No se encontraron más posts, reiniciando progreso");
             update_option(SIMILAR_TO_PROGRESS_OPTION, 0);
             return;
         }
 
-        // Procesar el post independientemente de si tiene caché o no
-        guardarLog("Procesando post ID: $post_id");
-        $posts_personalizados = calcularFeedPersonalizado(44, '', $post_id);
-        
-        if ($posts_personalizados) {
-            set_transient("similar_to_{$post_id}", $posts_personalizados, 15 * DAY_IN_SECONDS);
-            guardarLog("Feed calculado y guardado en caché para post ID: $post_id");
+        // Verificar si el post ya tiene caché
+        $similar_to_cache_key = "similar_to_{$post_id}";
+        if (get_transient($similar_to_cache_key)) {
+            // Si ya tiene caché, actualizar el progreso y pasar al siguiente post en la próxima ejecución
+            guardarLog("Post ID: $post_id ya tiene caché, saltando");
+            update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);
         } else {
-            guardarLog("Error al calcular feed para post ID: $post_id");
-        }
+            // Si no tiene caché, procesarlo
+            guardarLog("Procesando post ID: $post_id");
+            $posts_personalizados = calcularFeedPersonalizado(44, '', $post_id);
 
-        // Actualizar el último ID procesado
-        update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);
-        guardarLog("Proceso completado para post ID: $post_id");
+            if ($posts_personalizados) {
+                set_transient($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);  // Guardar en caché por 15 días
+                guardarLog("Feed calculado y guardado en caché para post ID: $post_id");
+            } else {
+                guardarLog("Error al calcular feed para post ID: $post_id");
+            }
+
+            // Actualizar el progreso con el último post procesado
+            update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);
+            guardarLog("Proceso completado para post ID: $post_id");
+        }
 
     } catch (Exception $e) {
         guardarLog("Error en el proceso: " . $e->getMessage());
     } finally {
-        // Asegurarse de eliminar el bloqueo al final del proceso
+        // Siempre eliminar el bloqueo al finalizar
         delete_transient(SIMILAR_TO_PROCESS_LOCK);
     }
 }
