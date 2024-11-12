@@ -26,11 +26,9 @@ function recalcularSimilarToFeed() {
 
             if (!$cached_data) {
                 $posts_personalizados = calcularFeedPersonalizado(44, '', $similar_to);
-                
                 if (!$posts_personalizados) {
                     error_log("Error al calcular el feed para 'similar_to_{$similar_to}'");
                 }
-                
                 set_transient($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);
             }
 
