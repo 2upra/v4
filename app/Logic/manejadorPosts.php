@@ -50,6 +50,25 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
     return $query_args;
 }
 
+function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
+{
+    global $wpdb;
+    $query_args = [
+        'post_type' => $args['post_type'],
+        'posts_per_page' => $posts,
+        'paged' => $paged,
+        'ignore_sticky_posts' => true,
+        'suppress_filters' => false,
+    ];
+    if (!empty($identifier)) {
+        $query_args = filtrarIdentifier($identifier, $query_args);
+    }
+    if ($args['post_type'] === 'social_post') {
+        $query_args = ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
+    }
+    return $query_args;
+}
+
 function obtenerDatosFeed($userId)
 {
     global $wpdb;
@@ -61,7 +80,8 @@ function obtenerDatosFeed($userId)
         $userId
     ), OBJECT_K);
     $vistas_posts = get_user_meta($userId, 'vistas_posts', true);
-
+    
+    chatgpt: esto aqui calcula muchos post para saber como ordenarlos eficientemente, esto tengo que dejarlo asi, es necesario, tienen que ser 50.000 para calcularlos todos 
     $args = [
         'post_type'      => 'social_post',
         'posts_per_page' => 50000,
@@ -181,6 +201,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
             if (!empty($feed_result['post_ids'])) {
                 $query_args['post__in'] = $feed_result['post_ids'];
                 $query_args['orderby'] = 'post__in';
+                $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, 2500);
 
                 if (!empty($feed_result['post_not_in'])) {
                     $query_args['post__not_in'] = $feed_result['post_not_in'];
@@ -250,6 +271,9 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
     }
 
     $post_ids = array_keys($posts_personalizados);
+
+    $post_ids = array_slice($post_ids, 0, 2500);
+
     if ($similar_to) {
         $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
             return $post_id != $similar_to;
@@ -278,6 +302,7 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
     $vistas_posts_processed = obtenerYProcesarVistasPosts($userId);
     $esAdmin = in_array('administrator', (array)$usuario->roles);
     $decay_factors = [];
+
     foreach ($datos['author_results'] as $post_data) {
         $post_date = $post_data->post_date;
         $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date;
@@ -286,6 +311,7 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
             $decay_factors[$diasDesdePublicacion] = getDecayFactor($diasDesdePublicacion);
         }
     }
+
     $posts_data = $datos['author_results'];
     $puntos_por_post = calcularPuntosPostBatch(
         $posts_data,
@@ -301,37 +327,13 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
 
     if (!empty($puntos_por_post)) {
         arsort($puntos_por_post);
+        ya hice esto aca pero por alguna razon siguen procesando el total en procesarPublicaciones
+        // Limitar a los primeros 2,500 posts
+        $puntos_por_post = array_slice($puntos_por_post, 0, 2500, true);
     }
     return $puntos_por_post;
 }
-
-function reiniciarFeed($current_user_id)
-{
-    global $wpdb;
-
-    // Obtener todos los transients relacionados con el usuario actual
-    $transient_pattern = '_transient_feed_personalizado_user_' . $current_user_id . '_%';
-    $backup_pattern = '_transient_feed_personalizado_user_' . $current_user_id . '_backup%';
-
-    // Consulta para obtener transients que coincidan con el patrón
-    $query = $wpdb->get_col($wpdb->prepare(
-        "SELECT option_name FROM $wpdb->options WHERE option_name LIKE %s OR option_name LIKE %s",
-        $transient_pattern,
-        $backup_pattern
-    ));
-
-    // Borrar transients y sus backups
-    foreach ($query as $option_name) {
-        // Eliminar el transient
-        $transient_name = str_replace('_transient_', '', $option_name); // Eliminar el prefijo '_transient_'
-        delete_transient($transient_name);
-
-        // Eliminar el backup relacionado en las opciones
-        delete_option($option_name . '_backup');
-    }
-
-    return count($query); // Retorna cuántos transients se eliminaron
-}
+pero aca al final solo necesito los 2.500 primeros en todos los casos, como sería (la paginacion es 12 post, pero el total que se carga el resultado de obtenerDatosFeed en muchos casos)
 function procesarPublicaciones($query_args, $args, $is_ajax)
 {
     ob_start();
@@ -353,7 +355,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 
     $total_posts = get_transient($cache_key);
     if ($total_posts === false) {
-        $query_args['no_found_rows'] = false;
+        $query_args['no_found_rows'] = true;
 
         // Crear la consulta con manejo de errores
         try {
@@ -422,24 +424,36 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     wp_reset_postdata();
     return ob_get_clean();
 }
-function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
+
+function reiniciarFeed($current_user_id)
 {
     global $wpdb;
-    $query_args = [
-        'post_type' => $args['post_type'],
-        'posts_per_page' => $posts,
-        'paged' => $paged,
-        'ignore_sticky_posts' => true,
-        'suppress_filters' => false,
-    ];
-    if (!empty($identifier)) {
-        $query_args = filtrarIdentifier($identifier, $query_args);
+
+    // Obtener todos los transients relacionados con el usuario actual
+    $transient_pattern = '_transient_feed_personalizado_user_' . $current_user_id . '_%';
+    $backup_pattern = '_transient_feed_personalizado_user_' . $current_user_id . '_backup%';
+
+    // Consulta para obtener transients que coincidan con el patrón
+    $query = $wpdb->get_col($wpdb->prepare(
+        "SELECT option_name FROM $wpdb->options WHERE option_name LIKE %s OR option_name LIKE %s",
+        $transient_pattern,
+        $backup_pattern
+    ));
+
+    // Borrar transients y sus backups
+    foreach ($query as $option_name) {
+        // Eliminar el transient
+        $transient_name = str_replace('_transient_', '', $option_name); // Eliminar el prefijo '_transient_'
+        delete_transient($transient_name);
+
+        // Eliminar el backup relacionado en las opciones
+        delete_option($option_name . '_backup');
     }
-    if ($args['post_type'] === 'social_post') {
-        $query_args = ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
-    }
-    return $query_args;
+
+    return count($query); // Retorna cuántos transients se eliminaron
 }
+
+
 function filtrarIdentifier($identifier, $query_args)
 {
     global $wpdb;
