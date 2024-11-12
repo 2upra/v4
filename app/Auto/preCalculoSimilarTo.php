@@ -148,7 +148,7 @@ function recalcularSimilarToFeed() {
 function agregar_cron_30_segundos($schedules) {
     if (!isset($schedules['every_30_seconds'])) {
         $schedules['every_30_seconds'] = [
-            'interval' => 15, 
+            'interval' => 30, 
             'display'  => __('Cada 30 segundos'),
         ];
     }
