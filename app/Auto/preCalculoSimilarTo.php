@@ -5,6 +5,8 @@ define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_feed_progress');
 
 // Función que se ejecutará en cada cron
 function recalcularSimilarToFeed() {
+    error_log("Cron 'recalcular_similar_to_feed_cron' se está ejecutando.", 0); // Log cuando el cron se ejecuta
+    
     // Recuperar el progreso de la última ejecución (post ID)
     $last_processed_post_id = get_option(SIMILAR_TO_PROGRESS_OPTION, 0);
     
@@ -56,8 +58,13 @@ function recalcularSimilarToFeed() {
 // Agregar a cron para ejecutar cada 30 segundos
 add_action('init', 'agregarCron30Segundos');
 function agregarCron30Segundos() {
-    if (!wp_next_scheduled('recalcular_similar_to_feed_cron')) {
-        wp_schedule_event(time(), 'every_30_seconds', 'recalcular_similar_to_feed_cron');
+    if (!wp_next_scheduled('recalcular_similar_to_feed_cron_30sec')) {
+        $scheduled = wp_schedule_event(time(), 'every_30_seconds', 'recalcular_similar_to_feed_cron_30sec');
+        if ($scheduled) {
+            error_log("Evento cron programado correctamente.", 0); // Log cuando el cron se programa
+        } else {
+            error_log("Error al programar el evento cron.", 0); // Log si hay un error al programar el cron
+        }
     }
 }
 
@@ -74,4 +81,4 @@ function agregar_cron_30_segundos($schedules) {
 }
 
 // Registrar el hook del cron
-add_action('recalcular_similar_to_feed_cron', 'recalcularSimilarToFeed');
+add_action('recalcular_similar_to_feed_cron_30sec', 'recalcularSimilarToFeed');
