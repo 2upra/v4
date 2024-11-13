@@ -1,5 +1,5 @@
 <?
-porque guarda un respaldo? creo que se acumulan y no lo veo necesario pero primero quiero me expliques si es necesario
+
 function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page) {
     try {
         if (!$current_user_id) {
