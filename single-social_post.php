@@ -33,11 +33,12 @@ $post_title = get_the_title();
 $tipo_audio = isset( $datos_decoded['tipo_audio'][ $active_lang ][0] ) ? $datos_decoded['tipo_audio'][ $active_lang ][0] : 'Sample';
 $seo_title = $post_title . ' | ' . $tipo_audio . ' free';
 
-// Utilizar el filtro document_title_parts
+// Filtro para modificar el título de la página
 add_filter( 'document_title_parts', function( $title ) use ( $seo_title ) {
+    // Asegúrate de que el título principal se esté modificando
     $title['title'] = $seo_title;
     return $title;
-} );
+}, 1); // Prioridad baja para que se ejecute antes
 
 // Meta descripción
 $sugerencias_busqueda = isset( $datos_decoded['sugerencia_busqueda'][ $active_lang ] ) ? implode( ', ', $datos_decoded['sugerencia_busqueda'][ $active_lang ] ) : '';
@@ -48,11 +49,12 @@ $meta_description_full = $sugerencias_busqueda . ' ' . $descripcion_ia;
 $meta_description = mb_substr( wp_strip_all_tags( $meta_description_full ), 0, 160 );
 $meta_description = esc_attr( $meta_description );
 
+// Añadir la meta descripción en el <head>
 add_action( 'wp_head', function () use ( $meta_description ) {
     if ( ! empty( $meta_description ) ) {
         echo '<meta name="description" content="' . $meta_description . '">' . "\n";
     }
-}, 1 );
+}, 1 ); // Prioridad baja para que se ejecute temprano en wp_head
 
 // Esquema JSON-LD
 $schema = [
@@ -60,12 +62,13 @@ $schema = [
     "@type"       => "AudioObject",
     "name"        => $seo_title,
     "description" => $meta_description,
-    "datePublished"=> get_the_date( 'c' ),
+    "datePublished" => get_the_date( 'c' ),
     "author"      => [
         "@type" => "Person",
         "name"  => get_the_author()
     ]
 ];
+
 if ( ! empty( $datos_decoded ) ) {
     if ( isset( $datos_decoded['descripcion_ia'][ $active_lang ] ) ) {
         $schema['description'] = esc_html( $datos_decoded['descripcion_ia'][ $active_lang ] );
@@ -77,9 +80,11 @@ if ( ! empty( $datos_decoded ) ) {
         $schema['keywords'] = esc_html( implode( ", ", $datos_decoded['tags_posibles'][ $active_lang ] ) );
     }
 }
+
+// Añadir el esquema JSON-LD al <head>
 add_action( 'wp_head', function () use ( $schema ) {
     echo '<script type="application/ld+json">' . wp_json_encode( $schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES ) . '</script>' . "\n";
-}, 2 );
+}, 2 ); // Se ejecuta después de la meta descripción
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
