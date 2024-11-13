@@ -1,5 +1,9 @@
  <?
 
+add_action('init', function() {
+    wp_deregister_script('heartbeat');
+});
+
 function desactivar_todos_soportes_bloques( $settings, $name ) {
     // Lista completa de soportes a desactivar
     $soportes_a_desactivar = array(

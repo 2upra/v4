@@ -24,12 +24,13 @@ define('AJAX_POST_LOG_ENABLED', false);
 define('IA_LOG_ENABLED', false);
 define('POST_LOG_ENABLED', false);
 define('STREAM_LOG_ENABLED', false);
-
+/*
 function debug_page_load_time() {
     $time = number_format((microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"]) * 1000, 2);
     error_log("Página cargada en: {$time}ms");
 }
 add_action('shutdown', 'debug_page_load_time');
+*/
 
 // Añadir iconos personalizados en el <head> de todas las páginas
 function headGeneric()
