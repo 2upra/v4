@@ -246,7 +246,6 @@ function dev()
                         ],
 
                     ];
-
                     foreach ($images as $index => $image):
                         $optimized_url = isset($image['url']) ? img($image['url'], 'medium', 50, 'all') : '';
 
@@ -298,7 +297,7 @@ function dev()
                                         </div>
                                     </div>
                                 <? else: ?>
-                                    <img src="<? echo esc_url($optimized_url); ?>" alt="<? echo esc_attr($image['alt']); ?>">
+                                    <img src="<? echo esc_url($optimized_url); ?>" alt="<? echo isset($image['alt']) ? esc_attr($image['alt']) : ''; ?>">
                                 <? endif; ?>
                             </div>
                             <h3 class="XXD1"><? echo wp_kses_post($image['title']); ?></h3>
