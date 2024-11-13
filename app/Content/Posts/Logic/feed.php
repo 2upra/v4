@@ -51,6 +51,17 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             if ($paged === 1) {
                 guardarLog("Usuario ID: $current_user_id calculando nuevo feed para primera página (sin caché)");
                 $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
+
+                if (!$posts_personalizados) {
+                    guardarLog("Error: Fallo al calcular feed personalizado para usuario ID: $current_user_id");
+                    return ['post_ids' => [], 'post_not_in' => []];
+                }
+
+                // Guardar en caché y respaldo
+                $cache_data = ['posts' => $posts_personalizados, 'timestamp' => time()];
+                set_transient($transient_key, $cache_data, $cache_time);
+                update_option($transient_key . '_backup', $posts_personalizados);
+
             } else {
                 guardarLog("Usuario ID: $current_user_id intentando recuperar backup para página $paged (sin caché)");
                 $posts_personalizados = get_option($transient_key . '_backup', []);
@@ -65,6 +76,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
                     return ['post_ids' => [], 'post_not_in' => []];
                 }
 
+                // Guardar en caché y respaldo
                 $cache_data = ['posts' => $posts_personalizados, 'timestamp' => time()];
                 set_transient($transient_key, $cache_data, $cache_time);
                 update_option($transient_key . '_backup', $posts_personalizados);
