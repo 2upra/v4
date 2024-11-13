@@ -22,7 +22,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
                 $posts_personalizados = $cached_data;
             } else {
                 guardarLog("Usuario ID: $current_user_id calculando nuevo feed similar para post ID: $similar_to");
-                $posts_personalizados = calcularSimilarPosts($similar_to);
+                $posts_personalizados = calcularFeedPersonalizado(44, '', $similar_to);
 
                 if (!$posts_personalizados) {
                     guardarLog("Error: Fallo al calcular posts similares para post ID: $similar_to");
@@ -192,7 +192,7 @@ function recalcularSimilarToFeed() {
                 $last_processed_post_id = $post_id;
             } else {
                 // Calcular posts similares y guardar en caché
-                $posts_similares = calcularSimilarPosts($post_id);
+                $posts_similares = calcularFeedPersonalizado(44, '', $post_id);
 
                 if ($posts_similares) {
                     set_cache_in_file($similar_to_cache_key, $posts_similares, 15 * DAY_IN_SECONDS);
