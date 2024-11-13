@@ -54,7 +54,7 @@ function headGeneric()
 }
 add_action('wp_head', 'headGeneric');
 
-// Detecta el idioma del navegador
+/*
 function encolar_sw_js()
 {
     wp_enqueue_script(
@@ -66,7 +66,7 @@ function encolar_sw_js()
     );
 }
 add_action('wp_enqueue_scripts', 'encolar_sw_js');
-
+*/
 function escribirLog($mensaje, $archivo, $max_lineas = 1000)
 {
     // Verificaciones iniciales de seguridad
