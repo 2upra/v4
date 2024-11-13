@@ -2,14 +2,7 @@
 /*
 Template Name: Inicio
 */
-?>
 
-<head>
-    <meta name="robots" content="index, follow">
-    <?php wp_head(); ?>
-</head>
-
-<?php
 // Función para obtener el idioma preferido del navegador
 function obtenerIdiomaDelNavegador() {
     if (!isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
@@ -44,7 +37,14 @@ add_action('wp_head', function () use ($titulo, $descripcion) {
 // Configurar cookies para el título y descripción
 setcookie("page_title", $titulo, time() + 3600, "/");
 setcookie("page_description", $descripcion, time() + 3600, "/");
+?>
 
+<head>
+    <meta name="robots" content="index, follow">
+    <?php wp_head(); ?>
+</head>
+
+<?php
 get_header();
 $user_id = get_current_user_id();
 $acciones = get_user_meta($user_id, 'acciones', true);
