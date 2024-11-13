@@ -12,7 +12,6 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
         // Manejo de posts similares
         if ($similar_to) {
             $post_not_in[] = $similar_to;
-            $cache_suffix = "_similar_" . $similar_to;
             $similar_to_cache_key = "similar_to_{$similar_to}";
 
             // Verificar caché global en archivos
@@ -23,71 +22,76 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
                 $posts_personalizados = $cached_data;
             } else {
                 guardarLog("Usuario ID: $current_user_id calculando nuevo feed similar para post ID: $similar_to");
-                $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
+                $posts_personalizados = calcularSimilarPosts($similar_to);
 
                 if (!$posts_personalizados) {
-                    guardarLog("Error: Fallo al calcular feed similar para usuario ID: $current_user_id");
+                    guardarLog("Error: Fallo al calcular posts similares para post ID: $similar_to");
                     return ['post_ids' => [], 'post_not_in' => []];
                 }
 
                 set_cache_in_file($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);
             }
+
+            // Para usuarios anónimos, no se genera caché adicional
+            // Para usuarios logueados, podríamos personalizar aún más si es necesario
         } else {
-            $cache_suffix = "";
-        }
+            // Generar clave de caché para el feed personalizado general
+            $cache_key = ($current_user_id == 44)
+                ? "feed_personalizado_user_44_{$identifier}"
+                : "feed_personalizado_user_{$current_user_id}_{$identifier}";
 
-        // Generar clave de caché
-        $cache_key = ($current_user_id == 44)
-            ? "feed_personalizado_anonymous_{$identifier}{$cache_suffix}"
-            : "feed_personalizado_user_{$current_user_id}_{$identifier}{$cache_suffix}";
+            $cache_time = $is_admin ? 7200 : 43200; // 2 horas para admin, 12 horas para usuarios
 
-        $cache_time = $is_admin ? 7200 : 43200; // 2 horas para admin, 12 horas para usuarios
+            // Verificar caché en archivos
+            $cache_data = get_cache_from_file($cache_key);
 
-        // Verificar caché en archivos
-        $cache_data = get_cache_from_file($cache_key);
-
-        if ($cache_data) {
-            guardarLog("Usuario ID: $current_user_id usando caché para feed personalizado");
-            $posts_personalizados = $cache_data['posts'];
-        } else {
-            if ($paged === 1) {
-                guardarLog("Usuario ID: $current_user_id calculando nuevo feed para primera página (sin caché)");
-                $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
-
-                if (!$posts_personalizados) {
-                    guardarLog("Error: Fallo al calcular feed personalizado para usuario ID: $current_user_id");
-                    return ['post_ids' => [], 'post_not_in' => []];
-                }
-
-                // Guardar en caché y respaldo
-                $cache_content = ['posts' => $posts_personalizados, 'timestamp' => time()];
-                set_cache_in_file($cache_key, $cache_content, $cache_time);
-
-                // Guardar un respaldo en las opciones
-                update_option($cache_key . '_backup', $posts_personalizados);
-
+            if ($cache_data) {
+                guardarLog("Usuario ID: $current_user_id usando caché para feed personalizado");
+                $posts_personalizados = $cache_data['posts'];
             } else {
-                guardarLog("Usuario ID: $current_user_id intentando recuperar backup para página $paged (sin caché)");
-                $posts_personalizados = get_option($cache_key . '_backup', []);
+                if ($paged === 1) {
+                    guardarLog("Usuario ID: $current_user_id calculando nuevo feed para primera página (sin caché)");
+                    $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier);
 
-                if (empty($posts_personalizados)) {
-                    guardarLog("Usuario ID: $current_user_id backup no encontrado, calculando nuevo feed (sin caché)");
-                    $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
+                    if (!$posts_personalizados) {
+                        guardarLog("Error: Fallo al calcular feed personalizado para usuario ID: $current_user_id");
+                        return ['post_ids' => [], 'post_not_in' => []];
+                    }
+
+                    // Guardar en caché y respaldo
+                    $cache_content = ['posts' => $posts_personalizados, 'timestamp' => time()];
+                    set_cache_in_file($cache_key, $cache_content, $cache_time);
+
+                    // Guardar un respaldo en las opciones
+                    update_option($cache_key . '_backup', $posts_personalizados);
+
+                } else {
+                    guardarLog("Usuario ID: $current_user_id intentando recuperar backup para página $paged (sin caché)");
+                    $posts_personalizados = get_option($cache_key . '_backup', []);
+
+                    if (empty($posts_personalizados)) {
+                        guardarLog("Usuario ID: $current_user_id backup no encontrado, calculando nuevo feed (sin caché)");
+                        $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier);
+                    }
+
+                    if (!$posts_personalizados) {
+                        guardarLog("Error: Fallo al calcular feed personalizado para usuario ID: $current_user_id");
+                        return ['post_ids' => [], 'post_not_in' => []];
+                    }
+
+                    // Guardar en caché y respaldo
+                    $cache_content = ['posts' => $posts_personalizados, 'timestamp' => time()];
+                    set_cache_in_file($cache_key, $cache_content, $cache_time);
+                    update_option($cache_key . '_backup', $posts_personalizados);
                 }
-
-                if (!$posts_personalizados) {
-                    guardarLog("Error: Fallo al calcular feed personalizado para usuario ID: $current_user_id");
-                    return ['post_ids' => [], 'post_not_in' => []];
-                }
-
-                // Guardar en caché y respaldo
-                $cache_content = ['posts' => $posts_personalizados, 'timestamp' => time()];
-                set_cache_in_file($cache_key, $cache_content, $cache_time);
-                update_option($cache_key . '_backup', $posts_personalizados);
             }
         }
 
-        $post_ids = array_keys($posts_personalizados);
+        if (isset($posts_personalizados)) {
+            $post_ids = array_keys($posts_personalizados);
+        } else {
+            $post_ids = [];
+        }
 
         if (count($post_ids) > POSTINLIMIT) {
             guardarLog("Usuario ID: $current_user_id - Limitando resultados a " . POSTINLIMIT . " posts");
@@ -112,6 +116,101 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
     } catch (Exception $e) {
         guardarLog("Error crítico para usuario ID: $current_user_id - " . $e->getMessage());
         return ['post_ids' => [], 'post_not_in' => []];
+    }
+}
+
+
+//es un calculo automatico que se ejecuta cada 30 seg para diferentes post para que agilizar la carga de los post 
+function recalcularSimilarToFeed() {
+    // Verificar si hay una detención prolongada activa
+    $stop_until = get_option(SIMILAR_TO_STOP_UNTIL_OPTION, 0);
+    if ($stop_until && time() < $stop_until) {
+        return;
+    } elseif ($stop_until && time() >= $stop_until) {
+        delete_option(SIMILAR_TO_STOP_UNTIL_OPTION);
+        update_option(SIMILAR_TO_CACHED_COUNT_OPTION, 0);
+    }
+
+    // Verificar si un proceso ya está en ejecución
+    $lock_time = get_cache_from_file(SIMILAR_TO_PROCESS_LOCK);
+    if ($lock_time && (time() - $lock_time < SIMILAR_TO_MAX_LOCK_TIME)) {
+        return;
+    } elseif ($lock_time) {
+        delete_cache_file(SIMILAR_TO_PROCESS_LOCK);
+    }
+
+    // Establecer bloqueo
+    set_cache_in_file(SIMILAR_TO_PROCESS_LOCK, time(), SIMILAR_TO_MAX_LOCK_TIME);
+
+    try {
+        // Obtener el ID del último post procesado
+        $last_processed_post_id = get_option(SIMILAR_TO_PROGRESS_OPTION, 0);
+
+        global $wpdb;
+
+        while (true) {
+            // Obtener el siguiente post a procesar
+            $query = $wpdb->prepare(
+                "SELECT p.ID 
+                FROM {$wpdb->posts} p
+                INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+                WHERE p.post_type = 'social_post'
+                AND p.post_status = 'publish'
+                AND p.ID > %d
+                AND pm.meta_key = 'datosAlgoritmo'
+                ORDER BY p.ID ASC
+                LIMIT 1",
+                $last_processed_post_id
+            );
+
+            $post_id = $wpdb->get_var($query);
+
+            if (!$post_id) {
+                update_option(SIMILAR_TO_PROGRESS_OPTION, 0);
+                update_option(SIMILAR_TO_CACHED_COUNT_OPTION, 0);
+                break;
+            }
+
+            $similar_to_cache_key = "similar_to_$post_id";
+
+            if (get_cache_from_file($similar_to_cache_key)) {
+                update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);
+
+                // Incrementar el contador de posts con caché
+                $cached_count = get_option(SIMILAR_TO_CACHED_COUNT_OPTION, 0);
+                $cached_count++;
+                update_option(SIMILAR_TO_CACHED_COUNT_OPTION, $cached_count);
+
+                // Verificar límite de posts con caché
+                if ($cached_count >= SIMILAR_TO_CONSECUTIVE_LIMIT) {
+                    $new_stop_until = time() + SIMILAR_TO_STOP_DURATION;
+                    update_option(SIMILAR_TO_STOP_UNTIL_OPTION, $new_stop_until);
+                    update_option(SIMILAR_TO_CACHED_COUNT_OPTION, 0);
+                    break;
+                }
+
+                $last_processed_post_id = $post_id;
+            } else {
+                // Calcular posts similares y guardar en caché
+                $posts_similares = calcularSimilarPosts($post_id);
+
+                if ($posts_similares) {
+                    set_cache_in_file($similar_to_cache_key, $posts_similares, 15 * DAY_IN_SECONDS);
+                }
+
+                update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);
+                update_option(SIMILAR_TO_CACHED_COUNT_OPTION, 0);
+
+                // Romper después de procesar un post
+                break;
+            }
+        }
+
+    } catch (Exception $e) {
+        // Manejo de excepciones
+    } finally {
+        // Eliminar el bloqueo
+        delete_cache_file(SIMILAR_TO_PROCESS_LOCK);
     }
 }
 
