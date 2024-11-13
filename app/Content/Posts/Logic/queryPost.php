@@ -175,9 +175,9 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                     $query_args['post__in'] = $feed_result['post_ids'];
                     $query_args['orderby'] = 'post__in';
 
-                    if (count($feed_result['post_ids']) > 2500) {
-                        error_log("[ordenamientoQuery] Aviso: Limitando resultados a 2500 posts");
-                        $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, 2500);
+                    if (count($feed_result['post_ids']) > POSTINLIMIT) {
+                        error_log("[ordenamientoQuery] Aviso: Limitando resultados a " . POSTINLIMIT . " posts");
+                        $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, POSTINLIMIT);
                     }
 
                     if (!empty($feed_result['post_not_in'])) {

@@ -2,8 +2,6 @@
 
 
 global $wpdb;
-define('INTERES_TABLE', "{$wpdb->prefix}interes");
-define('BATCH_SIZE', 1000);
 
 function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
 {
@@ -45,7 +43,8 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
 
     if (!empty($puntos_por_post)) {
         arsort($puntos_por_post);
-        $puntos_por_post = array_slice($puntos_por_post, 0, 2500, true);
+
+        $puntos_por_post = array_slice($puntos_por_post, 0, POSTINLIMIT, true);
     }
     return $puntos_por_post;
 }

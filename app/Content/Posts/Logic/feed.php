@@ -85,11 +85,11 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
 
         $post_ids = array_keys($posts_personalizados);
 
-        if (count($post_ids) > 2500) {
-            guardarLog("Usuario ID: $current_user_id - Limitando resultados a 2500 posts");
-            $post_ids = array_slice($post_ids, 0, 2500);
+        if (count($post_ids) > POSTINLIMIT) {
+            guardarLog("Usuario ID: $current_user_id - Limitando resultados a " . POSTINLIMIT . " posts");
+            $post_ids = array_slice($post_ids, 0, POSTINLIMIT);
         }
-
+        
         if ($similar_to) {
             $post_ids = array_filter($post_ids, function ($post_id) use ($similar_to) {
                 return $post_id != $similar_to;
