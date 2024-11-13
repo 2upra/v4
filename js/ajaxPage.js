@@ -3,21 +3,88 @@ const pageCache = {};
 const isFirefox = typeof InstallTrigger !== 'undefined';
 
 if (isFirefox) {
-  // Agrega la clase "firefox" al body
-  document.body.classList.add('firefox');
+    // Agrega la clase "firefox" al body
+    document.body.classList.add('firefox');
 
-  // Inserta el SVG para el filtro de desenfoque
-  const svg = `
+    // Inserta el SVG para el filtro de desenfoque
+    const svg = `
     <svg style="display: none;">
       <filter id="blur-effect">
         <feGaussianBlur stdDeviation="10" />
       </filter>
     </svg>`;
-  document.body.insertAdjacentHTML('afterbegin', svg);
+    document.body.insertAdjacentHTML('afterbegin', svg);
 }
 
 function inicializarScripts() {
-    ['inicializarWaveforms', 'inicializarReproductorAudio', 'minimizarform', 'selectorformtipo', 'ajax_submit', 'borrarcomentario', 'colab', 'configuser', 'deletepost', 'diferidopost', 'editarcomentario', 'like', 'notificacioncolab', 'busqueda', 'updateBackgroundColor', 'presentacionmusic', 'seguir', 'registro', 'comentarios', 'botoneditarpost', 'fan', 'perfilpanel', 'smooth', 'navpanel', 'borderborder', 'initializeFormFunctions', 'initializeModalregistro', 'submenu', 'selectortipousuario', 'empezarcolab', 'subidaRolaForm', 'avances', 'updateDates', 'initializeProgressSegments', 'initializeCustomTooltips', 'fondoAcciones', 'pestanasgroup', 'manejoDeLogs', 'progresosinteractive', 'setupScrolling', 'inicializarDescargas', 'handleAllRequests', 'textflux', 'autoFillUserInfo', 'inicializarPestanas', 'meta', 'reporteScript', 'generarGrafico', 'grafico', 'IniciadoresConfigPerfil', 'proyectoForm', 'inicializarAlerta', 'autoRows', 'iniciarRS', 'initializeUI', 'tagsPosts', 'vistaPost', 'initEditWordPress', 'reiniciarCargaDiferida', 'registrarVistas', 'colec', 'cambiarFiltroTiempo', 'filtrosPost', 'contadorDeSamples', 'establecerFiltros', 'actualizarBotonFiltro',].forEach(func => {
+    [
+        'inicializarWaveforms',
+        'inicializarReproductorAudio',
+        'minimizarform',
+        'selectorformtipo',
+        'ajax_submit',
+        'borrarcomentario',
+        'colab',
+        'configuser',
+        'deletepost',
+        'diferidopost',
+        'editarcomentario',
+        'like',
+        'notificacioncolab',
+        'busqueda',
+        'updateBackgroundColor',
+        'presentacionmusic',
+        'seguir',
+        'registro',
+        'comentarios',
+        'botoneditarpost',
+        'fan',
+        'perfilpanel',
+        'smooth',
+        'navpanel',
+        'borderborder',
+        'initializeFormFunctions',
+        'initializeModalregistro',
+        'submenu',
+        'selectortipousuario',
+        'empezarcolab',
+        'subidaRolaForm',
+        'avances',
+        'updateDates',
+        'initializeProgressSegments',
+        'initializeCustomTooltips',
+        'fondoAcciones',
+        'pestanasgroup',
+        'manejoDeLogs',
+        'progresosinteractive',
+        'setupScrolling',
+        'inicializarDescargas',
+        'handleAllRequests',
+        'textflux',
+        'autoFillUserInfo',
+        'inicializarPestanas',
+        'meta',
+        'reporteScript',
+        'generarGrafico',
+        'grafico',
+        'IniciadoresConfigPerfil',
+        'proyectoForm',
+        'inicializarAlerta',
+        'autoRows',
+        'iniciarRS',
+        'initializeUI',
+        'tagsPosts',
+        'vistaPost',
+        'initEditWordPress',
+        'reiniciarCargaDiferida',
+        'registrarVistas',
+        'colec',
+        'cambiarFiltroTiempo',
+        'filtrosPost',
+        'contadorDeSamples',
+        'establecerFiltros',
+        'actualizarBotonFiltro'
+    ].forEach(func => {
         if (typeof window[func] === 'function') {
             try {
                 window[func]();
@@ -57,7 +124,6 @@ function shouldCache(url) {
     return !['https://2upra.com/nocache'].some(noCacheUrl => new RegExp(noCacheUrl.replace(/\*/g, '.*')).test(url));
 }
 
-
 function loadContent(enlace, isPushState) {
     console.log('Iniciando carga de contenido:', enlace);
     const lowerEnlace = enlace.trim().toLowerCase();
@@ -83,7 +149,7 @@ function loadContent(enlace, isPushState) {
             if (shouldCache(enlace)) pageCache[enlace] = content;
 
             loadingBar.style.cssText = 'width: 100%; transition: width 0.1s ease, opacity 0.3s ease';
-            setTimeout(() => loadingBar.style.cssText = 'width: 0%; opacity: 0', 100);
+            setTimeout(() => (loadingBar.style.cssText = 'width: 0%; opacity: 0'), 100);
 
             if (isPushState) history.pushState(null, '', enlace);
 
@@ -98,41 +164,47 @@ function loadContent(enlace, isPushState) {
         .catch(error => console.error('Error al cargar la página:', error));
 }
 
-document.addEventListener('DOMContentLoaded', function () {
+const login = ajaxPage.logeado;
+
+Document.addEventListener('DOMContentLoaded', function () {
     if (!window.location.href.includes('?fb-edit=1')) {
-        if (!window.galleInicializado && typeof window.galle === 'function') {
-            window.galle();
-            window.galleInicializado = true;
-        }
         reinicializar();
-        loadStripe(initializeStripeFunctions);
+
+        if (login) {
+            if (!window.galleInicializado && typeof window.galle === 'function') {
+                window.galle();
+                window.galleInicializado = true;
+            }
+            
+            if (typeof loadStripe === 'function') {
+                loadStripe(initializeStripeFunctions);
+            }
+        }
     }
 
     function handleContentLoad(event, enlace, element) {
         // If the element or its parent has 'no-ajax' class, return true (bypass AJAX).
         if (element.classList.contains('no-ajax') || element.closest('.no-ajax')) return true;
-    
+
         // Ensure the 'enlace' is a valid string before proceeding.
         if (typeof enlace !== 'string' || !enlace) {
             console.warn('Invalid enlace:', enlace);
             return true;
         }
-    
+
         // Convert the enlace to lowercase and trim it.
         const lowerCaseLink = enlace.trim().toLowerCase();
-    
+
         // Check if it's a valid link that should be handled via AJAX.
-        if (lowerCaseLink.endsWith('.pdf') || 
-            ['https://2upra.com/nocache', 'javascript:', 'data:', 'vbscript:'].some(prefix => lowerCaseLink.startsWith(prefix)) || 
-            enlace.includes('#')) {
+        if (lowerCaseLink.endsWith('.pdf') || ['https://2upra.com/nocache', 'javascript:', 'data:', 'vbscript:'].some(prefix => lowerCaseLink.startsWith(prefix)) || enlace.includes('#')) {
             return true;
         }
-    
+
         // Prevent the default link click behavior and load the content via AJAX.
         event.preventDefault();
         loadContent(enlace, true);
     }
-    
+
     document.querySelectorAll('a, button a, .botones-panel').forEach(element => {
         element.addEventListener('click', function (event) {
             const enlace = this.getAttribute('href') || this.getAttribute('data-href') || this.querySelector('a')?.getAttribute('href');

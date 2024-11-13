@@ -278,7 +278,7 @@ function scriptsOrdenados()
         );
     }
 
-    // Localización de scripts solo si el usuario está logueado
+
     if (is_user_logged_in()) {
         $nonce = wp_create_nonce('wp_rest');
         wp_localize_script('galleV2', 'galleV2', array(
@@ -288,17 +288,18 @@ function scriptsOrdenados()
         ));
     }
 
+    if (is_user_logged_in()) {
+        wp_localize_script('ajaxPage', 'ajaxPage', array(
+            'logeado' => get_current_user_id()
+        ));
+    }
+
     // Scripts externos
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
     wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', ['chart-js'], null, true);
     wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.7.8', true);
     wp_enqueue_script('jquery');
     wp_add_inline_script('genericAjax', 'const wpAdminUrl = "' . admin_url() . '";', 'before');
-
-    wp_localize_script('notificaciones', 'datosNotificaciones', array(
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'usuarioID' => get_current_user_id()
-    ));
 
     // Localización de scripts
     $ajax_url = admin_url('admin-ajax.php');
