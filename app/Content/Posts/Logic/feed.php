@@ -1,5 +1,5 @@
 <?
-
+porque guarda un respaldo? creo que se acumulan y no lo veo necesario pero primero quiero me expliques si es necesario
 function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page) {
     try {
         if (!$current_user_id) {
@@ -63,11 +63,11 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
                     guardarCache($cache_key, $cache_content, $cache_time);
 
                     // Guardar un respaldo en las opciones
-                    update_option($cache_key . '_backup', $posts_personalizados);
+                    //update_option($cache_key . '_backup', $posts_personalizados);
 
                 } else {
                     guardarLog("Usuario ID: $current_user_id intentando recuperar backup para página $paged (sin caché)");
-                    $posts_personalizados = get_option($cache_key . '_backup', []);
+                    //$posts_personalizados = get_option($cache_key . '_backup', []);
 
                     if (empty($posts_personalizados)) {
                         guardarLog("Usuario ID: $current_user_id backup no encontrado, calculando nuevo feed (sin caché)");
@@ -82,7 +82,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
                     // Guardar en caché y respaldo
                     $cache_content = ['posts' => $posts_personalizados, 'timestamp' => time()];
                     guardarCache($cache_key, $cache_content, $cache_time);
-                    update_option($cache_key . '_backup', $posts_personalizados);
+                    //update_option($cache_key . '_backup', $posts_personalizados);
                 }
             }
         }
@@ -120,7 +120,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
 }
 
 
-
+//cuando se reinicia el feed, se puede aprovechar para generar la cached del feed
 function reiniciarFeed($current_user_id) {
     global $wpdb;
 
@@ -149,6 +149,7 @@ function reiniciarFeed($current_user_id) {
     }
 
     // Eliminar los respaldos de opciones relacionados
+    /*
     $option_pattern = ($current_user_id == 44)
         ? 'feed_personalizado_anonymous_%'
         : 'feed_personalizado_user_' . $current_user_id . '_%';
@@ -163,7 +164,7 @@ function reiniciarFeed($current_user_id) {
             guardarLog("Backup eliminado: {$option_name} para usuario ID: $current_user_id");
         }
     }
-
+    */
     borrarCache('feed_datos_' . $current_user_id);
     guardarLog("Caché específica eliminada: feed_datos_$current_user_id");
 
