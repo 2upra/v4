@@ -701,6 +701,8 @@ function filtrosPost() {
     console.log('Iniciando filtrosPost()');
 
     const filtrosPost = document.getElementById('filtrosPost');
+    if (!filtrosPost) return;
+
     let filtrosActivos = [];
 
     async function cargarFiltrosGuardados() {
@@ -710,10 +712,9 @@ function filtrosPost() {
             console.log('Respuesta obtenerFiltros:', respuesta);
 
             if (respuesta.success && respuesta.data && respuesta.data.filtros) {
-                filtrosActivos = respuesta.data.filtros; // Nota el cambio aquí para acceder a data.filtros
+                filtrosActivos = respuesta.data.filtros;
                 console.log('Filtros a activar:', filtrosActivos);
 
-                // Forzar un pequeño retraso para asegurar que el DOM está listo
                 setTimeout(() => {
                     filtrosActivos.forEach(filtro => {
                         const checkbox = document.querySelector(`input[name="${filtro}"]`);
@@ -731,6 +732,8 @@ function filtrosPost() {
     }
 
     const checkboxes = filtrosPost.querySelectorAll('input[type="checkbox"]');
+    if (!checkboxes.length) return;
+
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function () {
             console.log('Checkbox cambiado:', this.name, 'Estado:', this.checked);
@@ -746,19 +749,22 @@ function filtrosPost() {
     });
 
     const botonGuardar = filtrosPost.querySelector('.botonprincipal');
+    if (!botonGuardar) return;
+
     botonGuardar.addEventListener('click', async function () {
         const respuesta = await enviarAjax('guardarFiltroPost', {
             filtros: JSON.stringify(filtrosActivos)
         });
 
         if (respuesta.success) {
-            //window.reiniciarCargaDiferida();
             window.limpiarBusqueda();
             establecerFiltros();
         }
     });
 
     const botonRestablecer = filtrosPost.querySelector('.botonsecundario');
+    if (!botonRestablecer) return;
+
     botonRestablecer.addEventListener('click', async function () {
         filtrosActivos = [];
         checkboxes.forEach(checkbox => (checkbox.checked = false));
@@ -768,7 +774,6 @@ function filtrosPost() {
         });
 
         if (respuesta.success) {
-            //window.reiniciarCargaDiferida();
             window.limpiarBusqueda();
             establecerFiltros();
         }
