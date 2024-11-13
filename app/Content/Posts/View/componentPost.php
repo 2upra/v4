@@ -209,7 +209,6 @@ function imagenPostList($block, $es_suscriptor, $post_id)
     return $output;
 }
 
-//esto funciona muy mal porque cuando es use temp true, en vez de usar de las imagenes que ya se subio, vuelve a subir aunque exista, no esta nada optimizado aunque funcione, es uy lento y ocupa espacio resubiendo las mismas imagenes
 function imagenPost($post_id, $size = 'medium', $quality = 50, $strip = 'all', $pixelated = false, $use_temp = false)
 {
     $post_thumbnail_id = get_post_thumbnail_id($post_id);
@@ -274,25 +273,6 @@ function obtenerImagenAleatoria($directory)
     return $images[array_rand($images)];
 }
 
-
-function agregar_soporte_jfif($mimes)
-{
-    $mimes['jfif'] = 'image/jpeg';
-    return $mimes;
-}
-add_filter('upload_mimes', 'agregar_soporte_jfif');
-
-// Extiende wp_check_filetype para reconocer .jfif
-function extender_wp_check_filetype($types, $filename, $mimes)
-{
-    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-    if ($ext === 'jfif') {
-        return ['ext' => 'jpeg', 'type' => 'image/jpeg'];
-    }
-    return $types;
-}
-add_filter('wp_check_filetype_and_ext', 'extender_wp_check_filetype', 10, 3);
-
 function subirImagenALibreria($file_path, $post_id)
 {
     if (!file_exists($file_path)) {
@@ -335,6 +315,25 @@ function subirImagenALibreria($file_path, $post_id)
     }
     return false;
 }
+
+function agregar_soporte_jfif($mimes)
+{
+    $mimes['jfif'] = 'image/jpeg';
+    return $mimes;
+}
+add_filter('upload_mimes', 'agregar_soporte_jfif');
+
+// Extiende wp_check_filetype para reconocer .jfif
+function extender_wp_check_filetype($types, $filename, $mimes)
+{
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    if ($ext === 'jfif') {
+        return ['ext' => 'jpeg', 'type' => 'image/jpeg'];
+    }
+    return $types;
+}
+add_filter('wp_check_filetype_and_ext', 'extender_wp_check_filetype', 10, 3);
+
 
 function img($url, $quality = 40, $strip = 'all') {
     if ($url === null || $url === '') {

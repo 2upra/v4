@@ -3,7 +3,7 @@
 function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page) {
     try {
         if (!$current_user_id) {
-            error_log("[obtenerFeedPersonalizado] Error: ID de usuario no válido");
+            guardarLog("Error: ID de usuario no válido al obtener feed personalizado");
             return ['post_ids' => [], 'post_not_in' => []];
         }
 
@@ -19,14 +19,14 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             $cached_data = get_transient($similar_to_cache_key);
 
             if ($cached_data) {
-                error_log("[obtenerFeedPersonalizado] Aviso: Usando caché global para similar_to_{$similar_to}");
+                guardarLog("Usuario ID: $current_user_id usando caché global para posts similares a $similar_to");
                 $posts_personalizados = $cached_data;
             } else {
-                error_log("[obtenerFeedPersonalizado] Aviso: Calculando nuevo feed similar para post ID: {$similar_to}");
+                guardarLog("Usuario ID: $current_user_id calculando nuevo feed similar para post ID: $similar_to");
                 $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
                 
                 if (!$posts_personalizados) {
-                    error_log("[obtenerFeedPersonalizado] Error: Fallo al calcular feed similar");
+                    guardarLog("Error: Fallo al calcular feed similar para usuario ID: $current_user_id");
                     return ['post_ids' => [], 'post_not_in' => []];
                 }
                 
@@ -45,23 +45,23 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
         $cached_data = get_transient($transient_key);
 
         if ($cached_data) {
-            error_log("[obtenerFeedPersonalizado] Aviso: Usando caché para usuario ID: {$current_user_id}");
+            guardarLog("Usuario ID: $current_user_id usando caché para feed personalizado");
             $posts_personalizados = $cached_data['posts'];
         } else {
             if ($paged === 1) {
-                error_log("[obtenerFeedPersonalizado] Aviso: Calculando nuevo feed para primera página");
+                guardarLog("Usuario ID: $current_user_id calculando nuevo feed para primera página (sin caché)");
                 $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
             } else {
-                error_log("[obtenerFeedPersonalizado] Aviso: Intentando recuperar backup para página {$paged}");
+                guardarLog("Usuario ID: $current_user_id intentando recuperar backup para página $paged (sin caché)");
                 $posts_personalizados = get_option($transient_key . '_backup', []);
                 
                 if (empty($posts_personalizados)) {
-                    error_log("[obtenerFeedPersonalizado] Aviso: Backup no encontrado, calculando nuevo feed");
+                    guardarLog("Usuario ID: $current_user_id backup no encontrado, calculando nuevo feed (sin caché)");
                     $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $similar_to);
                 }
 
                 if (!$posts_personalizados) {
-                    error_log("[obtenerFeedPersonalizado] Error: Fallo al calcular feed personalizado");
+                    guardarLog("Error: Fallo al calcular feed personalizado para usuario ID: $current_user_id");
                     return ['post_ids' => [], 'post_not_in' => []];
                 }
 
@@ -74,7 +74,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
         $post_ids = array_keys($posts_personalizados);
 
         if (count($post_ids) > 2500) {
-            error_log("[obtenerFeedPersonalizado] Aviso: Limitando resultados a 2500 posts");
+            guardarLog("Usuario ID: $current_user_id - Limitando resultados a 2500 posts");
             $post_ids = array_slice($post_ids, 0, 2500);
         }
 
@@ -84,7 +84,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             });
             
             if (empty($post_ids)) {
-                error_log("[obtenerFeedPersonalizado] Advertencia: No se encontraron posts similares para ID: {$similar_to}");
+                guardarLog("Usuario ID: $current_user_id - No se encontraron posts similares para ID: $similar_to");
             }
         }
 
@@ -94,7 +94,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
         ];
 
     } catch (Exception $e) {
-        error_log("[obtenerFeedPersonalizado] Error crítico: " . $e->getMessage());
+        guardarLog("Error crítico para usuario ID: $current_user_id - " . $e->getMessage());
         return ['post_ids' => [], 'post_not_in' => []];
     }
 }
@@ -102,6 +102,8 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
 function reiniciarFeed($current_user_id)
 {
     global $wpdb;
+
+    guardarLog("Iniciando reinicio de feed para usuario ID: $current_user_id");
 
     // Obtener todos los transients relacionados con el usuario actual
     $transient_pattern = '_transient_feed_personalizado_user_' . $current_user_id . '_%';
@@ -114,18 +116,32 @@ function reiniciarFeed($current_user_id)
         $backup_pattern
     ));
 
+    if (empty($query)) {
+        guardarLog("No se encontraron cachés para reiniciar del usuario ID: $current_user_id");
+        return 0;
+    }
+
     // Borrar transients y sus backups
+    $transients_eliminados = 0;
     foreach ($query as $option_name) {
         // Eliminar el transient
-        $transient_name = str_replace('_transient_', '', $option_name); // Eliminar el prefijo '_transient_'
-        delete_transient($transient_name);
+        $transient_name = str_replace('_transient_', '', $option_name);
+        if (delete_transient($transient_name)) {
+            $transients_eliminados++;
+            guardarLog("Caché eliminada: $transient_name para usuario ID: $current_user_id");
+        }
 
         // Eliminar el backup relacionado en las opciones
-        delete_option($option_name . '_backup');
+        if (delete_option($option_name . '_backup')) {
+            guardarLog("Backup eliminado: {$option_name}_backup para usuario ID: $current_user_id");
+        }
     }
 
     // Eliminar la caché específica del usuario
     wp_cache_delete('feed_datos_' . $current_user_id);
+    guardarLog("Caché específica eliminada: feed_datos_$current_user_id");
 
-    return count($query); // Retorna cuántos transients se eliminaron
+    guardarLog("Reinicio de feed completado para usuario ID: $current_user_id - Total de cachés eliminadas: $transients_eliminados");
+
+    return $transients_eliminados;
 }

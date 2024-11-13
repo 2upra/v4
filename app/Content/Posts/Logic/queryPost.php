@@ -37,12 +37,8 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
     try {
-        global $FALLBACK_USER_ID;
-        if (!isset($FALLBACK_USER_ID)) {
-            $FALLBACK_USER_ID = 44;
-            error_log("[configuracionQueryArgs] Aviso: FALLBACK_USER_ID no definido, usando valor predeterminado: 44");
-        }
 
+        $FALLBACK_USER_ID = 44;
         $is_authenticated = $current_user_id && $current_user_id != 0;
         $is_admin = current_user_can('administrator');
 
