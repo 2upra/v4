@@ -29,16 +29,20 @@ $datosAlgoritmo = empty($datos_algoritmo_pri) ? $datos_algoritmo_respaldo : $dat
 $datos_decoded = is_string($datosAlgoritmo) ? json_decode($datosAlgoritmo, true) : $datosAlgoritmo;
 
 // Generar el título SEO
+// Generar el título SEO
 $post_title = get_the_title();
 $tipo_audio = isset( $datos_decoded['tipo_audio'][ $active_lang ][0] ) ? $datos_decoded['tipo_audio'][ $active_lang ][0] : 'Sample';
 $seo_title = $post_title . ' | ' . $tipo_audio . ' free';
 
-// Filtro para modificar el título de la página
+// Filtro para modificar el título de la página, si el tema lo permite
 add_filter( 'document_title_parts', function( $title ) use ( $seo_title ) {
-    // Asegúrate de que el título principal se esté modificando
     $title['title'] = $seo_title;
     return $title;
-}, 1); // Prioridad baja para que se ejecute antes
+}, 1 );
+
+add_action( 'wp_head', function() use ( $seo_title ) {
+    echo '<title>' . esc_html( $seo_title ) . '</title>' . "\n";
+}, 1 );
 
 // Meta descripción
 $sugerencias_busqueda = isset( $datos_decoded['sugerencia_busqueda'][ $active_lang ] ) ? implode( ', ', $datos_decoded['sugerencia_busqueda'][ $active_lang ] ) : '';
