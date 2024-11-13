@@ -3,22 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit; 
 }
 
-// Detecta el idioma del navegador
-function get_user_browser_language() {
-    if ( ! isset( $_SERVER['HTTP_ACCEPT_LANGUAGE'] ) ) {
-        return 'en';
-    }
-    $accepted_languages = explode( ',', $_SERVER['HTTP_ACCEPT_LANGUAGE'] );
-    foreach ( $accepted_languages as $language ) {
-        $lang = substr( $language, 0, 2 );
-        if ( in_array( $lang, ['es', 'en'] ) ) {
-            return $lang;
-        }
-    }
-    return 'en';
-}
-
-$active_lang = get_user_browser_language();
+$active_lang = obtenerIdiomaDelNavegador();
 $current_post_id = get_the_ID();
 $filtro = 'single';
 
@@ -29,17 +14,9 @@ $datosAlgoritmo = empty($datos_algoritmo_pri) ? $datos_algoritmo_respaldo : $dat
 $datos_decoded = is_string($datosAlgoritmo) ? json_decode($datosAlgoritmo, true) : $datosAlgoritmo;
 
 // Generar el título SEO
-// Generar el título SEO
 $post_title = get_the_title();
 $tipo_audio = isset( $datos_decoded['tipo_audio'][ $active_lang ][0] ) ? $datos_decoded['tipo_audio'][ $active_lang ][0] : 'Sample';
 $seo_title = $post_title . ' | ' . $tipo_audio . ' free';
-
-// Filtro para modificar el título de la página, si el tema lo permite
-add_filter( 'document_title_parts', function( $title ) use ( $seo_title ) {
-    $title['title'] = $seo_title;
-    return $title;
-}, 1 );
-
 add_action( 'wp_head', function() use ( $seo_title ) {
     echo '<title>' . esc_html( $seo_title ) . '</title>' . "\n";
 }, 1 );

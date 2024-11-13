@@ -26,7 +26,7 @@ define('POST_LOG_ENABLED', false);
 define('STREAM_LOG_ENABLED', false);
 
 // Añadir iconos personalizados en el <head> de todas las páginas
-function headIconos()
+function headGeneric()
 {
 ?>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -49,11 +49,26 @@ function headIconos()
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="https://2upra.com/wp-content/themes/2upra3v/assets/icons/ms-icon-144x144.png">
     <meta name="theme-color" content="#ffffff">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https://2upra.com">
 
 <?
 }
-add_action('wp_head', 'headIconos');
+add_action('wp_head', 'headGeneric');
 
+// Detecta el idioma del navegador
+function obtenerIdiomaDelNavegador() {
+    if ( ! isset( $_SERVER['HTTP_ACCEPT_LANGUAGE'] ) ) {
+        return 'en';
+    }
+    $accepted_languages = explode( ',', $_SERVER['HTTP_ACCEPT_LANGUAGE'] );
+    foreach ( $accepted_languages as $language ) {
+        $lang = substr( $language, 0, 2 );
+        if ( in_array( $lang, ['es', 'en'] ) ) {
+            return $lang;
+        }
+    }
+    return 'en';
+}
 
 
 
