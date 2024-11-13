@@ -5,7 +5,50 @@ global $wpdb;
 define('INTERES_TABLE', "{$wpdb->prefix}interes");
 define('BATCH_SIZE', 1000);
 
+function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
+{
+    $datos = obtenerDatosFeedConCache($userId); 
+    if (empty($datos)) {
+        return [];
+    }
+    $usuario = get_userdata($userId);
+    if (!$usuario || !is_object($usuario)) {
+        return [];
+    }
+    $posts_personalizados = [];
+    $current_timestamp = current_time('timestamp');
+    $vistas_posts_processed = obtenerYProcesarVistasPosts($userId);
+    $esAdmin = in_array('administrator', (array)$usuario->roles);
+    $decay_factors = [];
 
+    foreach ($datos['author_results'] as $post_data) {
+        $post_date = $post_data->post_date;
+        $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date;
+        $diasDesdePublicacion = floor(($current_timestamp - $post_timestamp) / (3600 * 24));
+        if (!isset($decay_factors[$diasDesdePublicacion])) {
+            $decay_factors[$diasDesdePublicacion] = getDecayFactor($diasDesdePublicacion);
+        }
+    }
+
+    $posts_data = $datos['author_results'];
+    $puntos_por_post = calcularPuntosPostBatch(
+        $posts_data,
+        $datos,
+        $esAdmin,
+        $vistas_posts_processed,
+        $identifier,
+        $similar_to,
+        $current_timestamp,
+        $userId,
+        $decay_factors
+    );
+
+    if (!empty($puntos_por_post)) {
+        arsort($puntos_por_post);
+        $puntos_por_post = array_slice($puntos_por_post, 0, 2500, true);
+    }
+    return $puntos_por_post;
+}
 
 function calcularPuntosPostBatch(
     $posts_data,
