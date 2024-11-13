@@ -248,7 +248,8 @@ function dev()
                     ];
 
                     foreach ($images as $index => $image):
-                        $optimized_url = img($image['url'], 'medium', 50, 'all');
+                        $optimized_url = isset($image['url']) ? img($image['url'], 'medium', 50, 'all') : '';
+
                     ?>
                         <div class="XXDD">
                             <div class="spaceimagen index-<? echo $index; ?>">
