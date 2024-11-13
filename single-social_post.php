@@ -1,4 +1,4 @@
-<?
+<?php
 if ( ! defined( 'ABSPATH' ) ) {
     exit; 
 }
@@ -32,8 +32,11 @@ $datos_decoded = is_string($datosAlgoritmo) ? json_decode($datosAlgoritmo, true)
 $post_title = get_the_title();
 $tipo_audio = isset( $datos_decoded['tipo_audio'][ $active_lang ][0] ) ? $datos_decoded['tipo_audio'][ $active_lang ][0] : 'Sample';
 $seo_title = $post_title . ' | ' . $tipo_audio . ' free';
-add_filter( 'pre_get_document_title', function() use ( $seo_title ) {
-    return $seo_title;
+
+// Utilizar el filtro document_title_parts
+add_filter( 'document_title_parts', function( $title ) use ( $seo_title ) {
+    $title['title'] = $seo_title;
+    return $title;
 } );
 
 // Meta descripción
@@ -79,30 +82,30 @@ add_action( 'wp_head', function () use ( $schema ) {
 }, 2 );
 ?>
 <!DOCTYPE html>
-<html <? language_attributes(); ?>>
+<html <?php language_attributes(); ?>>
 <head>
-    <meta charset="<? bloginfo( 'charset' ); ?>">
+    <meta charset="<?php bloginfo( 'charset' ); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="index, follow">
-    <? wp_head(); ?>
+    <?php wp_head(); ?>
 </head>
-<body <? body_class(); ?>>
+<body <?php body_class(); ?>>
 
-<? get_header(); ?>
+<?php get_header(); ?>
 
 <main id="main">
-    <div id="content" class="<? echo esc_attr( ! is_user_logged_in() ? 'nologin' : '' ); ?>">
-        <? if ( have_posts() ) : while ( have_posts() ) : the_post(); ?>
-            <article <? post_class(); ?>>
-                <h1><? echo esc_html( $post_title ); ?></h1>
-                <h2><? echo esc_html( $seo_title ); ?></h2>
+    <div id="content" class="<?php echo esc_attr( ! is_user_logged_in() ? 'nologin' : '' ); ?>">
+        <?php if ( have_posts() ) : while ( have_posts() ) : the_post(); ?>
+            <article <?php post_class(); ?>>
+                <h1><?php echo esc_html( $post_title ); ?></h1>
+                <h2><?php echo esc_html( $seo_title ); ?></h2>
                 <div class="single">
                     <div class="fullH">
-                        <? echo htmlPost( $filtro ); ?>
+                        <?php echo htmlPost( $filtro ); ?>
                     </div>
                     <div class="publicaciones-similares" nosnippet>
                         <h3>Publicaciones Similares</h3>
-                        <?
+                        <?php
                         echo publicaciones( [
                             'filtro'      => 'nada',
                             'posts'       => 10,
@@ -112,11 +115,11 @@ add_action( 'wp_head', function () use ( $schema ) {
                     </div>
                 </div>
             </article>
-        <? endwhile; endif; ?>
+        <?php endwhile; endif; ?>
     </div>
 </main>
 
-<? get_footer(); ?>
+<?php get_footer(); ?>
 
 </body>
 </html>
