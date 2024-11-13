@@ -49,7 +49,6 @@ function headGeneric()
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="https://2upra.com/wp-content/themes/2upra3v/assets/icons/ms-icon-144x144.png">
     <meta name="theme-color" content="#ffffff">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https://2upra.com">
 
 <?
 }
