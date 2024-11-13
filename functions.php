@@ -288,11 +288,9 @@ function scriptsOrdenados()
         ));
     }
 
-    if (is_user_logged_in()) {
-        wp_localize_script('ajaxPage', 'ajaxPage', array(
-            'logeado' => get_current_user_id()
-        ));
-    }
+    wp_localize_script('ajaxPage', 'ajaxPage', array(
+        'logeado' => get_current_user_id()
+    ));
 
     // Scripts externos
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
