@@ -565,13 +565,18 @@ async function enviarAjax(action, data = {}) {
 async function establecerFiltros() {
     try {
         const response = await enviarAjax('obtenerFiltrosTotal');
-        
+
         if (response.success) {
-            const {filtroPost, filtroTiempo} = response.data;
+            const { filtroPost, filtroTiempo } = response.data;
             const hayFiltrosActivados = filtroTiempo !== 0 || filtroPost !== 'a:0:{}';
             const botonRestablecer = document.querySelector('.restablecerBusqueda');
+
+            // Comprobación para asegurar que el botón existe
+            if (!botonRestablecer) return;
+
             if (hayFiltrosActivados) {
                 botonRestablecer.style.display = 'block';
+
                 if (!botonRestablecer.dataset.listenerAdded) {
                     botonRestablecer.addEventListener('click', async function () {
                         try {
@@ -588,6 +593,7 @@ async function establecerFiltros() {
                             alert('Hubo un error en la solicitud. Por favor, inténtalo de nuevo.');
                         }
                     });
+
                     botonRestablecer.dataset.listenerAdded = true;
                 }
             } else {
