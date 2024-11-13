@@ -1,21 +1,14 @@
 <?
 
-// Definiciones de constantes
-define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_feed_progress');    // Opción para guardar progreso
-define('SIMILAR_TO_PROCESS_LOCK', 'similar_to_process_lock');        // Bloqueo de proceso
-define('SIMILAR_TO_MAX_LOCK_TIME', 60);                             // 1 minuto de bloqueo máximo (ajustado a 60 segundos)
+// Asegúrate de definir estas constantes en tu código o en tu archivo de configuración.
+define('SIMILAR_TO_PROCESS_LOCK', 'similar_to_process_lock');
+define('SIMILAR_TO_MAX_LOCK_TIME', 300); // 5 minutos, ajusta según tus necesidades
+define('SIMILAR_TO_PROGRESS_OPTION', 'similar_to_progress');
+define('SIMILAR_TO_CACHED_COUNT_OPTION', 'similar_to_cached_count');
+define('SIMILAR_TO_STOP_UNTIL_OPTION', 'similar_to_stop_until');
+define('SIMILAR_TO_CONSECUTIVE_LIMIT', 100); // Límite de posts consecutivos con caché, ajusta según necesites
+define('SIMILAR_TO_STOP_DURATION', 6 * HOUR_IN_SECONDS); // Detención de 6 horas
 
-// Nuevas constantes para manejo de detención prolongada
-define('SIMILAR_TO_CACHED_COUNT_OPTION', 'similar_to_cached_count'); // Contador de posts consecutivos con caché
-define('SIMILAR_TO_STOP_UNTIL_OPTION', 'similar_to_stop_until');     // Timestamp hasta el cual se detiene la ejecución
-define('SIMILAR_TO_CONSECUTIVE_LIMIT', 100);                        // Límite de posts consecutivos con caché
-define('SIMILAR_TO_STOP_DURATION', 6 * HOUR_IN_SECONDS);            // Duración de la detención (6 horas)
-
-
-
-/**
- * Función principal para recalcular el feed similar.
- */
 function recalcularSimilarToFeed() {
     // Verificar si hay una detención prolongada activa
     $stop_until = get_option(SIMILAR_TO_STOP_UNTIL_OPTION, 0);
@@ -31,18 +24,18 @@ function recalcularSimilarToFeed() {
     }
 
     // Verificar si un proceso ya está en ejecución basado en el tiempo de bloqueo
-    $lock_time = get_transient(SIMILAR_TO_PROCESS_LOCK);
+    $lock_time = get_cache_from_file(SIMILAR_TO_PROCESS_LOCK);
     if ($lock_time && (time() - $lock_time < SIMILAR_TO_MAX_LOCK_TIME)) {
         //guardarLog("Proceso ya en ejecución, saltando esta iteración.");
         return;
     } elseif ($lock_time) {
         // Si el bloqueo ha excedido el tiempo máximo permitido, limpiar el bloqueo
         //guardarLog("El bloqueo ha estado activo demasiado tiempo, limpiando el bloqueo.");
-        delete_transient(SIMILAR_TO_PROCESS_LOCK);
+        delete_cache_file(SIMILAR_TO_PROCESS_LOCK);
     }
 
     // Establecer bloqueo con la marca de tiempo actual para evitar ejecuciones simultáneas
-    set_transient(SIMILAR_TO_PROCESS_LOCK, time(), SIMILAR_TO_MAX_LOCK_TIME);
+    set_cache_in_file(SIMILAR_TO_PROCESS_LOCK, time(), SIMILAR_TO_MAX_LOCK_TIME);
 
     try {
         // Obtener el ID del último post procesado, por defecto 0 si no se ha procesado ninguno
@@ -84,7 +77,7 @@ function recalcularSimilarToFeed() {
             // Generar la clave de caché para el post actual
             $similar_to_cache_key = "similar_to_$post_id";
             
-            if (get_transient($similar_to_cache_key)) {
+            if (get_cache_from_file($similar_to_cache_key)) {
                 // Si ya tiene caché, actualizar el progreso y continuar al siguiente post
                 //guardarLog("Post ID: $post_id ya tiene caché, avanzando al siguiente post.");
                 update_option(SIMILAR_TO_PROGRESS_OPTION, $post_id);
@@ -118,7 +111,7 @@ function recalcularSimilarToFeed() {
 
                 if ($posts_personalizados) {
                     // Guardar el resultado en caché por 15 días
-                    set_transient($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);
+                    set_cache_in_file($similar_to_cache_key, $posts_personalizados, 15 * DAY_IN_SECONDS);
                     //guardarLog("Feed calculado y guardado en caché para post ID: $post_id.");
                 } else {
                     //guardarLog("Error al calcular feed para post ID: $post_id.");
@@ -140,10 +133,58 @@ function recalcularSimilarToFeed() {
         //guardarLog("Error en el proceso: " . $e->getMessage());
     } finally {
         // Siempre eliminar el bloqueo al finalizar
-        delete_transient(SIMILAR_TO_PROCESS_LOCK);
+        delete_cache_file(SIMILAR_TO_PROCESS_LOCK);
     }
 }
 
+// Función para guardar datos en caché en archivos con compresión y serialización
+function set_cache_in_file($cache_key, $data, $expiration) {
+    $cache_dir = WP_CONTENT_DIR . '/cache/feed/';
+    if (!file_exists($cache_dir)) {
+        mkdir($cache_dir, 0755, true);
+    }
+    $file_path = $cache_dir . $cache_key . '.cache';
+
+    $data_to_store = [
+        'expiration' => time() + $expiration,
+        'data' => $data,
+    ];
+    // Serializar y comprimir los datos
+    $serialized_data = serialize($data_to_store);
+    $compressed_data = gzcompress($serialized_data);
+
+    file_put_contents($file_path, $compressed_data);
+}
+
+// Función para recuperar datos del caché de archivos
+function get_cache_from_file($cache_key) {
+    $file_path = WP_CONTENT_DIR . '/cache/feed/' . $cache_key . '.cache';
+    if (file_exists($file_path)) {
+        $compressed_content = file_get_contents($file_path);
+        $serialized_data = gzuncompress($compressed_content);
+        if ($serialized_data === false) {
+            // Datos corruptos o inválidos, eliminar el archivo de caché
+            unlink($file_path);
+            return false;
+        }
+        $data = unserialize($serialized_data);
+        if ($data['expiration'] > time()) {
+            return $data['data'];
+        } else {
+            // El caché ha expirado, eliminar el archivo
+            unlink($file_path);
+        }
+    }
+    return false;
+}
+
+// Función para eliminar un archivo de caché específico
+function delete_cache_file($cache_key) {
+    $file_path = WP_CONTENT_DIR . '/cache/feed/' . $cache_key . '.cache';
+    if (file_exists($file_path)) {
+        unlink($file_path);
+    }
+}
 
 function agregar_cron_30_segundos($schedules) {
     if (!isset($schedules['every_30_seconds'])) {
