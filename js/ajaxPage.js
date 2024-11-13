@@ -166,7 +166,7 @@ function loadContent(enlace, isPushState) {
 
 const login = ajaxPage.logeado;
 
-Document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {
     if (!window.location.href.includes('?fb-edit=1')) {
         reinicializar();
 
