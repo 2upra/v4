@@ -1,7 +1,7 @@
 <?
 
 // Función para guardar datos en caché en archivos con compresión y serialización
-function set_cache_in_file($cache_key, $data, $expiration) {
+function guardarCache($cache_key, $data, $expiration) {
     $cache_dir = WP_CONTENT_DIR . '/cache/feed/';
     if (!file_exists($cache_dir)) {
         mkdir($cache_dir, 0755, true);
@@ -20,7 +20,7 @@ function set_cache_in_file($cache_key, $data, $expiration) {
 }
 
 // Función para recuperar datos del caché de archivos
-function get_cache_from_file($cache_key) {
+function obtenerCache($cache_key) {
     $file_path = WP_CONTENT_DIR . '/cache/feed/' . $cache_key . '.cache';
     if (file_exists($file_path)) {
         $compressed_content = file_get_contents($file_path);
@@ -42,7 +42,7 @@ function get_cache_from_file($cache_key) {
 }
 
 // Función para eliminar un archivo de caché específico
-function delete_cache_file($cache_key) {
+function borrarCache($cache_key) {
     $file_path = WP_CONTENT_DIR . '/cache/feed/' . $cache_key . '.cache';
     if (file_exists($file_path)) {
         unlink($file_path);
