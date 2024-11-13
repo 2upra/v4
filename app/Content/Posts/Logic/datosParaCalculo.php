@@ -129,15 +129,14 @@ function obtenerDatosFeed($userId) {
     }
 }
 
-function obtenerDatosFeedConCache($userId)
-{
+function obtenerDatosFeedConCache($userId) {
     $cache_key = 'feed_datos_' . $userId;
-    $datos = wp_cache_get($cache_key);
+    $datos = get_cache_from_file($cache_key);
     
     if (false === $datos) {
         guardarLog("Usuario ID: $userId - Caché no encontrada, calculando nuevos datos de feed");
         $datos = obtenerDatosFeed($userId);
-        wp_cache_set($cache_key, $datos, '', 43200);
+        set_cache_in_file($cache_key, $datos, 43200); // Guarda en caché por 12 horas
         guardarLog("Usuario ID: $userId - Nuevos datos de feed guardados en caché por 12 horas");
     } else {
         guardarLog("Usuario ID: $userId - Usando datos de feed desde caché");

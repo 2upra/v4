@@ -158,8 +158,7 @@ function reiniciarFeed($current_user_id) {
         }
     }
 
-    // Eliminar la caché específica del usuario en la caché de objetos (si se usa)
-    wp_cache_delete('feed_datos_' . $current_user_id);
+    delete_cache_file('feed_datos_' . $current_user_id);
     guardarLog("Caché específica eliminada: feed_datos_$current_user_id");
 
     guardarLog("Reinicio de feed completado para usuario ID: $current_user_id - Total de cachés eliminadas: $transients_eliminados");
