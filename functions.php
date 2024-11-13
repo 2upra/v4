@@ -3,25 +3,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-add_action( 'plugins_loaded', function() {
-    if ( ! is_user_logged_in() && is_front_page() ) {
-        // Desactivar Redis
-        if ( class_exists( 'RedisObjectCache' ) ) {
-            // Si Redis ya está cargado, cerramos la conexión
-            if ( isset( $GLOBALS['wp_object_cache'] ) && method_exists( $GLOBALS['wp_object_cache'], 'close' ) ) {
-                $GLOBALS['wp_object_cache']->close();
-            }
-            // Reiniciamos el sistema de caché de WordPress sin Redis
-            wp_cache_init();
-        } else {
-            // Si Redis aún no está cargado, definimos la constante para evitar que se cargue
-            if ( ! defined( 'WP_REDIS_DISABLED' ) ) {
-                define( 'WP_REDIS_DISABLED', true );
-            }
-        }
-    }
-}, 1 );
-
 require_once ABSPATH . 'wp-admin/includes/media.php';
 require_once ABSPATH . 'wp-admin/includes/file.php';
 require_once ABSPATH . 'wp-admin/includes/image.php';
@@ -43,6 +24,12 @@ define('AJAX_POST_LOG_ENABLED', false);
 define('IA_LOG_ENABLED', false);
 define('POST_LOG_ENABLED', false);
 define('STREAM_LOG_ENABLED', false);
+
+function debug_page_load_time() {
+    $time = number_format((microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"]) * 1000, 2);
+    error_log("Página cargada en: {$time}ms");
+}
+add_action('shutdown', 'debug_page_load_time');
 
 // Añadir iconos personalizados en el <head> de todas las páginas
 function headGeneric()
