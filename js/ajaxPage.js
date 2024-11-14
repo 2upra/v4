@@ -103,15 +103,23 @@ function reinicializar() {
 }
 
 window.reinicializar = reinicializar;
+const login = ajaxPage.logeado;
 
 function loadStripe(callback) {
+    if (!login) {
+        console.log('Login is false, Stripe will not be loaded');
+        return; // No cargar Stripe si login es false
+    }
+
     if (typeof Stripe !== 'undefined') return callback();
+
     const script = document.createElement('script');
     script.src = 'https://js.stripe.com/v3/';
     script.async = true;
     script.onload = callback;
     document.head.appendChild(script);
 }
+
 
 function initializeStripeFunctions() {
     ['stripepro', 'stripecompra'].forEach(func => {
@@ -164,7 +172,7 @@ function loadContent(enlace, isPushState) {
         .catch(error => console.error('Error al cargar la página:', error));
 }
 
-const login = ajaxPage.logeado;
+
 
 document.addEventListener('DOMContentLoaded', function () {
     if (!window.location.href.includes('?fb-edit=1')) {
