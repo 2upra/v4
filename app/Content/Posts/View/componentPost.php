@@ -198,21 +198,43 @@ function opcionesPost($post_id, $author_id)
 
 //MOSTRAR IMAGEN
 
-
 function imagenPostList($block, $es_suscriptor, $post_id)
 {
+    // Determinar si la imagen debe estar difuminada
     $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
-    $image_size = ($block && !$es_suscriptor) ? 'thumbnail' : 'large';
-    $quality = ($block && !$es_suscriptor) ? 20 : 80;
+
+    // Determinar el tamaño de la imagen y la calidad según las condiciones
+    if ($block && !$es_suscriptor) {
+        // Caso: Es un bloque y el usuario no es suscriptor
+        $image_size = 'thumbnail';
+        $quality = 20;
+    } else {
+        // Caso: No es un bloque o el usuario es suscriptor
+        // Puedes elegir entre 'medium' o 'small' según prefieras
+        $image_size = 'small'; // Cambia a 'small' si prefieres
+        $quality = 40;
+    }
+
+    // Obtener la URL de la imagen usando la función imagenPost
+    $image_url = imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), true);
+
+    // Procesar la URL con la función img
+    $processed_image_url = img($image_url, $quality, 'all');
+
+    // Iniciar el almacenamiento en búfer de salida
     ob_start();
     ?>
-    <div class="post-image-container <?= $blurred_class ?>">
-        <a href="<? echo esc_url(get_permalink()); ?>">
-            <img src="<?= esc_url(imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), true)) ?>" alt="Post Image" />
+    <div class="post-image-container <?= esc_attr($blurred_class) ?>">
+        <a href="<?= esc_url(get_permalink($post_id)); ?>">
+            <img src="<?= esc_url($processed_image_url); ?>" alt="Post Image" />
         </a>
     </div>
-<?
+    <?php
+
+    // Capturar el contenido del búfer y limpiarlo
     $output = ob_get_clean();
+
+    // Devolver el contenido generado
     return $output;
 }
 
@@ -256,6 +278,26 @@ function imagenPost($post_id, $size = 'medium', $quality = 50, $strip = 'all', $
         return jetpack_photon_url($url, $args);
     }
     return $url;
+}
+
+function img($url, $quality = 40, $strip = 'all') {
+    if ($url === null || $url === '') {
+        return ''; 
+    }
+    $parsed_url = parse_url($url);
+    if (strpos($url, 'https://i0.wp.com/') === 0) {
+        $cdn_url = $url;
+    } else {
+        $path = isset($parsed_url['host']) ? $parsed_url['host'] . $parsed_url['path'] : ltrim($parsed_url['path'], '/');
+        $cdn_url = 'https://i0.wp.com/' . $path;
+    }
+    
+    $query = [
+        'quality' => $quality,
+        'strip' => $strip,
+    ];
+    
+    return add_query_arg($query, $cdn_url);
 }
 
 function obtenerImagenAleatoria($directory)
@@ -342,25 +384,7 @@ function extender_wp_check_filetype($types, $filename, $mimes)
 add_filter('wp_check_filetype_and_ext', 'extender_wp_check_filetype', 10, 3);
 
 
-function img($url, $quality = 40, $strip = 'all') {
-    if ($url === null || $url === '') {
-        return ''; 
-    }
-    $parsed_url = parse_url($url);
-    if (strpos($url, 'https://i0.wp.com/') === 0) {
-        $cdn_url = $url;
-    } else {
-        $path = isset($parsed_url['host']) ? $parsed_url['host'] . $parsed_url['path'] : ltrim($parsed_url['path'], '/');
-        $cdn_url = 'https://i0.wp.com/' . $path;
-    }
-    
-    $query = [
-        'quality' => $quality,
-        'strip' => $strip,
-    ];
-    
-    return add_query_arg($query, $cdn_url);
-}
+
 
 /**
  * Ejecuta un script de shell para corregir permisos.
