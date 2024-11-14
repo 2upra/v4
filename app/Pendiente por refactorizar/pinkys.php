@@ -241,6 +241,7 @@ function botonDescarga($postID)
             <div class="ZAQIBB">
                 <button class="icon-arrow-down <?php echo esc_attr($claseExtra); ?>"
                         data-post-id="<?php echo esc_attr($postID); ?>"
+                        aria-label="Boton Descarga" 
                         id="download-button-<?php echo esc_attr($postID); ?>"
                         onclick="return procesarDescarga('<?php echo esc_js($postID); ?>', '<?php echo esc_js($userID); ?>')">
                     <?php echo $GLOBALS['descargaicono']; ?>
@@ -250,7 +251,7 @@ function botonDescarga($postID)
         } else {
             ?>
             <div class="ZAQIBB">
-                <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down">
+                <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down" aria-label="Descargar" >
                     <?php echo $GLOBALS['descargaicono']; ?>
                 </button>
             </div>
@@ -297,7 +298,7 @@ function botonDescargaPrueba()
     ob_start();
     ?>
     <div class="ZAQIBB ASDGD8">
-        <button>
+        <button aria-label="Descarga ejemplo" >
             <? echo $GLOBALS['descargaicono']; ?>
         </button>
     </div>
