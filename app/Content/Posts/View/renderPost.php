@@ -53,7 +53,9 @@ function htmlPost($filtro)
                     </div>
                     <div class="TAGSLISTSAMPLE">
                         <div class="tags-container" id="tags-<? echo get_the_ID(); ?>"></div>
-                        <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;"><? echo esc_html($datosAlgoritmo); ?></p>
+                        <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;">
+                            <? echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
+                        </p>
                     </div>
                 </div>
                 <div class="INFOTYPELIST">
