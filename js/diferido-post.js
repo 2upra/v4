@@ -114,12 +114,10 @@
         }
 
         let intentos = 0;
-        const maxIntentos = 3;
-        const intervalo = 1000 / 3; // 3 veces por segundo (1000 ms / 3)
-
+        const maxIntentos = 5;
+        const intervalo = 1000 / 5;
+        const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
         const buscarPestañaActiva = setInterval(() => {
-            const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
-
             if (listaPublicaciones) {
                 log('Pestaña activa encontrada');
                 clearInterval(buscarPestañaActiva); // Detenemos los intentos al encontrar la pestaña
