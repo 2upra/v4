@@ -64,8 +64,8 @@ function headGeneric()
 add_action('wp_head', 'headGeneric');
 
 function preload_fonts() {
-    echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/fonts/SourceSans3-Regular.woff2" as="font" type="font/woff2" crossorigin>';
-    echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/fonts/SourceSans3-Bold.woff2" as="font" type="font/woff2" crossorigin>';
+    echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Regular.woff2" as="font" type="font/woff2" crossorigin>';
+    echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Bold.woff2" as="font" type="font/woff2" crossorigin>';
 }
 add_action('wp_head', 'preload_fonts', 1);
 

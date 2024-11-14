@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) {
             @font-face {
                 font-family: 'Source Sans 3';
                 
-                src: url('https://2upra.com/wp-content/themes/2upra3v/assets/fonts/SourceSans3-Regular.woff2') format('woff2');
+                src: url('https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Regular.woff2') format('woff2');
                 font-weight: 400;
                 font-style: normal;
                 font-display: swap;
@@ -34,7 +34,7 @@ if (!defined('ABSPATH')) {
 
             @font-face {
                 font-family: 'Source Sans 3';
-                src: url('https://2upra.com/wp-content/themes/2upra3v/assets/fonts/SourceSans3-Bold.woff2') format('woff2');
+                src: url('https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Bold.woff2') format('woff2');
                 font-weight: 700;
                 font-style: normal;
                 font-display: swap;
