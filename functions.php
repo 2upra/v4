@@ -207,7 +207,14 @@ function postLog($log)
 }
 
 
-
+function custom_deregister_jquery() {
+    // Verifica si es la página de inicio y si el usuario NO está logueado
+    if ( is_front_page() && !is_user_logged_in() ) {
+        // Desregistrar jQuery para que no se cargue
+        wp_deregister_script('jquery');
+    }
+}
+add_action('wp_enqueue_scripts', 'custom_deregister_jquery', 100); // Prioridad alta para asegurarse de que se ejecuta después de que otros scripts se hayan registrado.
 
 function scriptsOrdenados()
 {
