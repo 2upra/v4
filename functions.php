@@ -63,7 +63,8 @@ function headGeneric()
 }
 add_action('wp_head', 'headGeneric');
 
-function preload_fonts() {
+function preload_fonts()
+{
     echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Regular.woff2" as="font" type="font/woff2" crossorigin>';
     echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Bold.woff2" as="font" type="font/woff2" crossorigin>';
 }
@@ -320,17 +321,20 @@ function scriptsOrdenados()
             'emisor' => get_current_user_id()
         ));
     }
-     
+
     wp_localize_script('ajaxPage', 'ajaxPage', array(
         'logeado' => get_current_user_id() ? true : false
     ));
-    
+    if (is_user_logged_in()) {
+        wp_enqueue_script('jquery');
+        wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
+        wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', ['chart-js'], null, true);
+    }
 
     // Scripts externos
-    wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
-    wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', ['chart-js'], null, true);
+
     wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.7.8', true);
-    wp_enqueue_script('jquery');
+    
     wp_add_inline_script('genericAjax', 'const wpAdminUrl = "' . admin_url() . '";', 'before');
 
     // Localización de scripts
