@@ -1,8 +1,8 @@
 <?
 
 add_action('template_redirect', function() {
-    // Verifica si el parámetro 'search' está en la URL
-    if (isset($_GET['search'])) {
+    // Verifica si estamos en la página de inicio y si el parámetro 'search' está en la URL
+    if (!is_front_page() && isset($_GET['search'])) {
         $search_query = sanitize_text_field($_GET['search']); // Sanitiza la entrada del usuario
         
         // Redirige a la página de inicio con el parámetro de búsqueda
