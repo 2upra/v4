@@ -16,17 +16,11 @@ function htmlPost($filtro)
     $postAut = get_post_meta($post_id, 'postAut', true);
     $verificado = get_post_meta($post_id, 'Verificado', true);
     $recortado = get_post_meta($post_id, 'recortado', true);
-
     $urlAudioSegura = audioUrlSegura($audio_id_lite);
     if (is_wp_error($urlAudioSegura)) {
         $urlAudioSegura = '';
     }
     ob_start();
-    /*wavejs.js?ver=2.0.12.358813928:108 
- No se encontró wavesurfer para postId: 268787
- (anónimo)	@	wavejs.js?ver=2.0.12.358813928:108 
- 
- el filtro es sampleList*/
 ?>
     <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV"
         filtro="<? echo esc_attr($filtro); ?>"
@@ -34,55 +28,7 @@ function htmlPost($filtro)
         autor="<? echo esc_attr($author_id); ?>">
 
         <? if ($sampleList): ?>
-            <div class="LISTSAMPLE">
-                <div class="KLYJBY">
-                    <? // echo audioPostList($post_id); 
-                    ?>
-                </div>
-                <? echo imagenPostList($block, $es_suscriptor, $post_id); ?>
-                <div class="INFOLISTSAMPLE">
-                    <div class="CONTENTLISTSAMPLE">
-                        <a href="<?php echo esc_url(get_permalink()); ?>" id-post="<?php echo get_the_ID(); ?>">
-                            <?php
-                            // Obtener y limpiar el contenido
-                            $content = get_the_content();
-                            $content = wp_trim_words($content, 20, '...');
-                            echo wp_kses_post($content);
-                            ?>
-                        </a>
-                    </div>
-                    <div class="TAGSLISTSAMPLE">
-                        <div class="tags-container" id="tags-<? echo get_the_ID(); ?>"></div>
-                        <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;">
-                            <? echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
-                        </p>
-                    </div>
-                </div>
-                <div class="INFOTYPELIST">
-                    <div class="verificacionPost">
-                        <? if ($verificado == '1') : ?>
-                            <? echo $GLOBALS['check']; ?>
-                        <? elseif ($postAut == '1' && current_user_can('administrator')) : ?>
-                            <div class="verificarPost" data-post-id="<? echo $post_id; ?>" style="cursor: pointer;">
-                                <? echo $GLOBALS['robot']; ?>
-                            </div>
-                        <? endif; ?>
-                    </div>
-                </div>
-                <div class="ZQHOQY LISTWAVESAMPLE">
-                    <div id="waveform-<? echo $post_id; ?>"
-                        class="waveform-container without-image"
-                        postIDWave="<? echo $post_id; ?>"
-                        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
-                        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
-                        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
-                        <div class="waveform-message"></div>
-                        <div class="waveform-loading" style="display: none;">Cargando...</div>
-                    </div>
-                </div>
-                <? echo renderPostControls($post_id, $colab); ?>
-                <? echo opcionesPost($post_id, $author_id); ?>
-            </div>
+            <? generarBloquePost($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id); ?>
         <? else: ?>
             <? echo fondoPost($filtro, $block, $es_suscriptor, $post_id); ?>
             <? if ($music): ?>
@@ -99,6 +45,64 @@ function htmlPost($filtro)
 <?
     return ob_get_clean();
 }
+
+
+
+function generarBloquePost($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id)
+{
+?>
+    <div class="LISTSAMPLE">
+        <div class="KLYJBY">
+            <? // echo audioPostList($post_id); 
+            ?>
+        </div>
+        <? echo imagenPostList($block, $es_suscriptor, $post_id); ?>
+        <div class="INFOLISTSAMPLE">
+            <div class="CONTENTLISTSAMPLE">
+                <a href="<? echo esc_url(get_permalink($post_id)); ?>" id-post="<? echo $post_id; ?>">
+                    <?
+                    // Obtener y limpiar el contenido
+                    $content = get_post_field('post_content', $post_id);
+                    $content = wp_trim_words($content, 20, '...');
+                    echo wp_kses_post($content);
+                    ?>
+                </a>
+            </div>
+            <div class="TAGSLISTSAMPLE">
+                <div class="tags-container" id="tags-<? echo $post_id; ?>"></div>
+                <p id-post-algoritmo="<? echo $post_id; ?>" style="display:none;">
+                    <? echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
+                </p>
+            </div>
+        </div>
+        <div class="INFOTYPELIST">
+            <div class="verificacionPost">
+                <? if ($verificado == '1') : ?>
+                    <? echo $GLOBALS['check']; ?>
+                <? elseif ($postAut == '1' && current_user_can('administrator')) : ?>
+                    <div class="verificarPost" data-post-id="<? echo $post_id; ?>" style="cursor: pointer;">
+                        <? echo $GLOBALS['robot']; ?>
+                    </div>
+                <? endif; ?>
+            </div>
+        </div>
+        <div class="ZQHOQY LISTWAVESAMPLE">
+            <div id="waveform-<? echo $post_id; ?>"
+                class="waveform-container without-image"
+                postIDWave="<? echo $post_id; ?>"
+                data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
+                data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
+                <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
+                <div class="waveform-message"></div>
+                <div class="waveform-loading" style="display: none;">Cargando...</div>
+            </div>
+        </div>
+        <? echo renderPostControls($post_id, $colab); ?>
+        <? echo opcionesPost($post_id, $author_id); ?>
+    </div>
+<?
+}
+
 
 
 function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscriptor, $post_status, $audio_url)

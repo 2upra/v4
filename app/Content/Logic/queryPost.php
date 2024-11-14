@@ -266,6 +266,8 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
                 echo htmlPost($filtro);
             } elseif ($tipoPost === 'colab') {
                 echo htmlColab($filtro);
+            } elseif ($tipoPost === 'colecciones') {
+                echo htmlColec($filtro);
             } else {
                 echo '<p>Tipo de publicación no reconocido.</p>';
             }

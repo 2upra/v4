@@ -242,6 +242,7 @@ function obtenerHashesFiltrados($extensiones)
     return $wpdb->get_results($query, ARRAY_A);
 }
 
+//esto ya no se puede usar, pues los archivos ya no son accesibles desde la web, pero lo que puede hacer es ver si el archivo existe 
 function verificarCargaArchivoPorHash($file_hash)
 {
     // Obtener los detalles del archivo usando el hash
