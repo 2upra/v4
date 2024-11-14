@@ -16,8 +16,8 @@ function autProcesarAudio($rutaOriginalOne)
     }
     
     $fileSizeMB = filesize($rutaOriginalOne) / 1048576;
-    if ($fileSizeMB < 0.1) {
-        $motivoFallo = "Archivo demasiado pequeño o inválido (menos de 0.1 MB)";
+    if ($fileSizeMB < 0.01) {
+        $motivoFallo = "Archivo demasiado pequeño o inválido (menos de 0.01 MB)";
         autLog($motivoFallo . ": $rutaOriginalOne");
         manejarArchivoFallido($rutaOriginalOne, $motivoFallo);
         return;
