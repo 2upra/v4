@@ -14,6 +14,16 @@ add_action('template_redirect', function() {
     }
 });
 
+add_action('parse_query', function($query) {
+    // Verifica si el parámetro 'search' está presente y no está en el admin
+    if (!is_admin() && isset($_GET['search'])) {
+        // Anula la funcionalidad de búsqueda de WordPress para esta solicitud
+        $query->is_search = false;
+        $query->query_vars['s'] = false;
+    }
+});
+
+
 
 // Redirigir a la página de perfil del usuario actual
 add_action('template_redirect', 'redirect_to_user_profile');
