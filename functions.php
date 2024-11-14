@@ -41,6 +41,7 @@ function headGeneric()
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://2upra.com/favicon.ico" type="image/x-icon">
     <link rel="apple-touch-icon" sizes="57x57" href="https://2upra.com/apple-icon-57x57.png">
     <link rel="apple-touch-icon" sizes="60x60" href="https://2upra.com/apple-icon-60x60.png">
     <link rel="apple-touch-icon" sizes="72x72" href="https://2upra.com/apple-icon-72x72.png">
@@ -54,14 +55,12 @@ function headGeneric()
     <link rel="icon" type="image/png" sizes="32x32" href="https://2upra.com/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="96x96" href="https://2upra.com/favicon-96x96.png">
     <link rel="icon" type="image/png" sizes="16x16" href="https://2upra.com/favicon-16x16.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="https://2upra.com/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://2upra.com/favicon-32x32.ico">
     <link rel="manifest" href="https://2upra.com/manifest.json">  
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="https://2upra.com/ms-icon-144x144.png">
     <meta name="theme-color" content="#ffffff">
 
-<?
+<?php
 }
 add_action('wp_head', 'headGeneric');
 
