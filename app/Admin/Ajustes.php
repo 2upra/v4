@@ -64,17 +64,7 @@ function remplazarFuncionObsoleta()
 }
 add_action('after_setup_theme', 'remplazarFuncionObsoleta');
 
-function redirigirBusquedaInvalida()
-{
-    if (isset($_SERVER['REQUEST_URI'])) {
-        $request_uri = $_SERVER['REQUEST_URI'];
-        if (strpos($request_uri, '?s=') !== false) {
-            wp_redirect(home_url());
-            exit;
-        }
-    }
-}
-add_action('template_redirect', 'redirigirBusquedaInvalida');
+
 
 function mimesPermitidos($mimes)
 {
