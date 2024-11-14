@@ -113,12 +113,27 @@
             return;
         }
 
-        const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
-        if (!listaPublicaciones) {
-            log('No se encontró una pestaña activa');
-            estaCargando = false;
-            return;
-        }
+        let intentos = 0;
+        const maxIntentos = 3;
+        const intervalo = 1000 / 3; // 3 veces por segundo (1000 ms / 3)
+
+        const buscarPestañaActiva = setInterval(() => {
+            const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
+
+            if (listaPublicaciones) {
+                log('Pestaña activa encontrada');
+                clearInterval(buscarPestañaActiva); // Detenemos los intentos al encontrar la pestaña
+                // Aquí puedes continuar con tu lógica para listaPublicaciones
+            } else {
+                intentos++;
+                log('No se encontró una pestaña activa, intento:', intentos);
+                if (intentos >= maxIntentos) {
+                    clearInterval(buscarPestañaActiva); // Detenemos los intentos si alcanzamos el máximo
+                    log('No se encontró una pestaña activa después de varios intentos');
+                    estaCargando = false;
+                }
+            }
+        }, intervalo);
 
         const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
         const idUsuario = window.idUsuarioActual || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
@@ -157,7 +172,7 @@
 
     async function procesarRespuesta(respuesta) {
         log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
-        
+
         const respuestaLimpia = respuesta.trim();
 
         if (respuestaLimpia === '<div id="no-more-posts"></div>') {
@@ -246,7 +261,6 @@
             detenerCarga();
         }
     }
-    
 
     function reiniciarEventosPostTag() {
         log('Reiniciando eventos de clic mediante delegación en <span class="postTag">');
@@ -281,13 +295,13 @@
         }
     }
 
-    window.limpiarBusqueda = function() {
+    window.limpiarBusqueda = function () {
         publicacionesCargadas.clear();
         identificador = '';
         actualizarUIBusqueda('');
         resetearCarga();
         cargarMasContenido();
-    }
+    };
 
     function configurarEventoBusqueda() {
         const inputBusqueda = document.getElementById('identifier');
