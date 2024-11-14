@@ -13,6 +13,15 @@ if (!is_user_logged_in()) {
 if (!defined('ABSPATH')) {
     exit('Direct script access denied.');
 }
+
+/*
+
+    <div id="preloader">
+        <div class="loader-content">
+            <? echo $GLOBALS['iconologo1']; ?>
+        </div>
+    </div>
+*/
 ?>
 
 <!DOCTYPE html>
@@ -25,7 +34,7 @@ if (!defined('ABSPATH')) {
         <style>
             @font-face {
                 font-family: 'Source Sans 3';
-                
+
                 src: url('https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Regular.woff2') format('woff2');
                 font-weight: 400;
                 font-style: normal;
@@ -109,7 +118,7 @@ if (!defined('ABSPATH')) {
 
                     </div>
 
-                    <div class="endmenu">
+                    <div class="endmenu endmenuflow">
 
                         <div class="menu-item iconoconfig">
                             <a href="https://2upra.com/config">
@@ -131,7 +140,7 @@ if (!defined('ABSPATH')) {
                     <ul class="tab-links" id="adaptableTabs">
                     </ul>
 
-                    <div class="endmenu">
+                    <div class="endmenu MENUDGE">
 
                         <div class="search-container" id="filtros">
                             <input type="text" id="identifier" placeholder="Busqueda">
