@@ -42,7 +42,7 @@
                 limpiarBusqueda();
             });
         }
-
+        actualizarUIBusqueda('');
         const busquedaInicial = obtenerBusquedaDeURL();
         if (busquedaInicial) {
             identificador = busquedaInicial;
