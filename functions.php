@@ -63,6 +63,13 @@ function headGeneric()
 }
 add_action('wp_head', 'headGeneric');
 
+function preload_fonts() {
+    echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/fonts/SourceSans3-Regular.woff2" as="font" type="font/woff2" crossorigin>';
+    echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/fonts/SourceSans3-Bold.woff2" as="font" type="font/woff2" crossorigin>';
+}
+add_action('wp_head', 'preload_fonts', 1);
+
+
 /*
 function encolar_sw_js()
 {
@@ -443,12 +450,7 @@ foreach ($directorios as $directorio) {
     incluirArchivos($directorio);
 }
 
-function fonts()
-{
-    echo '<link rel="preload" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;700&display=swap" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">';
-    echo '<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;700&display=swap"></noscript>';
-}
-add_action('wp_head', 'fonts', 1);
+
 
 // CARGAR LA BARRA DE CARGA
 function loadingBar()

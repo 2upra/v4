@@ -202,11 +202,11 @@ function dev()
 
                 <div class="BKXAFN">
 
-                    <div class="JMIOCI">
+                    <div class="JMIOCI"> 
                         <h1>Un entorno libre para almas libres</h1>
                         <p>Biblioteca de recursos musicales con herramientas potenciadas para la colaboración e independencia artistica.</p>
                     </div>
-                    <div class="BNZWJR">
+                    <div class="BNZWJR" style="display: none;">
                         <span class="MASYTN GFDFDN">Total recaudado $632</span>
                         <span class="MASYTN WJTTLG">Meta final $1000</span>
                     </div>

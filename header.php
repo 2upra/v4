@@ -19,10 +19,27 @@ if (!defined('ABSPATH')) {
 <html <?php language_attributes(); ?>>
 
 <body <? body_class(); ?>>
-    
+
 
     <header>
+        <style>
+            @font-face {
+                font-family: 'Source Sans 3';
+                
+                src: url('https://2upra.com/wp-content/themes/2upra3v/assets/fonts/SourceSans3-Regular.woff2') format('woff2');
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
+            }
 
+            @font-face {
+                font-family: 'Source Sans 3';
+                src: url('https://2upra.com/wp-content/themes/2upra3v/assets/fonts/SourceSans3-Bold.woff2') format('woff2');
+                font-weight: 700;
+                font-style: normal;
+                font-display: swap;
+            }
+        </style>
         <? if (is_page('asley')) : ?>
             <style>
                 #menu1 {
