@@ -215,7 +215,6 @@ function debeProcesarse($ruta_archivo, $file_hash)
                         file_put_contents($nueva_ruta . "_razon.txt", $razon_no_eliminar);
                         autLog("debeProcesarse: Archivo movido a $nueva_ruta y motivo de no eliminación registrado.");
                     } else {
-                        aqui hay un problema que nunca puede mover el archivo porque, arreglalo por favor
                         autLog("debeProcesarse: No se pudo mover el archivo a la ruta de verificación: $nueva_ruta");
                     }
                 }
