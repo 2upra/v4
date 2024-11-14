@@ -48,7 +48,7 @@
             identificador = busquedaInicial;
             resetearCarga();
             actualizarUIBusqueda(busquedaInicial);
-            cargarMasContenido();
+            //cargarMasContenido();
         }
 
         reiniciarEventosPostTag();

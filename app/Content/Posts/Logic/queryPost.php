@@ -2,6 +2,7 @@
 
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
+    
     try {
         $user_id = obtenerUserId($is_ajax);
         $current_user_id = get_current_user_id();
@@ -25,7 +26,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
         if ($is_ajax) {
             echo $output;
-            die();
+            wp_die();
         }
         return $output;
     } catch (Exception $e) {
@@ -47,7 +48,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             $current_user_id = $FALLBACK_USER_ID;
         }
 
-        $identifier = $_POST['identifier'] ?? '';
+        $identifier = $_GET['busqueda'] ?? $_POST['identifier'] ?? '';
         $posts = $args['posts'];
         $similar_to = $args['similar_to'] ?? null;
         $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
