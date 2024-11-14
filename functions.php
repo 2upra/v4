@@ -347,12 +347,7 @@ function scriptsOrdenados()
         wp_dequeue_script('jquery');
         wp_dequeue_script('wavesurfer');
     }
-
-    if (!is_front_page() && !is_user_logged_in()) {
-        wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.7.8', true);
-    }
-
-
+    wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.7.8', true);
     wp_add_inline_script('genericAjax', 'const wpAdminUrl = "' . admin_url() . '";', 'before');
 
     // Localización de scripts
