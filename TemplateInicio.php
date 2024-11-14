@@ -21,11 +21,11 @@ function obtenerIdiomaDelNavegador() {
 // Detectar idioma y definir título y descripción
 $idioma = obtenerIdiomaDelNavegador();
 if ($idioma === 'es') {
-    $titulo = "Social Media para Artistas | Samples, Colaboración, Sonidos y VST gratis";
-    $descripcion = "Conéctate con artistas, comparte samples y encuentra sonidos y plugins VST gratuitos para tus proyectos.";
+    $titulo = "Social Media para Artistas | Samples y VST Gratis";
+    $descripcion = "Únete a una red de creadores donde puedes conectar con artistas, colaborar en proyectos, y encontrar una amplia variedad de samples y plugins VST gratuitos para potenciar tus producciones musicales.";
 } else {
-    $titulo = "Social Media for Artists | Samples, Collaboration, Sounds and Free VSTs";
-    $descripcion = "Connect with artists, share samples, and find free sounds and VST plugins for your projects.";
+    $titulo = "Social Media for Artists | Free Samples & VSTs";
+    $descripcion = "Join a network of creators where you can connect with artists, collaborate on projects, and access a wide range of free samples and VST plugins to enhance your music productions.";
 }
 
 // Añadir el título y la descripción al <head>
