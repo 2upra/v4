@@ -1,13 +1,16 @@
 <?
 
 add_action('template_redirect', function() {
-    // Verifica si estamos en la página de inicio y si el parámetro 'search' está en la URL
+    // Verificar si estamos en la página de inicio y si el parámetro 'search' está en la URL
     if (!is_front_page() && isset($_GET['search'])) {
-        $search_query = sanitize_text_field($_GET['search']); // Sanitiza la entrada del usuario
+        $search_query = sanitize_text_field($_GET['search']); // Sanitiza el término de búsqueda
         
-        // Redirige a la página de inicio con el parámetro de búsqueda
-        wp_redirect(home_url('/?search=' . urlencode($search_query)));
-        exit;
+        // Evitar redirección infinita comprobando si ya estamos redirigiendo a esta URL
+        if (!isset($_GET['redirected'])) {
+            // Redirige a la página de inicio con el parámetro de búsqueda y una marca para evitar bucles
+            wp_redirect(home_url('/?search=' . urlencode($search_query) . '&redirected=1'));
+            exit;
+        }
     }
 });
 
