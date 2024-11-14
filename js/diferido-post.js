@@ -354,17 +354,16 @@
     function actualizarURL(busqueda) {
         const nuevaURL = new URL(window.location);
         if (busqueda) {
-            nuevaURL.searchParams.set('search', busqueda);
+            nuevaURL.searchParams.set('busqueda', busqueda);
         } else {
-            nuevaURL.searchParams.delete('search');
+            nuevaURL.searchParams.delete('busqueda');
         }
         window.history.pushState({}, '', nuevaURL);
     }
 
-    // Obtener búsqueda de la URL al cargar
     function obtenerBusquedaDeURL() {
         const params = new URLSearchParams(window.location.search);
-        return params.get('search') || '';
+        return params.get('busqueda') || '';
     }
 
     // Modificar la función actualizarUIBusqueda
