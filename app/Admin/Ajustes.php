@@ -1,18 +1,7 @@
 <?
 
 // Redirigir URLs con /tag/ a búsqueda personalizada
-function redirect_tag_urls_to_custom_search() {
-    if (strpos($_SERVER['REQUEST_URI'], '/tag/') !== false) {
-        $url_parts = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
-        $tag_index = array_search('tag', $url_parts);
-        if ($tag_index !== false && isset($url_parts[$tag_index + 1])) {
-            $search_url = 'https://2upra.com/samples/?search=' . urlencode($url_parts[$tag_index + 1]);
-            wp_redirect($search_url);
-            exit;
-        }
-    }
-}
-add_action('template_redirect', 'redirect_tag_urls_to_custom_search');
+
 
 // Desactivar envío de correos
 add_filter('wp_mail', fn($args) => []);
