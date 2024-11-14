@@ -1,6 +1,7 @@
 <?
 
-function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page) {
+function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts_per_page)
+{
     try {
         if (!$current_user_id) {
             guardarLog("Error: ID de usuario no válido al obtener feed personalizado");
@@ -66,7 +67,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
                     //update_option($cache_key . '_backup', $posts_personalizados);
 
                 } else {
-                    guardarLog("Usuario ID: $current_user_id intentando recuperar backup para página $paged (sin caché)");
+                    //guardarLog("Usuario ID: $current_user_id intentando recuperar backup para página $paged (sin caché)");
                     //$posts_personalizados = get_option($cache_key . '_backup', []);
 
                     if (empty($posts_personalizados)) {
@@ -112,7 +113,6 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             'post_ids' => $post_ids,
             'post_not_in' => $post_not_in,
         ];
-
     } catch (Exception $e) {
         guardarLog("Error crítico para usuario ID: $current_user_id - " . $e->getMessage());
         return ['post_ids' => [], 'post_not_in' => []];
@@ -121,10 +121,16 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
 
 
 //cuando se reinicia el feed, se puede aprovechar para generar la cached del feed
-function reiniciarFeed($current_user_id) {
+function reiniciarFeed($current_user_id)
+{
     global $wpdb;
-
+    $is_admin = current_user_can('administrator');
     guardarLog("Iniciando reinicio de feed para usuario ID: $current_user_id");
+    $cache_key = ($current_user_id == 44)
+        ? "feed_personalizado_user_44_"
+        : "feed_personalizado_user_{$current_user_id}_";
+
+    $cache_time = $is_admin ? 7200 : 43200; // 2 horas para admin, 12 horas para usuarios
 
     // Obtener todos los archivos de caché relacionados con el usuario actual
     $cache_dir = WP_CONTENT_DIR . '/cache/feed/';
@@ -143,6 +149,18 @@ function reiniciarFeed($current_user_id) {
                 if (unlink($file)) {
                     $transients_eliminados++;
                     guardarLog("Caché eliminada: {$file} para usuario ID: $current_user_id");
+
+                    guardarLog("Usuario ID: $current_user_id REcalculando nuevo feed para primera página (sin caché)");
+                    $posts_personalizados = calcularFeedPersonalizado($current_user_id);
+
+                    if (!$posts_personalizados) {
+                        guardarLog("Error: Fallo al calcular feed personalizado para usuario ID: $current_user_id");
+                        return ['post_ids' => [], 'post_not_in' => []];
+                    }
+
+                    // Guardar en caché y respaldo
+                    $cache_content = ['posts' => $posts_personalizados, 'timestamp' => time()];
+                    guardarCache($cache_key, $cache_content, $cache_time);
                 }
             }
         }

@@ -12,11 +12,16 @@ function variablesPosts($post_id = null)
     $autores_suscritos = get_user_meta($current_user_id, 'offering_user_ids', true);
     $author_id = get_post_field('post_author', $post_id);
 
-    // Obtener datosAlgoritmo y su respaldo
+    // Obtener datosAlgoritmo y su respaldo, con ajustes
     $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
     $datos_algoritmo_respaldo = get_post_meta($post_id, 'datosAlgoritmo_respaldo', true);
 
-    // Usar el respaldo si datosAlgoritmo está vacío
+    // Si datos_algoritmo_respaldo es un array, convertir a JSON para evitar problemas
+    if (is_array($datos_algoritmo_respaldo)) {
+        $datos_algoritmo_respaldo = json_encode($datos_algoritmo_respaldo);
+    }
+
+    // Elegir entre datos_algoritmo o su respaldo
     $datos_algoritmo_final = empty($datos_algoritmo) ? $datos_algoritmo_respaldo : $datos_algoritmo;
 
     return [
