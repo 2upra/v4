@@ -19,11 +19,8 @@ if (!defined('ABSPATH')) {
 <html <?php language_attributes(); ?>>
 
 <body <? body_class(); ?>>
-    <div id="preloader">
-        <div class="loader-content">
-            <? echo $GLOBALS['iconologo1']; ?>
-        </div>
-    </div>
+    
+
     <header>
 
         <? if (is_page('asley')) : ?>
