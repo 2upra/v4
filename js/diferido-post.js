@@ -46,7 +46,7 @@
         const busquedaInicial = obtenerBusquedaDeURL();
         if (busquedaInicial) {
             identificador = busquedaInicial;
-            resetearCarga();
+            //resetearCarga();
             actualizarUIBusqueda(busquedaInicial);
             //cargarMasContenido();
         }
