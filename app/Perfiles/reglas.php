@@ -1,5 +1,17 @@
 <?
 
+add_action('template_redirect', function() {
+    // Verifica si el parámetro 'search' está en la URL
+    if (isset($_GET['search'])) {
+        $search_query = sanitize_text_field($_GET['search']); // Sanitiza la entrada del usuario
+        
+        // Redirige a la página de inicio con el parámetro de búsqueda
+        wp_redirect(home_url('/?search=' . urlencode($search_query)));
+        exit;
+    }
+});
+
+
 // Redirigir a la página de perfil del usuario actual
 add_action('template_redirect', 'redirect_to_user_profile');
 function redirect_to_user_profile() {
