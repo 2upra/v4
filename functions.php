@@ -296,10 +296,11 @@ function scriptsOrdenados()
             'emisor' => get_current_user_id()
         ));
     }
-
+     
     wp_localize_script('ajaxPage', 'ajaxPage', array(
-        'logeado' => get_current_user_id()
+        'logeado' => get_current_user_id() ? true : false
     ));
+    
 
     // Scripts externos
     wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
