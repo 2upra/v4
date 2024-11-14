@@ -21,7 +21,7 @@ define('CHAT_LOG_ENABLED', false);
 define('AUT_LOG_ENABLED', false);
 define('LOG_ALGORITMO_ENABLED', false);
 define('AJAX_POST_LOG_ENABLED', false);
-define('IA_LOG_ENABLED', false);
+define('IA_LOG_ENABLED', true);
 define('POST_LOG_ENABLED', false);
 define('STREAM_LOG_ENABLED', false);
 define('INTERES_TABLE', "{$wpdb->prefix}interes");
