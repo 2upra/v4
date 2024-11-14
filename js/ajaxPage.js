@@ -19,6 +19,7 @@
 
     function inicializarScripts() {
         const funciones = [
+            'inicializarPestanas',
             'inicializarWaveforms',
             'inicializarReproductorAudio',
             'minimizarform',
@@ -62,8 +63,7 @@
             'inicializarDescargas',
             'handleAllRequests',
             'textflux',
-            'autoFillUserInfo',
-            'inicializarPestanas',
+            'autoFillUserInfo',   
             'meta',
             'reporteScript',
             'generarGrafico',
