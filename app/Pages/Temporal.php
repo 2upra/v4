@@ -202,7 +202,7 @@ function dev()
 
                 <div class="BKXAFN">
 
-                    <div class="JMIOCI"> 
+                    <div class="JMIOCI">
                         <h1>Un entorno libre para almas libres</h1>
                         <p>Biblioteca de recursos musicales con herramientas potenciadas para la colaboración e independencia artistica.</p>
                     </div>
@@ -211,8 +211,8 @@ function dev()
                         <span class="MASYTN WJTTLG">Meta final $1000</span>
                     </div>
                     <div class="LXCJWW">
-                        <button class="borde carta">Carta</button>
-                        <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Iniciar sesión</button>
+                        <button class="borde carta" aria-label="Carta">Carta</button>
+                        <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>" aria-label="Entrar">Iniciar sesión</button>
                     </div>
 
                 </div>
@@ -222,7 +222,6 @@ function dev()
                 <div class="XX1 XX2">
                     <?
                     $images = [
-
                         [
                             'title' => '<strong>Recursos gratis</strong> para tu música: descarga samples, drumkits, VST y mucho más.',
                         ],
@@ -232,6 +231,7 @@ function dev()
                         [
                             'url' => 'https://2upra.com/wp-content/uploads/2024/05/asfsdf4.png',
                             'title' => '<strong>Gana con tu arte</strong>: diversifica tus ingresos y recibe el apoyo de tus fans a través de contenido exclusivo.',
+                            'alt' => 'Gana con tu arte - imagen de ingresos diversificados',
                         ],
                         [
                             'title' => '<strong>Producción más sencilla</strong>: Accede a playlists, distribuye tu música y aumenta tu alcance sin complicaciones.',
@@ -239,28 +239,29 @@ function dev()
                         [
                             'url' => 'https://2upra.com/wp-content/uploads/2024/10/fdsfasfhgt.png',
                             'title' => '<strong>Comparte tus proyectos</strong>: Únete a nuestra comunidad abierta y comparte tus trabajos libremente con otros artistas y fans.',
+                            'alt' => 'Comparte tus proyectos - imagen de comunidad artística',
                         ],
                         [
                             'url' => 'https://2upra.com/wp-content/uploads/2024/10/Recurso-1.png',
                             'title' => '<strong>Biblioteca de samples inteligente</strong>: impulsada por IA para organizar y encontrar samples que se adapten a tus gustos.',
+                            'alt' => 'Biblioteca de samples inteligente impulsada por IA',
                         ],
-
                     ];
+
                     foreach ($images as $index => $image):
                         $optimized_url = isset($image['url']) ? img($image['url'], 'medium', 50, 'all') : '';
-
                     ?>
                         <div class="XXDD">
                             <div class="spaceimagen index-<? echo $index; ?>">
                                 <? if ($index === 0): ?>
                                     <div class="KTEPUZ">
                                         <div class="WELODV">
-                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/1107885577068943408_и.jpg', 40, 'all'); ?>">
+                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/1107885577068943408_и.jpg', 40, 'all'); ?>" alt="Sample pack vol 1 winrar">
                                             <p>Sample_pack_vol_1.winrar</p>
                                             <? echo botonDescargaPrueba(); ?>
                                         </div>
                                         <div class="WELODV KESAYW">
-                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/1107885577066304428_Magnetic-aura-subliminal.jpg', 40, 'all'); ?>">
+                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/1107885577066304428_Magnetic-aura-subliminal.jpg', 40, 'all'); ?>" alt="Ambient sound wav">
                                             <p>ambient sound.wav</p>
                                             <? echo botonDescargaPrueba(); ?>
                                         </div>
@@ -268,28 +269,28 @@ function dev()
                                 <? elseif ($index === 1): ?>
                                     <div class="KTEPUZ JOJLEZ">
                                         <div class="WELODV OQDGCR">
-                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/05/2.webp', 40, 'all'); ?>">
+                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/05/2.webp', 40, 'all'); ?>" alt="Wandorius artista colaborador">
                                             <p>Wandorius</p>
                                         </div>
                                         <div class="HPDTIR">
                                             <? echo $GLOBALS['present1']; ?>
                                         </div>
                                         <div class="WELODV KESAYW OQDGCR">
-                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/05/1.webp', 40, 'all'); ?>">
+                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/05/1.webp', 40, 'all'); ?>" alt="Billie Eilish colaboradora">
                                             <p>Billie Eilish</p>
                                         </div>
                                     </div>
                                 <? elseif ($index === 3): ?>
                                     <div class="KTEPUZ UEMOGY">
                                         <div class="WELODV HYEXIH">
-                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/10/e285720ece097bcf54447cad123c92a6.jpg', 40, 'all'); ?>">
+                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/10/e285720ece097bcf54447cad123c92a6.jpg', 40, 'all'); ?>" alt="Playlist de Hip Hop Lofi">
                                             <div class="UPYTYH">
                                                 <p>Playlist de Hip Hop Lofi </p>
                                                 <button>Acceder</button>
                                             </div>
                                         </div>
                                         <div class="WELODV KESAYW HYEXIH">
-                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/05/4.jpg', 40, 'all'); ?>">
+                                            <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/05/4.jpg', 40, 'all'); ?>" alt="Ambient sound wav">
                                             <div class="UPYTYH">
                                                 <p>ambient sound.wav</p>
                                                 <button>Acceder</button>
@@ -297,7 +298,7 @@ function dev()
                                         </div>
                                     </div>
                                 <? else: ?>
-                                    <img src="<? echo esc_url($optimized_url); ?>" alt="<? echo isset($image['alt']) ? esc_attr($image['alt']) : ''; ?>">
+                                    <img src="<? echo esc_url($optimized_url); ?>" alt="<? echo isset($image['alt']) ? esc_attr($image['alt']) : 'Imagen sin descripción'; ?>">
                                 <? endif; ?>
                             </div>
                             <h3 class="XXD1"><? echo wp_kses_post($image['title']); ?></h3>
