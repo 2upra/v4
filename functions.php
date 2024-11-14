@@ -223,6 +223,23 @@ function scriptsOrdenados()
         'likes',
         'descargas',
         'fan',
+        'RS',
+        'progreso',
+        'configPerfil',
+        'stripeAccion',
+        'likes',
+        'autorows',
+        'stripepro',
+        'subida',
+        'hashs',
+        'ajax-submit',
+        'formsscript',
+        'notificaciones',
+        'colec',
+        'contarVistaPost',
+        'seguir',
+        'inversores',
+        'genericAjax'
     ];
 
     $script_handles = [
