@@ -211,8 +211,8 @@ function imagenPostList($block, $es_suscriptor, $post_id)
     } else {
         // Caso: No es un bloque o el usuario es suscriptor
         // Puedes elegir entre 'medium' o 'small' según prefieras
-        $image_size = 'small'; // Cambia a 'small' si prefieres
-        $quality = 40;
+        $image_size = 'thumbnail'; // Cambia a 'small' si prefieres
+        $quality = 20;
     }
 
     // Obtener la URL de la imagen usando la función imagenPost
