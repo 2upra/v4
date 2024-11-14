@@ -115,7 +115,7 @@
 
         let intentos = 0;
         const maxIntentos = 5;
-        const intervalo = 1000 / 5;
+        const intervalo = 5000 / 5;
         const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
         const buscarPestañaActiva = setInterval(() => {
             if (listaPublicaciones) {
