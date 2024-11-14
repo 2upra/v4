@@ -42,7 +42,6 @@
                 limpiarBusqueda();
             });
         }
-        actualizarUIBusqueda('');
         const busquedaInicial = obtenerBusquedaDeURL();
         if (busquedaInicial) {
             identificador = busquedaInicial;
@@ -394,4 +393,17 @@
 
         actualizarURL(valor);
     }
+
+    window.actualizarUIBusquedaNoURL = function () {
+        const inputBusqueda = document.getElementById('identifier');
+        const botonLimpiar = document.getElementById('clearSearch');
+
+        if (inputBusqueda) {
+            inputBusqueda.value = '';
+        }
+
+        if (botonLimpiar) {
+            botonLimpiar.style.display = 'none';
+        }
+    };
 })();

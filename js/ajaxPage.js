@@ -19,6 +19,7 @@
 
     function inicializarScripts() {
         const funciones = [
+            'actualizarUIBusquedaNoURL',
             'inicializarPestanas',
             'inicializarWaveforms',
             'inicializarReproductorAudio',
