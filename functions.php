@@ -211,7 +211,7 @@ function postLog($log)
 function scriptsOrdenados()
 {
     // Definir la versión global
-    $global_version = '3.0.1'; // Cambia esta versión cuando desees actualizar todos los scripts
+    $global_version = '3.0.2'; // Cambia esta versión cuando desees actualizar todos los scripts
 
     // Verificar si el usuario actual es administrador
     $dev_mode = current_user_can('administrator');
