@@ -1,6 +1,8 @@
 (function () {
     'use strict';
-
+    document.addEventListener('DOMContentLoaded', function () {
+        reiniciarCargaDiferida();
+    });
     const DEPURAR = true;
     const log = DEPURAR ? console.log.bind(console) : () => {};
 
@@ -115,56 +117,57 @@
 
         let intentos = 0;
         const maxIntentos = 5;
-        const intervalo = 5000 / 5;
-        const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
-        const buscarPestañaActiva = setInterval(() => {
+        const intervalo = 1000; // Intervalo de 1 segundo
+
+        const buscarPestañaActiva = setInterval(async () => {
+            const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
             if (listaPublicaciones) {
                 log('Pestaña activa encontrada');
-                clearInterval(buscarPestañaActiva); // Detenemos los intentos al encontrar la pestaña
-                // Aquí puedes continuar con tu lógica para listaPublicaciones
+                clearInterval(buscarPestañaActiva);
+
+                // Parámetros de carga
+                const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
+                const idUsuario = window.idUsuarioActual || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
+
+                log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual});
+
+                try {
+                    const respuesta = await fetch(ajaxUrl, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: new URLSearchParams({
+                            action: 'cargar_mas_publicaciones',
+                            paged: paginaActual,
+                            filtro,
+                            posttype,
+                            identifier: identificador,
+                            tab_id: tabId,
+                            user_id: idUsuario,
+                            cargadas: Array.from(publicacionesCargadas).join(',')
+                        })
+                    });
+
+                    if (!respuesta.ok) {
+                        throw new Error(`HTTP error! status: ${respuesta.status}`);
+                    }
+
+                    const textoRespuesta = await respuesta.text();
+                    await procesarRespuesta(textoRespuesta);
+                } catch (error) {
+                    log('Error en la petición AJAX:', error);
+                } finally {
+                    estaCargando = false;
+                }
             } else {
                 intentos++;
                 log('No se encontró una pestaña activa, intento:', intentos);
                 if (intentos >= maxIntentos) {
-                    clearInterval(buscarPestañaActiva); // Detenemos los intentos si alcanzamos el máximo
+                    clearInterval(buscarPestañaActiva);
                     log('No se encontró una pestaña activa después de varios intentos');
                     estaCargando = false;
                 }
             }
         }, intervalo);
-
-        const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
-        const idUsuario = window.idUsuarioActual || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
-
-        log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual});
-
-        try {
-            const respuesta = await fetch(ajaxUrl, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                body: new URLSearchParams({
-                    action: 'cargar_mas_publicaciones',
-                    paged: paginaActual,
-                    filtro,
-                    posttype,
-                    identifier: identificador,
-                    tab_id: tabId,
-                    user_id: idUsuario,
-                    cargadas: Array.from(publicacionesCargadas).join(',')
-                })
-            });
-
-            if (!respuesta.ok) {
-                throw new Error(`HTTP error! status: ${respuesta.status}`);
-            }
-
-            const textoRespuesta = await respuesta.text();
-            await procesarRespuesta(textoRespuesta);
-        } catch (error) {
-            log('Error en la petición AJAX:', error);
-        } finally {
-            estaCargando = false;
-        }
     }
     const MAX_POSTS = 50;
 
@@ -358,9 +361,6 @@
     }
 
     window.addEventListener('resize', ajustarAlturaMaxima);
-
-    // Inicializar al cargar el script
-    reiniciarCargaDiferida();
 
     /////////////////////////////////
     // Actualizar URL con el parámetro de búsqueda
