@@ -44,6 +44,7 @@
         const busquedaInicial = obtenerBusquedaDeURL();
         if (busquedaInicial) {
             identificador = busquedaInicial;
+            resetearCarga();
             actualizarUIBusqueda(busquedaInicial);
             cargarMasContenido();
         }
