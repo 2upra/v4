@@ -45,7 +45,7 @@ function imagenColeccion($postId)
 {
     $imagenSize = 'medium';
     $quality = 60;
-    $image_url = imagenPost($postId, $imagenSize, $quality, 'all');
+    $image_url = imagenPost($postId, $imagenSize, $quality, 'all', false, true);
     $processed_image_url = img($image_url, $quality, 'all');
     ob_start();
 ?>
