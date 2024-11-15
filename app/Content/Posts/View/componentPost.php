@@ -225,67 +225,6 @@ function imagenPostList($block, $es_suscriptor, $postId)
     return $output;
 }
 
-function imagenPost($postId, $size = 'medium', $quality = 50, $strip = 'all', $pixelated = false, $use_temp = false)
-{
-    $post_thumbnail_id = get_post_thumbnail_id($postId);
-    if ($post_thumbnail_id) {
-        $url = wp_get_attachment_image_url($post_thumbnail_id, $size);
-    } elseif ($use_temp) {
-        $temp_image_id = get_post_meta($postId, 'imagenTemporal', true);
-        
-        // Si existe una imagen temporal, úsala
-        if ($temp_image_id && wp_attachment_is_image($temp_image_id)) {
-            $url = wp_get_attachment_image_url($temp_image_id, $size);
-        } else {
-            // Si no existe imagen temporal, sube una nueva
-            $random_image_path = obtenerImagenAleatoria('/home/asley01/MEGA/Waw/random');
-            if (!$random_image_path) {
-                ejecutarScriptPermisos();
-                return false;
-            }
-            $temp_image_id = subirImagenALibreria($random_image_path, $postId);
-            if (!$temp_image_id) {
-                ejecutarScriptPermisos();
-                return false;
-            }
-            update_post_meta($postId, 'imagenTemporal', $temp_image_id);
-            $url = wp_get_attachment_image_url($temp_image_id, $size);
-        }
-    } else {
-        return false;
-    }
-
-    if (function_exists('jetpack_photon_url') && $url) {
-        $args = array('quality' => $quality, 'strip' => $strip);
-        if ($pixelated) {
-            $args['w'] = 50;
-            $args['h'] = 50;
-            $args['zoom'] = 2;
-        }
-        return jetpack_photon_url($url, $args);
-    }
-    return $url;
-}
-
-function img($url, $quality = 40, $strip = 'all') {
-    if ($url === null || $url === '') {
-        return ''; 
-    }
-    $parsed_url = parse_url($url);
-    if (strpos($url, 'https://i0.wp.com/') === 0) {
-        $cdn_url = $url;
-    } else {
-        $path = isset($parsed_url['host']) ? $parsed_url['host'] . $parsed_url['path'] : ltrim($parsed_url['path'], '/');
-        $cdn_url = 'https://i0.wp.com/' . $path;
-    }
-    
-    $query = [
-        'quality' => $quality,
-        'strip' => $strip,
-    ];
-    
-    return add_query_arg($query, $cdn_url);
-}
 
 function obtenerImagenAleatoria($directory)
 {
