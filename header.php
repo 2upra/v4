@@ -21,6 +21,34 @@ if (!defined('ABSPATH')) {
             <? echo $GLOBALS['iconologo1']; ?>
         </div>
     </div>
+
+    <style>
+        #preloader {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 99999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .loader-content {
+            text-align: center;
+        }
+
+        body.loaded #preloader {
+            display: none;
+        }
+
+        body:not(.loaded) {
+            overflow: hidden;
+        }
+    </style>
 */
 ?>
 

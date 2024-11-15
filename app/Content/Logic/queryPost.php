@@ -2,7 +2,6 @@
 
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
-
     try {
         $user_id = obtenerUserId($is_ajax);
         $current_user_id = get_current_user_id();
@@ -18,10 +17,36 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             'exclude' => [],
             'post_type' => 'social_post',
             'similar_to' => null,
+            'colec' => null, // ID del post con meta "samples"
         ];
         $args = array_merge($defaults, $args);
 
-        $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
+        // Si se pasa una ID en "colec", obtener los IDs desde el meta "samples"
+        if (!empty($args['colec']) && is_numeric($args['colec'])) {
+            $samples_meta = get_post_meta($args['colec'], 'samples', true);
+
+            // Deserializar el meta si no es un array
+            if (!is_array($samples_meta)) {
+                $samples_meta = maybe_unserialize($samples_meta);
+            }
+
+            // Verificar que sea un array válido
+            if (is_array($samples_meta)) {
+                $query_args = [
+                    'post_type' => $args['post_type'],
+                    'post__in' => array_values($samples_meta), // Usar los IDs deserializados
+                    'orderby' => 'post__in', // Mantener el orden proporcionado
+                    'posts_per_page' => -1, // Mostrar todos los IDs
+                ];
+            } else {
+                error_log("[publicaciones] El meta 'samples' no es un array válido.");
+                return false;
+            }
+        } else {
+            // Si no hay colec, usar configuracionQueryArgs
+            $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
+        }
+
         $output = procesarPublicaciones($query_args, $args, $is_ajax);
 
         if ($is_ajax) {
@@ -33,6 +58,83 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         error_log("[publicaciones] Error crítico: " . $e->getMessage());
         return false;
     }
+}
+
+
+function procesarPublicaciones($query_args, $args, $is_ajax)
+{
+    ob_start();
+    $user_id = get_current_user_id();
+
+    // Verificar que query_args no esté vacío
+    if (empty($query_args)) {
+        error_log('Query args está vacío en procesarPublicaciones');
+        return '';
+    }
+
+    // Asegurarse de que query_args sea un array
+    if (!is_array($query_args)) {
+        error_log('Query args no es un array en procesarPublicaciones');
+        return '';
+    }
+
+    // Crear la consulta con manejo de errores
+    try {
+        $query = new WP_Query($query_args);
+
+        // Verificar si la consulta es válida
+        if (!is_a($query, 'WP_Query')) {
+            error_log('Error al crear WP_Query');
+            return '';
+        }
+    } catch (Exception $e) {
+        error_log('Error en WP_Query: ' . $e->getMessage());
+        return '';
+    }
+
+    // Verificar que $query sea válido antes de continuar
+    if (!is_object($query) || !method_exists($query, 'have_posts')) {
+        error_log('Query inválido en procesarPublicaciones');
+        return '';
+    }
+
+    $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
+    if ($query->have_posts()) {
+        $tipoPost = $args['post_type'];
+        if (!wp_doing_ajax()) {
+            $clase_extra = 'clase-' . esc_attr($filtro);
+            if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
+                $clase_extra = 'clase-rolastatus';
+            }
+
+            echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
+                  data-filtro="' . esc_attr($filtro) . '" 
+                  data-posttype="' . esc_attr($tipoPost) . '" 
+                  data-tab-id="' . esc_attr($args['tab_id']) . '">';
+        }
+
+        while ($query->have_posts()) {
+            $query->the_post();
+
+            if ($tipoPost === 'social_post') {
+                echo htmlPost($filtro);
+            } elseif ($tipoPost === 'colab') {
+                echo htmlColab($filtro);
+            } elseif ($tipoPost === 'colecciones') {
+                echo htmlColec($filtro);
+            } else {
+                echo '<p>Tipo de publicación no reconocido.</p>';
+            }
+        }
+
+        if (!wp_doing_ajax()) {
+            echo '</ul>';
+        }
+    } else {
+        echo nohayPost($filtro, $is_ajax);
+    }
+    wp_reset_postdata();
+    return ob_get_clean();
 }
 
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
@@ -58,7 +160,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
         $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
 
-        if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['samplesList', 'sample'])) {
+        if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
             $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
         }
         
@@ -317,81 +419,7 @@ function aplicarFiltroGlobal($query_args, $args, $current_user_id)
 }
 
 
-function procesarPublicaciones($query_args, $args, $is_ajax)
-{
-    ob_start();
-    $user_id = get_current_user_id();
 
-    // Verificar que query_args no esté vacío
-    if (empty($query_args)) {
-        error_log('Query args está vacío en procesarPublicaciones');
-        return '';
-    }
-
-    // Asegurarse de que query_args sea un array
-    if (!is_array($query_args)) {
-        error_log('Query args no es un array en procesarPublicaciones');
-        return '';
-    }
-
-    // Crear la consulta con manejo de errores
-    try {
-        $query = new WP_Query($query_args);
-
-        // Verificar si la consulta es válida
-        if (!is_a($query, 'WP_Query')) {
-            error_log('Error al crear WP_Query');
-            return '';
-        }
-    } catch (Exception $e) {
-        error_log('Error en WP_Query: ' . $e->getMessage());
-        return '';
-    }
-
-    // Verificar que $query sea válido antes de continuar
-    if (!is_object($query) || !method_exists($query, 'have_posts')) {
-        error_log('Query inválido en procesarPublicaciones');
-        return '';
-    }
-
-    $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
-    if ($query->have_posts()) {
-        $tipoPost = $args['post_type'];
-        if (!wp_doing_ajax()) {
-            $clase_extra = 'clase-' . esc_attr($filtro);
-            if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
-                $clase_extra = 'clase-rolastatus';
-            }
-
-            echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
-                  data-filtro="' . esc_attr($filtro) . '" 
-                  data-posttype="' . esc_attr($tipoPost) . '" 
-                  data-tab-id="' . esc_attr($args['tab_id']) . '">';
-        }
-
-        while ($query->have_posts()) {
-            $query->the_post();
-
-            if ($tipoPost === 'social_post') {
-                echo htmlPost($filtro);
-            } elseif ($tipoPost === 'colab') {
-                echo htmlColab($filtro);
-            } elseif ($tipoPost === 'colecciones') {
-                echo htmlColec($filtro);
-            } else {
-                echo '<p>Tipo de publicación no reconocido.</p>';
-            }
-        }
-
-        if (!wp_doing_ajax()) {
-            echo '</ul>';
-        }
-    } else {
-        echo nohayPost($filtro, $is_ajax);
-    }
-    wp_reset_postdata();
-    return ob_get_clean();
-}
 
 
 
