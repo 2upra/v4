@@ -165,8 +165,8 @@ function singleColec($postId)
                 <? echo $samples ?>
             </div>
             <div class="BOTONESCOLEC">
-            <? echo botonDescargaColec($postID) ?>
-            <? echo like($post_id); ?>
+                <? echo botonDescargaColec($postID) ?>
+                <? echo like($post_id); ?>
             </div>
         </div>
     </div>
@@ -197,7 +197,7 @@ function botonDescargaColec($postID)
                 aria-label="Boton Descarga"
                 id="download-button-<? echo esc_attr($postID); ?>"
                 onclick="return procesarDescarga('<? echo esc_js($postID); ?>', '<? echo esc_js($userID); ?>')">
-                <? echo $GLOBALS['descargaicono']; ?>
+                <? echo $GLOBALS['descargaicono']; ?> Descargar
             </button>
         </div>
     <?
