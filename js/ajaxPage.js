@@ -20,7 +20,7 @@
     ];
   
     function initScripts() {
-      funcs.forEach(f => window[f] && window[f]());
+        funcs.forEach(f => typeof window[f] === 'function' ? window[f]() : console.warn(`Función ${f} no definida.`));
     }
   
     function reinit() {
