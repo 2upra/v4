@@ -10,6 +10,9 @@ function musica()
     saberSi($user_id);
     ob_start();
 ?>
+    <div id="menuData" style="display:none;" pestanaActual="">
+        <div data-tab="Music"></div>
+    </div>
 
     <div class="tabs">
         <div class="tab-content">

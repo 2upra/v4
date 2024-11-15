@@ -20,10 +20,6 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
         ?>
         <? else: ?>
 
-            <div id="menuData" style="display:none;" pestanaActual="">
-                <div data-tab="Música"></div>
-            </div>
-
             <? echo musica() ?>
 
         <? endif; ?>
