@@ -58,7 +58,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
         $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
 
-        if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['samplesList', 'sample'])) {
+        if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
             $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
         }
         
