@@ -43,15 +43,15 @@ function variablesColec($postId)
 
 function imagenColeccion($postId)
 {
-    $imagenSize = 'medium';
+    $imagenSize = 'thumbnail';
     $quality = 60;
-    $image_url = imagenPost($postId, $imagenSize, $quality, 'all', false, true);
-    $processed_image_url = img($image_url, $quality, 'all');
+    $imagenUrl = imagenPost($postId, $imagenSize, $quality, 'all', false, true);
+    $imagenProcesada = img($imagenUrl, $quality, 'all');
     ob_start();
 ?>
     <div class="post-image-container">
         <a href="<? esc_url(get_permalink($postId)); ?>">
-            <img src="<? esc_url($processed_image_url); ?>" alt="Post Image" />
+            <img src="<? esc_url($imagenProcesada); ?>" alt="Post Image" />
         </a>
     </div>
 <?
