@@ -139,7 +139,7 @@ function socialTabs()
                 </div>
             </div>
 
-            <div class="tab INICIO S4K7I3" id="Samples">
+            <div class="tab INICIO S4K7I3" id="Colecciones">
                 <div class="BPLBDE">
                     <? echo publicaciones(['post_type' => 'colecciones', 'filtro' => 'colecciones', 'posts' => 12]); ?>
                 </div>
