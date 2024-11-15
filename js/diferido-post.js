@@ -29,7 +29,7 @@
             eventoBusquedaConfigurado = true;
         }
 
-        ajustarAlturaMaxima();
+        //ajustarAlturaMaxima();
         habilitarCargaPorScroll();
         establecerIdUsuarioDesdeInput();
         configurarDelegacionEventosPostTag();
@@ -347,7 +347,7 @@
         hayMasContenido = false;
         window.removeEventListener('scroll', manejarScroll);
     }
-
+    /*
     function ajustarAlturaMaxima() {
         const contenedor = document.querySelector('.SAOEXP .clase-rolastatus');
         const elemento = contenedor?.querySelector('li[filtro="rolastatus"]');
@@ -360,7 +360,7 @@
     }
 
     window.addEventListener('resize', ajustarAlturaMaxima);
-
+    */
     /////////////////////////////////
     // Actualizar URL con el parámetro de búsqueda
     function actualizarURL(busqueda) {

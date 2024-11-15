@@ -4,7 +4,7 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-$current_post_id = get_the_ID();
+$postId = get_the_ID();
 $filtro = 'singleColec';
 
 ?>
@@ -26,7 +26,7 @@ $filtro = 'singleColec';
             <? if (have_posts()) : while (have_posts()) : the_post(); ?>
                     <article <? post_class(); ?>>
                         <div>
-                            
+                            <? echo singleColec($postId) ?>
                         </div>
                     </article>
             <? endwhile;
