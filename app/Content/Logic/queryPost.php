@@ -2,7 +2,7 @@
 
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
-    
+
     try {
         $user_id = obtenerUserId($is_ajax);
         $current_user_id = get_current_user_id();
@@ -38,7 +38,6 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
     try {
-
         $FALLBACK_USER_ID = 44;
         $is_authenticated = $current_user_id && $current_user_id != 0;
         $is_admin = current_user_can('administrator');
@@ -58,7 +57,11 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         }
 
         $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
-        $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+
+        if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['samplesList', 'sample'])) {
+            $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+        }
+        
         $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id);
 
         return $query_args;
@@ -67,6 +70,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         return false;
     }
 }
+
 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
 {
@@ -204,6 +208,112 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
         error_log("[ordenamientoQuery] Error crítico: " . $e->getMessage());
         return false;
     }
+}
+
+
+
+function aplicarFiltrosUsuario($query_args, $current_user_id)
+{
+    // Obtener los filtros personalizados del usuario
+    $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
+
+    // Si no hay filtros o el array está vacío, no modificar $query_args
+    if (empty($filtrosUsuario) || !is_array($filtrosUsuario)) {
+        return $query_args;  // No aplicar ningún filtro y devolver los query_args originales
+    }
+    if (in_array('ocultarDescargados', $filtrosUsuario)) {
+        $descargasAnteriores = get_user_meta($current_user_id, 'descargas', true) ?: [];
+        if (!empty($descargasAnteriores)) {
+            // Agregar las publicaciones descargadas a `post__not_in` sin afectar `post__in`
+            $query_args['post__not_in'] = array_merge(
+                $query_args['post__not_in'] ?? [],
+                array_keys($descargasAnteriores)
+            );
+        }
+    }
+
+
+    if (in_array('ocultarEnColeccion', $filtrosUsuario)) {
+        $samplesGuardados = get_user_meta($current_user_id, 'samplesGuardados', true) ?: [];
+        if (!empty($samplesGuardados)) {
+            $guardadosIDs = array_keys($samplesGuardados);
+            // Agregar las publicaciones guardadas a `post__not_in` sin afectar `post__in`
+            $query_args['post__not_in'] = array_merge(
+                $query_args['post__not_in'] ?? [],
+                $guardadosIDs
+            );
+        }
+    }
+
+    if (in_array('mostrarMeGustan', $filtrosUsuario)) {
+        $userLikedPostIds = obtenerLikesDelUsuario($current_user_id);
+        if (!empty($userLikedPostIds)) {
+            // Si ya existen posts en 'post__in', hacer una intersección para conservar el orden original
+            if (isset($query_args['post__in'])) {
+                $query_args['post__in'] = array_intersect($query_args['post__in'], $userLikedPostIds);
+            } else {
+                $query_args['post__in'] = $userLikedPostIds;
+            }
+
+            // Si la intersección da como resultado un conjunto vacío, establecer `posts_per_page` a 0
+            if (empty($query_args['post__in'])) {
+                $query_args['posts_per_page'] = 0;  // No mostrar ninguna publicación
+            }
+        } else {
+            // Si el usuario no tiene posts con 'me gusta', establecer `posts_per_page` a 0
+            $query_args['posts_per_page'] = 0;  // No mostrar ninguna publicación
+        }
+    }
+
+    return $query_args;
+}
+
+
+function aplicarFiltroGlobal($query_args, $args, $current_user_id)
+{
+    // Aplicar el filtro original de `$filtro`
+    $filtro = $args['filtro'] ?? 'nada';
+    $meta_query_conditions = [
+        'rolasEliminadas' => fn() => $query_args['post_status'] = 'pending_deletion',
+        'rolasRechazadas' => fn() => $query_args['post_status'] = 'rejected',
+        'rolasPendiente' => fn() => $query_args['post_status'] = 'pending',
+        'likesRolas' => fn() => ($userLikedPostIds = obtenerLikesDelUsuario($current_user_id))
+            ? $query_args['post__in'] = $userLikedPostIds
+            : $query_args['posts_per_page'] = 0,
+        'nada' => fn() => $query_args['post_status'] = 'publish',
+        'colabs' => ['key' => 'paraColab', 'value' => '1', 'compare' => '='],
+        'libres' => [
+            ['key' => 'esExclusivo', 'value' => '0', 'compare' => '='],
+            ['key' => 'post_price', 'compare' => 'NOT EXISTS'],
+            ['key' => 'rola', 'value' => '1', 'compare' => '!=']
+        ],
+        'momento' => [
+            ['key' => 'momento', 'value' => '1', 'compare' => '='],
+            ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
+        ],
+        'sample' => [
+            ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+            ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
+        ],
+        'sampleList' => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+        'colab' => fn() => $query_args['post_status'] = 'publish',
+        'colabPendiente' => function () use (&$query_args) {
+            $query_args['author'] = get_current_user_id();
+            $query_args['post_status'] = 'pending';
+        },
+    ];
+
+    // Ejecutar el filtro
+    if (isset($meta_query_conditions[$filtro])) {
+        $result = $meta_query_conditions[$filtro];
+        if (is_callable($result)) {
+            $result();
+        } else {
+            $query_args['meta_query'][] = $result;
+        }
+    }
+
+    return $query_args;
 }
 
 
