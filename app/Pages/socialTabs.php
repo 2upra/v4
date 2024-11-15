@@ -50,11 +50,10 @@ function socialTabs()
                         <? echo tagsPosts() ?>
                     </div>
                     <div class="FDGEDF">
-                        <p id="resultadosPost-sampleList">Resultados: </p>
+                        <p id="resultadosPost-sampleList"></p>
                         <div class="OPCDGED">
 
                             <button class="restablecerBusqueda" style="display: none;">Restablecer filtros</button>
-
                             <button class="filtrosboton">
                                 <?
                                 $user_id = get_current_user_id();
@@ -137,6 +136,12 @@ function socialTabs()
                     <div class="FOFDV5">
                         <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12]); ?>
                     </div>
+                </div>
+            </div>
+
+            <div class="tab INICIO S4K7I3" id="Samples">
+                <div class="BPLBDE">
+                    <? echo publicaciones(['post_type' => 'colecciones', 'filtro' => 'colecciones', 'posts' => 12]); ?>
                 </div>
             </div>
 

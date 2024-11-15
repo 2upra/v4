@@ -3,7 +3,6 @@
   
     if (isFirefox) {
       document.body.classList.add('firefox');
-      document.body.insertAdjacentHTML('afterbegin', '<svg style="display: none;"><filter id="blur-effect"><feGaussianBlur stdDeviation="10" /></filter></svg>');
     }
   
     const funcs = [
