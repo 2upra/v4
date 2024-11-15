@@ -156,20 +156,20 @@ function singleColec($postId)
     extract($vars);
     ob_start()
 ?>
-    <div>
+    <div class="AMORP">
         <? echo imagenColeccion($postId); ?>
-        <div>
+        <div class="ORGDE">
             <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
             <h2 class="post-title"><? echo get_the_title($postId); ?></h2>
-            <div>
+            <div class="DSEDBE">
                 <? echo $samples ?>
             </div>
             <? echo $botonDescargaColec ?>
         </div>
     </div>
 
-    <div>
-        
+    <div class="LISTCOLECSIN">
+        <? echo publicaciones(['post_type' => 'colecciones', 'filtro' => 'colecciones', 'posts' => 12]); ?>
     </div>
 
     <?
