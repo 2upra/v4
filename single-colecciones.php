@@ -25,13 +25,8 @@ $filtro = 'singleColec';
         <div id="content" class="<? echo esc_attr(! is_user_logged_in() ? 'nologin' : ''); ?>">
             <? if (have_posts()) : while (have_posts()) : the_post(); ?>
                     <article <? post_class(); ?>>
-                        <div class="single">
-                            <div class="fullH">
-                                <? echo htmlPost($filtro); ?>
-                            </div>
-                            <div class="samples-colaboracion" nosnippet>
-
-                            </div>
+                        <div>
+                            
                         </div>
                     </article>
             <? endwhile;
