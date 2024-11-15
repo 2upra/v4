@@ -1,22 +1,20 @@
 <?
 
 //VARIABLES POSTS
-function variablesPosts($post_id = null)
+function variablesPosts($postId = null)
 {
-    if ($post_id === null) {
+    if ($postId === null) {
         global $post;
-        $post_id = $post->ID;
+        $postId = $post->ID;
     }
 
-    $current_user_id = get_current_user_id();
-    $autores_suscritos = get_user_meta($current_user_id, 'offering_user_ids', true);
-    $author_id = get_post_field('post_author', $post_id);
+    $usuarioActual = get_current_user_id();
+    $autores_suscritos = get_user_meta($usuarioActual, 'offering_user_ids', true);
+    $autorId = get_post_field('post_author', $postId);
 
-    // Obtener datosAlgoritmo y su respaldo, con conversión adicional para evitar errores
-    $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
-    $datos_algoritmo_respaldo = get_post_meta($post_id, 'datosAlgoritmo_respaldo', true);
+    $datos_algoritmo = get_post_meta($postId, 'datosAlgoritmo', true);
+    $datos_algoritmo_respaldo = get_post_meta($postId, 'datosAlgoritmo_respaldo', true);
 
-    // Asegurar que el respaldo sea un string, convirtiendo arrays a JSON o serializando si es necesario
     if (is_array($datos_algoritmo_respaldo)) {
         $datos_algoritmo_respaldo = json_encode($datos_algoritmo_respaldo);
     } elseif (is_object($datos_algoritmo_respaldo)) {
@@ -27,43 +25,43 @@ function variablesPosts($post_id = null)
     $datos_algoritmo_final = empty($datos_algoritmo) ? $datos_algoritmo_respaldo : $datos_algoritmo;
 
     return [
-        'current_user_id' => $current_user_id,
+        'current_user_id' => $usuarioActual,
         'autores_suscritos' => $autores_suscritos,
-        'author_id' => $author_id,
-        'es_suscriptor' => in_array($author_id, (array)$autores_suscritos),
-        'author_name' => get_the_author_meta('display_name', $author_id),
-        'author_avatar' => imagenPerfil($author_id),
-        'audio_id_lite' => get_post_meta($post_id, 'post_audio_lite', true),
-        'audio_id' => get_post_meta($post_id, 'post_audio', true),
-        'audio_url' => wp_get_attachment_url(get_post_meta($post_id, 'post_audio', true)),
-        'audio_lite' => wp_get_attachment_url(get_post_meta($post_id, 'post_audio_lite', true)),
-        'wave' => get_post_meta($post_id, 'waveform_image_url', true),
-        'post_date' => get_the_date('', $post_id),
-        'block' => get_post_meta($post_id, 'esExclusivo', true),
-        'colab' => get_post_meta($post_id, 'paraColab', true),
-        'post_status' => get_post_status($post_id),
-        'bpm' => get_post_meta($post_id, 'audio_bpm', true),
-        'key' => get_post_meta($post_id, 'audio_key', true),
-        'scale' => get_post_meta($post_id, 'audio_scale', true),
-        'detallesIA' => get_post_meta($post_id, 'audio_descripcion', true),
+        'author_id' => $autorId,
+        'es_suscriptor' => in_array($autorId, (array)$autores_suscritos),
+        'author_name' => get_the_author_meta('display_name', $autorId),
+        'author_avatar' => imagenPerfil($autorId),
+        'audio_id_lite' => get_post_meta($postId, 'post_audio_lite', true),
+        'audio_id' => get_post_meta($postId, 'post_audio', true),
+        'audio_url' => wp_get_attachment_url(get_post_meta($postId, 'post_audio', true)),
+        'audio_lite' => wp_get_attachment_url(get_post_meta($postId, 'post_audio_lite', true)),
+        'wave' => get_post_meta($postId, 'waveform_image_url', true),
+        'post_date' => get_the_date('', $postId),
+        'block' => get_post_meta($postId, 'esExclusivo', true),
+        'colab' => get_post_meta($postId, 'paraColab', true),
+        'post_status' => get_post_status($postId),
+        'bpm' => get_post_meta($postId, 'audio_bpm', true),
+        'key' => get_post_meta($postId, 'audio_key', true),
+        'scale' => get_post_meta($postId, 'audio_scale', true),
+        'detallesIA' => get_post_meta($postId, 'audio_descripcion', true),
         'datosAlgoritmo' => $datos_algoritmo_final,
-        'postAut' => get_post_meta($post_id, 'postAut', true),
-        'ultimoEdit' => get_post_meta($post_id, 'ultimoEdit', true),
+        'postAut' => get_post_meta($postId, 'postAut', true),
+        'ultimoEdit' => get_post_meta($postId, 'ultimoEdit', true),
     ];
 }
 
 //BOTON DE SEGUIR
-function botonseguir($author_id)
+function botonseguir($autorId)
 {
-    $author_id = (int) $author_id;
-    $current_user_id = get_current_user_id();
+    $autorId = (int) $autorId;
+    $usuarioActual = get_current_user_id();
 
-    if ($current_user_id === 0) {
+    if ($usuarioActual === 0) {
         return ''; // Usuario no autenticado
     }
 
     // Si el usuario está viendo su propio perfil, añadimos una clase de deshabilitado
-    if ($current_user_id === $author_id) {
+    if ($usuarioActual === $autorId) {
         ob_start();
 ?>
         <button class="mismo-usuario" disabled>
@@ -73,8 +71,8 @@ function botonseguir($author_id)
         return ob_get_clean();
     }
 
-    $siguiendo = get_user_meta($current_user_id, 'siguiendo', true);
-    $es_seguido = is_array($siguiendo) && in_array($author_id, $siguiendo);
+    $siguiendo = get_user_meta($usuarioActual, 'siguiendo', true);
+    $es_seguido = is_array($siguiendo) && in_array($autorId, $siguiendo);
 
     $clase_boton = $es_seguido ? 'dejar-de-seguir' : 'seguir';
     $icono_boton = $es_seguido ? $GLOBALS['iconorestar'] : $GLOBALS['iconosumar'];
@@ -82,25 +80,25 @@ function botonseguir($author_id)
     ob_start();
     ?>
     <button class="<? echo esc_attr($clase_boton); ?>"
-        data-seguidor-id="<? echo esc_attr($current_user_id); ?>"
-        data-seguido-id="<? echo esc_attr($author_id); ?>">
+        data-seguidor-id="<? echo esc_attr($usuarioActual); ?>"
+        data-seguido-id="<? echo esc_attr($autorId); ?>">
         <? echo $icono_boton; ?>
     </button>
 <?
     return ob_get_clean();
 }
 
-function botonSeguirPerfilBanner($author_id)
+function botonSeguirPerfilBanner($autorId)
 {
 
-    $author_id = (int) $author_id;
-    $current_user_id = get_current_user_id();
-    if ($current_user_id === 0 || $current_user_id === $author_id) {
+    $autorId = (int) $autorId;
+    $usuarioActual = get_current_user_id();
+    if ($usuarioActual === 0 || $usuarioActual === $autorId) {
         return '';
     }
-    $siguiendo = get_user_meta($current_user_id, 'siguiendo', true);
+    $siguiendo = get_user_meta($usuarioActual, 'siguiendo', true);
     $siguiendo = is_array($siguiendo) ? $siguiendo : array();
-    $es_seguido = in_array($author_id, $siguiendo);
+    $es_seguido = in_array($autorId, $siguiendo);
     $clase_boton = $es_seguido ? 'dejar-de-seguir' : 'seguir';
     $texto_boton = $es_seguido ? 'Dejar de seguir' : 'Seguir';
 
@@ -108,8 +106,8 @@ function botonSeguirPerfilBanner($author_id)
     ob_start();
 ?>
     <button class="borde <? echo esc_attr($clase_boton); ?>"
-        data-seguidor-id="<? echo esc_attr($current_user_id); ?>"
-        data-seguido-id="<? echo esc_attr($author_id); ?>">
+        data-seguidor-id="<? echo esc_attr($usuarioActual); ?>"
+        data-seguido-id="<? echo esc_attr($autorId); ?>">
         <? echo esc_html($texto_boton); ?>
     </button>
 <?
@@ -117,29 +115,29 @@ function botonSeguirPerfilBanner($author_id)
 }
 
 //OPCIONES EN LAS ROLAS 
-function opcionesRola($post_id, $post_status, $audio_url)
+function opcionesRola($postId, $post_status, $audio_url)
 {
     ob_start();
 ?>
-    <button class="HR695R7" data-post-id="<? echo $post_id; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
+    <button class="HR695R7" data-post-id="<? echo $postId; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
 
-    <div class="A1806241" id="opcionesrola-<? echo $post_id; ?>">
+    <div class="A1806241" id="opcionesrola-<? echo $postId; ?>">
         <div class="A1806242">
             <? if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'pending_deletion') { ?>
-                <button class="toggle-status-rola" data-post-id="<? echo $post_id; ?>">Cambiar estado</button>
+                <button class="toggle-status-rola" data-post-id="<? echo $postId; ?>">Cambiar estado</button>
             <? } ?>
 
             <? if (current_user_can('administrator') && $post_status != 'publish' && $post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
-                <button class="rechazar-rola" data-post-id="<? echo $post_id; ?>">Rechazar rola</button>
+                <button class="rechazar-rola" data-post-id="<? echo $postId; ?>">Rechazar rola</button>
             <? } ?>
 
             <button class="download-button" data-audio-url="<? echo $audio_url; ?>" data-filename="<? echo basename($audio_url); ?>">Descargar</button>
 
             <? if ($post_status != 'rejected' && $post_status != 'pending_deletion') { ?>
                 <? if ($post_status == 'pending') { ?>
-                    <button class="request-deletion" data-post-id="<? echo $post_id; ?>">Cancelar publicación</button>
+                    <button class="request-deletion" data-post-id="<? echo $postId; ?>">Cancelar publicación</button>
                 <? } else { ?>
-                    <button class="request-deletion" data-post-id="<? echo $post_id; ?>">Solicitar eliminación</button>
+                    <button class="request-deletion" data-post-id="<? echo $postId; ?>">Solicitar eliminación</button>
                 <? } ?>
             <? } ?>
 
@@ -152,41 +150,41 @@ function opcionesRola($post_id, $post_status, $audio_url)
     return ob_get_clean();
 }
 
-function opcionesPost($post_id, $author_id)
+function opcionesPost($postId, $autorId)
 {
-    $current_user_id = get_current_user_id();
-    $audio_id_lite = get_post_meta($post_id, 'post_audio_lite', true);
-    $descarga_permitida = get_post_meta($post_id, 'paraDescarga', true);
-    $post_verificado = get_post_meta($post_id, 'Verificado', true);
+    $usuarioActual = get_current_user_id();
+    $audio_id_lite = get_post_meta($postId, 'post_audio_lite', true);
+    $descarga_permitida = get_post_meta($postId, 'paraDescarga', true);
+    $post_verificado = get_post_meta($postId, 'Verificado', true);
     ob_start();
 ?>
-    <button class="HR695R8" data-post-id="<? echo $post_id; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
+    <button class="HR695R8" data-post-id="<? echo $postId; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
 
-    <div class="A1806241" id="opcionespost-<? echo $post_id; ?>">
+    <div class="A1806241" id="opcionespost-<? echo $postId; ?>">
         <div class="A1806242">
             <? if (current_user_can('administrator')) : ?>
-                <button class="eliminarPost" data-post-id="<? echo $post_id; ?>">Eliminar</button>
+                <button class="eliminarPost" data-post-id="<? echo $postId; ?>">Eliminar</button>
                 <? if (!$post_verificado) : ?>
-                    <button class="verificarPost" data-post-id="<? echo $post_id; ?>">Verificar</button>
+                    <button class="verificarPost" data-post-id="<? echo $postId; ?>">Verificar</button>
                 <? endif; ?>
-                <button class="corregirTags" data-post-id="<? echo $post_id; ?>">Corregir tags</button>
-                <button class="editarPost" data-post-id="<? echo $post_id; ?>">Editar</button>
+                <button class="corregirTags" data-post-id="<? echo $postId; ?>">Corregir tags</button>
+                <button class="editarPost" data-post-id="<? echo $postId; ?>">Editar</button>
                 <!-- Nuevo botón para ir al editor de WordPress -->
-                <button class="editarWordPress" data-post-id="<? echo $post_id; ?>">Editar en WordPress</button>
-                <button class="banearUsuario" data-post-id="<? echo $post_id; ?>">Banear</button>
+                <button class="editarWordPress" data-post-id="<? echo $postId; ?>">Editar en WordPress</button>
+                <button class="banearUsuario" data-post-id="<? echo $postId; ?>">Banear</button>
                 <? if ($audio_id_lite && $descarga_permitida != 1) : ?>
-                    <button class="permitirDescarga" data-post-id="<? echo $post_id; ?>">Permitir descarga</button>
+                    <button class="permitirDescarga" data-post-id="<? echo $postId; ?>">Permitir descarga</button>
                 <? endif; ?>
-            <? elseif ($current_user_id == $author_id) : ?>
-                <button class="corregirTags" data-post-id="<? echo $post_id; ?>">Corregir tags</button>
-                <button class="editarPost" data-post-id="<? echo $post_id; ?>">Editar</button>
-                <button class="eliminarPost" data-post-id="<? echo $post_id; ?>">Eliminar</button>
+            <? elseif ($usuarioActual == $autorId) : ?>
+                <button class="corregirTags" data-post-id="<? echo $postId; ?>">Corregir tags</button>
+                <button class="editarPost" data-post-id="<? echo $postId; ?>">Editar</button>
+                <button class="eliminarPost" data-post-id="<? echo $postId; ?>">Eliminar</button>
                 <? if ($audio_id_lite && $descarga_permitida != 1) : ?>
-                    <button class="permitirDescarga" data-post-id="<? echo $post_id; ?>">Permitir descarga</button>
+                    <button class="permitirDescarga" data-post-id="<? echo $postId; ?>">Permitir descarga</button>
                 <? endif; ?>
             <? else : ?>
-                <button class="reporte" data-post-id="<? echo $post_id; ?>" tipoContenido="social_post">Reportar</button>
-                <button class="bloquear" data-post-id="<? echo $post_id; ?>">Bloquear</button>
+                <button class="reporte" data-post-id="<? echo $postId; ?>" tipoContenido="social_post">Reportar</button>
+                <button class="bloquear" data-post-id="<? echo $postId; ?>">Bloquear</button>
             <? endif; ?>
         </div>
     </div>
@@ -197,54 +195,43 @@ function opcionesPost($post_id, $author_id)
 }
 
 //MOSTRAR IMAGEN
-
-function imagenPostList($block, $es_suscriptor, $post_id)
+function imagenPostList($block, $es_suscriptor, $postId)
 {
-    // Determinar si la imagen debe estar difuminada
     $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
 
-    // Determinar el tamaño de la imagen y la calidad según las condiciones
     if ($block && !$es_suscriptor) {
-        // Caso: Es un bloque y el usuario no es suscriptor
         $image_size = 'thumbnail';
         $quality = 20;
     } else {
-        // Caso: No es un bloque o el usuario es suscriptor
-        // Puedes elegir entre 'medium' o 'small' según prefieras
-        $image_size = 'thumbnail'; // Cambia a 'small' si prefieres
+        $image_size = 'thumbnail'; 
         $quality = 20;
     }
 
-    // Obtener la URL de la imagen usando la función imagenPost
-    $image_url = imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor), true);
+    $image_url = imagenPost($postId, $image_size, $quality, 'all', ($block && !$es_suscriptor), true);
 
-    // Procesar la URL con la función img
     $processed_image_url = img($image_url, $quality, 'all');
 
-    // Iniciar el almacenamiento en búfer de salida
     ob_start();
     ?>
     <div class="post-image-container <?= esc_attr($blurred_class) ?>">
-        <a href="<?= esc_url(get_permalink($post_id)); ?>">
+        <a href="<?= esc_url(get_permalink($postId)); ?>">
             <img src="<?= esc_url($processed_image_url); ?>" alt="Post Image" />
         </a>
     </div>
     <?php
 
-    // Capturar el contenido del búfer y limpiarlo
     $output = ob_get_clean();
 
-    // Devolver el contenido generado
     return $output;
 }
 
-function imagenPost($post_id, $size = 'medium', $quality = 50, $strip = 'all', $pixelated = false, $use_temp = false)
+function imagenPost($postId, $size = 'medium', $quality = 50, $strip = 'all', $pixelated = false, $use_temp = false)
 {
-    $post_thumbnail_id = get_post_thumbnail_id($post_id);
+    $post_thumbnail_id = get_post_thumbnail_id($postId);
     if ($post_thumbnail_id) {
         $url = wp_get_attachment_image_url($post_thumbnail_id, $size);
     } elseif ($use_temp) {
-        $temp_image_id = get_post_meta($post_id, 'imagenTemporal', true);
+        $temp_image_id = get_post_meta($postId, 'imagenTemporal', true);
         
         // Si existe una imagen temporal, úsala
         if ($temp_image_id && wp_attachment_is_image($temp_image_id)) {
@@ -256,12 +243,12 @@ function imagenPost($post_id, $size = 'medium', $quality = 50, $strip = 'all', $
                 ejecutarScriptPermisos();
                 return false;
             }
-            $temp_image_id = subirImagenALibreria($random_image_path, $post_id);
+            $temp_image_id = subirImagenALibreria($random_image_path, $postId);
             if (!$temp_image_id) {
                 ejecutarScriptPermisos();
                 return false;
             }
-            update_post_meta($post_id, 'imagenTemporal', $temp_image_id);
+            update_post_meta($postId, 'imagenTemporal', $temp_image_id);
             $url = wp_get_attachment_image_url($temp_image_id, $size);
         }
     } else {
@@ -322,7 +309,7 @@ function obtenerImagenAleatoria($directory)
     return $images[array_rand($images)];
 }
 
-function subirImagenALibreria($file_path, $post_id)
+function subirImagenALibreria($file_path, $postId)
 {
     if (!file_exists($file_path)) {
         return false;
@@ -352,9 +339,9 @@ function subirImagenALibreria($file_path, $post_id)
         'post_title'     => sanitize_file_name(pathinfo($upload_file['file'], PATHINFO_BASENAME)),
         'post_content'   => '',
         'post_status'    => 'inherit',
-        'post_parent'    => $post_id,
+        'post_parent'    => $postId,
     );
-    $attach_id = wp_insert_attachment($attachment, $upload_file['file'], $post_id);
+    $attach_id = wp_insert_attachment($attachment, $upload_file['file'], $postId);
     if (!is_wp_error($attach_id)) {
         require_once(ABSPATH . 'wp-admin/includes/image.php');
         $attach_data = wp_generate_attachment_metadata($attach_id, $upload_file['file']);
@@ -399,28 +386,28 @@ function ejecutarScriptPermisos()
 }
 
 //MOSTRAR INFORMACIÓN DEL AUTOR
-function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id, $block, $colab)
+function infoPost($autorId, $author_avatar, $author_name, $post_date, $postId, $block, $colab)
 {
     // Obtener los metadatos del post
-    $postAut = get_post_meta($post_id, 'postAut', true);
-    $ultimoEdit = get_post_meta($post_id, 'ultimoEdit', true);
-    $verificado = get_post_meta($post_id, 'Verificado', true);
-    $recortado = get_post_meta($post_id, 'recortado', true);
+    $postAut = get_post_meta($postId, 'postAut', true);
+    $ultimoEdit = get_post_meta($postId, 'ultimoEdit', true);
+    $verificado = get_post_meta($postId, 'Verificado', true);
+    $recortado = get_post_meta($postId, 'recortado', true);
     // Verificar si el autor es el usuario actual
-    $current_user_id = (int)get_current_user_id();
-    $author_id = (int)$author_id;
-    $is_current_user = ($current_user_id === $author_id);
+    $usuarioActual = (int)get_current_user_id();
+    $autorId = (int)$autorId;
+    $is_current_user = ($usuarioActual === $autorId);
     ob_start();
 ?>
     <div class="SOVHBY <? echo ($is_current_user ? 'miContenido' : ''); ?>">
         <div class="CBZNGK">
-            <a href="<? echo esc_url(get_author_posts_url($author_id)); ?>"></a>
+            <a href="<? echo esc_url(get_author_posts_url($autorId)); ?>"></a>
             <img src="<? echo esc_url($author_avatar); ?>">
-            <? echo botonseguir($author_id); ?>
+            <? echo botonseguir($autorId); ?>
         </div>
         <div class="ZVJVZA">
             <div class="JHVSFW">
-                <a href="<? echo esc_url(get_author_posts_url($author_id)); ?>" class="profile-link">
+                <a href="<? echo esc_url(get_author_posts_url($autorId)); ?>" class="profile-link">
                     <? echo esc_html($author_name); ?>
                 </a>
             </div>
@@ -456,7 +443,7 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
     <div class="spin"></div>
 
     <div class="YBZGPB">
-        <? echo opcionesPost($post_id, $author_id); ?>
+        <? echo opcionesPost($postId, $autorId); ?>
     </div>
 <?
     return ob_get_clean();
@@ -464,16 +451,16 @@ function infoPost($author_id, $author_avatar, $author_name, $post_date, $post_id
 
 
 //BOTON PARA SUSCRIBIRSE
-function botonSuscribir($author_id, $author_name, $subscription_price_id = 'price_1OqGjlCdHJpmDkrryMzL0BCK')
+function botonSuscribir($autorId, $author_name, $subscription_price_id = 'price_1OqGjlCdHJpmDkrryMzL0BCK')
 {
     ob_start();
     $current_user = wp_get_current_user();
 ?>
     <button
         class="ITKSUG"
-        data-offering-user-id="<? echo esc_attr($author_id); ?>"
+        data-offering-user-id="<? echo esc_attr($autorId); ?>"
         data-offering-user-login="<? echo esc_attr($author_name); ?>"
-        data-offering-user-email="<? echo esc_attr(get_the_author_meta('user_email', $author_id)); ?>"
+        data-offering-user-email="<? echo esc_attr(get_the_author_meta('user_email', $autorId)); ?>"
         data-subscriber-user-id="<? echo esc_attr($current_user->ID); ?>"
         data-subscriber-user-login="<? echo esc_attr($current_user->user_login); ?>"
         data-subscriber-user-email="<? echo esc_attr($current_user->user_email); ?>"
@@ -487,13 +474,13 @@ function botonSuscribir($author_id, $author_name, $subscription_price_id = 'pric
     return ob_get_clean();
 }
 //
-function botonComentar($post_id)
+function botonComentar($postId)
 {
     ob_start();
 ?>
 
     <div class="RTAWOD">
-        <button class="WNLOFT" data-post-id="<? echo $post_id; ?>">
+        <button class="WNLOFT" data-post-id="<? echo $postId; ?>">
             <? echo $GLOBALS['iconocomentario']; ?>
         </button>
     </div>
@@ -503,7 +490,7 @@ function botonComentar($post_id)
     return ob_get_clean();
 }
 
-function fondoPost($filtro, $block, $es_suscriptor, $post_id)
+function fondoPost($filtro, $block, $es_suscriptor, $postId)
 {
     if (!in_array($filtro, ['rolastatus1', 'rolasEliminadas1', 'rolasRechazadas1'])) {
         $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
@@ -512,7 +499,7 @@ function fondoPost($filtro, $block, $es_suscriptor, $post_id)
         ob_start();
     ?>
         <div class="post-background <?= $blurred_class ?>"
-            style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<? esc_url(imagenPost($post_id, $image_size, $quality, 'all', ($block && !$es_suscriptor))) ?>);">
+            style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<? esc_url(imagenPost($postId, $image_size, $quality, 'all', ($block && !$es_suscriptor))) ?>);">
         </div>
     <?
         $output = ob_get_clean();
@@ -524,62 +511,62 @@ function fondoPost($filtro, $block, $es_suscriptor, $post_id)
 
 
 
-function audioPost($post_id)
+function audioPost($postId)
 {
-    $audio_id_lite = get_post_meta($post_id, 'post_audio_lite', true);
+    $audio_id_lite = get_post_meta($postId, 'post_audio_lite', true);
 
     if (empty($audio_id_lite)) {
         return '';
     }
 
     // Get the post author ID
-    $post_author_id = get_post_field('post_author', $post_id);
+    $post_author_id = get_post_field('post_author', $postId);
 
     ob_start();
 ?>
-    <div id="audio-container-<? echo $post_id; ?>" class="audio-container" data-post-id="<? echo $post_id; ?>" artista-id="<? echo $post_author_id; ?>">
+    <div id="audio-container-<? echo $postId; ?>" class="audio-container" data-post-id="<? echo $postId; ?>" artista-id="<? echo $post_author_id; ?>">
 
         <div class="play-pause-sobre-imagen">
             <img src="https://2upra.com/wp-content/uploads/2024/03/1.svg" alt="Play" style="width: 50px; height: 50px;">
         </div>
 
-        <audio id="audio-<? echo $post_id; ?>" src="<? echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"></audio>
+        <audio id="audio-<? echo $postId; ?>" src="<? echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"></audio>
     </div>
 <?
     return ob_get_clean();
 }
 
-function audioPostList($post_id)
+function audioPostList($postId)
 {
-    $audio_id_lite = get_post_meta($post_id, 'post_audio_lite', true);
+    $audio_id_lite = get_post_meta($postId, 'post_audio_lite', true);
 
     if (empty($audio_id_lite)) {
         return '';
     }
     $urlAudioSegura = audioUrlSegura($audio_id_lite);
-    $post_author_id = get_post_field('post_author', $post_id);
+    $post_author_id = get_post_field('post_author', $postId);
     if (is_wp_error($urlAudioSegura)) {
         $urlAudioSegura = ''; // O establece un valor predeterminado o maneja el error de forma diferente
     }
     ob_start();
 ?>
-    <div id="audio-container-<? echo $post_id; ?>" class="audio-container" data-post-id="<? echo $post_id; ?>" artista-id="<? echo $post_author_id; ?>">
+    <div id="audio-container-<? echo $postId; ?>" class="audio-container" data-post-id="<? echo $postId; ?>" artista-id="<? echo $post_author_id; ?>">
 
         <div class="play-pause-sobre-imagen">
             <img src="https://2upra.com/wp-content/uploads/2024/03/1.svg" alt="Play" style="width: 50px; height: 50px;">
         </div>
 
-        <audio id="audio-<? echo $post_id; ?>" src="<? echo esc_url($urlAudioSegura); ?>"></audio>
+        <audio id="audio-<? echo $postId; ?>" src="<? echo esc_url($urlAudioSegura); ?>"></audio>
     </div>
 <?
     return ob_get_clean();
 }
 
 
-function wave($audio_url, $audio_id_lite, $post_id)
+function wave($audio_url, $audio_id_lite, $postId)
 {
-    $wave = get_post_meta($post_id, 'waveform_image_url', true);
-    $waveCargada = get_post_meta($post_id, 'waveCargada', true);
+    $wave = get_post_meta($postId, 'waveform_image_url', true);
+    $waveCargada = get_post_meta($postId, 'waveCargada', true);
     $urlAudioSegura = audioUrlSegura($audio_id_lite); // Usando la URL segura
 
     // Verificar si $urlAudioSegura es una instancia de WP_Error
@@ -587,9 +574,9 @@ function wave($audio_url, $audio_id_lite, $post_id)
         $urlAudioSegura = ''; // O establece un valor predeterminado o maneja el error de forma diferente
     }
 ?>
-    <div id="waveform-<? echo $post_id; ?>"
+    <div id="waveform-<? echo $postId; ?>"
         class="waveform-container without-image"
-        postIDWave="<? echo $post_id; ?>"
+        postIDWave="<? echo $postId; ?>"
         data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
         data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
         <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
