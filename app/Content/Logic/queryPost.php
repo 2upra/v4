@@ -90,7 +90,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
         ];
 
         if (!empty($identifier)) {
-            $query_args = filtrarIdentifier($identifier, $query_args);
+            $query_args = prefiltrarIdentifier($identifier, $query_args);
             if (!$query_args) {
                 error_log("[construirQueryArgs] Error: Falló el filtrado por identifier: " . $identifier);
             }
@@ -396,7 +396,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 
 
 
-function filtrarIdentifier($identifier, $query_args)
+function prefiltrarIdentifier($identifier, $query_args)
 {
     global $wpdb;
 
