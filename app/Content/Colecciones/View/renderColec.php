@@ -169,7 +169,7 @@ function singleColec($postId)
     </div>
 
     <div class="LISTCOLECSIN">
-        <? echo publicaciones(['post_type' => 'colecciones', 'filtro' => 'colecciones', 'posts' => 12]); ?>
+        <? echo publicaciones(['post_type' => 'social_post', 'filtro' => 'sampleList', 'posts' => 12]); ?>
     </div>
 
     <?
