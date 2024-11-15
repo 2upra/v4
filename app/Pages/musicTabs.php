@@ -1,20 +1,8 @@
 <?
 
-function musica()
-{
-    ob_start();
-?>
-    <div class="FLXVTQ">
-        <a href="https://2upra.com/">
-            <p>Aquí encontraras música de tus artistas en la plataforma, aún no esta disponible esta funcionalidad.</p>
-            <button class="borde">Volver</button>
-        </a>
-    </div>
-<?
-    return ob_get_clean();
-}
 
-/*
+
+
 function musica()
 {
 
@@ -25,7 +13,7 @@ function musica()
 
     <div class="tabs">
         <div class="tab-content">
-            <div class="tab active ZYBVGE" id="Music" data-post-id="tab1-posts" ajax="no">
+            <div class="tab active ZYBVGE" id="Music" ajax="no">
 
                 <? if (get_user_meta($user_id, 'leGustaAlMenosUnaRola', true)) : ?>
                     <div class="SAOEXP">
@@ -33,7 +21,7 @@ function musica()
                             <p class="titulorolasenviadas">Rolas que te gustan</p>
                             <button class="TDMZDD"></button>
                         </div>
-                        <? echo do_shortcode('[mostrar_publicaciones_sociales filtro="likes" tab_id="tab1-posts" posts="6"]'); ?>
+                        <? echo publicaciones(['filtro' => 'likes', 'tab_id' => 'Samples', 'posts' => 12]); ?>
                     </div>
                 <? endif; ?>
 
@@ -42,7 +30,7 @@ function musica()
                         <p class="titulorolasenviadas">Últimas rolas</p>
                         <button class="TDMZDD"></button>
                     </div>
-                    <? echo do_shortcode('[mostrar_publicaciones_sociales filtro="rola" tab_id="tab1-posts" posts="6"]'); ?>
+                    <? echo publicaciones(['filtro' => 'rola', 'tab_id' => 'Music', 'posts' => 12]); ?>
                 </div>
 
                 <div class="LGEMLK">
@@ -53,8 +41,6 @@ function musica()
     </div>
 
 <?
-    // Retorna el contenido generado
+
     return ob_get_clean();
 }
-
-*/
