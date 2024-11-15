@@ -1,3 +1,8 @@
+<head>
+    <meta name="robots" content="index, follow">
+    <? wp_head(); ?>
+</head>
+
 <?
 /*
 Template Name: Music

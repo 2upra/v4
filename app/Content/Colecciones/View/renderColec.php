@@ -42,10 +42,10 @@ function variablesColec($postId)
 
 function imagenColeccion($postId)
 {
-    $imagenSize = 'medium';
+    $imagenSize = 'large';
     $quality = 60;
     $imagenUrl = imagenPost($postId, $imagenSize, $quality, 'all', false, true);
-    $imagenProcesada = img($imagenUrl, $quality, 'all'); // Aquí quitamos esc_url()
+    $imagenProcesada = img($imagenUrl, $quality, 'all'); 
 
     ob_start();
 ?>
