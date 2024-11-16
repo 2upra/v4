@@ -386,6 +386,9 @@ function borrarColec()
         error_log("borrarColec: Los metadatos de samples guardados para el usuario con ID {$userId} no están definidos o no son válidos.");
     }
 
+    // Log de los samples antes de la actualización
+    error_log("borrarColec: samplesGuardados antes de la modificación: " . print_r($samplesGuardados, true));
+
     // Recorrer cada sample y eliminar la referencia a la colección
     foreach ($samples as $sample_id) {
         if (isset($samplesGuardados[$sample_id])) {
@@ -403,15 +406,23 @@ function borrarColec()
         }
     }
 
+    // Log de los samples después de la modificación
+    error_log("borrarColec: samplesGuardados después de la modificación: " . print_r($samplesGuardados, true));
+
     // Actualizar los metadatos del usuario solo si hay cambios en los samples guardados
     if (!empty($samplesGuardados)) {
+        // Log de lo que se intentará guardar
+        error_log("borrarColec: Intentando actualizar samplesGuardados con el siguiente valor: " . print_r($samplesGuardados, true));
+
         // Actualizar los metadatos del usuario solo si hubo cambios
-        if (!update_user_meta($userId, 'samplesGuardados', $samplesGuardados)) {
-            error_log("borrarColec: Fallo al actualizar los metadatos de samples guardados para el usuario con ID {$userId}.");
+        $updated = update_user_meta($userId, 'samplesGuardados', $samplesGuardados);
+        if (!$updated) {
+            error_log("borrarColec: Fallo al actualizar los metadatos de samples guardados para el usuario con ID {$userId}. Valor de retorno de update_user_meta: " . var_export($updated, true));
             wp_send_json_error(['message' => 'Error al actualizar los metadatos del usuario']);
         }
     } else {
         // Si no quedan samples guardados, eliminar la entrada meta del usuario
+        error_log("borrarColec: No quedan samples guardados. Eliminando la entrada 'samplesGuardados' para el usuario con ID {$userId}.");
         delete_user_meta($userId, 'samplesGuardados');
     }
 
@@ -425,7 +436,6 @@ function borrarColec()
     error_log("borrarColec: Colección con ID {$coleccionId} eliminada correctamente por el usuario con ID {$userId}.");
     wp_send_json_success(['message' => 'Colección eliminada correctamente']);
 }
-
 
 
 add_action('wp_ajax_crearColeccion', 'crearColeccion');
