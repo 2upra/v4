@@ -27,7 +27,7 @@ function iniciarColec() {
         if (btnEliminar) {
             e.preventDefault();
             colecABorrar = btnEliminar.getAttribute('data-post_id');
-            borrarcolec();
+            borrarColec();
         }
     });
 
