@@ -23,7 +23,7 @@ function iniciarColec() {
     });
 
     document.body.addEventListener('click', e => {
-        const btnEliminar = e.target.closest('.borrarColec')
+        const btnEliminar = e.target.closest('.borrarColec');
         if (btnEliminar) {
             e.preventDefault();
             colecABorrar = btnEliminar.getAttribute('data-post_id');
@@ -71,15 +71,12 @@ async function borrarColec() {
     );
 }
 
-
-
-
-//Cuando se da click, el boton no se desactiva y si doy varios click se crea varias colecciones, especialmente para el caso de busqueda vacía 
+//Cuando se da click, el boton no se desactiva y si doy varios click se crea varias colecciones, especialmente para el caso de busqueda vacía
 async function manejarClickListoColec() {
-    console.log('Función manejarClickListoColec iniciada');
-    
+    //console.log('Función manejarClickListoColec iniciada');
+
     if (colecSampleId && colecSelecionado) {
-        console.log('colecSampleId y colecSelecionado existen:', colecSampleId, colecSelecionado);
+        //console.log('colecSampleId y colecSelecionado existen:', colecSampleId, colecSelecionado);
 
         const button = a('#btnListo');
         const originalText = button.innerText;
@@ -89,12 +86,12 @@ async function manejarClickListoColec() {
         button.disabled = true;
 
         try {
-            console.log('Enviando petición AJAX para guardar sample en colección');
+            //console.log('Enviando petición AJAX para guardar sample en colección');
             const response = await enviarAjax('guardarSampleEnColec', {
                 colecSampleId,
                 colecSelecionado
             });
-            console.log('Respuesta recibida:', response);
+            //console.log('Respuesta recibida:', response);
 
             if (response?.success) {
                 alert('Sample guardado en la colección con éxito');
@@ -111,7 +108,7 @@ async function manejarClickListoColec() {
             button.disabled = false;
         }
     } else {
-        console.log('colecSampleId o colecSelecionado faltan:', colecSampleId, colecSelecionado);
+        //console.log('colecSampleId o colecSelecionado faltan:', colecSampleId, colecSelecionado);
         cerrarColec(); // Cerrar modal si no hay selección válida
     }
 }
@@ -138,8 +135,6 @@ function busquedaColec(query) {
     }
 }
 
-
-
 function manejarClickColec(coleccion) {
     const button = a('#btnListo');
 
@@ -147,7 +142,7 @@ function manejarClickColec(coleccion) {
         coleccion.classList.remove('seleccion');
         colecSelecionado = null;
         button.innerText = 'Listo';
-        button.onclick = null; 
+        button.onclick = null;
     } else {
         a.quitar('.coleccion', 'seleccion');
         coleccion.classList.add('seleccion');
@@ -157,7 +152,6 @@ function manejarClickColec(coleccion) {
     }
 }
 
-
 async function crearNuevaColecConTitulo(titulo) {
     const button = a('#btnListo');
     if (button.disabled) return; // Previene múltiples clics
@@ -165,7 +159,7 @@ async function crearNuevaColecConTitulo(titulo) {
     button.disabled = true;
     a('#tituloColec').value = titulo;
     button.innerText = 'Creando nueva colección...';
-    
+
     await crearNuevaColec(); // Espera a que la creación termine
     button.disabled = false; // Rehabilita el botón después de finalizar
 }
@@ -192,7 +186,7 @@ async function crearNuevaColec() {
         descripcion,
         privado
     };
-    console.log('Datos enviados:', data); // Log de la data que se envía
+    //console.log('Datos enviados:', data); // Log de la data que se envía
 
     try {
         const response = await enviarAjax('crearColeccion', data);
@@ -212,7 +206,7 @@ async function crearNuevaColec() {
 }
 
 async function abrirColec() {
-    console.log('Función abrirColec iniciada');
+    //console.log('Función abrirColec iniciada');
     if (!colecSampleId) {
         console.warn('colecSampleId no está definido');
         return; // Evitar abrir el modal sin un ID válido
@@ -221,19 +215,19 @@ async function abrirColec() {
     mostrar(modal);
     crearBackgroundColec();
     a.gregar('body', 'no-scroll');
-    console.log('Modal mostrado y fondo creado');
+    //console.log('Modal mostrado y fondo creado');
     await verificarSampleEnColecciones();
-    console.log('verificarSampleEnColecciones completado');
+    //console.log('verificarSampleEnColecciones completado');
 }
 
 async function verificarSampleEnColecciones() {
-    console.log('Función verificarSampleEnColecciones iniciada');
+    //console.log('Función verificarSampleEnColecciones iniciada');
     try {
-        console.log('Enviando petición AJAX para verificar sample en colecciones con ID:', colecSampleId);
+        //console.log('Enviando petición AJAX para verificar sample en colecciones con ID:', colecSampleId);
         const response = await enviarAjax('verificar_sample_en_colecciones', {
             sample_id: colecSampleId
         });
-        console.log('Respuesta recibida de verificarSampleEnColecciones:', response);
+        //console.log('Respuesta recibida de verificarSampleEnColecciones:', response);
 
         if (response.success) {
             const colecciones = document.querySelectorAll('.coleccion');
@@ -248,27 +242,27 @@ async function verificarSampleEnColecciones() {
                         existeSpan.textContent = 'Guardado aquí';
 
                         // Evento para cambiar el contenido al hacer hover
-                        existeSpan.addEventListener('mouseenter', function() {
+                        existeSpan.addEventListener('mouseenter', function () {
                             this.textContent = 'Eliminar';
                         });
 
-                        existeSpan.addEventListener('mouseleave', function() {
+                        existeSpan.addEventListener('mouseleave', function () {
                             this.textContent = 'Guardado aquí';
                         });
 
                         // Evento para manejar el clic en "Eliminar"
-                        existeSpan.addEventListener('click', async function() {
+                        existeSpan.addEventListener('click', async function () {
                             const confirmacion = await confirm('¿Seguro que deseas eliminar este sample de la colección?');
                             if (confirmacion) {
                                 try {
-                                    console.log('Enviando petición AJAX para eliminar el sample de la colección con ID:', coleccionId);
+                                    //console.log('Enviando petición AJAX para eliminar el sample de la colección con ID:', coleccionId);
                                     const eliminarResponse = await enviarAjax('eliminarSampledeColec', {
                                         sample_id: colecSampleId,
                                         coleccion_id: coleccionId
                                     });
 
                                     if (eliminarResponse.success) {
-                                        console.log('Sample eliminado correctamente de la colección con ID:', coleccionId);
+                                        //console.log('Sample eliminado correctamente de la colección con ID:', coleccionId);
                                         // Eliminar el span de la colección
                                         existeSpan.remove();
                                     } else {
@@ -281,7 +275,7 @@ async function verificarSampleEnColecciones() {
                         });
 
                         coleccion.appendChild(existeSpan);
-                        console.log('Etiqueta "Guardado aquí" añadida a la colección con ID:', coleccionId);
+                        //console.log('Etiqueta "Guardado aquí" añadida a la colección con ID:', coleccionId);
                     }
                 } else if (!coleccionId) {
                     console.warn('Elemento sin data-post_id encontrado y omitido:', coleccion);
@@ -294,7 +288,6 @@ async function verificarSampleEnColecciones() {
         console.error('Error al verificar las colecciones:', error);
     }
 }
-
 
 async function abrirModalCrearColec() {
     ocultar(a('.modalColec'));
@@ -322,36 +315,34 @@ function verificarColec() {
     return verificarCamposColec;
 }
 
-
-
 async function actualizarListaColecciones() {
     try {
-        console.log("Iniciando la actualización de la lista de colecciones...");
+        console.log('Iniciando la actualización de la lista de colecciones...');
         const response = await enviarAjax('obtenerListaColec');
-        console.log("Respuesta recibida del servidor:", response);
+        console.log('Respuesta recibida del servidor:', response);
 
         if (response) {
             const listaColeccion = document.querySelector('.listaColeccion');
-            console.log("Elemento .listaColeccion encontrado:", listaColeccion);
+            console.log('Elemento .listaColeccion encontrado:', listaColeccion);
 
             const elementosFijos = listaColeccion.querySelectorAll('#favoritos, #despues');
-            console.log("Elementos fijos identificados:", elementosFijos);
+            console.log('Elementos fijos identificados:', elementosFijos);
 
             listaColeccion.innerHTML = '';
-            console.log("Contenido de .listaColeccion limpiado.");
+            console.log('Contenido de .listaColeccion limpiado.');
 
             elementosFijos.forEach(elemento => {
                 listaColeccion.appendChild(elemento);
-                console.log("Elemento fijo añadido nuevamente:", elemento);
+                console.log('Elemento fijo añadido nuevamente:', elemento);
             });
 
             listaColeccion.insertAdjacentHTML('beforeend', response);
-            console.log("Nuevos elementos añadidos a la lista desde la respuesta.");
+            console.log('Nuevos elementos añadidos a la lista desde la respuesta.');
         } else {
-            console.warn("La respuesta del servidor está vacía o no válida.");
+            console.warn('La respuesta del servidor está vacía o no válida.');
         }
     } catch (error) {
-        console.error("Error al actualizar la lista de colecciones:", error);
+        console.error('Error al actualizar la lista de colecciones:', error);
     }
 }
 
@@ -407,7 +398,6 @@ function subidaImagenColec() {
     });
 }
 
-
 function cerrarColec() {
     ocultar(a('.modalColec'));
     ocultar(a('.modalCrearColec'));
@@ -452,4 +442,3 @@ function crearBackgroundColec() {
     darkBackground.addEventListener('click', cerrarColec, {once: true});
     return darkBackground;
 }
-
