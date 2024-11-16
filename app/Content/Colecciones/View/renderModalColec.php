@@ -108,6 +108,11 @@ function modalColeccion()
 function obtenerListaColec()
 {
     $current_user_id = get_current_user_id();
+    if (!$current_user_id) {
+        error_log("Error: No se pudo obtener el ID del usuario actual.");
+        return "Error: No se pudo obtener el ID del usuario actual.";
+    }
+
     $args = array(
         'post_type'      => 'colecciones',
         'post_status'    => 'publish',
@@ -118,7 +123,16 @@ function obtenerListaColec()
         'order'          => 'DESC'                 // Orden descendente para mostrar las más recientes primero
     );
 
+    error_log("Args de WP_Query: " . print_r($args, true)); // Log para verificar los argumentos de WP_Query
+
     $user_collections = new WP_Query($args);
+
+    if ($user_collections->have_posts()) {
+        error_log("Se encontraron colecciones para el usuario ID: $current_user_id");
+    } else {
+        error_log("No se encontraron colecciones para el usuario ID: $current_user_id");
+    }
+
     $default_image = 'https://2upra.com/wp-content/uploads/2024/10/699bc48ebc970652670ff977acc0fd92.jpg';
 
     // Iniciar el buffer de salida
@@ -126,31 +140,35 @@ function obtenerListaColec()
 
 ?>
     <ul>
-        <?
+        <?php
         if ($user_collections->have_posts()) {
             while ($user_collections->have_posts()) {
                 $user_collections->the_post();
                 $thumbnail_url = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail');
         ?>
-                <li class="coleccion borde" data-post_id="<? echo get_the_ID(); ?>">
-                    <img src="<? echo esc_url($thumbnail_url ? $thumbnail_url : $default_image); ?>" alt="">
-                    <span><? the_title(); ?></span>
-                    <button class="borrarColec" data-post_id="<? echo get_the_ID(); ?>">
-                        <? echo $GLOBALS['iconPapelera'] ?>
+                <li class="coleccion borde" data-post_id="<?php echo get_the_ID(); ?>">
+                    <img src="<?php echo esc_url($thumbnail_url ? $thumbnail_url : $default_image); ?>" alt="">
+                    <span><?php the_title(); ?></span>
+                    <button class="borrarColec" data-post_id="<?php echo get_the_ID(); ?>">
+                        <?php echo $GLOBALS['iconPapelera']; ?>
                     </button>
                 </li>
-        <?
+        <?php
             }
             wp_reset_postdata();
+        } else {
+            echo "<li>No se encontraron colecciones.</li>";
         }
         ?>
     </ul>
-<?
+<?php
 
     // Capturar el contenido del buffer y devolverlo como HTML
     $html = ob_get_clean();
+    error_log("HTML generado: " . substr($html, 0, 500)); // Log del HTML generado (solo los primeros 500 caracteres para no saturar el log)
     return $html;
 }
+
 
 
 add_action('wp_ajax_obtenerListaColec', 'obtenerListaColec');
