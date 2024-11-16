@@ -192,7 +192,7 @@ function botonDescargaColec($postID)
 
     ?>
         <div class="ZAQIBB">
-            <button class="icon-arrow-down <? echo esc_attr($claseExtra); ?>"
+            <button class="icon-arrow-down botonprincipal <? echo esc_attr($claseExtra); ?>"
                 data-post-id="<? echo esc_attr($postID); ?>"
                 aria-label="Boton Descarga"
                 id="download-button-<? echo esc_attr($postID); ?>"
