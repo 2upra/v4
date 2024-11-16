@@ -104,13 +104,13 @@ function modalColeccion()
 <?
 }
 
-
 function obtenerListaColec()
 {
     $current_user_id = get_current_user_id();
     if (!$current_user_id) {
         error_log("Error: No se pudo obtener el ID del usuario actual.");
-        return "Error: No se pudo obtener el ID del usuario actual.";
+        wp_send_json_error("Error: No se pudo obtener el ID del usuario actual."); // Devuelve un error JSON
+        wp_die(); // Termina la ejecución
     }
 
     $args = array(
@@ -118,12 +118,12 @@ function obtenerListaColec()
         'post_status'    => 'publish',
         'posts_per_page' => -1,
         'author'         => $current_user_id,
-        'meta_key'       => 'ultimaModificacion',  // Campo de última modificación
-        'orderby'        => 'meta_value',          // Ordenar por el valor del campo personalizado
-        'order'          => 'DESC'                 // Orden descendente para mostrar las más recientes primero
+        'meta_key'       => 'ultimaModificacion',
+        'orderby'        => 'meta_value',
+        'order'          => 'DESC'
     );
 
-    error_log("Args de WP_Query: " . print_r($args, true)); // Log para verificar los argumentos de WP_Query
+    error_log("Args de WP_Query: " . print_r($args, true));
 
     $user_collections = new WP_Query($args);
 
@@ -135,17 +135,15 @@ function obtenerListaColec()
 
     $default_image = 'https://2upra.com/wp-content/uploads/2024/10/699bc48ebc970652670ff977acc0fd92.jpg';
 
-    // Iniciar el buffer de salida
     ob_start();
-
-?>
+    ?>
     <ul>
         <?php
         if ($user_collections->have_posts()) {
             while ($user_collections->have_posts()) {
                 $user_collections->the_post();
                 $thumbnail_url = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail');
-        ?>
+                ?>
                 <li class="coleccion borde" data-post_id="<?php echo get_the_ID(); ?>">
                     <img src="<?php echo esc_url($thumbnail_url ? $thumbnail_url : $default_image); ?>" alt="">
                     <span><?php the_title(); ?></span>
@@ -153,7 +151,7 @@ function obtenerListaColec()
                         <?php echo $GLOBALS['iconPapelera']; ?>
                     </button>
                 </li>
-        <?php
+                <?php
             }
             wp_reset_postdata();
         } else {
@@ -161,12 +159,12 @@ function obtenerListaColec()
         }
         ?>
     </ul>
-<?php
-
-    // Capturar el contenido del buffer y devolverlo como HTML
+    <?php
     $html = ob_get_clean();
-    error_log("HTML generado: " . substr($html, 0, 500)); // Log del HTML generado (solo los primeros 500 caracteres para no saturar el log)
-    return $html;
+    error_log("HTML generado: " . substr($html, 0, 500));
+
+    wp_send_json_success($html); // Devuelve el HTML como parte de una respuesta JSON exitosa
+    wp_die(); // Termina la ejecución
 }
 
 
