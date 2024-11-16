@@ -321,7 +321,7 @@ async function actualizarListaColecciones() {
         const response = await enviarAjax('obtenerListaColec');
         console.log('Respuesta recibida del servidor:', response);
 
-        if (response) {
+        if (response && response.success && response.data) {  // Verifica que response sea un objeto con success y data
             const listaColeccion = document.querySelector('.listaColeccion');
             console.log('Elemento .listaColeccion encontrado:', listaColeccion);
 
@@ -336,16 +336,19 @@ async function actualizarListaColecciones() {
                 console.log('Elemento fijo añadido nuevamente:', elemento);
             });
 
-            listaColeccion.insertAdjacentHTML('beforeend', response);
+            listaColeccion.insertAdjacentHTML('beforeend', response.data); // Usa response.data que contiene el HTML
             console.log('Nuevos elementos añadidos a la lista desde la respuesta.');
         } else {
-            console.warn('La respuesta del servidor está vacía o no válida.');
+            if (response && response.data === '') {
+                console.warn('No se encontraron colecciones.'); // Mensaje específico si no hay colecciones
+            } else {
+                console.warn('La respuesta del servidor está vacía, no válida o no tiene datos.'); // Manejo general de errores
+            }
         }
     } catch (error) {
         console.error('Error al actualizar la lista de colecciones:', error);
     }
 }
-
 function subidaImagenColec() {
     const previewImagenColec = a('#previewImagenColec');
     const modalCrearColec = a('#modalCrearColec');
