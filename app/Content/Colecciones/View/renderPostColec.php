@@ -112,8 +112,6 @@ function imagenPost($postId, $size = 'medium', $quality = 50, $strip = 'all', $p
         return false;
     }
 
-    error_log('imagenPost: URL generada - ' . $url);
-
     if (function_exists('jetpack_photon_url') && $url) {
         $args = array('quality' => $quality, 'strip' => $strip);
         if ($pixelated) {
@@ -145,8 +143,6 @@ function img($url, $quality = 40, $strip = 'all')
     ];
 
     $final_url = add_query_arg($query, $cdn_url);
-    error_log('img: URL generada - ' . $final_url);
-
     return $final_url;
 }
 
