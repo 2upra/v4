@@ -379,20 +379,23 @@ function borrarColec()
         error_log("borrarColec: No se encontraron samples válidos en la colección con ID {$coleccionId}.");
     }
 
-    // Eliminar la colección de los metadatos del usuario para cada sample
+    // Obtener los metadatos de samples guardados del usuario
     $samplesGuardados = get_user_meta($userId, 'samplesGuardados', true);
     if (!is_array($samplesGuardados)) {
         $samplesGuardados = [];
         error_log("borrarColec: Los metadatos de samples guardados para el usuario con ID {$userId} no están definidos o no son válidos.");
     }
 
+    // Recorrer cada sample y eliminar la referencia a la colección
     foreach ($samples as $sample_id) {
         if (isset($samplesGuardados[$sample_id])) {
+            // Buscar el índice de la colección en la lista de colecciones del sample
             $index = array_search($coleccionId, $samplesGuardados[$sample_id]);
             if ($index !== false) {
-                unset($samplesGuardados[$sample_id][$index]);
-                $samplesGuardados[$sample_id] = array_values($samplesGuardados[$sample_id]); // Reindexar el array
+                unset($samplesGuardados[$sample_id][$index]);  // Eliminar la colección de la lista
+                $samplesGuardados[$sample_id] = array_values($samplesGuardados[$sample_id]);  // Reindexar el array
 
+                // Si no quedan colecciones asociadas al sample, eliminar el sample de 'samplesGuardados'
                 if (empty($samplesGuardados[$sample_id])) {
                     unset($samplesGuardados[$sample_id]);
                 }
@@ -400,10 +403,16 @@ function borrarColec()
         }
     }
 
-    // Actualizar los metadatos del usuario
-    if (!update_user_meta($userId, 'samplesGuardados', $samplesGuardados)) {
-        error_log("borrarColec: Fallo al actualizar los metadatos de samples guardados para el usuario con ID {$userId}.");
-        wp_send_json_error(['message' => 'Error al actualizar los metadatos del usuario']);
+    // Actualizar los metadatos del usuario solo si hay cambios en los samples guardados
+    if (!empty($samplesGuardados)) {
+        // Actualizar los metadatos del usuario solo si hubo cambios
+        if (!update_user_meta($userId, 'samplesGuardados', $samplesGuardados)) {
+            error_log("borrarColec: Fallo al actualizar los metadatos de samples guardados para el usuario con ID {$userId}.");
+            wp_send_json_error(['message' => 'Error al actualizar los metadatos del usuario']);
+        }
+    } else {
+        // Si no quedan samples guardados, eliminar la entrada meta del usuario
+        delete_user_meta($userId, 'samplesGuardados');
     }
 
     // Eliminar la colección
