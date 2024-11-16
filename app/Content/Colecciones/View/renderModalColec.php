@@ -153,7 +153,7 @@ function obtenerListaColec()
 }
 
 
-add_action('wp_ajax_obtener_colecciones', 'obtenerListaColec');
+add_action('wp_ajax_obtenerListaColec', 'obtenerListaColec');
 
 function modalCreacionColeccion()
 {

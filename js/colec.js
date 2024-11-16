@@ -324,22 +324,35 @@ function verificarColec() {
 
 
 
-
 async function actualizarListaColecciones() {
     try {
-        const response = await enviarAjax('obtener_colecciones');
+        console.log("Iniciando la actualización de la lista de colecciones...");
+        const response = await enviarAjax('obtenerListaColec');
+        console.log("Respuesta recibida del servidor:", response);
+
         if (response) {
             const listaColeccion = document.querySelector('.listaColeccion');
+            console.log("Elemento .listaColeccion encontrado:", listaColeccion);
+
             const elementosFijos = listaColeccion.querySelectorAll('#favoritos, #despues');
+            console.log("Elementos fijos identificados:", elementosFijos);
+
             listaColeccion.innerHTML = '';
+            console.log("Contenido de .listaColeccion limpiado.");
+
             elementosFijos.forEach(elemento => {
                 listaColeccion.appendChild(elemento);
+                console.log("Elemento fijo añadido nuevamente:", elemento);
             });
 
             listaColeccion.insertAdjacentHTML('beforeend', response);
+            console.log("Nuevos elementos añadidos a la lista desde la respuesta.");
         } else {
+            console.warn("La respuesta del servidor está vacía o no válida.");
         }
-    } catch (error) {}
+    } catch (error) {
+        console.error("Error al actualizar la lista de colecciones:", error);
+    }
 }
 
 function subidaImagenColec() {
