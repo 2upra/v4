@@ -69,18 +69,20 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
                 }
 
                 // Obtiene el post_id del elemento actual
-                const post_id = event.currentTarget.getAttribute('data-post-id') || event.currentTarget.dataset.postId || element.closest('[data-post-id]')?.getAttribute('data-post-id');
+                const post_id =
+                    event.currentTarget.getAttribute('data-post-id') || // `data-post-id`
+                    event.currentTarget.getAttribute('data-post_id') || // `data-post_id`
+                    event.currentTarget.dataset.postId || // dataset formato camelCase
+                    event.currentTarget.dataset.post_id || // dataset formato snake_case
+                    element.closest('[data-post-id]')?.getAttribute('data-post-id') || // Padre con `data-post-id`
+                    element.closest('[data-post_id]')?.getAttribute('data-post_id'); // Padre con `data-post_id`
 
                 if (!post_id) {
                     console.error('No se pudo obtener el post_id');
+                    return;
                 }
 
                 const tipoContenido = event.currentTarget.dataset.tipoContenido;
-
-                if (!post_id) {
-                    console.error('No se encontró post_id en el elemento');
-                    return;
-                }
 
                 const confirmed = await confirm(confirmMessage);
 
@@ -98,6 +100,12 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
 
                         if (data.success) {
                             successCallback(null, data, post_id);
+
+                            // Si se especificó un elemento a remover, lo elimina
+                            if (elementToRemoveSelector) {
+                                const elementToRemove = document.querySelector(elementToRemoveSelector);
+                                if (elementToRemove) elementToRemove.remove();
+                            }
                         } else {
                             console.error(`Error: ${data.message}`);
                             alert('Error al enviar petición: ' + (data.message || 'Error desconocido'));
@@ -119,6 +127,7 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
         }
     });
 }
+
 
 async function permitirDescarga() {
     await accionClick(
