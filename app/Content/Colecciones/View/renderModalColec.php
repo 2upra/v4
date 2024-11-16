@@ -136,30 +136,28 @@ function obtenerListaColec()
     $default_image = 'https://2upra.com/wp-content/uploads/2024/10/699bc48ebc970652670ff977acc0fd92.jpg';
 
     ob_start();
-    ?>
-    <ul>
-        <?php
-        if ($user_collections->have_posts()) {
-            while ($user_collections->have_posts()) {
-                $user_collections->the_post();
-                $thumbnail_url = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail');
-                ?>
-                <li class="coleccion borde" data-post_id="<?php echo get_the_ID(); ?>">
-                    <img src="<?php echo esc_url($thumbnail_url ? $thumbnail_url : $default_image); ?>" alt="">
-                    <span><?php the_title(); ?></span>
-                    <button class="borrarColec" data-post_id="<?php echo get_the_ID(); ?>">
-                        <?php echo $GLOBALS['iconPapelera']; ?>
-                    </button>
-                </li>
-                <?php
-            }
-            wp_reset_postdata();
-        } else {
-            echo "<li>No se encontraron colecciones.</li>";
-        }
-        ?>
-    </ul>
+?>
     <?php
+    if ($user_collections->have_posts()) {
+        while ($user_collections->have_posts()) {
+            $user_collections->the_post();
+            $thumbnail_url = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail');
+    ?>
+            <li class="coleccion borde" data-post_id="<?php echo get_the_ID(); ?>">
+                <img src="<?php echo esc_url($thumbnail_url ? $thumbnail_url : $default_image); ?>" alt="">
+                <span><?php the_title(); ?></span>
+                <button class="borrarColec" data-post_id="<?php echo get_the_ID(); ?>">
+                    <?php echo $GLOBALS['iconPapelera']; ?>
+                </button>
+            </li>
+    <?php
+        }
+        wp_reset_postdata();
+    } else {
+        echo "<li>No se encontraron colecciones.</li>";
+    }
+    ?>
+<?php
     $html = ob_get_clean();
     error_log("HTML generado: " . substr($html, 0, 500));
 
