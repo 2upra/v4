@@ -340,13 +340,13 @@ function eliminarSampledeColec()
 
 add_action('wp_ajax_eliminarSampledeColec', 'eliminarSampledeColec');
 
-function eliminarColeccion()
+function borrarColec()
 {
     if (!is_user_logged_in()) {
         return json_encode(['error' => 'Usuario no autenticado']);
     }
 
-    $coleccionId = isset($_POST['coleccionId']) ? intval($_POST['coleccionId']) : 0;
+    $coleccionId = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
     $userId = get_current_user_id();
     $coleccion = get_post($coleccionId);
 
@@ -389,6 +389,6 @@ function eliminarColeccion()
 
 add_action('wp_ajax_crearColeccion', 'crearColeccion');
 add_action('wp_ajax_editarColeccion', 'editarColeccion');
-add_action('wp_ajax_eliminarColeccion', 'eliminarColeccion');
+add_action('wp_ajax_borrarColec', 'borrarColec');
 add_action('wp_ajax_guardarSampleEnColec', 'guardarSampleEnColec');
 
