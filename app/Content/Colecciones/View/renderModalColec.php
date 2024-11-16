@@ -81,11 +81,14 @@ function modalColeccion()
                 <? if ($user_collections->have_posts()) : ?>
                     <? while ($user_collections->have_posts()) : $user_collections->the_post(); ?>
                         <li class="coleccion borde" data-post_id="<? the_ID(); ?>">
-                            <?php
+                            <?
                             $thumbnail_url = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail');
                             ?>
                             <img src="<? echo esc_url($thumbnail_url ? $thumbnail_url : $default_image); ?>" alt="">
                             <span><? the_title(); ?></span>
+                            <button class="borrarColec" data-post_id="<? echo get_the_ID(); ?>">
+                                <? echo $GLOBALS['iconPapelera'] ?>
+                            </button>
                         </li>
                     <? endwhile; ?>
                     <? wp_reset_postdata(); ?>
@@ -98,7 +101,7 @@ function modalColeccion()
             </div>
         </div>
     </div>
-<?php
+<?
 }
 
 
@@ -116,23 +119,37 @@ function obtenerListaColec()
     );
 
     $user_collections = new WP_Query($args);
-    $html = '';
     $default_image = 'https://2upra.com/wp-content/uploads/2024/10/699bc48ebc970652670ff977acc0fd92.jpg';
 
-    if ($user_collections->have_posts()) {
-        while ($user_collections->have_posts()) {
-            $user_collections->the_post();
-            $thumbnail_url = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail');
-            $html .= '<li class="coleccion borde" data-post_id="' . get_the_ID() . '">';
-            $html .= '<img src="' . esc_url($thumbnail_url ? $thumbnail_url : $default_image) . '" alt="">';
-            $html .= '<span>' . get_the_title() . '</span>';
-            $html .= '</li>';
-        }
-        wp_reset_postdata();
-    }
+    // Iniciar el buffer de salida
+    ob_start();
 
-    echo $html;
-    wp_die();
+?>
+    <ul>
+        <?
+        if ($user_collections->have_posts()) {
+            while ($user_collections->have_posts()) {
+                $user_collections->the_post();
+                $thumbnail_url = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail');
+        ?>
+                <li class="coleccion borde" data-post_id="<? echo get_the_ID(); ?>">
+                    <img src="<? echo esc_url($thumbnail_url ? $thumbnail_url : $default_image); ?>" alt="">
+                    <span><? the_title(); ?></span>
+                    <button class="borrarColec" data-post_id="<? echo get_the_ID(); ?>">
+                        <? echo $GLOBALS['iconPapelera'] ?>
+                    </button>
+                </li>
+        <?
+            }
+            wp_reset_postdata();
+        }
+        ?>
+    </ul>
+<?
+
+    // Capturar el contenido del buffer y devolverlo como HTML
+    $html = ob_get_clean();
+    return $html;
 }
 
 
@@ -152,7 +169,7 @@ function modalCreacionColeccion()
             <input type="text" placeholder="Nombre de la colección" id="tituloColec">
             <input type="text" placeholder="Descripción de la colección (opcional)" id="descripColec">
 
-            <div class="bloque flex-row"" id="opcionesColec" style="display: flex">
+            <div class="bloque flex-row"" id=" opcionesColec" style="display: flex">
                 <p>Opciones de post</p>
                 <div class="flex flex-row gap-2">
                     <label class="custom-checkbox">
