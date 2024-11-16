@@ -342,50 +342,82 @@ add_action('wp_ajax_eliminarSampledeColec', 'eliminarSampledeColec');
 
 function borrarColec()
 {
+    // Verificar autenticación del usuario
     if (!is_user_logged_in()) {
-        return json_encode(['error' => 'Usuario no autenticado']);
+        error_log('borrarColec: Usuario no autenticado intentó acceder.');
+        wp_send_json_error(['message' => 'Usuario no autenticado']);
     }
 
     $coleccionId = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+    if (!$coleccionId) {
+        error_log('borrarColec: El ID de la colección no se recibió o no es válido.');
+        wp_send_json_error(['message' => 'ID de colección no válido']);
+    }
+
     $userId = get_current_user_id();
+    if (!$userId) {
+        error_log('borrarColec: No se pudo obtener el ID del usuario actual.');
+        wp_send_json_error(['message' => 'Error al obtener el usuario actual']);
+    }
+
     $coleccion = get_post($coleccionId);
+    if (!$coleccion) {
+        error_log("borrarColec: La colección con ID {$coleccionId} no existe.");
+        wp_send_json_error(['message' => 'La colección no existe']);
+    }
 
-    if ($coleccion && $coleccion->post_author == $userId) {
-        // Obtener todos los samples de la colección antes de eliminarla
-        $samples = get_post_meta($coleccionId, 'samples', true);
-        if (!is_array($samples)) {
-            $samples = [];
-        }
+    // Verificar si la colección pertenece al usuario actual
+    if ($coleccion->post_author != $userId) {
+        error_log("borrarColec: El usuario con ID {$userId} intentó eliminar una colección que no le pertenece (ID colección: {$coleccionId}).");
+        wp_send_json_error(['message' => 'No tienes permisos para eliminar esta colección']);
+    }
 
-        // Eliminar la colección de los metadatos del usuario para cada sample
-        $samplesGuardados = get_user_meta($userId, 'samplesGuardados', true);
-        foreach ($samples as $sample_id) {
-            if (isset($samplesGuardados[$sample_id])) {
-                // Buscar y eliminar la colección específica del sample
-                $index = array_search($coleccionId, $samplesGuardados[$sample_id]);
-                if ($index !== false) {
-                    unset($samplesGuardados[$sample_id][$index]);
-                    $samplesGuardados[$sample_id] = array_values($samplesGuardados[$sample_id]); // Reindexar el array
+    // Obtener todos los samples de la colección antes de eliminarla
+    $samples = get_post_meta($coleccionId, 'samples', true);
+    if (!is_array($samples)) {
+        $samples = [];
+        error_log("borrarColec: No se encontraron samples válidos en la colección con ID {$coleccionId}.");
+    }
 
-                    // Si no quedan colecciones para el sample, eliminar la entrada del sample en los metadatos
-                    if (empty($samplesGuardados[$sample_id])) {
-                        unset($samplesGuardados[$sample_id]);
-                    }
+    // Eliminar la colección de los metadatos del usuario para cada sample
+    $samplesGuardados = get_user_meta($userId, 'samplesGuardados', true);
+    if (!is_array($samplesGuardados)) {
+        $samplesGuardados = [];
+        error_log("borrarColec: Los metadatos de samples guardados para el usuario con ID {$userId} no están definidos o no son válidos.");
+    }
+
+    foreach ($samples as $sample_id) {
+        if (isset($samplesGuardados[$sample_id])) {
+            $index = array_search($coleccionId, $samplesGuardados[$sample_id]);
+            if ($index !== false) {
+                unset($samplesGuardados[$sample_id][$index]);
+                $samplesGuardados[$sample_id] = array_values($samplesGuardados[$sample_id]); // Reindexar el array
+
+                if (empty($samplesGuardados[$sample_id])) {
+                    unset($samplesGuardados[$sample_id]);
                 }
             }
         }
-
-        // Actualizar los metadatos del usuario
-        update_user_meta($userId, 'samplesGuardados', $samplesGuardados);
-
-        // Eliminar la colección
-        wp_delete_post($coleccionId, true);
-
-        return json_encode(['success' => true]);
-    } else {
-        return json_encode(['error' => 'No tienes permisos para eliminar esta colección']);
     }
+
+    // Actualizar los metadatos del usuario
+    if (!update_user_meta($userId, 'samplesGuardados', $samplesGuardados)) {
+        error_log("borrarColec: Fallo al actualizar los metadatos de samples guardados para el usuario con ID {$userId}.");
+        wp_send_json_error(['message' => 'Error al actualizar los metadatos del usuario']);
+    }
+
+    // Eliminar la colección
+    if (!wp_delete_post($coleccionId, true)) {
+        error_log("borrarColec: Fallo al eliminar la colección con ID {$coleccionId}.");
+        wp_send_json_error(['message' => 'Error al eliminar la colección']);
+    }
+
+    // Responder con éxito
+    error_log("borrarColec: Colección con ID {$coleccionId} eliminada correctamente por el usuario con ID {$userId}.");
+    wp_send_json_success(['message' => 'Colección eliminada correctamente']);
 }
+
+
 
 add_action('wp_ajax_crearColeccion', 'crearColeccion');
 add_action('wp_ajax_editarColeccion', 'editarColeccion');
