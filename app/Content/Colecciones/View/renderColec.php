@@ -166,7 +166,7 @@ function singleColec($postId)
             </div>
             <div class="BOTONESCOLEC">
                 <? echo botonDescargaColec($postID) ?>
-                <? echo like($post_id); ?>
+                <? echo like($postID); ?>
             </div>
         </div>
     </div>
