@@ -272,7 +272,8 @@ async function verificarSampleEnColecciones() {
 }
 
 
-function abrirModalCrearColec() {
+async function abrirModalCrearColec() {
+    await borrarColec();
     ocultar(a('.modalColec'));
     mostrar(a('.modalCrearColec'));
 }
@@ -305,6 +306,7 @@ async function actualizarListaColecciones() {
     try {
         const response = await enviarAjax('obtener_colecciones');
         if (response) {
+            await borrarColec();
             const listaColeccion = document.querySelector('.listaColeccion');
             const elementosFijos = listaColeccion.querySelectorAll('#favoritos, #despues');
             listaColeccion.innerHTML = '';
@@ -414,4 +416,18 @@ function crearBackgroundColec() {
     document.body.appendChild(darkBackground);
     darkBackground.addEventListener('click', cerrarColec, {once: true});
     return darkBackground;
+}
+
+
+async function borrarColec() {
+    await window.accionClick(
+        '.borrarColec',
+        'borrarColec',
+        '¿Estas seguro de borrar la colección? No podras recuperarla despues :O',
+        async (statusElement, data) => {
+            actualizarElemento(statusElement, data.new_status);
+            await alert('Colección eliminada.');
+        },
+        '.EDYQHV'
+    );
 }

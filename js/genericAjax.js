@@ -133,18 +133,6 @@ async function permitirDescarga() {
     );
 }
 
-async function borrarColec() {
-    await accionClick(
-        '.borrarColec',
-        'borrarColec',
-        '¿Estas seguro de borrar la colección? No podras recuperarla despues :O',
-        async (statusElement, data) => {
-            actualizarElemento(statusElement, data.new_status);
-            await alert('Colección eliminada.');
-        },
-        '.EDYQHV'
-    );
-}
 
 async function banearUsuario() {
     await accionClick(
