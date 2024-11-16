@@ -108,7 +108,6 @@ function imagenPost($postId, $size = 'medium', $quality = 50, $strip = 'all', $p
             $url = wp_get_attachment_image_url($temp_image_id, $size);
         }
     } else {
-        error_log('imagenPost: No se encontró imagen para el post ID ' . $postId);
         return false;
     }
 
