@@ -133,7 +133,6 @@ async function permitirDescarga() {
     );
 }
 
-
 async function banearUsuario() {
     await accionClick(
         '.banearUsuario',

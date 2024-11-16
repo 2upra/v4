@@ -3,6 +3,7 @@ let colecSelecionado = null;
 let colecIniciado = false;
 let imgColec = null;
 let imgColecId = null;
+let colecABorrar = null;
 
 function colec() {
     if (!colecIniciado) {
@@ -17,8 +18,16 @@ function iniciarColec() {
         if (btn) {
             e.preventDefault();
             colecSampleId = btn.getAttribute('data-post_id');
-            // console.log('Post ID seleccionado:', colecSampleId);
             abrirColec();
+        }
+    });
+
+    document.body.addEventListener('click', e => {
+        const btnEliminar = e.target.closest('.borrarColec')
+        if (btnEliminar) {
+            e.preventDefault();
+            colecABorrar = btn.getAttribute('data-post_id');
+            borrarcolec();
         }
     });
 
@@ -47,6 +56,20 @@ function iniciarColec() {
         resetColec();
     });
 }
+
+async function borrarColec() {
+    await window.accionClick(
+        '.borrarColec',
+        'borrarColec',
+        '¿Estas seguro de borrar la colección? No podras recuperarla despues :O',
+        async (statusElement, data) => {
+            actualizarElemento(statusElement, data.new_status);
+            await alert('Colección eliminada.');
+        },
+        '.EDYQHV'
+    );
+}
+
 
 
 
@@ -273,7 +296,6 @@ async function verificarSampleEnColecciones() {
 
 
 async function abrirModalCrearColec() {
-    await borrarColec();
     ocultar(a('.modalColec'));
     mostrar(a('.modalCrearColec'));
 }
@@ -306,7 +328,6 @@ async function actualizarListaColecciones() {
     try {
         const response = await enviarAjax('obtener_colecciones');
         if (response) {
-            await borrarColec();
             const listaColeccion = document.querySelector('.listaColeccion');
             const elementosFijos = listaColeccion.querySelectorAll('#favoritos, #despues');
             listaColeccion.innerHTML = '';
@@ -418,16 +439,3 @@ function crearBackgroundColec() {
     return darkBackground;
 }
 
-
-async function borrarColec() {
-    await window.accionClick(
-        '.borrarColec',
-        'borrarColec',
-        '¿Estas seguro de borrar la colección? No podras recuperarla despues :O',
-        async (statusElement, data) => {
-            actualizarElemento(statusElement, data.new_status);
-            await alert('Colección eliminada.');
-        },
-        '.EDYQHV'
-    );
-}
