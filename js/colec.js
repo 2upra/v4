@@ -26,7 +26,7 @@ function iniciarColec() {
         const btnEliminar = e.target.closest('.borrarColec')
         if (btnEliminar) {
             e.preventDefault();
-            colecABorrar = btn.getAttribute('data-post_id');
+            colecABorrar = btnEliminar.getAttribute('data-post_id');
             borrarcolec();
         }
     });
