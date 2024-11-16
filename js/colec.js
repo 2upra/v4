@@ -65,6 +65,7 @@ async function borrarColec() {
         async (statusElement, data) => {
             actualizarElemento(statusElement, data.new_status);
             await alert('Colección eliminada.');
+            await actualizarListaColecciones();
         },
         '.EDYQHV'
     );
