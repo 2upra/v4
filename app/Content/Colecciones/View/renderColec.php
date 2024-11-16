@@ -165,8 +165,8 @@ function singleColec($postId)
                 <? echo $samples ?>
             </div>
             <div class="BOTONESCOLEC">
-                <? echo botonDescargaColec($postID) ?>
-                <? echo like($postID); ?>
+                <? echo botonDescargaColec($postId) ?>
+                <? echo like($postId); ?>
             </div>
         </div>
     </div>
@@ -179,7 +179,7 @@ function singleColec($postId)
     return ob_get_clean();
 }
 
-function botonDescargaColec($postID)
+function botonDescargaColec($postId)
 {
     ob_start();
 
@@ -187,16 +187,16 @@ function botonDescargaColec($postID)
 
     if ($userID) {
         $descargas_anteriores = get_user_meta($userID, 'descargas', true);
-        $yaDescargado = isset($descargas_anteriores[$postID]);
+        $yaDescargado = isset($descargas_anteriores[$postId]);
         $claseExtra = $yaDescargado ? 'yaDescargado' : '';
 
     ?>
         <div class="ZAQIBB">
             <button class="icon-arrow-down botonprincipal <? echo esc_attr($claseExtra); ?>"
-                data-post-id="<? echo esc_attr($postID); ?>"
+                data-post-id="<? echo esc_attr($postId); ?>"
                 aria-label="Boton Descarga"
-                id="download-button-<? echo esc_attr($postID); ?>"
-                onclick="return procesarDescarga('<? echo esc_js($postID); ?>', '<? echo esc_js($userID); ?>')">
+                id="download-button-<? echo esc_attr($postId); ?>"
+                onclick="return procesarDescarga('<? echo esc_js($postId); ?>', '<? echo esc_js($userID); ?>')">
                 <? echo $GLOBALS['descargaicono']; ?> Descargar
             </button>
         </div>
