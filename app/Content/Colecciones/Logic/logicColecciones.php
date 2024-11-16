@@ -386,10 +386,11 @@ function borrarColec()
         error_log("borrarColec: Los metadatos de samples guardados para el usuario con ID {$userId} no están definidos o no son válidos.");
     }
 
-    // Log de los samples antes de la actualización
+    // Log del estado inicial de samplesGuardados
     error_log("borrarColec: samplesGuardados antes de la modificación: " . print_r($samplesGuardados, true));
 
     // Recorrer cada sample y eliminar la referencia a la colección
+    $samplesModificados = false; // Bandera para detectar si algo cambió
     foreach ($samples as $sample_id) {
         if (isset($samplesGuardados[$sample_id])) {
             // Buscar el índice de la colección en la lista de colecciones del sample
@@ -402,16 +403,17 @@ function borrarColec()
                 if (empty($samplesGuardados[$sample_id])) {
                     unset($samplesGuardados[$sample_id]);
                 }
+
+                $samplesModificados = true;  // Algo ha cambiado
             }
         }
     }
 
-    // Log de los samples después de la modificación
+    // Log después de la modificación
     error_log("borrarColec: samplesGuardados después de la modificación: " . print_r($samplesGuardados, true));
 
-    // Actualizar los metadatos del usuario solo si hay cambios en los samples guardados
-    if (!empty($samplesGuardados)) {
-        // Log de lo que se intentará guardar
+    // Solo intentar actualizar los metadatos si hubo cambios
+    if ($samplesModificados) {
         error_log("borrarColec: Intentando actualizar samplesGuardados con el siguiente valor: " . print_r($samplesGuardados, true));
 
         // Actualizar los metadatos del usuario solo si hubo cambios
@@ -421,7 +423,12 @@ function borrarColec()
             wp_send_json_error(['message' => 'Error al actualizar los metadatos del usuario']);
         }
     } else {
-        // Si no quedan samples guardados, eliminar la entrada meta del usuario
+        // Si no se modificó nada, no intentamos actualizar y solo registramos que no hubo cambios
+        error_log("borrarColec: No hubo cambios en samplesGuardados, no se necesita actualizar.");
+    }
+
+    // Si no quedan samples guardados, eliminar la entrada meta del usuario
+    if (empty($samplesGuardados)) {
         error_log("borrarColec: No quedan samples guardados. Eliminando la entrada 'samplesGuardados' para el usuario con ID {$userId}.");
         delete_user_meta($userId, 'samplesGuardados');
     }
@@ -436,7 +443,6 @@ function borrarColec()
     error_log("borrarColec: Colección con ID {$coleccionId} eliminada correctamente por el usuario con ID {$userId}.");
     wp_send_json_success(['message' => 'Colección eliminada correctamente']);
 }
-
 
 add_action('wp_ajax_crearColeccion', 'crearColeccion');
 add_action('wp_ajax_editarColeccion', 'editarColeccion');
