@@ -39,8 +39,9 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             submenu.style.top = `${(vh - submenu.offsetHeight) / 2}px`;
             submenu.style.left = `${(vw - submenu.offsetWidth) / 2}px`;
         } else {
-            const rect = event.target.getBoundingClientRect();
-            const { top, left } = calculatePosition(rect, submenu, position);
+            const trigger = event.target.closest(triggerSelector);
+            const triggerRect = trigger.getBoundingClientRect();
+            const { top, left } = calculatePosition(triggerRect, submenu, position);
             submenu.style.top = `${top}px`;
             submenu.style.left = `${left}px`;
         }
@@ -94,41 +95,52 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     });
 }
 
-function calculatePosition(rect, submenu, position) {
+function calculatePosition(triggerRect, submenu, position) {
     const { innerWidth: vw, innerHeight: vh } = window;
     let top, left;
 
     switch (position) {
         case 'arriba':
-            top = rect.top - submenu.offsetHeight;
-            left = rect.left + (rect.width / 2) - (submenu.offsetWidth / 2);
+            top = triggerRect.top - submenu.offsetHeight;
+            left = triggerRect.left + (triggerRect.width / 2) - (submenu.offsetWidth / 2);
             break;
         case 'abajo':
-            top = rect.bottom;
-            left = rect.left + (rect.width / 2) - (submenu.offsetWidth / 2);
+            // Posicionar debajo del trigger, alineado a la izquierda del trigger
+            top = triggerRect.bottom;
+            left = triggerRect.left;
             break;
         case 'izquierda':
-            top = rect.top + (rect.height / 2) - (submenu.offsetHeight / 2);
-            left = rect.left - submenu.offsetWidth;
+            top = triggerRect.top + (triggerRect.height / 2) - (submenu.offsetHeight / 2);
+            left = triggerRect.left - submenu.offsetWidth;
             break;
         case 'derecha':
-            top = rect.top + (rect.height / 2) - (submenu.offsetHeight / 2);
-            left = rect.right;
+            top = triggerRect.top + (triggerRect.height / 2) - (submenu.offsetHeight / 2);
+            left = triggerRect.right;
             break;
         case 'centro':
             top = (vh - submenu.offsetHeight) / 2;
             left = (vw - submenu.offsetWidth) / 2;
             break;
         default:
-            // 'auto' o cualquier otro valor: posicionar debajo del trigger
-            top = rect.bottom;
-            left = rect.left;
+            // 'auto' o cualquier otro valor: posicionar debajo del trigger, alineado a la izquierda del trigger
+            top = triggerRect.bottom;
+            left = triggerRect.left;
             break;
     }
 
-    // Asegurar que el submenú no se salga de la pantalla
-    top = Math.max(0, Math.min(top, vh - submenu.offsetHeight));
-    left = Math.max(0, Math.min(left, vw - submenu.offsetWidth));
+    // Asegurar que el submenú no se salga de la pantalla, ajustar si es necesario
+    if (top < 0) {
+        top = triggerRect.bottom; // Si se sale por arriba, mostrarlo debajo del trigger
+    }
+    if (top + submenu.offsetHeight > vh) {
+        top = vh - submenu.offsetHeight; // Si se sale por abajo, ajustarlo al borde inferior
+    }
+    if (left < 0) {
+        left = 0; // Si se sale por la izquierda, ajustarlo al borde izquierdo
+    }
+    if (left + submenu.offsetWidth > vw) {
+        left = vw - submenu.offsetWidth; // Si se sale por la derecha, ajustarlo al borde derecho
+    }
 
     return { top, left };
 }
