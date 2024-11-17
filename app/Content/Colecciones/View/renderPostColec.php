@@ -22,21 +22,22 @@ function htmlColec($filtro)
     return ob_get_clean();
 }
 
-/*
-[17-Nov-2024 00:35:34 UTC] PHP Fatal error:  Cannot redeclare maybe_unserialize() (previously declared in /var/www/wordpress/wp-includes/functions.php:648) in /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Colecciones/View/renderPostColec.php on line 158
-[17-Nov-2024 00:35:45 UTC] PHP Fatal error:  Uncaught TypeError: json_decode(): Argument #1 ($json) must be of type string, array given in /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Colecciones/View/renderPostColec.php:148
-Stack trace:
-#0 /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Colecciones/View/renderPostColec.php(148): json_decode()
-#1 /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Colecciones/View/renderPostColec.php(182): maybe_unserialize_dos()
-#2 /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Colecciones/View/renderPostColec.php(286): variablesColec()
-#3 /var/www/wordpress/wp-content/themes/2upra3v/single-colecciones.php(29): singleColec()
-#4 /var/www/wordpress/wp-includes/template-loader.php(106): include('...')
-#5 /var/www/wordpress/wp-blog-header.php(19): require_once('...')
-#6 /var/www/wordpress/index.php(17): require('...')
-#7 {main}
-  thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Colecciones/View/renderPostColec.php on line 148
-*/
 
+function aplanarArray($input) {
+    $result = [];
+    if (is_array($input)) {
+        foreach ($input as $element) {
+            if (is_array($element)) {
+                $result = array_merge($result, aplanarArray($element));
+            } else {
+                $result[] = $element;
+            }
+        }
+    } else {
+        $result[] = $input;
+    }
+    return $result;
+}
 
 function datosColeccion($postId)
 {
@@ -66,12 +67,12 @@ function datosColeccion($postId)
 
         // Inicializar el arreglo para 'datosColeccion'
         $datos_coleccion = [
-            'descripcion_corta'     => [],
-            'estado_animo'          => [],
-            'artista_posible'       => [],
-            'genero_posible'        => [],
+            'descripcion_corta'      => [],
+            'estado_animo'           => [],
+            'artista_posible'        => [],
+            'genero_posible'         => [],
             'instrumentos_principal' => [],
-            'tags_posibles'         => [],
+            'tags_posibles'          => [],
         ];
 
         // Campos a procesar
@@ -124,15 +125,33 @@ function datosColeccion($postId)
             foreach ($campos as $campo) {
                 if (isset($datos_algoritmo_array[$campo])) {
                     $valores = $datos_algoritmo_array[$campo];
+                    
+                    // Aplanar el array en caso de que haya arrays anidados
+                    $valores = aplanarArray($valores);
+
                     if (!is_array($valores)) {
                         // Asegurarse de que es un array
                         $valores = [$valores];
                     }
+
                     foreach ($valores as $valor) {
                         // Validar el tipo de dato antes de aplicar trim
                         if (is_array($valor)) {
-                            error_log("Advertencia: Se encontró un array en lugar de un string al procesar el campo '$campo'. Sample ID: $sample_id");
-                            continue; // Saltar este valor
+                            error_log("Advertencia: Se encontró un array dentro de '$campo'. Sample ID: $sample_id");
+                            // Aplanar de nuevo si es necesario
+                            $subvalores = aplanarArray($valor);
+                            foreach ($subvalores as $subvalor) {
+                                $subvalor = trim((string) $subvalor);
+                                if ($subvalor === '') {
+                                    continue;
+                                }
+                                if (isset($datos_coleccion[$campo][$subvalor])) {
+                                    $datos_coleccion[$campo][$subvalor]++;
+                                } else {
+                                    $datos_coleccion[$campo][$subvalor] = 1;
+                                }
+                            }
+                            continue; // Ya procesamos los subvalores
                         }
 
                         // Normalizar el valor (trim, mayúsculas/minúsculas según necesidad)
@@ -196,6 +215,7 @@ function maybe_unserialize_dos($data)
     // Devolver el original si no se pudo deserializar ni decodificar
     return $data;
 }
+?>
 
 
 
@@ -331,7 +351,7 @@ function singleColec($postId)
     <div class="AMORP">
         <? echo imagenColeccion($postId); ?>
         <div class="ORGDE">
-            
+
             <div class="AGDEORF">
                 <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
                 <h2 class="post-title"><? echo get_the_title($postId); ?></h2>
