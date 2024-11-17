@@ -20,7 +20,6 @@ function removeDuplicates(arr) {
     return [...new Set(arr)];
 }
 
-
 function tagsPosts() {
     document.querySelectorAll('p[id-post-algoritmo]').forEach(function (pElement) {
         const postId = pElement.getAttribute('id-post-algoritmo');
@@ -42,15 +41,15 @@ function tagsPosts() {
 
         // Función auxiliar para agregar tags desde una fuente específica
         const addTags = (source, key) => {
-            if (source?.[key]?.["en"]) {
-                allTags = allTags.concat(source[key]["en"].map(capitalize));
+            if (source?.[key]?.['en']) {
+                allTags = allTags.concat(source[key]['en'].map(capitalize));
             } else if (source?.[key]) {
                 allTags = allTags.concat(source[key].map(capitalize));
             }
         };
 
         // Detectar estructura
-        const isNewStructure = !!jsonData.instrumentos_principal?.["es"];
+        const isNewStructure = !!jsonData.instrumentos_principal?.['es'];
 
         // Primero agregar tipo de audio
         addTags(jsonData, 'tipo_audio');
@@ -71,9 +70,7 @@ function tagsPosts() {
 
         // Agregar categoría BPM
         if (jsonData.bpm) {
-            const bpmCategory = jsonData.bpm < 90 ? 'Lento' :
-                              jsonData.bpm < 120 ? 'Moderado' :
-                              jsonData.bpm < 150 ? 'Rápido' : 'Muy Rápido';
+            const bpmCategory = jsonData.bpm < 90 ? 'Lento' : jsonData.bpm < 120 ? 'Moderado' : jsonData.bpm < 150 ? 'Rápido' : 'Muy Rápido';
             allTags.push(`${bpmCategory} (${jsonData.bpm} BPM)`);
         }
 
@@ -83,15 +80,7 @@ function tagsPosts() {
         }
 
         // Agregar las categorías restantes
-        const remainingCategories = isNewStructure ? [
-            'estado_animo',
-            'artista_posible',
-            'tags_posibles'
-        ] : [
-            'Estado de animo',
-            'Artista posible',
-            'Tags posibles'
-        ];
+        const remainingCategories = isNewStructure ? ['estado_animo', 'artista_posible', 'tags_posibles'] : ['Estado de animo', 'Artista posible', 'Tags posibles'];
 
         remainingCategories.forEach(category => {
             addTags(jsonData, category);
@@ -110,13 +99,13 @@ function tagsPosts() {
 
 function limitTags(maxVisible = 5) {
     // Selecciona todos los contenedores de tags cuyo ID comienza con "tags-"
-    document.querySelectorAll('[id^="tags-"]').forEach(function(tagsContainer) {
+    document.querySelectorAll('[id^="tags-"]').forEach(function (tagsContainer) {
         const tagElements = tagsContainer.querySelectorAll('.postTag');
-        
+
         // Verifica si hay más tags de los permitidos
         if (tagElements.length > maxVisible) {
             // Oculta los tags que exceden el límite inicialmente
-            tagElements.forEach(function(tag, index) {
+            tagElements.forEach(function (tag, index) {
                 if (index >= maxVisible) {
                     tag.style.display = 'none';
                 }
@@ -132,10 +121,10 @@ function limitTags(maxVisible = 5) {
                 toggleButton.textContent = 'Ver más';
 
                 // Agrega un event listener para manejar el clic
-                toggleButton.addEventListener('click', function() {
+                toggleButton.addEventListener('click', function () {
                     const isCollapsed = toggleButton.textContent === 'Ver más';
-                    
-                    tagElements.forEach(function(tag, index) {
+
+                    tagElements.forEach(function (tag, index) {
                         if (isCollapsed) {
                             // Mostrar todas las etiquetas
                             tag.style.display = 'inline';
@@ -157,8 +146,7 @@ function limitTags(maxVisible = 5) {
         }
     });
 }
-
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Obtener el elemento que contiene el JSON
     const dataElement = document.getElementById('dataColec');
     if (!dataElement) {
@@ -172,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
         data = JSON.parse(jsonData);
     } catch (e) {
-        console.error("Error al parsear el JSON:", e);
+        console.error('Error al parsear el JSON:', e);
         return;
     }
 
@@ -190,13 +178,17 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    // Función para obtener los dos tags principales de una categoría
+    // Función para obtener los dos tags principales de una categoría, ignorando 'descripcion_corta'
     function getTopTwoTags(tagsObj) {
         return Object.entries(tagsObj)
-            .sort((a, b) => b[1] - a[1]) // Ordenar de mayor a menor
+            .filter(([key, _]) => key !== 'descripcion_corta') // Ignorar 'descripcion_corta'
+            .sort((a, b) => b[1] - a[1]) // Ordenar de mayor a menor según el valor
             .slice(0, 2) // Tomar los dos primeros
             .map(entry => entry[0]); // Obtener solo los nombres de los tags
     }
+
+    // Crear un conjunto para almacenar tags ya agregados y evitar duplicados
+    const addedTags = new Set();
 
     // Recorrer cada categoría en el JSON
     for (const categoria in data) {
@@ -205,25 +197,26 @@ document.addEventListener('DOMContentLoaded', function() {
             const topTags = getTopTwoTags(tags);
 
             topTags.forEach(tag => {
-                // Crear un elemento <span> con la clase 'postTag'
-                const span = document.createElement('span');
-                span.className = 'postTag';
-                span.textContent = tag;
+                // Verificar si el tag ya ha sido agregado
+                if (!addedTags.has(tag)) {
+                    // Crear un elemento <span> con la clase 'postTag'
+                    const span = document.createElement('span');
+                    span.className = 'postTag';
+                    span.textContent = tag;
 
-                // Opcional: Agregar un separador o espacio
-                // span.style.marginRight = '5px';
+                    // Opcional: Agregar un separador o espacio
+                    // span.style.marginRight = '5px';
 
-                // Insertar el <span> en el contenedor
-                container.appendChild(span);
+                    // Insertar el <span> en el contenedor
+                    container.appendChild(span);
+
+                    // Añadir el tag al conjunto para evitar duplicados futuros
+                    addedTags.add(tag);
+                }
             });
         }
     }
 });
-
-
-
-
-
 
 function modalDetallesIA() {
     const modal = document.getElementById('modalDetallesIA');
@@ -242,7 +235,7 @@ function modalDetallesIA() {
                     detallesIA = JSON.parse(postDetalles.textContent);
                 } catch (e) {
                     console.error('Error al parsear el JSON:', e);
-                    modalContent.textContent = "Error al mostrar los detalles.";
+                    modalContent.textContent = 'Error al mostrar los detalles.';
                     return;
                 }
 
