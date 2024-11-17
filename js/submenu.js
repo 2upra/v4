@@ -1,4 +1,4 @@
-function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLeft = 0) {
+function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     const triggers = document.querySelectorAll(triggerSelector);
 
     function toggleSubmenu(event) {
@@ -10,19 +10,20 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
 
         if (!submenu) return;
 
+        submenu._position = position; // Guardamos la posición deseada
+
         submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
 
         if (submenu.style.display === "block") {
             hideSubmenu(submenu);
         } else {
-            showSubmenu(event, submenu);
+            showSubmenu(event, submenu, submenu._position);
         }
 
         event.stopPropagation();
     }
 
-    function showSubmenu(event, submenu) {
-        const rect = event.target.getBoundingClientRect();
+    function showSubmenu(event, submenu, position) {
         const { innerWidth: vw, innerHeight: vh } = window;
 
         // Mover el submenú al body si no está ya allí
@@ -32,8 +33,18 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
 
         submenu.style.position = "fixed";
         submenu.style.zIndex = 9999; // Asegúrate de que tenga un z-index alto
-        submenu.style.top = `${Math.min(rect.bottom + adjustTop, vh - submenu.offsetHeight)}px`;
-        submenu.style.left = `${Math.min(rect.left + adjustLeft, vw - submenu.offsetWidth)}px`;
+
+        if (vw <= 640) {
+            // En dispositivos móviles, centrar el submenú
+            submenu.style.top = `${(vh - submenu.offsetHeight) / 2}px`;
+            submenu.style.left = `${(vw - submenu.offsetWidth) / 2}px`;
+        } else {
+            const rect = event.target.getBoundingClientRect();
+            const { top, left } = calculatePosition(rect, submenu, position);
+            submenu.style.top = `${top}px`;
+            submenu.style.left = `${left}px`;
+        }
+
         submenu.style.display = "block";
 
         submenu._darkBackground = createSubmenuDarkBackground(submenu);
@@ -83,25 +94,88 @@ function createSubmenu(triggerSelector, submenuIdPrefix, adjustTop = 0, adjustLe
     });
 }
 
+function calculatePosition(rect, submenu, position) {
+    const { innerWidth: vw, innerHeight: vh } = window;
+    let top, left;
+
+    switch (position) {
+        case 'arriba':
+            top = rect.top - submenu.offsetHeight;
+            left = rect.left + (rect.width / 2) - (submenu.offsetWidth / 2);
+            break;
+        case 'abajo':
+            top = rect.bottom;
+            left = rect.left + (rect.width / 2) - (submenu.offsetWidth / 2);
+            break;
+        case 'izquierda':
+            top = rect.top + (rect.height / 2) - (submenu.offsetHeight / 2);
+            left = rect.left - submenu.offsetWidth;
+            break;
+        case 'derecha':
+            top = rect.top + (rect.height / 2) - (submenu.offsetHeight / 2);
+            left = rect.right;
+            break;
+        case 'centro':
+            top = (vh - submenu.offsetHeight) / 2;
+            left = (vw - submenu.offsetWidth) / 2;
+            break;
+        default:
+            // 'auto' o cualquier otro valor: posicionar debajo del trigger
+            top = rect.bottom;
+            left = rect.left;
+            break;
+    }
+
+    // Asegurar que el submenú no se salga de la pantalla
+    top = Math.max(0, Math.min(top, vh - submenu.offsetHeight));
+    left = Math.max(0, Math.min(left, vw - submenu.offsetWidth));
+
+    return { top, left };
+}
+
+function createSubmenuDarkBackground(submenu) {
+    // Implementa tu función para crear el fondo oscuro detrás del submenú
+    // Aquí puedes agregar el código que ya tengas para esto
+    const darkBackground = document.createElement('div');
+    darkBackground.style.position = 'fixed';
+    darkBackground.style.top = 0;
+    darkBackground.style.left = 0;
+    darkBackground.style.width = '100%';
+    darkBackground.style.height = '100%';
+    darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    darkBackground.style.zIndex = 9998; // Debe estar debajo del submenú
+    document.body.appendChild(darkBackground);
+
+    darkBackground.addEventListener('click', () => {
+        hideSubmenu(submenu);
+    });
+
+    return darkBackground;
+}
+
+function removeSubmenuDarkBackground(darkBackground) {
+    if (darkBackground && darkBackground.parentNode) {
+        darkBackground.parentNode.removeChild(darkBackground);
+    }
+}
+
 function initializeStaticMenus() {
-    //console.log('[initializeStaticMenus] Inicializando menús estáticos');
-    createSubmenu(".subiricono", "submenusubir", 0, 120);
-    createSubmenu(".chatIcono", "bloqueConversaciones", 30, -270);
-    createSubmenu(".fotoperfilsub", "fotoperfilsub", 80, -30);
+    // Ejemplos de uso con la nueva parametrización de posición
+    createSubmenu(".subiricono", "submenusubir", 'derecha');
+    createSubmenu(".chatIcono", "bloqueConversaciones", 'izquierda');
+    createSubmenu(".fotoperfilsub", "fotoperfilsub", 'abajo');
 }
 
 // Esto se reinicia cada vez que cargan nuevos posts
 function submenu() {
-    //boton clase - submenu id - posicon x - posicion y
-    createSubmenu(".filtrosboton", "filtrosMenu", 0, 0);
-    createSubmenu(".mipsubmenu", "submenuperfil", 0, 120);
-    createSubmenu(".HR695R7", "opcionesrola", 100, 0);
-    createSubmenu(".HR695R8", "opcionespost", 60, 0);
-    createSubmenu(".submenucolab", "opcionescolab", 60, 0);
+    // Botón clase - submenu id - posición
+    createSubmenu(".filtrosboton", "filtrosMenu", 'abajo');
+    createSubmenu(".mipsubmenu", "submenuperfil", 'abajo');
+    createSubmenu(".HR695R7", "opcionesrola", 'abajo');
+    createSubmenu(".HR695R8", "opcionespost", 'abajo');
+    createSubmenu(".submenucolab", "opcionescolab", 'abajo');
 }
 
-
 document.addEventListener('DOMContentLoaded', () => {
-    //console.log('[DOMContentLoaded] Documento cargado, inicializando menús estáticos');
     initializeStaticMenus();
 });

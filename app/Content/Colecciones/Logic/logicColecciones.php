@@ -274,7 +274,7 @@ function botonColeccion($postId)
     }
 
     ob_start();
-    ?>
+    ?> 
     <div class="ZAQIBB botonColeccion<?php echo esc_attr($extraClass); ?>">
         <button class="botonColeccionBtn" aria-label="Guardar sonido" data-post_id="<?php echo esc_attr($postId); ?>" data-nonce="<?php echo wp_create_nonce('colec_nonce'); ?>">
             <?php echo $GLOBALS['iconoGuardar']; ?>
