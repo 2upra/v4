@@ -22,6 +22,21 @@ function htmlColec($filtro)
     return ob_get_clean();
 }
 
+/*
+[17-Nov-2024 00:35:34 UTC] PHP Fatal error:  Cannot redeclare maybe_unserialize() (previously declared in /var/www/wordpress/wp-includes/functions.php:648) in /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Colecciones/View/renderPostColec.php on line 158
+[17-Nov-2024 00:35:45 UTC] PHP Fatal error:  Uncaught TypeError: json_decode(): Argument #1 ($json) must be of type string, array given in /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Colecciones/View/renderPostColec.php:148
+Stack trace:
+#0 /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Colecciones/View/renderPostColec.php(148): json_decode()
+#1 /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Colecciones/View/renderPostColec.php(182): maybe_unserialize_dos()
+#2 /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Colecciones/View/renderPostColec.php(286): variablesColec()
+#3 /var/www/wordpress/wp-content/themes/2upra3v/single-colecciones.php(29): singleColec()
+#4 /var/www/wordpress/wp-includes/template-loader.php(106): include('...')
+#5 /var/www/wordpress/wp-blog-header.php(19): require_once('...')
+#6 /var/www/wordpress/index.php(17): require('...')
+#7 {main}
+  thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Colecciones/View/renderPostColec.php on line 148
+*/
+
 
 function datosColeccion($postId)
 {
@@ -85,12 +100,20 @@ function datosColeccion($postId)
                 }
             }
 
+            // Validar que el dato sea un string antes de decodificar JSON
+            if (is_array($datos_algoritmo)) {
+                $datos_algoritmo = json_encode($datos_algoritmo);
+            } elseif (!is_string($datos_algoritmo)) {
+                error_log("Error: datosAlgoritmo no es string ni array. Sample ID: " . $sample_id);
+                continue;
+            }
+
             // Decodificar el JSON
             $datos_algoritmo_array = json_decode($datos_algoritmo, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 // JSON inválido, intentar deserializar si es posible
                 $datos_algoritmo_array = maybe_unserialize_dos($datos_algoritmo);
-                if (json_last_error() !== JSON_ERROR_NONE || !is_array($datos_algoritmo_array)) {
+                if (!is_array($datos_algoritmo_array)) {
                     // No se puede procesar este sample, saltar
                     error_log("Error en datosColeccion: No se pudo decodificar o deserializar datosAlgoritmo para el sample ID: " . $sample_id);
                     continue;
@@ -155,8 +178,9 @@ function maybe_unserialize_dos($data)
         return $unserialized;
     }
     // Devolver el original si no se pudo deserializar ni decodificar
-    return $data;
+    return is_string($data) ? $data : (string) $data;
 }
+
 
 
 function variablesColec($postId)
