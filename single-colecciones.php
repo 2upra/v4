@@ -20,13 +20,31 @@ $filtro = 'singleColec';
 <body <? body_class(); ?>>
 
     <? get_header(); ?>
+    <div id="menuData" style="display:none;" pestanaActual="">
+        <div data-tab="Colección"></div>
+        <div data-tab="Ideas"></div>
+    </div>
 
     <main id="main">
         <div id="content" class="<? echo esc_attr(! is_user_logged_in() ? 'nologin' : ''); ?>">
             <? if (have_posts()) : while (have_posts()) : the_post(); ?>
                     <article <? post_class(); ?>>
-                        <div class="SINGLECOLECSGER">
-                            <? echo singleColec($postId) ?>
+                        <div class="tabs">
+                            <div class="tab-content">
+
+                                <div id="Colección">
+                                    <div class="SINGLECOLECSGER">
+                                        <? echo singleColec($postId) ?>
+                                    </div>
+                                </div>
+
+                                <div id="ideas">
+                                    <div>
+                                        
+                                    </div>
+                                </div>
+
+                            </div>
                         </div>
                     </article>
             <? endwhile;

@@ -35,7 +35,6 @@ function socialTabs()
 ?>
 
     <div id="menuData" style="display:none;" pestanaActual="">
-        >
         <div data-tab="Samples"></div>
         <div data-tab="Colecciones"></div>
     </div>
