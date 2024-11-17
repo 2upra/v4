@@ -1,3 +1,5 @@
+//a veces el submenu se ve fuera de la pantalla y por ejemplo abajo no es realmente abajo, se ve de lado izquierdo, y el resto parece no posocionarse bien 
+
 function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     const triggers = document.querySelectorAll(triggerSelector);
 
@@ -17,17 +19,17 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         if (submenu.style.display === "block") {
             hideSubmenu(submenu);
         } else {
-            showSubmenu(event, submenu, submenu._position);
+            showSubmenu(event, trigger, submenu, submenu._position); // Pasamos el trigger
         }
 
         event.stopPropagation();
     }
 
-    function showSubmenu(event, submenu, position) {
+    function showSubmenu(event, trigger, submenu, position) {
         const { innerWidth: vw, innerHeight: vh } = window;
 
         // Mover el submenú al body si no está ya allí
-        if (!document.body.contains(submenu)) {
+        if (submenu.parentNode !== document.body) {
             document.body.appendChild(submenu);
         }
 
@@ -42,12 +44,14 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         let submenuWidth = submenu.offsetWidth;
         let submenuHeight = submenu.offsetHeight;
 
+        // Obtenemos el rectángulo del elemento desencadenante
+        const rect = trigger.getBoundingClientRect();
+
         // En dispositivos móviles, centrar el submenú
         if (vw <= 640) {
             submenu.style.top = `${(vh - submenuHeight) / 2}px`;
             submenu.style.left = `${(vw - submenuWidth) / 2}px`;
         } else {
-            const rect = event.target.getBoundingClientRect();
             let { top, left } = calculatePosition(rect, submenuWidth, submenuHeight, position);
 
             // Asegurar que el submenú no se salga de la pantalla
