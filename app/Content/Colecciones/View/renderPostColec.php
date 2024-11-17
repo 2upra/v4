@@ -331,19 +331,21 @@ function singleColec($postId)
     <div class="AMORP">
         <? echo imagenColeccion($postId); ?>
         <div class="ORGDE">
-            <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
-            <h2 class="post-title"><? echo get_the_title($postId); ?></h2>
-            <div class="DSEDBE">
-                <? echo $samples ?>
-            </div>
-            <div class="AGMORF">
+            
+            <div class="AGDEORF">
+                <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
+                <h2 class="post-title"><? echo get_the_title($postId); ?></h2>
+                <div class="DSEDBE">
+                    <? echo $samples ?>
+                </div>
                 <div class="BOTONESCOLEC">
                     <? echo botonDescargaColec($postId); ?>
                     <? echo like($postId); ?>
                 </div>
-                <div class="INFEIS">
-                    <? echo datosColeccion($postId); ?>
-                </div>
+            </div>
+
+            <div class="INFEIS">
+                <? echo datosColeccion($postId); ?>
             </div>
         </div>
     </div>
