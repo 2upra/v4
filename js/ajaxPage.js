@@ -1,228 +1,103 @@
-(function () {
-  const pageCache = {};
-  const isFirefox = typeof InstallTrigger !== 'undefined';
-  if (isFirefox) {
-      // Agrega la clase "firefox" al body
+(function() {
+    const pageCache = {}, isFirefox = typeof InstallTrigger !== 'undefined';
+  
+    if (isFirefox) {
       document.body.classList.add('firefox');
-      // Inserta el SVG para el filtro de desenfoque
-      const svg = `
-      <svg style="display: none;">
-        <filter id="blur-effect">
-          <feGaussianBlur stdDeviation="10" />
-        </filter>
-      </svg>`;
-      document.body.insertAdjacentHTML('afterbegin', svg);
-  }
-  function inicializarScripts() {
-      const funciones = [
-          'actualizarUIBusquedaNoURL',
-          'inicializarPestanas',
-          'inicializarWaveforms',
-          'inicializarReproductorAudio',
-          'minimizarform',
-          'selectorformtipo',
-          'ajax_submit',
-          'borrarcomentario',
-          'colab',
-          'configuser',
-          'deletepost',
-          'diferidopost',
-          'editarcomentario',
-          'like',
-          'notificacioncolab',
-          'busqueda',
-          'updateBackgroundColor',
-          'presentacionmusic',
-          'seguir',
-          'registro',
-          'comentarios',
-          'botoneditarpost',
-          'fan',
-          'perfilpanel',
-          'smooth',
-          'navpanel',
-          'borderborder',
-          'initializeFormFunctions',
-          'initializeModalregistro',
-          'submenu',
-          'selectortipousuario',
-          'empezarcolab',
-          'subidaRolaForm',
-          'avances',
-          'updateDates',
-          'initializeProgressSegments',
-          'initializeCustomTooltips',
-          'fondoAcciones',
-          'pestanasgroup',
-          'manejoDeLogs',
-          'progresosinteractive',
-          'setupScrolling',
-          'inicializarDescargas',
-          'handleAllRequests',
-          'textflux',
-          'autoFillUserInfo',   
-          'meta',
-          'reporteScript',
-          'generarGrafico',
-          'grafico',
-          'IniciadoresConfigPerfil',
-          'proyectoForm',
-          'inicializarAlerta',
-          'autoRows',
-          'iniciarRS',
-          'initializeUI',
-          'tagsPosts',
-          'vistaPost',
-          'initEditWordPress',
-          'reiniciarCargaDiferida',
-          'registrarVistas',
-          'colec',
-          'cambiarFiltroTiempo',
-          'filtrosPost',
-          'contadorDeSamples',
-          'establecerFiltros',
-          'actualizarBotonFiltro'
-      ];
-      funciones.forEach(func => {
-          if (typeof window[func] === 'function') {
-              try {
-                  window[func]();
-              } catch (error) {
-                  console.error(`Error al ejecutar ${func}:`, error);
-              }
+    }
+  
+    const funcs = [
+      'actualizarUIBusquedaNoURL','inicializarPestanas','inicializarWaveforms','inicializarReproductorAudio','minimizarform',
+      'selectorformtipo','ajax_submit','borrarcomentario','colab','configuser','deletepost','diferidopost','editarcomentario',
+      'like','notificacioncolab','busqueda','updateBackgroundColor','presentacionmusic','seguir','registro','comentarios',
+      'botoneditarpost','fan','perfilpanel','smooth','navpanel','borderborder','initializeFormFunctions','initializeModalregistro',
+      'submenu','selectortipousuario','empezarcolab','subidaRolaForm','avances','updateDates','initializeProgressSegments',
+      'initializeCustomTooltips','fondoAcciones','pestanasgroup','manejoDeLogs','progresosinteractive','setupScrolling',
+      'inicializarDescargas','handleAllRequests','textflux','autoFillUserInfo','meta','reporteScript','generarGrafico',
+      'grafico','IniciadoresConfigPerfil','proyectoForm','inicializarAlerta','autoRows','iniciarRS','initializeUI','tagsPosts',
+      'vistaPost','initEditWordPress','reiniciarCargaDiferida','registrarVistas','colec','cambiarFiltroTiempo','filtrosPost',
+      'contadorDeSamples','establecerFiltros','actualizarBotonFiltro'
+    ];
+  
+    function initScripts() {
+        funcs.forEach(f => typeof window[f] === 'function' ? window[f]() : console.warn(`Función ${f} no definida.`));
+    }
+  
+    function reinit() {
+      initScripts();
+      window.location.hash && window.mostrarPestana && window.mostrarPestana(window.location.hash);
+    }
+    window.reinicializar = reinit;
+  
+    const login = window.ajaxPage && window.ajaxPage.logeado;
+  
+    function loadStripe(cb) {
+      if (!login) return console.log('Stripe skipped, not logged in');
+      if (typeof Stripe !== 'undefined') return cb();
+      const s = document.createElement('script');
+      s.src = 'https://js.stripe.com/v3/';
+      s.async = true;
+      s.onload = cb;
+      document.head.appendChild(s);
+    }
+  
+    function initStripeFuncs() {
+      ['stripepro', 'stripecompra'].forEach(f => window[f] ? window[f]() : console.warn(f + ' undefined'));
+    }
+  
+    function shouldCache(url) {
+      return !/https:\/\/2upra\.com\/nocache/.test(url);
+    }
+  
+    function load(url, pushState) {
+      if (!url || /^(javascript|data|vbscript):|#/.test(url.toLowerCase()) || url.includes('descarga_token')) return;
+      if (pageCache[url] && shouldCache(url)) {
+        document.getElementById('content').innerHTML = pageCache[url];
+        if (pushState) history.pushState(null, '', url);
+        return reinit();
+      }
+      document.getElementById('loadingBar').style.cssText = 'width: 70%; opacity: 1; transition: width 0.4s ease';
+      fetch(url).then(r => r.text()).then(data => {
+        const doc = new DOMParser().parseFromString(data, 'text/html');
+        const content = doc.getElementById('content').innerHTML;
+        document.getElementById('content').innerHTML = content;
+        if (shouldCache(url)) pageCache[url] = content;
+        document.getElementById('loadingBar').style.cssText = 'width: 100%; transition: width 0.1s ease, opacity 0.3s ease';
+        setTimeout(() => document.getElementById('loadingBar').style.cssText = 'width: 0%; opacity: 0', 100);
+        if (pushState) history.pushState(null, '', url);
+        doc.querySelectorAll('script').forEach(s => {
+          if (s.src && !document.querySelector(`script[src="${s.src}"]`)) {
+            document.body.appendChild(Object.assign(document.createElement('script'), { src: s.src, async: false }));
+          } else if (!s.src) {
+            document.body.appendChild(Object.assign(document.createElement('script'), { textContent: s.textContent }));
           }
-      });
-  }
-  function reinicializar() {
-      inicializarScripts();
-      if (window.location.hash && typeof window.mostrarPestana === 'function') {
-          window.mostrarPestana(window.location.hash);
-      }
-  }
-  window.reinicializar = reinicializar;
-  // Verificar si ajaxPage está definido antes de acceder a sus propiedades
-  const login = window.ajaxPage && window.ajaxPage.logeado;
-  function loadStripe(callback) {
-      if (!login) {
-          console.log('Login is false, Stripe will not be loaded');
-          return; // No cargar Stripe si login es false
-      }
-      if (typeof Stripe !== 'undefined') return callback();
-      const script = document.createElement('script');
-      script.src = 'https://js.stripe.com/v3/';
-      script.async = true;
-      script.onload = callback;
-      document.head.appendChild(script);
-  }
-  function initializeStripeFunctions() {
-      ['stripepro', 'stripecompra'].forEach(func => {
-          if (typeof window[func] === 'function') {
-              window[func]();
-          } else {
-              console.warn(`${func} no está definida`);
-          }
-      });
-  }
-  function shouldCache(url) {
-      const noCacheUrls = ['https://2upra.com/nocache'];
-      return !noCacheUrls.some(noCacheUrl => new RegExp(noCacheUrl.replace(/\*/g, '.*')).test(url));
-  }
-  function loadContent(enlace, isPushState) {
-      console.log('Iniciando carga de contenido:', enlace);
-      const lowerEnlace = enlace.trim().toLowerCase();
-      if (
-          !enlace ||
-          lowerEnlace.startsWith('javascript:') ||
-          lowerEnlace.startsWith('data:') ||
-          lowerEnlace.startsWith('vbscript:') ||
-          enlace.includes('#') ||
-          enlace.includes('descarga_token')
-      ) return;
-      if (pageCache[enlace] && shouldCache(enlace)) {
-          document.getElementById('content').innerHTML = pageCache[enlace];
-          if (isPushState) history.pushState(null, '', enlace);
-          return reinicializar();
-      }
-      const loadingBar = document.getElementById('loadingBar');
-      loadingBar.style.cssText = 'width: 70%; opacity: 1; transition: width 0.4s ease';
-      fetch(enlace)
-          .then(response => response.text())
-          .then(data => {
-              const parser = new DOMParser();
-              const doc = parser.parseFromString(data, 'text/html');
-              const content = doc.getElementById('content').innerHTML;
-              document.getElementById('content').innerHTML = content;
-              if (shouldCache(enlace)) pageCache[enlace] = content;
-              loadingBar.style.cssText = 'width: 100%; transition: width 0.1s ease, opacity 0.3s ease';
-              setTimeout(() => {
-                  loadingBar.style.cssText = 'width: 0%; opacity: 0';
-              }, 100);
-              if (isPushState) history.pushState(null, '', enlace);
-              // Evitar la ejecución de scripts duplicados
-              doc.querySelectorAll('script').forEach(script => {
-                  if (script.src) {
-                      // Verificar si el script ya está cargado
-                      if (!document.querySelector(`script[src="${script.src}"]`)) {
-                          const newScript = document.createElement('script');
-                          newScript.src = script.src;
-                          newScript.async = false; // Mantener el orden de ejecución
-                          document.body.appendChild(newScript);
-                      }
-                  } else {
-                      // Para scripts inline, verificar si ya han sido ejecutados
-                      const newScript = document.createElement('script');
-                      newScript.textContent = script.textContent;
-                      document.body.appendChild(newScript);
-                  }
-              });
-              setTimeout(reinicializar, 100);
-          })
-          .catch(error => console.error('Error al cargar la página:', error));
-  }
-  document.addEventListener('DOMContentLoaded', function () {
+        });
+        setTimeout(reinit, 100);
+      }).catch(e => console.error('Load error:', e));
+    }
+  
+    document.addEventListener('DOMContentLoaded', () => {
       if (!window.location.href.includes('?fb-edit=1')) {
-          reinicializar();
-          if (login) {
-              if (!window.galleInicializado && typeof window.galle === 'function') {
-                  window.galle();
-                  window.galleInicializado = true;
-              }
-              
-              if (typeof loadStripe === 'function') {
-                  loadStripe(initializeStripeFunctions);
-              }
-          }
+        reinit();
+        if (login && !window.galleInicializado && typeof window.galle === 'function') {
+          window.galle();
+          window.galleInicializado = true;
+        }
+        if (login && typeof loadStripe === 'function') loadStripe(initStripeFuncs);
       }
-      function handleContentLoad(event, enlace, element) {
-          // Si el elemento o su padre tiene la clase 'no-ajax', omitir AJAX
-          if (element.classList.contains('no-ajax') || element.closest('.no-ajax')) return true;
-          // Asegurarse de que 'enlace' es una cadena válida
-          if (typeof enlace !== 'string' || !enlace) {
-              console.warn('Enlace inválido:', enlace);
-              return true;
-          }
-          const lowerCaseLink = enlace.trim().toLowerCase();
-          // Verificar si el enlace debe manejarse vía AJAX
-          if (
-              lowerCaseLink.endsWith('.pdf') ||
-              ['https://2upra.com/nocache', 'javascript:', 'data:', 'vbscript:'].some(prefix => lowerCaseLink.startsWith(prefix)) ||
-              enlace.includes('#')
-          ) {
-              return true;
-          }
-          // Prevenir el comportamiento por defecto y cargar contenido vía AJAX
-          event.preventDefault();
-          loadContent(enlace, true);
+      
+      function handleLoad(e, url, el) {
+        if (el.classList.contains('no-ajax') || el.closest('.no-ajax')) return true;
+        if (typeof url !== 'string' || !url) return console.warn('Invalid URL:', url), true;
+        const lowerUrl = url.trim().toLowerCase();
+        if (/\.pdf$|^(https:\/\/2upra\.com\/nocache|javascript|data|vbscript):|#/.test(lowerUrl)) return true;
+        e.preventDefault();
+        load(url, true);
       }
-      document.querySelectorAll('a, button a, .botones-panel').forEach(element => {
-          element.addEventListener('click', function (event) {
-              const enlace =
-                  this.getAttribute('href') ||
-                  this.getAttribute('data-href') ||
-                  (this.querySelector('a') && this.querySelector('a').getAttribute('href'));
-              return handleContentLoad(event, enlace, this);
-          });
+  
+      document.querySelectorAll('a, button a, .botones-panel').forEach(el => {
+        el.addEventListener('click', e => handleLoad(e, el.getAttribute('href') || el.getAttribute('data-href') || (el.querySelector('a') && el.querySelector('a').getAttribute('href')), el));
       });
-      window.addEventListener('popstate', () => loadContent(location.href, false));
-  });
-})();
+  
+      window.addEventListener('popstate', () => load(location.href, false));
+    });
+  })();
