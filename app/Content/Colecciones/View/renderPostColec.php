@@ -68,7 +68,6 @@ function datosColeccion($postId)
 
         // Inicializar el arreglo para 'datosColeccion'
         $datos_coleccion = [
-            'descripcion_corta'      => [],
             'estado_animo'           => [],
             'artista_posible'        => [],
             'genero_posible'         => [],
