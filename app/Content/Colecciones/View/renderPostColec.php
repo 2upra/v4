@@ -129,8 +129,14 @@ function datosColeccion($postId)
                         $valores = [$valores];
                     }
                     foreach ($valores as $valor) {
+                        // Validar el tipo de dato antes de aplicar trim
+                        if (is_array($valor)) {
+                            error_log("Advertencia: Se encontró un array en lugar de un string al procesar el campo '$campo'. Sample ID: $sample_id");
+                            continue; // Saltar este valor
+                        }
+
                         // Normalizar el valor (trim, mayúsculas/minúsculas según necesidad)
-                        $valor = trim($valor);
+                        $valor = trim((string) $valor); // Convertir a string por seguridad
                         if ($valor === '') {
                             continue;
                         }
@@ -190,6 +196,7 @@ function maybe_unserialize_dos($data)
     // Devolver el original si no se pudo deserializar ni decodificar
     return $data;
 }
+
 
 
 
