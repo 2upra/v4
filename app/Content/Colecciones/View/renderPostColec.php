@@ -37,7 +37,7 @@ function datosColeccion($postId)
         }
 
         // Deserializar el array de muestras
-        $samples = maybe_unserialize($samples_serialized);
+        $samples = maybe_unserialize_dos($samples_serialized);
 
         if (!is_array($samples)) {
             preg_match_all('/i:\d+;i:(\d+);/', $samples_serialized, $matches);
@@ -73,7 +73,7 @@ function datosColeccion($postId)
                         $datos_algoritmo = json_encode($datos_algoritmo_respaldo);
                     } else {
                         // Asumir que está serializado
-                        $datos_algoritmo = maybe_unserialize($datos_algoritmo_respaldo);
+                        $datos_algoritmo = maybe_unserialize_dos($datos_algoritmo_respaldo);
                         if (is_object($datos_algoritmo) || is_array($datos_algoritmo)) {
                             $datos_algoritmo = json_encode($datos_algoritmo);
                         }
@@ -89,7 +89,7 @@ function datosColeccion($postId)
             $datos_algoritmo_array = json_decode($datos_algoritmo, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 // JSON inválido, intentar deserializar si es posible
-                $datos_algoritmo_array = maybe_unserialize($datos_algoritmo);
+                $datos_algoritmo_array = maybe_unserialize_dos($datos_algoritmo);
                 if (json_last_error() !== JSON_ERROR_NONE || !is_array($datos_algoritmo_array)) {
                     // No se puede procesar este sample, saltar
                     error_log("Error en datosColeccion: No se pudo decodificar o deserializar datosAlgoritmo para el sample ID: " . $sample_id);
@@ -139,7 +139,7 @@ function datosColeccion($postId)
     }
 }
 
-function maybe_unserialize($data)
+function maybe_unserialize_dos($data)
 {
     if (empty($data)) {
         return $data;
@@ -179,7 +179,7 @@ function variablesColec($postId)
 
     // Si los datos están serializados, cuenta los elementos.
     if (!empty($samplesMeta)) {
-        $samplesArray = maybe_unserialize($samplesMeta);
+        $samplesArray = maybe_unserialize_dos($samplesMeta);
         if (is_array($samplesArray)) {
             $sampleCount = count($samplesArray);
         }
