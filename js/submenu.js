@@ -133,32 +133,6 @@ function calculatePosition(rect, submenu, position) {
     return { top, left };
 }
 
-function createSubmenuDarkBackground(submenu) {
-    // Implementa tu función para crear el fondo oscuro detrás del submenú
-    // Aquí puedes agregar el código que ya tengas para esto
-    const darkBackground = document.createElement('div');
-    darkBackground.style.position = 'fixed';
-    darkBackground.style.top = 0;
-    darkBackground.style.left = 0;
-    darkBackground.style.width = '100%';
-    darkBackground.style.height = '100%';
-    darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    darkBackground.style.zIndex = 9998; // Debe estar debajo del submenú
-    document.body.appendChild(darkBackground);
-
-    darkBackground.addEventListener('click', () => {
-        hideSubmenu(submenu);
-    });
-
-    return darkBackground;
-}
-
-function removeSubmenuDarkBackground(darkBackground) {
-    if (darkBackground && darkBackground.parentNode) {
-        darkBackground.parentNode.removeChild(darkBackground);
-    }
-}
-
 function initializeStaticMenus() {
     // Ejemplos de uso con la nueva parametrización de posición
     createSubmenu(".subiricono", "submenusubir", 'derecha');
