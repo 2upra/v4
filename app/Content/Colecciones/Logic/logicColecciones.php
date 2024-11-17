@@ -263,15 +263,25 @@ function añadirSampleEnColab($collection_id, $sample_id, $user_id)
 
 function botonColeccion($postId)
 {
+    // Verificamos si el usuario está logueado
+    if (is_user_logged_in()) {
+        $userId = get_current_user_id();
+        $coleccion = get_user_meta($userId, 'samplesGuardados', true);
+        $extraClass = '';
+        if ($coleccion && is_array($coleccion) && array_key_exists($postId, $coleccion)) {
+            $extraClass = ' colabGuardado';
+        }
+    }
+
     ob_start();
-?>
-    <div class="ZAQIBB botonColeccion">
-        <button class="botonColeccionBtn" aria-label="Guardar sonido" data-post_id="<? echo esc_attr($postId) ?>" data-nonce="<? echo wp_create_nonce('colec_nonce') ?>">
-            <? echo $GLOBALS['iconoGuardar']; ?>
+    ?>
+    <div class="ZAQIBB botonColeccion<?php echo esc_attr($extraClass); ?>">
+        <button class="botonColeccionBtn" aria-label="Guardar sonido" data-post_id="<?php echo esc_attr($postId); ?>" data-nonce="<?php echo wp_create_nonce('colec_nonce'); ?>">
+            <?php echo $GLOBALS['iconoGuardar']; ?>
         </button>
     </div>
-
-<?
+    <?php
+    return ob_get_clean();
 }
 
 function eliminarSampledeColec()
