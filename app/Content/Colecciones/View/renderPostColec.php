@@ -125,7 +125,13 @@ function datosColeccion($postId)
             // Procesar cada campo
             foreach ($campos as $campo) {
                 if (isset($datos_algoritmo_array[$campo])) {
-                    $valores = $datos_algoritmo_array[$campo];
+                    // Obtener solo los datos en inglés
+                    if (isset($datos_algoritmo_array[$campo]['en'])) {
+                        $valores = $datos_algoritmo_array[$campo]['en'];
+                    } else {
+                        // Si no existe el campo 'en', saltar
+                        continue;
+                    }
 
                     // Aplanar el array en caso de que haya arrays anidados
                     $valores = aplanarArray($valores);
@@ -216,7 +222,6 @@ function maybe_unserialize_dos($data)
     // Devolver el original si no se pudo deserializar ni decodificar
     return $data;
 }
-
 
 
 
