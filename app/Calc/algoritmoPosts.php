@@ -150,9 +150,6 @@ function calcularPuntosPostBatch(
 
 
 
-
-
-
 // Helper function for decay factors
 function getDecayFactor($days)
 {
@@ -330,6 +327,7 @@ function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
 }
 
 
+
 function procesarMetaValue($meta_value)
 {
     if (is_array($meta_value)) {
@@ -346,6 +344,21 @@ function procesarMetaValue($meta_value)
     error_log("meta_value no es un array ni una cadena, es de tipo: " . gettype($meta_value));
     return [];
 }
+/*
+\[
+p_{\text{final}}''(p_i) = 
+\Bigg[
+\Big(
+w_u \cdot \delta_u + 
+w_I \cdot \text{calcId}(p_i, I, d) + 
+w_S \cdot \text{calcSim}(p_i, S, d) + 
+w_L \cdot (30 + l(p_i)) + 
+w_m \cdot (\delta_v + \delta_a)
+\Big) \cdot f_t(d_i) \cdot (1 - r_v)^{v(p_i)}
+\Big]
+\cdot (1 + \frac{r}{100}) + r_e
+\]
+*/
 
 function extractWordsFromDatosAlgoritmo($datosAlgoritmo)
 {

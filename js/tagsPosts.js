@@ -158,6 +158,69 @@ function limitTags(maxVisible = 5) {
     });
 }
 
+document.addEventListener('DOMContentLoaded', function() {
+    // Obtener el elemento que contiene el JSON
+    const dataElement = document.getElementById('dataColec');
+    if (!dataElement) {
+        console.error("Elemento con id 'dataColec' no encontrado.");
+        return;
+    }
+
+    // Obtener el contenido JSON y parsearlo
+    const jsonData = dataElement.textContent || dataElement.innerText;
+    let data;
+    try {
+        data = JSON.parse(jsonData);
+    } catch (e) {
+        console.error("Error al parsear el JSON:", e);
+        return;
+    }
+
+    // Obtener el ID del post desde el atributo personalizado
+    const postId = dataElement.getAttribute('id-post-algoritmo');
+    if (!postId) {
+        console.error("Atributo 'id-post-algoritmo' no encontrado.");
+        return;
+    }
+
+    // Obtener el contenedor donde se insertarán los tags
+    const container = document.getElementById('tags-' + postId);
+    if (!container) {
+        console.error(`Contenedor con id 'tags-${postId}' no encontrado.`);
+        return;
+    }
+
+    // Función para obtener los dos tags principales de una categoría
+    function getTopTwoTags(tagsObj) {
+        return Object.entries(tagsObj)
+            .sort((a, b) => b[1] - a[1]) // Ordenar de mayor a menor
+            .slice(0, 2) // Tomar los dos primeros
+            .map(entry => entry[0]); // Obtener solo los nombres de los tags
+    }
+
+    // Recorrer cada categoría en el JSON
+    for (const categoria in data) {
+        if (data.hasOwnProperty(categoria)) {
+            const tags = data[categoria];
+            const topTags = getTopTwoTags(tags);
+
+            topTags.forEach(tag => {
+                // Crear un elemento <span> con la clase 'postTag'
+                const span = document.createElement('span');
+                span.className = 'postTag';
+                span.textContent = tag;
+
+                // Opcional: Agregar un separador o espacio
+                // span.style.marginRight = '5px';
+
+                // Insertar el <span> en el contenedor
+                container.appendChild(span);
+            });
+        }
+    }
+});
+
+
 
 
 

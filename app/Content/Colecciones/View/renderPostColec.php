@@ -23,7 +23,8 @@ function htmlColec($filtro)
 }
 
 
-function aplanarArray($input) {
+function aplanarArray($input)
+{
     $result = [];
     if (is_array($input)) {
         foreach ($input as $element) {
@@ -125,7 +126,7 @@ function datosColeccion($postId)
             foreach ($campos as $campo) {
                 if (isset($datos_algoritmo_array[$campo])) {
                     $valores = $datos_algoritmo_array[$campo];
-                    
+
                     // Aplanar el array en caso de que haya arrays anidados
                     $valores = aplanarArray($valores);
 
@@ -227,17 +228,12 @@ function variablesColec($postId)
         $postId = $post->ID;
     }
 
-    // Obtiene el ID del usuario actual.
     $usuarioActual = get_current_user_id();
-
-    // Obtiene el ID del autor del post.
     $autorId = get_post_field('post_author', $postId);
-
-    // Obtiene los metadatos de 'samples' del post.
     $samplesMeta = get_post_meta($postId, 'samples', true);
+    $datosColeccion = get_post_meta($postId, 'datosColeccion', true);
     $sampleCount = 0;
 
-    // Si los datos están serializados, cuenta los elementos.
     if (!empty($samplesMeta)) {
         $samplesArray = maybe_unserialize_dos($samplesMeta);
         if (is_array($samplesArray)) {
@@ -250,6 +246,7 @@ function variablesColec($postId)
         'colecStatus' => get_post_status($postId),
         'autorId' => $autorId,
         'samples' => $sampleCount . ' samples',
+        'datosColeccion' => $datosColeccion,
     ];
 }
 
@@ -365,6 +362,64 @@ function singleColec($postId)
 
             <div class="INFEIS">
                 <? echo datosColeccion($postId); ?>
+                <? /*Tengo esto, en dataColec hay un json que se ve asi 
+
+{
+
+    "estado_animo": {
+        "Agresivo": 3,
+        "Aggressive": 3,
+        "Enérgico": 2,
+        "Energetic": 2,
+        "Melancólico": 2,
+
+    },
+    "artista_posible": {
+        "Three 6 Mafia": 16,
+        "DJ Paul": 8,
+        "Juicy J": 4,
+        "Project Pat": 4,
+        "J Dilla": 2,
+        "Madlib": 2,
+        "808 Mafia": 2,
+        "8Ball & MJG": 2
+    },
+    "genero_posible": {
+        "Hip Hop": 18,
+        "Memphis": 14,
+        "Trap": 12,
+        "Funk": 4,
+        "Soul": 2,
+        "R&B": 2,
+        "Phonk": 2
+    },
+    "instrumentos_principal": {
+        "Voz": 5,
+        "Vocals": 5,
+        "Bombo": 2,
+        "Snare": 2,
+        "Kick drum": 1,
+        "Kick Drum": 1,
+        "Disparo de escopeta": 1,
+        "Shotgun blast": 1
+    },
+    "tags_posibles": {
+        "Memphis": 16,
+        "Sample": 12,
+        "Hip Hop": 12,
+        "Trap": 10,
+        "Male": 8,
+        "Vocals": 8,
+    }
+}
+
+pero hay que hacer un js que se encargue de mostrar cada uno en un span tags-container-colec con la clase postTag, pero no todos, solos los 2 tag que tienen mas puntos en cada data, estado animo, artista posible, etc, 
+                 */?>
+                <div class="tags-container-colec" id="tags-<? echo get_the_ID(); ?>"></div>
+
+                <p id="dataColec" id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;">
+                    <? echo esc_html(limpiarJSON($datosColeccion)); ?>
+                </p>
             </div>
         </div>
     </div>
