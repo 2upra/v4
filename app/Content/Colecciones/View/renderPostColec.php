@@ -215,7 +215,6 @@ function maybe_unserialize_dos($data)
     // Devolver el original si no se pudo deserializar ni decodificar
     return $data;
 }
-?>
 
 
 
