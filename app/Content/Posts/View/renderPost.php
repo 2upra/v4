@@ -230,7 +230,6 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
         <div class="FBKMJD">
             <div class="UKVPJI">
                 <div class="tags-container" id="tags-<? echo get_the_ID(); ?>"></div>
-                <!-- Datos del algoritmo -->
 
                 <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;">
                     <? echo esc_html(limpiarJSON($datosAlgoritmo)); ?>

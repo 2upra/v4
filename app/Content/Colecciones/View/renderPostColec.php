@@ -16,12 +16,148 @@ function htmlColec($filtro)
             <? echo imagenColeccion($postId); ?>
             <h2 class="post-title"><? echo get_the_title($postId); ?></h2>
             <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
-
         </div>
     </li>
 <?
     return ob_get_clean();
 }
+
+
+function datosColeccion($postId)
+{
+    // Registro de inicio de la función
+    error_log("Inicio de la función datosColeccion para el post ID: " . $postId);
+
+    try {
+        // Obtener el metadato 'samples' y deserializarlo
+        $samples_serialized = get_post_meta($postId, 'samples', true);
+        if (empty($samples_serialized)) {
+            error_log("Error en datosColeccion: Metadato 'samples' vacío para el post ID: " . $postId);
+            return;
+        }
+
+        // Deserializar el array de muestras
+        $samples = maybe_unserialize($samples_serialized);
+
+        if (!is_array($samples)) {
+            preg_match_all('/i:\d+;i:(\d+);/', $samples_serialized, $matches);
+            if (isset($matches[1])) {
+                $samples = array_map('intval', $matches[1]);
+            } else {
+                error_log("Error en datosColeccion: No se pudo deserializar 'samples' para el post ID: " . $postId);
+                return;
+            }
+        }
+
+        // Inicializar el arreglo para 'datosColeccion'
+        $datos_coleccion = [
+            'descripcion_corta'     => [],
+            'estado_animo'          => [],
+            'artista_posible'       => [],
+            'genero_posible'        => [],
+            'instrumentos_principal' => [],
+            'tags_posibles'         => [],
+        ];
+
+        // Campos a procesar
+        $campos = array_keys($datos_coleccion);
+
+        foreach ($samples as $sample_id) {
+            // Obtener 'datosAlgoritmo'
+            $datos_algoritmo = get_post_meta($sample_id, 'datosAlgoritmo', true);
+            if (empty($datos_algoritmo)) {
+                $datos_algoritmo_respaldo = get_post_meta($sample_id, 'datosAlgoritmo_respaldo', true);
+                if (!empty($datos_algoritmo_respaldo)) {
+                    if (is_array($datos_algoritmo_respaldo) || is_object($datos_algoritmo_respaldo)) {
+                        // Serializar o codificar según el caso
+                        $datos_algoritmo = json_encode($datos_algoritmo_respaldo);
+                    } else {
+                        // Asumir que está serializado
+                        $datos_algoritmo = maybe_unserialize($datos_algoritmo_respaldo);
+                        if (is_object($datos_algoritmo) || is_array($datos_algoritmo)) {
+                            $datos_algoritmo = json_encode($datos_algoritmo);
+                        }
+                    }
+                } else {
+                    // No hay datos para este sample, continuar al siguiente
+                    error_log("Advertencia en datosColeccion: No se encontraron datosAlgoritmo ni datosAlgoritmo_respaldo para el sample ID: " . $sample_id);
+                    continue;
+                }
+            }
+
+            // Decodificar el JSON
+            $datos_algoritmo_array = json_decode($datos_algoritmo, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                // JSON inválido, intentar deserializar si es posible
+                $datos_algoritmo_array = maybe_unserialize($datos_algoritmo);
+                if (json_last_error() !== JSON_ERROR_NONE || !is_array($datos_algoritmo_array)) {
+                    // No se puede procesar este sample, saltar
+                    error_log("Error en datosColeccion: No se pudo decodificar o deserializar datosAlgoritmo para el sample ID: " . $sample_id);
+                    continue;
+                }
+            }
+
+            // Procesar cada campo
+            foreach ($campos as $campo) {
+                if (isset($datos_algoritmo_array[$campo])) {
+                    $valores = $datos_algoritmo_array[$campo];
+                    if (!is_array($valores)) {
+                        // Asegurarse de que es un array
+                        $valores = [$valores];
+                    }
+                    foreach ($valores as $valor) {
+                        // Normalizar el valor (trim, mayúsculas/minúsculas según necesidad)
+                        $valor = trim($valor);
+                        if ($valor === '') {
+                            continue;
+                        }
+                        if (isset($datos_coleccion[$campo][$valor])) {
+                            $datos_coleccion[$campo][$valor]++;
+                        } else {
+                            $datos_coleccion[$campo][$valor] = 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Opcional: Ordenar los resultados por frecuencia descendente
+        foreach ($datos_coleccion as &$campo) {
+            arsort($campo);
+        }
+        unset($campo); // Desreferenciar
+
+        $datos_coleccion_json = json_encode($datos_coleccion, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+        update_post_meta($postId, 'datosColeccion', $datos_coleccion_json);
+
+        // Registro de finalización exitosa de la función
+        error_log("Función datosColeccion completada con éxito para el post ID: " . $postId);
+    } catch (Exception $e) {
+        // Capturar cualquier excepción y registrar el error
+        error_log("Error fatal en datosColeccion para el post ID: " . $postId . ". Mensaje de error: " . $e->getMessage());
+    }
+}
+
+function maybe_unserialize($data)
+{
+    if (empty($data)) {
+        return $data;
+    }
+    // Intentar decodificar JSON
+    $json = json_decode($data, true);
+    if (json_last_error() === JSON_ERROR_NONE) {
+        return $json;
+    }
+    // Intentar deserializar
+    $unserialized = @unserialize($data);
+    if ($unserialized !== false || $data === 'b:0;') {
+        return $unserialized;
+    }
+    // Devolver el original si no se pudo deserializar ni decodificar
+    return $data;
+}
+
 
 function variablesColec($postId)
 {
@@ -159,9 +295,14 @@ function singleColec($postId)
             <div class="DSEDBE">
                 <? echo $samples ?>
             </div>
-            <div class="BOTONESCOLEC">
-                <? echo botonDescargaColec($postId) ?>
-                <? echo like($postId); ?>
+            <div class="AGMORF">
+                <div class="BOTONESCOLEC">
+                    <? echo botonDescargaColec($postId); ?>
+                    <? echo like($postId); ?>
+                </div>
+                <div class="INFEIS">
+                    <? echo datosColeccion($postId); ?>
+                </div>
             </div>
         </div>
     </div>
