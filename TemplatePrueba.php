@@ -7,6 +7,12 @@ $user_id = get_current_user_id();
 $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 ?>
 
+<head>
+    <meta name="robots" content="noindex, no follow">
+    <? wp_head(); ?>
+</head>
+
+
 <style>
     .modal {
         position: unset;
@@ -19,38 +25,15 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
         <input type="hidden" id="pagina_actual" name="pagina_actual" value="<? echo esc_attr(get_the_title()); ?>">
 
         <div id="menuData" style="display:none;" pestanaActual="">
-            <div data-tab="Colecciones"> </div>
-            <div data-tab="Colab"></div>
-            <div data-tab="SubirRola"></div>
+            <div data-tab="Preguntas"> </div>
+
         </div>
 
         <div class="tabs">
             <div class="tab-content">
 
-                <div class="tab INICIO S4K7I3" id="Colecciones">
-                    <div class="GSDKRA">
+                <div class="tab INICIO S4K7I3" id="Preguntas">
 
-
-
-
-
-                    </div>
-                    <div class="GSDKRA">
-                        <div><? echo modalCreacionColeccion(); ?></div>
-                    </div>
-                </div>
-
-
-                <div class="tab INICIO S4K7I3" id="Colab">
-                    <div class="GSDKRA">
-                        <div><? echo colabTest(); ?></div>
-                    </div>
-                </div>
-
-                <div class="tab INICIO S4K7I3" id="SubirRola">
-                    <div class="GSDKRA">
-
-                    </div>
                 </div>
 
             </div>
