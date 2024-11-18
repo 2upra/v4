@@ -90,6 +90,7 @@
                 log('Condiciones para cargar más contenido cumplidas');
                 const elementoPestañaActiva = document.querySelector('.tab.active');
                 if (elementoPestañaActiva?.getAttribute('ajax') === 'no') {
+                    log('ajax no carga detenido');
                     estaCargando = false;
                     return;
                 }
