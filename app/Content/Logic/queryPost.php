@@ -1,5 +1,40 @@
 <?
 
+function publicacionAjax()
+{
+    $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
+    $filtro = isset($_POST['filtro']) ? sanitize_text_field($_POST['filtro']) : '';
+    $tipoPost = isset($_POST['posttype']) ? sanitize_text_field($_POST['posttype']) : '';
+    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : '';
+    $tab_id = isset($_POST['tab_id']) ? sanitize_text_field($_POST['tab_id']) : '';
+    $user_id = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
+    $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas'])
+        ? array_map('intval', $_POST['cargadas'])
+        : array();
+    $similar_to = isset($_POST['similar_to']) ? intval($_POST['similar_to']) : null;
+    $colec = isset($_POST['colec']) ? intval($_POST['colec']) : null;
+    $idea = isset($_POST['idea']) ? sanitize_text_field($_POST['idea']) : '';
+
+    publicaciones(
+        array(
+            'filtro' => $filtro,
+            'post_type' => $tipoPost,
+            'tab_id' => $tab_id,
+            'user_id' => $user_id,
+            'identifier' => $data_identifier,
+            'exclude' => $publicacionesCargadas,
+            'similar_to' => $similar_to,
+            'colec' => $colec,
+            'idea' => $idea
+        ),
+        true,
+        $paged
+    );
+}
+add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
+add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
+
+
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
     try {
@@ -9,6 +44,12 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         if (!$current_user_id) {
             error_log("[publicaciones] Advertencia: No se encontró ID de usuario");
         }
+
+        /*
+        siento que aca hay un problema, cuando envio idea true, parece que no entiende el true porque no usa procesarIdeas cuando es ajax
+        [fetch] idea: {idea: true}idea: true[[Prototype]]: Object colec: {colec: '319708'}colec: "319708"[[Prototype]]: Object
+
+        */
 
         $defaults = [
             'filtro' => '',
@@ -23,7 +64,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
         $args = array_merge($defaults, $args);
 
-        if ($args['ideas'] === true) {
+        if ($args['ideas'] === true || $args['ideas'] === 'true') {
             $query_args = procesarIdeas($args, $paged);
             if (!$query_args) {
                 error_log("[publicaciones] Error al procesar ideas.");
@@ -41,7 +82,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
                     'post_type' => $args['post_type'],
                     'post__in' => array_values($samples_meta),
                     'orderby' => 'post__in',
-                    'posts_per_page' => -1,
+                    'posts_per_page' => 12,
                 ];
             } else {
                 error_log("[publicaciones] El meta 'samples' no es un array válido.");
@@ -191,7 +232,7 @@ function procesarIdeas($args, $paged)
                 'post_type'      => $args['post_type'],
                 'post__in'       => $all_similar_posts,
                 'orderby'        => 'post__in',
-                'posts_per_page' => 12, 
+                'posts_per_page' => 12,
                 'paged'          => $paged,
             ];
 
@@ -674,39 +715,6 @@ function prefiltrarIdentifier($identifier, $query_args)
 
     return $query_args;
 }
-function publicacionAjax()
-{
-    $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
-    $filtro = isset($_POST['filtro']) ? sanitize_text_field($_POST['filtro']) : '';
-    $tipoPost = isset($_POST['posttype']) ? sanitize_text_field($_POST['posttype']) : '';
-    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : '';
-    $tab_id = isset($_POST['tab_id']) ? sanitize_text_field($_POST['tab_id']) : '';
-    $user_id = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
-    $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas'])
-        ? array_map('intval', $_POST['cargadas'])
-        : array();
-    $similar_to = isset($_POST['similar_to']) ? intval($_POST['similar_to']) : null;
-    $colec = isset($_POST['colec']) ? intval($_POST['colec']) : null;
-    $idea = isset($_POST['idea']) ? sanitize_text_field($_POST['idea']) : '';
-
-    publicaciones(
-        array(
-            'filtro' => $filtro,
-            'post_type' => $tipoPost,
-            'tab_id' => $tab_id,
-            'user_id' => $user_id,
-            'identifier' => $data_identifier,
-            'exclude' => $publicacionesCargadas,
-            'similar_to' => $similar_to,
-            'colec' => $colec,
-            'idea' => $idea
-        ),
-        true,
-        $paged
-    );
-}
-add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
-add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
 
 function obtenerUserId($is_ajax)
 {

@@ -151,15 +151,15 @@
                         body: new URLSearchParams({
                             action: 'cargar_mas_publicaciones',
                             paged: paginaActual,
-                            filtro,
-                            posttype,
-                            identifier: identificador,
-                            tab_id: tabId,
-                            user_id: idUsuario,
-                            cargadas: Array.from(publicacionesCargadas).join(','),
-                            colec,
-                            idea
-                        })
+                            filtro: filtro || '',
+                            posttype: posttype || '',
+                            identifier: identificador || '',
+                            tab_id: tabId || '',
+                            user_id: idUsuario || '',
+                            cargadas: Array.from(publicacionesCargadas).join(',') || '',
+                            colec: colec || '', // Enviar vacío si es null
+                            idea: idea ? 'true' : 'false', // Convertir a cadena explícitamente
+                        })                        
                     });
 
                     if (!respuesta.ok) {
