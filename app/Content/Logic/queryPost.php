@@ -211,7 +211,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
     try {
         global $wpdb;
         if (!$wpdb) {
-            error_log("[ordenamientoQuery] Error crítico: No se pudo acceder a la base de datos wpdb");
+            guardarLog("[ordenamientoQuery] Error crítico: No se pudo acceder a la base de datos wpdb");
             return false;
         }
 
@@ -219,12 +219,13 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 
         // Validación de query_args
         if (!is_array($query_args)) {
-            error_log("[ordenamientoQuery] Advertencia: query_args no es un array, inicializando array vacío");
+            guardarLog("[ordenamientoQuery] Advertencia: query_args no es un array, inicializando array vacío");
             $query_args = array();
         }
 
         switch ($filtroTiempo) {
             case 1:
+                guardarLog("[ordenamientoQuery] Ordenando por fecha descendente (filtroTiempo: 1)");
                 $query_args['orderby'] = 'date';
                 $query_args['order'] = 'DESC';
                 break;
@@ -247,28 +248,32 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                     ORDER BY like_count DESC, p.post_date DESC
                 ";
 
+                guardarLog("[ordenamientoQuery] Ejecutando consulta SQL para top semanal/mensual: $sql");
+
                 $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
 
                 if ($wpdb->last_error) {
-                    error_log("[ordenamientoQuery] Error: Fallo en consulta de likes: " . $wpdb->last_error);
+                    guardarLog("[ordenamientoQuery] Error: Fallo en consulta de likes: " . $wpdb->last_error);
                 }
 
                 if (!empty($posts_with_likes)) {
                     $post_ids = wp_list_pluck($posts_with_likes, 'ID');
                     if (!empty($post_ids)) {
+                        guardarLog("[ordenamientoQuery] IDs de posts encontrados: " . implode(',', $post_ids));
                         $query_args['post__in'] = $post_ids;
                         $query_args['orderby'] = 'post__in';
                     } else {
-                        error_log("[ordenamientoQuery] Aviso: No se encontraron IDs de posts con likes");
+                        guardarLog("[ordenamientoQuery] Aviso: No se encontraron IDs de posts con likes");
                     }
                 } else {
-                    error_log("[ordenamientoQuery] Aviso: No se encontraron posts con likes para el período " . $interval);
+                    guardarLog("[ordenamientoQuery] Aviso: No se encontraron posts con likes para el período " . $interval);
                     $query_args['orderby'] = 'date';
                     $query_args['order'] = 'DESC';
                 }
                 break;
 
             default: // Feed personalizado
+                guardarLog("[ordenamientoQuery] Obteniendo feed personalizado");
                 $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
 
                 if (!empty($feed_result['post_ids'])) {
@@ -276,7 +281,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                     $query_args['orderby'] = 'post__in';
 
                     if (count($feed_result['post_ids']) > POSTINLIMIT) {
-                        error_log("[ordenamientoQuery] Aviso: Limitando resultados a " . POSTINLIMIT . " posts");
+                        guardarLog("[ordenamientoQuery] Aviso: Limitando resultados a " . POSTINLIMIT . " posts");
                         $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, POSTINLIMIT);
                     }
 
@@ -284,7 +289,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                         $query_args['post__not_in'] = $feed_result['post_not_in'];
                     }
                 } else {
-                    error_log("[ordenamientoQuery] Aviso: Feed personalizado vacío, usando ordenamiento por fecha");
+                    guardarLog("[ordenamientoQuery] Aviso: Feed personalizado vacío, usando ordenamiento por fecha");
                     $query_args['orderby'] = 'date';
                     $query_args['order'] = 'DESC';
                 }
@@ -293,17 +298,18 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 
         // Validación final de orderby
         if (empty($query_args['orderby'])) {
-            error_log("[ordenamientoQuery] Aviso: No se estableció orderby, usando valores por defecto");
+            guardarLog("[ordenamientoQuery] Aviso: No se estableció orderby, usando valores por defecto");
             $query_args['orderby'] = 'date';
             $query_args['order'] = 'DESC';
         }
 
         return $query_args;
     } catch (Exception $e) {
-        error_log("[ordenamientoQuery] Error crítico: " . $e->getMessage());
+        guardarLog("[ordenamientoQuery] Error crítico: " . $e->getMessage());
         return false;
     }
 }
+
 
 /*
 hola chatgpt
@@ -332,38 +338,47 @@ te daré mas contexto del codigo arriba
 
 function aplicarFiltrosUsuario($query_args, $current_user_id)
 {
-
+    guardarLog("Iniciando aplicarFiltrosUsuario para el usuario $current_user_id");
     $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
 
+    guardarLog("Filtros del usuario: " . print_r($filtrosUsuario, true));
 
     if (empty($filtrosUsuario) || !is_array($filtrosUsuario)) {
+        guardarLog("No hay filtros aplicables o el formato es incorrecto.");
         return $query_args;  
     }
+
+    // Filtro para ocultar posts descargados
     if (in_array('ocultarDescargados', $filtrosUsuario)) {
         $descargasAnteriores = get_user_meta($current_user_id, 'descargas', true) ?: [];
+        guardarLog("Descargas anteriores: " . print_r($descargasAnteriores, true));
         if (!empty($descargasAnteriores)) {
             $query_args['post__not_in'] = array_merge(
                 $query_args['post__not_in'] ?? [],
                 array_keys($descargasAnteriores)
             );
+            guardarLog("Post__not_in después de ocultar descargados: " . print_r($query_args['post__not_in'], true));
         }
     }
 
-
+    // Filtro para ocultar posts en colección
     if (in_array('ocultarEnColeccion', $filtrosUsuario)) {
         $samplesGuardados = get_user_meta($current_user_id, 'samplesGuardados', true) ?: [];
+        guardarLog("Samples guardados: " . print_r($samplesGuardados, true));
         if (!empty($samplesGuardados)) {
             $guardadosIDs = array_keys($samplesGuardados);
             $query_args['post__not_in'] = array_merge(
                 $query_args['post__not_in'] ?? [],
                 $guardadosIDs
             );
+            guardarLog("Post__not_in después de ocultar en colección: " . print_r($query_args['post__not_in'], true));
         }
     }
 
-    //Mostrar solo los post a los que el usuario ha dado like
+    // Filtro para mostrar solo los posts que le han gustado al usuario
     if (in_array('mostrarMeGustan', $filtrosUsuario)) {
         $userLikedPostIds = obtenerLikesDelUsuario($current_user_id);
+        guardarLog("Post IDs que le gustan al usuario: " . print_r($userLikedPostIds, true));
         if (!empty($userLikedPostIds)) {
             if (isset($query_args['post__in'])) {
                 $query_args['post__in'] = array_intersect($query_args['post__in'], $userLikedPostIds);
@@ -371,14 +386,19 @@ function aplicarFiltrosUsuario($query_args, $current_user_id)
                 $query_args['post__in'] = $userLikedPostIds;
             }
 
+            guardarLog("Post__in después de aplicar mostrarMeGustan: " . print_r($query_args['post__in'], true));
+
             if (empty($query_args['post__in'])) {
                 $query_args['posts_per_page'] = 0;  
+                guardarLog("No hay posts que mostrar después de aplicar mostrarMeGustan.");
             }
         } else {
             $query_args['posts_per_page'] = 0;  
+            guardarLog("No hay posts que le gusten al usuario, posts_per_page se establece en 0.");
         }
     }
 
+    guardarLog("Query args final: " . print_r($query_args, true));
     return $query_args;
 }
 
