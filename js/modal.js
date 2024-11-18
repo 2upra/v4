@@ -7,17 +7,14 @@ class ModalManager {
     }
 
     añadirModal(id, modalSelector, triggerSelectors, closeButtonSelector = null) {
-        if (this.modals[id]) {
-            // Si ya existe un modal con este ID, lo eliminamos antes de añadir el nuevo
-            this.removeModal(id);
-        }
-
+        // Obtenemos el elemento modal
         const modal = document.querySelector(modalSelector);
         if (!modal) {
             console.warn(`Modal elemento id:: ${id} no encontrado.`);
             return;
         }
 
+        // Obtenemos los triggers
         const triggers = triggerSelectors
             .map(selector => {
                 try {
@@ -34,18 +31,46 @@ class ModalManager {
             return;
         }
 
-        this.modals[id] = {
-            modal,
-            triggers,
-            closeButtonSelector,
-            darkBackground: null, // Guardaremos el fondo oscuro aquí
-            triggerListeners: [],
-            closeButtonElement: null,
-            closeButtonListener: null,
-            modalListener: null,
-            darkBackgroundListener: null,
-        };
+        let modalInfo = this.modals[id];
 
+        if (!modalInfo) {
+            // Si no existe, lo creamos
+            modalInfo = this.modals[id] = {
+                modal,
+                triggers: [],
+                closeButtonSelector,
+                darkBackground: null,
+                triggerListeners: [],
+                closeButtonElement: null,
+                closeButtonListener: null,
+                modalListener: null,
+                darkBackgroundListener: null,
+                isOpen: false, // Añadimos un flag para saber si está abierto
+            };
+        } else {
+            // Si ya existe, actualizamos referencias
+            // Actualizamos el modal (por si el elemento cambió)
+            modalInfo.modal = modal;
+            modalInfo.closeButtonSelector = closeButtonSelector;
+
+            // Removemos los event listeners anteriores de los triggers
+            if (modalInfo.triggerListeners) {
+                modalInfo.triggerListeners.forEach(({ trigger, listener }) => {
+                    trigger.removeEventListener('click', listener);
+                });
+            }
+            // Removemos el event listener del botón de cerrar
+            if (modalInfo.closeButtonElement && modalInfo.closeButtonListener) {
+                modalInfo.closeButtonElement.removeEventListener('click', modalInfo.closeButtonListener);
+            }
+            // Removemos el event listener del modal
+            if (modalInfo.modalListener) {
+                modalInfo.modal.removeEventListener('click', modalInfo.modalListener);
+            }
+        }
+
+        // Actualizamos los triggers y volvemos a configurar los event listeners
+        modalInfo.triggers = triggers;
         this.setupTriggers(id);
         this.setupCloseButton(id);
         this.setupModalListener(id);
@@ -56,7 +81,6 @@ class ModalManager {
         const { triggers } = modalInfo;
         if (!triggers || triggers.length === 0) return;
 
-        // Guardamos las funciones de los event listeners para poder removerlos después
         modalInfo.triggerListeners = [];
 
         triggers.forEach(trigger => {
@@ -121,15 +145,17 @@ class ModalManager {
         
         if (show) {
             if (!modalInfo.darkBackground) {
-                // Crear el fondo oscuro como hermano del modal
-                modalInfo.darkBackground = createModalDarkBackground(modalInfo.modal);
+                // Crear o reutilizar el fondo oscuro
+                modalInfo.darkBackground = this.createOrGetDarkBackground(modalInfo.modal);
                 const listener = () => this.closeAllModals();
                 modalInfo.darkBackground.addEventListener('click', listener);
                 modalInfo.darkBackgroundListener = listener;
             }
             modalInfo.darkBackground.style.display = 'block';
+            modalInfo.isOpen = true; // Marcamos el modal como abierto
         } else if (modalInfo.darkBackground) {
             modalInfo.darkBackground.style.display = 'none';
+            modalInfo.isOpen = false; // Marcamos el modal como cerrado
         }
 
         this.currentOpenModal = show ? modalId : null;
@@ -140,55 +166,18 @@ class ModalManager {
         this.currentOpenModal = null;
     }
 
-    removeModal(id) {
-        const modalInfo = this.modals[id];
-        if (!modalInfo) return;
-
-        // Remover todos los event listeners
-
-        // Para triggers
-        if (modalInfo.triggerListeners) {
-            modalInfo.triggerListeners.forEach(({ trigger, listener }) => {
-                trigger.removeEventListener('click', listener);
-            });
+    createOrGetDarkBackground(modalElement) {
+        let darkBackground = document.querySelector('.modal-background');
+        if (!darkBackground) {
+            darkBackground = document.createElement('div');
+            darkBackground.classList.add('modal-background');
+            // Insertar el fondo oscuro antes del modal en el DOM
+            modalElement.parentNode.insertBefore(darkBackground, modalElement);
         }
-
-        // Para el botón de cerrar
-        if (modalInfo.closeButtonElement && modalInfo.closeButtonListener) {
-            modalInfo.closeButtonElement.removeEventListener('click', modalInfo.closeButtonListener);
-        }
-
-        // Para el modal
-        if (modalInfo.modalListener) {
-            modalInfo.modal.removeEventListener('click', modalInfo.modalListener);
-        }
-
-        // Remover el fondo oscuro y su listener
-        if (modalInfo.darkBackground) {
-            if (modalInfo.darkBackgroundListener) {
-                modalInfo.darkBackground.removeEventListener('click', modalInfo.darkBackgroundListener);
-            }
-            modalInfo.darkBackground.parentNode.removeChild(modalInfo.darkBackground);
-        }
-
-        // Eliminar los datos del modal
-        delete this.modals[id];
-
-        // Si este modal estaba abierto, reiniciamos currentOpenModal
-        if (this.currentOpenModal === id) {
-            this.currentOpenModal = null;
-        }
+        return darkBackground;
     }
 }
-
-function createModalDarkBackground(modalElement) {
-    const darkBackground = document.createElement('div');
-    darkBackground.classList.add('modal-background');
-    // Insertar el fondo oscuro antes del modal en el DOM
-    modalElement.parentNode.insertBefore(darkBackground, modalElement);
-    return darkBackground;
-}
-
+    
 // Uso de ejemplo
 const modalManager = new ModalManager();
 
