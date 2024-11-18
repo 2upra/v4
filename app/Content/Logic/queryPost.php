@@ -685,7 +685,7 @@ function publicacionAjax()
         : array();
     $similar_to = isset($_POST['similar_to']) ? intval($_POST['similar_to']) : null;
     $colec = isset($_POST['colec']) ? intval($_POST['colec']) : null;
-    $idea = isset($_POST['ideas']) ? intval($_POST['ideas']) : null;
+    $idea = isset($_POST['idea']) ? sanitize_text_field($_POST['idea']) : '';
 
     publicaciones(
         array(

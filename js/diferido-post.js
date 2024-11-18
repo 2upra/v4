@@ -141,7 +141,7 @@
                 const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
                 const idUsuario = window.idUsuarioActual || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
 
-                log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual});
+                log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual, colec, idea});
 
                 try {
                     log('[fetch] idea:', {idea}, 'colec:', {colec});
