@@ -17,78 +17,15 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             'exclude' => [],
             'post_type' => 'social_post',
             'similar_to' => null,
-            'colec' => null, 
+            'colec' => null,
             'ideas' => null,
         ];
         $args = array_merge($defaults, $args);
 
-        // Manejar el caso en que 'ideas' es true y se proporciona un 'colec'
-        if ($args['ideas'] === true && !empty($args['colec']) && is_numeric($args['colec'])) {
-            $samples_meta = get_post_meta($args['colec'], 'samples', true);
-            if (!is_array($samples_meta)) {
-                $samples_meta = maybe_unserialize($samples_meta);
-            }
-
-            if (is_array($samples_meta)) {
-                $all_similar_posts = [];
-                foreach ($samples_meta as $post_id) {
-                    // Usar cache para obtener posts similares
-                    $similar_to_cache_key = "similar_to_$post_id";
-                    $cached_similars = obtenerCache($similar_to_cache_key);
-
-                    if ($cached_similars) {
-                        $posts_similares = $cached_similars;
-                    } else {
-                        $posts_similares = calcularFeedPersonalizado(44, '', $post_id);
-                        if ($posts_similares) {
-                            guardarCache($similar_to_cache_key, $posts_similares, 15 * DAY_IN_SECONDS);
-                        }
-                    }
-
-                    // Excluir repetidos y los mismos samples
-                    $posts_similares = array_diff($posts_similares, [$post_id], $samples_meta, $all_similar_posts);
-                    // Asegurar que tengamos al menos 5 posts similares
-                    $posts_similares = array_slice($posts_similares, 0, 5);
-
-                    // Añadir a la lista total de posts
-                    $all_similar_posts = array_merge($all_similar_posts, $posts_similares);
-                }
-
-                // Eliminar duplicados y limitar a 620 posts
-                $all_similar_posts = array_unique($all_similar_posts);
-                $all_similar_posts = array_slice($all_similar_posts, 0, 620);
-
-                // Aplicar aleatoriedad del 20%
-                if (count($all_similar_posts) > 1) {
-                    $total_posts = count($all_similar_posts);
-                    $randomize_count = ceil($total_posts * 0.2);
-                    if ($randomize_count > 1) {
-                        $random_indices = array_rand($all_similar_posts, $randomize_count);
-                        if (!is_array($random_indices)) {
-                            $random_indices = [$random_indices];
-                        }
-                        $random_posts = [];
-                        foreach ($random_indices as $index) {
-                            $random_posts[] = $all_similar_posts[$index];
-                        }
-                        shuffle($random_posts);
-                        $i = 0;
-                        foreach ($random_indices as $index) {
-                            $all_similar_posts[$index] = $random_posts[$i];
-                            $i++;
-                        }
-                    }
-                }
-
-                // Configurar argumentos de la consulta
-                $query_args = [
-                    'post_type' => $args['post_type'],
-                    'post__in' => $all_similar_posts,
-                    'orderby' => 'post__in',
-                    'posts_per_page' => -1,
-                ];
-            } else {
-                error_log("[publicaciones] El meta 'samples' no es un array válido.");
+        if ($args['ideas'] === true) {
+            $query_args = procesarIdeas($args);
+            if (!$query_args) {
+                error_log("[publicaciones] Error al procesar ideas.");
                 return false;
             }
         }
@@ -126,6 +63,96 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
     }
 }
 
+function procesarIdeas($args)
+{
+    try {
+        // Validar que 'colec' es un número válido
+        if (empty($args['colec']) || !is_numeric($args['colec'])) {
+            error_log("[procesarIdeas] 'colec' no es válido.");
+            return false;
+        }
+
+        $samples_meta = get_post_meta($args['colec'], 'samples', true);
+        if (!is_array($samples_meta)) {
+            $samples_meta = maybe_unserialize($samples_meta);
+        }
+
+        if (is_array($samples_meta)) {
+            $all_similar_posts = [];
+            foreach ($samples_meta as $post_id) {
+                // Usar cache para obtener posts similares
+                $similar_to_cache_key = "similar_to_$post_id";
+                $cached_similars = obtenerCache($similar_to_cache_key);
+
+                if ($cached_similars) {
+                    $posts_similares = $cached_similars;
+                    guardarLog("[procesarIdeas] Usando cache para post_id $post_id");
+                } else {
+                    $posts_similares = calcularFeedPersonalizado(44, '', $post_id);
+                    if ($posts_similares) {
+                        guardarCache($similar_to_cache_key, $posts_similares, 15 * DAY_IN_SECONDS);
+                        guardarLog("[procesarIdeas] Cache guardado para post_id $post_id");
+                    } else {
+                        error_log("[procesarIdeas] No se pudieron calcular posts similares para post_id $post_id.");
+                        continue;
+                    }
+                }
+
+                // Excluir repetidos y los mismos samples
+                $posts_similares = array_diff($posts_similares, [$post_id], $samples_meta, $all_similar_posts);
+                // Asegurar que tengamos al menos 5 posts similares
+                $posts_similares = array_slice($posts_similares, 0, 5);
+
+                // Añadir a la lista total de posts
+                $all_similar_posts = array_merge($all_similar_posts, $posts_similares);
+            }
+
+            // Eliminar duplicados y limitar a 620 posts
+            $all_similar_posts = array_unique($all_similar_posts);
+            $all_similar_posts = array_slice($all_similar_posts, 0, 620);
+
+            // Aplicar aleatoriedad del 20%
+            if (count($all_similar_posts) > 1) {
+                $total_posts = count($all_similar_posts);
+                $randomize_count = ceil($total_posts * 0.2);
+                if ($randomize_count > 1) {
+                    $random_indices = array_rand($all_similar_posts, $randomize_count);
+                    if (!is_array($random_indices)) {
+                        $random_indices = [$random_indices];
+                    }
+                    $random_posts = [];
+                    foreach ($random_indices as $index) {
+                        $random_posts[] = $all_similar_posts[$index];
+                    }
+                    shuffle($random_posts);
+                    $i = 0;
+                    foreach ($random_indices as $index) {
+                        $all_similar_posts[$index] = $random_posts[$i];
+                        $i++;
+                    }
+                }
+            }
+
+            // Configurar argumentos de la consulta
+            $query_args = [
+                'post_type' => $args['post_type'],
+                'post__in' => $all_similar_posts,
+                'orderby' => 'post__in',
+                'posts_per_page' => -1,
+            ];
+
+            guardarLog("[procesarIdeas] Query args configurados correctamente.");
+
+            return $query_args;
+        } else {
+            error_log("[procesarIdeas] El meta 'samples' no es un array válido.");
+            return false;
+        }
+    } catch (Exception $e) {
+        error_log("[procesarIdeas] Error crítico: " . $e->getMessage());
+        return false;
+    }
+}
 
 function procesarPublicaciones($query_args, $args, $is_ajax)
 {
