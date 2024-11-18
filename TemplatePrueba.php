@@ -33,7 +33,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
             <div class="tab-content">
 
                 <div class="tab INICIO S4K7I3" id="Preguntas">
-
+                    <? echo modalPreguntas() ?> 
                 </div>
 
             </div>
