@@ -17,100 +17,48 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             'exclude' => [],
             'post_type' => 'social_post',
             'similar_to' => null,
-            'colec' => null,
+            'colec' => null, 
             'ideas' => true,
         ];
         $args = array_merge($defaults, $args);
+        /*
+        esta parte esta bien, pero necesito manejar el caso en que recibe 'ideas' => true, y un colec id
+        aqui adicionalmente necesito que cuando reciba ideas en true y un colec (que es un Id)
+        tiene que buscar en la meta del colec samples, los post id que existen alli (samples), y luego usar $posts_similares = calcularFeedPersonalizado(44, '', $post_id) (calcularFeedPersonalizado regresas id de post similares) 
+        en cada uno, y tomar hacer algo especial, 
+        va a reunir 5 post similares de cada sample, tiene que omitir cualquier repetido (porque si los va a haber), tambien tiene que excluir los mismos samples de sus similares, tiene que reunir 5 post similares (5 aunque haya eliminado repitidos y etc)
+        luego de reunir todos los posible (pon un limite de 620) va a darles una aleatearidad del 20%
 
+        (nota calcularFeed tiene cache puede usarla asi
+        $similar_to_cache_key = "similar_to_$post_id";
+        if (obtenerCache($similar_to_cache_key)) )
+        y si no existe puede guardarla asi 
+
+        if ($posts_similares) {
+            guardarCache($similar_to_cache_key, $posts_similares, 15 * DAY_IN_SECONDS);
+        }
+        */
+
+        //este caso tiene que ser cuando recibe colec pero no ideas true 
         if (!empty($args['colec']) && is_numeric($args['colec'])) {
-            if (!empty($args['ideas'])) {
-                // Caso cuando recibe 'ideas' => true y un 'colec' (ID)
-                $samples_meta = get_post_meta($args['colec'], 'samples', true);
-                if (!is_array($samples_meta)) {
-                    $samples_meta = maybe_unserialize($samples_meta);
-                }
-                if (is_array($samples_meta)) {
-                    $all_similar_posts = [];
-                    foreach ($samples_meta as $sample_post_id) {
-                        // Obtener posts similares usando caché si está disponible
-                        $similar_to_cache_key = "similar_to_$sample_post_id";
-                        $posts_similares = obtenerCache($similar_to_cache_key);
-                        if (!$posts_similares) {
-                            $posts_similares = calcularFeedPersonalizado(44, '', $sample_post_id);
-                            if ($posts_similares) {
-                                guardarCache($similar_to_cache_key, $posts_similares, 15 * DAY_IN_SECONDS);
-                            } else {
-                                continue;
-                            }
-                        }
-                        // Excluir duplicados y el propio sample
-                        $posts_similares = array_diff($posts_similares, [$sample_post_id], $samples_meta, array_keys($all_similar_posts));
-                        // Asegurar tener 5 posts similares
-                        $posts_similares = array_slice($posts_similares, 0, 5);
-                        // Agregar al conjunto total
-                        foreach ($posts_similares as $post_id) {
-                            $all_similar_posts[$post_id] = $post_id;
-                        }
-                    }
-                    // Limitar a 620 posts
-                    $all_similar_posts = array_slice($all_similar_posts, 0, 620);
-                    $all_similar_posts = array_values($all_similar_posts); // Re-indexar array
-
-                    // Aplicar aleatoriedad del 20%
-                    $total_posts = count($all_similar_posts);
-                    $num_to_shuffle = ceil($total_posts * 0.2);
-
-                    $indices = range(0, $total_posts - 1);
-                    $shuffle_indices = array_rand($indices, $num_to_shuffle);
-
-                    if (!is_array($shuffle_indices)) {
-                        $shuffle_indices = [$shuffle_indices];
-                    }
-
-                    $posts_to_shuffle = [];
-                    foreach ($shuffle_indices as $index) {
-                        $posts_to_shuffle[] = $all_similar_posts[$index];
-                    }
-
-                    shuffle($posts_to_shuffle);
-
-                    foreach ($shuffle_indices as $i => $index) {
-                        $all_similar_posts[$index] = $posts_to_shuffle[$i];
-                    }
-
-                    // Configurar argumentos de consulta
-                    $query_args = [
-                        'post_type' => $args['post_type'],
-                        'post__in' => $all_similar_posts,
-                        'orderby' => 'post__in',
-                        'posts_per_page' => -1,
-                    ];
-                } else {
-                    error_log("[publicaciones] El meta 'samples' no es un array válido.");
-                    return false;
-                }
+            $samples_meta = get_post_meta($args['colec'], 'samples', true);
+            if (!is_array($samples_meta)) {
+                $samples_meta = maybe_unserialize($samples_meta);
+            }
+            if (is_array($samples_meta)) {
+                $query_args = [
+                    'post_type' => $args['post_type'],
+                    'post__in' => array_values($samples_meta), 
+                    'orderby' => 'post__in',
+                    'posts_per_page' => -1, 
+                ];
             } else {
-                // Caso cuando recibe 'colec' pero no 'ideas' true
-                $samples_meta = get_post_meta($args['colec'], 'samples', true);
-                if (!is_array($samples_meta)) {
-                    $samples_meta = maybe_unserialize($samples_meta);
-                }
-                if (is_array($samples_meta)) {
-                    $query_args = [
-                        'post_type' => $args['post_type'],
-                        'post__in' => array_values($samples_meta),
-                        'orderby' => 'post__in',
-                        'posts_per_page' => -1,
-                    ];
-                } else {
-                    error_log("[publicaciones] El meta 'samples' no es un array válido.");
-                    return false;
-                }
+                error_log("[publicaciones] El meta 'samples' no es un array válido.");
+                return false;
             }
         } else {
             $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
         }
-
         $output = procesarPublicaciones($query_args, $args, $is_ajax);
 
         if ($is_ajax) {
@@ -123,6 +71,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         return false;
     }
 }
+
 
 function procesarPublicaciones($query_args, $args, $is_ajax)
 {
