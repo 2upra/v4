@@ -390,7 +390,7 @@ function masIdeasColeb($postId)
 ?>
 
     <div class="LISTCOLECSIN">
-        <? echo publicaciones(['post_type' => 'social_post', 'filtro' => 'sampleList', 'posts' => 12, 'colec' => $postId, 'ideas' => true]);  ?>
+        <? echo publicaciones(['post_type' => 'social_post', 'filtro' => 'sampleList', 'posts' => 12, 'colec' => $postId, 'idea' => true]);  ?>
     </div>
 
     <?

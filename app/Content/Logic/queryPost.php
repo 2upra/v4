@@ -86,7 +86,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             'post_type' => 'social_post',
             'similar_to' => null,
             'colec' => null,
-            'ideas' => null,
+            'idea' => null,
         ];
 
         $args = array_merge($defaults, $args);
