@@ -20,6 +20,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             'colec' => null,
             'ideas' => null,
         ];
+        
         $args = array_merge($defaults, $args);
 
         if ($args['ideas'] === true) {
@@ -684,6 +685,8 @@ function publicacionAjax()
         ? array_map('intval', $_POST['cargadas'])
         : array();
     $similar_to = isset($_POST['similar_to']) ? intval($_POST['similar_to']) : null;
+    $colec = isset($_POST['colec']) ? intval($_POST['colec']) : null;
+    $idea = isset($_POST['ideas']) ? intval($_POST['ideas']) : null;
 
     publicaciones(
         array(
@@ -694,6 +697,8 @@ function publicacionAjax()
             'identifier' => $data_identifier,
             'exclude' => $publicacionesCargadas,
             'similar_to' => $similar_to,
+            'colec' => $colec,
+            'idea' => $idea
         ),
         true,
         $paged

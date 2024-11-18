@@ -88,7 +88,22 @@
 
             if (scrollTop + alturaVentana > alturaDocumento - 100 && !estaCargando && hayMasContenido) {
                 log('Condiciones para cargar más contenido cumplidas');
-                cargarMasContenido(listaPublicaciones);
+                const elementoPestañaActiva = document.querySelector('.tab.active');
+                if (elementoPestañaActiva?.getAttribute('ajax') === 'no') {
+                    estaCargando = false;
+                    return;
+                }
+
+                let colec = null; // Inicializamos la variable
+                if (elementoPestañaActiva?.getAttribute('colec')) {
+                    colec = elementoPestañaActiva.getAttribute('colec'); 
+                }
+
+                let idea = false; // Inicializamos la variable
+                if (elementoPestañaActiva?.getAttribute('idea') === 'true') {
+                    idea = true;
+                }
+                cargarMasContenido(listaPublicaciones, null, colec, idea);
             } else {
                 log('Condiciones para cargar más contenido no cumplidas');
             }
@@ -103,21 +118,13 @@
         }
     });
 
-    async function cargarMasContenido(listaPublicaciones) {
+    async function cargarMasContenido(listaPublicaciones, ajax = null, colec = null, idea = null) {
         if (estaCargando) {
-            log('Carga en progreso. Espera a que finalice antes de intentar nuevamente.');
             return;
         }
 
         estaCargando = true;
         log('Iniciando carga de más contenido');
-
-        const elementoPestañaActiva = document.querySelector('.tab.active');
-        if (elementoPestañaActiva?.getAttribute('ajax') === 'no') {
-            log('La pestaña activa tiene ajax="no". No se cargará más contenido.');
-            estaCargando = false;
-            return;
-        }
 
         let intentos = 0;
         const maxIntentos = 5;
@@ -146,7 +153,9 @@
                             identifier: identificador,
                             tab_id: tabId,
                             user_id: idUsuario,
-                            cargadas: Array.from(publicacionesCargadas).join(',')
+                            cargadas: Array.from(publicacionesCargadas).join(','),
+                            colec,
+                            idea
                         })
                     });
 
