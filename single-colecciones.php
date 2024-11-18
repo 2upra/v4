@@ -33,7 +33,7 @@ $filtro = 'singleColec';
                         <div class="tabs">
                             <div class="tab-content">
 
-                                <div class="tab" id="Colección" colec="true">
+                                <div class="tab" id="Colección" colec="<? echo $postId ?>">
                                     <div class="SINGLECOLECSGER">
                                         <? echo singleColec($postId) ?>
                                     </div>
