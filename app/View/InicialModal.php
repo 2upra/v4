@@ -106,5 +106,5 @@ function modalPreguntas()
     </div>
 
 <?
-    return ob_clean();
+    return ob_get_clean();
 }
