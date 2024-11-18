@@ -108,6 +108,14 @@
             log('Carga en progreso. Espera a que finalice antes de intentar nuevamente.');
             return;
         }
+        
+        if (!listaPublicaciones) {
+            const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
+            if (!listaPublicaciones) {
+                log('No se encontró .social-post-list para añadir contenido');
+                retur;
+            }
+        }
 
         estaCargando = true;
         log('Iniciando carga de más contenido');
