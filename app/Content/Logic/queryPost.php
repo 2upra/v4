@@ -13,7 +13,7 @@ function publicacionAjax()
         : array();
     $similar_to = isset($_POST['similar_to']) ? intval($_POST['similar_to']) : null;
     $colec = isset($_POST['colec']) ? intval($_POST['colec']) : null;
-    $idea = isset($_POST['idea']) ? sanitize_text_field($_POST['idea']) : '';
+    $idea = isset($_POST['idea']) ? filter_var($_POST['idea'], FILTER_VALIDATE_BOOLEAN) : false;
 
     publicaciones(
         array(
@@ -47,7 +47,34 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
         /*
         siento que aca hay un problema, cuando envio idea true, parece que no entiende el true porque no usa procesarIdeas cuando es ajax
-        [fetch] idea: {idea: true}idea: true[[Prototype]]: Object colec: {colec: '319708'}colec: "319708"[[Prototype]]: Object
+        Parámetros de carga: 
+        {filtro: 'sampleList', tabId: '', identificador: '', idUsuario: '', paginaActual: 2, …}
+        colec
+        : 
+        "319708"
+        filtro
+        : 
+        "sampleList"
+        idUsuario
+        : 
+        ""
+        idea
+        : 
+        true
+        identificador
+        : 
+        ""
+        paginaActual
+        : 
+        2
+        tabId
+        : 
+        ""
+        [[Prototype]]
+        : 
+        Object
+        
+        y cuando es ajax salta el log de guardarLog("cargando post de coleccion");
 
         */
 
@@ -64,7 +91,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
         $args = array_merge($defaults, $args);
 
-        if ($args['ideas'] === true || $args['ideas'] === 'true') {
+        if (filter_var($args['ideas'], FILTER_VALIDATE_BOOLEAN)) {
             guardarLog("cargando mas ideas");
             $query_args = procesarIdeas($args, $paged);
             if (!$query_args) {
