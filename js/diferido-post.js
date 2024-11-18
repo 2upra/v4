@@ -70,7 +70,7 @@
             log('La página actual no es "sello"');
         }
     }
-    //resto del codigo omitido...
+
     function manejarScroll() {
         if (scrollTimeout) return;
         scrollTimeout = setTimeout(() => {
@@ -168,9 +168,20 @@
             }
         }, intervalo);
     }
+
     const MAX_POSTS = 50;
 
+    // Función principal procesar respuesta
     async function procesarRespuesta(respuesta) {
+        const doc = validarRespuesta(respuesta);
+        if (!doc) return;
+
+        const publicacionesValidas = procesarPublicaciones(doc);
+        manejarContenido(publicacionesValidas);
+    }
+
+    // Parte 1: Validar y preparar la respuesta
+    function validarRespuesta(respuesta) {
         log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
 
         const respuestaLimpia = respuesta.trim();
@@ -178,19 +189,21 @@
         if (respuestaLimpia === '<div id="no-more-posts"></div>') {
             log('No hay más publicaciones');
             detenerCarga();
-            return;
+            return null;
         }
 
         if (!respuestaLimpia) {
             log('Respuesta vacía recibida');
             detenerCarga();
-            return;
+            return null;
         }
 
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(respuesta, 'text/html');
+        return new DOMParser().parseFromString(respuesta, 'text/html');
+    }
 
-        // Extraer y actualizar el valor de total-posts-sampleList de la respuesta
+    // Parte 2: Actualizar datos y filtrar publicaciones válidas
+    function procesarPublicaciones(doc) {
+        // Actualizar el campo total-posts-sampleList
         const totalPostsInputFromResponse = doc.querySelector('.total-posts-sampleList');
         if (totalPostsInputFromResponse) {
             const totalPostsValue = totalPostsInputFromResponse.getAttribute('value');
@@ -202,15 +215,16 @@
             }
         }
 
+        // Filtrar publicaciones duplicadas
         const publicacionesNuevas = doc.querySelectorAll('.EDYQHV');
+        const publicacionesValidas = [];
+
         if (publicacionesNuevas.length === 0) {
             log('No se encontraron publicaciones nuevas en la respuesta');
             detenerCarga();
-            return;
+            return [];
         }
 
-        // Filtrar publicaciones duplicadas
-        const publicacionesValidas = [];
         publicacionesNuevas.forEach(publicacion => {
             const idPublicacion = publicacion.getAttribute('id-post')?.trim();
             const existeEnDOM = document.querySelector(`.social-post-list .EDYQHV[id-post="${idPublicacion}"]`);
@@ -224,38 +238,44 @@
             }
         });
 
+        return publicacionesValidas;
+    }
+
+    // Parte 3: Insertar y manejar contenido en el DOM
+    function manejarContenido(publicacionesValidas) {
+        const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
+        if (!listaPublicaciones) {
+            log('No se encontró .social-post-list para añadir contenido');
+            return;
+        }
+
         if (publicacionesValidas.length > 0) {
-            const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
-            if (listaPublicaciones) {
-                listaPublicaciones.insertAdjacentHTML('beforeend', publicacionesValidas.join(''));
-                log('Contenido añadido');
-                paginaActual++;
+            listaPublicaciones.insertAdjacentHTML('beforeend', publicacionesValidas.join(''));
+            log('Contenido añadido');
+            paginaActual++;
 
-                // Limitar el número de publicaciones en el DOM
-                const publicacionesEnDOM = listaPublicaciones.querySelectorAll('.EDYQHV');
-                if (publicacionesEnDOM.length > MAX_POSTS) {
-                    const exceso = publicacionesEnDOM.length - MAX_POSTS;
-                    for (let i = 0; i < exceso; i++) {
-                        const elementoAEliminar = publicacionesEnDOM[i];
-                        const idPublicacion = elementoAEliminar.getAttribute('id-post')?.trim();
-                        if (idPublicacion) {
-                            publicacionesCargadas.delete(idPublicacion);
-                        }
-                        listaPublicaciones.removeChild(elementoAEliminar);
-                        log('Publicación eliminada para mantener el límite:', idPublicacion);
+            // Limitar el número de publicaciones en el DOM
+            const publicacionesEnDOM = listaPublicaciones.querySelectorAll('.EDYQHV');
+            if (publicacionesEnDOM.length > MAX_POSTS) {
+                const exceso = publicacionesEnDOM.length - MAX_POSTS;
+                for (let i = 0; i < exceso; i++) {
+                    const elementoAEliminar = publicacionesEnDOM[i];
+                    const idPublicacion = elementoAEliminar.getAttribute('id-post')?.trim();
+                    if (idPublicacion) {
+                        publicacionesCargadas.delete(idPublicacion);
                     }
+                    listaPublicaciones.removeChild(elementoAEliminar);
+                    log('Publicación eliminada para mantener el límite:', idPublicacion);
                 }
-
-                // Inicializar funciones necesarias
-                ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec'].forEach(funcion => {
-                    if (typeof window[funcion] === 'function') window[funcion]();
-                });
-
-                // Actualiza los eventos de delegación si es necesario
-                reiniciarEventosPostTag();
-            } else {
-                log('No se encontró .social-post-list para añadir contenido');
             }
+
+            // Inicializar funciones necesarias
+            ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec'].forEach(funcion => {
+                if (typeof window[funcion] === 'function') window[funcion]();
+            });
+
+            // Actualiza los eventos de delegación si es necesario
+            reiniciarEventosPostTag();
         } else {
             log('No hay publicaciones válidas para añadir');
             detenerCarga();
@@ -341,8 +361,8 @@
         // Opcional: Scroll hacia la parte superior
         window.scrollTo(0, 0);
     }
-
-    function detenerCarga() {
+    
+    window.detenerCarga = function () {
         log('Carga detenida');
         hayMasContenido = false;
         window.removeEventListener('scroll', manejarScroll);

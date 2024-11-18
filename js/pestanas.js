@@ -59,6 +59,7 @@ function inicializarPestanas() {
         enlaces.forEach(a => {
             a.addEventListener('click', function(e) {
                 e.preventDefault();
+                detenerCarga(); // Evita mostrar contenido que se estaba cargando en la otra pestaña que se acaba de abrir
                 mostrarPestana(this.getAttribute('href'));
             });
         });
