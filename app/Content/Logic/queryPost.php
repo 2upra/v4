@@ -191,7 +191,7 @@ function procesarIdeas($args, $paged)
                 'post_type'      => $args['post_type'],
                 'post__in'       => $all_similar_posts,
                 'orderby'        => 'post__in',
-                'posts_per_page' => $args['posts'], // Asegúrate de que 'posts' esté definido en $args
+                'posts_per_page' => 12, 
                 'paged'          => $paged,
             ];
 
