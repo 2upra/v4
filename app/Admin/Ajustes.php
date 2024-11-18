@@ -24,6 +24,15 @@ function ocultar_elementos_barra_admin() {
 add_action('admin_head', 'ocultar_elementos_barra_admin');
 add_action('wp_head', 'ocultar_elementos_barra_admin');
 
+function fix_really_simple_ssl_textdomain() {
+    // Verifica si la función del plugin existe para evitar errores si el plugin no está activo
+    if (function_exists('_load_textdomain_just_in_time')) {
+        // Asegúrate de que las traducciones se carguen después de 'init'
+        load_plugin_textdomain('really-simple-ssl', false, dirname(plugin_basename(__FILE__)) . '/languages/');
+    }
+}
+add_action('init', 'fix_really_simple_ssl_textdomain');
+
 // Personalizar estilos de la barra de admin (admin y front)
 function personalizar_estilos_wp_admin_bar() {
     echo '<style type="text/css">

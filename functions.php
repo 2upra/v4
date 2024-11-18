@@ -25,7 +25,7 @@ define('IA_LOG_ENABLED', true);
 define('POST_LOG_ENABLED', false);
 define('STREAM_LOG_ENABLED', false);
 define('INTERES_TABLE', "{$wpdb->prefix}interes");
-define('POSTINLIMIT', 99999);
+define('POSTINLIMIT', 640);
 /*
 function debug_page_load_time() {
     $time = number_format((microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"]) * 1000, 2);

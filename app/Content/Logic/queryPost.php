@@ -305,21 +305,43 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
     }
 }
 
+/*
+hola chatgpt
+aqui hay un problema con el filtro de los me gustas
+a veces solo muestra 1 o 2 post solamente, por que? 
+
+SELECT SQL_CALC_FOUND_ROWS wpsg_posts.ID
+FROM wpsg_posts
+INNER JOIN wpsg_postmeta
+ON ( wpsg_posts.ID = wpsg_postmeta.post_id )
+WHERE 1=1
+AND wpsg_posts.ID IN (312913,311043)
+AND ( ( wpsg_postmeta.meta_key = 'paraDescarga'
+AND wpsg_postmeta.meta_value = '1' ) )
+AND ((wpsg_posts.post_type = 'social_post'
+AND (wpsg_posts.post_status = 'publish'
+OR wpsg_posts.post_status = 'rejected'
+OR wpsg_posts.post_status = 'private')))
+GROUP BY wpsg_posts.ID
+ORDER BY FIELD(wpsg_posts.ID,312913,311043)
+LIMIT 0, 12
+
+te daré mas contexto del codigo arriba 
+*/
 
 
 function aplicarFiltrosUsuario($query_args, $current_user_id)
 {
-    // Obtener los filtros personalizados del usuario
+
     $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
 
-    // Si no hay filtros o el array está vacío, no modificar $query_args
+
     if (empty($filtrosUsuario) || !is_array($filtrosUsuario)) {
-        return $query_args;  // No aplicar ningún filtro y devolver los query_args originales
+        return $query_args;  
     }
     if (in_array('ocultarDescargados', $filtrosUsuario)) {
         $descargasAnteriores = get_user_meta($current_user_id, 'descargas', true) ?: [];
         if (!empty($descargasAnteriores)) {
-            // Agregar las publicaciones descargadas a `post__not_in` sin afectar `post__in`
             $query_args['post__not_in'] = array_merge(
                 $query_args['post__not_in'] ?? [],
                 array_keys($descargasAnteriores)
@@ -332,7 +354,6 @@ function aplicarFiltrosUsuario($query_args, $current_user_id)
         $samplesGuardados = get_user_meta($current_user_id, 'samplesGuardados', true) ?: [];
         if (!empty($samplesGuardados)) {
             $guardadosIDs = array_keys($samplesGuardados);
-            // Agregar las publicaciones guardadas a `post__not_in` sin afectar `post__in`
             $query_args['post__not_in'] = array_merge(
                 $query_args['post__not_in'] ?? [],
                 $guardadosIDs
@@ -340,23 +361,21 @@ function aplicarFiltrosUsuario($query_args, $current_user_id)
         }
     }
 
+    //Mostrar solo los post a los que el usuario ha dado like
     if (in_array('mostrarMeGustan', $filtrosUsuario)) {
         $userLikedPostIds = obtenerLikesDelUsuario($current_user_id);
         if (!empty($userLikedPostIds)) {
-            // Si ya existen posts en 'post__in', hacer una intersección para conservar el orden original
             if (isset($query_args['post__in'])) {
                 $query_args['post__in'] = array_intersect($query_args['post__in'], $userLikedPostIds);
             } else {
                 $query_args['post__in'] = $userLikedPostIds;
             }
 
-            // Si la intersección da como resultado un conjunto vacío, establecer `posts_per_page` a 0
             if (empty($query_args['post__in'])) {
-                $query_args['posts_per_page'] = 0;  // No mostrar ninguna publicación
+                $query_args['posts_per_page'] = 0;  
             }
         } else {
-            // Si el usuario no tiene posts con 'me gusta', establecer `posts_per_page` a 0
-            $query_args['posts_per_page'] = 0;  // No mostrar ninguna publicación
+            $query_args['posts_per_page'] = 0;  
         }
     }
 
