@@ -41,7 +41,7 @@ $filtro = 'singleColec';
 
                                 <div id="ideas">
                                     <div>
-
+                                        <? echo masIdeasColeb($postId) ?>
                                     </div>
                                 </div>
 

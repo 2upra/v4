@@ -367,59 +367,6 @@ function singleColec($postId)
 
             <div class="INFEIS">
                 <? echo datosColeccion($postId); ?>
-                <? /*Tengo esto, en dataColec hay un json que se ve asi 
-
-{
-
-    "estado_animo": {
-        "Agresivo": 3,
-        "Aggressive": 3,
-        "Enérgico": 2,
-        "Energetic": 2,
-        "Melancólico": 2,
-
-    },
-    "artista_posible": {
-        "Three 6 Mafia": 16,
-        "DJ Paul": 8,
-        "Juicy J": 4,
-        "Project Pat": 4,
-        "J Dilla": 2,
-        "Madlib": 2,
-        "808 Mafia": 2,
-        "8Ball & MJG": 2
-    },
-    "genero_posible": {
-        "Hip Hop": 18,
-        "Memphis": 14,
-        "Trap": 12,
-        "Funk": 4,
-        "Soul": 2,
-        "R&B": 2,
-        "Phonk": 2
-    },
-    "instrumentos_principal": {
-        "Voz": 5,
-        "Vocals": 5,
-        "Bombo": 2,
-        "Snare": 2,
-        "Kick drum": 1,
-        "Kick Drum": 1,
-        "Disparo de escopeta": 1,
-        "Shotgun blast": 1
-    },
-    "tags_posibles": {
-        "Memphis": 16,
-        "Sample": 12,
-        "Hip Hop": 12,
-        "Trap": 10,
-        "Male": 8,
-        "Vocals": 8,
-    }
-}
-
-pero hay que hacer un js que se encargue de mostrar cada uno en un span tags-container-colec con la clase postTag, pero no todos, solos los 2 tag que tienen mas puntos en cada data, estado animo, artista posible, etc, 
-                 */?>
                 <div class="tags-container-colec" id="tags-<? echo get_the_ID(); ?>"></div>
 
                 <p id="dataColec" id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;">
@@ -431,6 +378,19 @@ pero hay que hacer un js que se encargue de mostrar cada uno en un span tags-con
 
     <div class="LISTCOLECSIN">
         <? echo publicaciones(['post_type' => 'social_post', 'filtro' => 'sampleList', 'posts' => 12, 'colec' => $postId]); ?>
+    </div>
+
+<?
+    return ob_get_clean();
+}
+
+function masIdeasColeb($postId)
+{
+    ob_start()
+?>
+
+    <div class="LISTCOLECSIN">
+        <? echo publicaciones(['post_type' => 'social_post', 'filtro' => 'sampleList', 'posts' => 12, 'colec' => $postId, 'ideas' => true]);  ?>
     </div>
 
     <?
