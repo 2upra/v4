@@ -59,7 +59,7 @@ function inicializarPestanas() {
         enlaces.forEach(a => {
             a.addEventListener('click', function(e) {
                 e.preventDefault();
-                detenerCarga(); // Evita mostrar contenido que se estaba cargando en la otra pestaña que se acaba de abrir
+                detenerCarga(); // Se supone que debería evitar que se cargue contenido no correspondiente en la pestaña que se acaba de abrir pero no. 
                 mostrarPestana(this.getAttribute('href'));
             });
         });

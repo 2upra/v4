@@ -73,6 +73,11 @@
 
     function manejarScroll() {
         if (scrollTimeout) return;
+        const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
+        if (!listaPublicaciones) {
+            log('No se encontró .social-post-list para añadir contenido');
+            return;
+        }
         scrollTimeout = setTimeout(() => {
             scrollTimeout = null;
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -83,7 +88,7 @@
 
             if (scrollTop + alturaVentana > alturaDocumento - 100 && !estaCargando && hayMasContenido) {
                 log('Condiciones para cargar más contenido cumplidas');
-                cargarMasContenido();
+                cargarMasContenido(listaPublicaciones);
             } else {
                 log('Condiciones para cargar más contenido no cumplidas');
             }
@@ -98,7 +103,7 @@
         }
     });
 
-    async function cargarMasContenido() {
+    async function cargarMasContenido(listaPublicaciones) {
         if (estaCargando) {
             log('Carga en progreso. Espera a que finalice antes de intentar nuevamente.');
             return;
@@ -119,7 +124,6 @@
         const intervalo = 1000; // Intervalo de 1 segundo
 
         const buscarPestañaActiva = setInterval(async () => {
-            const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
             if (listaPublicaciones) {
                 log('Pestaña activa encontrada');
                 clearInterval(buscarPestañaActiva);
@@ -151,7 +155,7 @@
                     }
 
                     const textoRespuesta = await respuesta.text();
-                    await procesarRespuesta(textoRespuesta);
+                    await procesarRespuesta(textoRespuesta, listaPublicaciones);
                 } catch (error) {
                     log('Error en la petición AJAX:', error);
                 } finally {
@@ -172,12 +176,12 @@
     const MAX_POSTS = 50;
 
     // Función principal procesar respuesta
-    async function procesarRespuesta(respuesta) {
+    async function procesarRespuesta(respuesta, listaPublicaciones) {
         const doc = validarRespuesta(respuesta);
         if (!doc) return;
 
         const publicacionesValidas = procesarPublicaciones(doc);
-        manejarContenido(publicacionesValidas);
+        manejarContenido(publicacionesValidas, listaPublicaciones);
     }
 
     // Parte 1: Validar y preparar la respuesta
@@ -242,12 +246,12 @@
     }
 
     // Parte 3: Insertar y manejar contenido en el DOM
-    function manejarContenido(publicacionesValidas) {
-        const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
+    function manejarContenido(publicacionesValidas, listaPublicaciones) {
+        /* const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
         if (!listaPublicaciones) {
             log('No se encontró .social-post-list para añadir contenido');
             return;
-        }
+        } */
 
         if (publicacionesValidas.length > 0) {
             listaPublicaciones.insertAdjacentHTML('beforeend', publicacionesValidas.join(''));
@@ -361,12 +365,12 @@
         // Opcional: Scroll hacia la parte superior
         window.scrollTo(0, 0);
     }
-    
+
     window.detenerCarga = function () {
         log('Carga detenida');
         hayMasContenido = false;
         window.removeEventListener('scroll', manejarScroll);
-    }
+    };
     /*
     function ajustarAlturaMaxima() {
         const contenedor = document.querySelector('.SAOEXP .clase-rolastatus');
