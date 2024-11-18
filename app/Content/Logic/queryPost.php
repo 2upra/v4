@@ -17,36 +17,29 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             'exclude' => [],
             'post_type' => 'social_post',
             'similar_to' => null,
-            'colec' => null, // ID del post con meta "samples"
+            'colec' => null, 
         ];
         $args = array_merge($defaults, $args);
 
-        // Si se pasa una ID en "colec", obtener los IDs desde el meta "samples"
         if (!empty($args['colec']) && is_numeric($args['colec'])) {
             $samples_meta = get_post_meta($args['colec'], 'samples', true);
-
-            // Deserializar el meta si no es un array
             if (!is_array($samples_meta)) {
                 $samples_meta = maybe_unserialize($samples_meta);
             }
-
-            // Verificar que sea un array válido
             if (is_array($samples_meta)) {
                 $query_args = [
                     'post_type' => $args['post_type'],
-                    'post__in' => array_values($samples_meta), // Usar los IDs deserializados
-                    'orderby' => 'post__in', // Mantener el orden proporcionado
-                    'posts_per_page' => -1, // Mostrar todos los IDs
+                    'post__in' => array_values($samples_meta), 
+                    'orderby' => 'post__in',
+                    'posts_per_page' => -1, 
                 ];
             } else {
                 error_log("[publicaciones] El meta 'samples' no es un array válido.");
                 return false;
             }
         } else {
-            // Si no hay colec, usar configuracionQueryArgs
             $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
         }
-
         $output = procesarPublicaciones($query_args, $args, $is_ajax);
 
         if ($is_ajax) {
@@ -417,11 +410,6 @@ function aplicarFiltroGlobal($query_args, $args, $current_user_id)
 
     return $query_args;
 }
-
-
-
-
-
 
 
 function prefiltrarIdentifier($identifier, $query_args)
