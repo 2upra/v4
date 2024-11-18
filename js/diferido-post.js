@@ -94,15 +94,16 @@
                     return;
                 }
 
-                let colec = null; // Inicializamos la variable
+                let colec = null;
                 if (elementoPestañaActiva?.getAttribute('colec')) {
                     colec = elementoPestañaActiva.getAttribute('colec'); 
                 }
 
-                let idea = false; // Inicializamos la variable
+                let idea = false; 
                 if (elementoPestañaActiva?.getAttribute('idea') === 'true') {
                     idea = true;
                 }
+                log('[manejarScroll] idea:', {idea}, 'colec:', {colec});
                 cargarMasContenido(listaPublicaciones, null, colec, idea);
             } else {
                 log('Condiciones para cargar más contenido no cumplidas');
@@ -129,7 +130,7 @@
         let intentos = 0;
         const maxIntentos = 5;
         const intervalo = 1000; // Intervalo de 1 segundo
-
+        log('[cargarMasContenido] idea:', {idea}, 'colec:', {colec});
         const buscarPestañaActiva = setInterval(async () => {
             if (listaPublicaciones) {
                 log('Pestaña activa encontrada');
@@ -142,6 +143,7 @@
                 log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual});
 
                 try {
+                    log('[fetch] idea:', {idea}, 'colec:', {colec});
                     const respuesta = await fetch(ajaxUrl, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
