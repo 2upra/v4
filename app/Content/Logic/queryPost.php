@@ -23,18 +23,14 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         $args = array_merge($defaults, $args);
 
         if ($args['ideas'] === true) {
-            guardarLog("[publicaciones] Procesando ideas.");
             $query_args = procesarIdeas($args);
             if (!$query_args) {
                 error_log("[publicaciones] Error al procesar ideas.");
                 return false;
             }
-            guardarLog("[publicaciones] Query args obtenidos de procesarIdeas.", $query_args);
         }
         // Este bloque ya funciona, no hay que cambiarlo pero no debe usarse cuando 'ideas' es true
         else if (!empty($args['colec']) && is_numeric($args['colec'])) {
-            guardarLog("[publicaciones] Procesando colección específica.");
-
             $samples_meta = get_post_meta($args['colec'], 'samples', true);
             if (!is_array($samples_meta)) {
                 $samples_meta = maybe_unserialize($samples_meta);
@@ -46,15 +42,12 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
                     'orderby' => 'post__in',
                     'posts_per_page' => -1, 
                 ];
-                guardarLog("[publicaciones] Query args configurados para colección.", $query_args);
             } else {
                 error_log("[publicaciones] El meta 'samples' no es un array válido.");
                 return false;
             }
         } else {
-            guardarLog("[publicaciones] Configurando query args estándar.");
             $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
-            guardarLog("[publicaciones] Query args configurados.", $query_args);
         }
 
         $output = procesarPublicaciones($query_args, $args, $is_ajax);
@@ -73,66 +66,83 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 function procesarIdeas($args)
 {
     try {
+        guardarLog("[procesarIdeas] Iniciando procesamiento con args: " . print_r($args, true));
+
         // Validar que 'colec' es un número válido
         if (empty($args['colec']) || !is_numeric($args['colec'])) {
-            error_log("[procesarIdeas] 'colec' no es válido.");
+            error_log("[procesarIdeas] 'colec' no es válido. Valor recibido: " . print_r($args['colec'], true));
+            guardarLog("[procesarIdeas] 'colec' no es válido. Valor recibido: " . print_r($args['colec'], true));
             return false;
         }
 
-        guardarLog("[procesarIdeas] Obteniendo 'samples' para colec ID: " . $args['colec']);
+        guardarLog("[procesarIdeas] 'colec' es válido: " . $args['colec']);
+
+        // Obtener meta 'samples' del post
         $samples_meta = get_post_meta($args['colec'], 'samples', true);
+        guardarLog("[procesarIdeas] Obtención de meta 'samples' para colec {$args['colec']}: " . print_r($samples_meta, true));
+
         if (!is_array($samples_meta)) {
             $samples_meta = maybe_unserialize($samples_meta);
+            guardarLog("[procesarIdeas] Intentando deserializar 'samples': " . print_r($samples_meta, true));
         }
 
         if (is_array($samples_meta)) {
-            guardarLog("[procesarIdeas] Samples obtenidos:", $samples_meta);
+            guardarLog("[procesarIdeas] 'samples_meta' es un array con " . count($samples_meta) . " elementos.");
             $all_similar_posts = [];
             foreach ($samples_meta as $post_id) {
+                guardarLog("[procesarIdeas] Procesando post_id: $post_id");
+
                 // Usar cache para obtener posts similares
                 $similar_to_cache_key = "similar_to_$post_id";
                 $cached_similars = obtenerCache($similar_to_cache_key);
 
                 if ($cached_similars) {
                     $posts_similares = $cached_similars;
-                    guardarLog("[procesarIdeas] Usando cache para post_id $post_id");
+                    guardarLog("[procesarIdeas] Usando cache para post_id $post_id. Posts similares obtenidos: " . implode(', ', $posts_similares));
                 } else {
+                    guardarLog("[procesarIdeas] Cache no encontrado para post_id $post_id. Calculando posts similares.");
                     $posts_similares = calcularFeedPersonalizado(44, '', $post_id);
                     if ($posts_similares) {
                         guardarCache($similar_to_cache_key, $posts_similares, 15 * DAY_IN_SECONDS);
-                        guardarLog("[procesarIdeas] Cache guardado para post_id $post_id");
+                        guardarLog("[procesarIdeas] Cache guardado para post_id $post_id con posts: " . implode(', ', $posts_similares));
                     } else {
                         error_log("[procesarIdeas] No se pudieron calcular posts similares para post_id $post_id.");
+                        guardarLog("[procesarIdeas] No se pudieron calcular posts similares para post_id $post_id.");
                         continue;
                     }
                 }
 
-                guardarLog("[procesarIdeas] Posts similares para post_id $post_id:", $posts_similares);
-
                 // Excluir repetidos y los mismos samples
+                $original_count = count($posts_similares);
                 $posts_similares = array_diff($posts_similares, [$post_id], $samples_meta, $all_similar_posts);
-                guardarLog("[procesarIdeas] Posts similares después de excluir repetidos para post_id $post_id:", $posts_similares);
+                $filtered_count = count($posts_similares);
+                guardarLog("[procesarIdeas] Filtrados posts similares para post_id $post_id. Antes: $original_count, Después: $filtered_count");
 
                 // Asegurar que tengamos al menos 5 posts similares
                 $posts_similares = array_slice($posts_similares, 0, 5);
-                guardarLog("[procesarIdeas] Posts similares limitados a 5 para post_id $post_id:", $posts_similares);
+                guardarLog("[procesarIdeas] Limitados a 5 posts similares para post_id $post_id: " . implode(', ', $posts_similares));
 
                 // Añadir a la lista total de posts
                 $all_similar_posts = array_merge($all_similar_posts, $posts_similares);
-                guardarLog("[procesarIdeas] all_similar_posts actualizado:", $all_similar_posts);
+                guardarLog("[procesarIdeas] Total de posts similares acumulados: " . count($all_similar_posts));
             }
 
             // Eliminar duplicados y limitar a 620 posts
+            $prev_unique_count = count($all_similar_posts);
             $all_similar_posts = array_unique($all_similar_posts);
-            $all_similar_posts = array_slice($all_similar_posts, 0, 620);
-            guardarLog("[procesarIdeas] all_similar_posts después de eliminar duplicados y limitar a 620:", $all_similar_posts);
+            $unique_count = count($all_similar_posts);
+            guardarLog("[procesarIdeas] Eliminados duplicados. Antes: $prev_unique_count, Después: $unique_count");
+
+            if ($unique_count > 620) {
+                $all_similar_posts = array_slice($all_similar_posts, 0, 620);
+                guardarLog("[procesarIdeas] Limitados a 620 posts: " . implode(', ', $all_similar_posts));
+            }
 
             // Aplicar aleatoriedad del 20%
             if (count($all_similar_posts) > 1) {
                 $total_posts = count($all_similar_posts);
                 $randomize_count = ceil($total_posts * 0.2);
-
-                guardarLog("[procesarIdeas] Total posts: $total_posts. Cantidad a aleatorizar: $randomize_count");
+                guardarLog("[procesarIdeas] Aplicando aleatoriedad. Total posts: $total_posts, Cantidad a randomizar: $randomize_count");
 
                 if ($randomize_count > 1) {
                     $random_indices = array_rand($all_similar_posts, $randomize_count);
@@ -144,14 +154,18 @@ function procesarIdeas($args)
                         $random_posts[] = $all_similar_posts[$index];
                     }
                     shuffle($random_posts);
+                    guardarLog("[procesarIdeas] Posts seleccionados para aleatorizar: " . implode(', ', $random_posts));
+
                     $i = 0;
                     foreach ($random_indices as $index) {
                         $all_similar_posts[$index] = $random_posts[$i];
                         $i++;
                     }
-                    guardarLog("[procesarIdeas] all_similar_posts después de aplicar aleatoriedad:", $all_similar_posts);
+                    guardarLog("[procesarIdeas] Posts después de aleatorizar: " . implode(', ', $all_similar_posts));
                 }
             }
+
+            guardarLog("[procesarIdeas] Total final de posts similares: " . count($all_similar_posts));
 
             // Configurar argumentos de la consulta
             $query_args = [
@@ -161,21 +175,20 @@ function procesarIdeas($args)
                 'posts_per_page' => -1,
             ];
 
-            guardarLog("[procesarIdeas] Query args configurados correctamente.", $query_args);
+            guardarLog("[procesarIdeas] Query args configurados: " . print_r($query_args, true));
 
             return $query_args;
         } else {
-            error_log("[procesarIdeas] El meta 'samples' no es un array válido.");
+            error_log("[procesarIdeas] El meta 'samples' no es un array válido. Valor recibido: " . print_r($samples_meta, true));
+            guardarLog("[procesarIdeas] El meta 'samples' no es un array válido. Valor recibido: " . print_r($samples_meta, true));
             return false;
         }
     } catch (Exception $e) {
         error_log("[procesarIdeas] Error crítico: " . $e->getMessage());
+        guardarLog("[procesarIdeas] Error crítico: " . $e->getMessage());
         return false;
     }
 }
-
-
-
 function procesarPublicaciones($query_args, $args, $is_ajax)
 {
     ob_start();
