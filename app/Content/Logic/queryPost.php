@@ -38,9 +38,9 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             if (is_array($samples_meta)) {
                 $query_args = [
                     'post_type' => $args['post_type'],
-                    'post__in' => array_values($samples_meta), 
+                    'post__in' => array_values($samples_meta),
                     'orderby' => 'post__in',
-                    'posts_per_page' => -1, 
+                    'posts_per_page' => -1,
                 ];
             } else {
                 error_log("[publicaciones] El meta 'samples' no es un array válido.");
@@ -100,14 +100,29 @@ function procesarIdeas($args)
                 guardarLog("[procesarIdeas] Cache obtenido para post_id $post_id: " . print_r($cached_similars, true));
 
                 if ($cached_similars) {
-                    $posts_similares = $cached_similars;
+                    // Ensure the cached similars are sorted if needed
+                    arsort($cached_similars);
+
+                    // Extract post IDs from the cached similars
+                    $posts_similares = array_keys($cached_similars);
+
                     guardarLog("[procesarIdeas] Usando cache para post_id $post_id. Posts similares obtenidos: " . implode(', ', $posts_similares));
                 } else {
                     guardarLog("[procesarIdeas] Cache no encontrado para post_id $post_id. Calculando posts similares.");
                     $posts_similares = calcularFeedPersonalizado(44, '', $post_id);
+
                     if ($posts_similares) {
-                        guardarCache($similar_to_cache_key, $posts_similares, 15 * DAY_IN_SECONDS);
-                        guardarLog("[procesarIdeas] Cache guardado para post_id $post_id con posts: " . implode(', ', $posts_similares));
+                        // If calcularFeedPersonalizado returns an associative array, extract the keys
+                        if (is_array($posts_similares)) {
+                            $posts_similares_ids = array_keys($posts_similares);
+                            guardarCache($similar_to_cache_key, $posts_similares, 15 * DAY_IN_SECONDS);
+                            guardarLog("[procesarIdeas] Cache guardado para post_id $post_id con posts: " . implode(', ', $posts_similares_ids));
+                            $posts_similares = $posts_similares_ids; // Update for consistency
+                        } else {
+                            // Handle case where it returns an indexed array of post IDs
+                            guardarCache($similar_to_cache_key, $posts_similares, 15 * DAY_IN_SECONDS);
+                            guardarLog("[procesarIdeas] Cache guardado para post_id $post_id con posts: " . implode(', ', $posts_similares));
+                        }
                     } else {
                         error_log("[procesarIdeas] No se pudieron calcular posts similares para post_id $post_id.");
                         guardarLog("[procesarIdeas] No se pudieron calcular posts similares para post_id $post_id.");
@@ -295,7 +310,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
             $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
         }
-        
+
         $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id);
 
         return $query_args;
@@ -351,7 +366,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
     $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
     if (!empty($filtrosUsuario) && is_array($filtrosUsuario)) {
         //guardarLog("[ordenamientoQuery] Usuario con filtros personalizados. Solo se permiten casos 2 y 3.");
-        
+
         // Si el filtro no es 2 o 3, retornar directamente
         if (!in_array($filtroTiempo, [2, 3])) {
             //guardarLog("[ordenamientoQuery] Filtro $filtroTiempo no permitido para usuarios con filtroPost. Retornando query sin modificaciones.");
@@ -474,7 +489,7 @@ function aplicarFiltrosUsuario($query_args, $current_user_id)
 
     if (empty($filtrosUsuario) || !is_array($filtrosUsuario)) {
         //guardarLog("No hay filtros aplicables o el formato es incorrecto.");
-        return $query_args;  
+        return $query_args;
     }
 
     // Inicializar variables para mantener los IDs a incluir y excluir
@@ -522,22 +537,22 @@ function aplicarFiltrosUsuario($query_args, $current_user_id)
             //guardarLog("Post__in después de aplicar mostrarMeGustan: " . print_r($post_in, true));
 
             if (empty($post_in)) {
-                $query_args['posts_per_page'] = 0;  
+                $query_args['posts_per_page'] = 0;
                 //guardarLog("No hay posts que mostrar después de aplicar mostrarMeGustan.");
             }
         } else {
-            $query_args['posts_per_page'] = 0;  
+            $query_args['posts_per_page'] = 0;
             //guardarLog("No hay posts que le gusten al usuario, posts_per_page se establece en 0.");
         }
     }
-    
+
     // Eliminar los IDs en post_not_in de post_in para evitar conflictos
     if (!empty($post_in) && !empty($post_not_in)) {
         $post_in = array_diff($post_in, $post_not_in);
         //guardarLog("Post__in después de eliminar IDs en post__not_in: " . print_r($post_in, true));
 
         if (empty($post_in)) {
-            $query_args['posts_per_page'] = 0;  
+            $query_args['posts_per_page'] = 0;
             //guardarLog("No hay posts que mostrar después de aplicar los filtros.");
         }
     }
