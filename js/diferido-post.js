@@ -108,14 +108,6 @@
             log('Carga en progreso. Espera a que finalice antes de intentar nuevamente.');
             return;
         }
-        
-        if (!listaPublicaciones) {
-            const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
-            if (!listaPublicaciones) {
-                log('No se encontró .social-post-list para añadir contenido');
-                retur;
-            }
-        }
 
         estaCargando = true;
         log('Iniciando carga de más contenido');
@@ -318,21 +310,31 @@
             const valorTag = tag.textContent.trim();
 
             if (valorTag) {
+                const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
+                if (!listaPublicaciones) {
+                    log('No se encontró .social-post-list para añadir contenido');
+                    return;
+                }
                 identificador = valorTag;
                 actualizarUIBusqueda(valorTag);
                 log('Nuevo identificador establecido:', identificador);
                 resetearCarga();
-                cargarMasContenido();
+                cargarMasContenido(listaPublicaciones);
             }
         }
     }
 
     window.limpiarBusqueda = function () {
+        const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
+        if (!listaPublicaciones) {
+            log('No se encontró .social-post-list para añadir contenido');
+            return;
+        }
         publicacionesCargadas.clear();
         identificador = '';
         actualizarUIBusqueda('');
         resetearCarga();
-        cargarMasContenido();
+        cargarMasContenido(listaPublicaciones);
     };
 
     function configurarEventoBusqueda() {
@@ -349,11 +351,16 @@
     function manejadorEventoBusqueda(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
+            const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
+            if (!listaPublicaciones) {
+                log('No se encontró .social-post-list para añadir contenido');
+                return;
+            }
             identificador = e.target.value.trim();
             actualizarUIBusqueda(identificador);
             log('Enter presionado en búsqueda, valor de identificador:', identificador);
             resetearCarga();
-            cargarMasContenido();
+            cargarMasContenido(listaPublicaciones);
         }
     }
 
