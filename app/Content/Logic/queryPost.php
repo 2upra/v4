@@ -208,6 +208,18 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
 
 function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts)
 {
+    // Verificar si el usuario tiene configurado un filtro
+    $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
+    if (!empty($filtrosUsuario) && is_array($filtrosUsuario)) {
+        guardarLog("[ordenamientoQuery] Usuario con filtros personalizados. Solo se permiten casos 2 y 3.");
+        
+        // Si el filtro no es 2 o 3, retornar directamente
+        if (!in_array($filtroTiempo, [2, 3])) {
+            guardarLog("[ordenamientoQuery] Filtro $filtroTiempo no permitido para usuarios con filtroPost. Retornando query sin modificaciones.");
+            return $query_args;
+        }
+    }
+
     try {
         global $wpdb;
         if (!$wpdb) {
@@ -309,6 +321,8 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
         return false;
     }
 }
+
+
 
 
 /*
