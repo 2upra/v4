@@ -96,6 +96,9 @@ function procesarIdeas($args)
                 $similar_to_cache_key = "similar_to_$post_id";
                 $cached_similars = obtenerCache($similar_to_cache_key);
 
+                // Log adicional para inspeccionar el contenido del cache
+                guardarLog("[procesarIdeas] Cache obtenido para post_id $post_id: " . print_r($cached_similars, true));
+
                 if ($cached_similars) {
                     $posts_similares = $cached_similars;
                     guardarLog("[procesarIdeas] Usando cache para post_id $post_id. Posts similares obtenidos: " . implode(', ', $posts_similares));
@@ -189,6 +192,7 @@ function procesarIdeas($args)
         return false;
     }
 }
+
 function procesarPublicaciones($query_args, $args, $is_ajax)
 {
     ob_start();
