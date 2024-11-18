@@ -20,7 +20,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             'colec' => null,
             'ideas' => null,
         ];
-        
+
         $args = array_merge($defaults, $args);
 
         if ($args['ideas'] === true) {
@@ -191,7 +191,6 @@ function procesarIdeas($args)
                 'post_type' => $args['post_type'],
                 'post__in' => $all_similar_posts,
                 'orderby' => 'post__in',
-                'posts_per_page' => -1,
             ];
 
             guardarLog("[procesarIdeas] Query args configurados: " . print_r($query_args, true));
