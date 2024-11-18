@@ -325,30 +325,6 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 
 
 
-/*
-hola chatgpt
-aqui hay un problema con el filtro de los me gustas
-a veces solo muestra 1 o 2 post solamente, por que? 
-
-SELECT SQL_CALC_FOUND_ROWS wpsg_posts.ID
-FROM wpsg_posts
-INNER JOIN wpsg_postmeta
-ON ( wpsg_posts.ID = wpsg_postmeta.post_id )
-WHERE 1=1
-AND wpsg_posts.ID IN (312913,311043)
-AND ( ( wpsg_postmeta.meta_key = 'paraDescarga'
-AND wpsg_postmeta.meta_value = '1' ) )
-AND ((wpsg_posts.post_type = 'social_post'
-AND (wpsg_posts.post_status = 'publish'
-OR wpsg_posts.post_status = 'rejected'
-OR wpsg_posts.post_status = 'private')))
-GROUP BY wpsg_posts.ID
-ORDER BY FIELD(wpsg_posts.ID,312913,311043)
-LIMIT 0, 12
-
-te daré mas contexto del codigo arriba 
-*/
-
 
 function aplicarFiltrosUsuario($query_args, $current_user_id)
 {
@@ -378,14 +354,36 @@ function aplicarFiltrosUsuario($query_args, $current_user_id)
     // Filtro para ocultar posts en colección
     if (in_array('ocultarEnColeccion', $filtrosUsuario)) {
         $samplesGuardados = get_user_meta($current_user_id, 'samplesGuardados', true) ?: [];
-        guardarLog("Samples guardados: " . print_r($samplesGuardados, true));
+        $guardadosIDs = [];
+
         if (!empty($samplesGuardados)) {
-            $guardadosIDs = array_keys($samplesGuardados);
+            foreach ($samplesGuardados as $key => $value) {
+                $guardadosIDs[] = $key; // Clave principal
+                if (is_array($value)) {
+                    foreach ($value as $nestedKey => $nestedValue) {
+                        $guardadosIDs[] = (int)$nestedValue; // IDs anidados
+                    }
+                }
+            }
+            $guardadosIDs = array_unique($guardadosIDs); // Elimina duplicados
+        }
+
+        guardarLog("IDs de samples guardados procesados: " . print_r($guardadosIDs, true));
+
+        if (!empty($query_args['post__in'])) {
+            $query_args['post__in'] = array_diff($query_args['post__in'], $guardadosIDs);
+            guardarLog("Post__in actualizado tras aplicar ocultarEnColeccion: " . print_r($query_args['post__in'], true));
+
+            if (empty($query_args['post__in'])) {
+                $query_args['posts_per_page'] = 0;  
+                guardarLog("No hay posts que mostrar después de aplicar ocultarEnColeccion.");
+            }
+        } else {
             $query_args['post__not_in'] = array_merge(
                 $query_args['post__not_in'] ?? [],
                 $guardadosIDs
             );
-            guardarLog("Post__not_in después de ocultar en colección: " . print_r($query_args['post__not_in'], true));
+            guardarLog("Post__not_in actualizado tras aplicar ocultarEnColeccion: " . print_r($query_args['post__not_in'], true));
         }
     }
 
@@ -415,6 +413,7 @@ function aplicarFiltrosUsuario($query_args, $current_user_id)
     guardarLog("Query args final: " . print_r($query_args, true));
     return $query_args;
 }
+
 
 
 function aplicarFiltroGlobal($query_args, $args, $current_user_id)
