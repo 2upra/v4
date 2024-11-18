@@ -24,7 +24,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         $args = array_merge($defaults, $args);
 
         if ($args['ideas'] === true) {
-            $query_args = procesarIdeas($args);
+            $query_args = procesarIdeas($args, $paged);
             if (!$query_args) {
                 error_log("[publicaciones] Error al procesar ideas.");
                 return false;
@@ -63,8 +63,8 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         return false;
     }
 }
-
-function procesarIdeas($args)
+//procesar idea no gestiona bien la siguiente pagina, al cargar la segunda pagina no cargan el resto de post 
+function procesarIdeas($args, $paged)
 {
     try {
         guardarLog("[procesarIdeas] Iniciando procesamiento con args: " . print_r($args, true));
@@ -188,9 +188,11 @@ function procesarIdeas($args)
 
             // Configurar argumentos de la consulta
             $query_args = [
-                'post_type' => $args['post_type'],
-                'post__in' => $all_similar_posts,
-                'orderby' => 'post__in',
+                'post_type'      => $args['post_type'],
+                'post__in'       => $all_similar_posts,
+                'orderby'        => 'post__in',
+                'posts_per_page' => $args['posts'], // Asegúrate de que 'posts' esté definido en $args
+                'paged'          => $paged,
             ];
 
             guardarLog("[procesarIdeas] Query args configurados: " . print_r($query_args, true));
