@@ -98,9 +98,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
                 error_log("[publicaciones] Error al procesar ideas.");
                 return false;
             }
-        }
-        
-        else if (!empty($args['colec']) && is_numeric($args['colec'])) {
+        } else if (!empty($args['colec']) && is_numeric($args['colec'])) {
             guardarLog("cargando post de coleccion");
             $samples_meta = get_post_meta($args['colec'], 'samples', true);
             if (!is_array($samples_meta)) {
@@ -112,6 +110,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
                     'post__in' => array_values($samples_meta),
                     'orderby' => 'post__in',
                     'posts_per_page' => 12,
+                    'paged'          => $paged,
                 ];
             } else {
                 error_log("[publicaciones] El meta 'samples' no es un array válido.");
