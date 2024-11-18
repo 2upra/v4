@@ -91,7 +91,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
         $args = array_merge($defaults, $args);
 
-        if (filter_var($args['ideas'], FILTER_VALIDATE_BOOLEAN)) {
+        if (filter_var($args['idea'], FILTER_VALIDATE_BOOLEAN)) {
             guardarLog("cargando mas ideas");
             $query_args = procesarIdeas($args, $paged);
             if (!$query_args) {
