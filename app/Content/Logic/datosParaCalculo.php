@@ -139,7 +139,7 @@ function obtenerDatosFeedConCache($userId) {
         guardarCache($cache_key, $datos, 43200); // Guarda en caché por 12 horas
         guardarLog("Usuario ID: $userId - Nuevos datos de feed guardados en caché por 12 horas");
     } else {
-        guardarLog("Usuario ID: $userId - Usando datos de feed desde caché");
+        //guardarLog("Usuario ID: $userId - Usando datos de feed desde caché");
     }
     
     if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
