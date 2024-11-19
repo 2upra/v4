@@ -18,6 +18,16 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
         position: unset;
         transform: unset;
     }
+
+    .S4K7I3.active {
+        margin: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        padding: 20px;
+    }
 </style>
 
 <div id="main">
@@ -33,7 +43,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
             <div class="tab-content">
 
                 <div class="tab INICIO S4K7I3" id="Preguntas">
-                    <? echo modalPreguntas() ?> 
+                    <? echo modalPreguntas() ?>
                 </div>
 
             </div>
