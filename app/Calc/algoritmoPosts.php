@@ -123,12 +123,12 @@ function calcularPuntosPostBatch(
             $puntosFinal += $puntosIdentifier;
 
             // Apply reduction based on views
-            if (isset($vistas_posts_processed[$post_id])) {
+            /*if (isset($vistas_posts_processed[$post_id])) {
                 $vistas = $vistas_posts_processed[$post_id]['count'];
                 $reduccion_por_vista = 0.01;
                 $factorReduccion = pow(1 - $reduccion_por_vista, $vistas);
                 $puntosFinal *= $factorReduccion;
-            }
+            } */
 
             // Adjust randomness outside tight loops if possible
             $aleatoriedad = mt_rand(0, 20);
