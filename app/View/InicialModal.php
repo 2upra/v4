@@ -53,83 +53,63 @@ function modalPreguntas()
     <div class="modal selectorGeneros">
         <div class="GNEROBDS">
             <div class="borde">
-                <img src="" alt="">
                 <p>Trap</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>R&B</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Pop</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Tech House</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>EDM</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Disco</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Soul</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Techno</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Cinematic</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Reggaeton</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Hip hop</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Drum and Bass</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Rock</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Jazz</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Classical</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Funk</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Blues</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Dubstep</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>House</p>
             </div>
             <div class="borde">
-                <img src="" alt="">
                 <p>Afrobeat</p>
             </div>
         </div>
