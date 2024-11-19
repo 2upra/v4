@@ -1,3 +1,4 @@
+
 window.inicializarAlerta = function () {
     window.originalAlert = window.alert;
     window.originalConfirm = window.confirm;
@@ -13,7 +14,7 @@ window.inicializarAlerta = function () {
     function showCustomNotification(message, type) {
         return new Promise((resolve) => {
             const notificationDiv = document.createElement('div');
-            notificationDiv.className = `custom-notification${type === 'confirm' ? ' alertop' : ''}`;
+            notificationDiv.className = `custom-notification${type === 'confirm'? ' alertop' : ''}`;
 
             const contentDiv = document.createElement('div');
             contentDiv.className = 'notification-content';
@@ -26,7 +27,7 @@ window.inicializarAlerta = function () {
                     modalBackground.style.display = 'block';
                     modalBackground.style.visibility = 'visible';
                     modalBackground.style.opacity = '1';
-                    modalBackground.style.zIndex = '998';
+                    modalBackground.style.zIndex = '1002';
                 }, 0);
 
                 modalBackground.onclick = () => {
@@ -70,6 +71,9 @@ window.inicializarAlerta = function () {
                 }
                 if (modalBackground && type === 'confirm') {
                     modalBackground.style.display = 'none';
+                    modalBackground.style.visibility = 'hidden';
+                    modalBackground.style.opacity = '0';
+                    modalBackground.style.zIndex = 'auto';
                     modalBackground.onclick = null;
                 }
                 resolve(result);
