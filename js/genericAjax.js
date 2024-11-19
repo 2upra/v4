@@ -829,6 +829,102 @@ function guardarGenerosUsuario() {
 }
 
 add_action('wp_ajax_guardarGenerosUsuario', 'guardarGenerosUsuario');
+
+este es el problema 
+
+genericAjax.js?ver=3.0.2.865805307:966  Error al guardar los géneros: No se recibieron géneros seleccionados.
+
+asi se ve el html 
+
+function modalGeneros()
+{
+$userId = get_current_user_id();
+$usuarioPreferencias = get_user_meta($userId, 'usuarioPreferencias', true);
+
+// Si ya existen preferencias, no mostramos nada
+if (!empty($usuarioPreferencias)) {
+    return '';
+}
+
+ob_start();
+?>
+
+<div class="modal selectorGeneros" style="display: none;">
+    <div class="GNEROBDS">
+        <div class="borde">
+            <p>Trap</p>
+        </div>
+        <div class="borde">
+            <p>R&B</p>
+        </div>
+        <div class="borde">
+            <p>Pop</p>
+        </div>
+        <div class="borde">
+            <p>Tech House</p>
+        </div>
+        <div class="borde">
+            <p>EDM</p>
+        </div>
+        <div class="borde">
+            <p>Disco</p>
+        </div>
+        <div class="borde">
+            <p>Soul</p>
+        </div>
+        <div class="borde">
+            <p>Techno</p>
+        </div>
+    </div>
+    <button class="botonsecundario">Listo</button>
+</div>
+
+<?
+return ob_get_clean();
+}
+
+asi se ve enviar ajax (esta funcion no se puede cambiar porque se necesita asi)
+
+async function enviarAjax(action, data = {}) {
+    try {
+        const body = new URLSearchParams({
+            action: action,
+            ...data
+        });
+        const response = await fetch(ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: body
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+        }
+        let responseData;
+        const responseText = await response.text();
+        try {
+            responseData = JSON.parse(responseText);
+        } catch (jsonError) {
+            console.error('No se pudo interpretar la respuesta como JSON:', {
+                error: jsonError,
+                responseText: responseText,
+                action: action,
+                requestData: data
+            });
+            responseData = responseText;
+        }
+        return responseData;
+    } catch (error) {
+        console.error('Error en la solicitud AJAX:', {
+            error: error,
+            action: action,
+            requestData: data,
+            ajaxUrl: ajaxUrl
+        });
+        return {success: false, message: error.message};
+    }
+}
 */
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -953,22 +1049,18 @@ document.addEventListener('DOMContentLoaded', function () {
         // Evento para el botón "Listo"
         botonListo.addEventListener('click', async function () {
             if (generosSeleccionados.length > 0) {
-                // Enviar géneros seleccionados mediante AJAX
+                console.log('Géneros seleccionados:', generosSeleccionados); // Validar los datos
                 const response = await enviarAjax('guardarGenerosUsuario', {generos: generosSeleccionados});
                 if (response.success) {
-                    // Ocultar modalGeneros
                     modalGeneros.style.display = 'none';
-
-                    // Remover el fondo oscuro del modalGeneros
                     removeDarkBackground(darkBackgroundGeneros);
                 } else {
-                    // Cambiar response.message por response.data
                     console.error('Error al guardar los géneros:', response.data);
                 }
             } else {
                 alert('Por favor, selecciona al menos un género.');
             }
-        });
+        });        
     }
 
     // Funciones para crear y remover el fondo oscuro
