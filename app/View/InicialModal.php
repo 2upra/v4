@@ -8,11 +8,9 @@ function modalPreguntas()
 ?>
     <div class="modal">
         <div class="TIPEARTISTSF">
-            quiero esta imagen sea el background de el div productor https://2upra.com/wp-content/uploads/2024/11/aUZjCl0WQ_mmLypLZNGGJA.webp
             <div class="borde">
                 <p>Productor</p>
             </div>
-            y este artista https://2upra.com/wp-content/uploads/2024/11/ODuY4qpIReS8uWqwSTAQDg.webp
             <div class="borde">
                 <p>Artista</p>
             </div>
