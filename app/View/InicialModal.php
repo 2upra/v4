@@ -9,7 +9,7 @@ function modalPreguntas()
     <div class="modal selectorModalUsuario">
         <div class="TIPEARTISTSF">
             <div class="selectorUsuario borde" id="productorDiv">
-                <p>Productor</p>
+                <p>Fan</p>
             </div>
             <div class="selectorUsuario borde" id="artistaDiv">
                 <p>Artista</p>
