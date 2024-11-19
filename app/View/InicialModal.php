@@ -113,7 +113,7 @@ function modalPreguntas()
                 <p>Afrobeat</p>
             </div>
         </div>
-        <button class="botonprincipal">Listo</button>
+        <button class="botonsecundario">Listo</button>
     </div>
 
 <?
