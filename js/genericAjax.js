@@ -968,4 +968,3 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 });
-*/
