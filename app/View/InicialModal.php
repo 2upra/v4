@@ -149,9 +149,9 @@ function guardarGenerosUsuario() {
     if (!is_user_logged_in()) {
         wp_send_json_error('Debes iniciar sesión para realizar esta acción.');
     }
-    $generos = isset($_POST['generos']) ? $_POST['generos'] : array();
+    $generos = isset($_POST['generos'])? explode(',', $_POST['generos']) : array();
 
-    if (empty($generos) || !is_array($generos)) {
+    if (empty($generos) ||!is_array($generos)) {
         wp_send_json_error('No se recibieron géneros seleccionados.');
     }
 
