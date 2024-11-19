@@ -815,13 +815,18 @@ document.addEventListener('DOMContentLoaded', function () {
     let darkBackgroundGeneros; // Para almacenar el fondo oscuro del modalGeneros
 
     if (modalTipoUsuario) {
+        // Mover el modalTipoUsuario al body
+        document.body.appendChild(modalTipoUsuario);
+        // Establecer el z-index del modal por encima del fondo oscuro
+        modalTipoUsuario.style.zIndex = 999;
+
         // Mostrar el modalTipoUsuario
         modalTipoUsuario.style.display = 'flex';
 
         // Crear el fondo oscuro detrás del modalTipoUsuario
         darkBackgroundTipoUsuario = window.createModalDarkBackground(modalTipoUsuario);
 
-        // Obtener elementos
+        // Resto de tu código...
         const fanDiv = document.getElementById('fanDiv');
         const artistaDiv = document.getElementById('artistaDiv');
         const botonSiguiente = modalTipoUsuario.querySelector('.botonsecundario');
@@ -856,6 +861,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     window.removeModalDarkBackground(darkBackgroundTipoUsuario);
 
                     if (modalGeneros) {
+                        // Mover el modalGeneros al body
+                        document.body.appendChild(modalGeneros);
+                        // Establecer el z-index del modal por encima del fondo oscuro
+                        modalGeneros.style.zIndex = 999;
+
                         modalGeneros.style.display = 'flex';
 
                         // Crear el fondo oscuro detrás del modalGeneros
@@ -869,7 +879,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     } else if (modalGeneros) {
-        // Si modalTipoUsuario no existe pero modalGeneros sí, mostrar modalGeneros
+        // Mover el modalGeneros al body
+        document.body.appendChild(modalGeneros);
+        // Establecer el z-index del modal por encima del fondo oscuro
+        modalGeneros.style.zIndex = 999;
+
+        // Mostrar modalGeneros
         modalGeneros.style.display = 'flex';
 
         // Crear el fondo oscuro detrás del modalGeneros
