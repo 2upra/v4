@@ -8,10 +8,10 @@ function modalPreguntas()
 ?>
     <div class="modal">
         <div class="TIPEARTISTSF">
-            <div class="borde">
+            <div class="borde" id="productorDiv">
                 <p>Productor</p>
             </div>
-            <div class="borde">
+            <div class="borde" id="artistaDiv">
                 <p>Artista</p>
             </div>
         </div>
