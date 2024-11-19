@@ -805,7 +805,6 @@ window.contadorDeSamples = () => {
     }
 };
 
-//los background oscuro no funcionan 
 document.addEventListener('DOMContentLoaded', function () {
     // Verificar si existe el modalTipoUsuario en la página
     const modalTipoUsuario = document.querySelector('.selectorModalUsuario');
@@ -815,18 +814,21 @@ document.addEventListener('DOMContentLoaded', function () {
     let darkBackgroundGeneros; // Para almacenar el fondo oscuro del modalGeneros
 
     if (modalTipoUsuario) {
-        // Mover el modalTipoUsuario al body
-        document.body.appendChild(modalTipoUsuario);
+        // Mover el modalTipoUsuario al body si no es hijo directo
+        if (modalTipoUsuario.parentNode !== document.body) {
+            document.body.appendChild(modalTipoUsuario);
+        }
+
         // Establecer el z-index del modal por encima del fondo oscuro
-        modalTipoUsuario.style.zIndex = 999;
+        modalTipoUsuario.style.zIndex = '999';
 
         // Mostrar el modalTipoUsuario
         modalTipoUsuario.style.display = 'flex';
 
         // Crear el fondo oscuro detrás del modalTipoUsuario
-        darkBackgroundTipoUsuario = window.createModalDarkBackground(modalTipoUsuario);
+        darkBackgroundTipoUsuario = createDarkBackground();
 
-        // Resto de tu código...
+        // Obtener elementos
         const fanDiv = document.getElementById('fanDiv');
         const artistaDiv = document.getElementById('artistaDiv');
         const botonSiguiente = modalTipoUsuario.querySelector('.botonsecundario');
@@ -854,22 +856,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Guardar el tipo de usuario mediante AJAX
                 const response = await enviarAjax('guardarTipoUsuario', { tipoUsuario: tipoUsuarioSeleccionado });
                 if (response.success) {
-                    // Ocultar modalTipoUsuario y mostrar modalGeneros
+                    // Ocultar modalTipoUsuario
                     modalTipoUsuario.style.display = 'none';
 
                     // Remover el fondo oscuro del modalTipoUsuario
-                    window.removeModalDarkBackground(darkBackgroundTipoUsuario);
+                    removeDarkBackground(darkBackgroundTipoUsuario);
 
                     if (modalGeneros) {
-                        // Mover el modalGeneros al body
-                        document.body.appendChild(modalGeneros);
-                        // Establecer el z-index del modal por encima del fondo oscuro
-                        modalGeneros.style.zIndex = 999;
+                        // Mover el modalGeneros al body si no es hijo directo
+                        if (modalGeneros.parentNode !== document.body) {
+                            document.body.appendChild(modalGeneros);
+                        }
 
+                        // Establecer el z-index del modal por encima del fondo oscuro
+                        modalGeneros.style.zIndex = '999';
+
+                        // Mostrar modalGeneros
                         modalGeneros.style.display = 'flex';
 
                         // Crear el fondo oscuro detrás del modalGeneros
-                        darkBackgroundGeneros = window.createModalDarkBackground(modalGeneros);
+                        darkBackgroundGeneros = createDarkBackground();
 
                         iniciarModalGeneros();
                     }
@@ -879,16 +885,19 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     } else if (modalGeneros) {
-        // Mover el modalGeneros al body
-        document.body.appendChild(modalGeneros);
+        // Mover el modalGeneros al body si no es hijo directo
+        if (modalGeneros.parentNode !== document.body) {
+            document.body.appendChild(modalGeneros);
+        }
+
         // Establecer el z-index del modal por encima del fondo oscuro
-        modalGeneros.style.zIndex = 999;
+        modalGeneros.style.zIndex = '999';
 
         // Mostrar modalGeneros
         modalGeneros.style.display = 'flex';
 
         // Crear el fondo oscuro detrás del modalGeneros
-        darkBackgroundGeneros = window.createModalDarkBackground(modalGeneros);
+        darkBackgroundGeneros = createDarkBackground();
 
         iniciarModalGeneros();
     }
@@ -925,7 +934,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     modalGeneros.style.display = 'none';
 
                     // Remover el fondo oscuro del modalGeneros
-                    window.removeModalDarkBackground(darkBackgroundGeneros);
+                    removeDarkBackground(darkBackgroundGeneros);
 
                 } else {
                     console.error('Error al guardar los géneros:', response.message);
@@ -935,33 +944,28 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-});
 
-/*
-Puedes usar (no pueden ser modificadas estas funciones o puedes hacer unas nuevas)
+    // Funciones para crear y remover el fondo oscuro
+    function createDarkBackground() {
+        const darkBackground = document.createElement('div');
+        darkBackground.style.position = 'fixed';
+        darkBackground.style.top = '0';
+        darkBackground.style.left = '0';
+        darkBackground.style.width = '100%';
+        darkBackground.style.height = '100%';
+        darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        darkBackground.style.zIndex = '998'; // Debe ser menor que el z-index del modal
+        darkBackground.style.pointerEvents = 'auto';
 
-window.createModalDarkBackground = function (modal) {
-    const darkBackground = document.createElement('div');
-    darkBackground.classList.add('modal-background');
-    darkBackground.style.position = 'fixed';
-    darkBackground.style.top = 0;
-    darkBackground.style.left = 0;
-    darkBackground.style.width = '100vw';
-    darkBackground.style.height = '100vh';
-    darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    darkBackground.style.zIndex = 998; // Debe estar por debajo del modal
-    darkBackground.style.pointerEvents = 'auto';
+        document.body.appendChild(darkBackground);
 
-    // Insertar el background justo antes del modal, como hermano
-    modal.parentNode.insertBefore(darkBackground, modal);
-
-    return darkBackground;
-};
-
-// Función para remover el fondo oscuro del modal
-window.removeModalDarkBackground = function (darkBackground) {
-    if (darkBackground && darkBackground.parentNode) {
-        darkBackground.parentNode.removeChild(darkBackground);
+        return darkBackground;
     }
-};
+
+    function removeDarkBackground(darkBackground) {
+        if (darkBackground && darkBackground.parentNode) {
+            darkBackground.parentNode.removeChild(darkBackground);
+        }
+    }
+});
 */
