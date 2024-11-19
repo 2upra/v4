@@ -34,7 +34,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         }
 
         submenu.style.position = "fixed";
-        submenu.style.zIndex = 9999; // Asegúrate de que tenga un z-index alto
+        submenu.style.zIndex = 1001; // Asegúrate de que tenga un z-index alto
 
         // Hacemos que el submenú sea temporalmente visible para calcular sus dimensiones
         submenu.style.display = "block";
