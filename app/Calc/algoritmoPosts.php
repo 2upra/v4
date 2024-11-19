@@ -123,12 +123,12 @@ function calcularPuntosPostBatch(
             $puntosFinal += $puntosIdentifier;
 
             // Apply reduction based on views
-            /*if (isset($vistas_posts_processed[$post_id])) {
+            if (isset($vistas_posts_processed[$post_id])) {
                 $vistas = $vistas_posts_processed[$post_id]['count'];
                 $reduccion_por_vista = 0.01;
                 $factorReduccion = pow(1 - $reduccion_por_vista, $vistas);
                 $puntosFinal *= $factorReduccion;
-            } */
+            }
 
             // Adjust randomness outside tight loops if possible
             $aleatoriedad = mt_rand(0, 20);
@@ -151,9 +151,21 @@ function calcularPuntosPostBatch(
 
 
 // Helper function for decay factors
-function getDecayFactor($days)
+
+function getDecayFactor($days, $useDecay = false)
 {
     static $decay_factors = [];
+    static $use_decay = false;
+
+    // Configura la opción de usar el factor de decaimiento
+    if (func_num_args() > 1) {
+        $use_decay = $useDecay;
+    }
+
+    // Si no se utiliza el factor de decaimiento, devuelve 1
+    if (!$use_decay) {
+        return 1;
+    }
 
     // Populate the decay factors up to 365 days
     if (empty($decay_factors)) {
@@ -167,8 +179,6 @@ function getDecayFactor($days)
 
     return $decay_factors[$days];
 }
-
-
 
 function calcularPuntosIdentifier($post_id, $identifier, $datos)
 {
