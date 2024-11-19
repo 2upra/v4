@@ -812,7 +812,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (modalTipoUsuario) {
         // Show the modalTipoUsuario
-        modalTipoUsuario.style.display = 'block';
+        modalTipoUsuario.style.display = 'flex';
 
         // Get elements
         const fanDiv = document.getElementById('fanDiv');
@@ -826,14 +826,14 @@ document.addEventListener('DOMContentLoaded', function () {
             tipoUsuarioSeleccionado = 'Fan';
             fanDiv.classList.add('seleccionado');
             artistaDiv.classList.remove('seleccionado');
-            botonSiguiente.style.display = 'block';
+            botonSiguiente.style.display = 'flex';
         });
 
         artistaDiv.addEventListener('click', function () {
             tipoUsuarioSeleccionado = 'Artista';
             artistaDiv.classList.add('seleccionado');
             fanDiv.classList.remove('seleccionado');
-            botonSiguiente.style.display = 'block';
+            botonSiguiente.style.display = 'flex';
         });
 
         // Event listener for "Siguiente" button
@@ -845,7 +845,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Hide modalTipoUsuario and show modalGeneros
                     modalTipoUsuario.style.display = 'none';
                     if (modalGeneros) {
-                        modalGeneros.style.display = 'block';
+                        modalGeneros.style.display = 'flex';
                         iniciarModalGeneros();
                     }
                 } else {
@@ -855,7 +855,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     } else if (modalGeneros) {
         // If modalTipoUsuario does not exist but modalGeneros does, show modalGeneros
-        modalGeneros.style.display = 'block';
+        modalGeneros.style.display = 'flex';
         iniciarModalGeneros();
     }
 
