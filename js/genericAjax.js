@@ -805,6 +805,7 @@ window.contadorDeSamples = () => {
     }
 };
 
+//dame las funciones para que esto funcione en el backend, solo tiene que guardar las metas en el usuario actual
 document.addEventListener('DOMContentLoaded', function () {
     // Check if modalTipoUsuario exists on the page
     const modalTipoUsuario = document.querySelector('.selectorModalUsuario');
@@ -840,7 +841,7 @@ document.addEventListener('DOMContentLoaded', function () {
         botonSiguiente.addEventListener('click', async function () {
             if (tipoUsuarioSeleccionado) {
                 // Save the tipoUsuario meta via AJAX
-                const response = await enviarAjax('guardar_tipo_usuario', {tipoUsuario: tipoUsuarioSeleccionado});
+                const response = await enviarAjax('guardarTipoUsuario', {tipoUsuario: tipoUsuarioSeleccionado});
                 if (response.success) {
                     // Hide modalTipoUsuario and show modalGeneros
                     modalTipoUsuario.style.display = 'none';
@@ -885,7 +886,7 @@ document.addEventListener('DOMContentLoaded', function () {
         botonListo.addEventListener('click', async function () {
             if (generosSeleccionados.length > 0) {
                 // Send selected genres via AJAX
-                const response = await enviarAjax('guardar_generos_usuario', {generos: generosSeleccionados});
+                const response = await enviarAjax('guardarGenerosUsuario', {generos: generosSeleccionados});
                 if (response.success) {
                     // Hide modalGeneros
                     modalGeneros.style.display = 'none';

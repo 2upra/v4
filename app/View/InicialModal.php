@@ -1,58 +1,5 @@
 <?
 
-/*
-
-Necesito el script de estos modales, va cumplir una funcion,
-lo primero es que estarán ocultos inicialmente 
-son 2 modales y modalTipoUsuario debe aparecer primero y modalGeneros despues que el usuario termine elegir el tipo de usuario 
-el usuario en modalTipoUsuario debe elegir entre fan y artista, al dar click en uno, debe guardar la meta tipoUsuario con el valor Artista o Fan 
-en modalgeneros el usuario puede elegir varios generos, debe elegir al menos 1 (y agregar la clase seleccionados) y al dar listo enviar los generos que seleciono pro ajax
-
-y listo, puedes usar esta funcion para facilitar la tarea 
-
-async function enviarAjax(action, data = {}) {
-try {
-    const body = new URLSearchParams({
-        action: action,
-        ...data
-    });
-    const response = await fetch(ajaxUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: body
-    });
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
-    }
-    let responseData;
-    const responseText = await response.text();
-    try {
-        responseData = JSON.parse(responseText);
-    } catch (jsonError) {
-        console.error('No se pudo interpretar la respuesta como JSON:', {
-            error: jsonError,
-            responseText: responseText,
-            action: action,
-            requestData: data
-        });
-        responseData = responseText;
-    }
-    return responseData;
-} catch (error) {
-    console.error('Error en la solicitud AJAX:', {
-        error: error,
-        action: action,
-        requestData: data,
-        ajaxUrl: ajaxUrl
-    });
-    return {success: false, message: error.message};
-}
-}
-
-
-*/
 
 
 function modalTipoUsuario()
@@ -60,7 +7,6 @@ function modalTipoUsuario()
 $userId = get_current_user_id();
 $tipoUsuario = get_user_meta($userId, 'tipoUsuario', true);
 
-// Si ya existe un tipo de usuario, no mostramos nada
 if (!empty($tipoUsuario)) {
     return '';
 }
@@ -180,3 +126,39 @@ return ob_get_clean();
         </div>
 
         */
+
+
+
+
+function guardarTipoUsuario() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error('Debes iniciar sesión para realizar esta acción.');
+    }
+    $tipoUsuario = isset($_POST['tipoUsuario']) ? sanitize_text_field($_POST['tipoUsuario']) : '';
+    if (empty($tipoUsuario)) {
+        wp_send_json_error('No se recibió el tipo de usuario.');
+    }
+    $userId = get_current_user_id();
+    update_user_meta($userId, 'tipoUsuario', $tipoUsuario);
+    wp_send_json_success('El tipo de usuario ha sido guardado.');
+}
+add_action('wp_ajax_guardarTipoUsuario', 'guardarTipoUsuario');
+
+
+function guardarGenerosUsuario() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error('Debes iniciar sesión para realizar esta acción.');
+    }
+    $generos = isset($_POST['generos']) ? $_POST['generos'] : array();
+
+    if (empty($generos) || !is_array($generos)) {
+        wp_send_json_error('No se recibieron géneros seleccionados.');
+    }
+
+    $generos_sanitizados = array_map('sanitize_text_field', $generos);
+    $userId = get_current_user_id();
+    update_user_meta($userId, 'usuarioPreferencias', $generos_sanitizados);
+    wp_send_json_success('Los géneros han sido guardados.');
+}
+
+add_action('wp_ajax_guardarGenerosUsuario', 'guardarGenerosUsuario');
