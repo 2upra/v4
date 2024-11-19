@@ -16,11 +16,13 @@ function modalPreguntas()
             </div>
         </div>
         <style>
-            #productorDiv {
+            /* Fondo específico para el productor */
+            #productorDiv::before {
                 background-image: url('https://2upra.com/wp-content/uploads/2024/11/aUZjCl0WQ_mmLypLZNGGJA.webp');
             }
 
-            #artistaDiv {
+            /* Fondo específico para el artista */
+            #artistaDiv::before {
                 background-image: url('https://2upra.com/wp-content/uploads/2024/11/ODuY4qpIReS8uWqwSTAQDg.webp');
             }
         </style>
