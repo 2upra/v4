@@ -229,8 +229,15 @@ if (!defined('ABSPATH')) {
 
                 <? //echo publicaciones(['post_type' => 'colab', 'filtro' => 'colab', 'posts' => 3]); 
                 ?>
+
+
                 <!-- Fondo oscuro para los submenus -->
                 <div id="modalBackground2" class="modal-background submenu modalBackground2" style="display: none;"></div>
+
+                <div class="modalInicial">
+                    <? echo modalTipoUsuario() ?>
+                    <? echo modalGeneros() ?>
+                </div>
 
                 <div class="bloquesChatTest">
                     <div class="bloqueChatReiniciar">

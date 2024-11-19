@@ -128,7 +128,6 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
     });
 }
 
-
 async function permitirDescarga() {
     await accionClick(
         '.permitirDescarga',
@@ -576,7 +575,7 @@ async function establecerFiltros() {
         const response = await enviarAjax('obtenerFiltrosTotal');
 
         if (response.success) {
-            const { filtroPost, filtroTiempo } = response.data;
+            const {filtroPost, filtroTiempo} = response.data;
             const hayFiltrosActivados = filtroTiempo !== 0 || filtroPost !== 'a:0:{}';
             const botonRestablecer = document.querySelector('.restablecerBusqueda');
 
@@ -633,7 +632,6 @@ function getNombreFiltro(filtroTiempo) {
     return nombreFiltro;
 }
 
-
 // Función para actualizar el texto del botón
 
 async function actualizarBotonFiltro() {
@@ -641,19 +639,19 @@ async function actualizarBotonFiltro() {
     try {
         const response = await enviarAjax('obtenerFiltroActual', {});
         console.log('Respuesta completa del servidor:', response);
-        
+
         if (response.success) {
             // Corregimos el acceso a los datos
             const filtroActual = response.data.filtroTiempo;
             console.log('Filtro actual obtenido:', filtroActual);
-            
+
             // También podríamos usar directamente el nombreFiltro que viene del servidor
             const nombreFiltro = response.data.nombreFiltro || getNombreFiltro(filtroActual);
             console.log('Nombre del filtro obtenido:', nombreFiltro);
-            
+
             const botonFiltro = document.querySelector('.filtrosboton');
             console.log('Botón encontrado:', botonFiltro);
-            
+
             if (botonFiltro) {
                 const nuevoContenido = `${nombreFiltro} ${FLECHA_SVG}`;
                 console.log('Nuevo contenido del botón:', nuevoContenido);
@@ -666,7 +664,6 @@ async function actualizarBotonFiltro() {
         console.error('Error en actualizarBotonFiltro:', error);
     }
 }
-
 
 // Modificar la función cambiarFiltroTiempo para actualizar el botón
 async function cambiarFiltroTiempo() {
@@ -798,7 +795,6 @@ function filtrosPost() {
     cargarFiltrosGuardados();
 }
 
-
 window.contadorDeSamples = () => {
     const resultadosElement = document.getElementById('resultadosPost-sampleList');
     const totalPostsElement = document.querySelector('.total-posts-sampleList');
@@ -807,5 +803,98 @@ window.contadorDeSamples = () => {
         const formattedTotalPosts = totalPosts.toLocaleString('es-ES'); // Usamos 'es-ES' para formato de miles con puntos
         resultadosElement.textContent = formattedTotalPosts + ' resultados';
     }
-}
+};
 
+document.addEventListener('DOMContentLoaded', function () {
+    // Check if modalTipoUsuario exists on the page
+    const modalTipoUsuario = document.querySelector('.selectorModalUsuario');
+    const modalGeneros = document.querySelector('.selectorGeneros');
+
+    if (modalTipoUsuario) {
+        // Show the modalTipoUsuario
+        modalTipoUsuario.style.display = 'block';
+
+        // Get elements
+        const fanDiv = document.getElementById('fanDiv');
+        const artistaDiv = document.getElementById('artistaDiv');
+        const botonSiguiente = modalTipoUsuario.querySelector('.botonsecundario');
+
+        let tipoUsuarioSeleccionado = '';
+
+        // Event listeners for fan and artista selection
+        fanDiv.addEventListener('click', function () {
+            tipoUsuarioSeleccionado = 'Fan';
+            fanDiv.classList.add('seleccionado');
+            artistaDiv.classList.remove('seleccionado');
+            botonSiguiente.style.display = 'block';
+        });
+
+        artistaDiv.addEventListener('click', function () {
+            tipoUsuarioSeleccionado = 'Artista';
+            artistaDiv.classList.add('seleccionado');
+            fanDiv.classList.remove('seleccionado');
+            botonSiguiente.style.display = 'block';
+        });
+
+        // Event listener for "Siguiente" button
+        botonSiguiente.addEventListener('click', async function () {
+            if (tipoUsuarioSeleccionado) {
+                // Save the tipoUsuario meta via AJAX
+                const response = await enviarAjax('guardar_tipo_usuario', {tipoUsuario: tipoUsuarioSeleccionado});
+                if (response.success) {
+                    // Hide modalTipoUsuario and show modalGeneros
+                    modalTipoUsuario.style.display = 'none';
+                    if (modalGeneros) {
+                        modalGeneros.style.display = 'block';
+                        iniciarModalGeneros();
+                    }
+                } else {
+                    console.error('Error al guardar el tipo de usuario:', response.message);
+                }
+            }
+        });
+    } else if (modalGeneros) {
+        // If modalTipoUsuario does not exist but modalGeneros does, show modalGeneros
+        modalGeneros.style.display = 'block';
+        iniciarModalGeneros();
+    }
+
+    function iniciarModalGeneros() {
+        // Get elements
+        const generosDiv = modalGeneros.querySelector('.GNEROBDS');
+        const generoItems = generosDiv.querySelectorAll('.borde');
+        const botonListo = modalGeneros.querySelector('.botonsecundario');
+
+        let generosSeleccionados = [];
+
+        // Event listener for genre selection
+        generoItems.forEach(function (item) {
+            item.addEventListener('click', function () {
+                const genero = item.textContent.trim();
+                if (item.classList.contains('seleccionado')) {
+                    item.classList.remove('seleccionado');
+                    generosSeleccionados = generosSeleccionados.filter(g => g !== genero);
+                } else {
+                    item.classList.add('seleccionado');
+                    generosSeleccionados.push(genero);
+                }
+            });
+        });
+
+        // Event listener for "Listo" button
+        botonListo.addEventListener('click', async function () {
+            if (generosSeleccionados.length > 0) {
+                // Send selected genres via AJAX
+                const response = await enviarAjax('guardar_generos_usuario', {generos: generosSeleccionados});
+                if (response.success) {
+                    // Hide modalGeneros
+                    modalGeneros.style.display = 'none';
+                } else {
+                    console.error('Error al guardar los géneros:', response.message);
+                }
+            } else {
+                alert('Por favor, selecciona al menos un género.');
+            }
+        });
+    }
+});
