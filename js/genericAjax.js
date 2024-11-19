@@ -805,24 +805,21 @@ window.contadorDeSamples = () => {
     }
 };
 
-//dame las funciones para que esto funcione en el backend, solo tiene que guardar las metas en el usuario actual
 document.addEventListener('DOMContentLoaded', function () {
-    // Check if modalTipoUsuario exists on the page
     const modalTipoUsuario = document.querySelector('.selectorModalUsuario');
     const modalGeneros = document.querySelector('.selectorGeneros');
+    let currentBackground = null; // Variable para almacenar el fondo oscuro actual
 
     if (modalTipoUsuario) {
-        // Show the modalTipoUsuario
+        // Mostrar el modalTipoUsuario con fondo oscuro
         modalTipoUsuario.style.display = 'flex';
+        currentBackground = createModalDarkBackground(modalTipoUsuario);
 
-        // Get elements
         const fanDiv = document.getElementById('fanDiv');
         const artistaDiv = document.getElementById('artistaDiv');
         const botonSiguiente = modalTipoUsuario.querySelector('.botonsecundario');
-
         let tipoUsuarioSeleccionado = '';
 
-        // Event listeners for fan and artista selection
         fanDiv.addEventListener('click', function () {
             tipoUsuarioSeleccionado = 'Fan';
             fanDiv.classList.add('seleccionado');
@@ -837,16 +834,15 @@ document.addEventListener('DOMContentLoaded', function () {
             botonSiguiente.style.display = 'flex';
         });
 
-        // Event listener for "Siguiente" button
         botonSiguiente.addEventListener('click', async function () {
             if (tipoUsuarioSeleccionado) {
-                // Save the tipoUsuario meta via AJAX
-                const response = await enviarAjax('guardarTipoUsuario', {tipoUsuario: tipoUsuarioSeleccionado});
+                const response = await enviarAjax('guardarTipoUsuario', { tipoUsuario: tipoUsuarioSeleccionado });
                 if (response.success) {
-                    // Hide modalTipoUsuario and show modalGeneros
                     modalTipoUsuario.style.display = 'none';
+                    removeModalDarkBackground(currentBackground); // Remover el fondo actual
                     if (modalGeneros) {
                         modalGeneros.style.display = 'flex';
+                        currentBackground = createModalDarkBackground(modalGeneros); // Crear nuevo fondo para el siguiente modal
                         iniciarModalGeneros();
                     }
                 } else {
@@ -855,20 +851,17 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     } else if (modalGeneros) {
-        // If modalTipoUsuario does not exist but modalGeneros does, show modalGeneros
         modalGeneros.style.display = 'flex';
+        currentBackground = createModalDarkBackground(modalGeneros); // Fondo oscuro directo si el modalGeneros está activo
         iniciarModalGeneros();
     }
 
     function iniciarModalGeneros() {
-        // Get elements
         const generosDiv = modalGeneros.querySelector('.GNEROBDS');
         const generoItems = generosDiv.querySelectorAll('.borde');
         const botonListo = modalGeneros.querySelector('.botonsecundario');
-
         let generosSeleccionados = [];
 
-        // Event listener for genre selection
         generoItems.forEach(function (item) {
             item.addEventListener('click', function () {
                 const genero = item.textContent.trim();
@@ -882,14 +875,12 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        // Event listener for "Listo" button
         botonListo.addEventListener('click', async function () {
             if (generosSeleccionados.length > 0) {
-                // Send selected genres via AJAX
-                const response = await enviarAjax('guardarGenerosUsuario', {generos: generosSeleccionados});
+                const response = await enviarAjax('guardarGenerosUsuario', { generos: generosSeleccionados });
                 if (response.success) {
-                    // Hide modalGeneros
                     modalGeneros.style.display = 'none';
+                    removeModalDarkBackground(currentBackground); // Remover fondo oscuro al cerrar modalGeneros
                 } else {
                     console.error('Error al guardar los géneros:', response.message);
                 }
