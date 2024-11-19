@@ -806,20 +806,28 @@ window.contadorDeSamples = () => {
 };
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Verificar si existe el modalTipoUsuario en la página
     const modalTipoUsuario = document.querySelector('.selectorModalUsuario');
     const modalGeneros = document.querySelector('.selectorGeneros');
-    let currentBackground = null; // Variable para almacenar el fondo oscuro actual
+
+    let darkBackgroundTipoUsuario; // Para almacenar el fondo oscuro del modalTipoUsuario
+    let darkBackgroundGeneros; // Para almacenar el fondo oscuro del modalGeneros
 
     if (modalTipoUsuario) {
-        // Mostrar el modalTipoUsuario con fondo oscuro
+        // Mostrar el modalTipoUsuario
         modalTipoUsuario.style.display = 'flex';
-        currentBackground = createModalDarkBackground(modalTipoUsuario);
 
+        // Crear el fondo oscuro detrás del modalTipoUsuario
+        darkBackgroundTipoUsuario = window.createModalDarkBackground(modalTipoUsuario);
+
+        // Obtener elementos
         const fanDiv = document.getElementById('fanDiv');
         const artistaDiv = document.getElementById('artistaDiv');
         const botonSiguiente = modalTipoUsuario.querySelector('.botonsecundario');
+
         let tipoUsuarioSeleccionado = '';
 
+        // Eventos para la selección de fan y artista
         fanDiv.addEventListener('click', function () {
             tipoUsuarioSeleccionado = 'Fan';
             fanDiv.classList.add('seleccionado');
@@ -834,15 +842,24 @@ document.addEventListener('DOMContentLoaded', function () {
             botonSiguiente.style.display = 'flex';
         });
 
+        // Evento para el botón "Siguiente"
         botonSiguiente.addEventListener('click', async function () {
             if (tipoUsuarioSeleccionado) {
+                // Guardar el tipo de usuario mediante AJAX
                 const response = await enviarAjax('guardarTipoUsuario', { tipoUsuario: tipoUsuarioSeleccionado });
                 if (response.success) {
+                    // Ocultar modalTipoUsuario y mostrar modalGeneros
                     modalTipoUsuario.style.display = 'none';
-                    removeModalDarkBackground(currentBackground); // Remover el fondo actual
+
+                    // Remover el fondo oscuro del modalTipoUsuario
+                    window.removeModalDarkBackground(darkBackgroundTipoUsuario);
+
                     if (modalGeneros) {
                         modalGeneros.style.display = 'flex';
-                        currentBackground = createModalDarkBackground(modalGeneros); // Crear nuevo fondo para el siguiente modal
+
+                        // Crear el fondo oscuro detrás del modalGeneros
+                        darkBackgroundGeneros = window.createModalDarkBackground(modalGeneros);
+
                         iniciarModalGeneros();
                     }
                 } else {
@@ -851,17 +868,24 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     } else if (modalGeneros) {
+        // Si modalTipoUsuario no existe pero modalGeneros sí, mostrar modalGeneros
         modalGeneros.style.display = 'flex';
-        currentBackground = createModalDarkBackground(modalGeneros); // Fondo oscuro directo si el modalGeneros está activo
+
+        // Crear el fondo oscuro detrás del modalGeneros
+        darkBackgroundGeneros = window.createModalDarkBackground(modalGeneros);
+
         iniciarModalGeneros();
     }
 
     function iniciarModalGeneros() {
+        // Obtener elementos
         const generosDiv = modalGeneros.querySelector('.GNEROBDS');
         const generoItems = generosDiv.querySelectorAll('.borde');
         const botonListo = modalGeneros.querySelector('.botonsecundario');
+
         let generosSeleccionados = [];
 
+        // Evento para la selección de géneros
         generoItems.forEach(function (item) {
             item.addEventListener('click', function () {
                 const genero = item.textContent.trim();
@@ -875,12 +899,18 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
+        // Evento para el botón "Listo"
         botonListo.addEventListener('click', async function () {
             if (generosSeleccionados.length > 0) {
+                // Enviar géneros seleccionados mediante AJAX
                 const response = await enviarAjax('guardarGenerosUsuario', { generos: generosSeleccionados });
                 if (response.success) {
+                    // Ocultar modalGeneros
                     modalGeneros.style.display = 'none';
-                    removeModalDarkBackground(currentBackground); // Remover fondo oscuro al cerrar modalGeneros
+
+                    // Remover el fondo oscuro del modalGeneros
+                    window.removeModalDarkBackground(darkBackgroundGeneros);
+
                 } else {
                     console.error('Error al guardar los géneros:', response.message);
                 }
@@ -890,3 +920,4 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
