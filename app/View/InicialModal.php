@@ -1,13 +1,35 @@
 <?
 
+function img($url, $quality = 40, $strip = 'all')
+{
+    if ($url === null || $url === '') {
+        return '';
+    }
+    $parsed_url = parse_url($url);
+    if (strpos($url, 'https://i0.wp.com/') === 0) {
+        $cdn_url = $url;
+    } else {
+        $path = isset($parsed_url['host']) ? $parsed_url['host'] . $parsed_url['path'] : ltrim($parsed_url['path'], '/');
+        $cdn_url = 'https://i0.wp.com/' . $path;
+    }
+
+    $query = [
+        'quality' => $quality,
+        'strip' => $strip,
+    ];
+
+    $final_url = add_query_arg($query, $cdn_url);
+    return $final_url;
+}
+
 function modalPreguntas()
 {
     $userId = get_current_user_id();
-
+    $productorBg = img('https://2upra.com/wp-content/uploads/2024/11/aUZjCl0WQ_mmLypLZNGGJA.webp');
+    $artistaBg = img('https://2upra.com/wp-content/uploads/2024/11/ODuY4qpIReS8uWqwSTAQDg.webp');
     ob_start();
 ?>
     <div class="modal selectorModalUsuario">
-        <h3>Eres...</h3>
         <div class="TIPEARTISTSF">
             <div class="selectorUsuario borde" id="productorDiv">
                 <p>Fan</p>
@@ -17,14 +39,12 @@ function modalPreguntas()
             </div>
         </div>
         <style>
-            /* Fondo específico para el productor */
             #productorDiv::before {
-                background-image: url('https://2upra.com/wp-content/uploads/2024/11/aUZjCl0WQ_mmLypLZNGGJA.webp');
+                background-image: url('<? echo $productorBg; ?>');
             }
 
-            /* Fondo específico para el artista */
             #artistaDiv::before {
-                background-image: url('https://2upra.com/wp-content/uploads/2024/11/ODuY4qpIReS8uWqwSTAQDg.webp');
+                background-image: url('<? echo $artistaBg; ?>');
             }
         </style>
         <button class="botonprincipal" style="display: none;">Siguiente</button>
