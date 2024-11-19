@@ -6,7 +6,7 @@ function modalPreguntas()
 
     ob_start();
 ?>
-    <div class="modal">
+    <div class="modal selectorModalUsuario">
         <div class="TIPEARTISTSF">
             <div class="selectorUsuario borde" id="productorDiv">
                 <p>Productor</p>
