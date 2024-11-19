@@ -1045,12 +1045,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         });
+        /*
+        Géneros seleccionados: 
+        (2) ['Tech House', 'EDM']
+        0
+        : 
+        "Tech House"
+        1
+        : 
+        "EDM"
+        length
+        : 
+        2
+        [[Prototype]]
+        : 
+        Array(0)
+        */
 
         // Evento para el botón "Listo"
         botonListo.addEventListener('click', async function () {
             if (generosSeleccionados.length > 0) {
                 console.log('Géneros seleccionados:', generosSeleccionados); // Validar los datos
-                const response = await enviarAjax('guardarGenerosUsuario', {generos: generosSeleccionados});
+                const response = await enviarAjax('guardarGenerosUsuario', {generos: generosSeleccionados.join(',')});
                 if (response.success) {
                     modalGeneros.style.display = 'none';
                     removeDarkBackground(darkBackgroundGeneros);
@@ -1060,7 +1076,7 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 alert('Por favor, selecciona al menos un género.');
             }
-        });        
+        });
     }
 
     // Funciones para crear y remover el fondo oscuro
