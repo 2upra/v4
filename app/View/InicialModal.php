@@ -7,6 +7,7 @@ function modalPreguntas()
     ob_start();
 ?>
     <div class="modal selectorModalUsuario">
+        <h3>Eres...</h3>
         <div class="TIPEARTISTSF">
             <div class="selectorUsuario borde" id="productorDiv">
                 <p>Fan</p>
@@ -26,7 +27,7 @@ function modalPreguntas()
                 background-image: url('https://2upra.com/wp-content/uploads/2024/11/ODuY4qpIReS8uWqwSTAQDg.webp');
             }
         </style>
-        <button class="botonprincipal">Siguiente</button>
+        <button class="botonprincipal" style="display: none;">Siguiente</button>
     </div>
 
     <div class="modal">
