@@ -805,6 +805,32 @@ window.contadorDeSamples = () => {
     }
 };
 
+/*
+da error cuando intenta guardar los generos
+
+genericAjax.js?ver=3.0.2.1216093552:940 
+ Error al guardar los géneros: undefined
+(anónimo)	@	genericAjax.js?ver=3.0.2.1216093552:940
+
+function guardarGenerosUsuario() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error('Debes iniciar sesión para realizar esta acción.');
+    }
+    $generos = isset($_POST['generos']) ? $_POST['generos'] : array();
+
+    if (empty($generos) || !is_array($generos)) {
+        wp_send_json_error('No se recibieron géneros seleccionados.');
+    }
+
+    $generos_sanitizados = array_map('sanitize_text_field', $generos);
+    $userId = get_current_user_id();
+    update_user_meta($userId, 'usuarioPreferencias', $generos_sanitizados);
+    wp_send_json_success('Los géneros han sido guardados.');
+}
+
+add_action('wp_ajax_guardarGenerosUsuario', 'guardarGenerosUsuario');
+*/
+
 document.addEventListener('DOMContentLoaded', function () {
     // Verificar si existe el modalTipoUsuario en la página
     const modalTipoUsuario = document.querySelector('.selectorModalUsuario');
@@ -854,7 +880,7 @@ document.addEventListener('DOMContentLoaded', function () {
         botonSiguiente.addEventListener('click', async function () {
             if (tipoUsuarioSeleccionado) {
                 // Guardar el tipo de usuario mediante AJAX
-                const response = await enviarAjax('guardarTipoUsuario', { tipoUsuario: tipoUsuarioSeleccionado });
+                const response = await enviarAjax('guardarTipoUsuario', {tipoUsuario: tipoUsuarioSeleccionado});
                 if (response.success) {
                     // Ocultar modalTipoUsuario
                     modalTipoUsuario.style.display = 'none';
@@ -928,16 +954,16 @@ document.addEventListener('DOMContentLoaded', function () {
         botonListo.addEventListener('click', async function () {
             if (generosSeleccionados.length > 0) {
                 // Enviar géneros seleccionados mediante AJAX
-                const response = await enviarAjax('guardarGenerosUsuario', { generos: generosSeleccionados });
+                const response = await enviarAjax('guardarGenerosUsuario', {generos: generosSeleccionados});
                 if (response.success) {
                     // Ocultar modalGeneros
                     modalGeneros.style.display = 'none';
 
                     // Remover el fondo oscuro del modalGeneros
                     removeDarkBackground(darkBackgroundGeneros);
-
                 } else {
-                    console.error('Error al guardar los géneros:', response.message);
+                    // Cambiar response.message por response.data
+                    console.error('Error al guardar los géneros:', response.data);
                 }
             } else {
                 alert('Por favor, selecciona al menos un género.');
