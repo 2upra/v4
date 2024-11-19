@@ -805,6 +805,7 @@ window.contadorDeSamples = () => {
     }
 };
 
+//los background oscuro no funcionan 
 document.addEventListener('DOMContentLoaded', function () {
     // Verificar si existe el modalTipoUsuario en la página
     const modalTipoUsuario = document.querySelector('.selectorModalUsuario');
@@ -921,3 +922,31 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
+/*
+Puedes usar (no pueden ser modificadas estas funciones o puedes hacer unas nuevas)
+
+window.createModalDarkBackground = function (modal) {
+    const darkBackground = document.createElement('div');
+    darkBackground.classList.add('modal-background');
+    darkBackground.style.position = 'fixed';
+    darkBackground.style.top = 0;
+    darkBackground.style.left = 0;
+    darkBackground.style.width = '100vw';
+    darkBackground.style.height = '100vh';
+    darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    darkBackground.style.zIndex = 998; // Debe estar por debajo del modal
+    darkBackground.style.pointerEvents = 'auto';
+
+    // Insertar el background justo antes del modal, como hermano
+    modal.parentNode.insertBefore(darkBackground, modal);
+
+    return darkBackground;
+};
+
+// Función para remover el fondo oscuro del modal
+window.removeModalDarkBackground = function (darkBackground) {
+    if (darkBackground && darkBackground.parentNode) {
+        darkBackground.parentNode.removeChild(darkBackground);
+    }
+};
+*/
