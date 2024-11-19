@@ -26,7 +26,7 @@ window.inicializarAlerta = function () {
                     modalBackground.style.display = 'block';
                     modalBackground.style.visibility = 'visible';
                     modalBackground.style.opacity = '1';
-                    modalBackground.style.zIndex = '9999';
+                    modalBackground.style.zIndex = '998';
                 }, 0);
 
                 modalBackground.onclick = () => {
