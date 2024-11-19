@@ -47,7 +47,7 @@ function modalPreguntas()
                 background-image: url('<? echo $artistaBg; ?>');
             }
         </style>
-        <button class="botonprincipal" style="display: none;">Siguiente</button>
+        <button class="botonsecundario" style="display: none;">Siguiente</button>
     </div>
 
     <div class="modal selectorGeneros">
