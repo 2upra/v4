@@ -50,8 +50,7 @@ function modalPreguntas()
         <button class="botonprincipal" style="display: none;">Siguiente</button>
     </div>
 
-    <div class="modal">
-        <h3>Escoge los géneros que te gustan</h3>
+    <div class="modal selectorGeneros">
         <div class="GNEROBDS">
             <div class="borde">
                 <img src="" alt="">
