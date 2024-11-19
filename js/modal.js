@@ -167,10 +167,10 @@ class ModalManager {
     }
 
     createOrGetDarkBackground(modalElement) {
-        let darkBackground = document.querySelector('.modal-background');
+        let darkBackground = document.querySelector('.modal-backgroundModal');
         if (!darkBackground) {
             darkBackground = document.createElement('div');
-            darkBackground.classList.add('modal-background');
+            darkBackground.classList.add('modal-backgroundModal');
             // Insertar el fondo oscuro antes del modal en el DOM
             modalElement.parentNode.insertBefore(darkBackground, modalElement);
         }
