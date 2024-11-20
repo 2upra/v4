@@ -246,12 +246,19 @@ if (!defined('ABSPATH')) {
                     <? echo renderChat() ?>
                 </div>
 
+                <!-- Modal para editar titulo coleccion -->
+                <div id="cambiarTitulo" class="cambiarTituloModal modal" style="display: none;">
+                    <textarea id="mensajeEditTitulo"></textarea>
+                    <button id="enviarEditTitulo" class="borde">Editar</button>
+                </div>
+
                 <!-- Modal para editar post -->
                 <div id="editarPost" class="editarPostModal modal" style="display: none;">
                     <textarea id="mensajeEdit"></textarea>
                     <button id="enviarEdit" class="borde">Editar</button>
                 </div>
 
+                <!-- Modal para editar tags -->
                 <div id="corregirTags" class="editarPostModal modal" style="display: none;">
                     <textarea id="corregirEdit" placeholder="Explica a la IA concretamente que cosas debe corregir de los tags."></textarea>
                     <button id="enviarCorregir" class="borde">Corregir</button>

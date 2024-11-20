@@ -14,7 +14,7 @@ function htmlColec($filtro)
 
         <div class="post-content">
             <? echo imagenColeccion($postId); ?>
-            <h2 class="post-title"><? echo get_the_title($postId); ?></h2>
+            <h2 class="tituloColec post-title" data-post-id="<? echo $postId; ?>"><? echo get_the_title($postId); ?></h2>
             <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
         </div>
     </li>
@@ -408,5 +408,39 @@ function botonDescargaColec($postId)
     }
 
 
+    return ob_get_clean();
+}
+
+function opcionesColec($postId, $autorId)
+{
+    $usuarioActual = get_current_user_id();
+    $post_verificado = get_post_meta($postId, 'Verificado', true);
+    ob_start();
+?>
+    <button class="HR695R8" data-post-id="<? echo $postId; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
+
+    <div class="A1806241" id="opcionespost-<? echo $postId; ?>">
+        <div class="A1806242">
+            <? if (current_user_can('administrator')) : ?>
+                <button class="eliminarPost" data-post-id="<? echo $postId; ?>">Eliminar</button>
+                <button class="cambiarTitulo" data-post-id="<? echo $postId; ?>">Cambiar titulo</button>
+                <button class="cambiarImagen" data-post-id="<? echo $postId; ?>">Cambiar imagen</button>
+                <? if (!$post_verificado) : ?>
+                    <button class="verificarPost" data-post-id="<? echo $postId; ?>">Verificar</button>
+                <? endif; ?>
+                <button class="editarWordPress" data-post-id="<? echo $postId; ?>">Editar en WordPress</button>
+                <button class="banearUsuario" data-post-id="<? echo $postId; ?>">Banear</button>
+            <? elseif ($usuarioActual == $autorId) : ?>
+                <button class="eliminarPost" data-post-id="<? echo $postId; ?>">Eliminar</button>
+                <button class="cambiarImagen" data-post-id="<? echo $postId; ?>">Cambiar Imagen</button>
+            <? else : ?>
+                <button class="reporte" data-post-id="<? echo $postId; ?>" tipoContenido="social_post">Reportar</button>
+                <button class="bloquear" data-post-id="<? echo $postId; ?>">Bloquear</button>
+            <? endif; ?>
+        </div>
+    </div>
+
+    <div id="modalBackground4" class="modal-background submenu modalBackground2 modalBackground3" style="display: none;"></div>
+<?
     return ob_get_clean();
 }

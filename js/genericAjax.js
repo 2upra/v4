@@ -243,6 +243,110 @@ async function bloqueos() {
     accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
 }
 
+
+
+
+
+async function cambiarTitulo() {
+    modalManager.añadirModal('cambiarTitulo', '#cambiarTitulo', ['.cambiarTitulo']);
+
+    const editButtons = document.querySelectorAll('.cambiarTitulo');
+
+    if (editButtons.length === 0) {
+        return;
+    }
+
+    editButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            const postId = this.getAttribute('data-post-id');
+            abrirModalcambiarTitulo(postId);
+        });
+    });
+
+    const enviarEditBtn = document.getElementById('enviarEditTitulo');
+
+    if (enviarEditBtn && !enviarEditBtn.dataset.listenerAdded) {
+        enviarEditBtn.addEventListener('click', async function () {
+            const postId = this.dataset.postId;
+
+            if (!postId) {
+                console.error('No se encontró post_id en el botón enviarEdit');
+                return;
+            }
+
+            const confirmed = await confirm('¿Estás seguro de que quieres editar el titulo');
+            if (!confirmed) return;
+
+            const descripcion = document.getElementById('mensajeEditTitulo')?.value.trim() || '';
+
+            try {
+                const data = await enviarAjax('cambiarTitulo', {
+                    post_id: postId,
+                    titulo: titulo
+                });
+
+                if (data.success) {
+                    alert('Post editado correctamente');
+
+                    // Intenta encontrar el elemento primero por thePostContet
+                    let postContentDiv = document.querySelector(`.tituloColec[data-post-id="${postId}"]`);
+
+                    if (postContentDiv) {
+                        postContentDiv.textContent = descripcion;
+                    } else {
+                        console.warn('No se encontró el elemento para actualizar el contenido');
+                    }
+
+                    modalManager.toggleModal('cambiarTitulo', false);
+                } else {
+                    console.error(`Error: ${data.message}`);
+                    alert('Error al enviar petición: ' + (data.message || 'Error desconocido'));
+                }
+            } catch (error) {
+                console.error('Error al editar el post:', error);
+                alert('Ocurrió un error al editar el post.');
+            }
+        });
+        enviarEditBtn.dataset.listenerAdded = 'true';
+    }
+}
+
+function abrirModalcambiarTitulo(idContenido) {
+    modalManager.toggleModal('cambiarTitulo', true);
+
+    // Busca el contenido usando múltiples selectores
+    let postContent = '';
+
+    // Intenta diferentes selectores en orden
+    const selectors = [`.tituloColec[data-post-id="${postId}"]`, `.CONTENTLISTSAMPLE a[id-post="${idContenido}"]`, `#post-${idContenido} .CONTENTLISTSAMPLE`];
+
+    for (const selector of selectors) {
+        const element = document.querySelector(selector);
+        if (element) {
+            postContent = element.innerHTML.trim();
+            break;
+        }
+    }
+
+    // Limpia el contenido HTML
+    postContent = postContent
+        .replace(/<\/?[^>]+(>|$)/g, '') // Elimina etiquetas HTML
+        .replace(/&nbsp;/g, ' ') // Reemplaza &nbsp; por espacios
+        .trim(); // Elimina espacios extra
+
+    // Actualiza el textarea
+    const mensajeEditTextarea = document.getElementById('mensajeEditTitulo');
+    if (mensajeEditTextarea) {
+        mensajeEditTextarea.value = postContent;
+    }
+
+    // Actualiza el ID del post en el botón
+    const enviarEditBtn = document.getElementById('enviarEditTitulo');
+    if (enviarEditBtn) {
+        enviarEditBtn.dataset.postId = idContenido;
+    }
+}
+
 async function editarPost() {
     modalManager.añadirModal('editarPost', '#editarPost', ['.editarPost']);
 
@@ -432,6 +536,7 @@ async function handleAllRequests() {
         await permitirDescarga();
         await verificarPost();
         await corregirTags();
+        await cambiarTitulo();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }
