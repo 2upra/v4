@@ -370,6 +370,13 @@ function devlogin()
     $user_id = get_current_user_id();
     $acciones = get_user_meta($user_id, 'acciones', true);
     $pro = get_user_meta($user_id, 'user_pro', true);
+    $resultados = calc_ing();
+    $valEmp = "$" . number_format($resultados['valEmp'], 2, '.', '.');
+    $valAcc = "$" . number_format($resultados['valAcc'], 2, '.', '.');
+    $user = wp_get_current_user();
+    $acc = get_user_meta($user->ID, 'acciones', true);
+    $valD = $acc * $resultados['valAcc'];
+    $name = ($user->display_name);
     ob_start();
 ?>
 
