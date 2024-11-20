@@ -404,7 +404,7 @@ function devlogin()
                 </button>
             </a>
 
-            <a href="https://chat.whatsapp.com/JOduGKvWGR9KbYfBS9BWGL" class="no-ajax">
+            <a href="https://chat.whatsapp.com/G8hH7Gytfn5D2uYPibZT7N" class="no-ajax">
                 <button class="DZYBQD" id="whatsapp-button">
                     <? echo $GLOBALS['Whatsapp']; ?> WhatsApp
                 </button>
