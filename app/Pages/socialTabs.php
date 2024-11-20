@@ -30,13 +30,20 @@ function socialTabs()
                     </div>
                 </div>
             </div>
+
+            
+            <div class="tab INICIO S4K7I3" id="Colecciones">
+                <div class="BPLBDE">
+                    <? echo publicaciones(['post_type' => 'colecciones', 'filtro' => 'colecciones', 'posts' => 12]); ?>
+                </div>
+            </div>
     */
     ob_start();
 ?>
 
     <div id="menuData" style="display:none;" pestanaActual="">
         <div data-tab="Samples"></div>
-        <div data-tab="Colecciones"></div>
+
     </div>
 
     <div class="tabs">
@@ -139,11 +146,6 @@ function socialTabs()
                 </div>
             </div>
 
-            <div class="tab INICIO S4K7I3" id="Colecciones">
-                <div class="BPLBDE">
-                    <? echo publicaciones(['post_type' => 'colecciones', 'filtro' => 'colecciones', 'posts' => 12]); ?>
-                </div>
-            </div>
 
 
 

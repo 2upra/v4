@@ -130,6 +130,12 @@ if (!defined('ABSPATH')) {
                             </a>
                         </div>
 
+                        <div class="menu-item iconoInver">
+                            <a href="https://2upra.com/inversion">
+                                <? echo $GLOBALS['iconoInver']; ?>
+                            </a>
+                        </div>
+
                         <div class="menuColabs">
                             <? // echo colabsResumen() 
                             ?>
