@@ -323,7 +323,7 @@ function modalCarta()
         <div class="XCTQCK">
             <div class="WMPVLD"> <? echo $GLOBALS['iconologo']; ?></div>
             <div class="JMEPEB">
-                <p>Hola,</p>
+                <p>2 de octubre 2024,</p>
 
                 <p>No voy a hablar del proyecto ni a decir que es el próximo gran hito en aplicaciones web. Hoy quiero contarte un poco sobre mí, quién soy y por qué esto es tan importante para mí.</p>
 
@@ -403,8 +403,6 @@ function devlogin()
                 </button>
             </a>
 
-            <button class="DZYBQD borde botonprincipal carta">Carta</button>
-
         </div>
 
     </div>
@@ -442,18 +440,49 @@ function devlogin()
 
                 <div class="QSBVLN">
                     <p class="ZTHAWI">Total recaudado</p>
-                    <p class="BFUUUL">657$</p>
+                    <p class="BFUUUL">722$</p>
                 </div>
 
                 <div class="MDOKUH">
                     <p class="ZTHAWI">Meta</p>
-                    <p class="BFUUUL">1000$</p>
+                    <p class="BFUUUL">5000$</p>
                 </div>
 
             </div>
 
             <div class="progress-containerA1">
                 <div class="progress-barA1"></div>
+            </div>
+
+            <div class="GTVVIG">
+
+                <div class="XFBZWO">
+                    <div class="flex justify-between items-center">
+                        <p class="ZTHAWI">Tu valor actual</p>
+                        <? echo botonComprarAcciones('Comprar') ?>
+                    </div>
+                    <p class="BFUUUL">$<? echo number_format($valD, 2, '.', '.'); ?></p>
+                    <div class="GraficoCapital">
+                        <? echo graficoHistorialAcciones() ?>
+                    </div>
+                </div>
+
+                <div class="XFBZWO">
+                    <p class="ZTHAWI">Valor 2upra</p>
+                    <p class="BFUUUL"><? echo $valEmp ?></p>
+                    <div class="GraficoCapital">
+                        <? echo capitalValores() ?>
+                    </div>
+                </div>
+
+                <div class="XFBZWO">
+                    <p class="ZTHAWI">Valor Acción</p>
+                    <p class="BFUUUL"><? echo $valAcc ?></p>
+                    <div class="GraficoCapital">
+                        <? echo bolsavalores() ?>
+                    </div>
+                </div>
+
             </div>
 
         </div>
