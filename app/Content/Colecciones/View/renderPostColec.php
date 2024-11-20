@@ -14,7 +14,7 @@ function htmlColec($filtro)
 
         <div class="post-content">
             <? echo imagenColeccion($postId); ?>
-            <h2 class="tituloColec post-title" data-post-id="<? echo $postId; ?>"><? echo get_the_title($postId); ?></h2>
+            <h2 class="post-title" data-post-id="<? echo $postId; ?>"><? echo get_the_title($postId); ?></h2>
             <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
         </div>
     </li>
@@ -333,13 +333,14 @@ function singleColec($postId)
 
             <div class="AGDEORF">
                 <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
-                <h2 class="post-title"><? echo get_the_title($postId); ?></h2>
+                <h2 class="tituloColec post-title" data-post-id="<? echo $postId; ?>" ><? echo get_the_title($postId); ?></h2>
                 <div class="DSEDBE">
                     <? echo $samples ?>
                 </div>
                 <div class="BOTONESCOLEC">
                     <? echo botonDescargaColec($postId); ?>
                     <? echo like($postId); ?>
+                    <? echo opcionesColec($postId, $autorId); ?>
                 </div>
             </div>
 
