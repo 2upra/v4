@@ -317,8 +317,7 @@ function abrirModalcambiarTitulo(idContenido) {
     // Busca el contenido usando múltiples selectores
     let postContent = '';
 
-    // Intenta diferentes selectores en orden
-    const selectors = [`.tituloColec[data-post-id="${postId}"]`, `.CONTENTLISTSAMPLE a[id-post="${idContenido}"]`, `#post-${idContenido} .CONTENTLISTSAMPLE`];
+    const selectors = [`.tituloColec[data-post-id="${idContenido}"]`];
 
     for (const selector of selectors) {
         const element = document.querySelector(selector);

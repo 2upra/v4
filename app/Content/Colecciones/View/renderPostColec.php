@@ -333,7 +333,7 @@ function singleColec($postId)
 
             <div class="AGDEORF">
                 <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
-                <h2 class="tituloColec post-title" data-post-id="<? echo $postId; ?>" ><? echo get_the_title($postId); ?></h2>
+                <h2 class="tituloColec" data-post-id="<? echo $postId; ?>" ><? echo get_the_title($postId); ?></h2>
                 <div class="DSEDBE">
                     <? echo $samples ?>
                 </div>
