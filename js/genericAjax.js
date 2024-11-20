@@ -277,7 +277,7 @@ async function cambiarTitulo() {
             const confirmed = await confirm('¿Estás seguro de que quieres editar el titulo');
             if (!confirmed) return;
 
-            const descripcion = document.getElementById('mensajeEditTitulo')?.value.trim() || '';
+            const titulo = document.getElementById('mensajeEditTitulo')?.value.trim() || '';
 
             try {
                 const data = await enviarAjax('cambiarTitulo', {
