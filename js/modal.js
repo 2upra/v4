@@ -189,5 +189,4 @@ function smooth() {
     modalManager.añadirModal('proPro', '#propro', ['.prostatus0']);
     modalManager.añadirModal('proProAcciones', '#proproacciones', ['.subpro']);
     modalManager.añadirModal('W0512KN', '#a84J76WY', ['#W0512KN'], '#MkzIeq');
-    modalDetallesIA();
 }
