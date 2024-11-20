@@ -466,7 +466,6 @@ function devlogin()
                 <div class="XFBZWO">
                     <div class="flex justify-between items-center">
                         <p class="ZTHAWI">Tu valor actual</p>
-                        <? echo botonComprarAcciones('Comprar') ?>
                     </div>
                     <p class="BFUUUL">$<? echo number_format($valD, 2, '.', '.'); ?></p>
                     <div class="GraficoCapital">
