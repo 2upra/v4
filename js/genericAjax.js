@@ -292,7 +292,7 @@ async function cambiarTitulo() {
                     let postContentDiv = document.querySelector(`.tituloColec[data-post-id="${postId}"]`);
 
                     if (postContentDiv) {
-                        postContentDiv.textContent = descripcion;
+                        postContentDiv.textContent = titulo;
                     } else {
                         console.warn('No se encontró el elemento para actualizar el contenido');
                     }
