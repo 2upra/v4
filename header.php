@@ -92,7 +92,7 @@ if (!defined('ABSPATH')) {
 
                     <div class="centermenu">
 
-                        <div class="menu-item" style="display: none;">
+                        <div class="menu-item">
                             <a href="https://2upra.com/">
                                 <? echo $GLOBALS['iconoinicio']; 
                                 ?>
