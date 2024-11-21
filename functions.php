@@ -216,7 +216,7 @@ function custom_deregister_jquery() {
     }
 }
 add_action('wp_enqueue_scripts', 'custom_deregister_jquery', 100); // Prioridad alta para asegurarse de que se ejecuta después de que otros scripts se hayan registrado.
-/*
+
 function scriptsOrdenados()
 {
     // Definir la versión global
@@ -249,13 +249,13 @@ function scriptsOrdenados()
         'inversores',
         'genericAjax'
     ];
-
+    
     $script_handles = [
         'gloria' => '1.0.1',
         'ajaxPage' => '5.0.11',
         'autorows' => '1.0.1',
         'fan' => '1.0.36',
-        'stripeAccion' => '1.0.6',
+        /*'stripeAccion' => '1.0.6',
         'reproductor' => '2.1.2',
         'stripepro' => '1.0.8',
         'progreso' => '1.0.23',
@@ -288,9 +288,9 @@ function scriptsOrdenados()
         'cambiarVistas' => '1.0.1',
         'contarVistaPost' => '1.0.1',
         'notificaciones' => '1.0.1',
-        'colec' => '1.0.1',
+        'colec' => '1.0.1',*/
     ];
-
+    	
     foreach ($script_handles as $handle => $data) {
         // Verificar si el script debería cargarse solo para usuarios logueados
         if (!is_user_logged_in() && in_array($handle, $scripts_only_for_logged_in_users)) {
@@ -379,7 +379,7 @@ function scriptsOrdenados()
 
 
 add_action('wp_enqueue_scripts', 'scriptsOrdenados');
-*/
+
 function limpiarLogs()
 {
     $log_files = array(
