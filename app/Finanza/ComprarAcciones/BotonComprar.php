@@ -1,6 +1,6 @@
 <?
 
-function botonComprarAcciones($textoBoton = 'Acciones')
+function botonComprarAcciones($textoBoton = 'Comprar')
 {
     ob_start();
     ?>
