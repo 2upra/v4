@@ -216,7 +216,7 @@ function custom_deregister_jquery() {
     }
 }
 add_action('wp_enqueue_scripts', 'custom_deregister_jquery', 100); // Prioridad alta para asegurarse de que se ejecuta después de que otros scripts se hayan registrado.
-
+/*
 function scriptsOrdenados()
 {
     // Definir la versión global
@@ -377,7 +377,7 @@ function scriptsOrdenados()
     }
 }
 
-
+*/
 add_action('wp_enqueue_scripts', 'scriptsOrdenados');
 
 function limpiarLogs()
