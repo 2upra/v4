@@ -15,7 +15,7 @@ function inversorTab()
         <div class="tab-content">
 
             <div class="tab S4K7I3" id="Proyecto">
-                <? echo devlogin(); ?>
+                <? echo inversorSector(); ?>
             </div>
 
         </div>
