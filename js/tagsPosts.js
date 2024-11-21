@@ -146,6 +146,8 @@ function limitTags(maxVisible = 5) {
         }
     });
 }
+
+
 document.addEventListener('DOMContentLoaded', function () {
     // Obtener el elemento que contiene el JSON
     const dataElement = document.getElementById('dataColec');

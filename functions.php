@@ -273,7 +273,7 @@ function scriptsOrdenados()
         'grained' => '1.0.3',
         'subida' => '1.1.21',
         'RS' => '1.0.1',
-        //'tagsPosts' => '1.0.1',
+        'tagsPosts' => '1.0.1',
         'hashs' => '1.0.1',
         'background' => '1.0.1',
         //'formSubida' => '4.1.56',
