@@ -19,7 +19,7 @@ $current_post_id = get_the_ID();
     <main id="main">
         <div id="content" class="<?php echo esc_attr(! is_user_logged_in() ? 'nologin' : ''); ?>">
             <?php if (have_posts()) : while (have_posts()) : the_post(); ?>
-                    <article <?php post_class(); ?>>
+                    <article class="singlePostArticulo">
                         <h1 class="post-titleSingle"><?php the_title(); ?></h1>
                         <p class="post-authorSingle">By: <?php the_author(); ?></p>
                         <div class="post-contentSingle">
