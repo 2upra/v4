@@ -1,41 +1,42 @@
-<?php
+<?
 if (! defined('ABSPATH')) {
     exit;
 }
-$current_post_id = get_the_ID();
+$postId = get_the_ID();
+//  <p class="post-authorSingle">By: <? the_author(); </p>
 ?>
 
 <head>
-    <meta charset="<?php bloginfo('charset'); ?>">
+    <meta charset="<? bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="index, follow">
-    <?php wp_head(); ?>
+    <? wp_head(); ?>
 </head>
 
-<body <?php body_class(); ?>>
+<body <? body_class(); ?>>
 
-    <?php get_header(); ?>
+    <? get_header(); ?>
 
     <main id="main">
-        <div id="content" class="<?php echo esc_attr(! is_user_logged_in() ? 'nologin' : ''); ?>">
-            <?php if (have_posts()) : while (have_posts()) : the_post(); ?>
+        <div id="content" class="<? echo esc_attr(! is_user_logged_in() ? 'nologin' : ''); ?>">
+            <? if (have_posts()) : while (have_posts()) : the_post(); ?>
                     <article class="singlePostArticulo">
-                        <h1 class="post-titleSingle"><?php the_title(); ?></h1>
-                        <p class="post-authorSingle">By: <?php the_author(); ?></p>
+                        <h1 class="post-titleSingle"><? the_title(); ?></h1>
+
                         <div class="post-contentSingle">
-                            <?php the_content(); ?>
+                            <? the_content(); ?>
                         </div>
                         <div class="botonesPost">
-                            <? echo like($post_id); ?>
-                            <? echo botonComentar($post_id, $colab); ?>
+                            <? echo like($postId); ?>
+                            <? echo botonComentar($postId, $colab); ?>
                         </div>
                     </article>
-            <?php endwhile;
+            <? endwhile;
             endif; ?>
         </div>
     </main>
 
-    <?php get_footer(); ?>
+    <? get_footer(); ?>
 
 </body>
 
