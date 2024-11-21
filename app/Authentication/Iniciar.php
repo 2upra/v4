@@ -47,6 +47,7 @@ function iniciar_sesion()
                     </script>
 
                     <button type="button" class="R0A915 A1 boton-cerrar">Volver</button>
+                    <p class="pltcpv"><a href="https://2upra.com/tc/">Política de privacidad</a></p>
                 </div>
                 <? echo $mensaje; ?>
             </div>
@@ -54,7 +55,7 @@ function iniciar_sesion()
         <div class="RFZJUH">
             <div class="HPUYVS" id="fondograno"><? echo $GLOBALS['iconologo1']; ?></div>
         </div>
-        <p><a href="https://2upra.com/tc/">Política de privacidad</a></p>
+        
     </div>
 <?
     return ob_get_clean();
