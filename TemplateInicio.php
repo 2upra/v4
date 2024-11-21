@@ -45,6 +45,6 @@ setcookie("page_description", $descripcion, time() + 3600, "/");
 </head>
 
 <?
-
+get_header();
 
 ?>
