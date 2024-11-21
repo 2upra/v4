@@ -381,11 +381,11 @@ function devlogin()
     $name = ($user->display_name);
 
     ob_start();
-    ?>
+?>
     <div class="UIKMYM">
 
         <div class="WZEFLA">
-            <p>Hola <?php echo esc_html($user_name); ?></p>
+            <p>Hola <? echo esc_html($user_name); ?></p>
         </div>
 
         <div class="OIEODG">
@@ -395,13 +395,13 @@ function devlogin()
         <div class="JUJRQG">
             <a href="https://github.com/1ndoryu" class="no-ajax">
                 <button class="DZYBQD" id="github-button">
-                    <?php echo $GLOBALS['Github']; ?> GitHub
+                    <? echo $GLOBALS['Github']; ?> GitHub
                 </button>
             </a>
 
             <a href="https://chat.whatsapp.com/G8hH7Gytfn5D2uYPibZT7N" class="no-ajax">
                 <button class="DZYBQD" id="whatsapp-button">
-                    <?php echo $GLOBALS['Whatsapp']; ?> WhatsApp
+                    <? echo $GLOBALS['Whatsapp']; ?> WhatsApp
                 </button>
             </a>
         </div>
@@ -415,8 +415,8 @@ function devlogin()
                 <h3 class="XXD1"><strong>Conviértete en patrocinador:</strong> Puedes colaborar obteniendo participación creativa, acceso anticipado, contenido exclusivo, reconocimiento y acciones mensuales del proyecto.</h3>
 
                 <div class="DZYSQD DZYSQF">
-                    <?php echo botonSponsor(); ?>
-                    <?php echo botonComprarAcciones(); ?>
+                    <? echo botonSponsor(); ?>
+                    <? echo botonComprarAcciones(); ?>
                 </div>
 
             </div>
@@ -424,7 +424,7 @@ function devlogin()
                 <h3 class="XXD1"><strong>Colabora como desarrollador:</strong> Recibirás una compensación acorde a tu participación, que puede incluir reconocimiento, acciones del proyecto o la posibilidad de formar parte del equipo principal y beneficiarte de las ganancias futuras.</h3>
                 <a href="https://chat.whatsapp.com/JOduGKvWGR9KbYfBS9BWGL" class="no-ajax">
                     <div class="DZYSQD DZYSQF">
-                        <button class="DZYBQD unirteproyecto<?php if (!is_user_logged_in()) echo ' boton-sesion'; ?>"><?php echo $GLOBALS['randomIcono']; ?>Unirte al proyecto</button>
+                        <button class="DZYBQD unirteproyecto<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>"><? echo $GLOBALS['randomIcono']; ?>Unirte al proyecto</button>
                     </div>
                 </a>
             </div>
@@ -455,50 +455,54 @@ function devlogin()
                     <div class="flex justify-between items-center">
                         <p class="ZTHAWI">Tu valor actual</p>
                     </div>
-                    <p class="BFUUUL">$<?php echo number_format($valD, 2, '.', '.'); ?></p>
+                    <p class="BFUUUL">$<? echo number_format($valD, 2, '.', '.'); ?></p>
                     <div class="GraficoCapital">
-                        <?php echo graficoHistorialAcciones(); ?>
+                        <? echo graficoHistorialAcciones(); ?>
                     </div>
                 </div>
 
                 <div class="XFBZWO">
                     <p class="ZTHAWI">Valor 2upra</p>
-                    <p class="BFUUUL"><?php echo $valEmp; ?></p>
+                    <p class="BFUUUL"><? echo $valEmp; ?></p>
                     <div class="GraficoCapital">
-                        <?php echo capitalValores(); ?>
+                        <? echo capitalValores(); ?>
                     </div>
                 </div>
 
                 <div class="XFBZWO">
                     <p class="ZTHAWI">Valor Acción</p>
-                    <p class="BFUUUL"><?php echo $valAcc; ?></p>
+                    <p class="BFUUUL"><? echo $valAcc; ?></p>
                     <div class="GraficoCapital">
-                        <?php echo bolsavalores(); ?>
+                        <? echo bolsavalores(); ?>
                     </div>
                 </div>
 
+            </div>
+            <div>
+                <h3>Avances e información</h3>
+                <? echo publicaciones(['filtro' => 'nada', 'type_post' => 'post', 'tab_id' => 'Proyecto', 'posts' => 12]); ?>
             </div>
 
         </div>
 
         <div class="WLOZDD">
             <p>Muchas gracias</p>
-            <?php echo calcularAccionPorUsuario(); ?>
+            <? echo calcularAccionPorUsuario(); ?>
         </div>
 
-        <?php if (current_user_can('administrator')) : ?>
+        <? if (current_user_can('administrator')) : ?>
             <div class="YXJWYY flex">
                 <div class="XFBZWO">
-                    <?php echo formCompraAcciones(); ?>
+                    <? echo formCompraAcciones(); ?>
                 </div>
             </div>
-        <?php endif; ?>
+        <? endif; ?>
 
-        <?php echo modalComprarAcciones(); ?>
+        <? echo modalComprarAcciones(); ?>
 
     </div>
 
-    <?php
+<?
     return ob_get_clean();
 }
 

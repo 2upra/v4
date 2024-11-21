@@ -45,39 +45,6 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             error_log("[publicaciones] Advertencia: No se encontró ID de usuario");
         }
 
-        /*
-        siento que aca hay un problema, cuando envio idea true, parece que no entiende el true porque no usa procesarIdeas cuando es ajax
-        Parámetros de carga: 
-        {filtro: 'sampleList', tabId: '', identificador: '', idUsuario: '', paginaActual: 2, …}
-        colec
-        : 
-        "319708"
-        filtro
-        : 
-        "sampleList"
-        idUsuario
-        : 
-        ""
-        idea
-        : 
-        true
-        identificador
-        : 
-        ""
-        paginaActual
-        : 
-        2
-        tabId
-        : 
-        ""
-        [[Prototype]]
-        : 
-        Object
-        
-        y cuando es ajax salta el log de guardarLog("cargando post de coleccion");
-
-        */
-
         $defaults = [
             'filtro' => '',
             'tab_id' => '',
@@ -340,6 +307,8 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
                 echo htmlColab($filtro);
             } elseif ($tipoPost === 'colecciones') {
                 echo htmlColec($filtro);
+            } elseif ($tipoPost === 'post') {
+                echo htmlArticulo($filtro);
             } else {
                 echo '<p>Tipo de publicación no reconocido.</p>';
             }
