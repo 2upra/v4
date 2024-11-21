@@ -20,29 +20,40 @@ function variablesArticulo($postId)
     ];
 }
 
+function imagenArticulo($postId)
+{
+    $imagenSize = 'large';
+    $quality = 60;
+    $imagenUrl = imagenPost($postId, $imagenSize, $quality, 'all', false, true);
+    $imagenProcesada = img($imagenUrl, $quality, 'all');
+
+    return esc_url($imagenProcesada);
+}
+
+
 function htmlArticulo($filtro)
 {
     $post_id = get_the_ID();
     $vars = variablesArticulo($post_id);
     extract($vars);
+    $imagenUrl = imagenArticulo($postId);
+
     ob_start();
 ?>
     <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV"
         filtro="<? echo esc_attr($filtro); ?>"
-        id-post="<? echo get_the_ID(); ?>"
-        autor="<? echo esc_attr($autorId); ?>">
-
+        id-post="<? echo esc_attr($post_id); ?>"
+        autor="<? echo esc_attr($autorId); ?>"
+        style="background-image: url('<? echo esc_url($imagenUrl); ?>'); background-size: cover; background-position: center;">
+        
         <div class="post-content">
-            <? echo imagenColeccion($postId); ?>
-            <h2 class="post-title" data-post-id="<? echo $postId; ?>"><? echo get_the_title($postId); ?></h2>
+            <h2 class="post-title" data-post-id="<? echo esc_attr($postId); ?>"><? echo get_the_title($postId); ?></h2>
             <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
         </div>
 
     </li>
 
-    <li class="comentariosPost">
-
-    </li>
-<?
+    <li class="comentariosPost"></li>
+<?php
     return ob_get_clean();
 }

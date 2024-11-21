@@ -116,11 +116,11 @@ function inversorSector()
                 </div>
 
             </div>
-            <div>
-                <h3>Avances e información</h3>
-                <? echo publicaciones(['filtro' => 'nada', 'post_type' => 'post', 'tab_id' => 'Proyecto', 'posts' => 12]); ?>
-            </div>
 
+        </div>
+        <div class="articulosPost">
+            <h3>Avances e información</h3>
+            <? echo publicaciones(['filtro' => 'nada', 'post_type' => 'post', 'tab_id' => 'Proyecto', 'posts' => 12]); ?>
         </div>
 
         <div class="WLOZDD">
