@@ -1,5 +1,6 @@
 <?
 
+
 function iniciar_sesion()
 {
     if (is_user_logged_in()) return '<div>Ya has iniciado sesión. ¿Quieres cerrar sesión? <a href="' . wp_logout_url(home_url()) . '">Cerrar sesión</a></div>';
@@ -23,6 +24,7 @@ function iniciar_sesion()
 
     ob_start();
 ?>
+
     <div class="PUWJVS">
         <form class="CXHMID" action="" method="post">
             <div class="XUSEOO">
@@ -37,7 +39,7 @@ function iniciar_sesion()
                     <script>
                         document.getElementById('google-login-btn').addEventListener('click', function() {
                             window.location.href = 'https://accounts.google.com/o/oauth2/auth?' +
-                                'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' + // Aquí agregamos el "&"
+                                'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' +
                                 'redirect_uri=https://2upra.com/google-callback&' +
                                 'response_type=code&' +
                                 'scope=email profile';
@@ -52,6 +54,7 @@ function iniciar_sesion()
         <div class="RFZJUH">
             <div class="HPUYVS" id="fondograno"><? echo $GLOBALS['iconologo1']; ?></div>
         </div>
+        <p><a href="https://2upra.com/tc/">Política de privacidad</a></p>
     </div>
 <?
     return ob_get_clean();
