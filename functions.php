@@ -288,7 +288,7 @@ function scriptsOrdenados()
         'cambiarVistas' => '1.0.1',
         'contarVistaPost' => '1.0.1',
         'notificaciones' => '1.0.1',
-        'colec' => '1.0.1',*/
+        'colec' => '1.0.1',
     ];
     	
     foreach ($script_handles as $handle => $data) {
