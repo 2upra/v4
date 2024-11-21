@@ -377,9 +377,9 @@ function scriptsOrdenados()
     }
 }
 
-*/
-add_action('wp_enqueue_scripts', 'scriptsOrdenados');
 
+add_action('wp_enqueue_scripts', 'scriptsOrdenados');
+*/
 function limpiarLogs()
 {
     $log_files = array(
