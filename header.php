@@ -94,7 +94,7 @@ if (!defined('ABSPATH')) {
 
                         <div class="menu-item" style="display: none;">
                             <a href="https://2upra.com/">
-                                <? // echo $GLOBALS['iconoinicio']; 
+                                <? echo $GLOBALS['iconoinicio']; 
                                 ?>
                             </a>
                         </div>
