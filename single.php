@@ -1,72 +1,34 @@
 <?
-/**
- * The template for displaying all single posts
- *
- * @package WordPress
- * @subpackage 2upra_records
- * @since 1.0
- */
+if (! defined('ABSPATH')) {
+    exit;
+}
 
-get_header();
 ?>
 
-<main id="main" class="site-main">
+<head>
+    <meta charset="<? bloginfo('charset'); ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="index, follow">
+    <? wp_head(); ?>
+</head>
 
-    <?
-    while ( have_posts() ) :
-        the_post();
-    ?>
+<body <? body_class(); ?>>
 
-    <article id="post-<? the_ID(); ?>" <? post_class(); ?>>
-        <header class="entry-header">
-            <? the_title( '<h1 class="entry-title">', '</h1>' ); ?>
+    <? get_header(); ?>
 
-            <div class="entry-meta">
-                <?
-                // You can add your own meta information here
-                // For example: posted_on();
-                ?>
-            </div>
-        </header>
-
-        <?
-        if ( has_post_thumbnail() ) :
-            the_post_thumbnail();
-        endif;
-        ?>
-
-        <div class="entry-content">
-            <?
-            the_content();
-
-            wp_link_pages(
-                array(
-                    'before' => '<div class="page-links">' . __( 'Pages:', 'your-theme-textdomain' ),
-                    'after'  => '</div>',
-                )
-            );
-            ?>
+    <main id="main">
+        <div id="content" class="<? echo esc_attr(! is_user_logged_in() ? 'nologin' : ''); ?>">
+            <? if (have_posts()) : while (have_posts()) : the_post(); ?>
+                    <article <? post_class(); ?>>
+                      
+                    </article>
+            <? endwhile;
+            endif; ?>
         </div>
+    </main>
 
-        <footer class="entry-footer">
-            <?
-            // You can add tags, categories, etc. here
-            // For example: entry_footer();
-            ?>
-        </footer>
-    </article>
+    <? get_footer(); ?>
 
-    <?
-    // If comments are open or we have at least one comment, load up the comment template.
-    if ( comments_open() || get_comments_number() ) :
-        comments_template();
-    endif;
+</body>
 
-    endwhile; // End of the loop.
-    ?>
-
-</main>
-
-<?
-get_sidebar();
-get_footer();
+</html>
