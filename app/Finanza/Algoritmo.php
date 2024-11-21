@@ -10,6 +10,17 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
     $cGan = 0.05;        // Crecimiento de ganancias
     $volatilidad = 0.01; // Volatilidad
 
+    // Definir ingresos reales si no se proporcionan
+    if (empty($ingresosReales)) {
+
+        //$ingresosReales = obtenerIngresosRealesDesdeDB($wpdb, $fechaInicio);
+
+        // Si no hay ingresos reales en la base de datos, usa valores por defecto
+        if (empty($ingresosReales)) {
+            $ingresosReales = [25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, /*1 año */ ]; // Valores iniciales para meses específicos
+        }
+    }
+
     // Validación de entradas
     validarEntradas($m, $ingresosReales, $fechaInicio);
 
@@ -56,7 +67,22 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
     ];
 }
 
-// Funciones auxiliares
+// Función para obtener ingresos reales desde la base de datos
+function obtenerIngresosRealesDesdeDB($wpdb, $fechaInicio)
+{
+    $query = "
+        SELECT ingreso, fecha
+        FROM {$wpdb->prefix}ingresos
+        WHERE fecha >= %s
+        ORDER BY fecha ASC
+    ";
+    $resultados = $wpdb->get_results($wpdb->prepare($query, $fechaInicio));
+
+    return array_map(function ($row) {
+        return (float) $row->ingreso;
+    }, $resultados);
+}
+
 
 function validarEntradas($m, $ingresosReales, $fechaInicio)
 {
