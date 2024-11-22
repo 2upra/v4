@@ -12,7 +12,7 @@
       'botoneditarpost','fan','perfilpanel','smooth','navpanel','borderborder','initializeFormFunctions','initializeModalregistro',
       'submenu','selectortipousuario','empezarcolab','subidaRolaForm','avances','updateDates','initializeProgressSegments',
       'initializeCustomTooltips','fondoAcciones','pestanasgroup','manejoDeLogs','progresosinteractive','setupScrolling',
-      'inicializarDescargas','handleAllRequests','textflux','autoFillUserInfo','meta','reporteScript','generarGrafico',
+      'inicializarDescargas','handleAllRequests','textflux','autoFillUserInfo','meta','reporteScript','inicializarGraficos',
       'grafico','IniciadoresConfigPerfil','proyectoForm','inicializarAlerta','autoRows','iniciarRS','initializeUI','tagsPosts',
       'vistaPost','initEditWordPress','reiniciarCargaDiferida','registrarVistas','colec','cambiarFiltroTiempo','filtrosPost',
       'contadorDeSamples','establecerFiltros','actualizarBotonFiltro'

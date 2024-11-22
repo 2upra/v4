@@ -1,6 +1,16 @@
+// Variable global para almacenar las referencias de los gráficos
+var charts = {};
+
 function generarGrafico(idCanvas, datos, color = '#fff') {
+    // Obtener el contexto del canvas
     var ctx = document.getElementById(idCanvas).getContext('2d');
 
+    // Verificar si existe un gráfico previo en este canvas y destruirlo
+    if (charts[idCanvas]) {
+        charts[idCanvas].destroy();
+    }
+
+    // Extraer las etiquetas y datos de los datos proporcionados
     var labels = datos.map(function (e) {
         return e.time;
     });
@@ -8,7 +18,8 @@ function generarGrafico(idCanvas, datos, color = '#fff') {
         return e.value;
     });
 
-    new Chart(ctx, {
+    // Crear un nuevo gráfico y almacenarlo en la variable global
+    charts[idCanvas] = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
@@ -58,9 +69,13 @@ function generarGrafico(idCanvas, datos, color = '#fff') {
     });
 }
 
-// Generar los gráficos utilizando los datos de PHP
-if (typeof graficoData !== 'undefined') {
-    generarGrafico('myChart', graficoData.capital);
-    generarGrafico('myChartBolsa', graficoData.bolsa);
-    generarGrafico('myChartHistorial', graficoData.historial);
+// Función para inicializar los gráficos
+function inicializarGraficos() {
+    if (typeof graficoData !== 'undefined') {
+        generarGrafico('myChart', graficoData.capital);
+        generarGrafico('myChartBolsa', graficoData.bolsa);
+        generarGrafico('myChartHistorial', graficoData.historial);
+    }
 }
+
+
