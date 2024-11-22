@@ -1,11 +1,9 @@
-
 <?
+
 
 function iniciar_sesion()
 {
-    if (is_user_logged_in()) {
-        return '<div>Ya has iniciado sesión. ¿Quieres cerrar sesión? <a href="' . wp_logout_url(home_url()) . '">Cerrar sesión</a></div>';
-    }
+    if (is_user_logged_in()) return '<div>Ya has iniciado sesión. ¿Quieres cerrar sesión? <a href="' . wp_logout_url(home_url()) . '">Cerrar sesión</a></div>';
 
     $mensaje = '';
     if (isset($_POST['iniciar_sesion_submit'])) {
@@ -17,7 +15,7 @@ function iniciar_sesion()
         if (!is_wp_error($user)) {
             wp_set_current_user($user->ID);
             wp_set_auth_cookie($user->ID);
-            wp_redirect(home_url());
+            wp_redirect('https://2upra.com');
             exit;
         } else {
             $mensaje = '<div class="error-mensaje">Error al iniciar sesión. Por favor, verifica tus credenciales.</div>';
@@ -36,43 +34,40 @@ function iniciar_sesion()
                 <input type="password" id="contrasena_usuario_login" name="contrasena_usuario_login" required class="contrasena_usuario"><br>
                 <div class="XYSRLL">
                     <input class="R0A915 A1" type="submit" name="iniciar_sesion_submit" value="Iniciar sesión">
-                    <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn">Iniciar sesión con Google</button>
+                    <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn"><? echo $GLOBALS['Google']; ?>Iniciar sesión con Google</button>
 
                     <script>
                         document.getElementById('google-login-btn').addEventListener('click', function() {
-                            const googleAuthUrl = 'https://accounts.google.com/o/oauth2/auth';
-                            const params = new URLSearchParams({
-                                client_id: '84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com',
-                                redirect_uri: 'https://2upra.com/google-callback',
-                                response_type: 'code',
-                                scope: 'email profile',
-                                access_type: 'offline',
-                                prompt: 'consent'
-                            });
-                            window.location.href = `${googleAuthUrl}?${params.toString()}`;
+                            window.location.href = 'https://accounts.google.com/o/oauth2/auth?' +
+                                'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' +
+                                'redirect_uri=https://2upra.com/google-callback&' +
+                                'response_type=code&' +
+                                'scope=email profile';
                         });
                     </script>
 
                     <button type="button" class="R0A915 A1 boton-cerrar">Volver</button>
-                    <p class="pltcpv"><a href="https://2upra.com/tc/">Política de privacidad</a></p>
+                    <p><a href="https://2upra.com/tc/">Política de privacidad</a></p>
                 </div>
-                <?php echo $mensaje; ?>
+                <? echo $mensaje; ?>
             </div>
         </form>
         <div class="RFZJUH">
-            <div class="HPUYVS" id="fondograno"><?php echo $GLOBALS['iconologo1']; ?></div>
+            <div class="HPUYVS" id="fondograno"><? echo $GLOBALS['iconologo1']; ?></div>
         </div>
+        
     </div>
-<?php
+<?
     return ob_get_clean();
 }
+
 
 function handle_google_callback()
 {
     if (isset($_GET['code'])) {
-        $code = sanitize_text_field($_GET['code']);
+        $code = $_GET['code'];
         $client_id = '84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com';
-        $client_secret = getenv('GOOGLEAPI'); // Usa getenv para mayor seguridad
+        $client_secret = ($_ENV['GOOGLEAPI']);
         $redirect_uri = 'https://2upra.com/google-callback';
 
         // Intercambia el código por un token de acceso
@@ -87,29 +82,20 @@ function handle_google_callback()
         ));
 
         if (is_wp_error($response)) {
-            wp_die('Error en la autenticación con Google: ' . $response->get_error_message());
+            echo 'Error en la autenticación con Google.';
+            return;
         }
 
-        $body = wp_remote_retrieve_body($response);
-        $token = json_decode($body);
-
-        if (!isset($token->access_token)) {
-            wp_die('Error: no se pudo obtener el token de acceso.');
-        }
-
-        $access_token = sanitize_text_field($token->access_token);
+        $token = json_decode($response['body']);
+        $access_token = $token->access_token;
 
         // Obtener información del usuario
         $user_info_response = wp_remote_get('https://www.googleapis.com/oauth2/v1/userinfo?access_token=' . $access_token);
-        if (is_wp_error($user_info_response)) {
-            wp_die('Error al obtener la información del usuario.');
-        }
-
-        $user_info = json_decode(wp_remote_retrieve_body($user_info_response));
+        $user_info = json_decode($user_info_response['body']);
 
         if ($user_info && isset($user_info->email)) {
-            $email = sanitize_email($user_info->email);
-            $name = sanitize_text_field($user_info->name);
+            $email = $user_info->email;
+            $name = $user_info->name;
 
             // Verificar si el usuario ya existe
             if ($user = get_user_by('email', $email)) {
