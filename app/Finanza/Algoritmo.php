@@ -13,11 +13,8 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
     // Definir ingresos reales si no se proporcionan
     if (empty($ingresosReales)) {
 
-        //$ingresosReales = obtenerIngresosRealesDesdeDB($wpdb, $fechaInicio);
-
-        // Si no hay ingresos reales en la base de datos, usa valores por defecto
         if (empty($ingresosReales)) {
-            $ingresosReales = [25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, /*1 año */ ]; // Valores iniciales para meses específicos
+            $ingresosReales = [25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, /*1 año */ ]; 
         }
     }
 
