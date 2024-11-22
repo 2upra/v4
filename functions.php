@@ -60,6 +60,20 @@ function headGeneric()
     <meta name="msapplication-TileImage" content="https://2upra.com/ms-icon-144x144.png">
     <meta name="theme-color" content="#ffffff">
 
+    <!-- Etiquetas Open Graph para Facebook y otras plataformas -->
+    <meta property="og:title" content="2upra" />
+    <meta property="og:description" content="Social Media para artistas" />
+    <meta property="og:image" content="https://i0.wp.com/2upra.com/wp-content/uploads/2024/11/Pinterest_Download-47-28-818x1024.jpg?quality=60&strip=all" />
+    <meta property="og:url" content="https://2upra.com" />
+    <meta property="og:type" content="website" />
+
+    <!-- Etiquetas de Twitter Cards -->
+    <meta name="twitter:card" content="2upra" />
+    <meta name="twitter:title" content="Social Media para artistas">
+    <meta name="twitter:description" content="Descripción de tu página que aparecerá al compartir.">
+    <meta name="twitter:image" content="https://i0.wp.com/2upra.com/wp-content/uploads/2024/11/Pinterest_Download-47-28-818x1024.jpg?quality=60&strip=all">
+    <meta name="twitter:site" content="@wandorius" />
+
 <?php
 }
 add_action('wp_head', 'headGeneric');
