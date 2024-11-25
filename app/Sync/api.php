@@ -4,19 +4,9 @@ add_action('rest_api_init', function () {
     register_rest_route('1/v1', '/user_audio_downloads/(?P<user_id>\d+)', array(
         'methods'  => 'GET',
         'callback' => 'get_user_audio_downloads',
-        'permission_callback' => 'check_electron_app_header' // Función para verificar el encabezado
+        'permission_callback' => 'check_electron_app_header' // Function to verify the header
     ));
 });
-
-/*
-necesito que cuando envie una url, envie una url segura temporal de un solo uso para seguridad, 
-
-     validateStatus: [Function: validateStatus],
-      headers: [Object [AxiosHeaders]],
-      method: 'get',
-      url: 'https://2upra.com/wp-content/uploads/2024/11/Memphis-Snare_TSN5_2upra.wav',
-*/
-
 
 function get_user_audio_downloads(WP_REST_Request $request)
 {
@@ -38,13 +28,15 @@ function get_user_audio_downloads(WP_REST_Request $request)
                 $audio_url = wp_get_attachment_url($attachment_id);
                 $audio_filename = basename($audio_url);
 
-                // Generate a unique token
+                // Generate a unique token and nonce
                 $token = wp_generate_password(20, false);
+                $nonce = wp_create_nonce('download_' . $token);
+
                 // Store the token with the audio URL and set expiration time
                 set_transient('download_token_' . $token, $audio_url, 60 * 5); // Expires in 5 minutes
 
-                // Generate the temporary download URL
-                $download_url = home_url('/wp-json/my-custom-download/v1/download/?token=' . $token);
+                // Generate the temporary download URL with nonce
+                $download_url = home_url("/wp-json/my-custom-download/v1/download/?token=$token&nonce=$nonce");
 
                 $downloads[] = [
                     'post_id' => $post_id,
@@ -57,17 +49,18 @@ function get_user_audio_downloads(WP_REST_Request $request)
 
     return rest_ensure_response($downloads);
 }
-// Función para verificar el encabezado X-Electron-App
+
+// Function to verify the X-Electron-App header
 function check_electron_app_header() {
-    error_log("Encabezados: " . print_r($_SERVER, true)); // Imprime todos los encabezados del servidor
+    error_log("Headers: " . print_r($_SERVER, true)); // Prints all server headers
     error_log("X-Electron-App: " . (isset($_SERVER['HTTP_X_ELECTRON_APP']) ? $_SERVER['HTTP_X_ELECTRON_APP'] : 'No header'));
 
     if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
-        error_log("Acceso permitido");
+        error_log("Access allowed");
         return true;
     } else {
-        error_log("Acceso denegado");
-        return new WP_Error( 'forbidden', 'Acceso no autorizado', array( 'status' => 403 ) );
+        error_log("Access denied");
+        return new WP_Error('forbidden', 'Access not authorized', array('status' => 403));
     }
 }
 
@@ -77,6 +70,10 @@ function register_download_endpoint() {
         'callback' => 'serve_download',
         'args' => array(
             'token' => array(
+                'required' => true,
+                'type' => 'string',
+            ),
+            'nonce' => array(
                 'required' => true,
                 'type' => 'string',
             ),
@@ -93,6 +90,13 @@ function serve_download(WP_REST_Request $request) {
     }
 
     $token = $request->get_param('token');
+    $nonce = $request->get_param('nonce');
+
+    // Verify nonce
+    if (!wp_verify_nonce($nonce, 'download_' . $token)) {
+        error_log("Invalid nonce");
+        return new WP_Error('invalid_nonce', 'Invalid nonce.', array('status' => 403));
+    }
 
     // Retrieve the audio URL associated with the token
     $audio_url = get_transient('download_token_' . $token);
@@ -101,29 +105,19 @@ function serve_download(WP_REST_Request $request) {
         // Delete the token to prevent reuse
         delete_transient('download_token_' . $token);
 
-        // Serve the file
+        // Get the file path
         $file_path = wp_normalize_path(ABSPATH . str_replace(home_url('/'), '', $audio_url));
+
         if (file_exists($file_path)) {
-            // Get file info
-            $file_name = basename($file_path);
-            $file_size = filesize($file_path);
-            $file_type = mime_content_type($file_path);
-
-            // Output headers
-            header('Cache-Control: public');
-            header('Content-Description: File Transfer');
-            header('Content-Disposition: attachment; filename="' . $file_name . '"');
-            header('Content-Type: ' . $file_type);
-            header('Content-Transfer-Encoding: binary');
-            header('Content-Length: ' . $file_size);
-
-            // Read the file and output it
-            readfile($file_path);
+            // Serve the file using WordPress' file serving function
+            wp_serve_file($file_path, array('force_download' => true));
             exit;
         } else {
+            error_log("File not found at path: $file_path");
             return new WP_Error('file_not_found', 'File not found.', array('status' => 404));
         }
     } else {
+        error_log("Invalid or expired token");
         return new WP_Error('invalid_token', 'Invalid or expired token.', array('status' => 403));
     }
 }
