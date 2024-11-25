@@ -8,6 +8,39 @@ add_action('rest_api_init', function () {
     ));
 });
 
+
+// Function to verify the X-Electron-App header
+function check_electron_app_header() {
+    error_log("Headers: " . print_r($_SERVER, true)); // Prints all server headers
+    error_log("X-Electron-App: " . (isset($_SERVER['HTTP_X_ELECTRON_APP']) ? $_SERVER['HTTP_X_ELECTRON_APP'] : 'No header'));
+
+    if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
+        error_log("Access allowed");
+        return true;
+    } else {
+        error_log("Access denied");
+        return new WP_Error('forbidden', 'Access not authorized', array('status' => 403));
+    }
+}
+
+function register_download_endpoint() {
+    register_rest_route('my-custom-download/v1', '/download/', array(
+        'methods' => 'GET',
+        'callback' => 'serve_download',
+        'args' => array(
+            'token' => array(
+                'required' => true,
+                'type' => 'string',
+            ),
+            'nonce' => array(
+                'required' => true,
+                'type' => 'string',
+            ),
+        ),
+    ));
+}
+add_action('rest_api_init', 'register_download_endpoint');
+
 function get_user_audio_downloads(WP_REST_Request $request) {
     // Verify the X-Electron-App header
     $is_electron_app = check_electron_app_header();
@@ -45,37 +78,6 @@ function get_user_audio_downloads(WP_REST_Request $request) {
 
     return rest_ensure_response($downloads);
 }
-// Function to verify the X-Electron-App header
-function check_electron_app_header() {
-    error_log("Headers: " . print_r($_SERVER, true)); // Prints all server headers
-    error_log("X-Electron-App: " . (isset($_SERVER['HTTP_X_ELECTRON_APP']) ? $_SERVER['HTTP_X_ELECTRON_APP'] : 'No header'));
-
-    if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
-        error_log("Access allowed");
-        return true;
-    } else {
-        error_log("Access denied");
-        return new WP_Error('forbidden', 'Access not authorized', array('status' => 403));
-    }
-}
-
-function register_download_endpoint() {
-    register_rest_route('my-custom-download/v1', '/download/', array(
-        'methods' => 'GET',
-        'callback' => 'serve_download',
-        'args' => array(
-            'token' => array(
-                'required' => true,
-                'type' => 'string',
-            ),
-            'nonce' => array(
-                'required' => true,
-                'type' => 'string',
-            ),
-        ),
-    ));
-}
-add_action('rest_api_init', 'register_download_endpoint');
 
 function serve_download(WP_REST_Request $request) {
     // Verify the X-Electron-App header
