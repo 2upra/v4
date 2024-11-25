@@ -45,6 +45,7 @@ function register_download_endpoint() {
     register_rest_route('my-custom-download/v1', '/download/', array(
         'methods' => 'GET',
         'callback' => 'serve_download',
+        'permission_callback' => '__return_true',
         'args' => array(
             'token' => array(
                 'required' => true,
@@ -105,27 +106,35 @@ function serve_download(WP_REST_Request $request) {
     $nonce = $request->get_param('nonce');
 
     if (!wp_verify_nonce($nonce, 'download_' . $token)) {
+        error_log("Invalid nonce");
         return new WP_Error('invalid_nonce', 'Invalid nonce.', array('status' => 403));
     }
 
     $attachment_id = get_transient('download_token_' . $token);
     if (!$attachment_id) {
+        error_log("Invalid or expired token");
         return new WP_Error('invalid_token', 'Invalid or expired token.', array('status' => 403));
     }
 
     delete_transient('download_token_' . $token);
 
     $file_path = wp_get_attachment_path($attachment_id);
-    if (!file_exists($file_path)) {
+    error_log("Attachment ID: $attachment_id");
+    error_log("File path: $file_path");
+    error_log("File exists: " . (file_exists($file_path) ? 'Yes' : 'No'));
+
+    if (file_exists($file_path)) {
+        $mime_type = mime_content_type($file_path);
+        if (strpos($mime_type, 'audio/') !== 0) {
+            error_log("Invalid file type: $mime_type");
+            return new WP_Error('invalid_file_type', 'Invalid file type.', array('status' => 400));
+        }
+
+        // Serve the file using WordPress function
+        wp_send_file($file_path, array(), true);
+        exit;
+    } else {
+        error_log("File not found at path: $file_path");
         return new WP_Error('file_not_found', 'File not found.', array('status' => 404));
     }
-
-    $mime_type = mime_content_type($file_path);
-    if (strpos($mime_type, 'audio/') !== 0) {
-        return new WP_Error('invalid_file_type', 'Invalid file type.', array('status' => 400));
-    }
-
-    // Serve the file using WordPress function
-    wp_send_file($file_path, array(), true);
-    exit;
 }
