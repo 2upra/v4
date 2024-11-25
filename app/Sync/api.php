@@ -8,6 +8,24 @@ add_action('rest_api_init', function () {
     ));
 });
 
+/*
+
+se supone que el audio tiene que descargarse desde la url generada temporalmente pero se ve que lo hace asi: 
+no funciona porque https://2upra.com/wp-content/uploads es es innacesible por seguridad 
+que esta psando 
+Received response: [
+  {
+    post_id: 319580,
+    audio_url: 'https://2upra.com/wp-content/uploads/2024/11/Memphis-Snare_TSN5_2upra.wav',
+    audio_filename: 'Memphis-Snare_TSN5_2upra.wav'
+  }
+]
+Skipping audio with invalid download_url: {
+  post_id: 319580,
+  audio_url: 'https://2upra.com/wp-content/uploads/2024/11/Memphis-Snare_TSN5_2upra.wav',
+  audio_filename: 'Memphis-Snare_TSN5_2upra.wav'
+}
+*/
 
 // Function to verify the X-Electron-App header
 function check_electron_app_header() {
@@ -112,34 +130,11 @@ function serve_download(WP_REST_Request $request) {
             return new WP_Error('invalid_file_type', 'Invalid file type.', array('status' => 400));
         }
 
-        header('Content-Type: ' . $mime_type);
-        header('Content-Disposition: attachment; filename="' . basename($file_path) . '"');
-        header('Content-Length: ' . filesize($file_path));
-        readfile($file_path);
+        // Serve the file using WordPress function
+        wp_send_file($file_path, array(), true);
         exit;
     } else {
         error_log("File not found at path: $file_path");
         return new WP_Error('file_not_found', 'File not found.', array('status' => 404));
     }
 }
-
-/*
-tengo este problema
-[25-Nov-2024 20:50:10 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function wp_get_attachment_path() in /var/www/wordpress/wp-content/themes/2upra3v/app/Sync/api.php:60
-Stack trace:
-#0 /var/www/wordpress/wp-includes/rest-api/class-wp-rest-server.php(1292): get_user_audio_downloads()
-#1 /var/www/wordpress/wp-includes/rest-api/class-wp-rest-server.php(1125): WP_REST_Server->respond_to_request()
-#2 /var/www/wordpress/wp-includes/rest-api/class-wp-rest-server.php(439): WP_REST_Server->dispatch()
-#3 /var/www/wordpress/wp-includes/rest-api.php(449): WP_REST_Server->serve_request()
-#4 /var/www/wordpress/wp-includes/class-wp-hook.php(324): rest_api_loaded()
-#5 /var/www/wordpress/wp-includes/class-wp-hook.php(348): WP_Hook->apply_filters()
-#6 /var/www/wordpress/wp-includes/plugin.php(565): WP_Hook->do_action()
-#7 /var/www/wordpress/wp-includes/class-wp.php(418): do_action_ref_array()
-#8 /var/www/wordpress/wp-includes/class-wp.php(813): WP->parse_request()
-#9 /var/www/wordpress/wp-includes/functions.php(1336): WP->main()
-#10 /var/www/wordpress/wp-blog-header.php(16): wp()
-#11 /var/www/wordpress/index.php(17): require('...')
-#12 {main}
-  thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Sync/api.php on line 60
-
-*/
