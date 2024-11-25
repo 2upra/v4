@@ -12,7 +12,7 @@ add_action('rest_api_init', function () {
 
 se supone que el audio tiene que descargarse desde la url generada temporalmente pero se ve que lo hace asi: 
 no funciona porque https://2upra.com/wp-content/uploads es es innacesible por seguridad 
-que esta psando 
+que esta
 Received response: [
   {
     post_id: 319580,
@@ -45,7 +45,6 @@ function register_download_endpoint() {
     register_rest_route('my-custom-download/v1', '/download/', array(
         'methods' => 'GET',
         'callback' => 'serve_download',
-        'permission_callback' => '__return_true',
         'args' => array(
             'token' => array(
                 'required' => true,
@@ -105,36 +104,48 @@ function serve_download(WP_REST_Request $request) {
     $token = $request->get_param('token');
     $nonce = $request->get_param('nonce');
 
+    // Verify nonce
     if (!wp_verify_nonce($nonce, 'download_' . $token)) {
         error_log("Invalid nonce");
         return new WP_Error('invalid_nonce', 'Invalid nonce.', array('status' => 403));
     }
 
+    // Retrieve the attachment ID associated with the token
     $attachment_id = get_transient('download_token_' . $token);
-    if (!$attachment_id) {
+
+    if ($attachment_id) {
+        // Delete the token to prevent reuse
+        delete_transient('download_token_' . $token);
+
+        // Get the file path
+        $file_path = wp_get_attachment_path($attachment_id);
+
+        if (file_exists($file_path)) {
+            // Get the mime type
+            $mime_type = mime_content_type($file_path);
+
+             // Check if the mime type starts with 'audio/'
+             if (strpos($mime_type, 'audio/') !== 0) {
+                error_log("File is not an audio: $file_path");
+                return new WP_Error('invalid_file_type', 'Invalid file type.', array('status' => 400));
+            }
+
+            // Set headers for the download
+            header('Content-Description: File Transfer');
+            header('Content-Type: ' . $mime_type);
+            header('Content-Disposition: attachment; filename="' . basename($file_path) . '"');
+            header('Expires: 0');
+            header('Cache-Control: no-cache');
+            header('Pragma: public');
+            header('Content-Length: ' . filesize($file_path));
+            readfile($file_path);
+            exit;
+        } else {
+            error_log("File not found at path: $file_path");
+            return new WP_Error('file_not_found', 'File not found.', array('status' => 404));
+        }
+    } else {
         error_log("Invalid or expired token");
         return new WP_Error('invalid_token', 'Invalid or expired token.', array('status' => 403));
-    }
-
-    delete_transient('download_token_' . $token);
-
-    $file_path = wp_get_attachment_path($attachment_id);
-    error_log("Attachment ID: $attachment_id");
-    error_log("File path: $file_path");
-    error_log("File exists: " . (file_exists($file_path) ? 'Yes' : 'No'));
-
-    if (file_exists($file_path)) {
-        $mime_type = mime_content_type($file_path);
-        if (strpos($mime_type, 'audio/') !== 0) {
-            error_log("Invalid file type: $mime_type");
-            return new WP_Error('invalid_file_type', 'Invalid file type.', array('status' => 400));
-        }
-
-        // Serve the file using WordPress function
-        wp_send_file($file_path, array(), true);
-        exit;
-    } else {
-        error_log("File not found at path: $file_path");
-        return new WP_Error('file_not_found', 'File not found.', array('status' => 404));
     }
 }
