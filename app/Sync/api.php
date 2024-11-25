@@ -1,13 +1,14 @@
 <?php
 // Registrar la ruta del API REST
 add_action('rest_api_init', function () {
+    // Ruta para obtener las descargas de audio del usuario
     register_rest_route('1/v1', '/user_audio_downloads/(?P<user_id>\d+)', array(
         'methods'  => 'GET',
         'callback' => 'get_user_audio_downloads',
         'permission_callback' => 'check_electron_app_header', // Verifica el header
     ));
 
-    // Registrar el endpoint para descargar los archivos
+    // Ruta para servir las descargas de audio
     register_rest_route('my-custom-download/v1', '/download/', array(
         'methods' => 'GET',
         'callback' => 'serve_download',
@@ -40,7 +41,7 @@ function check_electron_app_header() {
     }
 }
 
-// Función para obtener las descargas del usuario
+// Función para obtener las descargas de audio del usuario
 function get_user_audio_downloads(WP_REST_Request $request) {
     $user_id = $request->get_param('user_id');
     error_log("Fetching audio downloads for user ID: $user_id");
@@ -59,7 +60,7 @@ function get_user_audio_downloads(WP_REST_Request $request) {
 
             // Validar que el attachment sea correcto
             if ($attachment_id && get_post($attachment_id)) {
-                $file_path = wp_get_attachment_path($attachment_id); // Obtener la ruta del archivo
+                $file_path = get_attached_file($attachment_id); // Obtener la ruta del archivo
                 if ($file_path && file_exists($file_path)) {
                     $mime_type = mime_content_type($file_path); // Obtener el MIME type
                     if (strpos($mime_type, 'audio/') === 0) {
@@ -111,7 +112,7 @@ function serve_download(WP_REST_Request $request) {
         delete_transient('download_token_' . $token);
 
         // Obtener la ruta del archivo
-        $file_path = wp_get_attachment_path($attachment_id);
+        $file_path = get_attached_file($attachment_id);
 
         if ($file_path && file_exists($file_path)) {
             // Obtener el MIME type
