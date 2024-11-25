@@ -30,41 +30,75 @@ function restarPinkysEliminacion($postID)
 add_action('wp_ajax_procesarDescarga', 'procesarDescarga');
 
 function procesarDescarga() {
+    error_log('Function procesarDescarga started');
+
     $userID = get_current_user_id();
+    error_log('User ID: ' . $userID);
     if (!$userID) {
         wp_send_json_error(['message' => 'No autorizado.']);
+        return;
     }
+
     $postID = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+    error_log('Post ID: ' . $postID);
     $post = get_post($postID);
     if (!$post || $post->post_status !== 'publish') {
         wp_send_json_error(['message' => 'Post no válido.']);
+        return;
     }
+
     $audioID = get_post_meta($postID, 'post_audio', true);
+    error_log('Audio ID: ' . $audioID);
     if (!$audioID) {
         wp_send_json_error(['message' => 'Audio no encontrado.']);
+        return;
     }
+
     $descargasAnteriores = get_user_meta($userID, 'descargas', true);
+    error_log('Descargas before: ' . print_r($descargasAnteriores, true));
     if (!$descargasAnteriores) {
         $descargasAnteriores = [];
     }
+
     $yaDescargado = isset($descargasAnteriores[$postID]);
+    error_log('Ya descargado: ' . ($yaDescargado ? 'true' : 'false'));
+
     if (!$yaDescargado) {
         $pinky = (int)get_user_meta($userID, 'pinky', true);
+        error_log('Pinky count: ' . $pinky);
         if ($pinky < 1) {
             wp_send_json_error(['message' => 'No tienes suficientes Pinkys para esta descarga.']);
+            return;
         }
         restarPinkys($userID, 1);
     }
+
     if (!$yaDescargado) {
         $descargasAnteriores[$postID] = 1;
     } else {
         $descargasAnteriores[$postID]++;
     }
-    update_user_meta($userID, 'descargas', $descargasAnteriores);
+    error_log('Descargas after: ' . print_r($descargasAnteriores, true));
+
+    $updateResult = update_user_meta($userID, 'descargas', $descargasAnteriores);
+    if ( ! $updateResult ) {
+        error_log('Failed to update descargas meta for user ID ' . $userID);
+    } else {
+        error_log('Successfully updated descargas meta for user ID ' . $userID);
+    }
+
     $total_descargas = (int)get_post_meta($postID, 'totalDescargas', true);
     $total_descargas++;
-    update_post_meta($postID, 'totalDescargas', $total_descargas);
+    $updatePostMeta = update_post_meta($postID, 'totalDescargas', $total_descargas);
+    if ( ! $updatePostMeta ) {
+        error_log('Failed to update totalDescargas meta for post ID ' . $postID);
+    } else {
+        error_log('Successfully updated totalDescargas meta for post ID ' . $postID);
+    }
+
     $download_url = generarEnlaceDescarga($userID, $audioID);
+    error_log('Download URL: ' . $download_url);
+
     wp_send_json_success(['download_url' => $download_url]);
 }
 
