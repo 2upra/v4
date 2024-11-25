@@ -8,8 +8,7 @@ add_action('rest_api_init', function () {
     ));
 });
 
-function get_user_audio_downloads(WP_REST_Request $request)
-{
+function get_user_audio_downloads(WP_REST_Request $request) {
     // Verify the X-Electron-App header
     $is_electron_app = check_electron_app_header();
     if (is_wp_error($is_electron_app)) {
@@ -25,23 +24,20 @@ function get_user_audio_downloads(WP_REST_Request $request)
         foreach ($descargas as $post_id => $count) {
             $attachment_id = get_post_meta($post_id, 'post_audio', true);
             if ($attachment_id) {
-                $audio_url = wp_get_attachment_url($attachment_id);
-                $audio_filename = basename($audio_url);
-
                 // Generate a unique token and nonce
                 $token = wp_generate_password(20, false);
                 $nonce = wp_create_nonce('download_' . $token);
 
-                // Store the token with the audio URL and set expiration time
-                set_transient('download_token_' . $token, $audio_url, 60 * 5); // Expires in 5 minutes
+                // Store the attachment ID with the token
+                set_transient('download_token_' . $token, $attachment_id, 60 * 5); // Expires in 5 minutes
 
-                // Generate the temporary download URL with nonce
+                // Generate the temporary download URL
                 $download_url = home_url("/wp-json/my-custom-download/v1/download/?token=$token&nonce=$nonce");
 
                 $downloads[] = [
                     'post_id' => $post_id,
                     'download_url' => $download_url,
-                    'audio_filename' => $audio_filename
+                    'audio_filename' => get_the_title($attachment_id)
                 ];
             }
         }
@@ -49,7 +45,6 @@ function get_user_audio_downloads(WP_REST_Request $request)
 
     return rest_ensure_response($downloads);
 }
-
 // Function to verify the X-Electron-App header
 function check_electron_app_header() {
     error_log("Headers: " . print_r($_SERVER, true)); // Prints all server headers
@@ -98,15 +93,15 @@ function serve_download(WP_REST_Request $request) {
         return new WP_Error('invalid_nonce', 'Invalid nonce.', array('status' => 403));
     }
 
-    // Retrieve the audio URL associated with the token
-    $audio_url = get_transient('download_token_' . $token);
+    // Retrieve the attachment ID associated with the token
+    $attachment_id = get_transient('download_token_' . $token);
 
-    if ($audio_url) {
+    if ($attachment_id) {
         // Delete the token to prevent reuse
         delete_transient('download_token_' . $token);
 
         // Get the file path
-        $file_path = wp_normalize_path(ABSPATH . str_replace(home_url('/'), '', $audio_url));
+        $file_path = wp_get_attachment_path($attachment_id);
 
         if (file_exists($file_path)) {
             // Serve the file using WordPress' file serving function
