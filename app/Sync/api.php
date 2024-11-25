@@ -37,11 +37,15 @@ function get_user_audio_downloads(WP_REST_Request $request)
 }
 
 // Función para verificar el encabezado X-Electron-App
-function check_electron_app_header()
-{
+function check_electron_app_header() {
+    error_log("Encabezados: " . print_r($_SERVER, true)); // Imprime todos los encabezados del servidor
+    error_log("X-Electron-App: " . $_SERVER['HTTP_X_ELECTRON_APP']); // Imprime el valor del encabezado específico
+
     if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
-        return true; // Permitir acceso si el encabezado está presente y es correcto
+        error_log("Acceso permitido");
+        return true;
     } else {
-        return new WP_Error('forbidden', 'Acceso no autorizado', array('status' => 403)); // Denegar acceso
+        error_log("Acceso denegado");
+        return new WP_Error( 'forbidden', 'Acceso no autorizado', array( 'status' => 403 ) );
     }
 }
