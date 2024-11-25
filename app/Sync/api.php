@@ -55,20 +55,13 @@ function get_user_audio_downloads(WP_REST_Request $request) {
         foreach ($descargas as $post_id => $count) {
             $attachment_id = get_post_meta($post_id, 'post_audio', true);
             if ($attachment_id && get_post_type($attachment_id) === 'attachment') {
-                 // Get the file path to check if it's a valid audio file
                 $file_path = wp_get_attachment_path($attachment_id);
                 $mime_type = mime_content_type($file_path);
-                
-                // Check if the mime type starts with 'audio/'
+
                 if (strpos($mime_type, 'audio/') === 0) {
-                    // Generate a unique token and nonce
                     $token = wp_generate_password(20, false);
                     $nonce = wp_create_nonce('download_' . $token);
-
-                    // Store the attachment ID with the token
-                    set_transient('download_token_' . $token, $attachment_id, 60 * 5); // Expires in 5 minutes
-
-                    // Generate the temporary download URL
+                    set_transient('download_token_' . $token, $attachment_id, 60 * 5);
                     $download_url = home_url("/wp-json/my-custom-download/v1/download/?token=$token&nonce=$nonce");
 
                     $downloads[] = [
@@ -76,11 +69,10 @@ function get_user_audio_downloads(WP_REST_Request $request) {
                         'download_url' => $download_url,
                         'audio_filename' => get_the_title($attachment_id) . '.' . pathinfo($file_path, PATHINFO_EXTENSION)
                     ];
+                } else {
+                    error_log("File is not an audio: $file_path");
                 }
-                else{
-                     error_log("File is not an audio: $file_path");
-                }
-            }else {
+            } else {
                 error_log("Attachment not found for post ID: $post_id");
             }
         }
