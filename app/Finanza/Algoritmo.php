@@ -11,23 +11,23 @@ function calc_ing($m = 48, $ingresosReales = [], $fechaInicio = '2024-01-01')
     $volatilidad = 0.01; // Volatilidad
 
     // Definir ingresos reales si no se proporcionan
-    if (empty($ingresosReales)) {
 
-        if (empty($ingresosReales)) {
-            $ingresosReales = [25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, /*1 año */ ]; 
-        }
+    if (empty($ingresosReales)) {
+        $ingresosReales = [25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, /*1 año */];
     }
 
     // Validación de entradas
     validarEntradas($m, $ingresosReales, $fechaInicio);
 
     // Obtención de las acciones de los usuarios
-    $resultados = $wpdb->get_results("
-        SELECT user_id, meta_value AS acciones
-        FROM {$wpdb->usermeta}
-        WHERE meta_key = 'acciones' AND user_id != 1
-    ");
-
+    $resultados = $wpdb->get_results(
+        $wpdb->prepare("
+            SELECT user_id, meta_value AS acciones
+            FROM {$wpdb->usermeta}
+            WHERE meta_key = %s AND user_id != %d
+        ", 'acciones', 1)
+    );
+    
     // Calcular factor de escasez
     $totalAccionesUsuarios = sumarAcciones($resultados);
     $accionesDisponibles = $accTot - $totalAccionesUsuarios;
@@ -123,7 +123,7 @@ function ajustarIngresos($ingM, $ingresosReales, $fechaInicio)
     $fechaInicioObj = new DateTime($fechaInicio);
     $fechaActualObj = new DateTime();
     $mesActual = (($fechaActualObj->format('Y') - $fechaInicioObj->format('Y')) * 12) +
-                 ($fechaActualObj->format('n') - $fechaInicioObj->format('n')) + 1;
+        ($fechaActualObj->format('n') - $fechaInicioObj->format('n')) + 1;
     $mesActual = min($mesActual, count($ingM));
     $numIngresosReales = min($mesActual, count($ingresosReales));
 
@@ -207,8 +207,3 @@ function valores()
 
     return $output;
 }
-
-?>
-
-
-
