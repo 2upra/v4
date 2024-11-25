@@ -8,24 +8,6 @@ add_action('rest_api_init', function () {
     ));
 });
 
-/*
-
-se supone que el audio tiene que descargarse desde la url generada temporalmente pero se ve que lo hace asi: 
-no funciona porque https://2upra.com/wp-content/uploads es es innacesible por seguridad 
-que esta psando 
-Received response: [
-  {
-    post_id: 319580,
-    audio_url: 'https://2upra.com/wp-content/uploads/2024/11/Memphis-Snare_TSN5_2upra.wav',
-    audio_filename: 'Memphis-Snare_TSN5_2upra.wav'
-  }
-]
-Skipping audio with invalid download_url: {
-  post_id: 319580,
-  audio_url: 'https://2upra.com/wp-content/uploads/2024/11/Memphis-Snare_TSN5_2upra.wav',
-  audio_filename: 'Memphis-Snare_TSN5_2upra.wav'
-}
-*/
 
 // Function to verify the X-Electron-App header
 function check_electron_app_header() {
@@ -130,8 +112,10 @@ function serve_download(WP_REST_Request $request) {
             return new WP_Error('invalid_file_type', 'Invalid file type.', array('status' => 400));
         }
 
-        // Serve the file using WordPress function
-        wp_send_file($file_path, array(), true);
+        header('Content-Type: ' . $mime_type);
+        header('Content-Disposition: attachment; filename="' . basename($file_path) . '"');
+        header('Content-Length: ' . filesize($file_path));
+        readfile($file_path);
         exit;
     } else {
         error_log("File not found at path: $file_path");
