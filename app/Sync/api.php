@@ -1,10 +1,10 @@
-<?
+<?php
 
 add_action( 'rest_api_init', function () {
     register_rest_route( '1/v1', '/user_audio_downloads/(?P<user_id>\d+)', array(
       'methods'  => 'GET',
       'callback' => 'get_user_audio_downloads',
-      'permission_callback' => '__return_true' // Ajusta los permisos según tu necesidad
+      'permission_callback' => 'check_electron_app_header' // Función para verificar el encabezado
       ) );
   });
   
@@ -33,3 +33,14 @@ add_action( 'rest_api_init', function () {
   
       return rest_ensure_response( $downloads );
   }
+  
+  // Función para verificar el encabezado X-Electron-App
+  function check_electron_app_header() {
+    $headers = apache_request_headers(); // Obtener todos los encabezados de la solicitud
+    if (isset($headers['X-Electron-App']) && $headers['X-Electron-App'] === 'true') {
+      return true; // Permitir acceso si el encabezado está presente y es correcto
+    } else {
+      return new WP_Error( 'forbidden', 'Acceso no autorizado', array( 'status' => 403 ) ); // Denegar acceso
+    }
+  }
+?>
