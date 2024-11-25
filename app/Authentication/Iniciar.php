@@ -55,7 +55,7 @@ function iniciar_sesion()
         <div class="RFZJUH">
             <div class="HPUYVS" id="fondograno"><? echo $GLOBALS['iconologo1']; ?></div>
         </div>
-        
+
     </div>
 <?
     return ob_get_clean();
@@ -102,7 +102,11 @@ function handle_google_callback()
                 // Iniciar sesión al usuario
                 wp_set_current_user($user->ID);
                 wp_set_auth_cookie($user->ID);
-                wp_redirect('https://2upra.com');
+                if (is_electron_app()) {
+                    wp_redirect('https://2upra.com/app?user_id=' . $user->ID); // Redirige a la URL de la app con el user ID
+                } else {
+                    wp_redirect('https://2upra.com'); // Redirige a la URL normal
+                }
                 exit;
             } else {
                 // Registrar al usuario si no existe
@@ -118,3 +122,8 @@ function handle_google_callback()
 }
 
 add_action('init', 'handle_google_callback');
+
+function is_electron_app()
+{
+    return isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true';
+}
