@@ -35,10 +35,13 @@ function verificarCambiosAudios(WP_REST_Request $request) {
     $user_id = $request->get_param('user_id');
     $last_sync_timestamp = isset($_GET['last_sync']) ? intval($_GET['last_sync']) : 0;
 
+    error_log("verificarCambiosAudios: User ID: $user_id, Last Sync Timestamp: $last_sync_timestamp"); // Nuevo log
+
     $descargas_timestamp = intval(get_user_meta($user_id, 'descargas_modificado', true));
     $samples_timestamp = intval(get_user_meta($user_id, 'samplesGuardados_modificado', true));
 
-    // Devolver un objeto JSON con los timestamps
+    error_log("verificarCambiosAudios: Descargas Timestamp: $descargas_timestamp, Samples Timestamp: $samples_timestamp"); // Nuevo log
+
     return rest_ensure_response([
         'descargas_modificado' => $descargas_timestamp,
         'samplesGuardados_modificado' => $samples_timestamp
@@ -46,8 +49,12 @@ function verificarCambiosAudios(WP_REST_Request $request) {
 }
 
 function actualizarTimestampDescargas($user_id) {
-    update_user_meta($user_id, 'descargas_modificado', time());
+    $time = time();
+    update_user_meta($user_id, 'descargas_modificado', $time);
+    error_log("actualizarTimestampDescargas: User ID: $user_id, Timestamp actualizado a: $time"); // Nuevo log
 }
+
+
 add_action('nueva_descarga_realizada', 'actualizarTimestampDescargas', 10, 2); 
 
 function actualizarTimestampSamplesGuardados($user_id) {
@@ -57,6 +64,7 @@ add_action('samples_guardados_actualizados', 'actualizarTimestampSamplesGuardado
 
 function obtenerAudiosUsuario(WP_REST_Request $request) {
     $user_id = $request->get_param('user_id');
+    error_log("obtenerAudiosUsuario: User ID: $user_id, Post ID (opcional): " . ($post_id ?? 'null')); // Log al inicio
     $post_id = $request->get_param('post_id'); // Nuevo parámetro opcional
     $descargas = get_user_meta($user_id, 'descargas', true);
     $samplesGuardados = get_user_meta($user_id, 'samplesGuardados', true);
@@ -91,7 +99,10 @@ function obtenerAudiosUsuario(WP_REST_Request $request) {
                 }
             }
         }
+    } else {
+        error_log("obtenerAudiosUsuario: El metadato 'descargas' no es un array o no está definido para el usuario $user_id"); // Nuevo log
     }
+    error_log("obtenerAudiosUsuario: Se encontraron " . count($downloads) . " audios para el usuario $user_id"); // Log al final
 
     return rest_ensure_response($downloads);
 }
