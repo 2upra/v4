@@ -35,77 +35,26 @@ function verificarCambiosAudios(WP_REST_Request $request)
 {
     $user_id = $request->get_param('user_id');
     $last_sync_timestamp = isset($_GET['last_sync']) ? intval($_GET['last_sync']) : 0;
-    $descargas = get_user_meta($user_id, 'descargas', true);
-    $cambios_detectados = false;
 
-    if (is_array($descargas)) {
-        foreach ($descargas as $post_id => $count) {
-            $modified_time = strtotime(get_post_modified_time('U', false, $post_id));
-            if ($modified_time > $last_sync_timestamp) {
-                $cambios_detectados = true;
-                break;
-            }
-        }
-    }
-    // Añadimos chequeo para samplesGuardados, en caso de que la colección cambie
-    $samplesGuardados = get_user_meta($user_id, 'samplesGuardados', true);
-    if (is_array($samplesGuardados)) {
-        $modified_time_samples = strtotime(get_user_meta($user_id, 'samplesGuardados_modificado', true));
-        if ($modified_time_samples > $last_sync_timestamp) {
-            $cambios_detectados = true;
-        }
-    }
-    // Guardar el timestamp actual como última modificación de samplesGuardados
-    if (isset($_POST['samplesGuardados']) && is_array($_POST['samplesGuardados'])) {
-        update_user_meta($user_id, 'samplesGuardados_modificado', time());
-    }
+    // Obtener timestamps de las últimas modificaciones relevantes
+    $descargas_timestamp = intval(get_user_meta($user_id, 'descargas_modificado', true));
+    $samples_timestamp = intval(get_user_meta($user_id, 'samplesGuardados_modificado', true));
+
+    // Determinar si ha habido cambios comparando con el último timestamp de sincronización
+    $cambios_detectados = ($descargas_timestamp > $last_sync_timestamp) || ($samples_timestamp > $last_sync_timestamp);
 
     return rest_ensure_response($cambios_detectados);
 }
 
-//Esto funciona bien, pero, necesito que cuando el usuario descargue un audio nuevo, se sincronice automaticamente (lo hace por el momento mediante un boton), es una app que se ejecuta en windows, y este es el archivo sync.js, funciona con electron.js, como sería hacer que la sincronización fuera automatica?
+function actualizarTimestampDescargas($user_id) {
+    update_user_meta($user_id, 'descargas_modificado', time());
+}
+add_action('nueva_descarga_realizada', 'actualizarTimestampDescargas', 10, 2); 
 
-/*
-const fs = require('fs');
-const path = require('path');
-const axios = require('axios');
-const API_BASE = 'https://2upra.com/wp-json';
-
-const downloadFile = async (url, filePath) => {
-    const response = await axios({
-        method: 'get',
-        url: url,
-        responseType: 'stream',
-        headers: { 'X-Electron-App': 'true' },
-    });
-    return new Promise((resolve, reject) => {
-        response.data.pipe(fs.createWriteStream(filePath))
-            .on('finish', resolve)
-            .on('error', reject);
-    });
-};
-
-module.exports = {
-    syncAudios: async (userId, downloadDir) => {
-        const url = `${API_BASE}/1/v1/syncpre/${userId}`;
-        const response = await axios.get(url, {
-            headers: { 'X-Electron-App': 'true' },
-            withCredentials: true
-        });
-        const audiosToDownload = response.data;
-        if (!audiosToDownload || audiosToDownload.length === 0) return;
-        if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir, { recursive: true });
-        for (const audio of audiosToDownload) {
-            if (!audio.download_url || typeof audio.download_url !== 'string') continue;
-            const collectionDir = path.join(downloadDir, audio.collection);
-            if (!fs.existsSync(collectionDir)) fs.mkdirSync(collectionDir, { recursive: true });
-            const filePath = path.join(collectionDir, audio.audio_filename);
-            if (!fs.existsSync(filePath)) await downloadFile(audio.download_url, filePath);
-        }
-    }
-};
-*/
-
+function actualizarTimestampSamplesGuardados($user_id) {
+    update_user_meta($user_id, 'samplesGuardados_modificado', time());
+}
+add_action('samples_guardados_actualizados', 'actualizarTimestampSamplesGuardados', 10, 2); 
 
 function obtenerAudiosUsuario(WP_REST_Request $request) {
     $user_id = $request->get_param('user_id');

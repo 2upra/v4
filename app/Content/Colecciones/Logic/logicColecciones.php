@@ -245,6 +245,7 @@ function añadirSampleEnColab($collection_id, $sample_id, $user_id)
         }
         $samplesGuardados[$sample_id][] = $collection_id;
         update_user_meta($user_id, 'samplesGuardados', $samplesGuardados);
+        actualizarTimestampSamplesGuardados($user_id);
 
         return [
             'success' => true,

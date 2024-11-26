@@ -98,7 +98,7 @@ function procesarDescarga() {
 
     $download_url = generarEnlaceDescarga($userID, $audioID);
     error_log('Download URL: ' . $download_url);
-
+    actualizarTimestampDescargas($userID);
     wp_send_json_success(['download_url' => $download_url]);
 }
 
