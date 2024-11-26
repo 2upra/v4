@@ -34,22 +34,31 @@ function chequearElectron() {
 }
 
 /*
-porque pasa esto 
-
-[26-Nov-2024 12:03:46 UTC] actualizarTimestampDescargas: User ID: 44, Timestamp actualizado a: 1732622626
-
-y luego cuando hago, o sea manda el valor viejo
-
-root@vmi1760274:/var/www/wordpress/wp-content/themes/2upra3v# curl -H "X-Electron-App: true" "https://2upra.com/wp-json/1/v1/syncpre/44/check?last_sync=0"
+CUando ejecuto 
+root@vmi1760274:/var/www/wordpress/wp-content/themes/2upra3v# curl -H "X-Electron-App: true" -H "Cache-Control: no-cache" "https://2upra.com/wp-json/1/v1/syncpre/44/check?last_sync=0"
  {"descargas_modificado":1732620186,"samplesGuardados_modificado":0}root@vmi1760274:/var/www/wordpress/wp-content/themes/2upra3v# 
 
-crees que tenga que ver con nignx
+
+nunca veo que se ejecute verificarCambiosAudios
+
+y aunque actualice el valor, siempre da 1732620186 
+
+que esta pasando 
+
+config de nginx
 
     location /wp-json/ {
         # Cabeceras CORS comunes
         add_header 'Access-Control-Allow-Origin' 'https://2upra.com' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
         add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,X-Electron-App' always;
+
+        add_header 'Cache-Control' 'no-cache, no-store, must-revalidate';
+        add_header 'Pragma' 'no-cache';
+        add_header 'Expires' 0;
+        proxy_no_cache 1;
+        proxy_cache_bypass 1;
+        fastcgi_no_cache 1; # si usas fastcgi
 
         # Maneja las solicitudes OPTIONS para preflight
         if ($request_method = 'OPTIONS') {
@@ -61,12 +70,7 @@ crees que tenga que ver con nignx
 
         # Rutas específicas para sincronización que requieren X-Electron-App
         location ~* /wp-json/1/v1/syncpre/ {
-            add_header 'Cache-Control' 'no-cache, no-store, must-revalidate';
-            add_header 'Pragma' 'no-cache';
-            add_header 'Expires' 0;
-            proxy_no_cache 1;
-            proxy_cache_bypass 1;
-            fastcgi_no_cache 1; # si usas fastcgi
+
             # Verificar el header X-Electron-App
             if ($http_x_electron_app != "true") {
                 return 403; # Denegar acceso si no está presente o incorrecto
@@ -91,6 +95,24 @@ crees que tenga que ver con nignx
         try_files $uri $uri/ /index.php?$args;
     }
 
+    #PHP
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+
+        # Agregar esta línea para pasar el encabezado a PHP
+        fastcgi_param HTTP_X_ELECTRON_APP $http_x_electron_app; 
+
+        # Directivas de caché FastCGI
+        fastcgi_cache WORDPRESS;
+        fastcgi_cache_bypass $skip_cache;
+        fastcgi_no_cache $skip_cache;
+        add_header X-Cache-Status $upstream_cache_status;
+    }
+
+
 */
 
 
@@ -98,31 +120,37 @@ function verificarCambiosAudios(WP_REST_Request $request) {
     $user_id = $request->get_param('user_id'); // Obtiene el parámetro user_id
     $last_sync_timestamp = isset($_GET['last_sync']) ? intval($_GET['last_sync']) : 0;
 
-    // Agrega logs para depurar
-    error_log("verificarCambiosAudios: User ID: $user_id, Last Sync Timestamp: $last_sync_timestamp");
-
-    // Eliminar caché antes de obtener el valor (en caso de que esté en caché)
+    // Forzar eliminación de caché
     wp_cache_delete($user_id, 'users');
+    error_log("Caché eliminada para user_id: $user_id");
 
-    // Obtén los metadatos del usuario
-    $descargas_timestamp = get_user_meta($user_id, 'descargas_modificado', true);
-    $samples_timestamp = get_user_meta($user_id, 'samplesGuardados_modificado', true);
+    // Obtener los valores directamente desde la base de datos
+    global $wpdb;
+    $descargas_timestamp = $wpdb->get_var($wpdb->prepare("
+        SELECT meta_value 
+        FROM {$wpdb->usermeta} 
+        WHERE user_id = %d AND meta_key = 'descargas_modificado'
+    ", $user_id));
+    $samples_timestamp = $wpdb->get_var($wpdb->prepare("
+        SELECT meta_value 
+        FROM {$wpdb->usermeta} 
+        WHERE user_id = %d AND meta_key = 'samplesGuardados_modificado'
+    ", $user_id));
 
-    // Verificar si los metadatos se obtuvieron correctamente y convertirlos a enteros
-    $descargas_timestamp = ($descargas_timestamp !== '' && $descargas_timestamp !== false) ? intval($descargas_timestamp) : 0;
-    $samples_timestamp = ($samples_timestamp !== '' && $samples_timestamp !== false) ? intval($samples_timestamp) : 0;
+    $descargas_timestamp = ($descargas_timestamp !== null) ? intval($descargas_timestamp) : 0;
+    $samples_timestamp = ($samples_timestamp !== null) ? intval($samples_timestamp) : 0;
 
     // Más logs para depuración
     error_log("verificarCambiosAudios: Descargas Timestamp: $descargas_timestamp, Samples Timestamp: $samples_timestamp");
 
-    // Crea la respuesta
     $response_data = [
         'descargas_modificado' => $descargas_timestamp,
-        'samplesGuardados_modificado' => $samples_timestamp
+        'samplesGuardados_modificado' => $samples_timestamp,
     ];
 
     return rest_ensure_response($response_data);
 }
+
 
 
 function actualizarTimestampDescargas($user_id) {
@@ -141,7 +169,8 @@ add_action('samples_guardados_actualizados', 'actualizarTimestampSamplesGuardado
 
 function obtenerAudiosUsuario(WP_REST_Request $request) {
     $user_id = $request->get_param('user_id');
-    error_log("obtenerAudiosUsuario: User ID: $user_id, Post ID (opcional): " . ($post_id ?? 'null')); // Log al inicio
+    error_log("obtenerAudiosUsuario: User ID: $user_id"); // Log al inicio
+
     $post_id = $request->get_param('post_id'); // Nuevo parámetro opcional
     $descargas = get_user_meta($user_id, 'descargas', true);
     $samplesGuardados = get_user_meta($user_id, 'samplesGuardados', true);
@@ -177,9 +206,9 @@ function obtenerAudiosUsuario(WP_REST_Request $request) {
             }
         }
     } else {
-        error_log("obtenerAudiosUsuario: El metadato 'descargas' no es un array o no está definido para el usuario $user_id"); // Nuevo log
+        error_log("obtenerAudiosUsuario: El metadato 'descargas' no es un array o no está definido para el usuario $user_id");
     }
-    error_log("obtenerAudiosUsuario: Se encontraron " . count($downloads) . " audios para el usuario $user_id"); // Log al final
+    error_log("obtenerAudiosUsuario: Se encontraron " . count($downloads) . " audios para el usuario $user_id");
 
     return rest_ensure_response($downloads);
 }
