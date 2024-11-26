@@ -1,130 +1,120 @@
-<?php
-// Registrar la ruta del API REST
-add_action('rest_api_init', function () {
-    // Ruta para obtener las descargas de audio del usuario
-    register_rest_route('1/v1', '/user_audio_downloads/(?P<user_id>\d+)', array(
-        'methods'  => 'GET',
-        'callback' => 'get_user_audio_downloads',
-        'permission_callback' => 'check_electron_app_header', // Verifica el header
-    ));
+<?
 
-    // Ruta para servir las descargas de audio
-    register_rest_route('my-custom-download/v1', '/download/', array(
+add_action('rest_api_init', function () {
+    register_rest_route('1/v1', '/syncpre/(?P<user_id>\d+)', array(
+        'methods'  => 'GET',
+        'callback' => 'obtenerAudiosUsuario',
+        'permission_callback' => 'chequearElectron',
+    ));
+    register_rest_route('sync/v1', '/download/', array(
         'methods' => 'GET',
-        'callback' => 'serve_download',
+        'callback' => 'descargarAudiosSync',
         'args' => array(
-            'token' => array(
-                'required' => true,
-                'type' => 'string',
-            ),
-            'nonce' => array(
-                'required' => true,
-                'type' => 'string',
-            ),
+            'token' => array('required' => true,'type' => 'string'),
+            'nonce' => array('required' => true,'type' => 'string'),
         ),
     ));
 });
 
-// Función para verificar el header personalizado
-function check_electron_app_header() {
-    // Registrar los headers en el log para depuración
-    error_log("Headers: " . print_r($_SERVER, true));
-    error_log("X-Electron-App: " . (isset($_SERVER['HTTP_X_ELECTRON_APP']) ? $_SERVER['HTTP_X_ELECTRON_APP'] : 'No header'));
-
-    // Verificar si el header está presente y tiene el valor correcto
+function chequearElectron() {
     if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
-        error_log("Access allowed");
-        return true; // Autorizado
+        return true;
     } else {
-        error_log("Access denied");
-        return new WP_Error('forbidden', 'Access not authorized', array('status' => 403));
+        error_log("Acceso denegado: Header X-Electron-App no presente o incorrecto.");
+        return new WP_Error('forbidden', 'Acceso no autorizado', array('status' => 403));
     }
 }
 
-// Función para obtener las descargas de audio del usuario
-function get_user_audio_downloads(WP_REST_Request $request) {
+/*
+Ahora será más inteligente
+
+Necesito que haga algo en particular, necesito que la colección genere carpetas en base a las colecciones de los usuarios
+El audio tiene que poder estar descargado es decir, es un requisito que este en la meta de descargas
+La informacion de colecciones se guarda asi de esta manera
+Si el sample no esta en ninguna coleccion lo guarda en una Carpeta llamada "No coleccionados"
+Obviamente el nombre de las coleccioens puede cambiar y los archivos estar presente en varias colecciones
+eso se tiene que manejar permitiendo que este en varias colecciones (evitar repetidos en una misma coleccion pero eso ya se maneja en el servidor evitando duplicados pero de igual manera hay que evitarlo)
+si el usuario borra un sample de una colección, ya no debería de estar en esa carpeta
+
+function añadirSampleEnColab($collection_id, $sample_id, $user_id)
+//Un resumen de como se manejan los samples y colecciones
+$samples = get_post_meta($collection_id, 'samples', true);
+if (!is_array($samples)) {
+    $samples = array();
+}
+$samples[] = $sample_id;
+$updated = update_post_meta($collection_id, 'samples', $samples);
+$samplesGuardados = get_user_meta($user_id, 'samplesGuardados', true);
+if (!is_array($samplesGuardados)) {
+    $samplesGuardados = array();
+}
+if (!isset($samplesGuardados[$sample_id])) {
+    $samplesGuardados[$sample_id] = [];
+}
+$samplesGuardados[$sample_id][] = $collection_id;
+update_user_meta($user_id, 'samplesGuardados', $samplesGuardados);
+
+
+*/
+
+function obtenerAudiosUsuario(WP_REST_Request $request) {
     $user_id = $request->get_param('user_id');
-    error_log("Fetching audio downloads for user ID: $user_id");
-
-    // Obtener las descargas del usuario desde la meta
-    $descargas = get_user_meta($user_id, 'descargas', true);
-    error_log("User downloads meta: " . print_r($descargas, true));
-
+    $descargas = get_user_meta($user_id, 'descargas', true); // Audios descargados
+    $samplesGuardados = get_user_meta($user_id, 'samplesGuardados', true); // Relación de samples a colecciones
     $downloads = [];
 
-    // Verificar que las descargas sean un array válido
     if (is_array($descargas)) {
         foreach ($descargas as $post_id => $count) {
             $attachment_id = get_post_meta($post_id, 'post_audio', true);
-            error_log("Post ID: $post_id, Attachment ID: $attachment_id");
-
-            // Validar que el attachment sea correcto
             if ($attachment_id && get_post($attachment_id)) {
-                $file_path = get_attached_file($attachment_id); // Obtener la ruta del archivo
-                if ($file_path && file_exists($file_path)) {
-                    $mime_type = mime_content_type($file_path); // Obtener el MIME type
-                    if (strpos($mime_type, 'audio/') === 0) {
-                        // Generar token y nonce para la descarga
-                        $token = wp_generate_password(20, false);
-                        $nonce = wp_create_nonce('download_' . $token);
-                        set_transient('download_token_' . $token, $attachment_id, 60 * 5); // Token válido por 5 minutos
-                        $download_url = home_url("/wp-json/my-custom-download/v1/download/?token=$token&nonce=$nonce");
+                $file_path = get_attached_file($attachment_id);
+                if ($file_path && file_exists($file_path) && strpos(mime_content_type($file_path), 'audio/') === 0) {
+                    $token = wp_generate_password(20, false);
+                    $nonce = wp_create_nonce('download_' . $token);
+                    set_transient('sync_token_' . $token, $attachment_id, 300);
 
-                        // Agregar al array de descargas
+                    // Obtener las colecciones a las que pertenece el sample
+                    $colecciones = isset($samplesGuardados[$post_id]) ? $samplesGuardados[$post_id] : ['No coleccionados'];
+
+                    // Crear una entrada para cada colección
+                    foreach ($colecciones as $collection_id) {
+                        $collection_name = ($collection_id !== 'No coleccionados') ? get_the_title($collection_id) : 'No coleccionados';
+                        $collection_name = sanitize_title($collection_name); // Sanitizar nombre de carpeta
+
                         $downloads[] = [
                             'post_id' => $post_id,
-                            'download_url' => $download_url,
+                            'collection' => $collection_name,
+                            'download_url' => home_url("/wp-json/sync/v1/download/?token=$token&nonce=$nonce"),
                             'audio_filename' => get_the_title($attachment_id) . '.' . pathinfo($file_path, PATHINFO_EXTENSION),
                         ];
-                    } else {
-                        error_log("Invalid audio MIME type: $mime_type");
                     }
                 } else {
-                    error_log("File does not exist: $file_path");
+                    error_log("Error con el archivo de audio para el post ID: $post_id. Archivo: $file_path");
                 }
-            } else {
-                error_log("Invalid attachment ID for post ID: $post_id");
             }
         }
-    } else {
-        error_log("No downloads found for user ID: $user_id");
     }
 
     return rest_ensure_response($downloads);
 }
 
-// Función para servir la descarga del archivo
-function serve_download(WP_REST_Request $request) {
+function descargarAudiosSync(WP_REST_Request $request) {
     $token = $request->get_param('token');
     $nonce = $request->get_param('nonce');
-
-    // Verificar el nonce
     if (!wp_verify_nonce($nonce, 'download_' . $token)) {
-        error_log("Invalid nonce");
-        return new WP_Error('invalid_nonce', 'Invalid nonce.', array('status' => 403));
+        error_log("Intento de descarga con nonce inválido. Token: $token, Nonce: $nonce");
+        return new WP_Error('invalid_nonce', 'Nonce inválido.', array('status' => 403));
     }
-
-    // Recuperar el attachment ID asociado al token
-    $attachment_id = get_transient('download_token_' . $token);
-
+    $attachment_id = get_transient('sync_token_' . $token);
     if ($attachment_id) {
-        // Eliminar el token para evitar reutilización
-        delete_transient('download_token_' . $token);
-
-        // Obtener la ruta del archivo
+        delete_transient('sync_token_' . $token);
         $file_path = get_attached_file($attachment_id);
-
         if ($file_path && file_exists($file_path)) {
-            // Obtener el MIME type
             $mime_type = mime_content_type($file_path);
-
-            // Verificar que sea un archivo de audio
             if (strpos($mime_type, 'audio/') !== 0) {
-                error_log("File is not an audio: $file_path");
-                return new WP_Error('invalid_file_type', 'Invalid file type.', array('status' => 400));
+                error_log("Intento de acceso a archivo no de audio. Ruta: $file_path");
+                return new WP_Error('invalid_file_type', 'Tipo de archivo inválido.', array('status' => 400));
             }
-
-            // Establecer los headers para la descarga
             header('Content-Description: File Transfer');
             header('Content-Type: ' . $mime_type);
             header('Content-Disposition: attachment; filename="' . basename($file_path) . '"');
@@ -135,11 +125,76 @@ function serve_download(WP_REST_Request $request) {
             readfile($file_path);
             exit;
         } else {
-            error_log("File not found at path: $file_path");
-            return new WP_Error('file_not_found', 'File not found.', array('status' => 404));
+            error_log("Archivo no encontrado en la ruta: $file_path. Token: $token");
+            return new WP_Error('file_not_found', 'Archivo no encontrado.', array('status' => 404));
         }
     } else {
-        error_log("Invalid or expired token");
-        return new WP_Error('invalid_token', 'Invalid or expired token.', array('status' => 403));
+        error_log("Intento de descarga con token inválido o expirado: $token");
+        return new WP_Error('invalid_token', 'Token inválido o expirado.', array('status' => 403));
     }
 }
+
+/*
+En la app el codigo se ve asi
+
+//sync.js
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
+const API_BASE = 'https://2upra.com/wp-json';
+
+const downloadFile = async (url, filePath) => {
+    try {
+        const response = await axios({
+            method: 'get',
+            url: url,
+            responseType: 'stream',
+            headers: { 'X-Electron-App': 'true' },
+        });
+        return new Promise((resolve, reject) => {
+            response.data.pipe(fs.createWriteStream(filePath))
+                .on('finish', resolve)
+                .on('error', reject);
+        });
+    } catch (error) {
+        console.error(`Error descargando ${url}:`, error);
+        throw error;
+    }
+};
+
+module.exports = {
+    syncAudios: async (userId, downloadDir) => {
+        try {
+            console.log(`Iniciando sincronización para usuario ${userId} en ${downloadDir}`);
+            const response = await axios.get(`${API_BASE}/1/v1/syncpre/${userId}`, {
+                headers: { 'X-Electron-App': 'true' },
+                withCredentials: true
+            });
+            const audiosToDownload = response.data;
+            if (!fs.existsSync(downloadDir)) {
+                fs.mkdirSync(downloadDir, { recursive: true });
+            }
+            for (const audio of audiosToDownload) {
+                if (!audio.download_url || typeof audio.download_url !== 'string') {
+                    console.warn(`URL de descarga inválida, saltando audio:`, audio);
+                    continue;
+                }
+                const filePath = path.join(downloadDir, audio.audio_filename);
+                if (!fs.existsSync(filePath)) {
+                    console.log(`Descargando ${audio.download_url} a ${filePath}`);
+                    await downloadFile(audio.download_url, filePath);
+                } else {
+                    console.log(`Archivo ${audio.audio_filename} ya existe.`);
+                }
+            }
+        } catch (error) {
+            console.error("Error en syncAudios:", error);
+            if (error.response) {
+                console.error('Datos de respuesta:', error.response.data);
+                console.error('Estado de respuesta:', error.response.status);
+            }
+            throw error;
+        }
+    }
+};
+*/
