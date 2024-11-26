@@ -31,19 +31,18 @@ function chequearElectron()
     }
 }
 
-function verificarCambiosAudios(WP_REST_Request $request)
-{
+function verificarCambiosAudios(WP_REST_Request $request) {
     $user_id = $request->get_param('user_id');
     $last_sync_timestamp = isset($_GET['last_sync']) ? intval($_GET['last_sync']) : 0;
 
-    // Obtener timestamps de las últimas modificaciones relevantes
     $descargas_timestamp = intval(get_user_meta($user_id, 'descargas_modificado', true));
     $samples_timestamp = intval(get_user_meta($user_id, 'samplesGuardados_modificado', true));
 
-    // Determinar si ha habido cambios comparando con el último timestamp de sincronización
-    $cambios_detectados = ($descargas_timestamp > $last_sync_timestamp) || ($samples_timestamp > $last_sync_timestamp);
-
-    return rest_ensure_response($cambios_detectados);
+    // Devolver un objeto JSON con los timestamps
+    return rest_ensure_response([
+        'descargas_modificado' => $descargas_timestamp,
+        'samplesGuardados_modificado' => $samples_timestamp
+    ]);
 }
 
 function actualizarTimestampDescargas($user_id) {
