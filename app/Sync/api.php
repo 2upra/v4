@@ -62,8 +62,8 @@ function verificarCambiosAudios(WP_REST_Request $request)
     $last_sync_timestamp = isset($_GET['last_sync']) ? intval($_GET['last_sync']) : 0;
 
     // Forzar eliminación de caché
-    wp_cache_delete($user_id, 'users');
-    error_log("Caché eliminada para user_id: $user_id");
+    //wp_cache_delete($user_id, 'users');
+    //error_log("Caché eliminada para user_id: $user_id");
 
     // Obtener los valores directamente desde la base de datos
     global $wpdb;
@@ -82,7 +82,7 @@ function verificarCambiosAudios(WP_REST_Request $request)
     $samples_timestamp = ($samples_timestamp !== null) ? intval($samples_timestamp) : 0;
 
     // Más logs para depuración
-    error_log("verificarCambiosAudios: Descargas Timestamp: $descargas_timestamp, Samples Timestamp: $samples_timestamp");
+    //error_log("verificarCambiosAudios: Descargas Timestamp: $descargas_timestamp, Samples Timestamp: $samples_timestamp");
 
     $response_data = [
         'descargas_modificado' => $descargas_timestamp,
