@@ -3,12 +3,12 @@
 add_action('rest_api_init', function () {
     register_rest_route('1/v1', '/syncpre/(?P<user_id>\d+)', array(
         'methods'  => 'GET',
-        'callback' => 'obtenerAudiosUsuario',
-        'permission_callback' => 'chequearElectron',
+        'callback' => 'obtenerAudiosUsuario', // Tu callback para este endpoint
+        'permission_callback' => 'chequearElectron', // Verificación personalizada
     ));
     register_rest_route('sync/v1', '/download/', array(
         'methods' => 'GET',
-        'callback' => 'descargarAudiosSync',
+        'callback' => 'descargarAudiosSync', // Tu callback para este endpoint
         'args' => array(
             'token' => array('required' => true, 'type' => 'string'),
             'nonce' => array('required' => true, 'type' => 'string'),
@@ -16,213 +16,83 @@ add_action('rest_api_init', function () {
     ));
     register_rest_route('1/v1', '/syncpre/(?P<user_id>\d+)/check', array(
         'methods'  => 'GET',
-        'callback' => 'verificarCambiosAudios',
-        'permission_callback' => 'chequearElectron',
+        'callback' => 'verificarCambiosAudios', // El callback que estamos depurando
+        'permission_callback' => 'chequearElectron', // Verificación personalizada
     ));
 });
 
-function chequearElectron()
-{
+// Función de permiso: valida la cabecera X-Electron-App
+function chequearElectron() {
+    error_log("Verificando cabecera X-Electron-App...");
     if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
+        error_log("Cabecera X-Electron-App válida.");
         return true;
     } else {
         error_log("Acceso denegado: Header X-Electron-App no presente o incorrecto.");
         return new WP_Error('forbidden', 'Acceso no autorizado', array('status' => 403));
     }
 }
-
 /*
 NO ENTIENDO PORQUE DEVUELVE ESTO
 Verificando cambios para usuario: 44 y directorio: C:\Users\1u\Documents\Audios con timestamp: 0
 Respuesta inesperada del servidor: false
-sync.js se ve asi: 
+un detalle importante es que verificarCambiosAudios nunca se ejecuta debe ser un problema de nginx
+root@vmi1760274:/var/www/wordpress/wp-content/themes/2upra3v# curl -H "X-on-App: true" "https://2upra.com/wp-json/1/v1/syncpre/44/check?last_sync=0"
+false
+en nginx 
 
+    location /wp-json/ {
+        # Cabeceras CORS comunes
+        add_header 'Access-Control-Allow-Origin' 'https://2upra.com' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,X-Electron-App' always;
 
-const fs = require('fs');
-const path = require('path');
-const axios = require('axios');
-const API_BASE = 'https://2upra.com/wp-json';
-
-let Store; 
-let store;
-
-
-(async () => {
-    try {
-        Store = (await import('electron-store')).default;
-        store = new Store(); // Crea una instancia de electron-store después de importarla
-        console.log('Electron-store cargado correctamente.');
-
-        // Iniciar la sincronización solo después de que electron-store esté listo
-        if(store.get('userId') && store.get('downloadDir')) {
-            startSyncing(store.get('userId'), store.get('downloadDir'));
-        } else {
-            console.log('Faltan configuraciones de usuario o directorio en electron-store.');
-        }
-      
-    } catch (error) {
-        console.error('Error al importar electron-store:', error);
-        // Manejar el error, posiblemente deshabilitar la funcionalidad que depende de electron-store
-    }
-})();
-
-let lastSyncTimestamp = 0;
-let syncInterval; // Variable para almacenar el intervalo de sincronización
-const DOWNLOAD_INTERVAL_MS = 10000; // Intervalo de 10 segundos para verificar cambios
-
-const downloadFile = async (url, filePath) => {
-    const response = await axios({
-        method: 'get',
-        url: url,
-        responseType: 'stream',
-        headers: { 'X-Electron-App': 'true' },
-    });
-    return new Promise((resolve, reject) => {
-        response.data.pipe(fs.createWriteStream(filePath))
-            .on('finish', resolve)
-            .on('error', reject);
-    });
-};
-
-const syncSingleAudio = async (userId, postId, downloadDir) => {
-    const url = `${API_BASE}/1/v1/syncpre/${userId}?post_id=${postId}`;
-    try {
-        const response = await axios.get(url, {
-            headers: { 'X-Electron-App': 'true' },
-            withCredentials: true
-        });
-        const audioToDownload = response.data[0]; // Esperamos un solo audio
-        console.log('Respuesta de sincronización individual:', audioToDownload);
-
-        if (!audioToDownload || !audioToDownload.download_url) {
-            console.log('No se encontró URL de descarga o no hay audio disponible.');
-            return;
+        # Maneja las solicitudes OPTIONS para preflight
+        if ($request_method = 'OPTIONS') {
+            add_header 'Access-Control-Max-Age' 1728000;
+            add_header 'Content-Type' 'text/plain charset=utf-8';
+            add_header 'Content-Length' 0;
+            return 204;
         }
 
-        const collectionDir = path.join(downloadDir, audioToDownload.collection);
-        if (!fs.existsSync(collectionDir)) fs.mkdirSync(collectionDir, { recursive: true });
-        const filePath = path.join(collectionDir, audioToDownload.audio_filename);
-
-        await downloadFile(audioToDownload.download_url, filePath);
-        console.log(`Audio ${audioToDownload.audio_filename} sincronizado correctamente.`);
-
-    } catch (error) {
-        console.error('Error al sincronizar audio individual:', error);
-    }
-};
-
-const syncAudios = async (userId, downloadDir) => {
-    const url = `${API_BASE}/1/v1/syncpre/${userId}`;
-    try {
-        const response = await axios.get(url, {
-            headers: { 'X-Electron-App': 'true' },
-            withCredentials: true
-        });
-        const audiosToDownload = response.data;
-        console.log('Audios para sincronizar:', audiosToDownload);
-
-        if (!audiosToDownload || audiosToDownload.length === 0) {
-            console.log('No hay audios para sincronizar.');
-            return;
-        }
-
-        if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir, { recursive: true });
-
-        for (const audio of audiosToDownload) {
-            if (!audio.download_url || typeof audio.download_url !== 'string') continue;
-
-            const collectionDir = path.join(downloadDir, audio.collection);
-            if (!fs.existsSync(collectionDir)) fs.mkdirSync(collectionDir, { recursive: true });
-
-            const filePath = path.join(collectionDir, audio.audio_filename);
-
-            if (!fs.existsSync(filePath)) {
-                await downloadFile(audio.download_url, filePath);
-                console.log(`Audio ${audio.audio_filename} sincronizado correctamente.`);
-            } else {
-                console.log(`El archivo ${audio.audio_filename} ya existe. No se descarga nuevamente.`);
+        # Rutas específicas para sincronización que requieren X-Electron-App
+        location ~* /wp-json/1/v1/syncpre/ {
+            # Verificar el header X-Electron-App
+            if ($http_x_electron_app != "true") {
+                return 403; # Denegar acceso si no está presente o incorrecto
             }
-        }
-        lastSyncTimestamp = Math.floor(Date.now() / 1000);
-        store?.set('lastSyncTimestamp', lastSyncTimestamp);
-
-    } catch (error) {
-        console.error('Error al sincronizar audios:', error);
-    }
-};
-
-const checkForChangesAndSync = async (userId, downloadDir) => {
-    console.log('Verificando cambios para usuario:', userId, 'y directorio:', downloadDir, 'con timestamp:', lastSyncTimestamp);
-    try {
-        lastSyncTimestamp = store?.get('lastSyncTimestamp') || 0;
-
-        const checkUrl = `${API_BASE}/1/v1/syncpre/${userId}/check?last_sync=${lastSyncTimestamp}`;
-        const response = await axios.get(checkUrl, {
-            headers: { 'X-Electron-App': 'true' },
-            withCredentials: true
-        });
-
-        // Verificar la estructura de la respuesta del servidor
-        if (response.data && typeof response.data === 'object' && 
-            response.data.hasOwnProperty('descargas_modificado') &&
-            response.data.hasOwnProperty('samplesGuardados_modificado')) {
-
-            const descargasModificado = parseInt(response.data.descargas_modificado);
-            const samplesModificado = parseInt(response.data.samplesGuardados_modificado);
-
-            if (descargasModificado > lastSyncTimestamp || samplesModificado > lastSyncTimestamp) {
-                console.log('Cambios detectados, sincronizando...');
-                await syncAudios(userId, downloadDir);
-                lastSyncTimestamp = Math.max(descargasModificado, samplesModificado); // Actualizar lastSyncTimestamp
-                store?.set('lastSyncTimestamp', lastSyncTimestamp); // Guardar el nuevo timestamp
-            } else {
-                console.log('Sin cambios detectados.');
-            }
-        } else {
-            console.error('Respuesta inesperada del servidor:', response.data);
+            # Procesar la solicitud
+            try_files $uri $uri/ /index.php?$args;
         }
 
-    } catch (error) {
-        console.error('Error al verificar cambios o sincronizar:', error);
+        # Rutas específicas para streaming de audio
+        location ~* /wp-json/1/v1/2 {
+            # Permitir sin verificar el header X-Electron-App
+            add_header 'Access-Control-Allow-Origin' 'https://2upra.com' always;
+            add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS' always;
+            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type' always;
+
+            # Procesar la solicitud
+            try_files $uri $uri/ /index.php?$args;
+        }
+
+        # Rutas generales para /wp-json/ que no necesitan lógica especial
+        try_files $uri $uri/ /index.php?$args;
     }
-};
 
-const startSyncing = (userId, downloadDir) => {
-    console.log('Iniciando sincronización para usuario:', userId, 'y directorio:', downloadDir); // Log
-    if (syncInterval) clearInterval(syncInterval);
-    syncInterval = setInterval(() => checkForChangesAndSync(userId, downloadDir), DOWNLOAD_INTERVAL_MS);
-    checkForChangesAndSync(userId, downloadDir);
-    console.log('Sincronización automática iniciada.');
-    store.set('userId', userId);
-    store.set('downloadDir', downloadDir);
-    console.log('Valores guardados en electron-store:', store.get('userId'), store.get('downloadDir')); // Log
-};
-
-const stopSyncing = () => {
-    if (syncInterval) {
-        clearInterval(syncInterval);
-        syncInterval = null;
-        console.log('Sincronización automática detenida.');
-    }
-};
-
-module.exports = {
-    syncAudios,
-    startSyncing,
-    stopSyncing,
-    syncSingleAudio
-};
 y en php: 
 */
 
 
 
 function verificarCambiosAudios(WP_REST_Request $request) {
-    $user_id = $request->get_param('user_id');
+    $user_id = $request->get_param('user_id'); // Obtiene el parámetro user_id
     $last_sync_timestamp = isset($_GET['last_sync']) ? intval($_GET['last_sync']) : 0;
 
+    // Agrega logs para depurar
     error_log("verificarCambiosAudios: User ID: $user_id, Last Sync Timestamp: $last_sync_timestamp");
 
+    // Obtén los metadatos del usuario
     $descargas_timestamp = get_user_meta($user_id, 'descargas_modificado', true);
     $samples_timestamp = get_user_meta($user_id, 'samplesGuardados_modificado', true);
 
@@ -230,14 +100,15 @@ function verificarCambiosAudios(WP_REST_Request $request) {
     $descargas_timestamp = ($descargas_timestamp !== '' && $descargas_timestamp !== false) ? intval($descargas_timestamp) : 0;
     $samples_timestamp = ($samples_timestamp !== '' && $samples_timestamp !== false) ? intval($samples_timestamp) : 0;
 
+    // Más logs para depuración
     error_log("verificarCambiosAudios: Descargas Timestamp: $descargas_timestamp, Samples Timestamp: $samples_timestamp");
 
+    // Crea la respuesta
     $response_data = [
         'descargas_modificado' => $descargas_timestamp,
         'samplesGuardados_modificado' => $samples_timestamp
     ];
 
-    // Asegurarse de que la respuesta sea un JSON válido
     return rest_ensure_response($response_data);
 }
 
