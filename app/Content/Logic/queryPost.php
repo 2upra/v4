@@ -42,7 +42,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         $current_user_id = get_current_user_id();
 
         if (!$current_user_id) {
-            error_log("[publicaciones] Advertencia: No se encontró ID de usuario");
+            //error_log("[publicaciones] Advertencia: No se encontró ID de usuario");
         }
 
         $defaults = [
@@ -332,7 +332,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         $is_admin = current_user_can('administrator');
 
         if (!$is_authenticated) {
-            error_log("[configuracionQueryArgs] Advertencia: Usuario no autenticado, utilizando FALLBACK_USER_ID");
+            //error_log("[configuracionQueryArgs] Advertencia: Usuario no autenticado, utilizando FALLBACK_USER_ID");
             $current_user_id = $FALLBACK_USER_ID;
         }
 
