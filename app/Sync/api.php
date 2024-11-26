@@ -10,13 +10,19 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'descargarAudiosSync',
         'args' => array(
-            'token' => array('required' => true,'type' => 'string'),
-            'nonce' => array('required' => true,'type' => 'string'),
+            'token' => array('required' => true, 'type' => 'string'),
+            'nonce' => array('required' => true, 'type' => 'string'),
         ),
+    ));
+    register_rest_route('1/v1', '/syncpre/(?P<user_id>\d+)/check', array(
+        'methods'  => 'GET',
+        'callback' => 'verificarCambiosAudios',
+        'permission_callback' => 'chequearElectron',
     ));
 });
 
-function chequearElectron() {
+function chequearElectron()
+{
     if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
         return true;
     } else {
@@ -25,71 +31,115 @@ function chequearElectron() {
     }
 }
 
-/*
-Ahora será más inteligente
-
-Necesito que haga algo en particular, necesito que la colección genere carpetas en base a las colecciones de los usuarios
-El audio tiene que poder estar descargado es decir, es un requisito que este en la meta de descargas
-La informacion de colecciones se guarda asi de esta manera
-Si el sample no esta en ninguna coleccion lo guarda en una Carpeta llamada "No coleccionados"
-Obviamente el nombre de las coleccioens puede cambiar y los archivos estar presente en varias colecciones
-eso se tiene que manejar permitiendo que este en varias colecciones (evitar repetidos en una misma coleccion pero eso ya se maneja en el servidor evitando duplicados pero de igual manera hay que evitarlo)
-si el usuario borra un sample de una colección, ya no debería de estar en esa carpeta
-
-function añadirSampleEnColab($collection_id, $sample_id, $user_id)
-//Un resumen de como se manejan los samples y colecciones
-$samples = get_post_meta($collection_id, 'samples', true);
-if (!is_array($samples)) {
-    $samples = array();
-}
-$samples[] = $sample_id;
-$updated = update_post_meta($collection_id, 'samples', $samples);
-$samplesGuardados = get_user_meta($user_id, 'samplesGuardados', true);
-if (!is_array($samplesGuardados)) {
-    $samplesGuardados = array();
-}
-if (!isset($samplesGuardados[$sample_id])) {
-    $samplesGuardados[$sample_id] = [];
-}
-$samplesGuardados[$sample_id][] = $collection_id;
-update_user_meta($user_id, 'samplesGuardados', $samplesGuardados);
-
-
-*/
-
-function obtenerAudiosUsuario(WP_REST_Request $request) {
+function verificarCambiosAudios(WP_REST_Request $request)
+{
     $user_id = $request->get_param('user_id');
-    $descargas = get_user_meta($user_id, 'descargas', true); // Audios descargados
-    $samplesGuardados = get_user_meta($user_id, 'samplesGuardados', true); // Relación de samples a colecciones
-    $downloads = [];
+    $last_sync_timestamp = isset($_GET['last_sync']) ? intval($_GET['last_sync']) : 0;
+    $descargas = get_user_meta($user_id, 'descargas', true);
+    $cambios_detectados = false;
 
     if (is_array($descargas)) {
         foreach ($descargas as $post_id => $count) {
-            $attachment_id = get_post_meta($post_id, 'post_audio', true);
+            $modified_time = strtotime(get_post_modified_time('U', false, $post_id));
+            if ($modified_time > $last_sync_timestamp) {
+                $cambios_detectados = true;
+                break;
+            }
+        }
+    }
+    // Añadimos chequeo para samplesGuardados, en caso de que la colección cambie
+    $samplesGuardados = get_user_meta($user_id, 'samplesGuardados', true);
+    if (is_array($samplesGuardados)) {
+        $modified_time_samples = strtotime(get_user_meta($user_id, 'samplesGuardados_modificado', true));
+        if ($modified_time_samples > $last_sync_timestamp) {
+            $cambios_detectados = true;
+        }
+    }
+    // Guardar el timestamp actual como última modificación de samplesGuardados
+    if (isset($_POST['samplesGuardados']) && is_array($_POST['samplesGuardados'])) {
+        update_user_meta($user_id, 'samplesGuardados_modificado', time());
+    }
+
+    return rest_ensure_response($cambios_detectados);
+}
+
+//Esto funciona bien, pero, necesito que cuando el usuario descargue un audio nuevo, se sincronice automaticamente (lo hace por el momento mediante un boton), es una app que se ejecuta en windows, y este es el archivo sync.js, funciona con electron.js, como sería hacer que la sincronización fuera automatica?
+
+/*
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
+const API_BASE = 'https://2upra.com/wp-json';
+
+const downloadFile = async (url, filePath) => {
+    const response = await axios({
+        method: 'get',
+        url: url,
+        responseType: 'stream',
+        headers: { 'X-Electron-App': 'true' },
+    });
+    return new Promise((resolve, reject) => {
+        response.data.pipe(fs.createWriteStream(filePath))
+            .on('finish', resolve)
+            .on('error', reject);
+    });
+};
+
+module.exports = {
+    syncAudios: async (userId, downloadDir) => {
+        const url = `${API_BASE}/1/v1/syncpre/${userId}`;
+        const response = await axios.get(url, {
+            headers: { 'X-Electron-App': 'true' },
+            withCredentials: true
+        });
+        const audiosToDownload = response.data;
+        if (!audiosToDownload || audiosToDownload.length === 0) return;
+        if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir, { recursive: true });
+        for (const audio of audiosToDownload) {
+            if (!audio.download_url || typeof audio.download_url !== 'string') continue;
+            const collectionDir = path.join(downloadDir, audio.collection);
+            if (!fs.existsSync(collectionDir)) fs.mkdirSync(collectionDir, { recursive: true });
+            const filePath = path.join(collectionDir, audio.audio_filename);
+            if (!fs.existsSync(filePath)) await downloadFile(audio.download_url, filePath);
+        }
+    }
+};
+*/
+
+
+function obtenerAudiosUsuario(WP_REST_Request $request) {
+    $user_id = $request->get_param('user_id');
+    $post_id = $request->get_param('post_id'); // Nuevo parámetro opcional
+    $descargas = get_user_meta($user_id, 'descargas', true);
+    $samplesGuardados = get_user_meta($user_id, 'samplesGuardados', true);
+    $downloads = [];
+
+    if (is_array($descargas)) {
+        foreach ($descargas as $current_post_id => $count) {
+            // Si se proporciona post_id, solo procesar ese post
+            if ($post_id !== null && $current_post_id != $post_id) continue;
+
+            $attachment_id = get_post_meta($current_post_id, 'post_audio', true);
             if ($attachment_id && get_post($attachment_id)) {
                 $file_path = get_attached_file($attachment_id);
                 if ($file_path && file_exists($file_path) && strpos(mime_content_type($file_path), 'audio/') === 0) {
                     $token = wp_generate_password(20, false);
                     $nonce = wp_create_nonce('download_' . $token);
                     set_transient('sync_token_' . $token, $attachment_id, 300);
-
-                    // Obtener las colecciones a las que pertenece el sample
-                    $colecciones = isset($samplesGuardados[$post_id]) ? $samplesGuardados[$post_id] : ['No coleccionados'];
-
-                    // Crear una entrada para cada colección
+                    $colecciones = isset($samplesGuardados[$current_post_id]) ? $samplesGuardados[$current_post_id] : ['No coleccionados'];
                     foreach ($colecciones as $collection_id) {
                         $collection_name = ($collection_id !== 'No coleccionados') ? get_the_title($collection_id) : 'No coleccionados';
-                        $collection_name = sanitize_title($collection_name); // Sanitizar nombre de carpeta
+                        $collection_name = sanitize_title($collection_name);
 
                         $downloads[] = [
-                            'post_id' => $post_id,
+                            'post_id' => $current_post_id,
                             'collection' => $collection_name,
                             'download_url' => home_url("/wp-json/sync/v1/download/?token=$token&nonce=$nonce"),
                             'audio_filename' => get_the_title($attachment_id) . '.' . pathinfo($file_path, PATHINFO_EXTENSION),
                         ];
                     }
                 } else {
-                    error_log("Error con el archivo de audio para el post ID: $post_id. Archivo: $file_path");
+                    error_log("Error con el archivo de audio para el post ID: $current_post_id. Archivo: $file_path");
                 }
             }
         }
@@ -98,7 +148,8 @@ function obtenerAudiosUsuario(WP_REST_Request $request) {
     return rest_ensure_response($downloads);
 }
 
-function descargarAudiosSync(WP_REST_Request $request) {
+function descargarAudiosSync(WP_REST_Request $request)
+{
     $token = $request->get_param('token');
     $nonce = $request->get_param('nonce');
     if (!wp_verify_nonce($nonce, 'download_' . $token)) {
@@ -133,68 +184,3 @@ function descargarAudiosSync(WP_REST_Request $request) {
         return new WP_Error('invalid_token', 'Token inválido o expirado.', array('status' => 403));
     }
 }
-
-/*
-En la app el codigo se ve asi
-
-//sync.js
-const fs = require('fs');
-const path = require('path');
-const axios = require('axios');
-const API_BASE = 'https://2upra.com/wp-json';
-
-const downloadFile = async (url, filePath) => {
-    try {
-        const response = await axios({
-            method: 'get',
-            url: url,
-            responseType: 'stream',
-            headers: { 'X-Electron-App': 'true' },
-        });
-        return new Promise((resolve, reject) => {
-            response.data.pipe(fs.createWriteStream(filePath))
-                .on('finish', resolve)
-                .on('error', reject);
-        });
-    } catch (error) {
-        console.error(`Error descargando ${url}:`, error);
-        throw error;
-    }
-};
-
-module.exports = {
-    syncAudios: async (userId, downloadDir) => {
-        try {
-            console.log(`Iniciando sincronización para usuario ${userId} en ${downloadDir}`);
-            const response = await axios.get(`${API_BASE}/1/v1/syncpre/${userId}`, {
-                headers: { 'X-Electron-App': 'true' },
-                withCredentials: true
-            });
-            const audiosToDownload = response.data;
-            if (!fs.existsSync(downloadDir)) {
-                fs.mkdirSync(downloadDir, { recursive: true });
-            }
-            for (const audio of audiosToDownload) {
-                if (!audio.download_url || typeof audio.download_url !== 'string') {
-                    console.warn(`URL de descarga inválida, saltando audio:`, audio);
-                    continue;
-                }
-                const filePath = path.join(downloadDir, audio.audio_filename);
-                if (!fs.existsSync(filePath)) {
-                    console.log(`Descargando ${audio.download_url} a ${filePath}`);
-                    await downloadFile(audio.download_url, filePath);
-                } else {
-                    console.log(`Archivo ${audio.audio_filename} ya existe.`);
-                }
-            }
-        } catch (error) {
-            console.error("Error en syncAudios:", error);
-            if (error.response) {
-                console.error('Datos de respuesta:', error.response.data);
-                console.error('Estado de respuesta:', error.response.status);
-            }
-            throw error;
-        }
-    }
-};
-*/
