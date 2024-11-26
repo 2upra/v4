@@ -31,21 +31,213 @@ function chequearElectron()
     }
 }
 
+/*
+NO ENTIENDO PORQUE DEVUELVE ESTO
+Verificando cambios para usuario: 44 y directorio: C:\Users\1u\Documents\Audios con timestamp: 0
+Respuesta inesperada del servidor: false
+sync.js se ve asi: 
+
+
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
+const API_BASE = 'https://2upra.com/wp-json';
+
+let Store; 
+let store;
+
+
+(async () => {
+    try {
+        Store = (await import('electron-store')).default;
+        store = new Store(); // Crea una instancia de electron-store después de importarla
+        console.log('Electron-store cargado correctamente.');
+
+        // Iniciar la sincronización solo después de que electron-store esté listo
+        if(store.get('userId') && store.get('downloadDir')) {
+            startSyncing(store.get('userId'), store.get('downloadDir'));
+        } else {
+            console.log('Faltan configuraciones de usuario o directorio en electron-store.');
+        }
+      
+    } catch (error) {
+        console.error('Error al importar electron-store:', error);
+        // Manejar el error, posiblemente deshabilitar la funcionalidad que depende de electron-store
+    }
+})();
+
+let lastSyncTimestamp = 0;
+let syncInterval; // Variable para almacenar el intervalo de sincronización
+const DOWNLOAD_INTERVAL_MS = 10000; // Intervalo de 10 segundos para verificar cambios
+
+const downloadFile = async (url, filePath) => {
+    const response = await axios({
+        method: 'get',
+        url: url,
+        responseType: 'stream',
+        headers: { 'X-Electron-App': 'true' },
+    });
+    return new Promise((resolve, reject) => {
+        response.data.pipe(fs.createWriteStream(filePath))
+            .on('finish', resolve)
+            .on('error', reject);
+    });
+};
+
+const syncSingleAudio = async (userId, postId, downloadDir) => {
+    const url = `${API_BASE}/1/v1/syncpre/${userId}?post_id=${postId}`;
+    try {
+        const response = await axios.get(url, {
+            headers: { 'X-Electron-App': 'true' },
+            withCredentials: true
+        });
+        const audioToDownload = response.data[0]; // Esperamos un solo audio
+        console.log('Respuesta de sincronización individual:', audioToDownload);
+
+        if (!audioToDownload || !audioToDownload.download_url) {
+            console.log('No se encontró URL de descarga o no hay audio disponible.');
+            return;
+        }
+
+        const collectionDir = path.join(downloadDir, audioToDownload.collection);
+        if (!fs.existsSync(collectionDir)) fs.mkdirSync(collectionDir, { recursive: true });
+        const filePath = path.join(collectionDir, audioToDownload.audio_filename);
+
+        await downloadFile(audioToDownload.download_url, filePath);
+        console.log(`Audio ${audioToDownload.audio_filename} sincronizado correctamente.`);
+
+    } catch (error) {
+        console.error('Error al sincronizar audio individual:', error);
+    }
+};
+
+const syncAudios = async (userId, downloadDir) => {
+    const url = `${API_BASE}/1/v1/syncpre/${userId}`;
+    try {
+        const response = await axios.get(url, {
+            headers: { 'X-Electron-App': 'true' },
+            withCredentials: true
+        });
+        const audiosToDownload = response.data;
+        console.log('Audios para sincronizar:', audiosToDownload);
+
+        if (!audiosToDownload || audiosToDownload.length === 0) {
+            console.log('No hay audios para sincronizar.');
+            return;
+        }
+
+        if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir, { recursive: true });
+
+        for (const audio of audiosToDownload) {
+            if (!audio.download_url || typeof audio.download_url !== 'string') continue;
+
+            const collectionDir = path.join(downloadDir, audio.collection);
+            if (!fs.existsSync(collectionDir)) fs.mkdirSync(collectionDir, { recursive: true });
+
+            const filePath = path.join(collectionDir, audio.audio_filename);
+
+            if (!fs.existsSync(filePath)) {
+                await downloadFile(audio.download_url, filePath);
+                console.log(`Audio ${audio.audio_filename} sincronizado correctamente.`);
+            } else {
+                console.log(`El archivo ${audio.audio_filename} ya existe. No se descarga nuevamente.`);
+            }
+        }
+        lastSyncTimestamp = Math.floor(Date.now() / 1000);
+        store?.set('lastSyncTimestamp', lastSyncTimestamp);
+
+    } catch (error) {
+        console.error('Error al sincronizar audios:', error);
+    }
+};
+
+const checkForChangesAndSync = async (userId, downloadDir) => {
+    console.log('Verificando cambios para usuario:', userId, 'y directorio:', downloadDir, 'con timestamp:', lastSyncTimestamp);
+    try {
+        lastSyncTimestamp = store?.get('lastSyncTimestamp') || 0;
+
+        const checkUrl = `${API_BASE}/1/v1/syncpre/${userId}/check?last_sync=${lastSyncTimestamp}`;
+        const response = await axios.get(checkUrl, {
+            headers: { 'X-Electron-App': 'true' },
+            withCredentials: true
+        });
+
+        // Verificar la estructura de la respuesta del servidor
+        if (response.data && typeof response.data === 'object' && 
+            response.data.hasOwnProperty('descargas_modificado') &&
+            response.data.hasOwnProperty('samplesGuardados_modificado')) {
+
+            const descargasModificado = parseInt(response.data.descargas_modificado);
+            const samplesModificado = parseInt(response.data.samplesGuardados_modificado);
+
+            if (descargasModificado > lastSyncTimestamp || samplesModificado > lastSyncTimestamp) {
+                console.log('Cambios detectados, sincronizando...');
+                await syncAudios(userId, downloadDir);
+                lastSyncTimestamp = Math.max(descargasModificado, samplesModificado); // Actualizar lastSyncTimestamp
+                store?.set('lastSyncTimestamp', lastSyncTimestamp); // Guardar el nuevo timestamp
+            } else {
+                console.log('Sin cambios detectados.');
+            }
+        } else {
+            console.error('Respuesta inesperada del servidor:', response.data);
+        }
+
+    } catch (error) {
+        console.error('Error al verificar cambios o sincronizar:', error);
+    }
+};
+
+const startSyncing = (userId, downloadDir) => {
+    console.log('Iniciando sincronización para usuario:', userId, 'y directorio:', downloadDir); // Log
+    if (syncInterval) clearInterval(syncInterval);
+    syncInterval = setInterval(() => checkForChangesAndSync(userId, downloadDir), DOWNLOAD_INTERVAL_MS);
+    checkForChangesAndSync(userId, downloadDir);
+    console.log('Sincronización automática iniciada.');
+    store.set('userId', userId);
+    store.set('downloadDir', downloadDir);
+    console.log('Valores guardados en electron-store:', store.get('userId'), store.get('downloadDir')); // Log
+};
+
+const stopSyncing = () => {
+    if (syncInterval) {
+        clearInterval(syncInterval);
+        syncInterval = null;
+        console.log('Sincronización automática detenida.');
+    }
+};
+
+module.exports = {
+    syncAudios,
+    startSyncing,
+    stopSyncing,
+    syncSingleAudio
+};
+y en php: 
+*/
+
+
+
 function verificarCambiosAudios(WP_REST_Request $request) {
     $user_id = $request->get_param('user_id');
-    $last_sync_timestamp = isset($_GET['last_sync']) ? intval($_GET['last_sync']) : 0;
+    $last_sync_timestamp = isset($request->get_query_params()['last_sync']) 
+        ? intval($request->get_query_params()['last_sync']) 
+        : 0;
 
-    error_log("verificarCambiosAudios: User ID: $user_id, Last Sync Timestamp: $last_sync_timestamp"); // Nuevo log
+    error_log("Verificando cambios para usuario: $user_id y timestamp: $last_sync_timestamp");
 
     $descargas_timestamp = intval(get_user_meta($user_id, 'descargas_modificado', true));
     $samples_timestamp = intval(get_user_meta($user_id, 'samplesGuardados_modificado', true));
 
-    error_log("verificarCambiosAudios: Descargas Timestamp: $descargas_timestamp, Samples Timestamp: $samples_timestamp"); // Nuevo log
+    error_log("Descargas timestamp: $descargas_timestamp, Samples timestamp: $samples_timestamp");
 
-    return rest_ensure_response([
+    $response = [
         'descargas_modificado' => $descargas_timestamp,
         'samplesGuardados_modificado' => $samples_timestamp
-    ]);
+    ];
+
+    error_log("Response: " . print_r($response, true));
+
+    return rest_ensure_response($response);
 }
 
 function actualizarTimestampDescargas($user_id) {
@@ -53,7 +245,6 @@ function actualizarTimestampDescargas($user_id) {
     update_user_meta($user_id, 'descargas_modificado', $time);
     error_log("actualizarTimestampDescargas: User ID: $user_id, Timestamp actualizado a: $time"); // Nuevo log
 }
-
 
 add_action('nueva_descarga_realizada', 'actualizarTimestampDescargas', 10, 2); 
 
