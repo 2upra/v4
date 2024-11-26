@@ -32,14 +32,18 @@ function chequearElectron() {
         return new WP_Error('forbidden', 'Acceso no autorizado', array('status' => 403));
     }
 }
+
 /*
-NO ENTIENDO PORQUE DEVUELVE ESTO
-Verificando cambios para usuario: 44 y directorio: C:\Users\1u\Documents\Audios con timestamp: 0
-Respuesta inesperada del servidor: false
-un detalle importante es que verificarCambiosAudios nunca se ejecuta debe ser un problema de nginx
-root@vmi1760274:/var/www/wordpress/wp-content/themes/2upra3v# curl -H "X-on-App: true" "https://2upra.com/wp-json/1/v1/syncpre/44/check?last_sync=0"
-false
-en nginx 
+porque pasa esto 
+
+[26-Nov-2024 12:03:46 UTC] actualizarTimestampDescargas: User ID: 44, Timestamp actualizado a: 1732622626
+
+y luego cuando hago, o sea manda el valor viejo
+
+root@vmi1760274:/var/www/wordpress/wp-content/themes/2upra3v# curl -H "X-Electron-App: true" "https://2upra.com/wp-json/1/v1/syncpre/44/check?last_sync=0"
+ {"descargas_modificado":1732620186,"samplesGuardados_modificado":0}root@vmi1760274:/var/www/wordpress/wp-content/themes/2upra3v# 
+
+crees que tenga que ver con nignx
 
     location /wp-json/ {
         # Cabeceras CORS comunes
@@ -57,10 +61,17 @@ en nginx
 
         # Rutas específicas para sincronización que requieren X-Electron-App
         location ~* /wp-json/1/v1/syncpre/ {
+            add_header 'Cache-Control' 'no-cache, no-store, must-revalidate';
+            add_header 'Pragma' 'no-cache';
+            add_header 'Expires' 0;
+            proxy_no_cache 1;
+            proxy_cache_bypass 1;
+            fastcgi_no_cache 1; # si usas fastcgi
             # Verificar el header X-Electron-App
             if ($http_x_electron_app != "true") {
                 return 403; # Denegar acceso si no está presente o incorrecto
             }
+            proxy_set_header X-Electron-App $http_x_electron_app;
             # Procesar la solicitud
             try_files $uri $uri/ /index.php?$args;
         }
@@ -80,9 +91,7 @@ en nginx
         try_files $uri $uri/ /index.php?$args;
     }
 
-y en php: 
 */
-
 
 
 function verificarCambiosAudios(WP_REST_Request $request) {
@@ -91,6 +100,9 @@ function verificarCambiosAudios(WP_REST_Request $request) {
 
     // Agrega logs para depurar
     error_log("verificarCambiosAudios: User ID: $user_id, Last Sync Timestamp: $last_sync_timestamp");
+
+    // Eliminar caché antes de obtener el valor (en caso de que esté en caché)
+    wp_cache_delete($user_id, 'users');
 
     // Obtén los metadatos del usuario
     $descargas_timestamp = get_user_meta($user_id, 'descargas_modificado', true);
@@ -112,7 +124,9 @@ function verificarCambiosAudios(WP_REST_Request $request) {
     return rest_ensure_response($response_data);
 }
 
+
 function actualizarTimestampDescargas($user_id) {
+    //SI FUNCIONA PORQUE EN LA BASE DE DATOS SE VE EL NUEVO VALOR CUANDO CAMBIA
     $time = time();
     update_user_meta($user_id, 'descargas_modificado', $time);
     error_log("actualizarTimestampDescargas: User ID: $user_id, Timestamp actualizado a: $time"); // Nuevo log
