@@ -3,12 +3,12 @@
 add_action('rest_api_init', function () {
     register_rest_route('1/v1', '/syncpre/(?P<user_id>\d+)', array(
         'methods'  => 'GET',
-        'callback' => 'obtenerAudiosUsuario', // Tu callback para este endpoint
-        'permission_callback' => 'chequearElectron', // Verificación personalizada
+        'callback' => 'obtenerAudiosUsuario', 
+        'permission_callback' => 'chequearElectron',
     ));
     register_rest_route('sync/v1', '/download/', array(
         'methods' => 'GET',
-        'callback' => 'descargarAudiosSync', // Tu callback para este endpoint
+        'callback' => 'descargarAudiosSync',
         'args' => array(
             'token' => array('required' => true, 'type' => 'string'),
             'nonce' => array('required' => true, 'type' => 'string'),
@@ -16,21 +16,20 @@ add_action('rest_api_init', function () {
     ));
     register_rest_route('1/v1', '/syncpre/(?P<user_id>\d+)/check', array(
         'methods'  => 'GET',
-        'callback' => 'verificarCambiosAudios', // El callback que estamos depurando
-        'permission_callback' => 'chequearElectron', // Verificación personalizada
+        'callback' => 'verificarCambiosAudios', 
+        'permission_callback' => 'chequearElectron',
     ));
 });
 
 // Función de permiso: valida la cabecera X-Electron-App
 function chequearElectron() {
-    error_log("Verificando cabecera X-Electron-App...");
+    error_log("Iniciando chequearElectron...");
     if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
-        error_log("Cabecera X-Electron-App válida.");
+        error_log("Cabecera válida: " . $_SERVER['HTTP_X_ELECTRON_APP']);
         return true;
-    } else {
-        error_log("Acceso denegado: Header X-Electron-App no presente o incorrecto.");
-        return new WP_Error('forbidden', 'Acceso no autorizado', array('status' => 403));
     }
+    error_log("Cabecera inválida o ausente.");
+    return new WP_Error('forbidden', 'Acceso no autorizado', array('status' => 403));
 }
 
 /*
@@ -42,6 +41,11 @@ root@vmi1760274:/var/www/wordpress/wp-content/themes/2upra3v# curl -H "X-Electro
 nunca veo que se ejecute verificarCambiosAudios
 
 y aunque actualice el valor, siempre da 1732620186 
+
+y cuando pruebo por ejemplo 
+root@vmi1760274:/var/www/wordpress/wp-content/themes/2upra3v# curl -H "X-Electron-App: true" "https://2upra.com/wp-json/1/v1/syncpre/1/check?last_sync=0"
+curl: (92) HTTP/2 stream 0 was not closed cleanly: INTERNAL_ERROR (err 2)
+da ese error
 
 que esta pasando 
 
@@ -112,6 +116,8 @@ config de nginx
         add_header X-Cache-Status $upstream_cache_status;
     }
 
+    No tengo ningun plugin de cache activado
+    el log de error_log("verificarCambiosAudios: Descargas Timestamp: $descargas_timestamp, Samples Timestamp: $samples_timestamp"); nunca lo veo imprimirse
 
 */
 
