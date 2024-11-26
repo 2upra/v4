@@ -219,25 +219,26 @@ y en php:
 
 function verificarCambiosAudios(WP_REST_Request $request) {
     $user_id = $request->get_param('user_id');
-    $last_sync_timestamp = isset($request->get_query_params()['last_sync']) 
-        ? intval($request->get_query_params()['last_sync']) 
-        : 0;
+    $last_sync_timestamp = isset($_GET['last_sync']) ? intval($_GET['last_sync']) : 0;
 
-    error_log("Verificando cambios para usuario: $user_id y timestamp: $last_sync_timestamp");
+    error_log("verificarCambiosAudios: User ID: $user_id, Last Sync Timestamp: $last_sync_timestamp");
 
-    $descargas_timestamp = intval(get_user_meta($user_id, 'descargas_modificado', true));
-    $samples_timestamp = intval(get_user_meta($user_id, 'samplesGuardados_modificado', true));
+    $descargas_timestamp = get_user_meta($user_id, 'descargas_modificado', true);
+    $samples_timestamp = get_user_meta($user_id, 'samplesGuardados_modificado', true);
 
-    error_log("Descargas timestamp: $descargas_timestamp, Samples timestamp: $samples_timestamp");
+    // Verificar si los metadatos se obtuvieron correctamente y convertirlos a enteros
+    $descargas_timestamp = ($descargas_timestamp !== '' && $descargas_timestamp !== false) ? intval($descargas_timestamp) : 0;
+    $samples_timestamp = ($samples_timestamp !== '' && $samples_timestamp !== false) ? intval($samples_timestamp) : 0;
 
-    $response = [
+    error_log("verificarCambiosAudios: Descargas Timestamp: $descargas_timestamp, Samples Timestamp: $samples_timestamp");
+
+    $response_data = [
         'descargas_modificado' => $descargas_timestamp,
         'samplesGuardados_modificado' => $samples_timestamp
     ];
 
-    error_log("Response: " . print_r($response, true));
-
-    return rest_ensure_response($response);
+    // Asegurarse de que la respuesta sea un JSON válido
+    return rest_ensure_response($response_data);
 }
 
 function actualizarTimestampDescargas($user_id) {
