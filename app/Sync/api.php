@@ -3,7 +3,7 @@
 add_action('rest_api_init', function () {
     register_rest_route('1/v1', '/syncpre/(?P<user_id>\d+)', array(
         'methods'  => 'GET',
-        'callback' => 'obtenerAudiosUsuario', 
+        'callback' => 'obtenerAudiosUsuario',
         'permission_callback' => 'chequearElectron',
     ));
     register_rest_route('sync/v1', '/download/', array(
@@ -16,13 +16,36 @@ add_action('rest_api_init', function () {
     ));
     register_rest_route('1/v1', '/syncpre/(?P<user_id>\d+)/check', array(
         'methods'  => 'GET',
-        'callback' => 'verificarCambiosAudios', 
+        'callback' => 'verificarCambiosAudios',
+        'permission_callback' => 'chequearElectron',
+    ));
+    register_rest_route('1/v1',  '/infoUsuario', array(
+        'methods' => 'POST',
+        'callback' => 'handle_info_usuario',
         'permission_callback' => 'chequearElectron',
     ));
 });
 
+
+function handle_info_usuario(WP_REST_Request $request) {
+    $receptor = intval($request->get_param('receptor'));
+
+    if ($receptor <= 0) {
+        return new WP_Error('invalid_receptor', 'ID del receptor inválido.', array('status' => 400));
+    }
+
+    $imagenPerfil = imagenPerfil($receptor) ?: 'ruta_por_defecto.jpg';
+    $nombreUsuario = obtenerNombreUsuario($receptor) ?: 'Usuario Desconocido';
+
+    return array(
+        'imagenPerfil' => $imagenPerfil,
+        'nombreUsuario' => $nombreUsuario,
+    );
+}
+
 // Función de permiso: valida la cabecera X-Electron-App
-function chequearElectron() {
+function chequearElectron()
+{
     error_log("Iniciando chequearElectron...");
     if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
         error_log("Cabecera válida: " . $_SERVER['HTTP_X_ELECTRON_APP']);
@@ -122,7 +145,8 @@ config de nginx
 */
 
 
-function verificarCambiosAudios(WP_REST_Request $request) {
+function verificarCambiosAudios(WP_REST_Request $request)
+{
     $user_id = $request->get_param('user_id'); // Obtiene el parámetro user_id
     $last_sync_timestamp = isset($_GET['last_sync']) ? intval($_GET['last_sync']) : 0;
 
@@ -159,21 +183,24 @@ function verificarCambiosAudios(WP_REST_Request $request) {
 
 
 
-function actualizarTimestampDescargas($user_id) {
+function actualizarTimestampDescargas($user_id)
+{
     //SI FUNCIONA PORQUE EN LA BASE DE DATOS SE VE EL NUEVO VALOR CUANDO CAMBIA
     $time = time();
     update_user_meta($user_id, 'descargas_modificado', $time);
     error_log("actualizarTimestampDescargas: User ID: $user_id, Timestamp actualizado a: $time"); // Nuevo log
 }
 
-add_action('nueva_descarga_realizada', 'actualizarTimestampDescargas', 10, 2); 
+add_action('nueva_descarga_realizada', 'actualizarTimestampDescargas', 10, 2);
 
-function actualizarTimestampSamplesGuardados($user_id) {
+function actualizarTimestampSamplesGuardados($user_id)
+{
     update_user_meta($user_id, 'samplesGuardados_modificado', time());
 }
-add_action('samples_guardados_actualizados', 'actualizarTimestampSamplesGuardados', 10, 2); 
+add_action('samples_guardados_actualizados', 'actualizarTimestampSamplesGuardados', 10, 2);
 
-function obtenerAudiosUsuario(WP_REST_Request $request) {
+function obtenerAudiosUsuario(WP_REST_Request $request)
+{
     $user_id = $request->get_param('user_id');
     error_log("obtenerAudiosUsuario: User ID: $user_id"); // Log al inicio
 
