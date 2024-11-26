@@ -46,103 +46,14 @@ function handle_info_usuario(WP_REST_Request $request) {
 // Función de permiso: valida la cabecera X-Electron-App
 function chequearElectron()
 {
-    error_log("Iniciando chequearElectron...");
+    //error_log("Iniciando chequearElectron...");
     if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
-        error_log("Cabecera válida: " . $_SERVER['HTTP_X_ELECTRON_APP']);
+        //error_log("Cabecera válida: " . $_SERVER['HTTP_X_ELECTRON_APP']);
         return true;
     }
-    error_log("Cabecera inválida o ausente.");
+    //error_log("Cabecera inválida o ausente.");
     return new WP_Error('forbidden', 'Acceso no autorizado', array('status' => 403));
 }
-
-/*
-CUando ejecuto 
-root@vmi1760274:/var/www/wordpress/wp-content/themes/2upra3v# curl -H "X-Electron-App: true" -H "Cache-Control: no-cache" "https://2upra.com/wp-json/1/v1/syncpre/44/check?last_sync=0"
- {"descargas_modificado":1732620186,"samplesGuardados_modificado":0}root@vmi1760274:/var/www/wordpress/wp-content/themes/2upra3v# 
-
-
-nunca veo que se ejecute verificarCambiosAudios
-
-y aunque actualice el valor, siempre da 1732620186 
-
-y cuando pruebo por ejemplo 
-root@vmi1760274:/var/www/wordpress/wp-content/themes/2upra3v# curl -H "X-Electron-App: true" "https://2upra.com/wp-json/1/v1/syncpre/1/check?last_sync=0"
-curl: (92) HTTP/2 stream 0 was not closed cleanly: INTERNAL_ERROR (err 2)
-da ese error
-
-que esta pasando 
-
-config de nginx
-
-    location /wp-json/ {
-        # Cabeceras CORS comunes
-        add_header 'Access-Control-Allow-Origin' 'https://2upra.com' always;
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
-        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,X-Electron-App' always;
-
-        add_header 'Cache-Control' 'no-cache, no-store, must-revalidate';
-        add_header 'Pragma' 'no-cache';
-        add_header 'Expires' 0;
-        proxy_no_cache 1;
-        proxy_cache_bypass 1;
-        fastcgi_no_cache 1; # si usas fastcgi
-
-        # Maneja las solicitudes OPTIONS para preflight
-        if ($request_method = 'OPTIONS') {
-            add_header 'Access-Control-Max-Age' 1728000;
-            add_header 'Content-Type' 'text/plain charset=utf-8';
-            add_header 'Content-Length' 0;
-            return 204;
-        }
-
-        # Rutas específicas para sincronización que requieren X-Electron-App
-        location ~* /wp-json/1/v1/syncpre/ {
-
-            # Verificar el header X-Electron-App
-            if ($http_x_electron_app != "true") {
-                return 403; # Denegar acceso si no está presente o incorrecto
-            }
-            proxy_set_header X-Electron-App $http_x_electron_app;
-            # Procesar la solicitud
-            try_files $uri $uri/ /index.php?$args;
-        }
-
-        # Rutas específicas para streaming de audio
-        location ~* /wp-json/1/v1/2 {
-            # Permitir sin verificar el header X-Electron-App
-            add_header 'Access-Control-Allow-Origin' 'https://2upra.com' always;
-            add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS' always;
-            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type' always;
-
-            # Procesar la solicitud
-            try_files $uri $uri/ /index.php?$args;
-        }
-
-        # Rutas generales para /wp-json/ que no necesitan lógica especial
-        try_files $uri $uri/ /index.php?$args;
-    }
-
-    #PHP
-    location ~ \.php$ {
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        include fastcgi_params;
-
-        # Agregar esta línea para pasar el encabezado a PHP
-        fastcgi_param HTTP_X_ELECTRON_APP $http_x_electron_app; 
-
-        # Directivas de caché FastCGI
-        fastcgi_cache WORDPRESS;
-        fastcgi_cache_bypass $skip_cache;
-        fastcgi_no_cache $skip_cache;
-        add_header X-Cache-Status $upstream_cache_status;
-    }
-
-    No tengo ningun plugin de cache activado
-    el log de error_log("verificarCambiosAudios: Descargas Timestamp: $descargas_timestamp, Samples Timestamp: $samples_timestamp"); nunca lo veo imprimirse
-
-*/
 
 
 function verificarCambiosAudios(WP_REST_Request $request)
