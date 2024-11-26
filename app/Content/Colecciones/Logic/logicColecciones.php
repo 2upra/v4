@@ -261,24 +261,27 @@ function añadirSampleEnColab($collection_id, $sample_id, $user_id)
 }
 
 
-
 function botonColeccion($postId)
 {
+    // Inicializamos $extraClass para evitar la advertencia de PHP si no está definida
+    $extraClass = '';
+
     // Verificamos si el usuario está logueado
     if (is_user_logged_in()) {
         $userId = get_current_user_id();
         $coleccion = get_user_meta($userId, 'samplesGuardados', true);
-        $extraClass = '';
-        if ($coleccion && is_array($coleccion) && array_key_exists($postId, $coleccion)) {
+
+        // Verificamos si $coleccion es un array y si la clave $postId existe, y solo entonces agregamos la clase
+        if (is_array($coleccion) && isset($coleccion[$postId])) {
             $extraClass = ' colabGuardado';
         }
     }
 
     ob_start();
-    ?> 
+    ?>
     <div class="ZAQIBB botonColeccion<?php echo esc_attr($extraClass); ?>">
         <button class="botonColeccionBtn" aria-label="Guardar sonido" data-post_id="<?php echo esc_attr($postId); ?>" data-nonce="<?php echo wp_create_nonce('colec_nonce'); ?>">
-            <?php echo $GLOBALS['iconoGuardar']; ?>
+            <?php echo isset($GLOBALS['iconoGuardar']) ? $GLOBALS['iconoGuardar'] : ''; // Verifica si $GLOBALS['iconoGuardar'] está definida ?>
         </button>
     </div>
     <?php
