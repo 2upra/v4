@@ -1,9 +1,10 @@
 <?
 
-
 function iniciar_sesion()
 {
-    if (is_user_logged_in()) return '<div>Ya has iniciado sesión. ¿Quieres cerrar sesión? <a href="' . wp_logout_url(home_url()) . '">Cerrar sesión</a></div>';
+    if (is_user_logged_in()) {
+        return '<div>Ya has iniciado sesión. ¿Quieres cerrar sesión? <a href="' . wp_logout_url(home_url()) . '">Cerrar sesión</a></div>';
+    }
 
     $mensaje = '';
     if (isset($_POST['iniciar_sesion_submit'])) {
@@ -15,7 +16,7 @@ function iniciar_sesion()
         if (!is_wp_error($user)) {
             wp_set_current_user($user->ID);
             wp_set_auth_cookie($user->ID);
-            wp_redirect('https://2upra.com');
+            wp_safe_redirect('https://2upra.com');
             exit;
         } else {
             $mensaje = '<div class="error-mensaje">Error al iniciar sesión. Por favor, verifica tus credenciales.</div>';
@@ -23,7 +24,7 @@ function iniciar_sesion()
     }
 
     ob_start();
-?>
+    ?>
 
     <div class="PUWJVS">
         <form class="CXHMID" action="" method="post">
@@ -34,7 +35,7 @@ function iniciar_sesion()
                 <input type="password" id="contrasena_usuario_login" name="contrasena_usuario_login" required class="contrasena_usuario"><br>
                 <div class="XYSRLL">
                     <input class="R0A915 A1" type="submit" name="iniciar_sesion_submit" value="Iniciar sesión">
-                    <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn"><? echo $GLOBALS['Google']; ?>Iniciar sesión con Google</button>
+                    <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn"><?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google</button>
 
                     <script>
                         document.getElementById('google-login-btn').addEventListener('click', function() {
@@ -49,15 +50,15 @@ function iniciar_sesion()
                     <button type="button" class="R0A915 A1 boton-cerrar">Volver</button>
                     <p><a href="https://2upra.com/tc/">Política de privacidad</a></p>
                 </div>
-                <? echo $mensaje; ?>
+                <?php echo $mensaje; ?>
             </div>
         </form>
         <div class="RFZJUH">
-            <div class="HPUYVS" id="fondograno"><? echo $GLOBALS['iconologo1']; ?></div>
+            <div class="HPUYVS" id="fondograno"><?php echo $GLOBALS['iconologo1']; ?></div>
         </div>
-
     </div>
-<?
+
+    <?php
     return ob_get_clean();
 }
 
