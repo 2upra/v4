@@ -16,6 +16,10 @@ function iniciar_sesion()
         if (!is_wp_error($user)) {
             wp_set_current_user($user->ID);
             wp_set_auth_cookie($user->ID);
+
+            // Clean output buffer
+            ob_clean();
+
             wp_safe_redirect('https://2upra.com');
             exit;
         } else {
@@ -24,7 +28,7 @@ function iniciar_sesion()
     }
 
     ob_start();
-    ?>
+?>
 
     <div class="PUWJVS">
         <form class="CXHMID" action="" method="post">
@@ -58,7 +62,7 @@ function iniciar_sesion()
         </div>
     </div>
 
-    <?php
+<?php
     return ob_get_clean();
 }
 
