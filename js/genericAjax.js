@@ -647,6 +647,7 @@ function inicializarCambiarImagen() {
             console.log('inicializarCambiarImagen: El elemento clicado tiene la clase "cambiarImagen".');
 
             e.preventDefault();
+            e.stopPropagation(); // Detener la propagación para evitar que el submenú se oculte
 
             const postId = e.target.getAttribute('data-post-id');
             console.log('inicializarCambiarImagen: postId obtenido del atributo data-post-id:', postId);
@@ -734,7 +735,6 @@ function inicializarCambiarImagen() {
 
     console.log('inicializarCambiarImagen: Evento "click" registrado en el documento.');
 }
-
 
 
 
