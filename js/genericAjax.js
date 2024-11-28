@@ -638,33 +638,19 @@ function actualizarElemento(element, newStatus) {
 function inicializarCambiarImagen() {
     console.log('inicializarCambiarImagen: La función se ha inicializado correctamente.');
 
-    // Asegurarnos de que el DOM está cargado antes de registrar eventos
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('inicializarCambiarImagen: DOMContentLoaded detectado, ahora se pueden registrar eventos.');
-    });
-
-    // Registrar el evento click para toda la página
+    // Registrar el evento click a nivel del documento
     document.addEventListener('click', async (e) => {
         console.log('inicializarCambiarImagen: Evento de clic detectado.', e);
 
-        // Asegurarnos de que el target no sea null
-        if (!e.target) {
-            console.warn('inicializarCambiarImagen: El target del evento click es null. No se puede procesar.');
-            return;
-        }
-
         // Verificar si el elemento clicado tiene la clase "cambiarImagen"
-        if (e.target.classList.contains('cambiarImagen')) {
+        if (e.target && e.target.classList.contains('cambiarImagen')) {
             console.log('inicializarCambiarImagen: El elemento clicado tiene la clase "cambiarImagen".');
 
-            // Prevenir el comportamiento por defecto del enlace o botón
             e.preventDefault();
 
-            // Obtener el atributo data-post-id del elemento clicado
             const postId = e.target.getAttribute('data-post-id');
             console.log('inicializarCambiarImagen: postId obtenido del atributo data-post-id:', postId);
 
-            // Si no hay postId, mostramos un error
             if (!postId) {
                 console.error('inicializarCambiarImagen: El botón no contiene un atributo data-post-id.');
                 return;
@@ -717,7 +703,9 @@ function inicializarCambiarImagen() {
                         console.log('inicializarCambiarImagen: Imagen cambiada con éxito en el servidor.');
 
                         // Actualizar la imagen en el frontend
-                        const postImage = document.querySelector(`.post-image-container a[data-post-id="${postId}"] img`);
+                        const postImage = document.querySelector(
+                            `.post-image-container a[data-post-id="${postId}"] img`
+                        );
                         console.log('inicializarCambiarImagen: Elemento de la imagen encontrado en el DOM:', postImage);
 
                         if (postImage) {
@@ -744,7 +732,6 @@ function inicializarCambiarImagen() {
         }
     });
 
-    // Agregar un log final para confirmar que el evento click ha sido registrado
     console.log('inicializarCambiarImagen: Evento "click" registrado en el documento.');
 }
 
