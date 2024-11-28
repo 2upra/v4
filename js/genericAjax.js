@@ -636,18 +636,29 @@ function actualizarElemento(element, newStatus) {
 }
 
 function inicializarCambiarImagen() {
-    console.log('inicializarCambiarImagen: La función se ha inicializado correctamente.');
+    console.log('inicializarCambiarImagen: Inicializando eventos para los botones "cambiarImagen".');
 
-    // Registrar el evento click a nivel del documento (delegación)
-    document.addEventListener('click', async (e) => {
-        console.log('inicializarCambiarImagen: Evento de clic detectado en el documento.', e);
+    // Seleccionar todos los botones con la clase "cambiarImagen"
+    const botonesCambiarImagen = document.querySelectorAll('.cambiarImagen');
 
-        // Verificar si el elemento clicado tiene la clase "cambiarImagen" y está dentro de un submenú
-        if (e.target && e.target.classList.contains('cambiarImagen') && e.target.closest('[id^="opcionespost-"]')) {
-            console.log('inicializarCambiarImagen: El elemento clicado es un botón "cambiarImagen" dentro de un submenú.');
+    if (!botonesCambiarImagen.length) {
+        console.warn('inicializarCambiarImagen: No se encontraron botones con la clase "cambiarImagen".');
+        return;
+    }
+
+    // Iterar sobre los botones y registrar el evento de clic
+    botonesCambiarImagen.forEach((boton) => {
+        // Evitar añadir múltiples veces el mismo evento al botón
+        if (boton.dataset.eventoInicializado) {
+            console.log(`inicializarCambiarImagen: El evento ya está inicializado para el botón con postId: ${boton.dataset.postId}`);
+            return;
+        }
+
+        boton.addEventListener('click', async (e) => {
+            console.log('inicializarCambiarImagen: Clic detectado en el botón "cambiarImagen".', e);
 
             e.preventDefault();
-            e.stopPropagation(); // Detener la propagación para evitar que el submenú se oculte
+            e.stopPropagation(); // Detener la propagación para evitar conflictos con el submenú
 
             const postId = e.target.getAttribute('data-post-id');
             console.log('inicializarCambiarImagen: postId obtenido del atributo data-post-id:', postId);
@@ -728,13 +739,17 @@ function inicializarCambiarImagen() {
             // Simular un clic en el input de archivo para abrir el selector
             console.log('inicializarCambiarImagen: Abriendo el selector de archivos.');
             inputFile.click();
-        } else {
-            console.log('inicializarCambiarImagen: El elemento clicado no es un botón "cambiarImagen" o no está dentro de un submenú.');
-        }
+        });
+
+        // Marcar el botón como inicializado para evitar eventos duplicados
+        boton.dataset.eventoInicializado = 'true';
     });
 
-    console.log('inicializarCambiarImagen: Evento "click" registrado en el documento (delegado).');
+    console.log('inicializarCambiarImagen: Eventos registrados para los botones "cambiarImagen".');
 }
+
+// Llamar a la función para inicializar los eventos
+
 
 
 
