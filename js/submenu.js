@@ -93,9 +93,9 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
             if (
                 submenu.contains(event.target) &&
-                event.target.classList.contains('cambiarImagen')
+                event.target.classList.contains('cambiarImagenW')
             ) {
-                return; // No cerrar el submenú si se hace clic en el botón cambiarImagen
+                return; // No cerrar el submenú si se hace clic en el botón cambiarImagenW
             }
 
             if (!submenu.contains(event.target) && !event.target.matches(triggerSelector)) {
