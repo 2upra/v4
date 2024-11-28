@@ -433,7 +433,7 @@ function opcionesColec($postId, $autorId)
                 <button class="banearUsuario" data-post-id="<? echo $postId; ?>">Banear</button>
             <? elseif ($usuarioActual == $autorId) : ?>
                 <button class="eliminarPost" data-post-id="<? echo $postId; ?>">Eliminar</button>
-                <button class="cambiarImagen" data-post-id="<? echo $postId; ?>">Cambiar Imagen</button>
+                <button class="cambiarImagenW" data-post-id="<? echo $postId; ?>">Cambiar Imagen</button>
             <? else : ?>
                 <button class="reporte" data-post-id="<? echo $postId; ?>" tipoContenido="social_post">Reportar</button>
                 <button class="bloquear" data-post-id="<? echo $postId; ?>">Bloquear</button>
