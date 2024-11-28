@@ -351,7 +351,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
         }
 
-        if ($args['post_type'] === 'colec') {
+        if ($args['post_type'] === 'colecciones') {
             $query_args = aplicarFiltrosUsuarioColec($query_args, $current_user_id);
         }
 
