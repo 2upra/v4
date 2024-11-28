@@ -74,8 +74,6 @@ function handle_google_callback()
         $client_id = '84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com';
         $client_secret = ($_ENV['GOOGLEAPI']);
         $redirect_uri = 'https://2upra.com/google-callback';
-
-        // Intercambia el código por un token de acceso
         $response = wp_remote_post('https://oauth2.googleapis.com/token', array(
             'body' => array(
                 'code' => $code,
@@ -93,8 +91,6 @@ function handle_google_callback()
 
         $token = json_decode($response['body']);
         $access_token = $token->access_token;
-
-        // Obtener información del usuario
         $user_info_response = wp_remote_get('https://www.googleapis.com/oauth2/v1/userinfo?access_token=' . $access_token);
         $user_info = json_decode($user_info_response['body']);
 
@@ -102,19 +98,17 @@ function handle_google_callback()
             $email = $user_info->email;
             $name = $user_info->name;
 
-            // Verificar si el usuario ya existe
             if ($user = get_user_by('email', $email)) {
-                // Iniciar sesión al usuario
                 wp_set_current_user($user->ID);
                 wp_set_auth_cookie($user->ID);
+                $token = generate_secure_token($user->ID);
                 if (is_electron_app()) {
-                    wp_redirect('https://2upra.com/app?user_id=' . $user->ID); // Redirige a la URL de la app con el user ID
+                    wp_redirect('https://2upra.com/app?token=' . $token);
                 } else {
-                    wp_redirect('https://2upra.com'); // Redirige a la URL normal
+                    wp_redirect('https://2upra.com');
                 }
                 exit;
             } else {
-                // Registrar al usuario si no existe
                 $random_password = wp_generate_password();
                 $user_id = wp_create_user($name, $random_password, $email);
                 wp_set_current_user($user_id);
@@ -131,4 +125,44 @@ add_action('init', 'handle_google_callback');
 function is_electron_app()
 {
     return isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true';
+}
+
+function generate_secure_token($user_id) {
+    $token = bin2hex(random_bytes(32));
+    $expiration = time() + 36000; 
+    // Guardar $token y $expiration en la base de datos, asociado a $user_id
+    update_user_meta($user_id, 'session_token', $token);
+    update_user_meta($user_id, 'session_token_expiration', $expiration);
+    return $token;
+}
+
+function verify_secure_token($token) {
+    global $wpdb;
+    $user_id = $wpdb->get_var($wpdb->prepare(
+        "SELECT user_id FROM $wpdb->usermeta WHERE meta_key = 'session_token' AND meta_value = %s AND CAST(get_user_meta(user_id, 'session_token_expiration', true) AS UNSIGNED) > %d",
+        $token, time()
+    ));
+
+    if ($user_id) {
+        return $user_id;
+    }
+    return false;
+}
+
+add_action('rest_api_init', function () {
+    register_rest_route('2upra/v1', '/verify_token', array(
+        'methods' => 'POST',
+        'callback' => 'verify_token_endpoint',
+    ));
+});
+
+function verify_token_endpoint(WP_REST_Request $request) {
+    $token = $request->get_param('token');
+    $user_id = verify_secure_token($token);
+
+    if ($user_id) {
+        return new WP_REST_Response(array('user_id' => $user_id, 'status' => 'valid'), 200);
+    } else {
+        return new WP_REST_Response(array('message' => 'Token inválido', 'status' => 'invalid'), 401);
+    }
 }
