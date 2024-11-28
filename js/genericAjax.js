@@ -538,6 +538,7 @@ async function handleAllRequests() {
         await verificarPost();
         await corregirTags();
         await cambiarTitulo();
+        await inicializarCambiarImagen();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }
@@ -635,60 +636,64 @@ function actualizarElemento(element, newStatus) {
 }
 
 
-// Delegación de eventos para el botón "Cambiar imagen"
-document.addEventListener('click', async (e) => {
-    if (e.target.classList.contains('cambiarImagen')) {
-        e.preventDefault();
+async function inicializarCambiarImagen() {
+    document.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('cambiarImagen')) {
+            e.preventDefault();
 
-        const postId = e.target.getAttribute('data-post-id');
-        if (!postId) {
-            console.error('El botón no contiene un atributo data-post-id.');
-            return;
-        }
-
-        // Abrir un selector de archivos
-        const inputFile = document.createElement('input');
-        inputFile.type = 'file';
-        inputFile.accept = 'image/*';
-
-        inputFile.addEventListener('change', async (fileEvent) => {
-            const file = fileEvent.target.files[0];
-            if (!file) return;
-
-            // Crear un objeto FormData para enviar la imagen
-            const formData = new FormData();
-            formData.append('action', 'cambiar_imagen_post'); // Acción para el backend de WordPress
-            formData.append('post_id', postId);
-            formData.append('imagen', file);
-
-            try {
-                // Enviar la imagen al servidor
-                const response = await fetch(ajaxUrl, {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    // Actualizar la imagen en el frontend
-                    const postImage = document.querySelector(`.post-image-container a[data-post-id="${postId}"] img`);
-                    if (postImage) {
-                        postImage.src = result.new_image_url;
-                    }
-                } else {
-                    console.error('Error al cambiar la imagen:', result.message);
-                    alert('Hubo un problema al cambiar la imagen.');
-                }
-            } catch (error) {
-                console.error('Error en la solicitud AJAX:', error);
-                alert('Hubo un error al enviar la imagen.');
+            const postId = e.target.getAttribute('data-post-id');
+            if (!postId) {
+                console.error('El botón no contiene un atributo data-post-id.');
+                return;
             }
-        });
 
-        // Simular un clic en el input de archivo para abrir el selector
-        inputFile.click();
-    }
-});
+            // Abrir un selector de archivos
+            const inputFile = document.createElement('input');
+            inputFile.type = 'file';
+            inputFile.accept = 'image/*';
+
+            inputFile.addEventListener('change', async (fileEvent) => {
+                const file = fileEvent.target.files[0];
+                if (!file) return;
+
+                // Crear un objeto FormData para enviar la imagen
+                const formData = new FormData();
+                formData.append('action', 'cambiar_imagen_post'); // Acción para el backend de WordPress
+                formData.append('post_id', postId);
+                formData.append('imagen', file);
+
+                try {
+                    // Enviar la imagen al servidor
+                    const response = await fetch(ajaxUrl, {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        // Actualizar la imagen en el frontend
+                        const postImage = document.querySelector(`.post-image-container a[data-post-id="${postId}"] img`);
+                        if (postImage) {
+                            postImage.src = result.new_image_url;
+                        }
+                    } else {
+                        console.error('Error al cambiar la imagen:', result.message);
+                        alert('Hubo un problema al cambiar la imagen.');
+                    }
+                } catch (error) {
+                    console.error('Error en la solicitud AJAX:', error);
+                    alert('Hubo un error al enviar la imagen.');
+                }
+            });
+
+            // Simular un clic en el input de archivo para abrir el selector
+            inputFile.click();
+        }
+    });
+}
+
+// Llamar a la función para inicializar el evento
+await inicializarCambiarImagen();
 
 //GENERIC FETCH (NO SE PUEDE CAMBIAR O ALTERAR )
 async function enviarAjax(action, data = {}) {
