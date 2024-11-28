@@ -188,27 +188,14 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
 
         submenu.style.visibility = "visible";
 
-        submenu._darkBackground = createSubmenuDarkBackground(submenu);
-
-        document.body.classList.add('no-scroll');
-
         submenu.addEventListener('click', (e) => {
-            e.stopPropagation(); // Evitar que el clic dentro del submenú cierre el mismo
+            e.stopPropagation(); // Evitar que el clic dentro del submenú lo cierre
         });
     }
 
     function hideSubmenu(submenu) {
         if (submenu) {
             submenu.style.display = "none";
-        }
-
-        removeSubmenuDarkBackground(submenu._darkBackground);
-        submenu._darkBackground = null;
-
-        const activeSubmenus = Array.from(document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`)).filter(menu => menu.style.display === "block");
-
-        if (activeSubmenus.length === 0) {
-            document.body.classList.remove('no-scroll');
         }
     }
 
@@ -221,13 +208,6 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
 
     document.addEventListener("click", (event) => {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
-            if (
-                submenu.contains(event.target) &&
-                event.target.classList.contains('cambiarImagen')
-            ) {
-                return; // No cerrar el submenú si se hace clic en el botón cambiarImagen
-            }
-
             if (!submenu.contains(event.target) && !event.target.matches(triggerSelector)) {
                 hideSubmenu(submenu);
             }
