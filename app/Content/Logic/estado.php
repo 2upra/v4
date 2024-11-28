@@ -233,8 +233,6 @@ function cambiarTitulo()
 
 add_action('wp_ajax_cambiar_imagen_post', 'cambiar_imagen_post_handler'); // Acción AJAX autenticada
 
-
-
 function cambiar_imagen_post_handler() {
     // Verificar que el post_id y el archivo de imagen están presentes
     if (empty($_POST['post_id']) || empty($_FILES['imagen'])) {

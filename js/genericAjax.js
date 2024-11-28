@@ -635,36 +635,39 @@ function actualizarElemento(element, newStatus) {
     }
 }
 
-function inicializarCambiarImagen() {
-    console.log('inicializarCambiarImagen: Inicializando eventos para los botones "cambiarImagen".');
 
+//Quita los logs, hazlo dinamico,  es decir, esto llamara con ajax, que agregue un valor en el boton de que ya esta con el evento asignado para que no se vuelva a colocar por si el elemento aparece 2 veces, y por cierto, hay un pequeño bug, la imagen carga en el servidor pero visualmente no se coloca 
+
+/*
+inicializarCambiarImagen: Imagen cambiada con éxito en el servidor.
+genericAjax.js?ver=3.0.6.521998212:721 inicializarCambiarImagen: Elemento de la imagen encontrado en el DOM: <img src=​"undefined" alt=​"Post Image">​
+genericAjax.js?ver=3.0.6.521998212:725 inicializarCambiarImagen: URL de la imagen actualizada en el frontend: undefined
+
+
+*/
+function inicializarCambiarImagen() {
     // Seleccionar todos los botones con la clase "cambiarImagen"
     const botonesCambiarImagen = document.querySelectorAll('.cambiarImagen');
 
     if (!botonesCambiarImagen.length) {
-        console.warn('inicializarCambiarImagen: No se encontraron botones con la clase "cambiarImagen".');
+        console.warn('No se encontraron botones con la clase "cambiarImagen".');
         return;
     }
 
     // Iterar sobre los botones y registrar el evento de clic
     botonesCambiarImagen.forEach((boton) => {
         // Evitar añadir múltiples veces el mismo evento al botón
-        if (boton.dataset.eventoInicializado) {
-            console.log(`inicializarCambiarImagen: El evento ya está inicializado para el botón con postId: ${boton.dataset.postId}`);
+        if (boton.dataset.eventoInicializado === 'true') {
             return;
         }
 
         boton.addEventListener('click', async (e) => {
-            console.log('inicializarCambiarImagen: Clic detectado en el botón "cambiarImagen".', e);
-
             e.preventDefault();
             e.stopPropagation(); // Detener la propagación para evitar conflictos con el submenú
 
             const postId = e.target.getAttribute('data-post-id');
-            console.log('inicializarCambiarImagen: postId obtenido del atributo data-post-id:', postId);
-
             if (!postId) {
-                console.error('inicializarCambiarImagen: El botón no contiene un atributo data-post-id.');
+                alert('Error: El botón no contiene un atributo "data-post-id".');
                 return;
             }
 
@@ -672,17 +675,12 @@ function inicializarCambiarImagen() {
             const inputFile = document.createElement('input');
             inputFile.type = 'file';
             inputFile.accept = 'image/*';
-            console.log('inicializarCambiarImagen: Input file creado con éxito.');
 
             // Registrar el evento change en el input para detectar la selección del archivo
             inputFile.addEventListener('change', async (fileEvent) => {
-                console.log('inicializarCambiarImagen: Evento de cambio en el input file detectado.', fileEvent);
-
                 const file = fileEvent.target.files[0];
-                console.log('inicializarCambiarImagen: Archivo seleccionado:', file);
-
                 if (!file) {
-                    console.warn('inicializarCambiarImagen: No se seleccionó ningún archivo.');
+                    alert('No seleccionaste ningún archivo.');
                     return;
                 }
 
@@ -691,64 +689,104 @@ function inicializarCambiarImagen() {
                 formData.append('action', 'cambiar_imagen_post'); // Acción para el backend de WordPress
                 formData.append('post_id', postId);
                 formData.append('imagen', file);
-                console.log('inicializarCambiarImagen: FormData creado con los siguientes datos:', {
-                    action: 'cambiar_imagen_post',
-                    post_id: postId,
-                    imagen: file,
-                });
 
                 try {
-                    // Enviar la imagen al servidor
-                    console.log('inicializarCambiarImagen: Enviando datos al servidor mediante fetch.');
-
+                    // Enviar la imagen al servidor mediante fetch
                     const response = await fetch(ajaxUrl, {
                         method: 'POST',
                         body: formData,
                     });
 
-                    console.log('inicializarCambiarImagen: Respuesta recibida del servidor.', response);
-
                     const result = await response.json();
-                    console.log('inicializarCambiarImagen: Resultado parseado de la respuesta JSON:', result);
 
                     if (result.success) {
-                        console.log('inicializarCambiarImagen: Imagen cambiada con éxito en el servidor.');
-
                         // Actualizar la imagen en el frontend
                         const postImage = document.querySelector(
                             `.post-image-container a[data-post-id="${postId}"] img`
                         );
-                        console.log('inicializarCambiarImagen: Elemento de la imagen encontrado en el DOM:', postImage);
 
                         if (postImage) {
-                            postImage.src = result.new_image_url;
-                            console.log('inicializarCambiarImagen: URL de la imagen actualizada en el frontend:', result.new_image_url);
+                            postImage.src = result.new_image_url + `?timestamp=${new Date().getTime()}`; // Evitar caché
                         } else {
-                            console.warn('inicializarCambiarImagen: No se encontró el elemento de la imagen en el DOM.');
+                            console.warn(`No se encontró la imagen para el postId: ${postId}.`);
                         }
                     } else {
-                        console.error('inicializarCambiarImagen: Error al cambiar la imagen en el servidor:', result.message);
-                        alert('Hubo un problema al cambiar la imagen.');
+                        alert(`Error: ${result.message}`);
                     }
                 } catch (error) {
-                    console.error('inicializarCambiarImagen: Error en la solicitud AJAX:', error);
+                    console.error('Error al enviar la solicitud AJAX:', error);
                     alert('Hubo un error al enviar la imagen.');
                 }
             });
 
             // Simular un clic en el input de archivo para abrir el selector
-            console.log('inicializarCambiarImagen: Abriendo el selector de archivos.');
             inputFile.click();
         });
 
         // Marcar el botón como inicializado para evitar eventos duplicados
         boton.dataset.eventoInicializado = 'true';
     });
-
-    console.log('inicializarCambiarImagen: Eventos registrados para los botones "cambiarImagen".');
 }
+/*
+function cambiar_imagen_post_handler() {
+    // Verificar que el post_id y el archivo de imagen están presentes
+    if (empty($_POST['post_id']) || empty($_FILES['imagen'])) {
+        wp_send_json_error(['message' => 'Faltan datos necesarios.']);
+    }
 
-// Llamar a la función para inicializar los eventos
+    $post_id = intval($_POST['post_id']);
+
+    // Verificar que el post existe
+    $post = get_post($post_id);
+    if (!$post) {
+        wp_send_json_error(['message' => 'El post no existe.']);
+    }
+
+    // Verificar que el usuario actual sea el autor del post
+    if ((int) $post->post_author !== get_current_user_id()) {
+        wp_send_json_error(['message' => 'No tienes permisos para cambiar la imagen de este post.']);
+    }
+
+    // Procesar la imagen subida
+    $file = $_FILES['imagen'];
+
+    // Validar y subir la imagen usando la API de WordPress
+    require_once ABSPATH . 'wp-admin/includes/file.php';
+    require_once ABSPATH . 'wp-admin/includes/image.php';
+    $upload = wp_handle_upload($file, ['test_form' => false]);
+
+    if (isset($upload['error']) || !isset($upload['file'])) {
+        wp_send_json_error(['message' => 'Error al subir la imagen: ' . $upload['error']]);
+    }
+
+    $file_path = $upload['file'];
+    $file_url = $upload['url'];
+
+    // Crear un attachment en la biblioteca de medios
+    $attachment_id = wp_insert_attachment([
+        'guid'           => $file_url,
+        'post_mime_type' => $upload['type'],
+        'post_title'     => sanitize_file_name($file['name']),
+        'post_content'   => '',
+        'post_status'    => 'inherit',
+    ], $file_path, $post_id);
+
+    if (is_wp_error($attachment_id) || !$attachment_id) {
+        wp_send_json_error(['message' => 'Error al guardar la imagen en la biblioteca de medios.']);
+    }
+
+    // Generar los metadatos de la imagen (tamaños, etc.)
+    require_once ABSPATH . 'wp-admin/includes/image.php';
+    $attach_data = wp_generate_attachment_metadata($attachment_id, $file_path);
+    wp_update_attachment_metadata($attachment_id, $attach_data);
+
+    // Establecer la imagen destacada del post
+    set_post_thumbnail($post_id, $attachment_id);
+
+    // Devolver la URL de la nueva imagen para actualizar el frontend
+    wp_send_json_success(['new_image_url' => $file_url]);
+}
+*/
 
 
 
