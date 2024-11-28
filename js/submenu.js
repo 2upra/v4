@@ -17,69 +17,53 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         if (submenu.style.display === "block") {
             hideSubmenu(submenu);
         } else {
-            showSubmenu(event, trigger, submenu, submenu._position); // Pasamos el trigger
+            showSubmenu(event, trigger, submenu, submenu._position);
         }
 
-        event.stopPropagation(); // Evita que el clic se propague al documento
+        event.stopPropagation();
     }
 
     function showSubmenu(event, trigger, submenu, position) {
         const { innerWidth: vw, innerHeight: vh } = window;
 
-        // Mover el submenú al body si no está ya allí
         if (submenu.parentNode !== document.body) {
             document.body.appendChild(submenu);
         }
 
         submenu.style.position = "fixed";
-        submenu.style.zIndex = 1001; // Asegúrate de que tenga un z-index alto
+        submenu.style.zIndex = 1001;
 
-        // Hacemos que el submenú sea temporalmente visible para calcular sus dimensiones
         submenu.style.display = "block";
         submenu.style.visibility = "hidden";
 
-        // Obtenemos las dimensiones del submenú
         let submenuWidth = submenu.offsetWidth;
         let submenuHeight = submenu.offsetHeight;
 
-        // Obtenemos el rectángulo del elemento desencadenante
         const rect = trigger.getBoundingClientRect();
 
-        // En dispositivos móviles, centrar el submenú
         if (vw <= 640) {
             submenu.style.top = `${(vh - submenuHeight) / 2}px`;
             submenu.style.left = `${(vw - submenuWidth) / 2}px`;
         } else {
             let { top, left } = calculatePosition(rect, submenuWidth, submenuHeight, position);
 
-            // Asegurar que el submenú no se salga de la pantalla
-            if (top + submenuHeight > vh) {
-                top = vh - submenuHeight;
-            }
-            if (left + submenuWidth > vw) {
-                left = vw - submenuWidth;
-            }
-            if (top < 0) {
-                top = 0;
-            }
-            if (left < 0) {
-                left = 0;
-            }
+            if (top + submenuHeight > vh) top = vh - submenuHeight;
+            if (left + submenuWidth > vw) left = vw - submenuWidth;
+            if (top < 0) top = 0;
+            if (left < 0) left = 0;
 
             submenu.style.top = `${top}px`;
             submenu.style.left = `${left}px`;
         }
 
-        // Ahora hacemos visible el submenú
         submenu.style.visibility = "visible";
 
         submenu._darkBackground = createSubmenuDarkBackground(submenu);
 
         document.body.classList.add('no-scroll');
 
-        // **Evitar que los clics dentro del submenú lo cierren**
         submenu.addEventListener('click', (e) => {
-            e.stopPropagation(); // Evita que el clic dentro del submenú cierre el mismo
+            e.stopPropagation(); // Evitar que el clic dentro del submenú cierre el mismo
         });
     }
 
@@ -107,6 +91,13 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
 
     document.addEventListener("click", (event) => {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
+            if (
+                submenu.contains(event.target) &&
+                event.target.classList.contains('cambiarImagen')
+            ) {
+                return; // No cerrar el submenú si se hace clic en el botón cambiarImagen
+            }
+
             if (!submenu.contains(event.target) && !event.target.matches(triggerSelector)) {
                 hideSubmenu(submenu);
             }
