@@ -692,9 +692,6 @@ async function inicializarCambiarImagen() {
     });
 }
 
-// Llamar a la función para inicializar el evento
-await inicializarCambiarImagen();
-
 //GENERIC FETCH (NO SE PUEDE CAMBIAR O ALTERAR )
 async function enviarAjax(action, data = {}) {
     try {
