@@ -140,7 +140,7 @@ function generate_secure_token($user_id) {
 function verify_secure_token($token) {
     global $wpdb;
     $user_id = $wpdb->get_var($wpdb->prepare(
-        "SELECT user_id FROM $wpdb->usermeta WHERE meta_key = 'session_token' AND meta_value = %s AND CAST(get_user_meta(user_id, 'session_token_expiration', true) AS UNSIGNED) > %d",
+        "SELECT user_id FROM $wpdb->usermeta WHERE meta_key = 'session_token' AND meta_value = %s AND CAST((SELECT meta_value FROM $wpdb->usermeta WHERE user_id = user_id AND meta_key = 'session_token_expiration') AS UNSIGNED) > %d",
         $token, time()
     ));
     
