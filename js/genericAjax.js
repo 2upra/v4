@@ -643,11 +643,11 @@ function inicializarCambiarImagen() {
         console.log('inicializarCambiarImagen: Evento de clic detectado.', e);
 
         // Verificar si el elemento clicado tiene la clase "cambiarImagen"
-        if (e.target && e.target.classList.contains('cambiarImagenW')) {
+        if (e.target && e.target.classList.contains('cambiarImagen')) {
             console.log('inicializarCambiarImagen: El elemento clicado tiene la clase "cambiarImagen".');
 
             e.preventDefault();
-            e.stopPropagation(); // Detener la propagación para evitar que el submenú se oculte
+            e.stopPropagation(); // Detener la propagación para evitar conflictos con el submenú
 
             const postId = e.target.getAttribute('data-post-id');
             console.log('inicializarCambiarImagen: postId obtenido del atributo data-post-id:', postId);
@@ -728,8 +728,6 @@ function inicializarCambiarImagen() {
             // Simular un clic en el input de archivo para abrir el selector
             console.log('inicializarCambiarImagen: Abriendo el selector de archivos.');
             inputFile.click();
-        } else {
-            console.log('inicializarCambiarImagen: El elemento clicado no tiene la clase "cambiarImagen".');
         }
     });
 
