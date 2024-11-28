@@ -351,10 +351,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
         }
 
-        if ($args['post_type'] === 'colecciones') {
-            $query_args = aplicarFiltrosUsuarioColec($query_args, $current_user_id);
-        }
-
         $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id);
 
         return $query_args;
@@ -521,55 +517,6 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 }
 
 
-
-function aplicarFiltrosUsuarioColec($query_args, $current_user_id)
-{
-    //guardarLog("Iniciando aplicarFiltrosUsuario para el usuario $current_user_id");
-    $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
-    //guardarLog("Filtros del usuario: " . print_r($filtrosUsuario, true));
-
-    if (empty($filtrosUsuario) || !is_array($filtrosUsuario)) {
-        //guardarLog("No hay filtros aplicables o el formato es incorrecto.");
-        return $query_args;
-    }
-
-    // Inicializar variables para mantener los IDs a incluir y excluir
-    $post_not_in = $query_args['post__not_in'] ?? [];
-    $post_in = $query_args['post__in'] ?? [];
-
-    if (in_array('misColecciones', $filtrosUsuario)) {
-        $query_args['author'] = $current_user_id;
-    }
-
-
-    // Eliminar los IDs en post_not_in de post_in para evitar conflictos
-    if (!empty($post_in) && !empty($post_not_in)) {
-        $post_in = array_diff($post_in, $post_not_in);
-        //guardarLog("Post__in después de eliminar IDs en post__not_in: " . print_r($post_in, true));
-        if (empty($post_in)) {
-            $query_args['posts_per_page'] = 0;
-            //guardarLog("No hay posts que mostrar después de aplicar los filtros.");
-        }
-    }
-
-    // Actualizar los argumentos de la consulta
-    if (!empty($post_in)) {
-        $query_args['post__in'] = $post_in;
-    } else {
-        unset($query_args['post__in']);
-    }
-
-    if (!empty($post_not_in)) {
-        $query_args['post__not_in'] = $post_not_in;
-    } else {
-        unset($query_args['post__not_in']);
-    }
-
-    //guardarLog("Query args final: " . print_r($query_args, true));
-    return $query_args;
-}
-
-
 function aplicarFiltrosUsuario($query_args, $current_user_id)
 {
     //guardarLog("Iniciando aplicarFiltrosUsuario para el usuario $current_user_id");
@@ -666,7 +613,11 @@ function aplicarFiltrosUsuario($query_args, $current_user_id)
 
 function aplicarFiltroGlobal($query_args, $args, $current_user_id)
 {
-    // Aplicar el filtro original de `$filtro`
+    $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
+    if (is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
+        $query_args['author'] = $current_user_id;
+        return $query_args;
+    }
     $filtro = $args['filtro'] ?? 'nada';
     $meta_query_conditions = [
         'rolasEliminadas' => fn() => $query_args['post_status'] = 'pending_deletion',
@@ -698,7 +649,6 @@ function aplicarFiltroGlobal($query_args, $args, $current_user_id)
         },
     ];
 
-    // Ejecutar el filtro
     if (isset($meta_query_conditions[$filtro])) {
         $result = $meta_query_conditions[$filtro];
         if (is_callable($result)) {
