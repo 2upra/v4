@@ -1,6 +1,6 @@
 <?
 /*
-Template Name: Colec
+Template Name: Colecc
 */
 
 // Función para obtener el idioma preferido del navegador
