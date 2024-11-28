@@ -638,16 +638,16 @@ function actualizarElemento(element, newStatus) {
 function inicializarCambiarImagen() {
     console.log('inicializarCambiarImagen: La función se ha inicializado correctamente.');
 
-    // Registrar el evento click a nivel del documento
+    // Registrar el evento click a nivel del documento (delegación)
     document.addEventListener('click', async (e) => {
-        console.log('inicializarCambiarImagen: Evento de clic detectado.', e);
+        console.log('inicializarCambiarImagen: Evento de clic detectado en el documento.', e);
 
-        // Verificar si el elemento clicado tiene la clase "cambiarImagen"
-        if (e.target && e.target.classList.contains('cambiarImagen')) {
-            console.log('inicializarCambiarImagen: El elemento clicado tiene la clase "cambiarImagen".');
+        // Verificar si el elemento clicado tiene la clase "cambiarImagen" y está dentro de un submenú
+        if (e.target && e.target.classList.contains('cambiarImagen') && e.target.closest('[id^="opcionespost-"]')) {
+            console.log('inicializarCambiarImagen: El elemento clicado es un botón "cambiarImagen" dentro de un submenú.');
 
             e.preventDefault();
-            e.stopPropagation(); // Detener la propagación para evitar conflictos con el submenú
+            e.stopPropagation(); // Detener la propagación para evitar que el submenú se oculte
 
             const postId = e.target.getAttribute('data-post-id');
             console.log('inicializarCambiarImagen: postId obtenido del atributo data-post-id:', postId);
@@ -728,10 +728,12 @@ function inicializarCambiarImagen() {
             // Simular un clic en el input de archivo para abrir el selector
             console.log('inicializarCambiarImagen: Abriendo el selector de archivos.');
             inputFile.click();
+        } else {
+            console.log('inicializarCambiarImagen: El elemento clicado no es un botón "cambiarImagen" o no está dentro de un submenú.');
         }
     });
 
-    console.log('inicializarCambiarImagen: Evento "click" registrado en el documento.');
+    console.log('inicializarCambiarImagen: Evento "click" registrado en el documento (delegado).');
 }
 
 
