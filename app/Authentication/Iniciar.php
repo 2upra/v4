@@ -126,13 +126,14 @@ function is_electron_app()
 {
     return isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true';
 }
-
 function generate_secure_token($user_id) {
     $token = bin2hex(random_bytes(32));
     $expiration = time() + 36000; 
-    // Guardar $token y $expiration en la base de datos, asociado a $user_id
-    update_user_meta($user_id, 'session_token', $token);
-    update_user_meta($user_id, 'session_token_expiration', $expiration);
+    $result_token = update_user_meta($user_id, 'session_token', $token);
+    $result_expiration = update_user_meta($user_id, 'session_token_expiration', $expiration);
+    
+    error_log('generate_secure_token - user_id: ' . $user_id . ' token: ' . $token . ' expiration: ' . $expiration  . ' result_token: ' . ($result_token ? 'true' : 'false') . ' result_expiration: ' . ($result_expiration ? 'true' : 'false'));
+    
     return $token;
 }
 
@@ -142,10 +143,14 @@ function verify_secure_token($token) {
         "SELECT user_id FROM $wpdb->usermeta WHERE meta_key = 'session_token' AND meta_value = %s AND CAST(get_user_meta(user_id, 'session_token_expiration', true) AS UNSIGNED) > %d",
         $token, time()
     ));
+    
+    error_log('verify_secure_token - token: ' . $token . ' user_id: ' . ($user_id ? $user_id : 'not found'));
 
     if ($user_id) {
         return $user_id;
     }
+    
+    error_log('verify_secure_token - invalid token: ' . $token);
     return false;
 }
 
@@ -161,8 +166,10 @@ function verify_token_endpoint(WP_REST_Request $request) {
     $user_id = verify_secure_token($token);
 
     if ($user_id) {
+        error_log('verify_token_endpoint - token: ' . $token . ' user_id: ' . $user_id);
         return new WP_REST_Response(array('user_id' => $user_id, 'status' => 'valid'), 200);
     } else {
+        error_log('verify_token_endpoint - invalid token: ' . $token );
         return new WP_REST_Response(array('message' => 'Token inválido', 'status' => 'invalid'), 401);
     }
 }
