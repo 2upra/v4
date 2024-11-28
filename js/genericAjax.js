@@ -539,6 +539,7 @@ async function handleAllRequests() {
         await corregirTags();
         await cambiarTitulo();
         await inicializarCambiarImagen();
+        inicializarCambiarImagen();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
     }
@@ -636,7 +637,7 @@ function actualizarElemento(element, newStatus) {
 }
 
 
-async function inicializarCambiarImagen() {
+function inicializarCambiarImagen() {
     document.addEventListener('click', async (e) => {
         if (e.target.classList.contains('cambiarImagen')) {
             e.preventDefault();
@@ -691,6 +692,9 @@ async function inicializarCambiarImagen() {
         }
     });
 }
+
+
+
 
 //GENERIC FETCH (NO SE PUEDE CAMBIAR O ALTERAR )
 async function enviarAjax(action, data = {}) {
