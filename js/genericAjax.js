@@ -635,32 +635,48 @@ function actualizarElemento(element, newStatus) {
     }
 }
 
-
 function inicializarCambiarImagen() {
     console.log('inicializarCambiarImagen: La función se ha inicializado correctamente.');
 
+    // Asegurarnos de que el DOM está cargado antes de registrar eventos
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('inicializarCambiarImagen: DOMContentLoaded detectado, ahora se pueden registrar eventos.');
+    });
+
+    // Registrar el evento click para toda la página
     document.addEventListener('click', async (e) => {
         console.log('inicializarCambiarImagen: Evento de clic detectado.', e);
 
+        // Asegurarnos de que el target no sea null
+        if (!e.target) {
+            console.warn('inicializarCambiarImagen: El target del evento click es null. No se puede procesar.');
+            return;
+        }
+
+        // Verificar si el elemento clicado tiene la clase "cambiarImagen"
         if (e.target.classList.contains('cambiarImagen')) {
             console.log('inicializarCambiarImagen: El elemento clicado tiene la clase "cambiarImagen".');
 
+            // Prevenir el comportamiento por defecto del enlace o botón
             e.preventDefault();
 
+            // Obtener el atributo data-post-id del elemento clicado
             const postId = e.target.getAttribute('data-post-id');
             console.log('inicializarCambiarImagen: postId obtenido del atributo data-post-id:', postId);
 
+            // Si no hay postId, mostramos un error
             if (!postId) {
                 console.error('inicializarCambiarImagen: El botón no contiene un atributo data-post-id.');
                 return;
             }
 
-            // Abrir un selector de archivos
+            // Crear un input de tipo archivo para seleccionar la imagen
             const inputFile = document.createElement('input');
             inputFile.type = 'file';
             inputFile.accept = 'image/*';
             console.log('inicializarCambiarImagen: Input file creado con éxito.');
 
+            // Registrar el evento change en el input para detectar la selección del archivo
             inputFile.addEventListener('change', async (fileEvent) => {
                 console.log('inicializarCambiarImagen: Evento de cambio en el input file detectado.', fileEvent);
 
@@ -723,8 +739,13 @@ function inicializarCambiarImagen() {
             // Simular un clic en el input de archivo para abrir el selector
             console.log('inicializarCambiarImagen: Abriendo el selector de archivos.');
             inputFile.click();
+        } else {
+            console.log('inicializarCambiarImagen: El elemento clicado no tiene la clase "cambiarImagen".');
         }
     });
+
+    // Agregar un log final para confirmar que el evento click ha sido registrado
+    console.log('inicializarCambiarImagen: Evento "click" registrado en el documento.');
 }
 
 
