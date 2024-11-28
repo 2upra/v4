@@ -266,7 +266,7 @@ function imagenColeccion($postId)
     ob_start();
 ?>
     <div class="post-image-container">
-        <a href="<? echo esc_url(get_permalink($postId)); ?>">
+        <a href="<? echo esc_url(get_permalink($postId)); ?>" data-post-id="<? echo $postId; ?>" class="imagenColecS">
             <img src="<? echo esc_url($imagenProcesada); ?>" alt="Post Image" />
         </a>
     </div>

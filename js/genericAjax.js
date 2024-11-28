@@ -55,6 +55,8 @@ async function verificarPost() {
     );
 }
 
+
+
 // Función genérica para manejar acciones con confirmación y AJAX
 async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
     const elements = document.querySelectorAll(selector); // Selecciona cualquier elemento que coincida con el selector
@@ -632,7 +634,63 @@ function actualizarElemento(element, newStatus) {
     }
 }
 
-//GENERIC FETCH
+
+// Delegación de eventos para el botón "Cambiar imagen"
+document.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('cambiarImagen')) {
+        e.preventDefault();
+
+        const postId = e.target.getAttribute('data-post-id');
+        if (!postId) {
+            console.error('El botón no contiene un atributo data-post-id.');
+            return;
+        }
+
+        // Abrir un selector de archivos
+        const inputFile = document.createElement('input');
+        inputFile.type = 'file';
+        inputFile.accept = 'image/*';
+
+        inputFile.addEventListener('change', async (fileEvent) => {
+            const file = fileEvent.target.files[0];
+            if (!file) return;
+
+            // Crear un objeto FormData para enviar la imagen
+            const formData = new FormData();
+            formData.append('action', 'cambiar_imagen_post'); // Acción para el backend de WordPress
+            formData.append('post_id', postId);
+            formData.append('imagen', file);
+
+            try {
+                // Enviar la imagen al servidor
+                const response = await fetch(ajaxUrl, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    // Actualizar la imagen en el frontend
+                    const postImage = document.querySelector(`.post-image-container a[data-post-id="${postId}"] img`);
+                    if (postImage) {
+                        postImage.src = result.new_image_url;
+                    }
+                } else {
+                    console.error('Error al cambiar la imagen:', result.message);
+                    alert('Hubo un problema al cambiar la imagen.');
+                }
+            } catch (error) {
+                console.error('Error en la solicitud AJAX:', error);
+                alert('Hubo un error al enviar la imagen.');
+            }
+        });
+
+        // Simular un clic en el input de archivo para abrir el selector
+        inputFile.click();
+    }
+});
+
+//GENERIC FETCH (NO SE PUEDE CAMBIAR O ALTERAR )
 async function enviarAjax(action, data = {}) {
     try {
         const body = new URLSearchParams({
@@ -908,128 +966,6 @@ window.contadorDeSamples = () => {
         resultadosElement.textContent = formattedTotalPosts + ' resultados';
     }
 };
-
-/*
-da error cuando intenta guardar los generos
-
-genericAjax.js?ver=3.0.2.1216093552:940 
- Error al guardar los géneros: undefined
-(anónimo)	@	genericAjax.js?ver=3.0.2.1216093552:940
-
-function guardarGenerosUsuario() {
-    if (!is_user_logged_in()) {
-        wp_send_json_error('Debes iniciar sesión para realizar esta acción.');
-    }
-    $generos = isset($_POST['generos']) ? $_POST['generos'] : array();
-
-    if (empty($generos) || !is_array($generos)) {
-        wp_send_json_error('No se recibieron géneros seleccionados.');
-    }
-
-    $generos_sanitizados = array_map('sanitize_text_field', $generos);
-    $userId = get_current_user_id();
-    update_user_meta($userId, 'usuarioPreferencias', $generos_sanitizados);
-    wp_send_json_success('Los géneros han sido guardados.');
-}
-
-add_action('wp_ajax_guardarGenerosUsuario', 'guardarGenerosUsuario');
-
-este es el problema 
-
-genericAjax.js?ver=3.0.2.865805307:966  Error al guardar los géneros: No se recibieron géneros seleccionados.
-
-asi se ve el html 
-
-function modalGeneros()
-{
-$userId = get_current_user_id();
-$usuarioPreferencias = get_user_meta($userId, 'usuarioPreferencias', true);
-
-// Si ya existen preferencias, no mostramos nada
-if (!empty($usuarioPreferencias)) {
-    return '';
-}
-
-ob_start();
-?>
-
-<div class="modal selectorGeneros" style="display: none;">
-    <div class="GNEROBDS">
-        <div class="borde">
-            <p>Trap</p>
-        </div>
-        <div class="borde">
-            <p>R&B</p>
-        </div>
-        <div class="borde">
-            <p>Pop</p>
-        </div>
-        <div class="borde">
-            <p>Tech House</p>
-        </div>
-        <div class="borde">
-            <p>EDM</p>
-        </div>
-        <div class="borde">
-            <p>Disco</p>
-        </div>
-        <div class="borde">
-            <p>Soul</p>
-        </div>
-        <div class="borde">
-            <p>Techno</p>
-        </div>
-    </div>
-    <button class="botonsecundario">Listo</button>
-</div>
-
-<?
-return ob_get_clean();
-}
-
-asi se ve enviar ajax (esta funcion no se puede cambiar porque se necesita asi)
-
-async function enviarAjax(action, data = {}) {
-    try {
-        const body = new URLSearchParams({
-            action: action,
-            ...data
-        });
-        const response = await fetch(ajaxUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: body
-        });
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
-        }
-        let responseData;
-        const responseText = await response.text();
-        try {
-            responseData = JSON.parse(responseText);
-        } catch (jsonError) {
-            console.error('No se pudo interpretar la respuesta como JSON:', {
-                error: jsonError,
-                responseText: responseText,
-                action: action,
-                requestData: data
-            });
-            responseData = responseText;
-        }
-        return responseData;
-    } catch (error) {
-        console.error('Error en la solicitud AJAX:', {
-            error: error,
-            action: action,
-            requestData: data,
-            ajaxUrl: ajaxUrl
-        });
-        return {success: false, message: error.message};
-    }
-}
-*/
 
 document.addEventListener('DOMContentLoaded', function () {
     // Verificar si existe el modalTipoUsuario en la página
