@@ -2,11 +2,14 @@
 
 function iniciar_sesion()
 {
+    // Si el usuario ya está logueado, mostrar un mensaje
     if (is_user_logged_in()) {
         return '<div>Ya has iniciado sesión. ¿Quieres cerrar sesión? <a href="' . wp_logout_url(home_url()) . '">Cerrar sesión</a></div>';
     }
 
     $mensaje = '';
+
+    // Procesar el formulario de inicio de sesión
     if (isset($_POST['iniciar_sesion_submit'])) {
         $user = wp_signon(array(
             'user_login' => sanitize_user($_POST['nombre_usuario_login']),
@@ -17,11 +20,14 @@ function iniciar_sesion()
             wp_set_current_user($user->ID);
             wp_set_auth_cookie($user->ID);
 
-            // Clean output buffer
-            ob_clean();
-
-            wp_safe_redirect('https://2upra.com');
-            exit;
+            // Redirigir al usuario
+            if (!headers_sent()) {
+                wp_safe_redirect('https://2upra.com');
+                exit;
+            } else {
+                echo "<script>window.location.href='https://2upra.com';</script>";
+                exit;
+            }
         } else {
             $mensaje = '<div class="error-mensaje">Error al iniciar sesión. Por favor, verifica tus credenciales.</div>';
         }
@@ -29,7 +35,6 @@ function iniciar_sesion()
 
     ob_start();
 ?>
-
     <div class="PUWJVS">
         <form class="CXHMID" action="" method="post">
             <div class="XUSEOO">
@@ -61,19 +66,20 @@ function iniciar_sesion()
             <div class="HPUYVS" id="fondograno"><?php echo $GLOBALS['iconologo1']; ?></div>
         </div>
     </div>
-
 <?php
     return ob_get_clean();
 }
 
-
+// Manejo del callback de Google
 function handle_google_callback()
 {
     if (isset($_GET['code'])) {
         $code = $_GET['code'];
         $client_id = '84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com';
-        $client_secret = ($_ENV['GOOGLEAPI']);
+        $client_secret = ($_ENV['GOOGLEAPI']); // Asegúrate de definir esto correctamente en tu entorno
         $redirect_uri = 'https://2upra.com/google-callback';
+
+        // Solicitar el token de acceso a Google
         $response = wp_remote_post('https://oauth2.googleapis.com/token', array(
             'body' => array(
                 'code' => $code,
@@ -91,6 +97,8 @@ function handle_google_callback()
 
         $token = json_decode($response['body']);
         $access_token = $token->access_token;
+
+        // Obtener la información del usuario desde Google
         $user_info_response = wp_remote_get('https://www.googleapis.com/oauth2/v1/userinfo?access_token=' . $access_token);
         $user_info = json_decode($user_info_response['body']);
 
@@ -98,28 +106,46 @@ function handle_google_callback()
             $email = $user_info->email;
             $name = $user_info->name;
 
+            // Verificar si el usuario ya existe
             if ($user = get_user_by('email', $email)) {
                 wp_set_current_user($user->ID);
                 wp_set_auth_cookie($user->ID);
                 $token = generate_secure_token($user->ID);
-                if (is_electron_app()) {
-                    wp_redirect('https://2upra.com/app?token=' . $token);
+
+                if (!headers_sent()) {
+                    if (is_electron_app()) {
+                        wp_redirect('https://2upra.com/app?token=' . $token);
+                    } else {
+                        wp_redirect('https://2upra.com');
+                    }
+                    exit;
                 } else {
-                    wp_redirect('https://2upra.com');
+                    if (is_electron_app()) {
+                        echo "<script>window.location.href='https://2upra.com/app?token=" . $token . "';</script>";
+                    } else {
+                        echo "<script>window.location.href='https://2upra.com';</script>";
+                    }
+                    exit;
                 }
-                exit;
             } else {
+                // Crear un nuevo usuario en WordPress
                 $random_password = wp_generate_password();
                 $user_id = wp_create_user($name, $random_password, $email);
+
                 wp_set_current_user($user_id);
                 wp_set_auth_cookie($user_id);
-                wp_redirect('https://2upra.com');
-                exit;
+
+                if (!headers_sent()) {
+                    wp_redirect('https://2upra.com');
+                    exit;
+                } else {
+                    echo "<script>window.location.href='https://2upra.com';</script>";
+                    exit;
+                }
             }
         }
     }
 }
-
 add_action('init', 'handle_google_callback');
 
 function is_electron_app()
