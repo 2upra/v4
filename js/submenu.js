@@ -1,5 +1,3 @@
-//a veces el submenu se ve fuera de la pantalla y por ejemplo abajo no es realmente abajo, se ve de lado izquierdo, y el resto parece no posocionarse bien 
-
 function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     const triggers = document.querySelectorAll(triggerSelector);
 
@@ -22,7 +20,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             showSubmenu(event, trigger, submenu, submenu._position); // Pasamos el trigger
         }
 
-        event.stopPropagation();
+        event.stopPropagation(); // Evita que el clic se propague al documento
     }
 
     function showSubmenu(event, trigger, submenu, position) {
@@ -79,9 +77,9 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
 
         document.body.classList.add('no-scroll');
 
+        // **Evitar que los clics dentro del submenú lo cierren**
         submenu.addEventListener('click', (e) => {
-            e.stopPropagation();
-            hideSubmenu(submenu);
+            e.stopPropagation(); // Evita que el clic dentro del submenú cierre el mismo
         });
     }
 
