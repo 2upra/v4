@@ -538,7 +538,6 @@ async function handleAllRequests() {
         await verificarPost();
         await corregirTags();
         await cambiarTitulo();
-        await inicializarCambiarImagen();
         inicializarCambiarImagen();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
