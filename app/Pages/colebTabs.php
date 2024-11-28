@@ -26,8 +26,8 @@ function colecTabs()
 
                             <div class="opcionCheck">
                                 <div>
-                                    <label>Mostrar solo mis colecciones</label>
-                                    <p class="description">Oculta todas las colecciones que no hayas creado</p>
+                                    <label>Mostrar solo mi contenido</label>
+                                    <p class="description">Oculta todo el contenido que no hayas publicado</p>
                                 </div>
 
                                 <label class="switch">

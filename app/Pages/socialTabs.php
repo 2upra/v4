@@ -128,6 +128,18 @@ function socialTabs()
                                 </label>
                             </div>
 
+                            <div class="opcionCheck">
+                                <div>
+                                    <label>Mostrar solo mi contenido</label>
+                                    <p class="description">Oculta todo el contenido que no hayas publicado</p>
+                                </div>
+
+                                <label class="switch">
+                                    <input type="checkbox" name="misColecciones" id="misColecciones">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
                             <div class="XJAAHB">
                                 <button class="botonsecundario borde">Restablecer</button>
                                 <button class="botonprincipal">Guardar</button>
@@ -137,7 +149,7 @@ function socialTabs()
                     </div>
                 </div>
             </div>
-            
+
             <div class="tab INICIO S4K7I3" id="Samples">
                 <div class="BPLBDE">
                     <div class="FOFDV5">
