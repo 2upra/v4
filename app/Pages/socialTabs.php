@@ -93,11 +93,9 @@ function socialTabs()
 
                             <div class="opcionCheck">
                                 <div>
-                                    <label>Ocultar ya descargados</label>
-                                    <p class="description">No se mostraran los samples que ya hayas descargado</p>
+                                    <label>Ocultar descargados</label>
+                                    <p class="description">No verás samples ya descargados.</p>
                                 </div>
-
-
                                 <label class="switch">
                                     <input type="checkbox" name="ocultarDescargados" id="ocultarDescargados">
                                     <span class="slider"></span>
@@ -106,10 +104,9 @@ function socialTabs()
 
                             <div class="opcionCheck">
                                 <div>
-                                    <label>Ocultar guardados en coleccion</label>
-                                    <p class="description">No se mostraran los samples que esten guardadas en algunas de colecciones</p>
+                                    <label>Ocultar de colecciones</label>
+                                    <p class="description">Se excluyen samples en colecciones.</p>
                                 </div>
-
                                 <label class="switch">
                                     <input type="checkbox" name="ocultarEnColeccion" id="ocultarEnColeccion">
                                     <span class="slider"></span>
@@ -118,10 +115,9 @@ function socialTabs()
 
                             <div class="opcionCheck">
                                 <div>
-                                    <label>Mostrar solo con likes</label>
-                                    <p class="description">Solo se mostraran los samples con tu like marcado</p>
+                                    <label>Mostrar solo con like</label>
+                                    <p class="description">Verás solo samples que te gustaron.</p>
                                 </div>
-
                                 <label class="switch">
                                     <input type="checkbox" name="mostrarMeGustan" id="mostrarMeGustan">
                                     <span class="slider"></span>
@@ -131,9 +127,8 @@ function socialTabs()
                             <div class="opcionCheck">
                                 <div>
                                     <label>Mostrar solo mi contenido</label>
-                                    <p class="description">Oculta todo el contenido que no hayas publicado</p>
+                                    <p class="description">Solo se muestra lo que publicaste.</p>
                                 </div>
-
                                 <label class="switch">
                                     <input type="checkbox" name="misColecciones" id="misColecciones">
                                     <span class="slider"></span>
