@@ -2,6 +2,13 @@
 
 function iniciar_sesion()
 {
+    /*
+        <label for="nombre_usuario">Nombre de Usuario</label>
+        <input type="text" id="nombre_usuario_login" name="nombre_usuario_login" required class="nombre_usuario"><br>
+        <label for="contrasena_usuario">Contraseña:</label>
+        <input type="password" id="contrasena_usuario_login" name="contrasena_usuario_login" required class="contrasena_usuario"><br>
+        <input class="R0A915 A1" type="submit" name="iniciar_sesion_submit" value="Iniciar sesión">
+    */
     // Si el usuario ya está logueado, mostrar un mensaje
     if (is_user_logged_in()) {
         return '<div>Ya has iniciado sesión. ¿Quieres cerrar sesión? <a href="' . wp_logout_url(home_url()) . '">Cerrar sesión</a></div>';
@@ -38,12 +45,8 @@ function iniciar_sesion()
     <div class="PUWJVS">
         <form class="CXHMID" action="" method="post">
             <div class="XUSEOO">
-                <label for="nombre_usuario">Nombre de Usuario</label>
-                <input type="text" id="nombre_usuario_login" name="nombre_usuario_login" required class="nombre_usuario"><br>
-                <label for="contrasena_usuario">Contraseña:</label>
-                <input type="password" id="contrasena_usuario_login" name="contrasena_usuario_login" required class="contrasena_usuario"><br>
                 <div class="XYSRLL">
-                    <input class="R0A915 A1" type="submit" name="iniciar_sesion_submit" value="Iniciar sesión">
+
                     <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn"><?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google</button>
 
                     <script>
