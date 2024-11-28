@@ -638,13 +638,21 @@ function actualizarElemento(element, newStatus) {
 
 
 function inicializarCambiarImagen() {
+    console.log('inicializarCambiarImagen: La función se ha inicializado correctamente.');
+
     document.addEventListener('click', async (e) => {
+        console.log('inicializarCambiarImagen: Evento de clic detectado.', e);
+
         if (e.target.classList.contains('cambiarImagen')) {
+            console.log('inicializarCambiarImagen: El elemento clicado tiene la clase "cambiarImagen".');
+
             e.preventDefault();
 
             const postId = e.target.getAttribute('data-post-id');
+            console.log('inicializarCambiarImagen: postId obtenido del atributo data-post-id:', postId);
+
             if (!postId) {
-                console.error('El botón no contiene un atributo data-post-id.');
+                console.error('inicializarCambiarImagen: El botón no contiene un atributo data-post-id.');
                 return;
             }
 
@@ -652,42 +660,69 @@ function inicializarCambiarImagen() {
             const inputFile = document.createElement('input');
             inputFile.type = 'file';
             inputFile.accept = 'image/*';
+            console.log('inicializarCambiarImagen: Input file creado con éxito.');
 
             inputFile.addEventListener('change', async (fileEvent) => {
+                console.log('inicializarCambiarImagen: Evento de cambio en el input file detectado.', fileEvent);
+
                 const file = fileEvent.target.files[0];
-                if (!file) return;
+                console.log('inicializarCambiarImagen: Archivo seleccionado:', file);
+
+                if (!file) {
+                    console.warn('inicializarCambiarImagen: No se seleccionó ningún archivo.');
+                    return;
+                }
 
                 // Crear un objeto FormData para enviar la imagen
                 const formData = new FormData();
                 formData.append('action', 'cambiar_imagen_post'); // Acción para el backend de WordPress
                 formData.append('post_id', postId);
                 formData.append('imagen', file);
+                console.log('inicializarCambiarImagen: FormData creado con los siguientes datos:', {
+                    action: 'cambiar_imagen_post',
+                    post_id: postId,
+                    imagen: file,
+                });
 
                 try {
                     // Enviar la imagen al servidor
+                    console.log('inicializarCambiarImagen: Enviando datos al servidor mediante fetch.');
+
                     const response = await fetch(ajaxUrl, {
                         method: 'POST',
                         body: formData,
                     });
 
+                    console.log('inicializarCambiarImagen: Respuesta recibida del servidor.', response);
+
                     const result = await response.json();
+                    console.log('inicializarCambiarImagen: Resultado parseado de la respuesta JSON:', result);
+
                     if (result.success) {
+                        console.log('inicializarCambiarImagen: Imagen cambiada con éxito en el servidor.');
+
                         // Actualizar la imagen en el frontend
                         const postImage = document.querySelector(`.post-image-container a[data-post-id="${postId}"] img`);
+                        console.log('inicializarCambiarImagen: Elemento de la imagen encontrado en el DOM:', postImage);
+
                         if (postImage) {
                             postImage.src = result.new_image_url;
+                            console.log('inicializarCambiarImagen: URL de la imagen actualizada en el frontend:', result.new_image_url);
+                        } else {
+                            console.warn('inicializarCambiarImagen: No se encontró el elemento de la imagen en el DOM.');
                         }
                     } else {
-                        console.error('Error al cambiar la imagen:', result.message);
+                        console.error('inicializarCambiarImagen: Error al cambiar la imagen en el servidor:', result.message);
                         alert('Hubo un problema al cambiar la imagen.');
                     }
                 } catch (error) {
-                    console.error('Error en la solicitud AJAX:', error);
+                    console.error('inicializarCambiarImagen: Error en la solicitud AJAX:', error);
                     alert('Hubo un error al enviar la imagen.');
                 }
             });
 
             // Simular un clic en el input de archivo para abrir el selector
+            console.log('inicializarCambiarImagen: Abriendo el selector de archivos.');
             inputFile.click();
         }
     });
