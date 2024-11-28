@@ -24,12 +24,12 @@ function colecTabs()
                         <button class="ORDENPOSTSL" id="ORDENPOSTSL">Opciones<? echo $GLOBALS['flechaAbajo']; ?></button>
                         <div class="opcionCheckBox modal" id="filtrosPost" style="display: none;">
 
+
                             <div class="opcionCheck">
                                 <div>
                                     <label>Mostrar solo mi contenido</label>
-                                    <p class="description">Oculta todo el contenido que no hayas publicado</p>
+                                    <p class="description">Solo se muestra lo que publicaste.</p>
                                 </div>
-
                                 <label class="switch">
                                     <input type="checkbox" name="misColecciones" id="misColecciones">
                                     <span class="slider"></span>
