@@ -668,6 +668,7 @@ function inicializarCambiarImagen() {
                 return;
             }
 
+            // Crear un input de tipo archivo para seleccionar la imagen
             const inputFile = document.createElement('input');
             inputFile.type = 'file';
             inputFile.accept = 'image/*';
@@ -679,6 +680,24 @@ function inicializarCambiarImagen() {
                     return;
                 }
 
+                // Mostrar la imagen seleccionada localmente en el frontend
+                const postImage = document.querySelector(
+                    `.post-image-container a[data-post-id="${postId}"] img`
+                );
+
+                if (postImage) {
+                    const reader = new FileReader();
+
+                    reader.onload = (event) => {
+                        postImage.src = event.target.result; // Actualizar la imagen localmente
+                    };
+
+                    reader.readAsDataURL(file); // Leer el archivo seleccionado
+                } else {
+                    console.warn(`No se encontró la imagen para el postId: ${postId}.`);
+                }
+
+                // Ahora enviar la imagen al servidor sin esperar la respuesta
                 const formData = new FormData();
                 formData.append('action', 'cambiar_imagen_post');
                 formData.append('post_id', postId);
@@ -692,19 +711,7 @@ function inicializarCambiarImagen() {
 
                     const result = await response.json();
 
-                    // Validar si el servidor devuelve correctamente la URL de la imagen
-                    if (result.success && result.new_image_url) {
-                        const postImage = document.querySelector(
-                            `.post-image-container a[data-post-id="${postId}"] img`
-                        );
-
-                        if (postImage) {
-                            postImage.src = result.new_image_url + `?timestamp=${new Date().getTime()}`;
-                        } else {
-                            console.warn(`No se encontró la imagen para el postId: ${postId}.`);
-                        }
-                    } else {
-                        console.error('Error en la respuesta del servidor:', result.message || 'URL no válida.');
+                    if (!result.success) {
                         alert(result.message || 'Hubo un problema al cambiar la imagen.');
                     }
                 } catch (error) {
