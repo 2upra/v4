@@ -49,7 +49,7 @@ function likeAccion($postId, $userId, $accion)
                 $autorId = get_post_field('post_author', $postId);
                 if ($autorId != $userId) {
                     $usuario = get_userdata($userId);
-                    crearNotificacion($autorId, $usuario->user_login . ' le ha dado me gusta a tu publicación.', false, get_permalink($postId));
+                    crearNotificacion($autorId, $usuario->user_login . ' le ha dado me gusta a tu publicación.', false, $postId);
                 }
             }
         }

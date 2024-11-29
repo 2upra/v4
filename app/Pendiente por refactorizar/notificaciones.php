@@ -1,17 +1,20 @@
 <?
 
-function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false, $enlace = '')
+function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false, $postIdRelacionado = 0)
 {
+    // Verifica que el usuario receptor sea válido
     $usuario = get_user_by('ID', $usuarioReceptor);
     if (!$usuario) {
         error_log("Error: Usuario receptor no válido ID: " . $usuarioReceptor);
         return false;
     }
 
+    // Sanitiza el contenido de la notificación
     $contenidoSanitizado = wp_kses($contenido, 'post');
-    $enlaceSanitizado = esc_url_raw($enlace);
     $metaSolicitud = is_bool($metaSolicitud) ? $metaSolicitud : false;
+    $postIdRelacionado = is_numeric($postIdRelacionado) ? intval($postIdRelacionado) : 0;
 
+    // Crear el post de la notificación
     $nuevoPost = [
         'post_type'   => 'notificaciones',
         'post_title'   => 'Nueva notificación',
@@ -21,12 +24,13 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
         'meta_input'   => [
             'emisor' => get_current_user_id(),
             'solicitud' => $metaSolicitud,
-            'enlace' => $enlaceSanitizado
+            'post_relacionado' => $postIdRelacionado
         ]
     ];
 
     $postId = wp_insert_post($nuevoPost);
 
+    // Si hay un error, lo registramos
     if (is_wp_error($postId)) {
         error_log("Error al crear la notificación: " . $postId->get_error_message());
         return false;
@@ -54,21 +58,27 @@ function listarNotificaciones($usuarioReceptor, $pagina = 1)
         echo '<ul class="notificaciones-lista modal">';
         while ($query->have_posts()) {
             $query->the_post();
-            $emisor = get_post_meta(get_the_ID(), 'emisor', true); 
+            $emisor = get_post_meta(get_the_ID(), 'emisor', true);
             $solicitud = get_post_meta(get_the_ID(), 'solicitud', true);
-            $enlace = get_post_meta(get_the_ID(), 'enlace', true);
+            $postRelacionado = get_post_meta(get_the_ID(), 'post_relacionado', true);  // Recuperamos el ID del post relacionado
 
             if ($emisor) {
-                $avatar_optimizado = imagenPerfil($emisor); 
+                $avatar_optimizado = imagenPerfil($emisor); // Reemplaza con tu función de avatar
             }
 ?>
             <li class="notificacion-item">
-                <? if (!empty($avatar_optimizado)) : ?>
-                    <img class="avatar" src="<? echo esc_url($avatar_optimizado); ?>" alt="Avatar del emisor">
-                <? endif; ?>
-                <p class="notificacion-contenido"><? the_content(); ?></p>
-                <? if (!empty($enlace)) : ?>
-                    <a href="<? echo esc_url($enlace); ?>" class="notificacion-enlace">Ver más</a>
+                <? if (!empty($postRelacionado)) : ?>
+                    <a href="<? echo get_permalink($postRelacionado); ?>" class="notificacion-enlace" style="display: block; text-decoration: none; color: inherit;">
+                    <? endif; ?>
+
+                    <? if (!empty($avatar_optimizado)) : ?>
+                        <img class="avatar" src="<? echo esc_url($avatar_optimizado); ?>" alt="Avatar del emisor">
+                    <? endif; ?>
+
+                    <p class="notificacion-contenido"><? the_content(); ?></p>
+
+                    <? if (!empty($postRelacionado)) : ?>
+                    </a>
                 <? endif; ?>
             </li>
 <?
@@ -80,7 +90,6 @@ function listarNotificaciones($usuarioReceptor, $pagina = 1)
     wp_reset_postdata();
     return ob_get_clean();
 }
-
 
 function ajaxCargarNotificaciones()
 {
