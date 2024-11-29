@@ -60,15 +60,15 @@ function listarNotificaciones($usuarioReceptor, $pagina = 1)
             $query->the_post();
             $emisor = get_post_meta(get_the_ID(), 'emisor', true);
             $solicitud = get_post_meta(get_the_ID(), 'solicitud', true);
-            $postRelacionado = get_post_meta(get_the_ID(), 'post_relacionado', true);  // Recuperamos el ID del post relacionado
+            $postRelacionado = get_post_meta(get_the_ID(), 'post_relacionado', true);  
 
             if ($emisor) {
-                $avatar_optimizado = imagenPerfil($emisor); // Reemplaza con tu función de avatar
+                $avatar_optimizado = imagenPerfil($emisor); 
             }
 ?>
             <li class="notificacion-item">
                 <? if (!empty($postRelacionado)) : ?>
-                    <a href="<? echo get_permalink($postRelacionado); ?>" class="notificacion-enlace" style="display: block; text-decoration: none; color: inherit;">
+                    <a href="<? echo get_permalink($postRelacionado); ?>" class="notificacion-enlace">
                     <? endif; ?>
 
                     <? if (!empty($avatar_optimizado)) : ?>
