@@ -1,5 +1,41 @@
 <?
 
+function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false) {
+    // Validar usuario receptor
+    $usuario = get_user_by('ID', $usuarioReceptor);
+    if (!$usuario) {
+        error_log("Error: Usuario receptor no válido ID: ".$usuarioReceptor);
+        return false;
+    }
+
+    // Sanitizar contenido
+    $contenidoSanitizado = wp_kses($contenido, 'post');
+
+    // Validar meta solicitud
+    $metaSolicitud = is_bool($metaSolicitud) ? $metaSolicitud : false;
+
+    $nuevoPost = [
+        'post_type'   => 'notificaciones',
+        'post_title'   => 'Nueva notificación', 
+        'post_content' => $contenidoSanitizado,
+        'post_author'  => $usuarioReceptor,
+        'post_status'  => 'publish',
+        'meta_input'   => [
+            'emisor' => get_current_user_id(),
+            'solicitud' => $metaSolicitud
+        ]
+    ];
+
+    $postId = wp_insert_post($nuevoPost);
+
+    if (is_wp_error($postId)) {
+        error_log("Error al crear la notificación: " . $postId->get_error_message());
+        return false;
+    }
+
+    return $postId;
+}
+
 function iconoNotificaciones()
 {
 

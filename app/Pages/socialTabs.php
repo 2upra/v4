@@ -104,8 +104,8 @@ function socialTabs()
 
                             <div class="opcionCheck">
                                 <div>
-                                    <label>Ocultar de colecciones</label>
-                                    <p class="description">Se excluyen samples en colecciones.</p>
+                                    <label>Ocultar en colecciones</label>
+                                    <p class="description">Se excluyen samples en tus colecciones.</p>
                                 </div>
                                 <label class="switch">
                                     <input type="checkbox" name="ocultarEnColeccion" id="ocultarEnColeccion">
@@ -115,7 +115,7 @@ function socialTabs()
 
                             <div class="opcionCheck">
                                 <div>
-                                    <label>Mostrar solo con like</label>
+                                    <label>Mostrar solo con mi like</label>
                                     <p class="description">Verás solo samples que te gustaron.</p>
                                 </div>
                                 <label class="switch">

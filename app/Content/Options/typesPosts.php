@@ -29,7 +29,9 @@ function register_custom_post_types() {
         'albums' => ['Albums', 'Album', 'album', 'dashicons-format-audio'],
         'stories' => ['Momentos', 'Momento', 'momentos', 'dashicons-camera'],
         'colab' => ['Colaboraciones', 'Colaboración', 'colab', 'dashicons-share-alt2'],
-        'colecciones' =>  ['Colecciones', 'Colección', 'colecciones', 'dashicons-book']  
+        'colecciones' =>  ['Colecciones', 'Colección', 'colecciones', 'dashicons-book'],
+        'notificaciones' => ['Notificaciones', 'Notificación', 'notificacion', 'dashicons-bell'],  
+        
     ];
 
     foreach ($post_types as $key => $type) {
