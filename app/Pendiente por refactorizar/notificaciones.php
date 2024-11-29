@@ -38,7 +38,6 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
 
     return $postId;
 }
-
 function listarNotificaciones($usuarioReceptor, $pagina = 1)
 {
     $notificacionesPorPagina = 12;
@@ -58,26 +57,34 @@ function listarNotificaciones($usuarioReceptor, $pagina = 1)
         echo '<ul class="notificaciones-lista modal">';
         while ($query->have_posts()) {
             $query->the_post();
+            
+            // Obtener metadatos de la notificación
             $emisor = get_post_meta(get_the_ID(), 'emisor', true);
             $solicitud = get_post_meta(get_the_ID(), 'solicitud', true);
-            $postRelacionado = get_post_meta(get_the_ID(), 'post_relacionado', true);  
-
+            $postRelacionado = get_post_meta(get_the_ID(), 'post_relacionado', true);
+            
+            $fechaPublicacion = get_the_date('Y-m-d H:i:s');
+            $fechaRelativa = tiempoRelativo($fechaPublicacion); 
             if ($emisor) {
-                $avatar_optimizado = imagenPerfil($emisor); 
+                $avatar_optimizado = imagenPerfil($emisor);
             }
+
 ?>
             <li class="notificacion-item">
                 <? if (!empty($postRelacionado)) : ?>
                     <a href="<? echo get_permalink($postRelacionado); ?>" class="notificacion-enlace">
-                    <? endif; ?>
+                <? endif; ?>
 
                     <? if (!empty($avatar_optimizado)) : ?>
                         <img class="avatar" src="<? echo esc_url($avatar_optimizado); ?>" alt="Avatar del emisor">
                     <? endif; ?>
 
-                    <p class="notificacion-contenido"><? the_content(); ?></p>
+                    <div class="DAEFSE">
+                        <p class="notificacion-contenido"><? the_content(); ?></p>
+                        <p class="notificacion-fecha"><? echo $fechaRelativa; ?></p> 
+                    </div>
 
-                    <? if (!empty($postRelacionado)) : ?>
+                <? if (!empty($postRelacionado)) : ?>
                     </a>
                 <? endif; ?>
             </li>
@@ -89,7 +96,7 @@ function listarNotificaciones($usuarioReceptor, $pagina = 1)
     }
     wp_reset_postdata();
     return ob_get_clean();
-}
+} 
 
 function ajaxCargarNotificaciones()
 {
