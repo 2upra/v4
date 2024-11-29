@@ -35,15 +35,15 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
         <input type="hidden" id="pagina_actual" name="pagina_actual" value="<? echo esc_attr(get_the_title()); ?>">
 
         <div id="menuData" style="display:none;" pestanaActual="">
-            <div data-tab="Preguntas"> </div>
+            <div data-tab="Noti"> </div>
 
         </div>
 
         <div class="tabs">
             <div class="tab-content">
 
-                <div class="tab INICIO S4K7I3" id="Preguntas">
-                    <? echo modalPreguntas() ?>
+                <div class="tab INICIO S4K7I3" id="Noti">
+                    <? echo listarNotificaciones('44','1') ?>
                 </div>
 
             </div>

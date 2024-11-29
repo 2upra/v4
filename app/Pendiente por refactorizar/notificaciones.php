@@ -1,25 +1,20 @@
 <?
 
-function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false, $enlace = '') {
-    // Validar usuario receptor
+function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false, $enlace = '')
+{
     $usuario = get_user_by('ID', $usuarioReceptor);
     if (!$usuario) {
-        error_log("Error: Usuario receptor no válido ID: ".$usuarioReceptor);
+        error_log("Error: Usuario receptor no válido ID: " . $usuarioReceptor);
         return false;
     }
 
-    // Sanitizar contenido
     $contenidoSanitizado = wp_kses($contenido, 'post');
-
-    // Validar y sanitizar enlace
     $enlaceSanitizado = esc_url_raw($enlace);
-
-    // Validar meta solicitud
     $metaSolicitud = is_bool($metaSolicitud) ? $metaSolicitud : false;
 
     $nuevoPost = [
         'post_type'   => 'notificaciones',
-        'post_title'   => 'Nueva notificación', 
+        'post_title'   => 'Nueva notificación',
         'post_content' => $contenidoSanitizado,
         'post_author'  => $usuarioReceptor,
         'post_status'  => 'publish',
@@ -40,6 +35,72 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
     return $postId;
 }
 
+function listarNotificaciones($usuarioReceptor, $pagina = 1)
+{
+    // Variables básicas
+    $notificacionesPorPagina = 12;
+    $offset = ($pagina - 1) * $notificacionesPorPagina;
+    $args = [
+        'post_type'      => 'notificaciones',
+        'post_status'    => 'publish',
+        'posts_per_page' => $notificacionesPorPagina,
+        'offset'         => $offset,
+        'author'         => $usuarioReceptor,
+    ];
+
+    $query = new WP_Query($args);
+
+    // Iniciar el buffer de salida para capturar el HTML
+    ob_start();
+
+    if ($query->have_posts()) {
+        echo '<ul class="notificaciones-lista">';
+        while ($query->have_posts()) {
+            $query->the_post();
+
+            // Obtener metadatos
+            $emisor = get_post_meta(get_the_ID(), 'emisor', true);
+            $solicitud = get_post_meta(get_the_ID(), 'solicitud', true);
+            $enlace = get_post_meta(get_the_ID(), 'enlace', true);
+
+            // Generar HTML para cada notificación
+?>
+            <li class="notificacion-item">
+                <h3 class="notificacion-titulo"><? the_title(); ?></h3>
+                <p class="notificacion-contenido"><? the_content(); ?></p>
+                <? if (!empty($enlace)) : ?>
+                    <a href="<? echo esc_url($enlace); ?>" class="notificacion-enlace">Ver más</a>
+                <? endif; ?>
+                <small class="notificacion-meta">Enviado por: <? echo esc_html($emisor); ?></small>
+            </li>
+<?
+        }
+        echo '</ul>';
+    } else {
+        echo '<p>No hay notificaciones disponibles.</p>';
+    }
+
+    // Resetear post data
+    wp_reset_postdata();
+
+    // Devolver el contenido capturado
+    return ob_get_clean();
+}
+
+function ajaxCargarNotificaciones()
+{
+    if (!is_user_logged_in()) {
+        wp_send_json_error('No tienes permiso para realizar esta acción.');
+        wp_die();
+    }
+    $usuarioReceptor = get_current_user_id();
+    $pagina = isset($_POST['pagina']) ? intval($_POST['pagina']) : 1;
+    $html = listarNotificaciones($usuarioReceptor, $pagina);
+    wp_send_json_success($html);
+    wp_die();
+}
+add_action('wp_ajax_cargar_notificaciones', 'ajaxCargarNotificaciones');
+
 function iconoNotificaciones()
 {
 
@@ -54,7 +115,3 @@ function iconoNotificaciones()
 
     return $html_completo;
 }
-
-
-
-
