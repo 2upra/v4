@@ -37,7 +37,6 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
 
 function listarNotificaciones($usuarioReceptor, $pagina = 1)
 {
-    // Variables básicas
     $notificacionesPorPagina = 12;
     $offset = ($pagina - 1) * $notificacionesPorPagina;
     $args = [
@@ -49,29 +48,28 @@ function listarNotificaciones($usuarioReceptor, $pagina = 1)
     ];
 
     $query = new WP_Query($args);
-
-    // Iniciar el buffer de salida para capturar el HTML
     ob_start();
 
     if ($query->have_posts()) {
-        echo '<ul class="notificaciones-lista">';
+        echo '<ul class="notificaciones-lista modal">';
         while ($query->have_posts()) {
             $query->the_post();
-
-            // Obtener metadatos
             $emisor = get_post_meta(get_the_ID(), 'emisor', true);
             $solicitud = get_post_meta(get_the_ID(), 'solicitud', true);
             $enlace = get_post_meta(get_the_ID(), 'enlace', true);
-
-            // Generar HTML para cada notificación
+            if ($emisor) {
+                $avatar_url = get_avatar_url($emisor, ['size' => 64]); 
+                $avatar_optimizado = img($avatar_url, 40, 'all');
+            }
 ?>
             <li class="notificacion-item">
-                <h3 class="notificacion-titulo"><? the_title(); ?></h3>
+                <? if (!empty($avatar_optimizado)) : ?>
+                    <img class="avatar" src="<? echo esc_url($avatar_optimizado); ?>" alt="Avatar del emisor" width="40" height="40">
+                <? endif; ?>
                 <p class="notificacion-contenido"><? the_content(); ?></p>
                 <? if (!empty($enlace)) : ?>
                     <a href="<? echo esc_url($enlace); ?>" class="notificacion-enlace">Ver más</a>
                 <? endif; ?>
-                <small class="notificacion-meta">Enviado por: <? echo esc_html($emisor); ?></small>
             </li>
 <?
         }
@@ -79,11 +77,7 @@ function listarNotificaciones($usuarioReceptor, $pagina = 1)
     } else {
         echo '<p>No hay notificaciones disponibles.</p>';
     }
-
-    // Resetear post data
     wp_reset_postdata();
-
-    // Devolver el contenido capturado
     return ob_get_clean();
 }
 

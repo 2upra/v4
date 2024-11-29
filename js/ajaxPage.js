@@ -15,7 +15,7 @@
       'inicializarDescargas','handleAllRequests','textflux','autoFillUserInfo','meta','reporteScript','inicializarGraficos',
       'grafico','IniciadoresConfigPerfil','proyectoForm','inicializarAlerta','autoRows','iniciarRS','initializeUI','tagsPosts',
       'vistaPost','initEditWordPress','reiniciarCargaDiferida','registrarVistas','colec','cambiarFiltroTiempo','filtrosPost',
-      'contadorDeSamples','establecerFiltros','actualizarBotonFiltro'
+      'contadorDeSamples','establecerFiltros','actualizarBotonFiltro', 'iniciarCargaNotificaciones'
     ];
   
     function initScripts() {
