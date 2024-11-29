@@ -54,17 +54,17 @@ function listarNotificaciones($usuarioReceptor, $pagina = 1)
         echo '<ul class="notificaciones-lista modal">';
         while ($query->have_posts()) {
             $query->the_post();
-            $emisor = get_post_meta(get_the_ID(), 'emisor', true);
+            $emisor = get_post_meta(get_the_ID(), 'emisor', true); 
             $solicitud = get_post_meta(get_the_ID(), 'solicitud', true);
             $enlace = get_post_meta(get_the_ID(), 'enlace', true);
+
             if ($emisor) {
-                $avatar_url = get_avatar_url($emisor, ['size' => 64]); 
-                $avatar_optimizado = img($avatar_url, 40, 'all');
+                $avatar_optimizado = imagenPerfil($emisor); 
             }
 ?>
             <li class="notificacion-item">
                 <? if (!empty($avatar_optimizado)) : ?>
-                    <img class="avatar" src="<? echo esc_url($avatar_optimizado); ?>" alt="Avatar del emisor" width="40" height="40">
+                    <img class="avatar" src="<? echo esc_url($avatar_optimizado); ?>" alt="Avatar del emisor">
                 <? endif; ?>
                 <p class="notificacion-contenido"><? the_content(); ?></p>
                 <? if (!empty($enlace)) : ?>
@@ -80,6 +80,7 @@ function listarNotificaciones($usuarioReceptor, $pagina = 1)
     wp_reset_postdata();
     return ob_get_clean();
 }
+
 
 function ajaxCargarNotificaciones()
 {
