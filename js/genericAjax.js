@@ -636,17 +636,16 @@ function actualizarElemento(element, newStatus) {
 }
 
 
-//Quita los logs, hazlo dinamico,  es decir, esto llamara con ajax, que agregue un valor en el boton de que ya esta con el evento asignado para que no se vuelva a colocar por si el elemento aparece 2 veces, y por cierto, hay un pequeño bug, la imagen carga en el servidor pero visualmente no se coloca 
+
 
 /*
-inicializarCambiarImagen: Imagen cambiada con éxito en el servidor.
-genericAjax.js?ver=3.0.6.521998212:721 inicializarCambiarImagen: Elemento de la imagen encontrado en el DOM: <img src=​"undefined" alt=​"Post Image">​
-genericAjax.js?ver=3.0.6.521998212:725 inicializarCambiarImagen: URL de la imagen actualizada en el frontend: undefined
 
-
+la imagen visualmente no se agrega, da este error
+undefined:1 
+ GET https://2upra.com/colecciones/samples-hip-hop-soul/undefined?timestamp=1732838401197 404 (Not Found)
+despues cuando recargo la pagina la imagen aparece https://i0.wp.com/2upra.com/wp-content/uploads/2024/11/henrik-donnestad-t2Sai-AqIpI-unsplash-2-1024x1024.jpg?quality=60&strip=all
 */
 function inicializarCambiarImagen() {
-    // Seleccionar todos los botones con la clase "cambiarImagen"
     const botonesCambiarImagen = document.querySelectorAll('.cambiarImagen');
 
     if (!botonesCambiarImagen.length) {
@@ -654,16 +653,14 @@ function inicializarCambiarImagen() {
         return;
     }
 
-    // Iterar sobre los botones y registrar el evento de clic
     botonesCambiarImagen.forEach((boton) => {
-        // Evitar añadir múltiples veces el mismo evento al botón
         if (boton.dataset.eventoInicializado === 'true') {
             return;
         }
 
         boton.addEventListener('click', async (e) => {
             e.preventDefault();
-            e.stopPropagation(); // Detener la propagación para evitar conflictos con el submenú
+            e.stopPropagation();
 
             const postId = e.target.getAttribute('data-post-id');
             if (!postId) {
@@ -671,12 +668,10 @@ function inicializarCambiarImagen() {
                 return;
             }
 
-            // Crear un input de tipo archivo para seleccionar la imagen
             const inputFile = document.createElement('input');
             inputFile.type = 'file';
             inputFile.accept = 'image/*';
 
-            // Registrar el evento change en el input para detectar la selección del archivo
             inputFile.addEventListener('change', async (fileEvent) => {
                 const file = fileEvent.target.files[0];
                 if (!file) {
@@ -684,14 +679,12 @@ function inicializarCambiarImagen() {
                     return;
                 }
 
-                // Crear un objeto FormData para enviar la imagen
                 const formData = new FormData();
-                formData.append('action', 'cambiar_imagen_post'); // Acción para el backend de WordPress
+                formData.append('action', 'cambiar_imagen_post');
                 formData.append('post_id', postId);
                 formData.append('imagen', file);
 
                 try {
-                    // Enviar la imagen al servidor mediante fetch
                     const response = await fetch(ajaxUrl, {
                         method: 'POST',
                         body: formData,
@@ -699,19 +692,20 @@ function inicializarCambiarImagen() {
 
                     const result = await response.json();
 
-                    if (result.success) {
-                        // Actualizar la imagen en el frontend
+                    // Validar si el servidor devuelve correctamente la URL de la imagen
+                    if (result.success && result.new_image_url) {
                         const postImage = document.querySelector(
                             `.post-image-container a[data-post-id="${postId}"] img`
                         );
 
                         if (postImage) {
-                            postImage.src = result.new_image_url + `?timestamp=${new Date().getTime()}`; // Evitar caché
+                            postImage.src = result.new_image_url + `?timestamp=${new Date().getTime()}`;
                         } else {
                             console.warn(`No se encontró la imagen para el postId: ${postId}.`);
                         }
                     } else {
-                        alert(`Error: ${result.message}`);
+                        console.error('Error en la respuesta del servidor:', result.message || 'URL no válida.');
+                        alert(result.message || 'Hubo un problema al cambiar la imagen.');
                     }
                 } catch (error) {
                     console.error('Error al enviar la solicitud AJAX:', error);
@@ -719,11 +713,9 @@ function inicializarCambiarImagen() {
                 }
             });
 
-            // Simular un clic en el input de archivo para abrir el selector
             inputFile.click();
         });
 
-        // Marcar el botón como inicializado para evitar eventos duplicados
         boton.dataset.eventoInicializado = 'true';
     });
 }
