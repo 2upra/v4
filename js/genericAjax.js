@@ -638,14 +638,8 @@ function actualizarElemento(element, newStatus) {
 
 
 
-/*
-
-la imagen visualmente no se agrega, da este error
-undefined:1 
- GET https://2upra.com/colecciones/samples-hip-hop-soul/undefined?timestamp=1732838401197 404 (Not Found)
-despues cuando recargo la pagina la imagen aparece https://i0.wp.com/2upra.com/wp-content/uploads/2024/11/henrik-donnestad-t2Sai-AqIpI-unsplash-2-1024x1024.jpg?quality=60&strip=all
-*/
 function inicializarCambiarImagen() {
+    // Seleccionar todos los botones con la clase "cambiarImagen"
     const botonesCambiarImagen = document.querySelectorAll('.cambiarImagen');
 
     if (!botonesCambiarImagen.length) {
@@ -653,14 +647,16 @@ function inicializarCambiarImagen() {
         return;
     }
 
+    // Iterar sobre los botones y registrar el evento de clic
     botonesCambiarImagen.forEach((boton) => {
+        // Evitar añadir múltiples veces el mismo evento al botón
         if (boton.dataset.eventoInicializado === 'true') {
             return;
         }
 
         boton.addEventListener('click', async (e) => {
             e.preventDefault();
-            e.stopPropagation();
+            e.stopPropagation(); // Detener la propagación para evitar conflictos con el submenú
 
             const postId = e.target.getAttribute('data-post-id');
             if (!postId) {
@@ -673,6 +669,7 @@ function inicializarCambiarImagen() {
             inputFile.type = 'file';
             inputFile.accept = 'image/*';
 
+            // Registrar el evento change en el input para detectar la selección del archivo
             inputFile.addEventListener('change', async (fileEvent) => {
                 const file = fileEvent.target.files[0];
                 if (!file) {
@@ -680,30 +677,30 @@ function inicializarCambiarImagen() {
                     return;
                 }
 
-                // Mostrar la imagen seleccionada localmente en el frontend
-                const postImage = document.querySelector(
-                    `.post-image-container a[data-post-id="${postId}"] img`
-                );
+                // Previsualizar la imagen seleccionada antes de enviarla al servidor
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const postImage = document.querySelector(
+                        `.post-image-container a[data-post-id="${postId}"] img`
+                    );
 
-                if (postImage) {
-                    const reader = new FileReader();
+                    if (postImage) {
+                        // Actualizar la imagen en el frontend con la previsualización
+                        postImage.src = reader.result;
+                    } else {
+                        console.warn(`No se encontró la imagen para el postId: ${postId}.`);
+                    }
+                };
+                reader.readAsDataURL(file); // Leer el archivo como un DataURL para previsualización
 
-                    reader.onload = (event) => {
-                        postImage.src = event.target.result; // Actualizar la imagen localmente
-                    };
-
-                    reader.readAsDataURL(file); // Leer el archivo seleccionado
-                } else {
-                    console.warn(`No se encontró la imagen para el postId: ${postId}.`);
-                }
-
-                // Ahora enviar la imagen al servidor sin esperar la respuesta
+                // Crear un objeto FormData para enviar la imagen
                 const formData = new FormData();
-                formData.append('action', 'cambiar_imagen_post');
+                formData.append('action', 'cambiar_imagen_post'); // Acción para el backend de WordPress
                 formData.append('post_id', postId);
                 formData.append('imagen', file);
 
                 try {
+                    // Enviar la imagen al servidor mediante fetch
                     const response = await fetch(ajaxUrl, {
                         method: 'POST',
                         body: formData,
@@ -711,8 +708,19 @@ function inicializarCambiarImagen() {
 
                     const result = await response.json();
 
-                    if (!result.success) {
-                        alert(result.message || 'Hubo un problema al cambiar la imagen.');
+                    if (result.success) {
+                        // Actualizar la imagen con la URL definitiva del servidor
+                        const postImage = document.querySelector(
+                            `.post-image-container a[data-post-id="${postId}"] img`
+                        );
+
+                        if (postImage) {
+                            postImage.src = result.new_image_url + `?timestamp=${new Date().getTime()}`; // Evitar caché
+                        } else {
+                            console.warn(`No se encontró la imagen para el postId: ${postId}.`);
+                        }
+                    } else {
+                        alert(`Error: ${result.message}`);
                     }
                 } catch (error) {
                     console.error('Error al enviar la solicitud AJAX:', error);
@@ -720,73 +728,14 @@ function inicializarCambiarImagen() {
                 }
             });
 
+            // Simular un clic en el input de archivo para abrir el selector
             inputFile.click();
         });
 
+        // Marcar el botón como inicializado para evitar eventos duplicados
         boton.dataset.eventoInicializado = 'true';
     });
 }
-/*
-function cambiar_imagen_post_handler() {
-    // Verificar que el post_id y el archivo de imagen están presentes
-    if (empty($_POST['post_id']) || empty($_FILES['imagen'])) {
-        wp_send_json_error(['message' => 'Faltan datos necesarios.']);
-    }
-
-    $post_id = intval($_POST['post_id']);
-
-    // Verificar que el post existe
-    $post = get_post($post_id);
-    if (!$post) {
-        wp_send_json_error(['message' => 'El post no existe.']);
-    }
-
-    // Verificar que el usuario actual sea el autor del post
-    if ((int) $post->post_author !== get_current_user_id()) {
-        wp_send_json_error(['message' => 'No tienes permisos para cambiar la imagen de este post.']);
-    }
-
-    // Procesar la imagen subida
-    $file = $_FILES['imagen'];
-
-    // Validar y subir la imagen usando la API de WordPress
-    require_once ABSPATH . 'wp-admin/includes/file.php';
-    require_once ABSPATH . 'wp-admin/includes/image.php';
-    $upload = wp_handle_upload($file, ['test_form' => false]);
-
-    if (isset($upload['error']) || !isset($upload['file'])) {
-        wp_send_json_error(['message' => 'Error al subir la imagen: ' . $upload['error']]);
-    }
-
-    $file_path = $upload['file'];
-    $file_url = $upload['url'];
-
-    // Crear un attachment en la biblioteca de medios
-    $attachment_id = wp_insert_attachment([
-        'guid'           => $file_url,
-        'post_mime_type' => $upload['type'],
-        'post_title'     => sanitize_file_name($file['name']),
-        'post_content'   => '',
-        'post_status'    => 'inherit',
-    ], $file_path, $post_id);
-
-    if (is_wp_error($attachment_id) || !$attachment_id) {
-        wp_send_json_error(['message' => 'Error al guardar la imagen en la biblioteca de medios.']);
-    }
-
-    // Generar los metadatos de la imagen (tamaños, etc.)
-    require_once ABSPATH . 'wp-admin/includes/image.php';
-    $attach_data = wp_generate_attachment_metadata($attachment_id, $file_path);
-    wp_update_attachment_metadata($attachment_id, $attach_data);
-
-    // Establecer la imagen destacada del post
-    set_post_thumbnail($post_id, $attachment_id);
-
-    // Devolver la URL de la nueva imagen para actualizar el frontend
-    wp_send_json_success(['new_image_url' => $file_url]);
-}
-*/
-
 
 
 
