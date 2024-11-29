@@ -654,7 +654,7 @@ function inicializarCambiarImagen() {
             return;
         }
 
-        boton.addEventListener('click', async (e) => {
+        boton.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation(); // Detener la propagación para evitar conflictos con el submenú
 
@@ -677,55 +677,44 @@ function inicializarCambiarImagen() {
                     return;
                 }
 
-                // Previsualizar la imagen seleccionada antes de enviarla al servidor
+                // Previsualizar la imagen seleccionada con FileReader
                 const reader = new FileReader();
-                reader.onload = () => {
-                    const postImage = document.querySelector(
-                        `.post-image-container a[data-post-id="${postId}"] img`
-                    );
+                reader.onload = async () => {
+                    try {
+                        // Enviar la imagen al servidor mediante fetch
+                        const formData = new FormData();
+                        formData.append('action', 'cambiar_imagen_post'); // Acción para el backend de WordPress
+                        formData.append('post_id', postId);
+                        formData.append('imagen', file);
 
-                    if (postImage) {
-                        // Actualizar la imagen en el frontend con la previsualización
-                        postImage.src = reader.result;
-                    } else {
-                        console.warn(`No se encontró la imagen para el postId: ${postId}.`);
+                        const response = await fetch(ajaxUrl, {
+                            method: 'POST',
+                            body: formData,
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // Actualizar la imagen en el frontend con la imagen seleccionada
+                            const postImage = document.querySelector(
+                                `.post-image-container a[data-post-id="${postId}"] img`
+                            );
+
+                            if (postImage) {
+                                postImage.src = reader.result; // Usar la imagen local seleccionada
+                            } else {
+                                console.warn(`No se encontró la imagen para el postId: ${postId}.`);
+                            }
+                        } else {
+                            alert(`Error: ${result.message}`);
+                        }
+                    } catch (error) {
+                        console.error('Error al enviar la solicitud AJAX:', error);
+                        alert('Hubo un error al enviar la imagen.');
                     }
                 };
+
                 reader.readAsDataURL(file); // Leer el archivo como un DataURL para previsualización
-
-                // Crear un objeto FormData para enviar la imagen
-                const formData = new FormData();
-                formData.append('action', 'cambiar_imagen_post'); // Acción para el backend de WordPress
-                formData.append('post_id', postId);
-                formData.append('imagen', file);
-
-                try {
-                    // Enviar la imagen al servidor mediante fetch
-                    const response = await fetch(ajaxUrl, {
-                        method: 'POST',
-                        body: formData,
-                    });
-
-                    const result = await response.json();
-
-                    if (result.success) {
-                        // Actualizar la imagen con la URL definitiva del servidor
-                        const postImage = document.querySelector(
-                            `.post-image-container a[data-post-id="${postId}"] img`
-                        );
-
-                        if (postImage) {
-                            postImage.src = result.new_image_url + `?timestamp=${new Date().getTime()}`; // Evitar caché
-                        } else {
-                            console.warn(`No se encontró la imagen para el postId: ${postId}.`);
-                        }
-                    } else {
-                        alert(`Error: ${result.message}`);
-                    }
-                } catch (error) {
-                    console.error('Error al enviar la solicitud AJAX:', error);
-                    alert('Hubo un error al enviar la imagen.');
-                }
             });
 
             // Simular un clic en el input de archivo para abrir el selector
