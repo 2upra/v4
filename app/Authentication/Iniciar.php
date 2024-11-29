@@ -69,10 +69,7 @@ function iniciar_sesion()
 
 function handle_google_callback()
 {
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Cache-Control: post-check=0, pre-check=0", false);
-    header("Pragma: no-cache");
-
+    
     if (isset($_GET['code'])) {
         $code = $_GET['code'];
         $client_id = '84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com';
@@ -130,33 +127,30 @@ function is_electron_app()
 {
     return isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true';
 }
-function generate_secure_token($user_id)
-{
+function generate_secure_token($user_id) {
     $token = bin2hex(random_bytes(32));
-    $expiration = time() + 36000;
+    $expiration = time() + 36000; 
     $result_token = update_user_meta($user_id, 'session_token', $token);
     $result_expiration = update_user_meta($user_id, 'session_token_expiration', $expiration);
-
+    
     error_log('generate_secure_token - user_id: ' . $user_id . ' token: ' . $token . ' expiration: ' . $expiration  . ' result_token: ' . ($result_token ? 'true' : 'false') . ' result_expiration: ' . ($result_expiration ? 'true' : 'false'));
-
+    
     return $token;
 }
 
-function verify_secure_token($token)
-{
+function verify_secure_token($token) {
     global $wpdb;
     $user_id = $wpdb->get_var($wpdb->prepare(
         "SELECT user_id FROM $wpdb->usermeta WHERE meta_key = 'session_token' AND meta_value = %s AND CAST((SELECT meta_value FROM $wpdb->usermeta WHERE user_id = user_id AND meta_key = 'session_token_expiration') AS UNSIGNED) > %d",
-        $token,
-        time()
+        $token, time()
     ));
-
+    
     error_log('verify_secure_token - token: ' . $token . ' user_id: ' . ($user_id ? $user_id : 'not found'));
 
     if ($user_id) {
         return $user_id;
     }
-
+    
     error_log('verify_secure_token - invalid token: ' . $token);
     return false;
 }
@@ -168,8 +162,7 @@ add_action('rest_api_init', function () {
     ));
 });
 
-function verify_token_endpoint(WP_REST_Request $request)
-{
+function verify_token_endpoint(WP_REST_Request $request) {
     $token = $request->get_param('token');
     $user_id = verify_secure_token($token);
 
@@ -177,7 +170,7 @@ function verify_token_endpoint(WP_REST_Request $request)
         error_log('verify_token_endpoint - token: ' . $token . ' user_id: ' . $user_id);
         return new WP_REST_Response(array('user_id' => $user_id, 'status' => 'valid'), 200);
     } else {
-        error_log('verify_token_endpoint - invalid token: ' . $token);
+        error_log('verify_token_endpoint - invalid token: ' . $token );
         return new WP_REST_Response(array('message' => 'Token inválido', 'status' => 'invalid'), 401);
     }
 }
