@@ -132,42 +132,64 @@ function is_electron_app()
 }
 
 /*
-sucede esto aqui 
-
-[29-Nov-2024 01:04:02 UTC] WordPress database error Subquery returns more than 1 row for query SELECT user_id FROM wpsg_usermeta WHERE meta_key = 'session_token' AND meta_value = 'c0444a3286ee5adbb579c6712c7bd0a54a1babdae0f3545a59db0ae204a3fb4a' AND CAST((SELECT meta_value FROM wpsg_usermeta WHERE user_id = user_id AND meta_key = 'session_token_expiration') AS UNSIGNED) > 1732842242 made by require('wp-blog-header.php'), wp, WP->main, WP->parse_request, do_action_ref_array('parse_request'), WP_Hook->do_action, WP_Hook->apply_filters, rest_api_loaded, WP_REST_Server->serve_request, WP_REST_Server->dispatch, WP_REST_Server->respond_to_request, verify_token_endpoint, verify_secure_token
-[29-Nov-2024 01:04:02 UTC] verify_secure_token - token: c0444a3286ee5adbb579c6712c7bd0a54a1babdae0f3545a59db0ae204a3fb4a user_id: not found
-[29-Nov-2024 01:04:02 UTC] verify_secure_token - invalid token: c0444a3286ee5adbb579c6712c7bd0a54a1babdae0f3545a59db0ae204a3fb4a
-[29-Nov-2024 01:04:02 UTC] verify_token_endpoint - invalid token: c0444a3286ee5adbb579c6712c7bd0a54a1babdae0f3545a59db0ae204a3fb4a
+sucede esto aqui como lo arreglo 
+[29-Nov-2024 01:06:42 UTC] WordPress database error Subquery returns more than 1 row for query SELECT user_id FROM wpsg_usermeta WHERE meta_key = 'session_token' AND meta_value = '95ce51f52034cd56166248765471114f3901cce271f5b58bff5b9764aab297c7' AND CAST((SELECT meta_value FROM wpsg_usermeta WHERE user_id = user_id AND meta_key = 'session_token_expiration') AS UNSIGNED) > 1732842402 made by require('wp-blog-header.php'), wp, WP->main, WP->parse_request, do_action_ref_array('parse_request'), WP_Hook->do_action, WP_Hook->apply_filters, rest_api_loaded, WP_REST_Server->serve_request, WP_REST_Server->dispatch, WP_REST_Server->respond_to_request, verify_token_endpoint, verify_secure_token
+[29-Nov-2024 01:06:42 UTC] verify_secure_token - token: 95ce51f52034cd56166248765471114f3901cce271f5b58bff5b9764aab297c7 user_id: not found
+[29-Nov-2024 01:06:42 UTC] verify_secure_token - invalid token: 95ce51f52034cd56166248765471114f3901cce271f5b58bff5b9764aab297c7
+[29-Nov-2024 01:06:42 UTC] verify_token_endpoint - invalid token: 95ce51f52034cd56166248765471114f3901cce271f5b58bff5b9764aab297c7
 */
 function generate_secure_token($user_id)
 {
+    // Genera un token único y define la expiración
     $token = bin2hex(random_bytes(32));
-    $expiration = time() + 36000;
+    $expiration = time() + 36000; // 10 horas
 
-    // Remove existing entries to prevent duplicates
+    // Elimina posibles entradas duplicadas para este usuario
     delete_user_meta($user_id, 'session_token');
     delete_user_meta($user_id, 'session_token_expiration');
 
-    // Add new entries
+    // Debug: verifica si los metadatos fueron realmente eliminados
+    $existing_token = get_user_meta($user_id, 'session_token', true);
+    $existing_expiration = get_user_meta($user_id, 'session_token_expiration', true);
+
+    if ($existing_token || $existing_expiration) {
+        error_log('generate_secure_token - No se pudieron eliminar las entradas duplicadas.');
+        return false; // Devuelve false si no se eliminan correctamente
+    }
+
+    // Añade los nuevos valores
     $result_token = update_user_meta($user_id, 'session_token', $token);
     $result_expiration = update_user_meta($user_id, 'session_token_expiration', $expiration);
 
     error_log('generate_secure_token - user_id: ' . $user_id . ' token: ' . $token . ' expiration: ' . $expiration  . ' result_token: ' . ($result_token ? 'true' : 'false') . ' result_expiration: ' . ($result_expiration ? 'true' : 'false'));
 
-    return $token;
+    return $token; // Devuelve el token generado
 }
 
 function verify_secure_token($token)
 {
     global $wpdb;
+
+    // Cambiamos la subconsulta para usar MAX() y asegurarnos de que solo devuelva un valor
     $user_id = $wpdb->get_var($wpdb->prepare(
-        "SELECT user_id FROM $wpdb->usermeta WHERE meta_key = 'session_token' AND meta_value = %s AND CAST((SELECT meta_value FROM $wpdb->usermeta WHERE user_id = user_id AND meta_key = 'session_token_expiration') AS UNSIGNED) > %d",
+        "SELECT user_id 
+         FROM $wpdb->usermeta 
+         WHERE meta_key = 'session_token' 
+           AND meta_value = %s 
+           AND CAST((
+               SELECT MAX(meta_value) 
+               FROM $wpdb->usermeta 
+               WHERE user_id = $wpdb->usermeta.user_id 
+                 AND meta_key = 'session_token_expiration'
+           ) AS UNSIGNED) > %d",
         $token,
         time()
     ));
 
+    // Log para depuración
     error_log('verify_secure_token - token: ' . $token . ' user_id: ' . ($user_id ? $user_id : 'not found'));
 
+    // Devuelve el ID del usuario si es válido, de lo contrario devuelve false
     if ($user_id) {
         return $user_id;
     }
@@ -185,7 +207,10 @@ add_action('rest_api_init', function () {
 
 function verify_token_endpoint(WP_REST_Request $request)
 {
+    // Obtiene el token enviado en el request
     $token = $request->get_param('token');
+
+    // Verifica el token
     $user_id = verify_secure_token($token);
 
     if ($user_id) {
