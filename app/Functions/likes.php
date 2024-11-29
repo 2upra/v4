@@ -2,7 +2,8 @@
 
 
 
-function manejarLike() {
+function manejarLike()
+{
     if (!is_user_logged_in()) {
         echo 'not_logged_in';
         wp_die();
@@ -28,14 +29,15 @@ function manejarLike() {
 add_action('wp_ajax_like', 'manejarLike');
 
 
-function likeAccion($postId, $userId, $accion) {
+function likeAccion($postId, $userId, $accion)
+{
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';
     $like_count = (int) get_user_meta($userId, 'like_count', true);
 
     if ($accion === 'like') {
         if (chequearLike($postId, $userId)) {
-            $accion = 'unlike';  
+            $accion = 'unlike';
         } else {
             $insert_result = $wpdb->insert($table_name, ['user_id' => $userId, 'post_id' => $postId]);
             if ($insert_result !== false) {
@@ -47,7 +49,7 @@ function likeAccion($postId, $userId, $accion) {
                 $autorId = get_post_field('post_author', $postId);
                 if ($autorId != $userId) {
                     $usuario = get_userdata($userId);
-                    crearNotificacion($autorId, $usuario->user_login .' le ha dado me gusta a tu publicación.', false);
+                    crearNotificacion($autorId, $usuario->user_login . ' le ha dado me gusta a tu publicación.', false, get_permalink($postId));
                 }
             }
         }
@@ -71,7 +73,8 @@ function obtenerLikesDelUsuario($userId, $limit = 500)
     $table_name = $wpdb->prefix . 'post_likes';
     $query = $wpdb->prepare(
         "SELECT post_id FROM $table_name WHERE user_id = %d ORDER BY like_date DESC LIMIT %d",
-        $userId, $limit
+        $userId,
+        $limit
     );
     $liked_posts = $wpdb->get_col($query);
     if (empty($liked_posts)) {
@@ -80,7 +83,8 @@ function obtenerLikesDelUsuario($userId, $limit = 500)
     return $liked_posts;
 }
 
-function contarLike($postId) {
+function contarLike($postId)
+{
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';
     $contadorLike = $wpdb->get_var($wpdb->prepare(
@@ -91,7 +95,8 @@ function contarLike($postId) {
     return $contadorLike ? $contadorLike : 0;
 }
 
-function chequearLike($postId, $userId) {
+function chequearLike($postId, $userId)
+{
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';
 

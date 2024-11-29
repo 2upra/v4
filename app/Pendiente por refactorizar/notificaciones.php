@@ -1,6 +1,6 @@
 <?
 
-function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false) {
+function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false, $enlace = '') {
     // Validar usuario receptor
     $usuario = get_user_by('ID', $usuarioReceptor);
     if (!$usuario) {
@@ -10,6 +10,9 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false)
 
     // Sanitizar contenido
     $contenidoSanitizado = wp_kses($contenido, 'post');
+
+    // Validar y sanitizar enlace
+    $enlaceSanitizado = esc_url_raw($enlace);
 
     // Validar meta solicitud
     $metaSolicitud = is_bool($metaSolicitud) ? $metaSolicitud : false;
@@ -22,7 +25,8 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false)
         'post_status'  => 'publish',
         'meta_input'   => [
             'emisor' => get_current_user_id(),
-            'solicitud' => $metaSolicitud
+            'solicitud' => $metaSolicitud,
+            'enlace' => $enlaceSanitizado
         ]
     ];
 
