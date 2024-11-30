@@ -223,15 +223,15 @@ function dev()
                                     <defs>
                                         <style>
                                             .div1 .cls-1 {
-                                                clip-path: url(#clippath-11);
+                                                clip-path: url(#divclippath-11);
                                             }
 
                                             .div1 .cls-2 {
-                                                clip-path: url(#clippath-2);
+                                                clip-path: url(#divclippath-2);
                                             }
 
                                             .div1 .cls-3 {
-                                                clip-path: url(#clippath-13);
+                                                clip-path: url(#divclippath-13);
                                             }
 
                                             .div1 .cls-4 {
@@ -239,19 +239,19 @@ function dev()
                                             }
 
                                             .div1 .cls-5 {
-                                                clip-path: url(#clippath-6);
+                                                clip-path: url(#divclippath-6);
                                             }
 
                                             .div1 .cls-6 {
-                                                clip-path: url(#clippath-7);
+                                                clip-path: url(#divclippath-7);
                                             }
 
                                             .div1 .cls-7 {
-                                                clip-path: url(#clippath-1);
+                                                clip-path: url(#divclippath-1);
                                             }
 
                                             .div1 .cls-8 {
-                                                clip-path: url(#clippath-4);
+                                                clip-path: url(#divclippath-4);
                                             }
 
                                             .div1 .cls-9 {
@@ -265,15 +265,15 @@ function dev()
                                             }
 
                                             .div1 .cls-11 {
-                                                clip-path: url(#clippath-12);
+                                                clip-path: url(#divclippath-12);
                                             }
 
                                             .div1 .cls-12 {
-                                                clip-path: url(#clippath-9);
+                                                clip-path: url(#divclippath-9);
                                             }
 
                                             .div1 .cls-13 {
-                                                clip-path: url(#clippath);
+                                                clip-path: url(#divclippath);
                                             }
 
                                             .div1 .cls-14 {
@@ -297,7 +297,7 @@ function dev()
                                             }
 
                                             .div1 .cls-19 {
-                                                clip-path: url(#clippath-3);
+                                                clip-path: url(#divclippath-3);
                                             }
 
                                             .div1 .cls-20 {
@@ -305,11 +305,11 @@ function dev()
                                             }
 
                                             .div1 .cls-21 {
-                                                clip-path: url(#clippath-8);
+                                                clip-path: url(#divclippath-8);
                                             }
 
                                             .div1 .cls-22 {
-                                                clip-path: url(#clippath-5);
+                                                clip-path: url(#divclippath-5);
                                             }
 
                                             .div1 .cls-23 {
@@ -317,53 +317,53 @@ function dev()
                                             }
 
                                             .div1 .cls-24 {
-                                                clip-path: url(#clippath-10);
+                                                clip-path: url(#divclippath-10);
                                             }
 
                                             .div1 .cls-25 {
                                                 fill: #ededed;
                                             }
                                         </style>
-                                        <clipPath id="clippath">
+                                        <clipPath id="divclippath">
                                             <rect class="cls-15" width="551" height="268" />
                                         </clipPath>
-                                        <clipPath id="clippath-1">
+                                        <clipPath id="divclippath-1">
                                             <polygon class="cls-15" points="-352.83 333.32 200.59 11.71 1170.13 571.47 616.72 893.08 -352.83 333.32" />
                                         </clipPath>
-                                        <clipPath id="clippath-2">
+                                        <clipPath id="divclippath-2">
                                             <path class="cls-15" d="M149.64,146.17l-19.72-11.39c-2-1.15-2-3.02-.02-4.18l19.59-11.39c1.99-1.15,5.21-1.16,7.21,0l19.72,11.39c2,1.15,2.01,3.03,.02,4.18l-19.59,11.39c-1.99,1.15-5.22,1.15-7.22,0" />
                                         </clipPath>
-                                        <clipPath id="clippath-3">
+                                        <clipPath id="divclippath-3">
                                             <path class="cls-15" d="M176.43,130.61l-19.72-11.39c-1.85-1.07-4.76-1.14-6.76-.23l-20.45,11.88c-1.24,.92-1.42,2.17-.51,3.18l21.93,12.66c1.51,.45,3.32,.43,4.8-.04l21.58-12.54c1.07-1.12,.77-2.57-.88-3.52" />
                                         </clipPath>
-                                        <clipPath id="clippath-4">
+                                        <clipPath id="divclippath-4">
                                             <polyline class="cls-15" points="153.29 148.29 126.15 132.62 153.12 116.94 180.26 132.62 153.29 148.29" />
                                         </clipPath>
-                                        <clipPath id="clippath-5">
+                                        <clipPath id="divclippath-5">
                                             <path class="cls-15" d="M99.81,175.96l-21.14-12.2c-2-1.15-2.01-3.03-.02-4.18l21-12.21c1.99-1.15,5.22-1.15,7.22,0l21.14,12.2c2,1.15,2.01,3.03,.02,4.18l-21,12.21c-1.99,1.15-5.22,1.15-7.22,0" />
                                         </clipPath>
-                                        <clipPath id="clippath-6">
+                                        <clipPath id="divclippath-6">
                                             <path class="cls-15" d="M129.18,160.63l-24.14-13.94c-1.61-.35-3.47-.21-4.88,.42l-21.96,12.76c-1.52,1.16-1.37,2.82,.47,3.88l21.14,12.2c1.64,.95,4.12,1.12,6.05,.51l23.03-13.39c.71-.76,.8-1.65,.29-2.45" />
                                         </clipPath>
-                                        <clipPath id="clippath-7">
+                                        <clipPath id="divclippath-7">
                                             <polyline class="cls-15" points="103.32 178.16 74.75 161.66 102.95 145.27 131.53 161.77 103.32 178.16" />
                                         </clipPath>
-                                        <clipPath id="clippath-8">
+                                        <clipPath id="divclippath-8">
                                             <path class="cls-15" d="M49.26,205.33l-21.14-12.2c-2-1.15-2.01-3.03-.02-4.18l21-12.21c1.99-1.15,5.21-1.15,7.21,0l21.14,12.2c2,1.15,2.02,3.02,.03,4.18l-21,12.21c-1.99,1.15-5.22,1.15-7.22,0" />
                                         </clipPath>
-                                        <clipPath id="clippath-9">
+                                        <clipPath id="divclippath-9">
                                             <path class="cls-15" d="M78.14,189.44l-22.69-13.1c-1.79-.67-4.14-.62-5.84,.14l-21.96,12.76c-1.3,.98-1.38,2.34-.24,3.37l22.74,13.13c1.57,.57,3.55,.6,5.16,.09l23.03-13.39c.88-.94,.81-2.1-.21-3.01" />
                                         </clipPath>
-                                        <clipPath id="clippath-10">
+                                        <clipPath id="divclippath-10">
                                             <polyline class="cls-15" points="52.83 207.5 24.25 191 52.64 174.5 81.22 191 52.83 207.5" />
                                         </clipPath>
-                                        <clipPath id="clippath-11">
+                                        <clipPath id="divclippath-11">
                                             <path class="cls-15" d="M-1.28,234.7l-21.14-12.2c-2-1.15-2.02-3.02-.03-4.18L-1.45,206.11c1.99-1.15,5.22-1.15,7.22,0l21.14,12.2c2,1.15,2.01,3.03,.02,4.18l-21,12.21c-1.99,1.15-5.21,1.15-7.21,0" />
                                         </clipPath>
-                                        <clipPath id="clippath-12">
+                                        <clipPath id="divclippath-12">
                                             <path class="cls-15" d="M27.62,218.83l-22.74-13.13c-1.79-.65-4.12-.6-5.82,.15l-21.96,12.76c-1.3,.99-1.37,2.35-.22,3.39L-.42,235.1c1.57,.58,3.57,.62,5.19,.11l23.03-13.39c.87-.93,.81-2.08-.18-2.99" />
                                         </clipPath>
-                                        <clipPath id="clippath-13">
+                                        <clipPath id="divclippath-13">
                                             <polyline class="cls-15" points="2.28 236.87 -26.29 220.38 2.1 203.88 30.67 220.37 2.28 236.87" />
                                         </clipPath>
                                     </defs>
