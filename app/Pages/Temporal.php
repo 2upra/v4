@@ -695,18 +695,6 @@ function dev()
                             box-sizing: border-box;
                         }
 
-                        /* Bloques individuales */
-                        .bloque {
-                            background-color: #f0f0f0;
-                            /* Color de fondo para visualización */
-                            border: 1px solid #ccc;
-                            /* Bordes para visualización */
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            text-align: center;
-                        }
-
                         /* Posicionamiento personalizado de los bloques */
                         .div1 {
                             grid-area: 1 / 1 / 2 / 3;
