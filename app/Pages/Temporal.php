@@ -660,66 +660,66 @@ function dev()
                                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Capa_2" data-name="Capa 2" viewBox="0 0 185.34 514.04">
                                     <defs>
                                         <style>
-                                            .cls-1,
-                                            .cls-2 {
+                                            .div3 .cls-1,
+                                            .div3 .cls-2 {
                                                 fill: #fff;
                                             }
 
-                                            .cls-3 {
+                                            .div3 .cls-3 {
                                                 fill: #d8d8d8;
                                             }
 
-                                            .cls-2,
-                                            .cls-4 {
+                                            .div3 .cls-2,
+                                            .div3 .cls-4 {
                                                 fill-rule: evenodd;
                                             }
 
-                                            .cls-5 {
+                                            .div3 .cls-5 {
                                                 fill: #303030;
                                             }
 
-                                            .cls-6 {
+                                            .div3 .cls-6 {
                                                 opacity: .29;
                                             }
 
-                                            .cls-7 {
+                                            .div3 .cls-7 {
                                                 fill: #0d0c0c;
                                             }
 
-                                            .cls-8 {
+                                            .div3 .cls-8 {
                                                 clip-path: url(#clippath-1);
                                             }
 
-                                            .cls-9,
-                                            .cls-4 {
+                                            .div3 .cls-9,
+                                            .div3 .cls-4 {
                                                 fill: #b0b0b0;
                                             }
 
-                                            .cls-10 {
+                                            .div3 .cls-10 {
                                                 clip-path: url(#clippath);
                                             }
 
-                                            .cls-11 {
+                                            .div3 .cls-11 {
                                                 fill: none;
                                             }
 
-                                            .cls-12 {
+                                            .div3 .cls-12 {
                                                 fill: #c1c1c1;
                                             }
 
-                                            .cls-13 {
+                                            .div3 .cls-13 {
                                                 fill: #161616;
                                             }
 
-                                            .cls-14 {
+                                            .div3 .cls-14 {
                                                 fill: #070707;
                                             }
 
-                                            .cls-15 {
+                                            .div3 .cls-15 {
                                                 fill: #919191;
                                             }
 
-                                            .cls-16 {
+                                            .div3 .cls-16 {
                                                 fill: #ededed;
                                             }
                                         </style>
