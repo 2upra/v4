@@ -201,7 +201,7 @@ function dev()
             <div class="tab active GMXSUJ" id="inicio">
 
                 <div class="BKXAFN">
-                    <div style="display: noene">
+                    <div style="display: none">
                         <div class="JMIOCI">
                             <h1>Libertad música para almas libres</h1>
                             <p>Biblioteca de recursos musicales con herramientas potenciadas para la colaboración e independencia artistica.</p>
