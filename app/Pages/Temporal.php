@@ -686,7 +686,7 @@ function dev()
                                             }
 
                                             .div3 .cls-8 {
-                                                clip-path: url(#clippath-1);
+                                                clip-path: url(#div3clippath-1);
                                             }
 
                                             .div3 .cls-9,
@@ -695,7 +695,7 @@ function dev()
                                             }
 
                                             .div3 .cls-10 {
-                                                clip-path: url(#clippath);
+                                                clip-path: url(#div3clippath);
                                             }
 
                                             .div3 .cls-11 {
@@ -722,10 +722,10 @@ function dev()
                                                 fill: #ededed;
                                             }
                                         </style>
-                                        <clipPath id="clippath">
+                                        <clipPath id="div3clippath">
                                             <circle class="cls-11" cx="20.61" cy="19.81" r="9.29" />
                                         </clipPath>
-                                        <clipPath id="clippath-1">
+                                        <clipPath id="div3clippath-1">
                                             <rect class="cls-11" x="19.1" y="359.97" width="24.59" height="24.59" rx="5.1" ry="5.1" />
                                         </clipPath>
                                     </defs>
@@ -1195,7 +1195,7 @@ function dev()
                                             }
 
                                             .div4 .cls-12 {
-                                                clip-path: url(#clippath-2);
+                                                clip-path: url(#div4clippath-2);
                                             }
 
                                             .div4 .cls-4 {
@@ -1207,7 +1207,7 @@ function dev()
                                             }
 
                                             .div4 .cls-13 {
-                                                clip-path: url(#clippath-6);
+                                                clip-path: url(#div4clippath-6);
                                             }
 
                                             .div4 .cls-6 {
@@ -1219,15 +1219,15 @@ function dev()
                                             }
 
                                             .div4 .cls-15 {
-                                                clip-path: url(#clippath-7);
+                                                clip-path: url(#div4clippath-7);
                                             }
 
                                             .div4 .cls-16 {
-                                                clip-path: url(#clippath-1);
+                                                clip-path: url(#div4clippath-1);
                                             }
 
                                             .div4 .cls-17 {
-                                                clip-path: url(#clippath-4);
+                                                clip-path: url(#div4clippath-4);
                                             }
 
                                             .div4 .cls-7 {
@@ -1243,7 +1243,7 @@ function dev()
                                             }
 
                                             .div4 .cls-19 {
-                                                clip-path: url(#clippath);
+                                                clip-path: url(#div4clippath);
                                             }
 
                                             .div4 .cls-20 {
@@ -1259,11 +1259,11 @@ function dev()
                                             }
 
                                             .div4 .cls-23 {
-                                                clip-path: url(#clippath-3);
+                                                clip-path: url(#div4clippath-3);
                                             }
 
                                             .div4 .cls-24 {
-                                                clip-path: url(#clippath-8);
+                                                clip-path: url(#div4clippath-8);
                                             }
 
                                             .div4 .cls-25,
@@ -1281,7 +1281,7 @@ function dev()
                                             }
 
                                             .div4 .cls-28 {
-                                                clip-path: url(#clippath-5);
+                                                clip-path: url(#div4clippath-5);
                                             }
 
                                             .div4 .cls-29 {
@@ -1304,31 +1304,31 @@ function dev()
                                                 opacity: .5;
                                             }
                                         </style>
-                                        <clipPath id="clippath">
+                                        <clipPath id="div4clippath">
                                             <rect class="cls-20" x="121.51" y="34.02" width="15.71" height="15.71" rx="2.34" ry="2.34" />
                                         </clipPath>
-                                        <clipPath id="clippath-1">
+                                        <clipPath id="div4clippath-1">
                                             <circle class="cls-20" cx="129.36" cy="16.07" r="7.85" />
                                         </clipPath>
-                                        <clipPath id="clippath-2">
+                                        <clipPath id="div4clippath-2">
                                             <rect class="cls-20" x="122.16" y="58.9" width="15.43" height="15.43" rx="2.2" ry="2.2" />
                                         </clipPath>
-                                        <clipPath id="clippath-3">
+                                        <clipPath id="div4clippath-3">
                                             <rect class="cls-20" x="122.16" y="83.51" width="15.43" height="15.43" rx="2.2" ry="2.2" />
                                         </clipPath>
-                                        <clipPath id="clippath-4">
+                                        <clipPath id="div4clippath-4">
                                             <rect class="cls-20" x="122.16" y="108.12" width="15.43" height="15.43" rx="2.2" ry="2.2" />
                                         </clipPath>
-                                        <clipPath id="clippath-5">
+                                        <clipPath id="div4clippath-5">
                                             <rect class="cls-20" x="122.16" y="132.73" width="15.43" height="15.43" rx="2.2" ry="2.2" />
                                         </clipPath>
-                                        <clipPath id="clippath-6">
+                                        <clipPath id="div4clippath-6">
                                             <rect class="cls-20" x="122.16" y="157.34" width="15.43" height="15.43" rx="2.2" ry="2.2" />
                                         </clipPath>
-                                        <clipPath id="clippath-7">
+                                        <clipPath id="div4clippath-7">
                                             <rect class="cls-20" x="122.55" y="181.95" width="14.66" height="14.66" rx="2.2" ry="2.2" />
                                         </clipPath>
-                                        <clipPath id="clippath-8">
+                                        <clipPath id="div4clippath-8">
                                             <rect class="cls-20" x="124.5" y="213.05" width="9.36" height="9.36" />
                                         </clipPath>
                                     </defs>
@@ -1804,7 +1804,7 @@ function dev()
                                             }
 
                                             .div5 .cls-4 {
-                                                clip-path: url(#clippath-2);
+                                                clip-path: url(#div5clippath-2);
                                             }
 
                                             .div5 .cls-5 {
@@ -1812,7 +1812,7 @@ function dev()
                                             }
 
                                             .div5 .cls-6 {
-                                                clip-path: url(#clippath-1);
+                                                clip-path: url(#div5clippath-1);
                                             }
 
                                             .div5 .cls-7 {
@@ -1820,7 +1820,7 @@ function dev()
                                             }
 
                                             .div5 .cls-8 {
-                                                clip-path: url(#clippath);
+                                                clip-path: url(#div5clippath);
                                             }
 
                                             .div5 .cls-9 {
@@ -1832,23 +1832,23 @@ function dev()
                                             }
 
                                             .div5 .cls-11 {
-                                                clip-path: url(#clippath-3);
+                                                clip-path: url(#div5clippath-3);
                                             }
 
                                             .div5 .cls-12 {
                                                 fill: #070707;
                                             }
                                         </style>
-                                        <clipPath id="clippath">
+                                        <clipPath id="div5clippath">
                                             <rect class="cls-9" x="13.14" y="54.47" width="13.84" height="13.84" rx="2.2" ry="2.2" />
                                         </clipPath>
-                                        <clipPath id="clippath-1">
+                                        <clipPath id="div5clippath-1">
                                             <rect class="cls-9" x="13.14" y="83.25" width="13.84" height="13.84" rx="2.2" ry="2.2" />
                                         </clipPath>
-                                        <clipPath id="clippath-2">
+                                        <clipPath id="div5clippath-2">
                                             <rect class="cls-9" x="13.14" y="112.03" width="13.84" height="13.84" rx="2.2" ry="2.2" />
                                         </clipPath>
-                                        <clipPath id="clippath-3">
+                                        <clipPath id="div5clippath-3">
                                             <rect class="cls-9" x="13.14" y="140.8" width="13.84" height="13.84" rx="2.2" ry="2.2" />
                                         </clipPath>
                                     </defs>
