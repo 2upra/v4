@@ -214,6 +214,7 @@ function dev()
                             <button class="borde carta" aria-label="Carta" style="display: none;">Carta</button>
                             <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>" aria-label="Entrar">Iniciar sesión</button>
                         </div>
+
                     </div>
                     <div class="OSFED">
                         <div class="ADEEDE">
@@ -651,104 +652,146 @@ function dev()
                                     </g>
                                 </svg>
                             </div>
-                            <div class="div2 bloque"> </div>
-                            <div class="div3 bloque"> </div>
-                            <div class="div4 bloque"> </div>
-                            <div class="div5 bloque"> </div>
-                            <div class="div6 bloque"> </div>
-                            <div class="div7 bloque"> </div>
-                            <div class="div8 bloque"> </div>
-                            <div class="div9 bloque"> </div>
-                            <div class="div10 bloque"> </div>
+
+                            <div class="div2 bloque"></div>
+                            <div class="div3 bloque"></div>
+                            <div class="div4 bloque"></div>
+                            <div class="div5 bloque"></div>
+                            <div class="div6 bloque"></div>
+                            <div class="div7 bloque"></div>
+                            <div class="div8 bloque"></div>
+                            <div class="div9 bloque"></div>
+                            <div class="div10 bloque"></div>
                         </div>
                     </div>
 
+                    <style>
+                        /* Contenedor principal */
+                        .OSFED {
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            width: 100%;
+                            height: 100vh;
+                            /* Ocupa toda la altura de la pantalla */
+                            box-sizing: border-box;
+                        }
+
+                        /* Contenedor del grid */
+                        .ADEEDE {
+                            display: grid;
+                            grid-template-columns: repeat(3, 1fr);
+                            /* 3 columnas iguales */
+                            grid-template-rows: repeat(4, 1fr);
+                            /* 4 filas iguales */
+                            gap: 10px;
+                            /* Espaciado entre filas y columnas */
+                            max-width: 1100px;
+                            /* Ancho máximo de 1100px */
+                            width: 100%;
+                            /* Ocupa el 100% del ancho disponible */
+                            height: 100%;
+                            /* Ocupa el 100% del alto disponible */
+                            box-sizing: border-box;
+                        }
+
+                        /* Bloques individuales */
+                        .bloque {
+                            background-color: #f0f0f0;
+                            /* Color de fondo para visualización */
+                            border: 1px solid #ccc;
+                            /* Bordes para visualización */
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            text-align: center;
+                        }
+
+                        /* Posicionamiento personalizado de los bloques */
+                        .div1 {
+                            grid-area: 1 / 1 / 2 / 3;
+                            /* Ocupa la fila 1, columnas 1-2 */
+                        }
+
+                        .div2 {
+                            grid-area: 1 / 3 / 2 / 4;
+                            /* Ocupa la fila 1, columna 3 */
+                        }
+
+                        .div3 {
+                            grid-area: 2 / 1 / 4 / 2;
+                            /* Ocupa filas 2-3, columna 1 */
+                        }
+
+                        .div4 {
+                            grid-area: 2 / 2 / 3 / 3;
+                            /* Ocupa fila 2, columna 2 */
+                        }
+
+                        .div5 {
+                            grid-area: 2 / 3 / 3 / 4;
+                            /* Ocupa fila 2, columna 3 */
+                        }
+
+                        .div6 {
+                            grid-area: 3 / 2 / 4 / 4;
+                            /* Ocupa fila 3, columnas 2-3 */
+                        }
+
+                        .div7 {
+                            grid-area: 4 / 1 / 5 / 2;
+                            /* Ocupa fila 4, columna 1 */
+                        }
+
+                        .div8 {
+                            grid-area: 4 / 2 / 5 / 3;
+                            /* Ocupa fila 4, columna 2 */
+                        }
+
+                        .div9 {
+                            grid-area: 4 / 3 / 5 / 4;
+                            /* Ocupa fila 4, columna 3 */
+                        }
+                    </style>
+
                 </div>
-
-                <style>
-                    .ADEEDE {
-                        display: grid;
-                        grid-template-columns: repeat(3, 1fr);
-                        grid-template-rows: repeat(4, 1fr);
-                        grid-column-gap: 10px;
-                        grid-row-gap: 10px;
-                    }
-
-                    .div1 {
-                        grid-area: 1 / 1 / 2 / 3;
-                    }
-
-                    .div2 {
-                        grid-area: 1 / 3 / 2 / 4;
-                    }
-
-                    .div3 {
-                        grid-area: 2 / 1 / 4 / 2;
-                    }
-
-                    .div4 {
-                        grid-area: 2 / 2 / 3 / 3;
-                    }
-
-                    .div5 {
-                        grid-area: 2 / 3 / 3 / 4;
-                    }
-
-                    .div6 {
-                        grid-area: 3 / 2 / 4 / 4;
-                    }
-
-                    .div7 {
-                        grid-area: 4 / 1 / 5 / 2;
-                    }
-
-                    .div8 {
-                        grid-area: 4 / 2 / 5 / 3;
-                    }
-
-                    .div9 {
-                        grid-area: 4 / 3 / 5 / 4;
-                    }
-                </style>
-
             </div>
         </div>
-    </div>
 
 
-<?
+    <?
     return ob_get_clean();
 }
 
 function modalCarta()
 {
     ob_start();
-?>
-    <div class="TAZFZZ" id="modalCarta" style="display: none;" data-nosnippet>
-        <div class="XCTQCK">
-            <div class="WMPVLD"> <? echo $GLOBALS['iconologo']; ?></div>
-            <div class="JMEPEB">
-                <p>2 de octubre 2024,</p>
+    ?>
+        <div class="TAZFZZ" id="modalCarta" style="display: none;" data-nosnippet>
+            <div class="XCTQCK">
+                <div class="WMPVLD"> <? echo $GLOBALS['iconologo']; ?></div>
+                <div class="JMEPEB">
+                    <p>2 de octubre 2024,</p>
 
-                <p>No voy a hablar del proyecto ni a decir que es el próximo gran hito en aplicaciones web. Hoy quiero contarte un poco sobre mí, quién soy y por qué esto es tan importante para mí.</p>
+                    <p>No voy a hablar del proyecto ni a decir que es el próximo gran hito en aplicaciones web. Hoy quiero contarte un poco sobre mí, quién soy y por qué esto es tan importante para mí.</p>
 
-                <p>Este no es mi primer proyecto. Algunas cosas me han salido bien en el pasado, y otras no tanto. Sin embargo, la experiencia me ha brindado las herramientas necesarias para construir cosas cada vez más complejas.</p>
+                    <p>Este no es mi primer proyecto. Algunas cosas me han salido bien en el pasado, y otras no tanto. Sin embargo, la experiencia me ha brindado las herramientas necesarias para construir cosas cada vez más complejas.</p>
 
-                <p>En el proceso, la música se ha convertido en una parte fundamental de mi vida. Cuando comienzas una carrera musical, tienes ciertas expectativas, y podría parecer que la falta de experiencia o esfuerzo serían los mayores obstáculos. ¡Ja! Si solo dependiera de eso, sería genial. Claro, el talento y hacer las cosas bien son lo más importante, pero me he dado cuenta de que hay muchos problemas en la producción musical que nadie parece dispuesto a resolver, sobre todo para las personas que no podemos costear los cientos de servicios necesarios. Las herramientas actuales están dispersas o te obligan a pagar suscripciones de $20 al mes cada una para usarlas, pffff.</p>
+                    <p>En el proceso, la música se ha convertido en una parte fundamental de mi vida. Cuando comienzas una carrera musical, tienes ciertas expectativas, y podría parecer que la falta de experiencia o esfuerzo serían los mayores obstáculos. ¡Ja! Si solo dependiera de eso, sería genial. Claro, el talento y hacer las cosas bien son lo más importante, pero me he dado cuenta de que hay muchos problemas en la producción musical que nadie parece dispuesto a resolver, sobre todo para las personas que no podemos costear los cientos de servicios necesarios. Las herramientas actuales están dispersas o te obligan a pagar suscripciones de $20 al mes cada una para usarlas, pffff.</p>
 
-                <p>Los productores necesitamos algo más accesible y práctico. Queremos poder separar pistas fácilmente, tener kits de batería frescos todos los días, un espacio donde encontrar colaboraciones, organizar nuestros samples, o tener una lista de sonidos favoritos para el próximo proyecto. Queremos subir el WAV a todas las malditas plataformas y no tener que esperar un mes para se publiquen o un año si queremos borrarla porque ya no nos gusta en nuestro catalago, y que buena idea sería un lugar donde los artistas pequeños puedan recibir apoyo directo de sus fans, y que esten todas su música junto a cualquier contenido que deseen compartir, fuah.</p>
+                    <p>Los productores necesitamos algo más accesible y práctico. Queremos poder separar pistas fácilmente, tener kits de batería frescos todos los días, un espacio donde encontrar colaboraciones, organizar nuestros samples, o tener una lista de sonidos favoritos para el próximo proyecto. Queremos subir el WAV a todas las malditas plataformas y no tener que esperar un mes para se publiquen o un año si queremos borrarla porque ya no nos gusta en nuestro catalago, y que buena idea sería un lugar donde los artistas pequeños puedan recibir apoyo directo de sus fans, y que esten todas su música junto a cualquier contenido que deseen compartir, fuah.</p>
 
-                <p>Lo bueno es que estoy dispuesta a construir cada una de estas soluciones, porque la independencia y resolver problemas le dan sentido a mi vida. He aprendido todo lo necesario para empezar, y estoy dispuesta a seguir aprendiendo lo que haga falta para lograrlo. También he aprendido que quizás no pueda hacerlo sola, y que no está mal aceptar que necesito un poco de ayuda, y la verdad, la necesito esta vez, cualquier pequeño apoyo hará la diferencia.</p>
+                    <p>Lo bueno es que estoy dispuesta a construir cada una de estas soluciones, porque la independencia y resolver problemas le dan sentido a mi vida. He aprendido todo lo necesario para empezar, y estoy dispuesta a seguir aprendiendo lo que haga falta para lograrlo. También he aprendido que quizás no pueda hacerlo sola, y que no está mal aceptar que necesito un poco de ayuda, y la verdad, la necesito esta vez, cualquier pequeño apoyo hará la diferencia.</p>
 
+                </div>
+                <div class="WMPVLV">
+                    <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/10/afsafad.png') ?>" alt="">
+                    <p>Wandorius</p>
+                </div>
+                <button class="borde cerrarCarta">Volver</button>
             </div>
-            <div class="WMPVLV">
-                <img src="<? echo img('https://2upra.com/wp-content/uploads/2024/10/afsafad.png') ?>" alt="">
-                <p>Wandorius</p>
-            </div>
-            <button class="borde cerrarCarta">Volver</button>
         </div>
-    </div>
-<?
+    <?
     return ob_get_clean();
 }
 
@@ -774,89 +817,89 @@ function modalCarta()
 function formularioProgramador()
 {
     ob_start();
-?>
+    ?>
 
-    <div class="HMPGRM" id="modalproyecto">
-        <form class="PVSHOT" method="post" data-action="proyectoForm" id="proyectoUnirte">
+        <div class="HMPGRM" id="modalproyecto">
+            <form class="PVSHOT" method="post" data-action="proyectoForm" id="proyectoUnirte">
 
-            <!-- Cambiar nombre de usuario -->
-            <p class="ONDNYU">Completa el formulario para unirte</p>
+                <!-- Cambiar nombre de usuario -->
+                <p class="ONDNYU">Completa el formulario para unirte</p>
 
-            <!-- Cambiar nombre de usuario -->
-            <div class="PTORKC">
-                <label for="usernameReal">Tu nombre real</label>
-                <input type="text" id="usernameReal" name="usernameReal" placeholder="Ingresa tu nombre" required>
-            </div>
+                <!-- Cambiar nombre de usuario -->
+                <div class="PTORKC">
+                    <label for="usernameReal">Tu nombre real</label>
+                    <input type="text" id="usernameReal" name="usernameReal" placeholder="Ingresa tu nombre" required>
+                </div>
 
-            <!-- Cambiar descripción -->
-            <div class="PTORKC">
-                <label for="number">Numero de telefono</label>
-                <input type="tel" id="number" name="number" placeholder="Ingresa tu número de teléfono" required>
-            </div>
+                <!-- Cambiar descripción -->
+                <div class="PTORKC">
+                    <label for="number">Numero de telefono</label>
+                    <input type="tel" id="number" name="number" placeholder="Ingresa tu número de teléfono" required>
+                </div>
 
-            <!-- Cantidad de meses programando -->
-            <div class="PTORKC">
-                <label for="programmingExperience">Cantidad de meses programando:</label>
-                <select id="programmingExperience" name="programmingExperience" required>
-                    <option value="">Selecciona una opción</option>
-                    <option value="lessThan1Year">Menos de 1 año</option>
-                    <option value="1Year">1 año</option>
-                    <option value="2Years">2 años</option>
-                    <option value="moreThan3Years">Más de 3 años</option>
-                </select>
-            </div>
+                <!-- Cantidad de meses programando -->
+                <div class="PTORKC">
+                    <label for="programmingExperience">Cantidad de meses programando:</label>
+                    <select id="programmingExperience" name="programmingExperience" required>
+                        <option value="">Selecciona una opción</option>
+                        <option value="lessThan1Year">Menos de 1 año</option>
+                        <option value="1Year">1 año</option>
+                        <option value="2Years">2 años</option>
+                        <option value="moreThan3Years">Más de 3 años</option>
+                    </select>
+                </div>
 
-            <!-- ¿Por qué te quieres unir al proyecto? -->
-            <div class="PTORKC">
-                <label for="reasonToJoin">¿Por qué te quieres unir al proyecto?</label>
-                <textarea id="reasonToJoin" name="reasonToJoin" rows="2" placeholder="Explica tus motivos" required></textarea>
-            </div>
+                <!-- ¿Por qué te quieres unir al proyecto? -->
+                <div class="PTORKC">
+                    <label for="reasonToJoin">¿Por qué te quieres unir al proyecto?</label>
+                    <textarea id="reasonToJoin" name="reasonToJoin" rows="2" placeholder="Explica tus motivos" required></textarea>
+                </div>
 
-            <!-- País -->
-            <div class="PTORKC">
-                <label for="country">País:</label>
-                <input type="text" id="country" name="country" placeholder="Ingresa tu país" required>
-            </div>
+                <!-- País -->
+                <div class="PTORKC">
+                    <label for="country">País:</label>
+                    <input type="text" id="country" name="country" placeholder="Ingresa tu país" required>
+                </div>
 
-            <!-- Actitud respecto al proyecto -->
-            <div class="PTORKC">
-                <label for="projectAttitude">¿Cual es tu actitud respecto al proyecto?</label>
-                <textarea id="projectAttitude" name="projectAttitude" rows="2" placeholder="Describe tu actitud" required></textarea>
-            </div>
+                <!-- Actitud respecto al proyecto -->
+                <div class="PTORKC">
+                    <label for="projectAttitude">¿Cual es tu actitud respecto al proyecto?</label>
+                    <textarea id="projectAttitude" name="projectAttitude" rows="2" placeholder="Describe tu actitud" required></textarea>
+                </div>
 
-            <!-- Actitud respecto a WordPress -->
-            <div class="PTORKC">
-                <label for="wordpressAttitude">¿Cual es tu actitud respecto a WordPress?</label>
-                <textarea id="wordpressAttitude" name="wordpressAttitude" rows="3" placeholder="Describe tu actitud" required></textarea>
-            </div>
+                <!-- Actitud respecto a WordPress -->
+                <div class="PTORKC">
+                    <label for="wordpressAttitude">¿Cual es tu actitud respecto a WordPress?</label>
+                    <textarea id="wordpressAttitude" name="wordpressAttitude" rows="3" placeholder="Describe tu actitud" required></textarea>
+                </div>
 
-            <!-- Iniciativa para un proyecto así -->
-            <div class="PTORKC">
-                <label for="projectInitiative">¿Cual es tu iniciativa para un proyecto así?:</label>
-                <select id="projectInitiative" name="projectInitiative" required>
-                    <option value="">Selecciona una opción</option>
-                    <option value="money">Dinero</option>
-                    <option value="somethingSpecial">Hacer algo especial</option>
-                    <option value="bePartOfSomething">Formar parte de algo que puede salir bien</option>
-                    <option value="recognition">Reconocimiento</option>
-                    <option value="jobSecurity">Un puesto de trabajo asegurado</option>
-                    <option value="learn">Aprender</option>
-                    <option value="portafolio">Para mi portafolio</option>
-                    <option value="meGusta">Me gusta el proyecto simplemente</option>
-                    <option value="meEsUtil">Me será util, me gusta la música</option>
-                    <option value="other">Otra cosa</option>
-                </select>
-                <textarea id="projectInitiativeOther" name="projectInitiativeOther" rows="3" placeholder="Si seleccionaste 'Otra cosa', especifica aquí"></textarea>
-            </div>
+                <!-- Iniciativa para un proyecto así -->
+                <div class="PTORKC">
+                    <label for="projectInitiative">¿Cual es tu iniciativa para un proyecto así?:</label>
+                    <select id="projectInitiative" name="projectInitiative" required>
+                        <option value="">Selecciona una opción</option>
+                        <option value="money">Dinero</option>
+                        <option value="somethingSpecial">Hacer algo especial</option>
+                        <option value="bePartOfSomething">Formar parte de algo que puede salir bien</option>
+                        <option value="recognition">Reconocimiento</option>
+                        <option value="jobSecurity">Un puesto de trabajo asegurado</option>
+                        <option value="learn">Aprender</option>
+                        <option value="portafolio">Para mi portafolio</option>
+                        <option value="meGusta">Me gusta el proyecto simplemente</option>
+                        <option value="meEsUtil">Me será util, me gusta la música</option>
+                        <option value="other">Otra cosa</option>
+                    </select>
+                    <textarea id="projectInitiativeOther" name="projectInitiativeOther" rows="3" placeholder="Si seleccionaste 'Otra cosa', especifica aquí"></textarea>
+                </div>
 
-            <div class="DZYSQD">
-                <button class="DZYBQD DGFDRD" type="submit">Enviar</button>
-                <button type="button" class="DZYBQD DGFDRDC">Cerrar</button>
-            </div>
+                <div class="DZYSQD">
+                    <button class="DZYBQD DGFDRD" type="submit">Enviar</button>
+                    <button type="button" class="DZYBQD DGFDRDC">Cerrar</button>
+                </div>
 
-        </form>
-    </div>
-<? return ob_get_clean();
+            </form>
+        </div>
+    <? return ob_get_clean();
 }
 
 /*
