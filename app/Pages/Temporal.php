@@ -2037,67 +2037,67 @@ function dev()
                                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Capa_2" data-name="Capa 2" viewBox="0 0 513.08 222.75">
                                     <defs>
                                         <style>
-                                            .cls-1 {
+                                            .div6 .cls-1 {
                                                 clip-path: url(#div6clippath-11);
                                             }
 
-                                            .cls-2 {
+                                            .div6 .cls-2 {
                                                 clip-path: url(#div6clippath-2);
                                             }
 
-                                            .cls-3 {
+                                            .div6 .cls-3 {
                                                 clip-path: url(#div6clippath-6);
                                             }
 
-                                            .cls-4 {
+                                            .div6 .cls-4 {
                                                 clip-path: url(#div6clippath-7);
                                             }
 
-                                            .cls-5 {
+                                            .div6 .cls-5 {
                                                 clip-path: url(#div6clippath-4);
                                             }
 
-                                            .cls-6 {
+                                            .div6 .cls-6 {
                                                 clip-path: url(#div6clippath-9);
                                             }
 
-                                            .cls-7 {
+                                            .div6 .cls-7 {
                                                 fill: none;
                                             }
 
-                                            .cls-8 {
+                                            .div6 .cls-8 {
                                                 fill: #c1c1c1;
                                             }
 
-                                            .cls-9 {
+                                            .div6 .cls-9 {
                                                 fill: #161616;
                                             }
 
-                                            .cls-10 {
+                                            .div6 .cls-10 {
                                                 clip-path: url(#div6clippath-3);
                                             }
 
-                                            .cls-11 {
+                                            .div6 .cls-11 {
                                                 clip-path: url(#div6clippath-8);
                                             }
 
-                                            .cls-12 {
+                                            .div6 .cls-12 {
                                                 clip-path: url(#div6clippath-5);
                                             }
 
-                                            .cls-13 {
+                                            .div6 .cls-13 {
                                                 fill: #070707;
                                             }
 
-                                            .cls-14 {
+                                            .div6 .cls-14 {
                                                 clip-path: url(#div6clippath-10);
                                             }
 
-                                            .cls-15 {
+                                            .div6 .cls-15 {
                                                 fill: #060606;
                                             }
 
-                                            .cls-16 {
+                                            .div6 .cls-16 {
                                                 fill: #ededed;
                                             }
                                         </style>
