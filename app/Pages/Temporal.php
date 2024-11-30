@@ -222,105 +222,105 @@ function dev()
                                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Capa_2" data-name="Capa 2" viewBox="0 0 551 268">
                                     <defs>
                                         <style>
-                                            .cls-1 {
+                                            .div1 .cls-1 {
                                                 clip-path: url(#clippath-11);
                                             }
 
-                                            .cls-2 {
+                                            .div1 .cls-2 {
                                                 clip-path: url(#clippath-2);
                                             }
 
-                                            .cls-3 {
+                                            .div1 .cls-3 {
                                                 clip-path: url(#clippath-13);
                                             }
 
-                                            .cls-4 {
+                                            .div1 .cls-4 {
                                                 isolation: isolate;
                                             }
 
-                                            .cls-5 {
+                                            .div1 .cls-5 {
                                                 clip-path: url(#clippath-6);
                                             }
 
-                                            .cls-6 {
+                                            .div1 .cls-6 {
                                                 clip-path: url(#clippath-7);
                                             }
 
-                                            .cls-7 {
+                                            .div1 .cls-7 {
                                                 clip-path: url(#clippath-1);
                                             }
 
-                                            .cls-8 {
+                                            .div1 .cls-8 {
                                                 clip-path: url(#clippath-4);
                                             }
 
-                                            .cls-9 {
+                                            .div1 .cls-9 {
                                                 fill: #101010;
                                             }
 
-                                            .cls-10 {
+                                            .div1 .cls-10 {
                                                 fill: #060606;
                                                 stroke: #161616;
                                                 stroke-miterlimit: 10;
                                             }
 
-                                            .cls-11 {
+                                            .div1 .cls-11 {
                                                 clip-path: url(#clippath-12);
                                             }
 
-                                            .cls-12 {
+                                            .div1 .cls-12 {
                                                 clip-path: url(#clippath-9);
                                             }
 
-                                            .cls-13 {
+                                            .div1 .cls-13 {
                                                 clip-path: url(#clippath);
                                             }
 
-                                            .cls-14 {
+                                            .div1 .cls-14 {
                                                 fill: #afafaf;
                                             }
 
-                                            .cls-15 {
+                                            .div1 .cls-15 {
                                                 fill: none;
                                             }
 
-                                            .cls-16 {
+                                            .div1 .cls-16 {
                                                 fill: #050505;
                                             }
 
-                                            .cls-17 {
+                                            .div1 .cls-17 {
                                                 fill: #c1c1c1;
                                             }
 
-                                            .cls-18 {
+                                            .div1 .cls-18 {
                                                 fill: #161616;
                                             }
 
-                                            .cls-19 {
+                                            .div1 .cls-19 {
                                                 clip-path: url(#clippath-3);
                                             }
 
-                                            .cls-20 {
+                                            .div1 .cls-20 {
                                                 fill: #0b0b0b;
                                             }
 
-                                            .cls-21 {
+                                            .div1 .cls-21 {
                                                 clip-path: url(#clippath-8);
                                             }
 
-                                            .cls-22 {
+                                            .div1 .cls-22 {
                                                 clip-path: url(#clippath-5);
                                             }
 
-                                            .cls-23 {
+                                            .div1 .cls-23 {
                                                 fill: #070707;
                                             }
 
-                                            .cls-24 {
+                                            .div1 .cls-24 {
                                                 clip-path: url(#clippath-10);
                                             }
 
-                                            .cls-25 {
+                                            .div1 .cls-25 {
                                                 fill: #ededed;
                                             }
                                         </style>
