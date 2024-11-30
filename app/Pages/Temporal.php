@@ -653,7 +653,9 @@ function dev()
                                 </svg>
                             </div>
 
-                            <div class="div2 bloque"></div>
+                            <div class="div2 bloque">
+                                <img src="https://2upra.com/wp-content/uploads/2024/11/Recurso-4@2x-1.png" alt="">
+                            </div>
                             <div class="div3 bloque"></div>
                             <div class="div4 bloque"></div>
                             <div class="div5 bloque"></div>
@@ -667,34 +669,6 @@ function dev()
 
                     <style>
                         /* Contenedor principal */
-                        .OSFED {
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            width: 100%;
-                            height: 100vh;
-                            /* Ocupa toda la altura de la pantalla */
-                            box-sizing: border-box;
-                        }
-
-                        /* Contenedor del grid */
-                        .ADEEDE {
-                            display: grid;
-                            grid-template-columns: repeat(3, 1fr);
-                            /* 3 columnas iguales */
-                            grid-template-rows: repeat(4, 1fr);
-                            /* 4 filas iguales */
-                            gap: 10px;
-                            /* Espaciado entre filas y columnas */
-                            max-width: 1100px;
-                            /* Ancho máximo de 1100px */
-                            width: 100%;
-                            /* Ocupa el 100% del ancho disponible */
-                            height: 100%;
-                            /* Ocupa el 100% del alto disponible */
-                            box-sizing: border-box;
-                        }
-
                         /* Posicionamiento personalizado de los bloques */
                         .div1 {
                             grid-area: 1 / 1 / 2 / 3;
