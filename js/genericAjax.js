@@ -1183,28 +1183,55 @@ document.addEventListener('DOMContentLoaded', function () {
 
 // Comprobamos si IntersectionObserver está disponible
 if ('IntersectionObserver' in window) {
+    console.log('IntersectionObserver está disponible');
+
     const observer = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
+                console.log('El div está en la vista:', entry.target);
+
                 const div = entry.target;
                 const src = div.getAttribute('data-src');
                 if (src) {
-                    // Usa fetch para obtener el contenido del SVG
+                    console.log('Intentando cargar el SVG desde:', src);
+
+                    // Usa fetch para cargar el contenido del SVG
                     fetch(src)
-                        .then(response => response.text())
+                        .then(response => {
+                            if (!response.ok) {
+                                console.error('Error al cargar el SVG:', response.status);
+                                throw new Error('Error al cargar el SVG');
+                            }
+                            return response.text();
+                        })
                         .then(svg => {
+                            console.log('SVG cargado correctamente');
                             div.innerHTML = svg; // Inserta el SVG en el div
                             div.removeAttribute('data-src'); // Limpia el data-src
                         })
-                        .catch(err => console.error('Error cargando el SVG:', err));
+                        .catch(err => {
+                            console.error('Error en la carga del SVG:', err);
+                        });
+
                     observer.unobserve(div); // Deja de observar el elemento
+                } else {
+                    console.warn('El atributo data-src está vacío o no existe');
                 }
             }
         });
     });
 
+    // Seleccionamos todos los elementos con la clase 'lazy-svg'
     const lazySvgs = document.querySelectorAll('.lazy-svg');
-    lazySvgs.forEach(div => observer.observe(div));
+    console.log('Encontrados elementos para observar:', lazySvgs.length);
+
+    lazySvgs.forEach(div => {
+        console.log('Iniciando observación para:', div);
+        observer.observe(div);
+    });
+} else {
+    console.error('IntersectionObserver no está disponible en este navegador');
 }
+
 
 
