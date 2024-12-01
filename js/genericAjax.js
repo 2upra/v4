@@ -1186,22 +1186,25 @@ if ('IntersectionObserver' in window) {
     const observer = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                // Cuando el div entra en la vista, cargamos el SVG
-                const img = entry.target;
-                const src = img.getAttribute('data-src');
+                const div = entry.target;
+                const src = div.getAttribute('data-src');
                 if (src) {
-                    img.setAttribute('src', src);  // Cambiamos el src por la URL del SVG
-                    img.removeAttribute('data-src'); // Limpiamos el atributo data-src
-                    observer.unobserve(img); // Dejamos de observar este elemento
+                    // Usa fetch para obtener el contenido del SVG
+                    fetch(src)
+                        .then(response => response.text())
+                        .then(svg => {
+                            div.innerHTML = svg; // Inserta el SVG en el div
+                            div.removeAttribute('data-src'); // Limpia el data-src
+                        })
+                        .catch(err => console.error('Error cargando el SVG:', err));
+                    observer.unobserve(div); // Deja de observar el elemento
                 }
             }
         });
     });
 
-    // Seleccionamos todos los elementos con la clase 'lazy-svg'
-    const images = document.querySelectorAll('.lazy-svg');
-    images.forEach(img => {
-        observer.observe(img); // Iniciamos la observación
-    });
+    const lazySvgs = document.querySelectorAll('.lazy-svg');
+    lazySvgs.forEach(div => observer.observe(div));
 }
+
 
