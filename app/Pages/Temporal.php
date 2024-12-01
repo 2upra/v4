@@ -219,9 +219,9 @@ function dev()
                     <div class="OSFED">
                         <div class="ADEEDE">
                             <div class="div1 bloque svg-container">
-                                <div class="tinfo">
-                                    <p class="ttpri">test</p>
-                                    <p class="ttsec">test test test test test test test test test test test test test test test test </p>
+                                <div class="tinfo" style="display: none;">
+                                    <p class="ttpri" style="display: none;">test</p>
+                                    <p class="ttsec">2UPRA nace debido a la falta de centralización e innovación en apps de producción musical. Las herramientas actuales están dispersas y no optimizadas. Por eso nuestro enfoque es ofrecer una experiencia única en todas las etapas de producción musical.</p>
                                 </div>
                                 <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-1.svg"></div>
                             </div>

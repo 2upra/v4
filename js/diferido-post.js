@@ -509,3 +509,16 @@ if ('IntersectionObserver' in window) {
 } else {
     console.error('IntersectionObserver no está disponible en este navegador');
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const contenedorSvg = document.querySelector('.svg-container');
+    const infoTooltip = contenedorSvg.querySelector('.tinfo');
+
+    contenedorSvg.addEventListener('mouseenter', function() {
+        infoTooltip.style.display = 'block';
+    });
+
+    contenedorSvg.addEventListener('mouseleave', function() {
+        infoTooltip.style.display = 'none';
+    });
+});
