@@ -218,11 +218,8 @@ function dev()
                     </div>
                     <div class="OSFED">
                         <div class="ADEEDE">
-                            <div class="div1 bloque">
-                                <div class="svg-container">
-                                    <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svg/div-1.svg"></div>
-                                </div>
-
+                            <div class="div1 bloque svg-container">
+                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svg/div-1.svg"></div>
                             </div>
                             <div class="div2 bloque">
                                 <img src="https://2upra.com/wp-content/uploads/2024/11/Recurso-4@2x-1.png" alt="">
