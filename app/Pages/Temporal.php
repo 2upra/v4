@@ -219,31 +219,31 @@ function dev()
                     <div class="OSFED">
                         <div class="ADEEDE">
                             <div class="div1 bloque svg-container">
-                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svg/div-1.svg"></div>
+                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-1.svg"></div>
                             </div>
                             <div class="div2 bloque">
                                 <img src="https://2upra.com/wp-content/uploads/2024/11/Recurso-4@2x-1.png" alt="">
                             </div>
                             <div class="div3 bloque svg-container">
-                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svg/div-3.svg"></div>
+                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-3.svg"></div>
                             </div>
                             <div class="div4 bloque svg-container">
-                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svg/div-4.svg"></div>
+                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-4.svg"></div>
                             </div>
                             <div class="div5 bloque svg-container">
-                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svg/div-5.svg"></div>
+                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-5.svg"></div>
                             </div>
                             <div class="div6 bloque svg-container">
-                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svg/div-6.svg"></div>
+                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-6.svg"></div>
                             </div>
                             <div class="div7 bloque svg-container">
-                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svg/div-7.svg"></div>
+                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-7.svg"></div>
                             </div>
                             <div class="div8 bloque svg-container">
-                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svg/div-8.svg"></div>
+                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-8.svg"></div>
                             </div>
                             <div class="div9 bloque svg-container">
-                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svg/div-9.svg"></div>
+                                <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-9.svg"></div>
                             </div>
                             <div class="div10 bloquesvg-container" style="display: none">
 
