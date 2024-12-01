@@ -219,6 +219,10 @@ function dev()
                     <div class="OSFED">
                         <div class="ADEEDE">
                             <div class="div1 bloque svg-container">
+                                <div class="tinfo">
+                                    <p class="ttpri">test</p>
+                                    <p class="ttsec">test test test test test test test test test test test test test test test test </p>
+                                </div>
                                 <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-1.svg"></div>
                             </div>
                             <div class="div2 bloque">
