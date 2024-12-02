@@ -343,7 +343,7 @@ function dev()
                                         <td>No</td>
                                         <td>Si</td>
                                         <td>Casi</td>
-                                        <t<td class="looperman">si</td>
+                                        <td class="looperman">si</td>
                                     </tr>
                                     <tr>
                                         <td>Publicar Kits</td>
