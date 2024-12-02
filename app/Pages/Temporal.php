@@ -242,7 +242,7 @@ function dev()
                             <div class="div4 bloque svg-container">
                                 <div class="tinfo" style="display: none;">
                                     <p class="ttpri" style="display: none;"></p>
-                                    <p class="ttsec">Sync 2UPRA: herramienta única que facilita la organización, recolección y uso de recursos. Olvídate de dónde guardar tus samples uno por uno, se sincronizarán y organizarán automáticamente de forma eficaz para que puedas acceder a ellos fácilmente cuando los necesites.</p>
+                                    <p class="ttsec">Sync 2UPRA: herramienta única que facilita la organización, recolección y uso de recursos. Olvídate de dónde guardar tus samples uno por uno, se sincronizarán y organizarán automáticamente de forma eficaz para que puedas acceder a ellos fácilmente cuando los necesites en tu pc.</p>
                                 </div>
                                 <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-4.svg"></div>
                             </div>
