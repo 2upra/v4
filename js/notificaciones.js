@@ -3,7 +3,7 @@ function iniciarCargaNotificaciones() {
         cargando = false;
     const listaNotificaciones = document.querySelector('.notificaciones-lista.modal');
 
-    if(!listaNotificaciones){
+    if (!listaNotificaciones) {
         console.error('No se encontró el elemento .notificaciones-lista.modal');
         return;
     }
@@ -11,8 +11,8 @@ function iniciarCargaNotificaciones() {
     const marcarNotificacionVista = id => {
         return fetch(ajaxUrl, {
             method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: new URLSearchParams({action: 'marcar_notificacion_vista', notificacionId: id})
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ action: 'marcar_notificacion_vista', notificacionId: id })
         })
             .then(res => {
                 if (!res.ok) {
@@ -34,7 +34,7 @@ function iniciarCargaNotificaciones() {
                 }
             });
         },
-        {root: null, rootMargin: '0px', threshold: 0.1}
+        { root: null, rootMargin: '0px', threshold: 0.1 }
     );
 
     const observarNotificaciones = () => {
@@ -47,17 +47,14 @@ function iniciarCargaNotificaciones() {
     observarNotificaciones();
 
     listaNotificaciones.addEventListener('scroll', () => {
-       
-        if (listaNotificaciones.scrollHeight - (listaNotificaciones.scrollTop + listaNotificaciones.clientHeight)  <= 200 && !cargando) {
+        if (listaNotificaciones.scrollHeight - (listaNotificaciones.scrollTop + listaNotificaciones.clientHeight) <= 200 && !cargando) {
             cargando = true;
-           
             fetch(ajaxUrl, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: new URLSearchParams({action: 'cargar_notificaciones', pagina: paginaActual})
             })
                 .then(res => {
-                   
                     if (!res.ok) {
                         console.error('Respuesta del servidor no fue OK:', res.statusText);
                         throw new Error('Error en la respuesta del servidor');
@@ -65,21 +62,18 @@ function iniciarCargaNotificaciones() {
                     return res.text();
                 })
                 .then(data => {
-                    if (data) {
+                    if (data && !data.includes("<p>No hay notificaciones disponibles.</p>")) {
                         listaNotificaciones.insertAdjacentHTML('beforeend', data);
                         observarNotificaciones();
                         paginaActual++;
-                       
-                    } else {
-                        
+                    }else{
+                        listaNotificaciones.removeEventListener('scroll', ()=>{});
                     }
                     cargando = false;
-                    
                 })
                 .catch(err => {
                     console.error('Error cargando notificaciones:', err);
                     cargando = false;
-                   
                 });
         }
     });
