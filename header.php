@@ -157,7 +157,9 @@ if (!defined('ABSPATH')) {
                     <div class="endmenu endmenuflow">
 
                         <div class="menu-item botonConfig">
+                            <a>
                                 <? echo $GLOBALS['configicono']; ?>
+                            </a>
                         </div>
 
                         <div class="xaxa1 menu-item">
