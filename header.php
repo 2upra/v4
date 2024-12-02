@@ -184,23 +184,25 @@ if (!defined('ABSPATH')) {
                                 <? echo $GLOBALS['flechaAtras']; ?>
                             </button>
                         </div>
-                        
-                        <div class="xaxa1 menu-item iconoperfil" id="cambiarVista">
-                            <a>
-                                <? echo $GLOBALS['vista1']; ?>
-                            </a>
-                        </div>
 
-                        <div class="xaxa1 menu-item iconoperfil prostatus0" id="btnpro">
-                            <a>
-                                <? echo $GLOBALS['pro']; ?>
-                            </a>
-                        </div>
+                        <div class="menuArribaLogin">
+                            <div class="xaxa1 menu-item iconoperfil" id="cambiarVista">
+                                <a>
+                                    <? echo $GLOBALS['vista1']; ?>
+                                </a>
+                            </div>
 
-                        <div class="xaxa1 menu-item iconoperfil chatIcono" id="chatIcono">
-                            <a>
-                                <? echo $GLOBALS['chatIcono']; ?>
-                            </a>
+                            <div class="xaxa1 menu-item iconoperfil prostatus0" id="btnpro">
+                                <a>
+                                    <? echo $GLOBALS['pro']; ?>
+                                </a>
+                            </div>
+
+                            <div class="xaxa1 menu-item iconoperfil chatIcono" id="chatIcono">
+                                <a>
+                                    <? echo $GLOBALS['chatIcono']; ?>
+                                </a>
+                            </div>
                         </div>
 
                         <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil fotoperfilsub" id="fotoperfilsub">
