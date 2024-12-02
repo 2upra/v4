@@ -50,7 +50,7 @@ function perfil()
                         <? echo perfilBanner($user_id); ?>
                     </div>
                     <div class="JNDKWD">
-                        <? echo do_shortcode('[mostrar_publicaciones_sociales filtro="nada" tab_id="perfil"]'); ?>
+                        <? echo publicaciones(['filtro' => 'nada', 'tab_id' => 'perfil', 'posts' => 12]);?>
                     </div>
                 </div>
             </div>
