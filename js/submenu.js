@@ -279,7 +279,7 @@ function calculatePosition(rect, submenuWidth, submenuHeight, position) {
 function initializeStaticMenus() {
     // Ejemplos de uso con la nueva parametrización de posición
     createSubmenu(".subiricono", "submenusubir", 'derecha');
-    createSubmenu(".chatIcono", "bloqueConversaciones", 'izquierda');
+    createSubmenu(".chatIcono", "bloqueConversaciones", 'abajo');
     createSubmenu(".fotoperfilsub", "fotoperfilsub", 'abajo');
 }
 
