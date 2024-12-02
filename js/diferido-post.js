@@ -511,14 +511,13 @@ if ('IntersectionObserver' in window) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const contenedorSvg = document.querySelector('.svg-container');
-    const infoTooltip = contenedorSvg.querySelector('.tinfo');
-
-    contenedorSvg.addEventListener('mouseenter', function() {
-        infoTooltip.style.display = 'block';
-    });
-
-    contenedorSvg.addEventListener('mouseleave', function() {
-        infoTooltip.style.display = 'none';
+    document.querySelectorAll('.svg-container').forEach(function(contenedorSvg){
+        const infoTooltip = contenedorSvg.querySelector('.tinfo');
+        contenedorSvg.addEventListener('mouseenter', function() {
+            infoTooltip.style.display = 'block';
+        });
+        contenedorSvg.addEventListener('mouseleave', function() {
+            infoTooltip.style.display = 'none';
+        });
     });
 });
