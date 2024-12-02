@@ -286,7 +286,6 @@ function dev()
                         </div>
                         <div class="table_component" role="region" tabindex="0">
                             <table>
-                                <caption>Table 1</caption>
                                 <thead>
                                     <tr>
                                         <th>Funciones</th>
@@ -294,7 +293,7 @@ function dev()
                                         <th>Splice</th>
                                         <th>Beatstar</th>
                                         <th>Samplefocus</th>
-                                        <th>Looperman</th>
+                                        <th class="looperman">Looperman</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -304,7 +303,7 @@ function dev()
                                         <td>No</td>
                                         <td>Si</td>
                                         <td>Si con limites*</td>
-                                        <td>No</td>
+                                        <td class="looperman">No</td>
                                     </tr>
                                     <tr>
                                         <td>Aplicación de escritorio y móvil</td>
@@ -312,7 +311,7 @@ function dev()
                                         <td>Si</td>
                                         <td>No</td>
                                         <td>No</td>
-                                        <td>No</td>
+                                        <td class="looperman">No</td>
                                     </tr>
                                     <tr>
                                         <td>Free Sync app</td>
@@ -320,7 +319,7 @@ function dev()
                                         <td>No</td>
                                         <td>No</td>
                                         <td>No</td>
-                                        <td>No</td>
+                                        <td class="looperman">No</td>
                                     </tr>
                                     <tr>
                                         <td>Filtros inteligentes</td>
@@ -328,7 +327,7 @@ function dev()
                                         <td>Casi</td>
                                         <td>No</td>
                                         <td>No</td>
-                                        <td>No</td>
+                                        <td class="looperman">No</td>
                                     </tr>
                                     <tr>
                                         <td>Publicar servicios gratis</td>
@@ -336,7 +335,7 @@ function dev()
                                         <td>No</td>
                                         <td>No</td>
                                         <td>No</td>
-                                        <td>No</td>
+                                        <td class="looperman">No</td>
                                     </tr>
                                     <tr>
                                         <td>Publicar Samples fácilmente</td>
@@ -344,7 +343,7 @@ function dev()
                                         <td>No</td>
                                         <td>Si</td>
                                         <td>Casi</td>
-                                        <td>Casi</td>
+                                        <t<td class="looperman">si</td>
                                     </tr>
                                     <tr>
                                         <td>Publicar Kits</td>
@@ -352,7 +351,7 @@ function dev()
                                         <td>No</td>
                                         <td>Si</td>
                                         <td>Si</td>
-                                        <td>No</td>
+                                        <td class="looperman">No</td>
                                     </tr>
                                     <tr>
                                         <td>Enviar mensajes</td>
@@ -360,7 +359,7 @@ function dev()
                                         <td>No</td>
                                         <td>No</td>
                                         <td>No</td>
-                                        <td>No</td>
+                                        <td class="looperman">No</td>
                                     </tr>
                                     <tr>
                                         <td>Feed inteligente</td>
@@ -368,7 +367,7 @@ function dev()
                                         <td>No</td>
                                         <td>Si</td>
                                         <td>No</td>
-                                        <td>No</td>
+                                        <td class="looperman">No</td>
                                     </tr>
                                     <tr>
                                         <td>Suscripción a productores</td>
@@ -376,7 +375,7 @@ function dev()
                                         <td>No</td>
                                         <td>No</td>
                                         <td>No</td>
-                                        <td>No</td>
+                                        <td class="looperman">No</td>
                                     </tr>
                                     <tr>
                                         <td>Monetización</td>
@@ -384,7 +383,7 @@ function dev()
                                         <td>No</td>
                                         <td>No</td>
                                         <td>No</td>
-                                        <td>No</td>
+                                        <td class="looperman">No</td>
                                     </tr>
                                     <tr>
                                         <td>Stream Music</td>
@@ -392,7 +391,7 @@ function dev()
                                         <td>No</td>
                                         <td>No</td>
                                         <td>No</td>
-                                        <td>No</td>
+                                        <td class="looperman">No</td>
                                     </tr>
                                     <tr>
                                         <td>Encontrar colaboraciones</td>
@@ -400,7 +399,7 @@ function dev()
                                         <td>No</td>
                                         <td>No</td>
                                         <td>No</td>
-                                        <td>No</td>
+                                        <td class="looperman">No</td>
                                     </tr>
                                     <tr>
                                         <td>Recomendaciones inteligentes</td>
@@ -408,7 +407,7 @@ function dev()
                                         <td>No</td>
                                         <td>No</td>
                                         <td>Casi</td>
-                                        <td>No</td>
+                                        <td class="looperman">No</td>
                                     </tr>
                                     <tr>
                                         <td>Publicar comentarios</td>
@@ -416,7 +415,7 @@ function dev()
                                         <td>No</td>
                                         <td>No</td>
                                         <td>Si</td>
-                                        <td>Si</td>
+                                        <td class="looperman">Si</td>
                                     </tr>
                                     <tr>
                                         <td>Publicar plugins y vst</td>
@@ -424,31 +423,7 @@ function dev()
                                         <td>Si</td>
                                         <td>No&nbsp;</td>
                                         <td>No</td>
-                                        <td>Si</td>
-                                    </tr>
-                                    <tr>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
+                                        <td class="looperman">Si</td>
                                     </tr>
                                 </tbody>
                             </table>
