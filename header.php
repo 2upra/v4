@@ -198,7 +198,7 @@ if (!defined('ABSPATH')) {
                                 </a>
                             </div>
 
-                            <div class="xaxa1 menu-item iconoperfil chatIcono" id="chatIcono">
+                            <div class="chatIcono" id="chatIcono">
                                 <a>
                                     <? echo $GLOBALS['chatIcono']; ?>
                                 </a>
