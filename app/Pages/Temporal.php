@@ -303,7 +303,7 @@ function dev()
                                         <td><? echo $GLOBALS['iconoNo']; ?></td>
                                         <td><? echo $GLOBALS['iconoCheck1']; ?></td>
                                         <td class="aste"><? echo $GLOBALS['iconoCheck1']; ?>*</td>
-                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoCheck1']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Aplicación de escritorio y móvil</td>
