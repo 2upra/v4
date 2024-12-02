@@ -305,7 +305,7 @@ if (!defined('ABSPATH')) {
                         <button><a href="https://2upra.com/perfil/">Perfil</a></button>
                         <button><a href="https://2upra.com/config/">Configuración</a></button>
                         <button class="reporte">Reportar un error</button>
-                        <button><a href="<?php echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>
+                        <button class="no-ajax"><a class="no-ajax" href="<?php echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>
                     </div>
                 </div>
 

@@ -62,30 +62,20 @@ function normalizarNuevoPost($post_id, $post, $update) {
     // Verificar y restaurar después de la normalización
     verificarYRestaurarDatos($post_id);
 }
-
-// Hook para cuando se crea o actualiza un post
 add_action('wp_insert_post', 'normalizarNuevoPost', 10, 3);
 
-// Función específica para manejar actualizaciones
+
 function normalizarPostActualizado($post_id, $post_after, $post_before) {
-    // Verificar si es el tipo de post correcto
     if ('social_post' !== get_post_type($post_id)) {
         return;
     }
-
-    // Verificar si el contenido ha cambiado
     if ($post_before->post_content === $post_after->post_content) {
         return;
     }
-
-    // Llamar a la función principal de normalización
     normalizarNuevoPost($post_id, $post_after, true);
-
-    // Verificar y restaurar después de la normalización
     verificarYRestaurarDatos($post_id);
 }
 
-// Hook adicional para cuando se actualiza un post
 add_action('post_updated', 'normalizarPostActualizado', 10, 3);
 
 // Función para verificar y restaurar datos
