@@ -1,4 +1,5 @@
 function vistaPost() {
+    /*
     const botonCambiarVista = document.getElementById('cambiarVista');
     const listas = document.querySelectorAll('ul.social-post-list.clase-nada[data-posttype="social_post"]');
     const CLAVE_VISTA = 'vistaGridActivada';
@@ -27,4 +28,6 @@ function vistaPost() {
         actualizarVista(nuevaEstado);
         localStorage.setItem(CLAVE_VISTA, nuevaEstado);
     });
+    */
+    return;
 }
