@@ -276,7 +276,7 @@ function nohayPost($filtro, $is_ajax)
         <div id="no-more-posts-two" no-more="<? echo esc_attr($filtro); ?>"></div>
     <? else: ?>
         <div class="LNVHED no-<? echo esc_attr($filtro); ?>">
-            <p>Aún no hay nada aquí</p>
+            <p>Ta vacío, intenta restablecer los filtros o buscar otra cosa :)</p>
             <? if ($filtro === 'rolastatus'): ?>
                 <p>Cuando publiques tu primera rola, aparecerá aquí</p>
             <? endif; ?>

@@ -135,7 +135,7 @@ function renderListaChats($conversaciones, $usuarioId)
     } else {
     ?>
         <div class="bloqueConversaciones bloque" id="bloqueConversaciones-chatIcono" style="display: none;">
-            <p>Aún no tienes mensajes</p>
+            <p>Aquí apareceran tus mensajes</p>
         </div>
         <?
         ?>
