@@ -55,7 +55,7 @@ function listarNotificaciones($usuarioReceptor, $pagina = 1)
     ob_start();
 
     if ($query->have_posts()) {
-        echo '<ul class="notificaciones-lista modal">';
+        echo '<ul class="notificaciones-lista modal" id="notificacionesModal">';
         while ($query->have_posts()) {
             $query->the_post();
             $emisor = get_post_meta(get_the_ID(), 'emisor', true);
@@ -104,7 +104,7 @@ function marcarNotificacionVista() {
     if ($notificacionId <= 0 || !get_post($notificacionId)) {
         wp_send_json_error(['message' => 'El ID de la notificación no es válido.'], 400);
     }
-    
+
     $actualizado = update_post_meta($notificacionId, 'visto', 1);
     if ($actualizado === false) {
         wp_send_json_error(['message' => 'No se pudo actualizar la meta de la notificación.'], 500);
