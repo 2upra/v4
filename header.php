@@ -188,6 +188,7 @@ if (!defined('ABSPATH')) {
                         <div class="menuArribaLogin">
                             <div class="prostatus0" id="btnpro">
                                 <a>
+                                    <? echo $GLOBALS['pro']; ?>
                                     <?
                                     // Obtener el ID del usuario actual
                                     $user_id = get_current_user_id();
