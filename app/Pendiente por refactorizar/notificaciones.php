@@ -104,10 +104,7 @@ function marcarNotificacionVista() {
     if ($notificacionId <= 0 || !get_post($notificacionId)) {
         wp_send_json_error(['message' => 'El ID de la notificación no es válido.'], 400);
     }
-
-    if (get_post_type($notificacionId) !== 'notificacion') {
-        wp_send_json_error(['message' => 'El post no es del tipo esperado.'], 400);
-    }
+    
     $actualizado = update_post_meta($notificacionId, 'visto', 1);
     if ($actualizado === false) {
         wp_send_json_error(['message' => 'No se pudo actualizar la meta de la notificación.'], 500);
