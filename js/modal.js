@@ -190,4 +190,5 @@ function smooth() {
     modalManager.añadirModal('proProAcciones', '#proproacciones', ['.subpro']);
     modalManager.añadirModal('W0512KN', '#a84J76WY', ['#W0512KN'], '#MkzIeq');
     modalManager.añadirModal('notificaciones', '#notificacionesModal', ['.icono-notificaciones']);
+    modalManager.añadirModal('config', '#modalConfig', ['.botonConfig']);
 }

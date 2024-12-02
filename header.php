@@ -156,10 +156,8 @@ if (!defined('ABSPATH')) {
 
                     <div class="endmenu endmenuflow">
 
-                        <div class="menu-item iconoconfig">
-                            <a href="https://2upra.com/config">
+                        <div class="menu-item botonConfig">
                                 <? echo $GLOBALS['configicono']; ?>
-                            </a>
                         </div>
 
                         <div class="xaxa1 menu-item">
@@ -274,7 +272,7 @@ if (!defined('ABSPATH')) {
                     <button id="enviarCorregir" class="borde">Corregir</button>
                 </div>
 
-
+                <? echo config() ?>
 
 
                 <!-- Enviar mensaje de error -->
@@ -303,7 +301,6 @@ if (!defined('ABSPATH')) {
                 <div class="A1806241" id="fotoperfilsub-fotoperfilsub">
                     <div class="A1806242">
                         <button><a href="https://2upra.com/perfil/">Perfil</a></button>
-                        <button><a href="https://2upra.com/config/">Configuración</a></button>
                         <button class="reporte">Reportar un error</button>
                         <button class="no-ajax"><a class="no-ajax" href="<?php echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>
                     </div>

@@ -20,8 +20,6 @@ get_header();
                 <? endif; ?>
             </div>
 
-            <? echo config() ?>
-
         <? endif; ?>
     </div>
 </div>
