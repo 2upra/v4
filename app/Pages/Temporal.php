@@ -282,8 +282,176 @@ function dev()
                                 <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-9.svg"></div>
                             </div>
                             <div class="div10 bloquesvg-container" style="display: none">
-
                             </div>
+                        </div>
+                        <div class="table_component" role="region" tabindex="0">
+                            <table>
+                                <caption>Table 1</caption>
+                                <thead>
+                                    <tr>
+                                        <th>Funciones</th>
+                                        <th>2upra</th>
+                                        <th>Splice</th>
+                                        <th>Beatstar</th>
+                                        <th>Samplefocus</th>
+                                        <th>Looperman</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Descargas gratis</td>
+                                        <td>Si con limites*</td>
+                                        <td>No</td>
+                                        <td>Si</td>
+                                        <td>Si con limites*</td>
+                                        <td>No</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Aplicación de escritorio y móvil</td>
+                                        <td>Si</td>
+                                        <td>Si</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Free Sync app</td>
+                                        <td>Si</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Filtros inteligentes</td>
+                                        <td>Si</td>
+                                        <td>Casi</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Publicar servicios gratis</td>
+                                        <td>Si</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Publicar Samples fácilmente</td>
+                                        <td>Si</td>
+                                        <td>No</td>
+                                        <td>Si</td>
+                                        <td>Casi</td>
+                                        <td>Casi</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Publicar Kits</td>
+                                        <td>Si</td>
+                                        <td>No</td>
+                                        <td>Si</td>
+                                        <td>Si</td>
+                                        <td>No</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Enviar mensajes</td>
+                                        <td>Si</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Feed inteligente</td>
+                                        <td>Si</td>
+                                        <td>No</td>
+                                        <td>Si</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Suscripción a productores</td>
+                                        <td>Si</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Monetización</td>
+                                        <td>Si</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Stream Music</td>
+                                        <td>Si</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Encontrar colaboraciones</td>
+                                        <td>Si</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Recomendaciones inteligentes</td>
+                                        <td>Si</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>Casi</td>
+                                        <td>No</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Publicar comentarios</td>
+                                        <td>Si</td>
+                                        <td>No</td>
+                                        <td>No</td>
+                                        <td>Si</td>
+                                        <td>Si</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Publicar plugins y vst</td>
+                                        <td>Si</td>
+                                        <td>Si</td>
+                                        <td>No&nbsp;</td>
+                                        <td>No</td>
+                                        <td>Si</td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
