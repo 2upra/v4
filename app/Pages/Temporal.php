@@ -299,10 +299,10 @@ function dev()
                                 <tbody>
                                     <tr>
                                         <td>Descargas gratis</td>
-                                        <td><? echo $GLOBALS['iconoRes']; ?></td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?>*</td>
                                         <td><? echo $GLOBALS['iconoNo']; ?></td>
                                         <td><? echo $GLOBALS['iconoCheck1']; ?></td>
-                                        <td><? echo $GLOBALS['iconoRes']; ?></td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?>*</td>
                                         <td><? echo $GLOBALS['iconoCheck1']; ?></td>
                                     </tr>
                                     <tr>
@@ -399,7 +399,7 @@ function dev()
                                         <td><? echo $GLOBALS['iconoNo']; ?></td>
                                         <td><? echo $GLOBALS['iconoNo']; ?></td>
                                         <td><? echo $GLOBALS['iconoNo']; ?></td>
-                                        <td class="looperman"><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoRes']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Recomendaciones inteligentes</td>
@@ -415,15 +415,15 @@ function dev()
                                         <td><? echo $GLOBALS['iconoNo']; ?></td>
                                         <td><? echo $GLOBALS['iconoNo']; ?></td>
                                         <td><? echo $GLOBALS['iconoCheck1']; ?></td>
-                                        <td class="looperman">Si</td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoCheck1']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Publicar plugins y vst</td>
                                         <td><? echo $GLOBALS['iconoCheck1']; ?></td>
                                         <td><? echo $GLOBALS['iconoCheck1']; ?></td>
-                                        <td>No&nbsp;</td>
                                         <td><? echo $GLOBALS['iconoNo']; ?></td>
-                                        <td class="looperman">Si</td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoCheck1']; ?></td>
                                     </tr>
                                 </tbody>
                             </table>
