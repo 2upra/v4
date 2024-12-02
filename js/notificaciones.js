@@ -9,7 +9,7 @@ function iniciarCargaNotificaciones() {
     }
 
     const marcarNotificacionVista = id => {
-        return fetch(ajaxurl, {
+        return fetch(ajaxUrl, {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: new URLSearchParams({action: 'marcar_notificacion_vista', notificacionId: id})
@@ -51,7 +51,7 @@ function iniciarCargaNotificaciones() {
         if (listaNotificaciones.scrollHeight - (listaNotificaciones.scrollTop + listaNotificaciones.clientHeight)  <= 200 && !cargando) {
             cargando = true;
            
-            fetch(ajaxurl, {
+            fetch(ajaxUrl, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: new URLSearchParams({action: 'cargar_notificaciones', pagina: paginaActual})
