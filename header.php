@@ -94,7 +94,7 @@ if (!defined('ABSPATH')) {
 
                         <div class="menu-item botoniniciomenu">
                             <a href="https://2upra.com/">
-                                <? echo $GLOBALS['iconoinicio']; 
+                                <? echo $GLOBALS['iconoinicio'];
                                 ?>
                             </a>
                         </div>
@@ -253,9 +253,9 @@ if (!defined('ABSPATH')) {
                     </div>
                     <? echo renderChat() ?>
                 </div>
-
-                <? echo listarNotificaciones() ?>
-
+                <div id="notificacionesModal" style="display: none">
+                    <? echo listarNotificaciones() ?>
+                </div>
                 <!-- Modal para editar titulo coleccion -->
                 <div id="cambiarTitulo" class="cambiarTituloModal modal" style="display: none;">
                     <textarea id="mensajeEditTitulo"></textarea>
