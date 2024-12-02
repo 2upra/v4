@@ -11,7 +11,7 @@ function config()
 
 ?>
 
-    <div class="LEDDCN modal" id="modalConfig"> 
+    <div class="LEDDCN modal" id="modalConfig" style="display: none;"> 
         <p class="ONDNYU">Configuración de Perfil</p>
 
         <form class="PVSHOT">
