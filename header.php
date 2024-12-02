@@ -186,10 +186,18 @@ if (!defined('ABSPATH')) {
                         </div>
 
                         <div class="menuArribaLogin">
-
                             <div class="prostatus0" id="btnpro">
                                 <a>
-                                    <? echo $GLOBALS['pro']; ?>
+                                    <?
+                                    // Obtener el ID del usuario actual
+                                    $user_id = get_current_user_id();
+
+                                    // Obtener la cantidad de pinkys desde la meta del usuario
+                                    $pinkys = (int) get_user_meta($user_id, 'pinky', true);
+
+                                    // Mostrar "99+" si los pinkys son más de 100, de lo contrario mostrar el número exacto
+                                    echo ($pinkys > 100) ? '99+' : $pinkys;
+                                    ?>
                                 </a>
                             </div>
 
