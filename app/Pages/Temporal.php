@@ -226,27 +226,59 @@ function dev()
                                 <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-1.svg"></div>
                             </div>
                             <div class="div2 bloque">
+                                <div class="tinfo" style="display: none;">
+                                    <p class="ttpri" style="display: none;">test</p>
+                                    <p class="ttsec">La principal virtud del proyecto es el uso de inteligencia artificial y machine learning para reconocimiento de patrones, optimización, mejora de algoritmos y supervisión. 2UPRA aprende de los usuarios para mejorar continuamente.</p>
+                                </div>
                                 <img src="https://2upra.com/wp-content/uploads/2024/11/Recurso-4@2x-1.png" alt="">
                             </div>
                             <div class="div3 bloque svg-container">
+                                <div class="tinfo" style="display: none;">
+                                    <p class="ttpri" style="display: none;">Enfoque social: plataforma optimizada para la comunicación entre productores, artistas y fans, ofreciendo una experiencia única que facilita los procesos creativos.</p>
+                                    <p class="ttsec"></p>
+                                </div>
                                 <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-3.svg"></div>
                             </div>
                             <div class="div4 bloque svg-container">
+                                <div class="tinfo" style="display: none;">
+                                    <p class="ttpri" style="display: none;"> Sync 2UPRA: herramienta única que facilita la organización, recolección y uso de recursos. Olvídate de dónde guardar tus samples uno por uno, se sincronizarán y organizarán automáticamente de forma eficaz para que puedas acceder a ellos fácilmente cuando los necesites.</p>
+                                    <p class="ttsec"></p>
+                                </div>
                                 <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-4.svg"></div>
                             </div>
                             <div class="div5 bloque svg-container">
+                                <div class="tinfo" style="display: none;">
+                                    <p class="ttpri" style="display: none;">Colecciones: organiza tus recursos musicales en colecciones personalizables y compártelas con la comunidad o de forma privada. Descubre nuevas colecciones y amplía tus horizontes musicales.</p>
+                                    <p class="ttsec"></p>
+                                </div>
                                 <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-5.svg"></div>
                             </div>
                             <div class="div6 bloque svg-container">
+                                <div class="tinfo" style="display: none;">
+                                    <p class="ttpri" style="display: none;">Algoritmos inteligentes de recomendación: 2UPRA entiende tus gustos, te ayuda a organizar ideas y recomienda recursos apropiados para ti y tus colecciones.</p>
+                                    <p class="ttsec"></p>
+                                </div>
                                 <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-6.svg"></div>
                             </div>
                             <div class="div7 bloque svg-container">
+                                <div class="tinfo" style="display: none;">
+                                    <p class="ttpri" style="display: none;">Mantente conectado como en cualquier red social, pero impulsando tu crecimiento artístico. Comparte tus creaciones, colabora con otros artistas, descubre oportunidades y sigue la trayectoria de tus ídolos.</p>
+                                    <p class="ttsec"></p>
+                                </div>
                                 <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-7.svg"></div>
                             </div>
                             <div class="div8 bloque svg-container">
+                                <div class="tinfo" style="display: none;">
+                                    <p class="ttpri" style="display: none;">Múltiples fuentes de ingresos: en 2UPRA usamos algoritmos inteligentes para compensar tu esfuerzo. Invita a tus fans a suscribirse o publica tus servicios, tu crecimiento artístico y tu bienestar van de la mano.</p>
+                                    <p class="ttsec"></p>
+                                </div>
                                 <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-8.svg"></div>
                             </div>
                             <div class="div9 bloque svg-container">
+                                <div class="tinfo" style="display: none;">
+                                    <p class="ttpri" style="display: none;">Exprésate de muchas formas: en 2UPRA comprendemos que el arte tiene múltiples expresiones. Comunica tus ideas, emociones y proyectos como desees, ya sea a través de música, videos, imágenes o texto, y acércate a otros artistas y fans de maneras diversas.</p>
+                                    <p class="ttsec"></p>
+                                </div>
                                 <div class="lazy-svg" data-src="https://2upra.com/wp-content/themes/2upra3v/assets/svgs/div-9.svg"></div>
                             </div>
                             <div class="div10 bloquesvg-container" style="display: none">
