@@ -39,8 +39,9 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
     return $postId;
 }
 
-function listarNotificaciones($usuarioReceptor, $pagina = 1)
+function listarNotificaciones($pagina = 1)
 {
+    $usuarioReceptor = get_current_user_id();
     $notificacionesPorPagina = 12;
     $offset = ($pagina - 1) * $notificacionesPorPagina;
     $args = [

@@ -254,6 +254,8 @@ if (!defined('ABSPATH')) {
                     <? echo renderChat() ?>
                 </div>
 
+                <? echo listarNotificaciones() ?>
+
                 <!-- Modal para editar titulo coleccion -->
                 <div id="cambiarTitulo" class="cambiarTituloModal modal" style="display: none;">
                     <textarea id="mensajeEditTitulo"></textarea>
