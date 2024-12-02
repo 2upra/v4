@@ -191,7 +191,9 @@ if (!defined('ABSPATH')) {
                             </div>
 
                             <div class="chatIcono" id="chatIcono">
+                                <a>
                                 <? echo $GLOBALS['chatIcono']; ?>
+                                </a>
                             </div>
                         </div>
 
