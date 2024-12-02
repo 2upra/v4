@@ -58,38 +58,31 @@ function listarNotificaciones($usuarioReceptor, $pagina = 1)
         echo '<ul class="notificaciones-lista modal">';
         while ($query->have_posts()) {
             $query->the_post();
-            
-            // Obtener metadatos de la notificación
             $emisor = get_post_meta(get_the_ID(), 'emisor', true);
             $solicitud = get_post_meta(get_the_ID(), 'solicitud', true);
             $postRelacionado = get_post_meta(get_the_ID(), 'post_relacionado', true);
-            
             $fechaPublicacion = get_the_date('Y-m-d H:i:s');
             $fechaRelativa = tiempoRelativo($fechaPublicacion); 
             if ($emisor) {
                 $avatar_optimizado = imagenPerfil($emisor);
             }
-
-?>
-            <li class="notificacion-item">
+            ?>
+            <li class="notificacion-item" data-notificacion-id="<? echo get_the_ID(); ?>">
                 <? if (!empty($postRelacionado)) : ?>
                     <a href="<? echo get_permalink($postRelacionado); ?>" class="notificacion-enlace">
                 <? endif; ?>
-
                     <? if (!empty($avatar_optimizado)) : ?>
                         <img class="avatar" src="<? echo esc_url($avatar_optimizado); ?>" alt="Avatar del emisor">
                     <? endif; ?>
-
                     <div class="DAEFSE">
                         <p class="notificacion-contenido"><? the_content(); ?></p>
                         <p class="notificacion-fecha"><? echo $fechaRelativa; ?></p> 
                     </div>
-
                 <? if (!empty($postRelacionado)) : ?>
                     </a>
                 <? endif; ?>
             </li>
-<?
+            <?
         }
         echo '</ul>';
     } else {
@@ -97,7 +90,7 @@ function listarNotificaciones($usuarioReceptor, $pagina = 1)
     }
     wp_reset_postdata();
     return ob_get_clean();
-} 
+}
 
 
 add_action('wp_ajax_marcar_notificacion_vista', 'marcarNotificacionVista');
