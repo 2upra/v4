@@ -1,6 +1,12 @@
 function iniciarCargaNotificaciones() {
     let paginaActual = 2,
         cargando = false;
+    const listaNotificaciones = document.querySelector('.notificaciones-lista.modal');
+
+    if(!listaNotificaciones){
+        console.error('No se encontró el elemento .notificaciones-lista.modal');
+        return;
+    }
 
     const marcarNotificacionVista = id => {
         return fetch(ajaxurl, {
@@ -10,10 +16,10 @@ function iniciarCargaNotificaciones() {
         })
             .then(res => {
                 if (!res.ok) {
-                    console.error('Error al marcar la notificación como vista');
+                    console.error('Error al marcar la notificación como vista:', res.statusText);
                 }
             })
-            .catch(err => console.error('Error de red al marcar notificación vista', err));
+            .catch(err => console.error('Error de red al marcar notificación vista:', err));
     };
 
     const observer = new IntersectionObserver(
@@ -32,7 +38,7 @@ function iniciarCargaNotificaciones() {
     );
 
     const observarNotificaciones = () => {
-        document.querySelectorAll('.notificacion-item:not([data-observado="true"])').forEach(el => {
+        listaNotificaciones.querySelectorAll('.notificacion-item:not([data-observado="true"])').forEach(el => {
             el.dataset.observado = 'true';
             observer.observe(el);
         });
@@ -40,24 +46,18 @@ function iniciarCargaNotificaciones() {
 
     observarNotificaciones();
 
-    window.addEventListener('scroll', () => {
-        console.log('Evento scroll detectado.');
-        console.log('Scroll Y:', window.scrollY);
-        console.log('Window Height:', window.innerHeight);
-        console.log('Document Height:', document.documentElement.scrollHeight);
-        console.log('Cargando:', cargando);
-
-        if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 200 && !cargando) {
-            console.log('Condición para cargar más notificaciones cumplida.');
+    listaNotificaciones.addEventListener('scroll', () => {
+       
+        if (listaNotificaciones.scrollHeight - (listaNotificaciones.scrollTop + listaNotificaciones.clientHeight)  <= 200 && !cargando) {
             cargando = true;
-            console.log('Cargando página:', paginaActual);
+           
             fetch(ajaxurl, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: new URLSearchParams({action: 'cargar_notificaciones', pagina: paginaActual})
             })
                 .then(res => {
-                    console.log('Respuesta recibida del servidor:', res.status);
+                   
                     if (!res.ok) {
                         console.error('Respuesta del servidor no fue OK:', res.statusText);
                         throw new Error('Error en la respuesta del servidor');
@@ -66,25 +66,21 @@ function iniciarCargaNotificaciones() {
                 })
                 .then(data => {
                     if (data) {
-                        console.log('Datos recibidos para la página', paginaActual - 1, ':', data);
-                        const lista = document.querySelector('.notificaciones-lista');
-                        lista.insertAdjacentHTML('beforeend', data);
+                        listaNotificaciones.insertAdjacentHTML('beforeend', data);
                         observarNotificaciones();
                         paginaActual++;
-                        console.log('Página actual incrementada a:', paginaActual);
+                       
                     } else {
-                        console.log('No se recibieron datos para la página', paginaActual - 1);
+                        
                     }
                     cargando = false;
-                    console.log('Estado de carga restablecido a:', cargando);
+                    
                 })
                 .catch(err => {
                     console.error('Error cargando notificaciones:', err);
                     cargando = false;
-                    console.log('Estado de carga restablecido a (error):', cargando);
+                   
                 });
-        } else {
-            console.log('Condición para cargar más notificaciones no cumplida.');
         }
     });
 }
