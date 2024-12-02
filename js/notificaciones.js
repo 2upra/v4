@@ -49,30 +49,36 @@ function iniciarCargaNotificaciones() {
     listaNotificaciones.addEventListener('scroll', () => {
         if (listaNotificaciones.scrollHeight - (listaNotificaciones.scrollTop + listaNotificaciones.clientHeight) <= 200 && !cargando) {
             cargando = true;
+
             fetch(ajaxUrl, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                body: new URLSearchParams({action: 'cargar_notificaciones', pagina: paginaActual})
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ action: 'cargar_notificaciones', pagina: paginaActual })
             })
                 .then(res => {
                     if (!res.ok) {
-                        console.error('Respuesta del servidor no fue OK:', res.statusText);
                         throw new Error('Error en la respuesta del servidor');
                     }
                     return res.text();
                 })
                 .then(data => {
-                    if (data && !data.includes("<p>No hay notificaciones disponibles.</p>")) {
+                    // Normalizamos el texto para evitar problemas con espacios o saltos de línea
+                    const textoNormalizado = data.replace(/\s+/g, ' ').trim();
+
+                    // Verificamos de forma más flexible si no hay notificaciones
+                    if (textoNormalizado.includes('No hay notificaciones disponibles')) {
+                        cargando = true; // Detenemos la carga adicional
+                        return;
+                    }
+
+                    if (data) {
                         listaNotificaciones.insertAdjacentHTML('beforeend', data);
                         observarNotificaciones();
                         paginaActual++;
-                    }else{
-                        listaNotificaciones.removeEventListener('scroll', ()=>{});
                     }
                     cargando = false;
                 })
                 .catch(err => {
-                    console.error('Error cargando notificaciones:', err);
                     cargando = false;
                 });
         }
