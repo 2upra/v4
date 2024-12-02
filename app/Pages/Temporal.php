@@ -299,130 +299,130 @@ function dev()
                                 <tbody>
                                     <tr>
                                         <td>Descargas gratis</td>
-                                        <td>Si con limites*</td>
-                                        <td>No</td>
-                                        <td>Si</td>
-                                        <td>Si con limites*</td>
-                                        <td class="looperman">No</td>
+                                        <td><? echo $GLOBALS['iconoRes']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoRes']; ?></td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Aplicación de escritorio y móvil</td>
-                                        <td>Si</td>
-                                        <td>Si</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td class="looperman">No</td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoNo']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Free Sync app</td>
-                                        <td>Si</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td class="looperman">No</td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoNo']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Filtros inteligentes</td>
-                                        <td>Si</td>
-                                        <td>Casi</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td class="looperman">No</td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoRes']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoNo']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Publicar servicios gratis</td>
-                                        <td>Si</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td class="looperman">No</td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoNo']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Publicar Samples fácilmente</td>
-                                        <td>Si</td>
-                                        <td>No</td>
-                                        <td>Si</td>
-                                        <td>Casi</td>
-                                        <td class="looperman">si</td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoRes']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoNo']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Publicar Kits</td>
-                                        <td>Si</td>
-                                        <td>No</td>
-                                        <td>Si</td>
-                                        <td>Si</td>
-                                        <td class="looperman">No</td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoNo']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Enviar mensajes</td>
-                                        <td>Si</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td class="looperman">No</td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoNo']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Feed inteligente</td>
-                                        <td>Si</td>
-                                        <td>No</td>
-                                        <td>Si</td>
-                                        <td>No</td>
-                                        <td class="looperman">No</td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoNo']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Suscripción a productores</td>
-                                        <td>Si</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td class="looperman">No</td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoNo']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Monetización</td>
-                                        <td>Si</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td class="looperman">No</td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoNo']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Stream Music</td>
-                                        <td>Si</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td class="looperman">No</td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoNo']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Encontrar colaboraciones</td>
-                                        <td>Si</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td class="looperman">No</td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoNo']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Recomendaciones inteligentes</td>
-                                        <td>Si</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td>Casi</td>
-                                        <td class="looperman">No</td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoRes']; ?></td>
+                                        <td class="looperman"><? echo $GLOBALS['iconoNo']; ?></td>
                                     </tr>
                                     <tr>
                                         <td>Publicar comentarios</td>
-                                        <td>Si</td>
-                                        <td>No</td>
-                                        <td>No</td>
-                                        <td>Si</td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
                                         <td class="looperman">Si</td>
                                     </tr>
                                     <tr>
                                         <td>Publicar plugins y vst</td>
-                                        <td>Si</td>
-                                        <td>Si</td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
+                                        <td><? echo $GLOBALS['iconoCheck1']; ?></td>
                                         <td>No&nbsp;</td>
-                                        <td>No</td>
+                                        <td><? echo $GLOBALS['iconoNo']; ?></td>
                                         <td class="looperman">Si</td>
                                     </tr>
                                 </tbody>
