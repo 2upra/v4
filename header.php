@@ -187,7 +187,7 @@ if (!defined('ABSPATH')) {
 
                         <div class="menuArribaLogin">
                             <div class="prostatus0" id="btnpro">
-                                <a>
+
                                     <? echo $GLOBALS['pro']; ?>
                                     <?
                                     // Obtener el ID del usuario actual
@@ -199,7 +199,6 @@ if (!defined('ABSPATH')) {
                                     // Mostrar "99+" si los pinkys son más de 100, de lo contrario mostrar el número exacto
                                     echo ($pinkys > 100) ? '99+' : $pinkys;
                                     ?>
-                                </a>
                             </div>
 
                             <div class="chatIcono" id="chatIcono">
