@@ -56,7 +56,7 @@ function listarNotificaciones($pagina = 1)
     ob_start();
 
     if ($query->have_posts()) {
-        echo '<ul class="notificaciones-lista modal">';
+        echo '<ul>';
         while ($query->have_posts()) {
             $query->the_post();
             $emisor = get_post_meta(get_the_ID(), 'emisor', true);

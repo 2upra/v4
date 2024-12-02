@@ -253,7 +253,7 @@ if (!defined('ABSPATH')) {
                     </div>
                     <? echo renderChat() ?>
                 </div>
-                <div id="notificacionesModal" style="display: none">
+                <div class="notificaciones-lista modal" id="notificacionesModal" style="display: none">
                     <? echo listarNotificaciones() ?>
                 </div>
                 <!-- Modal para editar titulo coleccion -->
