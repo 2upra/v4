@@ -186,13 +186,16 @@ if (!defined('ABSPATH')) {
                         </div>
 
                         <div class="menuArribaLogin">
+
+
                             <div class="prostatus0" id="btnpro">
+
                                 <? echo $GLOBALS['pro']; ?>
                             </div>
 
-                            <div class="chatIcono" id="chatIcono">
+                            <div class="xaxa1 menu-item iconoperfil chatIcono" id="chatIcono">
                                 <a>
-                                <? echo $GLOBALS['chatIcono']; ?>
+                                    <? echo $GLOBALS['chatIcono']; ?>
                                 </a>
                             </div>
                         </div>
