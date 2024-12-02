@@ -38,6 +38,7 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
 
     return $postId;
 }
+
 function listarNotificaciones($usuarioReceptor, $pagina = 1)
 {
     $notificacionesPorPagina = 12;
@@ -97,6 +98,30 @@ function listarNotificaciones($usuarioReceptor, $pagina = 1)
     wp_reset_postdata();
     return ob_get_clean();
 } 
+
+
+add_action('wp_ajax_marcar_notificacion_vista', 'marcarNotificacionVista');
+function marcarNotificacionVista() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'No tienes permiso para realizar esta acción.'], 403);
+    }
+
+    $notificacionId = isset($_POST['notificacionId']) ? intval($_POST['notificacionId']) : 0;
+    
+    if ($notificacionId <= 0 || !get_post($notificacionId)) {
+        wp_send_json_error(['message' => 'El ID de la notificación no es válido.'], 400);
+    }
+
+    if (get_post_type($notificacionId) !== 'notificacion') {
+        wp_send_json_error(['message' => 'El post no es del tipo esperado.'], 400);
+    }
+    $actualizado = update_post_meta($notificacionId, 'visto', 1);
+    if ($actualizado === false) {
+        wp_send_json_error(['message' => 'No se pudo actualizar la meta de la notificación.'], 500);
+    }
+    wp_send_json_success(['message' => 'Notificación marcada como vista.', 'notificacionId' => $notificacionId]);
+}
+
 
 function ajaxCargarNotificaciones()
 {
