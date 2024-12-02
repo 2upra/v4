@@ -65,7 +65,7 @@ function obtenerChats($usuarioId, $pagina = 1, $resultadosPorPagina = 10)
         usort($conversaciones, function ($a, $b) {
             $fechaA = isset($a->ultimoMensaje->fecha) ? strtotime($a->ultimoMensaje->fecha) : 0;
             $fechaB = isset($b->ultimoMensaje->fecha) ? strtotime($b->ultimoMensaje->fecha) : 0;
-            return $fechaB - $fechaA; 
+            return $fechaB - $fechaA;
         });
 
         // Aplicar paginación después de ordenar
@@ -80,7 +80,7 @@ function renderListaChats($conversaciones, $usuarioId)
     ob_start();
 
     if ($conversaciones) {
-    ?>
+?>
         <div class="bloqueConversaciones bloque" id="bloqueConversaciones-chatIcono" style="display: none;">
             <ul class="mensajes">
                 <?php
@@ -101,13 +101,11 @@ function renderListaChats($conversaciones, $usuarioId)
                         } else {
                             $mensajeMostrado = "[Mensaje faltante]";
                         }
-                        $fechaOriginal = $conversacion->ultimoMensaje->fecha;
-                        // Obtener el estado 'leido', asegurando que tenga un valor por defecto
                         $leido = isset($conversacion->ultimoMensaje->leido) ? (int)$conversacion->ultimoMensaje->leido : 0;
                     }
                 ?>
-                    <li class="mensaje <?php echo $leido ? 'leido' : 'no-leido'; ?>" 
-                        data-receptor="<?= esc_attr($receptor); ?>" 
+                    <li class="mensaje <?php echo $leido ? 'leido' : 'no-leido'; ?>"
+                        data-receptor="<?= esc_attr($receptor); ?>"
                         data-conversacion="<?= esc_attr($conversacion->id); ?>"
                         data-leido="<?= esc_attr($leido); ?>">
                         <div class="imagenMensaje">
@@ -126,7 +124,7 @@ function renderListaChats($conversaciones, $usuarioId)
                         </div>
                         <?php if ($leido): ?>
                             <div class="iconoLeido">
-                                ✓ 
+                                ✓
                             </div>
                         <?php endif; ?>
                     </li>
@@ -136,11 +134,15 @@ function renderListaChats($conversaciones, $usuarioId)
     <?php
     } else {
     ?>
-    
-    <?php
+        <div class="bloqueConversaciones bloque" id="bloqueConversaciones-chatIcono" style="display: none;">
+            <p>Aún no tienes mensajes</p>
+        </div>
+        <?
+        ?>
+
+<?php
     }
 
     $htmlGenerado = ob_get_clean();
     return $htmlGenerado;
 }
-
