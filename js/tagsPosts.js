@@ -7,33 +7,23 @@ necesito que funcione sin dañar el resto de cosas
 */
 
 //LA FORMA EN QUE ESTO PROCESA LAS COSA NO DEBE ALTERARSE PORQUE SOPORTA DIFERENTES FORMATOS, SOLO HACERLO MAS FLEXIBLE
-// Reparar JSON con mayor flexibilidad
-function repararJson(jsonString) {
+function parseJson(jsonString) {
     try {
-        // Escapar dobles comillas dentro de cadenas JSON anidadas
-        jsonString = jsonString.replace(/"([^"]+?)":\s*?"({.*?})"/g, function (match, p1, p2) {
-            return `"${p1}":"${p2.replace(/"/g, '\\"')}"`;
-        });
-
-        // Intentar parsear el JSON
         return JSON.parse(jsonString);
     } catch (e) {
-        console.error('Error al parsear el JSON:', e.message, '\nJSON Original:', jsonString);
+        console.error('Error al parsear el JSON:', e.message);
         return null;
     }
 }
 
-// Capitalizar palabras
 function capitalize(word) {
     return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
 }
 
-// Eliminar elementos duplicados de un array
 function removeDuplicates(arr) {
     return [...new Set(arr)];
 }
 
-// Procesar tags de los posts
 function tagsPosts() {
     document.querySelectorAll('p[id-post-algoritmo]').forEach(function (pElement) {
         const postId = pElement.getAttribute('id-post-algoritmo');
@@ -44,70 +34,44 @@ function tagsPosts() {
             return;
         }
 
-        const jsonData = repararJson(pElement.textContent);
+        const jsonText = pElement.textContent.trim();
+        const jsonData = parseJson(jsonText);
         if (!jsonData) {
-            console.error(`No se pudo procesar el JSON para el post ${postId}`);
+            console.error(`Error al parsear el JSON para el post ${postId}`);
             return;
         }
 
         tagsContainer.innerHTML = '';
         let allTags = [];
 
-        // Función auxiliar para agregar tags desde una fuente específica
         const addTags = (source, key) => {
-            if (source?.[key]?.['en']) {
-                allTags = allTags.concat(source[key]['en'].map(capitalize));
-            } else if (source?.[key]) {
-                allTags = allTags.concat(source[key].map(capitalize));
-            }
+            ['es', 'en'].forEach(lang => {
+                if (source?.[key]?.[lang]) {
+                    allTags = allTags.concat(source[key][lang].map(capitalize));
+                }
+            });
         };
 
-        // Detectar si es una estructura nueva o antigua
-        const isNewStructure = !!jsonData.instrumentos_principal?.['es'];
+        // Agregar tags
+        addTags(jsonData, 'tipo_audio');
+        addTags(jsonData, 'instrumentos_posibles');
+        addTags(jsonData, 'genero_posible');
+        addTags(jsonData, 'estado_animo');
+        addTags(jsonData, 'artista_posible');
+        addTags(jsonData, 'tags_posibles');
 
-        // Agregar tags según la estructura
-        addTags(jsonData, 'tipo_audio'); // Tipo de audio (común en ambas estructuras)
-
-        if (isNewStructure) {
-            addTags(jsonData, 'instrumentos_principal');
-        } else {
-            addTags(jsonData, 'Instrumentos posibles');
-        }
-
-        if (isNewStructure) {
-            addTags(jsonData, 'genero_posible');
-        } else {
-            addTags(jsonData, 'Genero posible');
-        }
-
-        // Agregar BPM como categoría
+        // Procesar BPM
         if (jsonData.bpm) {
-            const bpmCategory =
-                jsonData.bpm < 90
-                    ? 'Lento'
-                    : jsonData.bpm < 120
-                    ? 'Moderado'
-                    : jsonData.bpm < 150
-                    ? 'Rápido'
-                    : 'Muy Rápido';
+            const bpmCategory = jsonData.bpm < 90 ? 'Lento' : jsonData.bpm < 120 ? 'Moderado' : jsonData.bpm < 150 ? 'Rápido' : 'Muy Rápido';
             allTags.push(`${bpmCategory} (${jsonData.bpm} BPM)`);
         }
 
-        // Agregar tonalidad (key y scale)
+        // Procesar tonalidad y escala
         if (jsonData.key && jsonData.scale) {
             allTags.push(`${capitalize(jsonData.key)} ${capitalize(jsonData.scale)}`);
         }
 
-        // Categorías restantes que son comunes
-        const remainingCategories = isNewStructure
-            ? ['estado_animo', 'artista_posible', 'tags_posibles']
-            : ['Estado de animo', 'Artista posible', 'Tags posibles'];
-
-        remainingCategories.forEach(category => {
-            addTags(jsonData, category);
-        });
-
-        // Eliminar duplicados y agregar los tags al contenedor
+        // Eliminar duplicados y añadir tags al DOM
         removeDuplicates(allTags).forEach(tag => {
             const tagElement = document.createElement('span');
             tagElement.classList.add('postTag');
@@ -115,8 +79,6 @@ function tagsPosts() {
             tagsContainer.appendChild(tagElement);
         });
     });
-
-    // Limitar la cantidad de tags visibles (si es necesario)
     limitTags();
 }
 
@@ -169,7 +131,6 @@ function limitTags(maxVisible = 5) {
         }
     });
 }
-
 
 document.addEventListener('DOMContentLoaded', function () {
     // Obtener el elemento que contiene el JSON
