@@ -85,8 +85,6 @@ function verificarCamposRs() {
     return verificarCampos;
 }
 
-
-
 async function envioRs() {
     const button = document.getElementById('enviarRs');
 
@@ -119,35 +117,12 @@ async function envioRs() {
         const colab = colabCheckbox.checked ? colabCheckbox.value : 0;
         const music = musicCheckbox.checked ? musicCheckbox.value : 0;
         const uniqueAudioUrls = new Set(); // Para almacenar URLs únicas
-        const uniqueAudioIds = new Set(); 
+        const uniqueAudioIds = new Set();
 
-        const isValidNombre = (nombre) => {
+        const isValidNombre = nombre => {
             return nombre && nombre.trim().length >= 3;
         };
-        
-        // Verificación principal
-        if (music) {
-            // Verificar que existe imagenUrl1 y es válida
-            if (!data.imagenUrl1 || !isValidUrl(data.imagenUrl1)) {
-                alert('Cuando seleccionas "Music", es obligatorio incluir una imagen válida');
-                return false;
-            }
-        
-            // Verificar que todos los nombres de audio tienen al menos 3 caracteres
-            let nombresValidos = true;
-            const nombreInputs = document.querySelectorAll('.nombreAudioRs');
-            nombreInputs.forEach(input => {
-                if (input.value && !isValidNombre(input.value)) {
-                    nombresValidos = false;
-                }
-            });
-        
-            if (!nombresValidos) {
-                alert('Cuando seleccionas "Music", todos los nombres de audio deben tener al menos 3 caracteres');
-                return false;
-            }
-        }
-        
+
         const isValidUrl = url => {
             const requiredPrefix = 'https://2upra.com/wp-content/uploads';
             return url.startsWith(requiredPrefix);
@@ -160,13 +135,12 @@ async function envioRs() {
 
             if (!isValidUrl(audio.audioUrl)) {
                 console.warn(`URL inválida para el audio con ID ${audio.audioId}: ${audio.audioUrl}`);
-                return; 
+                return;
             }
 
             if (!uniqueAudioUrls.has(audio.audioUrl) && !uniqueAudioIds.has(audio.audioId)) {
                 audioData[`audioUrl${audioNumber}`] = audio.audioUrl;
                 audioData[`audioId${audioNumber}`] = audio.audioId;
-
 
                 uniqueAudioUrls.add(audio.audioUrl);
                 uniqueAudioIds.add(audio.audioId);
@@ -177,7 +151,7 @@ async function envioRs() {
                 if (nombreInput) {
                     let nombreRola = nombreInput.value.trim();
 
-                    const MAX_NOMBRE_LENGTH = 100; 
+                    const MAX_NOMBRE_LENGTH = 100;
 
                     if (nombreRola.length > MAX_NOMBRE_LENGTH) {
                         nombreRola = nombreRola.substring(0, MAX_NOMBRE_LENGTH);
@@ -197,7 +171,7 @@ async function envioRs() {
             archivoUrl1: typeof archivoUrl !== 'undefined' ? archivoUrl : null,
             archivoId1: typeof archivoId !== 'undefined' ? archivoId : null,
             ...audioData,
-            ...nombreRolaData, 
+            ...nombreRolaData,
             tags,
             textoNormal,
             descarga,
@@ -206,7 +180,30 @@ async function envioRs() {
             music
         };
 
+        // Verificación de imagenUrl1 y Music
+        if (music) {
+            if (!data.imagenUrl1 || !isValidUrl(data.imagenUrl1)) {
+                alert('Cuando seleccionas "Music", es obligatorio incluir una imagen válida');
+                button.innerText = originalText;
+                button.disabled = false;
+                return; // Asegúrate de detener el flujo si no es válido
+            }
 
+            // Verificar que todos los nombres de audio tienen al menos 3 caracteres
+            let nombresValidos = true;
+            nombreInputs.forEach(input => {
+                if (input.value && !isValidNombre(input.value)) {
+                    nombresValidos = false;
+                }
+            });
+
+            if (!nombresValidos) {
+                alert('Cuando seleccionas "Music", todos los nombres de audio deben tener al menos 3 caracteres');
+                button.innerText = originalText;
+                button.disabled = false;
+                return;
+            }
+        }
 
         try {
             const response = await enviarAjax('subidaRs', data);
@@ -631,7 +628,6 @@ window.inicializarWaveform = function (containerId, audioSrc) {
 };
 
 async function selectorformtipo() {
-
     const descargacheck = document.getElementById('descargacheck');
     const musiccheck = document.getElementById('musiccheck');
     const exclusivocheck = document.getElementById('exclusivocheck');
@@ -658,7 +654,7 @@ async function selectorformtipo() {
 
             // Si se marca 'musiccheck', desmarca los demás checkboxes y pide confirmación
             if (event.target.id === 'musiccheck' && event.target.checked) {
-                const confirmacion = await window.confirm("Vas a publicar música en nuestra plataforma y en otras plataformas de stream.");
+                const confirmacion = await window.confirm('Vas a publicar música en nuestra plataforma y en otras plataformas de stream.');
                 if (!confirmacion) {
                     event.target.checked = false;
                     return;
@@ -667,13 +663,13 @@ async function selectorformtipo() {
                 descargacheck.checked = false;
                 exclusivocheck.checked = false;
                 colabcheck.checked = false;
-                resetStyles(); 
+                resetStyles();
             }
 
             // Si se marca 'exclusivocheck', desmarca 'colabcheck' y 'musiccheck'
             if (event.target.id === 'exclusivocheck' && event.target.checked) {
-                colabcheck.checked = false; 
-                musiccheck.checked = false; 
+                colabcheck.checked = false;
+                musiccheck.checked = false;
                 const colabLabel = colabcheck.closest('label');
                 colabLabel.style.color = '#6b6b6b';
                 colabLabel.style.background = '';
@@ -682,18 +678,18 @@ async function selectorformtipo() {
 
             // Si se marca 'colabcheck', desmarca 'exclusivocheck' y 'musiccheck'
             if (event.target.id === 'colabcheck' && event.target.checked) {
-                exclusivocheck.checked = false; 
-                musiccheck.checked = false; 
+                exclusivocheck.checked = false;
+                musiccheck.checked = false;
                 const exclusivocLabel = exclusivocheck.closest('label');
                 exclusivocLabel.style.color = '#6b6b6b';
                 exclusivocLabel.style.background = '';
-                resetStyles(); 
+                resetStyles();
             }
 
             // Si se marca 'descargacheck', desmarca 'musiccheck'
             if (event.target.id === 'descargacheck' && event.target.checked) {
-                musiccheck.checked = false; 
-                resetStyles(); 
+                musiccheck.checked = false;
+                resetStyles();
             }
 
             // Estilo al checkbox seleccionado
@@ -720,4 +716,3 @@ async function selectorformtipo() {
         });
     }
 }
-
