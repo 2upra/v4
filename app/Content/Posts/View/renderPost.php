@@ -193,18 +193,27 @@ function renderPostControls($post_id, $colab)
 }
 
 
-
 function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $audio_id_lite)
 {
-?>
+    ?>
     <div class="NERWFB">
+        <!-- Contenedor principal -->
         <div class="YWBIBG">
+            <!-- Mostrar la portada si existe -->
+            <? if (has_post_thumbnail($post_id)) : ?>
+                <div class="post-thumbnail">
+                    <? echo get_the_post_thumbnail($post_id, 'full'); ?>
+                </div>
+            <? endif; ?>
+
+            <!-- Contenido del post -->
             <div class="thePostContet" data-post-id="<? echo esc_html($post_id); ?>">
                 <? the_content(); ?>
             </div>
+
+            <!-- Información adicional (bpm, escala, nota) -->
             <div>
                 <?
-                // Información bpm - escala - nota 
                 $key_info = $key ? $key : null;
                 $scale_info = $scale ? $scale : null;
                 $bpm_info = $bpm ? round($bpm) : null;
@@ -216,17 +225,22 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
                 ?>
             </div>
         </div>
-        <?
-        if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])):
-        ?>
+
+        <!-- Verificar filtro y manejar medios -->
+        <? if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])) : ?>
             <div class="ZQHOQY">
-                <? wave($audio_url, $audio_id_lite, $post_id); ?>
+                <!-- Verificar si existe audio_id_lite antes de mostrar el audio -->
+                <? if (!empty($audio_id_lite)) : ?>
+                    <? wave($audio_url, $audio_id_lite, $post_id); ?>
+                <? endif; ?>
             </div>
-        <? else: ?>
+        <? else : ?>
             <div class="KLYJBY">
                 <? echo audioPost($post_id); ?>
             </div>
         <? endif; ?>
+
+        <!-- Contenedor de etiquetas y datos adicionales -->
         <div class="FBKMJD">
             <div class="UKVPJI">
                 <div class="tags-container" id="tags-<? echo get_the_ID(); ?>"></div>
@@ -237,7 +251,7 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
             </div>
         </div>
     </div>
-<?
+    <?
 }
 
 
