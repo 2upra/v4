@@ -32,6 +32,80 @@ function sonHashesSimilares($hash1, $hash2, $umbral = HASH_SIMILARITY_THRESHOLD)
     return $similitud >= $umbral;
 }
 
+/*
+async function generateServerAudioHash(file) {
+    logHash("Solicitando hash de audio al servidor:", file.name);
+
+    const formData = new FormData();
+    formData.append('action', 'recalcularHash');
+    formData.append('audio_file', file);
+
+    try {
+        const response = await fetch(ajax_url, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error('Error en la respuesta del servidor');
+        }
+
+        const result = await response.json();
+        
+        if (result.success && result.data.hash) {
+            logHash("Hash de audio recibido del servidor exitosamente:", result.data.hash);
+            return result.data.hash;
+        } else {
+            throw new Error(result.data.message || 'Error generando hash de audio');
+        }
+    } catch (error) {
+        logHash("Error generando hash de audio en el servidor, usando hash local:", error.message);
+
+        // En caso de error, usar el hash normal como fallback
+        try {
+            logHash("Generando hash local como fallback para archivo de audio:", file.name);
+            const buffer = await file.arrayBuffer();
+            const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            logHash("Hash local generado exitosamente como fallback:", hash);
+            return hash;
+        } catch (localError) {
+            logHash("Error generando hash local como fallback:", localError.message);
+            throw localError;
+        }
+    }
+}
+*/
+
+function handle_recalcular_hash() {
+    try {
+        if (!isset($_FILES['audio_file']) || $_FILES['audio_file']['error'] !== UPLOAD_ERR_OK) {
+            wp_send_json_error(['message' => 'No se pudo subir el archivo o está corrupto.']);
+        }
+        $audio_file = $_FILES['audio_file'];
+        $allowed_mime_types = ['audio/mpeg', 'audio/wav']; 
+        if (!in_array($audio_file['type'], $allowed_mime_types)) {
+            wp_send_json_error(['message' => 'Tipo de archivo no permitido.']);
+        }
+        $upload_dir = wp_upload_dir();
+        $temp_file_path = $upload_dir['path'] . '/' . basename($audio_file['name']);
+        if (!move_uploaded_file($audio_file['tmp_name'], $temp_file_path)) {
+            wp_send_json_error(['message' => 'Error al mover el archivo subido.']);
+        }
+        $hash = recalcularHash($temp_file_path);
+        if ($hash === false) {
+            wp_send_json_error(['message' => 'Error al generar el hash del archivo.']);
+        }
+        unlink($temp_file_path);
+        wp_send_json_success(['hash' => $hash]);
+
+    } catch (Exception $e) {
+        wp_send_json_error(['message' => $e->getMessage()]);
+    }
+}
+add_action('wp_ajax_recalcularHash', 'handle_recalcular_hash');
+
 function recalcularHash($audio_file_path)
 {
     try {
@@ -49,11 +123,9 @@ function recalcularHash($audio_file_path)
 
         if (!is_readable($file_path)) {
             $output = shell_exec('sudo /var/www/wordpress/wp-content/themes/2upra3v/app/Commands/permisos.sh 2>&1');
-            //guardarLog("Salida de permisos.sh: " . $output);
             throw new Exception("No hay permisos de lectura para el archivo: " . $file_path);
         }
 
-        // Verificar script wrapper
         if (!file_exists(WRAPPER_SCRIPT_PATH)) {
             throw new Exception("Script wrapper no encontrado en: " . WRAPPER_SCRIPT_PATH);
         }
@@ -95,12 +167,9 @@ function recalcularHash($audio_file_path)
             throw new Exception("Hash inválido generado: " . $output);
         }
 
-        ////guardarLog("Hash calculado correctamente: " . $hash);
         return $hash;
     } catch (Exception $e) {
         $output = shell_exec('sudo /var/www/wordpress/wp-content/themes/2upra3v/app/Commands/permisos.sh 2>&1');
-        //guardarLog("Salida de permisos.sh: " . $output);
-        ////guardarLog("Error en recalcularHash: " . $e->getMessage());
         return false;
     }
 }

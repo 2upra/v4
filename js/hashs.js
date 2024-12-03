@@ -31,12 +31,10 @@ function logHash(message, detail = '') {
 window.generateFileHash = async function(file) {
     logHash("Iniciando generación de hash para el archivo:", file.name);
 
-    // Si es un archivo de audio, enviar al servidor para generar el hash
     if (file.type.startsWith('audio/')) {
         return await generateServerAudioHash(file);
     }
 
-    // Para archivos no-audio, usar el hash normal
     try {
         logHash("Generando hash localmente para archivo no-audio:", file.name);
         const buffer = await file.arrayBuffer();
@@ -55,7 +53,7 @@ async function generateServerAudioHash(file) {
     logHash("Solicitando hash de audio al servidor:", file.name);
 
     const formData = new FormData();
-    formData.append('action', 'generate_audio_hash');
+    formData.append('action', 'recalcularHash');
     formData.append('audio_file', file);
 
     try {
