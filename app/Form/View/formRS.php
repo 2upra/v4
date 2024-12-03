@@ -24,7 +24,20 @@ function formRs()
             <textarea id="postContent" name="post_content" rows="2" required placeholder="Escribe aquí" style="display: none;"></textarea>
         </div>
 
-        <div class="previewsForm NGEESM RS">
+        <div class="DRHMDE">
+            <label class="custom-checkbox">
+                <input type="checkbox" id="fancheck" name="fancheck" value="1">
+                <span class="checkmark"></span>
+                Area de fans
+            </label>
+            <label class="custom-checkbox">
+                <input type="checkbox" id="artistacheck" name="artistacheck" value="1">
+                <span class="checkmark"></span>
+                Area de artistas
+            </label>
+        </div>
+
+        <div class="previewsForm NGEESM RS ppp3" style="display: none;">
             <div class="previewAreaArchivos" id="previewImagen" style="display: none;">
                 <label></label>
             </div>
@@ -36,7 +49,7 @@ function formRs()
             </div>
         </div>
 
-        <div class="bloque flex-row"" id="opciones" style="display: none">
+        <div class="bloque flex-row"" id=" opciones" style="display: none">
             <p>Opciones de post</p>
             <div class="flex flex-row gap-2">
                 <label class="custom-checkbox">

@@ -37,12 +37,13 @@ function iniciarRS() {
         subidaAudioEnProgreso = false;
         subidaImagenEnProgreso = false;
         subidaArchivoEnProgreso = false;
-        selectorformtipo();
-        selectorFanArtista();
+
         subidaRs();
         envioRs();
         placeholderRs();
         TagEnTexto();
+        selectorformtipo();
+        selectorFanArtista();
     } else {
         logRS('formRs no existe');
     }
@@ -226,7 +227,7 @@ async function envioRs() {
 }
 
 function subidaRs() {
-    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs', 'previewsForm'];
+    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs', 'ppp3'];
     const elements = ids.reduce((acc, id) => {
         const el = document.getElementById(id);
         if (!el) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
@@ -241,7 +242,7 @@ function subidaRs() {
         return;
     }
 
-    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs, previewsForm} = elements;
+    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs, ppp3,} = elements;
 
     const inicialSubida = event => {
         event.preventDefault();
@@ -288,7 +289,7 @@ function subidaRs() {
         try {
             alert(`Audio subido: ${file.name}`);
             previewAudio.style.display = 'block';
-            previewsForm.style.display = 'flex';
+            ppp3.style.display = 'flex';
             opciones.style.display = 'flex';
             const tempId = `temp-${Date.now()}`;
             const progressBarId = waveAudio(file, tempId);
@@ -375,7 +376,7 @@ function subidaRs() {
 
         if (audiosData.length === 0) {
             previewAudio.style.display = 'none';
-            previewsForm.style.display = 'none';
+            ppp3.style.display = 'none';
         }
 
         actualizarCamposNombre();
@@ -545,10 +546,10 @@ function limpiarCamposRs() {
 
     // Ocultar y limpiar los contenidos de las áreas de previsualización
     const previewAudio = document.getElementById('previewAudio');
-    const previewsForm = document.getElementById('previewsForm');
+    const ppp3 = document.getElementById('ppp3');
     if (previewAudio) {
         previewAudio.style.display = 'none';
-        previewsForm.style.display = 'none';
+        ppp3.style.display = 'none';
         const labelAudio = previewAudio.querySelector('label');
         if (labelAudio) labelAudio.textContent = '';
     }

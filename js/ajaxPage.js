@@ -12,7 +12,6 @@
         'inicializarWaveforms',
         'inicializarReproductorAudio',
         'minimizarform',
-        'selectorformtipo',
         'ajax_submit',
         'borrarcomentario',
         'colab',
