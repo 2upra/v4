@@ -114,7 +114,11 @@ async function envioRs() {
         const descargaCheckbox = document.getElementById('descargacheck');
         const exclusivoCheckbox = document.getElementById('exclusivocheck');
         const colabCheckbox = document.getElementById('colabcheck');
-        const musicCheckbox = document.getElementById('musiccheck');
+        const fancheck = document.getElementById('fancheck');
+        const artistacheck = document.getElementById('artistacheck');
+        
+        const fan = fancheck.checked ? fancheck.value : 0;
+        const artista = artistacheck.checked ? artistacheck.value : 0;
         const descarga = descargaCheckbox.checked ? descargaCheckbox.value : 0;
         const exclusivo = exclusivoCheckbox.checked ? exclusivoCheckbox.value : 0;
         const colab = colabCheckbox.checked ? colabCheckbox.value : 0;
@@ -178,6 +182,8 @@ async function envioRs() {
             tags,
             textoNormal,
             descarga,
+            fan,
+            artista,
             exclusivo,
             colab,
             music

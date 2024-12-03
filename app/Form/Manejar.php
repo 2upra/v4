@@ -37,7 +37,10 @@ function actualizarMetaDatos($postId)
         'paraColab'    => 'colab',
         'esExclusivo'  => 'exclusivo',
         'paraDescarga' => 'descarga',
-        'rola'         => 'music'
+        'rola'         => 'music',
+        'fan'          => 'fan',
+        'artista'      => 'artista'
+        
     ];
 
     foreach ($meta_fields as $meta_key => $post_key) {
