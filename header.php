@@ -186,19 +186,28 @@ if (!defined('ABSPATH')) {
                         </div>
 
                         <div class="menuArribaLogin">
+
+                            <div class="menuarribamovil">
+                                <div class="menu-item botonConfig">
+                                    <a>
+                                        <? echo $GLOBALS['configicono']; ?>
+                                    </a>
+                                </div>
+
+                                <div class="xaxa1 menu-item">
+                                    <a>
+                                        <? echo iconoNotificaciones() ?>
+                                    </a>
+                                </div>
+                            </div>
                             <div class="prostatus0" id="btnpro">
 
-                                    <? echo $GLOBALS['pro']; ?>
-                                    <?
-                                    // Obtener el ID del usuario actual
-                                    $user_id = get_current_user_id();
-
-                                    // Obtener la cantidad de pinkys desde la meta del usuario
-                                    $pinkys = (int) get_user_meta($user_id, 'pinky', true);
-
-                                    // Mostrar "99+" si los pinkys son más de 100, de lo contrario mostrar el número exacto
-                                    echo ($pinkys > 100) ? '99+' : $pinkys;
-                                    ?>
+                                <? echo $GLOBALS['pro']; ?>
+                                <?
+                                $user_id = get_current_user_id();
+                                $pinkys = (int) get_user_meta($user_id, 'pinky', true);
+                                echo ($pinkys > 100) ? '99+' : $pinkys;
+                                ?>
                             </div>
 
                             <div class="chatIcono" id="chatIcono">
@@ -333,7 +342,6 @@ if (!defined('ABSPATH')) {
                     <div class="A1806242">
                         <button><a href="https://2upra.com/perfil/">Mi perfil</a></button>
                         <button class="reporte">Reportar un error</button>
-                        <button class="botonConfig">Configuración</button>
                         <button><a href="https://2upra.com/colabs/">Mis colabs</a></button>
                         <button class="no-ajax"><a class="no-ajax" href="<?php echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>
                     </div>
