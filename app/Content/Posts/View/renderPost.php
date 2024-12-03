@@ -222,44 +222,31 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
 {
 ?>
     <div class="NERWFB">
-        <!-- Contenedor principal -->
         <div class="YWBIBG">
-            <!-- Renderizado de la imagen de portada o imagen temporal fuera de NERWFB -->
             <div class="MRPDOR">
-                <? if (!empty($audio_id_lite)) : // Solo renderizar si hay audio 
-                ?>
+                <? if (!empty($audio_id_lite)) : ?>
                     <? if (has_post_thumbnail($post_id)) : ?>
-                        <!-- Mostrar imagen de portada -->
                         <div class="post-thumbnail">
                             <?
-                            // Obtener la URL de la imagen de portada
                             $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
-                            // Optimizar la imagen usando la función img()
                             $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
                             ?>
-                            <!-- Mostrar imagen optimizada -->
                             <img src="<? echo esc_url($optimized_thumbnail_url); ?>" alt="<? echo esc_attr(get_the_title($post_id)); ?>">
                         </div>
                     <? else : ?>
-                        <!-- Obtener imagen temporal desde los metadatos -->
                         <? $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true); ?>
                         <? if ($imagen_temporal_id) : ?>
-                            <!-- Renderizar imagen temporal -->
                             <div class="temporal-thumbnail">
                                 <?
-                                // Obtener la URL de la imagen temporal
                                 $temporal_image_url = wp_get_attachment_url($imagen_temporal_id);
-                                // Optimizar la imagen usando la función img()
                                 $optimized_temporal_image_url = img($temporal_image_url, 40, 'all');
                                 ?>
-                                <!-- Mostrar imagen temporal optimizada -->
                                 <img src="<? echo esc_url($optimized_temporal_image_url); ?>" alt="Imagen temporal">
                             </div>
                         <? endif; ?>
                     <? endif; ?>
                 <? endif; ?>
             </div>
-            <!-- Contenido del post -->
             <div class="OASDEF">
                 <div class="thePostContet" data-post-id="<? echo esc_html($post_id); ?>">
                     <? the_content(); ?>
@@ -269,8 +256,6 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
                         </div>
                     <? endif; ?>
                 </div>
-
-                <!-- Información adicional (bpm, escala, nota) -->
                 <div>
                     <?
                     $key_info = $key ? $key : null;
@@ -284,11 +269,8 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
                     ?>
                 </div>
             </div>
-
-            <!-- Verificar filtro y manejar medios -->
             <? if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])) : ?>
                 <div class="ZQHOQY">
-                    <!-- Verificar si existe audio_id_lite antes de mostrar el audio -->
                     <? if (!empty($audio_id_lite)) : ?>
                         <? wave($audio_url, $audio_id_lite, $post_id); ?>
                     <? endif; ?>
@@ -299,18 +281,15 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
                 </div>
             <? endif; ?>
         </div>
-        <!-- Contenedor de etiquetas y datos adicionales -->
         <div class="FBKMJD">
             <div class="UKVPJI">
                 <div class="tags-container" id="tags-<? echo get_the_ID(); ?>"></div>
-
                 <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;">
                     <? echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
                 </p>
             </div>
         </div>
     </div>
-
 <?
 }
 
