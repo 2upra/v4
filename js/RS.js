@@ -226,7 +226,7 @@ async function envioRs() {
 }
 
 function subidaRs() {
-    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs'];
+    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs', 'previewsForm'];
     const elements = ids.reduce((acc, id) => {
         const el = document.getElementById(id);
         if (!el) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
@@ -241,7 +241,7 @@ function subidaRs() {
         return;
     }
 
-    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs} = elements;
+    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs, previewsForm} = elements;
 
     const inicialSubida = event => {
         event.preventDefault();
@@ -268,7 +268,6 @@ function subidaRs() {
 
     // Obtén la referencia al checkbox de música
     const musicCheckbox = document.getElementById('musiccheck');
-
     // Función para actualizar la visibilidad de los campos de nombre
     const actualizarCamposNombre = () => {
         const cantidadAudios = audiosData.length;
@@ -289,14 +288,13 @@ function subidaRs() {
         try {
             alert(`Audio subido: ${file.name}`);
             previewAudio.style.display = 'block';
+            previewsForm.style.display = 'flex';
             opciones.style.display = 'flex';
             const tempId = `temp-${Date.now()}`;
             const progressBarId = waveAudio(file, tempId);
             audiosData.push({tempId, audioUrl: null, audioId: null});
-
             // Actualiza la dirección de flexión después de agregar el audio
             actualizarFlexDirection();
-
             const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
             const index = audiosData.findIndex(audio => audio.tempId === tempId);
             if (index !== -1) {
@@ -310,7 +308,6 @@ function subidaRs() {
             if (audiosData.length > 30) {
                 alert('Ya has subido el límite máximo de 30 audios.');
             }
-
             // Actualiza los campos de nombre después de subir el audio
             actualizarCamposNombre();
         } catch (error) {
@@ -378,6 +375,7 @@ function subidaRs() {
 
         if (audiosData.length === 0) {
             previewAudio.style.display = 'none';
+            previewsForm.style.display = 'none';
         }
 
         actualizarCamposNombre();
@@ -547,8 +545,10 @@ function limpiarCamposRs() {
 
     // Ocultar y limpiar los contenidos de las áreas de previsualización
     const previewAudio = document.getElementById('previewAudio');
+    const previewsForm = document.getElementById('previewsForm');
     if (previewAudio) {
         previewAudio.style.display = 'none';
+        previewsForm.style.display = 'none';
         const labelAudio = previewAudio.querySelector('label');
         if (labelAudio) labelAudio.textContent = '';
     }
@@ -595,7 +595,6 @@ function limpiarCamposRs() {
 
 window.inicializarWaveform = function (containerId, audioSrc) {
     const container = document.getElementById(containerId);
-
     if (container && audioSrc) {
         const options = {
             container: container,
@@ -606,16 +605,12 @@ window.inicializarWaveform = function (containerId, audioSrc) {
             barWidth: 2,
             responsive: true
         };
-
         // Crear instancia de WaveSurfer
         let wavesurfer = WaveSurfer.create(options);
-
         // Almacenar la instancia en waveSurferInstances
         waveSurferInstances[containerId] = wavesurfer;
-
         wavesurfer.load(audioSrc);
         console.log(`Cargando el archivo de audio: ${audioSrc}`);
-
         wavesurfer.on('ready', function () {
             console.log('Audio listo. Forma de onda generada.');
         });
@@ -665,7 +660,6 @@ async function selectorformtipo() {
                     event.target.checked = false;
                     return;
                 }
-
                 descargacheck.checked = false;
                 exclusivocheck.checked = false;
                 colabcheck.checked = false;
