@@ -248,9 +248,9 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
                 <? endif; ?>
             </div>
             <div class="OASDEF">
-                <div class="thePostContet" data-post-id="<? echo esc_html($post_id); ?>">
+                <div class="thePostContet" data-post-id="<? echo esc_attr($post_id); ?>">
                     <? the_content(); ?>
-                    <? if (has_post_thumbnail($post_id)) : ?>
+                    <? if (has_post_thumbnail($post_id) && empty($audio_id_lite)) : ?>
                         <div class="post-thumbnail">
                             <? echo get_the_post_thumbnail($post_id, 'full'); ?>
                         </div>
@@ -284,8 +284,8 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
         </div>
         <div class="FBKMJD">
             <div class="UKVPJI">
-                <div class="tags-container" id="tags-<? echo get_the_ID(); ?>"></div>
-                <p id-post-algoritmo="<? echo get_the_ID(); ?>" style="display:none;">
+                <div class="tags-container" id="tags-<? echo esc_attr(get_the_ID()); ?>"></div>
+                <p id-post-algoritmo="<? echo esc_attr(get_the_ID()); ?>" style="display:none;">
                     <? echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
                 </p>
             </div>
