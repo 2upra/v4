@@ -333,7 +333,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         $is_admin = current_user_can('administrator');
 
         if (!$is_authenticated) {
-            //error_log("[configuracionQueryArgs] Advertencia: Usuario no autenticado, utilizando FALLBACK_USER_ID");
+            // error_log("[configuracionQueryArgs] Advertencia: Usuario no autenticado, utilizando FALLBACK_USER_ID");
             $current_user_id = $FALLBACK_USER_ID;
         }
 
@@ -346,13 +346,21 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
         }
 
+        // Construcción inicial de query args
         $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
 
-        if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
-            $query_args = aplicarFiltrosUsuario($query_args, $current_user_id, );
-        }
+        // Si $user_id no es null, simplemente ordenamos por fecha (más reciente al más viejo)
+        if (!is_null($user_id)) {
+            $query_args['orderby'] = 'date';
+            $query_args['order'] = 'DESC';
+        } else {
+            // Aplicar filtros cuando $user_id es null
+            if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
+                $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+            }
 
-        $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
+            $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
+        }
 
         return $query_args;
     } catch (Exception $e) {
@@ -360,7 +368,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         return false;
     }
 }
-
 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
 {
