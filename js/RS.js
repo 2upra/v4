@@ -226,7 +226,7 @@ async function envioRs() {
 }
 
 function subidaRs() {
-    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs', 'previewsForm'];
+    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs'];
     const elements = ids.reduce((acc, id) => {
         const el = document.getElementById(id);
         if (!el) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
@@ -241,7 +241,7 @@ function subidaRs() {
         return;
     }
 
-    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs, previewsForm} = elements;
+    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs} = elements;
 
     const inicialSubida = event => {
         event.preventDefault();
@@ -289,7 +289,6 @@ function subidaRs() {
         try {
             alert(`Audio subido: ${file.name}`);
             previewAudio.style.display = 'block';
-            previewsForm.style.display = 'flex';
             opciones.style.display = 'flex';
             const tempId = `temp-${Date.now()}`;
             const progressBarId = waveAudio(file, tempId);
@@ -379,7 +378,6 @@ function subidaRs() {
 
         if (audiosData.length === 0) {
             previewAudio.style.display = 'none';
-            previewsForm.style.display = 'none';
         }
 
         actualizarCamposNombre();
@@ -549,10 +547,8 @@ function limpiarCamposRs() {
 
     // Ocultar y limpiar los contenidos de las áreas de previsualización
     const previewAudio = document.getElementById('previewAudio');
-    const previewsForm = document.getElementById('previewsForm');
     if (previewAudio) {
         previewAudio.style.display = 'none';
-        previewsForm.style.display = 'none';
         const labelAudio = previewAudio.querySelector('label');
         if (labelAudio) labelAudio.textContent = '';
     }
