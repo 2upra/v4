@@ -37,7 +37,7 @@ function formRs()
             </label>
         </div>
 
-        <div class="previewsForm NGEESM RS" style="display: none;">
+        <div class="previewsForm NGEESM RS">
             <div class="previewAreaArchivos" id="previewImagen" style="display: none;">
                 <label></label>
             </div>
