@@ -661,8 +661,7 @@ async function selectorformtipo() {
         if (event.target.matches('.custom-checkbox input[type="checkbox"]')) {
             const checkedCheckboxes = document.querySelectorAll('.custom-checkbox input[type="checkbox"]:checked');
 
-            // Si hay más de 2 checkboxes seleccionados (excluyendo fancheck y artistacheck), desmarca el que acaba de ser seleccionado
-            const nonFanArtistChecked = Array.from(checkedCheckboxes).filter(checkbox => checkbox.id !== 'fancheck' && checkbox.id !== 'artistacheck');
+            const nonFanArtistChecked = Array.from(checkedCheckboxes).filter(checkbox => checkbox.id !== 'fancheck' && checkbox.id !== 'artistacheck' && checkbox.id !== 'artistaTipoCheck' && checkbox.id !== 'fanTipoCheck');
             if (nonFanArtistChecked.length > 2) {
                 event.target.checked = false;
                 alert('Solo puedes seleccionar un máximo de 2 opciones.');

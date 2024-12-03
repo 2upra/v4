@@ -3,6 +3,7 @@ function IniciadoresConfigPerfil() {
     cambiarNombre();
     cambiarDescripcion();
     cambiarEnlace();
+    selectorFanArtistaTipo();
 }
 
 function SubidaImagenPerfil() {
@@ -269,3 +270,92 @@ function cambiarEnlace() {
         linkInput.placeholder = 'Ingresa un enlace (opcional)';
     }
 }
+
+function selectorFanArtistaTipo() {
+    const fancheck = document.getElementById('fanTipoCheck');
+    const artistacheck = document.getElementById('artistaTipoCheck');
+
+    // Verifica si los elementos necesarios existen; si no, retorna
+    if (!fancheck || !artistacheck) return;
+
+    let timeoutId = null; // Variable para rastrear el temporizador
+
+    // Función para actualizar estilos
+    function updateStyles(checkbox) {
+        const label = checkbox.closest('label');
+        if (checkbox.checked) {
+            label.style.color = '#ffffff';
+            label.style.background = '#131313';
+        } else {
+            label.style.color = '#6b6b6b';
+            label.style.background = '';
+        }
+    }
+
+    // Función para guardar el tipo de usuario en el servidor
+    function guardarTipoUsuario(tipoUsuario) {
+        // Realizamos una solicitud AJAX a través de fetch
+        fetch(ajaxurl, { // 'ajaxurl' debe estar definido en tu entorno de WordPress
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                action: 'guardarTipoUsuario', // Acción definida en el backend
+                tipoUsuario: tipoUsuario,
+            }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    console.log('Tipo de usuario guardado correctamente:', tipoUsuario);
+                } else {
+                    console.error('Error al guardar tipo de usuario:', data.data);
+                }
+            })
+            .catch((error) => {
+                console.error('Error en la solicitud AJAX:', error);
+            });
+    }
+
+    // Función para manejar el cambio y activar el temporizador
+    function handleChange() {
+        // Cancelar cualquier temporizador anterior
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+        }
+
+        // Determinar el tipo de usuario seleccionado
+        const tipoUsuario = fancheck.checked ? 'Fan' : artistacheck.checked ? 'Artista' : null;
+
+        // Si hay un tipo de usuario seleccionado, iniciar el temporizador
+        if (tipoUsuario) {
+            timeoutId = setTimeout(() => {
+                guardarTipoUsuario(tipoUsuario);
+            }, 3000); // Espera de 3 segundos
+        }
+    }
+
+    // Listener para 'fancheck'
+    fancheck.addEventListener('change', function () {
+        if (fancheck.checked) {
+            artistacheck.checked = false;
+            updateStyles(artistacheck);
+        }
+        updateStyles(fancheck);
+        handleChange(); // Llama al manejador para iniciar el temporizador
+    });
+
+    // Listener para 'artistacheck'
+    artistacheck.addEventListener('change', function () {
+        if (artistacheck.checked) {
+            fancheck.checked = false;
+            updateStyles(fancheck);
+        }
+        updateStyles(artistacheck);
+        handleChange(); // Llama al manejador para iniciar el temporizador
+    });
+}
+
+// Llama a la función para activarla
+selectorFanArtistaTipo();

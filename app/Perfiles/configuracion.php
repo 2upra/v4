@@ -7,11 +7,12 @@ function config()
     $user_name = $current_user->display_name;
     $descripcion = get_user_meta($user_id, 'profile_description', true);
     $linkUser = get_user_meta($user_id, 'user_link', true);
-    ob_start();
+    $tipoUsuario = get_user_meta($user_id, 'tipoUsuario', true); // Obtenemos el tipo de usuario del meta
 
+    ob_start();
 ?>
 
-    <div class="LEDDCN modal" id="modalConfig" style="display: none;"> 
+    <div class="LEDDCN modal" id="modalConfig" style="display: none;">
         <p class="ONDNYU">Configuración de Perfil</p>
 
         <form class="PVSHOT">
@@ -27,28 +28,43 @@ function config()
             <!-- Cambiar nombre de usuario -->
             <div class="PTORKC">
                 <label for="username">Nombre de Usuario:</label>
-                <input type="text" id="username" name="username" value="<? echo esc_attr($user_name); ?>">
+                <input type="text" id="username" name="username" value="<?php echo esc_attr($user_name); ?>">
             </div>
 
             <!-- Cambiar descripción -->
             <div class="PTORKC">
                 <label for="description">Descripción:</label>
-                <textarea id="description" name="description" rows="2"><? echo esc_attr($descripcion); ?></textarea>
+                <textarea id="description" name="description" rows="2"><?php echo esc_attr($descripcion); ?></textarea>
             </div>
 
             <!-- Agregar un enlace -->
             <div class="PTORKC">
                 <label for="link">Enlace:</label>
-                <input type="url" id="link" name="link" placeholder="Ingresa un enlace (opcional)" value="<? echo esc_attr($linkUser); ?>">
+                <input type="url" id="link" name="link" placeholder="Ingresa un enlace (opcional)" value="<?php echo esc_attr($linkUser); ?>">
+            </div>
+
+            <!-- Tipo de usuario -->
+            <div class="PTORKC ADGOR3">
+                <label for="typeUser">Tipo de usuario:</label>
+                <div class="DRHMDE">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" id="fanTipoCheck" name="fanTipoCheck" value="1" <?php echo $tipoUsuario === 'Fan' ? 'checked' : ''; ?>>
+                        <span class="checkmark"></span>
+                        Fan
+                    </label>
+                    <label class="custom-checkbox">
+                        <input type="checkbox" id="artistaTipoCheck" name="artistaTipoCheck" value="1" <?php echo $tipoUsuario === 'Artista' ? 'checked' : ''; ?>>
+                        <span class="checkmark"></span>
+                        Artista
+                    </label>
+                </div>
             </div>
 
         </form>
     </div>
-<?
-
+<?php
     return ob_get_clean();
 }
-
 
 function cambiar_imagen_perfil()
 {
