@@ -187,19 +187,6 @@ if (!defined('ABSPATH')) {
 
                         <div class="menuArribaLogin">
 
-                            <div class="menuarribamovil">
-                                <div class="menu-item botonConfig">
-                                    <a>
-                                        <? echo $GLOBALS['configicono']; ?>
-                                    </a>
-                                </div>
-
-                                <div class="xaxa1 menu-item">
-                                    <a>
-                                        <? echo iconoNotificaciones() ?>
-                                    </a>
-                                </div>
-                            </div>
                             <div class="prostatus0" id="btnpro">
 
                                 <? echo $GLOBALS['pro']; ?>
@@ -209,12 +196,31 @@ if (!defined('ABSPATH')) {
                                 echo ($pinkys > 100) ? '99+' : $pinkys;
                                 ?>
                             </div>
-
                             <div class="chatIcono" id="chatIcono">
                                 <a>
                                     <? echo $GLOBALS['chatIcono']; ?>
                                 </a>
                             </div>
+
+                            <div class="menuarribamovil">
+
+
+                                <div class="xaxa1 menu-item">
+                                    <a>
+                                        <? echo iconoNotificaciones() ?>
+                                    </a>
+                                </div>
+
+                                <div class="menu-item botonConfig">
+                                    <a>
+                                        <? echo $GLOBALS['configicono']; ?>
+                                    </a>
+                                </div>
+                                
+                            </div>
+
+
+
                         </div>
 
                         <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil fotoperfilsub" id="fotoperfilsub">
