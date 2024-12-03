@@ -54,20 +54,27 @@
     }
 
     function establecerIdUsuarioDesdeInput() {
-        const inputPaginaActual = document.getElementById('pagina_actual');
-        if (inputPaginaActual?.value.toLowerCase() === 'sello') {
-            const inputIdUsuario = document.getElementById('user_id');
-            if (inputIdUsuario) {
-                const idUsuario = inputIdUsuario.value;
+        // Busca el div que contiene el atributo `data-iduser`
+        const divConIdUsuario = document.querySelector('div.X522YA.FRRVBB[data-iduser]');
+        
+        if (divConIdUsuario) {
+            // Extrae el valor del atributo `data-iduser`
+            const idUsuario = divConIdUsuario.getAttribute('data-iduser');
+            
+            if (idUsuario) {
+                // Busca el contenedor de perfil y establece el atributo `data-author-id`
                 const contenedorPerfil = document.querySelector('.custom-uprofile-container');
                 contenedorPerfil?.setAttribute('data-author-id', idUsuario);
+                
+                // Guarda el ID de usuario en una variable global (opcional)
                 window.idUsuarioActual = idUsuario;
-                log('ID de usuario establecido:', idUsuario);
+    
+                console.log('ID de usuario establecido:', idUsuario);
             } else {
-                log('No se encontró el input de user_id');
+                console.log('El atributo data-iduser está vacío.');
             }
         } else {
-            log('La página actual no es "sello"');
+            console.log('No se encontró un div con la clase "X522YA FRRVBB" y el atributo data-iduser.');
         }
     }
 
@@ -139,7 +146,7 @@
 
                 // Parámetros de carga
                 const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
-                const idUsuario = window.idUsuarioActual || document.querySelector('.custom-uprofile-container')?.dataset.authorId || '';
+                const idUsuario = window.idUsuarioActual;
 
                 log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual, colec, idea});
 

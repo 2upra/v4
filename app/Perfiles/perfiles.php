@@ -88,7 +88,7 @@ function perfilBanner($user_id)
 
     ob_start();
     ?>
-    <div class="X522YA FRRVBB">
+    <div class="X522YA FRRVBB" data-iduser="<? echo esc_html($user_id); ?>">
         <div class="JKBZKR">
             <img src="<? echo esc_url($imagen_perfil); ?>" alt="">
             <div class="KFEVRT">
