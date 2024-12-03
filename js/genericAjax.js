@@ -989,12 +989,27 @@ function filtrosPost() {
 }
 
 window.contadorDeSamples = () => {
+    // Seleccionamos el contenedor donde se encuentra el atributo data-total-posts
+    const postListElement = document.querySelector('.social-post-list');
+
+    // Seleccionamos el elemento donde mostraremos el total de resultados
     const resultadosElement = document.getElementById('resultadosPost-sampleList');
-    const totalPostsElement = document.querySelector('.total-posts-sampleList');
-    if (resultadosElement && totalPostsElement) {
-        const totalPosts = parseInt(totalPostsElement.value, 10);
-        const formattedTotalPosts = totalPosts.toLocaleString('es-ES'); // Usamos 'es-ES' para formato de miles con puntos
-        resultadosElement.textContent = formattedTotalPosts + ' resultados';
+
+    if (postListElement && resultadosElement) {
+        // Obtenemos el valor del total de publicaciones desde el atributo data-total-posts
+        const totalPosts = parseInt(postListElement.getAttribute('data-total-posts'), 10);
+
+        // Verificamos que el número sea válido
+        if (!isNaN(totalPosts)) {
+            // Formateamos el número (puntos para miles, coma para decimales según 'es-ES')
+            const formattedTotalPosts = totalPosts.toLocaleString('es-ES');
+
+            // Actualizamos el contenido del elemento resultadosElement
+            resultadosElement.textContent = `${formattedTotalPosts} resultados`;
+        } else {
+            // Si no se encuentra un valor válido, mostramos un mensaje por defecto
+            resultadosElement.textContent = '0 resultados';
+        }
     }
 };
 
