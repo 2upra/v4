@@ -179,7 +179,7 @@ function renderSubscriptionPrompt($author_name, $author_id)
 }
 
 
-function renderPostControls($post_id, $colab, $audio_id_lite)
+function renderPostControls($post_id, $colab, $audio_id_lite = null)
 {
 ?>
     <div class="QSORIW">
@@ -193,7 +193,6 @@ function renderPostControls($post_id, $colab, $audio_id_lite)
     </div>
 <?
 }
-
 
 function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $audio_id_lite)
 {
@@ -251,6 +250,28 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
                 </p>
             </div>
         </div>
+    </div>
+
+    <!-- Renderizado de la imagen de portada o imagen temporal fuera de NERWFB -->
+    <div class="MRPDOR">
+        <? if (!empty($audio_id_lite)) : // Solo renderizar si hay audio 
+        ?>
+            <? if (has_post_thumbnail($post_id)) : ?>
+                <!-- Mostrar imagen de portada -->
+                <div class="post-thumbnail">
+                    <? echo get_the_post_thumbnail($post_id, 'full'); ?>
+                </div>
+            <? else : ?>
+                <!-- Obtener imagen temporal desde los metadatos -->
+                <? $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true); ?>
+                <? if ($imagen_temporal_id) : ?>
+                    <!-- Renderizar imagen temporal -->
+                    <div class="temporal-thumbnail">
+                        <? echo wp_get_attachment_image($imagen_temporal_id, 'full'); ?>
+                    </div>
+                <? endif; ?>
+            <? endif; ?>
+        <? endif; ?>
     </div>
 <?
 }
