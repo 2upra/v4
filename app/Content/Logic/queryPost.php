@@ -38,8 +38,7 @@ add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
     try {
-        //$user_id = obtenerUserId($is_ajax);
-        $user_id = 1;
+        $user_id = obtenerUserId($is_ajax);
         $current_user_id = get_current_user_id();
 
         if (!$current_user_id) {
@@ -350,10 +349,10 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
 
         if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
-            $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+            $query_args = aplicarFiltrosUsuario($query_args, $current_user_id, );
         }
 
-        $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id);
+        $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
 
         return $query_args;
     } catch (Exception $e) {
@@ -612,14 +611,22 @@ function aplicarFiltrosUsuario($query_args, $current_user_id)
     //guardarLog("Query args final: " . print_r($query_args, true));
     return $query_args;
 }
-
-function aplicarFiltroGlobal($query_args, $args, $current_user_id)
+function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id)
 {
+    // Si se proporciona un user_id, filtrar solo por los posts de ese usuario
+    if (!empty($user_id)) {
+        $query_args['author'] = $user_id;
+        return $query_args;
+    }
+
+    // Obtener filtros personalizados del usuario actual
     $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
     if (is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
         $query_args['author'] = $current_user_id;
         return $query_args;
     }
+
+    // Filtro general basado en $args['filtro']
     $filtro = $args['filtro'] ?? 'nada';
     $meta_query_conditions = [
         'rolasEliminadas' => fn() => $query_args['post_status'] = 'pending_deletion',
