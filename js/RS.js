@@ -640,6 +640,7 @@ async function selectorformtipo() {
     // Verifica si los elementos necesarios existen; si no, retorna
     if (!descargacheck || !musiccheck || !exclusivocheck || !colabcheck || !fancheck || !artistacheck) return;
 
+    // Preselecciona 'descargacheck' y aplica estilos
     descargacheck.checked = true;
     const label = descargacheck.closest('label');
     label.style.color = '#ffffff';
@@ -675,9 +676,6 @@ async function selectorformtipo() {
             if (event.target.id === 'exclusivocheck' && event.target.checked) {
                 colabcheck.checked = false;
                 musiccheck.checked = false;
-                const colabLabel = colabcheck.closest('label');
-                colabLabel.style.color = '#6b6b6b';
-                colabLabel.style.background = '';
                 resetStyles();
             }
 
@@ -685,9 +683,6 @@ async function selectorformtipo() {
             if (event.target.id === 'colabcheck' && event.target.checked) {
                 exclusivocheck.checked = false;
                 musiccheck.checked = false;
-                const exclusivocLabel = exclusivocheck.closest('label');
-                exclusivocLabel.style.color = '#6b6b6b';
-                exclusivocLabel.style.background = '';
                 resetStyles();
             }
 
@@ -721,7 +716,6 @@ async function selectorformtipo() {
         });
     }
 }
-
 
 async function selectorFanArtista() {
     const fancheck = document.getElementById('fancheck');
