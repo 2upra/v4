@@ -246,7 +246,6 @@ function procesarIdeas($args, $paged)
         return false;
     }
 }
-
 function procesarPublicaciones($query_args, $args, $is_ajax)
 {
     ob_start();
@@ -284,6 +283,11 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
         return '';
     }
 
+    // Obtener el número total de publicaciones encontradas
+    $total_publicaciones = $query->found_posts;
+
+    // También podrías loguearlo o usarlo de otra forma si es necesario
+
     $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
     if ($query->have_posts()) {
         $tipoPost = $args['post_type'];
@@ -296,7 +300,8 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
             echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
                   data-filtro="' . esc_attr($filtro) . '" 
                   data-posttype="' . esc_attr($tipoPost) . '" 
-                  data-tab-id="' . esc_attr($args['tab_id']) . '">';
+                  data-tab-id="' . esc_attr($args['tab_id']) . '" 
+                  data-total-posts="' . esc_attr($total_publicaciones) . '">';
         }
 
         while ($query->have_posts()) {
@@ -321,7 +326,11 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     } else {
         echo nohayPost($filtro, $is_ajax);
     }
+
+    // Restablecer los datos de la consulta
     wp_reset_postdata();
+
+    // Retornar el contenido generado y el total de publicaciones
     return ob_get_clean();
 }
 
