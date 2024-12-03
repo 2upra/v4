@@ -223,10 +223,10 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
 ?>
     <div class="NERWFB">
         <div class="YWBIBG">
+
             <? if (!empty($audio_id_lite)) : ?>
                 <? if (has_post_thumbnail($post_id)) : ?>
                     <div class="MRPDOR">
-
                         <div class="post-thumbnail">
                             <?
                             $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
@@ -234,7 +234,9 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
                             ?>
                             <img src="<? echo esc_url($optimized_thumbnail_url); ?>" alt="<? echo esc_attr(get_the_title($post_id)); ?>">
                         </div>
-                    <? else : ?>
+                    </div>
+                <? else : ?>
+                    <div class="MRPDOR">
                         <? $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true); ?>
                         <? if ($imagen_temporal_id) : ?>
                             <div class="temporal-thumbnail">
@@ -245,10 +247,10 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
                                 <img src="<? echo esc_url($optimized_temporal_image_url); ?>" alt="Imagen temporal">
                             </div>
                         <? endif; ?>
-
                     </div>
                 <? endif; ?>
             <? endif; ?>
+
             <div class="OASDEF">
                 <div class="thePostContet" data-post-id="<? echo esc_attr($post_id); ?>">
                     <? the_content(); ?>
