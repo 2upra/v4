@@ -48,7 +48,6 @@ function iniciarRS() {
         logRS('formRs no existe');
     }
 }
-
 function verificarCamposRs() {
     const textoRsDiv = document.getElementById('textoRs');
     textoRsDiv.setAttribute('placeholder', 'Puedes agregar tags agregando un #');
@@ -57,6 +56,15 @@ function verificarCamposRs() {
         // Verificar si hay alguna subida en progreso
         if (uploadInProgressCount > 0) {
             alert('Espera a que se completen las subidas de archivos.');
+            return false;
+        }
+
+        // Verificar que al menos uno de los checkboxes esté seleccionado (fan o artista)
+        const fanCheck = document.getElementById('fancheck');
+        const artistaCheck = document.getElementById('artistacheck');
+
+        if (!fanCheck.checked && !artistaCheck.checked) {
+            alert('Debe seleccionar al menos una opción: Área de fans o Área de artistas.');
             return false;
         }
 
@@ -114,6 +122,7 @@ async function envioRs() {
         const descargaCheckbox = document.getElementById('descargacheck');
         const exclusivoCheckbox = document.getElementById('exclusivocheck');
         const colabCheckbox = document.getElementById('colabcheck');
+        const musicCheckbox = document.getElementById('musiccheck');
         const fancheck = document.getElementById('fancheck');
         const artistacheck = document.getElementById('artistacheck');
         
