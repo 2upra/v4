@@ -1,4 +1,3 @@
-
 function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     const triggers = document.querySelectorAll(triggerSelector);
 
@@ -65,6 +64,14 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
 
         submenu.addEventListener('click', (e) => {
             e.stopPropagation(); 
+        });
+
+        // Agregar el evento de clic a los botones dentro del submenú
+        const submenuButtons = submenu.querySelectorAll('button');
+        submenuButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                hideSubmenu(submenu);
+            });
         });
     }
 
