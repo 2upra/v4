@@ -57,7 +57,7 @@ async function generateServerAudioHash(file) {
     formData.append('audio_file', file);
 
     try {
-        const response = await fetch(ajax_url, {
+        const response = await fetch(ajaxUrl, {
             method: 'POST',
             body: formData
         });
