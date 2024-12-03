@@ -325,7 +325,6 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     return ob_get_clean();
 }
 
-//aqui necesito que cuando $user_id, no sea null, no use construirQueryArgs ni aplicarFiltrosUsuario, y estableca un ordenamiento del mas reciente al mas viejo simplemente, dame el codigo completo sin dañar
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
     try {
@@ -334,7 +333,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         $is_admin = current_user_can('administrator');
 
         if (!$is_authenticated) {
-            // error_log("[configuracionQueryArgs] Advertencia: Usuario no autenticado, utilizando FALLBACK_USER_ID");
+            // Usuario no autenticado: usar un ID predeterminado
             $current_user_id = $FALLBACK_USER_ID;
         }
 
@@ -348,9 +347,10 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
                 'suppress_filters' => false,
                 'orderby' => 'date',
                 'order' => 'DESC', // Ordenar del más reciente al más antiguo
+                'author' => $user_id, // Filtrar solo los posts del usuario especificado
             ];
 
-            // Aplicar filtro global
+            // Aplicar filtro global para mantener consistencia
             $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
 
             return $query_args;
@@ -372,6 +372,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
         }
 
+        // Aplicar filtro global
         $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
 
         return $query_args;
@@ -379,6 +380,65 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         error_log("[configuracionQueryArgs] Error crítico: " . $e->getMessage());
         return false;
     }
+}
+
+function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id)
+{
+    // Si se proporciona un user_id, filtrar solo por los posts de ese usuario
+    if (!empty($user_id)) {
+        $query_args['author'] = $user_id; // Filtrar posts por el autor especificado
+        return $query_args;
+    }
+
+    // Obtener filtros personalizados del usuario actual
+    $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
+    if (is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
+        $query_args['author'] = $current_user_id;
+        return $query_args;
+    }
+
+    // Filtro general basado en $args['filtro']
+    $filtro = $args['filtro'] ?? 'nada';
+    $meta_query_conditions = [
+        'rolasEliminadas' => fn() => $query_args['post_status'] = 'pending_deletion',
+        'rolasRechazadas' => fn() => $query_args['post_status'] = 'rejected',
+        'rolasPendiente' => fn() => $query_args['post_status'] = 'pending',
+        'likesRolas' => fn() => ($userLikedPostIds = obtenerLikesDelUsuario($current_user_id))
+            ? $query_args['post__in'] = $userLikedPostIds
+            : $query_args['posts_per_page'] = 0,
+        'nada' => fn() => $query_args['post_status'] = 'publish',
+        'colabs' => ['key' => 'paraColab', 'value' => '1', 'compare' => '='],
+        'libres' => [
+            ['key' => 'esExclusivo', 'value' => '0', 'compare' => '='],
+            ['key' => 'post_price', 'compare' => 'NOT EXISTS'],
+            ['key' => 'rola', 'value' => '1', 'compare' => '!=']
+        ],
+        'momento' => [
+            ['key' => 'momento', 'value' => '1', 'compare' => '='],
+            ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
+        ],
+        'sample' => [
+            ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+            ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
+        ],
+        'sampleList' => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+        'colab' => fn() => $query_args['post_status'] = 'publish',
+        'colabPendiente' => function () use (&$query_args) {
+            $query_args['author'] = get_current_user_id();
+            $query_args['post_status'] = 'pending';
+        },
+    ];
+
+    if (isset($meta_query_conditions[$filtro])) {
+        $result = $meta_query_conditions[$filtro];
+        if (is_callable($result)) {
+            $result();
+        } else {
+            $query_args['meta_query'][] = $result;
+        }
+    }
+
+    return $query_args;
 }
 
 
@@ -629,64 +689,6 @@ function aplicarFiltrosUsuario($query_args, $current_user_id)
     }
 
     //guardarLog("Query args final: " . print_r($query_args, true));
-    return $query_args;
-}
-function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id)
-{
-    // Si se proporciona un user_id, filtrar solo por los posts de ese usuario
-    if (!empty($user_id)) {
-        $query_args['author'] = $user_id;
-        return $query_args;
-    }
-
-    // Obtener filtros personalizados del usuario actual
-    $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
-    if (is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
-        $query_args['author'] = $current_user_id;
-        return $query_args;
-    }
-
-    // Filtro general basado en $args['filtro']
-    $filtro = $args['filtro'] ?? 'nada';
-    $meta_query_conditions = [
-        'rolasEliminadas' => fn() => $query_args['post_status'] = 'pending_deletion',
-        'rolasRechazadas' => fn() => $query_args['post_status'] = 'rejected',
-        'rolasPendiente' => fn() => $query_args['post_status'] = 'pending',
-        'likesRolas' => fn() => ($userLikedPostIds = obtenerLikesDelUsuario($current_user_id))
-            ? $query_args['post__in'] = $userLikedPostIds
-            : $query_args['posts_per_page'] = 0,
-        'nada' => fn() => $query_args['post_status'] = 'publish',
-        'colabs' => ['key' => 'paraColab', 'value' => '1', 'compare' => '='],
-        'libres' => [
-            ['key' => 'esExclusivo', 'value' => '0', 'compare' => '='],
-            ['key' => 'post_price', 'compare' => 'NOT EXISTS'],
-            ['key' => 'rola', 'value' => '1', 'compare' => '!=']
-        ],
-        'momento' => [
-            ['key' => 'momento', 'value' => '1', 'compare' => '='],
-            ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
-        ],
-        'sample' => [
-            ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
-            ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
-        ],
-        'sampleList' => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
-        'colab' => fn() => $query_args['post_status'] = 'publish',
-        'colabPendiente' => function () use (&$query_args) {
-            $query_args['author'] = get_current_user_id();
-            $query_args['post_status'] = 'pending';
-        },
-    ];
-
-    if (isset($meta_query_conditions[$filtro])) {
-        $result = $meta_query_conditions[$filtro];
-        if (is_callable($result)) {
-            $result();
-        } else {
-            $query_args['meta_query'][] = $result;
-        }
-    }
-
     return $query_args;
 }
 
