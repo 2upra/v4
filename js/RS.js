@@ -37,6 +37,8 @@ function iniciarRS() {
         subidaAudioEnProgreso = false;
         subidaImagenEnProgreso = false;
         subidaArchivoEnProgreso = false;
+        selectorformtipo();
+        selectorFanArtista();
         subidaRs();
         envioRs();
         placeholderRs();
@@ -632,9 +634,11 @@ async function selectorformtipo() {
     const musiccheck = document.getElementById('musiccheck');
     const exclusivocheck = document.getElementById('exclusivocheck');
     const colabcheck = document.getElementById('colabcheck');
+    const fancheck = document.getElementById('fancheck');
+    const artistacheck = document.getElementById('artistacheck');
 
     // Verifica si los elementos necesarios existen; si no, retorna
-    if (!descargacheck || !musiccheck || !exclusivocheck || !colabcheck) return;
+    if (!descargacheck || !musiccheck || !exclusivocheck || !colabcheck || !fancheck || !artistacheck) return;
 
     descargacheck.checked = true;
     const label = descargacheck.closest('label');
@@ -645,10 +649,18 @@ async function selectorformtipo() {
         if (event.target.matches('.custom-checkbox input[type="checkbox"]')) {
             const checkedCheckboxes = document.querySelectorAll('.custom-checkbox input[type="checkbox"]:checked');
 
-            // Si hay más de 2 checkboxes seleccionados, desmarca el que acaba de ser seleccionado
-            if (checkedCheckboxes.length > 2) {
+            // Si hay más de 2 checkboxes seleccionados (excluyendo fancheck y artistacheck), desmarca el que acaba de ser seleccionado
+            const nonFanArtistChecked = Array.from(checkedCheckboxes).filter(checkbox => checkbox.id !== 'fancheck' && checkbox.id !== 'artistacheck');
+            if (nonFanArtistChecked.length > 2) {
                 event.target.checked = false;
                 alert('Solo puedes seleccionar un máximo de 2 opciones.');
+                return;
+            }
+
+            // Evitar que se seleccionen fancheck y artistacheck simultáneamente
+            if (fancheck.checked && artistacheck.checked) {
+                event.target.checked = false;
+                alert('No puedes seleccionar "fan" y "artista" al mismo tiempo.');
                 return;
             }
 
@@ -715,4 +727,25 @@ async function selectorformtipo() {
             }
         });
     }
+}
+
+
+async function selectorFanArtista() {
+    const fancheck = document.getElementById('fancheck');
+    const artistacheck = document.getElementById('artistacheck');
+
+    // Verifica si los elementos necesarios existen; si no, retorna
+    if (!fancheck || !artistacheck) return;
+
+    document.addEventListener('change', function (event) {
+        // Si se marca 'fancheck', desmarca 'artistacheck'
+        if (event.target.id === 'fancheck' && event.target.checked) {
+            artistacheck.checked = false;
+        }
+
+        // Si se marca 'artistacheck', desmarca 'fancheck'
+        if (event.target.id === 'artistacheck' && event.target.checked) {
+            fancheck.checked = false;
+        }
+    });
 }
