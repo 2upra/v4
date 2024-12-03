@@ -3,7 +3,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         reiniciarCargaDiferida();
     });
-    const DEPURAR = true;
+    const DEPURAR = false;
     const log = DEPURAR ? console.log.bind(console) : () => {};
 
     let estaCargando = false;
