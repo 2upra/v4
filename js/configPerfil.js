@@ -271,6 +271,13 @@ function cambiarEnlace() {
     }
 }
 
+/*
+Configura para que el que inicialmente este marcado tenga este estilo 
+
+    color: rgb(255, 255, 255);
+    background: rgb(19, 19, 19);
+*/
+
 function selectorFanArtistaTipo() {
     const fancheck = document.getElementById('fanTipoCheck');
     const artistacheck = document.getElementById('artistaTipoCheck');
@@ -295,7 +302,7 @@ function selectorFanArtistaTipo() {
     // Función para guardar el tipo de usuario en el servidor
     function guardarTipoUsuario(tipoUsuario) {
         // Realizamos una solicitud AJAX a través de fetch
-        fetch(ajaxurl, { // 'ajaxurl' debe estar definido en tu entorno de WordPress
+        fetch(ajaxUrl, { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -336,6 +343,12 @@ function selectorFanArtistaTipo() {
         }
     }
 
+    // **Configuración inicial**: Aplica estilos al checkbox inicial seleccionado
+    function applyInitialStyles() {
+        updateStyles(fancheck);
+        updateStyles(artistacheck);
+    }
+
     // Listener para 'fancheck'
     fancheck.addEventListener('change', function () {
         if (fancheck.checked) {
@@ -355,7 +368,7 @@ function selectorFanArtistaTipo() {
         updateStyles(artistacheck);
         handleChange(); // Llama al manejador para iniciar el temporizador
     });
-}
 
-// Llama a la función para activarla
-selectorFanArtistaTipo();
+    // Llama a la configuración inicial
+    applyInitialStyles();
+}
