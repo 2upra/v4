@@ -332,7 +332,10 @@ if (!defined('ABSPATH')) {
                 <div class="A1806241" id="submenuperfil-default">
                     <div class="A1806242">
                         <button><a href="https://2upra.com/perfil/">Mi perfil</a></button>
+                        <button class="reporte">Reportar un error</button>
+                        <button class="botonConfig">Configuración</button>
                         <button><a href="https://2upra.com/colabs/">Mis colabs</a></button>
+                        <button class="no-ajax"><a class="no-ajax" href="<?php echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>
                     </div>
                 </div>
 
