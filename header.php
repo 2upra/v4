@@ -296,6 +296,7 @@ if (!defined('ABSPATH')) {
                 </div>
 
                 <? echo config() ?>
+                <? echo formRs() ?>
 
 
                 <!-- Enviar mensaje de error -->
@@ -311,15 +312,6 @@ if (!defined('ABSPATH')) {
                     </div>
                 </div>
                 <div id="backgroundDetallesIA" class="modalBackground" style="display: none; z-index: 999; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);"></div>
-
-
-                <!-- submenu de subir rola o sample -->
-                <div class="A1806241" id="submenusubir-subiricono">
-                    <div class="A1806242">
-                        <button id="subirrola"><a href="https://2upra.com/rola/">Subir rola</a></button>
-                        <!-- <button id="subirsample"><a href="https://2upra.com/subirsample/">Subir Sample</a></button> -->
-                    </div>
-                </div>
 
                 <div class="A1806241" id="fotoperfilsub-fotoperfilsub">
                     <div class="A1806242">

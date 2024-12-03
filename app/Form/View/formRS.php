@@ -8,7 +8,7 @@ function formRs()
     $urlImagenperfil = imagenPerfil($user->ID);
 
 ?>
-    <div class="bloque" id="formRs">
+    <div class="bloque modal" id="formRs" style="display: none;">
 
         <div class="W8DK25">
             <img id="perfil-imagen" src="<? echo esc_url($urlImagenperfil); ?>" alt="Perfil"
