@@ -575,7 +575,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                     WHERE p.post_type = 'social_post' 
                     AND p.post_status = 'publish'
                     AND p.post_date >= DATE_SUB(NOW(), INTERVAL $interval)  
-                    AND pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval) 
+                    AND (pl.like_date IS NULL OR pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval)) 
                     GROUP BY p.ID
                     HAVING like_count > 0
                     ORDER BY like_count DESC, p.post_date DESC
@@ -606,7 +606,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                     }
 
                     if (!empty($feed_result['post_not_in'])) {
-                        $query_args['post__not_in'] = $feed_result['post_not_in'];
+                        $query_args['post_not_in'] = $feed_result['post_not_in'];
                     }
                 } else {
                     $query_args['orderby'] = 'date';
@@ -620,13 +620,48 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
             $query_args['order'] = 'DESC';
         }
 
+        // Contar las publicaciones si originalCountPost está vacío o es 0
+        $originalCountPost = $feed_result['originalCountPost'] ?? 0;
+
+        if ($originalCountPost === 0) {
+            // Realizar una consulta eficiente para contar las publicaciones
+            $count_sql = "
+                SELECT COUNT(p.ID)
+                FROM {$wpdb->posts} p
+                WHERE p.post_type = %s 
+                AND p.post_status = 'publish'
+            ";
+
+            // Aplicar condiciones adicionales si existen filtros
+            $conditions = [];
+            $params = ['social_post'];
+
+            if (!empty($query_args['post__in'])) {
+                $placeholders = implode(',', array_fill(0, count($query_args['post__in']), '%d'));
+                $conditions[] = "p.ID IN ($placeholders)";
+                $params = array_merge($params, $query_args['post__in']);
+            }
+
+            if (!empty($query_args['post_not_in'])) {
+                $placeholders = implode(',', array_fill(0, count($query_args['post_not_in']), '%d'));
+                $conditions[] = "p.ID NOT IN ($placeholders)";
+                $params = array_merge($params, $query_args['post_not_in']);
+            }
+
+            if (!empty($conditions)) {
+                $count_sql .= ' AND ' . implode(' AND ', $conditions);
+            }
+
+            $originalCountPost = (int) $wpdb->get_var($wpdb->prepare($count_sql, $params));
+        }
+
         // Si se obtuvo un feed personalizado, combinar el resultado con query_args
         if (!empty($feed_result)) {
             return [
                 'query_args' => $query_args,
                 'post_ids' => $feed_result['post_ids'] ?? [],
                 'post_not_in' => $feed_result['post_not_in'] ?? [],
-                'originalCountPost' => $feed_result['originalCountPost'] ?? 0, // Incluye el conteo original si está disponible
+                'originalCountPost' => $originalCountPost,
             ];
         }
 
@@ -634,9 +669,10 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
             'query_args' => $query_args,
             'post_ids' => [],
             'post_not_in' => [],
-            'originalCountPost' => 0,
+            'originalCountPost' => $originalCountPost,
         ];
     } catch (Exception $e) {
+        error_log('Error en ordenamientoQuery: ' . $e->getMessage());
         return false;
     }
 }
