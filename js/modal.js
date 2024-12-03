@@ -13,26 +13,25 @@ class ModalManager {
             console.warn(`Modal elemento id:: ${id} no encontrado.`);
             return;
         }
-
+    
         // Obtenemos los triggers
         const triggers = triggerSelectors
-            .map(selector => {
+            .flatMap(selector => {
                 try {
-                    return document.querySelector(selector);
+                    return Array.from(document.querySelectorAll(selector)); // Usamos querySelectorAll y lo convertimos en array
                 } catch (error) {
                     console.warn(`Selector fallo:: ${selector}`);
-                    return null;
+                    return [];
                 }
-            })
-            .filter(Boolean);
-
+            });
+    
         if (triggers.length === 0) {
             console.warn(`Fail triggers modal id: ${id}`);
             return;
         }
-
+    
         let modalInfo = this.modals[id];
-
+    
         if (!modalInfo) {
             // Si no existe, lo creamos
             modalInfo = this.modals[id] = {
@@ -52,7 +51,7 @@ class ModalManager {
             // Actualizamos el modal (por si el elemento cambió)
             modalInfo.modal = modal;
             modalInfo.closeButtonSelector = closeButtonSelector;
-
+    
             // Removemos los event listeners anteriores de los triggers
             if (modalInfo.triggerListeners) {
                 modalInfo.triggerListeners.forEach(({ trigger, listener }) => {
@@ -68,7 +67,7 @@ class ModalManager {
                 modalInfo.modal.removeEventListener('click', modalInfo.modalListener);
             }
         }
-
+    
         // Actualizamos los triggers y volvemos a configurar los event listeners
         modalInfo.triggers = triggers;
         this.setupTriggers(id);
@@ -80,9 +79,9 @@ class ModalManager {
         const modalInfo = this.modals[modalId];
         const { triggers } = modalInfo;
         if (!triggers || triggers.length === 0) return;
-
+    
         modalInfo.triggerListeners = [];
-
+    
         triggers.forEach(trigger => {
             const listener = event => {
                 event.stopPropagation();
