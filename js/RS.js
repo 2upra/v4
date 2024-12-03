@@ -11,7 +11,7 @@ const nombreRolaData = {};
 
 let uploadInProgressCount = 0;
 // Logs
-let enablelogRS = false;
+let enablelogRS = true;
 const logRS = enablelogRS ? console.log : function () {};
 let waveSurferInstances = {};
 
