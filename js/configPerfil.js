@@ -1,21 +1,9 @@
 function IniciadoresConfigPerfil() {
-    var paginaActualElement = document.getElementById('pagina_actual');
-    
-    if (paginaActualElement) {
-        var paginaActual = paginaActualElement.value;
-        
-        if (paginaActual === 'Config') {
-            SubidaImagenPerfil();
-            cambiarNombre();
-            cambiarDescripcion();
-            cambiarEnlace();
-        }
-    } else {
-        return
-    }
+    SubidaImagenPerfil();
+    cambiarNombre();
+    cambiarDescripcion();
+    cambiarEnlace();
 }
-
-
 
 function SubidaImagenPerfil() {
     const previewAreaImagen = document.getElementById('previewAreaImagenPerfil');
@@ -27,7 +15,7 @@ function SubidaImagenPerfil() {
     function handleImageSelect(event) {
         event.preventDefault();
         const file = event.dataTransfer?.files[0] || event.target.files[0];
-        
+
         if (file && file.type.startsWith('image/')) {
             // Verificar si el tamaño de la imagen es menor a 1 MB
             const maxSizeInBytes = 1048576; // 1 MB en bytes
@@ -44,7 +32,6 @@ function SubidaImagenPerfil() {
             alert('Por favor, seleccione un archivo de imagen');
         }
     }
-    
 
     function updateImagePreview(file) {
         const reader = new FileReader();
@@ -110,7 +97,6 @@ function SubidaImagenPerfil() {
     });
 }
 
-
 function cambiarNombre() {
     const usernameInput = document.getElementById('username');
     if (!usernameInput) {
@@ -123,7 +109,7 @@ function cambiarNombre() {
         return;
     }
 
-    usernameInput.addEventListener('keydown', async function(event) {
+    usernameInput.addEventListener('keydown', async function (event) {
         if (event.key === 'Enter') {
             event.preventDefault();
             const newUsername = usernameInput.value.trim();
@@ -144,9 +130,9 @@ function cambiarNombre() {
                     const response = await fetch(ajaxUrl, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Content-Type': 'application/x-www-form-urlencoded'
                         },
-                        body: data.toString(),
+                        body: data.toString()
                     });
                     const result = await response.json();
                     if (result.success) {
@@ -164,7 +150,6 @@ function cambiarNombre() {
     });
 }
 
-
 function cambiarDescripcion() {
     const descripcionInput = document.getElementById('description');
     const originalDescripcion = descripcionInput.value;
@@ -172,13 +157,13 @@ function cambiarDescripcion() {
     if (!descripcionInput || !originalDescripcion) return;
 
     // Limitar a 300 caracteres
-    descripcionInput.addEventListener('input', function() {
+    descripcionInput.addEventListener('input', function () {
         if (descripcionInput.value.length > 300) {
             descripcionInput.value = descripcionInput.value.slice(0, 300);
         }
     });
 
-    descripcionInput.addEventListener('keydown', async function(event) {
+    descripcionInput.addEventListener('keydown', async function (event) {
         if (event.key === 'Enter') {
             event.preventDefault();
 
@@ -198,9 +183,9 @@ function cambiarDescripcion() {
                     const response = await fetch(ajaxUrl, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Content-Type': 'application/x-www-form-urlencoded'
                         },
-                        body: data.toString(),
+                        body: data.toString()
                     });
 
                     const result = await response.json();
@@ -227,7 +212,7 @@ function cambiarEnlace() {
 
     if (!linkInput) return;
 
-    linkInput.addEventListener('keydown', async function(event) {
+    linkInput.addEventListener('keydown', async function (event) {
         if (event.key === 'Enter') {
             event.preventDefault();
 
@@ -258,9 +243,9 @@ function cambiarEnlace() {
                     const response = await fetch(ajaxUrl, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Content-Type': 'application/x-www-form-urlencoded'
                         },
-                        body: data.toString(),
+                        body: data.toString()
                     });
 
                     const result = await response.json();
@@ -284,6 +269,3 @@ function cambiarEnlace() {
         linkInput.placeholder = 'Ingresa un enlace (opcional)';
     }
 }
-
-
-
