@@ -160,7 +160,7 @@ function renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $a
         </div>
 
         <div class="IZXEPH">
-            <? renderPostControls($post_id, $colab); ?>
+            <? renderPostControls($post_id, $colab, $audio_id_lite); ?>
         </div>
     </div>
 <?
@@ -179,7 +179,7 @@ function renderSubscriptionPrompt($author_name, $author_id)
 }
 
 
-function renderPostControls($post_id, $colab)
+function renderPostControls($post_id, $colab, $audio_id_lite)
 {
 ?>
     <div class="QSORIW">
@@ -187,7 +187,9 @@ function renderPostControls($post_id, $colab)
         <? echo botonComentar($post_id, $colab); ?>
         <? echo botonDescarga($post_id); ?>
         <? echo botonColab($post_id, $colab); ?>
-        <? echo botonColeccion($post_id); ?>
+        <? if (!empty($audio_id_lite)) : ?>
+            <? echo botonColeccion($post_id); ?>
+        <? endif; ?>
     </div>
 <?
 }
