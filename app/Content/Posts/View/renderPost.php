@@ -193,6 +193,30 @@ function renderPostControls($post_id, $colab, $audio_id_lite = null)
     </div>
 <?
 }
+/*
+utiliza 
+function img($url, $quality = 40, $strip = 'all')
+{
+    if ($url === null || $url === '') {
+        return '';
+    }
+    $parsed_url = parse_url($url);
+    if (strpos($url, 'https://i0.wp.com/') === 0) {
+        $cdn_url = $url;
+    } else {
+        $path = isset($parsed_url['host']) ? $parsed_url['host'] . $parsed_url['path'] : ltrim($parsed_url['path'], '/');
+        $cdn_url = 'https://i0.wp.com/' . $path;
+    }
+
+    $query = [
+        'quality' => $quality,
+        'strip' => $strip,
+    ];
+
+    $final_url = add_query_arg($query, $cdn_url);
+    return $final_url;
+}
+*/
 
 function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $audio_id_lite)
 {
@@ -200,46 +224,81 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
     <div class="NERWFB">
         <!-- Contenedor principal -->
         <div class="YWBIBG">
-
-            <!-- Contenido del post -->
-            <div class="thePostContet" data-post-id="<? echo esc_html($post_id); ?>">
-                <? the_content(); ?>
-                <? if (has_post_thumbnail($post_id)) : ?>
-                    <div class="post-thumbnail">
-                        <? echo get_the_post_thumbnail($post_id, 'full'); ?>
-                    </div>
-                <? endif; ?>
-            </div>
-
-            <!-- Información adicional (bpm, escala, nota) -->
-            <div>
-                <?
-                $key_info = $key ? $key : null;
-                $scale_info = $scale ? $scale : null;
-                $bpm_info = $bpm ? round($bpm) : null;
-
-                $info = array_filter([$key_info, $scale_info, $bpm_info]);
-                if (!empty($info)) {
-                    echo '<p class="TRZPQD">' . implode(' - ', $info) . '</p>';
-                }
+            <!-- Renderizado de la imagen de portada o imagen temporal fuera de NERWFB -->
+            <div class="MRPDOR">
+                <? if (!empty($audio_id_lite)) : // Solo renderizar si hay audio 
                 ?>
-            </div>
-        </div>
-
-        <!-- Verificar filtro y manejar medios -->
-        <? if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])) : ?>
-            <div class="ZQHOQY">
-                <!-- Verificar si existe audio_id_lite antes de mostrar el audio -->
-                <? if (!empty($audio_id_lite)) : ?>
-                    <? wave($audio_url, $audio_id_lite, $post_id); ?>
+                    <? if (has_post_thumbnail($post_id)) : ?>
+                        <!-- Mostrar imagen de portada -->
+                        <div class="post-thumbnail">
+                            <?
+                            // Obtener la URL de la imagen de portada
+                            $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
+                            // Optimizar la imagen usando la función img()
+                            $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
+                            ?>
+                            <!-- Mostrar imagen optimizada -->
+                            <img src="<? echo esc_url($optimized_thumbnail_url); ?>" alt="<? echo esc_attr(get_the_title($post_id)); ?>">
+                        </div>
+                    <? else : ?>
+                        <!-- Obtener imagen temporal desde los metadatos -->
+                        <? $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true); ?>
+                        <? if ($imagen_temporal_id) : ?>
+                            <!-- Renderizar imagen temporal -->
+                            <div class="temporal-thumbnail">
+                                <?
+                                // Obtener la URL de la imagen temporal
+                                $temporal_image_url = wp_get_attachment_url($imagen_temporal_id);
+                                // Optimizar la imagen usando la función img()
+                                $optimized_temporal_image_url = img($temporal_image_url, 40, 'all');
+                                ?>
+                                <!-- Mostrar imagen temporal optimizada -->
+                                <img src="<? echo esc_url($optimized_temporal_image_url); ?>" alt="Imagen temporal">
+                            </div>
+                        <? endif; ?>
+                    <? endif; ?>
                 <? endif; ?>
             </div>
-        <? else : ?>
-            <div class="KLYJBY">
-                <? echo audioPost($post_id); ?>
-            </div>
-        <? endif; ?>
+            <!-- Contenido del post -->
+            <div class="OASDEF">
+                <div class="thePostContet" data-post-id="<? echo esc_html($post_id); ?>">
+                    <? the_content(); ?>
+                    <? if (has_post_thumbnail($post_id)) : ?>
+                        <div class="post-thumbnail">
+                            <? echo get_the_post_thumbnail($post_id, 'full'); ?>
+                        </div>
+                    <? endif; ?>
+                </div>
 
+                <!-- Información adicional (bpm, escala, nota) -->
+                <div>
+                    <?
+                    $key_info = $key ? $key : null;
+                    $scale_info = $scale ? $scale : null;
+                    $bpm_info = $bpm ? round($bpm) : null;
+
+                    $info = array_filter([$key_info, $scale_info, $bpm_info]);
+                    if (!empty($info)) {
+                        echo '<p class="TRZPQD">' . implode(' - ', $info) . '</p>';
+                    }
+                    ?>
+                </div>
+            </div>
+
+            <!-- Verificar filtro y manejar medios -->
+            <? if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])) : ?>
+                <div class="ZQHOQY">
+                    <!-- Verificar si existe audio_id_lite antes de mostrar el audio -->
+                    <? if (!empty($audio_id_lite)) : ?>
+                        <? wave($audio_url, $audio_id_lite, $post_id); ?>
+                    <? endif; ?>
+                </div>
+            <? else : ?>
+                <div class="KLYJBY">
+                    <? echo audioPost($post_id); ?>
+                </div>
+            <? endif; ?>
+        </div>
         <!-- Contenedor de etiquetas y datos adicionales -->
         <div class="FBKMJD">
             <div class="UKVPJI">
@@ -252,27 +311,6 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
         </div>
     </div>
 
-    <!-- Renderizado de la imagen de portada o imagen temporal fuera de NERWFB -->
-    <div class="MRPDOR">
-        <? if (!empty($audio_id_lite)) : // Solo renderizar si hay audio 
-        ?>
-            <? if (has_post_thumbnail($post_id)) : ?>
-                <!-- Mostrar imagen de portada -->
-                <div class="post-thumbnail">
-                    <? echo get_the_post_thumbnail($post_id, 'full'); ?>
-                </div>
-            <? else : ?>
-                <!-- Obtener imagen temporal desde los metadatos -->
-                <? $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true); ?>
-                <? if ($imagen_temporal_id) : ?>
-                    <!-- Renderizar imagen temporal -->
-                    <div class="temporal-thumbnail">
-                        <? echo wp_get_attachment_image($imagen_temporal_id, 'full'); ?>
-                    </div>
-                <? endif; ?>
-            <? endif; ?>
-        <? endif; ?>
-    </div>
 <?
 }
 
