@@ -268,18 +268,19 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
                     }
                     ?>
                 </div>
+                <? if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])) : ?>
+                    <div class="ZQHOQY">
+                        <? if (!empty($audio_id_lite)) : ?>
+                            <? wave($audio_url, $audio_id_lite, $post_id); ?>
+                        <? endif; ?>
+                    </div>
+                <? else : ?>
+                    <div class="KLYJBY">
+                        <? echo audioPost($post_id); ?>
+                    </div>
+                <? endif; ?>
             </div>
-            <? if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])) : ?>
-                <div class="ZQHOQY">
-                    <? if (!empty($audio_id_lite)) : ?>
-                        <? wave($audio_url, $audio_id_lite, $post_id); ?>
-                    <? endif; ?>
-                </div>
-            <? else : ?>
-                <div class="KLYJBY">
-                    <? echo audioPost($post_id); ?>
-                </div>
-            <? endif; ?>
+
         </div>
         <div class="FBKMJD">
             <div class="UKVPJI">
