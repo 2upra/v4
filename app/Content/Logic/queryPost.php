@@ -334,13 +334,13 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         $is_admin = current_user_can('administrator');
 
         if (!$is_authenticated) {
-            //error_log("[configuracionQueryArgs] Advertencia: Usuario no autenticado, utilizando FALLBACK_USER_ID");
+            // error_log("[configuracionQueryArgs] Advertencia: Usuario no autenticado, utilizando FALLBACK_USER_ID");
             $current_user_id = $FALLBACK_USER_ID;
         }
 
-        // Si $user_id no es nulo, no usar construirQueryArgs ni aplicarFiltrosUsuario
+        // Si $user_id no es nulo, construir un query_args básico y aplicarFiltroGlobal
         if ($user_id !== null) {
-            return [
+            $query_args = [
                 'post_type' => $args['post_type'],
                 'posts_per_page' => $args['posts'],
                 'paged' => $paged,
@@ -349,6 +349,11 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
                 'orderby' => 'date',
                 'order' => 'DESC', // Ordenar del más reciente al más antiguo
             ];
+
+            // Aplicar filtro global
+            $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
+
+            return $query_args;
         }
 
         // Continuar con el flujo normal si $user_id es nulo
