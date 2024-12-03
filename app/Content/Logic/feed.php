@@ -94,8 +94,10 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             $post_ids = [];
         }
 
+        // Guardar la cantidad original de posts antes de truncar
+        $originalCountPost = count($post_ids);
+
         if (count($post_ids) > POSTINLIMIT) {
-            guardarLog("Usuario ID: $current_user_id - Limitando resultados a " . POSTINLIMIT . " posts");
             $post_ids = array_slice($post_ids, 0, POSTINLIMIT);
         }
 
@@ -112,6 +114,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
         return [
             'post_ids' => $post_ids,
             'post_not_in' => $post_not_in,
+            'originalCountPost' => $originalCountPost // Devolvemos la cantidad original de posts
         ];
     } catch (Exception $e) {
         guardarLog("Error crítico para usuario ID: $current_user_id - " . $e->getMessage());
