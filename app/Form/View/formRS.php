@@ -37,7 +37,7 @@ function formRs()
             </label>
         </div>
 
-        <div class="previewsForm NGEESM RS ppp3" style="display: none;">
+        <div class="previewsForm NGEESM RS ppp3" id="ppp3" style="display: none;">
             <div class="previewAreaArchivos" id="previewImagen" style="display: none;">
                 <label></label>
             </div>
@@ -49,7 +49,7 @@ function formRs()
             </div>
         </div>
 
-        <div class="bloque flex-row"" id=" opciones" style="display: none">
+        <div class="bloque flex-row"" id="opciones" style="display: none">
             <p>Opciones de post</p>
             <div class="flex flex-row gap-2">
                 <label class="custom-checkbox">
