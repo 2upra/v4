@@ -6,7 +6,7 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
     $contenido = sanitize_textarea_field($_POST['textoNormal'] ?? '');
     $tags = sanitize_text_field($_POST['tags'] ?? '');
     if (empty($contenido)) {
-        //guardarLog('empty_content: El contenido no puede estar vacío.');
+        error_log('Error en crearPost: El contenido no puede estar vacío.');
         return new WP_Error('empty_content', 'El contenido no puede estar vacío.');
     }
     $titulo = wp_trim_words($contenido, 15, '...');
@@ -19,16 +19,18 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
         'post_type'    => $tipoPost,
     ]);
     if (is_wp_error($postId)) {
+        error_log('Error en crearPost: Error al insertar el post. Detalles: ' . $postId->get_error_message());
         return $postId;
     }
     if (!empty($tags)) {
-        update_post_meta($postId, 'tagsUsuario', $tags);
+        if (update_post_meta($postId, 'tagsUsuario', $tags) === false) {
+            error_log('Error en crearPost: Fallo al actualizar meta tagsUsuario para el post ID ' . $postId);
+        }
     }
-
     return $postId;
 }
 
-# Paso 2
+#Paso 2
 function actualizarMetaDatos($postId)
 {
     $meta_fields = [
@@ -39,33 +41,26 @@ function actualizarMetaDatos($postId)
     ];
 
     foreach ($meta_fields as $meta_key => $post_key) {
-        if (isset($_POST[$post_key])) {
-            $value = $_POST[$post_key] == '1' ? 1 : 0;
-        } else {
-            $value = 0;
+        $value = isset($_POST[$post_key]) && $_POST[$post_key] == '1' ? 1 : 0;
+        if (update_post_meta($postId, $meta_key, $value) === false) {
+            error_log("Error en actualizarMetaDatos: Fallo al actualizar el meta $meta_key para el post ID $postId.");
         }
-        update_post_meta($postId, $meta_key, $value);
     }
 
-    # Llama a registrarNombreRolas si viene 'rola'
     if (isset($_POST['music']) && $_POST['music'] == '1') {
         registrarNombreRolas($postId);
     }
 }
-
-# Paso 2.1 - Registrar nombres de rolas
+#Paso 2.1
 function registrarNombreRolas($postId)
 {
-    # Se busca hasta 30 posibles nombres de rolas en $_POST
     for ($i = 1; $i <= 30; $i++) {
         $rola_key = 'nombreRola' . $i;
-
         if (isset($_POST[$rola_key])) {
-            # Sanitizar el valor
             $nombre_rola = sanitize_text_field($_POST[$rola_key]);
-
-            # Guardar el nombre de la rola en un meta con el mismo nombre
-            update_post_meta($postId, $rola_key, $nombre_rola);
+            if (update_post_meta($postId, $rola_key, $nombre_rola) === false) {
+                error_log("Error en registrarNombreRolas: Fallo al actualizar el meta $rola_key para el post ID $postId.");
+            }
         }
     }
 }
@@ -89,31 +84,30 @@ function datosParaAlgoritmo($postId)
             'nombre' => $nombreMostrar,
         ],
     ];
-    if ($datosAlgoritmoJson = json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE)) {
-        update_post_meta($postId, 'datosAlgoritmo', $datosAlgoritmoJson);
+    $datosAlgoritmoJson = json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE);
+    if ($datosAlgoritmoJson === false) {
+        error_log("Error en datosParaAlgoritmo: Fallo al codificar JSON para el post ID: " . $postId . ". Error: " . json_last_error_msg());
     } else {
+        if (update_post_meta($postId, 'datosAlgoritmo', $datosAlgoritmoJson) === false) {
+            error_log("Error en datosParaAlgoritmo: Fallo al actualizar meta datosAlgoritmo para el post ID " . $postId);
+        }
     }
 }
 
 #Paso 4
 function confirmarArchivos($postId)
 {
-    // Define los tipos de campos que deseas procesar
     $tiposCampos = ['archivoId', 'audioId', 'imagenId'];
-    
-    // Define el número máximo de iteraciones (puedes ajustar este valor según tus necesidades)
     $maxCampos = 30;
-    
     foreach ($tiposCampos as $tipo) {
         for ($i = 1; $i <= $maxCampos; $i++) {
-            // Construye el nombre del campo, por ejemplo, 'archivoId1', 'archivoId2', etc.
             $campo = $tipo . $i;
-            
             if (!empty($_POST[$campo])) {
                 $file_id = intval($_POST[$campo]);
                 if ($file_id > 0) {
-                    update_post_meta($postId, 'idHash_' . $campo, $file_id);
-                    //guardarLog("idHash_{$campo} actualizado para postId: {$postId}");
+                    if (update_post_meta($postId, 'idHash_' . $campo, $file_id) === false) {
+                        error_log("Error en confirmarArchivos: Fallo al actualizar meta idHash_{$campo} para el post ID: {$postId}");
+                    }
                     confirmarHashId($file_id);
                 }
             }
@@ -121,7 +115,7 @@ function confirmarArchivos($postId)
     }
 }
 
-#Paso 5 
+#Paso 5
 function procesarURLs($postId)
 {
     $tiposURLs = [
@@ -129,32 +123,22 @@ function procesarURLs($postId)
         'audioUrl'   => ['procesarArchivo', true],
         'archivoUrl' => ['procesarArchivo', false],
     ];
-    
-    // Define el número máximo de iteraciones (ajustable según tus necesidades)
     $maxCampos = 30;
-    
     foreach ($tiposURLs as $tipo => $callbackData) {
-        // Extrae la función de callback y el parámetro adicional
         $funcionCallback = $callbackData[0];
         $parametroAdicional = isset($callbackData[1]) ? $callbackData[1] : null;
-        
         for ($i = 1; $i <= $maxCampos; $i++) {
-
             $campo = $tipo . $i;
-            
             if (!empty($_POST[$campo])) {
                 $url = esc_url_raw($_POST[$campo]);
                 if (filter_var($url, FILTER_VALIDATE_URL)) {
                     if ($parametroAdicional !== null) {
-                        // Llama a la función de callback con el parámetro adicional
                         call_user_func($funcionCallback, $postId, $campo, $parametroAdicional);
                     } else {
-                        // Llama a la función de callback sin el parámetro adicional
                         call_user_func($funcionCallback, $postId, $campo);
                     }
                 } else {
-                    // Opcional: Manejar URLs inválidas
-                    //guardarLog("URL inválida en el campo: {$campo} para postId: {$postId}");
+                    error_log("Error en procesarURLs: URL inválida en el campo: {$campo} para postId: {$postId}");
                 }
             }
         }
@@ -166,19 +150,22 @@ function procesarArchivo($postId, $campo, $renombrar = false)
 {
     $url = esc_url_raw($_POST[$campo]);
     $archivoId = obtenerArchivoId($url, $postId);
-
     if ($archivoId && !is_wp_error($archivoId)) {
-        actualizarMetaConArchivo($postId, $campo, $archivoId);
-
-        if ($renombrar) {
-            renombrarArchivoAdjunto($postId, $archivoId, $campo);
+        if (actualizarMetaConArchivo($postId, $campo, $archivoId) === false) {
+            error_log("Error en procesarArchivo: Fallo al actualizar meta con archivo para Post ID: $postId y Campo: $campo");
+            return false;
         }
-
+        if ($renombrar) {
+            if (renombrarArchivoAdjunto($postId, $archivoId, $campo) === false) {
+                error_log("Error en procesarArchivo: Fallo al renombrar el archivo adjunto para Post ID: $postId, Campo: $campo y Archivo ID: $archivoId");
+                return false;
+            }
+        }
         return true;
     } else {
-        //guardarLog("Error: No se pudo procesar el archivo para Post ID: $postId y Campo: $campo");
+        $mensajeError = is_wp_error($archivoId) ? $archivoId->get_error_message() : "No se pudo obtener el ID del archivo.";
+        error_log("Error en procesarArchivo: No se pudo procesar el archivo para Post ID: $postId, Campo: $campo. Error: " . $mensajeError);
     }
-
     return false;
 }
 
@@ -186,97 +173,52 @@ function procesarArchivo($postId, $campo, $renombrar = false)
 
 function renombrarArchivoAdjunto($postId, $archivoId, $campo)
 {
-    guardarLog("renombrarArchivoAdjunto recibió: $postId, $archivoId, $campo");
-    
-    // Extraer el índice del campo, por ejemplo, de 'audioUrl1' extraemos '1'
-    if (preg_match('/(\d+)$/', $campo, $matches)) {
-        $indice = intval($matches[1]);
-    } else {
-        guardarLog("Advertencia: No se pudo extraer el índice del campo {$campo}.");
-        return; // Salir si no se puede extraer el índice
+    if (!preg_match('/(\d+)$/', $campo, $matches)) {
+        error_log("Error en renombrarArchivoAdjunto: No se pudo extraer el índice del campo {$campo}.");
+        return;
     }
-
-    // Definir el nombre del campo para idHash_audioIdX
+    $indice = intval($matches[1]);
     $idHashCampo = "idHash_audioId{$indice}";
-    
-    // Obtener el idHash desde los meta del post
     $idHash = get_post_meta($postId, $idHashCampo, true);
-    
     if (empty($idHash)) {
-        guardarLog("Advertencia: No se encontró el meta {$idHashCampo} para postId {$postId}.");
-        return; // Salir si no se encuentra el idHash
+        error_log("Error en renombrarArchivoAdjunto: No se encontró el meta {$idHashCampo} para postId {$postId}.");
+        return;
     }
-
-    // Construir el nombre del campo 'audioIdX'
     $audioIdCampo = 'audioId' . $indice;
-
-    // Obtener el file_id correspondiente desde $_POST
-    if (!empty($_POST[$audioIdCampo])) {
-        $file_id = intval($_POST[$audioIdCampo]);
-    } else {
-        guardarLog("Advertencia: No se encontró el campo {$audioIdCampo} en \$_POST.");
-        $file_id = 0; // O manejar de otra manera según tus necesidades
-    }
-
+    $file_id = !empty($_POST[$audioIdCampo]) ? intval($_POST[$audioIdCampo]) : 0;
     if ($file_id !== $archivoId) {
-        guardarLog("Advertencia: El file_id ({$file_id}) no coincide con archivoId ({$archivoId}).");
+        error_log("Error en renombrarArchivoAdjunto: El file_id ({$file_id}) no coincide con archivoId ({$archivoId}).");
     }
-
-    // Obtener el post y el autor
     $post = get_post($postId);
     $author = get_userdata($post->post_author);
-
     if (!$post || !$author) {
-        guardarLog("Error: No se pudo obtener el post o el autor.");
-        return new WP_Error('post_or_author_not_found', 'No se pudo obtener el post o el autor.');
+        error_log("Error en renombrarArchivoAdjunto: No se pudo obtener el post o el autor para postId: {$postId}.");
+        return;
     }
-
-    // Obtener la ruta del archivo adjunto
     $file_path = get_attached_file($archivoId);
-
     if (!$file_path || !file_exists($file_path)) {
-        guardarLog("Error: El archivo adjunto no existe para archivoId: {$archivoId}.");
-        return new WP_Error('file_not_found', 'El archivo adjunto no existe.');
+        error_log("Error en renombrarArchivoAdjunto: El archivo adjunto no existe para archivoId: {$archivoId}.");
+        return;
     }
-
     $info = pathinfo($file_path);
-
-    // Generar un identificador aleatorio de 5 dígitos
     $random_id = rand(10000, 99999);
-
-    // Construir el nuevo nombre de archivo con el ID aleatorio
     $new_filename = sprintf(
         '2upra_%s_%s_%s.%s',
         sanitize_file_name(mb_substr($author->user_login, 0, 20)),
         sanitize_file_name(mb_substr($post->post_content, 0, 40)),
-        $random_id, // Agregar el ID aleatorio
+        $random_id,
         $info['extension']
     );
-
     $new_file_path = $info['dirname'] . DIRECTORY_SEPARATOR . $new_filename;
-
-    // Renombrar el archivo
     if (rename($file_path, $new_file_path)) {
         $upload_dir = wp_upload_dir();
         $public_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $new_file_path);
-        
-        // Log corregido para utilizar idHash en lugar de archivoId
-        guardarLog("enviando $idHash con $public_url a actualizarUrlArchivo");
-        actualizarUrlArchivo($idHash, $public_url); // Usar idHash en lugar de archivoId
-        
-        // Actualizar la ruta del archivo adjunto
+        actualizarUrlArchivo($idHash, $public_url);
         update_attached_file($archivoId, $new_file_path);
-        
-        // Actualizar metadatos según sea necesario
         update_post_meta($postId, 'sample', true);
-
-        // Procesar el audio de manera ligera
         procesarAudioLigero($postId, $archivoId, $indice);
-
-        guardarLog("Archivo adjunto renombrado a {$new_filename} para postId: {$postId}");
     } else {
-        guardarLog("Error: No se pudo renombrar el archivo adjunto de $file_path a $new_file_path.");
-        return new WP_Error('rename_failed', 'No se pudo renombrar el archivo adjunto.');
+        error_log("Error en renombrarArchivoAdjunto: No se pudo renombrar el archivo adjunto de {$file_path} a {$new_file_path}.");
     }
 }
 
@@ -291,57 +233,48 @@ function obtenerArchivoId($url, $postId)
                 'name'     => basename($file_path),
                 'tmp_name' => $file_path
             ], $postId);
+            if (is_wp_error($archivoId)) {
+                error_log("Error en obtenerArchivoId: No se pudo crear el adjunto desde la URL {$url}. Error: " . $archivoId->get_error_message());
+                return false;
+            }
+        } else {
+            error_log("Error en obtenerArchivoId: El archivo no existe en la ruta {$file_path} para la URL {$url}.");
+            return false;
         }
     }
-
     return $archivoId;
 }
 
 #Paso 5.4
 function actualizarMetaConArchivo($postId, $campo, $archivoId)
 {
-    // Mapeo de tipos base de campos a claves meta.
     $meta_mapping = [
         'imagenUrl'   => 'imagenID',
         'audioUrl'    => 'post_audio',
         'archivoUrl'  => 'archivoID'
     ];
-
-    // Regex para extraer el tipo base y el índice (si existe).
     $pattern = '/^(?<base>imagenUrl|audioUrl|archivoUrl)(?<index>\d*)$/';
-
     if (preg_match($pattern, $campo, $matches)) {
-        $baseField = $matches['base'];             // e.g., 'audioUrl'
-        $index     = $matches['index'];            // e.g., '1'; puede estar vacío si no hay número.
-
-        // Obtener la clave meta base desde el mapeo.
+        $baseField = $matches['base'];
+        $index     = $matches['index'];
         if (isset($meta_mapping[$baseField])) {
             $baseMetaKey = $meta_mapping[$baseField];
-
-            // Si hay un índice, lo añadimos a la clave meta para mantener unicidad.
-            // Por ejemplo, 'post_audio1', 'post_audio2', etc.
             $meta_key = $baseMetaKey . ($index !== '' ? $index : '');
-
-            // Actualizar el meta dato específico.
             update_post_meta($postId, $meta_key, $archivoId);
-
-
-            if ($baseField === 'imagenUrl1' && $index === '') {
+            if ($baseField === 'imagenUrl' && $index === '1') {
                 set_post_thumbnail($postId, $archivoId);
-                //guardarLog("Miniatura del post establecida con archivo ID: {$archivoId} para postId: {$postId}");
-            } else {
-                //guardarLog("Meta clave '{$meta_key}' actualizada con archivo ID: {$archivoId} para postId: {$postId}");
             }
         } else {
-            // Si el tipo base no está en el mapeo, usar el nombre completo del campo como meta_key.
             update_post_meta($postId, $campo, $archivoId);
-            //guardarLog("Meta clave '{$campo}' actualizada con archivo ID: {$archivoId} para postId: {$postId}");
         }
     } else {
-        // Si el campo no coincide con los patrones esperados, manejarlo de forma predeterminada.
         update_post_meta($postId, $campo, $archivoId);
-        //guardarLog("Meta clave '{$campo}' actualizada con archivo ID: {$archivoId} para postId: {$postId}");
     }
+    if (update_post_meta($postId, $campo, $archivoId) === false) {
+        error_log("Error en actualizarMetaConArchivo: Fallo al actualizar meta {$campo} para el post ID {$postId}.");
+        return false;
+    }
+    return true;
 }
 
 
@@ -530,7 +463,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index, 
     if ($descripcion) {
         // Procesar el JSON eliminando caracteres innecesarios
         $descripcion_procesada = json_decode(trim($descripcion, "```json \n"), true);
-    
+
         if ($descripcion_procesada) {
             // Corregir la estructura de 'descripcion_ia' solo si está mal estructurada
             if (isset($descripcion_procesada['descripcion_ia']['descripcion_ia'])) {
@@ -539,10 +472,10 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index, 
                     'en' => $descripcion_procesada['descripcion_ia']['descripcion_ia']['en'] ?? ''
                 ];
             }
-    
+
             // Definir el sufijo para los datos, según el índice
             $suffix = ($index == 1) ? '' : "_{$index}";
-    
+
             // Asegurarse de que la clave 'descripcion_ia' esté bien estructurada
             if (isset($descripcion_procesada['descripcion_ia']) && is_array($descripcion_procesada['descripcion_ia'])) {
                 // Crear los nuevos datos con la estructura correcta
@@ -580,7 +513,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index, 
                         'en' => $descripcion_procesada['sugerencia_busqueda']['en'] ?? []
                     ]
                 ];
-    
+
                 // Guardar los datos procesados en los metadatos del post
                 update_post_meta($post_id, "audio_descripcion{$suffix}", json_encode($nuevos_datos, JSON_UNESCAPED_UNICODE));
                 iaLog("Descripción del audio guardada para el post ID: {$post_id}");
@@ -591,10 +524,10 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index, 
             iaLog("Error al procesar el JSON de la descripción generada por IA.");
         }
     }
-    
+
     // Obtener los datos del algoritmo
     $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
-    
+
     // Si no existen, inicializarlos como un array vacío
     if (!$datos_algoritmo) {
         $datos_algoritmo = [];
@@ -604,7 +537,7 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index, 
             $datos_algoritmo = [];
         }
     }
-    
+
     // Actualizar los nuevos datos correctamente sin anidar 'descripcion_ia'
     $nuevos_datos_algoritmo = [
         'bpm' => $resultados['bpm'] ?? '',
@@ -621,22 +554,21 @@ function analizarYGuardarMetasAudio($post_id, $nuevo_archivo_path_lite, $index, 
         'tags_posibles' => $nuevos_datos['tags_posibles'],
         'sugerencia_busqueda' => $nuevos_datos['sugerencia_busqueda']
     ];
-    
+
     iaLog("Datos nuevos a agregar: " . json_encode($nuevos_datos_algoritmo));
-    
+
     // Combinar los nuevos datos con los existentes
     $datos_algoritmo = array_merge($datos_algoritmo, $nuevos_datos_algoritmo);
-    
+
     iaLog("Metadatos actuales para 'datosAlgoritmo' antes de guardar: " . json_encode($datos_algoritmo));
-    
+
     // Guardar los datos combinados en los metadatos del post
     update_post_meta($post_id, 'datosAlgoritmo', json_encode($datos_algoritmo, JSON_UNESCAPED_UNICODE));
-    
+
     // Actualizar la bandera de IA
     update_post_meta($post_id, 'flashIA', true);
-    
+
     iaLog("Metadatos de 'datosAlgoritmo' actualizados para el post ID: {$post_id}");
-    
 }
 
 
@@ -650,9 +582,3 @@ function asignarTags($postId)
         wp_set_post_tags($postId, $tags_array, false);
     }
 }
-
-
-
-
-
-
