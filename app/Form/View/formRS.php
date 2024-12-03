@@ -26,12 +26,12 @@ function formRs()
 
         <div class="DRHMDE">
             <label class="custom-checkbox">
-                <input type="checkbox" id="descargacheck" name="descargacheck" value="1">
+                <input type="checkbox" id="fancheck" name="fancheck" value="1">
                 <span class="checkmark"></span>
                 Area de fans
             </label>
             <label class="custom-checkbox">
-                <input type="checkbox" id="exclusivocheck" name="exclusivocheck" value="1">
+                <input type="checkbox" id="artistacheck" name="artistacheck" value="1">
                 <span class="checkmark"></span>
                 Area de artistas
             </label>
