@@ -15,7 +15,10 @@ let enablelogRS = false;
 const logRS = enablelogRS ? console.log : function () {};
 let waveSurferInstances = {};
 
+let rsIniciado = false;
 function iniciarRS() {
+    if (rsIniciado) return;
+    rsIniciado = true;
     logRS('comienzoFormRS fue llamado');
     if (document.getElementById('formRs')) {
         logRS('formRs existe');
