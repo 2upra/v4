@@ -107,12 +107,7 @@ if (!defined('ABSPATH')) {
                         </div>
                         -->
                         <!--
-                        <div class="subiricono menu-item" id="subiricono">
-                            <a>
-                                <? // echo $GLOBALS['subiricono']; 
-                                ?>
-                            </a>
-                        </div>
+
                         -->
                         <div class="menu-item">
                             <a href="https://2upra.com/mu">
@@ -196,6 +191,14 @@ if (!defined('ABSPATH')) {
                                 echo ($pinkys > 100) ? '99+' : $pinkys;
                                 ?>
                             </div>
+
+                            <div class="subiricono menu-item" id="subiricono">
+                                <a>
+                                    <? echo $GLOBALS['subiricono'];
+                                    ?>
+                                </a>
+                            </div>
+
                             <div class="chatIcono" id="chatIcono">
                                 <a>
                                     <? echo $GLOBALS['chatIcono']; ?>
@@ -211,12 +214,12 @@ if (!defined('ABSPATH')) {
                                     </a>
                                 </div>
 
-                                <div class="menu-item botonConfig">
+                                <div class="menu-item botonConfig" style="display: none;">
                                     <a>
                                         <? echo $GLOBALS['configicono']; ?>
                                     </a>
                                 </div>
-                                
+
                             </div>
 
 
@@ -347,6 +350,7 @@ if (!defined('ABSPATH')) {
                 <div class="A1806241" id="submenuperfil-default">
                     <div class="A1806242">
                         <button><a href="https://2upra.com/perfil/">Mi perfil</a></button>
+                        <button class="botonConfig">Editar perfil</button>
                         <button class="reporte">Reportar un error</button>
                         <button><a href="https://2upra.com/colabs/">Mis colabs</a></button>
                         <button class="no-ajax"><a class="no-ajax" href="<?php echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>
