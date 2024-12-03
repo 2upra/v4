@@ -348,17 +348,15 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
         // Construcción inicial de query args
         $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
+        if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
+            $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+        }
 
         // Si $user_id no es null, simplemente ordenamos por fecha (más reciente al más viejo)
         if (!is_null($user_id)) {
             $query_args['orderby'] = 'date';
             $query_args['order'] = 'DESC';
         } else {
-            // Aplicar filtros cuando $user_id es null
-            if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
-                $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
-            }
-
             $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
         }
 
