@@ -1,25 +1,39 @@
+/*
+porque este formato no funciona
+
+{"tags":["lofi","test"],"texto":"Lofi drum loop","autor":{"id":"1","usuario":"1ndoryu","nombre":"Wandorius"},"bpm":150,"emotion":"","key":"Ab","scale":"major","descripcion_ia":{"es":"Loop de batería lofi con un ritmo relajado y repetitivo, ideal para la creación de beats hip hop o música electrónica con una estética vintage.  Su sonido es cálido y orgánico, con un groove sutil que invita a la relajación.  Perfecto para proyectos chillhop, lofi hip hop, o cualquier género que requiera un beat suave y atmosférico.","en":"Lofi drum loop with a relaxed and repetitive rhythm, ideal for creating hip hop beats or electronic music with a vintage aesthetic. Its sound is warm and organic, with a subtle groove that invites relaxation. Perfect for chillhop, lofi hip hop, or any genre that requires a smooth and atmospheric beat."},"instrumentos_posibles":{"es":[],"en":[]},"estado_animo":{"es":["Relajado","Tranquilo"],"en":["Relaxed","Calm"]},"artista_posible":{"es":["Nujabes","J Dilla","MF DOOM"],"en":["Nujabes","J Dilla","MF DOOM"]},"genero_posible":{"es":["Lofi hip hop","Chillhop","Hip hop instrumental"],"en":["Lofi hip hop","Chillhop","Hip hop instrumental"]},"tipo_audio":{"es":["Loop"],"en":["Loop"]},"tags_posibles":{"es":["Lofi","Hip Hop","Chillhop","Loop","Drums","Batería","Suave","Relax","Vintage","Warm"],"en":["Lofi","Hip Hop","Chillhop","Loop","Drums","Smooth","Relax","Vintage","Warm"]},"sugerencia_busqueda":{"es":["Beat lofi relajante","Loop de batería lofi","Música lofi para relajarse"],"en":["Relaxing lofi beat","Lofi drum loop","Relaxing lofi music"]}}
+
+necesito que funcione sin dañar el resto de cosas
+*/
+
+//LA FORMA EN QUE ESTO PROCESA LAS COSA NO DEBE ALTERARSE PORQUE SOPORTA DIFERENTES FORMATOS, SOLO HACERLO MAS FLEXIBLE
+// Reparar JSON con mayor flexibilidad
 function repararJson(jsonString) {
     try {
-        // Escapar comillas dentro de cualquier propiedad que tenga un objeto como valor
+        // Escapar dobles comillas dentro de cadenas JSON anidadas
         jsonString = jsonString.replace(/"([^"]+?)":\s*?"({.*?})"/g, function (match, p1, p2) {
             return `"${p1}":"${p2.replace(/"/g, '\\"')}"`;
         });
 
-        // Intentar parsear el JSON reparado
+        // Intentar parsear el JSON
         return JSON.parse(jsonString);
     } catch (e) {
-        console.error('Error al parsear el JSON:', e.message);
+        console.error('Error al parsear el JSON:', e.message, '\nJSON Original:', jsonString);
         return null;
     }
 }
+
+// Capitalizar palabras
 function capitalize(word) {
     return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
 }
 
+// Eliminar elementos duplicados de un array
 function removeDuplicates(arr) {
     return [...new Set(arr)];
 }
 
+// Procesar tags de los posts
 function tagsPosts() {
     document.querySelectorAll('p[id-post-algoritmo]').forEach(function (pElement) {
         const postId = pElement.getAttribute('id-post-algoritmo');
@@ -32,7 +46,7 @@ function tagsPosts() {
 
         const jsonData = repararJson(pElement.textContent);
         if (!jsonData) {
-            console.error(`Error al parsear el JSON para el post ${postId}`);
+            console.error(`No se pudo procesar el JSON para el post ${postId}`);
             return;
         }
 
@@ -48,45 +62,52 @@ function tagsPosts() {
             }
         };
 
-        // Detectar estructura
+        // Detectar si es una estructura nueva o antigua
         const isNewStructure = !!jsonData.instrumentos_principal?.['es'];
 
-        // Primero agregar tipo de audio
-        addTags(jsonData, 'tipo_audio');
+        // Agregar tags según la estructura
+        addTags(jsonData, 'tipo_audio'); // Tipo de audio (común en ambas estructuras)
 
-        // Agregar instrumentos
         if (isNewStructure) {
             addTags(jsonData, 'instrumentos_principal');
         } else {
             addTags(jsonData, 'Instrumentos posibles');
         }
 
-        // Agregar género
         if (isNewStructure) {
             addTags(jsonData, 'genero_posible');
         } else {
             addTags(jsonData, 'Genero posible');
         }
 
-        // Agregar categoría BPM
+        // Agregar BPM como categoría
         if (jsonData.bpm) {
-            const bpmCategory = jsonData.bpm < 90 ? 'Lento' : jsonData.bpm < 120 ? 'Moderado' : jsonData.bpm < 150 ? 'Rápido' : 'Muy Rápido';
+            const bpmCategory =
+                jsonData.bpm < 90
+                    ? 'Lento'
+                    : jsonData.bpm < 120
+                    ? 'Moderado'
+                    : jsonData.bpm < 150
+                    ? 'Rápido'
+                    : 'Muy Rápido';
             allTags.push(`${bpmCategory} (${jsonData.bpm} BPM)`);
         }
 
-        // Agregar tonalidad y escala
+        // Agregar tonalidad (key y scale)
         if (jsonData.key && jsonData.scale) {
             allTags.push(`${capitalize(jsonData.key)} ${capitalize(jsonData.scale)}`);
         }
 
-        // Agregar las categorías restantes
-        const remainingCategories = isNewStructure ? ['estado_animo', 'artista_posible', 'tags_posibles'] : ['Estado de animo', 'Artista posible', 'Tags posibles'];
+        // Categorías restantes que son comunes
+        const remainingCategories = isNewStructure
+            ? ['estado_animo', 'artista_posible', 'tags_posibles']
+            : ['Estado de animo', 'Artista posible', 'Tags posibles'];
 
         remainingCategories.forEach(category => {
             addTags(jsonData, category);
         });
 
-        // Crear y agregar tags únicos al contenedor
+        // Eliminar duplicados y agregar los tags al contenedor
         removeDuplicates(allTags).forEach(tag => {
             const tagElement = document.createElement('span');
             tagElement.classList.add('postTag');
@@ -94,6 +115,8 @@ function tagsPosts() {
             tagsContainer.appendChild(tagElement);
         });
     });
+
+    // Limitar la cantidad de tags visibles (si es necesario)
     limitTags();
 }
 
