@@ -325,6 +325,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     return ob_get_clean();
 }
 
+//aqui necesito que cuando $user_id, no sea null, no use construirQueryArgs ni aplicarFiltrosUsuario, y estableca un ordenamiento del mas reciente al mas viejo simplemente, dame el codigo completo sin dañar
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
     try {
@@ -333,10 +334,24 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         $is_admin = current_user_can('administrator');
 
         if (!$is_authenticated) {
-            // error_log("[configuracionQueryArgs] Advertencia: Usuario no autenticado, utilizando FALLBACK_USER_ID");
+            //error_log("[configuracionQueryArgs] Advertencia: Usuario no autenticado, utilizando FALLBACK_USER_ID");
             $current_user_id = $FALLBACK_USER_ID;
         }
 
+        // Si $user_id no es nulo, no usar construirQueryArgs ni aplicarFiltrosUsuario
+        if ($user_id !== null) {
+            return [
+                'post_type' => $args['post_type'],
+                'posts_per_page' => $args['posts'],
+                'paged' => $paged,
+                'ignore_sticky_posts' => true,
+                'suppress_filters' => false,
+                'orderby' => 'date',
+                'order' => 'DESC', // Ordenar del más reciente al más antiguo
+            ];
+        }
+
+        // Continuar con el flujo normal si $user_id es nulo
         $identifier = $_GET['busqueda'] ?? $_POST['identifier'] ?? '';
         $posts = $args['posts'];
         $similar_to = $args['similar_to'] ?? null;
@@ -346,17 +361,12 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
         }
 
-        // Construcción inicial de query args
         $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
 
-        if (!is_null($user_id)) {
-            $query_args['orderby'] = 'date';
-            $query_args['order'] = 'DESC';
-        } else {
-            if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
-                $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
-            }
+        if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
+            $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
         }
+
         $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
 
         return $query_args;
@@ -365,6 +375,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         return false;
     }
 }
+
 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
 {
