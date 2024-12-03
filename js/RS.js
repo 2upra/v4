@@ -629,6 +629,7 @@ window.inicializarWaveform = function (containerId, audioSrc) {
     }
 };
 
+//esto creo que funciona bien
 async function selectorformtipo() {
     const descargacheck = document.getElementById('descargacheck');
     const musiccheck = document.getElementById('musiccheck');
@@ -640,7 +641,6 @@ async function selectorformtipo() {
     // Verifica si los elementos necesarios existen; si no, retorna
     if (!descargacheck || !musiccheck || !exclusivocheck || !colabcheck || !fancheck || !artistacheck) return;
 
-    // Preselecciona 'descargacheck' y aplica estilos
     descargacheck.checked = true;
     const label = descargacheck.closest('label');
     label.style.color = '#ffffff';
@@ -676,6 +676,9 @@ async function selectorformtipo() {
             if (event.target.id === 'exclusivocheck' && event.target.checked) {
                 colabcheck.checked = false;
                 musiccheck.checked = false;
+                const colabLabel = colabcheck.closest('label');
+                colabLabel.style.color = '#6b6b6b';
+                colabLabel.style.background = '';
                 resetStyles();
             }
 
@@ -683,6 +686,9 @@ async function selectorformtipo() {
             if (event.target.id === 'colabcheck' && event.target.checked) {
                 exclusivocheck.checked = false;
                 musiccheck.checked = false;
+                const exclusivocLabel = exclusivocheck.closest('label');
+                exclusivocLabel.style.color = '#6b6b6b';
+                exclusivocLabel.style.background = '';
                 resetStyles();
             }
 
@@ -717,22 +723,40 @@ async function selectorformtipo() {
     }
 }
 
-async function selectorFanArtista() {
+function selectorFanArtista() {
     const fancheck = document.getElementById('fancheck');
     const artistacheck = document.getElementById('artistacheck');
 
     // Verifica si los elementos necesarios existen; si no, retorna
     if (!fancheck || !artistacheck) return;
 
-    document.addEventListener('change', function (event) {
-        // Si se marca 'fancheck', desmarca 'artistacheck'
-        if (event.target.id === 'fancheck' && event.target.checked) {
-            artistacheck.checked = false;
+    // Función para actualizar estilos
+    function updateStyles(checkbox) {
+        const label = checkbox.closest('label');
+        if (checkbox.checked) {
+            label.style.color = '#ffffff';
+            label.style.background = '#131313';
+        } else {
+            label.style.color = '#6b6b6b';
+            label.style.background = '';
         }
+    }
 
-        // Si se marca 'artistacheck', desmarca 'fancheck'
-        if (event.target.id === 'artistacheck' && event.target.checked) {
-            fancheck.checked = false;
+    // Listener para 'fancheck'
+    fancheck.addEventListener('change', function () {
+        if (fancheck.checked) {
+            artistacheck.checked = false;
+            updateStyles(artistacheck);
         }
+        updateStyles(fancheck);
+    });
+
+    // Listener para 'artistacheck'
+    artistacheck.addEventListener('change', function () {
+        if (artistacheck.checked) {
+            fancheck.checked = false;
+            updateStyles(fancheck);
+        }
+        updateStyles(artistacheck);
     });
 }
