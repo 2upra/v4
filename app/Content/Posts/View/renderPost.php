@@ -195,20 +195,19 @@ function renderPostControls($post_id, $colab)
 
 function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $audio_id_lite)
 {
-    ?>
+?>
     <div class="NERWFB">
         <!-- Contenedor principal -->
         <div class="YWBIBG">
-            <!-- Mostrar la portada si existe -->
-            <? if (has_post_thumbnail($post_id)) : ?>
-                <div class="post-thumbnail">
-                    <? echo get_the_post_thumbnail($post_id, 'full'); ?>
-                </div>
-            <? endif; ?>
 
             <!-- Contenido del post -->
             <div class="thePostContet" data-post-id="<? echo esc_html($post_id); ?>">
                 <? the_content(); ?>
+                <? if (has_post_thumbnail($post_id)) : ?>
+                    <div class="post-thumbnail">
+                        <? echo get_the_post_thumbnail($post_id, 'full'); ?>
+                    </div>
+                <? endif; ?>
             </div>
 
             <!-- Información adicional (bpm, escala, nota) -->
@@ -251,7 +250,7 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
             </div>
         </div>
     </div>
-    <?
+<?
 }
 
 
