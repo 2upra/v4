@@ -657,13 +657,6 @@ async function selectorformtipo() {
                 return;
             }
 
-            // Evitar que se seleccionen fancheck y artistacheck simultáneamente
-            if (fancheck.checked && artistacheck.checked) {
-                event.target.checked = false;
-                alert('No puedes seleccionar "fan" y "artista" al mismo tiempo.');
-                return;
-            }
-
             // Si se marca 'musiccheck', desmarca los demás checkboxes y pide confirmación
             if (event.target.id === 'musiccheck' && event.target.checked) {
                 const confirmacion = await window.confirm('Vas a publicar música en nuestra plataforma y en otras plataformas de stream.');
