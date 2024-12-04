@@ -441,7 +441,7 @@ function fondoPost($filtro, $block, $es_suscriptor, $postId)
         ob_start();
         ?>
         <div class="post-background <?= $blurred_class ?>"
-            style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<? esc_url($optimized_thumbnail_url) ?>);">
+            style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<? echo esc_url($optimized_thumbnail_url) ?>);">
         </div>
     <?
         $output = ob_get_clean();
