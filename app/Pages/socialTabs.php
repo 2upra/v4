@@ -43,18 +43,18 @@ function socialTabs()
     </div>
     <div class="tabs">
         <div class="tab-content">
-
-            <div class="BPLBDE UP">
-                <div class="DHRDTAG">
-                    <? echo tagsPosts(); ?>
-                </div>
-                <div class="FDGEDF">
-                    <p id="resultadosPost-sampleList"></p>
-                    <? echo renderFiltro(); ?>
-                </div>
-            </div>
             <? if ($usuarioTipo === 'Artista'): // Mostrar solo si el usuario es artista 
             ?>
+                <div class="BPLBDE UP">
+                    <div class="DHRDTAG">
+                        <? echo tagsPosts(); ?>
+                    </div>
+                    <div class="FDGEDF">
+                        <p id="resultadosPost-sampleList"></p>
+                        <? echo renderFiltro(); ?>
+                    </div>
+                </div>
+
                 <div class="tab INICIO S4K7I3" id="Samples">
                     <div class="BPLBDE">
                         <div class="FOFDV5">

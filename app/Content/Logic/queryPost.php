@@ -99,10 +99,10 @@ function manejarIdea($args, $paged)
 {
     // Obtener el ID del usuario para diferenciar la caché por usuario
     $user_id = get_current_user_id();
-    
+
     // Crear una clave de caché única basada en el usuario y la paginación
     $cache_key = 'idea_' . $user_id . '_' . md5(json_encode($args) . '_paged_' . $paged);
-    
+
     // Intentar obtener datos desde la caché
     $cached_data = obtenerCache($cache_key);
     if ($cached_data !== false) {
@@ -133,7 +133,7 @@ function manejarColeccion($args, $paged)
 {
     // Crear una clave de caché única basada en la colección y la paginación
     $cache_key = 'coleccion_' . $args['colec'] . '_paged_' . $paged;
-    
+
     // Intentar obtener datos desde la caché
     $cached_data = obtenerCache($cache_key);
     if ($cached_data !== false) {
@@ -216,11 +216,15 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
         }
 
-        // Construcción de los argumentos de consulta
-        $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
+        $tipoUsuario = get_user_meta($current_user_id, 'tipoUsuario', true);
 
+        $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario);
+
+        // Solo aplicarFiltrosUsuario si el tipoUsuario no es 'fan'
         if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
-            $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+            if ($tipoUsuario !== 'fan') {
+                $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+            }
         }
 
         $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
@@ -519,7 +523,7 @@ function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id)
     return $query_args;
 }
 
-function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
+function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario = null)
 {
     try {
         global $wpdb;
@@ -542,12 +546,13 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                 error_log("[construirQueryArgs] Error: Falló el filtrado por identifier: " . $identifier);
             }
         }
-
-        if ($args['post_type'] === 'social_post') {
+        if ($args['post_type'] === 'social_post' && $tipoUsuario !== 'fan') {
             $query_args = ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
             if (!$query_args) {
                 error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
             }
+        } else if ($args['post_type'] === 'social_post' && $tipoUsuario === 'fan') {
+            error_log("[construirQueryArgs] No se aplicó ordenamientoQuery porque tipoUsuario es 'fan'.");
         }
 
         return $query_args;
