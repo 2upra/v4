@@ -213,17 +213,35 @@
         eliminarMarcadorCarga(listaPublicaciones);
     }
     // Función para insertar el marcador de carga
+    /*
+    remplaza y añade esto
+    <div role="status" class="loading-placeholder">
+        <div class="loading-bar"></div>
+        <span class="sr-only">Loading...</span>
+    </div>
+    */
     function insertarMarcadorCarga(listaPublicaciones) {
         if (!listaPublicaciones) return;
-
-        // Crear un elemento para el marcador de carga
+    
+        // Crear un elemento div para el marcador de carga
         const marcadorCarga = document.createElement('div');
-        marcadorCarga.className = 'marcador-carga';
-        marcadorCarga.textContent = 'Cargando posts...';
-        marcadorCarga.style.textAlign = 'center'; // Centrar el texto (opcional)
-        marcadorCarga.style.padding = '10px'; // Espaciado (opcional)
-
-        // Añadir el marcador al inicio de la lista de publicaciones
+        marcadorCarga.setAttribute('role', 'status'); // Añadir el atributo role="status"
+        marcadorCarga.className = 'loading-placeholder'; // Asignar la clase loading-placeholder
+    
+        // Crear el div que representa la barra de carga
+        const loadingBar = document.createElement('div');
+        loadingBar.className = 'loading-bar'; // Asignar la clase loading-bar
+    
+        // Crear el span con la clase sr-only para el texto "Loading..."
+        const srOnlyText = document.createElement('span');
+        srOnlyText.className = 'sr-only'; // Asignar la clase sr-only
+        srOnlyText.textContent = 'Loading...'; // El texto que será accesible solo para lectores de pantalla
+    
+        // Añadir los elementos hijos (loading-bar y sr-only) al marcador de carga
+        marcadorCarga.appendChild(loadingBar);
+        marcadorCarga.appendChild(srOnlyText);
+    
+        // Insertar el marcador de carga al final de la lista de publicaciones
         listaPublicaciones.insertAdjacentElement('beforeend', marcadorCarga);
     }
     // Función para eliminar el marcador de carga
