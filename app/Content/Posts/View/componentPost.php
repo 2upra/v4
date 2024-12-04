@@ -203,7 +203,7 @@ function imagenPostList($block, $es_suscriptor, $postId)
         $image_size = 'thumbnail';
         $quality = 20;
     } else {
-        $image_size = 'thumbnail'; 
+        $image_size = 'thumbnail';
         $quality = 20;
     }
 
@@ -212,13 +212,13 @@ function imagenPostList($block, $es_suscriptor, $postId)
     $processed_image_url = img($image_url, $quality, 'all');
 
     ob_start();
-    ?>
+?>
     <div class="post-image-container <?= esc_attr($blurred_class) ?>">
         <a href="<?= esc_url(get_permalink($postId)); ?>">
             <img src="<?= esc_url($processed_image_url); ?>" alt="Post Image" />
         </a>
     </div>
-    <?php
+<?php
 
     $output = ob_get_clean();
 
@@ -237,9 +237,9 @@ function obtenerImagenAleatoria($directory)
     if (!is_dir($directory)) {
         return false;
     }
-    
+
     $images = glob(rtrim($directory, '/') . '/*.{jpg,jpeg,png,gif,jfif}', GLOB_BRACE);
-    
+
     if (!$images) {
         return false;
     }
@@ -431,14 +431,17 @@ function botonComentar($postId)
 
 function fondoPost($filtro, $block, $es_suscriptor, $postId)
 {
+
     if (!in_array($filtro, ['rolastatus1', 'rolasEliminadas1', 'rolasRechazadas1'])) {
         $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
         $image_size = ($block && !$es_suscriptor) ? 'thumbnail' : 'large';
         $quality = ($block && !$es_suscriptor) ? 20 : 80;
+        $thumbnail_url = get_the_post_thumbnail_url($postId, 'full');
+        $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
         ob_start();
-    ?>
+        ?>
         <div class="post-background <?= $blurred_class ?>"
-            style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<? esc_url(imagenPost($postId, $image_size, $quality, 'all', ($block && !$es_suscriptor))) ?>);">
+            style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<? esc_url($optimized_thumbnail_url) ?>);">
         </div>
     <?
         $output = ob_get_clean();
@@ -462,7 +465,7 @@ function audioPost($postId)
     $post_author_id = get_post_field('post_author', $postId);
 
     ob_start();
-?>
+    ?>
     <div id="audio-container-<? echo $postId; ?>" class="audio-container" data-post-id="<? echo $postId; ?>" artista-id="<? echo $post_author_id; ?>">
 
         <div class="play-pause-sobre-imagen">
