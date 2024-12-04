@@ -16,7 +16,7 @@ function musica()
 
     <div class="tabs">
         <div class="tab-content">
-            <div class="tab active ZYBVGE" id="Music" ajax="no">
+            <div class="tab active ZYBVGE" id="Music">
 
                 <? if (get_user_meta($user_id, 'leGustaAlMenosUnaRola', true)) : ?>
                     <div class="SAOEXP">
