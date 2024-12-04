@@ -85,16 +85,10 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
                 return false;
             }
         } else {
-            // Capturamos el array completo retornado por configuracionQueryArgs
-            $query_config = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
-
-            // Extraemos los valores de query_args y originalCountPost
-            $query_args = $query_config['query_args'];
-            $originalCountPost = $query_config['originalCountPost'];
+            $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
         }
 
-        // Pasamos los argumentos procesados a procesarPublicaciones
-        $output = procesarPublicaciones($query_args, $args, $is_ajax, $originalCountPost);
+        $output = procesarPublicaciones($query_args, $args, $is_ajax);
 
         if ($is_ajax) {
             echo $output;
@@ -106,7 +100,6 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         return false;
     }
 }
-
 //procesar idea no gestiona bien la siguiente pagina, al cargar la segunda pagina no cargan el resto de post 
 function procesarIdeas($args, $paged)
 {
@@ -253,7 +246,7 @@ function procesarIdeas($args, $paged)
         return false;
     }
 }
-function procesarPublicaciones($query_args, $args, $is_ajax, $originalCountPost = null)
+function procesarPublicaciones($query_args, $args, $is_ajax)
 {
     ob_start();
     $user_id = get_current_user_id();
@@ -290,17 +283,12 @@ function procesarPublicaciones($query_args, $args, $is_ajax, $originalCountPost 
         return '';
     }
 
-    // Usar originalCountPost si está definido, de lo contrario usar found_posts
-    $total_publicaciones = $originalCountPost; #!== null ? $originalCountPost : $query->found_posts
+    // Obtener el número total de publicaciones encontradas
+    $total_publicaciones = $query->found_posts;
 
-    // Obtener el filtro, si está definido
-    $filtro = !empty($args['filtro']) ? $args['filtro'] : '';
-
-    // Si hay publicaciones
+    $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
     if ($query->have_posts()) {
         $tipoPost = $args['post_type'];
-
-        // Si no es una solicitud AJAX, renderizar la lista con clases y atributos personalizados
         if (!wp_doing_ajax()) {
             $clase_extra = 'clase-' . esc_attr($filtro);
             if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
@@ -314,7 +302,6 @@ function procesarPublicaciones($query_args, $args, $is_ajax, $originalCountPost 
                   data-total-posts="' . esc_attr($total_publicaciones) . '">';
         }
 
-        // Recorrer las publicaciones y renderizar según el tipo de post
         while ($query->have_posts()) {
             $query->the_post();
 
@@ -331,19 +318,17 @@ function procesarPublicaciones($query_args, $args, $is_ajax, $originalCountPost 
             }
         }
 
-        // Cerrar la lista si no es una solicitud AJAX
         if (!wp_doing_ajax()) {
             echo '</ul>';
         }
     } else {
-        // Si no hay publicaciones, mostrar mensaje correspondiente
         echo nohayPost($filtro, $is_ajax);
     }
 
     // Restablecer los datos de la consulta
     wp_reset_postdata();
 
-    // Retornar el contenido generado
+    // Retornar el contenido generado y el total de publicaciones
     return ob_get_clean();
 }
 
@@ -375,10 +360,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             // Aplicar filtro global para mantener consistencia
             $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
 
-            return [
-                'query_args' => $query_args,
-                'originalCountPost' => 0, // No hay conteo original en este caso
-            ];
+            return $query_args;
         }
 
         // Continuar con el flujo normal si $user_id es nulo
@@ -391,13 +373,8 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
         }
 
-        // Llamar a construirQueryArgs y desestructurar el resultado
-        $query_result = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
+        $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
 
-        $query_args = $query_result['query_args'] ?? [];
-        $originalCountPost = $query_result['originalCountPost'] ?? 0;
-
-        // Aplicar filtros adicionales, si corresponde
         if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
             $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
         }
@@ -405,11 +382,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         // Aplicar filtro global
         $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
 
-        // Retornar los argumentos de la consulta y la cantidad original de posts
-        return [
-            'query_args' => $query_args,
-            'originalCountPost' => $originalCountPost,
-        ];
+        return $query_args;
     } catch (Exception $e) {
         error_log("[configuracionQueryArgs] Error crítico: " . $e->getMessage());
         return false;
@@ -485,7 +458,6 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
             return false;
         }
 
-        // Inicializamos los argumentos base para la consulta
         $query_args = [
             'post_type' => $args['post_type'],
             'posts_per_page' => $posts,
@@ -494,7 +466,6 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
             'suppress_filters' => false,
         ];
 
-        // Aplicar prefiltrado según el identifier
         if (!empty($identifier)) {
             $query_args = prefiltrarIdentifier($identifier, $query_args);
             if (!$query_args) {
@@ -502,41 +473,31 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
             }
         }
 
-        $originalCountPost = 0; // Inicializamos el conteo original de posts
-
-        // Caso especial para el post_type 'social_post'
         if ($args['post_type'] === 'social_post') {
-            // Llamar a ordenamientoQuery
-            $ordenamiento_result = ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
-
-            // Validar el resultado de ordenamientoQuery
-            if (!$ordenamiento_result) {
+            $query_args = ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
+            if (!$query_args) {
                 error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
-            } else {
-                // Extraer los valores del resultado
-                $query_args = $ordenamiento_result['query_args'] ?? $query_args; // Actualizar los argumentos de la consulta
-                $originalCountPost = $ordenamiento_result['originalCountPost'] ?? 0; // Obtener la cantidad original de posts
             }
         }
 
-        // Retornar los argumentos de la consulta y la cantidad original de posts
-        return [
-            'query_args' => $query_args,
-            'originalCountPost' => $originalCountPost,
-        ];
+        return $query_args;
     } catch (Exception $e) {
         error_log("[construirQueryArgs] Error crítico: " . $e->getMessage());
         return false;
     }
 }
 
+
 function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts)
 {
     // Verificar si el usuario tiene configurado un filtro
     $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
     if (!empty($filtrosUsuario) && is_array($filtrosUsuario)) {
+        //guardarLog("[ordenamientoQuery] Usuario con filtros personalizados. Solo se permiten casos 2 y 3.");
+
         // Si el filtro no es 2 o 3, retornar directamente
         if (!in_array($filtroTiempo, [2, 3])) {
+            //guardarLog("[ordenamientoQuery] Filtro $filtroTiempo no permitido para usuarios con filtroPost. Retornando query sin modificaciones.");
             return $query_args;
         }
     }
@@ -544,6 +505,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
     try {
         global $wpdb;
         if (!$wpdb) {
+            //guardarLog("[ordenamientoQuery] Error crítico: No se pudo acceder a la base de datos wpdb");
             return false;
         }
 
@@ -551,14 +513,13 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 
         // Validación de query_args
         if (!is_array($query_args)) {
+            //guardarLog("[ordenamientoQuery] Advertencia: query_args no es un array, inicializando array vacío");
             $query_args = array();
         }
 
-        $feed_result = []; // Inicializamos la variable para el caso por defecto
-
         switch ($filtroTiempo) {
             case 1:
-                // Ordenar por fecha descendente
+                //guardarLog("[ordenamientoQuery] Ordenando por fecha descendente (filtroTiempo: 1)");
                 $query_args['orderby'] = 'date';
                 $query_args['order'] = 'DESC';
                 break;
@@ -575,110 +536,74 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                     WHERE p.post_type = 'social_post' 
                     AND p.post_status = 'publish'
                     AND p.post_date >= DATE_SUB(NOW(), INTERVAL $interval)  
-                    AND (pl.like_date IS NULL OR pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval)) 
+                    AND pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval) 
                     GROUP BY p.ID
                     HAVING like_count > 0
                     ORDER BY like_count DESC, p.post_date DESC
                 ";
 
+                //guardarLog("[ordenamientoQuery] Ejecutando consulta SQL para top semanal/mensual: $sql");
+
                 $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
+
+                if ($wpdb->last_error) {
+                    //guardarLog("[ordenamientoQuery] Error: Fallo en consulta de likes: " . $wpdb->last_error);
+                }
 
                 if (!empty($posts_with_likes)) {
                     $post_ids = wp_list_pluck($posts_with_likes, 'ID');
                     if (!empty($post_ids)) {
+                        //guardarLog("[ordenamientoQuery] IDs de posts encontrados: " . implode(',', $post_ids));
                         $query_args['post__in'] = $post_ids;
                         $query_args['orderby'] = 'post__in';
+                    } else {
+                        //guardarLog("[ordenamientoQuery] Aviso: No se encontraron IDs de posts con likes");
                     }
                 } else {
+                    //guardarLog("[ordenamientoQuery] Aviso: No se encontraron posts con likes para el período " . $interval);
                     $query_args['orderby'] = 'date';
                     $query_args['order'] = 'DESC';
                 }
                 break;
 
             default: // Feed personalizado
+                //guardarLog("[ordenamientoQuery] Obteniendo feed personalizado");
                 $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
+
                 if (!empty($feed_result['post_ids'])) {
-                    // Contamos el número total de publicaciones antes de truncarlas
-                    $originalCountPost = count($feed_result['post_ids']);
-
-                    // Aplicamos el límite de POSTINLIMIT si es necesario
-                    if ($originalCountPost > POSTINLIMIT) {
-                        $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, POSTINLIMIT);
-                    }
-
                     $query_args['post__in'] = $feed_result['post_ids'];
                     $query_args['orderby'] = 'post__in';
 
+                    if (count($feed_result['post_ids']) > POSTINLIMIT) {
+                        //guardarLog("[ordenamientoQuery] Aviso: Limitando resultados a " . POSTINLIMIT . " posts");
+                        $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, POSTINLIMIT);
+                    }
+
                     if (!empty($feed_result['post_not_in'])) {
-                        $query_args['post_not_in'] = $feed_result['post_not_in'];
+                        $query_args['post__not_in'] = $feed_result['post_not_in'];
                     }
                 } else {
+                    //guardarLog("[ordenamientoQuery] Aviso: Feed personalizado vacío, usando ordenamiento por fecha");
                     $query_args['orderby'] = 'date';
                     $query_args['order'] = 'DESC';
-                    $originalCountPost = 0; // No hay publicaciones
                 }
+                break;
         }
 
         // Validación final de orderby
         if (empty($query_args['orderby'])) {
+            //guardarLog("[ordenamientoQuery] Aviso: No se estableció orderby, usando valores por defecto");
             $query_args['orderby'] = 'date';
             $query_args['order'] = 'DESC';
         }
 
-        // Si no se ha calculado `originalCountPost`, lo calculamos aquí
-        if (!isset($originalCountPost) || $originalCountPost === 0) {
-            // Realizar una consulta eficiente para contar las publicaciones
-            $count_sql = "
-                SELECT COUNT(p.ID)
-                FROM {$wpdb->posts} p
-                WHERE p.post_type = %s 
-                AND p.post_status = 'publish'
-            ";
-
-            // Aplicar condiciones adicionales si existen filtros
-            $conditions = [];
-            $params = ['social_post'];
-
-            if (!empty($query_args['post__in'])) {
-                $placeholders = implode(',', array_fill(0, count($query_args['post__in']), '%d'));
-                $conditions[] = "p.ID IN ($placeholders)";
-                $params = array_merge($params, $query_args['post__in']);
-            }
-
-            if (!empty($query_args['post_not_in'])) {
-                $placeholders = implode(',', array_fill(0, count($query_args['post_not_in']), '%d'));
-                $conditions[] = "p.ID NOT IN ($placeholders)";
-                $params = array_merge($params, $query_args['post_not_in']);
-            }
-
-            if (!empty($conditions)) {
-                $count_sql .= ' AND ' . implode(' AND ', $conditions);
-            }
-
-            $originalCountPost = (int) $wpdb->get_var($wpdb->prepare($count_sql, $params));
-        }
-
-        // Si se obtuvo un feed personalizado, combinar el resultado con query_args
-        if (!empty($feed_result)) {
-            return [
-                'query_args' => $query_args,
-                'post_ids' => $feed_result['post_ids'] ?? [],
-                'post_not_in' => $feed_result['post_not_in'] ?? [],
-                'originalCountPost' => $originalCountPost,
-            ];
-        }
-
-        return [
-            'query_args' => $query_args,
-            'post_ids' => [],
-            'post_not_in' => [],
-            'originalCountPost' => $originalCountPost,
-        ];
+        return $query_args;
     } catch (Exception $e) {
-        error_log('Error en ordenamientoQuery: ' . $e->getMessage());
+        //guardarLog("[ordenamientoQuery] Error crítico: " . $e->getMessage());
         return false;
     }
 }
+
 
 function aplicarFiltrosUsuario($query_args, $current_user_id)
 {
