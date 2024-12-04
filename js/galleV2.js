@@ -313,14 +313,14 @@ function galle() {
     let conversacionAbierta = null;
 
     function actualizarListaConversaciones(usuarioId, ultimoMensaje, conversacionId = null) {
-        //console.log('Iniciando actualizarListaConversaciones');
+        console.log('Iniciando actualizarListaConversaciones');
 
         const mensajesUl = document.querySelector('.mensajes');
         if (!mensajesUl) {
             console.warn('No se encontró el elemento .mensajes en el DOM.');
             return;
         }
-        //console.log('Elemento .mensajes encontrado:', mensajesUl);
+        console.log('Elemento .mensajes encontrado:', mensajesUl);
 
         const listaMensajes = mensajesUl.querySelectorAll('.mensaje');
         //console.log('Número de mensajes encontrados:', listaMensajes.length);
