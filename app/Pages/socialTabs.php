@@ -53,15 +53,16 @@ function socialTabs()
                     <? echo renderFiltro(); ?>
                 </div>
             </div>
-
-            <div class="tab INICIO S4K7I3" id="Samples">
-                <div class="BPLBDE">
-                    <div class="FOFDV5">
-                        <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12]); ?>
+            <? if ($usuarioTipo === 'Artista'): // Mostrar solo si el usuario es artista 
+            ?>
+                <div class="tab INICIO S4K7I3" id="Samples">
+                    <div class="BPLBDE">
+                        <div class="FOFDV5">
+                            <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12]); ?>
+                        </div>
                     </div>
                 </div>
-            </div>
-
+            <? endif; ?>
 
             <? if ($usuarioTipo === 'Fan'): // Mostrar solo si el usuario es fan 
             ?>
