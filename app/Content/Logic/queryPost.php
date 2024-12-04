@@ -208,14 +208,15 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         $similar_to = $args['similar_to'] ?? null;
         $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
 
-        // Construir query_args inicial - ordenamientoQuery va en construirQueryArgs
+        // Apply global filter first
+        $query_args = aplicarFiltroGlobal([], $args, $current_user_id, $user_id);
+
+        // Build query args with ordering based on filtered posts
         $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
 
         if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
             $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
         }
-
-        $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
 
         return $query_args;
     } catch (Exception $e) {
@@ -247,8 +248,12 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 
             switch ($filtroTiempo) {
                 case 1: // Recientes
-                    $query_args['orderby'] = 'date';
-                    $query_args['order'] = 'DESC';
+                    if (!isset($query_args['post__in'])) {
+                        $query_args['orderby'] = 'date';
+                        $query_args['order'] = 'DESC';
+                    } else {
+                        $query_args['orderby'] = 'post__in';
+                    }
                     break;
 
                 case 2: // Top semanal
@@ -272,6 +277,9 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                     $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
                     if (!empty($posts_with_likes)) {
                         $post_ids = wp_list_pluck($posts_with_likes, 'ID');
+                        if (isset($query_args['post__in'])) {
+                            $post_ids = array_intersect($post_ids, $query_args['post__in']);
+                        }
                         $query_args['post__in'] = $post_ids;
                         $query_args['orderby'] = 'post__in';
                     } else {
@@ -284,11 +292,15 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                     $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
 
                     if (!empty($feed_result['post_ids'])) {
-                        $query_args['post__in'] = $feed_result['post_ids'];
+                        $post_ids = $feed_result['post_ids'];
+                        if (isset($query_args['post__in'])) {
+                            $post_ids = array_intersect($post_ids, $query_args['post__in']);
+                        }
+                        $query_args['post__in'] = $post_ids;
                         $query_args['orderby'] = 'post__in';
 
-                        if (count($feed_result['post_ids']) > POSTINLIMIT) {
-                            $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, POSTINLIMIT);
+                        if (count($post_ids) > POSTINLIMIT) {
+                            $post_ids = array_slice($post_ids, 0, POSTINLIMIT);
                         }
 
                         if (!empty($feed_result['post_not_in'])) {
@@ -311,6 +323,8 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
             return false;
         }
     }
+
+    return $query_args;
 }
 
 function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id)
