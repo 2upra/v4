@@ -147,7 +147,6 @@
                 // Parámetros de carga
                 const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
                 const idUsuario = window.idUsuarioActual;
-                const identificador = listaPublicaciones.dataset.identifier || ''; // Asegura que identificador esté definido
 
                 log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual, colec, idea});
 
@@ -161,7 +160,7 @@
                             paged: paginaActual,
                             filtro: filtro || '',
                             posttype: posttype || '',
-                            identifier: identificador, // Usa el identificador extraído
+                            identifier: identificador, 
                             tab_id: tabId || '',
                             user_id: idUsuario || '',
                             cargadas: Array.from(publicacionesCargadas).join(',') || '',
