@@ -260,8 +260,9 @@
                 log('Publicación duplicada omitida:', idPublicacion);
             }
         });
-
+        contadorDeSamples();
         return publicacionesValidas;
+        
     }
 
     // Parte 3: Insertar y manejar contenido en el DOM
