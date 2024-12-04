@@ -84,3 +84,32 @@ function iniciarCargaNotificaciones() {
         }
     });
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Función para verificar notificaciones no leídas usando long polling
+    async function verificarNotificaciones() {
+        try {
+            const response = await enviarAjax('verificar_notificaciones');
+            
+            if (response.hay_no_vistas) {
+                // Cambiar el color del ícono a rojo (#d43333)
+                document.querySelector('#icono-notificaciones svg').setAttribute('fill', '#d43333');
+            } else {
+                // Cambiar el color de vuelta a su color por defecto (currentColor)
+                document.querySelector('#icono-notificaciones svg').setAttribute('fill', 'currentColor');
+            }
+
+            // Iniciar otra verificación después de que se reciba una respuesta
+            verificarNotificaciones();
+
+        } catch (error) {
+            console.error('Error en la verificación de notificaciones:', error);
+
+            // En caso de error, esperar unos segundos antes de intentar de nuevo
+            setTimeout(verificarNotificaciones, 30000);
+        }
+    }
+
+    // Iniciar la verificación de notificaciones al cargar la página
+    verificarNotificaciones();
+});
