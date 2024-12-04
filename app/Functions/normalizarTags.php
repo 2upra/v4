@@ -233,4 +233,46 @@ function revertirNormalizacion($batch_size = 100) {
 // $revertidos = revertirNormalizacion(100);
 // echo "Total de posts revertidos: " . $revertidos;
 
+function restaurar_datos_algoritmo() {
+    // Parámetros para obtener todos los posts del tipo 'social_post'
+    $args = array(
+        'post_type'      => 'social_post',
+        'posts_per_page' => -1, // Obtener todos los posts
+        'post_status'    => 'any', // Incluir todos los estados (publicados, borradores, etc.)
+        'fields'         => 'ids', // Solo necesitamos los IDs para optimizar
+    );
+
+    // Obtener los posts
+    $posts = get_posts($args);
+
+    // Verificar cada post
+    foreach ($posts as $post_id) {
+        // Intentar obtener el meta dato 'datosAlgoritmo'
+        $datos_algoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
+
+        // Si 'datosAlgoritmo' no existe o está vacío
+        if (empty($datos_algoritmo)) {
+            // Verificar si existe 'datosAlgoritmo_respaldo'
+            $datos_algoritmo_respaldo = get_post_meta($post_id, 'datosAlgoritmo_respaldo', true);
+
+            if (!empty($datos_algoritmo_respaldo)) {
+                // Restaurar el valor de 'datosAlgoritmo' desde 'datosAlgoritmo_respaldo'
+                update_post_meta($post_id, 'datosAlgoritmo', $datos_algoritmo_respaldo);
+                error_log("Restaurado 'datosAlgoritmo' para el post ID: $post_id");
+            }
+        }
+    }
+
+    // Agregar un log para saber que la función se ejecutó
+    error_log("Restauración de 'datosAlgoritmo' completada.");
+}
+
+// Ejecutar la función una sola vez
+add_action('init', function() {
+    if (!get_option('datos_algoritmo_restaurado')) {
+        restaurar_datos_algoritmo();
+        update_option('datos_algoritmo_restaurado', 1); // Marcar que ya se ejecutó
+    }
+});
+
 
