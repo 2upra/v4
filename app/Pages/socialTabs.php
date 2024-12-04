@@ -31,7 +31,7 @@ function socialTabs()
 ?>
 
     <div id="menuData" style="display:none;" pestanaActual="">
-        <? if ($usuarioTipo === 'Artista'): 
+        <? if ($usuarioTipo === 'Artista'):
         ?>
             <div data-tab="Samples"></div>
         <? endif; ?>
@@ -43,26 +43,25 @@ function socialTabs()
     </div>
     <div class="tabs">
         <div class="tab-content">
-            <? if ($usuarioTipo === 'Artista'): // Mostrar solo si el usuario es artista 
-            ?>
-                <div class="BPLBDE UP">
-                    <div class="DHRDTAG">
-                        <? echo tagsPosts(); ?>
-                    </div>
-                    <div class="FDGEDF">
-                        <p id="resultadosPost-sampleList"></p>
-                        <? echo renderFiltro(); ?>
-                    </div>
-                </div>
 
-                <div class="tab INICIO S4K7I3" id="Samples">
-                    <div class="BPLBDE">
-                        <div class="FOFDV5">
-                            <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12]); ?>
-                        </div>
+            <div class="BPLBDE UP">
+                <div class="DHRDTAG">
+                    <? echo tagsPosts(); ?>
+                </div>
+                <div class="FDGEDF">
+                    <p id="resultadosPost-sampleList"></p>
+                    <? echo renderFiltro(); ?>
+                </div>
+            </div>
+
+            <div class="tab INICIO S4K7I3" id="Samples">
+                <div class="BPLBDE">
+                    <div class="FOFDV5">
+                        <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12]); ?>
                     </div>
                 </div>
-            <? endif; ?>
+            </div>
+
 
             <? if ($usuarioTipo === 'Fan'): // Mostrar solo si el usuario es fan 
             ?>
