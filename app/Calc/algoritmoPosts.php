@@ -147,17 +147,29 @@ function calcularPuntosParaPost(
 
     // Access meta roles (artista/fan)
     $meta_roles = $datos['meta_roles'];
+
+    // Log para verificar si $meta_roles[$post_id] tiene los datos esperados
+    if (!isset($meta_roles[$post_id])) {
+        error_log("Post ID {$post_id} no tiene meta roles definidos.");
+    } else {
+        error_log("Post ID {$post_id}: meta roles: " . print_r($meta_roles[$post_id], true));
+    }
+
     $postParaArtistas = $meta_roles[$post_id]['artista'] ?? false;
     $postParaFans = $meta_roles[$post_id]['fan'] ?? false;
+
+    // Log para verificar el valor de $postParaFans y $postParaArtistas
+    error_log("Post ID {$post_id}: postParaArtistas=" . ($postParaArtistas ? 'true' : 'false') . ", postParaFans=" . ($postParaFans ? 'true' : 'false'));
 
     // Tipo de usuario y puntos para artista/fan
     $puntosArtistaFan = 0;
     if ($tipoUsuario === 'Fan') {
         $puntosArtistaFan = $postParaFans ? 999 : 0;
+        error_log("Post ID {$post_id}: TipoUsuario=Fan, puntosArtistaFan={$puntosArtistaFan}");
     } elseif ($tipoUsuario === 'Artista') {
         $puntosArtistaFan = $postParaFans ? -50 : 0;
+        error_log("Post ID {$post_id}: TipoUsuario=Artista, puntosArtistaFan={$puntosArtistaFan}");
     }
-
     // Calculate puntosFinal
     $puntosFinal = calcularPuntosFinales(
         $puntosUsuario,
