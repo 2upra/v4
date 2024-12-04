@@ -456,12 +456,10 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     return ob_get_clean();
 }
 
-
 function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id)
 {
-    // Si se proporciona un user_id, filtrar solo por los posts de ese usuario
     if (!empty($user_id)) {
-        $query_args['author'] = $user_id; // Filtrar posts por el autor especificado
+        $query_args['author'] = $user_id;
         return $query_args;
     }
 
@@ -496,7 +494,11 @@ function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id)
             ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
             ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
         ],
-        'sampleList' => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+        'sampleList' => [
+            // Necesitamos que cumpla con ambos: 'paraDescarga' y que tenga 'post_audio_lite'
+            ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+            ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
+        ],
         'colab' => fn() => $query_args['post_status'] = 'publish',
         'colabPendiente' => function () use (&$query_args) {
             $query_args['author'] = get_current_user_id();
@@ -509,13 +511,13 @@ function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id)
         if (is_callable($result)) {
             $result();
         } else {
-            $query_args['meta_query'][] = $result;
+            // Si es una condición de meta_query, lo agregamos al array de 'meta_query'
+            $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], $result);
         }
     }
 
     return $query_args;
 }
-
 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
 {
