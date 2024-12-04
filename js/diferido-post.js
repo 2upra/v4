@@ -56,19 +56,19 @@
     function establecerIdUsuarioDesdeInput() {
         // Busca el div que contiene el atributo `data-iduser`
         const divConIdUsuario = document.querySelector('div.X522YA.FRRVBB[data-iduser]');
-        
+
         if (divConIdUsuario) {
             // Extrae el valor del atributo `data-iduser`
             const idUsuario = divConIdUsuario.getAttribute('data-iduser');
-            
+
             if (idUsuario) {
                 // Busca el contenedor de perfil y establece el atributo `data-author-id`
                 const contenedorPerfil = document.querySelector('.custom-uprofile-container');
                 contenedorPerfil?.setAttribute('data-author-id', idUsuario);
-                
+
                 // Guarda el ID de usuario en una variable global (opcional)
                 window.idUsuarioActual = idUsuario;
-    
+
                 console.log('ID de usuario establecido:', idUsuario);
             } else {
                 console.log('El atributo data-iduser está vacío.');
@@ -91,7 +91,7 @@
             const alturaVentana = window.innerHeight;
             const alturaDocumento = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
 
-            log('Evento de scroll detectado:', {scrollTop, alturaVentana, alturaDocumento, estaCargando});
+            //log('Evento de scroll detectado:', {scrollTop, alturaVentana, alturaDocumento, estaCargando});
 
             if (scrollTop + alturaVentana > alturaDocumento - 100 && !estaCargando && hayMasContenido) {
                 log('Condiciones para cargar más contenido cumplidas');
@@ -104,10 +104,10 @@
 
                 let colec = null;
                 if (elementoPestañaActiva?.getAttribute('colec')) {
-                    colec = elementoPestañaActiva.getAttribute('colec'); 
+                    colec = elementoPestañaActiva.getAttribute('colec');
                 }
 
-                let idea = false; 
+                let idea = false;
                 if (elementoPestañaActiva?.getAttribute('idea') === 'true') {
                     idea = true;
                 }
@@ -147,11 +147,12 @@
                 // Parámetros de carga
                 const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
                 const idUsuario = window.idUsuarioActual;
+                const identificador = listaPublicaciones.dataset.identifier || ''; // Asegura que identificador esté definido
 
                 log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual, colec, idea});
 
                 try {
-                    log('[fetch] idea:', {idea}, 'colec:', {colec});
+                    log('[fetch] idea:', {idea}, 'colec:', {colec}, 'identifier:', {identificador});
                     const respuesta = await fetch(ajaxUrl, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -160,13 +161,13 @@
                             paged: paginaActual,
                             filtro: filtro || '',
                             posttype: posttype || '',
-                            identifier: identificador || '',
+                            identifier: identificador, // Usa el identificador extraído
                             tab_id: tabId || '',
                             user_id: idUsuario || '',
                             cargadas: Array.from(publicacionesCargadas).join(',') || '',
-                            colec: colec || '', // Enviar vacío si es null
-                            idea: idea ? 'true' : 'false', // Convertir a cadena explícitamente
-                        })                        
+                            colec: colec || '',
+                            idea: idea ? 'true' : 'false'
+                        })
                     });
 
                     if (!respuesta.ok) {
@@ -517,13 +518,13 @@ if ('IntersectionObserver' in window) {
     console.error('IntersectionObserver no está disponible en este navegador');
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.svg-container').forEach(function(contenedorSvg){
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.svg-container').forEach(function (contenedorSvg) {
         const infoTooltip = contenedorSvg.querySelector('.tinfo');
-        contenedorSvg.addEventListener('mouseenter', function() {
+        contenedorSvg.addEventListener('mouseenter', function () {
             infoTooltip.style.display = 'block';
         });
-        contenedorSvg.addEventListener('mouseleave', function() {
+        contenedorSvg.addEventListener('mouseleave', function () {
             infoTooltip.style.display = 'none';
         });
     });

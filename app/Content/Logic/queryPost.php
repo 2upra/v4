@@ -15,6 +15,12 @@ function publicacionAjax()
     $colec = isset($_POST['colec']) ? intval($_POST['colec']) : null;
     $idea = isset($_POST['idea']) ? filter_var($_POST['idea'], FILTER_VALIDATE_BOOLEAN) : false;
 
+    if (empty($data_identifier)) {
+        error_log("[publicacionAjax] Warning: El valor de 'identifier' está vacío o no se recibió.");
+    } else {
+        error_log("[publicacionAjax] Valor de 'identifier' recibido: " . $data_identifier);
+    }
+
     publicaciones(
         array(
             'filtro' => $filtro,
@@ -33,7 +39,6 @@ function publicacionAjax()
 }
 add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
 add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
-
 
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
@@ -333,11 +338,9 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         $is_admin = current_user_can('administrator');
 
         if (!$is_authenticated) {
-            // Usuario no autenticado: usar un ID predeterminado
             $current_user_id = $FALLBACK_USER_ID;
         }
 
-        // Si $user_id no es nulo, construir un query_args básico y aplicarFiltroGlobal
         if ($user_id !== null) {
             $query_args = [
                 'post_type' => $args['post_type'],
@@ -346,18 +349,26 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
                 'ignore_sticky_posts' => true,
                 'suppress_filters' => false,
                 'orderby' => 'date',
-                'order' => 'DESC', // Ordenar del más reciente al más antiguo
-                'author' => $user_id, // Filtrar solo los posts del usuario especificado
+                'order' => 'DESC',
+                'author' => $user_id,
             ];
 
-            // Aplicar filtro global para mantener consistencia
             $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
-
             return $query_args;
         }
 
-        // Continuar con el flujo normal si $user_id es nulo
-        $identifier = $_GET['busqueda'] ?? $_POST['identifier'] ?? '';
+        $identifier = '';
+
+        if (isset($_GET['busqueda'])) {
+            $identifier = $_GET['busqueda'];
+            error_log("[configuracionQueryArgs] Valor de busqueda obtenido de GET: " . $identifier);
+        } elseif (isset($_POST['identifier'])) {
+            $identifier = $_POST['identifier'];
+            error_log("[configuracionQueryArgs] Valor de identifier obtenido de POST: " . $identifier);
+        } else {
+            error_log("[configuracionQueryArgs] No se encontro valor para identifier ni busqueda.");
+        }
+
         $posts = $args['posts'];
         $similar_to = $args['similar_to'] ?? null;
         $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
@@ -372,7 +383,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
         }
 
-        // Aplicar filtro global
         $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
 
         return $query_args;
@@ -381,7 +391,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         return false;
     }
 }
-
 function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id)
 {
     // Si se proporciona un user_id, filtrar solo por los posts de ese usuario
