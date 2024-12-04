@@ -173,7 +173,7 @@
                     if (!respuesta.ok) {
                         throw new Error(`HTTP error! status: ${respuesta.status}`);
                     }
-                    
+
                     const textoRespuesta = await respuesta.text();
                     await procesarRespuesta(textoRespuesta, listaPublicaciones);
                 } catch (error) {
@@ -220,39 +220,63 @@
         <span class="sr-only">Loading...</span>
     </div>
     */
+    let intervalId; // Variable para almacenar el ID del intervalo
+    let loadingCount = 0; // Contador de barras de carga
+
+    // Función para insertar el marcador de carga con barras dinámicas
     function insertarMarcadorCarga(listaPublicaciones) {
         if (!listaPublicaciones) return;
-    
+
         // Crear un elemento div para el marcador de carga
         const marcadorCarga = document.createElement('div');
         marcadorCarga.setAttribute('role', 'status'); // Añadir el atributo role="status"
         marcadorCarga.className = 'loading-placeholder'; // Asignar la clase loading-placeholder
-    
-        // Crear el div que representa la barra de carga
-        const loadingBar = document.createElement('div');
-        loadingBar.className = 'loading-bar'; // Asignar la clase loading-bar
-    
+
         // Crear el span con la clase sr-only para el texto "Loading..."
         const srOnlyText = document.createElement('span');
         srOnlyText.className = 'sr-only'; // Asignar la clase sr-only
         srOnlyText.textContent = 'Loading...'; // El texto que será accesible solo para lectores de pantalla
-    
-        // Añadir los elementos hijos (loading-bar y sr-only) al marcador de carga
-        marcadorCarga.appendChild(loadingBar);
+
+        // Añadir el texto al marcador de carga
         marcadorCarga.appendChild(srOnlyText);
-    
+
         // Insertar el marcador de carga al final de la lista de publicaciones
         listaPublicaciones.insertAdjacentElement('beforeend', marcadorCarga);
+
+        // Iniciar el intervalo para añadir una barra de carga cada 0.5 segundos
+        intervalId = setInterval(() => {
+            if (loadingCount < 12) {
+                // Crear una nueva barra de carga
+                const loadingBar = document.createElement('div');
+                loadingBar.className = 'loading-bar'; // Asignar la clase loading-bar
+
+                // Añadir la barra de carga al marcador
+                marcadorCarga.appendChild(loadingBar);
+
+                loadingCount++; // Incrementar el contador
+            } else {
+                // Si ya hay 12 barras, detener el intervalo
+                clearInterval(intervalId);
+            }
+        }, 500); // 500 ms = 0.5 segundos
     }
+
     // Función para eliminar el marcador de carga
     function eliminarMarcadorCarga(listaPublicaciones) {
         if (!listaPublicaciones) return;
 
         // Buscar el marcador de carga y eliminarlo
-        const marcadorCarga = listaPublicaciones.querySelector('.marcador-carga');
+        const marcadorCarga = listaPublicaciones.querySelector('.loading-placeholder');
         if (marcadorCarga) {
             marcadorCarga.remove();
         }
+
+        // Detener el intervalo si está activo
+        clearInterval(intervalId);
+        intervalId = null; // Limpiar el ID del intervalo
+
+        // Reiniciar el contador para la próxima vez
+        loadingCount = 0;
     }
     // Parte 1: Validar y preparar la respuesta
     function validarRespuesta(respuesta) {
