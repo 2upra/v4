@@ -99,10 +99,10 @@ function manejarIdea($args, $paged)
 {
     // Obtener el ID del usuario para diferenciar la caché por usuario
     $user_id = get_current_user_id();
-    
+
     // Crear una clave de caché única basada en el usuario y la paginación
     $cache_key = 'idea_' . $user_id . '_' . md5(json_encode($args) . '_paged_' . $paged);
-    
+
     // Intentar obtener datos desde la caché
     $cached_data = obtenerCache($cache_key);
     if ($cached_data !== false) {
@@ -133,7 +133,7 @@ function manejarColeccion($args, $paged)
 {
     // Crear una clave de caché única basada en la colección y la paginación
     $cache_key = 'coleccion_' . $args['colec'] . '_paged_' . $paged;
-    
+
     // Intentar obtener datos desde la caché
     $cached_data = obtenerCache($cache_key);
     if ($cached_data !== false) {
@@ -195,34 +195,35 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
                 'author' => $user_id,
             ];
 
-            $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
-            return $query_args;
+        }else{
+            // Usar el identifier pasado en $args
+            $identifier = isset($args['identifier']) ? $args['identifier'] : '';
+
+            if (empty($identifier)) {
+                error_log("[configuracionQueryArgs] Advertencia: El valor de 'identifier' está vacío.");
+            } else {
+                error_log("[configuracionQueryArgs] Valor de 'identifier': " . $identifier);
+            }
+
+            $posts = $args['posts'];
+            $similar_to = $args['similar_to'] ?? null;
+            $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
+
+            if ($filtroTiempo === false) {
+                error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
+            }
+
+            // Construcción de los argumentos de consulta 
+            //En queryArgs van los filtros de ordenamient
+            $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
+
+            if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
+                $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+            }
+
+             $query_args = ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
         }
-
-        // Usar el identifier pasado en $args
-        $identifier = isset($args['identifier']) ? $args['identifier'] : '';
-
-        if (empty($identifier)) {
-            error_log("[configuracionQueryArgs] Advertencia: El valor de 'identifier' está vacío.");
-        } else {
-            error_log("[configuracionQueryArgs] Valor de 'identifier': " . $identifier);
-        }
-
-        $posts = $args['posts'];
-        $similar_to = $args['similar_to'] ?? null;
-        $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
-
-        if ($filtroTiempo === false) {
-            error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
-        }
-
-        // Construcción de los argumentos de consulta
-        $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
-
-        if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
-            $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
-        }
-
+        
         $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
 
         return $query_args;
@@ -230,6 +231,182 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         error_log("[configuracionQueryArgs] Error crítico: " . $e->getMessage());
         return false;
     }
+}
+
+
+function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts)
+{
+    // Verificar si el usuario tiene configurado un filtro
+    $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
+    if (!empty($filtrosUsuario) && is_array($filtrosUsuario)) {
+        //guardarLog("[ordenamientoQuery] Usuario con filtros personalizados. Solo se permiten casos 2 y 3.");
+
+        // Si el filtro no es 2 o 3, retornar directamente
+        if (!in_array($filtroTiempo, [2, 3])) {
+            //guardarLog("[ordenamientoQuery] Filtro $filtroTiempo no permitido para usuarios con filtroPost. Retornando query sin modificaciones.");
+            return $query_args;
+        }
+    }
+
+    try {
+        global $wpdb;
+        if (!$wpdb) {
+            //guardarLog("[ordenamientoQuery] Error crítico: No se pudo acceder a la base de datos wpdb");
+            return false;
+        }
+
+        $likes_table = $wpdb->prefix . 'post_likes';
+
+        // Validación de query_args
+        if (!is_array($query_args)) {
+            //guardarLog("[ordenamientoQuery] Advertencia: query_args no es un array, inicializando array vacío");
+            $query_args = array();
+        }
+
+        switch ($filtroTiempo) {
+            case 1:
+                //guardarLog("[ordenamientoQuery] Ordenando por fecha descendente (filtroTiempo: 1)");
+                $query_args['orderby'] = 'date';
+                $query_args['order'] = 'DESC';
+                break;
+
+            case 2: // Top semanal
+            case 3: // Top mensual
+                $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
+
+                $sql = "
+                    SELECT p.ID, 
+                           COUNT(pl.post_id) as like_count 
+                    FROM {$wpdb->posts} p 
+                    LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
+                    WHERE p.post_type = 'social_post' 
+                    AND p.post_status = 'publish'
+                    AND p.post_date >= DATE_SUB(NOW(), INTERVAL $interval)  
+                    AND pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval) 
+                    GROUP BY p.ID
+                    HAVING like_count > 0
+                    ORDER BY like_count DESC, p.post_date DESC
+                ";
+
+                //guardarLog("[ordenamientoQuery] Ejecutando consulta SQL para top semanal/mensual: $sql");
+
+                $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
+
+                if ($wpdb->last_error) {
+                    //guardarLog("[ordenamientoQuery] Error: Fallo en consulta de likes: " . $wpdb->last_error);
+                }
+
+                if (!empty($posts_with_likes)) {
+                    $post_ids = wp_list_pluck($posts_with_likes, 'ID');
+                    if (!empty($post_ids)) {
+                        //guardarLog("[ordenamientoQuery] IDs de posts encontrados: " . implode(',', $post_ids));
+                        $query_args['post__in'] = $post_ids;
+                        $query_args['orderby'] = 'post__in';
+                    } else {
+                        //guardarLog("[ordenamientoQuery] Aviso: No se encontraron IDs de posts con likes");
+                    }
+                } else {
+                    //guardarLog("[ordenamientoQuery] Aviso: No se encontraron posts con likes para el período " . $interval);
+                    $query_args['orderby'] = 'date';
+                    $query_args['order'] = 'DESC';
+                }
+                break;
+
+            default: // Feed personalizado
+                //guardarLog("[ordenamientoQuery] Obteniendo feed personalizado");
+                $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
+
+                if (!empty($feed_result['post_ids'])) {
+                    $query_args['post__in'] = $feed_result['post_ids'];
+                    $query_args['orderby'] = 'post__in';
+
+                    if (count($feed_result['post_ids']) > POSTINLIMIT) {
+                        //guardarLog("[ordenamientoQuery] Aviso: Limitando resultados a " . POSTINLIMIT . " posts");
+                        $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, POSTINLIMIT);
+                    }
+
+                    if (!empty($feed_result['post_not_in'])) {
+                        $query_args['post__not_in'] = $feed_result['post_not_in'];
+                    }
+                } else {
+                    //guardarLog("[ordenamientoQuery] Aviso: Feed personalizado vacío, usando ordenamiento por fecha");
+                    $query_args['orderby'] = 'date';
+                    $query_args['order'] = 'DESC';
+                }
+                break;
+        }
+
+        // Validación final de orderby
+        if (empty($query_args['orderby'])) {
+            //guardarLog("[ordenamientoQuery] Aviso: No se estableció orderby, usando valores por defecto");
+            $query_args['orderby'] = 'date';
+            $query_args['order'] = 'DESC';
+        }
+
+        return $query_args;
+    } catch (Exception $e) {
+        //guardarLog("[ordenamientoQuery] Error crítico: " . $e->getMessage());
+        return false;
+    }
+}
+
+function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id)
+{
+    // Si se proporciona un user_id, filtrar solo por los posts de ese usuario
+    if (!empty($user_id)) {
+        $query_args['author'] = $user_id; // Filtrar posts por el autor especificado
+        return $query_args;
+    }
+
+    // Obtener filtros personalizados del usuario actual
+    $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
+    if (is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
+        $query_args['author'] = $current_user_id;
+        return $query_args;
+    }
+
+    // Filtro general basado en $args['filtro']
+    $filtro = $args['filtro'] ?? 'nada';
+    $meta_query_conditions = [
+        'rolasEliminadas' => fn() => $query_args['post_status'] = 'pending_deletion',
+        'rolasRechazadas' => fn() => $query_args['post_status'] = 'rejected',
+        'rolasPendiente' => fn() => $query_args['post_status'] = 'pending',
+        'likesRolas' => fn() => ($userLikedPostIds = obtenerLikesDelUsuario($current_user_id))
+            ? $query_args['post__in'] = $userLikedPostIds
+            : $query_args['posts_per_page'] = 0,
+        'nada' => fn() => $query_args['post_status'] = 'publish',
+        'colabs' => ['key' => 'paraColab', 'value' => '1', 'compare' => '='],
+        'libres' => [
+            ['key' => 'esExclusivo', 'value' => '0', 'compare' => '='],
+            ['key' => 'post_price', 'compare' => 'NOT EXISTS'],
+            ['key' => 'rola', 'value' => '1', 'compare' => '!=']
+        ],
+        'momento' => [
+            ['key' => 'momento', 'value' => '1', 'compare' => '='],
+            ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
+        ],
+        'sample' => [
+            ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+            ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
+        ],
+        'sampleList' => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+        'colab' => fn() => $query_args['post_status'] = 'publish',
+        'colabPendiente' => function () use (&$query_args) {
+            $query_args['author'] = get_current_user_id();
+            $query_args['post_status'] = 'pending';
+        },
+    ];
+
+    if (isset($meta_query_conditions[$filtro])) {
+        $result = $meta_query_conditions[$filtro];
+        if (is_callable($result)) {
+            $result();
+        } else {
+            $query_args['meta_query'][] = $result;
+        }
+    }
+
+    return $query_args;
 }
 
 function procesarIdeas($args, $paged)
@@ -457,64 +634,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 }
 
 
-function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id)
-{
-    // Si se proporciona un user_id, filtrar solo por los posts de ese usuario
-    if (!empty($user_id)) {
-        $query_args['author'] = $user_id; // Filtrar posts por el autor especificado
-        return $query_args;
-    }
 
-    // Obtener filtros personalizados del usuario actual
-    $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
-    if (is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
-        $query_args['author'] = $current_user_id;
-        return $query_args;
-    }
-
-    // Filtro general basado en $args['filtro']
-    $filtro = $args['filtro'] ?? 'nada';
-    $meta_query_conditions = [
-        'rolasEliminadas' => fn() => $query_args['post_status'] = 'pending_deletion',
-        'rolasRechazadas' => fn() => $query_args['post_status'] = 'rejected',
-        'rolasPendiente' => fn() => $query_args['post_status'] = 'pending',
-        'likesRolas' => fn() => ($userLikedPostIds = obtenerLikesDelUsuario($current_user_id))
-            ? $query_args['post__in'] = $userLikedPostIds
-            : $query_args['posts_per_page'] = 0,
-        'nada' => fn() => $query_args['post_status'] = 'publish',
-        'colabs' => ['key' => 'paraColab', 'value' => '1', 'compare' => '='],
-        'libres' => [
-            ['key' => 'esExclusivo', 'value' => '0', 'compare' => '='],
-            ['key' => 'post_price', 'compare' => 'NOT EXISTS'],
-            ['key' => 'rola', 'value' => '1', 'compare' => '!=']
-        ],
-        'momento' => [
-            ['key' => 'momento', 'value' => '1', 'compare' => '='],
-            ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
-        ],
-        'sample' => [
-            ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
-            ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
-        ],
-        'sampleList' => ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
-        'colab' => fn() => $query_args['post_status'] = 'publish',
-        'colabPendiente' => function () use (&$query_args) {
-            $query_args['author'] = get_current_user_id();
-            $query_args['post_status'] = 'pending';
-        },
-    ];
-
-    if (isset($meta_query_conditions[$filtro])) {
-        $result = $meta_query_conditions[$filtro];
-        if (is_callable($result)) {
-            $result();
-        } else {
-            $query_args['meta_query'][] = $result;
-        }
-    }
-
-    return $query_args;
-}
 
 
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to)
@@ -556,121 +676,6 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
 }
 
 
-function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts)
-{
-    // Verificar si el usuario tiene configurado un filtro
-    $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
-    if (!empty($filtrosUsuario) && is_array($filtrosUsuario)) {
-        //guardarLog("[ordenamientoQuery] Usuario con filtros personalizados. Solo se permiten casos 2 y 3.");
-
-        // Si el filtro no es 2 o 3, retornar directamente
-        if (!in_array($filtroTiempo, [2, 3])) {
-            //guardarLog("[ordenamientoQuery] Filtro $filtroTiempo no permitido para usuarios con filtroPost. Retornando query sin modificaciones.");
-            return $query_args;
-        }
-    }
-
-    try {
-        global $wpdb;
-        if (!$wpdb) {
-            //guardarLog("[ordenamientoQuery] Error crítico: No se pudo acceder a la base de datos wpdb");
-            return false;
-        }
-
-        $likes_table = $wpdb->prefix . 'post_likes';
-
-        // Validación de query_args
-        if (!is_array($query_args)) {
-            //guardarLog("[ordenamientoQuery] Advertencia: query_args no es un array, inicializando array vacío");
-            $query_args = array();
-        }
-
-        switch ($filtroTiempo) {
-            case 1:
-                //guardarLog("[ordenamientoQuery] Ordenando por fecha descendente (filtroTiempo: 1)");
-                $query_args['orderby'] = 'date';
-                $query_args['order'] = 'DESC';
-                break;
-
-            case 2: // Top semanal
-            case 3: // Top mensual
-                $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
-
-                $sql = "
-                    SELECT p.ID, 
-                           COUNT(pl.post_id) as like_count 
-                    FROM {$wpdb->posts} p 
-                    LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
-                    WHERE p.post_type = 'social_post' 
-                    AND p.post_status = 'publish'
-                    AND p.post_date >= DATE_SUB(NOW(), INTERVAL $interval)  
-                    AND pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval) 
-                    GROUP BY p.ID
-                    HAVING like_count > 0
-                    ORDER BY like_count DESC, p.post_date DESC
-                ";
-
-                //guardarLog("[ordenamientoQuery] Ejecutando consulta SQL para top semanal/mensual: $sql");
-
-                $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
-
-                if ($wpdb->last_error) {
-                    //guardarLog("[ordenamientoQuery] Error: Fallo en consulta de likes: " . $wpdb->last_error);
-                }
-
-                if (!empty($posts_with_likes)) {
-                    $post_ids = wp_list_pluck($posts_with_likes, 'ID');
-                    if (!empty($post_ids)) {
-                        //guardarLog("[ordenamientoQuery] IDs de posts encontrados: " . implode(',', $post_ids));
-                        $query_args['post__in'] = $post_ids;
-                        $query_args['orderby'] = 'post__in';
-                    } else {
-                        //guardarLog("[ordenamientoQuery] Aviso: No se encontraron IDs de posts con likes");
-                    }
-                } else {
-                    //guardarLog("[ordenamientoQuery] Aviso: No se encontraron posts con likes para el período " . $interval);
-                    $query_args['orderby'] = 'date';
-                    $query_args['order'] = 'DESC';
-                }
-                break;
-
-            default: // Feed personalizado
-                //guardarLog("[ordenamientoQuery] Obteniendo feed personalizado");
-                $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
-
-                if (!empty($feed_result['post_ids'])) {
-                    $query_args['post__in'] = $feed_result['post_ids'];
-                    $query_args['orderby'] = 'post__in';
-
-                    if (count($feed_result['post_ids']) > POSTINLIMIT) {
-                        //guardarLog("[ordenamientoQuery] Aviso: Limitando resultados a " . POSTINLIMIT . " posts");
-                        $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, POSTINLIMIT);
-                    }
-
-                    if (!empty($feed_result['post_not_in'])) {
-                        $query_args['post__not_in'] = $feed_result['post_not_in'];
-                    }
-                } else {
-                    //guardarLog("[ordenamientoQuery] Aviso: Feed personalizado vacío, usando ordenamiento por fecha");
-                    $query_args['orderby'] = 'date';
-                    $query_args['order'] = 'DESC';
-                }
-                break;
-        }
-
-        // Validación final de orderby
-        if (empty($query_args['orderby'])) {
-            //guardarLog("[ordenamientoQuery] Aviso: No se estableció orderby, usando valores por defecto");
-            $query_args['orderby'] = 'date';
-            $query_args['order'] = 'DESC';
-        }
-
-        return $query_args;
-    } catch (Exception $e) {
-        //guardarLog("[ordenamientoQuery] Error crítico: " . $e->getMessage());
-        return false;
-    }
-}
 
 
 function aplicarFiltrosUsuario($query_args, $current_user_id)
