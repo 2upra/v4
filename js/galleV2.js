@@ -8,15 +8,15 @@ function formatearTiempoRelativo(fecha) {
     const semanas = Math.floor(dias / 7);
 
     if (semanas > 0) {
-        return semanas === 1 ? '1 semana' : `${semanas} semanas`;
+        return semanas === 1 ? '1 s' : `${semanas} s`;
     } else if (dias > 0) {
-        return dias === 1 ? '1 día' : `${dias} días`;
+        return dias === 1 ? '1 d' : `${dias} d`;
     } else if (horas > 0) {
-        return horas === 1 ? '1 hora' : `${horas} horas`;
+        return horas === 1 ? '1 h' : `${horas} h`;
     } else if (minutos > 0) {
-        return minutos === 1 ? '1 minuto' : `${minutos} minutos`;
+        return minutos === 1 ? '1 m' : `${minutos} m`;
     } else {
-        return 'unos segundos';
+        return 'ahora';
     }
 }
 
