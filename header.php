@@ -58,7 +58,7 @@ if (!defined('ABSPATH')) {
 <body <? body_class(); ?>>
 
 
-    <header>
+    <header id="header">
         <style>
             @font-face {
                 font-family: 'Source Sans 3';
