@@ -30,7 +30,7 @@ function obtenerNombreUsuario($usuarioId)
         return !empty($usuario->display_name) ? $usuario->display_name : $usuario->user_login;
     }
 
-    return '[Usuario desconocido]';
+    return 'Usuario desconocido';
 }
 
 

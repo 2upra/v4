@@ -91,7 +91,7 @@ function renderListaChats($conversaciones, $usuarioId)
                     $imagenPerfil = imagenPerfil($receptor);
                     $nombreUsuario = obtenerNombreUsuario($receptor);
 
-                    $mensajeMostrado = "[No hay mensajes]";
+                    $mensajeMostrado = "Mensaje desconocido";
                     $fechaOriginal = "";
                     $leido = 0; // Valor por defecto
 
@@ -99,8 +99,9 @@ function renderListaChats($conversaciones, $usuarioId)
                         if (!empty($conversacion->ultimoMensaje->mensaje)) {
                             $mensajeMostrado = ($conversacion->ultimoMensaje->emisor == $usuarioId ? "Tú: " : "") . $conversacion->ultimoMensaje->mensaje;
                         } else {
-                            $mensajeMostrado = "[Mensaje faltante]";
+                            $mensajeMostrado = "Mensaje desconocido";
                         }
+                        $fechaOriginal = $conversacion->ultimoMensaje->fecha;
                         $leido = isset($conversacion->ultimoMensaje->leido) ? (int)$conversacion->ultimoMensaje->leido : 0;
                     }
                 ?>
