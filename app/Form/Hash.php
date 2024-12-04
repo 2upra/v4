@@ -330,6 +330,7 @@ function subidaArchivo()
 
     ////guardarLog("FIN subidaArchivo");
 }
+/*
 function antivirus($file_path, $file_id, $current_user_id)
 {
     $command = escapeshellcmd("clamscan --infected --quiet " . $file_path);
@@ -348,7 +349,7 @@ function antivirus($file_path, $file_id, $current_user_id)
 
 // Programar la acción de WordPress
 add_action('antivirus', 'antivirus', 10, 2);
-
+*/
 function guardarHash($hash, $url, $user_id, $status = 'pending')
 {
     global $wpdb;
