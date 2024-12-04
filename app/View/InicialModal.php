@@ -144,6 +144,7 @@ function guardarTipoUsuario()
         wp_send_json_error('No se recibió el tipo de usuario.');
     }
     $userId = get_current_user_id();
+    reiniciarFeed($userId);
     update_user_meta($userId, 'tipoUsuario', $tipoUsuario);
     wp_send_json_success('El tipo de usuario ha sido guardado.');
 }

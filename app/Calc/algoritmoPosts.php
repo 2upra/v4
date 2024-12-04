@@ -3,9 +3,9 @@
 
 global $wpdb;
 
-function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null)
+function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null, $tipoUsuario = null)
 {
-    $datos = obtenerDatosFeedConCache($userId); 
+    $datos = obtenerDatosFeedConCache($userId);
     if (empty($datos)) {
         return [];
     }
@@ -38,7 +38,8 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
         $similar_to,
         $current_timestamp,
         $userId,
-        $decay_factors
+        $decay_factors,
+        $tipoUsuario
     );
 
     if (!empty($puntos_por_post)) {
@@ -58,7 +59,8 @@ function calcularPuntosPostBatch(
     $similar_to = null,
     $current_timestamp = null,
     $user_id = null,
-    $decay_factors = []
+    $decay_factors = [],
+    $tipoUsuario = null
 ) {
     if ($current_timestamp === null) {
         $current_timestamp = current_time('timestamp');
@@ -66,75 +68,20 @@ function calcularPuntosPostBatch(
 
     $posts_puntos = [];
 
-    // Precompute interests if needed
-    $interesesUsuario = $datos['interesesUsuario'];
-    $siguiendo = $datos['siguiendo'];
-    $likes_by_post = $datos['likes_by_post'];
-    $meta_data = $datos['meta_data'];
-
     foreach ($posts_data as $post_id => $post_data) {
         try {
-            $autor_id = $post_data->post_author;
-            $post_date = $post_data->post_date;
-
-            $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date;
-
-            $diasDesdePublicacion = floor(($current_timestamp - $post_timestamp) / (3600 * 24));
-            $factorTiempo = $decay_factors[$diasDesdePublicacion] ?? getDecayFactor($diasDesdePublicacion);
-
-            // Calculate puntosUsuario
-            $puntosUsuario = in_array($autor_id, $siguiendo) ? 20 : 0;
-
-            // Calculate puntosIntereses
-            $puntosIntereses = calcularPuntosIntereses($post_id, $datos);
-
-            // Calculate puntosIdentifier
-            $puntosIdentifier = 0;
-            if (!empty($identifier)) {
-                $puntosIdentifier = calcularPuntosIdentifier($post_id, $identifier, $datos);
-            }
-            $pesoIdentifier = 1.0;
-            $puntosIdentifier *= $pesoIdentifier;
-
-            // Calculate puntosSimilarTo
-            $puntosSimilarTo = 0;
-            if (!empty($similar_to)) {
-                $puntosSimilarTo = calcularPuntosSimilarTo($post_id, $similar_to, $datos);
-            }
-
-            // Calculate puntosLikes
-            $likes = $likes_by_post[$post_id] ?? 0;
-            $puntosLikes = 30 + $likes;
-
-            // Access meta data
-            $metaVerificado = isset($meta_data[$post_id]['Verificado']) && ($meta_data[$post_id]['Verificado'] === '1');
-            $metaPostAut = isset($meta_data[$post_id]['postAut']) && ($meta_data[$post_id]['postAut'] === '1');
-
-            // Calculate puntosFinal
-            $puntosFinal = calcularPuntosFinales(
-                $puntosUsuario,
-                $puntosIntereses + $puntosSimilarTo,
-                $puntosLikes,
-                $metaVerificado,
-                $metaPostAut,
-                $esAdmin
+            $puntosFinal = calcularPuntosParaPost(
+                $post_id,
+                $post_data,
+                $datos,
+                $esAdmin,
+                $vistas_posts_processed,
+                $identifier,
+                $similar_to,
+                $current_timestamp,
+                $decay_factors,
+                $tipoUsuario
             );
-
-            $puntosFinal += $puntosIdentifier;
-
-            // Apply reduction based on views
-            if (isset($vistas_posts_processed[$post_id])) {
-                $vistas = $vistas_posts_processed[$post_id]['count'];
-                $reduccion_por_vista = 0.01;
-                $factorReduccion = pow(1 - $reduccion_por_vista, $vistas);
-                $puntosFinal *= $factorReduccion;
-            }
-
-            // Adjust randomness outside tight loops if possible
-            $aleatoriedad = mt_rand(0, 20);
-            $ajusteExtra = mt_rand(-50, 50);
-            $puntosFinal = ($puntosFinal * (1 + ($aleatoriedad / 100))) * $factorTiempo;
-            $puntosFinal += $ajusteExtra;
 
             if (is_numeric($puntosFinal) && $puntosFinal > 0) {
                 $posts_puntos[$post_id] = max($puntosFinal, 0);
@@ -147,8 +94,98 @@ function calcularPuntosPostBatch(
     return $posts_puntos;
 }
 
+function calcularPuntosParaPost(
+    $post_id,
+    $post_data,
+    $datos,
+    $esAdmin,
+    $vistas_posts_processed,
+    $identifier,
+    $similar_to,
+    $current_timestamp,
+    $decay_factors,
+    $tipoUsuario
+) {
+    $autor_id = $post_data->post_author;
+    $post_date = $post_data->post_date;
 
+    $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date;
 
+    $diasDesdePublicacion = floor(($current_timestamp - $post_timestamp) / (3600 * 24));
+    $factorTiempo = $decay_factors[$diasDesdePublicacion] ?? getDecayFactor($diasDesdePublicacion);
+
+    // Calculate puntosUsuario
+    $siguiendo = $datos['siguiendo'];
+    $puntosUsuario = in_array($autor_id, $siguiendo) ? 20 : 0;
+
+    // Calculate puntosIntereses
+    $puntosIntereses = calcularPuntosIntereses($post_id, $datos);
+
+    // Calculate puntosIdentifier
+    $puntosIdentifier = 0;
+    if (!empty($identifier)) {
+        $puntosIdentifier = calcularPuntosIdentifier($post_id, $identifier, $datos);
+    }
+    $pesoIdentifier = 1.0;
+    $puntosIdentifier *= $pesoIdentifier;
+
+    // Calculate puntosSimilarTo
+    $puntosSimilarTo = 0;
+    if (!empty($similar_to)) {
+        $puntosSimilarTo = calcularPuntosSimilarTo($post_id, $similar_to, $datos);
+    }
+
+    // Calculate puntosLikes
+    $likes_by_post = $datos['likes_by_post'];
+    $likes = $likes_by_post[$post_id] ?? 0;
+    $puntosLikes = 30 + $likes;
+
+    // Access meta data
+    $meta_data = $datos['meta_data'];
+    $metaVerificado = isset($meta_data[$post_id]['Verificado']) && ($meta_data[$post_id]['Verificado'] === '1');
+    $metaPostAut = isset($meta_data[$post_id]['postAut']) && ($meta_data[$post_id]['postAut'] === '1');
+
+    // Access meta roles (artista/fan)
+    $meta_roles = $datos['meta_roles'];
+    $postParaArtistas = $meta_roles[$post_id]['artista'] ?? false;
+    $postParaFans = $meta_roles[$post_id]['fan'] ?? false;
+
+    // Tipo de usuario y puntos para artista/fan
+    $puntosArtistaFan = 0;
+    if ($tipoUsuario === 'fan') {
+        $puntosArtistaFan = $postParaFans ? 50 : 0;
+    } elseif ($tipoUsuario === 'artista') {
+        $puntosArtistaFan = $postParaFans ? -50 : 0;
+    }
+
+    // Calculate puntosFinal
+    $puntosFinal = calcularPuntosFinales(
+        $puntosUsuario,
+        $puntosIntereses + $puntosSimilarTo + $puntosArtistaFan,
+        $puntosLikes,
+        $metaVerificado,
+        $metaPostAut,
+        $esAdmin
+    );
+
+    $puntosFinal += $puntosIdentifier;
+
+    // Apply reduction based on views
+    if (isset($vistas_posts_processed[$post_id])) {
+        $vistas = $vistas_posts_processed[$post_id]['count'];
+        $reduccion_por_vista = 0.01;
+        $factorReduccion = pow(1 - $reduccion_por_vista, $vistas);
+        $puntosFinal *= $factorReduccion;
+    }
+
+    // Adjust randomness outside tight loops if possible
+    $aleatoriedad = mt_rand(0, 20);
+    $ajusteExtra = mt_rand(-50, 50);
+    $puntosFinal = ($puntosFinal * (1 + ($aleatoriedad / 100))) * $factorTiempo;
+    $puntosFinal += $ajusteExtra;
+
+    return $puntosFinal;
+}
 
 // Helper function for decay factors
 
@@ -332,7 +369,7 @@ function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
     $contentWeight = 1.5;
     $contenidoMatches = count(array_intersect(extractWordsFromContent($contenido_post_1), extractWordsFromContent($contenido_post_2)));
     $similarity = (count($intersection) + $contenidoMatches * $contentWeight) / count($union);
-    $puntosSimilarTo = $similarity * 150; 
+    $puntosSimilarTo = $similarity * 150;
     return $puntosSimilarTo;
 }
 

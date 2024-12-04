@@ -1,5 +1,4 @@
 <?
-
 function obtenerDatosFeed($userId) {
     try {
         global $wpdb;
@@ -27,7 +26,7 @@ function obtenerDatosFeed($userId) {
             "SELECT interest, intensity FROM $table_intereses WHERE user_id = %d",
             $userId
         ), OBJECT_K);
-        
+
         if ($wpdb->last_error) {
             error_log("[obtenerDatosFeed] Error: Fallo al obtener intereses del usuario: " . $wpdb->last_error);
         }
@@ -54,7 +53,7 @@ function obtenerDatosFeed($userId) {
 
         // Preparar consultas
         $placeholders = implode(', ', array_fill(0, count($posts_ids), '%d'));
-        $meta_keys = ['datosAlgoritmo', 'Verificado', 'postAut'];
+        $meta_keys = ['datosAlgoritmo', 'Verificado', 'postAut', 'artista', 'fan'];
         $meta_keys_placeholders = implode(',', array_fill(0, count($meta_keys), '%s'));
 
         // Obtener metadata
@@ -74,6 +73,16 @@ function obtenerDatosFeed($userId) {
         $meta_data = [];
         foreach ($meta_results as $meta_row) {
             $meta_data[$meta_row->post_id][$meta_row->meta_key] = $meta_row->meta_value;
+        }
+
+        // Procesar metas adicionales (artista o fan)
+        $meta_roles = [];
+        foreach ($meta_data as $post_id => $meta) {
+            // Verificar si 'artista' o 'fan' existen y si alguno es true
+            $meta_roles[$post_id] = [
+                'artista' => isset($meta['artista']) ? filter_var($meta['artista'], FILTER_VALIDATE_BOOLEAN) : false,
+                'fan'     => isset($meta['fan']) ? filter_var($meta['fan'], FILTER_VALIDATE_BOOLEAN) : false,
+            ];
         }
 
         // Obtener likes
@@ -119,6 +128,7 @@ function obtenerDatosFeed($userId) {
             'posts_ids'        => $posts_ids,
             'likes_by_post'    => $likes_by_post,
             'meta_data'        => $meta_data,
+            'meta_roles'       => $meta_roles,  // Roles adicionales (artista/fan)
             'author_results'   => $posts_results,
             'post_content'     => $post_content,
         ];
