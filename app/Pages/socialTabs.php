@@ -26,7 +26,7 @@ function socialTabs()
     ob_start();
 
     // Obtener el tipo de usuario actual (por ejemplo, desde una función o meta del usuario).
-    $usuarioTipo = get_user_meta(get_current_user_id(), 'usuarioTipo', true); // Asumiendo que esto devuelve 'artista' o 'fan'.
+    $usuarioTipo = get_user_meta(get_current_user_id(), 'tipoUsuario', true);
 
 ?>
 
