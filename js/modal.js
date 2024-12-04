@@ -192,76 +192,99 @@ function smooth() {
     modalManager.añadirModal('RS', '#formRs', ['.subiricono']);
 }
 
-//
 function busquedaMenuMovil() {
-    // Obtener los elementos del DOM
-    const iconoBusqueda = document.getElementById('iconobusqueda'); // Ícono de búsqueda
-    const filtros = document.getElementById('filtros'); // Contenedor de búsqueda
-    const overlay = document.getElementById('overlay'); // Fondo oscuro
-    const header = document.getElementById('header'); // Contenedor principal para el modal
-    const endMenu = document.querySelector('.endmenu.MENUDGE'); // Contenedor original
-
-    // Verificar que los elementos existen antes de intentar usarlos
-    if (!iconoBusqueda || !filtros || !overlay || !header || !endMenu) {
-        console.error('Uno o más elementos del DOM no se encontraron. Revisa los IDs y clases.');
-        return;
-    }
+    const iconoBusqueda = document.getElementById('iconobusqueda');
+    const filtros = document.getElementById('filtros');
+    const overlay = document.getElementById('overlay');
+    const header = document.getElementById('header');
+    const endMenu = document.querySelector('.endmenu.MENUDGE');
 
     // Verifica si la pantalla tiene menos de 640px
     function actualizarVisibilidad() {
         if (window.innerWidth <= 640) {
-            iconoBusqueda.style.display = 'block'; // Muestra el ícono
+            iconoBusqueda.style.display = 'block';
         } else {
-            iconoBusqueda.style.display = 'none'; // Oculta el ícono
-            cerrarModal(); // Cierra el modal si está abierto
+            iconoBusqueda.style.display = 'none';
+            cerrarModal();
         }
     }
 
     // Función para mover el contenedor de búsqueda fuera de "endmenu"
     function moverFiltrosAHeader() {
-        if (!header.contains(filtros)) {
-            console.log('Moviendo filtros al header'); // Depuración
-            filtros.classList.add('modal'); // Añade la clase modal
-            filtros.style.display = 'block'; // Asegúrate de que sea visible
-            header.appendChild(filtros); // Mueve el contenedor al header
+        // Primero, verifica si el elemento existe y si no está ya en el header
+        if (filtros && endMenu.contains(filtros)) {
+            // Clona el nodo para mantener todos los eventos y propiedades
+            const filtrosClone = filtros.cloneNode(true);
+
+            // Añade la clase modal
+            filtrosClone.classList.add('modal');
+
+            // Remueve el original
+            endMenu.removeChild(filtros);
+
+            // Añade el clon al header
+            header.appendChild(filtrosClone);
+
+            // Actualiza la referencia
+            window.filtros = filtrosClone;
+            return filtrosClone;
         }
+        return filtros;
     }
 
     // Función para devolver el contenedor de búsqueda a "endmenu"
     function devolverFiltrosAEndMenu() {
-        if (header.contains(filtros)) {
-            console.log('Devolviendo filtros a endMenu'); // Depuración
-            filtros.classList.remove('modal'); // Quita la clase modal
-            filtros.style.display = 'none'; // Oculta el modal
-            endMenu.appendChild(filtros); // Devuelve el contenedor a su posición original
+        const currentFiltros = document.getElementById('filtros');
+        if (currentFiltros && header.contains(currentFiltros)) {
+            // Clona el nodo
+            const filtrosClone = currentFiltros.cloneNode(true);
+
+            // Remueve la clase modal
+            filtrosClone.classList.remove('modal');
+
+            // Remueve el original
+            header.removeChild(currentFiltros);
+
+            // Añade el clon al endMenu
+            endMenu.appendChild(filtrosClone);
+
+            // Actualiza la referencia
+            window.filtros = filtrosClone;
+            return filtrosClone;
         }
+        return currentFiltros;
     }
 
     // Abre el modal
     function abrirModal() {
-        moverFiltrosAHeader(); // Mueve el contenedor al header
-        filtros.style.display = 'block'; // Muestra el modal
-        overlay.style.display = 'block'; // Muestra el overlay
+        const movedFiltros = moverFiltrosAHeader();
+        if (movedFiltros) {
+            movedFiltros.style.display = 'block';
+            overlay.style.display = 'block';
+        }
     }
 
     // Cierra el modal
     function cerrarModal() {
-        filtros.style.display = 'none'; // Oculta el modal
-        overlay.style.display = 'none'; // Oculta el overlay
-        devolverFiltrosAEndMenu(); // Devuelve el contenedor a su posición original
+        const currentFiltros = document.getElementById('filtros');
+        if (currentFiltros) {
+            currentFiltros.style.display = 'none';
+            overlay.style.display = 'none';
+            devolverFiltrosAEndMenu();
+        }
     }
 
     // Evento de clic en el ícono de búsqueda
     iconoBusqueda.addEventListener('click', () => {
-        // Si el modal ya está abierto, lo cerramos (toggle)
-        if (filtros.style.display === 'block') {
+        const currentFiltros = document.getElementById('filtros');
+        if (currentFiltros.style.display === 'block') {
             cerrarModal();
         } else {
             abrirModal();
         }
     });
 
-    // Evento de clic fuera del modal (en el overlay)
+    // Evento de clic en el overlay
     overlay.addEventListener('click', cerrarModal);
 
     // Ajustar visibilidad al cambiar el tamaño de la ventana
@@ -270,4 +293,3 @@ function busquedaMenuMovil() {
     // Configuración inicial
     actualizarVisibilidad();
 }
-
