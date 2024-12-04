@@ -39,7 +39,49 @@ function obtenerCache($cache_key) {
 
 function borrarCache($cache_key) {
     $file_path = WP_CONTENT_DIR . '/cache/feed/' . $cache_key . '.cache';
+    
     if (file_exists($file_path)) {
-        unlink($file_path);
+        // Intentar eliminar el archivo, y manejar posibles errores
+        if (!unlink($file_path)) {
+            error_log("[borrarCache] No se pudo eliminar el archivo de caché: " . $file_path);
+        } else {
+            guardarLog("Archivo de caché eliminado: " . $file_path);
+        }
+    } else {
+        error_log("[borrarCache] Archivo de caché no encontrado: " . $file_path);
+    }
+}
+
+function borrarCacheIdeasParaUsuario($user_id)
+{
+    // Recuperar la lista de claves de caché asociadas al usuario
+    $cache_master_key = 'cache_idea_user_' . $user_id;
+    $cache_keys = obtenerCache($cache_master_key);
+
+    if ($cache_keys) {
+        // Eliminar todas las claves de la caché
+        foreach ($cache_keys as $cache_key) {
+            borrarCache($cache_key); // Suponiendo que tienes una función eliminarCache
+        }
+        // Eliminar también la clave maestra
+        borrarCache($cache_master_key);
+    }
+}
+
+function borrarCacheColeccion($colec_id)
+{
+    // Recuperar la lista de claves de caché asociadas a la colección
+    $user_id = get_current_user_id();
+    $cache_master_key = 'cache_colec_' . $colec_id;
+    $cache_keys = obtenerCache($cache_master_key);
+
+    if ($cache_keys) {
+        // Eliminar todas las claves de la caché
+        foreach ($cache_keys as $cache_key) {
+            borrarCache($cache_key); // Suponiendo que tienes una función eliminarCache
+        }
+        // Eliminar también la clave maestra
+        borrarCache($cache_master_key);
+        borrarCacheIdeasParaUsuario($user_id);
     }
 }

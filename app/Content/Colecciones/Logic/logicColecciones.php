@@ -245,6 +245,7 @@ function añadirSampleEnColab($collection_id, $sample_id, $user_id)
         }
         $samplesGuardados[$sample_id][] = $collection_id;
         update_user_meta($user_id, 'samplesGuardados', $samplesGuardados);
+        borrarCacheColeccion($collection_id);
         actualizarTimestampSamplesGuardados($user_id);
 
         return [
@@ -345,7 +346,7 @@ function eliminarSampledeColec()
 
         // Actualizar los metadatos del usuario
         update_user_meta($userId, 'samplesGuardados', $samplesGuardados);
-
+        borrarCacheColeccion($coleccionId);
         wp_send_json_success(['message' => 'Sample eliminado de colección']);
     } else {
         wp_send_json_error(['message' => 'No se encontró el sample en la colección']);

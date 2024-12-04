@@ -49,7 +49,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         $current_user_id = get_current_user_id();
 
         if (!$current_user_id) {
-            //error_log("[publicaciones] Advertencia: No se encontró ID de usuario");
+            // error_log("[publicaciones] Advertencia: No se encontró ID de usuario");
         }
 
         $defaults = [
@@ -67,28 +67,14 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         $args = array_merge($defaults, $args);
 
         if (filter_var($args['idea'], FILTER_VALIDATE_BOOLEAN)) {
-            guardarLog("cargando mas ideas");
-            $query_args = procesarIdeas($args, $paged);
+            $query_args = manejarIdea($args, $paged);
             if (!$query_args) {
                 error_log("[publicaciones] Error al procesar ideas.");
                 return false;
             }
         } else if (!empty($args['colec']) && is_numeric($args['colec'])) {
-            guardarLog("cargando post de coleccion");
-            $samples_meta = get_post_meta($args['colec'], 'samples', true);
-            if (!is_array($samples_meta)) {
-                $samples_meta = maybe_unserialize($samples_meta);
-            }
-            if (is_array($samples_meta)) {
-                $query_args = [
-                    'post_type' => $args['post_type'],
-                    'post__in' => array_values($samples_meta),
-                    'orderby' => 'post__in',
-                    'posts_per_page' => 12,
-                    'paged'          => $paged,
-                ];
-            } else {
-                error_log("[publicaciones] El meta 'samples' no es un array válido.");
+            $query_args = manejarColeccion($args, $paged);
+            if (!$query_args) {
                 return false;
             }
         } else {
@@ -101,9 +87,87 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             echo $output;
             wp_die();
         }
+
         return $output;
     } catch (Exception $e) {
         error_log("[publicaciones] Error crítico: " . $e->getMessage());
+        return false;
+    }
+}
+//manejar ideas es disintas para cada usuario, como se distingue? y si quiero borrar la cache en un evento, como hago si el elemento paged me lo complica 
+function manejarIdea($args, $paged)
+{
+    // Obtener el ID del usuario para diferenciar la caché por usuario
+    $user_id = get_current_user_id();
+    
+    // Crear una clave de caché única basada en el usuario y la paginación
+    $cache_key = 'idea_' . $user_id . '_' . md5(json_encode($args) . '_paged_' . $paged);
+    
+    // Intentar obtener datos desde la caché
+    $cached_data = obtenerCache($cache_key);
+    if ($cached_data !== false) {
+        guardarLog("Cargando ideas desde la caché para el usuario {$user_id}");
+        return $cached_data;
+    }
+
+    guardarLog("Cargando más ideas desde la base de datos para el usuario {$user_id}");
+    $query_args = procesarIdeas($args, $paged);
+    if (!$query_args) {
+        error_log("[manejarIdea] Error al procesar ideas.");
+        return false;
+    }
+
+    // Guardamos la clave de la caché en una lista asociada al usuario, para facilitar su eliminación
+    $cache_master_key = 'cache_idea_user_' . $user_id;
+    $cache_keys = obtenerCache($cache_master_key) ?: [];
+    $cache_keys[] = $cache_key;
+    guardarCache($cache_master_key, $cache_keys, 86400); // Guardar lista de claves de caché
+
+    // Guardar los resultados en la caché con una expiración de 1 día
+    guardarCache($cache_key, $query_args, 86400);
+
+    return $query_args;
+}
+
+function manejarColeccion($args, $paged)
+{
+    // Crear una clave de caché única basada en la colección y la paginación
+    $cache_key = 'coleccion_' . $args['colec'] . '_paged_' . $paged;
+    
+    // Intentar obtener datos desde la caché
+    $cached_data = obtenerCache($cache_key);
+    if ($cached_data !== false) {
+        guardarLog("Cargando colección desde la caché para colección {$args['colec']}");
+        return $cached_data;
+    }
+
+    guardarLog("Cargando posts de la colección desde la base de datos para colección {$args['colec']}");
+    $samples_meta = get_post_meta($args['colec'], 'samples', true);
+    if (!is_array($samples_meta)) {
+        $samples_meta = maybe_unserialize($samples_meta);
+    }
+
+    if (is_array($samples_meta)) {
+        $query_args = [
+            'post_type' => $args['post_type'],
+            'post__in' => array_values($samples_meta),
+            'orderby' => 'post__in',
+            'posts_per_page' => 12,
+            'paged' => $paged,
+        ];
+
+        // Guardamos la clave de la caché en una lista asociada a la colección, para facilitar su eliminación
+        $cache_master_key = 'cache_colec_' . $args['colec'];
+        $cache_keys = obtenerCache($cache_master_key) ?: [];
+        $cache_keys[] = $cache_key;
+        guardarCache($cache_master_key, $cache_keys, 86400); // Guardar lista de claves de caché
+
+        // Guardar los resultados en la caché con una expiración de 1 día
+        guardarCache($cache_key, $query_args, 86400);
+
+        return $query_args;
+    } else {
+        error_log("[manejarColeccion] El meta 'samples' no es un array válido.");
         return false;
     }
 }
