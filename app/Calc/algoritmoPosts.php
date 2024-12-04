@@ -149,53 +149,81 @@ function calcularPuntosParaPost(
     $meta_roles = $datos['meta_roles'];
 
     /*
-    chatgpt tengo un problema aqui
-    [04-Dec-2024 12:50:21 UTC] Post ID 322751: postParaArtistas=false, postParaFans=false
-    [04-Dec-2024 12:50:21 UTC] Post ID 322759: meta roles: Array
+    ESTOS SON LOS UNICOS LOGS QUE VEO PERO NO VEO NINGUN LOG QUE DIGA QUE SUMA O RESTE 
+    [04-Dec-2024 12:59:13 UTC] [obtenerDatosFeed] Debug: meta_roles generado: Array
     (
-        [artista] => 
-        [fan] => 1
+        [322741] => Array
+            (
+                [artista] => 
+                [fan] => 
+            )
+
+        [322746] => Array
+            (
+                [artista] => 
+                [fan] => 
+            )
+
+        [322751] => Array
+            (
+                [artista] => 
+                [fan] => 
+            )
+
+        [322759] => Array
+            (
+                [artista] => 
+                [fan] => 1
+            )
+
+        [322760] => Array
+            (
+                [artista] => 1
+                [fan] => 
+            )
+
+        [322761] => Array
+            (
+                [artista] => 1
+                [fan] => 
+            )
+
+        [322777] => Array
+            (
+                [artista] => 1
+                [fan] => 
+            )
+
     )
 
-    [04-Dec-2024 12:50:21 UTC] Post ID 322759: postParaArtistas=false, postParaFans=true
-    [04-Dec-2024 12:50:21 UTC] Post ID 322760: meta roles: Array
-    (
-        [artista] => 1
-        [fan] => 
-    )
-
-    [04-Dec-2024 12:50:21 UTC] Post ID 322760: postParaArtistas=true, postParaFans=false
-    [04-Dec-2024 12:50:21 UTC] Post ID 322761: meta roles: Array
-    (
-        [artista] => 1
-        [fan] => 
-    )
-
-    [04-Dec-2024 12:50:21 UTC] Post ID 322761: postParaArtistas=true, postParaFans=false
-    [04-Dec-2024 12:50:21 UTC] Post ID 322777: meta roles: Array
-    (
-        [artista] => 1
-        [fan] => 
-    )
+    [04-Dec-2024 12:59:13 UTC] Post ID 322741: postParaArtistas=0, postParaFans=0
+    [04-Dec-2024 12:59:13 UTC] Post ID 322746: postParaArtistas=0, postParaFans=0
+    [04-Dec-2024 12:59:13 UTC] Post ID 322751: postParaArtistas=0, postParaFans=0
+    [04-Dec-2024 12:59:13 UTC] Post ID 322759: postParaArtistas=0, postParaFans=1
+    [04-Dec-2024 12:59:13 UTC] Post ID 322760: postParaArtistas=1, postParaFans=0
+    [04-Dec-2024 12:59:13 UTC] Post ID 322761: postParaArtistas=1, postParaFans=0
+    [04-Dec-2024 12:59:13 UTC] Post ID 322777: postParaArtistas=1, postParaFans=0
     */
     if (!isset($meta_roles[$post_id]) || !is_array($meta_roles[$post_id])) {
         error_log("Post ID {$post_id} no tiene meta roles definidos o no es un array.");
         $meta_roles[$post_id] = ['artista' => false, 'fan' => false];
     }
-    
+
     $postParaArtistas = !empty($meta_roles[$post_id]['artista']);
     $postParaFans = !empty($meta_roles[$post_id]['fan']);
-    
+
     error_log("Post ID {$post_id}: postParaArtistas=" . (int)$postParaArtistas . ", postParaFans=" . (int)$postParaFans);
-    
-    // Tipo de usuario y puntos para artista/fan
-    $puntosArtistaFan = 0;
+
+    error_log("Post ID {$post_id}: TipoUsuario inicial={$tipoUsuario}");
+
     if ($tipoUsuario === 'Fan') {
         $puntosArtistaFan = $postParaFans ? 999 : 0;
         error_log("Post ID {$post_id}: TipoUsuario=Fan, puntosArtistaFan={$puntosArtistaFan}");
     } elseif ($tipoUsuario === 'Artista') {
         $puntosArtistaFan = $postParaFans ? -50 : 0;
         error_log("Post ID {$post_id}: TipoUsuario=Artista, puntosArtistaFan={$puntosArtistaFan}");
+    } else {
+        error_log("Post ID {$post_id}: TipoUsuario desconocido ({$tipoUsuario}), no se asignan puntos.");
     }
     // Calculate puntosFinal
     $puntosFinal = calcularPuntosFinales(
