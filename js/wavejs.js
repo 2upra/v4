@@ -275,7 +275,7 @@ function initWavesurfer(container) {
     // Verifica si el contenedor o alguno de sus elementos padre tiene la clase 'LISTWAVESAMPLE'
     const isListWaveSample = container.classList.contains('LISTWAVESAMPLE') || container.parentElement.classList.contains('LISTWAVESAMPLE');
 
-    const containerHeight = container.classList.contains('waveform-container-venta') ? 60 : isListWaveSample ? 40 : 102;
+    const containerHeight = container.classList.contains('waveform-container-venta') ? 60 : isListWaveSample ? 40 : 90;
 
     const ctx = document.createElement('canvas').getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 500);
