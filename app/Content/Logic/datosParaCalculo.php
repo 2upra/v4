@@ -78,9 +78,6 @@ function obtenerDatosFeed($userId)
             $meta_data[$meta_row->post_id][$meta_row->meta_key] = $meta_row->meta_value;
         }
 
-        // Agregar un log para verificar el contenido de $meta_data
-        error_log("[obtenerDatosFeed] Debug: meta_data procesado: " . print_r($meta_data, true));
-
         // Procesar roles (artista/fan)
         $meta_roles = [];
         foreach ($meta_data as $post_id => $meta) {
