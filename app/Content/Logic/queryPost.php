@@ -601,6 +601,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                     $query_args['post__in'] = $feed_result['post_ids'];
                     $query_args['orderby'] = 'post__in';
 
+                    aqui hay un pequño problema, necesito calcular cuanto da originalCountPost antes de POSTINLIMIT
                     if (count($feed_result['post_ids']) > POSTINLIMIT) {
                         $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, POSTINLIMIT);
                     }
@@ -655,7 +656,6 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
             $originalCountPost = (int) $wpdb->get_var($wpdb->prepare($count_sql, $params));
         }
 
-        // Si se obtuvo un feed personalizado, combinar el resultado con query_args
         if (!empty($feed_result)) {
             return [
                 'query_args' => $query_args,
