@@ -258,7 +258,7 @@
                 // Si ya hay 12 barras, detener el intervalo
                 clearInterval(intervalId);
             }
-        }, 200); // 500 ms = 0.5 segundos
+        }, 1); // 500 ms = 0.5 segundos
     }
 
     // Función para eliminar el marcador de carga
