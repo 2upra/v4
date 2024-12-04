@@ -148,19 +148,46 @@ function calcularPuntosParaPost(
     // Access meta roles (artista/fan)
     $meta_roles = $datos['meta_roles'];
 
-    // Log para verificar si $meta_roles[$post_id] tiene los datos esperados
-    if (!isset($meta_roles[$post_id])) {
-        error_log("Post ID {$post_id} no tiene meta roles definidos.");
-    } else {
-        error_log("Post ID {$post_id}: meta roles: " . print_r($meta_roles[$post_id], true));
+    /*
+    chatgpt tengo un problema aqui
+    [04-Dec-2024 12:50:21 UTC] Post ID 322751: postParaArtistas=false, postParaFans=false
+    [04-Dec-2024 12:50:21 UTC] Post ID 322759: meta roles: Array
+    (
+        [artista] => 
+        [fan] => 1
+    )
+
+    [04-Dec-2024 12:50:21 UTC] Post ID 322759: postParaArtistas=false, postParaFans=true
+    [04-Dec-2024 12:50:21 UTC] Post ID 322760: meta roles: Array
+    (
+        [artista] => 1
+        [fan] => 
+    )
+
+    [04-Dec-2024 12:50:21 UTC] Post ID 322760: postParaArtistas=true, postParaFans=false
+    [04-Dec-2024 12:50:21 UTC] Post ID 322761: meta roles: Array
+    (
+        [artista] => 1
+        [fan] => 
+    )
+
+    [04-Dec-2024 12:50:21 UTC] Post ID 322761: postParaArtistas=true, postParaFans=false
+    [04-Dec-2024 12:50:21 UTC] Post ID 322777: meta roles: Array
+    (
+        [artista] => 1
+        [fan] => 
+    )
+    */
+    if (!isset($meta_roles[$post_id]) || !is_array($meta_roles[$post_id])) {
+        error_log("Post ID {$post_id} no tiene meta roles definidos o no es un array.");
+        $meta_roles[$post_id] = ['artista' => false, 'fan' => false];
     }
-
-    $postParaArtistas = $meta_roles[$post_id]['artista'] ?? false;
-    $postParaFans = $meta_roles[$post_id]['fan'] ?? false;
-
-    // Log para verificar el valor de $postParaFans y $postParaArtistas
-    error_log("Post ID {$post_id}: postParaArtistas=" . ($postParaArtistas ? 'true' : 'false') . ", postParaFans=" . ($postParaFans ? 'true' : 'false'));
-
+    
+    $postParaArtistas = !empty($meta_roles[$post_id]['artista']);
+    $postParaFans = !empty($meta_roles[$post_id]['fan']);
+    
+    error_log("Post ID {$post_id}: postParaArtistas=" . (int)$postParaArtistas . ", postParaFans=" . (int)$postParaFans);
+    
     // Tipo de usuario y puntos para artista/fan
     $puntosArtistaFan = 0;
     if ($tipoUsuario === 'Fan') {
