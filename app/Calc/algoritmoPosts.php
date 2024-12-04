@@ -152,9 +152,9 @@ function calcularPuntosParaPost(
 
     // Tipo de usuario y puntos para artista/fan
     $puntosArtistaFan = 0;
-    if ($tipoUsuario === 'fan') {
+    if ($tipoUsuario === 'Fan') {
         $puntosArtistaFan = $postParaFans ? 50 : 0;
-    } elseif ($tipoUsuario === 'artista') {
+    } elseif ($tipoUsuario === 'Artista') {
         $puntosArtistaFan = $postParaFans ? -50 : 0;
     }
 
