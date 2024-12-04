@@ -9,6 +9,7 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
     if (empty($datos)) {
         return [];
     }
+    error_log("TipoUsuario inicial={$tipoUsuario} calcularFeedPersonalizado");
     $usuario = get_userdata($userId);
     if (!$usuario || !is_object($usuario)) {
         return [];
@@ -67,6 +68,7 @@ function calcularPuntosPostBatch(
     }
 
     $posts_puntos = [];
+    error_log("TipoUsuario inicial={$tipoUsuario} calcularPuntosPostBatch");
 
     foreach ($posts_data as $post_id => $post_data) {
         try {
@@ -214,7 +216,7 @@ function calcularPuntosParaPost(
 
     error_log("Post ID {$post_id}: postParaArtistas=" . (int)$postParaArtistas . ", postParaFans=" . (int)$postParaFans);
 
-    error_log("Post ID {$post_id}: TipoUsuario inicial={$tipoUsuario}");
+    error_log("TipoUsuario inicial={$tipoUsuario} final");
 
     if ($tipoUsuario === 'Fan') {
         $puntosArtistaFan = $postParaFans ? 999 : 0;
