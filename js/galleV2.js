@@ -8,15 +8,15 @@ function formatearTiempoRelativo(fecha) {
     const semanas = Math.floor(dias / 7);
 
     if (semanas > 0) {
-        return semanas === 1 ? 'hace 1 semana' : `hace ${semanas} semanas`;
+        return semanas === 1 ? '1 semana' : `${semanas} semanas`;
     } else if (dias > 0) {
-        return dias === 1 ? 'hace 1 día' : `hace ${dias} días`;
+        return dias === 1 ? '1 día' : `${dias} días`;
     } else if (horas > 0) {
-        return horas === 1 ? 'hace 1 hora' : `hace ${horas} horas`;
+        return horas === 1 ? '1 hora' : `${horas} horas`;
     } else if (minutos > 0) {
-        return minutos === 1 ? 'hace 1 minuto' : `hace ${minutos} minutos`;
+        return minutos === 1 ? '1 minuto' : `${minutos} minutos`;
     } else {
-        return 'hace unos segundos';
+        return 'unos segundos';
     }
 }
 
@@ -109,7 +109,7 @@ function galle() {
             });
         });
 
-        // Opcional: Cerrar el modal al hacer clic en el fondo modal
+        // Opcional: Cerrar el modal al  clic en el fondo modal
         modalBackground.addEventListener('click', function () {
             // Selecciona el modal actualmente visible
             const visibleModal = document.querySelector('li.modal.POST-colab[style*="display: block"]');
@@ -383,7 +383,7 @@ function galle() {
         }
     }
 
-    // Evento para quitar el color rojo al hacer clic en el icono de chat
+    // Evento para quitar el color rojo al  clic en el icono de chat
     const chatIconoElemento = document.querySelector('#chatIcono');
     if (chatIconoElemento) {
         chatIconoElemento.addEventListener('click', function () {
