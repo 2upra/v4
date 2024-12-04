@@ -133,6 +133,7 @@
         }
 
         estaCargando = true;
+        insertarMarcadorCarga(listaPublicaciones);
         log('Iniciando carga de más contenido');
 
         let intentos = 0;
@@ -172,7 +173,7 @@
                     if (!respuesta.ok) {
                         throw new Error(`HTTP error! status: ${respuesta.status}`);
                     }
-                    insertarMarcadorCarga(listaPublicaciones);
+                    
                     const textoRespuesta = await respuesta.text();
                     await procesarRespuesta(textoRespuesta, listaPublicaciones);
                 } catch (error) {
