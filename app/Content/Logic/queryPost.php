@@ -1,5 +1,5 @@
 <?
-
+//por alguna extraña razon el $post_ identifier no llega a configuracionQueryArgs, asi que mejor la enviamos directamente en una variable desde publicaciones a configuracionQueryArgs
 function publicacionAjax()
 {
     $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
@@ -34,13 +34,14 @@ function publicacionAjax()
             'idea' => $idea
         ),
         true,
-        $paged
+        $paged,
+        $data_identifier // Pasar el identificador directamente
     );
 }
 add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
 add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
 
-function publicaciones($args = [], $is_ajax = false, $paged = 1)
+function publicaciones($args = [], $is_ajax = false, $paged = 1, $identifier = '')
 {
     try {
         $user_id = obtenerUserId($is_ajax);
@@ -60,9 +61,11 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             'colec' => null,
             'idea' => null,
             'perfil' => null,
+            'identifier' => '' // Agregar identifier a los argumentos por defecto
         ];
 
         $args = array_merge($defaults, $args);
+        $args['identifier'] = $identifier; // Asegurar que el identifier se pasa correctamente
 
         if (filter_var($args['idea'], FILTER_VALIDATE_BOOLEAN)) {
             guardarLog("cargando mas ideas");
