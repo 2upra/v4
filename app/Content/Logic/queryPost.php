@@ -5,7 +5,7 @@ function publicacionAjax()
     $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
     $filtro = isset($_POST['filtro']) ? sanitize_text_field($_POST['filtro']) : '';
     $tipoPost = isset($_POST['posttype']) ? sanitize_text_field($_POST['posttype']) : '';
-    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : ''; // Aseguramos que el identifier se obtenga correctamente
+    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : '';
     $tab_id = isset($_POST['tab_id']) ? sanitize_text_field($_POST['tab_id']) : '';
     $user_id = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
     $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas'])
@@ -15,14 +15,12 @@ function publicacionAjax()
     $colec = isset($_POST['colec']) ? intval($_POST['colec']) : null;
     $idea = isset($_POST['idea']) ? filter_var($_POST['idea'], FILTER_VALIDATE_BOOLEAN) : false;
 
-    // Log para depuración
     if (empty($data_identifier)) {
         error_log("[publicacionAjax] Warning: El valor de 'identifier' está vacío o no se recibió.");
     } else {
         error_log("[publicacionAjax] Valor de 'identifier' recibido: " . $data_identifier);
     }
 
-    // Pasamos explícitamente el identifier en el array de argumentos
     publicaciones(
         array(
             'filtro' => $filtro,
@@ -119,13 +117,32 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             $current_user_id = $FALLBACK_USER_ID;
         }
 
-        // Usar el identifier pasado en $args
-        $identifier = isset($args['identifier']) ? $args['identifier'] : '';
+        if ($user_id !== null) {
+            $query_args = [
+                'post_type' => $args['post_type'],
+                'posts_per_page' => $args['posts'],
+                'paged' => $paged,
+                'ignore_sticky_posts' => true,
+                'suppress_filters' => false,
+                'orderby' => 'date',
+                'order' => 'DESC',
+                'author' => $user_id,
+            ];
 
-        if (empty($identifier)) {
-            error_log("[configuracionQueryArgs] Advertencia: El valor de 'identifier' está vacío.");
+            $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
+            return $query_args;
+        }
+
+        $identifier = '';
+
+        if (isset($_GET['busqueda'])) {
+            $identifier = $_GET['busqueda'];
+            error_log("[configuracionQueryArgs] Valor de busqueda obtenido de GET: " . $identifier);
+        } elseif (isset($_POST['identifier'])) {
+            $identifier = $_POST['identifier'];
+            error_log("[configuracionQueryArgs] Valor de identifier obtenido de POST: " . $identifier);
         } else {
-            error_log("[configuracionQueryArgs] Valor de 'identifier': " . $identifier);
+            error_log("[configuracionQueryArgs] No se encontro valor para identifier ni busqueda.");
         }
 
         $posts = $args['posts'];
@@ -136,7 +153,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
         }
 
-        // Construcción de los argumentos de consulta
         $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
 
         if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
