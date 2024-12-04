@@ -36,7 +36,7 @@ function obtenerDatosFeed($userId)
             'post_type'      => 'social_post',
             'posts_per_page' => 50000,
             'date_query'     => [
-                'after' => date('Y-m-d', strtotime('-3 days'))
+                'after' => date('Y-m-d', strtotime('-365 days'))
             ],
             'fields'         => 'ids',
             'no_found_rows'  => true,
