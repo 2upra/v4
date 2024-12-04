@@ -452,7 +452,6 @@ function fondoPost($filtro, $block, $es_suscriptor, $postId)
 }
 
 
-
 function audioPost($postId)
 {
     $audio_id_lite = get_post_meta($postId, 'post_audio_lite', true);
