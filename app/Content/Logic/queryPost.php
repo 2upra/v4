@@ -1,11 +1,11 @@
 <?
-//por alguna extraña razon el $post_ identifier no llega a configuracionQueryArgs, asi que mejor la enviamos directamente en una variable desde publicaciones a configuracionQueryArgs
+//por alguna extraña razon el $post_ identifier no llega a configuracionQueryArgs, asi que mejor la enviamos directamente en una variable desde publicaciones a configuracionQueryArgs o si sabes resolver el problema mejor
 function publicacionAjax()
 {
     $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
     $filtro = isset($_POST['filtro']) ? sanitize_text_field($_POST['filtro']) : '';
     $tipoPost = isset($_POST['posttype']) ? sanitize_text_field($_POST['posttype']) : '';
-    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : '';
+    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : ''; // Aseguramos que el identifier se obtenga correctamente
     $tab_id = isset($_POST['tab_id']) ? sanitize_text_field($_POST['tab_id']) : '';
     $user_id = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
     $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas'])
@@ -15,12 +15,14 @@ function publicacionAjax()
     $colec = isset($_POST['colec']) ? intval($_POST['colec']) : null;
     $idea = isset($_POST['idea']) ? filter_var($_POST['idea'], FILTER_VALIDATE_BOOLEAN) : false;
 
+    // Log para depuración
     if (empty($data_identifier)) {
         error_log("[publicacionAjax] Warning: El valor de 'identifier' está vacío o no se recibió.");
     } else {
         error_log("[publicacionAjax] Valor de 'identifier' recibido: " . $data_identifier);
     }
 
+    // Pasamos explícitamente el identifier en el array de argumentos
     publicaciones(
         array(
             'filtro' => $filtro,
@@ -34,14 +36,13 @@ function publicacionAjax()
             'idea' => $idea
         ),
         true,
-        $paged,
-        $data_identifier // Pasar el identificador directamente
+        $paged
     );
 }
 add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
 add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
 
-function publicaciones($args = [], $is_ajax = false, $paged = 1, $identifier = '')
+function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
     try {
         $user_id = obtenerUserId($is_ajax);
@@ -61,11 +62,9 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1, $identifier = '
             'colec' => null,
             'idea' => null,
             'perfil' => null,
-            'identifier' => '' // Agregar identifier a los argumentos por defecto
         ];
 
         $args = array_merge($defaults, $args);
-        $args['identifier'] = $identifier; // Asegurar que el identifier se pasa correctamente
 
         if (filter_var($args['idea'], FILTER_VALIDATE_BOOLEAN)) {
             guardarLog("cargando mas ideas");
@@ -108,7 +107,51 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1, $identifier = '
         return false;
     }
 }
-//procesar idea no gestiona bien la siguiente pagina, al cargar la segunda pagina no cargan el resto de post 
+
+function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
+{
+    try {
+        $FALLBACK_USER_ID = 44;
+        $is_authenticated = $current_user_id && $current_user_id != 0;
+        $is_admin = current_user_can('administrator');
+
+        if (!$is_authenticated) {
+            $current_user_id = $FALLBACK_USER_ID;
+        }
+
+        // Usar el identifier pasado en $args
+        $identifier = isset($args['identifier']) ? $args['identifier'] : '';
+
+        if (empty($identifier)) {
+            error_log("[configuracionQueryArgs] Advertencia: El valor de 'identifier' está vacío.");
+        } else {
+            error_log("[configuracionQueryArgs] Valor de 'identifier': " . $identifier);
+        }
+
+        $posts = $args['posts'];
+        $similar_to = $args['similar_to'] ?? null;
+        $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
+
+        if ($filtroTiempo === false) {
+            error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
+        }
+
+        // Construcción de los argumentos de consulta
+        $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
+
+        if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
+            $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+        }
+
+        $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
+
+        return $query_args;
+    } catch (Exception $e) {
+        error_log("[configuracionQueryArgs] Error crítico: " . $e->getMessage());
+        return false;
+    }
+}
+
 function procesarIdeas($args, $paged)
 {
     try {
@@ -333,67 +376,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     return ob_get_clean();
 }
 
-function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
-{
-    try {
-        $FALLBACK_USER_ID = 44;
-        $is_authenticated = $current_user_id && $current_user_id != 0;
-        $is_admin = current_user_can('administrator');
 
-        if (!$is_authenticated) {
-            $current_user_id = $FALLBACK_USER_ID;
-        }
-
-        if ($user_id !== null) {
-            $query_args = [
-                'post_type' => $args['post_type'],
-                'posts_per_page' => $args['posts'],
-                'paged' => $paged,
-                'ignore_sticky_posts' => true,
-                'suppress_filters' => false,
-                'orderby' => 'date',
-                'order' => 'DESC',
-                'author' => $user_id,
-            ];
-
-            $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
-            return $query_args;
-        }
-
-        $identifier = '';
-
-        if (isset($_GET['busqueda'])) {
-            $identifier = $_GET['busqueda'];
-            error_log("[configuracionQueryArgs] Valor de busqueda obtenido de GET: " . $identifier);
-        } elseif (isset($_POST['identifier'])) {
-            $identifier = $_POST['identifier'];
-            error_log("[configuracionQueryArgs] Valor de identifier obtenido de POST: " . $identifier);
-        } else {
-            error_log("[configuracionQueryArgs] No se encontro valor para identifier ni busqueda.");
-        }
-
-        $posts = $args['posts'];
-        $similar_to = $args['similar_to'] ?? null;
-        $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
-
-        if ($filtroTiempo === false) {
-            error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
-        }
-
-        $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
-
-        if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
-            $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
-        }
-
-        $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
-
-        return $query_args;
-    } catch (Exception $e) {
-        error_log("[configuracionQueryArgs] Error crítico: " . $e->getMessage());
-        return false;
-    }
-}
 function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id)
 {
     // Si se proporciona un user_id, filtrar solo por los posts de ese usuario
