@@ -991,11 +991,11 @@ function galle() {
         const formData = new FormData();
         formData.append('action', 'file_upload');
         formData.append('file', file);
-        formData.append('file_hash', await generateFileHash(file)); // Asumiendo que ya tienes esta función
+        formData.append('file_hash', await generateFileHash(file, chat = true));
 
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', my_ajax_object.ajax_url, true);
+            xhr.open('POST', ajaxUrl, true);
 
             // Actualización de la barra de progreso
             xhr.upload.onprogress = e => {

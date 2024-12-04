@@ -28,15 +28,17 @@ function logHash(message, detail = '') {
     console.log(`${icon} ${message} ${detail}`);
 }
 
-window.generateFileHash = async function(file) {
+window.generateFileHash = async function(file, chat = null) {
     logHash("Iniciando generación de hash para el archivo:", file.name);
 
-    if (file.type.startsWith('audio/')) {
+    // Si el archivo es de tipo audio y `chat` no es true, usa el hash del servidor
+    if (file.type.startsWith('audio/') && !chat) {
         return await generateServerAudioHash(file);
     }
 
+    // En cualquier otro caso (audio con chat=true o no-audio), usa el hash local
     try {
-        logHash("Generando hash localmente para archivo no-audio:", file.name);
+        logHash("Generando hash localmente para archivo:", file.name);
         const buffer = await file.arrayBuffer();
         const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
