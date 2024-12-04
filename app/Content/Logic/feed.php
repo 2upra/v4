@@ -28,7 +28,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             } else {
                 if ($paged === 1) {
                     guardarLog("Usuario ID: $current_user_id calculando nuevo feed para primera página (sin caché)");
-                    $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $tipoUsuario);
+                    $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, '', $tipoUsuario);
 
                     if (!$posts_personalizados) {
                         guardarLog("Error: Fallo al calcular feed personalizado para usuario ID: $current_user_id");
@@ -40,7 +40,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
                 } else {
                     if (empty($posts_personalizados)) {
                         guardarLog("Usuario ID: $current_user_id backup no encontrado, calculando nuevo feed (sin caché)");
-                        $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, $tipoUsuario);
+                        $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, '', $tipoUsuario);
                     }
 
                     if (!$posts_personalizados) {
@@ -128,8 +128,10 @@ function obtenerPostsSimilares($current_user_id, $similar_to)
 
 
 /*
-porque aqui si es 
-[04-Dec-2024 13:14:45 UTC] TipoUsuario inicial=Fan reiniciarFeed
+no entiendo porque tipoUsuari no llega  calcularFeedPersonalizado
+[04-Dec-2024 13:17:29 UTC] TipoUsuario inicial=Fan reiniciarFeed
+[04-Dec-2024 13:17:29 UTC] TipoUsuario inicial=Fan enviado a calcularFeedPersonalizado
+[04-Dec-2024 13:17:29 UTC] TipoUsuario inicial= calcularFeedPersonalizado
 
 */
 function reiniciarFeed($current_user_id)
@@ -165,7 +167,7 @@ function reiniciarFeed($current_user_id)
 
                     guardarLog("Usuario ID: $current_user_id REcalculando nuevo feed para primera página (sin caché)");
                     error_log("TipoUsuario inicial={$tipoUsuario} enviado a calcularFeedPersonalizado");
-                    $posts_personalizados = calcularFeedPersonalizado($current_user_id, '', $tipoUsuario);
+                    $posts_personalizados = calcularFeedPersonalizado($current_user_id, '', '', $tipoUsuario);
 
                     if (!$posts_personalizados) {
                         guardarLog("Error: Fallo al calcular feed personalizado para usuario ID: $current_user_id");
