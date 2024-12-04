@@ -28,7 +28,7 @@ function htmlPost($filtro)
         autor="<? echo esc_attr($author_id); ?>">
 
         <? if ($sampleList): ?>
-            <? generarBloquePost($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id); ?>
+            <? generarBloquePost($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id, $audio_id_lite); ?>
         <? else: ?>
             <? echo fondoPost($filtro, $block, $es_suscriptor, $post_id); ?>
             <? if ($music): ?>
@@ -48,7 +48,7 @@ function htmlPost($filtro)
 
 
 
-function generarBloquePost($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id)
+function generarBloquePost($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id, $audio_id_lite = null)
 {
 ?>
     <div class="LISTSAMPLE">
@@ -97,7 +97,7 @@ function generarBloquePost($block, $es_suscriptor, $post_id, $datosAlgoritmo, $v
                 <div class="waveform-loading" style="display: none;">Cargando...</div>
             </div>
         </div>
-        <? echo renderPostControls($post_id, $colab); ?>
+        <? echo renderPostControls($post_id, $colab, $audio_id_lite); ?>
         <? echo opcionesPost($post_id, $author_id); ?>
     </div>
 <?
