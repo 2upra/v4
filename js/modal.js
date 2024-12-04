@@ -202,7 +202,7 @@ function busquedaMenuMovil() {
     // Verifica si la pantalla tiene menos de 640px
     function actualizarVisibilidad() {
         if (window.innerWidth <= 640) {
-            iconoBusqueda.style.display = 'block';
+            iconoBusqueda.style.display = 'flex';
         } else {
             iconoBusqueda.style.display = 'none';
             cerrarModal();
