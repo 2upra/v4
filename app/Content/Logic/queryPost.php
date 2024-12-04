@@ -598,13 +598,16 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
             default: // Feed personalizado
                 $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
                 if (!empty($feed_result['post_ids'])) {
-                    $query_args['post__in'] = $feed_result['post_ids'];
-                    $query_args['orderby'] = 'post__in';
+                    // Contamos el número total de publicaciones antes de truncarlas
+                    $originalCountPost = count($feed_result['post_ids']);
 
-                    aqui hay un pequño problema, necesito calcular cuanto da originalCountPost antes de POSTINLIMIT
-                    if (count($feed_result['post_ids']) > POSTINLIMIT) {
+                    // Aplicamos el límite de POSTINLIMIT si es necesario
+                    if ($originalCountPost > POSTINLIMIT) {
                         $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, POSTINLIMIT);
                     }
+
+                    $query_args['post__in'] = $feed_result['post_ids'];
+                    $query_args['orderby'] = 'post__in';
 
                     if (!empty($feed_result['post_not_in'])) {
                         $query_args['post_not_in'] = $feed_result['post_not_in'];
@@ -612,6 +615,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                 } else {
                     $query_args['orderby'] = 'date';
                     $query_args['order'] = 'DESC';
+                    $originalCountPost = 0; // No hay publicaciones
                 }
         }
 
@@ -621,10 +625,8 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
             $query_args['order'] = 'DESC';
         }
 
-        // Contar las publicaciones si originalCountPost está vacío o es 0
-        $originalCountPost = $feed_result['originalCountPost'] ?? 0;
-
-        if ($originalCountPost === 0) {
+        // Si no se ha calculado `originalCountPost`, lo calculamos aquí
+        if (!isset($originalCountPost) || $originalCountPost === 0) {
             // Realizar una consulta eficiente para contar las publicaciones
             $count_sql = "
                 SELECT COUNT(p.ID)
@@ -656,6 +658,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
             $originalCountPost = (int) $wpdb->get_var($wpdb->prepare($count_sql, $params));
         }
 
+        // Si se obtuvo un feed personalizado, combinar el resultado con query_args
         if (!empty($feed_result)) {
             return [
                 'query_args' => $query_args,
