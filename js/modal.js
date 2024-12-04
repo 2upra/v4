@@ -194,14 +194,22 @@ function smooth() {
 
 //
 function busquedaMenuMovil() {
+    // Obtener los elementos del DOM
     const iconoBusqueda = document.getElementById('iconobusqueda'); // Ícono de búsqueda
     const filtros = document.getElementById('filtros'); // Contenedor de búsqueda
     const overlay = document.getElementById('overlay'); // Fondo oscuro
     const header = document.getElementById('header'); // Contenedor principal para el modal
     const endMenu = document.querySelector('.endmenu.MENUDGE'); // Contenedor original
 
+    // Verificar que los elementos existen antes de intentar usarlos
+    if (!iconoBusqueda || !filtros || !overlay || !header || !endMenu) {
+        console.error('Uno o más elementos del DOM no se encontraron. Revisa los IDs y clases.');
+        return;
+    }
+
     // Verifica si la pantalla tiene menos de 640px
     function actualizarVisibilidad() {
+        console.log('Ancho de la ventana:', window.innerWidth); // Depuración
         if (window.innerWidth <= 640) {
             iconoBusqueda.style.display = 'block'; // Muestra el ícono
         } else {
@@ -213,6 +221,7 @@ function busquedaMenuMovil() {
     // Función para mover el contenedor de búsqueda fuera de "endmenu"
     function moverFiltrosAHeader() {
         if (!header.contains(filtros)) {
+            console.log('Moviendo filtros al header'); // Depuración
             filtros.classList.add('modal'); // Añade la clase modal
             filtros.style.display = 'block'; // Asegúrate de que sea visible
             header.appendChild(filtros); // Mueve el contenedor al header
@@ -222,6 +231,7 @@ function busquedaMenuMovil() {
     // Función para devolver el contenedor de búsqueda a "endmenu"
     function devolverFiltrosAEndMenu() {
         if (header.contains(filtros)) {
+            console.log('Devolviendo filtros a endMenu'); // Depuración
             filtros.classList.remove('modal'); // Quita la clase modal
             filtros.style.display = 'none'; // Oculta el modal
             endMenu.appendChild(filtros); // Devuelve el contenedor a su posición original
@@ -230,6 +240,7 @@ function busquedaMenuMovil() {
 
     // Abre el modal
     function abrirModal() {
+        console.log('Abriendo modal'); // Depuración
         moverFiltrosAHeader(); // Mueve el contenedor al header
         filtros.style.display = 'block'; // Muestra el modal
         overlay.style.display = 'block'; // Muestra el overlay
@@ -237,6 +248,7 @@ function busquedaMenuMovil() {
 
     // Cierra el modal
     function cerrarModal() {
+        console.log('Cerrando modal'); // Depuración
         filtros.style.display = 'none'; // Oculta el modal
         overlay.style.display = 'none'; // Oculta el overlay
         devolverFiltrosAEndMenu(); // Devuelve el contenedor a su posición original
