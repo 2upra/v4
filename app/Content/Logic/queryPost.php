@@ -461,10 +461,8 @@ function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id, $ti
         return $query_args;
     }
 
-    // Obtener el filtro solicitado en $args
+    //aqui necesito agregar un nuevo filtro que se llame rola, y que necesit que el post este publicado, y que tenga la meta rola en 1 y un tener un post_audio_lite
     $filtro = $args['filtro'] ?? 'nada';
-
-    // Definir las condiciones de meta_query y otros parámetros
     $meta_query_conditions = [
         'rolasEliminadas' => fn() => $query_args['post_status'] = 'pending_deletion',
         'rolasRechazadas' => fn() => $query_args['post_status'] = 'rejected',
@@ -505,29 +503,21 @@ function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id, $ti
             $query_args['author'] = get_current_user_id();
             $query_args['post_status'] = 'pending';
         },
-        // Nuevo filtro: rola
-        'rola' => [
-            ['key' => 'rola', 'value' => '1', 'compare' => '='],
-            ['key' => 'post_audio_lite', 'compare' => 'EXISTS']
-        ],
     ];
 
-    // Aplicar el filtro solicitado
     if (isset($meta_query_conditions[$filtro])) {
         $result = $meta_query_conditions[$filtro];
-
         if (is_callable($result)) {
-            // Si es una función, ejecutamos la lógica personalizada
             $result();
         } else {
             // Si es una condición de meta_query, lo agregamos al array de 'meta_query'
-            $query_args['post_status'] = 'publish'; // Aseguramos que el estado sea 'publish'
             $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], $result);
         }
     }
 
     return $query_args;
 }
+
 function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario = null)
 {
     try {
