@@ -330,6 +330,8 @@ function subidaArchivo()
 
     ////guardarLog("FIN subidaArchivo");
 }
+
+add_action('wp_ajax_file_upload', 'subidaArchivo');
 /*
 function antivirus($file_path, $file_id, $current_user_id)
 {
@@ -440,7 +442,7 @@ function nombreUnicoFile($dir, $name, $ext)
     return basename($name, $ext) . $ext;
 }
 
-add_action('wp_ajax_file_upload', 'subidaArchivo');
+
 
 
 

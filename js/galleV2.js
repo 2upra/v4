@@ -577,7 +577,7 @@ function galle() {
 
     setInterval(actualizarTiemposRelativos, 4000);
     actualizarTiemposRelativos();
-    
+
     function actualizarTiemposRelativos() {
         const actualizarElementosFecha = selector => {
             const elementos = document.querySelectorAll(selector);
@@ -989,52 +989,77 @@ function galle() {
 
     async function subidaChatBackend(file, progressBarId) {
         const formData = new FormData();
-        chat = true;
+        let chat = true; // Asegúrate de declarar correctamente la variable "chat".
+
+        console.log('Iniciando generación de hash para el archivo...');
+
+        // Agrega logs antes y después de las operaciones más relevantes
+        try {
+            const fileHash = await generateFileHash(file, chat);
+            console.log('Hash generado:', fileHash);
+            formData.append('file_hash', fileHash);
+        } catch (error) {
+            console.error('Error al generar el hash del archivo:', error);
+            throw error; // Lanza el error para detener la ejecución si falla
+        }
+
         formData.append('action', 'file_upload');
         formData.append('file', file);
         formData.append('chat', chat);
-        formData.append('file_hash', await generateFileHash(file, chat));
 
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open('POST', ajaxUrl, true);
+
+            // Log para confirmar que la solicitud se ha abierto correctamente
+            console.log('Solicitud POST abierta a:', ajaxUrl);
 
             // Actualización de la barra de progreso
             xhr.upload.onprogress = e => {
                 if (e.lengthComputable) {
                     const progressBar = document.getElementById(progressBarId);
                     const progressPercent = (e.loaded / e.total) * 100;
+                    console.log(`Progreso de subida: ${progressPercent}%`);
                     if (progressBar) progressBar.style.width = `${progressPercent}%`;
                 }
             };
 
             // Manejo de la respuesta del servidor
             xhr.onload = () => {
+                console.log('Respuesta recibida del servidor. Status:', xhr.status);
                 if (xhr.status === 200) {
                     try {
                         const result = JSON.parse(xhr.responseText);
+                        console.log('Respuesta JSON parseada:', result);
                         if (result.success) {
+                            console.log('Subida exitosa, datos recibidos:', result.data);
                             resolve(result.data); // Devuelve la data en caso de éxito
                         } else {
+                            console.error('La respuesta del servidor no indica éxito:', result);
                             reject(new Error('Error en la respuesta del servidor'));
                         }
                     } catch (error) {
+                        console.error('Error al parsear la respuesta JSON:', error);
                         reject(error); // Error al parsear la respuesta
                     }
                 } else {
+                    console.error(`Error en la carga del archivo. Status: ${xhr.status}`);
                     reject(new Error(`Error en la carga del archivo. Status: ${xhr.status}`));
                 }
             };
 
             // Manejo de errores de conexión
             xhr.onerror = () => {
+                console.error('Error en la conexión con el servidor');
                 reject(new Error('Error en la conexión con el servidor'));
             };
 
             // Enviar solicitud AJAX
             try {
+                console.log('Enviando la solicitud AJAX...');
                 xhr.send(formData);
             } catch (error) {
+                console.error('Error al enviar la solicitud AJAX:', error);
                 reject(new Error('Error al enviar la solicitud AJAX'));
             }
         });
