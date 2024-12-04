@@ -87,7 +87,7 @@ function listarNotificaciones($pagina = 1)
         }
         echo '</ul>';
     } else {
-        echo '<p>No hay notificaciones disponibles.</p>';
+        echo '<p class="sinnotifi">No hay notificaciones disponibles.</p>';
     }
     wp_reset_postdata();
     return ob_get_clean();

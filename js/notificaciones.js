@@ -3,21 +3,12 @@ function iniciarCargaNotificaciones() {
         cargando = false;
     const listaNotificaciones = document.querySelector('.notificaciones-lista.modal');
 
-    if (!listaNotificaciones) {
-        console.error('No se encontró el elemento .notificaciones-lista.modal');
-        return;
-    }
+    if (!listaNotificaciones) return;
 
     const marcarNotificacionVista = id => {
-        return fetch(ajaxUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ action: 'marcar_notificacion_vista', notificacionId: id })
-        })
-            .then(res => {
-                if (!res.ok) {
-                    console.error('Error al marcar la notificación como vista:', res.statusText);
-                }
+        enviarAjax('marcar_notificacion_vista', { notificacionId: id })
+            .then(response => {
+                if (!response.success) console.error('Error al marcar la notificación como vista:', response.message);
             })
             .catch(err => console.error('Error de red al marcar notificación vista:', err));
     };
@@ -44,72 +35,59 @@ function iniciarCargaNotificaciones() {
         });
     };
 
+    const cargarPaginaNotificaciones = (pagina) => {
+        enviarAjax('cargar_notificaciones', { pagina })
+            .then(data => {
+                const textoNormalizado = data.replace(/\s+/g, ' ').trim();
+
+                if (textoNormalizado.includes('No hay notificaciones disponibles')) {
+                    cargando = true;
+                    return;
+                }
+
+                if (pagina === 1) {
+                    listaNotificaciones.innerHTML = data;
+                    paginaActual = 2;
+                } else {
+                    listaNotificaciones.insertAdjacentHTML('beforeend', data);
+                    paginaActual++;
+                }
+
+                observarNotificaciones();
+                cargando = false;
+            })
+            .catch(() => {
+                cargando = false;
+            });
+    };
+
     observarNotificaciones();
 
     listaNotificaciones.addEventListener('scroll', () => {
         if (listaNotificaciones.scrollHeight - (listaNotificaciones.scrollTop + listaNotificaciones.clientHeight) <= 200 && !cargando) {
             cargando = true;
-
-            fetch(ajaxUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ action: 'cargar_notificaciones', pagina: paginaActual })
-            })
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error('Error en la respuesta del servidor');
-                    }
-                    return res.text();
-                })
-                .then(data => {
-                    // Normalizamos el texto para evitar problemas con espacios o saltos de línea
-                    const textoNormalizado = data.replace(/\s+/g, ' ').trim();
-
-                    // Verificamos de forma más flexible si no hay notificaciones
-                    if (textoNormalizado.includes('No hay notificaciones disponibles')) {
-                        cargando = true; // Detenemos la carga adicional
-                        return;
-                    }
-
-                    if (data) {
-                        listaNotificaciones.insertAdjacentHTML('beforeend', data);
-                        observarNotificaciones();
-                        paginaActual++;
-                    }
-                    cargando = false;
-                })
-                .catch(err => {
-                    cargando = false;
-                });
+            cargarPaginaNotificaciones(paginaActual);
         }
     });
-}
 
-document.addEventListener("DOMContentLoaded", function() {
-    // Función para verificar notificaciones no leídas usando long polling
-    async function verificarNotificaciones() {
-        try {
-            const response = await enviarAjax('verificar_notificaciones');
-            
-            if (response.hay_no_vistas) {
-                // Cambiar el color del ícono a rojo (#d43333)
-                document.querySelector('#icono-notificaciones svg').setAttribute('fill', '#d43333');
-            } else {
-                // Cambiar el color de vuelta a su color por defecto (currentColor)
-                document.querySelector('#icono-notificaciones svg').setAttribute('fill', 'currentColor');
+    document.addEventListener("DOMContentLoaded", function() {
+        async function verificarNotificaciones() {
+            try {
+                const response = await enviarAjax('verificar_notificaciones');
+                
+                if (response.hay_no_vistas) {
+                    document.querySelector('#icono-notificaciones svg').setAttribute('fill', '#d43333');
+                    cargarPaginaNotificaciones(1); // Recargar la página 1 si hay nuevas notificaciones
+                } else {
+                    document.querySelector('#icono-notificaciones svg').setAttribute('fill', 'currentColor');
+                }
+
+                verificarNotificaciones();
+            } catch (error) {
+                console.error('Error en la verificación de notificaciones:', error);
+                setTimeout(verificarNotificaciones, 30000);
             }
-
-            // Iniciar otra verificación después de que se reciba una respuesta
-            verificarNotificaciones();
-
-        } catch (error) {
-            console.error('Error en la verificación de notificaciones:', error);
-
-            // En caso de error, esperar unos segundos antes de intentar de nuevo
-            setTimeout(verificarNotificaciones, 30000);
         }
-    }
-
-    // Iniciar la verificación de notificaciones al cargar la página
-    verificarNotificaciones();
-});
+        verificarNotificaciones();
+    });
+}
