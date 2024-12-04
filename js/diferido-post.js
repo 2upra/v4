@@ -172,7 +172,7 @@
                     if (!respuesta.ok) {
                         throw new Error(`HTTP error! status: ${respuesta.status}`);
                     }
-
+                    insertarMarcadorCarga(listaPublicaciones);
                     const textoRespuesta = await respuesta.text();
                     await procesarRespuesta(textoRespuesta, listaPublicaciones);
                 } catch (error) {
@@ -197,7 +197,6 @@
     // Función principal procesar respuesta
     async function procesarRespuesta(respuesta, listaPublicaciones) {
         // Mostrar el mensaje de "Cargando posts" antes de procesar
-        insertarMarcadorCarga(listaPublicaciones);
 
         const doc = validarRespuesta(respuesta);
         if (!doc) {
@@ -212,7 +211,6 @@
         // Eliminar el mensaje de carga después de manejar el contenido
         eliminarMarcadorCarga(listaPublicaciones);
     }
-
     // Función para insertar el marcador de carga
     function insertarMarcadorCarga(listaPublicaciones) {
         if (!listaPublicaciones) return;
@@ -227,7 +225,6 @@
         // Añadir el marcador al inicio de la lista de publicaciones
         listaPublicaciones.insertAdjacentElement('beforeend', marcadorCarga);
     }
-
     // Función para eliminar el marcador de carga
     function eliminarMarcadorCarga(listaPublicaciones) {
         if (!listaPublicaciones) return;
@@ -238,7 +235,6 @@
             marcadorCarga.remove();
         }
     }
-
     // Parte 1: Validar y preparar la respuesta
     function validarRespuesta(respuesta) {
         log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
@@ -259,7 +255,6 @@
 
         return new DOMParser().parseFromString(respuesta, 'text/html');
     }
-
     // Parte 2: Actualizar datos y filtrar publicaciones válidas
     function procesarPublicaciones(doc) {
         // Actualizar el campo total-posts-sampleList
@@ -299,7 +294,6 @@
         contadorDeSamples();
         return publicacionesValidas;
     }
-
     // Parte 3: Insertar y manejar contenido en el DOM
     function manejarContenido(publicacionesValidas, listaPublicaciones) {
         if (publicacionesValidas.length > 0) {
@@ -335,6 +329,7 @@
             detenerCarga();
         }
     }
+
     function reiniciarEventosPostTag() {
         log('Reiniciando eventos de clic mediante delegación en <span class="postTag">');
         configurarDelegacionEventosPostTag();
