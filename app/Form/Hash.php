@@ -202,7 +202,6 @@ function actualizarEstadoArchivo($id, $estado)
 }
 
 function subidaArchivo() {
-    ////guardarLog("INICIO subidaArchivo");
     $is_admin = current_user_can('administrator');
     $current_user_id = get_current_user_id(); // Obtener ID del usuario actual
     $file = $_FILES['file'] ?? null;
@@ -212,12 +211,10 @@ function subidaArchivo() {
 
     // Verificar si se proporcionó archivo y hash
     if (!$file || !$file_hash) {
-        ////guardarLog("No se proporcionó archivo o hash");
         wp_send_json_error('No se proporcionó archivo o hash');
         return;
     }
 
-    ////guardarLog("Hash recibido: $file_hash");
     $existing_file = obtenerHash($file_hash);
 
     // Si el archivo ya existe en la base de datos
@@ -229,43 +226,41 @@ function subidaArchivo() {
         // Verificar si el archivo realmente existe en el servidor
         $file_path = str_replace(get_site_url(), ABSPATH, $file_url); // Convertir URL a ruta absoluta
         if (!file_exists($file_path)) {
-            ////guardarLog("El archivo no existe en el servidor: $file_url");
-
             // Si el archivo no existe en el servidor, permitir que se suba el archivo normalmente
             $upload_dir = wp_upload_dir();
-            $custom_dir = $is_chat ? $upload_dir['basedir'] . '/chat_uploads' : $upload_dir['basedir'] . '/default_uploads';
+            $custom_dir = $is_chat ? $upload_dir['basedir'] . '/chat_uploads' : $upload_dir['path']; // Usar ruta predeterminada si no es chat
 
             if (!file_exists($custom_dir)) {
                 mkdir($custom_dir, 0755, true); // Crear la carpeta si no existe
             }
 
-            // Filtro para establecer el directorio de subida personalizado
-            add_filter('upload_dir', function($dirs) use ($custom_dir) {
-                $dirs['path'] = $custom_dir;
-                $dirs['url'] = str_replace($dirs['basedir'], $dirs['baseurl'], $custom_dir);
-                $dirs['subdir'] = ''; // No necesitamos subdirectorios adicionales
-                return $dirs;
-            });
+            // Filtro para establecer el directorio de subida personalizado solo si es chat
+            if ($is_chat) {
+                add_filter('upload_dir', function($dirs) use ($custom_dir) {
+                    $dirs['path'] = $custom_dir;
+                    $dirs['url'] = str_replace($dirs['basedir'], $dirs['baseurl'], $custom_dir);
+                    $dirs['subdir'] = ''; // No necesitamos subdirectorios adicionales
+                    return $dirs;
+                });
+            }
 
             $movefile = wp_handle_upload($file, array(
                 'test_form' => false,
                 'unique_filename_callback' => 'nombreUnicoFile',
             ));
-            ////guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
 
-            // Eliminar el filtro después de la carga
-            remove_filter('upload_dir', '__return_false');
+            // Eliminar el filtro después de la carga si se aplicó
+            if ($is_chat) {
+                remove_filter('upload_dir', '__return_false');
+            }
 
             if ($movefile && !isset($movefile['error'])) {
                 // Si el archivo estaba registrado con user_id = 0, actualizarlo con el user_id actual
                 if ($owner_id == 0) {
-                    ////guardarLog("Actualizando el user_id de $owner_id a $current_user_id para el archivo $file_id");
                     actualizarUrlArchivo($file_id, $movefile['url']); // Actualizar URL
                 }
-                ////guardarLog("Carga exitosa. URL del nuevo archivo: " . $movefile['url']);
                 wp_send_json_success(array('fileUrl' => $movefile['url'], 'fileId' => $file_id));
             } else {
-                ////guardarLog("Error en la carga: " . ($movefile['error'] ?? 'Error desconocido'));
                 wp_send_json_error($movefile['error'] ?? 'Error desconocido');
             }
 
@@ -273,71 +268,60 @@ function subidaArchivo() {
         }
         // Verificar si el archivo pertenece al usuario actual o si es administrador
         if ($owner_id != $current_user_id && !$is_admin) {
-            ////guardarLog("El archivo no pertenece al usuario actual.");
             wp_send_json_error('No tienes permiso para reutilizar este archivo');
             return;
         }
         // Si el archivo está pendiente y el usuario no es administrador
         if ($existing_file['status'] === 'pending' && !$is_admin) {
-            ////guardarLog("El archivo ya está pendiente, reutilizando: " . $existing_file['file_url']);
             wp_send_json_success(array('fileUrl' => $file_url, 'fileId' => $file_id));
             return;
         }
         // Si el archivo ya está confirmado, no es necesario volver a subirlo
         if ($existing_file['status'] === 'confirmed') {
-            ////guardarLog("El archivo ya está confirmado, reutilizando: " . $file_url);
             wp_send_json_success(array('fileUrl' => $file_url, 'fileId' => $file_id));
             return;
         }
         // Si es administrador, permitir el uso del archivo sin eliminarlo
         if ($is_admin) {
-            ////guardarLog("El usuario es administrador, reutilizando archivo existente: " . $file_url);
             wp_send_json_success(array('fileUrl' => $file_url, 'fileId' => $file_id));
             return;
         }
     }
 
-    ////guardarLog("No se encontró un archivo existente con este hash o el archivo está pendiente.");
-
     // Manejar la nueva subida de archivo
     $upload_dir = wp_upload_dir();
-    $custom_dir = $is_chat ? $upload_dir['basedir'] . '/chat_uploads' : $upload_dir['basedir'] . '/default_uploads';
+    $custom_dir = $is_chat ? $upload_dir['basedir'] . '/chat_uploads' : $upload_dir['path']; // Usar ruta predeterminada si no es chat
 
     if (!file_exists($custom_dir)) {
         mkdir($custom_dir, 0755, true); // Crear la carpeta si no existe
     }
 
-    // Filtro para establecer el directorio de subida personalizado
-    add_filter('upload_dir', function($dirs) use ($custom_dir) {
-        $dirs['path'] = $custom_dir;
-        $dirs['url'] = str_replace($dirs['basedir'], $dirs['baseurl'], $custom_dir);
-        $dirs['subdir'] = ''; // No necesitamos subdirectorios adicionales
-        return $dirs;
-    });
+    // Filtro para establecer el directorio de subida personalizado solo si es chat
+    if ($is_chat) {
+        add_filter('upload_dir', function($dirs) use ($custom_dir) {
+            $dirs['path'] = $custom_dir;
+            $dirs['url'] = str_replace($dirs['basedir'], $dirs['baseurl'], $custom_dir);
+            $dirs['subdir'] = ''; // No necesitamos subdirectorios adicionales
+            return $dirs;
+        });
+    }
 
     $movefile = wp_handle_upload($file, array(
         'test_form' => false,
         'unique_filename_callback' => 'nombreUnicoFile',
     ));
 
-    // Eliminar el filtro después de la carga
-    remove_filter('upload_dir', '__return_false');
-
-    ////guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
+    // Eliminar el filtro después de la carga si se aplicó
+    if ($is_chat) {
+        remove_filter('upload_dir', '__return_false');
+    }
 
     if ($movefile && !isset($movefile['error'])) {
         $file_id = guardarHash($file_hash, $movefile['url'], $current_user_id, 'pending');
-        ////guardarLog("Carga exitosa. Hash guardado: $file_hash. URL del nuevo archivo: " . $movefile['url']);
-        $file_path = $movefile['file']; // Ruta del archivo
-        //wp_schedule_single_event(time() + 5, 'antivirus', array($file_path, $file_id, $current_user_id));
-
         wp_send_json_success(array('fileUrl' => $movefile['url'], 'fileId' => $file_id));
     } else {
-        guardarLog("Error en la carga: " . ($movefile['error'] ?? 'Error desconocido'));
         wp_send_json_error($movefile['error'] ?? 'Error desconocido');
     }
-
-    ////guardarLog("FIN subidaArchivo");
 }
 
 add_action('wp_ajax_file_upload', 'subidaArchivo');
