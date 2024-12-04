@@ -192,6 +192,11 @@ if (!defined('ABSPATH')) {
                                 ?>
                             </div>
 
+                            <div class="iconobusqueda" id="iconobusqueda">
+                                <? echo $GLOBALS['iconobusqueda'];
+                                ?>
+                            </div>
+
                             <div class="subiricono" id="subiricono">
                                 <? echo $GLOBALS['subiricono'];
                                 ?>
