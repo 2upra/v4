@@ -195,35 +195,35 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
                 'author' => $user_id,
             ];
 
-        }else{
-            // Usar el identifier pasado en $args
-            $identifier = isset($args['identifier']) ? $args['identifier'] : '';
-
-            if (empty($identifier)) {
-                error_log("[configuracionQueryArgs] Advertencia: El valor de 'identifier' está vacío.");
-            } else {
-                error_log("[configuracionQueryArgs] Valor de 'identifier': " . $identifier);
-            }
-
-            $posts = $args['posts'];
-            $similar_to = $args['similar_to'] ?? null;
-            $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
-
-            if ($filtroTiempo === false) {
-                error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
-            }
-
-            // Construcción de los argumentos de consulta 
-            //En queryArgs van los filtros de ordenamient
-            $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
-
-            if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
-                $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
-            }
-
-             $query_args = ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
+            $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
+            return $query_args;
         }
-        
+
+        // Usar el identifier pasado en $args
+        $identifier = isset($args['identifier']) ? $args['identifier'] : '';
+
+        if (empty($identifier)) {
+            error_log("[configuracionQueryArgs] Advertencia: El valor de 'identifier' está vacío.");
+        } else {
+            error_log("[configuracionQueryArgs] Valor de 'identifier': " . $identifier);
+        }
+
+        $posts = $args['posts'];
+        $similar_to = $args['similar_to'] ?? null;
+        $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
+
+        if ($filtroTiempo === false) {
+            error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
+        }
+
+        // Construcción de los argumentos de consulta 
+        //En queryArgs van los filtros de ordenamient
+        $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to);
+
+        if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
+            $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+        }
+
         $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
 
         return $query_args;
@@ -232,7 +232,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         return false;
     }
 }
-
 
 function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts)
 {
