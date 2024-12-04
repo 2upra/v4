@@ -121,10 +121,10 @@ function manejarIdea($args, $paged)
     $cache_master_key = 'cache_idea_user_' . $user_id;
     $cache_keys = obtenerCache($cache_master_key) ?: [];
     $cache_keys[] = $cache_key;
-    guardarCache($cache_master_key, $cache_keys, 86400); // Guardar lista de claves de caché
+    guardarCache($cache_master_key, $cache_keys, 300); // Guardar lista de claves de caché
 
     // Guardar los resultados en la caché con una expiración de 1 día
-    guardarCache($cache_key, $query_args, 86400);
+    guardarCache($cache_key, $query_args, 300);
 
     return $query_args;
 }
