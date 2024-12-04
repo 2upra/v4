@@ -201,8 +201,7 @@ function actualizarEstadoArchivo($id, $estado)
     }
 }
 
-function subidaArchivo()
-{
+function subidaArchivo() {
     ////guardarLog("INICIO subidaArchivo");
     $is_admin = current_user_can('administrator');
     $current_user_id = get_current_user_id(); // Obtener ID del usuario actual
@@ -240,18 +239,22 @@ function subidaArchivo()
                 mkdir($custom_dir, 0755, true); // Crear la carpeta si no existe
             }
 
+            // Filtro para establecer el directorio de subida personalizado
+            add_filter('upload_dir', function($dirs) use ($custom_dir) {
+                $dirs['path'] = $custom_dir;
+                $dirs['url'] = str_replace($dirs['basedir'], $dirs['baseurl'], $custom_dir);
+                $dirs['subdir'] = ''; // No necesitamos subdirectorios adicionales
+                return $dirs;
+            });
+
             $movefile = wp_handle_upload($file, array(
                 'test_form' => false,
                 'unique_filename_callback' => 'nombreUnicoFile',
-                'upload_error_handler' => null,
-                'upload_dir' => function ($upload) use ($custom_dir) {
-                    // Cambiar el directorio de subida dependiendo de la condición
-                    $upload['path'] = $custom_dir;
-                    $upload['url'] = str_replace($upload['basedir'], $upload['baseurl'], $custom_dir);
-                    return $upload;
-                }
             ));
             ////guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
+
+            // Eliminar el filtro después de la carga
+            remove_filter('upload_dir', '__return_false');
 
             if ($movefile && !isset($movefile['error'])) {
                 // Si el archivo estaba registrado con user_id = 0, actualizarlo con el user_id actual
@@ -304,16 +307,22 @@ function subidaArchivo()
         mkdir($custom_dir, 0755, true); // Crear la carpeta si no existe
     }
 
+    // Filtro para establecer el directorio de subida personalizado
+    add_filter('upload_dir', function($dirs) use ($custom_dir) {
+        $dirs['path'] = $custom_dir;
+        $dirs['url'] = str_replace($dirs['basedir'], $dirs['baseurl'], $custom_dir);
+        $dirs['subdir'] = ''; // No necesitamos subdirectorios adicionales
+        return $dirs;
+    });
+
     $movefile = wp_handle_upload($file, array(
         'test_form' => false,
         'unique_filename_callback' => 'nombreUnicoFile',
-        'upload_dir' => function ($upload) use ($custom_dir) {
-            // Cambiar el directorio de subida dependiendo de la condición
-            $upload['path'] = $custom_dir;
-            $upload['url'] = str_replace($upload['basedir'], $upload['baseurl'], $custom_dir);
-            return $upload;
-        }
     ));
+
+    // Eliminar el filtro después de la carga
+    remove_filter('upload_dir', '__return_false');
+
     ////guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
 
     if ($movefile && !isset($movefile['error'])) {
