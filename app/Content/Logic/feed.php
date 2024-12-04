@@ -130,6 +130,7 @@ function obtenerPostsSimilares($current_user_id, $similar_to)
 //cuando se reinicia el feed, se puede aprovechar para generar la cached del feed
 function reiniciarFeed($current_user_id)
 {
+    $tipoUsuario = get_user_meta($current_user_id, 'tipoUsuario', true);
     global $wpdb;
     $is_admin = current_user_can('administrator');
     guardarLog("Iniciando reinicio de feed para usuario ID: $current_user_id");
@@ -158,7 +159,7 @@ function reiniciarFeed($current_user_id)
                     guardarLog("Caché eliminada: {$file} para usuario ID: $current_user_id");
 
                     guardarLog("Usuario ID: $current_user_id REcalculando nuevo feed para primera página (sin caché)");
-                    $posts_personalizados = calcularFeedPersonalizado($current_user_id);
+                    $posts_personalizados = calcularFeedPersonalizado($current_user_id, '', $tipoUsuario);
 
                     if (!$posts_personalizados) {
                         guardarLog("Error: Fallo al calcular feed personalizado para usuario ID: $current_user_id");
