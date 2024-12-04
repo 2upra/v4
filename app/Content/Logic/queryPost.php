@@ -195,12 +195,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         // Usar el identifier pasado en $args
         $identifier = isset($args['identifier']) ? $args['identifier'] : '';
 
-        if (empty($identifier)) {
-            error_log("[configuracionQueryArgs] Advertencia: El valor de 'identifier' está vacío.");
-        } else {
-            error_log("[configuracionQueryArgs] Valor de 'identifier': " . $identifier);
-        }
-
         $posts = $args['posts'];
         $similar_to = $args['similar_to'] ?? null;
         $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
