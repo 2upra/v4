@@ -194,10 +194,11 @@ function smooth() {
 
 //
 function busquedaMenuMovil() {
-    const iconoBusqueda = document.getElementById('iconobusqueda');
-    const filtros = document.getElementById('filtros');
-    const overlay = document.getElementById('overlay');
-    const header = document.getElementById('header');
+    const iconoBusqueda = document.getElementById('iconobusqueda'); // Ícono de búsqueda
+    const filtros = document.getElementById('filtros'); // Contenedor de búsqueda
+    const overlay = document.getElementById('overlay'); // Fondo oscuro
+    const header = document.getElementById('header'); // Contenedor principal para el modal
+    const endMenu = document.querySelector('.endmenu.MENUDGE'); // Contenedor original
 
     // Verifica si la pantalla tiene menos de 640px
     function actualizarVisibilidad() {
@@ -209,30 +210,36 @@ function busquedaMenuMovil() {
         }
     }
 
+    // Función para mover el contenedor de búsqueda fuera de "endmenu"
+    function moverFiltrosAHeader() {
+        if (!header.contains(filtros)) {
+            filtros.classList.add('modal'); // Añade la clase modal
+            filtros.style.display = 'block'; // Asegúrate de que sea visible
+            header.appendChild(filtros); // Mueve el contenedor al header
+        }
+    }
+
+    // Función para devolver el contenedor de búsqueda a "endmenu"
+    function devolverFiltrosAEndMenu() {
+        if (header.contains(filtros)) {
+            filtros.classList.remove('modal'); // Quita la clase modal
+            filtros.style.display = 'none'; // Oculta el modal
+            endMenu.appendChild(filtros); // Devuelve el contenedor a su posición original
+        }
+    }
+
     // Abre el modal
     function abrirModal() {
-        filtros.classList.add('modal');
-        filtros.style.display = 'block';
-        overlay.style.display = 'block';
-
-        // Mueve el modal al nivel superior (dentro del header)
-        if (!header.contains(filtros)) {
-            header.appendChild(filtros);
-        }
-
-        // Asegura que el modal esté en la parte superior
-        filtros.style.position = 'absolute';
-        filtros.style.top = '0';
-        filtros.style.left = '0';
-        filtros.style.width = '100%';
-        filtros.style.zIndex = '1000'; // Asegúrate de que esté encima
+        moverFiltrosAHeader(); // Mueve el contenedor al header
+        filtros.style.display = 'block'; // Muestra el modal
+        overlay.style.display = 'block'; // Muestra el overlay
     }
 
     // Cierra el modal
     function cerrarModal() {
-        filtros.classList.remove('modal');
-        filtros.style.display = 'none';
-        overlay.style.display = 'none';
+        filtros.style.display = 'none'; // Oculta el modal
+        overlay.style.display = 'none'; // Oculta el overlay
+        devolverFiltrosAEndMenu(); // Devuelve el contenedor a su posición original
     }
 
     // Evento de clic en el ícono de búsqueda
@@ -245,7 +252,7 @@ function busquedaMenuMovil() {
         }
     });
 
-    // Evento de clic fuera del modal (overlay)
+    // Evento de clic fuera del modal (en el overlay)
     overlay.addEventListener('click', cerrarModal);
 
     // Ajustar visibilidad al cambiar el tamaño de la ventana

@@ -77,6 +77,7 @@ if (!defined('ABSPATH')) {
                 font-display: swap;
             }
         </style>
+        <div id="overlay"></div>
         <? if (is_page('asley')) : ?>
             <style>
                 #menu1 {
