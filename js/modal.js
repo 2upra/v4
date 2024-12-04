@@ -209,7 +209,6 @@ function busquedaMenuMovil() {
 
     // Verifica si la pantalla tiene menos de 640px
     function actualizarVisibilidad() {
-        console.log('Ancho de la ventana:', window.innerWidth); // Depuración
         if (window.innerWidth <= 640) {
             iconoBusqueda.style.display = 'block'; // Muestra el ícono
         } else {
@@ -240,7 +239,6 @@ function busquedaMenuMovil() {
 
     // Abre el modal
     function abrirModal() {
-        console.log('Abriendo modal'); // Depuración
         moverFiltrosAHeader(); // Mueve el contenedor al header
         filtros.style.display = 'block'; // Muestra el modal
         overlay.style.display = 'block'; // Muestra el overlay
@@ -248,7 +246,6 @@ function busquedaMenuMovil() {
 
     // Cierra el modal
     function cerrarModal() {
-        console.log('Cerrando modal'); // Depuración
         filtros.style.display = 'none'; // Oculta el modal
         overlay.style.display = 'none'; // Oculta el overlay
         devolverFiltrosAEndMenu(); // Devuelve el contenedor a su posición original
@@ -273,3 +270,4 @@ function busquedaMenuMovil() {
     // Configuración inicial
     actualizarVisibilidad();
 }
+
