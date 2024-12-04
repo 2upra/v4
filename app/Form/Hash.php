@@ -320,11 +320,11 @@ function subidaArchivo()
         $file_id = guardarHash($file_hash, $movefile['url'], $current_user_id, 'pending');
         ////guardarLog("Carga exitosa. Hash guardado: $file_hash. URL del nuevo archivo: " . $movefile['url']);
         $file_path = $movefile['file']; // Ruta del archivo
-        wp_schedule_single_event(time() + 5, 'antivirus', array($file_path, $file_id, $current_user_id));
+        //wp_schedule_single_event(time() + 5, 'antivirus', array($file_path, $file_id, $current_user_id));
 
         wp_send_json_success(array('fileUrl' => $movefile['url'], 'fileId' => $file_id));
     } else {
-        ////guardarLog("Error en la carga: " . ($movefile['error'] ?? 'Error desconocido'));
+        guardarLog("Error en la carga: " . ($movefile['error'] ?? 'Error desconocido'));
         wp_send_json_error($movefile['error'] ?? 'Error desconocido');
     }
 
