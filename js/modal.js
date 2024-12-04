@@ -259,7 +259,7 @@ function busquedaMenuMovil() {
     function abrirModal() {
         const movedFiltros = moverFiltrosAHeader();
         if (movedFiltros) {
-            movedFiltros.style.display = 'block';
+            movedFiltros.style.display = 'flex';
             overlay.style.display = 'block';
         }
     }
@@ -277,7 +277,7 @@ function busquedaMenuMovil() {
     // Evento de clic en el ícono de búsqueda
     iconoBusqueda.addEventListener('click', () => {
         const currentFiltros = document.getElementById('filtros');
-        if (currentFiltros.style.display === 'block') {
+        if (currentFiltros.style.display === 'flex') {
             cerrarModal();
         } else {
             abrirModal();
