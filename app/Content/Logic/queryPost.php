@@ -291,7 +291,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax, $originalCountPost 
     }
 
     // Usar originalCountPost si está definido, de lo contrario usar found_posts
-    $total_publicaciones = $originalCountPost !== null ? $originalCountPost : $query->found_posts;
+    $total_publicaciones = $originalCountPost; #!== null ? $originalCountPost : $query->found_posts
 
     // Obtener el filtro, si está definido
     $filtro = !empty($args['filtro']) ? $args['filtro'] : '';
