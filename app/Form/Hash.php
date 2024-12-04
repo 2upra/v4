@@ -78,13 +78,14 @@ async function generateServerAudioHash(file) {
 }
 */
 
-function handle_recalcular_hash() {
+function handle_recalcular_hash()
+{
     try {
         if (!isset($_FILES['audio_file']) || $_FILES['audio_file']['error'] !== UPLOAD_ERR_OK) {
             wp_send_json_error(['message' => 'No se pudo subir el archivo o está corrupto.']);
         }
         $audio_file = $_FILES['audio_file'];
-        $allowed_mime_types = ['audio/mpeg', 'audio/wav']; 
+        $allowed_mime_types = ['audio/mpeg', 'audio/wav'];
         if (!in_array($audio_file['type'], $allowed_mime_types)) {
             wp_send_json_error(['message' => 'Tipo de archivo no permitido.']);
         }
@@ -99,7 +100,6 @@ function handle_recalcular_hash() {
         }
         unlink($temp_file_path);
         wp_send_json_success(['hash' => $hash]);
-
     } catch (Exception $e) {
         wp_send_json_error(['message' => $e->getMessage()]);
     }
@@ -207,7 +207,9 @@ function subidaArchivo()
     $is_admin = current_user_can('administrator');
     $current_user_id = get_current_user_id(); // Obtener ID del usuario actual
     $file = $_FILES['file'] ?? null;
+
     $file_hash = sanitize_text_field($_POST['file_hash'] ?? '');
+    $is_chat = filter_var($_POST['chat'] ?? false, FILTER_VALIDATE_BOOLEAN); // Detectar si se recibe el parámetro 'chat'
 
     // Verificar si se proporcionó archivo y hash
     if (!$file || !$file_hash) {
@@ -231,7 +233,24 @@ function subidaArchivo()
             ////guardarLog("El archivo no existe en el servidor: $file_url");
 
             // Si el archivo no existe en el servidor, permitir que se suba el archivo normalmente
-            $movefile = wp_handle_upload($file, array('test_form' => false, 'unique_filename_callback' => 'nombreUnicoFile'));
+            $upload_dir = wp_upload_dir();
+            $custom_dir = $is_chat ? $upload_dir['basedir'] . '/chat_uploads' : $upload_dir['basedir'] . '/default_uploads';
+
+            if (!file_exists($custom_dir)) {
+                mkdir($custom_dir, 0755, true); // Crear la carpeta si no existe
+            }
+
+            $movefile = wp_handle_upload($file, array(
+                'test_form' => false,
+                'unique_filename_callback' => 'nombreUnicoFile',
+                'upload_error_handler' => null,
+                'upload_dir' => function ($upload) use ($custom_dir) {
+                    // Cambiar el directorio de subida dependiendo de la condición
+                    $upload['path'] = $custom_dir;
+                    $upload['url'] = str_replace($upload['basedir'], $upload['baseurl'], $custom_dir);
+                    return $upload;
+                }
+            ));
             ////guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
 
             if ($movefile && !isset($movefile['error'])) {
@@ -278,7 +297,23 @@ function subidaArchivo()
     ////guardarLog("No se encontró un archivo existente con este hash o el archivo está pendiente.");
 
     // Manejar la nueva subida de archivo
-    $movefile = wp_handle_upload($file, array('test_form' => false, 'unique_filename_callback' => 'nombreUnicoFile'));
+    $upload_dir = wp_upload_dir();
+    $custom_dir = $is_chat ? $upload_dir['basedir'] . '/chat_uploads' : $upload_dir['basedir'] . '/default_uploads';
+
+    if (!file_exists($custom_dir)) {
+        mkdir($custom_dir, 0755, true); // Crear la carpeta si no existe
+    }
+
+    $movefile = wp_handle_upload($file, array(
+        'test_form' => false,
+        'unique_filename_callback' => 'nombreUnicoFile',
+        'upload_dir' => function ($upload) use ($custom_dir) {
+            // Cambiar el directorio de subida dependiendo de la condición
+            $upload['path'] = $custom_dir;
+            $upload['url'] = str_replace($upload['basedir'], $upload['baseurl'], $custom_dir);
+            return $upload;
+        }
+    ));
     ////guardarLog("Resultado de wp_handle_upload: " . print_r($movefile, true));
 
     if ($movefile && !isset($movefile['error'])) {
@@ -295,7 +330,6 @@ function subidaArchivo()
 
     ////guardarLog("FIN subidaArchivo");
 }
-
 function antivirus($file_path, $file_id, $current_user_id)
 {
     $command = escapeshellcmd("clamscan --infected --quiet " . $file_path);

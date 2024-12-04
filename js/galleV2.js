@@ -989,9 +989,11 @@ function galle() {
 
     async function subidaChatBackend(file, progressBarId) {
         const formData = new FormData();
+        chat = true;
         formData.append('action', 'file_upload');
         formData.append('file', file);
-        formData.append('file_hash', await generateFileHash(file, chat = true));
+        formData.append('chat', chat);
+        formData.append('file_hash', await generateFileHash(file, chat));
 
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
