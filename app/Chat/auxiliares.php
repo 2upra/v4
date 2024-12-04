@@ -6,19 +6,19 @@ function tiempoRelativo($fecha)
     $diferencia = time() - $timestamp;
 
     if ($diferencia < 60) {
-        return 'hace unos segundos';
+        return 'unos segundos';
     } elseif ($diferencia < 3600) {
         $minutos = floor($diferencia / 60);
-        return "hace $minutos minuto" . ($minutos > 1 ? 's' : '');
+        return "$minutos minuto" . ($minutos > 1 ? 's' : '');
     } elseif ($diferencia < 86400) {
         $horas = floor($diferencia / 3600);
-        return "hace $horas hora" . ($horas > 1 ? 's' : '');
+        return "$horas hora" . ($horas > 1 ? 's' : '');
     } elseif ($diferencia < 604800) {
         $dias = floor($diferencia / 86400);
-        return "hace $dias día" . ($dias > 1 ? 's' : '');
+        return "$dias día" . ($dias > 1 ? 's' : '');
     } else {
         $semanas = floor($diferencia / 604800);
-        return "hace $semanas semana" . ($semanas > 1 ? 's' : '');
+        return "$semanas semana" . ($semanas > 1 ? 's' : '');
     }
 }
 
