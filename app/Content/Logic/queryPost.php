@@ -246,6 +246,7 @@ function procesarIdeas($args, $paged)
         return false;
     }
 }
+
 function procesarPublicaciones($query_args, $args, $is_ajax)
 {
     ob_start();
@@ -283,9 +284,6 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
         return '';
     }
 
-    // Obtener el número total de publicaciones encontradas
-    $total_publicaciones = $query->found_posts;
-
     $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
     if ($query->have_posts()) {
         $tipoPost = $args['post_type'];
@@ -298,8 +296,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
             echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
                   data-filtro="' . esc_attr($filtro) . '" 
                   data-posttype="' . esc_attr($tipoPost) . '" 
-                  data-tab-id="' . esc_attr($args['tab_id']) . '" 
-                  data-total-posts="' . esc_attr($total_publicaciones) . '">';
+                  data-tab-id="' . esc_attr($args['tab_id']) . '">';
         }
 
         while ($query->have_posts()) {
@@ -324,11 +321,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     } else {
         echo nohayPost($filtro, $is_ajax);
     }
-
-    // Restablecer los datos de la consulta
     wp_reset_postdata();
-
-    // Retornar el contenido generado y el total de publicaciones
     return ob_get_clean();
 }
 
@@ -682,7 +675,7 @@ function aplicarFiltrosUsuario($query_args, $current_user_id)
         }
     }
 
-    // Actualizar los argumentos de la consulta
+
     if (!empty($post_in)) {
         $query_args['post__in'] = $post_in;
     } else {
@@ -695,7 +688,6 @@ function aplicarFiltrosUsuario($query_args, $current_user_id)
         unset($query_args['post__not_in']);
     }
 
-    //guardarLog("Query args final: " . print_r($query_args, true));
     return $query_args;
 }
 

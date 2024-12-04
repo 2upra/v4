@@ -48,8 +48,6 @@ async function verificarPost() {
     );
 }
 
-
-
 // Función genérica para manejar acciones con confirmación y AJAX
 async function accionClick(selector, action, confirmMessage, successCallback, elementToRemoveSelector = null) {
     const elements = document.querySelectorAll(selector); // Selecciona cualquier elemento que coincida con el selector
@@ -237,10 +235,6 @@ async function bloqueos() {
     }
     accionClick('.desbloquear', 'guardarBloqueo', '¿Estás seguro de desbloquear este usuario?', desbloquearUsuario);
 }
-
-
-
-
 
 async function cambiarTitulo() {
     modalManager.añadirModal('cambiarTitulo', '#cambiarTitulo', ['.cambiarTitulo']);
@@ -628,9 +622,6 @@ function actualizarElemento(element, newStatus) {
     }
 }
 
-
-
-
 function inicializarCambiarImagen() {
     // Seleccionar todos los botones con la clase "cambiarImagen"
     const botonesCambiarImagen = document.querySelectorAll('.cambiarImagen');
@@ -641,13 +632,13 @@ function inicializarCambiarImagen() {
     }
 
     // Iterar sobre los botones y registrar el evento de clic
-    botonesCambiarImagen.forEach((boton) => {
+    botonesCambiarImagen.forEach(boton => {
         // Evitar añadir múltiples veces el mismo evento al botón
         if (boton.dataset.eventoInicializado === 'true') {
             return;
         }
 
-        boton.addEventListener('click', (e) => {
+        boton.addEventListener('click', e => {
             e.preventDefault();
             e.stopPropagation(); // Detener la propagación para evitar conflictos con el submenú
 
@@ -663,7 +654,7 @@ function inicializarCambiarImagen() {
             inputFile.accept = 'image/*';
 
             // Registrar el evento change en el input para detectar la selección del archivo
-            inputFile.addEventListener('change', async (fileEvent) => {
+            inputFile.addEventListener('change', async fileEvent => {
                 const file = fileEvent.target.files[0];
                 if (!file) {
                     alert('No seleccionaste ningún archivo.');
@@ -682,16 +673,14 @@ function inicializarCambiarImagen() {
 
                         const response = await fetch(ajaxUrl, {
                             method: 'POST',
-                            body: formData,
+                            body: formData
                         });
 
                         const result = await response.json();
 
                         if (result.success) {
                             // Actualizar la imagen en el frontend con la imagen seleccionada
-                            const postImage = document.querySelector(
-                                `.post-image-container a[data-post-id="${postId}"] img`
-                            );
+                            const postImage = document.querySelector(`.post-image-container a[data-post-id="${postId}"] img`);
 
                             if (postImage) {
                                 postImage.src = reader.result; // Usar la imagen local seleccionada
@@ -718,8 +707,6 @@ function inicializarCambiarImagen() {
         boton.dataset.eventoInicializado = 'true';
     });
 }
-
-
 
 //GENERIC FETCH (NO SE PUEDE CAMBIAR O ALTERAR )
 async function enviarAjax(action, data = {}) {
@@ -989,27 +976,50 @@ function filtrosPost() {
 }
 
 window.contadorDeSamples = () => {
-    // Seleccionamos el contenedor donde se encuentra el atributo data-total-posts
-    const postListElement = document.querySelector('.social-post-list');
-
-    // Seleccionamos el elemento donde mostraremos el total de resultados
+    // Obtener el elemento donde se mostrarán los resultados
     const resultadosElement = document.getElementById('resultadosPost-sampleList');
 
-    if (postListElement && resultadosElement) {
-        // Obtenemos el valor del total de publicaciones desde el atributo data-total-posts
-        const totalPosts = parseInt(postListElement.getAttribute('data-total-posts'), 10);
+    // Función para contar los posts filtrados
+    function contarPostsFiltrados() {
+        // Obtener los parámetros de búsqueda y filtros si existen
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchQuery = urlParams.get('busqueda') || ''; // Cambia 'busqueda' según tu parámetro de URL
+        // Enviar la solicitud AJAX
+        fetch(ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            body: new URLSearchParams({
+                action: 'contarPostsFiltrados', // Nombre de la acción en PHP
+                search: searchQuery,
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Formatear el número de resultados (puntos para miles, etc.)
+                    const totalPosts = data.data.total;
+                    const formattedTotalPosts = totalPosts.toLocaleString('es-ES');
 
-        // Verificamos que el número sea válido
-        if (!isNaN(totalPosts)) {
-            // Formateamos el número (puntos para miles, coma para decimales según 'es-ES')
-            const formattedTotalPosts = totalPosts.toLocaleString('es-ES');
+                    // Actualizar el contenido del elemento
+                    resultadosElement.textContent = `${formattedTotalPosts} resultados`;
+                } else {
+                    // Mostrar un mensaje de error si algo salió mal
+                    resultadosElement.textContent = '0 resultados';
+                    console.error(data.data.message || 'Error desconocido.');
+                }
+            })
+            .catch(error => {
+                // Manejar errores de la solicitud
+                resultadosElement.textContent = '0 resultados';
+                console.error('Error en la solicitud AJAX:', error);
+            });
+    }
 
-            // Actualizamos el contenido del elemento resultadosElement
-            resultadosElement.textContent = `${formattedTotalPosts} resultados`;
-        } else {
-            // Si no se encuentra un valor válido, mostramos un mensaje por defecto
-            resultadosElement.textContent = '0 resultados';
-        }
+    // Ejecutar la función al cargar la página
+    if (resultadosElement) {
+        contarPostsFiltrados();
     }
 };
 
@@ -1190,6 +1200,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // Comprobamos si IntersectionObserver está disponible
-
-
-
