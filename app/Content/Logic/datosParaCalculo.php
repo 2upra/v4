@@ -1,5 +1,6 @@
 <?
-function obtenerDatosFeed($userId) {
+function obtenerDatosFeed($userId)
+{
     try {
         global $wpdb;
         if (!$wpdb) {
@@ -14,23 +15,19 @@ function obtenerDatosFeed($userId) {
 
         $table_likes = "{$wpdb->prefix}post_likes";
         $table_intereses = INTERES_TABLE;
-
         // Obtener datos de usuario
         $siguiendo = (array) get_user_meta($userId, 'siguiendo', true);
         if ($siguiendo === false) {
             error_log("[obtenerDatosFeed] Advertencia: No se encontraron usuarios seguidos para el usuario ID: " . $userId);
         }
-
         // Obtener intereses
         $interesesUsuario = $wpdb->get_results($wpdb->prepare(
             "SELECT interest, intensity FROM $table_intereses WHERE user_id = %d",
             $userId
         ), OBJECT_K);
-
         if ($wpdb->last_error) {
             error_log("[obtenerDatosFeed] Error: Fallo al obtener intereses del usuario: " . $wpdb->last_error);
         }
-
         $vistas_posts = get_user_meta($userId, 'vistas_posts', true);
         generarMetaDeIntereses($userId);
 
@@ -75,7 +72,16 @@ function obtenerDatosFeed($userId) {
             $meta_data[$meta_row->post_id][$meta_row->meta_key] = $meta_row->meta_value;
         }
 
-        // Procesar metas adicionales (artista o fan)
+        // Procesar metadata
+        $meta_data = [];
+        foreach ($meta_results as $meta_row) {
+            $meta_data[$meta_row->post_id][$meta_row->meta_key] = $meta_row->meta_value;
+        }
+
+        // Agregar un log para verificar el contenido de $meta_data
+        error_log("[obtenerDatosFeed] Debug: meta_data procesado: " . print_r($meta_data, true));
+
+        // Procesar roles (artista/fan)
         $meta_roles = [];
         foreach ($meta_data as $post_id => $meta) {
             // Verificar si 'artista' o 'fan' existen y si alguno es true
@@ -84,6 +90,9 @@ function obtenerDatosFeed($userId) {
                 'fan'     => isset($meta['fan']) ? filter_var($meta['fan'], FILTER_VALIDATE_BOOLEAN) : false,
             ];
         }
+
+        // Agregar un log para verificar el contenido de $meta_roles
+        error_log("[obtenerDatosFeed] Debug: meta_roles generado: " . print_r($meta_roles, true));
 
         // Obtener likes
         $sql_likes = "
@@ -132,17 +141,17 @@ function obtenerDatosFeed($userId) {
             'author_results'   => $posts_results,
             'post_content'     => $post_content,
         ];
-
     } catch (Exception $e) {
         error_log("[obtenerDatosFeed] Error crítico: " . $e->getMessage());
         return [];
     }
 }
 
-function obtenerDatosFeedConCache($userId) {
+function obtenerDatosFeedConCache($userId)
+{
     $cache_key = 'feed_datos_' . $userId;
     $datos = obtenerCache($cache_key);
-    
+
     if (false === $datos) {
         //guardarLog("Usuario ID: $userId - Caché no encontrada, calculando nuevos datos de feed");
         $datos = obtenerDatosFeed($userId);
@@ -151,7 +160,7 @@ function obtenerDatosFeedConCache($userId) {
     } else {
         //guardarLog("Usuario ID: $userId - Usando datos de feed desde caché");
     }
-    
+
     if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
         //guardarLog("Usuario ID: $userId - Error: Datos de feed inválidos o vacíos");
         return [];

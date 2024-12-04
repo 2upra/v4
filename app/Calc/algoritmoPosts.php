@@ -104,7 +104,7 @@ function calcularPuntosParaPost(
     $similar_to,
     $current_timestamp,
     $decay_factors,
-    $tipoUsuario
+    $tipoUsuario = null
 ) {
     $autor_id = $post_data->post_author;
     $post_date = $post_data->post_date;
