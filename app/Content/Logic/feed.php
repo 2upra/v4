@@ -127,7 +127,11 @@ function obtenerPostsSimilares($current_user_id, $similar_to)
 
 
 
-//cuando se reinicia el feed, se puede aprovechar para generar la cached del feed
+/*
+porque aqui si es 
+[04-Dec-2024 13:14:45 UTC] TipoUsuario inicial=Fan reiniciarFeed
+
+*/
 function reiniciarFeed($current_user_id)
 {
     $tipoUsuario = get_user_meta($current_user_id, 'tipoUsuario', true);
@@ -160,6 +164,7 @@ function reiniciarFeed($current_user_id)
                     guardarLog("Caché eliminada: {$file} para usuario ID: $current_user_id");
 
                     guardarLog("Usuario ID: $current_user_id REcalculando nuevo feed para primera página (sin caché)");
+                    error_log("TipoUsuario inicial={$tipoUsuario} enviado a calcularFeedPersonalizado");
                     $posts_personalizados = calcularFeedPersonalizado($current_user_id, '', $tipoUsuario);
 
                     if (!$posts_personalizados) {
