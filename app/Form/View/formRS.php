@@ -36,6 +36,10 @@ function formRs()
                 Area de artistas
             </label>
         </div>
+        <div class="GEFMDE borde">
+            <? echo $GLOBALS['iconinfo']; ?>
+            <p>En los proximos días estará disponible vender beats y la subida de multiples archivos</p>
+        </div>
 
         <div class="previewsForm NGEESM RS ppp3" id="ppp3" style="display: none;">
             <div class="previewAreaArchivos" id="previewImagen" style="display: none;">
@@ -49,7 +53,7 @@ function formRs()
             </div>
         </div>
 
-        <div class="bloque flex-row"" id="opciones" style="display: none">
+        <div class="bloque flex-row"" id=" opciones" style="display: none">
             <p>Opciones de post</p>
             <div class="flex flex-row gap-2">
                 <label class="custom-checkbox">
