@@ -8,7 +8,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 ?>
 
 <head>
-    <meta name="robots" content="noindex, no follow">
+    <meta name="robots" content="noindex, nofollow">
     <? wp_head(); ?>
 </head>
 
