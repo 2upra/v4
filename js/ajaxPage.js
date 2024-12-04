@@ -73,7 +73,8 @@
         'contadorDeSamples',
         'establecerFiltros',
         'actualizarBotonFiltro',
-        'iniciarCargaNotificaciones'
+        'iniciarCargaNotificaciones',
+        'busquedaMenuMovil'
     ];
 
     function initScripts() {

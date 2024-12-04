@@ -192,3 +192,55 @@ function smooth() {
     modalManager.añadirModal('config', '#modalConfig', ['.botonConfig']);
     modalManager.añadirModal('RS', '#formRs', ['.subiricono']);
 }
+
+//
+
+function busquedaMenuMovil() {
+    const iconoBusqueda = document.getElementById("iconobusqueda");
+    const filtros = document.getElementById("filtros");
+    const overlay = document.getElementById("overlay");
+    const header = document.getElementById("header");
+
+    // Verifica si la pantalla tiene menos de 640px
+    function actualizarVisibilidad() {
+      if (window.innerWidth <= 640) {
+        iconoBusqueda.style.display = "block"; // Muestra el ícono
+      } else {
+        iconoBusqueda.style.display = "none"; // Oculta el ícono
+        filtros.classList.remove("modal"); // Asegura que el modal se cierre
+        filtros.style.display = "none";
+        overlay.style.display = "none";
+      }
+    }
+
+    // Abre el modal
+    function abrirModal() {
+      filtros.classList.add("modal");
+      filtros.style.display = "block";
+      overlay.style.display = "block";
+
+      // Mueve el modal al nivel superior (dentro del header)
+      if (!header.contains(filtros)) {
+        header.appendChild(filtros);
+      }
+    }
+
+    // Cierra el modal
+    function cerrarModal() {
+      filtros.classList.remove("modal");
+      filtros.style.display = "none";
+      overlay.style.display = "none";
+    }
+
+    // Evento de clic en el ícono de búsqueda
+    iconoBusqueda.addEventListener("click", abrirModal);
+
+    // Evento de clic fuera del modal (overlay)
+    overlay.addEventListener("click", cerrarModal);
+
+    // Ajustar visibilidad al cambiar el tamaño de la ventana
+    window.addEventListener("resize", actualizarVisibilidad);
+
+    // Configuración inicial
+    actualizarVisibilidad();
+  }
