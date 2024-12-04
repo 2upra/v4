@@ -41,11 +41,11 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
         $decay_factors
     );
 
-    if (!empty($puntos_por_post)) {
+    /*if (!empty($puntos_por_post)) {
         arsort($puntos_por_post);
 
         $puntos_por_post = array_slice($puntos_por_post, 0, POSTINLIMIT, true);
-    }
+    }*/
     return $puntos_por_post;
 }
 
