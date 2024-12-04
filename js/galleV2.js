@@ -42,6 +42,7 @@ function galle() {
         setupBroadcastChannel();
         manageControllerTab();
         abrirColab();
+        actualizarTiemposRelativos();
     }
 
     function abrirColab() {
@@ -576,6 +577,7 @@ function galle() {
 
     setInterval(actualizarTiemposRelativos, 4000);
     actualizarTiemposRelativos();
+    
     function actualizarTiemposRelativos() {
         const actualizarElementosFecha = selector => {
             const elementos = document.querySelectorAll(selector);
