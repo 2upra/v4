@@ -214,7 +214,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             }
         }
 
-        $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
+        $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id, $tipoUsuario);
 
         return $query_args;
     } catch (Exception $e) {
@@ -447,7 +447,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     return ob_get_clean();
 }
 
-function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id)
+function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id, $tipoUsuario = null)
 {
     if (!empty($user_id)) {
         $query_args['author'] = $user_id;
@@ -481,10 +481,18 @@ function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id)
             ['key' => 'momento', 'value' => '1', 'compare' => '='],
             ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
         ],
-        'sample' => [
-            ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
-            ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
-        ],
+        'sample' => function () use ($tipoUsuario, &$query_args) {
+            if ($tipoUsuario === 'Fan') {
+                // Si es un Fan, solo devolvemos publicaciones publicadas
+                $query_args['post_status'] = 'publish';
+            } else {
+                // Si no es Fan, aplicamos el filtro normal de sample
+                $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], [
+                    ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+                    ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
+                ]);
+            }
+        },
         'sampleList' => [
             // Necesitamos que cumpla con ambos: 'paraDescarga' y que tenga 'post_audio_lite'
             ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],

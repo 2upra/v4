@@ -150,62 +150,7 @@ function calcularPuntosParaPost(
     // Access meta roles (artista/fan)
     $meta_roles = $datos['meta_roles'];
 
-    /*
-    ESTOS SON LOS UNICOS LOGS QUE VEO PERO NO VEO NINGUN LOG QUE DIGA QUE SUMA O RESTE 
-    [04-Dec-2024 12:59:13 UTC] [obtenerDatosFeed] Debug: meta_roles generado: Array
-    (
-        [322741] => Array
-            (
-                [artista] => 
-                [fan] => 
-            )
-
-        [322746] => Array
-            (
-                [artista] => 
-                [fan] => 
-            )
-
-        [322751] => Array
-            (
-                [artista] => 
-                [fan] => 
-            )
-
-        [322759] => Array
-            (
-                [artista] => 
-                [fan] => 1
-            )
-
-        [322760] => Array
-            (
-                [artista] => 1
-                [fan] => 
-            )
-
-        [322761] => Array
-            (
-                [artista] => 1
-                [fan] => 
-            )
-
-        [322777] => Array
-            (
-                [artista] => 1
-                [fan] => 
-            )
-
-    )
-
-    [04-Dec-2024 12:59:13 UTC] Post ID 322741: postParaArtistas=0, postParaFans=0
-    [04-Dec-2024 12:59:13 UTC] Post ID 322746: postParaArtistas=0, postParaFans=0
-    [04-Dec-2024 12:59:13 UTC] Post ID 322751: postParaArtistas=0, postParaFans=0
-    [04-Dec-2024 12:59:13 UTC] Post ID 322759: postParaArtistas=0, postParaFans=1
-    [04-Dec-2024 12:59:13 UTC] Post ID 322760: postParaArtistas=1, postParaFans=0
-    [04-Dec-2024 12:59:13 UTC] Post ID 322761: postParaArtistas=1, postParaFans=0
-    [04-Dec-2024 12:59:13 UTC] Post ID 322777: postParaArtistas=1, postParaFans=0
-    */
+    // chat gpt siento que lo de calcular funtos artistas/fan no esta funcionando, o sea no se si falta algo mas (si se suman o resta en esta parte ya lo verifique pero calcularPuntosFinales lo procesa?)
     if (!isset($meta_roles[$post_id]) || !is_array($meta_roles[$post_id])) {
         error_log("Post ID {$post_id} no tiene meta roles definidos o no es un array.");
         $meta_roles[$post_id] = ['artista' => false, 'fan' => false];
@@ -214,9 +159,6 @@ function calcularPuntosParaPost(
     $postParaArtistas = !empty($meta_roles[$post_id]['artista']);
     $postParaFans = !empty($meta_roles[$post_id]['fan']);
 
-    error_log("Post ID {$post_id}: postParaArtistas=" . (int)$postParaArtistas . ", postParaFans=" . (int)$postParaFans);
-
-    error_log("TipoUsuario inicial={$tipoUsuario} final");
 
     if ($tipoUsuario === 'Fan') {
         $puntosArtistaFan = $postParaFans ? 999 : 0;
@@ -225,7 +167,6 @@ function calcularPuntosParaPost(
         $puntosArtistaFan = $postParaFans ? -50 : 0;
         error_log("Post ID {$post_id}: TipoUsuario=Artista, puntosArtistaFan={$puntosArtistaFan}");
     } else {
-        error_log("Post ID {$post_id}: TipoUsuario desconocido ({$tipoUsuario}), no se asignan puntos.");
     }
     // Calculate puntosFinal
     $puntosFinal = calcularPuntosFinales(
@@ -255,6 +196,28 @@ function calcularPuntosParaPost(
 
     return $puntosFinal;
 }
+
+function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
+{
+
+    if ($esAdmin) {
+
+        if (!$metaVerificado && $metaPostAut) {
+            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 10;
+        } elseif ($metaVerificado && !$metaPostAut) {
+            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1;
+        }
+    } else {
+        if ($metaVerificado && $metaPostAut) {
+            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 4;
+        } elseif (!$metaVerificado && $metaPostAut) {
+            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1;
+        }
+    }
+
+    return $puntosUsuario + $puntosIntereses + $puntosLikes;
+}
+
 
 // Helper function for decay factors
 
@@ -515,26 +478,6 @@ function stemWord($word)
 
 
 #PASO 5
-function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
-{
-
-    if ($esAdmin) {
-
-        if (!$metaVerificado && $metaPostAut) {
-            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 10;
-        } elseif ($metaVerificado && !$metaPostAut) {
-            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1;
-        }
-    } else {
-        if ($metaVerificado && $metaPostAut) {
-            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 4;
-        } elseif (!$metaVerificado && $metaPostAut) {
-            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1;
-        }
-    }
-
-    return $puntosUsuario + $puntosIntereses + $puntosLikes;
-}
 
 function obtenerYProcesarVistasPosts($userId)
 {
