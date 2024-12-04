@@ -15,13 +15,6 @@ function publicacionAjax()
     $colec = isset($_POST['colec']) ? intval($_POST['colec']) : null;
     $idea = isset($_POST['idea']) ? filter_var($_POST['idea'], FILTER_VALIDATE_BOOLEAN) : false;
 
-    // Log para depuración
-    if (empty($data_identifier)) {
-        error_log("[publicacionAjax] Warning: El valor de 'identifier' está vacío o no se recibió.");
-    } else {
-        error_log("[publicacionAjax] Valor de 'identifier' recibido: " . $data_identifier);
-    }
-
     // Pasamos explícitamente el identifier en el array de argumentos
     publicaciones(
         array(
