@@ -103,15 +103,19 @@ function marcarNotificacionVista() {
     $notificacionId = isset($_POST['notificacionId']) ? intval($_POST['notificacionId']) : 0;
     
     if ($notificacionId <= 0 || !get_post($notificacionId)) {
+        error_log("ID no válido o inexistente: $notificacionId");
         wp_send_json_error(['message' => 'El ID de la notificación no es válido.'], 400);
     }
 
     $actualizado = update_post_meta($notificacionId, 'visto', 1);
     if ($actualizado === false) {
+        error_log("Fallo al actualizar la meta 'visto' para el ID: $notificacionId");
         wp_send_json_error(['message' => 'No se pudo actualizar la meta de la notificación.'], 500);
     }
+
     wp_send_json_success(['message' => 'Notificación marcada como vista.', 'notificacionId' => $notificacionId]);
 }
+
 
 
 function ajaxCargarNotificaciones()

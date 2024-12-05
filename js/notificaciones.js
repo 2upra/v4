@@ -1,3 +1,37 @@
+/*
+tengo este error 
+
+genericAjax.js?ver=3.0.16:743 Error en la solicitud AJAX: Objectaction: "marcar_notificacion_vista"ajaxUrl: "/wp-admin/admin-ajax.php"error: Error: HTTP error! status: 500 - 
+    at enviarAjax (https://2upra.com/wp-content/themes/2upra3v/js/genericAjax.js?ver=3.0.16:726:19)requestData: {notificacionId: '322771'}notificacionId: "322771"[[Prototype]]: Object[[Prototype]]: Object
+enviarAjax @ genericAjax.js?ver=3.0.16:743Understand this errorAI
+notificaciones.js?ver=3.0.16:11 Error al marcar la notificación como vista: HTTP error! status: 500 - 
+
+en el servidor
+
+
+add_action('wp_ajax_marcar_notificacion_vista', 'marcarNotificacionVista');
+function marcarNotificacionVista() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'No tienes permiso para realizar esta acción.'], 403);
+    }
+
+    $notificacionId = isset($_POST['notificacionId']) ? intval($_POST['notificacionId']) : 0;
+    
+    if ($notificacionId <= 0 || !get_post($notificacionId)) {
+        wp_send_json_error(['message' => 'El ID de la notificación no es válido.'], 400);
+    }
+
+    $actualizado = update_post_meta($notificacionId, 'visto', 1);
+    if ($actualizado === false) {
+        wp_send_json_error(['message' => 'No se pudo actualizar la meta de la notificación.'], 500);
+    }
+    wp_send_json_success(['message' => 'Notificación marcada como vista.', 'notificacionId' => $notificacionId]);
+}
+
+en el cliente:
+
+*/
+
 function iniciarCargaNotificaciones() {
     let paginaActual = 2,
         cargando = false;
