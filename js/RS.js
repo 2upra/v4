@@ -740,52 +740,32 @@ function selectorFanArtista() {
     if (!fancheck || !artistacheck) return;
 
     // Función para actualizar estilos
-    function updateStyles() {
-        const fanLabel = fancheck.closest('label');
-        const artistaLabel = artistacheck.closest('label');
-
-        // Actualiza estilos según si los checkboxes están seleccionados
-        if (fancheck.checked) {
-            fanLabel.style.color = '#ffffff';
-            fanLabel.style.background = '#131313';
+    function updateStyles(checkbox) {
+        const label = checkbox.closest('label');
+        if (checkbox.checked) {
+            label.style.color = '#ffffff';
+            label.style.background = '#131313';
         } else {
-            fanLabel.style.color = '#6b6b6b';
-            fanLabel.style.background = '';
+            label.style.color = '#6b6b6b';
+            label.style.background = '';
         }
-
-        if (artistacheck.checked) {
-            artistaLabel.style.color = '#ffffff';
-            artistaLabel.style.background = '#131313';
-        } else {
-            artistaLabel.style.color = '#6b6b6b';
-            artistaLabel.style.background = '';
-        }
-    }
-
-    // Función para manejar cambios en los checkboxes
-    function handleCheckboxChange(changedCheckbox, otherCheckbox) {
-        if (changedCheckbox.checked) {
-            // Si el checkbox actual fue marcado, desmarca el otro
-            otherCheckbox.checked = false;
-        } else if (!otherCheckbox.checked) {
-            // Si ambos quedan desmarcados, vuelve a marcar el checkbox actual
-            changedCheckbox.checked = true;
-        }
-
-        // Actualiza estilos
-        updateStyles();
     }
 
     // Listener para 'fancheck'
     fancheck.addEventListener('change', function () {
-        handleCheckboxChange(fancheck, artistacheck);
+        if (fancheck.checked) {
+            artistacheck.checked = false;
+            updateStyles(artistacheck);
+        }
+        updateStyles(fancheck);
     });
 
     // Listener para 'artistacheck'
     artistacheck.addEventListener('change', function () {
-        handleCheckboxChange(artistacheck, fancheck);
+        if (artistacheck.checked) {
+            fancheck.checked = false;
+            updateStyles(fancheck);
+        }
+        updateStyles(artistacheck);
     });
-
-    // Inicializar estilos al cargar la página
-    updateStyles();
 }

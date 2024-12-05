@@ -271,13 +271,6 @@ function cambiarEnlace() {
     }
 }
 
-/*
-Configura para que el que inicialmente este marcado tenga este estilo 
-
-    color: rgb(255, 255, 255);
-    background: rgb(19, 19, 19);
-*/
-
 function selectorFanArtistaTipo() {
     const fancheck = document.getElementById('fanTipoCheck');
     const artistacheck = document.getElementById('artistaTipoCheck');
@@ -354,6 +347,9 @@ function selectorFanArtistaTipo() {
         if (fancheck.checked) {
             artistacheck.checked = false;
             updateStyles(artistacheck);
+        } else if (!artistacheck.checked) {
+            // Evita que ambos queden desmarcados
+            fancheck.checked = true;
         }
         updateStyles(fancheck);
         handleChange(); // Llama al manejador para iniciar el temporizador
@@ -364,6 +360,9 @@ function selectorFanArtistaTipo() {
         if (artistacheck.checked) {
             fancheck.checked = false;
             updateStyles(fancheck);
+        } else if (!fancheck.checked) {
+            // Evita que ambos queden desmarcados
+            artistacheck.checked = true;
         }
         updateStyles(artistacheck);
         handleChange(); // Llama al manejador para iniciar el temporizador
