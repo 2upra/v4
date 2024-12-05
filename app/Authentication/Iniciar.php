@@ -73,13 +73,8 @@ function iniciar_sesion()
     return ob_get_clean();
 }
 
-// Manejo del callback de Google
-function handle_google_callback() {
-    // Desactiva la caché para esta acción
-    // header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    // header("Cache-Control: post-check=0, pre-check=0", false);
-    // header("Pragma: no-cache");
 
+function handle_google_callback() {
     if (isset($_GET['code'])) {
         $code = $_GET['code'];
         $client_id = '84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com';
@@ -137,7 +132,24 @@ function handle_google_callback() {
             } else {
                 // Crear un nuevo usuario en WordPress
                 $random_password = wp_generate_password();
-                $user_id = wp_create_user($name, $random_password, $email);
+
+                // Limpiar el nombre para crear un user_login válido
+                $user_login = sanitize_user(str_replace(' ', '', strtolower($name)), true);
+                
+                // Asegurarse de que el user_login sea único
+                $original_user_login = $user_login;
+                $counter = 1;
+                while (username_exists($user_login)) {
+                    $user_login = $original_user_login . $counter;
+                    $counter++;
+                }
+
+                $user_id = wp_create_user($user_login, $random_password, $email);
+
+                if (is_wp_error($user_id)) {
+                    echo 'Error al crear el usuario.';
+                    return;
+                }
 
                 wp_set_current_user($user_id);
                 wp_set_auth_cookie($user_id);
