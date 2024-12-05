@@ -193,11 +193,26 @@ function smooth() {
 }
 
 function busquedaMenuMovil() {
-    const iconoBusqueda = document.getElementById('iconobusqueda');
-    const filtros = document.getElementById('filtros');
-    const overlay = document.getElementById('overlay');
-    const header = document.getElementById('header');
-    const endMenu = document.querySelector('.endmenu.MENUDGE');
+    // Obtener todos los elementos necesarios
+    const elementos = {
+        iconoBusqueda: document.getElementById('iconobusqueda'),
+        filtros: document.getElementById('filtros'),
+        overlay: document.getElementById('overlay'),
+        header: document.getElementById('header'),
+        endMenu: document.querySelector('.endmenu.MENUDGE')
+    };
+
+    // Verificar si todos los elementos existen
+    const todosElementosExisten = Object.values(elementos).every(elemento => elemento !== null);
+
+    // Si falta algún elemento, salir de la función
+    if (!todosElementosExisten) {
+        console.warn('No se encontraron todos los elementos necesarios para el menú móvil');
+        return;
+    }
+
+    // Desestructurar los elementos para usar en el resto del código
+    const { iconoBusqueda, filtros, overlay, header, endMenu } = elementos;
 
     // Verifica si la pantalla tiene menos de 640px
     function actualizarVisibilidad() {
@@ -211,21 +226,11 @@ function busquedaMenuMovil() {
 
     // Función para mover el contenedor de búsqueda fuera de "endmenu"
     function moverFiltrosAHeader() {
-        // Primero, verifica si el elemento existe y si no está ya en el header
         if (filtros && endMenu.contains(filtros)) {
-            // Clona el nodo para mantener todos los eventos y propiedades
             const filtrosClone = filtros.cloneNode(true);
-
-            // Añade la clase modal
             filtrosClone.classList.add('modal');
-
-            // Remueve el original
             endMenu.removeChild(filtros);
-
-            // Añade el clon al header
             header.appendChild(filtrosClone);
-
-            // Actualiza la referencia
             window.filtros = filtrosClone;
             return filtrosClone;
         }
@@ -236,19 +241,10 @@ function busquedaMenuMovil() {
     function devolverFiltrosAEndMenu() {
         const currentFiltros = document.getElementById('filtros');
         if (currentFiltros && header.contains(currentFiltros)) {
-            // Clona el nodo
             const filtrosClone = currentFiltros.cloneNode(true);
-
-            // Remueve la clase modal
             filtrosClone.classList.remove('modal');
-
-            // Remueve el original
             header.removeChild(currentFiltros);
-
-            // Añade el clon al endMenu
             endMenu.appendChild(filtrosClone);
-
-            // Actualiza la referencia
             window.filtros = filtrosClone;
             return filtrosClone;
         }
