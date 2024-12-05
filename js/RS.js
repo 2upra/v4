@@ -751,35 +751,35 @@ function selectorFanArtista() {
         }
     }
 
-    // Asegurarse de que al menos uno esté seleccionado inicialmente
+    // Asegurarse de que uno esté seleccionado inicialmente
     if (!fancheck.checked && !artistacheck.checked) {
         fancheck.checked = true;
         updateStyles(fancheck);
     }
 
     // Listener para 'fancheck'
-    fancheck.addEventListener('change', function () {
+    fancheck.addEventListener('click', function (e) {
+        if (!fancheck.checked && !artistacheck.checked) {
+            e.preventDefault();
+            return;
+        }
         if (fancheck.checked) {
             artistacheck.checked = false;
-            updateStyles(artistacheck);
-        } else if (!artistacheck.checked) {
-            // Si se intenta deseleccionar y el otro no está marcado,
-            // mantener este marcado
-            fancheck.checked = true;
         }
         updateStyles(fancheck);
+        updateStyles(artistacheck);
     });
 
     // Listener para 'artistacheck'
-    artistacheck.addEventListener('change', function () {
+    artistacheck.addEventListener('click', function (e) {
+        if (!fancheck.checked && !artistacheck.checked) {
+            e.preventDefault();
+            return;
+        }
         if (artistacheck.checked) {
             fancheck.checked = false;
-            updateStyles(fancheck);
-        } else if (!fancheck.checked) {
-            // Si se intenta deseleccionar y el otro no está marcado,
-            // mantener este marcado
-            artistacheck.checked = true;
         }
+        updateStyles(fancheck);
         updateStyles(artistacheck);
     });
 }
