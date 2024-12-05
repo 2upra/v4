@@ -115,6 +115,12 @@ function marcarNotificacionVista() {
         wp_send_json_error(['message' => 'No tienes permiso para modificar esta notificación.'], 403);
     }
 
+    $metaActual = get_post_meta($notificacionId, 'visto', true);
+    if ($metaActual === '1') {
+        error_log("La meta 'visto' ya está configurada en '1' para el ID: $notificacionId.");
+        wp_send_json_success(['message' => 'La notificación ya estaba marcada como vista.', 'notificacionId' => $notificacionId]);
+    }
+
     $actualizado = update_post_meta($notificacionId, 'visto', 1);
     if ($actualizado === false) {
         global $wpdb;
