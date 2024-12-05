@@ -111,14 +111,16 @@ function actualizarTimestampSamplesGuardados($user_id)
 }
 add_action('samples_guardados_actualizados', 'actualizarTimestampSamplesGuardados', 10, 2);
 
+
+//el error es Intento de descarga con token inválido o expirado:, no se por qué
 function obtenerAudiosUsuario(WP_REST_Request $request)
 {
     $user_id = $request->get_param('user_id');
     error_log("obtenerAudiosUsuario: User ID: $user_id"); // Log al inicio
 
     $post_id = $request->get_param('post_id'); // Nuevo parámetro opcional
-    $descargas = get_user_meta($user_id, 'descargas', true);
-    $samplesGuardados = get_user_meta($user_id, 'samplesGuardados', true);
+    $descargas = get_user_meta($user_id, 'descargas', true); // Metadato de descargas
+    $samplesGuardados = get_user_meta($user_id, 'samplesGuardados', true); // Metadato de colecciones
     $downloads = [];
 
     if (is_array($descargas)) {
@@ -130,9 +132,14 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
             if ($attachment_id && get_post($attachment_id)) {
                 $file_path = get_attached_file($attachment_id);
                 if ($file_path && file_exists($file_path) && strpos(mime_content_type($file_path), 'audio/') === 0) {
-                    $token = wp_generate_password(20, false);
-                    $nonce = wp_create_nonce('download_' . $token);
-                    set_transient('sync_token_' . $token, $attachment_id, 300);
+                    $token = wp_generate_password(20, false); // Generar token único
+                    $nonce = wp_create_nonce('download_' . $token); // Crear nonce relacionado al token
+                    $transient_set = set_transient('sync_token_' . $token, $attachment_id, 1800); // Aumentar duración a 30 minutos
+
+                    if (!$transient_set) {
+                        error_log("Error al guardar el transient para el token: $token");
+                        continue; // Si falla, no procesar este audio
+                    }
 
                     // Obtener imagen optimizada
                     $optimized_image_url = obtenerImagenOptimizada($current_post_id);
@@ -149,6 +156,8 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
                             'audio_filename' => get_the_title($attachment_id) . '.' . pathinfo($file_path, PATHINFO_EXTENSION),
                             'image' => $optimized_image_url, // Añadimos la URL de la imagen
                         ];
+
+                        error_log("Audio añadido para descarga. Post ID: $current_post_id, Token: $token, Nonce: $nonce");
                     }
                 } else {
                     error_log("Error con el archivo de audio para el post ID: $current_post_id. Archivo: $file_path");
@@ -158,17 +167,61 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
     } else {
         error_log("obtenerAudiosUsuario: El metadato 'descargas' no es un array o no está definido para el usuario $user_id");
     }
+
     error_log("obtenerAudiosUsuario: Se encontraron " . count($downloads) . " audios para el usuario $user_id");
 
     return rest_ensure_response($downloads);
 }
 
-/**
- * Función para obtener la URL optimizada de la imagen (portada o imagen temporal).
- *
- * @param int $post_id ID del post.
- * @return string|null URL optimizada o null si no hay imagen.
- */
+function descargarAudiosSync(WP_REST_Request $request)
+{
+    $token = $request->get_param('token');
+    $nonce = $request->get_param('nonce');
+
+    // Validar nonce
+    if (!wp_verify_nonce($nonce, 'download_' . $token)) {
+        error_log("Intento de descarga con nonce inválido. Token: $token, Nonce: $nonce");
+        return new WP_Error('invalid_nonce', 'Nonce inválido.', array('status' => 403));
+    }
+
+    // Obtener attachment ID desde el transient
+    $attachment_id = get_transient('sync_token_' . $token);
+    if ($attachment_id) {
+        // Eliminar el transient después de usarlo
+        delete_transient('sync_token_' . $token);
+
+        // Obtener ruta del archivo
+        $file_path = get_attached_file($attachment_id);
+        if ($file_path && file_exists($file_path)) {
+            $mime_type = mime_content_type($file_path);
+
+            // Verificar que el tipo de archivo sea audio
+            if (strpos($mime_type, 'audio/') !== 0) {
+                error_log("Intento de acceso a archivo no de audio. Ruta: $file_path");
+                return new WP_Error('invalid_file_type', 'Tipo de archivo inválido.', array('status' => 400));
+            }
+
+            // Cabeceras para descarga del archivo
+            header('Content-Description: File Transfer');
+            header('Content-Type: ' . $mime_type);
+            header('Content-Disposition: attachment; filename="' . basename($file_path) . '"');
+            header('Expires: 0');
+            header('Cache-Control: no-cache');
+            header('Pragma: public');
+            header('Content-Length: ' . filesize($file_path));
+            readfile($file_path);
+            exit;
+        } else {
+            error_log("Archivo no encontrado en la ruta: $file_path. Token: $token");
+            return new WP_Error('file_not_found', 'Archivo no encontrado.', array('status' => 404));
+        }
+    } else {
+        error_log("Intento de descarga con token inválido o expirado: $token");
+        return new WP_Error('invalid_token', 'Token inválido o expirado.', array('status' => 403));
+    }
+}
+
+
 function obtenerImagenOptimizada($post_id)
 {
     // Intentar obtener la imagen de portada
@@ -191,41 +244,4 @@ function obtenerImagenOptimizada($post_id)
 
     // Si no hay imagen, devolver null
     return null;
-}
-
-function descargarAudiosSync(WP_REST_Request $request)
-{
-    $token = $request->get_param('token');
-    $nonce = $request->get_param('nonce');
-    if (!wp_verify_nonce($nonce, 'download_' . $token)) {
-        error_log("Intento de descarga con nonce inválido. Token: $token, Nonce: $nonce");
-        return new WP_Error('invalid_nonce', 'Nonce inválido.', array('status' => 403));
-    }
-    $attachment_id = get_transient('sync_token_' . $token);
-    if ($attachment_id) {
-        delete_transient('sync_token_' . $token);
-        $file_path = get_attached_file($attachment_id);
-        if ($file_path && file_exists($file_path)) {
-            $mime_type = mime_content_type($file_path);
-            if (strpos($mime_type, 'audio/') !== 0) {
-                error_log("Intento de acceso a archivo no de audio. Ruta: $file_path");
-                return new WP_Error('invalid_file_type', 'Tipo de archivo inválido.', array('status' => 400));
-            }
-            header('Content-Description: File Transfer');
-            header('Content-Type: ' . $mime_type);
-            header('Content-Disposition: attachment; filename="' . basename($file_path) . '"');
-            header('Expires: 0');
-            header('Cache-Control: no-cache');
-            header('Pragma: public');
-            header('Content-Length: ' . filesize($file_path));
-            readfile($file_path);
-            exit;
-        } else {
-            error_log("Archivo no encontrado en la ruta: $file_path. Token: $token");
-            return new WP_Error('file_not_found', 'Archivo no encontrado.', array('status' => 404));
-        }
-    } else {
-        error_log("Intento de descarga con token inválido o expirado: $token");
-        return new WP_Error('invalid_token', 'Token inválido o expirado.', array('status' => 403));
-    }
 }
