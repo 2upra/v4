@@ -55,18 +55,21 @@ function chequearElectron()
     return new WP_Error('forbidden', 'Acceso no autorizado', array('status' => 403));
 }
 
-
 function verificarCambiosAudios(WP_REST_Request $request)
 {
-    $user_id = $request->get_param('user_id'); // Obtiene el parámetro user_id
+    // Log inicial
+    error_log('[verificarCambiosAudios] Inicio de la función');
+
+    // Obtener parámetros
+    $user_id = $request->get_param('user_id');
     $last_sync_timestamp = isset($_GET['last_sync']) ? intval($_GET['last_sync']) : 0;
 
-    // Forzar eliminación de caché
-    //wp_cache_delete($user_id, 'users');
-    //error_log("Caché eliminada para user_id: $user_id");
+    error_log("[verificarCambiosAudios] Parámetro recibido - user_id: {$user_id}");
+    error_log("[verificarCambiosAudios] Parámetro recibido - last_sync_timestamp: {$last_sync_timestamp}");
 
-    // Obtener los valores directamente desde la base de datos
     global $wpdb;
+
+    // Obtener timestamps desde la base de datos
     $descargas_timestamp = $wpdb->get_var($wpdb->prepare("
         SELECT meta_value 
         FROM {$wpdb->usermeta} 
@@ -78,17 +81,29 @@ function verificarCambiosAudios(WP_REST_Request $request)
         WHERE user_id = %d AND meta_key = 'samplesGuardados_modificado'
     ", $user_id));
 
+    // Log de los valores obtenidos desde la base de datos
+    error_log("[verificarCambiosAudios] Valor obtenido - descargas_modificado (raw): " . print_r($descargas_timestamp, true));
+    error_log("[verificarCambiosAudios] Valor obtenido - samplesGuardados_modificado (raw): " . print_r($samples_timestamp, true));
+
+    // Convertir valores a enteros (si son nulos, establecer en 0)
     $descargas_timestamp = ($descargas_timestamp !== null) ? intval($descargas_timestamp) : 0;
     $samples_timestamp = ($samples_timestamp !== null) ? intval($samples_timestamp) : 0;
 
-    // Más logs para depuración
-    //error_log("verificarCambiosAudios: Descargas Timestamp: $descargas_timestamp, Samples Timestamp: $samples_timestamp");
+    // Log después de la conversión
+    error_log("[verificarCambiosAudios] Valor convertido - descargas_modificado: {$descargas_timestamp}");
+    error_log("[verificarCambiosAudios] Valor convertido - samplesGuardados_modificado: {$samples_timestamp}");
 
+    // Preparar respuesta
     $response_data = [
         'descargas_modificado' => $descargas_timestamp,
         'samplesGuardados_modificado' => $samples_timestamp,
     ];
 
+    // Log de la respuesta
+    error_log("[verificarCambiosAudios] Datos de respuesta: " . json_encode($response_data));
+
+    // Retornar la respuesta
+    error_log('[verificarCambiosAudios] Fin de la función');
     return rest_ensure_response($response_data);
 }
 
@@ -96,7 +111,6 @@ function verificarCambiosAudios(WP_REST_Request $request)
 
 function actualizarTimestampDescargas($user_id)
 {
-    //SI FUNCIONA PORQUE EN LA BASE DE DATOS SE VE EL NUEVO VALOR CUANDO CAMBIA
     $time = time();
     update_user_meta($user_id, 'descargas_modificado', $time);
     error_log("actualizarTimestampDescargas: User ID: $user_id, Timestamp actualizado a: $time"); // Nuevo log
