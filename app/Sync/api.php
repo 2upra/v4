@@ -13,7 +13,6 @@ add_action('rest_api_init', function () {
             'token' => array('required' => true, 'type' => 'string'),
             'nonce' => array('required' => true, 'type' => 'string'),
         ),
-        'permission_callback' => '__return_true', // Permitir acceso público
     ));
     register_rest_route('1/v1', '/syncpre/(?P<user_id>\d+)/check', array(
         'methods'  => 'GET',
@@ -26,23 +25,6 @@ add_action('rest_api_init', function () {
         'permission_callback' => 'chequearElectron',
     ));
 });
-
-function chequearElectron()
-{
-    // Verifica si la cabecera 'HTTP_X_ELECTRON_APP' está presente y es igual a 'true'
-    if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
-        // Opcional: registra que la validación fue exitosa
-        error_log('Validación exitosa en chequearElectron: HTTP_X_ELECTRON_APP está presente y es true.');
-        return true;
-    }
-
-    // Si no pasa la validación, registra un error con detalles útiles
-    error_log('Error en chequearElectron: Acceso no autorizado.');
-    error_log('Cabeceras presentes: ' . print_r(getallheaders(), true));
-
-    // Devuelve un error de acceso no autorizado
-    return new WP_Error('forbidden', 'Acceso no autorizado', array('status' => 403));
-}
 
 
 function handle_info_usuario(WP_REST_Request $request)
@@ -63,6 +45,16 @@ function handle_info_usuario(WP_REST_Request $request)
 }
 
 // Función de permiso: valida la cabecera X-Electron-App
+function chequearElectron()
+{
+    //error_log("Iniciando chequearElectron...");
+    if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
+        //error_log("Cabecera válida: " . $_SERVER['HTTP_X_ELECTRON_APP']);
+        return true;
+    }
+    //error_log("Cabecera inválida o ausente.");
+    return new WP_Error('forbidden', 'Acceso no autorizado', array('status' => 403));
+}
 
 
 function verificarCambiosAudios(WP_REST_Request $request)
@@ -119,16 +111,14 @@ function actualizarTimestampSamplesGuardados($user_id)
 }
 add_action('samples_guardados_actualizados', 'actualizarTimestampSamplesGuardados', 10, 2);
 
-
-//no funciona lo de chequear el nonce, por favor, quitalo, despues encuentro otra forma
 function obtenerAudiosUsuario(WP_REST_Request $request)
 {
     $user_id = $request->get_param('user_id');
-    error_log("obtenerAudiosUsuario: User ID: $user_id");
+    error_log("obtenerAudiosUsuario: User ID: $user_id"); // Log al inicio
 
     $post_id = $request->get_param('post_id'); // Nuevo parámetro opcional
-    $descargas = get_user_meta($user_id, 'descargas', true); // Metadato de descargas
-    $samplesGuardados = get_user_meta($user_id, 'samplesGuardados', true); // Metadato de colecciones
+    $descargas = get_user_meta($user_id, 'descargas', true);
+    $samplesGuardados = get_user_meta($user_id, 'samplesGuardados', true);
     $downloads = [];
 
     if (is_array($descargas)) {
@@ -140,7 +130,6 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
             if ($attachment_id && get_post($attachment_id)) {
                 $file_path = get_attached_file($attachment_id);
                 if ($file_path && file_exists($file_path) && strpos(mime_content_type($file_path), 'audio/') === 0) {
-
                     // Obtener imagen optimizada
                     $optimized_image_url = obtenerImagenOptimizada($current_post_id);
 
@@ -156,8 +145,6 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
                             'audio_filename' => get_the_title($attachment_id) . '.' . pathinfo($file_path, PATHINFO_EXTENSION),
                             'image' => $optimized_image_url, // Añadimos la URL de la imagen
                         ];
-
-                        error_log("Audio añadido para descarga. Post ID: $current_post_id, Attachment ID: $attachment_id");
                     }
                 } else {
                     error_log("Error con el archivo de audio para el post ID: $current_post_id. Archivo: $file_path");
@@ -167,7 +154,6 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
     } else {
         error_log("obtenerAudiosUsuario: El metadato 'descargas' no es un array o no está definido para el usuario $user_id");
     }
-
     error_log("obtenerAudiosUsuario: Se encontraron " . count($downloads) . " audios para el usuario $user_id");
 
     return rest_ensure_response($downloads);
@@ -175,39 +161,35 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
 
 function descargarAudiosSync(WP_REST_Request $request)
 {
-    // Evitar el caché de la respuesta
-    header('Cache-Control: no-cache, no-store, must-revalidate');
-    header('Pragma: no-cache');
-    header('Expires: 0');
-
     $attachment_id = $request->get_param('attachment_id');
 
-    // Verificar que el archivo existe
-    $file_path = get_attached_file($attachment_id);
-    if ($file_path && file_exists($file_path)) {
-        $mime_type = mime_content_type($file_path);
-
-        // Verificar que el archivo es un audio
-        if (strpos($mime_type, 'audio/') !== 0) {
-            error_log("Intento de acceso a archivo no de audio. Ruta: $file_path");
-            return new WP_Error('invalid_file_type', 'Tipo de archivo inválido.', array('status' => 400));
+    if ($attachment_id) {
+        $file_path = get_attached_file($attachment_id);
+        if ($file_path && file_exists($file_path)) {
+            $mime_type = mime_content_type($file_path);
+            if (strpos($mime_type, 'audio/') !== 0) {
+                error_log("Intento de acceso a archivo no de audio. Ruta: $file_path");
+                return new WP_Error('invalid_file_type', 'Tipo de archivo inválido.', array('status' => 400));
+            }
+            header('Content-Description: File Transfer');
+            header('Content-Type: ' . $mime_type);
+            header('Content-Disposition: attachment; filename="' . basename($file_path) . '"');
+            header('Expires: 0');
+            header('Cache-Control: no-cache');
+            header('Pragma: public');
+            header('Content-Length: ' . filesize($file_path));
+            readfile($file_path);
+            exit;
+        } else {
+            error_log("Archivo no encontrado en la ruta: $file_path. Attachment ID: $attachment_id");
+            return new WP_Error('file_not_found', 'Archivo no encontrado.', array('status' => 404));
         }
-
-        // Cabeceras para descarga del archivo
-        header('Content-Description: File Transfer');
-        header('Content-Type: ' . $mime_type);
-        header('Content-Disposition: attachment; filename="' . basename($file_path) . '"');
-        header('Expires: 0');
-        header('Cache-Control: no-cache');
-        header('Pragma: public');
-        header('Content-Length: ' . filesize($file_path));
-        readfile($file_path);
-        exit;
     } else {
-        error_log("Archivo no encontrado en la ruta: $file_path. Attachment ID: $attachment_id");
-        return new WP_Error('file_not_found', 'Archivo no encontrado.', array('status' => 404));
+        error_log("Intento de descarga sin un attachment_id válido.");
+        return new WP_Error('invalid_request', 'Parámetro attachment_id faltante o inválido.', array('status' => 400));
     }
 }
+
 function obtenerImagenOptimizada($post_id)
 {
     // Intentar obtener la imagen de portada
