@@ -76,8 +76,7 @@ function inicializarReproductorAudio() {
             }
         });
     }
-    ////////////////////////////////////////////////////////////
-    //No es el codigo completo pero es lo que importacreo
+
     let audioList = [];
     let currentAudioIndex = -1;
 
@@ -130,29 +129,6 @@ function inicializarReproductorAudio() {
         audio.pause();
     });
 
-
-    function playAudioFromElement(element, index) {
-        const audioContainer = element.querySelector('.audio-container');
-        const audioSrc = audioContainer?.querySelector('audio')?.getAttribute('src');
-        const postId = audioContainer?.getAttribute('data-post-id');
-        const artistId = audioContainer?.getAttribute('artista-id');
-    
-        if (!audioSrc) return;
-    
-        document.querySelector('.TMLIWT').style.display = 'block';
-    
-        if (audio.src === audioSrc) {
-            togglePlayPause();
-        } else {
-            registrarReproduccionYOyente(audioSrc, postId, artistId);
-            audio.src = audioSrc;
-            audio.play();
-            Cover(element);
-            Info(element);
-            currentAudioIndex = index;
-        }
-    }
-
     function setupControls() {
         document.querySelector('.next-btn')?.addEventListener('click', playNextAudio);
         document.querySelector('.prev-btn')?.addEventListener('click', playPreviousAudio);
@@ -180,37 +156,104 @@ function inicializarReproductorAudio() {
         }
     }
 
-    let isPlayingPromise = null;
+    /*
+    hay que actualizar esto, creo que para reproducir el audio hay que hacer algo asi 
 
-    function togglePlayPause() {
-        if (audio.paused) {
-            isPlayingPromise = audio.play();
-            if (isPlayingPromise !== undefined) {
-                isPlayingPromise
-                    .then(() => {
-                        // La reproducción se inició con éxito
-                        updatePlayPauseButton();
-                    })
-                    .catch(error => {
-                        // La reproducción falló, manejamos el error
-                        log06('Error al reproducir:', error);
-                        updatePlayPauseButton();
-                    });
+        fetch(audioUrl, {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+            'X-WP-Nonce': audioSettings.nonce,
+            'X-Requested-With': 'XMLHttpRequest',
+
             }
+        })
+            porque hay un 
+
+                register_rest_route('1/v1', '/2', array(
+        'methods' => 'GET',
+        'callback' => 'audioStreamEnd',
+        'args' => array(
+            'token' => array(
+                'required' => true,
+            ),
+        ),
+        'permission_callback' => function ($request) {
+            //guardarLog('Verificando permiso para token: ' . $request->get_param('token'));
+            return verificarAudio($request->get_param('token'));
+        }
+    ));
+    que regresa el audio en straem parcial content creo
+
+    la url del audio coloque la ruta del audio
+    */
+
+    async function playAudioFromElement(element, index) {
+        const audioContainer = element.querySelector('.audio-container');
+        const audioSrc = audioContainer?.querySelector('audio')?.getAttribute('src');
+        const postId = audioContainer?.getAttribute('data-post-id');
+        const artistId = audioContainer?.getAttribute('artista-id');
+
+        if (!audioSrc) return;
+
+        document.querySelector('.TMLIWT').style.display = 'block';
+
+        if (audio.src === audioSrc) {
+            togglePlayPause();
         } else {
-            if (isPlayingPromise !== null) {
-                isPlayingPromise
+            try {
+                // Primero registramos la reproducción
+                await registrarReproduccionYOyente(audioSrc, postId, artistId);
+
+                // Realizamos la solicitud fetch para obtener el audio
+                const response = await fetch(audioSrc, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-WP-Nonce': audioSettings.nonce,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Creamos un blob del stream de audio
+                const blob = await response.blob();
+                const audioUrl = URL.createObjectURL(blob);
+
+                // Actualizamos el source del audio y lo reproducimos
+                audio.src = audioUrl;
+                audio
+                    .play()
                     .then(() => {
-                        audio.pause();
-                        updatePlayPauseButton();
+                        Cover(element);
+                        Info(element);
+                        currentAudioIndex = index;
                     })
                     .catch(error => {
-                        log06('Error al pausar:', error);
+                        console.error('Error al reproducir el audio:', error);
                     });
-            } else {
-                audio.pause();
-                updatePlayPauseButton();
+            } catch (error) {
+                console.error('Error al cargar el audio:', error);
             }
+        }
+    }
+
+    let isPlayingPromise = null;
+    
+    async function togglePlayPause() {
+        try {
+            if (audio.paused) {
+                await audio.play();
+            } else {
+                await audio.pause();
+            }
+            updatePlayPauseButton();
+        } catch (error) {
+            console.error('Error al toggle play/pause:', error);
+            updatePlayPauseButton();
         }
     }
 
@@ -280,12 +323,11 @@ function registrarReproduccionYOyente(audioSrc, postId, artist) {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        log06('Respuesta:', data);
-    })
-    .catch(error => {
-        log06('Error:', error);
-    });
+        .then(response => response.json())
+        .then(data => {
+            log06('Respuesta:', data);
+        })
+        .catch(error => {
+            log06('Error:', error);
+        });
 }
-

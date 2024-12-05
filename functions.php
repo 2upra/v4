@@ -55,14 +55,14 @@ function headGeneric()
     <link rel="icon" type="image/png" sizes="32x32" href="https://2upra.com/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="96x96" href="https://2upra.com/favicon-96x96.png">
     <link rel="icon" type="image/png" sizes="16x16" href="https://2upra.com/favicon-16x16.png">
-    <link rel="manifest" href="https://2upra.com/manifest.json">  
+    <link rel="manifest" href="https://2upra.com/manifest.json">
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="https://2upra.com/ms-icon-144x144.png">
     <meta name="theme-color" content="#ffffff">
 
     <!-- Etiquetas Open Graph para Facebook y otras plataformas -->
     <meta property="og:title" content="<?php echo get_the_title(); ?>" />
-    <meta property="og:description" content="Social Media para artistas"/>
+    <meta property="og:description" content="Social Media para artistas" />
     <meta property="og:image" content="https://i0.wp.com/2upra.com/wp-content/uploads/2024/11/Pinterest_Download-47-28-818x1024.jpg?quality=60&strip=all" />
     <meta property="og:url" content="https://2upra.com" />
     <meta property="og:type" content="website" />
@@ -222,9 +222,10 @@ function postLog($log)
 }
 
 
-function custom_deregister_jquery() {
+function custom_deregister_jquery()
+{
     // Verifica si es la página de inicio y si el usuario NO está logueado
-    if ( is_front_page() && !is_user_logged_in() ) {
+    if (is_front_page() && !is_user_logged_in()) {
         // Desregistrar jQuery para que no se cargue
         wp_deregister_script('jquery');
     }
@@ -263,7 +264,7 @@ function scriptsOrdenados()
         'inversores',
         'genericAjax'
     ];
-    
+
     $script_handles = [
         'gloria' => '1.0.1',
         'ajaxPage' => '5.0.11',
@@ -304,7 +305,7 @@ function scriptsOrdenados()
         'notificaciones' => '1.0.1',
         'colec' => '1.0.1',
     ];
-    	
+
     foreach ($script_handles as $handle => $data) {
         // Verificar si el script debería cargarse solo para usuarios logueados
         if (!is_user_logged_in() && in_array($handle, $scripts_only_for_logged_in_users)) {
@@ -373,6 +374,10 @@ function scriptsOrdenados()
     ]);
     wp_localize_script('my-ajax-script', 'ajax_params', array(
         'ajax_url' => admin_url('admin-ajax.php')
+    ));
+
+    wp_localize_script('reproductor', 'audioSettings', array(
+        'nonce' => wp_create_nonce('wp_rest'),
     ));
 
     wp_localize_script('wavejs', 'audioSettings', array(
