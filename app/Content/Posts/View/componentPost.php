@@ -451,6 +451,28 @@ function fondoPost($filtro, $block, $es_suscriptor, $postId)
     return '';
 }
 
+function wave($audio_url, $audio_id_lite, $postId)
+{
+    $wave = get_post_meta($postId, 'waveform_image_url', true);
+    $waveCargada = get_post_meta($postId, 'waveCargada', true);
+    $urlAudioSegura = audioUrlSegura($audio_id_lite); 
+
+    // Verificar si $urlAudioSegura es una instancia de WP_Error
+    if (is_wp_error($urlAudioSegura)) {
+        $urlAudioSegura = ''; // O establece un valor predeterminado o maneja el error de forma diferente
+    }
+?>
+    <div id="waveform-<? echo $postId; ?>"
+        class="waveform-container without-image"
+        postIDWave="<? echo $postId; ?>"
+        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
+        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
+        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
+        <div class="waveform-message"></div>
+        <div class="waveform-loading" style="display: none;">Cargando...</div>
+    </div>
+<?
+}
 
 function audioPost($postId)
 {
@@ -460,8 +482,8 @@ function audioPost($postId)
         return '';
     }
 
-    // Get the post author ID
     $post_author_id = get_post_field('post_author', $postId);
+    $urlAudioSegura = audioUrlSegura($audio_id_lite); 
 
     ob_start();
     ?>
@@ -471,7 +493,7 @@ function audioPost($postId)
             <img src="https://2upra.com/wp-content/uploads/2024/03/1.svg" alt="Play" style="width: 50px; height: 50px;">
         </div>
 
-        <audio id="audio-<? echo $postId; ?>" src="<? echo site_url('?custom-audio-stream=1&audio_id=' . $audio_id_lite); ?>"></audio>
+        <audio id="audio-<? echo $postId; ?>" src="<? echo esc_url($urlAudioSegura); ?>"></audio>
     </div>
 <?
     return ob_get_clean();
@@ -504,26 +526,4 @@ function audioPostList($postId)
 }
 
 
-function wave($audio_url, $audio_id_lite, $postId)
-{
-    $wave = get_post_meta($postId, 'waveform_image_url', true);
-    $waveCargada = get_post_meta($postId, 'waveCargada', true);
-    $urlAudioSegura = audioUrlSegura($audio_id_lite); // Usando la URL segura
 
-    // Verificar si $urlAudioSegura es una instancia de WP_Error
-    if (is_wp_error($urlAudioSegura)) {
-        $urlAudioSegura = ''; // O establece un valor predeterminado o maneja el error de forma diferente
-    }
-?>
-    <div id="waveform-<? echo $postId; ?>"
-        class="waveform-container without-image"
-        postIDWave="<? echo $postId; ?>"
-        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
-        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
-        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
-        <div class="waveform-message"></div>
-        <div class="waveform-loading" style="display: none;">Cargando...</div>
-    </div>
-<?
-}
-?>
