@@ -57,10 +57,8 @@ function chequearElectron()
 
 function verificarCambiosAudios(WP_REST_Request $request)
 {
-    // Log inicial
     error_log('[verificarCambiosAudios] Inicio de la función');
 
-    // Obtener parámetros
     $user_id = $request->get_param('user_id');
     $last_sync_timestamp = isset($_GET['last_sync']) ? intval($_GET['last_sync']) : 0;
 
@@ -69,7 +67,6 @@ function verificarCambiosAudios(WP_REST_Request $request)
 
     global $wpdb;
 
-    // Obtener timestamps desde la base de datos
     $descargas_timestamp = $wpdb->get_var($wpdb->prepare("
         SELECT meta_value 
         FROM {$wpdb->usermeta} 
@@ -81,28 +78,19 @@ function verificarCambiosAudios(WP_REST_Request $request)
         WHERE user_id = %d AND meta_key = 'samplesGuardados_modificado'
     ", $user_id));
 
-    // Log de los valores obtenidos desde la base de datos
-    error_log("[verificarCambiosAudios] Valor obtenido - descargas_modificado (raw): " . print_r($descargas_timestamp, true));
-    error_log("[verificarCambiosAudios] Valor obtenido - samplesGuardados_modificado (raw): " . print_r($samples_timestamp, true));
-
-    // Convertir valores a enteros (si son nulos, establecer en 0)
     $descargas_timestamp = ($descargas_timestamp !== null) ? intval($descargas_timestamp) : 0;
     $samples_timestamp = ($samples_timestamp !== null) ? intval($samples_timestamp) : 0;
 
-    // Log después de la conversión
     error_log("[verificarCambiosAudios] Valor convertido - descargas_modificado: {$descargas_timestamp}");
     error_log("[verificarCambiosAudios] Valor convertido - samplesGuardados_modificado: {$samples_timestamp}");
 
-    // Preparar respuesta
     $response_data = [
         'descargas_modificado' => $descargas_timestamp,
         'samplesGuardados_modificado' => $samples_timestamp,
     ];
 
-    // Log de la respuesta
     error_log("[verificarCambiosAudios] Datos de respuesta: " . json_encode($response_data));
 
-    // Retornar la respuesta
     error_log('[verificarCambiosAudios] Fin de la función');
     return rest_ensure_response($response_data);
 }
