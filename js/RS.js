@@ -751,19 +751,12 @@ function selectorFanArtista() {
         }
     }
 
-    // Asegurarse de que uno esté seleccionado inicialmente
-    if (!fancheck.checked && !artistacheck.checked) {
-        fancheck.checked = true;
-        updateStyles(fancheck);
-    }
-
     // Listener para 'fancheck'
-    fancheck.addEventListener('click', function (e) {
+    fancheck.addEventListener('change', function () {
         if (!fancheck.checked && !artistacheck.checked) {
-            e.preventDefault();
-            return;
-        }
-        if (fancheck.checked) {
+            // Si ambos quedan sin seleccionar, forzamos a que este checkbox permanezca seleccionado
+            fancheck.checked = true;
+        } else if (fancheck.checked) {
             artistacheck.checked = false;
         }
         updateStyles(fancheck);
@@ -771,15 +764,18 @@ function selectorFanArtista() {
     });
 
     // Listener para 'artistacheck'
-    artistacheck.addEventListener('click', function (e) {
-        if (!fancheck.checked && !artistacheck.checked) {
-            e.preventDefault();
-            return;
-        }
-        if (artistacheck.checked) {
+    artistacheck.addEventListener('change', function () {
+        if (!artistacheck.checked && !fancheck.checked) {
+            // Si ambos quedan sin seleccionar, forzamos a que este checkbox permanezca seleccionado
+            artistacheck.checked = true;
+        } else if (artistacheck.checked) {
             fancheck.checked = false;
         }
-        updateStyles(fancheck);
         updateStyles(artistacheck);
+        updateStyles(fancheck);
     });
+
+    // Inicializar estilos al cargar la página
+    updateStyles(fancheck);
+    updateStyles(artistacheck);
 }
