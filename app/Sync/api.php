@@ -27,7 +27,8 @@ add_action('rest_api_init', function () {
 });
 
 
-function handle_info_usuario(WP_REST_Request $request) {
+function handle_info_usuario(WP_REST_Request $request)
+{
     $receptor = intval($request->get_param('receptor'));
 
     if ($receptor <= 0) {
@@ -132,6 +133,10 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
                     $token = wp_generate_password(20, false);
                     $nonce = wp_create_nonce('download_' . $token);
                     set_transient('sync_token_' . $token, $attachment_id, 300);
+
+                    // Obtener imagen optimizada
+                    $optimized_image_url = obtenerImagenOptimizada($current_post_id);
+
                     $colecciones = isset($samplesGuardados[$current_post_id]) ? $samplesGuardados[$current_post_id] : ['No coleccionados'];
                     foreach ($colecciones as $collection_id) {
                         $collection_name = ($collection_id !== 'No coleccionados') ? get_the_title($collection_id) : 'No coleccionados';
@@ -142,6 +147,7 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
                             'collection' => $collection_name,
                             'download_url' => home_url("/wp-json/sync/v1/download/?token=$token&nonce=$nonce"),
                             'audio_filename' => get_the_title($attachment_id) . '.' . pathinfo($file_path, PATHINFO_EXTENSION),
+                            'image' => $optimized_image_url, // Añadimos la URL de la imagen
                         ];
                     }
                 } else {
@@ -155,6 +161,36 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
     error_log("obtenerAudiosUsuario: Se encontraron " . count($downloads) . " audios para el usuario $user_id");
 
     return rest_ensure_response($downloads);
+}
+
+/**
+ * Función para obtener la URL optimizada de la imagen (portada o imagen temporal).
+ *
+ * @param int $post_id ID del post.
+ * @return string|null URL optimizada o null si no hay imagen.
+ */
+function obtenerImagenOptimizada($post_id)
+{
+    // Intentar obtener la imagen de portada
+    $portada_id = get_post_thumbnail_id($post_id);
+    if ($portada_id) {
+        $portada_url = wp_get_attachment_url($portada_id);
+        if ($portada_url) {
+            return img($portada_url); // Optimizar la imagen
+        }
+    }
+
+    // Si no hay portada, intentar obtener la imagen temporal
+    $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true);
+    if ($imagen_temporal_id) {
+        $imagen_temporal_url = wp_get_attachment_url($imagen_temporal_id);
+        if ($imagen_temporal_url) {
+            return img($imagen_temporal_url); // Optimizar la imagen
+        }
+    }
+
+    // Si no hay imagen, devolver null
+    return null;
 }
 
 function descargarAudiosSync(WP_REST_Request $request)
