@@ -984,6 +984,10 @@ window.contadorDeSamples = () => {
         // Obtener los parámetros de búsqueda y filtros si existen
         const urlParams = new URLSearchParams(window.location.search);
         const searchQuery = urlParams.get('busqueda') || ''; // Cambia 'busqueda' según tu parámetro de URL
+
+        // Obtener el tipo de post del atributo typepost, si existe
+        const postType = resultadosElement.getAttribute('typepost') || 'social_post';
+
         // Enviar la solicitud AJAX
         fetch(ajaxUrl, {
             method: 'POST',
@@ -993,6 +997,7 @@ window.contadorDeSamples = () => {
             body: new URLSearchParams({
                 action: 'contarPostsFiltrados', // Nombre de la acción en PHP
                 search: searchQuery,
+                post_type: postType // Agregar el tipo de post a la solicitud
             })
         })
             .then(response => response.json())
@@ -1022,7 +1027,6 @@ window.contadorDeSamples = () => {
         contarPostsFiltrados();
     }
 };
-
 document.addEventListener('DOMContentLoaded', function () {
     // Verificar si existe el modalTipoUsuario en la página
     const modalTipoUsuario = document.querySelector('.selectorModalUsuario');

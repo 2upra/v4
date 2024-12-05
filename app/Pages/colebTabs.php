@@ -16,7 +16,7 @@ function colecTabs()
                     <? echo tagsPosts() ?>
                 </div>
                 <div class="FDGEDF">
-                    <p id="resultadosPost-sampleList"></p>
+                    <p id="resultadosPost-sampleList" typepost="colecciones"></p>
                     <div class="OPCDGED">
 
                         <button class="restablecerBusqueda" style="display: none;">Restablecer filtros</button>

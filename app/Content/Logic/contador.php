@@ -8,11 +8,15 @@ function contarPostsFiltrados() {
     }
 
     $current_user_id = get_current_user_id();
+    
+    // Obtener el post type desde la petición Ajax
+    $post_type = isset($_POST['post_type']) ? sanitize_text_field($_POST['post_type']) : 'social_post';
+    
     $query_args = [
-        'post_type'      => 'social_post', // Cambia 'social_post' a tu tipo de post si es necesario
+        'post_type'      => $post_type, // Usar el post type recibido
         'post_status'    => 'publish',
-        'fields'         => 'ids', // Solo necesitamos los IDs para optimizar la consulta
-        'posts_per_page' => -1,    // Obtener todos los posts
+        'fields'         => 'ids',
+        'posts_per_page' => -1,
     ];
 
     // Obtener parámetros enviados por AJAX
