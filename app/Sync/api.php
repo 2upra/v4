@@ -29,9 +29,18 @@ add_action('rest_api_init', function () {
 
 function chequearElectron()
 {
+    // Verifica si la cabecera 'HTTP_X_ELECTRON_APP' está presente y es igual a 'true'
     if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
+        // Opcional: registra que la validación fue exitosa
+        error_log('Validación exitosa en chequearElectron: HTTP_X_ELECTRON_APP está presente y es true.');
         return true;
     }
+
+    // Si no pasa la validación, registra un error con detalles útiles
+    error_log('Error en chequearElectron: Acceso no autorizado.');
+    error_log('Cabeceras presentes: ' . print_r(getallheaders(), true));
+
+    // Devuelve un error de acceso no autorizado
     return new WP_Error('forbidden', 'Acceso no autorizado', array('status' => 403));
 }
 
