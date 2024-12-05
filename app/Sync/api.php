@@ -27,8 +27,7 @@ add_action('rest_api_init', function () {
 });
 
 
-function handle_info_usuario(WP_REST_Request $request)
-{
+function handle_info_usuario(WP_REST_Request $request) {
     $receptor = intval($request->get_param('receptor'));
 
     if ($receptor <= 0) {
@@ -130,9 +129,9 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
             if ($attachment_id && get_post($attachment_id)) {
                 $file_path = get_attached_file($attachment_id);
                 if ($file_path && file_exists($file_path) && strpos(mime_content_type($file_path), 'audio/') === 0) {
-                    // Obtener imagen optimizada
-                    $optimized_image_url = obtenerImagenOptimizada($current_post_id);
-
+                    $token = wp_generate_password(20, false);
+                    $nonce = wp_create_nonce('download_' . $token);
+                    set_transient('sync_token_' . $token, $attachment_id, 300);
                     $colecciones = isset($samplesGuardados[$current_post_id]) ? $samplesGuardados[$current_post_id] : ['No coleccionados'];
                     foreach ($colecciones as $collection_id) {
                         $collection_name = ($collection_id !== 'No coleccionados') ? get_the_title($collection_id) : 'No coleccionados';
@@ -141,9 +140,8 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
                         $downloads[] = [
                             'post_id' => $current_post_id,
                             'collection' => $collection_name,
-                            'download_url' => home_url("/wp-json/sync/v1/download/?attachment_id=$attachment_id"),
+                            'download_url' => home_url("/wp-json/sync/v1/download/?token=$token&nonce=$nonce"),
                             'audio_filename' => get_the_title($attachment_id) . '.' . pathinfo($file_path, PATHINFO_EXTENSION),
-                            'image' => $optimized_image_url, // Añadimos la URL de la imagen
                         ];
                     }
                 } else {
@@ -161,9 +159,15 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
 
 function descargarAudiosSync(WP_REST_Request $request)
 {
-    $attachment_id = $request->get_param('attachment_id');
-
+    $token = $request->get_param('token');
+    $nonce = $request->get_param('nonce');
+    if (!wp_verify_nonce($nonce, 'download_' . $token)) {
+        error_log("Intento de descarga con nonce inválido. Token: $token, Nonce: $nonce");
+        return new WP_Error('invalid_nonce', 'Nonce inválido.', array('status' => 403));
+    }
+    $attachment_id = get_transient('sync_token_' . $token);
     if ($attachment_id) {
+        delete_transient('sync_token_' . $token);
         $file_path = get_attached_file($attachment_id);
         if ($file_path && file_exists($file_path)) {
             $mime_type = mime_content_type($file_path);
@@ -181,35 +185,11 @@ function descargarAudiosSync(WP_REST_Request $request)
             readfile($file_path);
             exit;
         } else {
-            error_log("Archivo no encontrado en la ruta: $file_path. Attachment ID: $attachment_id");
+            error_log("Archivo no encontrado en la ruta: $file_path. Token: $token");
             return new WP_Error('file_not_found', 'Archivo no encontrado.', array('status' => 404));
         }
     } else {
-        error_log("Intento de descarga sin un attachment_id válido.");
-        return new WP_Error('invalid_request', 'Parámetro attachment_id faltante o inválido.', array('status' => 400));
+        error_log("Intento de descarga con token inválido o expirado: $token");
+        return new WP_Error('invalid_token', 'Token inválido o expirado.', array('status' => 403));
     }
-}
-
-function obtenerImagenOptimizada($post_id)
-{
-    // Intentar obtener la imagen de portada
-    $portada_id = get_post_thumbnail_id($post_id);
-    if ($portada_id) {
-        $portada_url = wp_get_attachment_url($portada_id);
-        if ($portada_url) {
-            return img($portada_url); // Optimizar la imagen
-        }
-    }
-
-    // Si no hay portada, intentar obtener la imagen temporal
-    $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true);
-    if ($imagen_temporal_id) {
-        $imagen_temporal_url = wp_get_attachment_url($imagen_temporal_id);
-        if ($imagen_temporal_url) {
-            return img($imagen_temporal_url); // Optimizar la imagen
-        }
-    }
-
-    // Si no hay imagen, devolver null
-    return null;
 }
