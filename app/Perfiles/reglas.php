@@ -16,57 +16,62 @@ add_action('template_redirect', function () {
 
 
 
-/**
- * Redirigir al perfil del usuario autenticado con un slug limpio.
- */
+add_action('template_redirect', 'fix_profile_url_spaces');
+function fix_profile_url_spaces() {
+    // Obtener la URL actual completa
+    $current_url = $_SERVER['REQUEST_URI'];
+    
+    // Verificar si la URL contiene '/perfil/' y espacios codificados
+    if (strpos($current_url, '/perfil/') !== false && 
+        (strpos($current_url, '%20') !== false || strpos($current_url, ' ') !== false)) {
+        
+        // Decodificar la URL para manejar caracteres especiales
+        $decoded_url = urldecode($current_url);
+        
+        // Reemplazar espacios por guiones
+        $fixed_url = str_replace(array(' ', '%20'), '-', $decoded_url);
+        
+        // Asegurarse de que la URL está correctamente codificada
+        $fixed_url = rtrim($fixed_url, '/') . '/';
+        
+        // Redirigir a la URL corregida
+        wp_redirect(home_url($fixed_url), 301);
+        exit;
+    }
+}
+
+// Función adicional para manejar otros casos de redirección de perfil
 add_action('template_redirect', 'redirect_to_user_profile');
-function redirect_to_user_profile()
-{
-    // Verifica si el usuario está conectado y está viendo la página "perfil"
-    if (is_user_logged_in() && is_page('perfil')) {
+function redirect_to_user_profile() {
+    if (is_user_logged_in() && strpos($_SERVER['REQUEST_URI'], '/perfil/') !== false) {
         $current_user = wp_get_current_user();
-
-        // Generar un slug limpio a partir del user_login
         $clean_user_login = sanitize_title($current_user->user_login);
-
-        // Obtener la URL actual
-        global $wp;
-        $current_url = home_url($wp->request);
-
-        // Generar la URL esperada para el perfil del usuario
-        $expected_url = site_url('/perfil/' . $clean_user_login);
-
-        // Verificar si la URL actual es diferente a la esperada
-        if (trailingslashit($current_url) !== trailingslashit($expected_url)) {
-            // Redirigir a la URL limpia
-            wp_redirect($expected_url, 301); // Redirección permanente
-            exit;
+        
+        // Obtener la parte del slug después de /perfil/
+        $request_uri = $_SERVER['REQUEST_URI'];
+        $path_parts = explode('/perfil/', $request_uri);
+        if (isset($path_parts[1])) {
+            $current_slug = trim($path_parts[1], '/');
+            $expected_slug = $clean_user_login;
+            
+            if ($current_slug !== $expected_slug) {
+                wp_redirect(home_url("/perfil/{$expected_slug}/"), 301);
+                exit;
+            }
         }
     }
 }
 
-/**
- * Corregir espacios codificados (%20) en la URL y redirigir a la versión con guiones.
- */
-add_action('template_redirect', 'fix_profile_url_spaces');
-function fix_profile_url_spaces()
-{
-    if (is_page('perfil')) {
-        global $wp;
-
-        // Obtener la URL actual
-        $current_url = home_url($wp->request);
-
-        // Detectar si la URL contiene espacios codificados (%20) o espacios
-        if (strpos($current_url, '%20') !== false || strpos($current_url, ' ') !== false) {
-            // Reemplazar los espacios codificados (%20) y espacios por guiones (-)
-            $fixed_url = str_replace(array('%20', ' '), '-', $current_url);
-
-            // Redirigir a la URL corregida
-            wp_redirect($fixed_url, 301); // Redirección permanente
-            exit;
-        }
-    }
+// Opcional: Agregar soporte para limpieza de URLs con caracteres especiales
+add_filter('sanitize_title', 'custom_sanitize_title', 10, 3);
+function custom_sanitize_title($title) {
+    // Convertir caracteres especiales y espacios a guiones
+    $title = remove_accents($title);
+    $title = strtolower($title);
+    $title = preg_replace('/[^a-z0-9\-]/', '-', $title);
+    $title = preg_replace('/-+/', '-', $title);
+    $title = trim($title, '-');
+    return $title;
 }
 
 // Añadir reglas de reescritura personalizadas
