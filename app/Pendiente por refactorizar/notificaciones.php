@@ -93,10 +93,10 @@ function listarNotificaciones($pagina = 1)
     return ob_get_clean();
 }
 
-
 add_action('wp_ajax_marcar_notificacion_vista', 'marcarNotificacionVista');
 function marcarNotificacionVista() {
     if (!is_user_logged_in()) {
+        error_log('Acceso denegado: Usuario no autenticado.');
         wp_send_json_error(['message' => 'No tienes permiso para realizar esta acción.'], 403);
     }
 
@@ -107,14 +107,26 @@ function marcarNotificacionVista() {
         wp_send_json_error(['message' => 'El ID de la notificación no es válido.'], 400);
     }
 
+    $currentUserId = get_current_user_id();
+    $postAuthorId = get_post_field('post_author', $notificacionId);
+
+    if ($postAuthorId && $postAuthorId != $currentUserId) {
+        error_log("Permiso denegado: Usuario actual ($currentUserId) no es el autor ($postAuthorId) del post ID $notificacionId.");
+        wp_send_json_error(['message' => 'No tienes permiso para modificar esta notificación.'], 403);
+    }
+
     $actualizado = update_post_meta($notificacionId, 'visto', 1);
     if ($actualizado === false) {
-        error_log("Fallo al actualizar la meta 'visto' para el ID: $notificacionId");
+        global $wpdb;
+        $wpdb_error = $wpdb->last_error ? $wpdb->last_error : 'No hay errores en la base de datos.';
+        error_log("Fallo al actualizar la meta 'visto' para el ID: $notificacionId. Error de base de datos: $wpdb_error.");
         wp_send_json_error(['message' => 'No se pudo actualizar la meta de la notificación.'], 500);
     }
 
+    error_log("Meta 'visto' actualizada correctamente para el ID: $notificacionId por el usuario: $currentUserId.");
     wp_send_json_success(['message' => 'Notificación marcada como vista.', 'notificacionId' => $notificacionId]);
 }
+
 
 
 
