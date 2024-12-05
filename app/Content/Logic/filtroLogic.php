@@ -33,18 +33,46 @@ add_action('wp_ajax_obtenerFiltroActual', 'obtenerFiltroActual');
 
 function restablecerFiltros()
 {
+    // Log inicial
+    error_log('Iniciando función restablecerFiltros');
+
+    // Verificar autenticación
     if (!is_user_logged_in()) {
+        error_log('Error: Usuario no autenticado');
         wp_send_json_error('Usuario no autenticado');
         return;
     }
 
-    $user_id = get_current_user_id();
-    $resultado_post = delete_user_meta($user_id, 'filtroPost');
-    $resultado_tiempo = delete_user_meta($user_id, 'filtroTiempo');
-    if ($resultado_post && $resultado_tiempo) {
-        wp_send_json_success(['message' => 'Filtros restablecidos correctamente']);
-    } else {
-        wp_send_json_error('Error al restablecer los filtros');
+    try {
+        // Obtener ID de usuario
+        $user_id = get_current_user_id();
+        error_log('ID de usuario: ' . $user_id);
+
+        // Intentar eliminar filtroPost
+        $resultado_post = delete_user_meta($user_id, 'filtroPost');
+        error_log('Resultado eliminación filtroPost: ' . ($resultado_post ? 'true' : 'false'));
+
+        // Intentar eliminar filtroTiempo
+        $resultado_tiempo = delete_user_meta($user_id, 'filtroTiempo');
+        error_log('Resultado eliminación filtroTiempo: ' . ($resultado_tiempo ? 'true' : 'false'));
+
+        // Verificar valores actuales después de eliminar
+        $post_meta = get_user_meta($user_id, 'filtroPost', true);
+        $tiempo_meta = get_user_meta($user_id, 'filtroTiempo', true);
+        error_log('Valor actual filtroPost: ' . ($post_meta ? $post_meta : 'vacío'));
+        error_log('Valor actual filtroTiempo: ' . ($tiempo_meta ? $tiempo_meta : 'vacío'));
+
+        if ($resultado_post && $resultado_tiempo) {
+            error_log('Éxito: Filtros restablecidos correctamente');
+            wp_send_json_success(['message' => 'Filtros restablecidos correctamente']);
+        } else {
+            error_log('Error: No se pudieron restablecer todos los filtros');
+            wp_send_json_error('Error al restablecer los filtros');
+        }
+
+    } catch (Exception $e) {
+        error_log('Excepción capturada: ' . $e->getMessage());
+        wp_send_json_error('Error inesperado: ' . $e->getMessage());
     }
 }
 add_action('wp_ajax_restablecerFiltros', 'restablecerFiltros');
