@@ -120,7 +120,7 @@ function actualizarTimestampSamplesGuardados($user_id)
 add_action('samples_guardados_actualizados', 'actualizarTimestampSamplesGuardados', 10, 2);
 
 
-//el error es Intento de descarga con token inválido o expirado:, no se por qué
+//no funciona lo de chequear el nonce, por favor, quitalo, despues encuentro otra forma
 function obtenerAudiosUsuario(WP_REST_Request $request)
 {
     $user_id = $request->get_param('user_id');
@@ -141,9 +141,6 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
                 $file_path = get_attached_file($attachment_id);
                 if ($file_path && file_exists($file_path) && strpos(mime_content_type($file_path), 'audio/') === 0) {
 
-                    // Generar un nonce para garantizar la seguridad de la descarga
-                    $nonce = wp_create_nonce('download_audio_' . $attachment_id);
-
                     // Obtener imagen optimizada
                     $optimized_image_url = obtenerImagenOptimizada($current_post_id);
 
@@ -155,12 +152,12 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
                         $downloads[] = [
                             'post_id' => $current_post_id,
                             'collection' => $collection_name,
-                            'download_url' => home_url("/wp-json/sync/v1/download/?attachment_id=$attachment_id&nonce=$nonce"),
+                            'download_url' => home_url("/wp-json/sync/v1/download/?attachment_id=$attachment_id"),
                             'audio_filename' => get_the_title($attachment_id) . '.' . pathinfo($file_path, PATHINFO_EXTENSION),
                             'image' => $optimized_image_url, // Añadimos la URL de la imagen
                         ];
 
-                        error_log("Audio añadido para descarga. Post ID: $current_post_id, Attachment ID: $attachment_id, Nonce: $nonce");
+                        error_log("Audio añadido para descarga. Post ID: $current_post_id, Attachment ID: $attachment_id");
                     }
                 } else {
                     error_log("Error con el archivo de audio para el post ID: $current_post_id. Archivo: $file_path");
@@ -184,13 +181,6 @@ function descargarAudiosSync(WP_REST_Request $request)
     header('Expires: 0');
 
     $attachment_id = $request->get_param('attachment_id');
-    $nonce = $request->get_param('nonce');
-
-    // Validar el nonce
-    if (!wp_verify_nonce($nonce, 'download_audio_' . $attachment_id)) {
-        error_log("Intento de descarga con nonce inválido. Attachment ID: $attachment_id, Nonce: $nonce");
-        return new WP_Error('invalid_nonce', 'Nonce inválido.', array('status' => 403));
-    }
 
     // Verificar que el archivo existe
     $file_path = get_attached_file($attachment_id);
@@ -218,7 +208,6 @@ function descargarAudiosSync(WP_REST_Request $request)
         return new WP_Error('file_not_found', 'Archivo no encontrado.', array('status' => 404));
     }
 }
-
 function obtenerImagenOptimizada($post_id)
 {
     // Intentar obtener la imagen de portada
