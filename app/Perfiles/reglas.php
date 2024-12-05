@@ -16,54 +16,40 @@ add_action('template_redirect', function () {
 
 
 
-add_action('template_redirect', 'fix_profile_url_spaces');
-function fix_profile_url_spaces() {
-    // Obtener la URL actual completa
+add_action('template_redirect', 'handle_profile_redirects');
+function handle_profile_redirects() {
+    // Obtener la URL actual
     $current_url = $_SERVER['REQUEST_URI'];
     
-    // Verificar si la URL contiene '/perfil/' y espacios codificados
+    // Caso 1: Redirección de /perfil/ al perfil del usuario actual
+    if (rtrim($current_url, '/') === '/perfil' && is_user_logged_in()) {
+        $current_user = wp_get_current_user();
+        $clean_user_login = sanitize_title($current_user->user_login);
+        wp_redirect(home_url("/perfil/{$clean_user_login}/"), 301);
+        exit;
+    }
+    
+    // Caso 2: Corregir URLs con espacios en los perfiles
     if (strpos($current_url, '/perfil/') !== false && 
         (strpos($current_url, '%20') !== false || strpos($current_url, ' ') !== false)) {
         
-        // Decodificar la URL para manejar caracteres especiales
-        $decoded_url = urldecode($current_url);
-        
-        // Reemplazar espacios por guiones
-        $fixed_url = str_replace(array(' ', '%20'), '-', $decoded_url);
-        
-        // Asegurarse de que la URL está correctamente codificada
-        $fixed_url = rtrim($fixed_url, '/') . '/';
-        
-        // Redirigir a la URL corregida
-        wp_redirect(home_url($fixed_url), 301);
-        exit;
-    }
-}
-
-// Función adicional para manejar otros casos de redirección de perfil
-add_action('template_redirect', 'redirect_to_user_profile');
-function redirect_to_user_profile() {
-    if (is_user_logged_in() && strpos($_SERVER['REQUEST_URI'], '/perfil/') !== false) {
-        $current_user = wp_get_current_user();
-        $clean_user_login = sanitize_title($current_user->user_login);
-        
-        // Obtener la parte del slug después de /perfil/
-        $request_uri = $_SERVER['REQUEST_URI'];
-        $path_parts = explode('/perfil/', $request_uri);
+        // Obtener el nombre de usuario de la URL
+        $path_parts = explode('/perfil/', $current_url);
         if (isset($path_parts[1])) {
-            $current_slug = trim($path_parts[1], '/');
-            $expected_slug = $clean_user_login;
+            $username = trim(urldecode($path_parts[1]), '/');
             
-            if ($current_slug !== $expected_slug) {
-                wp_redirect(home_url("/perfil/{$expected_slug}/"), 301);
-                exit;
-            }
+            // Crear slug limpio
+            $clean_username = sanitize_title($username);
+            
+            // Redirigir a la URL limpia
+            wp_redirect(home_url("/perfil/{$clean_username}/"), 301);
+            exit;
         }
     }
 }
 
-// Opcional: Agregar soporte para limpieza de URLs con caracteres especiales
-add_filter('sanitize_title', 'custom_sanitize_title', 10, 3);
+// Función auxiliar para limpiar URLs
+add_filter('sanitize_title', 'custom_sanitize_title', 10, 1);
 function custom_sanitize_title($title) {
     // Convertir caracteres especiales y espacios a guiones
     $title = remove_accents($title);
