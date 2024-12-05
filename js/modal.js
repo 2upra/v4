@@ -192,100 +192,106 @@ function smooth() {
     modalManager.añadirModal('RS', '#formRs', ['.subiricono']);
 }
 
-function busquedaMenuMovil() {
-    // Obtener todos los elementos necesarios
-    const elementos = {
-        iconoBusqueda: document.getElementById('iconobusqueda'),
-        filtros: document.getElementById('filtros'),
-        overlay: document.getElementById('overlay'),
-        header: document.getElementById('header'),
-        endMenu: document.querySelector('.endmenu.MENUDGE')
-    };
+// Primero verificamos el ancho de la pantalla
+if (window.innerWidth <= 640) {
+    function busquedaMenuMovil() {
+        // Obtener todos los elementos necesarios
+        const elementos = {
+            iconoBusqueda: document.getElementById('iconobusqueda'),
+            filtros: document.getElementById('filtros'),
+            overlay: document.getElementById('overlay'),
+            header: document.getElementById('header'),
+            endMenu: document.querySelector('.endmenu.MENUDGE')
+        };
 
-    // Verificar si todos los elementos existen
-    const todosElementosExisten = Object.values(elementos).every(elemento => elemento !== null);
+        // Verificar si todos los elementos existen
+        const todosElementosExisten = Object.values(elementos).every(elemento => elemento !== null);
 
-    // Si falta algún elemento, salir de la función
-    if (!todosElementosExisten) {
-        console.warn('No se encontraron todos los elementos necesarios para el menú móvil');
-        return;
+        // Si falta algún elemento, salir de la función
+        if (!todosElementosExisten) {
+            console.warn('No se encontraron todos los elementos necesarios para el menú móvil');
+            return;
+        }
+
+        // Desestructurar los elementos para usar en el resto del código
+        const { iconoBusqueda, filtros, overlay, header, endMenu } = elementos;
+
+        // Verifica si la pantalla tiene menos de 640px
+        function actualizarVisibilidad() {
+            if (window.innerWidth <= 640) {
+                iconoBusqueda.style.display = 'flex';
+            } else {
+                iconoBusqueda.style.display = 'none';
+                cerrarModal();
+            }
+        }
+
+        // Función para mover el contenedor de búsqueda fuera de "endmenu"
+        function moverFiltrosAHeader() {
+            if (filtros && endMenu.contains(filtros)) {
+                const filtrosClone = filtros.cloneNode(true);
+                filtrosClone.classList.add('modal');
+                endMenu.removeChild(filtros);
+                header.appendChild(filtrosClone);
+                window.filtros = filtrosClone;
+                return filtrosClone;
+            }
+            return filtros;
+        }
+
+        // Función para devolver el contenedor de búsqueda a "endmenu"
+        function devolverFiltrosAEndMenu() {
+            const currentFiltros = document.getElementById('filtros');
+            if (currentFiltros && header.contains(currentFiltros)) {
+                const filtrosClone = currentFiltros.cloneNode(true);
+                filtrosClone.classList.remove('modal');
+                header.removeChild(currentFiltros);
+                endMenu.appendChild(filtrosClone);
+                window.filtros = filtrosClone;
+                return filtrosClone;
+            }
+            return currentFiltros;
+        }
+
+        // Abre el modal
+        function abrirModal() {
+            const movedFiltros = moverFiltrosAHeader();
+            if (movedFiltros) {
+                movedFiltros.style.display = 'flex';
+                overlay.style.display = 'block';
+            }
+        }
+
+        // Cierra el modal
+        function cerrarModal() {
+            const currentFiltros = document.getElementById('filtros');
+            if (currentFiltros) {
+                currentFiltros.style.display = 'none';
+                overlay.style.display = 'none';
+                devolverFiltrosAEndMenu();
+            }
+        }
+
+        // Evento de clic en el ícono de búsqueda
+        iconoBusqueda.addEventListener('click', () => {
+            const currentFiltros = document.getElementById('filtros');
+            if (currentFiltros.style.display === 'flex') {
+                cerrarModal();
+            } else {
+                abrirModal();
+            }
+        });
+
+        // Evento de clic en el overlay
+        overlay.addEventListener('click', cerrarModal);
+
+        // Ajustar visibilidad al cambiar el tamaño de la ventana
+        window.addEventListener('resize', actualizarVisibilidad);
+
+        // Configuración inicial
+        actualizarVisibilidad();
     }
 
-    // Desestructurar los elementos para usar en el resto del código
-    const { iconoBusqueda, filtros, overlay, header, endMenu } = elementos;
-
-    // Verifica si la pantalla tiene menos de 640px
-    function actualizarVisibilidad() {
-        if (window.innerWidth <= 640) {
-            iconoBusqueda.style.display = 'flex';
-        } else {
-            iconoBusqueda.style.display = 'none';
-            cerrarModal();
-        }
-    }
-
-    // Función para mover el contenedor de búsqueda fuera de "endmenu"
-    function moverFiltrosAHeader() {
-        if (filtros && endMenu.contains(filtros)) {
-            const filtrosClone = filtros.cloneNode(true);
-            filtrosClone.classList.add('modal');
-            endMenu.removeChild(filtros);
-            header.appendChild(filtrosClone);
-            window.filtros = filtrosClone;
-            return filtrosClone;
-        }
-        return filtros;
-    }
-
-    // Función para devolver el contenedor de búsqueda a "endmenu"
-    function devolverFiltrosAEndMenu() {
-        const currentFiltros = document.getElementById('filtros');
-        if (currentFiltros && header.contains(currentFiltros)) {
-            const filtrosClone = currentFiltros.cloneNode(true);
-            filtrosClone.classList.remove('modal');
-            header.removeChild(currentFiltros);
-            endMenu.appendChild(filtrosClone);
-            window.filtros = filtrosClone;
-            return filtrosClone;
-        }
-        return currentFiltros;
-    }
-
-    // Abre el modal
-    function abrirModal() {
-        const movedFiltros = moverFiltrosAHeader();
-        if (movedFiltros) {
-            movedFiltros.style.display = 'flex';
-            overlay.style.display = 'block';
-        }
-    }
-
-    // Cierra el modal
-    function cerrarModal() {
-        const currentFiltros = document.getElementById('filtros');
-        if (currentFiltros) {
-            currentFiltros.style.display = 'none';
-            overlay.style.display = 'none';
-            devolverFiltrosAEndMenu();
-        }
-    }
-
-    // Evento de clic en el ícono de búsqueda
-    iconoBusqueda.addEventListener('click', () => {
-        const currentFiltros = document.getElementById('filtros');
-        if (currentFiltros.style.display === 'flex') {
-            cerrarModal();
-        } else {
-            abrirModal();
-        }
-    });
-
-    // Evento de clic en el overlay
-    overlay.addEventListener('click', cerrarModal);
-
-    // Ajustar visibilidad al cambiar el tamaño de la ventana
-    window.addEventListener('resize', actualizarVisibilidad);
-
-    // Configuración inicial
-    actualizarVisibilidad();
+    // Ejecutar la función
+    busquedaMenuMovil();
 }
