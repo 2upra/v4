@@ -18,16 +18,36 @@ add_action('template_redirect', function () {
 
 // Redirigir a la página de perfil del usuario actual
 add_action('template_redirect', 'redirect_to_user_profile');
-function redirect_to_user_profile()
-{
+function redirect_to_user_profile() {
     if (is_user_logged_in() && is_page('perfil')) {
         $current_user = wp_get_current_user();
 
         // Generar un slug limpio a partir del user_login
         $clean_user_login = sanitize_title($current_user->user_login);
 
+        // Redirigir al perfil limpio
         wp_redirect(site_url('/perfil/' . $clean_user_login));
         exit;
+    }
+}
+
+add_action('template_redirect', 'fix_profile_url_spaces');
+function fix_profile_url_spaces() {
+    if (is_page('perfil')) {
+        global $wp;
+
+        // Obtener la URL actual
+        $current_url = home_url(add_query_arg(array(), $wp->request));
+
+        // Detectar si la URL contiene espacios codificados (%20)
+        if (strpos($current_url, '%20') !== false) {
+            // Reemplazar los espacios codificados (%20) por guiones (-)
+            $fixed_url = str_replace('%20', '-', $current_url);
+
+            // Redirigir a la URL corregida
+            wp_redirect($fixed_url, 301); // Redirección permanente
+            exit;
+        }
     }
 }
 
