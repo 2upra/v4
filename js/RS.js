@@ -754,9 +754,10 @@ function selectorFanArtista() {
     // Listener para 'fancheck'
     fancheck.addEventListener('change', function () {
         if (!fancheck.checked && !artistacheck.checked) {
-            // Si ambos quedan sin seleccionar, forzamos a que este checkbox permanezca seleccionado
+            // Si ambos quedan sin seleccionar, cancelamos la acción y volvemos a marcar fancheck
             fancheck.checked = true;
         } else if (fancheck.checked) {
+            // Si fancheck está marcado, desmarcamos artistacheck
             artistacheck.checked = false;
         }
         updateStyles(fancheck);
@@ -766,9 +767,10 @@ function selectorFanArtista() {
     // Listener para 'artistacheck'
     artistacheck.addEventListener('change', function () {
         if (!artistacheck.checked && !fancheck.checked) {
-            // Si ambos quedan sin seleccionar, forzamos a que este checkbox permanezca seleccionado
+            // Si ambos quedan sin seleccionar, cancelamos la acción y volvemos a marcar artistacheck
             artistacheck.checked = true;
         } else if (artistacheck.checked) {
+            // Si artistacheck está marcado, desmarcamos fancheck
             fancheck.checked = false;
         }
         updateStyles(artistacheck);
