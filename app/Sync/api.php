@@ -13,6 +13,7 @@ add_action('rest_api_init', function () {
             'token' => array('required' => true, 'type' => 'string'),
             'nonce' => array('required' => true, 'type' => 'string'),
         ),
+        'permission_callback' => '__return_true', // Permitir acceso público
     ));
     register_rest_route('1/v1', '/syncpre/(?P<user_id>\d+)/check', array(
         'methods'  => 'GET',
@@ -25,6 +26,14 @@ add_action('rest_api_init', function () {
         'permission_callback' => 'chequearElectron',
     ));
 });
+
+function chequearElectron()
+{
+    if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
+        return true;
+    }
+    return new WP_Error('forbidden', 'Acceso no autorizado', array('status' => 403));
+}
 
 
 function handle_info_usuario(WP_REST_Request $request)
@@ -45,16 +54,6 @@ function handle_info_usuario(WP_REST_Request $request)
 }
 
 // Función de permiso: valida la cabecera X-Electron-App
-function chequearElectron()
-{
-    //error_log("Iniciando chequearElectron...");
-    if (isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true') {
-        //error_log("Cabecera válida: " . $_SERVER['HTTP_X_ELECTRON_APP']);
-        return true;
-    }
-    //error_log("Cabecera inválida o ausente.");
-    return new WP_Error('forbidden', 'Acceso no autorizado', array('status' => 403));
-}
 
 
 function verificarCambiosAudios(WP_REST_Request $request)
