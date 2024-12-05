@@ -89,7 +89,7 @@ function obtenerDatosFeed($userId)
         }
 
         // Agregar un log para verificar el contenido de $meta_roles
-        error_log("[obtenerDatosFeed] Debug: meta_roles generado: " . print_r($meta_roles, true));
+        //error_log("[obtenerDatosFeed] Debug: meta_roles generado: " . print_r($meta_roles, true));
 
         // Obtener likes
         $sql_likes = "
