@@ -150,6 +150,7 @@ function ajaxCargarNotificaciones()
 }
 add_action('wp_ajax_cargar_notificaciones', 'ajaxCargarNotificaciones');
 
+//a pesar que la ultina notificacion esta marcada como visto, muestra de color rojo de igual manera, no se que esa fallando, el post type es valido, 
 function iconoNotificaciones()
 {
     $user_id = get_current_user_id(); // Obtener el ID del usuario actual
@@ -157,22 +158,24 @@ function iconoNotificaciones()
     // Argumentos de la consulta
     $args = array(
         'post_type' => 'notificaciones',
-        'posts_per_page' => 1, // Solo necesitamos la última notificación
+        'posts_per_page' => 1,
         'meta_query' => array(
             'relation' => 'OR',
             array(
                 'key' => 'visto',
-                'compare' => 'NOT EXISTS', // La meta no existe (no ha sido vista)
+                'compare' => 'NOT EXISTS', // No ha sido visto (meta no existe)
             ),
             array(
                 'key' => 'visto',
                 'value' => '1',
-                'compare' => '!=', // No ha sido vista (tiene un valor distinto de 1)
+                'compare' => '!=', // No ha sido visto (valor distinto de 1)
             ),
         ),
-        'author' => $user_id, // Notificaciones del usuario actual
+        'author' => $user_id,
+        'orderby' => 'date', // Ordenar por fecha de creación
+        'order' => 'DESC',  // La más reciente primero
     );
-
+    
     // Crear la consulta
     $notificaciones_query = new WP_Query($args);
     $hay_no_vistas = $notificaciones_query->have_posts() ? true : false;
