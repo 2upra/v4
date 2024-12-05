@@ -751,11 +751,21 @@ function selectorFanArtista() {
         }
     }
 
+    // Asegurarse de que al menos uno esté seleccionado inicialmente
+    if (!fancheck.checked && !artistacheck.checked) {
+        fancheck.checked = true;
+        updateStyles(fancheck);
+    }
+
     // Listener para 'fancheck'
     fancheck.addEventListener('change', function () {
         if (fancheck.checked) {
             artistacheck.checked = false;
             updateStyles(artistacheck);
+        } else if (!artistacheck.checked) {
+            // Si se intenta deseleccionar y el otro no está marcado,
+            // mantener este marcado
+            fancheck.checked = true;
         }
         updateStyles(fancheck);
     });
@@ -765,6 +775,10 @@ function selectorFanArtista() {
         if (artistacheck.checked) {
             fancheck.checked = false;
             updateStyles(fancheck);
+        } else if (!fancheck.checked) {
+            // Si se intenta deseleccionar y el otro no está marcado,
+            // mantener este marcado
+            artistacheck.checked = true;
         }
         updateStyles(artistacheck);
     });
