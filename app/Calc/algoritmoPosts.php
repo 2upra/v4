@@ -95,7 +95,7 @@ function calcularPuntosPostBatch(
 
     return $posts_puntos;
 }
-
+//aqui en esta parte dice [05-Dec-2024 02:05:36 UTC] PHP Warning:  Undefined variable $puntosArtistaFan in /var/www/wordpress/wp-content/themes/2upra3v/app/Calc/algoritmoPosts.php
 function calcularPuntosParaPost(
     $post_id,
     $post_data,
@@ -147,26 +147,21 @@ function calcularPuntosParaPost(
     $metaVerificado = isset($meta_data[$post_id]['Verificado']) && ($meta_data[$post_id]['Verificado'] === '1');
     $metaPostAut = isset($meta_data[$post_id]['postAut']) && ($meta_data[$post_id]['postAut'] === '1');
 
-    // Access meta roles (artista/fan)
     $meta_roles = $datos['meta_roles'];
 
-    // chat gpt siento que lo de calcular funtos artistas/fan no esta funcionando, o sea no se si falta algo mas (si se suman o resta en esta parte ya lo verifique pero calcularPuntosFinales lo procesa?)
     if (!isset($meta_roles[$post_id]) || !is_array($meta_roles[$post_id])) {
-        error_log("Post ID {$post_id} no tiene meta roles definidos o no es un array.");
         $meta_roles[$post_id] = ['artista' => false, 'fan' => false];
     }
 
     $postParaArtistas = !empty($meta_roles[$post_id]['artista']);
     $postParaFans = !empty($meta_roles[$post_id]['fan']);
 
+    $puntosArtistaFan = 0;
 
     if ($tipoUsuario === 'Fan') {
         $puntosArtistaFan = $postParaFans ? 999 : 0;
-        error_log("Post ID {$post_id}: TipoUsuario=Fan, puntosArtistaFan={$puntosArtistaFan}");
     } elseif ($tipoUsuario === 'Artista') {
         $puntosArtistaFan = $postParaFans ? -50 : 0;
-        error_log("Post ID {$post_id}: TipoUsuario=Artista, puntosArtistaFan={$puntosArtistaFan}");
-    } else {
     }
     // Calculate puntosFinal
     $puntosFinal = calcularPuntosFinales(
