@@ -207,7 +207,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
         $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario);
 
-        // Solo aplicarFiltrosUsuario si el tipoUsuario no es 'fan'
         if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
             if ($tipoUsuario !== 'Fan') {
                 $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
@@ -551,8 +550,9 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
                 error_log("[construirQueryArgs] Error: Falló el filtrado por identifier: " . $identifier);
             }
         }
-        //y aqui necesito que si tipoUsuario es Fan, no usar ordenamientoQuery
-        if ($args['post_type'] === 'social_post') {
+
+        // Only apply ordenamientoQuery if post_type is social_post AND filtro is not 'rola'
+        if ($args['post_type'] === 'social_post' && (!isset($args['filtro']) || $args['filtro'] !== 'rola')) {
             $query_args = ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts, $tipoUsuario);
             if (!$query_args) {
                 error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
