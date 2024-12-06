@@ -271,37 +271,29 @@ add_action('rest_api_init', function () {
     register_rest_route('custom/v1', '/save-token', array(
         'methods' => 'POST',
         'callback' => 'save_firebase_token',
-        'permission_callback' => function () {
-            return is_user_logged_in();
-        },
+        'permission_callback' => '__return_true', // Permitir acceso sin autenticación
     ));
 });
 
 function save_firebase_token($request) {
-    $user_id = get_current_user_id();
-    error_log('[Firebase] Usuario actual: ' . $user_id);
+    $user_id = $request->get_param('userId'); // Obtener el userId desde la solicitud
 
-    if (!$user_id) {
-        return new WP_Error('not_logged_in', 'El usuario no está autenticado.', array('status' => 401));
+    if (!$user_id || !get_userdata($user_id)) {
+        return new WP_Error('invalid_user', 'El usuario no existe o el ID es inválido.', array('status' => 400));
     }
 
     $firebase_token = sanitize_text_field($request->get_param('token'));
     if (!$firebase_token) {
-        error_log('[Firebase] El token es requerido para el usuario ' . $user_id);
         return new WP_Error('no_token', 'El token es requerido.', array('status' => 400));
     }
 
     $updated = update_user_meta($user_id, 'firebase_token', $firebase_token);
     if (!$updated) {
-        error_log('[Firebase] Fallo al guardar el token para el usuario ' . $user_id);
         return new WP_Error('save_failed', 'No se pudo guardar el token.', array('status' => 500));
     }
 
-    error_log('[Firebase] Token guardado correctamente para el usuario ' . $user_id);
     return array('success' => true, 'message' => 'Token guardado correctamente.');
 }
-
-
 /*
 function send_push_notification($user_id, $title, $message) {
     $serviceAccountFile = '/var/www/wordpress/private/upra-b6879-firebase-adminsdk-w9xma-5f138a5b75.json';
