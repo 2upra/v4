@@ -294,7 +294,7 @@ function save_firebase_token($request) {
 
     return array('success' => true, 'message' => 'Token guardado correctamente.');
 }
-
+/*
 function send_push_notification($user_id, $title, $message) {
     $serviceAccountFile = '/var/www/wordpress/private/upra-b6879-firebase-adminsdk-w9xma-5f138a5b75.json';
 
@@ -349,3 +349,4 @@ add_action('init', function () {
         error_log('[Firebase] Resultado de la notificación: ' . $result);
     }
 });
+*/
