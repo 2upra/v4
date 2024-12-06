@@ -10,7 +10,6 @@ function add_pro_modal_to_footer()
         <p class="beneficiosplan">+ Acceso anticipado</p>
         <p class="beneficiosplan">+ Contenido exclusivo</p>
         <p class="beneficiosplan">+ Reconocimiento</p>
-        <p class="beneficiosplan">+ Acciones mensuales del proyecto</p>
         <p class="beneficiosplan">+ Sin limites de descarga</p>
         <p class="beneficiosplan">+ Sin limites de almacenamiento</p>
         <button class="DZYBQD MQKUSE">Suscribirte</button>';
