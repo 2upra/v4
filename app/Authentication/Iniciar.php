@@ -263,13 +263,16 @@ add_action('wp_head', function () {
     }
 });
 
-// Agregar el token de Firebase como un campo de usuario
+
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging;
+
 add_action('rest_api_init', function () {
     register_rest_route('custom/v1', '/save-token', array(
         'methods' => 'POST',
         'callback' => 'save_firebase_token',
         'permission_callback' => function () {
-            return is_user_logged_in(); // Asegúrate de que solo usuarios logueados puedan guardar un token
+            return is_user_logged_in();
         },
     ));
 });
@@ -279,35 +282,44 @@ function save_firebase_token($request) {
     $firebase_token = sanitize_text_field($request->get_param('token'));
 
     if (!$firebase_token) {
+        error_log('[Firebase] El token es requerido para el usuario ' . $user_id);
         return new WP_Error('no_token', 'El token es requerido.', array('status' => 400));
     }
 
-    // Guardar el token en el meta del usuario
-    update_user_meta($user_id, 'firebase_token', $firebase_token);
+    $updated = update_user_meta($user_id, 'firebase_token', $firebase_token);
 
+    if (!$updated) {
+        error_log('[Firebase] Fallo al guardar el token para el usuario ' . $user_id);
+        return new WP_Error('save_failed', 'No se pudo guardar el token.', array('status' => 500));
+    }
+
+    error_log('[Firebase] Token guardado correctamente para el usuario ' . $user_id);
     return array('success' => true, 'message' => 'Token guardado correctamente.');
 }
 
-use Kreait\Firebase\Factory;
-use Kreait\Firebase\Messaging;
-
-
 function send_push_notification($user_id, $title, $message) {
-    // Ruta al archivo JSON
     $serviceAccountFile = '/var/www/wordpress/private/upra-b6879-firebase-adminsdk-w9xma-5f138a5b75.json';
 
-    // Inicializar Firebase
-    $factory = (new Factory)->withServiceAccount($serviceAccountFile);
-    $messaging = $factory->createMessaging();
+    if (!file_exists($serviceAccountFile)) {
+        error_log('[Firebase] No se encontró el archivo de credenciales en ' . $serviceAccountFile);
+        return new WP_Error('no_service_account', 'No se encontró el archivo de credenciales.', array('status' => 500));
+    }
 
-    // Obtener el token del usuario desde la base de datos
+    try {
+        $factory = (new Factory)->withServiceAccount($serviceAccountFile);
+        $messaging = $factory->createMessaging();
+    } catch (\Exception $e) {
+        error_log('[Firebase] Error al inicializar Firebase: ' . $e->getMessage());
+        return new WP_Error('firebase_init_failed', 'Error al inicializar Firebase.', array('status' => 500));
+    }
+
     $firebase_token = get_user_meta($user_id, 'firebase_token', true);
 
     if (!$firebase_token) {
-        return new WP_Error('no_token', 'El usuario no tiene un token de Firebase.', ['status' => 404]);
+        error_log('[Firebase] El usuario ' . $user_id . ' no tiene un token de Firebase.');
+        return new WP_Error('no_token', 'El usuario no tiene un token de Firebase.', array('status' => 404));
     }
 
-    // Construir el mensaje
     $messageData = [
         'token' => $firebase_token,
         'notification' => [
@@ -318,17 +330,24 @@ function send_push_notification($user_id, $title, $message) {
 
     try {
         $messaging->send($messageData);
+        error_log('[Firebase] Notificación enviada al usuario ' . $user_id);
         return 'Notificación enviada con éxito.';
-    } catch (\Kreait\Firebase\Exception\MessagingException $e) {
+    } catch (MessagingException $e) {
+        error_log('[Firebase] Error al enviar la notificación: ' . $e->getMessage());
         return 'Error al enviar la notificación: ' . $e->getMessage();
     }
 }
 
 add_action('init', function () {
-    $user_id = 355; // ID del usuario a notificar
+    $user_id = 355;
     $title = 'Hola!';
     $message = 'Esta es una notificación personalizada.';
 
-    $response = send_push_notification($user_id, $title, $message);
+    $result = send_push_notification($user_id, $title, $message);
 
+    if (is_wp_error($result)) {
+        error_log('[Firebase] Error al enviar notificación para el usuario ' . $user_id . ': ' . $result->get_error_message());
+    } else {
+        error_log('[Firebase] Resultado de la notificación: ' . $result);
+    }
 });
