@@ -12,7 +12,6 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
         return false;
     }
 
-    // Sanitiza el contenido de la notificación
     $contenidoSanitizado = wp_kses($contenido, 'post');
     $metaSolicitud = is_bool($metaSolicitud) ? $metaSolicitud : false;
     $postIdRelacionado = is_numeric($postIdRelacionado) ? intval($postIdRelacionado) : 0;
@@ -39,15 +38,22 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
         return false;
     }
 
-    // Si la URL no se proporcionó, usar get_permalink($postId)
+    // Si la URL no se proporcionó, usar la página de inicio del sitio
     if ($url === null) {
-        $url = get_permalink($postId);
+        $url = home_url(); // Página de inicio
+    }
+
+    // Obtener el token de Firebase del usuario receptor
+    $firebase_token = get_user_meta($usuarioReceptor, 'firebase_token', true);
+
+    // Verificar si el usuario tiene un token de Firebase
+    if (empty($firebase_token)) {
+        return $postId;
     }
 
     // Enviar notificación push
     $titulo = $Titulo;
     $mensaje = $contenidoSanitizado;
-
     $resultadoPush = send_push_notification($usuarioReceptor, $titulo, $mensaje, $url);
 
     // Registrar en el log el resultado del envío
