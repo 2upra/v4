@@ -1,4 +1,8 @@
 <?
+
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging;
+
 function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false, $postIdRelacionado = 0, $Titulo = 'Nueva notificación', $url = null)
 {
     // Verifica que el usuario receptor sea válido
