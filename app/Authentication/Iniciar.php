@@ -255,3 +255,32 @@ function verify_token_endpoint(WP_REST_Request $request)
         return new WP_REST_Response(array('message' => 'Token inválido', 'status' => 'invalid'), 401);
     }
 }
+
+add_action('wp_head', function () {
+    if (is_user_logged_in()) {
+        $user_id = get_current_user_id();
+        echo "<script>window.userId = {$user_id};</script>";
+    }
+});
+
+add_action('wp_ajax_guardar_token_usuario', 'funcionGuardarTokenUsuario');
+add_action('wp_ajax_nopriv_guardar_token_usuario', 'funcionGuardarTokenUsuario');
+
+function funcionGuardarTokenUsuario() {
+    $token = $_POST['token'];
+    $userId = $_POST['user_id'];
+    if(is_user_logged_in()){
+          if ($userId && $token ) {
+            update_user_meta($userId, 'tokenFirebase', $token);
+            echo 'Token guardado para el usuario ' . $userId;
+         } else {
+            echo 'Error: Token o User ID no válidos.';
+            error_log('Error: Token o User ID no válidos al guardar el token. Token: ' . $token . ', User ID: ' . $userId);
+         }
+    }else{
+         error_log('Error: Usuario no logueado intenta guardar un token. Token: ' . $token . ', User ID: ' . $userId);
+         echo 'Error: Usuario no logueado';
+    }
+    wp_die();
+}
+
