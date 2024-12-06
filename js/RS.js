@@ -11,7 +11,7 @@ const nombreRolaData = {};
 
 let uploadInProgressCount = 0;
 // Logs
-//let enablelogRS = true;
+let enablelogRS = true;
 //const //logRS = enablelogRS ? console.log : function () {};
 let waveSurferInstances = {};
 
@@ -242,7 +242,9 @@ async function envioRs() {
 }
 
 function subidaRs() {
-    const ids = ['botonAudio', 'botonImagen', 'botonArchivo'];
+    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs', 'ppp3'];
+
+    // Obtiene todos los elementos con los IDs indicados
     const elements = ids.reduce((acc, id) => {
         const el = document.getElementById(id);
         if (!el) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
@@ -250,45 +252,250 @@ function subidaRs() {
         return acc;
     }, {});
 
-    const { botonAudio, botonImagen, botonArchivo } = elements;
+    // Verifica si faltan elementos y termina la ejecución si es así
+    const missingElements = Object.entries(elements)
+        .filter(([_, el]) => !el)
+        .map(([id]) => id);
 
-    // Si alguno de los botones no existe, salimos de la función
-    if (!botonAudio || !botonImagen || !botonArchivo) return;
+    if (missingElements.length) {
+        console.error(`Faltan elementos en el DOM: ${missingElements.join(', ')}`);
+        return;
+    }
 
-    // Función para abrir el selector de archivos
+    const { formRs, botonAudio, botonImagen, botonArchivo } = elements;
+
+    /**
+     * Abre un selector de archivos para un tipo específico
+     * @param {string} tipoArchivo - Tipo de archivo permitido (e.g., 'audio/*', 'image/*', '*')
+     */
     const abrirSelectorArchivos = (tipoArchivo) => {
-        console.log(`Abriendo selector de archivos para tipo: ${tipoArchivo}`);
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = tipoArchivo;
 
         input.onchange = (event) => {
-            const archivo = event.target.files[0];
-            if (archivo) {
-                console.log(`Archivo seleccionado: ${archivo.name}`);
-            } else {
-                console.log('No se seleccionó ningún archivo.');
-            }
+            console.log('Archivo seleccionado:', event.target.files[0]);
+            inicialSubida(event); // Llama a la función que maneja la subida
         };
 
-        input.click();
+        input.click(); // Simula el clic para abrir el selector
     };
 
-    // Asociar eventos a los botones
+    // Event listeners para los botones
     botonArchivo.addEventListener('click', () => {
         console.log('Botón Archivo clickeado.');
-        abrirSelectorArchivos('*');
+        abrirSelectorArchivos('*'); // Permite cualquier archivo
     });
 
     botonAudio.addEventListener('click', () => {
         console.log('Botón Audio clickeado.');
-        abrirSelectorArchivos('audio/*');
+        abrirSelectorArchivos('audio/*'); // Permite solo archivos de audio
     });
 
     botonImagen.addEventListener('click', () => {
         console.log('Botón Imagen clickeado.');
-        abrirSelectorArchivos('image/*');
+        abrirSelectorArchivos('image/*'); // Permite solo imágenes
     });
+
+    // Manejo de clics en el formulario para elementos específicos
+    formRs.addEventListener('click', (event) => {
+        const clickedElement = event.target.closest('.previewAudio, .previewImagen');
+        if (clickedElement) {
+            const tipoArchivo = clickedElement.classList.contains('previewAudio') ? 'audio/*' : 'image/*';
+            console.log(`Elemento clickeado: ${clickedElement.className}, tipo de archivo: ${tipoArchivo}`);
+            abrirSelectorArchivos(tipoArchivo);
+        }
+    });
+
+    // Manejo de eventos de arrastrar y soltar (drag & drop)
+    ['dragover', 'dragleave', 'drop'].forEach((eventName) => {
+        formRs.addEventListener(eventName, (e) => {
+            e.preventDefault();
+
+            if (eventName === 'dragover') {
+                formRs.style.backgroundColor = '#e9e9e9'; // Cambia el fondo al arrastrar
+            } else if (eventName === 'dragleave') {
+                formRs.style.backgroundColor = ''; // Restaura el fondo al salir
+            } else if (eventName === 'drop') {
+                console.log('Archivo arrastrado y soltado.');
+                inicialSubida(e);
+            }
+        });
+    });
+
+    const inicialSubida = event => {
+        event.preventDefault();
+        const file = event.dataTransfer?.files[0] || event.target.files[0];
+
+        if (!file) return;
+        if (file.size > 50 * 1024 * 1024) return alert('El archivo no puede superar los 50 MB.');
+
+        file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
+    };
+
+    const actualizarFlexDirection = () => {
+        const previewsFormDiv = document.querySelector('.previewsForm.NGEESM.RS');
+
+        if (previewsFormDiv) {
+            if (audiosData.length > 1) {
+                previewsFormDiv.style.flexDirection = 'column';
+            } else {
+                previewsFormDiv.style.flexDirection = '';
+            }
+        }
+    };
+
+    const musicCheckbox = document.getElementById('musiccheck');
+    const actualizarCamposNombre = () => {
+        const cantidadAudios = audiosData.length;
+        const mostrarCampos = musicCheckbox.checked && cantidadAudios > 1;
+
+        audiosData.forEach(audio => {
+            const inputNombre = document.getElementById(`nombre-${audio.tempId}`);
+            if (inputNombre) {
+                inputNombre.style.display = mostrarCampos ? 'block' : 'none';
+            }
+        });
+    };
+
+    musicCheckbox.addEventListener('change', actualizarCamposNombre);
+
+    const subidaAudio = async file => {
+        try {
+            alert(`Audio subido: ${file.name}`);
+            previewAudio.style.display = 'block';
+            ppp3.style.display = 'flex';
+            opciones.style.display = 'flex';
+            const tempId = `temp-${Date.now()}`;
+            const progressBarId = waveAudio(file, tempId);
+            audiosData.push({tempId, audioUrl: null, audioId: null});
+            actualizarFlexDirection();
+            const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
+            const index = audiosData.findIndex(audio => audio.tempId === tempId);
+            if (index !== -1) {
+                audiosData[index].audioUrl = fileUrl;
+                audiosData[index].audioId = fileId;
+                const waveformContainer = document.querySelector(`[data-temp-id="${tempId}"]`);
+                if (waveformContainer) {
+                    waveformContainer.setAttribute('data-audio-url', fileUrl);
+                }
+            }
+            if (audiosData.length > 30) {
+                alert('Ya has subido el límite máximo de 30 audios.');
+            }
+            actualizarCamposNombre();
+        } catch (error) {
+            alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
+        }
+    };
+
+    const waveAudio = (file, tempId) => {
+        const reader = new FileReader(),
+            audioContainerId = `waveform-container-${Date.now()}`,
+            progressBarId = `progress-${Date.now()}`;
+
+        reader.onload = e => {
+            const newWaveform = document.createElement('div');
+            newWaveform.innerHTML = `
+            <div id="${audioContainerId}" class="waveform-wrapper">
+                <div class="waveform-container without-image" data-temp-id="${tempId}">
+                    <div class="waveform-loading" style="display: none;">Cargando...</div>
+                    <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
+                    <div class="file-name">${file.name}</div>
+                    <button class="delete-waveform">Eliminar</button>
+                </div>
+                <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
+                    <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
+                </div>
+                <!-- Campo de texto para el nombre del audio -->
+                <input type="text" id="nombre-${tempId}" class="nombreAudioRs" placeholder="Titulo" style="display: none; margin-top: 5px; width: 100%;">
+            </div>`;
+
+            previewAudio.appendChild(newWaveform);
+            inicializarWaveform(audioContainerId, e.target.result);
+            const deleteButton = newWaveform.querySelector('.delete-waveform');
+            deleteButton.addEventListener('click', event => {
+                event.stopPropagation();
+                eliminarWaveform(audioContainerId, tempId);
+            });
+
+            // Actualiza los campos de nombre después de agregar un nuevo audio
+            actualizarCamposNombre();
+        };
+
+        reader.readAsDataURL(file);
+        return progressBarId;
+    };
+
+    const eliminarWaveform = (containerId, tempId) => {
+        const wrapper = document.getElementById(containerId);
+
+        if (wrapper) {
+            wrapper.parentNode.removeChild(wrapper);
+            if (waveSurferInstances[containerId]) {
+                waveSurferInstances[containerId].unAll();
+                if (waveSurferInstances[containerId].isPlaying()) {
+                    waveSurferInstances[containerId].stop();
+                }
+                waveSurferInstances[containerId].destroy();
+                delete waveSurferInstances[containerId];
+            }
+        }
+
+        const index = audiosData.findIndex(audio => audio.tempId === tempId);
+        if (index !== -1) {
+            audiosData.splice(index, 1);
+        }
+
+        if (audiosData.length === 0) {
+            previewAudio.style.display = 'none';
+            ppp3.style.display = 'none';
+        }
+
+        actualizarCamposNombre();
+        actualizarFlexDirection();
+    };
+
+    const subidaArchivo = async file => {
+        subidaArchivoEnProgreso = true;
+        previewArchivo.style.display = 'block';
+        previewArchivo.innerHTML = `<div class="file-name">${file.name}</div><div id="barraProgresoFile" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>`;
+        try {
+            alert(`Archivo subido: ${file.name}`);
+            const {fileUrl, fileId} = await subidaRsBackend(file, 'barraProgresoFile');
+            archivoUrl = fileUrl;
+            archivoId = fileId;
+            subidaArchivoEnProgreso = false;
+        } catch {
+            alert('Hubo un problema al cargar el Archivo. Inténtalo de nuevo.');
+            subidaArchivoEnProgreso = false;
+        }
+    };
+
+    const subidaImagen = async file => {
+        subidaImagenEnProgreso = true;
+        opciones.style.display = 'flex';
+        updatePreviewImagen(file);
+        try {
+            alert(`Imagen subida: ${file.name}`);
+            const {fileUrl, fileId} = await subidaRsBackend(file, 'barraProgresoImagen');
+            imagenUrl = fileUrl;
+            imagenId = fileId;
+            subidaImagenEnProgreso = false;
+        } catch {
+            alert('Hubo un problema al cargar la Imagen. Inténtalo de nuevo.');
+            subidaImagenEnProgreso = false;
+        }
+    };
+
+    const updatePreviewImagen = file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            previewImagen.innerHTML = `<img src="${e.target.result}" alt="Preview" style="width: 100%; height: 100%; aspect-ratio: 1 / 1; object-fit: cover;">`;
+            previewImagen.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    };
 }
 
 async function subidaRsBackend(file, progressBarId) {
