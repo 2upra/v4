@@ -397,6 +397,7 @@ function subidaRs() {
     const subidaArchivo = async file => {
         subidaArchivoEnProgreso = true;
         previewArchivo.style.display = 'block';
+        ppp3.style.display = 'flex';
         previewArchivo.innerHTML = `<div class="file-name">${file.name}</div><div id="barraProgresoFile" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>`;
         try {
             alert(`Archivo subido: ${file.name}`);
@@ -413,6 +414,7 @@ function subidaRs() {
     const subidaImagen = async file => {
         subidaImagenEnProgreso = true;
         opciones.style.display = 'flex';
+        ppp3.style.display = 'flex';
         updatePreviewImagen(file);
         try {
             alert(`Imagen subida: ${file.name}`);
