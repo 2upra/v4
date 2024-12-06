@@ -263,24 +263,74 @@ add_action('wp_head', function () {
     }
 });
 
-add_action('wp_ajax_guardar_token_usuario', 'funcionGuardarTokenUsuario');
-add_action('wp_ajax_nopriv_guardar_token_usuario', 'funcionGuardarTokenUsuario');
+// Agregar el token de Firebase como un campo de usuario
+add_action('rest_api_init', function () {
+    register_rest_route('custom/v1', '/save-token', array(
+        'methods' => 'POST',
+        'callback' => 'save_firebase_token',
+        'permission_callback' => function () {
+            return is_user_logged_in(); // Asegúrate de que solo usuarios logueados puedan guardar un token
+        },
+    ));
+});
 
-function funcionGuardarTokenUsuario() {
-    $token = $_POST['token'];
-    $userId = $_POST['user_id'];
-    if(is_user_logged_in()){
-          if ($userId && $token ) {
-            update_user_meta($userId, 'tokenFirebase', $token);
-            echo 'Token guardado para el usuario ' . $userId;
-         } else {
-            echo 'Error: Token o User ID no válidos.';
-            error_log('Error: Token o User ID no válidos al guardar el token. Token: ' . $token . ', User ID: ' . $userId);
-         }
-    }else{
-         error_log('Error: Usuario no logueado intenta guardar un token. Token: ' . $token . ', User ID: ' . $userId);
-         echo 'Error: Usuario no logueado';
+function save_firebase_token($request) {
+    $user_id = get_current_user_id();
+    $firebase_token = sanitize_text_field($request->get_param('token'));
+
+    if (!$firebase_token) {
+        return new WP_Error('no_token', 'El token es requerido.', array('status' => 400));
     }
-    wp_die();
+
+    // Guardar el token en el meta del usuario
+    update_user_meta($user_id, 'firebase_token', $firebase_token);
+
+    return array('success' => true, 'message' => 'Token guardado correctamente.');
 }
 
+function send_push_notification($user_id, $title, $message) {
+    // Obtener el token de Firebase del usuario
+    $firebase_token = get_user_meta($user_id, 'firebase_token', true);
+
+    if (!$firebase_token) {
+        return new WP_Error('no_token', 'El usuario no tiene un token de Firebase.', array('status' => 404));
+    }
+
+    // Datos para enviar a Firebase
+    $fields = array(
+        'to' => $firebase_token,
+        'notification' => array(
+            'title' => $title,
+            'body' => $message,
+        ),
+    );
+
+    // Configuración de la solicitud
+    $headers = array(
+        'Authorization: key=YOUR_SERVER_KEY', // Sustituye con tu clave de servidor de Firebase
+        'Content-Type: application/json',
+    );
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send');
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
+
+    $result = curl_exec($ch);
+    curl_close($ch);
+
+    return $result;
+}
+
+add_action('init', function () {
+    $user_id = 355; // ID del usuario a notificar
+    $title = 'Hola!';
+    $message = 'Esta es una notificación personalizada.';
+
+    $response = send_push_notification($user_id, $title, $message);
+    error_log($response);
+
+});

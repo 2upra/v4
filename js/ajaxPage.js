@@ -170,20 +170,3 @@
         window.addEventListener('popstate', () => load(location.href, false));
     });
 })();
-
-function guardarToken(token) {
-    if (window.userId) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/wp-admin/admin-ajax.php', true);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 400) {
-                console.log(xhr.responseText);
-            }
-        };
-        xhr.onerror = function() {
-           console.error('Error al enviar el token.');
-        };
-        xhr.send('action=guardar_token_usuario&token=' + token + '&user_id=' + window.userId);
-    }
-}
