@@ -1,6 +1,5 @@
 <?
-
-function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false, $postIdRelacionado = 0)
+function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false, $postIdRelacionado = 0, $Titulo = 'Nueva notificación', $url = null)
 {
     // Verifica que el usuario receptor sea válido
     $usuario = get_user_by('ID', $usuarioReceptor);
@@ -17,7 +16,7 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
     // Crear el post de la notificación
     $nuevoPost = [
         'post_type'   => 'notificaciones',
-        'post_title'   => 'Nueva notificación',
+        'post_title'   => $Titulo,
         'post_content' => $contenidoSanitizado,
         'post_author'  => $usuarioReceptor,
         'post_status'  => 'publish',
@@ -36,8 +35,72 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
         return false;
     }
 
+    // Si la URL no se proporcionó, usar get_permalink($postId)
+    if ($url === null) {
+        $url = get_permalink($postId);
+    }
+
+    // Enviar notificación push
+    $titulo = $Titulo;
+    $mensaje = $contenidoSanitizado;
+
+    $resultadoPush = send_push_notification($usuarioReceptor, $titulo, $mensaje, $url);
+
+    // Registrar en el log el resultado del envío
+    if (is_wp_error($resultadoPush)) {
+        error_log("Error al enviar la notificación push: " . $resultadoPush->get_error_message());
+    } else {
+        error_log("Notificación push enviada con éxito al usuario ID: " . $usuarioReceptor);
+    }
+
     return $postId;
 }
+//
+function send_push_notification($user_id, $title, $message, $url) {
+    $serviceAccountFile = '/var/www/wordpress/private/upra-b6879-firebase-adminsdk-w9xma-5f138a5b75.json';
+
+    if (!file_exists($serviceAccountFile)) {
+        error_log('[Firebase] No se encontró el archivo de credenciales en ' . $serviceAccountFile);
+        return new WP_Error('no_service_account', 'No se encontró el archivo de credenciales.', array('status' => 500));
+    }
+
+    try {
+        $factory = (new Factory)->withServiceAccount($serviceAccountFile);
+        $messaging = $factory->createMessaging();
+    } catch (\Exception $e) {
+        error_log('[Firebase] Error al inicializar Firebase: ' . $e->getMessage());
+        return new WP_Error('firebase_init_failed', 'Error al inicializar Firebase.', array('status' => 500));
+    }
+
+    $firebase_token = get_user_meta($user_id, 'firebase_token', true);
+
+    if (!$firebase_token) {
+        error_log('[Firebase] El usuario ' . $user_id . ' no tiene un token de Firebase.');
+        return new WP_Error('no_token', 'El usuario no tiene un token de Firebase.', array('status' => 404));
+    }
+
+    $messageData = [
+        'token' => $firebase_token,
+        'notification' => [
+            'title' => $title,
+            'body' => $message,
+        ],
+        'data' => [
+            'url' => $url, 
+            //'userId' => $user_id #aun no es necesario
+        ],
+    ];
+
+    try {
+        $messaging->send($messageData);
+        error_log('[Firebase] Notificación enviada al usuario ' . $user_id);
+        return 'Notificación enviada con éxito.';
+    } catch (MessagingException $e) {
+        error_log('[Firebase] Error al enviar la notificación: ' . $e->getMessage());
+        return 'Error al enviar la notificación: ' . $e->getMessage();
+    }
+}
+
 
 function listarNotificaciones($pagina = 1)
 {
