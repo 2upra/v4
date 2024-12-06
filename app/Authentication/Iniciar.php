@@ -294,7 +294,7 @@ use Kreait\Firebase\Messaging;
 
 function send_push_notification($user_id, $title, $message) {
     // Ruta al archivo JSON
-    $serviceAccountFile = '/var/www/private/upra-b6879-firebase-adminsdk-w9xma-5f138a5b75.json';
+    $serviceAccountFile = '/var/www/wordpress/private/upra-b6879-firebase-adminsdk-w9xma-5f138a5b75.json';
 
     // Inicializar Firebase
     $factory = (new Factory)->withServiceAccount($serviceAccountFile);
