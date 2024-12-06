@@ -279,15 +279,19 @@ add_action('rest_api_init', function () {
 
 function save_firebase_token($request) {
     $user_id = get_current_user_id();
-    $firebase_token = sanitize_text_field($request->get_param('token'));
+    error_log('[Firebase] Usuario actual: ' . $user_id);
 
+    if (!$user_id) {
+        return new WP_Error('not_logged_in', 'El usuario no está autenticado.', array('status' => 401));
+    }
+
+    $firebase_token = sanitize_text_field($request->get_param('token'));
     if (!$firebase_token) {
         error_log('[Firebase] El token es requerido para el usuario ' . $user_id);
         return new WP_Error('no_token', 'El token es requerido.', array('status' => 400));
     }
 
     $updated = update_user_meta($user_id, 'firebase_token', $firebase_token);
-
     if (!$updated) {
         error_log('[Firebase] Fallo al guardar el token para el usuario ' . $user_id);
         return new WP_Error('save_failed', 'No se pudo guardar el token.', array('status' => 500));
@@ -296,6 +300,7 @@ function save_firebase_token($request) {
     error_log('[Firebase] Token guardado correctamente para el usuario ' . $user_id);
     return array('success' => true, 'message' => 'Token guardado correctamente.');
 }
+
 
 /*
 function send_push_notification($user_id, $title, $message) {
