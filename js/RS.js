@@ -12,16 +12,16 @@ const nombreRolaData = {};
 let uploadInProgressCount = 0;
 // Logs
 let enablelogRS = true;
-//const //logRS = enablelogRS ? console.log : function () {};
+const logRS = enablelogRS ? console.log : function () {};
 let waveSurferInstances = {};
 
 let rsIniciado = false;
 function iniciarRS() {
     if (rsIniciado) return;
     rsIniciado = true;
-    //logRS('comienzoFormRS fue llamado');
+    logRS('comienzoFormRS fue llamado');
     if (document.getElementById('formRs')) {
-        //logRS('formRs existe');
+        logRS('formRs existe');
         imagenUrl = null;
         imagenId = null;
         audioUrl = null;
@@ -45,7 +45,7 @@ function iniciarRS() {
         selectorformtipo();
         selectorFanArtista();
     } else {
-        //logRS('formRs no existe');
+        logRS('formRs no existe');
     }
 }
 function verificarCamposRs() {
@@ -243,8 +243,6 @@ async function envioRs() {
 
 function subidaRs() {
     const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs', 'ppp3'];
-
-    // Obtiene todos los elementos con los IDs indicados
     const elements = ids.reduce((acc, id) => {
         const el = document.getElementById(id);
         if (!el) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
@@ -252,76 +250,14 @@ function subidaRs() {
         return acc;
     }, {});
 
-    // Verifica si faltan elementos y termina la ejecución si es así
     const missingElements = Object.entries(elements)
         .filter(([_, el]) => !el)
         .map(([id]) => id);
-
     if (missingElements.length) {
-        console.error(`Faltan elementos en el DOM: ${missingElements.join(', ')}`);
         return;
     }
 
-    const { formRs, botonAudio, botonImagen, botonArchivo } = elements;
-
-    /**
-     * Abre un selector de archivos para un tipo específico
-     * @param {string} tipoArchivo - Tipo de archivo permitido (e.g., 'audio/*', 'image/*', '*')
-     */
-    const abrirSelectorArchivos = (tipoArchivo) => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = tipoArchivo;
-
-        input.onchange = (event) => {
-            console.log('Archivo seleccionado:', event.target.files[0]);
-            inicialSubida(event); // Llama a la función que maneja la subida
-        };
-
-        input.click(); // Simula el clic para abrir el selector
-    };
-
-    // Event listeners para los botones
-    botonArchivo.addEventListener('click', () => {
-        console.log('Botón Archivo clickeado.');
-        abrirSelectorArchivos('*'); // Permite cualquier archivo
-    });
-
-    botonAudio.addEventListener('click', () => {
-        console.log('Botón Audio clickeado.');
-        abrirSelectorArchivos('audio/*'); // Permite solo archivos de audio
-    });
-
-    botonImagen.addEventListener('click', () => {
-        console.log('Botón Imagen clickeado.');
-        abrirSelectorArchivos('image/*'); // Permite solo imágenes
-    });
-
-    // Manejo de clics en el formulario para elementos específicos
-    formRs.addEventListener('click', (event) => {
-        const clickedElement = event.target.closest('.previewAudio, .previewImagen');
-        if (clickedElement) {
-            const tipoArchivo = clickedElement.classList.contains('previewAudio') ? 'audio/*' : 'image/*';
-            console.log(`Elemento clickeado: ${clickedElement.className}, tipo de archivo: ${tipoArchivo}`);
-            abrirSelectorArchivos(tipoArchivo);
-        }
-    });
-
-    // Manejo de eventos de arrastrar y soltar (drag & drop)
-    ['dragover', 'dragleave', 'drop'].forEach((eventName) => {
-        formRs.addEventListener(eventName, (e) => {
-            e.preventDefault();
-
-            if (eventName === 'dragover') {
-                formRs.style.backgroundColor = '#e9e9e9'; // Cambia el fondo al arrastrar
-            } else if (eventName === 'dragleave') {
-                formRs.style.backgroundColor = ''; // Restaura el fondo al salir
-            } else if (eventName === 'drop') {
-                console.log('Archivo arrastrado y soltado.');
-                inicialSubida(e);
-            }
-        });
-    });
+    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs, ppp3} = elements;
 
     const inicialSubida = event => {
         event.preventDefault();
@@ -496,10 +432,73 @@ function subidaRs() {
         };
         reader.readAsDataURL(file);
     };
+
+    formRs.addEventListener('click', event => {
+        logRS('Evento click detectado en formRs.');
+
+        // Identificar el elemento clickeado que contenga las clases .previewAudio o .previewImagen
+        const clickedElement = event.target.closest('.previewAudio, .previewImagen');
+
+        if (clickedElement) {
+            logRS(`Elemento clickeado: ${clickedElement.tagName}, clases: ${clickedElement.className}`);
+
+            // Determinar el tipo de archivo basado en la clase del elemento clickeado
+            const tipoArchivo = clickedElement.classList.contains('previewAudio') ? 'audio/*' : 'image/*';
+            logRS(`Tipo de archivo determinado: ${tipoArchivo}`);
+
+            // Llamar a la función para abrir el selector de archivos
+            abrirSelectorArchivos(tipoArchivo);
+        } else {
+            logRS('No se encontró un elemento con las clases .previewAudio o .previewImagen en la jerarquía del clic.');
+        }
+    });
+
+    const abrirSelectorArchivos = tipoArchivo => {
+        logRS(`Abrir selector de archivos con tipo: ${tipoArchivo}`);
+
+        // Crear dinámicamente un input de tipo file
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = tipoArchivo;
+
+        // Asociar la función de manejo de cambios (onchange)
+        input.onchange = event => {
+            logRS('Evento onchange detectado en el input de archivos.');
+            inicialSubida(event);
+        };
+
+        // Simular el clic del usuario para abrir el selector de archivos
+        input.click();
+        logRS('Selector de archivos abierto (input.click ejecutado).');
+    };
+
+    // Asociar eventos a los botones para abrir el selector de archivos con diferentes tipos
+    botonArchivo.addEventListener('click', () => {
+        logRS('Botón "Subir Archivo" clickeado.');
+        abrirSelectorArchivos('*');
+    });
+
+    botonAudio.addEventListener('click', () => {
+        logRS('Botón "Subir Audio" clickeado.');
+        abrirSelectorArchivos('audio/*');
+    });
+
+    botonImagen.addEventListener('click', () => {
+        logRS('Botón "Subir Imagen" clickeado.');
+        abrirSelectorArchivos('image/*');
+    });
+
+    ['dragover', 'dragleave', 'drop'].forEach(eventName => {
+        formRs.addEventListener(eventName, e => {
+            e.preventDefault();
+            formRs.style.backgroundColor = eventName === 'dragover' ? '#e9e9e9' : '';
+            eventName === 'drop' && inicialSubida(e);
+        });
+    });
 }
 
 async function subidaRsBackend(file, progressBarId) {
-    //logRS('Iniciando subida de archivo', {fileName: file.name, fileSize: file.size});
+    logRS('Iniciando subida de archivo', {fileName: file.name, fileSize: file.size});
 
     // Incrementar el contador de subidas en progreso
     uploadInProgressCount++;
@@ -513,7 +512,7 @@ async function subidaRsBackend(file, progressBarId) {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', my_ajax_object.ajax_url, true);
 
-        //logRS('Preparando solicitud AJAX', {url: my_ajax_object.ajax_url});
+        logRS('Preparando solicitud AJAX', {url: my_ajax_object.ajax_url});
 
         xhr.upload.onprogress = e => {
             if (e.lengthComputable) {
@@ -521,12 +520,12 @@ async function subidaRsBackend(file, progressBarId) {
                 const progressPercent = (e.loaded / e.total) * 100;
                 if (progressBar) progressBar.style.width = `${progressPercent}%`;
 
-                //logRS('Actualizando barra de progreso', {loaded: e.loaded, total: e.total, progressPercent});
+                logRS('Actualizando barra de progreso', {loaded: e.loaded, total: e.total, progressPercent});
             }
         };
 
         xhr.onload = () => {
-            //logRS('Respuesta recibida', {status: xhr.status, response: xhr.responseText});
+            logRS('Respuesta recibida', {status: xhr.status, response: xhr.responseText});
 
             // Decrementar el contador al finalizar la subida
             uploadInProgressCount--;
@@ -535,33 +534,33 @@ async function subidaRsBackend(file, progressBarId) {
                 try {
                     const result = JSON.parse(xhr.responseText);
                     if (result.success) {
-                        //logRS('Archivo subido exitosamente', {data: result.data});
+                        logRS('Archivo subido exitosamente', {data: result.data});
                         resolve(result.data);
                     } else {
-                        //logRS('Error en la respuesta del servidor (No éxito)', {response: result});
+                        logRS('Error en la respuesta del servidor (No éxito)', {response: result});
                         reject(new Error('Error en la respuesta del servidor'));
                     }
                 } catch (error) {
-                    //logRS('Error al parsear la respuesta', {errorMessage: error.message, response: xhr.responseText});
+                    logRS('Error al parsear la respuesta', {errorMessage: error.message, response: xhr.responseText});
                     reject(error);
                 }
             } else {
-                //logRS('Error en la carga del archivo', {status: xhr.status, response: xhr.responseText});
+                logRS('Error en la carga del archivo', {status: xhr.status, response: xhr.responseText});
                 reject(new Error(`Error en la carga del archivo. Status: ${xhr.status}`));
             }
         };
 
         xhr.onerror = () => {
-            //logRS('Error en la conexión con el servidor', {status: xhr.status});
+            logRS('Error en la conexión con el servidor', {status: xhr.status});
             uploadInProgressCount--; // Decrementar el contador en caso de error
             reject(new Error('Error en la conexión con el servidor'));
         };
 
         try {
-            //logRS('Enviando solicitud AJAX', {formData});
+            logRS('Enviando solicitud AJAX', {formData});
             xhr.send(formData);
         } catch (error) {
-            //logRS('Error al enviar la solicitud AJAX', {errorMessage: error.message});
+            logRS('Error al enviar la solicitud AJAX', {errorMessage: error.message});
             uploadInProgressCount--; // Decrementar el contador en caso de error
             reject(new Error('Error al enviar la solicitud AJAX'));
         }
