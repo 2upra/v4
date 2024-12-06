@@ -269,7 +269,6 @@ function subidaRs() {
         file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
     };
 
-    //esto no funciona, no agrega column a <div class="previewsForm NGEESM">
     const actualizarFlexDirection = () => {
         const previewsFormDiv = document.querySelector('.previewsForm.NGEESM.RS');
 
@@ -277,14 +276,13 @@ function subidaRs() {
             if (audiosData.length > 1) {
                 previewsFormDiv.style.flexDirection = 'column';
             } else {
-                previewsFormDiv.style.flexDirection = ''; // Restablece al valor por defecto
+                previewsFormDiv.style.flexDirection = ''; 
             }
         }
     };
 
-    // Obtén la referencia al checkbox de música
+
     const musicCheckbox = document.getElementById('musiccheck');
-    // Función para actualizar la visibilidad de los campos de nombre
     const actualizarCamposNombre = () => {
         const cantidadAudios = audiosData.length;
         const mostrarCampos = musicCheckbox.checked && cantidadAudios > 1;
@@ -297,7 +295,7 @@ function subidaRs() {
         });
     };
 
-    // Agrega un listener para cambios en el checkbox
+
     musicCheckbox.addEventListener('change', actualizarCamposNombre);
 
     const subidaAudio = async file => {
@@ -309,7 +307,6 @@ function subidaRs() {
             const tempId = `temp-${Date.now()}`;
             const progressBarId = waveAudio(file, tempId);
             audiosData.push({tempId, audioUrl: null, audioId: null});
-            // Actualiza la dirección de flexión después de agregar el audio
             actualizarFlexDirection();
             const {fileUrl, fileId} = await subidaRsBackend(file, progressBarId);
             const index = audiosData.findIndex(audio => audio.tempId === tempId);
@@ -324,7 +321,6 @@ function subidaRs() {
             if (audiosData.length > 30) {
                 alert('Ya has subido el límite máximo de 30 audios.');
             }
-            // Actualiza los campos de nombre después de subir el audio
             actualizarCamposNombre();
         } catch (error) {
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
@@ -439,11 +435,16 @@ function subidaRs() {
         reader.readAsDataURL(file);
     };
 
-    formRs.addEventListener('click', event => {
+    formRs.addEventListener('click', (event) => {
+        console.log('Evento click detectado en formRs');
         const clickedElement = event.target.closest('.previewAudio, .previewImagen');
-        clickedElement && abrirSelectorArchivos(clickedElement.classList.contains('previewAudio') ? 'audio/*' : 'image/*');
+        if (clickedElement) {
+            const tipoArchivo = clickedElement.classList.contains('previewAudio') ? 'audio/*' : 'image/*';
+            console.log('Elemento clickeado:', clickedElement, 'Tipo de archivo:', tipoArchivo);
+            abrirSelectorArchivos(tipoArchivo);
+        }
     });
-
+    
     const abrirSelectorArchivos = tipoArchivo => {
         const input = document.createElement('input');
         input.type = 'file';
@@ -451,6 +452,7 @@ function subidaRs() {
         input.onchange = inicialSubida;
         input.click();
     };
+
 
     botonArchivo.addEventListener('click', () => abrirSelectorArchivos('*'));
     botonAudio.addEventListener('click', () => abrirSelectorArchivos('audio/*'));
