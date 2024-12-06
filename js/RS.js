@@ -125,7 +125,7 @@ async function envioRs() {
         const musicCheckbox = document.getElementById('musiccheck');
         const fancheck = document.getElementById('fancheck');
         const artistacheck = document.getElementById('artistacheck');
-        
+
         const fan = fancheck.checked ? fancheck.value : 0;
         const artista = artistacheck.checked ? artistacheck.value : 0;
         const descarga = descargaCheckbox.checked ? descargaCheckbox.value : 0;
@@ -257,7 +257,7 @@ function subidaRs() {
         return;
     }
 
-    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs, ppp3,} = elements;
+    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs, ppp3} = elements;
 
     const inicialSubida = event => {
         event.preventDefault();
@@ -276,11 +276,10 @@ function subidaRs() {
             if (audiosData.length > 1) {
                 previewsFormDiv.style.flexDirection = 'column';
             } else {
-                previewsFormDiv.style.flexDirection = ''; 
+                previewsFormDiv.style.flexDirection = '';
             }
         }
     };
-
 
     const musicCheckbox = document.getElementById('musiccheck');
     const actualizarCamposNombre = () => {
@@ -294,7 +293,6 @@ function subidaRs() {
             }
         });
     };
-
 
     musicCheckbox.addEventListener('change', actualizarCamposNombre);
 
@@ -435,28 +433,60 @@ function subidaRs() {
         reader.readAsDataURL(file);
     };
 
-    formRs.addEventListener('click', (event) => {
-        console.log('Evento click detectado en formRs');
+    formRs.addEventListener('click', event => {
+        logRS('Evento click detectado en formRs.');
+
+        // Identificar el elemento clickeado que contenga las clases .previewAudio o .previewImagen
         const clickedElement = event.target.closest('.previewAudio, .previewImagen');
+
         if (clickedElement) {
+            logRS(`Elemento clickeado: ${clickedElement.tagName}, clases: ${clickedElement.className}`);
+
+            // Determinar el tipo de archivo basado en la clase del elemento clickeado
             const tipoArchivo = clickedElement.classList.contains('previewAudio') ? 'audio/*' : 'image/*';
-            console.log('Elemento clickeado:', clickedElement, 'Tipo de archivo:', tipoArchivo);
+            logRS(`Tipo de archivo determinado: ${tipoArchivo}`);
+
+            // Llamar a la función para abrir el selector de archivos
             abrirSelectorArchivos(tipoArchivo);
+        } else {
+            logRS('No se encontró un elemento con las clases .previewAudio o .previewImagen en la jerarquía del clic.');
         }
     });
-    
+
     const abrirSelectorArchivos = tipoArchivo => {
+        logRS(`Abrir selector de archivos con tipo: ${tipoArchivo}`);
+
+        // Crear dinámicamente un input de tipo file
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = tipoArchivo;
-        input.onchange = inicialSubida;
+
+        // Asociar la función de manejo de cambios (onchange)
+        input.onchange = event => {
+            logRS('Evento onchange detectado en el input de archivos.');
+            inicialSubida(event);
+        };
+
+        // Simular el clic del usuario para abrir el selector de archivos
         input.click();
+        logRS('Selector de archivos abierto (input.click ejecutado).');
     };
 
+    // Asociar eventos a los botones para abrir el selector de archivos con diferentes tipos
+    botonArchivo.addEventListener('click', () => {
+        logRS('Botón "Subir Archivo" clickeado.');
+        abrirSelectorArchivos('*');
+    });
 
-    botonArchivo.addEventListener('click', () => abrirSelectorArchivos('*'));
-    botonAudio.addEventListener('click', () => abrirSelectorArchivos('audio/*'));
-    botonImagen.addEventListener('click', () => abrirSelectorArchivos('image/*'));
+    botonAudio.addEventListener('click', () => {
+        logRS('Botón "Subir Audio" clickeado.');
+        abrirSelectorArchivos('audio/*');
+    });
+
+    botonImagen.addEventListener('click', () => {
+        logRS('Botón "Subir Imagen" clickeado.');
+        abrirSelectorArchivos('image/*');
+    });
 
     ['dragover', 'dragleave', 'drop'].forEach(eventName => {
         formRs.addEventListener(eventName, e => {
