@@ -339,7 +339,7 @@ function send_push_notification($user_id, $title, $message) {
         return 'Error al enviar la notificación: ' . $e->getMessage();
     }
 }
-
+/*
 add_action('init', function () {
     $user_id = 355;
     $title = 'Hola!';
@@ -353,3 +353,4 @@ add_action('init', function () {
         error_log('[Firebase] Resultado de la notificación: ' . $result);
     }
 });
+*/
