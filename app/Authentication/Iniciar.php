@@ -288,41 +288,40 @@ function save_firebase_token($request) {
     return array('success' => true, 'message' => 'Token guardado correctamente.');
 }
 
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Messaging;
+
+
 function send_push_notification($user_id, $title, $message) {
-    // Obtener el token de Firebase del usuario
+    // Ruta al archivo JSON
+    $serviceAccountFile = '/var/www/private/upra-b6879-firebase-adminsdk-w9xma-5f138a5b75.json';
+
+    // Inicializar Firebase
+    $factory = (new Factory)->withServiceAccount($serviceAccountFile);
+    $messaging = $factory->createMessaging();
+
+    // Obtener el token del usuario desde la base de datos
     $firebase_token = get_user_meta($user_id, 'firebase_token', true);
 
     if (!$firebase_token) {
-        return new WP_Error('no_token', 'El usuario no tiene un token de Firebase.', array('status' => 404));
+        return new WP_Error('no_token', 'El usuario no tiene un token de Firebase.', ['status' => 404]);
     }
 
-    // Datos para enviar a Firebase
-    $fields = array(
-        'to' => $firebase_token,
-        'notification' => array(
+    // Construir el mensaje
+    $messageData = [
+        'token' => $firebase_token,
+        'notification' => [
             'title' => $title,
             'body' => $message,
-        ),
-    );
+        ],
+    ];
 
-    // Configuración de la solicitud
-    $headers = array(
-        'Authorization: key=YOUR_SERVER_KEY', // Sustituye con tu clave de servidor de Firebase
-        'Content-Type: application/json',
-    );
-
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send');
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
-
-    $result = curl_exec($ch);
-    curl_close($ch);
-
-    return $result;
+    try {
+        $messaging->send($messageData);
+        return 'Notificación enviada con éxito.';
+    } catch (\Kreait\Firebase\Exception\MessagingException $e) {
+        return 'Error al enviar la notificación: ' . $e->getMessage();
+    }
 }
 
 add_action('init', function () {
@@ -331,6 +330,5 @@ add_action('init', function () {
     $message = 'Esta es una notificación personalizada.';
 
     $response = send_push_notification($user_id, $title, $message);
-    error_log($response);
 
 });
