@@ -1,15 +1,14 @@
 <?
 
+/*
+tengo este codigo en mi servidor, pero cuando doy click en la app, no funciona (si funciona en la web y tiene que seguir funcionando en la web), que tengo que hacer
+por favor no confundas la app de electron que es diferente con la app de android que estoy haciendo
+*/
+
+
 function iniciar_sesion()
 {
-    /*
-        <label for="nombre_usuario">Nombre de Usuario</label>
-        <input type="text" id="nombre_usuario_login" name="nombre_usuario_login" required class="nombre_usuario"><br>
-        <label for="contrasena_usuario">Contraseña:</label>
-        <input type="password" id="contrasena_usuario_login" name="contrasena_usuario_login" required class="contrasena_usuario"><br>
-        <input class="R0A915 A1" type="submit" name="iniciar_sesion_submit" value="Iniciar sesión">
-    */
-    // Si el usuario ya está logueado, mostrar un mensaje
+
     if (is_user_logged_in()) {
         return '<div>Ya has iniciado sesión. ¿Quieres cerrar sesión? <a href="' . wp_logout_url(home_url()) . '">Cerrar sesión</a></div>';
     }
@@ -72,7 +71,6 @@ function iniciar_sesion()
 <?php
     return ob_get_clean();
 }
-
 
 function handle_google_callback() {
     if (isset($_GET['code'])) {
@@ -173,13 +171,7 @@ function is_electron_app()
     return isset($_SERVER['HTTP_X_ELECTRON_APP']) && $_SERVER['HTTP_X_ELECTRON_APP'] === 'true';
 }
 
-/*
-sucede esto aqui como lo arreglo 
-[29-Nov-2024 01:06:42 UTC] WordPress database error Subquery returns more than 1 row for query SELECT user_id FROM wpsg_usermeta WHERE meta_key = 'session_token' AND meta_value = '95ce51f52034cd56166248765471114f3901cce271f5b58bff5b9764aab297c7' AND CAST((SELECT meta_value FROM wpsg_usermeta WHERE user_id = user_id AND meta_key = 'session_token_expiration') AS UNSIGNED) > 1732842402 made by require('wp-blog-header.php'), wp, WP->main, WP->parse_request, do_action_ref_array('parse_request'), WP_Hook->do_action, WP_Hook->apply_filters, rest_api_loaded, WP_REST_Server->serve_request, WP_REST_Server->dispatch, WP_REST_Server->respond_to_request, verify_token_endpoint, verify_secure_token
-[29-Nov-2024 01:06:42 UTC] verify_secure_token - token: 95ce51f52034cd56166248765471114f3901cce271f5b58bff5b9764aab297c7 user_id: not found
-[29-Nov-2024 01:06:42 UTC] verify_secure_token - invalid token: 95ce51f52034cd56166248765471114f3901cce271f5b58bff5b9764aab297c7
-[29-Nov-2024 01:06:42 UTC] verify_token_endpoint - invalid token: 95ce51f52034cd56166248765471114f3901cce271f5b58bff5b9764aab297c7
-*/
+
 function generate_secure_token($user_id)
 {
     // Genera un token único y define la expiración

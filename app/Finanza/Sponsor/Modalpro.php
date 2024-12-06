@@ -3,7 +3,7 @@
 function add_pro_modal_to_footer()
 {
 
-    $plan_title = 'Sponsor';
+    $plan_title = 'Suscripción';
     $highlight = '✨';
     $modal_content = '
         <p class="priceplan">$5 <span>USD/mensual</span></p>

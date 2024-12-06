@@ -6,6 +6,13 @@
         document.body.classList.add('firefox');
     }
 
+    const userAgent = navigator.userAgent;
+
+    // Verificar si contiene "AppAndroid"
+    if (userAgent.includes('AppAndroid')) {
+        document.body.classList.add('appAndroid');
+    }
+
     const funcs = [
         'actualizarUIBusquedaNoURL',
         'inicializarPestanas',
