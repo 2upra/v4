@@ -49,23 +49,26 @@ function inicializarWaveforms() {
 
         if (!post.dataset.hoverListenerAdded) {
             post.addEventListener('mouseenter', () => {
-              const wavesurfer = window.wavesurfers[postId];
-              if (wavesurfer && wavesurfer.isPlaying()) {
-                  pausaSL.style.display = 'flex';
-                  reproducirSL.style.display = 'none';
-              } else {
-                  pausaSL.style.display = 'none';
-                  reproducirSL.style.display = 'flex';
-              }
-          });
-      
-          post.addEventListener('mouseleave', () => {
-              reproducirSL.style.display = 'none';
-              pausaSL.style.display = 'none';
-          });
-          post.dataset.hoverListenerAdded = 'true';
-        }
+                const wavesurfer = window.wavesurfers[postId];
+                if (wavesurfer && wavesurfer.isPlaying()) {
+                    pausaSL.style.display = 'flex';
+                    reproducirSL.style.display = 'none';
+                } else {
+                    pausaSL.style.display = 'none';
+                    reproducirSL.style.display = 'flex';
+                }
+            });
 
+            post.addEventListener('mouseleave', () => {
+                const wavesurfer = window.wavesurfers[postId];
+                if (!wavesurfer || !wavesurfer.isPlaying()) {
+                    reproducirSL.style.display = 'none';
+                    pausaSL.style.display = 'none';
+                }
+            });
+            post.dataset.hoverListenerAdded = 'true';
+        }
+        
         if (!post.dataset.clickListenerAdded) {
             post.addEventListener('click', event => {
                 const clickedElement = event.target;
@@ -78,78 +81,78 @@ function inicializarWaveforms() {
             });
             post.dataset.clickListenerAdded = 'true';
         }
-
+        
         if (waveformContainer && !waveformContainer.dataset.eventListenersAdded) {
-          waveformContainer.addEventListener('click', () => {
-              handleWaveformClick(waveformContainer);
-          });
-          
-          waveformContainer.addEventListener('ready', () => {
-              const wavesurfer = window.wavesurfers[postId];
-              if (wavesurfer) {
-                  wavesurfer.on('play', () => {
-                      if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
-                          currentlyPlayingAudio.pause();
-                      }
-                      currentlyPlayingAudio = wavesurfer;
-                      document.querySelectorAll('.POST-sampleList').forEach(otherPost => {
-                          const otherPostId = otherPost.getAttribute('id-post');
-                          const otherReproducirSL = otherPost.querySelector('.reproducirSL');
-                          const otherPausaSL = otherPost.querySelector('.pausaSL');
-                          if (otherPostId !== postId) {
-                              otherReproducirSL.style.display = 'none';
-                              otherPausaSL.style.display = 'none';
-                          } else {
-                              otherReproducirSL.style.display = 'none';
-                              otherPausaSL.style.display = 'flex';
-                          }
-                      });
-                  });
-      
-                  wavesurfer.on('pause', () => {
-                      const thisReproducirSL = post.querySelector('.reproducirSL');
-                      const thisPausaSL = post.querySelector('.pausaSL');
-                      thisReproducirSL.style.display = 'flex';
-                      thisPausaSL.style.display = 'none';
-                      if (currentlyPlayingAudio === wavesurfer) {
-                          currentlyPlayingAudio = null;
-                      }
-                  });
-      
-                  wavesurfer.on('finish', () => {
-                      const thisReproducirSL = post.querySelector('.reproducirSL');
-                      const thisPausaSL = post.querySelector('.pausaSL');
-                      thisReproducirSL.style.display = 'flex';
-                      thisPausaSL.style.display = 'none';
-                      if (currentlyPlayingAudio === wavesurfer) {
-                          currentlyPlayingAudio = null;
-                      }
-                  });
-              }
-          });
-          waveformContainer.dataset.eventListenersAdded = 'true';
-      }
+            waveformContainer.addEventListener('click', () => {
+                handleWaveformClick(waveformContainer);
+            });
+            
+            waveformContainer.addEventListener('ready', () => {
+                const wavesurfer = window.wavesurfers[postId];
+                if (wavesurfer) {
+                    wavesurfer.on('play', () => {
+                        if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
+                            currentlyPlayingAudio.pause();
+                        }
+                        currentlyPlayingAudio = wavesurfer;
+                        document.querySelectorAll('.POST-sampleList').forEach(otherPost => {
+                            const otherPostId = otherPost.getAttribute('id-post');
+                            const otherReproducirSL = otherPost.querySelector('.reproducirSL');
+                            const otherPausaSL = otherPost.querySelector('.pausaSL');
+                            if (otherPostId !== postId) {
+                                otherReproducirSL.style.display = 'none';
+                                otherPausaSL.style.display = 'none';
+                            } else {
+                                otherReproducirSL.style.display = 'none';
+                                otherPausaSL.style.display = 'flex';
+                            }
+                        });
+                    });
+            
+                    wavesurfer.on('pause', () => {
+                        const thisReproducirSL = post.querySelector('.reproducirSL');
+                        const thisPausaSL = post.querySelector('.pausaSL');
+                        thisReproducirSL.style.display = 'flex';
+                        thisPausaSL.style.display = 'none';
+                        if (currentlyPlayingAudio === wavesurfer) {
+                            currentlyPlayingAudio = null;
+                        }
+                    });
+            
+                    wavesurfer.on('finish', () => {
+                        const thisReproducirSL = post.querySelector('.reproducirSL');
+                        const thisPausaSL = post.querySelector('.pausaSL');
+                        thisReproducirSL.style.display = 'flex';
+                        thisPausaSL.style.display = 'none';
+                        if (currentlyPlayingAudio === wavesurfer) {
+                            currentlyPlayingAudio = null;
+                        }
+                    });
+                }
+            });
+            waveformContainer.dataset.eventListenersAdded = 'true';
+        }
     });
 
     function handleWaveformClick(container) {
-      const postId = container.getAttribute('postIDWave');
-      const audioUrl = container.getAttribute('data-audio-url');
-  
-      if (!postId) return;
-  
-      if (!container.dataset.audioLoaded) {
-          loadAudio(postId, audioUrl, container, true);
-      } else {
-          const wavesurfer = window.wavesurfers[postId];
-          if (wavesurfer) {
-              if (wavesurfer.isPlaying()) {
-                  wavesurfer.pause();
-              } else {
-                  wavesurfer.play();
-              }
-          }
-      }
-  }
+        const postId = container.getAttribute('postIDWave');
+        const audioUrl = container.getAttribute('data-audio-url');
+
+        if (!postId) return;
+
+        if (!container.dataset.audioLoaded) {
+            loadAudio(postId, audioUrl, container, true);
+        } else {
+            const wavesurfer = window.wavesurfers[postId];
+            if (wavesurfer) {
+                if (wavesurfer.isPlaying()) {
+                    wavesurfer.pause();
+                } else {
+                    wavesurfer.play();
+                }
+            }
+        }
+    }
 
     window.stopAllWaveSurferPlayers = function() {
         if (currentlyPlayingAudio) {
@@ -163,6 +166,7 @@ function inicializarWaveforms() {
         currentlyPlayingAudio = null;
     };
 }
+
 
 function loadAudio(postId, audioUrl, container, playOnLoad) {
     if (!postId) {
