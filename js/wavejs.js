@@ -55,135 +55,115 @@ function inicializarWaveforms() {
         const pausaSL = post.querySelector('.pausaSL');
         const waveformContainer = post.querySelector('.waveform-container');
     
-        function handleMouseEnter() {
-            console.log(`[mouseenter] ➡️ Entrando al post: ${postId} - Se muestra el botón de play o pausa según corresponda`);
-            const wavesurfer = window.wavesurfers[postId];
-            if (wavesurfer && wavesurfer.isPlaying()) {
-                console.log(`[mouseenter] ⏸️ Mostrando pausa en post: ${postId} - El audio está sonando`);
-                pausaSL.style.display = 'flex';
-                reproducirSL.style.display = 'none';
-            } else {
-                console.log(`[mouseenter] ▶️ Mostrando play en post: ${postId} - El audio no está sonando`);
-                pausaSL.style.display = 'none';
-                reproducirSL.style.display = 'flex';
-            }
-        }
-    
-        function handleMouseLeave() {
-            console.log(`[mouseleave] ⬅️ Saliendo del post: ${postId} - Se ocultan los botones si el audio no está sonando`);
-            const wavesurfer = window.wavesurfers[postId];
-            if (!(wavesurfer && wavesurfer.isPlaying())) {
-                console.log(`[mouseleave] 🙈 Ocultando botones en post: ${postId} - El audio no está sonando`);
-                reproducirSL.style.display = 'none';
-                pausaSL.style.display = 'none';
-            }
-        }
-    
-        function handleClick(event) {
-            const clickedElement = event.target;
-    
-            if (clickedElement.closest('.tags-container') || clickedElement.closest('.QSORIW')) {
-                console.log(`[click] 🚫 Clic en elemento no permitido en post: ${postId} - Se ha hecho clic en un área restringida (tags o QSORIW)`);
-                return;
-            }
-    
-            if (waveformContainer) {
-                console.log(`[click] 👆 Clic en waveform de post: ${postId} - Se ha hecho clic en el contenedor del waveform`);
-                handleWaveformClick(waveformContainer);
-            }
-        }
-    
-        function handleWaveformContainerClick() {
-            console.log(`[waveformContainer.click] 👆 Clic en waveform de post: ${postId} - Se ha hecho clic en el contenedor del waveform (evento específico)`);
-            handleWaveformClick(waveformContainer);
-        }
-        
-        function handleWaveformReady() {
-            console.log(`[waveformContainer.ready] 🌊 Waveform listo en post: ${postId} - El waveform ha terminado de cargar`);
-            const wavesurfer = window.wavesurfers[postId];
-            if (wavesurfer) {
-                wavesurfer.on('play', handlePlay);
-                wavesurfer.on('pause', handlePause);
-                wavesurfer.on('finish', handleFinish);
-            }
-        }
-        
-        function handlePlay() {
-            console.log(`[wavesurfer.play] ▶️ Reproduciendo en post: ${postId} - El audio ha comenzado a reproducirse`);
-            if (currentlyPlayingAudio && currentlyPlayingAudio !== window.wavesurfers[postId]) {
-                console.log(`[wavesurfer.play] ⏸️ Pausando otro audio - Se estaba reproduciendo otro audio, se pausa`);
-                currentlyPlayingAudio.pause();
-            }
-            currentlyPlayingAudio = window.wavesurfers[postId];
-            document.querySelectorAll('.POST-sampleList').forEach(otherPost => {
-                const otherPostId = otherPost.getAttribute('id-post');
-                const otherReproducirSL = otherPost.querySelector('.reproducirSL');
-                const otherPausaSL = otherPost.querySelector('.pausaSL');
-                if (otherPostId !== postId) {
-                    console.log(`[wavesurfer.play] 🙈 Ocultando botones en otro post: ${otherPostId} - Se ocultan los botones de otros posts`);
-                    otherReproducirSL.style.display = 'none';
-                    otherPausaSL.style.display = 'none';
+        if (!post.dataset.hoverListenerAdded) {
+            post.addEventListener('mouseenter', () => {
+                console.log(`[mouseenter] ➡️ Entrando al post: ${postId} - Se muestra el botón de play o pausa según corresponda`);
+                const wavesurfer = window.wavesurfers[postId];
+                if (wavesurfer.isPlaying()) {
+                    console.log(`[mouseenter] ⏸️ Mostrando pausa en post: ${postId} - El audio está sonando`);
+                    pausaSL.style.display = 'flex';
+                    reproducirSL.style.display = 'none';
                 } else {
-                    console.log(`[wavesurfer.play] ⏸️ Mostrando pausa en post actual: ${postId} - Se muestra el botón de pausa en el post actual`);
-                    otherReproducirSL.style.display = 'none';
-                    otherPausaSL.style.display = 'flex';
+                    console.log(`[mouseenter] ▶️ Mostrando play en post: ${postId} - El audio no está sonando`);
+                    pausaSL.style.display = 'none';
+                    reproducirSL.style.display = 'flex';
                 }
             });
-        }
     
-        function handlePause() {
-            console.log(`[wavesurfer.pause] ⏸️ Pausado en post: ${postId} - El audio ha sido pausado`);
-            const thisReproducirSL = post.querySelector('.reproducirSL');
-            const thisPausaSL = post.querySelector('.pausaSL');
-            console.log(`[wavesurfer.pause] ▶️ Mostrando play en post actual: ${postId} - Se muestra el botón de play en el post actual`);
-            thisReproducirSL.style.display = 'flex';
-            thisPausaSL.style.display = 'none';
-            if (currentlyPlayingAudio === window.wavesurfers[postId]) {
-                console.log(`[wavesurfer.pause] 🔇 Audio actual pausado - Se ha pausado el audio que se estaba reproduciendo`);
-                currentlyPlayingAudio = null;
-            }
-        }
-    
-        function handleFinish() {
-            console.log(`[wavesurfer.finish] ⏹️ Fin de reproducción en post: ${postId} - El audio ha finalizado`);
-            const thisReproducirSL = post.querySelector('.reproducirSL');
-            const thisPausaSL = post.querySelector('.pausaSL');
-            console.log(`[wavesurfer.finish] ▶️ Mostrando play en post actual: ${postId} - Se muestra el botón de play`);
-            thisReproducirSL.style.display = 'flex';
-            thisPausaSL.style.display = 'none';
-            if (currentlyPlayingAudio === window.wavesurfers[postId]) {
-                console.log(`[wavesurfer.finish] 🔇 Audio actual finalizado - El audio que se estaba reproduciendo ha finalizado`);
-                currentlyPlayingAudio = null;
-            }
-        }
-    
-        if (!post.dataset.hoverListenerAdded) {
-            post.addEventListener('mouseenter', handleMouseEnter);
-            post.addEventListener('mouseleave', handleMouseLeave);
+            post.addEventListener('mouseleave', () => {
+                console.log(`[mouseleave] ⬅️ Saliendo del post: ${postId} - Se ocultan los botones si el audio no está sonando`);
+                const wavesurfer = window.wavesurfers[postId];
+                if (!(wavesurfer.isPlaying())) {
+                    console.log(`[mouseleave] 🙈 Ocultando botones en post: ${postId} - El audio no está sonando`);
+                    reproducirSL.style.display = 'none';
+                    pausaSL.style.display = 'none';
+                }
+            });
             post.dataset.hoverListenerAdded = 'true';
             console.log(`[eventListeners] ✅ Eventos hover añadidos a post: ${postId} - Eventos 'mouseenter' y 'mouseleave' agregados`);
         }
     
         if (!post.dataset.clickListenerAdded) {
-            post.addEventListener('click', handleClick);
+            post.addEventListener('click', event => {
+                const waveformContainer = post.querySelector('.waveform-container');
+                const clickedElement = event.target;
+    
+                if (clickedElement.closest('.tags-container') || clickedElement.closest('.QSORIW')) {
+                    console.log(`[click] 🚫 Clic en elemento no permitido en post: ${postId} - Se ha hecho clic en un área restringida (tags o QSORIW)`);
+                    return;
+                }
+    
+                if (waveformContainer) {
+                    console.log(`[click] 👆 Clic en waveform de post: ${postId} - Se ha hecho clic en el contenedor del waveform`);
+                    handleWaveformClick(waveformContainer);
+                }
+            });
             post.dataset.clickListenerAdded = 'true';
             console.log(`[eventListeners] ✅ Evento click añadido a post: ${postId} - Evento 'click' agregado`);
         }
     
         if (waveformContainer && !waveformContainer.dataset.eventListenersAdded) {
-            waveformContainer.addEventListener('click', handleWaveformContainerClick);
-            waveformContainer.dataset.eventListenersAdded = 'true';
-            console.log(`[eventListeners] ✅ Eventos de waveform añadidos a post: ${postId} - Evento 'click' agregado al contenedor del waveform`);
-        }
+            waveformContainer.addEventListener('click', () => {
+                console.log(`[waveformContainer.click] 👆 Clic en waveform de post: ${postId} - Se ha hecho clic en el contenedor del waveform (evento específico)`);
+                handleWaveformClick(waveformContainer);
+            });
     
-        //Si el audio ya está cargado, no se necesita volver a cargar, solo se agregan los listeners.
-        if(waveformContainer && !window.wavesurfers[postId]) {
-            waveformContainer.addEventListener('ready', handleWaveformReady);
-        } else if (window.wavesurfers[postId]) {
-            const wavesurfer = window.wavesurfers[postId];
-            wavesurfer.on('play', handlePlay);
-            wavesurfer.on('pause', handlePause);
-            wavesurfer.on('finish', handleFinish);
+            waveformContainer.addEventListener('ready', () => {
+                console.log(`[waveformContainer.ready] 🌊 Waveform listo en post: ${postId} - El waveform ha terminado de cargar`);
+                const wavesurfer = window.wavesurfers[postId];
+                if (wavesurfer) {
+                    wavesurfer.on('play', () => {
+                        console.log(`[wavesurfer.play] ▶️ Reproduciendo en post: ${postId} - El audio ha comenzado a reproducirse`);
+                        if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
+                            console.log(`[wavesurfer.play] ⏸️ Pausando otro audio - Se estaba reproduciendo otro audio, se pausa`);
+                            currentlyPlayingAudio.pause();
+                        }
+                        currentlyPlayingAudio = wavesurfer;
+                        document.querySelectorAll('.POST-sampleList').forEach(otherPost => {
+                            const otherPostId = otherPost.getAttribute('id-post');
+                            const otherReproducirSL = otherPost.querySelector('.reproducirSL');
+                            const otherPausaSL = otherPost.querySelector('.pausaSL');
+                            if (otherPostId !== postId) {
+                                console.log(`[wavesurfer.play] 🙈 Ocultando botones en otro post: ${otherPostId} - Se ocultan los botones de otros posts`);
+                                otherReproducirSL.style.display = 'none';
+                                otherPausaSL.style.display = 'none';
+                            } else {
+                                console.log(`[wavesurfer.play] ⏸️ Mostrando pausa en post actual: ${postId} - Se muestra el botón de pausa en el post actual`);
+                                otherReproducirSL.style.display = 'none';
+                                otherPausaSL.style.display = 'flex';
+                            }
+                        });
+                    });
+    
+                    wavesurfer.on('pause', () => {
+                        console.log(`[wavesurfer.pause] ⏸️ Pausado en post: ${postId} - El audio ha sido pausado`);
+                        const thisReproducirSL = post.querySelector('.reproducirSL');
+                        const thisPausaSL = post.querySelector('.pausaSL');
+                        console.log(`[wavesurfer.pause] ▶️ Mostrando play en post actual: ${postId} - Se muestra el botón de play en el post actual`);
+                        thisReproducirSL.style.display = 'flex';
+                        thisPausaSL.style.display = 'none';
+                        if (currentlyPlayingAudio === wavesurfer) {
+                            console.log(`[wavesurfer.pause] 🔇 Audio actual pausado - Se ha pausado el audio que se estaba reproduciendo`);
+                            currentlyPlayingAudio = null;
+                        }
+                    });
+    
+                    wavesurfer.on('finish', () => {
+                        console.log(`[wavesurfer.finish] ⏹️ Fin de reproducción en post: ${postId} - El audio ha finalizado`);
+                        const thisReproducirSL = post.querySelector('.reproducirSL');
+                        const thisPausaSL = post.querySelector('.pausaSL');
+                        console.log(`[wavesurfer.finish] ▶️ Mostrando play en post actual: ${postId} - Se muestra el botón de play`);
+                        thisReproducirSL.style.display = 'flex';
+                        thisPausaSL.style.display = 'none';
+                        if (currentlyPlayingAudio === wavesurfer) {
+                            console.log(`[wavesurfer.finish] 🔇 Audio actual finalizado - El audio que se estaba reproduciendo ha finalizado`);
+                            currentlyPlayingAudio = null;
+                        }
+                    });
+                }
+            });
+            waveformContainer.dataset.eventListenersAdded = 'true';
+            console.log(`[eventListeners] ✅ Eventos de waveform añadidos a post: ${postId} - Eventos 'click' y 'ready' agregados al contenedor del waveform`);
         }
     });
     
@@ -206,6 +186,7 @@ function inicializarWaveforms() {
                 if (wavesurfer.isPlaying()) {
                     console.log(`[handleWaveformClick] ⏸️ Pausando audio en post: ${postId} - El audio está sonando, se pausa`);
                     wavesurfer.pause();
+                    currentlyPlayingAudio = null;
                 } else {
                     console.log(`[handleWaveformClick] ▶️ Reproduciendo audio en post: ${postId} - El audio no está sonando, se reproduce`);
                     if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
@@ -213,12 +194,14 @@ function inicializarWaveforms() {
                         currentlyPlayingAudio.pause();
                     }
                     wavesurfer.play();
+                    currentlyPlayingAudio = wavesurfer;
                 }
             } else {
                 console.log(`[handleWaveformClick] ❌ Wavesurfer no encontrado para post: ${postId} - No se ha encontrado la instancia de Wavesurfer`);
             }
         }
     }
+
     
     window.stopAllWaveSurferPlayers = function () {
         if (currentlyPlayingAudio) {
