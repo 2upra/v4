@@ -90,14 +90,33 @@ function hoverWaves(posts) {
 }
 
 function inicializarWaveforms() {
+    console.log("🚀 [inicializarWaveforms] ➡️ Iniciando la inicialización de waveforms...");
+
     const waveformContainers = document.querySelectorAll('.waveform-container');
+    console.log(`🔍 [inicializarWaveforms] ➡️ Se encontraron ${waveformContainers.length} contenedores de waveform.`, waveformContainers);
+
     const posts = document.querySelectorAll('.POST-sampleList');
+    console.log(`🔍 [inicializarWaveforms] ➡️ Se encontraron ${posts.length} posts.`, posts);
 
     observacionWave(waveformContainers);
-    agregarManejadorWave(waveformContainers);
+    console.log("👀 [inicializarWaveforms] ➡️ Se aplicó la observación de wave a los contenedores.");
+
+    waveformContainers.forEach((contenedor, index) => {
+        console.log(`➕ [inicializarWaveforms] ➡️ Aplicando manejador de click al contenedor ${index + 1}:`, contenedor);
+        agregarManejadorWave(contenedor);
+    });
+    console.log("✅ [inicializarWaveforms] ➡️ Se aplicó el manejador de click a todos los contenedores.");
+
     hoverWaves(posts);
+    console.log("🖱️ [inicializarWaveforms] ➡️ Se aplicó el manejador de hover a los posts.");
+
     clickWaveContainer(posts);
+    console.log("🖱️ [inicializarWaveforms] ➡️ Se aplicó el manejador de click a los contenedores de los posts (delegación de eventos).");
+
     sampleListEscucha(posts);
+    console.log("👂 [inicializarWaveforms] ➡️ Se aplicó la escucha de nuevos posts a la lista de samples.");
+
+    console.log("🏁 [inicializarWaveforms] ➡️ Inicialización de waveforms completada.");
 }
 
 function reproducirWave(contenedorElemento) {
