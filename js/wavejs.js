@@ -1,3 +1,4 @@
+//tengo un problema, los auidos se reproducen sin necesidad de que la wave este cargada, es decir, se cargan despues dar click, pero si la weve no fue iniciada, se hace click en otra wave que tampoco fue inicia, entonces ambas se reproducen a mismo tiempo (las wave no son visibles en dispositivo movil), entonces esa mecanica de que pausar las waves si estan siendo reproducidas solo funciona si las wave fueron iniciadas previamente y no la primera vez, no funciona en movil porque las wave no son visibles, como se resuelve este problema 
 function inicializarWaveforms() {
     let currentlyPlayingAudio = null;
 
@@ -48,11 +49,6 @@ function inicializarWaveforms() {
         }
     });
 
-    /*
-    agregue esto, cada sample list tiene uno, estan ocultos por defecto, debe aparecer play cuando el usuario pone el mouse sobre el sample list, o cuando se esta reproduciendo debe aparecer pause, es sencillo, hazlo bien, ten en cuenta que hay que gestionar bien porque son varios sample list, dame el codigo completo ajustado
-    <div class="reproducirSL" id-post="<? echo $postId; ?>"><? echo $GLOBALS['play'];?></div>
-    <div class="pausaSL" id-post="<? echo $postId; ?>"><? echo $GLOBALS['pause'];?></div>
-    */
     document.querySelectorAll('.POST-sampleList').forEach(post => {
         if (!post.dataset.clickListenerAdded) {
             post.addEventListener('click', event => {
@@ -122,13 +118,9 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
     if (!window.wavesurfers) {
         window.wavesurfers = {};
     }
-
     const MAX_RETRIES = 3;
-    //console.log(`Intentando cargar audio para postId=${postId}, URL=${audioUrl}`);
-
     const loadAndPlayAudioStream = (retryCount = 0) => {
         if (retryCount >= MAX_RETRIES) {
-            //console.error(`No se pudo cargar el audio para postId=${postId} después de varios intentos`);
             container.querySelector('.waveform-loading').style.display = 'none';
             container.querySelector('.waveform-message').style.display = 'block';
             container.querySelector('.waveform-message').textContent = 'Error al cargar el audio.';
@@ -143,7 +135,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             headers: {
                 'X-WP-Nonce': audioSettings.nonce,
                 'X-Requested-With': 'XMLHttpRequest'
-                //Accept: 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8'
             }
         })
             .then(response => {
@@ -173,12 +164,9 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             .then(blob => {
                 const audioBlobUrl = URL.createObjectURL(blob);
 
-                // Inicializar wavesurfer y guardarlo en el objeto global
                 const wavesurfer = initWavesurfer(container);
                 window.wavesurfers[postId] = wavesurfer;
-
                 wavesurfer.load(audioBlobUrl);
-
                 const waveformBackground = container.querySelector('.waveform-background');
                 if (waveformBackground) {
                     waveformBackground.style.display = 'none';
@@ -188,8 +176,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     window.audioLoading = false;
                     container.dataset.audioLoaded = 'true';
                     container.querySelector('.waveform-loading').style.display = 'none';
-                    //console.log(`Audio listo para postId=${postId}`);
-
                     const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
                     const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
 
@@ -198,27 +184,20 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                             setTimeout(() => {
                                 const image = generateWaveformImage(wavesurfer);
                                 sendImageToServer(image, postId);
-                                //console.log(`Imagen de waveform enviada para postId=${postId}`);
                             }, 1);
                         }
                     }
-
-                    // Reproducir solo si fue cargado por un clic
                     if (playOnLoad) {
                         wavesurfer.play();
-                        //console.log(`Audio reproduciendo automáticamente para postId=${postId}`);
                     } else {
-                        //console.log(`Audio cargado pero no reproducido para postId=${postId}, esperando interacción del usuario.`);
                     }
                 });
 
                 wavesurfer.on('error', () => {
-                    //console.error(`Error al cargar el audio para postId=${postId}. Intento ${retryCount + 1} de ${MAX_RETRIES}`);
                     setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
                 });
             })
             .catch(error => {
-                //console.error(`Error al cargar el audio para postId=${postId}. Intento ${retryCount + 1} de ${MAX_RETRIES}`, error);
                 setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
             });
     };
