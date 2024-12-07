@@ -219,10 +219,9 @@ async function abrirColec() {
     }
 
     mostrar(modal);
-    crearBackgroundColec();
-    document.body.classList.add('no-scroll'); // Evita que el fondo se desplace al abrir el modal
+    createSubmenuDarkBackground();
+    document.body.classList.add('no-scroll');
 
-    // Simulación de función asíncrona
     await verificarSampleEnColecciones();
 }
 
@@ -235,41 +234,10 @@ function cerrarColec() {
     }
 
     ocultar(modal);
-    quitBackground();
-    document.body.classList.remove('no-scroll'); // Permite que el fondo se desplace de nuevo
+    removeSubmenuDarkBackground();
+    document.body.classList.remove('no-scroll');
 }
 
-// Crear el fondo oscuro detrás del modal
-function crearBackgroundColec() {
-
-    // Crear el elemento div para el fondo oscuro
-    darkBackground = document.createElement('div');
-    darkBackground.classList.add('submenu-background');
-    Object.assign(darkBackground.style, {
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        zIndex: '998',
-        pointerEvents: 'auto',
-    });
-
-    // Añadir el fondo al cuerpo del documento
-    document.body.appendChild(darkBackground);
-
-    // Agregar evento para cerrar el modal al hacer clic en el fondo oscuro
-    darkBackground.addEventListener('click', cerrarColec, { once: true });
-}
-
-// Eliminar el fondo oscuro
-function quitBackground() {
-    const darkBackground = document.querySelector('.submenu-background');
-    if (darkBackground) {
-        darkBackground.remove();
-    }
-}
 
 // Mostrar un elemento (con animación opcional)
 window.mostrar = function (element) {
