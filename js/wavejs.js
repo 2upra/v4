@@ -39,8 +39,20 @@ function inicializarWaveforms() {
                 observer.observe(container);
             }
         }
+
+        if (!container.dataset.clickListenerAdded) {
+            container.addEventListener('click', () => {
+                handleWaveformClick(container);
+            });
+            container.dataset.clickListenerAdded = 'true';
+        }
     });
 
+    /*
+    agregue esto, cada sample list tiene uno, estan ocultos por defecto, debe aparecer play cuando el usuario pone el mouse sobre el sample list, o cuando se esta reproduciendo debe aparecer pause, es sencillo, hazlo bien, ten en cuenta que hay que gestionar bien porque son varios sample list, dame el codigo completo ajustado
+    <div class="reproducirSL" id-post="<? echo $postId; ?>"><? echo $GLOBALS['play'];?></div>
+    <div class="pausaSL" id-post="<? echo $postId; ?>"><? echo $GLOBALS['pause'];?></div>
+    */
     document.querySelectorAll('.POST-sampleList').forEach(post => {
         const postId = post.getAttribute('id-post');
         const reproducirSL = post.querySelector('.reproducirSL');
@@ -68,10 +80,13 @@ function inicializarWaveforms() {
 
         if (!post.dataset.clickListenerAdded) {
             post.addEventListener('click', event => {
+                const waveformContainer = post.querySelector('.waveform-container');
                 const clickedElement = event.target;
+
                 if (clickedElement.closest('.tags-container') || clickedElement.closest('.QSORIW')) {
                     return;
                 }
+
                 if (waveformContainer) {
                     handleWaveformClick(waveformContainer);
                 }
@@ -128,43 +143,42 @@ function inicializarWaveforms() {
               }
           });
           waveformContainer.dataset.eventListenersAdded = 'true';
-      }
+        }
     });
 
     function handleWaveformClick(container) {
-      const postId = container.getAttribute('postIDWave');
-      const audioUrl = container.getAttribute('data-audio-url');
-  
-      if (!postId) return;
-  
-      if (!container.dataset.audioLoaded) {
-          loadAudio(postId, audioUrl, container, true);
-      } else {
-          const wavesurfer = window.wavesurfers[postId];
-          if (wavesurfer) {
-              if (wavesurfer.isPlaying()) {
-                  wavesurfer.pause();
+        const postId = container.getAttribute('postIDWave');
+        const audioUrl = container.getAttribute('data-audio-url');
+
+        if (!postId) return;
+
+        if (!container.dataset.audioLoaded) {
+            loadAudio(postId, audioUrl, container, true);
+        } else {
+            const wavesurfer = window.wavesurfers[postId];
+            if (wavesurfer) {
+                if (wavesurfer.isPlaying()) {
+                    wavesurfer.pause();
                     currentlyPlayingAudio = null;
-              } else {
+                } else {
                     if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
                         currentlyPlayingAudio.pause();
                     }
-                  wavesurfer.play();
+                    wavesurfer.play();
                     currentlyPlayingAudio = wavesurfer;
-              }
-          }
-      }
-  }
-
+                }
+            }
+        }
+    }
     window.stopAllWaveSurferPlayers = function() {
         if (currentlyPlayingAudio) {
-            currentlyPlayingAudio.pause();
+          currentlyPlayingAudio.pause();
           currentlyPlayingAudio = null;
         }
         for (const postId in window.wavesurfers) {
-            if (window.wavesurfers[postId].isPlaying()) {
-                window.wavesurfers[postId].pause();
-            }
+          if (window.wavesurfers[postId].isPlaying()) {
+            window.wavesurfers[postId].pause();
+          }
         }
     };
 }
