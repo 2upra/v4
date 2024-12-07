@@ -185,6 +185,7 @@ function inicializarWaveforms() {
                 if (wavesurfer.isPlaying()) {
                     console.log(`⏸️ Pausando audio en post: ${postId}`);
                     wavesurfer.pause();
+                    currentlyPlayingAudio = null;
                 } else {
                     console.log(`▶️ Reproduciendo audio en post: ${postId}`);
                     if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
