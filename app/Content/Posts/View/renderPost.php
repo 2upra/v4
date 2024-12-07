@@ -28,7 +28,7 @@ function htmlPost($filtro)
         autor="<? echo esc_attr($author_id); ?>">
 
         <? if ($sampleList): ?>
-            <? generarBloquePost($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id, $audio_id_lite); ?>
+            <? sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id, $audio_id_lite); ?>
         <? else: ?>
             <? echo fondoPost($filtro, $block, $es_suscriptor, $post_id); ?>
             <? if ($music): ?>
@@ -48,7 +48,7 @@ function htmlPost($filtro)
 
 
 
-function generarBloquePost($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id, $audio_id_lite = null)
+function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id, $audio_id_lite = null)
 {
 ?>
     <div class="LISTSAMPLE">
@@ -59,7 +59,7 @@ function generarBloquePost($block, $es_suscriptor, $post_id, $datosAlgoritmo, $v
         <? echo imagenPostList($block, $es_suscriptor, $post_id); ?>
         <div class="INFOLISTSAMPLE">
             <div class="CONTENTLISTSAMPLE">
-                <a href="<? echo esc_url(get_permalink($post_id)); ?>" id-post="<? echo $post_id; ?>">
+                <a href="" id-post="<? echo $post_id; ?>">
                     <?
                     // Obtener y limpiar el contenido
                     $content = get_post_field('post_content', $post_id);
