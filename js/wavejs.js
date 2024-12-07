@@ -276,17 +276,21 @@ function finalWave(wavesurfer, post) {
 }
 
 
-
-
-
-
 function loadAudio(postId, audioUrl, container, playOnLoad) {
+    console.log(`🔊 [loadAudio] ➡️ Intentando cargar audio para postId: ${postId}`);
+
     if (!postId) {
+        console.error("❌ [loadAudio] ➡️ postId no proporcionado.");
         return;
     }
+
     if (!container.dataset.audioLoaded) {
+        console.log(`⏳ [loadAudio] ➡️ Cargando audio para postId: ${postId}, URL: ${audioUrl}`);
         window.we(postId, audioUrl, container, playOnLoad);
         container.dataset.audioLoaded = 'true';
+        console.log(`✅ [loadAudio] ➡️ Audio cargado para postId: ${postId}`);
+    } else {
+        console.log(`✅ [loadAudio] ➡️ Audio ya cargado para postId: ${postId}`);
     }
 }
 
@@ -360,7 +364,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     window.audioLoading = false;
                     container.dataset.audioLoaded = 'true';
                     container.querySelector('.waveform-loading').style.display = 'none';
-                    //console.log(`Audio listo para postId=${postId}`);
 
                     const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
                     const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -370,27 +373,23 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                             setTimeout(() => {
                                 const image = generateWaveformImage(wavesurfer);
                                 sendImageToServer(image, postId);
-                                //console.log(`Imagen de waveform enviada para postId=${postId}`);
+
                             }, 1);
                         }
                     }
 
-                    // Reproducir solo si fue cargado por un clic
                     if (playOnLoad) {
                         wavesurfer.play();
-                        //console.log(`Audio reproduciendo automáticamente para postId=${postId}`);
+
                     } else {
-                        //console.log(`Audio cargado pero no reproducido para postId=${postId}, esperando interacción del usuario.`);
+
                     }
                 });
-
                 wavesurfer.on('error', () => {
-                    //console.error(`Error al cargar el audio para postId=${postId}. Intento ${retryCount + 1} de ${MAX_RETRIES}`);
                     setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
                 });
             })
             .catch(error => {
-                //console.error(`Error al cargar el audio para postId=${postId}. Intento ${retryCount + 1} de ${MAX_RETRIES}`, error);
                 setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
             });
     };
