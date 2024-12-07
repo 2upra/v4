@@ -153,16 +153,20 @@ function calcularPuntosParaPost(
         $meta_roles[$post_id] = ['artista' => false, 'fan' => false];
     }
 
-    $postParaArtistas = !empty($meta_roles[$post_id]['artista']);
-    $postParaFans = !empty($meta_roles[$post_id]['fan']);
-
     $puntosArtistaFan = 0;
 
-    if ($tipoUsuario === 'Fan') {
-        $puntosArtistaFan = $postParaFans ? 999 : 0;
-    } elseif ($tipoUsuario === 'Artista') {
-        $puntosArtistaFan = $postParaFans ? -50 : 0;
+    // Si similarTo no es null, entonces esto de tipo usuario no se tenga en cuenta para nada
+    if (empty($similar_to)) {
+        $postParaArtistas = !empty($meta_roles[$post_id]['artista']);
+        $postParaFans = !empty($meta_roles[$post_id]['fan']);
+
+        if ($tipoUsuario === 'Fan') {
+            $puntosArtistaFan = $postParaFans ? 999 : 0;
+        } elseif ($tipoUsuario === 'Artista') {
+            $puntosArtistaFan = $postParaFans ? -50 : 0; // Penaliza a los artistas si el post es para fans.
+        }
     }
+
     // Calculate puntosFinal
     $puntosFinal = calcularPuntosFinales(
         $puntosUsuario,

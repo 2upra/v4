@@ -90,7 +90,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
 
 function obtenerPostsSimilares($current_user_id, $similar_to)
 {
-    $post_not_in = [];
+        $post_not_in = [];
     if ($similar_to) {
         $post_not_in[] = $similar_to;
         $similar_to_cache_key = "similar_to_{$similar_to}";
