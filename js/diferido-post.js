@@ -69,12 +69,12 @@
                 // Guarda el ID de usuario en una variable global (opcional)
                 window.idUsuarioActual = idUsuario;
 
-                console.log('ID de usuario establecido:', idUsuario);
+
             } else {
-                console.log('El atributo data-iduser está vacío.');
+
             }
         } else {
-            console.log('No se encontró un div con la clase "X522YA FRRVBB" y el atributo data-iduser.');
+
         }
     }
 
@@ -535,39 +535,39 @@
 })();
 
 if ('IntersectionObserver' in window) {
-    console.log('IntersectionObserver está disponible');
+
 
     const observer = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                console.log('El div está en la vista:', entry.target);
+
 
                 const div = entry.target;
                 const src = div.getAttribute('data-src');
                 if (src) {
-                    console.log('Intentando cargar el SVG desde:', src);
+ 
 
                     // Usa fetch para cargar el contenido del SVG
                     fetch(src)
                         .then(response => {
                             if (!response.ok) {
-                                console.error('Error al cargar el SVG:', response.status);
+
                                 throw new Error('Error al cargar el SVG');
                             }
                             return response.text();
                         })
                         .then(svg => {
-                            console.log('SVG cargado correctamente');
+
                             div.innerHTML = svg; // Inserta el SVG en el div
                             div.removeAttribute('data-src'); // Limpia el data-src
                         })
                         .catch(err => {
-                            console.error('Error en la carga del SVG:', err);
+
                         });
 
                     observer.unobserve(div); // Deja de observar el elemento
                 } else {
-                    console.warn('El atributo data-src está vacío o no existe');
+
                 }
             }
         });
@@ -575,14 +575,14 @@ if ('IntersectionObserver' in window) {
 
     // Seleccionamos todos los elementos con la clase 'lazy-svg'
     const lazySvgs = document.querySelectorAll('.lazy-svg');
-    console.log('Encontrados elementos para observar:', lazySvgs.length);
+
 
     lazySvgs.forEach(div => {
-        console.log('Iniciando observación para:', div);
+
         observer.observe(div);
     });
 } else {
-    console.error('IntersectionObserver no está disponible en este navegador');
+
 }
 
 document.addEventListener('DOMContentLoaded', function () {
