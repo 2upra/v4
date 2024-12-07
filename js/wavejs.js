@@ -1,6 +1,7 @@
-function inicializarWaveforms() {
-    let currentlyPlayingAudio = null;
+let currentlyPlayingAudio = null;
+let audioPlayingStatus = false;
 
+function inicializarWaveforms() {
     const observer = new IntersectionObserver(
         entries => {
             entries.forEach(entry => {
@@ -63,27 +64,31 @@ function inicializarWaveforms() {
     function handleWaveformClick(container) {
         const postId = container.getAttribute('postIDWave');
         if (!postId) return;
-    
-        
-        if (window.wavesurfers[postId] && window.wavesurfers[postId].isPlaying() && currentlyPlayingAudio === window.wavesurfers[postId]) {
-          window.wavesurfers[postId].pause();
-          currentlyPlayingAudio = null;
-          return;
+
+        if (audioPlayingStatus && currentlyPlayingAudio !== window.wavesurfers[postId]) {
+            if(currentlyPlayingAudio) {
+                currentlyPlayingAudio.pause();
+            }
+            audioPlayingStatus = false;
+            currentlyPlayingAudio = null;
         }
 
-        
-        stopAllWaveSurferPlayers();
-
-        
         if (!container.dataset.audioLoaded) {
             const audioUrl = container.getAttribute('data-audio-url');
             loadAudio(postId, audioUrl, container, true);
         } else {
             const wavesurfer = window.wavesurfers[postId];
             if (wavesurfer) {
-                
-              wavesurfer.play();
-              currentlyPlayingAudio = wavesurfer;
+                if (wavesurfer.isPlaying()) {
+                    wavesurfer.pause();
+                    audioPlayingStatus = false;
+                    currentlyPlayingAudio = null;
+
+                } else {
+                    wavesurfer.play();
+                    audioPlayingStatus = true;
+                    currentlyPlayingAudio = wavesurfer;
+                }
             }
         }
     }
@@ -91,10 +96,12 @@ function inicializarWaveforms() {
     window.stopAllWaveSurferPlayers = function () {
         if (currentlyPlayingAudio) {
             currentlyPlayingAudio.pause();
-            currentlyPlayingAudio = null;
+            
         }
+        audioPlayingStatus = false;
+        currentlyPlayingAudio = null;
         for (const postId in window.wavesurfers) {
-            if (window.wavesurfers[postId] && window.wavesurfers[postId].isPlaying()) {
+            if (window.wavesurfers[postId].isPlaying()) {
                 window.wavesurfers[postId].pause();
             }
         }
@@ -119,8 +126,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             return;
         }
 
-        window.audioLoading = true;
-
         fetch(audioUrl, {
             method: 'GET',
             credentials: 'same-origin',
@@ -129,50 +134,59 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-            .then(response => {
-                if (!response.ok) throw new Error('Respuesta de red no satisfactoria');
-                return response.blob();
-            })
-            .then(blob => {
-                const audioBlobUrl = URL.createObjectURL(blob);
-                const wavesurfer = initWavesurfer(container);
-                window.wavesurfers[postId] = wavesurfer;
-                wavesurfer.load(audioBlobUrl);
+        .then(response => {
+            if (!response.ok) throw new Error('Respuesta de red no satisfactoria');
+            return response.blob();
+        })
+        .then(blob => {
+            const audioBlobUrl = URL.createObjectURL(blob);
+            const wavesurfer = initWavesurfer(container);
+            window.wavesurfers[postId] = wavesurfer;
+            wavesurfer.load(audioBlobUrl);
 
-                const waveformBackground = container.querySelector('.waveform-background');
-                if (waveformBackground) waveformBackground.style.display = 'none';
+            const waveformBackground = container.querySelector('.waveform-background');
+            if (waveformBackground) waveformBackground.style.display = 'none';
 
-                wavesurfer.on('ready', () => {
-                    window.audioLoading = false;
-                    container.dataset.audioLoaded = 'true';
-                    container.querySelector('.waveform-loading').style.display = 'none';
-                    const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
-                    const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
+            wavesurfer.on('ready', () => {
+                container.dataset.audioLoaded = 'true';
+                container.querySelector('.waveform-loading').style.display = 'none';
+                const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
+                const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
 
-                    if (!waveCargada && !isMobile && !container.closest('.LISTWAVESAMPLE')) {
-                        setTimeout(() => {
-                            const image = generateWaveformImage(wavesurfer);
-                            sendImageToServer(image, postId);
-                        }, 1);
+                if (!waveCargada && !isMobile && !container.closest('.LISTWAVESAMPLE')) {
+                    setTimeout(() => {
+                        const image = generateWaveformImage(wavesurfer);
+                        sendImageToServer(image, postId);
+                    }, 1);
+                }
+                if (playOnLoad) {
+                   
+                    if (audioPlayingStatus) {
+                        currentlyPlayingAudio.pause();
                     }
-                    if (playOnLoad) {
-                        wavesurfer.play();
-                        currentlyPlayingAudio = wavesurfer;
-                    }
-                });
+                    wavesurfer.play();
+                    audioPlayingStatus = true;
+                    currentlyPlayingAudio = wavesurfer;
+                }
+            });
 
-                wavesurfer.on('error', () => {
-                    setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
-                });
-            })
-            .catch(error => {
+            wavesurfer.on('error', () => {
                 setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
             });
+
+            wavesurfer.on('finish', () => {
+                audioPlayingStatus = false;
+                currentlyPlayingAudio = null;
+            });
+
+        })
+        .catch(error => {
+            setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
+        });
     };
 
     loadAndPlayAudioStream();
 };
-
 // La función que inicializa WaveSurfer con los estilos y configuraciones deseados
 function initWavesurfer(container) {
     // Verifica si el contenedor o alguno de sus elementos padre tiene la clase 'LISTWAVESAMPLE'
