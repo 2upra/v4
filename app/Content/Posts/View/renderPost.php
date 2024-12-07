@@ -185,9 +185,9 @@ function renderPostControls($post_id, $colab, $audio_id_lite = null)
     <div class="QSORIW">
         <? echo like($post_id); ?>
         <? echo botonComentar($post_id, $colab); ?>
-        <? echo botonDescarga($post_id); ?>
-        <? echo botonColab($post_id, $colab); ?>
         <? if (!empty($audio_id_lite)) : ?>
+            <? echo botonDescarga($post_id); ?>
+            <? echo botonColab($post_id, $colab); ?>
             <? echo botonColeccion($post_id); ?>
         <? endif; ?>
     </div>

@@ -264,15 +264,11 @@ function añadirSampleEnColab($collection_id, $sample_id, $user_id)
 
 function botonColeccion($postId)
 {
-    // Inicializamos $extraClass para evitar la advertencia de PHP si no está definida
-    $extraClass = '';
 
-    // Verificamos si el usuario está logueado
+    $extraClass = '';
     if (is_user_logged_in()) {
         $userId = get_current_user_id();
         $coleccion = get_user_meta($userId, 'samplesGuardados', true);
-
-        // Verificamos si $coleccion es un array y si la clave $postId existe, y solo entonces agregamos la clase
         if (is_array($coleccion) && isset($coleccion[$postId])) {
             $extraClass = ' colabGuardado';
         }
@@ -285,7 +281,7 @@ function botonColeccion($postId)
             <?php echo isset($GLOBALS['iconoGuardar']) ? $GLOBALS['iconoGuardar'] : ''; // Verifica si $GLOBALS['iconoGuardar'] está definida ?>
         </button>
     </div>
-    <?php
+    <?
     return ob_get_clean();
 }
 

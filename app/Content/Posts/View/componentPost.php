@@ -149,79 +149,79 @@ function opcionesRola($postId, $post_status, $audio_url)
 <?
     return ob_get_clean();
 }
-//ajusta aca, no aparece el boton de descarga aunque el post si tiene para descargar en true, algo
+//corrije aca
+
+
 function opcionesPost($postId, $autorId)
 {
-    $usuarioActual = get_current_user_id();
-    $audio_id_lite = get_post_meta($postId, 'post_audio_lite', true);
-    $descarga_permitida = get_post_meta($postId, 'paraDescarga', true);
-    $post_verificado = get_post_meta($postId, 'Verificado', true);
-    $paraDescarga = get_post_meta($postId, 'paraDescarga', true);
+    $user = get_current_user_id();
+    $lite = get_post_meta($postId, 'post_audio_lite', true);
+    $descarga = get_post_meta($postId, 'paraDescarga', true);
+    $verificado = get_post_meta($postId, 'Verificado', true);
+
     ob_start();
 ?>
-    <button class="HR695R8" data-post-id="<? echo $postId; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
-
-    <div class="A1806241" id="opcionespost-<? echo $postId; ?>">
+    <button class="HR695R8" data-post-id="<?= $postId ?>"><?= $GLOBALS['iconotrespuntos'] ?></button>
+    <div class="A1806241" id="opcionespost-<?= $postId ?>">
         <div class="A1806242">
-            <? if (current_user_can('administrator')) : ?>
-                <button class="eliminarPost" data-post-id="<? echo $postId; ?>">Eliminar</button>
-                <? if (!$post_verificado) : ?>
-                    <button class="verificarPost" data-post-id="<? echo $postId; ?>">Verificar</button>
-                <? endif; ?>
-                <button class="corregirTags" data-post-id="<? echo $postId; ?>">Corregir tags</button>
-                <button class="editarPost" data-post-id="<? echo $postId; ?>">Editar</button>
-                <!-- Nuevo botón para ir al editor de WordPress -->
-                <button class="editarWordPress" data-post-id="<? echo $postId; ?>">Editar en WordPress</button>
-                <button class="banearUsuario" data-post-id="<? echo $postId; ?>">Banear</button>
-                <? if ($audio_id_lite && $descarga_permitida != 1) : ?>
-                    <button class="permitirDescarga" data-post-id="<? echo $postId; ?>">Permitir descarga</button>
-                <? endif; ?>
-            <? elseif ($usuarioActual == $autorId) : ?>
-                <button class="corregirTags" data-post-id="<? echo $postId; ?>">Corregir tags</button>
-                <button class="editarPost" data-post-id="<? echo $postId; ?>">Editar</button>
-                <button class="eliminarPost" data-post-id="<? echo $postId; ?>">Eliminar</button>
-                <? if ($audio_id_lite && $descarga_permitida != 1) : ?>
-                    <button class="permitirDescarga" data-post-id="<? echo $postId; ?>">Permitir descarga</button>
-                <? endif; ?>
-            <? else : ?>
-                <button class="reporte" data-post-id="<? echo $postId; ?>" tipoContenido="social_post">Reportar</button>
-                <button class="bloquear" data-post-id="<? echo $postId; ?>">Bloquear</button>
-                <?
-                if ($paraDescarga == '1') {
-                    if ($usuarioActual) {
-                        // Obtener descargas previas del usuario
-                        $descargas_anteriores = get_user_meta($usuarioActual, 'descargas', true);
-                        $yaDescargado = isset($descargas_anteriores[$postId]);
-                        $claseExtra = $yaDescargado ? 'yaDescargado' : '';
-
-                ?>
+            <?php if (current_user_can('administrator')) : ?>
+                <button class="eliminarPost" data-post-id="<?= $postId ?>">Eliminar</button>
+                <?php if (!$verificado) : ?>
+                    <button class="verificarPost" data-post-id="<?= $postId ?>">Verificar</button>
+                <?php endif ?>
+                <button class="corregirTags" data-post-id="<?= $postId ?>">Corregir tags</button>
+                <button class="editarPost" data-post-id="<?= $postId ?>">Editar</button>
+                <button class="editarWordPress" data-post-id="<?= $postId ?>">Editar en WordPress</button>
+                <button class="banearUsuario" data-post-id="<?= $postId ?>">Banear</button>
+                <?php if ($lite && $descarga != 1) : ?>
+                    <button class="permitirDescarga" data-post-id="<?= $postId ?>">Permitir descarga</button>
+                <?php endif ?>
+            <?php elseif ($user == $autorId) : ?>
+                <button class="corregirTags" data-post-id="<?= $postId ?>">Corregir tags</button>
+                <button class="editarPost" data-post-id="<?= $postId ?>">Editar</button>
+                <button class="eliminarPost" data-post-id="<?= $postId ?>">Eliminar</button>
+                <?php if ($lite && $descarga != 1) : ?>
+                    <button class="permitirDescarga" data-post-id="<?= $postId ?>">Permitir descarga</button>
+                <?php endif ?>
+            <?php else : ?>
+                <button class="reporte" data-post-id="<?= $postId ?>" tipoContenido="social_post">Reportar</button>
+                <button class="bloquear" data-post-id="<?= $postId ?>">Bloquear</button>
+                <?php if ($descarga == '1') : ?>
+                    <?php if ($user) :
+                        $descargas = get_user_meta($user, 'descargas', true);
+                        $ya = isset($descargas[$postId]);
+                        $clase = $ya ? 'yaDescargado' : '';
+                    ?>
                         <div class="ZAQIBB">
-                            <button class="icon-arrow-down <? echo esc_attr($claseExtra); ?>"
-                                data-post-id="<? echo esc_attr($postId); ?>"
-                                aria-label="Boton Descarga"
-                                id="download-button-<? echo esc_attr($postId); ?>"
-                                onclick="return procesarDescarga('<? echo esc_js($postId); ?>', '<?php echo esc_js($usuarioActual); ?>')">
+                            <button class="icon-arrow-down <?= $clase ?>" data-post-id="<?= $postId ?>" aria-label="Boton Descarga" id="download-button-<?= $postId ?>" onclick="return procesarDescarga('<?= $postId ?>', '<?= $user ?>')">
                                 Descargar
                             </button>
                         </div>
-                    <?
-                    } else {
-                    ?>
+                    <?php else : ?>
                         <div class="ZAQIBB">
                             <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down" aria-label="Descargar">
                                 Descargar
                             </button>
                         </div>
-                <?
-                    }
+                    <?php endif ?>
+                <?php endif ?>
+                <?php
+                $clase = '';
+                $coleccion = get_user_meta($user, 'samplesGuardados', true);
+                if (is_array($coleccion) && isset($coleccion[$postId])) {
+                    $clase = ' colabGuardado';
                 }
                 ?>
-            <? endif; ?>
+                <div class="ZAQIBB botonColeccion<?= $clase ?>">
+                    <button class="botonColeccionBtn" aria-label="Guardar sonido" data-post-id="<?= $postId ?>" data-nonce="<?= wp_create_nonce('colec_nonce') ?>">
+                        <?= $GLOBALS['iconoGuardar'] ?? '' ?>
+                    </button>
+                </div>
+            <?php endif ?>
         </div>
     </div>
-
     <div id="modalBackground4" class="modal-background submenu modalBackground2 modalBackground3" style="display: none;"></div>
-<?
+<?php
     return ob_get_clean();
 }
 
