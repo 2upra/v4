@@ -35,22 +35,20 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
         <input type="hidden" id="pagina_actual" name="pagina_actual" value="<? echo esc_attr(get_the_title()); ?>">
 
         <div id="menuData" style="display:none;" pestanaActual="">
-            <div data-tab="Noti"> </div>
+            <div data-tab="Comentario"> </div>
 
         </div>
 
         <div class="tabs">
             <div class="tab-content">
 
-                <div class="tab INICIO S4K7I3" id="Noti">
-
+                <div class="tab INICIO S4K7I3" id="Comentario">
+                    <? echo comentariosForm() ?>
                 </div>
-
             </div>
         </div>
     </div>
-</div>
 
-<?
-get_footer();
-?>
+    <?
+    get_footer();
+    ?>
