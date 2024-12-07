@@ -15,6 +15,7 @@
 
     const funcs = [
         'actualizarUIBusquedaNoURL',
+        'window.stopAllWaveSurferPlayers',
         'inicializarPestanas',
         'inicializarWaveforms',
         'inicializarReproductorAudio',

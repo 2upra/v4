@@ -90,6 +90,17 @@ function inicializarWaveforms() {
             }
         }
     }
+    window.stopAllWaveSurferPlayers = function() {
+        if (currentlyPlayingAudio) {
+          currentlyPlayingAudio.pause();
+          currentlyPlayingAudio = null;
+        }
+        for (const postId in window.wavesurfers) {
+          if (window.wavesurfers[postId].isPlaying()) {
+            window.wavesurfers[postId].pause();
+          }
+        }
+    };
 }
 
 function loadAudio(postId, audioUrl, container, playOnLoad) {
