@@ -405,5 +405,5 @@ if (!defined('ABSPATH')) {
 
         <? endif; ?>
 
-
+        <div id="submenu-background"></div>
 </body>
