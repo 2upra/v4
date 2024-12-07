@@ -241,9 +241,6 @@ function cerrarColec() {
 
 // Crear el fondo oscuro detrás del modal
 function crearBackgroundColec() {
-    // Verifica si ya existe el fondo oscuro para no duplicarlo
-    let darkBackground = document.querySelector('.submenu-background');
-    if (darkBackground) return;
 
     // Crear el elemento div para el fondo oscuro
     darkBackground = document.createElement('div');
