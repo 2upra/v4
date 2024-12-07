@@ -78,6 +78,7 @@ function inicializarWaveforms() {
 
             post.addEventListener('mouseleave', () => {
                 console.log(`⬅️ Saliendo del post: ${postId}`);
+                reproducirSL.style.display = 'none';
                 const wavesurfer = window.wavesurfers[postId];
                 if (!(wavesurfer && wavesurfer.isPlaying())) {
                     console.log(`🙈 Ocultando botones en post: ${postId}`);
