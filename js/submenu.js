@@ -10,7 +10,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
 
         if (!submenu) return;
 
-        submenu._position = position; // Guardamos la posición deseada
+        submenu._position = position;
 
         submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
 
@@ -63,7 +63,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         document.body.classList.add('no-scroll');
 
         submenu.addEventListener('click', (e) => {
-            e.stopPropagation(); 
+            e.stopPropagation();
         });
 
         const submenuButtons = submenu.querySelectorAll('button');
@@ -111,17 +111,42 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
 }
 
 window.createSubmenuDarkBackground = function () {
-    const darkBackground = document.getElementById('submenu-background5322');
+    let darkBackground = document.getElementById('submenu-background5322');
+    if (!darkBackground) {
+        // Crear el fondo oscuro si no existe
+        darkBackground = document.createElement('div');
+        darkBackground.id = 'submenu-background5322';
+        darkBackground.style.position = 'fixed';
+        darkBackground.style.top = 0;
+        darkBackground.style.left = 0;
+        darkBackground.style.width = '100%';
+        darkBackground.style.height = '100%';
+        darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        darkBackground.style.zIndex = 1000;
+        darkBackground.style.display = 'none';
+        darkBackground.style.pointerEvents = 'none';
+        document.body.appendChild(darkBackground);
+
+        // Agregar evento para cerrar submenús al hacer clic en el fondo oscuro
+        darkBackground.addEventListener('click', () => {
+            document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
+                hideSubmenu(submenu);
+            });
+        });
+    }
+
     darkBackground.style.display = 'block';
     darkBackground.style.pointerEvents = 'auto';
-
 };
 
 window.removeSubmenuDarkBackground = function () {
     const darkBackground = document.getElementById('submenu-background5322');
-    darkBackground.style.display = 'none';
-    darkBackground.style.pointerEvents = 'none';
+    if (darkBackground) {
+        darkBackground.style.display = 'none';
+        darkBackground.style.pointerEvents = 'none';
+    }
 };
+
 
 function calculatePosition(rect, submenuWidth, submenuHeight, position) {
     const { innerWidth: vw, innerHeight: vh } = window;
