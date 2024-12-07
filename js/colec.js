@@ -205,6 +205,7 @@ async function crearNuevaColec() {
         button.disabled = false;
     }
 }
+
 async function abrirColec() {
     if (!colecSampleId) return;
 
@@ -265,6 +266,8 @@ window.createColecDarkBackground = function () {
         darkBackground.style.zIndex = 1000;
         darkBackground.style.display = 'none';
         darkBackground.style.pointerEvents = 'none';
+        darkBackground.style.opacity = '0';
+        darkBackground.style.transition = 'opacity 0.3s ease';
         document.body.appendChild(darkBackground);
 
         darkBackground.addEventListener('click', () => {
@@ -273,6 +276,9 @@ window.createColecDarkBackground = function () {
     }
 
     darkBackground.style.display = 'block';
+    setTimeout(() => {
+        darkBackground.style.opacity = '1';
+    }, 10);
     darkBackground.style.pointerEvents = 'auto';
 };
 
@@ -280,7 +286,6 @@ window.removeColecDarkBackground = function () {
     const darkBackground = document.getElementById('submenu-background5322');
     if (darkBackground) {
         darkBackground.style.opacity = '0';
-        darkBackground.style.transition = 'opacity 0.3s ease';
         setTimeout(() => {
             darkBackground.style.display = 'none';
             darkBackground.style.pointerEvents = 'none';
