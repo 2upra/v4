@@ -206,6 +206,7 @@ async function crearNuevaColec() {
     }
 }
 
+//el colec se abre pero al quitarse el background, no se cierra
 async function abrirColec() {
     if (!colecSampleId) {
         console.warn('colecSampleId no está definido');
@@ -267,6 +268,46 @@ window.ocultar = function (element) {
         }, 300);
     }
 };
+
+//funciona para varias cosas, cudiado con modificar demasiado 
+window.createSubmenuDarkBackground = function () {
+    let darkBackground = document.getElementById('submenu-background5322');
+    if (!darkBackground) {
+        // Crear el fondo oscuro si no existe
+        darkBackground = document.createElement('div');
+        darkBackground.id = 'submenu-background5322';
+        darkBackground.style.position = 'fixed';
+        darkBackground.style.top = 0;
+        darkBackground.style.left = 0;
+        darkBackground.style.width = '100%';
+        darkBackground.style.height = '100%';
+        darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        darkBackground.style.zIndex = 1000;
+        darkBackground.style.display = 'none';
+        darkBackground.style.pointerEvents = 'none';
+        document.body.appendChild(darkBackground);
+
+        // Agregar evento para cerrar submenús al hacer clic en el fondo oscuro
+        darkBackground.addEventListener('click', () => {
+            document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
+                hideSubmenu(submenu);
+                cerrarColec();
+            });
+        });
+    }
+
+    darkBackground.style.display = 'block';
+    darkBackground.style.pointerEvents = 'auto';
+};
+
+window.removeSubmenuDarkBackground = function () {
+    const darkBackground = document.getElementById('submenu-background5322');
+    if (darkBackground) {
+        darkBackground.style.display = 'none';
+        darkBackground.style.pointerEvents = 'none';
+    }
+};
+
 
 
 
