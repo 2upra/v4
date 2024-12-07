@@ -149,7 +149,7 @@ function opcionesRola($postId, $post_status, $audio_url)
 <?
     return ob_get_clean();
 }
-//ajusta aca, no aparece el boton de descarga aunque el post si tiene para descargar en true, algo hice mal
+//ajusta aca, no aparece el boton de descarga aunque el post si tiene para descargar en true, algo
 function opcionesPost($postId, $autorId)
 {
     $usuarioActual = get_current_user_id();
@@ -170,6 +170,7 @@ function opcionesPost($postId, $autorId)
                 <? endif; ?>
                 <button class="corregirTags" data-post-id="<? echo $postId; ?>">Corregir tags</button>
                 <button class="editarPost" data-post-id="<? echo $postId; ?>">Editar</button>
+                <!-- Nuevo botón para ir al editor de WordPress -->
                 <button class="editarWordPress" data-post-id="<? echo $postId; ?>">Editar en WordPress</button>
                 <button class="banearUsuario" data-post-id="<? echo $postId; ?>">Banear</button>
                 <? if ($audio_id_lite && $descarga_permitida != 1) : ?>
@@ -185,25 +186,36 @@ function opcionesPost($postId, $autorId)
             <? else : ?>
                 <button class="reporte" data-post-id="<? echo $postId; ?>" tipoContenido="social_post">Reportar</button>
                 <button class="bloquear" data-post-id="<? echo $postId; ?>">Bloquear</button>
-                <? if ($paraDescarga == '1') : ?>
-                    <? if ($usuarioActual) : ?>
+                <?
+                if ($paraDescarga == '1') {
+                    if ($usuarioActual) {
+                        // Obtener descargas previas del usuario
+                        $descargas_anteriores = get_user_meta($usuarioActual, 'descargas', true);
+                        $yaDescargado = isset($descargas_anteriores[$postId]);
+                        $claseExtra = $yaDescargado ? 'yaDescargado' : '';
+
+                ?>
                         <div class="ZAQIBB">
-                            <button class="icon-arrow-down <?
-                                                            $descargas_anteriores = get_user_meta($usuarioActual, 'descargas', true);
-                                                            $yaDescargado = isset($descargas_anteriores[$postId]);
-                                                            $claseExtra = $yaDescargado ? 'yaDescargado' : '';
-                                                            echo esc_attr($claseExtra); ?>" data-post-id="<? echo esc_attr($postId); ?>" aria-label="Boton Descarga" id="download-button-<? echo esc_attr($postId); ?>" onclick="return procesarDescarga('<? echo esc_js($postId); ?>', '<?php echo esc_js($usuarioActual); ?>')">
+                            <button class="icon-arrow-down <? echo esc_attr($claseExtra); ?>"
+                                data-post-id="<? echo esc_attr($postId); ?>"
+                                aria-label="Boton Descarga"
+                                id="download-button-<? echo esc_attr($postId); ?>"
+                                onclick="return procesarDescarga('<? echo esc_js($postId); ?>', '<?php echo esc_js($usuarioActual); ?>')">
                                 Descargar
                             </button>
                         </div>
-                    <? else : ?>
+                    <?
+                    } else {
+                    ?>
                         <div class="ZAQIBB">
                             <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down" aria-label="Descargar">
                                 Descargar
                             </button>
                         </div>
-                    <? endif; ?>
-                <? endif; ?>
+                <?
+                    }
+                }
+                ?>
             <? endif; ?>
         </div>
     </div>
