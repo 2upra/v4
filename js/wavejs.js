@@ -71,6 +71,16 @@ function inicializarWaveforms() {
         const pausaSL = post.querySelector('.pausaSL');
         const postId = reproducirSL.getAttribute('id-post');
 
+        if (!post.dataset.clickListenerAdded) {
+            post.addEventListener('click', event => {
+                const waveformContainer = post.querySelector('.waveform-container');
+                if (!event.target.closest('.tags-container') && !event.target.closest('.QSORIW') && waveformContainer) {
+                    handleWaveformClick(waveformContainer);
+                }
+            });
+            post.dataset.clickListenerAdded = 'true';
+        }
+        
         const hideAllButtons = () => {
             if (reproducirSL) reproducirSL.style.display = 'none';
             if (pausaSL) pausaSL.style.display = 'none';
