@@ -214,7 +214,7 @@ function opcionesPost($postId, $autorId)
                 ?>
                 <div class="ZAQIBB botonColeccion<?= $clase ?>">
                     <button class="botonColeccionBtn" aria-label="Guardar sonido" data-post-id="<?= $postId ?>" data-nonce="<?= wp_create_nonce('colec_nonce') ?>">
-                        <?= $GLOBALS['iconoGuardar'] ?? '' ?>
+                        guardar sample
                     </button>
                 </div>
             <?php endif ?>
