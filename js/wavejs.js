@@ -46,21 +46,24 @@ function inicializarWaveforms() {
         const reproducirSL = post.querySelector('.reproducirSL');
         const pausaSL = post.querySelector('.pausaSL');
         const waveformContainer = post.querySelector('.waveform-container');
-        
+
         if (!post.dataset.hoverListenerAdded) {
             post.addEventListener('mouseenter', () => {
-                if (currentlyPlayingAudio && currentlyPlayingAudio.isPlaying() && currentlyPlayingAudio.backend.buffer.src.includes(postId)) {
+              const wavesurfer = window.wavesurfers[postId];
+              if (wavesurfer && wavesurfer.isPlaying()) {
                   pausaSL.style.display = 'flex';
-                } else {
+                  reproducirSL.style.display = 'none';
+              } else {
+                  pausaSL.style.display = 'none';
                   reproducirSL.style.display = 'flex';
-                }
-            });
-        
-            post.addEventListener('mouseleave', () => {
-                reproducirSL.style.display = 'none';
-                pausaSL.style.display = 'none';
-            });
-            post.dataset.hoverListenerAdded = 'true';
+              }
+          });
+      
+          post.addEventListener('mouseleave', () => {
+              reproducirSL.style.display = 'none';
+              pausaSL.style.display = 'none';
+          });
+          post.dataset.hoverListenerAdded = 'true';
         }
 
         if (!post.dataset.clickListenerAdded) {
@@ -77,72 +80,87 @@ function inicializarWaveforms() {
         }
 
         if (waveformContainer && !waveformContainer.dataset.eventListenersAdded) {
-            waveformContainer.addEventListener('click', () => {
-                handleWaveformClick(waveformContainer);
-            });
-
-            waveformContainer.addEventListener('ready', () => {
-                
-                reproducirSL.style.display = 'none';
-                pausaSL.style.display = 'none';
-
-                const wavesurfer = window.wavesurfers[postId];
-                if(wavesurfer){
-                    wavesurfer.on('play', () => {
-                        reproducirSL.style.display = 'none';
-                        pausaSL.style.display = 'flex';
-                    });
-        
-                    wavesurfer.on('pause', () => {
-                        reproducirSL.style.display = 'flex';
-                        pausaSL.style.display = 'none';
-                    });
-
-                    wavesurfer.on('finish', () => {
-                        reproducirSL.style.display = 'flex';
-                        pausaSL.style.display = 'none';
-                    });
-                }
-            });
-            waveformContainer.dataset.eventListenersAdded = 'true';
-        }
+          waveformContainer.addEventListener('click', () => {
+              handleWaveformClick(waveformContainer);
+          });
+          
+          waveformContainer.addEventListener('ready', () => {
+              const wavesurfer = window.wavesurfers[postId];
+              if (wavesurfer) {
+                  wavesurfer.on('play', () => {
+                      if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
+                          currentlyPlayingAudio.pause();
+                      }
+                      currentlyPlayingAudio = wavesurfer;
+                      document.querySelectorAll('.POST-sampleList').forEach(otherPost => {
+                          const otherPostId = otherPost.getAttribute('id-post');
+                          const otherReproducirSL = otherPost.querySelector('.reproducirSL');
+                          const otherPausaSL = otherPost.querySelector('.pausaSL');
+                          if (otherPostId !== postId) {
+                              otherReproducirSL.style.display = 'none';
+                              otherPausaSL.style.display = 'none';
+                          } else {
+                              otherReproducirSL.style.display = 'none';
+                              otherPausaSL.style.display = 'flex';
+                          }
+                      });
+                  });
+      
+                  wavesurfer.on('pause', () => {
+                      const thisReproducirSL = post.querySelector('.reproducirSL');
+                      const thisPausaSL = post.querySelector('.pausaSL');
+                      thisReproducirSL.style.display = 'flex';
+                      thisPausaSL.style.display = 'none';
+                      if (currentlyPlayingAudio === wavesurfer) {
+                          currentlyPlayingAudio = null;
+                      }
+                  });
+      
+                  wavesurfer.on('finish', () => {
+                      const thisReproducirSL = post.querySelector('.reproducirSL');
+                      const thisPausaSL = post.querySelector('.pausaSL');
+                      thisReproducirSL.style.display = 'flex';
+                      thisPausaSL.style.display = 'none';
+                      if (currentlyPlayingAudio === wavesurfer) {
+                          currentlyPlayingAudio = null;
+                      }
+                  });
+              }
+          });
+          waveformContainer.dataset.eventListenersAdded = 'true';
+      }
     });
 
     function handleWaveformClick(container) {
-        const postId = container.getAttribute('postIDWave');
-        const audioUrl = container.getAttribute('data-audio-url');
+      const postId = container.getAttribute('postIDWave');
+      const audioUrl = container.getAttribute('data-audio-url');
+  
+      if (!postId) return;
+  
+      if (!container.dataset.audioLoaded) {
+          loadAudio(postId, audioUrl, container, true);
+      } else {
+          const wavesurfer = window.wavesurfers[postId];
+          if (wavesurfer) {
+              if (wavesurfer.isPlaying()) {
+                  wavesurfer.pause();
+              } else {
+                  wavesurfer.play();
+              }
+          }
+      }
+  }
 
-        if (!postId) return;
-
-        if (!container.dataset.audioLoaded) {
-            loadAudio(postId, audioUrl, container, true);
-        } else {
-            const wavesurfer = window.wavesurfers[postId];
-            if (wavesurfer) {
-                if (wavesurfer.isPlaying()) {
-                    wavesurfer.pause();
-                    currentlyPlayingAudio = null;
-                } else {
-                    if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
-                        currentlyPlayingAudio.pause();
-                    }
-                    wavesurfer.play();
-                    currentlyPlayingAudio = wavesurfer;
-                }
-            }
-        }
-    }
-    
     window.stopAllWaveSurferPlayers = function() {
         if (currentlyPlayingAudio) {
-          currentlyPlayingAudio.pause();
-          currentlyPlayingAudio = null;
+            currentlyPlayingAudio.pause();
         }
         for (const postId in window.wavesurfers) {
-          if (window.wavesurfers[postId].isPlaying()) {
-            window.wavesurfers[postId].pause();
-          }
+            if (window.wavesurfers[postId].isPlaying()) {
+                window.wavesurfers[postId].pause();
+            }
         }
+        currentlyPlayingAudio = null;
     };
 }
 
