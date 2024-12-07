@@ -26,7 +26,7 @@ function inicializarWaveforms() {
                 }
             });
         },
-        { threshold: 0.5 }
+        {threshold: 0.5}
     );
 
     document.querySelectorAll('.waveform-container').forEach(container => {
@@ -38,6 +38,13 @@ function inicializarWaveforms() {
                 container.dataset.initialized = 'true';
                 observer.observe(container);
             }
+        }
+
+        if (!container.dataset.clickListenerAdded) {
+            container.addEventListener('click', () => {
+                handleWaveformClick(container);
+            });
+            container.dataset.clickListenerAdded = 'true';
         }
     });
 
@@ -68,7 +75,7 @@ function inicializarWaveforms() {
             });
             post.dataset.hoverListenerAdded = 'true';
         }
-        
+
         if (!post.dataset.clickListenerAdded) {
             post.addEventListener('click', event => {
                 const clickedElement = event.target;
@@ -81,12 +88,8 @@ function inicializarWaveforms() {
             });
             post.dataset.clickListenerAdded = 'true';
         }
-        
+
         if (waveformContainer && !waveformContainer.dataset.eventListenersAdded) {
-            waveformContainer.addEventListener('click', () => {
-                handleWaveformClick(waveformContainer);
-            });
-            
             waveformContainer.addEventListener('ready', () => {
                 const wavesurfer = window.wavesurfers[postId];
                 if (wavesurfer) {
@@ -108,7 +111,7 @@ function inicializarWaveforms() {
                             }
                         });
                     });
-            
+
                     wavesurfer.on('pause', () => {
                         const thisReproducirSL = post.querySelector('.reproducirSL');
                         const thisPausaSL = post.querySelector('.pausaSL');
@@ -118,7 +121,7 @@ function inicializarWaveforms() {
                             currentlyPlayingAudio = null;
                         }
                     });
-            
+
                     wavesurfer.on('finish', () => {
                         const thisReproducirSL = post.querySelector('.reproducirSL');
                         const thisPausaSL = post.querySelector('.pausaSL');
@@ -154,7 +157,7 @@ function inicializarWaveforms() {
         }
     }
 
-    window.stopAllWaveSurferPlayers = function() {
+    window.stopAllWaveSurferPlayers = function () {
         if (currentlyPlayingAudio) {
             currentlyPlayingAudio.pause();
         }
@@ -166,7 +169,6 @@ function inicializarWaveforms() {
         currentlyPlayingAudio = null;
     };
 }
-
 
 function loadAudio(postId, audioUrl, container, playOnLoad) {
     if (!postId) {
