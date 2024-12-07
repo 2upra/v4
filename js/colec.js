@@ -17,6 +17,7 @@ function iniciarColec() {
         const btn = e.target.closest('.botonColeccionBtn');
         if (btn) {
             e.preventDefault();
+            e.stopPropagation(); // Añade esta línea
             colecSampleId = btn.getAttribute('data-post_id');
             abrirColec();
         }
