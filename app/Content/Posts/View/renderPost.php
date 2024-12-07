@@ -59,7 +59,7 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
         <? echo imagenPostList($block, $es_suscriptor, $post_id); ?>
         <div class="INFOLISTSAMPLE">
             <div class="CONTENTLISTSAMPLE">
-                <a href="" id-post="<? echo $post_id; ?>">
+                <a id-post="<? echo $post_id; ?>">
                     <?
                     // Obtener y limpiar el contenido
                     $content = get_post_field('post_content', $post_id);
