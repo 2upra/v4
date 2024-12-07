@@ -164,7 +164,7 @@ function opcionesPost($postId, $autorId)
     <div class="A1806241" id="opcionespost-<? echo $postId; ?>">
         <div class="A1806242">
             <? if (current_user_can('administrator')) : ?>
-                <button class="iralpost"><a href="<? echo esc_url(get_permalink()); ?>"></a></button>
+                <button class="iralpost"><a href="<? echo esc_url(get_permalink()); ?>">Ir al post</a></button>
                 <button class="eliminarPost" data-post-id="<? echo $postId; ?>">Eliminar</button>
                 <? if (!$post_verificado) : ?>
                     <button class="verificarPost" data-post-id="<? echo $postId; ?>">Verificar</button>
@@ -178,7 +178,7 @@ function opcionesPost($postId, $autorId)
                     <button class="permitirDescarga" data-post-id="<? echo $postId; ?>">Permitir descarga</button>
                 <? endif; ?>
             <? elseif ($usuarioActual == $autorId) : ?>
-                <button class="iralpost"><a href="<? echo esc_url(get_permalink()); ?>"></a></button>
+                <button class="iralpost"><a href="<? echo esc_url(get_permalink()); ?>">Ir al post</a></button>
                 <button class="corregirTags" data-post-id="<? echo $postId; ?>">Corregir tags</button>
                 <button class="editarPost" data-post-id="<? echo $postId; ?>">Editar</button>
                 <button class="eliminarPost" data-post-id="<? echo $postId; ?>">Eliminar</button>
@@ -187,7 +187,7 @@ function opcionesPost($postId, $autorId)
                     <button class="permitirDescarga" data-post-id="<? echo $postId; ?>">Permitir descarga</button>
                 <? endif; ?>
             <? else : ?>
-                <button class="iralpost"><a href="<? echo esc_url(get_permalink()); ?>"></a></button>
+                <button class="iralpost"><a href="<? echo esc_url(get_permalink()); ?>">Ir al post</a></button>
                 <button class="reporte" data-post-id="<? echo $postId; ?>" tipoContenido="social_post">Reportar</button>
                 <button class="bloquear" data-post-id="<? echo $postId; ?>">Bloquear</button>
                 
