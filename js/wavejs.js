@@ -100,46 +100,51 @@ function inicializarWaveforms() {
 
         post.addEventListener('mouseenter', () => {
             if (audioPlayingStatus && currentlyPlayingAudio === window.wavesurfers[postId]) {
-                showPauseButton();
+                if (pausaSL) pausaSL.style.display = 'flex';
             } else {
-                showPlayButton();
+                if (reproducirSL) reproducirSL.style.display = 'flex';
             }
         });
 
         post.addEventListener('mouseleave', () => {
             if (!(audioPlayingStatus && currentlyPlayingAudio === window.wavesurfers[postId])) {
-                hideAllButtons();
+                if (reproducirSL) reproducirSL.style.display = 'none';
+                if (pausaSL) pausaSL.style.display = 'none';
             }
         });
 
-        if (window.wavesurfers && window.wavesurfers[postId]) {
-            window.wavesurfers[postId].on('play', () => {
-                audioPlayingStatus = true;
-                currentlyPlayingAudio = window.wavesurfers[postId];
-                showPauseButton();
-            });
+        window.wavesurfers[postId].on('play', () => {
+            audioPlayingStatus = true;
+            currentlyPlayingAudio = window.wavesurfers[postId];
+            if (pausaSL) pausaSL.style.display = 'flex';
+            if (reproducirSL) reproducirSL.style.display = 'none';
+        });
 
-            window.wavesurfers[postId].on('pause', () => {
-                if (currentlyPlayingAudio === window.wavesurfers[postId]) {
-                    audioPlayingStatus = false;
-                    currentlyPlayingAudio = null;
-                }
-                hideAllButtons();
-            });
+        window.wavesurfers[postId].on('pause', () => {
+            if (currentlyPlayingAudio === window.wavesurfers[postId]) {
+                audioPlayingStatus = false;
+                currentlyPlayingAudio = null;
+            }
+            if (pausaSL) pausaSL.style.display = 'none';
+            if (reproducirSL) reproducirSL.style.display = 'flex';
+        });
 
-            window.wavesurfers[postId].on('finish', () => {
-                if (currentlyPlayingAudio === window.wavesurfers[postId]) {
-                    audioPlayingStatus = false;
-                    currentlyPlayingAudio = null;
-                }
-                hideAllButtons();
-            });
-        }
+        window.wavesurfers[postId].on('finish', () => {
+            if (currentlyPlayingAudio === window.wavesurfers[postId]) {
+                audioPlayingStatus = false;
+                currentlyPlayingAudio = null;
+            }
+            if (pausaSL) pausaSL.style.display = 'none';
+            if (reproducirSL) reproducirSL.style.display = 'flex';
+        });
     });
 
     function handleWaveformClick(container) {
         const postId = container.getAttribute('postIDWave');
         if (!postId) return;
+
+        const reproducirSL = document.querySelector(`#reproducirSL-${postId}`);
+        const pausaSL = document.querySelector(`#pausaSL-${postId}`);
 
         if (audioPlayingStatus && currentlyPlayingAudio !== window.wavesurfers[postId]) {
             if (currentlyPlayingAudio) {
@@ -159,10 +164,12 @@ function inicializarWaveforms() {
                     wavesurfer.pause();
                     audioPlayingStatus = false;
                     currentlyPlayingAudio = null;
+                    if (pausaSL) pausaSL.style.display = 'none';
                 } else {
                     wavesurfer.play();
                     audioPlayingStatus = true;
                     currentlyPlayingAudio = wavesurfer;
+                    if (pausaSL) pausaSL.style.display = 'flex';
                 }
             }
         }

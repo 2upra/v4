@@ -253,17 +253,22 @@ function imagenPostList($block, $es_suscriptor, $postId)
         <a>
             <img src="<?= esc_url($processed_image_url); ?>" alt="Post Image" />
         </a>
-        <div class="botonesRep" >
-            <div class="reproducirSL" id-post="<? echo $postId; ?>"><? echo $GLOBALS['play'];?></div>
-            <div class="pausaSL" id-post="<? echo $postId; ?>"><? echo $GLOBALS['pause'];?></div>
+        <div class="botonesRep">
+            <!-- ID único basado en el postId -->
+            <div class="reproducirSL" id="reproducirSL-<?= esc_attr($postId); ?>" id-post="<?= esc_attr($postId); ?>">
+                <?= esc_html($GLOBALS['play']); ?>
+            </div>
+            <div class="pausaSL" id="pausaSL-<?= esc_attr($postId); ?>" id-post="<?= esc_attr($postId); ?>">
+                <?= esc_html($GLOBALS['pause']); ?>
+            </div>
         </div>
     </div>
 <?php
-
     $output = ob_get_clean();
 
     return $output;
 }
+
 
 
 function obtenerImagenAleatoria($directory)
