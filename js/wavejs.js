@@ -39,30 +39,72 @@ function inicializarWaveforms() {
                 observer.observe(container);
             }
         }
-
-        if (!container.dataset.clickListenerAdded) {
-            container.addEventListener('click', () => {
-                handleWaveformClick(container);
-            });
-            container.dataset.clickListenerAdded = 'true';
-        }
     });
 
     document.querySelectorAll('.POST-sampleList').forEach(post => {
+        const postId = post.getAttribute('id-post');
+        const reproducirSL = post.querySelector('.reproducirSL');
+        const pausaSL = post.querySelector('.pausaSL');
+        const waveformContainer = post.querySelector('.waveform-container');
+        
+        if (!post.dataset.hoverListenerAdded) {
+            post.addEventListener('mouseenter', () => {
+                if (currentlyPlayingAudio && currentlyPlayingAudio.isPlaying() && currentlyPlayingAudio.backend.buffer.src.includes(postId)) {
+                  pausaSL.style.display = 'block';
+                } else {
+                  reproducirSL.style.display = 'block';
+                }
+            });
+        
+            post.addEventListener('mouseleave', () => {
+                reproducirSL.style.display = 'none';
+                pausaSL.style.display = 'none';
+            });
+            post.dataset.hoverListenerAdded = 'true';
+        }
+
         if (!post.dataset.clickListenerAdded) {
             post.addEventListener('click', event => {
-                const waveformContainer = post.querySelector('.waveform-container');
                 const clickedElement = event.target;
-
                 if (clickedElement.closest('.tags-container') || clickedElement.closest('.QSORIW')) {
                     return;
                 }
-
                 if (waveformContainer) {
                     handleWaveformClick(waveformContainer);
                 }
             });
             post.dataset.clickListenerAdded = 'true';
+        }
+
+        if (waveformContainer && !waveformContainer.dataset.eventListenersAdded) {
+            waveformContainer.addEventListener('click', () => {
+                handleWaveformClick(waveformContainer);
+            });
+
+            waveformContainer.addEventListener('ready', () => {
+                
+                reproducirSL.style.display = 'none';
+                pausaSL.style.display = 'none';
+
+                const wavesurfer = window.wavesurfers[postId];
+                if(wavesurfer){
+                    wavesurfer.on('play', () => {
+                        reproducirSL.style.display = 'none';
+                        pausaSL.style.display = 'block';
+                    });
+        
+                    wavesurfer.on('pause', () => {
+                        reproducirSL.style.display = 'block';
+                        pausaSL.style.display = 'none';
+                    });
+
+                    wavesurfer.on('finish', () => {
+                        reproducirSL.style.display = 'block';
+                        pausaSL.style.display = 'none';
+                    });
+                }
+            });
+            waveformContainer.dataset.eventListenersAdded = 'true';
         }
     });
 
@@ -90,6 +132,7 @@ function inicializarWaveforms() {
             }
         }
     }
+    
     window.stopAllWaveSurferPlayers = function() {
         if (currentlyPlayingAudio) {
           currentlyPlayingAudio.pause();
