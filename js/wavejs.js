@@ -134,30 +134,37 @@ function clickWaveContainer(posts) {
 }
 
 function waveEscucha(posts) {
+    console.log("🎧 waveEscucha: Inicializando...");
     posts.forEach(post => {
         const postId = post.getAttribute('id-post');
         const waveformContainer = post.querySelector('.waveform-container');
 
         if (waveformContainer && !waveformContainer.dataset.eventListenersAdded) {
+            console.log(`👂 waveEscucha: Agregando listeners para post ${postId}`);
             waveformContainer.addEventListener('ready', () => {
                 const wavesurfer = window.wavesurfers[postId];
                 if (wavesurfer) {
                     wavesurfer.on('play', () => {
+                        console.log(`▶️ waveEscucha: Evento 'play' en post ${postId}`);
                         playWave(wavesurfer, postId);
                     });
 
                     wavesurfer.on('pause', () => {
+                        console.log(`⏸️ waveEscucha: Evento 'pause' en post ${postId}`);
                         pausaWave(wavesurfer, post);
                     });
 
                     wavesurfer.on('finish', () => {
+                        console.log(`🏁 waveEscucha: Evento 'finish' en post ${postId}`);
                         finalWave(wavesurfer, post);
                     });
                 }
             });
             waveformContainer.dataset.eventListenersAdded = 'true';
+            console.log(`✅ waveEscucha: Listeners agregados para post ${postId}`);
         }
     });
+    console.log("💯 waveEscucha: Finalizado.");
 }
 
 
