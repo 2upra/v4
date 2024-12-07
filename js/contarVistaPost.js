@@ -28,6 +28,6 @@ function actualizarVistasServidor(postId) {
         },
         body: 'action=guardar_vistas&id_post=' + postId
     }).then(response => response.json()).then(data => {
-        console.log('Vistas actualizadas para el post ' + postId);
+        //console.log('Vistas actualizadas para el post ' + postId);
     });
 }
