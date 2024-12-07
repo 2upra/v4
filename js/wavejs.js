@@ -48,19 +48,31 @@ function inicializarWaveforms() {
         }
     });
 
+    /*
+    la primera vez que entro al post sin ser reproducido, no muestra nada 
+    wavejs.js?ver=3.0.48.1145771662:59 ➡️ Entrando al post: 322777
+    wavejs.js?ver=3.0.48.1145771662:73 ⬅️ Saliendo del post: 322777
+    wavejs.js?ver=3.0.48.1145771662:59 ➡️ Entrando al post: 322777
+
+    despues de dar click tampoco
+    wavejs.js?ver=3.0.48.1145771662:96 👆 Clic en waveform de post: 322777
+    wavejs.js?ver=3.0.48.1145771662:170 🔄 Función handleWaveformClick
+    wavejs.js?ver=3.0.48.1145771662:180 ⏳ Cargando audio en post: 322777
+    wavejs.js?ver=3.0.48.1145771662:73 ⬅️ Saliendo del post: 322777
+    
+    nada mas hasta que vuelvo a entrar
+    wavejs.js?ver=3.0.48.1145771662:59 ➡️ Entrando al post: 322777
+    wavejs.js?ver=3.0.48.1145771662:62 ⏸️ Mostrando pausa en post: 322777
+
+    debería sin ser reproducido mostrar el boton de play, 
+    */
+
     document.querySelectorAll('.POST-sampleList').forEach(post => {
         const postId = post.getAttribute('id-post');
         const reproducirSL = post.querySelector('.reproducirSL');
         const pausaSL = post.querySelector('.pausaSL');
         const waveformContainer = post.querySelector('.waveform-container');
-
-        post.addEventListener('mouseenter', () => {
-            console.log(`🔄 Inicializando post: ${postId}`);
-            pausaSL.style.display = 'none';
-            reproducirSL.style.display = 'flex';
-            console.log(`▶️ Mostrando play inicialmente en post: ${postId}`);
-        });
-
+    
         if (!post.dataset.hoverListenerAdded) {
             post.addEventListener('mouseenter', () => {
                 console.log(`➡️ Entrando al post: ${postId}`);
@@ -75,30 +87,30 @@ function inicializarWaveforms() {
                     reproducirSL.style.display = 'flex';
                 }
             });
-
+    
             post.addEventListener('mouseleave', () => {
                 console.log(`⬅️ Saliendo del post: ${postId}`);
-                reproducirSL.style.display = 'none';
-                if (wavesurfer.isPlaying()) {
-                    reproducirSL.style.display = 'none';
-                    pausaSL.style.display = 'flex';
-                }
                 const wavesurfer = window.wavesurfers[postId];
+                if (!(wavesurfer && wavesurfer.isPlaying())) {
+                    console.log(`🙈 Ocultando botones en post: ${postId}`);
+                    reproducirSL.style.display = 'none';
+                    pausaSL.style.display = 'none';
+                }
             });
             post.dataset.hoverListenerAdded = 'true';
             console.log(`✅ Eventos hover añadidos a post: ${postId}`);
         }
-
+    
         if (!post.dataset.clickListenerAdded) {
             post.addEventListener('click', event => {
                 const waveformContainer = post.querySelector('.waveform-container');
                 const clickedElement = event.target;
-
+    
                 if (clickedElement.closest('.tags-container') || clickedElement.closest('.QSORIW')) {
                     console.log(`🚫 Clic en elemento no permitido en post: ${postId}`);
                     return;
                 }
-
+    
                 if (waveformContainer) {
                     console.log(`👆 Clic en waveform de post: ${postId}`);
                     handleWaveformClick(waveformContainer);
@@ -107,13 +119,13 @@ function inicializarWaveforms() {
             post.dataset.clickListenerAdded = 'true';
             console.log(`✅ Evento click añadido a post: ${postId}`);
         }
-
+    
         if (waveformContainer && !waveformContainer.dataset.eventListenersAdded) {
             waveformContainer.addEventListener('click', () => {
                 console.log(`👆 Clic en waveform de post: ${postId}`);
                 handleWaveformClick(waveformContainer);
             });
-
+    
             waveformContainer.addEventListener('ready', () => {
                 console.log(`🌊 Waveform listo en post: ${postId}`);
                 const wavesurfer = window.wavesurfers[postId];
@@ -140,7 +152,7 @@ function inicializarWaveforms() {
                             }
                         });
                     });
-
+    
                     wavesurfer.on('pause', () => {
                         console.log(`⏸️ Pausado en post: ${postId}`);
                         const thisReproducirSL = post.querySelector('.reproducirSL');
@@ -153,7 +165,7 @@ function inicializarWaveforms() {
                             currentlyPlayingAudio = null;
                         }
                     });
-
+    
                     wavesurfer.on('finish', () => {
                         console.log(`⏹️ Fin de reproducción en post: ${postId}`);
                         const thisReproducirSL = post.querySelector('.reproducirSL');
@@ -172,17 +184,17 @@ function inicializarWaveforms() {
             console.log(`✅ Eventos de waveform añadidos a post: ${postId}`);
         }
     });
-
+    
     function handleWaveformClick(container) {
         console.log(`🔄 Función handleWaveformClick`);
         const postId = container.getAttribute('postIDWave');
         const audioUrl = container.getAttribute('data-audio-url');
-
+    
         if (!postId) {
             console.log(`❌ postId no encontrado`);
             return;
         }
-
+    
         if (!container.dataset.audioLoaded) {
             console.log(`⏳ Cargando audio en post: ${postId}`);
             loadAudio(postId, audioUrl, container, true);
