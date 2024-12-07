@@ -210,7 +210,9 @@ function finalWave(wavesurfer, post) {
 }
 
 function manejoWave(container) {
-    const postId = container.getAttribute('postIDWave');
+    if (!(container instanceof Element)) return; // Verifica que container sea un elemento del DOM.
+
+    const postId = container.getAttribute('postidwave');
     const audioUrl = container.getAttribute('data-audio-url');
 
     if (!postId) return;
