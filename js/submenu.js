@@ -99,6 +99,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
             if (!submenu.contains(event.target) && !event.target.matches(triggerSelector)) {
                 hideSubmenu(submenu);
+                
             }
         });
     });
@@ -131,6 +132,7 @@ window.createSubmenuDarkBackground = function () {
         darkBackground.addEventListener('click', () => {
             document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
                 hideSubmenu(submenu);
+                cerrarColec();
             });
         });
     }

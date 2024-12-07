@@ -226,16 +226,19 @@ async function abrirColec() {
 }
 
 // Función para cerrar el modal "Colec"
-function cerrarColec() {
+window.cerrarColec = function () {
     const modal = document.querySelector('.modalColec');
     if (!modal) {
         console.error('Modal no encontrado');
         return;
-    }
+    }   
+    ocultar(a('.modalColec'));
+    ocultar(a('.modalCrearColec'));
 
-    ocultar(modal);
+    quitBackground();
     removeSubmenuDarkBackground();
     document.body.classList.remove('no-scroll');
+    resetColec();
 }
 
 
@@ -448,13 +451,7 @@ function subidaImagenColec() {
     });
 }
 
-function cerrarColec() {
-    ocultar(a('.modalColec'));
-    ocultar(a('.modalCrearColec'));
-    quitBackground();
-    a.quitar('body', 'no-scroll');
-    resetColec();
-}
+
 
 function resetColec() {
     colecSampleId = null;
