@@ -53,13 +53,14 @@ function inicializarWaveforms() {
         const reproducirSL = post.querySelector('.reproducirSL');
         const pausaSL = post.querySelector('.pausaSL');
         const waveformContainer = post.querySelector('.waveform-container');
-    
-        // Mostrar el botón de play al inicio
-        console.log(`🔄 Inicializando post: ${postId}`);
-        pausaSL.style.display = 'none';
-        reproducirSL.style.display = 'flex';
-        console.log(`▶️ Mostrando play inicialmente en post: ${postId}`);
-    
+
+        post.addEventListener('mouseenter', () => {
+            console.log(`🔄 Inicializando post: ${postId}`);
+            pausaSL.style.display = 'none';
+            reproducirSL.style.display = 'flex';
+            console.log(`▶️ Mostrando play inicialmente en post: ${postId}`);
+        });
+
         if (!post.dataset.hoverListenerAdded) {
             post.addEventListener('mouseenter', () => {
                 console.log(`➡️ Entrando al post: ${postId}`);
@@ -74,7 +75,7 @@ function inicializarWaveforms() {
                     reproducirSL.style.display = 'flex';
                 }
             });
-    
+
             post.addEventListener('mouseleave', () => {
                 console.log(`⬅️ Saliendo del post: ${postId}`);
                 const wavesurfer = window.wavesurfers[postId];
@@ -87,17 +88,17 @@ function inicializarWaveforms() {
             post.dataset.hoverListenerAdded = 'true';
             console.log(`✅ Eventos hover añadidos a post: ${postId}`);
         }
-    
+
         if (!post.dataset.clickListenerAdded) {
             post.addEventListener('click', event => {
                 const waveformContainer = post.querySelector('.waveform-container');
                 const clickedElement = event.target;
-    
+
                 if (clickedElement.closest('.tags-container') || clickedElement.closest('.QSORIW')) {
                     console.log(`🚫 Clic en elemento no permitido en post: ${postId}`);
                     return;
                 }
-    
+
                 if (waveformContainer) {
                     console.log(`👆 Clic en waveform de post: ${postId}`);
                     handleWaveformClick(waveformContainer);
@@ -106,13 +107,13 @@ function inicializarWaveforms() {
             post.dataset.clickListenerAdded = 'true';
             console.log(`✅ Evento click añadido a post: ${postId}`);
         }
-    
+
         if (waveformContainer && !waveformContainer.dataset.eventListenersAdded) {
             waveformContainer.addEventListener('click', () => {
                 console.log(`👆 Clic en waveform de post: ${postId}`);
                 handleWaveformClick(waveformContainer);
             });
-    
+
             waveformContainer.addEventListener('ready', () => {
                 console.log(`🌊 Waveform listo en post: ${postId}`);
                 const wavesurfer = window.wavesurfers[postId];
@@ -139,7 +140,7 @@ function inicializarWaveforms() {
                             }
                         });
                     });
-    
+
                     wavesurfer.on('pause', () => {
                         console.log(`⏸️ Pausado en post: ${postId}`);
                         const thisReproducirSL = post.querySelector('.reproducirSL');
@@ -152,7 +153,7 @@ function inicializarWaveforms() {
                             currentlyPlayingAudio = null;
                         }
                     });
-    
+
                     wavesurfer.on('finish', () => {
                         console.log(`⏹️ Fin de reproducción en post: ${postId}`);
                         const thisReproducirSL = post.querySelector('.reproducirSL');
@@ -171,17 +172,17 @@ function inicializarWaveforms() {
             console.log(`✅ Eventos de waveform añadidos a post: ${postId}`);
         }
     });
-    
+
     function handleWaveformClick(container) {
         console.log(`🔄 Función handleWaveformClick`);
         const postId = container.getAttribute('postIDWave');
         const audioUrl = container.getAttribute('data-audio-url');
-    
+
         if (!postId) {
             console.log(`❌ postId no encontrado`);
             return;
         }
-    
+
         if (!container.dataset.audioLoaded) {
             console.log(`⏳ Cargando audio en post: ${postId}`);
             loadAudio(postId, audioUrl, container, true);
