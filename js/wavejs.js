@@ -26,7 +26,7 @@ function inicializarWaveforms() {
                 }
             });
         },
-        {threshold: 0.5}
+        { threshold: 0.5 }
     );
 
     function setupWaveformContainer(container) {
@@ -63,24 +63,27 @@ function inicializarWaveforms() {
     function handleWaveformClick(container) {
         const postId = container.getAttribute('postIDWave');
         if (!postId) return;
-
-        if (currentlyPlayingAudio && currentlyPlayingAudio !== window.wavesurfers[postId]) {
-            currentlyPlayingAudio.pause();
+    
+        
+        if (window.wavesurfers[postId] && window.wavesurfers[postId].isPlaying() && currentlyPlayingAudio === window.wavesurfers[postId]) {
+          window.wavesurfers[postId].pause();
+          currentlyPlayingAudio = null;
+          return;
         }
-        currentlyPlayingAudio = null;
 
+        
+        stopAllWaveSurferPlayers();
+
+        
         if (!container.dataset.audioLoaded) {
             const audioUrl = container.getAttribute('data-audio-url');
             loadAudio(postId, audioUrl, container, true);
         } else {
             const wavesurfer = window.wavesurfers[postId];
             if (wavesurfer) {
-                if (wavesurfer.isPlaying()) {
-                    wavesurfer.pause();
-                } else {
-                    wavesurfer.play();
-                    currentlyPlayingAudio = wavesurfer;
-                }
+                
+              wavesurfer.play();
+              currentlyPlayingAudio = wavesurfer;
             }
         }
     }
@@ -91,7 +94,7 @@ function inicializarWaveforms() {
             currentlyPlayingAudio = null;
         }
         for (const postId in window.wavesurfers) {
-            if (window.wavesurfers[postId].isPlaying()) {
+            if (window.wavesurfers[postId] && window.wavesurfers[postId].isPlaying()) {
                 window.wavesurfers[postId].pause();
             }
         }
