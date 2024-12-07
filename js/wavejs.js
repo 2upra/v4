@@ -77,7 +77,12 @@ function inicializarWaveforms() {
                 currentlyPlayingAudio = null;
         }
 
+        
         if (!container.dataset.audioLoaded) {
+            if(currentlyPlayingAudio){
+                currentlyPlayingAudio.pause();
+                currentlyPlayingAudio = null;
+            }
             loadAudio(postId, audioUrl, container, true);
         } else {
             const wavesurfer = window.wavesurfers[postId];
@@ -86,6 +91,10 @@ function inicializarWaveforms() {
                     wavesurfer.pause();
                     currentlyPlayingAudio = null;
                 } else {
+                    if(currentlyPlayingAudio){
+                        currentlyPlayingAudio.pause();
+                        currentlyPlayingAudio = null;
+                    }
                     wavesurfer.play();
                     currentlyPlayingAudio = wavesurfer;
                 }
@@ -191,6 +200,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     }
                     if (playOnLoad) {
                         wavesurfer.play();
+                        currentlyPlayingAudio = wavesurfer;
                     }
                 });
 
