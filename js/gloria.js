@@ -66,20 +66,3 @@ function addTransition(element, from, to) {
     );
 }
 
-window.mostrar = function (element) {
-    if (!element || !(element instanceof Element)) {
-        console.error('No se proporcionó un elemento válido o el elemento no es de tipo Element');
-        return;
-    }
-
-    if (getComputedStyle(element).display === 'none') {
-        element._previousDisplay = getComputedStyle(element).display === 'none' ? 'block' : getComputedStyle(element).display;
-        addTransition(element, 0, 1);
-    }
-};
-
-window.ocultar = function (element) {
-    if (element && getComputedStyle(element).display !== 'none') {
-        addTransition(element, 1, 0);
-    }
-};

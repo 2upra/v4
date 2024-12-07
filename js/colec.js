@@ -207,19 +207,100 @@ async function crearNuevaColec() {
 }
 
 async function abrirColec() {
-    //console.log('Función abrirColec iniciada');
     if (!colecSampleId) {
         console.warn('colecSampleId no está definido');
         return; // Evitar abrir el modal sin un ID válido
     }
-    const modal = a('.modalColec');
+
+    const modal = document.querySelector('.modalColec');
+    if (!modal) {
+        console.error('Modal no encontrado');
+        return;
+    }
+
     mostrar(modal);
     crearBackgroundColec();
-    a.gregar('body', 'no-scroll');
-    //console.log('Modal mostrado y fondo creado');
+    document.body.classList.add('no-scroll'); // Evita que el fondo se desplace al abrir el modal
+
+    // Simulación de función asíncrona
     await verificarSampleEnColecciones();
-    //console.log('verificarSampleEnColecciones completado');
 }
+
+// Función para cerrar el modal "Colec"
+function cerrarColec() {
+    const modal = document.querySelector('.modalColec');
+    if (!modal) {
+        console.error('Modal no encontrado');
+        return;
+    }
+
+    ocultar(modal);
+    quitBackground();
+    document.body.classList.remove('no-scroll'); // Permite que el fondo se desplace de nuevo
+}
+
+// Crear el fondo oscuro detrás del modal
+function crearBackgroundColec() {
+    // Verifica si ya existe el fondo oscuro para no duplicarlo
+    let darkBackground = document.querySelector('.submenu-background');
+    if (darkBackground) return;
+
+    // Crear el elemento div para el fondo oscuro
+    darkBackground = document.createElement('div');
+    darkBackground.classList.add('submenu-background');
+    Object.assign(darkBackground.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        zIndex: '998',
+        pointerEvents: 'auto',
+    });
+
+    // Añadir el fondo al cuerpo del documento
+    document.body.appendChild(darkBackground);
+
+    // Agregar evento para cerrar el modal al hacer clic en el fondo oscuro
+    darkBackground.addEventListener('click', cerrarColec, { once: true });
+}
+
+// Eliminar el fondo oscuro
+function quitBackground() {
+    const darkBackground = document.querySelector('.submenu-background');
+    if (darkBackground) {
+        darkBackground.remove();
+    }
+}
+
+// Mostrar un elemento (con animación opcional)
+window.mostrar = function (element) {
+    if (!element || !(element instanceof Element)) {
+        console.error('No se proporcionó un elemento válido o el elemento no es de tipo Element');
+        return;
+    }
+
+    // Cambiar el estilo CSS para mostrar el elemento
+    element.style.display = element._previousDisplay || 'block';
+    element.style.opacity = '1';
+    element.style.transition = 'opacity 0.3s ease';
+};
+
+// Ocultar un elemento (con animación opcional)
+window.ocultar = function (element) {
+    if (element && getComputedStyle(element).display !== 'none') {
+        element.style.opacity = '0';
+        element.style.transition = 'opacity 0.3s ease';
+
+        // Esperar a que termine la transición antes de ocultar completamente
+        setTimeout(() => {
+            element.style.display = 'none';
+        }, 300);
+    }
+};
+
+
 
 async function verificarSampleEnColecciones() {
     //console.log('Función verificarSampleEnColecciones iniciada');
@@ -420,29 +501,3 @@ function resetColec() {
     button.innerText = 'Listo';
 }
 
-function quitBackground() {
-    const darkBackground = a('.submenu-background');
-    if (darkBackground) {
-        darkBackground.remove();
-    }
-}
-
-function crearBackgroundColec() {
-    if (a('.submenu-background')) return;
-
-    const darkBackground = document.createElement('div');
-    darkBackground.classList.add('submenu-background');
-    Object.assign(darkBackground.style, {
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        zIndex: '998',
-        pointerEvents: 'auto'
-    });
-    document.body.appendChild(darkBackground);
-    darkBackground.addEventListener('click', cerrarColec, {once: true});
-    return darkBackground;
-}
