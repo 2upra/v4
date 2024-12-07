@@ -245,7 +245,7 @@ function imagenPostList($block, $es_suscriptor, $postId)
     ob_start();
 ?>
     <div class="post-image-container <?= esc_attr($blurred_class) ?>">
-        <a href="<?= esc_url(get_permalink($postId)); ?>">
+        <a>
             <img src="<?= esc_url($processed_image_url); ?>" alt="Post Image" />
         </a>
     </div>

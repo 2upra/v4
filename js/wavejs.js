@@ -64,9 +64,7 @@ function inicializarWaveforms() {
                 const clickedElement = event.target;
                 if (
                     clickedElement.closest('.tags-container') ||
-                    clickedElement.closest('.QSORIW') ||
-                    clickedElement.closest('.post-image-container') ||
-                    clickedElement.closest('.CONTENTLISTSAMPLE')
+                    clickedElement.closest('.QSORIW')
                 ) {
                     //console.log('Clic ignorado por estar dentro de un contenedor excluido.');
                     return;
