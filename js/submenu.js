@@ -62,15 +62,14 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
 
         document.body.classList.add('no-scroll');
 
+        // Delegate button clicks within the submenu
         submenu.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-
-        const submenuButtons = submenu.querySelectorAll('button');
-        submenuButtons.forEach(button => {
-            button.addEventListener('click', () => {
+            const btn = e.target.closest('button');
+            if (btn) {
                 hideSubmenu(submenu);
-            });
+            }
+            // Important: Stop propagation to prevent the submenu from closing
+            e.stopPropagation();
         });
     }
 
@@ -97,7 +96,8 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
 
     document.addEventListener("click", (event) => {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
-            if (!submenu.contains(event.target) && !event.target.matches(triggerSelector)) {
+            // Check if the click is outside the submenu AND not on the trigger
+            if (!submenu.contains(event.target) && !event.target.closest(triggerSelector)) {
                 hideSubmenu(submenu);
             }
         });
