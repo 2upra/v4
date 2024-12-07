@@ -26,10 +26,10 @@ function inicializarWaveforms() {
                 }
             });
         },
-        { threshold: 0.5 }
+        {threshold: 0.5}
     );
 
-    document.querySelectorAll('.waveform-container').forEach(container => {
+    function setupWaveformContainer(container) {
         if (!container.dataset.initialized) {
             const postId = container.getAttribute('postIDWave');
             const audioUrl = container.getAttribute('data-audio-url');
@@ -41,24 +41,18 @@ function inicializarWaveforms() {
         }
 
         if (!container.dataset.clickListenerAdded) {
-            container.addEventListener('click', () => {
-                handleWaveformClick(container);
-            });
+            container.addEventListener('click', () => handleWaveformClick(container));
             container.dataset.clickListenerAdded = 'true';
         }
-    });
+    }
+
+    document.querySelectorAll('.waveform-container').forEach(setupWaveformContainer);
 
     document.querySelectorAll('.POST-sampleList').forEach(post => {
         if (!post.dataset.clickListenerAdded) {
             post.addEventListener('click', event => {
                 const waveformContainer = post.querySelector('.waveform-container');
-                const clickedElement = event.target;
-
-                if (clickedElement.closest('.tags-container') || clickedElement.closest('.QSORIW')) {
-                    return;
-                }
-
-                if (waveformContainer) {
+                if (!event.target.closest('.tags-container') && !event.target.closest('.QSORIW') && waveformContainer) {
                     handleWaveformClick(waveformContainer);
                 }
             });
@@ -68,33 +62,22 @@ function inicializarWaveforms() {
 
     function handleWaveformClick(container) {
         const postId = container.getAttribute('postIDWave');
-        const audioUrl = container.getAttribute('data-audio-url');
-
         if (!postId) return;
 
-        if (currentlyPlayingAudio && (currentlyPlayingAudio !== window.wavesurfers[postId])) {
-                currentlyPlayingAudio.pause();
-                currentlyPlayingAudio = null;
+        if (currentlyPlayingAudio && currentlyPlayingAudio !== window.wavesurfers[postId]) {
+            currentlyPlayingAudio.pause();
         }
+        currentlyPlayingAudio = null;
 
-        
         if (!container.dataset.audioLoaded) {
-            if(currentlyPlayingAudio){
-                currentlyPlayingAudio.pause();
-                currentlyPlayingAudio = null;
-            }
+            const audioUrl = container.getAttribute('data-audio-url');
             loadAudio(postId, audioUrl, container, true);
         } else {
             const wavesurfer = window.wavesurfers[postId];
             if (wavesurfer) {
                 if (wavesurfer.isPlaying()) {
                     wavesurfer.pause();
-                    currentlyPlayingAudio = null;
                 } else {
-                    if(currentlyPlayingAudio){
-                        currentlyPlayingAudio.pause();
-                        currentlyPlayingAudio = null;
-                    }
                     wavesurfer.play();
                     currentlyPlayingAudio = wavesurfer;
                 }
@@ -116,20 +99,15 @@ function inicializarWaveforms() {
 }
 
 function loadAudio(postId, audioUrl, container, playOnLoad) {
-    if (!postId) {
-        return;
-    }
-    if (!container.dataset.audioLoaded) {
-        window.we(postId, audioUrl, container, playOnLoad);
-        container.dataset.audioLoaded = 'true';
-    }
+    if (!postId || container.dataset.audioLoaded) return;
+    window.we(postId, audioUrl, container, playOnLoad);
+    container.dataset.audioLoaded = 'true';
 }
 
 window.we = function (postId, audioUrl, container, playOnLoad = false) {
-    if (!window.wavesurfers) {
-        window.wavesurfers = {};
-    }
+    if (!window.wavesurfers) window.wavesurfers = {};
     const MAX_RETRIES = 3;
+
     const loadAndPlayAudioStream = (retryCount = 0) => {
         if (retryCount >= MAX_RETRIES) {
             container.querySelector('.waveform-loading').style.display = 'none';
@@ -150,38 +128,16 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
         })
             .then(response => {
                 if (!response.ok) throw new Error('Respuesta de red no satisfactoria');
-                return response;
+                return response.blob();
             })
-            .then(response => {
-                const reader = response.body.getReader();
-                return new ReadableStream({
-                    start(controller) {
-                        return pump();
-                        function pump() {
-                            return reader.read().then(({ done, value }) => {
-                                if (done) {
-                                    controller.close();
-                                    return;
-                                }
-                                controller.enqueue(value);
-                                return pump();
-                            });
-                        }
-                    }
-                });
-            })
-            .then(stream => new Response(stream))
-            .then(response => response.blob())
             .then(blob => {
                 const audioBlobUrl = URL.createObjectURL(blob);
-
                 const wavesurfer = initWavesurfer(container);
                 window.wavesurfers[postId] = wavesurfer;
                 wavesurfer.load(audioBlobUrl);
+
                 const waveformBackground = container.querySelector('.waveform-background');
-                if (waveformBackground) {
-                    waveformBackground.style.display = 'none';
-                }
+                if (waveformBackground) waveformBackground.style.display = 'none';
 
                 wavesurfer.on('ready', () => {
                     window.audioLoading = false;
@@ -190,13 +146,11 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
                     const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
 
-                    if (!waveCargada && !isMobile) {
-                        if (!container.closest('.LISTWAVESAMPLE')) {
-                            setTimeout(() => {
-                                const image = generateWaveformImage(wavesurfer);
-                                sendImageToServer(image, postId);
-                            }, 1);
-                        }
+                    if (!waveCargada && !isMobile && !container.closest('.LISTWAVESAMPLE')) {
+                        setTimeout(() => {
+                            const image = generateWaveformImage(wavesurfer);
+                            sendImageToServer(image, postId);
+                        }, 1);
                     }
                     if (playOnLoad) {
                         wavesurfer.play();
