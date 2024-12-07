@@ -1,4 +1,6 @@
 function inicializarWaveforms() {
+    let currentlyPlayingAudio = null;
+
     const observer = new IntersectionObserver(
         entries => {
             entries.forEach(entry => {
@@ -24,7 +26,7 @@ function inicializarWaveforms() {
                 }
             });
         },
-        {threshold: 0.5}
+        { threshold: 0.5 }
     );
 
     document.querySelectorAll('.waveform-container').forEach(container => {
@@ -75,7 +77,16 @@ function inicializarWaveforms() {
         } else {
             const wavesurfer = window.wavesurfers[postId];
             if (wavesurfer) {
-                wavesurfer.isPlaying() ? wavesurfer.pause() : wavesurfer.play();
+                if (wavesurfer.isPlaying()) {
+                    wavesurfer.pause();
+                    currentlyPlayingAudio = null;
+                } else {
+                    if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
+                        currentlyPlayingAudio.pause();
+                    }
+                    wavesurfer.play();
+                    currentlyPlayingAudio = wavesurfer;
+                }
             }
         }
     }
@@ -83,16 +94,11 @@ function inicializarWaveforms() {
 
 function loadAudio(postId, audioUrl, container, playOnLoad) {
     if (!postId) {
-        //console.error('postId no está definido en loadAudio.');
         return;
     }
-
     if (!container.dataset.audioLoaded) {
-        //console.log(`Iniciando carga de audio: postId=${postId}`);
         window.we(postId, audioUrl, container, playOnLoad);
         container.dataset.audioLoaded = 'true';
-    } else {
-        //console.log(`Audio ya estaba cargado para postId=${postId}`);
     }
 }
 
