@@ -18,18 +18,6 @@ dame la parte del codigo que tengo que modifcar
 let currentlyPlayingAudio = null;
 let audioPlayingStatus = false;
 
-function resetAllButtons() {
-    document.querySelectorAll('.waveform-container').forEach(container => {
-        const post = container.closest('.POST-sampleList');
-        if (post) {
-            const reproducirSL = post.querySelector('.reproducirSL');
-            const pausaSL = post.querySelector('.pausaSL');
-            if (reproducirSL) reproducirSL.style.display = 'flex';
-            if (pausaSL) pausaSL.style.display = 'none';
-        }
-    });
-}
-
 function inicializarWaveforms() {
     const observer = new IntersectionObserver(
         entries => {
@@ -82,7 +70,75 @@ function inicializarWaveforms() {
         const reproducirSL = post.querySelector('.reproducirSL');
         const pausaSL = post.querySelector('.pausaSL');
         const postId = reproducirSL.getAttribute('id-post');
-
+    
+        // Función para ocultar los botones de reproducción en todos los posts
+        const hideAllPostButtons = () => {
+            document.querySelectorAll('.POST-sampleList').forEach(p => {
+                const play = p.querySelector('.reproducirSL');
+                const pause = p.querySelector('.pausaSL');
+                if (play) play.style.display = 'none';
+                if (pause) pause.style.display = 'none';
+            });
+        };
+    
+        const hideButtons = () => {
+            if (reproducirSL) reproducirSL.style.display = 'none';
+            if (pausaSL) pausaSL.style.display = 'none';
+        };
+    
+        const showPlayButton = () => {
+            hideButtons();
+            if (reproducirSL) reproducirSL.style.display = 'flex';
+        };
+    
+        const showPauseButton = () => {
+            hideButtons();
+            if (pausaSL) pausaSL.style.display = 'flex';
+        };
+    
+        // Manejo del hover solo en dispositivos de escritorio
+        if (window.matchMedia('(hover: hover)').matches) {
+            post.addEventListener('mouseenter', () => {
+                if (audioPlayingStatus && currentlyPlayingAudio === window.wavesurfers[postId]) {
+                    showPauseButton();
+                } else {
+                    showPlayButton();
+                }
+            });
+    
+            post.addEventListener('mouseleave', () => {
+                if (!(audioPlayingStatus && currentlyPlayingAudio === window.wavesurfers[postId])) {
+                    hideButtons();
+                }
+            });
+        }
+    
+        if (window.wavesurfers && window.wavesurfers[postId]) {
+            window.wavesurfers[postId].on('play', () => {
+                hideAllPostButtons(); // Oculta botones en todos los posts
+                audioPlayingStatus = true;
+                currentlyPlayingAudio = window.wavesurfers[postId];
+                showPauseButton();
+            });
+    
+            window.wavesurfers[postId].on('pause', () => {
+                if (currentlyPlayingAudio === window.wavesurfers[postId]) {
+                    audioPlayingStatus = false;
+                    currentlyPlayingAudio = null;
+                }
+                hideButtons();
+            });
+    
+            window.wavesurfers[postId].on('finish', () => {
+                if (currentlyPlayingAudio === window.wavesurfers[postId]) {
+                    audioPlayingStatus = false;
+                    currentlyPlayingAudio = null;
+                }
+                hideButtons();
+            });
+        }
+    
+        // Click listener para dispositivos móviles
         if (!post.dataset.clickListenerAdded) {
             post.addEventListener('click', event => {
                 const waveformContainer = post.querySelector('.waveform-container');
@@ -92,78 +148,19 @@ function inicializarWaveforms() {
             });
             post.dataset.clickListenerAdded = 'true';
         }
-
-        const hideAllButtons = () => {
-            if (reproducirSL) reproducirSL.style.display = 'none';
-            if (pausaSL) pausaSL.style.display = 'none';
-        };
-
-        const showPlayButton = () => {
-            hideAllButtons();
-            if (reproducirSL) reproducirSL.style.display = 'flex';
-        };
-
-        const showPauseButton = () => {
-            hideAllButtons();
-            if (pausaSL) pausaSL.style.display = 'flex';
-        };
-
-        post.addEventListener('mouseenter', () => {
-            if (audioPlayingStatus && currentlyPlayingAudio === window.wavesurfers[postId]) {
-                showPauseButton();
-            } else {
-                showPlayButton();
-            }
-        });
-
-        post.addEventListener('mouseleave', () => {
-            if (!(audioPlayingStatus && currentlyPlayingAudio === window.wavesurfers[postId])) {
-                hideAllButtons();
-            }
-        });
-
-        // Actualizar botón cuando se reproduzca el audio
-        if (window.wavesurfers && window.wavesurfers[postId]) {
-            window.wavesurfers[postId].on('play', () => {
-                audioPlayingStatus = true;
-                currentlyPlayingAudio = window.wavesurfers[postId];
-                resetAllButtons(); // Asegurarse de que otros botones estén actualizados
-                showPauseButton(); // Mostrar botón de pausa del audio actual
-            });
-
-            window.wavesurfers[postId].on('pause', () => {
-                if (currentlyPlayingAudio === window.wavesurfers[postId]) {
-                    audioPlayingStatus = false;
-                    currentlyPlayingAudio = null;
-                }
-                resetAllButtons(); // Actualizar todos los botones
-            });
-
-            window.wavesurfers[postId].on('finish', () => {
-                if (currentlyPlayingAudio === window.wavesurfers[postId]) {
-                    audioPlayingStatus = false;
-                    currentlyPlayingAudio = null;
-                }
-                resetAllButtons(); // Restablecer botones a su estado inicial
-            });
-        }
     });
-
     function handleWaveformClick(container) {
         const postId = container.getAttribute('postIDWave');
         if (!postId) return;
 
-        // Detener cualquier audio que se esté reproduciendo
         if (audioPlayingStatus && currentlyPlayingAudio !== window.wavesurfers[postId]) {
-            if (currentlyPlayingAudio) currentlyPlayingAudio.pause();
+            if (currentlyPlayingAudio) {
+                currentlyPlayingAudio.pause();
+            }
             audioPlayingStatus = false;
             currentlyPlayingAudio = null;
         }
 
-        // Actualizar los botones visualmente
-        resetAllButtons();
-
-        // Reproducir o cargar el audio actual
         if (!container.dataset.audioLoaded) {
             const audioUrl = container.getAttribute('data-audio-url');
             loadAudio(postId, audioUrl, container, true);
@@ -182,6 +179,7 @@ function inicializarWaveforms() {
             }
         }
     }
+
     window.stopAllWaveSurferPlayers = function () {
         if (currentlyPlayingAudio) {
             currentlyPlayingAudio.pause();
