@@ -89,20 +89,19 @@ function hoverWaves(posts) {
     });
 }
 
-
 function inicializarWaveforms() {
     const waveformContainers = document.querySelectorAll('.waveform-container');
     const posts = document.querySelectorAll('.POST-sampleList');
 
-    observaciónWave(waveformContainers);
-    manejoWave(waveformContainers);
+    observacionWave(waveformContainers);
+    agregarManejadorWave(waveformContainers);
     hoverWaves(posts);
     clickWaveContainer(posts);
     sampleListEscucha(posts);
 }
 
 function reproducirWave(container) {
-    if (!(container instanceof Element)) return; // Verifica que container sea un elemento del DOM.
+    if (!(container instanceof Element)) return;
 
     const postId = container.getAttribute('postidwave');
     const audioUrl = container.getAttribute('data-audio-url');
@@ -126,42 +125,32 @@ function reproducirWave(container) {
     }
 }
 
-function manejoWave(container) {
-    console.log("👆 manejoWave: Click detectado en un contenedor Wave.");
+function agregarManejadorWave(container) {
     if (!container.dataset.clickListenerAdded) {
-        console.log("👂 manejoWave: Agregando listener de click (interno).");
         container.addEventListener('click', () => {
             reproducirWave(container);
         });
         container.dataset.clickListenerAdded = 'true';
-        console.log("✅ manejoWave: Listener de click (interno) agregado.");
     }
 }
 
 function clickWaveContainer(posts) {
-    console.log("🖱️ clickWaveContainer: Inicializando...");
     posts.forEach(post => {
         const waveformContainer = post.querySelector('.waveform-container');
-        console.log(`🖼️ clickWaveContainer: Procesando post ${post.getAttribute('id-post') || 'sin ID'}`);
 
         if (!post.dataset.clickListenerAdded) {
-            console.log(`👂 clickWaveContainer: Agregando listener de click a post ${post.getAttribute('id-post') || 'sin ID'}`);
             post.addEventListener('click', event => {
                 const clickedElement = event.target;
                 if (clickedElement.closest('.tags-container') || clickedElement.closest('.QSORIW')) {
-                    console.log("🚫 clickWaveContainer: Click ignorado en .tags-container o .QSORIW");
                     return;
                 }
                 if (waveformContainer) {
-                    console.log(`👆 clickWaveContainer: Delegando a manejoWave para post ${post.getAttribute('id-post') || 'sin ID'}`);
-                    manejoWave(waveformContainer);
+                    agregarManejadorWave(waveformContainer);
                 }
             });
             post.dataset.clickListenerAdded = 'true';
-            console.log(`✅ clickWaveContainer: Listener de click agregado a post ${post.getAttribute('id-post') || 'sin ID'}`);
         }
     });
-    console.log("💯 clickWaveContainer: Finalizado.");
 }
 
 function sampleListEscucha(posts) {
