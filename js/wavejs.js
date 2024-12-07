@@ -157,12 +157,12 @@ function inicializarWaveforms() {
         } else {
             const wavesurfer = window.wavesurfers[postId];
             if (wavesurfer) {
-                if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
-                    currentlyPlayingAudio.pause();
-                }
                 if (wavesurfer.isPlaying()) {
                     wavesurfer.pause();
                 } else {
+                    if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
+                        currentlyPlayingAudio.pause();
+                    }
                     wavesurfer.play();
                 }
             }
@@ -187,13 +187,14 @@ function inicializarWaveforms() {
 }
 
 function loadAudio(postId, audioUrl, container, playOnLoad) {
-    if (!postId || container.dataset.audioLoaded) {
+    if (!postId) {
         return;
     }
-    window.we(postId, audioUrl, container, playOnLoad);
-    container.dataset.audioLoaded = 'true';
+    if (!container.dataset.audioLoaded) {
+        window.we(postId, audioUrl, container, playOnLoad);
+        container.dataset.audioLoaded = 'true';
+    }
 }
-
 
 window.we = function (postId, audioUrl, container, playOnLoad = false) {
     if (!window.wavesurfers) {
