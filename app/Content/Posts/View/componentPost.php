@@ -248,6 +248,10 @@ function imagenPostList($block, $es_suscriptor, $postId)
         <a>
             <img src="<?= esc_url($processed_image_url); ?>" alt="Post Image" />
         </a>
+        <div class="botonesRep" id-post="<? echo $postId; ?>">
+            <div class="reproducirSL"><? echo $GLOBALS['play'];?></div>
+            <div class="pausaSL"><? echo $GLOBALS['pause'];?></div>
+        </div>
     </div>
 <?php
 
