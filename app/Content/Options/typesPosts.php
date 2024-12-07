@@ -31,6 +31,7 @@ function register_custom_post_types() {
         'colab' => ['Colaboraciones', 'Colaboración', 'colab', 'dashicons-share-alt2'],
         'colecciones' =>  ['Colecciones', 'Colección', 'colecciones', 'dashicons-book'],
         'notificaciones' => ['Notificaciones', 'Notificación', 'notificacion', 'dashicons-bell'],  
+        'comentarios' => ['Comentarios', 'Comentario', 'comentario', 'dashicons-admin-comments'],
         
     ];
 
@@ -47,7 +48,7 @@ function register_custom_post_types() {
             ],
             'public' => true,
             'has_archive' => true,
-            'supports' => ['title', 'editor', 'thumbnail', 'comments', 'custom-fields'],
+            'supports' => ['title', 'editor', 'thumbnail', 'custom-fields'],
             'rewrite' => ['slug' => $slug],
             'show_in_rest' => true, 
             'menu_icon' => $icon
