@@ -1,3 +1,4 @@
+
 function inicializarWaveforms() {
     let currentlyPlayingAudio = null;
 
@@ -96,6 +97,16 @@ function inicializarWaveforms() {
                     wavesurfer.on('play', () => {
                         if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
                             currentlyPlayingAudio.pause();
+                            const previousPostId = currentlyPlayingAudio.params.container.getAttribute('postIDWave');
+                            const previousPost = document.querySelector(`.POST-sampleList[id-post="${previousPostId}"]`);
+
+                            if(previousPost){
+                                const previousReproducirSL = previousPost.querySelector('.reproducirSL');
+                                const previousPausaSL = previousPost.querySelector('.pausaSL');
+                                previousReproducirSL.style.display = 'flex';
+                                previousPausaSL.style.display = 'none';
+                            }
+
                         }
                         currentlyPlayingAudio = wavesurfer;
                         document.querySelectorAll('.POST-sampleList').forEach(otherPost => {
@@ -151,6 +162,10 @@ function inicializarWaveforms() {
                 if (wavesurfer.isPlaying()) {
                     wavesurfer.pause();
                 } else {
+                    
+                    if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
+                        currentlyPlayingAudio.pause();
+                    }
                     wavesurfer.play();
                 }
             }
@@ -167,6 +182,10 @@ function inicializarWaveforms() {
             }
         }
         currentlyPlayingAudio = null;
+        document.querySelectorAll('.POST-sampleList').forEach(post => {
+            post.querySelector('.reproducirSL').style.display = 'none';
+            post.querySelector('.pausaSL').style.display = 'none';
+        });
     };
 }
 
