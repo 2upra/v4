@@ -286,6 +286,7 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
             </div>
 
         </div>
+        <? if (!empty($datosAlgoritmo)) : ?> 
         <div class="FBKMJD">
             <div class="UKVPJI">
                 <div class="tags-container" id="tags-<? echo esc_attr(get_the_ID()); ?>"></div>
@@ -294,6 +295,7 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
                 </p>
             </div>
         </div>
+        <? endif; ?>
     </div>
 <?
 }
