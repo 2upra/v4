@@ -206,7 +206,7 @@ async function crearNuevaColec() {
     }
 }
 
-//el colec se abre pero al quitarse el background, no se cierra
+// Función para abrir el modal "Colec"
 async function abrirColec() {
     if (!colecSampleId) {
         console.warn('colecSampleId no está definido');
@@ -232,16 +232,14 @@ window.cerrarColec = function () {
     if (!modal) {
         console.error('Modal no encontrado');
         return;
-    }   
-    ocultar(a('.modalColec'));
-    ocultar(a('.modalCrearColec'));
+    }
+    ocultar(modal); // Oculta el modal
+    ocultar(document.querySelector('.modalCrearColec')); // Oculta el modal de creación
 
-    quitBackground();
-    removeSubmenuDarkBackground();
-    document.body.classList.remove('no-scroll');
-    resetColec();
-}
-
+    removeSubmenuDarkBackground(); // Elimina el fondo oscuro
+    document.body.classList.remove('no-scroll'); // Permite el scroll
+    resetColec(); // Resetea cualquier estado relacionado con el modal
+};
 
 // Mostrar un elemento (con animación opcional)
 window.mostrar = function (element) {
@@ -269,7 +267,7 @@ window.ocultar = function (element) {
     }
 };
 
-//funciona para varias cosas, cudiado con modificar demasiado 
+// Crear el fondo oscuro
 window.createSubmenuDarkBackground = function () {
     let darkBackground = document.getElementById('submenu-background5322');
     if (!darkBackground) {
@@ -291,8 +289,8 @@ window.createSubmenuDarkBackground = function () {
         darkBackground.addEventListener('click', () => {
             document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
                 hideSubmenu(submenu);
-                cerrarColec();
             });
+            cerrarColec();
         });
     }
 
@@ -300,16 +298,20 @@ window.createSubmenuDarkBackground = function () {
     darkBackground.style.pointerEvents = 'auto';
 };
 
+// Eliminar el fondo oscuro
 window.removeSubmenuDarkBackground = function () {
     const darkBackground = document.getElementById('submenu-background5322');
     if (darkBackground) {
-        darkBackground.style.display = 'none';
-        darkBackground.style.pointerEvents = 'none';
+        darkBackground.style.opacity = '0';
+        darkBackground.style.transition = 'opacity 0.3s ease';
+
+        // Esperar a que termine la transición antes de ocultar completamente
+        setTimeout(() => {
+            darkBackground.style.display = 'none';
+            darkBackground.style.pointerEvents = 'none';
+        }, 300);
     }
 };
-
-
-
 
 async function verificarSampleEnColecciones() {
     //console.log('Función verificarSampleEnColecciones iniciada');
@@ -412,7 +414,8 @@ async function actualizarListaColecciones() {
         const response = await enviarAjax('obtenerListaColec');
         console.log('Respuesta recibida del servidor:', response);
 
-        if (response && response.success && response.data) {  // Verifica que response sea un objeto con success y data
+        if (response && response.success && response.data) {
+            // Verifica que response sea un objeto con success y data
             const listaColeccion = document.querySelector('.listaColeccion');
             console.log('Elemento .listaColeccion encontrado:', listaColeccion);
 
@@ -492,8 +495,6 @@ function subidaImagenColec() {
     });
 }
 
-
-
 function resetColec() {
     colecSampleId = null;
     colecSelecionado = null;
@@ -503,4 +504,3 @@ function resetColec() {
     const button = a('#btnListo');
     button.innerText = 'Listo';
 }
-
