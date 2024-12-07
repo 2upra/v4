@@ -17,7 +17,6 @@ dame la parte del codigo que tengo que modifcar
 
 let currentlyPlayingAudio = null;
 let audioPlayingStatus = false;
-let lastPlayingPost = null;
 
 function inicializarWaveforms() {
     const observer = new IntersectionObserver(
@@ -67,10 +66,22 @@ function inicializarWaveforms() {
 
     document.querySelectorAll('.waveform-container').forEach(setupWaveformContainer);
 
+    //aquí varios problemas, el primero, al reproducirse un nuevo audio, se queda el boton de reproducir en el anterior audio, segundo, al reproducir un audio, cuando termina de reproducirse debe quitarse el icono
+
     document.querySelectorAll('.POST-sampleList').forEach(post => {
         const reproducirSL = post.querySelector('.reproducirSL');
         const pausaSL = post.querySelector('.pausaSL');
-        const postId = reproducirSL?.getAttribute('id-post');
+        const postId = reproducirSL.getAttribute('id-post');
+
+        if (!post.dataset.clickListenerAdded) {
+            post.addEventListener('click', event => {
+                const waveformContainer = post.querySelector('.waveform-container');
+                if (!event.target.closest('.tags-container') && !event.target.closest('.QSORIW') && waveformContainer) {
+                    handleWaveformClick(waveformContainer);
+                }
+            });
+            post.dataset.clickListenerAdded = 'true';
+        }
 
         const hideAllButtons = () => {
             if (reproducirSL) reproducirSL.style.display = 'none';
@@ -85,23 +96,6 @@ function inicializarWaveforms() {
         const showPauseButton = () => {
             hideAllButtons();
             if (pausaSL) pausaSL.style.display = 'flex';
-        };
-
-        // Función para actualizar los botones en todos los posts
-        const updateAllPostButtons = () => {
-            document.querySelectorAll('.POST-sampleList').forEach(p => {
-                const pId = p.querySelector('.reproducirSL')?.getAttribute('id-post');
-                const pReproducir = p.querySelector('.reproducirSL');
-                const pPausa = p.querySelector('.pausaSL');
-
-                if (audioPlayingStatus && currentlyPlayingAudio === window.wavesurfers[pId]) {
-                    if (pReproducir) pReproducir.style.display = 'none';
-                    if (pPausa) pPausa.style.display = 'flex';
-                } else {
-                    if (pReproducir) pReproducir.style.display = 'none';
-                    if (pPausa) pPausa.style.display = 'none';
-                }
-            });
         };
 
         post.addEventListener('mouseenter', () => {
@@ -122,8 +116,7 @@ function inicializarWaveforms() {
             window.wavesurfers[postId].on('play', () => {
                 audioPlayingStatus = true;
                 currentlyPlayingAudio = window.wavesurfers[postId];
-                lastPlayingPost = post;
-                updateAllPostButtons();
+                showPauseButton();
             });
 
             window.wavesurfers[postId].on('pause', () => {
@@ -131,16 +124,15 @@ function inicializarWaveforms() {
                     audioPlayingStatus = false;
                     currentlyPlayingAudio = null;
                 }
-                updateAllPostButtons();
+                hideAllButtons();
             });
 
             window.wavesurfers[postId].on('finish', () => {
                 if (currentlyPlayingAudio === window.wavesurfers[postId]) {
                     audioPlayingStatus = false;
                     currentlyPlayingAudio = null;
-                    hideAllButtons();
                 }
-                updateAllPostButtons();
+                hideAllButtons();
             });
         }
     });
@@ -149,7 +141,6 @@ function inicializarWaveforms() {
         const postId = container.getAttribute('postIDWave');
         if (!postId) return;
 
-        // Si hay otro audio reproduciéndose, lo pausamos
         if (audioPlayingStatus && currentlyPlayingAudio !== window.wavesurfers[postId]) {
             if (currentlyPlayingAudio) {
                 currentlyPlayingAudio.pause();
@@ -166,8 +157,12 @@ function inicializarWaveforms() {
             if (wavesurfer) {
                 if (wavesurfer.isPlaying()) {
                     wavesurfer.pause();
+                    audioPlayingStatus = false;
+                    currentlyPlayingAudio = null;
                 } else {
                     wavesurfer.play();
+                    audioPlayingStatus = true;
+                    currentlyPlayingAudio = wavesurfer;
                 }
             }
         }
