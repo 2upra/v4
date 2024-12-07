@@ -54,6 +54,12 @@ function inicializarWaveforms() {
         const pausaSL = post.querySelector('.pausaSL');
         const waveformContainer = post.querySelector('.waveform-container');
     
+        // Mostrar el botón de play al inicio
+        console.log(`🔄 Inicializando post: ${postId}`);
+        pausaSL.style.display = 'none';
+        reproducirSL.style.display = 'flex';
+        console.log(`▶️ Mostrando play inicialmente en post: ${postId}`);
+    
         if (!post.dataset.hoverListenerAdded) {
             post.addEventListener('mouseenter', () => {
                 console.log(`➡️ Entrando al post: ${postId}`);
