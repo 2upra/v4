@@ -1,4 +1,3 @@
-//tengo un problema, los auidos se reproducen sin necesidad de que la wave este cargada, es decir, se cargan despues dar click, pero si la weve no fue iniciada, se hace click en otra wave que tampoco fue inicia, entonces ambas se reproducen a mismo tiempo (las wave no son visibles en dispositivo movil), entonces esa mecanica de que pausar las waves si estan siendo reproducidas solo funciona si las wave fueron iniciadas previamente y no la primera vez, no funciona en movil porque las wave no son visibles, como se resuelve este problema 
 function inicializarWaveforms() {
     let currentlyPlayingAudio = null;
 
@@ -27,7 +26,7 @@ function inicializarWaveforms() {
                 }
             });
         },
-        {threshold: 0.5}
+        { threshold: 0.5 }
     );
 
     document.querySelectorAll('.waveform-container').forEach(container => {
@@ -73,6 +72,11 @@ function inicializarWaveforms() {
 
         if (!postId) return;
 
+        if (currentlyPlayingAudio && (currentlyPlayingAudio !== window.wavesurfers[postId])) {
+                currentlyPlayingAudio.pause();
+                currentlyPlayingAudio = null;
+        }
+
         if (!container.dataset.audioLoaded) {
             loadAudio(postId, audioUrl, container, true);
         } else {
@@ -82,15 +86,13 @@ function inicializarWaveforms() {
                     wavesurfer.pause();
                     currentlyPlayingAudio = null;
                 } else {
-                    if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
-                        currentlyPlayingAudio.pause();
-                    }
                     wavesurfer.play();
                     currentlyPlayingAudio = wavesurfer;
                 }
             }
         }
     }
+
     window.stopAllWaveSurferPlayers = function () {
         if (currentlyPlayingAudio) {
             currentlyPlayingAudio.pause();
@@ -147,7 +149,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     start(controller) {
                         return pump();
                         function pump() {
-                            return reader.read().then(({done, value}) => {
+                            return reader.read().then(({ done, value }) => {
                                 if (done) {
                                     controller.close();
                                     return;
@@ -189,7 +191,6 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                     }
                     if (playOnLoad) {
                         wavesurfer.play();
-                    } else {
                     }
                 });
 
