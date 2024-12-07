@@ -205,84 +205,55 @@ async function crearNuevaColec() {
         button.disabled = false;
     }
 }
-// Función para abrir el modal "Colec"
 async function abrirColec() {
-    if (!colecSampleId) {
-        console.warn('colecSampleId no está definido');
-        return; // Evitar abrir el modal sin un ID válido
-    }
+    if (!colecSampleId) return;
 
     const modal = document.querySelector('.modalColec');
-    if (!modal) {
-        console.error('Modal no encontrado');
-        return;
-    }
+    if (!modal) return;
 
-    mostrar(modal); // Mostrar el modal
-    createSubmenuDarkBackground(); // Crear y mostrar el fondo oscuro
-    document.body.classList.add('no-scroll'); // Deshabilitar scroll del body
+    if (getComputedStyle(modal).display !== 'none') return;
 
-    await verificarSampleEnColecciones(); // Lógica adicional (asíncrona)
+    mostrar(modal);
+    createColecDarkBackground();
+    document.body.classList.add('no-scroll');
+    await verificarSampleEnColecciones();
 }
 
-// Función para cerrar el modal "Colec"
 window.cerrarColec = function () {
-    console.log('Ejecutando cerrarColec()'); // Mensaje de depuración
     const modal = document.querySelector('.modalColec');
-    if (!modal) {
-        console.error('Modal no encontrado');
-        return;
-    }
-
-    console.log('Ocultando modalColec');
-    ocultar(modal); // Ocultar el modal principal
+    if (modal) ocultar(modal);
 
     const modalCrear = document.querySelector('.modalCrearColec');
-    if (modalCrear) {
-        console.log('Ocultando modalCrearColec');
-        ocultar(modalCrear); // Ocultar el modal de creación si existe
-    }
+    if (modalCrear) ocultar(modalCrear);
 
-    removeSubmenuDarkBackground(); // Ocultar y eliminar el fondo oscuro
-    document.body.classList.remove('no-scroll'); // Rehabilitar el scroll del body
-    resetColec(); // Lógica para resetear el estado del modal
+    removeColecDarkBackground();
+    document.body.classList.remove('no-scroll');
+    resetColec();
 };
 
-// Mostrar un elemento (con animación opcional)
 window.mostrar = function (element) {
-    if (!element || !(element instanceof Element)) {
-        console.error('No se proporcionó un elemento válido o el elemento no es de tipo Element');
-        return;
-    }
+    if (!element || !(element instanceof Element)) return;
 
-    console.log('Mostrando elemento:', element);
-    element.style.display = 'block'; // Asegurarse de que esté visible
+    element.style.display = 'block';
     setTimeout(() => {
-        element.style.opacity = '1'; // Transición para hacer visible el elemento
+        element.style.opacity = '1';
         element.style.transition = 'opacity 0.3s ease';
-    }, 10); // Pequeño retraso para garantizar que las transiciones se apliquen
+    }, 10);
 };
 
-// Ocultar un elemento (con animación opcional)
 window.ocultar = function (element) {
     if (element && getComputedStyle(element).display !== 'none') {
-        console.log('Ocultando elemento:', element);
-        element.style.opacity = '0'; // Transición para hacer invisible el elemento
+        element.style.opacity = '0';
         element.style.transition = 'opacity 0.3s ease';
-
-        // Esperar a que termine la transición antes de ocultar completamente
         setTimeout(() => {
             element.style.display = 'none';
-        }, 300); // Duración de la transición
+        }, 300);
     }
 };
 
-// Crear el fondo oscuro
-window.createSubmenuDarkBackground = function () {
+window.createColecDarkBackground = function () {
     let darkBackground = document.getElementById('submenu-background5322');
     if (!darkBackground) {
-        console.log('Creando fondo oscuro');
-        // Crear el fondo oscuro si no existe
         darkBackground = document.createElement('div');
         darkBackground.id = 'submenu-background5322';
         darkBackground.style.position = 'fixed';
@@ -296,32 +267,33 @@ window.createSubmenuDarkBackground = function () {
         darkBackground.style.pointerEvents = 'none';
         document.body.appendChild(darkBackground);
 
-        // Agregar evento para cerrar submenús al hacer clic en el fondo oscuro
         darkBackground.addEventListener('click', () => {
-            console.log('Clic en el fondo oscuro');
-            cerrarColec(); // Cierra el modal
+            cerrarColec();
         });
     }
 
-    darkBackground.style.display = 'block'; // Hacer visible el fondo oscuro
-    darkBackground.style.pointerEvents = 'auto'; // Habilitar clics en el fondo oscuro
+    darkBackground.style.display = 'block';
+    darkBackground.style.pointerEvents = 'auto';
 };
 
-// Eliminar el fondo oscuro
-window.removeSubmenuDarkBackground = function () {
+window.removeColecDarkBackground = function () {
     const darkBackground = document.getElementById('submenu-background5322');
     if (darkBackground) {
-        console.log('Eliminando fondo oscuro');
-        darkBackground.style.opacity = '0'; // Transición para hacer invisible el fondo
+        darkBackground.style.opacity = '0';
         darkBackground.style.transition = 'opacity 0.3s ease';
-
-        // Esperar a que termine la transición antes de ocultar completamente
         setTimeout(() => {
             darkBackground.style.display = 'none';
             darkBackground.style.pointerEvents = 'none';
-        }, 300); // Duración de la transición
+        }, 300);
     }
 };
+
+const modal = document.querySelector('.modalColec');
+if (modal) {
+    modal.addEventListener('click', (event) => {
+        event.stopPropagation();
+    });
+}
 
 async function verificarSampleEnColecciones() {
     //console.log('Función verificarSampleEnColecciones iniciada');
