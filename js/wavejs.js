@@ -50,9 +50,9 @@ function inicializarWaveforms() {
         if (!post.dataset.hoverListenerAdded) {
             post.addEventListener('mouseenter', () => {
                 if (currentlyPlayingAudio && currentlyPlayingAudio.isPlaying() && currentlyPlayingAudio.backend.buffer.src.includes(postId)) {
-                  pausaSL.style.display = 'block';
+                  pausaSL.style.display = 'flex';
                 } else {
-                  reproducirSL.style.display = 'block';
+                  reproducirSL.style.display = 'flex';
                 }
             });
         
@@ -90,16 +90,16 @@ function inicializarWaveforms() {
                 if(wavesurfer){
                     wavesurfer.on('play', () => {
                         reproducirSL.style.display = 'none';
-                        pausaSL.style.display = 'block';
+                        pausaSL.style.display = 'flex';
                     });
         
                     wavesurfer.on('pause', () => {
-                        reproducirSL.style.display = 'block';
+                        reproducirSL.style.display = 'flex';
                         pausaSL.style.display = 'none';
                     });
 
                     wavesurfer.on('finish', () => {
-                        reproducirSL.style.display = 'block';
+                        reproducirSL.style.display = 'flex';
                         pausaSL.style.display = 'none';
                     });
                 }
