@@ -83,50 +83,45 @@ function tagsPosts() {
 }
 
 function limitTags(maxVisible = 5) {
-    // Selecciona todos los contenedores de tags cuyo ID comienza con "tags-"
-    document.querySelectorAll('[id^="tags-"]').forEach(function (tagsContainer) {
-        const tagElements = tagsContainer.querySelectorAll('.postTag');
+    const maxMobile = 2;
+    const screenLimit = 640;
 
-        // Verifica si hay más tags de los permitidos
-        if (tagElements.length > maxVisible) {
-            // Oculta los tags que exceden el límite inicialmente
-            tagElements.forEach(function (tag, index) {
-                if (index >= maxVisible) {
+    document.querySelectorAll('[id^="tags-"]').forEach(tagsCont => {
+        const tags = tagsCont.querySelectorAll('.postTag');
+        const isMobile = window.innerWidth < screenLimit;
+        const maxToShow = isMobile ? maxMobile : maxVisible;
+
+        if (tags.length > maxToShow) {
+            tags.forEach((tag, index) => {
+                if (index >= maxToShow) {
                     tag.style.display = 'none';
                 }
             });
 
-            // Verifica si el botón "Ver más" ya existe para evitar duplicados
-            let toggleButton = tagsContainer.querySelector('.postTagToggle');
+            let btn = tagsCont.querySelector('.postTagToggle');
 
-            if (!toggleButton) {
-                // Crea el elemento de toggle (inicialmente "Ver más")
-                toggleButton = document.createElement('span');
-                toggleButton.classList.add('postTagToggle');
-                toggleButton.textContent = 'Ver más';
+            if (!btn) {
+                btn = document.createElement('span');
+                btn.classList.add('postTagToggle');
+                btn.textContent = 'Ver más';
 
-                // Agrega un event listener para manejar el clic
-                toggleButton.addEventListener('click', function () {
-                    const isCollapsed = toggleButton.textContent === 'Ver más';
+                btn.addEventListener('click', () => {
+                    const isCollapsed = btn.textContent === 'Ver más';
 
-                    tagElements.forEach(function (tag, index) {
+                    tags.forEach((tag, index) => {
                         if (isCollapsed) {
-                            // Mostrar todas las etiquetas
                             tag.style.display = 'inline';
                         } else {
-                            // Ocultar las etiquetas que exceden el límite
-                            if (index >= maxVisible) {
+                            if (index >= maxToShow) {
                                 tag.style.display = 'none';
                             }
                         }
                     });
 
-                    // Cambiar el texto del botón
-                    toggleButton.textContent = isCollapsed ? 'Ver menos' : 'Ver más';
+                    btn.textContent = isCollapsed ? 'Ver menos' : 'Ver más';
                 });
 
-                // Agrega el botón de toggle al contenedor de tags
-                tagsContainer.appendChild(toggleButton);
+                tagsCont.appendChild(btn);
             }
         }
     });
