@@ -235,7 +235,7 @@ add_action('wp_enqueue_scripts', 'custom_deregister_jquery', 100); // Prioridad 
 function scriptsOrdenados()
 {
     // Definir la versión global
-    $global_version = '3.0.18'; // Cambia esta versión cuando desees actualizar todos los scripts
+    $global_version = '3.0.19'; // Cambia esta versión cuando desees actualizar todos los scripts
     // Verificar si el usuario actual es administrador
     $dev_mode = current_user_can('administrator');
     $error_log = [];

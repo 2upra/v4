@@ -79,8 +79,9 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         if (submenu) {
             submenu.style.display = "none";
         }
+        const darkBackground = document.getElementById('submenu-background');
 
-        removeSubmenuDarkBackground(submenu._darkBackground);
+        removeSubmenuDarkBackground(darkBackground);
         submenu._darkBackground = null;
 
         const activeSubmenus = Array.from(document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`)).filter(menu => menu.style.display === "block");
@@ -111,6 +112,30 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         });
     });
 }
+
+window.createSubmenuDarkBackground = function (submenu) {
+    const darkBackground = document.createElement('div');
+    darkBackground.id = 'submenu-background';
+    darkBackground.style.position = 'fixed';
+    darkBackground.style.top = 0;
+    darkBackground.style.left = 0;
+    darkBackground.style.width = '100vw';
+    darkBackground.style.height = '100vh';
+    darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    darkBackground.style.zIndex = 998;
+    darkBackground.style.pointerEvents = 'auto';
+
+    document.body.appendChild(darkBackground);
+
+    return darkBackground;
+};
+
+// Función para remover el fondo oscuro del submenú
+window.removeSubmenuDarkBackground = function (darkBackground) {
+    if (darkBackground && darkBackground.parentNode) {
+        darkBackground.parentNode.removeChild(darkBackground);
+    }
+};
 
 function calculatePosition(rect, submenuWidth, submenuHeight, position) {
     const { innerWidth: vw, innerHeight: vh } = window;
