@@ -101,13 +101,37 @@ function inicializarWaveforms() {
     sampleListEscucha(posts);
 }
 
+function reproducirWave(container) {
+    if (!(container instanceof Element)) return; // Verifica que container sea un elemento del DOM.
+
+    const postId = container.getAttribute('postidwave');
+    const audioUrl = container.getAttribute('data-audio-url');
+
+    if (!postId) return;
+
+    if (!container.dataset.audioLoaded) {
+        loadAudio(postId, audioUrl, container, true);
+    } else {
+        const wavesurfer = window.wavesurfers[postId];
+        if (wavesurfer) {
+            if (wavesurfer.isPlaying()) {
+                wavesurfer.pause();
+            } else {
+                if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
+                    currentlyPlayingAudio.pause();
+                }
+                wavesurfer.play();
+            }
+        }
+    }
+}
 
 function manejoWave(container) {
     console.log("👆 manejoWave: Click detectado en un contenedor Wave.");
     if (!container.dataset.clickListenerAdded) {
         console.log("👂 manejoWave: Agregando listener de click (interno).");
         container.addEventListener('click', () => {
-            manejoWave(container);
+            reproducirWave(container);
         });
         container.dataset.clickListenerAdded = 'true';
         console.log("✅ manejoWave: Listener de click (interno) agregado.");
@@ -223,30 +247,6 @@ function finalWave(wavesurfer, post) {
     }
 }
 
-function manejoWave(container) {
-    if (!(container instanceof Element)) return; // Verifica que container sea un elemento del DOM.
-
-    const postId = container.getAttribute('postidwave');
-    const audioUrl = container.getAttribute('data-audio-url');
-
-    if (!postId) return;
-
-    if (!container.dataset.audioLoaded) {
-        loadAudio(postId, audioUrl, container, true);
-    } else {
-        const wavesurfer = window.wavesurfers[postId];
-        if (wavesurfer) {
-            if (wavesurfer.isPlaying()) {
-                wavesurfer.pause();
-            } else {
-                if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
-                    currentlyPlayingAudio.pause();
-                }
-                wavesurfer.play();
-            }
-        }
-    }
-}
 
 
 
