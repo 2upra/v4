@@ -55,14 +55,40 @@ function inicializarWaveforms() {
             post.addEventListener('click', event => {
                 const waveformContainer = post.querySelector('.waveform-container');
                 if (!event.target.closest('.tags-container') && !event.target.closest('.QSORIW') && waveformContainer) {
-                    handleWaveformClick(waveformContainer);
+                    handleWaveformClick(waveformContainer, post);
                 }
             });
             post.dataset.clickListenerAdded = 'true';
         }
+        
+        // Manejo del mouse para mostrar/ocultar botones
+        const reproducirBtn = post.querySelector('.reproducirSL');
+        const pausaBtn = post.querySelector('.pausaSL');
+
+        if (reproducirBtn && pausaBtn) {
+            post.addEventListener('mouseenter', () => {
+                if (currentlyPlayingAudio && currentlyPlayingAudio.isPlaying() && currentlyPlayingAudio.container.closest('.POST-sampleList') === post) {
+                    pausaBtn.style.display = 'flex';
+                    reproducirBtn.style.display = 'none';
+                } else {
+                    reproducirBtn.style.display = 'flex';
+                    pausaBtn.style.display = 'none';
+                }
+            });
+
+            post.addEventListener('mouseleave', () => {
+                 if (currentlyPlayingAudio && currentlyPlayingAudio.isPlaying() && currentlyPlayingAudio.container.closest('.POST-sampleList') === post) {
+                    
+                 } else {
+                    reproducirBtn.style.display = 'none';
+                    pausaBtn.style.display = 'none';
+                 }
+                 
+            });
+        }
     });
 
-    function handleWaveformClick(container) {
+    function handleWaveformClick(container, post) {
         const postId = container.getAttribute('postIDWave');
         if (!postId) return;
 
@@ -72,6 +98,19 @@ function inicializarWaveforms() {
             }
             audioPlayingStatus = false;
             currentlyPlayingAudio = null;
+        }
+
+        // Pausar cualquier audio que se esté reproduciendo
+        if (currentlyPlayingAudio && currentlyPlayingAudio !== window.wavesurfers[postId]) {
+            currentlyPlayingAudio.pause();
+            // Ocultar botones de pausa en el post anterior
+            const previousPost = currentlyPlayingAudio.container.closest('.POST-sampleList');
+            if(previousPost) {
+                const prevPausaBtn = previousPost.querySelector('.pausaSL');
+                const prevReproducirBtn = previousPost.querySelector('.reproducirSL');
+                if(prevPausaBtn) prevPausaBtn.style.display = 'none';
+                if(prevReproducirBtn) prevReproducirBtn.style.display = 'none';
+            }
         }
 
         if (!container.dataset.audioLoaded) {
@@ -92,15 +131,42 @@ function inicializarWaveforms() {
                 }
             }
         }
+
+        // Actualizar botones después de la acción
+        const reproducirBtn = post.querySelector('.reproducirSL');
+        const pausaBtn = post.querySelector('.pausaSL');
+        
+        if (window.wavesurfers[postId] && window.wavesurfers[postId].isPlaying()) {
+            reproducirBtn.style.display = 'none';
+            pausaBtn.style.display = 'flex';
+            audioPlayingStatus = true;
+            currentlyPlayingAudio = window.wavesurfers[postId];
+
+        } else {
+            reproducirBtn.style.display = 'none';
+            pausaBtn.style.display = 'none';
+            audioPlayingStatus = false;
+            currentlyPlayingAudio = null;
+        }
     }
 
     window.stopAllWaveSurferPlayers = function () {
+       
+        // Ocultar botones de todos los posts
+        document.querySelectorAll('.POST-sampleList').forEach(post => {
+            const reproducirBtn = post.querySelector('.reproducirSL');
+            const pausaBtn = post.querySelector('.pausaSL');
+            if (reproducirBtn) reproducirBtn.style.display = 'none';
+            if (pausaBtn) pausaBtn.style.display = 'none';
+        });
+        
         if (currentlyPlayingAudio) {
             currentlyPlayingAudio.pause();
-            
         }
+        
         audioPlayingStatus = false;
         currentlyPlayingAudio = null;
+        
         for (const postId in window.wavesurfers) {
             if (window.wavesurfers[postId].isPlaying()) {
                 window.wavesurfers[postId].pause();
@@ -178,6 +244,40 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
             wavesurfer.on('finish', () => {
                 audioPlayingStatus = false;
                 currentlyPlayingAudio = null;
+                // Actualizar botones después de finalizar
+                const post = container.closest('.POST-sampleList');
+                if(post){
+                    const reproducirBtn = post.querySelector('.reproducirSL');
+                    const pausaBtn = post.querySelector('.pausaSL');
+                    if (reproducirBtn) reproducirBtn.style.display = 'none';
+                    if (pausaBtn) pausaBtn.style.display = 'none';
+                }
+            });
+
+            wavesurfer.on('play', () => {
+                // Actualizar botones al reproducir
+                const post = container.closest('.POST-sampleList');
+                if(post){
+                    const reproducirBtn = post.querySelector('.reproducirSL');
+                    const pausaBtn = post.querySelector('.pausaSL');
+                    if (reproducirBtn) reproducirBtn.style.display = 'none';
+                    if (pausaBtn) pausaBtn.style.display = 'flex';
+                    audioPlayingStatus = true;
+                    currentlyPlayingAudio = wavesurfer;
+                }
+                
+            });
+
+            wavesurfer.on('pause', () => {
+                // Actualizar botones al pausar
+                const post = container.closest('.POST-sampleList');
+                if(post){
+                    const reproducirBtn = post.querySelector('.reproducirSL');
+                    const pausaBtn = post.querySelector('.pausaSL');
+                    if (reproducirBtn) reproducirBtn.style.display = 'none';
+                    if (pausaBtn) pausaBtn.style.display = 'none';
+                    audioPlayingStatus = false;
+                }
             });
 
         })
