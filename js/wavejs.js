@@ -100,58 +100,78 @@ function inicializarWaveforms() {
     sampleListEscucha(posts);
 }
 
-function reproducirWave(container) {
-    if (!(container instanceof Element)) return;
-
-    const postId = container.getAttribute('postidwave');
-    const audioUrl = container.getAttribute('data-audio-url');
-
-    if (!postId) return;
-
-    if (!container.dataset.audioLoaded) {
-        loadAudio(postId, audioUrl, container, true);
+function reproducirWave(contenedorElemento) {
+    if (!(contenedorElemento instanceof Element)) {
+      console.log("❌ [reproducirWave] ➡️ El contenedor no es un elemento válido.");
+      return;
+    }
+  
+    const idPublicacion = contenedorElemento.getAttribute('postidwave');
+    const urlAudio = contenedorElemento.getAttribute('data-audio-url');
+  
+    if (!idPublicacion) {
+      console.log("❌ [reproducirWave] ➡️ No se encontró el ID de la publicación.");
+      return;
+    }
+  
+    if (!contenedorElemento.dataset.audioCargado) {
+      console.log("⏳ [reproducirWave] ➡️ Cargando audio por primera vez...", { idPublicacion, urlAudio });
+      loadAudio(idPublicacion, urlAudio, contenedorElemento, true);
     } else {
-        const wavesurfer = window.wavesurfers[postId];
-        if (wavesurfer) {
-            if (wavesurfer.isPlaying()) {
-                wavesurfer.pause();
-            } else {
-                if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
-                    currentlyPlayingAudio.pause();
-                }
-                wavesurfer.play();
-            }
+      const wavesurferInstancia = window.wavesurfers[idPublicacion];
+      console.log("✅ [reproducirWave] ➡️ Audio ya cargado.", { wavesurferInstancia });
+      if (wavesurferInstancia) {
+        if (wavesurferInstancia.isPlaying()) {
+          console.log("⏸️ [reproducirWave] ➡️ Pausando audio.", { idPublicacion });
+          wavesurferInstancia.pause();
+        } else {
+          if (window.currentlyPlayingAudio && window.currentlyPlayingAudio !== wavesurferInstancia) {
+            console.log("⏸️ [reproducirWave] ➡️ Pausando audio anterior.", { audioAnterior: window.currentlyPlayingAudio });
+            window.currentlyPlayingAudio.pause();
+          }
+          console.log("▶️ [reproducirWave] ➡️ Reproduciendo audio.", { idPublicacion });
+          wavesurferInstancia.play();
         }
+      }
     }
-}
-
-function agregarManejadorWave(container) {
-    if (!container.dataset.clickListenerAdded) {
-        container.addEventListener('click', () => {
-            reproducirWave(container);
+  }
+  
+  function agregarManejadorWave(contenedorElemento) {
+    if (!contenedorElemento.dataset.clickListenerAgregado) {
+      contenedorElemento.addEventListener('click', () => {
+        console.log("🖱️ [agregarManejadorWave] ➡️ Click en contenedor de audio.", { contenedorElemento });
+        reproducirWave(contenedorElemento);
+      });
+      contenedorElemento.dataset.clickListenerAgregado = 'true';
+      console.log("✅ [agregarManejadorWave] ➡️ Manejador de click agregado.", { contenedorElemento });
+    } else {
+        console.log("✅ [agregarManejadorWave] ➡️ El manejador de click ya existe.", { contenedorElemento });
+    }
+  }
+  
+  function clickWaveContainer(publicaciones) {
+    publicaciones.forEach(publicacionElemento => {
+      const contenedorWave = publicacionElemento.querySelector('.waveform-container');
+  
+      if (!publicacionElemento.dataset.clickListenerAgregado) {
+        publicacionElemento.addEventListener('click', evento => {
+          const elementoClickeado = evento.target;
+          if (elementoClickeado.closest('.tags-container') || elementoClickeado.closest('.QSORIW')) {
+            console.log("🖱️ [clickWaveContainer] ➡️ Click en tags o QSORIW, ignorando.", { elementoClickeado });
+            return;
+          }
+          if (contenedorWave) {
+            console.log("🖱️ [clickWaveContainer] ➡️ Click en contenedor de post, agregando manejador a waveform.", { publicacionElemento, contenedorWave });
+            agregarManejadorWave(contenedorWave);
+          }
         });
-        container.dataset.clickListenerAdded = 'true';
-    }
-}
-
-function clickWaveContainer(posts) {
-    posts.forEach(post => {
-        const waveformContainer = post.querySelector('.waveform-container');
-
-        if (!post.dataset.clickListenerAdded) {
-            post.addEventListener('click', event => {
-                const clickedElement = event.target;
-                if (clickedElement.closest('.tags-container') || clickedElement.closest('.QSORIW')) {
-                    return;
-                }
-                if (waveformContainer) {
-                    agregarManejadorWave(waveformContainer);
-                }
-            });
-            post.dataset.clickListenerAdded = 'true';
-        }
+        publicacionElemento.dataset.clickListenerAgregado = 'true';
+        console.log("✅ [clickWaveContainer] ➡️ Manejador de click agregado a la publicación.", { publicacionElemento });
+      } else {
+        console.log("✅ [clickWaveContainer] ➡️ El manejador de click ya existe en la publicación.", { publicacionElemento });
+      }
     });
-}
+  }
 
 function sampleListEscucha(posts) {
     //console.log("🎧 sampleListEscucha: Inicializando...");
