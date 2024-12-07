@@ -66,108 +66,75 @@ function inicializarWaveforms() {
 
     document.querySelectorAll('.waveform-container').forEach(setupWaveformContainer);
 
-    document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.POST-sampleList').forEach(post => {
-            const reproducirSL = post.querySelector('.reproducirSL');
-            const pausaSL = post.querySelector('.pausaSL');
-            const postId = reproducirSL.getAttribute('id-post');
+    //aquí varios problemas, el primero, al reproducirse un nuevo audio, se queda el boton de reproducir en el anterior audio, segundo, al reproducir un audio, cuando termina de reproducirse debe quitarse el icono
 
-            // Function to hide all buttons
-            const hideAllButtons = currentPost => {
-                document.querySelectorAll('.POST-sampleList').forEach(p => {
-                    const rSL = p.querySelector('.reproducirSL');
-                    const pSL = p.querySelector('.pausaSL');
-                    if (rSL) rSL.style.display = 'none';
-                    if (pSL) pSL.style.display = 'none';
-                });
-            };
+    document.querySelectorAll('.POST-sampleList').forEach(post => {
+        const reproducirSL = post.querySelector('.reproducirSL');
+        const pausaSL = post.querySelector('.pausaSL');
+        const postId = reproducirSL.getAttribute('id-post');
 
-            // Function to show the play button
-            const showPlayButton = () => {
-                hideAllButtons();
-                if (reproducirSL) reproducirSL.style.display = 'flex';
-            };
-
-            // Function to show the pause button
-            const showPauseButton = () => {
-                hideAllButtons();
-                if (pausaSL) pausaSL.style.display = 'flex';
-            };
-
-            // Function to handle waveform click (simplified for clarity)
-            const handleWaveformClick = container => {
-                const postId = container.getAttribute('postIDWave');
-                if (!postId) return;
-
-                const wavesurfer = window.wavesurfers[postId];
-
-                if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
-                    currentlyPlayingAudio.pause();
-                }
-
-                if (!container.dataset.audioLoaded) {
-                    const audioUrl = container.getAttribute('data-audio-url');
-                    loadAudio(postId, audioUrl, container, true);
-                } else {
-                    if (wavesurfer) {
-                        if (wavesurfer.isPlaying()) {
-                            wavesurfer.pause();
-                        } else {
-                            wavesurfer.play();
-                        }
-                    }
-                }
-            };
-
-            // Event listener for post clicks
-            if (!post.dataset.clickListenerAdded) {
-                post.addEventListener('click', event => {
-                    const waveformContainer = post.querySelector('.waveform-container');
-                    if (!event.target.closest('.tags-container') && !event.target.closest('.QSORIW') && waveformContainer) {
-                        handleWaveformClick(waveformContainer);
-                    }
-                });
-                post.dataset.clickListenerAdded = 'true';
-            }
-
-            // Mouseenter event for showing play/pause buttons
-            post.addEventListener('mouseenter', () => {
-                if (window.wavesurfers && window.wavesurfers[postId]) {
-                    if (window.wavesurfers[postId].isPlaying()) {
-                        showPauseButton();
-                    } else {
-                        showPlayButton();
-                    }
+        if (!post.dataset.clickListenerAdded) {
+            post.addEventListener('click', event => {
+                const waveformContainer = post.querySelector('.waveform-container');
+                if (!event.target.closest('.tags-container') && !event.target.closest('.QSORIW') && waveformContainer) {
+                    handleWaveformClick(waveformContainer);
                 }
             });
+            post.dataset.clickListenerAdded = 'true';
+        }
 
-            // Mouseleave event for hiding buttons
-            post.addEventListener('mouseleave', () => {
-                if (window.wavesurfers && window.wavesurfers[postId] && !window.wavesurfers[postId].isPlaying()) {
-                    hideAllButtons();
-                }
-            });
+        const hideAllButtons = () => {
+            if (reproducirSL) reproducirSL.style.display = 'none';
+            if (pausaSL) pausaSL.style.display = 'none';
+        };
 
-            // Wavesurfer event listeners
-            if (window.wavesurfers && window.wavesurfers[postId]) {
-                window.wavesurfers[postId].on('play', () => {
-                    currentlyPlayingAudio = window.wavesurfers[postId];
-                    showPauseButton();
-                });
+        const showPlayButton = () => {
+            hideAllButtons();
+            if (reproducirSL) reproducirSL.style.display = 'flex';
+        };
 
-                window.wavesurfers[postId].on('pause', () => {
-                    if (currentlyPlayingAudio === window.wavesurfers[postId]) {
-                        currentlyPlayingAudio = null;
-                    }
-                    showPlayButton();
-                });
+        const showPauseButton = () => {
+            hideAllButtons();
+            if (pausaSL) pausaSL.style.display = 'flex';
+        };
 
-                window.wavesurfers[postId].on('finish', () => {
-                    showPlayButton(); // Show play button after audio finishes
-                    currentlyPlayingAudio = null; // Reset currently playing audio
-                });
+        post.addEventListener('mouseenter', () => {
+            if (audioPlayingStatus && currentlyPlayingAudio === window.wavesurfers[postId]) {
+                showPauseButton();
+            } else {
+                showPlayButton();
             }
         });
+
+        post.addEventListener('mouseleave', () => {
+            if (!(audioPlayingStatus && currentlyPlayingAudio === window.wavesurfers[postId])) {
+                hideAllButtons();
+            }
+        });
+
+        if (window.wavesurfers && window.wavesurfers[postId]) {
+            window.wavesurfers[postId].on('play', () => {
+                audioPlayingStatus = true;
+                currentlyPlayingAudio = window.wavesurfers[postId];
+                showPauseButton();
+            });
+
+            window.wavesurfers[postId].on('pause', () => {
+                if (currentlyPlayingAudio === window.wavesurfers[postId]) {
+                    audioPlayingStatus = false;
+                    currentlyPlayingAudio = null;
+                }
+                hideAllButtons();
+            });
+
+            window.wavesurfers[postId].on('finish', () => {
+                if (currentlyPlayingAudio === window.wavesurfers[postId]) {
+                    audioPlayingStatus = false;
+                    currentlyPlayingAudio = null;
+                }
+                hideAllButtons();
+            });
+        }
     });
 
     function handleWaveformClick(container) {
