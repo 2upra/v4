@@ -79,17 +79,11 @@ function inicializarWaveforms() {
             post.addEventListener('mouseleave', () => {
                 console.log(`⬅️ Saliendo del post: ${postId}`);
                 reproducirSL.style.display = 'none';
-                if (wavesurfer && wavesurfer.isPlaying()) {
-                    console.log(`🙈 Ocultando botones en post: ${postId}`);
+                if (wavesurfer.isPlaying()) {
                     reproducirSL.style.display = 'none';
                     pausaSL.style.display = 'flex';
                 }
                 const wavesurfer = window.wavesurfers[postId];
-                if (!(wavesurfer && wavesurfer.isPlaying())) {
-                    console.log(`🙈 Ocultando botones en post: ${postId}`);
-                    reproducirSL.style.display = 'none';
-                    pausaSL.style.display = 'none';
-                }
             });
             post.dataset.hoverListenerAdded = 'true';
             console.log(`✅ Eventos hover añadidos a post: ${postId}`);
