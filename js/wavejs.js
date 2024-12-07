@@ -98,73 +98,80 @@ function inicializarWaveforms() {
     manejoWave(waveformContainers);
     hoverWaves(posts);
     clickWaveContainer(posts);
-    waveEscucha(posts);
+    sampleListEscucha(posts);
 }
 
 
-function manejoWave(containers) {
-    containers.forEach(container => {
-        if (!container.dataset.clickListenerAdded) {
-            container.addEventListener('click', () => {
-                manejoWave(container);
-            });
-            container.dataset.clickListenerAdded = 'true';
-        }
-    });
+function manejoWave(container) {
+    console.log("👆 manejoWave: Click detectado en un contenedor Wave.");
+    if (!container.dataset.clickListenerAdded) {
+        console.log("👂 manejoWave: Agregando listener de click (interno).");
+        container.addEventListener('click', () => {
+            manejoWave(container);
+        });
+        container.dataset.clickListenerAdded = 'true';
+        console.log("✅ manejoWave: Listener de click (interno) agregado.");
+    }
 }
-
 
 function clickWaveContainer(posts) {
+    console.log("🖱️ clickWaveContainer: Inicializando...");
     posts.forEach(post => {
         const waveformContainer = post.querySelector('.waveform-container');
+        console.log(`🖼️ clickWaveContainer: Procesando post ${post.getAttribute('id-post') || 'sin ID'}`);
 
         if (!post.dataset.clickListenerAdded) {
+            console.log(`👂 clickWaveContainer: Agregando listener de click a post ${post.getAttribute('id-post') || 'sin ID'}`);
             post.addEventListener('click', event => {
                 const clickedElement = event.target;
                 if (clickedElement.closest('.tags-container') || clickedElement.closest('.QSORIW')) {
+                    console.log("🚫 clickWaveContainer: Click ignorado en .tags-container o .QSORIW");
                     return;
                 }
                 if (waveformContainer) {
+                    console.log(`👆 clickWaveContainer: Delegando a manejoWave para post ${post.getAttribute('id-post') || 'sin ID'}`);
                     manejoWave(waveformContainer);
                 }
             });
             post.dataset.clickListenerAdded = 'true';
+            console.log(`✅ clickWaveContainer: Listener de click agregado a post ${post.getAttribute('id-post') || 'sin ID'}`);
         }
     });
+    console.log("💯 clickWaveContainer: Finalizado.");
 }
 
-function waveEscucha(posts) {
-    console.log("🎧 waveEscucha: Inicializando...");
+function sampleListEscucha(posts) {
+    //console.log("🎧 sampleListEscucha: Inicializando...");
     posts.forEach(post => {
         const postId = post.getAttribute('id-post');
         const waveformContainer = post.querySelector('.waveform-container');
 
         if (waveformContainer && !waveformContainer.dataset.eventListenersAdded) {
-            console.log(`👂 waveEscucha: Agregando listeners para post ${postId}`);
+            //console.log(`👂 sampleListEscucha: Agregando listeners para post ${postId}`);
             waveformContainer.addEventListener('ready', () => {
                 const wavesurfer = window.wavesurfers[postId];
                 if (wavesurfer) {
                     wavesurfer.on('play', () => {
-                        console.log(`▶️ waveEscucha: Evento 'play' en post ${postId}`);
+                        //console.log(`▶️ sampleListEscucha: Evento 'play' en post ${postId}`);
                         playWave(wavesurfer, postId);
                     });
 
                     wavesurfer.on('pause', () => {
-                        console.log(`⏸️ waveEscucha: Evento 'pause' en post ${postId}`);
+                        //console.log(`⏸️ sampleListEscucha: Evento 'pause' en post ${postId}`);
                         pausaWave(wavesurfer, post);
                     });
 
                     wavesurfer.on('finish', () => {
-                        console.log(`🏁 waveEscucha: Evento 'finish' en post ${postId}`);
+                        //console.log(`🏁 sampleListEscucha: Evento 'finish' en post ${postId}`);
                         finalWave(wavesurfer, post);
                     });
                 }
             });
             waveformContainer.dataset.eventListenersAdded = 'true';
-            console.log(`✅ waveEscucha: Listeners agregados para post ${postId}`);
+            //console.log(`✅ sampleListEscucha: Listeners agregados para post ${postId}`);
         }
     });
-    console.log("💯 waveEscucha: Finalizado.");
+    //console.log("💯 sampleListEscucha: Finalizado.");
 }
 
 
