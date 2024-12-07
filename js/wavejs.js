@@ -66,12 +66,10 @@ function inicializarWaveforms() {
 
     document.querySelectorAll('.waveform-container').forEach(setupWaveformContainer);
 
-    //aquí varios problemas, el primero, al reproducirse un nuevo audio, se queda el boton de reproducir en el anterior audio, segundo, al reproducir un audio, cuando termina de reproducirse debe quitarse el icono
-
     document.querySelectorAll('.POST-sampleList').forEach(post => {
         const reproducirSL = post.querySelector('.reproducirSL');
         const pausaSL = post.querySelector('.pausaSL');
-        const postId = reproducirSL.getAttribute('id-post');
+        const postId = post.querySelector('.waveform-container').getAttribute('postIDWave');
 
         if (!post.dataset.clickListenerAdded) {
             post.addEventListener('click', event => {
@@ -84,31 +82,35 @@ function inicializarWaveforms() {
         }
 
         const hideAllButtons = () => {
-            if (reproducirSL) reproducirSL.style.display = 'none';
-            if (pausaSL) pausaSL.style.display = 'none';
+            document.querySelectorAll('.reproducirSL').forEach(button => button.style.display = 'none');
+            document.querySelectorAll('.pausaSL').forEach(button => button.style.display = 'none');
         };
 
-        const showPlayButton = () => {
-            hideAllButtons();
+        const showPlayButton = (currentPost) => {
+            const reproducirSL = currentPost.querySelector('.reproducirSL');
+             hideAllButtons();
             if (reproducirSL) reproducirSL.style.display = 'flex';
+           
         };
 
-        const showPauseButton = () => {
+        const showPauseButton = (currentPost) => {
+            const pausaSL = currentPost.querySelector('.pausaSL');
             hideAllButtons();
             if (pausaSL) pausaSL.style.display = 'flex';
         };
 
         post.addEventListener('mouseenter', () => {
             if (audioPlayingStatus && currentlyPlayingAudio === window.wavesurfers[postId]) {
-                showPauseButton();
+                showPauseButton(post);
             } else {
-                showPlayButton();
+                showPlayButton(post);
             }
         });
 
         post.addEventListener('mouseleave', () => {
             if (!(audioPlayingStatus && currentlyPlayingAudio === window.wavesurfers[postId])) {
-                hideAllButtons();
+              if (reproducirSL) reproducirSL.style.display = 'none';
+              if (pausaSL) pausaSL.style.display = 'none';
             }
         });
 
@@ -116,23 +118,24 @@ function inicializarWaveforms() {
             window.wavesurfers[postId].on('play', () => {
                 audioPlayingStatus = true;
                 currentlyPlayingAudio = window.wavesurfers[postId];
-                showPauseButton();
+                showPauseButton(post);
             });
 
             window.wavesurfers[postId].on('pause', () => {
-                if (currentlyPlayingAudio === window.wavesurfers[postId]) {
+                 if (currentlyPlayingAudio === window.wavesurfers[postId]) {
                     audioPlayingStatus = false;
                     currentlyPlayingAudio = null;
+                      showPlayButton(post);
                 }
-                hideAllButtons();
             });
 
             window.wavesurfers[postId].on('finish', () => {
                 if (currentlyPlayingAudio === window.wavesurfers[postId]) {
                     audioPlayingStatus = false;
                     currentlyPlayingAudio = null;
+                     showPlayButton(post);
                 }
-                hideAllButtons();
+
             });
         }
     });
@@ -141,12 +144,8 @@ function inicializarWaveforms() {
         const postId = container.getAttribute('postIDWave');
         if (!postId) return;
 
-        if (audioPlayingStatus && currentlyPlayingAudio !== window.wavesurfers[postId]) {
-            if (currentlyPlayingAudio) {
-                currentlyPlayingAudio.pause();
-            }
-            audioPlayingStatus = false;
-            currentlyPlayingAudio = null;
+          if (currentlyPlayingAudio && currentlyPlayingAudio !== window.wavesurfers[postId]) {
+            currentlyPlayingAudio.pause();
         }
 
         if (!container.dataset.audioLoaded) {
@@ -157,12 +156,8 @@ function inicializarWaveforms() {
             if (wavesurfer) {
                 if (wavesurfer.isPlaying()) {
                     wavesurfer.pause();
-                    audioPlayingStatus = false;
-                    currentlyPlayingAudio = null;
                 } else {
                     wavesurfer.play();
-                    audioPlayingStatus = true;
-                    currentlyPlayingAudio = wavesurfer;
                 }
             }
         }
