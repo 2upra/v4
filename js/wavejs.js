@@ -14,7 +14,6 @@ si se pauso, se oculta pausaSL
 
 dame la parte del codigo que tengo que modifcar
 */
-
 let currentlyPlayingAudio = null;
 let audioPlayingStatus = false;
 
@@ -44,7 +43,7 @@ function inicializarWaveforms() {
                 }
             });
         },
-        {threshold: 0.5}
+        { threshold: 0.5 }
     );
 
     function setupWaveformContainer(container) {
@@ -66,11 +65,10 @@ function inicializarWaveforms() {
 
     document.querySelectorAll('.waveform-container').forEach(setupWaveformContainer);
 
-    //aquí varios problemas, el primero, al reproducirse un nuevo audio, se queda el boton de reproducir en el anterior audio, segundo, al reproducir un audio, debe quedarse boton de pausa, pero se queda el de reproducir y solo se queda el de pausa si vuelvo a poner el mouse mientras se reproduce, cuando termina de reproducirse, debe quitarse el icono
     document.querySelectorAll('.POST-sampleList').forEach(post => {
         const reproducirSL = post.querySelector('.reproducirSL');
         const pausaSL = post.querySelector('.pausaSL');
-        const postId = reproducirSL.getAttribute('id-post');
+        const postId = post.querySelector('.reproducirSL')?.getAttribute('id-post');
 
         if (!post.dataset.clickListenerAdded) {
             post.addEventListener('click', event => {
@@ -96,42 +94,48 @@ function inicializarWaveforms() {
             hideAllButtons();
             if (pausaSL) pausaSL.style.display = 'flex';
         };
+      
+        const updateButtonState = () => {
+          if (window.wavesurfers && window.wavesurfers[postId]) {
+            if (audioPlayingStatus && currentlyPlayingAudio === window.wavesurfers[postId]) {
+              showPauseButton();
+            } else {
+              showPlayButton();
+            }
+          }
+        };
+        
+        post.addEventListener('mouseenter', updateButtonState);
+
+        post.addEventListener('mouseleave', () => {
+          if (window.wavesurfers && window.wavesurfers[postId]) {
+              if (!(audioPlayingStatus && currentlyPlayingAudio === window.wavesurfers[postId])) {
+                  hideAllButtons();
+              }
+          }
+        });
 
         if (window.wavesurfers && window.wavesurfers[postId]) {
             window.wavesurfers[postId].on('play', () => {
                 audioPlayingStatus = true;
                 currentlyPlayingAudio = window.wavesurfers[postId];
-
-                // Actualizar botones para todos los posts
-                document.querySelectorAll('.POST-sampleList').forEach(otherPost => {
-                    const otherPostId = otherPost.querySelector('.reproducirSL').getAttribute('id-post');
-                    if (otherPostId === postId) {
-                        showPauseButton();
-                    } else {
-                        const otherReproducirSL = otherPost.querySelector('.reproducirSL');
-                        const otherPausaSL = otherPost.querySelector('.pausaSL');
-                        if (otherReproducirSL) otherReproducirSL.style.display = 'none';
-                        if (otherPausaSL) otherPausaSL.style.display = 'none';
-                    }
-                });
+                updateButtonState();
             });
 
             window.wavesurfers[postId].on('pause', () => {
                 if (currentlyPlayingAudio === window.wavesurfers[postId]) {
                     audioPlayingStatus = false;
                     currentlyPlayingAudio = null;
+                    updateButtonState();
                 }
-                // Mostrar botón de play al pausar
-                showPlayButton();
             });
 
             window.wavesurfers[postId].on('finish', () => {
                 if (currentlyPlayingAudio === window.wavesurfers[postId]) {
                     audioPlayingStatus = false;
                     currentlyPlayingAudio = null;
+                    updateButtonState();
                 }
-                // Mostrar botón de play al finalizar
-                showPlayButton();
             });
         }
     });
@@ -140,12 +144,8 @@ function inicializarWaveforms() {
         const postId = container.getAttribute('postIDWave');
         if (!postId) return;
 
-        if (audioPlayingStatus && currentlyPlayingAudio !== window.wavesurfers[postId]) {
-            if (currentlyPlayingAudio) {
-                currentlyPlayingAudio.pause();
-            }
-            audioPlayingStatus = false;
-            currentlyPlayingAudio = null;
+        if (currentlyPlayingAudio && currentlyPlayingAudio !== window.wavesurfers[postId]) {
+            currentlyPlayingAudio.pause();
         }
 
         if (!container.dataset.audioLoaded) {
@@ -156,11 +156,8 @@ function inicializarWaveforms() {
             if (wavesurfer) {
                 if (wavesurfer.isPlaying()) {
                     wavesurfer.pause();
-                    // No es necesario actualizar audioPlayingStatus y currentlyPlayingAudio aquí
                 } else {
                     wavesurfer.play();
-                    audioPlayingStatus = true;
-                    currentlyPlayingAudio = wavesurfer;
                 }
             }
         }
@@ -170,19 +167,13 @@ function inicializarWaveforms() {
         if (currentlyPlayingAudio) {
             currentlyPlayingAudio.pause();
         }
-        // No es necesario actualizar audioPlayingStatus y currentlyPlayingAudio aquí
+        audioPlayingStatus = false;
+        currentlyPlayingAudio = null;
         for (const postId in window.wavesurfers) {
             if (window.wavesurfers[postId].isPlaying()) {
                 window.wavesurfers[postId].pause();
             }
         }
-        // Actualizar botones para todos los posts al detener todos
-        document.querySelectorAll('.POST-sampleList').forEach(post => {
-            const reproducirSL = post.querySelector('.reproducirSL');
-            const pausaSL = post.querySelector('.pausaSL');
-            if (reproducirSL) reproducirSL.style.display = 'none';
-            if (pausaSL) pausaSL.style.display = 'none';
-        });
     };
 }
 
@@ -238,15 +229,10 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                         }, 1);
                     }
                     if (playOnLoad) {
-                        if (audioPlayingStatus) {
+                        if (currentlyPlayingAudio) {
                             currentlyPlayingAudio.pause();
                         }
-                        // Verificar si el audio no está reproduciéndose antes de llamar a play()
-                        if (!wavesurfer.isPlaying()) {
-                            wavesurfer.play();
-                        }
-                        audioPlayingStatus = true;
-                        currentlyPlayingAudio = wavesurfer;
+                        wavesurfer.play();
                     }
                 });
 
@@ -266,6 +252,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
 
     loadAndPlayAudioStream();
 };
+
 // La función que inicializa WaveSurfer con los estilos y configuraciones deseados
 function initWavesurfer(container) {
     // Verifica si el contenedor o alguno de sus elementos padre tiene la clase 'LISTWAVESAMPLE'
