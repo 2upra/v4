@@ -1,7 +1,7 @@
 let currentlyPlayingAudio = null;
 let audioPlayingStatus = false;
 
-
+//solo hay un pequeño detalle que no se donde arreglar, un pequeño detalle, mientras que hay un audio en reproduccion y pongo el mouse sobre otro audio, no aparece reproducirBtn hasta que terminer de reproducr el audio que se estaba reproduciendo o pausarlo 
 function inicializarWaveforms() {
     const observer = new IntersectionObserver(
         entries => {
@@ -67,23 +67,31 @@ function inicializarWaveforms() {
 
         if (reproducirBtn && pausaBtn) {
             post.addEventListener('mouseenter', () => {
-                if (currentlyPlayingAudio && currentlyPlayingAudio.isPlaying() && currentlyPlayingAudio.container.closest('.POST-sampleList') === post) {
+                // Obtener el WaveSurfer asociado a este post
+                const postId = post.querySelector('.waveform-container').getAttribute('postIDWave');
+                const wavesurfer = window.wavesurfers[postId];
+    
+                if (wavesurfer && wavesurfer.isPlaying()) {
+                    // Si el audio de este post se está reproduciendo, mostrar pausa
                     pausaBtn.style.display = 'flex';
                     reproducirBtn.style.display = 'none';
                 } else {
+                    // Si el audio de este post no se está reproduciendo, mostrar reproducir
                     reproducirBtn.style.display = 'flex';
                     pausaBtn.style.display = 'none';
                 }
             });
-
+    
             post.addEventListener('mouseleave', () => {
-                 if (currentlyPlayingAudio && currentlyPlayingAudio.isPlaying() && currentlyPlayingAudio.container.closest('.POST-sampleList') === post) {
-                    
-                 } else {
+                // Obtener el WaveSurfer asociado a este post
+                const postId = post.querySelector('.waveform-container').getAttribute('postIDWave');
+                const wavesurfer = window.wavesurfers[postId];
+    
+                if (!wavesurfer || !wavesurfer.isPlaying()) {
+                    // Si no hay audio o no se está reproduciendo en este post, ocultar ambos botones
                     reproducirBtn.style.display = 'none';
                     pausaBtn.style.display = 'none';
-                 }
-                 
+                }
             });
         }
     });
