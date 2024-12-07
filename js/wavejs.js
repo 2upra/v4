@@ -26,7 +26,7 @@ function inicializarWaveforms() {
                 }
             });
         },
-        { threshold: 0.5 }
+        {threshold: 0.5}
     );
 
     document.querySelectorAll('.waveform-container').forEach(container => {
@@ -48,11 +48,6 @@ function inicializarWaveforms() {
         }
     });
 
-    /*
-    agregue esto, cada sample list tiene uno, estan ocultos por defecto, debe aparecer play cuando el usuario pone el mouse sobre el sample list, o cuando se esta reproduciendo debe aparecer pause, es sencillo, hazlo bien, ten en cuenta que hay que gestionar bien porque son varios sample list, dame el codigo completo ajustado
-    <div class="reproducirSL" id-post="<? echo $postId; ?>"><? echo $GLOBALS['play'];?></div>
-    <div class="pausaSL" id-post="<? echo $postId; ?>"><? echo $GLOBALS['pause'];?></div>
-    */
     document.querySelectorAll('.POST-sampleList').forEach(post => {
         const postId = post.getAttribute('id-post');
         const reproducirSL = post.querySelector('.reproducirSL');
@@ -61,21 +56,27 @@ function inicializarWaveforms() {
 
         if (!post.dataset.hoverListenerAdded) {
             post.addEventListener('mouseenter', () => {
-              const wavesurfer = window.wavesurfers[postId];
-              if (wavesurfer && wavesurfer.isPlaying()) {
-                  pausaSL.style.display = 'flex';
-                  reproducirSL.style.display = 'none';
-              } else {
-                  pausaSL.style.display = 'none';
-                  reproducirSL.style.display = 'flex';
-              }
-          });
-      
-          post.addEventListener('mouseleave', () => {
-              reproducirSL.style.display = 'none';
-              pausaSL.style.display = 'none';
-          });
-          post.dataset.hoverListenerAdded = 'true';
+                console.log(`➡️ Entrando al post: ${postId}`);
+                const wavesurfer = window.wavesurfers[postId];
+                if (wavesurfer && wavesurfer.isPlaying()) {
+                    console.log(`⏸️ Mostrando pausa en post: ${postId}`);
+                    pausaSL.style.display = 'flex';
+                    reproducirSL.style.display = 'none';
+                } else {
+                    console.log(`▶️ Mostrando play en post: ${postId}`);
+                    pausaSL.style.display = 'none';
+                    reproducirSL.style.display = 'flex';
+                }
+            });
+
+            post.addEventListener('mouseleave', () => {
+                console.log(`⬅️ Saliendo del post: ${postId}`);
+                console.log(`🙈 Ocultando botones en post: ${postId}`);
+                reproducirSL.style.display = 'none';
+                pausaSL.style.display = 'none';
+            });
+            post.dataset.hoverListenerAdded = 'true';
+            console.log(`✅ Eventos hover añadidos a post: ${postId}`);
         }
 
         if (!post.dataset.clickListenerAdded) {
@@ -84,101 +85,128 @@ function inicializarWaveforms() {
                 const clickedElement = event.target;
 
                 if (clickedElement.closest('.tags-container') || clickedElement.closest('.QSORIW')) {
+                    console.log(`🚫 Clic en elemento no permitido en post: ${postId}`);
                     return;
                 }
 
                 if (waveformContainer) {
+                    console.log(`👆 Clic en waveform de post: ${postId}`);
                     handleWaveformClick(waveformContainer);
                 }
             });
             post.dataset.clickListenerAdded = 'true';
+            console.log(`✅ Evento click añadido a post: ${postId}`);
         }
 
         if (waveformContainer && !waveformContainer.dataset.eventListenersAdded) {
-          waveformContainer.addEventListener('click', () => {
-              handleWaveformClick(waveformContainer);
-          });
-          
-          waveformContainer.addEventListener('ready', () => {
-              const wavesurfer = window.wavesurfers[postId];
-              if (wavesurfer) {
-                  wavesurfer.on('play', () => {
-                      if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
-                          currentlyPlayingAudio.pause();
-                      }
-                      currentlyPlayingAudio = wavesurfer;
-                      document.querySelectorAll('.POST-sampleList').forEach(otherPost => {
-                          const otherPostId = otherPost.getAttribute('id-post');
-                          const otherReproducirSL = otherPost.querySelector('.reproducirSL');
-                          const otherPausaSL = otherPost.querySelector('.pausaSL');
-                          if (otherPostId !== postId) {
-                              otherReproducirSL.style.display = 'none';
-                              otherPausaSL.style.display = 'none';
-                          } else {
-                              otherReproducirSL.style.display = 'none';
-                              otherPausaSL.style.display = 'flex';
-                          }
-                      });
-                  });
-      
-                  wavesurfer.on('pause', () => {
-                      const thisReproducirSL = post.querySelector('.reproducirSL');
-                      const thisPausaSL = post.querySelector('.pausaSL');
-                      thisReproducirSL.style.display = 'flex';
-                      thisPausaSL.style.display = 'none';
-                      if (currentlyPlayingAudio === wavesurfer) {
-                          currentlyPlayingAudio = null;
-                      }
-                  });
-      
-                  wavesurfer.on('finish', () => {
-                      const thisReproducirSL = post.querySelector('.reproducirSL');
-                      const thisPausaSL = post.querySelector('.pausaSL');
-                      thisReproducirSL.style.display = 'flex';
-                      thisPausaSL.style.display = 'none';
-                      if (currentlyPlayingAudio === wavesurfer) {
-                          currentlyPlayingAudio = null;
-                      }
-                  });
-              }
-          });
-          waveformContainer.dataset.eventListenersAdded = 'true';
+            waveformContainer.addEventListener('click', () => {
+                console.log(`👆 Clic en waveform de post: ${postId}`);
+                handleWaveformClick(waveformContainer);
+            });
+
+            waveformContainer.addEventListener('ready', () => {
+                console.log(`🌊 Waveform listo en post: ${postId}`);
+                const wavesurfer = window.wavesurfers[postId];
+                if (wavesurfer) {
+                    wavesurfer.on('play', () => {
+                        console.log(`▶️ Reproduciendo en post: ${postId}`);
+                        if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
+                            console.log(`⏸️ Pausando otro audio`);
+                            currentlyPlayingAudio.pause();
+                        }
+                        currentlyPlayingAudio = wavesurfer;
+                        document.querySelectorAll('.POST-sampleList').forEach(otherPost => {
+                            const otherPostId = otherPost.getAttribute('id-post');
+                            const otherReproducirSL = otherPost.querySelector('.reproducirSL');
+                            const otherPausaSL = otherPost.querySelector('.pausaSL');
+                            if (otherPostId !== postId) {
+                                console.log(`🙈 Ocultando botones en otro post: ${otherPostId}`);
+                                otherReproducirSL.style.display = 'none';
+                                otherPausaSL.style.display = 'none';
+                            } else {
+                                console.log(`⏸️ Mostrando pausa en post actual: ${postId}`);
+                                otherReproducirSL.style.display = 'none';
+                                otherPausaSL.style.display = 'flex';
+                            }
+                        });
+                    });
+
+                    wavesurfer.on('pause', () => {
+                        console.log(`⏸️ Pausado en post: ${postId}`);
+                        const thisReproducirSL = post.querySelector('.reproducirSL');
+                        const thisPausaSL = post.querySelector('.pausaSL');
+                        console.log(`▶️ Mostrando play en post actual: ${postId}`);
+                        thisReproducirSL.style.display = 'flex';
+                        thisPausaSL.style.display = 'none';
+                        if (currentlyPlayingAudio === wavesurfer) {
+                            console.log(`🔇 Audio actual pausado`);
+                            currentlyPlayingAudio = null;
+                        }
+                    });
+
+                    wavesurfer.on('finish', () => {
+                        console.log(`⏹️ Fin de reproducción en post: ${postId}`);
+                        const thisReproducirSL = post.querySelector('.reproducirSL');
+                        const thisPausaSL = post.querySelector('.pausaSL');
+                        console.log(`▶️ Mostrando play en post actual: ${postId}`);
+                        thisReproducirSL.style.display = 'flex';
+                        thisPausaSL.style.display = 'none';
+                        if (currentlyPlayingAudio === wavesurfer) {
+                            console.log(`🔇 Audio actual finalizado`);
+                            currentlyPlayingAudio = null;
+                        }
+                    });
+                }
+            });
+            waveformContainer.dataset.eventListenersAdded = 'true';
+            console.log(`✅ Eventos de waveform añadidos a post: ${postId}`);
         }
     });
 
     function handleWaveformClick(container) {
+        console.log(`🔄 Función handleWaveformClick`);
         const postId = container.getAttribute('postIDWave');
         const audioUrl = container.getAttribute('data-audio-url');
 
-        if (!postId) return;
+        if (!postId) {
+            console.log(`❌ postId no encontrado`);
+            return;
+        }
 
         if (!container.dataset.audioLoaded) {
+            console.log(`⏳ Cargando audio en post: ${postId}`);
             loadAudio(postId, audioUrl, container, true);
         } else {
             const wavesurfer = window.wavesurfers[postId];
             if (wavesurfer) {
                 if (wavesurfer.isPlaying()) {
+                    console.log(`⏸️ Pausando audio en post: ${postId}`);
                     wavesurfer.pause();
                     currentlyPlayingAudio = null;
                 } else {
+                    console.log(`▶️ Reproduciendo audio en post: ${postId}`);
                     if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
+                        console.log(`⏸️ Pausando otro audio`);
                         currentlyPlayingAudio.pause();
                     }
                     wavesurfer.play();
                     currentlyPlayingAudio = wavesurfer;
                 }
+            } else {
+                console.log(`❌ Wavesurfer no encontrado para post: ${postId}`);
             }
         }
     }
-    window.stopAllWaveSurferPlayers = function() {
+
+    window.stopAllWaveSurferPlayers = function () {
         if (currentlyPlayingAudio) {
-          currentlyPlayingAudio.pause();
-          currentlyPlayingAudio = null;
+            currentlyPlayingAudio.pause();
+            currentlyPlayingAudio = null;
         }
         for (const postId in window.wavesurfers) {
-          if (window.wavesurfers[postId].isPlaying()) {
-            window.wavesurfers[postId].pause();
-          }
+            if (window.wavesurfers[postId].isPlaying()) {
+                window.wavesurfers[postId].pause();
+            }
         }
     };
 }
