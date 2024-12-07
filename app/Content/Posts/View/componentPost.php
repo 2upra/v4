@@ -156,6 +156,7 @@ function opcionesPost($postId, $autorId)
     $audio_id_lite = get_post_meta($postId, 'post_audio_lite', true);
     $descarga_permitida = get_post_meta($postId, 'paraDescarga', true);
     $post_verificado = get_post_meta($postId, 'Verificado', true);
+    $paraDescarga = get_post_meta($postId, 'paraDescarga', true);
     ob_start();
 ?>
     <button class="HR695R8" data-post-id="<? echo $postId; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
@@ -185,6 +186,36 @@ function opcionesPost($postId, $autorId)
             <? else : ?>
                 <button class="reporte" data-post-id="<? echo $postId; ?>" tipoContenido="social_post">Reportar</button>
                 <button class="bloquear" data-post-id="<? echo $postId; ?>">Bloquear</button>
+                <?
+                if ($paraDescarga == '1') {
+                    if ($usuarioActual) {
+                        // Obtener descargas previas del usuario
+                        $descargas_anteriores = get_user_meta($usuarioActual, 'descargas', true);
+                        $yaDescargado = isset($descargas_anteriores[$postId]);
+                        $claseExtra = $yaDescargado ? 'yaDescargado' : '';
+
+                ?>
+                        <div class="ZAQIBB">
+                            <button class="icon-arrow-down <? echo esc_attr($claseExtra); ?>"
+                                data-post-id="<? echo esc_attr($postId); ?>"
+                                aria-label="Boton Descarga"
+                                id="download-button-<? echo esc_attr($postId); ?>"
+                                onclick="return procesarDescarga('<? echo esc_js($postId); ?>', '<?php echo esc_js($usuarioActual); ?>')">
+                                Descargar
+                            </button>
+                        </div>
+                    <?
+                    } else {
+                    ?>
+                        <div class="ZAQIBB">
+                            <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down" aria-label="Descargar">
+                                Descargar
+                            </button>
+                        </div>
+                <?
+                    }
+                }
+                ?>
             <? endif; ?>
         </div>
     </div>
@@ -449,11 +480,11 @@ function fondoPost($filtro, $block, $es_suscriptor, $postId)
         $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
 
         ob_start();
-        ?>
+    ?>
         <div class="post-background <?= $blurred_class ?>"
-             style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<?php echo esc_url($optimized_thumbnail_url); ?>);">
+            style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<?php echo esc_url($optimized_thumbnail_url); ?>);">
         </div>
-        <?php
+    <?php
         $output = ob_get_clean();
         return $output;
     }
@@ -465,13 +496,13 @@ function wave($audio_url, $audio_id_lite, $postId)
 {
     $wave = get_post_meta($postId, 'waveform_image_url', true);
     $waveCargada = get_post_meta($postId, 'waveCargada', true);
-    $urlAudioSegura = audioUrlSegura($audio_id_lite); 
+    $urlAudioSegura = audioUrlSegura($audio_id_lite);
 
     // Verificar si $urlAudioSegura es una instancia de WP_Error
     if (is_wp_error($urlAudioSegura)) {
         $urlAudioSegura = ''; // O establece un valor predeterminado o maneja el error de forma diferente
     }
-?>
+    ?>
     <div id="waveform-<? echo $postId; ?>"
         class="waveform-container without-image"
         postIDWave="<? echo $postId; ?>"
@@ -493,10 +524,10 @@ function audioPost($postId)
     }
 
     $post_author_id = get_post_field('post_author', $postId);
-    $urlAudioSegura = audioUrlSegura($audio_id_lite); 
+    $urlAudioSegura = audioUrlSegura($audio_id_lite);
 
     ob_start();
-    ?>
+?>
     <div id="audio-container-<? echo $postId; ?>" class="audio-container" data-post-id="<? echo $postId; ?>" artista-id="<? echo $post_author_id; ?>">
 
         <div class="play-pause-sobre-imagen">
@@ -534,6 +565,3 @@ function audioPostList($postId)
 <?
     return ob_get_clean();
 }
-
-
-
