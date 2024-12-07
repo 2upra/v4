@@ -78,12 +78,12 @@ function inicializarWaveforms() {
 
         const showPlayButton = () => {
             hideAllButtons();
-            if (reproducirSL) reproducirSL.style.display = 'block';
+            if (reproducirSL) reproducirSL.style.display = 'flex';
         };
 
         const showPauseButton = () => {
             hideAllButtons();
-            if (pausaSL) pausaSL.style.display = 'block';
+            if (pausaSL) pausaSL.style.display = 'flex';
         };
 
         post.addEventListener('mouseenter', () => {
