@@ -1,4 +1,4 @@
-function observaciónWave(containers) {
+function observacionWave(containers) {
     const observer = new IntersectionObserver(
         entries => {
             entries.forEach(entry => {
