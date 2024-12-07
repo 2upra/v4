@@ -27,7 +27,7 @@ function inicializarWaveforms() {
                 }
             });
         },
-        {threshold: 0.5}
+        { threshold: 0.5 }
     );
 
     document.querySelectorAll('.waveform-container').forEach(container => {
@@ -99,14 +99,12 @@ function inicializarWaveforms() {
                             currentlyPlayingAudio.pause();
                             const previousPostId = currentlyPlayingAudio.params.container.getAttribute('postIDWave');
                             const previousPost = document.querySelector(`.POST-sampleList[id-post="${previousPostId}"]`);
-
-                            if(previousPost){
+                            if (previousPost) {
                                 const previousReproducirSL = previousPost.querySelector('.reproducirSL');
                                 const previousPausaSL = previousPost.querySelector('.pausaSL');
                                 previousReproducirSL.style.display = 'flex';
                                 previousPausaSL.style.display = 'none';
                             }
-
                         }
                         currentlyPlayingAudio = wavesurfer;
                         document.querySelectorAll('.POST-sampleList').forEach(otherPost => {
@@ -159,13 +157,12 @@ function inicializarWaveforms() {
         } else {
             const wavesurfer = window.wavesurfers[postId];
             if (wavesurfer) {
+                if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
+                    currentlyPlayingAudio.pause();
+                }
                 if (wavesurfer.isPlaying()) {
                     wavesurfer.pause();
                 } else {
-                    
-                    if (currentlyPlayingAudio && currentlyPlayingAudio !== wavesurfer) {
-                        currentlyPlayingAudio.pause();
-                    }
                     wavesurfer.play();
                 }
             }
@@ -190,14 +187,13 @@ function inicializarWaveforms() {
 }
 
 function loadAudio(postId, audioUrl, container, playOnLoad) {
-    if (!postId) {
+    if (!postId || container.dataset.audioLoaded) {
         return;
     }
-    if (!container.dataset.audioLoaded) {
-        window.we(postId, audioUrl, container, playOnLoad);
-        container.dataset.audioLoaded = 'true';
-    }
+    window.we(postId, audioUrl, container, playOnLoad);
+    container.dataset.audioLoaded = 'true';
 }
+
 
 window.we = function (postId, audioUrl, container, playOnLoad = false) {
     if (!window.wavesurfers) {
