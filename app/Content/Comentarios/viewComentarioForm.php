@@ -54,12 +54,6 @@ function renderComentarios()
     $comentariosPorPagina = 12;
     $offset = ($page - 1) * $comentariosPorPagina;
 
-
-    if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
-        $offset = $comentariosPorPagina;
-        $comentariosPorPagina = 0;
-    }
-
     $args = array(
         'post_type' => 'comentarios',
         'post_status' => 'publish',
@@ -117,11 +111,8 @@ function renderComentarios()
     wp_reset_postdata();
     $output = ob_get_clean();
 
-    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-        wp_send_json_success($output);
-    } else {
-        return $output;
-    }
+    echo $output;
+    wp_die();
 }
 
 add_action('wp_ajax_renderComentarios', 'renderComentarios');
