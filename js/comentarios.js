@@ -60,7 +60,6 @@ function iniciarcm() {
     if (comIniciado) return;
     comIniciado = true;
     if (document.getElementById('rsComentario')) {
-        logcm('IniciarCOM start');
         CimagenId = null;
         CimagenUrl = null;
         CaudioId = null;
@@ -356,7 +355,7 @@ function subidaComentario() {
 }
 
 async function subidaComBackend(file, progressBarId) {
-    logcm('Iniciando subida de archivo', {fileName: file.name, fileSize: file.size});
+    console.log('Iniciando subida de archivo', {fileName: file.name, fileSize: file.size});
 
     // Incrementar el contador de subidas en progreso
     subidaEnComentario++;
@@ -370,7 +369,7 @@ async function subidaComBackend(file, progressBarId) {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', my_ajax_object.ajax_url, true);
 
-        logcm('Preparando solicitud AJAX', {url: my_ajax_object.ajax_url});
+        console.log('Preparando solicitud AJAX', {url: my_ajax_object.ajax_url});
 
         xhr.upload.onprogress = e => {
             if (e.lengthComputable) {
@@ -378,12 +377,12 @@ async function subidaComBackend(file, progressBarId) {
                 const progressPercent = (e.loaded / e.total) * 100;
                 if (progressBar) progressBar.style.width = `${progressPercent}%`;
 
-                logcm('Actualizando barra de progreso', {loaded: e.loaded, total: e.total, progressPercent});
+                console.log('Actualizando barra de progreso', {loaded: e.loaded, total: e.total, progressPercent});
             }
         };
 
         xhr.onload = () => {
-            logcm('Respuesta recibida', {status: xhr.status, response: xhr.responseText});
+            console.log('Respuesta recibida', {status: xhr.status, response: xhr.responseText});
 
             // Decrementar el contador al finalizar la subida
             subidaEnComentario--;
@@ -392,33 +391,33 @@ async function subidaComBackend(file, progressBarId) {
                 try {
                     const result = JSON.parse(xhr.responseText);
                     if (result.success) {
-                        logcm('Archivo subido exitosamente', {data: result.data});
+                        console.log('Archivo subido exitosamente', {data: result.data});
                         resolve(result.data);
                     } else {
-                        logcm('Error en la respuesta del servidor (No éxito)', {response: result});
+                        console.log('Error en la respuesta del servidor (No éxito)', {response: result});
                         reject(new Error('Error en la respuesta del servidor'));
                     }
                 } catch (error) {
-                    logcm('Error al parsear la respuesta', {errorMessage: error.message, response: xhr.responseText});
+                    console.log('Error al parsear la respuesta', {errorMessage: error.message, response: xhr.responseText});
                     reject(error);
                 }
             } else {
-                logcm('Error en la carga del archivo', {status: xhr.status, response: xhr.responseText});
+                console.log('Error en la carga del archivo', {status: xhr.status, response: xhr.responseText});
                 reject(new Error(`Error en la carga del archivo. Status: ${xhr.status}`));
             }
         };
 
         xhr.onerror = () => {
-            logcm('Error en la conexión con el servidor', {status: xhr.status});
+            console.log('Error en la conexión con el servidor', {status: xhr.status});
             subidaEnComentario--; // Decrementar el contador en caso de error
             reject(new Error('Error en la conexión con el servidor'));
         };
 
         try {
-            logcm('Enviando solicitud AJAX', {formData});
+            console.log('Enviando solicitud AJAX', {formData});
             xhr.send(formData);
         } catch (error) {
-            logcm('Error al enviar la solicitud AJAX', {errorMessage: error.message});
+            console.log('Error al enviar la solicitud AJAX', {errorMessage: error.message});
             subidaEnComentario--; // Decrementar el contador en caso de error
             reject(new Error('Error al enviar la solicitud AJAX'));
         }
