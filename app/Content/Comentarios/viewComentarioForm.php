@@ -71,19 +71,17 @@ function renderComentarios()
             $query->the_post();
             $comentarioId = get_the_ID();
             $autorComentarioId = get_the_author_meta('ID');
-            $autorComentario = get_the_author();
+            $autorComentario = get_userdata($autorComentarioId); // Obtener el objeto de usuario.
+            $nombreUsuario = $autorComentario->display_name; // Acceder a display_name.
             $contenidoComentario = get_the_content();
             $audio = get_post_meta($comentarioId, 'post_audio_lite', true);
             $imagenPortada = get_the_post_thumbnail_url($comentarioId, 'full');
-            if ($imagenPortada) {
-                $imagenPortadaOptimizada = img($imagenPortada);
-            }
-            $nombreUsuario = $autorComentarioId->display_name;
+            $imagenPortadaOptimizada = $imagenPortada ? img($imagenPortada) : ''; // Simplifica la condición y evita errores si img() no existe.
             $fechaPublicacion = get_the_date('Y-m-d H:i:s');
             $fechaRelativa = tiempoRelativo($fechaPublicacion);
-            $avatar_optimizado = imagenPerfil($autorComentarioId)
+            $avatar_optimizado = imagenPerfil($autorComentarioId);
     ?>
-
+    
             <li class="comentarioPost" id="comentario-<? echo $comentarioId ?>">
                 <div class="avatarComentario">
                     <img class="avatar" src="<? echo esc_url($avatar_optimizado); ?>" alt="Avatar del emisor">
@@ -93,16 +91,15 @@ function renderComentarios()
                     </div>
                 </div>
                 <div class="contenidoComentario">
-                    <span class="fecha"><? echo $fechaRelativa ?></span>
                     <div class="texto"><? echo $contenidoComentario ?></div>
+                    <? if ($imagenPortadaOptimizada): ?>
                     <div class="imagenComentario">
-                        <? if ($imagenPortadaOptimizada): ?>
                             <img src="<? echo $imagenPortadaOptimizada ?>" alt="Imagen de portada" />
-                        <? endif; ?>
                     </div>
+                    <? endif; ?>
                 </div>
             </li>
-<?
+    <?
         }
         echo '</ul>';
     } else {
