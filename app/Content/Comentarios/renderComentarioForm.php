@@ -109,9 +109,9 @@ function renderComentarios()
                                 </div>
 
                             <? endif; ?>
-                            <? if (!empty($audio_id_lite)) : ?>
+                            <? if (!empty($audio)) : ?>
                                 <div class="audioComentario">
-                                    <? wave($audio_url, $audio_id_lite, $comentarioId); ?>
+                                    <? wave($audio_url, $audio, $comentarioId); ?>
                                 </div>
                             <? endif; ?>
                             <div class="controlComentario">
