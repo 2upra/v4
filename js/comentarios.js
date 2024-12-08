@@ -3,7 +3,7 @@ let subidasEnProgreso = 0;
 
 let enablelogCom = true;
 const logCOM = enableLogCom ? console.log : function () {};
-let waveSurferInstances = {};
+let waveSurferInstancesCom = {};
 
 let comIniciado = false;
 
@@ -189,13 +189,13 @@ function subidaComentario() {
 
         if (wrapper) {
             wrapper.parentNode.removeChild(wrapper);
-            if (waveSurferInstances[containerId]) {
-                waveSurferInstances[containerId].unAll();
-                if (waveSurferInstances[containerId].isPlaying()) {
-                    waveSurferInstances[containerId].stop();
+            if (waveSurferInstancesCom[containerId]) {
+                waveSurferInstancesCom[containerId].unAll();
+                if (waveSurferInstancesCom[containerId].isPlaying()) {
+                    waveSurferInstancesCom[containerId].stop();
                 }
-                waveSurferInstances[containerId].destroy();
-                delete waveSurferInstances[containerId];
+                waveSurferInstancesCom[containerId].destroy();
+                delete waveSurferInstancesCom[containerId];
             }
         }
 
