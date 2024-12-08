@@ -66,25 +66,6 @@ function iniciarcm() {
     }
 }
 
-function ocultarColec() {
-    const rsComentario = document.getElementById('rsComentario');
-    rsComentario.style.display = 'none';
-}
-
-function abrirComentario() {
-    const rsComentario = document.getElementById('rsComentario');
-    if (!rsComentario) return; // Salir si no existe el elemento
-
-    // Delegación de eventos en lugar de agregar listeners a cada botón
-    document.body.addEventListener('click', event => {
-        const boton = event.target.closest('.WNLOFT');
-        if (boton) {
-            CpostId = boton.dataset.postId;
-            rsComentario.style.display = 'flex';
-            createComDarkBackground();
-        }
-    });
-}
 
 function verificarComentario() {
     function verificarCamposCom() {
@@ -433,12 +414,33 @@ async function subidaComBackend(file, progressBarId) {
     });
 }
 
+//que estoy haciendo mal que al momento de abrir el comentario, el background se cierra automaticamente? 
+function ocultarColec() {
+    const rsComentario = document.getElementById('rsComentario');
+    rsComentario.style.display = 'none';
+}
+
+function abrirComentario() {
+    const rsComentario = document.getElementById('rsComentario');
+    if (!rsComentario) return; 
+
+    document.body.addEventListener('click', event => {
+        const boton = event.target.closest('.WNLOFT');
+        if (boton) {
+            CpostId = boton.dataset.postId;
+            rsComentario.style.display = 'flex';
+            createComDarkBackground();
+        }
+    });
+}
+
+
 window.createComDarkBackground = function () {
-    let darkBackground = document.getElementById('submenu-background5322');
+    let darkBackground = document.getElementById('submenu-background5323');
     if (!darkBackground) {
         // Crear el fondo oscuro si no existe
         darkBackground = document.createElement('div');
-        darkBackground.id = 'submenu-background5322';
+        darkBackground.id = 'submenu-background5323';
         darkBackground.style.position = 'fixed';
         darkBackground.style.top = 0;
         darkBackground.style.left = 0;
@@ -466,7 +468,7 @@ window.createComDarkBackground = function () {
 
 // Eliminar el fondo oscuro
 window.removeComDarkBackground = function () {
-    const darkBackground = document.getElementById('submenu-background5322');
+    const darkBackground = document.getElementById('submenu-background5323');
     if (darkBackground) {
         darkBackground.style.opacity = '0';
         setTimeout(() => {
