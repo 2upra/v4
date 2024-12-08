@@ -414,26 +414,31 @@ async function subidaComBackend(file, progressBarId) {
     });
 }
 
-//que estoy haciendo mal que al momento de abrir el comentario, el background se cierra automaticamente? 
 function ocultarColec() {
     const rsComentario = document.getElementById('rsComentario');
     rsComentario.style.display = 'none';
+    removeComDarkBackground(); // Asegúrate de eliminar el fondo también
 }
 
 function abrirComentario() {
     const rsComentario = document.getElementById('rsComentario');
-    if (!rsComentario) return; 
+    if (!rsComentario) return;
 
     document.body.addEventListener('click', event => {
         const boton = event.target.closest('.WNLOFT');
         if (boton) {
+            event.stopPropagation(); // Detiene la propagación aquí
             CpostId = boton.dataset.postId;
             rsComentario.style.display = 'flex';
             createComDarkBackground();
+
+            // Evita que el clic se propague desde el comentario
+            rsComentario.addEventListener('click', (event) => {
+                event.stopPropagation();
+            });
         }
     });
 }
-
 
 window.createComDarkBackground = function () {
     let darkBackground = document.getElementById('submenu-background5323');
@@ -449,21 +454,21 @@ window.createComDarkBackground = function () {
         darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
         darkBackground.style.zIndex = 1000;
         darkBackground.style.display = 'none';
-        darkBackground.style.pointerEvents = 'none';
+        // darkBackground.style.pointerEvents = 'none';  // No es necesario al inicio
         darkBackground.style.opacity = '0';
         darkBackground.style.transition = 'opacity 0.3s ease';
         document.body.appendChild(darkBackground);
-
-        darkBackground.addEventListener('click', () => {
-            ocultarColec();
-        });
     }
+
+    // Se remueve el listener del fondo oscuro si ya existe para evitar duplicados.
+    darkBackground.removeEventListener('click', ocultarColec);
+    darkBackground.addEventListener('click', ocultarColec);
 
     darkBackground.style.display = 'block';
     setTimeout(() => {
         darkBackground.style.opacity = '1';
     }, 10);
-    darkBackground.style.pointerEvents = 'auto';
+    // darkBackground.style.pointerEvents = 'auto'; // No es necesario, se establece al hacer display block
 };
 
 // Eliminar el fondo oscuro
@@ -473,7 +478,7 @@ window.removeComDarkBackground = function () {
         darkBackground.style.opacity = '0';
         setTimeout(() => {
             darkBackground.style.display = 'none';
-            darkBackground.style.pointerEvents = 'none';
+            // darkBackground.style.pointerEvents = 'none'; // No es necesario, se elimina al hacer display none
         }, 300);
     }
 };
