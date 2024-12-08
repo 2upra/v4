@@ -445,7 +445,7 @@ function cargarComentarios() {
     let paginaActual = 1;
     let cargando = false;
     const comentariosList = document.querySelector('.listComentarios');
-
+    comentariosList.style.display = 'flex';
     console.log('Función cargarComentarios iniciada.');
 
     function cargarPaginaComentario() {
@@ -484,7 +484,7 @@ function cargarComentarios() {
                     cargando = true; // Lo dejamos en true para que no intente cargar más páginas.
 
                     if (paginaActual === 1) {
-                        comentariosList.style.display = 'flex';
+                        
                         comentariosList.innerHTML = data.html;
                     }
                     return;
