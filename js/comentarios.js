@@ -597,8 +597,10 @@ function cargarComentarios() {
                 }
                 
                 if (data.noComentarios) {
+                    comentariosList.style.display = 'none';
                     console.log('No hay más comentarios o no hay comentarios.');
                     cargando = true; // Lo dejamos en true para que no intente cargar más páginas.
+                    
                     if (paginaActual === 1) {
                         // Mostrar el mensaje de que no hay comentarios.
                         comentariosList.innerHTML = data.html;
