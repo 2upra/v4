@@ -45,8 +45,6 @@ function iniciarRS() {
         selectorformtipo();
         selectorFanArtista();
 
-        //
-        comentariosRS()
     } else {
         logRS('formRs no existe');
     }
