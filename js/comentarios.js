@@ -18,6 +18,7 @@ function iniciarCOM() {
         subidasEnProgreso = 0;
         verificarComentario();
         enviarComentario();
+        subidaComentario();
     }
 }
 
