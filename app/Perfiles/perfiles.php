@@ -111,7 +111,8 @@ function perfilBanner($user_id)
                 <button class="borde PRJWWT mensajeBoton" data-receptor="<? echo esc_html($user_id); ?>">Enviar mensaje</button>
             <? endif; ?>
             <? if ($mismoAutor): ?>
-                <button class="DSQKYW">Configuración</button>
+                <button class="botonConfig borde">Configuración</button>
+                <button class="compartirPerfil borde">Compartir perfil</button>
             <? endif; ?>
         </div>
     </div>
