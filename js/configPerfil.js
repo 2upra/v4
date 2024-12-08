@@ -1,11 +1,3 @@
-function IniciadoresConfigPerfil() {
-    SubidaImagenPerfil();
-    cambiarNombre();
-    cambiarDescripcion();
-    cambiarEnlace();
-    selectorFanArtistaTipo();
-}
-
 function SubidaImagenPerfil() {
     const previewAreaImagen = document.getElementById('previewAreaImagenPerfil');
     const postImage = document.getElementById('profilePicture');
@@ -98,6 +90,61 @@ function SubidaImagenPerfil() {
     });
 }
 
+function IniciadoresConfigPerfil() {
+    SubidaImagenPerfil();  //ignorar
+    selectorFanArtistaTipo(); //ignorar
+    cambiarNombre();
+    cambiarDescripcion();
+    cambiarEnlace();
+    
+}
+
+/*
+//GENERIC FETCH (NO SE PUEDE CAMBIAR O ALTERAR ) no toques esta funcion ni nada, usalo para simplificar
+async function enviarAjax(action, data = {}) {
+    try {
+        const body = new URLSearchParams({
+            action: action,
+            ...data
+        });
+        const response = await fetch(ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: body
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+        }
+        let responseData;
+        const responseText = await response.text();
+        try {
+            responseData = JSON.parse(responseText);
+        } catch (jsonError) {
+            console.error('No se pudo interpretar la respuesta como JSON:', {
+                error: jsonError,
+                responseText: responseText,
+                action: action,
+                requestData: data
+            });
+            responseData = responseText;
+        }
+        return responseData;
+    } catch (error) {
+        console.error('Error en la solicitud AJAX:', {
+            error: error,
+            action: action,
+            requestData: data,
+            ajaxUrl: ajaxUrl
+        });
+        return {success: false, message: error.message};
+    }
+}
+
+el siguiente codigo ya no deben de depender de que si se da enter, debe depender de un boton con la clase guardarConfig, si se da click a ese boton, se guarda las configuraciones que hayan combiado, dame el codigo completo. 
+*/
+
 function cambiarNombre() {
     const usernameInput = document.getElementById('username');
     if (!usernameInput) {
@@ -106,56 +153,53 @@ function cambiarNombre() {
 
     const originalUsername = usernameInput.value;
     const maxCharacters = 20;
-    if (!originalUsername) {
-        return;
-    }
 
-    usernameInput.addEventListener('keydown', async function (event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
+    // No se requiere el evento 'keydown' para Enter, ya que el botón se encargará de guardar los cambios.
+
+    // Agregamos un evento 'click' al botón con la clase 'guardarConfig'
+    const guardarConfigButton = document.querySelector('.guardarConfig');
+    if (guardarConfigButton) {
+        guardarConfigButton.addEventListener('click', async function () {
             const newUsername = usernameInput.value.trim();
-            if (newUsername === originalUsername || newUsername === '') {
+            if (newUsername === originalUsername) {
+                return; // No se necesitan cambios
+            }
+            if (!newUsername) {
+                alert("Por favor, ingresa un nombre de usuario.");
                 return;
             }
             if (newUsername.length > maxCharacters) {
                 alert(`El nombre de usuario no puede tener más de ${maxCharacters} caracteres.`);
                 return;
             }
+
             const confirmMessage = `¿Estás seguro que quieres cambiar el nombre de usuario a "${newUsername}"?`;
             const confirmed = await new Promise(resolve => resolve(confirm(confirmMessage)));
+
             if (confirmed) {
-                const data = new URLSearchParams();
-                data.append('action', 'cambiar_nombre');
-                data.append('new_username', newUsername);
                 try {
-                    const response = await fetch(ajaxUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: data.toString()
-                    });
-                    const result = await response.json();
-                    if (result.success) {
+                    const response = await enviarAjax('cambiar_nombre', { new_username: newUsername });
+                    if (response.success) {
                         alert('Nombre de usuario actualizado con éxito.');
                         usernameInput.value = newUsername;
+                        originalUsername = newUsername
                     } else {
-                        alert('Error: ' + result.data);
+                        alert('Error: ' + response.message);
                     }
                 } catch (error) {
                     console.error('Error al cambiar el nombre de usuario:', error);
                     alert('Hubo un error al intentar cambiar el nombre de usuario.');
                 }
             }
-        }
-    });
+        });
+    }
 }
 
 function cambiarDescripcion() {
     const descripcionInput = document.getElementById('description');
-    const originalDescripcion = descripcionInput.value;
+    let originalDescripcion = descripcionInput.value;
 
-    if (!descripcionInput || !originalDescripcion) return;
+    if (!descripcionInput) return;
 
     // Limitar a 300 caracteres
     descripcionInput.addEventListener('input', function () {
@@ -164,62 +208,55 @@ function cambiarDescripcion() {
         }
     });
 
-    descripcionInput.addEventListener('keydown', async function (event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
+    // No se requiere el evento 'keydown' para Enter, ya que el botón se encargará de guardar los cambios.
 
-            const nuevaDescripcion = descripcionInput.value; // No usar trim() aquí
-            if (nuevaDescripcion === originalDescripcion || nuevaDescripcion === '') {
-                return;
+    // Agregamos un evento 'click' al botón con la clase 'guardarConfig'
+    const guardarConfigButton = document.querySelector('.guardarConfig');
+    if (guardarConfigButton) {
+        guardarConfigButton.addEventListener('click', async function () {
+            const nuevaDescripcion = descripcionInput.value;
+            if (nuevaDescripcion === originalDescripcion) {
+                return; // No se necesitan cambios
             }
 
             const confirmMessage = `¿Estás seguro que quieres cambiar la descripción a:\n\n"${nuevaDescripcion}"?`;
             const confirmed = await new Promise(resolve => resolve(confirm(confirmMessage)));
 
             if (confirmed) {
-                const data = new URLSearchParams();
-                data.append('action', 'cambiar_descripcion');
-                data.append('new_description', nuevaDescripcion);
                 try {
-                    const response = await fetch(ajaxUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: data.toString()
-                    });
-
-                    const result = await response.json();
-
-                    if (result.success) {
+                    const response = await enviarAjax('cambiar_descripcion', { new_description: nuevaDescripcion });
+                    if (response.success) {
                         alert('Descripción actualizada con éxito.');
                         descripcionInput.value = nuevaDescripcion;
+                        originalDescripcion = nuevaDescripcion;
                     } else {
-                        alert('Error: ' + result.data);
+                        alert('Error: ' + response.message);
                     }
                 } catch (error) {
                     console.error('Error al cambiar la descripción:', error);
                     alert('Hubo un error al intentar cambiar la descripción.');
                 }
             }
-        }
-    });
+        });
+    }
 }
 
 function cambiarEnlace() {
     const linkInput = document.getElementById('link');
-    const originalLink = linkInput.value;
+    let originalLink = linkInput.value;
     const maxCharacters = 100;
 
     if (!linkInput) return;
 
-    linkInput.addEventListener('keydown', async function (event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
+    // No se requiere el evento 'keydown' para Enter, ya que el botón se encargará de guardar los cambios.
 
+    // Agregamos un evento 'click' al botón con la clase 'guardarConfig'
+    const guardarConfigButton = document.querySelector('.guardarConfig');
+    if (guardarConfigButton) {
+        guardarConfigButton.addEventListener('click', async function () {
             const newLink = linkInput.value.trim();
-            if (newLink === originalLink || newLink === '') {
-                return;
+            if (newLink === originalLink) {
+                return; // No se necesitan cambios
             }
             if (newLink.length > maxCharacters) {
                 alert(`El enlace no puede tener más de ${maxCharacters} caracteres.`);
@@ -236,34 +273,22 @@ function cambiarEnlace() {
             const confirmed = await new Promise(resolve => resolve(confirm(confirmMessage)));
 
             if (confirmed) {
-                const data = new URLSearchParams();
-                data.append('action', 'cambiar_enlace');
-                data.append('new_link', newLink);
-
                 try {
-                    const response = await fetch(ajaxUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: data.toString()
-                    });
-
-                    const result = await response.json();
-
-                    if (result.success) {
+                    const response = await enviarAjax('cambiar_enlace', { new_link: newLink });
+                    if (response.success) {
                         alert('Enlace actualizado con éxito.');
                         linkInput.value = newLink;
+                        originalLink = newLink;
                     } else {
-                        alert('Error: ' + result.data);
+                        alert('Error: ' + response.message);
                     }
                 } catch (error) {
                     console.error('Error al cambiar el enlace:', error);
                     alert('Hubo un error al intentar cambiar el enlace.');
                 }
             }
-        }
-    });
+        });
+    }
 
     // Si el enlace original está vacío, muestra un placeholder
     if (originalLink === '') {
