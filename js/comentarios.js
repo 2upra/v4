@@ -446,24 +446,113 @@ genericAjax.js?ver=3.0.53.1071147829:733  No se pudo interpretar la respuesta co
 at JSON.parse (<anonymous…, responseText: ' <p class="sinnotifi">No hay comentarios para este post</p>0', action: 'renderComentarios', requestData: {…}}
 
 
+function renderComentarios()
+{
+    $postId = isset($_POST['postId']) ? intval($_POST['postId']) : 0;
+    $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+    $userId = get_current_user_id();
+    $comentariosPorPagina = 12;
+    $offset = ($page - 1) * $comentariosPorPagina;
+    $comentarios_ids = get_post_meta($postId, 'comentarios_ids', true);
+
+    if (empty($comentarios_ids)) {
+        // No hay comentarios asociados a este post, puedes mostrar un mensaje o simplemente no mostrar nada.
+        echo '<p class="sinnotifi">No hay comentarios para este post</p>';
+        return;
+    }
+
+    $args = array(
+        'post_type' => 'comentarios',
+        'post_status' => 'publish',
+        'posts_per_page' => $comentariosPorPagina,
+        'offset' => $offset,
+        'post__in' => $comentarios_ids,
+        'orderby' => 'post__in', // Ordenar los resultados en el mismo orden que el array de IDs.
+    );
+
+    $query = new WP_Query($args);
+
+
+    ob_start();
+    echo '<ul class="lista-comentarios">';
+    if ($query->have_posts()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+            $comentarioId = get_the_ID();
+            $autorComentarioId = get_the_author_meta('ID');
+            $autorComentario = get_userdata($autorComentarioId); // Obtener el objeto de usuario.
+            $nombreUsuario = $autorComentario->display_name; // Acceder a display_name.
+            $contenidoComentario = get_the_content();
+            $audio = get_post_meta($comentarioId, 'post_audio_lite', true);
+            $imagenPortada = get_the_post_thumbnail_url($comentarioId, 'full');
+            $imagenPortadaOptimizada = $imagenPortada ? img($imagenPortada) : ''; // Simplifica la condición y evita errores si img() no existe.
+            $fechaPublicacion = get_the_date('Y-m-d H:i:s');
+            $fechaRelativa = tiempoRelativo($fechaPublicacion);
+            $avatar_optimizado = imagenPerfil($autorComentarioId);
+            $audio_url = wp_get_attachment_url(get_post_meta($comentarioId, 'post_audio', true));
+    ?>
+
+            <li class="comentarioPost" id="comentario-<? echo $comentarioId ?>">
+                <div class="avatarComentario">
+                    <img class="avatar" src="<? echo esc_url($avatar_optimizado); ?>" alt="Avatar del emisor">
+                    <div class="spaceComentario">
+                        <div class="MGDEOP">
+                            <p><? echo $nombreUsuario ?> </p>
+                            <span class="fecha"><? echo $fechaRelativa ?></span>
+                            <? echo opcionesComentarios($comentarioId, $autorComentarioId) ?>
+                        </div>
+                        <div class="contenidoComentario">
+                            <div class="texto"><? echo $contenidoComentario ?></div>
+                            <? if ($imagenPortadaOptimizada): ?>
+                                <div class="imagenComentario">
+                                    <img src="<? echo $imagenPortadaOptimizada ?>" alt="Imagen de portada" />
+                                </div>
+
+                            <? endif; ?>
+                            <? if (!empty($audio)) : ?>
+                                <div class="audioComentario">
+                                    <? wave($audio_url, $audio, $comentarioId); ?>
+                                </div>
+                            <? endif; ?>
+                            <div class="controlComentario">
+                                <? echo renderPostControls($comentarioId, '', $audio); ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </li>
+<?
+        }
+        echo '</ul>';
+        $response['noComentarios'] = false;
+        $response['html'] = ob_get_clean();
     } else {
-        echo '0';
+        $response['noComentarios'] = true;
+        $response['html'] = '<p class="sinnotifi">No hay comentarios para este post</p>';
     }
     wp_reset_postdata();
+
+    // Obtén el contenido del buffer y límpialo
     $output = ob_get_clean();
 
+    // Construye la respuesta
     $response = array();
-    if (trim($output) === '0') {
+    if (trim($output) === '0' || empty($output)) {
         $response['noComentarios'] = true;
-        $response['html'] = '<p class="sinnotifi">No hay comentarios para este post</p>'; 
+        $response['html'] = '<p class="sinnotifi">No hay comentarios para este post</p>';
     } else {
         $response['noComentarios'] = false;
         $response['html'] = $output;
     }
 
-    // Devuelve la respuesta como JSON
+    // Establece el encabezado de tipo de contenido como JSON
     header('Content-Type: application/json');
+
+    // Devuelve la respuesta como JSON
     echo json_encode($response);
+
+    // Finaliza la ejecución del script
     wp_die();
 }
 
@@ -477,79 +566,78 @@ function cargarComentarios() {
 
     console.log('Función cargarComentarios iniciada.');
 
-function cargarPaginaComentario() {
-    console.log(`Cargando página de comentarios: ${paginaActual}`);
-    if (cargando) {
-        console.log('Ya se está cargando una página. Retornando.');
-        return;
-    }
-    cargando = true;
+    function cargarPaginaComentario() {
+        console.log(`Cargando página de comentarios: ${paginaActual}`);
+        if (cargando) {
+            console.log('Ya se está cargando una página. Retornando.');
+            return;
+        }
+        cargando = true;
 
-    const data = {
-        postId: CpostId,
-        page: paginaActual
-    };
+        const data = {
+            postId: CpostId,
+            page: paginaActual
+        };
 
-    console.log('Enviando datos:', data);
+        console.log('Enviando datos:', data);
 
-    enviarAjax('renderComentarios', data)
-        .then(response => {
-            console.log('Respuesta recibida:', response);
+        enviarAjax('renderComentarios', data)
+            .then(response => {
+                console.log('Respuesta recibida:', response);
 
-            let data;
-            // Intenta interpretar la respuesta como JSON
-            try {
-                data = JSON.parse(response);
-            } catch (e) {
-                // Si falla, asume que es HTML
-                console.warn('No se pudo interpretar la respuesta como JSON:', e, 'responseText:', response, 'action:', 'renderComentarios', 'requestData:', data);
-                data = {
-                    noComentarios: true,
-                    html: response // Asigna la respuesta completa como HTML
-                };
-            }
-
-            if (data.noComentarios) {
-                console.log('No hay más comentarios.');
-                cargando = true;
-                if (paginaActual === 1) {
-                    // Usa data.html para mostrar el mensaje
-                    comentariosList.innerHTML = data.html.includes('No hay comentarios') ? data.html : '<p class="sinnotifi">No hay comentarios</p>';
+                // La respuesta ya debería ser un objeto JSON válido.
+                let data;
+                try{
+                    data = JSON.parse(response);
+                } catch (error) {
+                    console.error('Error al analizar JSON:', error, 'Respuesta completa:', response);
+                    // Puedes manejar el error aquí, por ejemplo, mostrando un mensaje de error al usuario.
+                    cargando = false;
+                    return;
                 }
-                return;
-            }
+                
+                if (data.noComentarios) {
+                    console.log('No hay más comentarios o no hay comentarios.');
+                    cargando = true; // Lo dejamos en true para que no intente cargar más páginas.
+                    if (paginaActual === 1) {
+                        // Mostrar el mensaje de que no hay comentarios.
+                        comentariosList.innerHTML = data.html;
+                    }
+                    return;
+                }
 
-            if (paginaActual === 1) {
-                console.log('Reemplazando contenido de comentariosList.');
-                comentariosList.innerHTML = data.html;
-            } else {
-                console.log('Agregando contenido a comentariosList.');
-                comentariosList.insertAdjacentHTML('beforeend', data.html);
-            }
+                if (paginaActual === 1) {
+                    console.log('Reemplazando contenido de comentariosList.');
+                    comentariosList.innerHTML = data.html;
+                } else {
+                    console.log('Agregando contenido a comentariosList.');
+                    comentariosList.insertAdjacentHTML('beforeend', data.html);
+                }
 
-            paginaActual++;
-            cargando = false;
-            console.log(`Página cargada. Nueva página actual: ${paginaActual}`);
-            createSubmenu('.submenucomentario', 'opcionescomentarios', 'abajo');
-            ['inicializarWaveforms', 'empezarcolab', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'colec'].forEach(funcion => {
-                if (typeof window[funcion] === 'function') window[funcion]();
+                paginaActual++;
+                cargando = false;
+                console.log(`Página cargada. Nueva página actual: ${paginaActual}`);
+                // Ejecutar otras funciones después de cargar los comentarios.
+                createSubmenu('.submenucomentario', 'opcionescomentarios', 'abajo');
+                ['inicializarWaveforms', 'empezarcolab', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'colec'].forEach(funcion => {
+                    if (typeof window[funcion] === 'function') window[funcion]();
+                });
+            })
+            .catch(error => {
+                console.error('Error en la promesa:', error);
+                cargando = false;
             });
-        })
-        .catch(error => {
-            console.error('Error en la promesa:', error);
-            cargando = false;
-        });
-}
+    }
 
     cargarPaginaComentario();
 
     comentariosList.addEventListener('scroll', () => {
         console.log('Evento scroll detectado.');
         console.log(`ScrollTop: ${comentariosList.scrollTop}, ScrollHeight: ${comentariosList.scrollHeight}, ClientHeight: ${comentariosList.clientHeight}`);
-        if (comentariosList.scrollHeight - (comentariosList.scrollTop + comentariosList.clientHeight) <= 200 && !cargando) {
+        // Ajustar la condición para cargar más comentarios si no hay comentarios y la página actual es 1.
+        if (paginaActual > 1 && comentariosList.scrollHeight - (comentariosList.scrollTop + comentariosList.clientHeight) <= 200 && !cargando) {
             console.log('Condición de carga de nueva página cumplida.');
-            cargando = true;
-            cargarPaginaComentario(paginaActual);
+            cargarPaginaComentario();
         }
     });
 }
