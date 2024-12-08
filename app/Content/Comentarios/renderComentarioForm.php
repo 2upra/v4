@@ -98,7 +98,7 @@ function renderComentarios()
                         <div class="MGDEOP">
                             <p><? echo $nombreUsuario ?> </p>
                             <span class="fecha"><? echo $fechaRelativa ?></span>
-                            <? echo opcionesComentarios($postId, $autorComentarioId) ?>
+                            <? echo opcionesComentarios($comentarioId, $autorComentarioId) ?>
                         </div>
                         <div class="contenidoComentario">
                             <div class="texto"><? echo $contenidoComentario ?></div>
@@ -108,7 +108,7 @@ function renderComentarios()
                                 </div>
                             <? endif; ?>
                             <div class="controlComentario">
-                                <? echo renderPostControls($postId, '', $audio); ?>
+                                <? echo renderPostControls($comentarioId, '', $audio); ?>
                             </div>
                         </div>
                     </div>
