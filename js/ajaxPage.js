@@ -1,3 +1,20 @@
+/*
+VM2585:1  Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Unexpected token ':'
+    at ajaxPage.js?ver=3.0.54:141:39
+    at NodeList.forEach (<anonymous>)
+    at ajaxPage.js?ver=3.0.54:137:48
+(anónimo) @ ajaxPage.js?ver=3.0.54:141
+(anónimo) @ ajaxPage.js?ver=3.0.54:137
+Promise.then
+load @ ajaxPage.js?ver=3.0.54:129
+handleLoad @ ajaxPage.js?ver=3.0.54:165
+(anónimo) @ ajaxPage.js?ver=3.0.54:169
+VM2592:1  Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Identifier 'wpAdminUrl' has already been declared
+    at ajaxPage.js?ver=3.0.54:141:39
+    at NodeList.forEach (<anonymous>)
+    at ajaxPage.js?ver=3.0.54:137:48
+*/
+
 (function () {
     const pageCache = {},
         isFirefox = typeof InstallTrigger !== 'undefined';
@@ -83,7 +100,7 @@
         'actualizarBotonFiltro',
         'iniciarCargaNotificaciones',
         'busquedaMenuMovil',
-        'iniciarcm',
+        'iniciarcm'
     ];
 
     function initScripts() {
@@ -134,16 +151,51 @@
                 document.getElementById('loadingBar').style.cssText = 'width: 100%; transition: width 0.1s ease, opacity 0.3s ease';
                 setTimeout(() => (document.getElementById('loadingBar').style.cssText = 'width: 0%; opacity: 0'), 100);
                 if (pushState) history.pushState(null, '', url);
+
+                // Manejar scripts externos
+                const externalScripts = [];
                 doc.querySelectorAll('script').forEach(s => {
                     if (s.src && !document.querySelector(`script[src="${s.src}"]`)) {
-                        document.body.appendChild(Object.assign(document.createElement('script'), {src: s.src, async: false}));
-                    } else if (!s.src) {
-                        document.body.appendChild(Object.assign(document.createElement('script'), {textContent: s.textContent}));
+                        externalScripts.push(s.src);
                     }
                 });
-                setTimeout(reinit, 100);
+
+                // Cargar scripts externos primero
+                loadExternalScripts(externalScripts, () => {
+                    // Ejecutar scripts inline después de cargar los externos
+                    doc.querySelectorAll('script').forEach(s => {
+                        if (!s.src) {
+                            try {
+                                // Evaluar el código de forma segura
+                                eval(s.textContent);
+                            } catch (error) {
+                                console.error('Error evaluating inline script:', error);
+                            }
+                        }
+                    });
+                    setTimeout(reinit, 100);
+                });
             })
             .catch(e => console.error('Load error:', e));
+    }
+
+    // Función para cargar scripts externos de forma secuencial
+    function loadExternalScripts(scripts, callback) {
+        if (scripts.length === 0) {
+            callback();
+            return;
+        }
+
+        const src = scripts.shift();
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = false; // Asegura el orden de ejecución
+        script.onload = () => loadExternalScripts(scripts, callback);
+        script.onerror = () => {
+            console.error('Error loading external script:', src);
+            loadExternalScripts(scripts, callback); // Continuar con los demás aunque haya error
+        };
+        document.body.appendChild(script);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
