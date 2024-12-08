@@ -434,6 +434,29 @@ function ocultarColec() {
     removeComDarkBackground(); // Asegúrate de eliminar el fondo también
 }
 
+/*
+los post si cargan pero tengo este error 
+
+genericAjax.js?ver=3.0.53.1176076182:733 
+ No se pudo interpretar la respuesta como JSON: 
+{error: SyntaxError: Unexpected token '<', " <ul class="... is not valid JSON
+    at JSON.parse (<anonymous…, responseText: ' <ul class="lista-comentarios">\n            <li cl…v>\n                </div>\n            </li>\n</ul>', action: 'renderComentarios', requestData: {…}}
+action
+: 
+"renderComentarios"
+error
+: 
+SyntaxError: Unexpected token '<', " <ul class="... is not valid JSON at JSON.parse (<anonymous>) at enviarAjax (https://2upra.com/wp-content/themes/2upra3v/js/genericAjax.js?ver=3.0.53.1176076182:731:33)
+requestData
+: 
+{postId: '322761', page: 1}
+[[Prototype]]
+: 
+Object
+
+no debo modificar enviarAjax, sino usarlo correctamente
+*/
+
 function cargarComentarios() {
     let paginaActual = 1;
     let cargando = false;

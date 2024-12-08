@@ -111,7 +111,19 @@ function renderComentarios()
     wp_reset_postdata();
     $output = ob_get_clean();
 
-    echo $output;
+    // Construye el objeto JSON
+    $response = array();
+    if (trim(strip_tags($output)) === 'No hay comentarios') {
+        $response['noComentarios'] = true;
+        $response['html'] = ''; // o $response['html'] = $output; si quieres devolver el mensaje "No hay comentarios"
+    } else {
+        $response['noComentarios'] = false;
+        $response['html'] = $output;
+    }
+
+    // Devuelve la respuesta como JSON
+    header('Content-Type: application/json');
+    echo json_encode($response);
     wp_die();
 }
 
