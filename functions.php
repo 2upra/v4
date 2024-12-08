@@ -529,19 +529,29 @@ function loadingBar()
 add_action('wp_head', 'loadingBar');
 
 //CALCULAR ALTURA CORRECTA CON SCRIPT
-function innerHeight()
-{
+function innerHeight() {
     wp_register_script('script-base', '');
     wp_enqueue_script('script-base');
     $script_inline = <<<EOD
     function setVHVariable() {
-        let vh = window.innerHeight * 0.01;
+        var vh;
+        if (window.visualViewport) {
+            vh = window.visualViewport.height * 0.01;
+        } else {
+            vh = window.innerHeight * 0.01;
+        }
         document.documentElement.style.setProperty('--vh', vh + 'px');
     }
 
-    setVHVariable();
-    window.addEventListener('resize', setVHVariable);
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        setVHVariable();
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', setVHVariable);
+        } else {
+            window.addEventListener('resize', setVHVariable);
+        }
+    });
 EOD;
     wp_add_inline_script('script-base', $script_inline);
 }

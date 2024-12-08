@@ -107,7 +107,7 @@ add_action('wp_head', function () use ($schema) {
                                 <? echo htmlPost($filtro); ?>
                             </div>
                             <div class="publicaciones-similares" nosnippet>
-                                <h3>Publicaciones Similares</h3>
+                                <h3 style="display: none;">Publicaciones Similares</h3>
                                 <?
                                 echo publicaciones([
                                     'filtro'      => 'nada',
