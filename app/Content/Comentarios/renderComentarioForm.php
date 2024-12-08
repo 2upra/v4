@@ -89,6 +89,7 @@ function renderComentarios()
             $fechaPublicacion = get_the_date('Y-m-d H:i:s');
             $fechaRelativa = tiempoRelativo($fechaPublicacion);
             $avatar_optimizado = imagenPerfil($autorComentarioId);
+            $audio_url = wp_get_attachment_url(get_post_meta($comentarioId, 'post_audio', true));
     ?>
 
             <li class="comentarioPost" id="comentario-<? echo $comentarioId ?>">
@@ -106,6 +107,11 @@ function renderComentarios()
                                 <div class="imagenComentario">
                                     <img src="<? echo $imagenPortadaOptimizada ?>" alt="Imagen de portada" />
                                 </div>
+                                <? if (!empty($audio_id_lite)) : ?>
+                                    <div class="audioComentario">
+                                        <? wave($audio_url, $audio_id_lite, $comentarioId); ?>
+                                    </div>
+                                <? endif; ?>
                             <? endif; ?>
                             <div class="controlComentario">
                                 <? echo renderPostControls($comentarioId, '', $audio); ?>
