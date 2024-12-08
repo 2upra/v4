@@ -68,7 +68,7 @@ function iniciarcm() {
 
 function ocultarColec() {
     const rsComentario = document.getElementById('rsComentario');
-    rsComentario.style.display = 'hidden';
+    rsComentario.style.display = 'none';
 }
 
 function abrirComentario() {
