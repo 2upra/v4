@@ -437,30 +437,34 @@ function ocultarColec() {
 /*
 sucede este problema cuando no hay comentarios 
 
-
+Cargando página de comentarios: 1
+comentarios.js?ver=3.0.53.1448960775:489 Enviando datos: {postId: '322741', page: 1}
+comentarios.js?ver=3.0.53.1448960775:493 Respuesta recibida:  <p class="sinnotifi">No hay comentarios para este post</p>0
+comentarios.js?ver=3.0.53.1448960775:505 Reemplazando contenido de comentariosList.
+comentarios.js?ver=3.0.53.1448960775:514 Página cargada. Nueva página actual: 2
 genericAjax.js?ver=3.0.53.1071147829:733  No se pudo interpretar la respuesta como JSON: {error: SyntaxError: Unexpected token '<', " <p class=""... is not valid JSON
 at JSON.parse (<anonymous…, responseText: ' <p class="sinnotifi">No hay comentarios para este post</p>0', action: 'renderComentarios', requestData: {…}}
 
 
-} else {
-    echo '0';
-}
-wp_reset_postdata();
-$output = ob_get_clean();
+    } else {
+        echo '0';
+    }
+    wp_reset_postdata();
+    $output = ob_get_clean();
 
-$response = array();
-if (trim($output) === '0') { // Compara con el nuevo valor
-    $response['noComentarios'] = true;
-    $response['html'] = '';
-} else {
-    $response['noComentarios'] = false;
-    $response['html'] = $output;
-}
+    $response = array();
+    if (trim($output) === '0') {
+        $response['noComentarios'] = true;
+        $response['html'] = '<p class="sinnotifi">No hay comentarios para este post</p>'; 
+    } else {
+        $response['noComentarios'] = false;
+        $response['html'] = $output;
+    }
 
-// Devuelve la respuesta como JSON
-header('Content-Type: application/json');
-echo json_encode($response);
-wp_die();
+    // Devuelve la respuesta como JSON
+    header('Content-Type: application/json');
+    echo json_encode($response);
+    wp_die();
 }
 
 add_action('wp_ajax_renderComentarios', 'renderComentarios');
@@ -473,7 +477,7 @@ function cargarComentarios() {
 
     console.log('Función cargarComentarios iniciada.');
 
-    const cargarPaginaComentario = () => {
+    function cargarPaginaComentario() {
         console.log(`Cargando página de comentarios: ${paginaActual}`);
         if (cargando) {
             console.log('Ya se está cargando una página. Retornando.');
@@ -489,14 +493,28 @@ function cargarComentarios() {
         console.log('Enviando datos:', data);
 
         enviarAjax('renderComentarios', data)
-            .then(data => {
-                console.log('Respuesta recibida:', data);
+            .then(response => {
+                console.log('Respuesta recibida:', response);
+
+                let data;
+                // Intenta interpretar la respuesta como JSON
+                try {
+                    data = JSON.parse(response);
+                } catch (e) {
+                    // Si falla, asume que es HTML
+                    console.warn('No se pudo interpretar la respuesta como JSON:', e, 'responseText:', response, 'action:', 'renderComentarios', 'requestData:', data);
+                    data = {
+                        noComentarios: true,
+                        html: response // Asigna la respuesta completa como HTML
+                    };
+                }
 
                 if (data.noComentarios) {
                     console.log('No hay más comentarios.');
                     cargando = true;
                     if (paginaActual === 1) {
-                        comentariosList.innerHTML = '<p class="sinnotifi">No hay comentarios</p>';
+                        // Usa data.html para mostrar el mensaje
+                        comentariosList.innerHTML = data.html.includes('No hay comentarios') ? data.html : '<p class="sinnotifi">No hay comentarios</p>';
                     }
                     return;
                 }
@@ -521,7 +539,7 @@ function cargarComentarios() {
                 console.error('Error en la promesa:', error);
                 cargando = false;
             });
-    };
+    }
 
     cargarPaginaComentario();
 

@@ -139,7 +139,7 @@ function renderComentarios()
     $response = array();
     if (trim($output) === '0') {
         $response['noComentarios'] = true;
-        $response['html'] = '<p class="sinnotifi">No hay comentarios para este post</p>'; // Se incluye el mensaje
+        $response['html'] = '<p class="sinnotifi">No hay comentarios para este post</p>'; 
     } else {
         $response['noComentarios'] = false;
         $response['html'] = $output;
