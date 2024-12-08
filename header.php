@@ -273,6 +273,9 @@ if (!defined('ABSPATH')) {
                     <? echo modalGeneros() ?>
                 </div>
 
+
+                <? echo comentariosForm() ?>
+                
                 <div class="bloquesChatTest">
                     <div class="bloqueChatReiniciar">
                         <? echo conversacionesUsuario($user_id) ?>
