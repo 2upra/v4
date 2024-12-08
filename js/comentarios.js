@@ -1,8 +1,5 @@
 let CimagenUrl, CimagenId, CaudioId, CaudioUrl, CpostId;
 let subidaEnComentario = 0;
-
-let enablelogCom = true;
-const logcm = enablelogCom ? console.log : function () {};
 let waveSurferInstancesCom = {};
 
 let comIniciado = false;
@@ -35,13 +32,13 @@ function limpiarcamposCom() {
     const comentarios = document.querySelector('.listComentarios');
 
     if (audioDiv) {
-        audioDiv.innerHTML = ''; 
+        audioDiv.innerHTML = '';
         audioDiv.style.display = 'none';
     }
 
     if (imagenDiv) {
-        imagenDiv.innerHTML = ''; 
-        imagenDiv.style.display = 'none'; 
+        imagenDiv.innerHTML = '';
+        imagenDiv.style.display = 'none';
     }
 
     if (comentarios) {
@@ -429,8 +426,12 @@ async function subidaComBackend(file, progressBarId) {
 }
 
 function ocultarColec() {
+    const comentariosPost = document.getElementById('comentariosPost');
     const rsComentario = document.getElementById('rsComentario');
+    const listComentarios = document.getElementById('listComentarios');
     rsComentario.style.display = 'none';
+    listComentarios.style.display = 'none';
+    comentariosPost.style.display = 'none';
     removeComDarkBackground(); // Asegúrate de eliminar el fondo también
 }
 
@@ -439,8 +440,14 @@ function cargarComentarios() {
     let cargando = false;
     const comentariosList = document.querySelector('.listComentarios');
 
+    console.log('Función cargarComentarios iniciada.');
+
     const cargarPaginaComentario = () => {
-        if (cargando) return;
+        console.log(`Cargando página de comentarios: ${paginaActual}`);
+        if (cargando) {
+            console.log('Ya se está cargando una página. Retornando.');
+            return;
+        }
         cargando = true;
 
         const data = {
@@ -448,24 +455,32 @@ function cargarComentarios() {
             page: paginaActual
         };
 
+        console.log('Enviando datos:', data);
+
         enviarAjax('renderComentarios', data)
             .then(data => {
+                console.log('Respuesta recibida:', data);
                 const noCom = data.replace(/\s+/g, ' ').trim();
 
                 if (noCom.includes('No hay comentarios') || data.trim() === '') {
+                    console.log('No hay más comentarios o respuesta vacía.');
                     cargando = true;
                     return;
                 }
 
                 if (paginaActual === 1) {
+                    console.log('Reemplazando contenido de comentariosList.');
                     comentariosList.innerHTML = data;
                 } else {
+                    console.log('Agregando contenido a comentariosList.');
                     comentariosList.insertAdjacentHTML('beforeend', data);
                 }
                 paginaActual++;
                 cargando = false;
+                console.log(`Página cargada. Nueva página actual: ${paginaActual}`);
             })
-            .catch(() => {
+            .catch(error => {
+                console.error('Error en la promesa:', error);
                 cargando = false;
             });
     };
@@ -473,7 +488,10 @@ function cargarComentarios() {
     cargarPaginaComentario();
 
     comentariosList.addEventListener('scroll', () => {
+        console.log('Evento scroll detectado.');
+        console.log(`ScrollTop: ${comentariosList.scrollTop}, ScrollHeight: ${comentariosList.scrollHeight}, ClientHeight: ${comentariosList.clientHeight}`);
         if (comentariosList.scrollHeight - (comentariosList.scrollTop + comentariosList.clientHeight) <= 200 && !cargando) {
+            console.log('Condición de carga de nueva página cumplida.');
             cargando = true;
             cargarPaginaComentario(paginaActual);
         }
@@ -483,25 +501,34 @@ function cargarComentarios() {
 function abrirComentario() {
     const comentariosPost = document.getElementById('comentariosPost');
     const rsComentario = document.getElementById('rsComentario');
-    if (!rsComentario) return;
+    const listComentarios = document.getElementById('listComentarios');
+    if (!rsComentario) {
+        console.log('Elemento rsComentario no encontrado.');
+        return;
+    }
+
+    console.log('Función abrirComentario iniciada.');
 
     document.body.addEventListener('click', event => {
         const boton = event.target.closest('.WNLOFT');
         if (boton) {
+            console.log('Botón WNLOFT clickeado.');
             event.stopPropagation(); // Detiene la propagación aquí
             CpostId = boton.dataset.postId;
+            console.log(`CpostId obtenido: ${CpostId}`);
             cargarComentarios();
             comentariosPost.style.display = 'flex';
+            listComentarios.style.display = 'flex';
             rsComentario.style.display = 'flex';
             createComDarkBackground();
 
             rsComentario.addEventListener('click', event => {
+                console.log('Click dentro de rsComentario. Deteniendo propagación.');
                 event.stopPropagation();
             });
         }
     });
 }
-
 window.createComDarkBackground = function () {
     let darkBackground = document.getElementById('submenu-background5323');
     if (!darkBackground) {

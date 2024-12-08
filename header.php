@@ -274,7 +274,7 @@ if (!defined('ABSPATH')) {
                 </div>
 
                 <div class="comentariosPost modal" style="display: none" id="comentariosPost">
-                    <div class="listComentarios">
+                    <div class="listComentarios" id="listComentarios">
 
                     </div>
                     <? echo comentariosForm() ?>
