@@ -304,6 +304,7 @@ function scriptsOrdenados()
         'cambiarVistas' => '1.0.1',
         'contarVistaPost' => '1.0.1',
         'notificaciones' => '1.0.1',
+        'comentarios' => '1.0.1',
         'colec' => '1.0.1',
     ];
 
