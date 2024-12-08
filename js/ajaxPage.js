@@ -132,7 +132,8 @@ VM2592:1  Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Ident
     function shouldCache(url) {
         return !/https:\/\/2upra\.com\/nocache/.test(url);
     }
-
+    //porque no funciona con <a href="https://2upra.com/sample/dark-ambient-pad/">Ir al post</a> o <a href="https://2upra.com/author/mxrtality/" class="profile-link"> MXRTALITY</a> o cosas asi
+                   
     function load(url, pushState) {
         if (!url || /^(javascript|data|vbscript):|#/.test(url.toLowerCase()) || url.includes('descarga_token')) return;
         if (pageCache[url] && shouldCache(url)) {
@@ -212,7 +213,7 @@ VM2592:1  Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Ident
             if (el.classList.contains('no-ajax') || el.closest('.no-ajax')) return true;
             if (typeof url !== 'string' || !url) return console.warn('Invalid URL:', url), true;
             const lowerUrl = url.trim().toLowerCase();
-            if (/\.pdf$|^(https:\/\/2upra\.com\/nocache|javascript|data|vbscript):|#/.test(lowerUrl)) return true;
+            if (/\.pdf$|^(javascript|data|vbscript):|#/.test(lowerUrl) || /https:\/\/2upra\.com\/nocache/.test(lowerUrl)) return true;
             e.preventDefault();
             load(url, true);
         }
