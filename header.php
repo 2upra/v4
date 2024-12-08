@@ -61,12 +61,20 @@ if (!defined('ABSPATH')) {
         <style>
             @font-face {
                 font-family: 'Source Sans 3';
-
                 src: url('https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Regular.woff2') format('woff2');
                 font-weight: 400;
                 font-style: normal;
                 font-display: swap;
             }
+
+            @font-face {
+                font-family: 'Source Sans 3';
+                src: url('https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-SemiBold.woff2') format('woff2');
+                font-weight: 500;
+                font-style: normal;
+                font-display: swap;
+            }
+
 
             @font-face {
                 font-family: 'Source Sans 3';
