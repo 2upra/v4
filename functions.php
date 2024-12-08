@@ -262,7 +262,8 @@ function scriptsOrdenados()
         'contarVistaPost',
         'seguir',
         'inversores',
-        'genericAjax'
+        'genericAjax',
+        'comentarios'
     ];
 
     $script_handles = [

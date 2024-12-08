@@ -44,6 +44,9 @@ function iniciarRS() {
         TagEnTexto();
         selectorformtipo();
         selectorFanArtista();
+
+        //
+        comentariosRS()
     } else {
         logRS('formRs no existe');
     }
@@ -58,8 +61,6 @@ function verificarCamposRs() {
             alert('Espera a que se completen las subidas de archivos.');
             return false;
         }
-
-        // Verificar que al menos uno de los checkboxes esté seleccionado (fan o artista)
         const fanCheck = document.getElementById('fancheck');
         const artistaCheck = document.getElementById('artistacheck');
 
@@ -281,8 +282,8 @@ function subidaRs() {
         }
     };
 
-
     const musicCheckbox = document.getElementById('musiccheck');
+    
     const actualizarCamposNombre = () => {
         const cantidadAudios = audiosData.length;
         const mostrarCampos = musicCheckbox.checked && cantidadAudios > 1;
@@ -389,9 +390,7 @@ function subidaRs() {
             previewAudio.style.display = 'none';
             ppp3.style.display = 'none';
         }
-
-        actualizarCamposNombre();
-        actualizarFlexDirection();
+;
     };
 
     const subidaArchivo = async file => {
@@ -438,7 +437,6 @@ function subidaRs() {
     };
 
     formRs.addEventListener('click', event => {
-        logRS('log ejemplo');
         const clickedElement = event.target.closest('.previewAudio, .previewImagen');
         clickedElement && abrirSelectorArchivos(clickedElement.classList.contains('previewAudio') ? 'audio/*' : 'image/*');
     });
@@ -769,3 +767,11 @@ function selectorFanArtista() {
         updateStyles(artistacheck);
     });
 }
+
+
+
+
+
+
+
+
