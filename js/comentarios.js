@@ -8,9 +8,9 @@ let waveSurferInstancesCom = {};
 let comIniciado = false;
 
 /*
-[ ] background
-[ ] Cerrar modal 
-[ ] Eliminar imagen
+[x] background
+[x] Cerrar modal 
+[x] Eliminar imagen
 [ ] Ver comentarios anteriores 
 [ ] Responder comentarios 
 [ ] Notificacion de comentarios 
@@ -24,8 +24,31 @@ function limpiarcamposCom() {
     CaudioId = null;
     CpostId = null;
     subidasEnProgreso = 0;
-}
+    waveSurferInstancesCom = {};
 
+    // Eliminar contenido de los divs
+    const audioDiv = document.querySelector(".previewAreaArchivos.paudio#pcomentAudio");
+    const imagenDiv = document.querySelector(".previewAreaArchivos.pimagen#pcomentImagen");
+
+    if (audioDiv) {
+        audioDiv.innerHTML = ''; // Elimina el contenido interno
+        audioDiv.style.display = 'none'; // Oculta el div si aún no está oculto
+    }
+
+    if (imagenDiv) {
+        imagenDiv.innerHTML = ''; // Elimina el contenido interno
+        imagenDiv.style.display = 'none'; // Oculta el div si aún no está oculto
+    }
+    
+    // Ocultar elementos adicionales (si ya no están ocultos por los pasos anteriores)
+    const elementsToHide = ['pcomentImagen', 'pcomentAudio', 'previevsComent'];
+    elementsToHide.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.style.display = 'none';
+        }
+    });
+}
 function iniciarcm() {
     if (comIniciado) return;
     comIniciado = true;
