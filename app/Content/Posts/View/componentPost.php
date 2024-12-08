@@ -199,7 +199,9 @@ function opcionesPost($postId, $autorId)
                 <? if (!$post_verificado) : ?>
                     <button class="verificarPost" data-post-id="<? echo $postId; ?>">Verificar</button>
                 <? endif; ?>
-                <button class="corregirTags" data-post-id="<? echo $postId; ?>">Corregir tags</button>
+                <? if ($audio_id_lite != 1) : ?>
+                    <button class="corregirTags" data-post-id="<? echo $postId; ?>">Corregir tags</button>
+                <? endif; ?>
                 <button class="editarPost" data-post-id="<? echo $postId; ?>">Editar</button>
                 <!-- Nuevo botón para ir al editor de WordPress -->
                 <button class="editarWordPress" data-post-id="<? echo $postId; ?>">Editar en WordPress</button>
@@ -209,7 +211,9 @@ function opcionesPost($postId, $autorId)
                 <? endif; ?>
             <? elseif ($usuarioActual == $autorId) : ?>
                 <button class="iralpost"><a href="<? echo esc_url(get_permalink()); ?>">Ir al post</a></button>
-                <button class="corregirTags" data-post-id="<? echo $postId; ?>">Corregir tags</button>
+                <? if ($audio_id_lite != 1) : ?>
+                    <button class="corregirTags" data-post-id="<? echo $postId; ?>">Corregir tags</button>
+                <? endif; ?>
                 <button class="editarPost" data-post-id="<? echo $postId; ?>">Editar</button>
                 <button class="eliminarPost" data-post-id="<? echo $postId; ?>">Eliminar</button>
 
@@ -220,7 +224,7 @@ function opcionesPost($postId, $autorId)
                 <button class="iralpost"><a href="<? echo esc_url(get_permalink()); ?>">Ir al post</a></button>
                 <button class="reporte" data-post-id="<? echo $postId; ?>" tipoContenido="social_post">Reportar</button>
                 <button class="bloquear" data-post-id="<? echo $postId; ?>">Bloquear</button>
-                
+
                 <?
                 if ($paraDescarga == '1') {
                     if ($usuarioActual) {
@@ -283,9 +287,9 @@ function imagenPostList($block, $es_suscriptor, $postId)
         <a>
             <img src="<?= esc_url($processed_image_url); ?>" alt="Post Image" />
         </a>
-        <div class="botonesRep" >
-            <div class="reproducirSL" id-post="<? echo $postId; ?>"><? echo $GLOBALS['play'];?></div>
-            <div class="pausaSL" id-post="<? echo $postId; ?>"><? echo $GLOBALS['pause'];?></div>
+        <div class="botonesRep">
+            <div class="reproducirSL" id-post="<? echo $postId; ?>"><? echo $GLOBALS['play']; ?></div>
+            <div class="pausaSL" id-post="<? echo $postId; ?>"><? echo $GLOBALS['pause']; ?></div>
         </div>
     </div>
 <?php

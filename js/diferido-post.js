@@ -3,7 +3,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         reiniciarCargaDiferida();
     });
-    const DEPURAR = false;
+    const DEPURAR = true;
     const log = DEPURAR ? console.log.bind(console) : () => {};
 
     let estaCargando = false;
@@ -58,17 +58,12 @@
         const divConIdUsuario = document.querySelector('div.X522YA.FRRVBB[data-iduser]');
 
         if (divConIdUsuario) {
-            // Extrae el valor del atributo `data-iduser`
             const idUsuario = divConIdUsuario.getAttribute('data-iduser');
 
             if (idUsuario) {
-                // Busca el contenedor de perfil y establece el atributo `data-author-id`
                 const contenedorPerfil = document.querySelector('.custom-uprofile-container');
                 contenedorPerfil?.setAttribute('data-author-id', idUsuario);
-
-                // Guarda el ID de usuario en una variable global (opcional)
                 window.idUsuarioActual = idUsuario;
-
 
             } else {
 
