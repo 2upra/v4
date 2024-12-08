@@ -7,6 +7,15 @@ let waveSurferInstancesCom = {};
 
 let comIniciado = false;
 
+/*
+[ ] background
+[ ] Cerrar modal 
+[ ] Eliminar imagen
+[ ] Ver comentarios anteriores 
+[ ] Responder comentarios 
+[ ] Notificacion de comentarios 
+*/
+
 function limpiarcamposCom() {
     document.getElementById('comentContent').value = '';
     CimagenUrl = null;
@@ -34,18 +43,24 @@ function iniciarcm() {
     }
 }
 
+function ocultarColec() {
+    const rsComentario = document.getElementById('rsComentario');
+    rsComentario.style.display = 'hidden';
+}
+
 function abrirComentario() {
     const rsComentario = document.getElementById('rsComentario');
     if (!rsComentario) return; // Salir si no existe el elemento
 
     // Delegación de eventos en lugar de agregar listeners a cada botón
-    document.body.addEventListener('click', (event) => {
-      const boton = event.target.closest('.WNLOFT');
-      if (boton) {
-        limpiarcamposCom();
-        CpostId = boton.dataset.postId;
-        rsComentario.style.display = 'flex';
-      }
+    document.body.addEventListener('click', event => {
+        const boton = event.target.closest('.WNLOFT');
+        if (boton) {
+            limpiarcamposCom();
+            CpostId = boton.dataset.postId;
+            rsComentario.style.display = 'flex';
+            createComDarkBackground();
+        }
     });
 }
 
@@ -117,7 +132,7 @@ async function enviarComentario() {
         const data = {
             comentario: document.getElementById('comentContent').value,
             imagenUrl: CimagenUrl, // Puede ser null
-            audioUrl: CaudioUrl,  // Puede ser null
+            audioUrl: CaudioUrl, // Puede ser null
             imagenId: CimagenId,
             audioId: CaudioId,
             postId: CpostId
@@ -395,3 +410,46 @@ async function subidaComBackend(file, progressBarId) {
         }
     });
 }
+
+window.createComDarkBackground = function () {
+    let darkBackground = document.getElementById('submenu-background5322');
+    if (!darkBackground) {
+        // Crear el fondo oscuro si no existe
+        darkBackground = document.createElement('div');
+        darkBackground.id = 'submenu-background5322';
+        darkBackground.style.position = 'fixed';
+        darkBackground.style.top = 0;
+        darkBackground.style.left = 0;
+        darkBackground.style.width = '100%';
+        darkBackground.style.height = '100%';
+        darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        darkBackground.style.zIndex = 1000;
+        darkBackground.style.display = 'none';
+        darkBackground.style.pointerEvents = 'none';
+        darkBackground.style.opacity = '0';
+        darkBackground.style.transition = 'opacity 0.3s ease';
+        document.body.appendChild(darkBackground);
+
+        darkBackground.addEventListener('click', () => {
+            ocultarColec();
+        });
+    }
+
+    darkBackground.style.display = 'block';
+    setTimeout(() => {
+        darkBackground.style.opacity = '1';
+    }, 10);
+    darkBackground.style.pointerEvents = 'auto';
+};
+
+// Eliminar el fondo oscuro
+window.removeComDarkBackground = function () {
+    const darkBackground = document.getElementById('submenu-background5322');
+    if (darkBackground) {
+        darkBackground.style.opacity = '0';
+        setTimeout(() => {
+            darkBackground.style.display = 'none';
+            darkBackground.style.pointerEvents = 'none';
+        }, 300);
+    }
+};
