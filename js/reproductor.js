@@ -32,15 +32,24 @@ function inicializarReproductorAudio() {
         if (infoDiv) {
             const author = infoDiv.querySelector('.CPQBAU').textContent.trim();
             const content = infoDiv.querySelector('.CPQBCO').textContent.trim();
+            const imgElement = infoDiv.querySelector('img');
+            const imageUrl = imgElement ? imgElement.getAttribute('src') : ''; // Extrae la URL de la imagen
+    
             const shortAuthor = author.length > 40 ? author.slice(0, 40) + '...' : author;
             const shortTitle = content.length > 40 ? content.slice(0, 40) + '...' : content;
             const titleElement = document.querySelector('.XKPMGD .tituloR');
             const authorElement = document.querySelector('.XKPMGD .AutorR');
-
+    
             if (titleElement) titleElement.textContent = shortTitle;
             if (authorElement) authorElement.textContent = shortAuthor;
-
+    
             log06('Updated title and author:', shortTitle, shortAuthor);
+    
+            // Envía la información a Android
+            if (typeof Android !== 'undefined') {
+                const audioSrc = container.querySelector('.audio-container audio')?.getAttribute('src');
+                Android.sendAudioInfo(shortTitle, shortAuthor, imageUrl, audioSrc);
+            }
         } else {
             log06('Info div not found');
         }
@@ -156,55 +165,23 @@ function inicializarReproductorAudio() {
         }
     }
 
-    /*
-    hay que actualizar esto, creo que para reproducir el audio hay que hacer algo asi 
-
-        fetch(audioUrl, {
-        method: 'GET',
-        credentials: 'same-origin',
-        headers: {
-            'X-WP-Nonce': audioSettings.nonce,
-            'X-Requested-With': 'XMLHttpRequest',
-
-            }
-        })
-            porque hay un 
-
-                register_rest_route('1/v1', '/2', array(
-        'methods' => 'GET',
-        'callback' => 'audioStreamEnd',
-        'args' => array(
-            'token' => array(
-                'required' => true,
-            ),
-        ),
-        'permission_callback' => function ($request) {
-            //guardarLog('Verificando permiso para token: ' . $request->get_param('token'));
-            return verificarAudio($request->get_param('token'));
-        }
-    ));
-    que regresa el audio en straem parcial content creo
-
-    la url del audio coloque la ruta del audio
-    */
-
     async function playAudioFromElement(element, index) {
         const audioContainer = element.querySelector('.audio-container');
         const audioSrc = audioContainer?.querySelector('audio')?.getAttribute('src');
         const postId = audioContainer?.getAttribute('data-post-id');
         const artistId = audioContainer?.getAttribute('artista-id');
-
+    
         if (!audioSrc) return;
-
+    
         document.querySelector('.TMLIWT').style.display = 'block';
-
+    
         if (audio.src === audioSrc) {
             togglePlayPause();
         } else {
             try {
                 // Primero registramos la reproducción
                 await registrarReproduccionYOyente(audioSrc, postId, artistId);
-
+    
                 // Realizamos la solicitud fetch para obtener el audio
                 const response = await fetch(audioSrc, {
                     method: 'GET',
@@ -214,22 +191,22 @@ function inicializarReproductorAudio() {
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
-
+    
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
+    
                 // Creamos un blob del stream de audio
                 const blob = await response.blob();
                 const audioUrl = URL.createObjectURL(blob);
-
+    
                 // Actualizamos el source del audio y lo reproducimos
                 audio.src = audioUrl;
                 audio
                     .play()
                     .then(() => {
                         Cover(element);
-                        Info(element);
+                        Info(element); // Asegúrate de que Info(element) se llama aquí
                         currentAudioIndex = index;
                     })
                     .catch(error => {
@@ -256,6 +233,13 @@ function inicializarReproductorAudio() {
             updatePlayPauseButton();
         }
     }
+
+    /*
+    aqui por ejemplo como uso esto
+       if (typeof Android !== 'undefined') {
+        Android.sendAudioInfo(title, author, imageUrl, audioUrl);
+    }
+    */
 
     function updatePlayPauseButton() {
         const playButton = document.querySelector('.play-btn');

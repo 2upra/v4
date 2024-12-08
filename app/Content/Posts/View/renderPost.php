@@ -107,6 +107,21 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
 
 function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscriptor, $post_status, $audio_url)
 {
+    // Verificar si el post tiene una foto de portada
+    $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
+    // Verificar si el post tiene la meta 'audio_post_id'
+    $audio_post_id = get_post_meta($post_id, 'post_audio_lite', true);
+
+    // Si tiene foto de portada pero no tiene 'audio_post_id', no colocar la imagen de fondo
+    if ($thumbnail_url && empty($audio_post_id)) {
+        return ''; // No mostrar el fondo
+    }
+
+    // Continuar con los ajustes del fondo
+    $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
+    $image_size = ($block && !$es_suscriptor) ? 'thumbnail' : 'large';
+    $quality = ($block && !$es_suscriptor) ? 20 : 80;
+    $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
 ?>
     <div class="post-content">
         <div class="MFQOYC">
@@ -126,6 +141,7 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
         <div class="CPQBEN" style="display: none;">
             <div class="CPQBAU"><? echo $author_name; ?></div>
             <div class="CPQBCO"><? the_content(); ?></div>
+            <img src="<?= esc_url($optimized_thumbnail_url); ?>"  alt="">
         </div>
     </div>
 <?
@@ -287,15 +303,15 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
 
         </div>
 
-        <? if (!empty($audio_id_lite)) : ?> 
-        <div class="FBKMJD">
-            <div class="UKVPJI">
-                <div class="tags-container" id="tags-<? echo esc_attr(get_the_ID()); ?>"></div>
-                <p id-post-algoritmo="<? echo esc_attr(get_the_ID()); ?>" style="display:none;">
-                    <? echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
-                </p>
+        <? if (!empty($audio_id_lite)) : ?>
+            <div class="FBKMJD">
+                <div class="UKVPJI">
+                    <div class="tags-container" id="tags-<? echo esc_attr(get_the_ID()); ?>"></div>
+                    <p id-post-algoritmo="<? echo esc_attr(get_the_ID()); ?>" style="display:none;">
+                        <? echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
+                    </p>
+                </div>
             </div>
-        </div>
         <? endif; ?>
     </div>
 <?
