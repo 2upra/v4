@@ -125,17 +125,18 @@ function renderComentarios()
 <?
         }
         echo '</ul>';
+
+
     } else {
-        echo '<p class="sinnotifi">No hay comentarios</p>';
+        echo '0'; // Cambia esto a un valor numérico o una cadena vacía
     }
     wp_reset_postdata();
     $output = ob_get_clean();
 
-    // Construye el objeto JSON
     $response = array();
-    if (trim(strip_tags($output)) === 'No hay comentarios') {
+    if (trim($output) === '0') { // Compara con el nuevo valor
         $response['noComentarios'] = true;
-        $response['html'] = ''; // o $response['html'] = $output; si quieres devolver el mensaje "No hay comentarios"
+        $response['html'] = '';
     } else {
         $response['noComentarios'] = false;
         $response['html'] = $output;
