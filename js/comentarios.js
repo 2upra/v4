@@ -602,7 +602,7 @@ function cargarComentarios() {
                     cargando = true; // Lo dejamos en true para que no intente cargar más páginas.
                     
                     if (paginaActual === 1) {
-                        // Mostrar el mensaje de que no hay comentarios.
+                        comentariosList.style.display = 'flex';
                         comentariosList.innerHTML = data.html;
                     }
                     return;
@@ -664,7 +664,6 @@ function abrirComentario() {
             console.log(`CpostId obtenido: ${CpostId}`);
             cargarComentarios();
             comentariosPost.style.display = 'flex';
-            listComentarios.style.display = 'flex';
             rsComentario.style.display = 'flex';
 
             createComDarkBackground();
