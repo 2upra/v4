@@ -7,7 +7,7 @@ function comentariosForm()
     $nombreUsuario = $user->display_name;
     $urlImagenperfil = imagenPerfil($user->ID);
 ?>
-    <div class="bloque modal anadircomentario" id="rsComentario">
+    <div class="bloque modal anadircomentario" id="rsComentario" style="display: none;">
 
         <div class="W8DK25">
             <img id="perfil-imagen" src="<? echo esc_url($urlImagenperfil); ?>" alt="Perfil"

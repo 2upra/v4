@@ -7,6 +7,16 @@ let waveSurferInstancesCom = {};
 
 let comIniciado = false;
 
+function limpiarcamposCom() {
+    document.getElementById('comentContent').value = '';
+    CimagenUrl = null;
+    CaudioUrl = null;
+    CimagenId = null;
+    CaudioId = null;
+    CpostId = null;
+    subidasEnProgreso = 0;
+}
+
 function iniciarcm() {
     if (comIniciado) return;
     comIniciado = true;
@@ -17,15 +27,36 @@ function iniciarcm() {
         CaudioId = null;
         CaudioUrl = null;
         subidasEnProgreso = 0;
-        verificarComentario();
         enviarComentario();
         subidaComentario();
+        //aqui la funcion para establecer el evento de WNLOFT
+        abrirComentario();
     }
+}
+
+function abrirComentario() {
+    const rsComentario = document.getElementById('rsComentario');
+    if (!rsComentario) return; // Salir si no existe el elemento
+
+    // Delegación de eventos en lugar de agregar listeners a cada botón
+    document.body.addEventListener('click', (event) => {
+      const boton = event.target.closest('.WNLOFT');
+      if (boton) {
+        limpiarcamposCom();
+        CpostId = boton.dataset.postId;
+        rsComentario.style.display = 'flex';
+      }
+    });
 }
 
 function verificarComentario() {
     function verificarCamposCom() {
         const textComent = document.getElementById('comentContent').value;
+
+        if (!CpostId || isNaN(CpostId) || parseInt(CpostId) <= 0) {
+            alert('Error: ID de publicación inválido.');
+            return false;
+        }
 
         if (textComent.length < 1) {
             alert('Ingresa un comentario para enviar');
@@ -87,12 +118,7 @@ async function enviarComentario() {
         try {
             const response = await enviarAjax('procesarComentario', data);
             if (response.success) {
-                document.getElementById('comentContent').value = '';
-                CimagenUrl = null;
-                CaudioUrl = null;
-                CimagenId = null;
-                CaudioId = null;
-                subidasEnProgreso = 0;
+                limpiarcamposCom();
                 alert('Comentario enviado con exito');
             } else {
                 alert('Error al enviar el comentario');
@@ -129,11 +155,19 @@ function subidaComentario() {
     const inicialSubida = event => {
         event.preventDefault();
         const file = event.dataTransfer?.files[0] || event.target.files[0];
-    
+
         if (!file) return;
         if (file.size > 12 * 1024 * 1024) return alert('El archivo no puede superar los 12 MB.');
-    
-        file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : null;
+
+        if (file.type.startsWith('audio/')) {
+            if (CaudioUrl) {
+                alert('Solo se permite subir un audio.');
+                return;
+            }
+            subidaAudio(file);
+        } else if (file.type.startsWith('image/')) {
+            subidaImagen(file);
+        }
     };
 
     const subidaAudio = async file => {
@@ -156,6 +190,7 @@ function subidaComentario() {
             progressBarId = `progress-${Date.now()}`;
 
         reader.onload = e => {
+            pcomentAudio.innerHTML = ''; // Limpiar el contenedor de audio
             const newWaveform = document.createElement('div');
             newWaveform.innerHTML = `
             <div id="${audioContainerId}" class="waveform-wrapper">
@@ -200,13 +235,11 @@ function subidaComentario() {
             }
         }
 
-        const index = audiosData.findIndex(audio => audio.tempId === tempId);
-        if (index !== -1) {
-            audiosData.splice(index, 1);
-        }
+        CaudioUrl = null;
+        CaudioId = null;
 
-        if (audiosData.length === 0) {
-            pcomentImagen.style.display = 'none';
+        pcomentAudio.style.display = 'none';
+        if (!CimagenUrl) {
             previevsComent.style.display = 'none';
         }
     };
@@ -234,7 +267,17 @@ function subidaComentario() {
 
     rsComentario.addEventListener('click', event => {
         const clickedElement = event.target.closest('.paudio, .pimagen');
-        clickedElement && abrirSelectorArchivos(clickedElement.classList.contains('paudio') ? 'audio/*' : 'image/*');
+        if (clickedElement) {
+            if (clickedElement.classList.contains('paudio')) {
+                if (!CaudioUrl) {
+                    abrirSelectorArchivos('audio/*');
+                } else {
+                    alert('Ya se ha subido un audio.');
+                }
+            } else {
+                abrirSelectorArchivos('image/*');
+            }
+        }
     });
 
     const abrirSelectorArchivos = tipoArchivo => {
@@ -245,20 +288,38 @@ function subidaComentario() {
         input.click();
     };
 
-    audioComent.addEventListener('click', () => abrirSelectorArchivos('audio/*'));
+    audioComent.addEventListener('click', () => {
+        if (!CaudioUrl) {
+            abrirSelectorArchivos('audio/*');
+        } else {
+            alert('Ya se ha subido un audio.');
+        }
+    });
     imagenComent.addEventListener('click', () => abrirSelectorArchivos('image/*'));
 
     ['dragover', 'dragleave', 'drop'].forEach(eventName => {
         rsComentario.addEventListener(eventName, e => {
             e.preventDefault();
             rsComentario.style.backgroundColor = eventName === 'dragover' ? '#e9e9e9' : '';
-            eventName === 'drop' && inicialSubida(e);
+            if (eventName === 'drop') {
+                if (e.dataTransfer.files.length > 0) {
+                    if (e.dataTransfer.files[0].type.startsWith('audio/')) {
+                        if (!CaudioUrl) {
+                            inicialSubida(e);
+                        } else {
+                            alert('Solo se permite subir un audio.');
+                        }
+                    } else {
+                        inicialSubida(e);
+                    }
+                }
+            }
         });
     });
 }
 
 async function subidaComBackend(file, progressBarId) {
-    logRS('Iniciando subida de archivo', {fileName: file.name, fileSize: file.size});
+    logcm('Iniciando subida de archivo', {fileName: file.name, fileSize: file.size});
 
     // Incrementar el contador de subidas en progreso
     uploadInProgressCount++;
@@ -272,7 +333,7 @@ async function subidaComBackend(file, progressBarId) {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', my_ajax_object.ajax_url, true);
 
-        logRS('Preparando solicitud AJAX', {url: my_ajax_object.ajax_url});
+        logcm('Preparando solicitud AJAX', {url: my_ajax_object.ajax_url});
 
         xhr.upload.onprogress = e => {
             if (e.lengthComputable) {
@@ -280,12 +341,12 @@ async function subidaComBackend(file, progressBarId) {
                 const progressPercent = (e.loaded / e.total) * 100;
                 if (progressBar) progressBar.style.width = `${progressPercent}%`;
 
-                logRS('Actualizando barra de progreso', {loaded: e.loaded, total: e.total, progressPercent});
+                logcm('Actualizando barra de progreso', {loaded: e.loaded, total: e.total, progressPercent});
             }
         };
 
         xhr.onload = () => {
-            logRS('Respuesta recibida', {status: xhr.status, response: xhr.responseText});
+            logcm('Respuesta recibida', {status: xhr.status, response: xhr.responseText});
 
             // Decrementar el contador al finalizar la subida
             uploadInProgressCount--;
@@ -294,33 +355,33 @@ async function subidaComBackend(file, progressBarId) {
                 try {
                     const result = JSON.parse(xhr.responseText);
                     if (result.success) {
-                        logRS('Archivo subido exitosamente', {data: result.data});
+                        logcm('Archivo subido exitosamente', {data: result.data});
                         resolve(result.data);
                     } else {
-                        logRS('Error en la respuesta del servidor (No éxito)', {response: result});
+                        logcm('Error en la respuesta del servidor (No éxito)', {response: result});
                         reject(new Error('Error en la respuesta del servidor'));
                     }
                 } catch (error) {
-                    logRS('Error al parsear la respuesta', {errorMessage: error.message, response: xhr.responseText});
+                    logcm('Error al parsear la respuesta', {errorMessage: error.message, response: xhr.responseText});
                     reject(error);
                 }
             } else {
-                logRS('Error en la carga del archivo', {status: xhr.status, response: xhr.responseText});
+                logcm('Error en la carga del archivo', {status: xhr.status, response: xhr.responseText});
                 reject(new Error(`Error en la carga del archivo. Status: ${xhr.status}`));
             }
         };
 
         xhr.onerror = () => {
-            logRS('Error en la conexión con el servidor', {status: xhr.status});
+            logcm('Error en la conexión con el servidor', {status: xhr.status});
             uploadInProgressCount--; // Decrementar el contador en caso de error
             reject(new Error('Error en la conexión con el servidor'));
         };
 
         try {
-            logRS('Enviando solicitud AJAX', {formData});
+            logcm('Enviando solicitud AJAX', {formData});
             xhr.send(formData);
         } catch (error) {
-            logRS('Error al enviar la solicitud AJAX', {errorMessage: error.message});
+            logcm('Error al enviar la solicitud AJAX', {errorMessage: error.message});
             uploadInProgressCount--; // Decrementar el contador en caso de error
             reject(new Error('Error al enviar la solicitud AJAX'));
         }
