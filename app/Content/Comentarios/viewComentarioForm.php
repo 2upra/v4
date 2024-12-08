@@ -98,6 +98,7 @@ function renderComentarios()
                         <div class="MGDEOP">
                             <p><? echo $nombreUsuario ?> </p>
                             <span class="fecha"><? echo $fechaRelativa ?></span>
+                            <? echo opcionesComentarios($postId, $autorComentarioId) ?>
                         </div>
                         <div class="contenidoComentario">
                             <div class="texto"><? echo $contenidoComentario ?></div>
@@ -106,6 +107,9 @@ function renderComentarios()
                                     <img src="<? echo $imagenPortadaOptimizada ?>" alt="Imagen de portada" />
                                 </div>
                             <? endif; ?>
+                            <div class="controlComentario">
+                            <? echo renderPostControls($postId, '', $audio); ?>
+                            </div>
                         </div>
                     </div>
                 </div>
