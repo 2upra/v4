@@ -7,6 +7,7 @@
     const log = DEPURAR ? console.log.bind(console) : () => {};
 
     let estaCargando = false;
+    log('Carga reactivada en diferido start');
     let hayMasContenido = true;
     let paginaActual = 2;
     const publicacionesCargadas = new Set();
@@ -18,6 +19,7 @@
         log('Reiniciando carga diferida');
         window.removeEventListener('scroll', manejarScroll);
         estaCargando = false;
+        log('Carga reactivada en reiniciarCargaDiferida');
         hayMasContenido = true;
         paginaActual = 2;
         publicacionesCargadas.clear();
@@ -454,6 +456,7 @@
         log('Ejecutando resetearCarga');
         paginaActual = 1;
         publicacionesCargadas.clear();
+        log('Carga reactivada en resetearCarga');
         hayMasContenido = true;
 
         const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
