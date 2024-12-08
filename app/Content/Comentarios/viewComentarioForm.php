@@ -78,7 +78,7 @@ function renderComentarios()
             if ($imagenPortada) {
                 $imagenPortadaOptimizada = img($imagenPortada);
             }
-            $nombreUsuario = $autorComentario->display_name;
+            $nombreUsuario = $autorComentarioId->display_name;
             $fechaPublicacion = get_the_date('Y-m-d H:i:s');
             $fechaRelativa = tiempoRelativo($fechaPublicacion);
             $avatar_optimizado = imagenPerfil($autorComentarioId)
