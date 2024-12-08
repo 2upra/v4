@@ -31,7 +31,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         }
 
         submenu.style.position = "fixed";
-        submenu.style.zIndex = 1001;
+        submenu.style.zIndex = 1003;
 
         submenu.style.display = "block";
         submenu.style.visibility = "hidden";
@@ -123,7 +123,7 @@ window.createSubmenuDarkBackground = function () {
         darkBackground.style.width = '100%';
         darkBackground.style.height = '100%';
         darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-        darkBackground.style.zIndex = 1000;
+        darkBackground.style.zIndex = 1002;
         darkBackground.style.display = 'none';
         darkBackground.style.pointerEvents = 'none';
         darkBackground.style.opacity = '0';
