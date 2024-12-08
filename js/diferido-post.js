@@ -140,7 +140,7 @@
                 log('Pestaña activa encontrada');
                 clearInterval(buscarPestañaActiva);
 
-                // Parámetros de carga
+                establecerIdUsuarioDesdeInput();
                 const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
                 const idUsuario = window.idUsuarioActual;
 
