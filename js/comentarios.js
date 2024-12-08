@@ -482,21 +482,24 @@ function cargarComentarios() {
         enviarAjax('renderComentarios', data)
             .then(data => {
                 console.log('Respuesta recibida:', data);
-                const noCom = data.replace(/\s+/g, ' ').trim();
 
-                if (noCom.includes('No hay comentarios') || data.trim() === '') {
-                    console.log('No hay más comentarios o respuesta vacía.');
+                if (data.noComentarios) {
+                    console.log('No hay más comentarios.');
                     cargando = true;
+                    if (paginaActual === 1) {
+                        comentariosList.innerHTML = '<p class="sinnotifi">No hay comentarios</p>';
+                    }
                     return;
                 }
-
+    
                 if (paginaActual === 1) {
                     console.log('Reemplazando contenido de comentariosList.');
-                    comentariosList.innerHTML = data;
+                    comentariosList.innerHTML = data.html;
                 } else {
                     console.log('Agregando contenido a comentariosList.');
-                    comentariosList.insertAdjacentHTML('beforeend', data);
+                    comentariosList.insertAdjacentHTML('beforeend', data.html);
                 }
+    
                 paginaActual++;
                 cargando = false;
                 console.log(`Página cargada. Nueva página actual: ${paginaActual}`);
