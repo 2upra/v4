@@ -45,7 +45,7 @@ function limpiarcamposCom() {
     }
 
     if (comentarios) {
-        comenterios.innerHTML = '';
+        comentarios.innerHTML = '';
         comentarios.style.display = 'none';
     }
 
