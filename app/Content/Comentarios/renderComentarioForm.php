@@ -125,11 +125,6 @@ function renderComentarios()
 <?
         }
         echo '</ul>';
-    /*
-    genericAjax.js?ver=3.0.53.1071147829:733  No se pudo interpretar la respuesta como JSON: {error: SyntaxError: Unexpected token '<', " <p class=""... is not valid JSON
-    at JSON.parse (<anonymous…, responseText: ' <p class="sinnotifi">No hay comentarios para este post</p>0', action: 'renderComentarios', requestData: {…}}
-    */
-
     } else {
         //echo '0';
     }
