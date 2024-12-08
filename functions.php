@@ -237,7 +237,7 @@ function scriptsOrdenados()
     // Definir la versión global
     $global_version = '3.0.54'; // Cambia esta versión cuando desees actualizar todos los scripts
     // Verificar si el usuario actual es administrador
-    $dev_mode = current_user_can('administrator');
+    $dev_mode = false;
     $error_log = [];
 
     // Definir scripts que no se deben cargar si el usuario no está logueado
