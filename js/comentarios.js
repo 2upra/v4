@@ -503,6 +503,7 @@ function cargarComentarios() {
                 paginaActual++;
                 cargando = false;
                 console.log(`Página cargada. Nueva página actual: ${paginaActual}`);
+                submenu();
             })
             .catch(error => {
                 console.error('Error en la promesa:', error);
@@ -551,7 +552,7 @@ function abrirComentario() {
             rsComentario.addEventListener('click', event => {
                 console.log('Click dentro de rsComentario. Deteniendo propagación.');
                 event.stopPropagation();
-                submenu();
+                
             });
         }
     });
