@@ -3,7 +3,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         reiniciarCargaDiferida();
     });
-    const DEPURAR = true;
+    const DEPURAR = false;
     const log = DEPURAR ? console.log.bind(console) : () => {};
 
     let estaCargando = false;
@@ -31,7 +31,6 @@
 
         //ajustarAlturaMaxima();
         habilitarCargaPorScroll();
-        establecerIdUsuarioDesdeInput();
         configurarDelegacionEventosPostTag();
 
         // Configurar el botón de limpiar
@@ -58,12 +57,17 @@
         const divConIdUsuario = document.querySelector('div.X522YA.FRRVBB[data-iduser]');
 
         if (divConIdUsuario) {
+            // Extrae el valor del atributo `data-iduser`
             const idUsuario = divConIdUsuario.getAttribute('data-iduser');
 
             if (idUsuario) {
+                // Busca el contenedor de perfil y establece el atributo `data-author-id`
                 const contenedorPerfil = document.querySelector('.custom-uprofile-container');
                 contenedorPerfil?.setAttribute('data-author-id', idUsuario);
+
+                // Guarda el ID de usuario en una variable global (opcional)
                 window.idUsuarioActual = idUsuario;
+
 
             } else {
 
@@ -126,7 +130,7 @@
         if (estaCargando) {
             return;
         }
-
+        establecerIdUsuarioDesdeInput();
         estaCargando = true;
         insertarMarcadorCarga(listaPublicaciones);
         log('Iniciando carga de más contenido');
@@ -140,7 +144,7 @@
                 log('Pestaña activa encontrada');
                 clearInterval(buscarPestañaActiva);
 
-                establecerIdUsuarioDesdeInput();
+                // Parámetros de carga
                 const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
                 const idUsuario = window.idUsuarioActual;
 
