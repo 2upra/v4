@@ -78,7 +78,7 @@ async function enviarComentario() {
     const button = document.getElementById('enviarComent');
 
     button.addEventListener('click', async event => {
-        const originalText = button.innerText || button.textContent;
+        const originalText = button.innerText;
         button.innerText = 'Procesando';
         button.disabled = true;
 
@@ -89,18 +89,26 @@ async function enviarComentario() {
             return;
         }
 
+        // Función para validar la URL
         const isValidUrl = url => {
+            // Si la URL es null, la consideramos válida (ya que no es obligatoria)
+            if (url === null) {
+                return true;
+            }
             const requiredPrefix = 'https://2upra.com/wp-content/uploads';
             return url.startsWith(requiredPrefix);
         };
 
-        if (!isValidUrl(CaudioUrl)) {
+        // Solo validamos las URLs si no son null
+        if (CaudioUrl !== null && !isValidUrl(CaudioUrl)) {
+            alert('La URL del audio no es válida.');
             button.innerText = originalText;
             button.disabled = false;
             return;
         }
 
-        if (!isValidUrl(CimagenUrl)) {
+        if (CimagenUrl !== null && !isValidUrl(CimagenUrl)) {
+            alert('La URL de la imagen no es válida.');
             button.innerText = originalText;
             button.disabled = false;
             return;
@@ -108,8 +116,8 @@ async function enviarComentario() {
 
         const data = {
             comentario: document.getElementById('comentContent').value,
-            imagenUrl: CimagenUrl,
-            audioUrl: CaudioUrl,
+            imagenUrl: CimagenUrl, // Puede ser null
+            audioUrl: CaudioUrl,  // Puede ser null
             imagenId: CimagenId,
             audioId: CaudioId,
             postId: CpostId
@@ -119,7 +127,7 @@ async function enviarComentario() {
             const response = await enviarAjax('procesarComentario', data);
             if (response.success) {
                 limpiarcamposCom();
-                alert('Comentario enviado con exito');
+                alert('Comentario enviado con éxito');
             } else {
                 alert('Error al enviar el comentario');
             }
