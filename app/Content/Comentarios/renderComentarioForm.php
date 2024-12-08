@@ -107,11 +107,12 @@ function renderComentarios()
                                 <div class="imagenComentario">
                                     <img src="<? echo $imagenPortadaOptimizada ?>" alt="Imagen de portada" />
                                 </div>
-                                <? if (!empty($audio_id_lite)) : ?>
-                                    <div class="audioComentario">
-                                        <? wave($audio_url, $audio_id_lite, $comentarioId); ?>
-                                    </div>
-                                <? endif; ?>
+
+                            <? endif; ?>
+                            <? if (!empty($audio_id_lite)) : ?>
+                                <div class="audioComentario">
+                                    <? wave($audio_url, $audio_id_lite, $comentarioId); ?>
+                                </div>
                             <? endif; ?>
                             <div class="controlComentario">
                                 <? echo renderPostControls($comentarioId, '', $audio); ?>
