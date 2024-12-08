@@ -93,7 +93,7 @@
             //log('Evento de scroll detectado:', {scrollTop, alturaVentana, alturaDocumento, estaCargando});
 
             if (scrollTop + alturaVentana > alturaDocumento - 100 && !estaCargando && hayMasContenido) {
-                log('Condiciones para cargar más contenido cumplidas');
+                log('Condiciones para cargar más contenido cumplidas estaCargando', 'estaCargando:', {estaCargando}, 'hayMasContenido:', {hayMasContenido} );
                 const elementoPestañaActiva = document.querySelector('.tab.active');
                 if (elementoPestañaActiva?.getAttribute('ajax') === 'no') {
                     log('ajax no carga detenido');
