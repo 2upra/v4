@@ -2,7 +2,7 @@ let CimagenUrl, CimagenId, CaudioId, CaudioUrl, CpostId;
 let subidasEnProgreso = 0;
 
 let enablelogCom = true;
-const logCOM = enableLogCom ? console.log : function () {};
+const logCOM = enablelogCom ? console.log : function () {};
 let waveSurferInstancesCom = {};
 
 let comIniciado = false;
