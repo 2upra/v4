@@ -545,12 +545,13 @@ function abrirComentario() {
             comentariosPost.style.display = 'flex';
             listComentarios.style.display = 'flex';
             rsComentario.style.display = 'flex';
-            submenu();
+            
             createComDarkBackground();
 
             rsComentario.addEventListener('click', event => {
                 console.log('Click dentro de rsComentario. Deteniendo propagación.');
                 event.stopPropagation();
+                submenu();
             });
         }
     });
