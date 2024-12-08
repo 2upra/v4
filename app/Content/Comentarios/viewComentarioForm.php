@@ -45,7 +45,7 @@ function comentariosForm()
 
 
 
-
+//solo tiene que mostrar los comentarios en comentarios_ids, pero sin importar el postId que reciba muestra todos comentarios, que estoy haciendo mal
 function renderComentarios()
 {
     $postId = isset($_POST['postId']) ? intval($_POST['postId']) : 0;
@@ -53,16 +53,25 @@ function renderComentarios()
     $userId = get_current_user_id();
     $comentariosPorPagina = 12;
     $offset = ($page - 1) * $comentariosPorPagina;
+    $comentarios_ids = get_post_meta($postId, 'comentarios_ids', true);
+
+    if (empty($comentarios_ids)) {
+        // No hay comentarios asociados a este post, puedes mostrar un mensaje o simplemente no mostrar nada.
+        echo '<p class="sinnotifi">No hay comentarios para este post</p>';
+        return;
+    }
 
     $args = array(
         'post_type' => 'comentarios',
         'post_status' => 'publish',
         'posts_per_page' => $comentariosPorPagina,
         'offset' => $offset,
-        'post__in' => get_post_meta($postId, 'comentarios_ids', true)
+        'post__in' => $comentarios_ids,
+        'orderby' => 'post__in', // Ordenar los resultados en el mismo orden que el array de IDs.
     );
 
     $query = new WP_Query($args);
+
 
     ob_start();
     echo '<ul class="lista-comentarios">';
