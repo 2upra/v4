@@ -125,8 +125,11 @@ function renderComentarios()
 <?
         }
         echo '</ul>';
+        $response['noComentarios'] = false;
+        $response['html'] = ob_get_clean();
     } else {
-        //echo '0';
+        $response['noComentarios'] = true;
+        $response['html'] = '<p class="sinnotifi">No hay comentarios para este post</p>';
     }
     wp_reset_postdata();
 
@@ -145,7 +148,7 @@ function renderComentarios()
 
     // Establece el encabezado de tipo de contenido como JSON
     header('Content-Type: application/json');
-    
+
     // Devuelve la respuesta como JSON
     echo json_encode($response);
 
