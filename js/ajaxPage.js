@@ -129,18 +129,16 @@ VM2592:1  Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Ident
         ['stripepro', 'stripecompra'].forEach(f => (window[f] ? window[f]() : console.warn(f + ' undefined')));
     }
 
-    function shouldCache(url) {
-        return !/https:\/\/2upra\.com\/nocache/.test(url);
-    }
-    //porque no funciona con <a href="https://2upra.com/sample/dark-ambient-pad/">Ir al post</a> o <a href="https://2upra.com/author/mxrtality/" class="profile-link"> MXRTALITY</a> o cosas asi
-                   
     function load(url, pushState) {
         if (!url || /^(javascript|data|vbscript):|#/.test(url.toLowerCase()) || url.includes('descarga_token')) return;
-        if (pageCache[url] && shouldCache(url)) {
+
+        // Si la URL está en la caché, cargarla desde allí
+        if (pageCache[url]) {
             document.getElementById('content').innerHTML = pageCache[url];
             if (pushState) history.pushState(null, '', url);
             return reinit();
         }
+
         document.getElementById('loadingBar').style.cssText = 'width: 70%; opacity: 1; transition: width 0.4s ease';
         fetch(url)
             .then(r => r.text())
@@ -148,7 +146,8 @@ VM2592:1  Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Ident
                 const doc = new DOMParser().parseFromString(data, 'text/html');
                 const content = doc.getElementById('content').innerHTML;
                 document.getElementById('content').innerHTML = content;
-                if (shouldCache(url)) pageCache[url] = content;
+                // Guardar en caché para futuras solicitudes
+                pageCache[url] = content;
                 document.getElementById('loadingBar').style.cssText = 'width: 100%; transition: width 0.1s ease, opacity 0.3s ease';
                 setTimeout(() => (document.getElementById('loadingBar').style.cssText = 'width: 0%; opacity: 0'), 100);
                 if (pushState) history.pushState(null, '', url);
@@ -168,7 +167,7 @@ VM2592:1  Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Ident
                         if (!s.src) {
                             try {
                                 // Evaluar el código de forma segura
-                                eval(s.textContent);
+                                new Function(s.textContent)();
                             } catch (error) {
                                 console.error('Error evaluating inline script:', error);
                             }
@@ -213,7 +212,7 @@ VM2592:1  Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Ident
             if (el.classList.contains('no-ajax') || el.closest('.no-ajax')) return true;
             if (typeof url !== 'string' || !url) return console.warn('Invalid URL:', url), true;
             const lowerUrl = url.trim().toLowerCase();
-            if (/\.pdf$|^(javascript|data|vbscript):|#/.test(lowerUrl) || /https:\/\/2upra\.com\/nocache/.test(lowerUrl)) return true;
+            if (/\.pdf$|^(javascript|data|vbscript):|#/.test(lowerUrl)) return true;
             e.preventDefault();
             load(url, true);
         }
