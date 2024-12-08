@@ -59,7 +59,7 @@ function config()
                     </label>
                 </div>
             </div>
-
+            <button class="guardarConfig">Guardar cambios</button>
         </form>
     </div>
 <?php
