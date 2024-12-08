@@ -81,25 +81,28 @@ function renderComentarios()
             $fechaRelativa = tiempoRelativo($fechaPublicacion);
             $avatar_optimizado = imagenPerfil($autorComentarioId);
     ?>
-    
+
             <li class="comentarioPost" id="comentario-<? echo $comentarioId ?>">
                 <div class="avatarComentario">
                     <img class="avatar" src="<? echo esc_url($avatar_optimizado); ?>" alt="Avatar del emisor">
-                    <div class="MGDEOP">
-                        <p><? echo $nombreUsuario ?> </p>
-                        <span class="fecha"><? echo $fechaRelativa ?></span>
+                    <div class="spaceComentario">
+                        <div class="MGDEOP">
+                            <p><? echo $nombreUsuario ?> </p>
+                            <span class="fecha"><? echo $fechaRelativa ?></span>
+                        </div>
+                        <div class="contenidoComentario">
+                            <div class="texto"><? echo $contenidoComentario ?></div>
+                            <? if ($imagenPortadaOptimizada): ?>
+                                <div class="imagenComentario">
+                                    <img src="<? echo $imagenPortadaOptimizada ?>" alt="Imagen de portada" />
+                                </div>
+                            <? endif; ?>
+                        </div>
                     </div>
                 </div>
-                <div class="contenidoComentario">
-                    <div class="texto"><? echo $contenidoComentario ?></div>
-                    <? if ($imagenPortadaOptimizada): ?>
-                    <div class="imagenComentario">
-                            <img src="<? echo $imagenPortadaOptimizada ?>" alt="Imagen de portada" />
-                    </div>
-                    <? endif; ?>
-                </div>
+
             </li>
-    <?
+<?
         }
         echo '</ul>';
     } else {
