@@ -253,17 +253,17 @@ window.ocultar = function (element) {
 };
 
 window.createColecDarkBackground = function () {
-    let darkBackground = document.getElementById('submenu-background5322');
+    let darkBackground = document.getElementById('backgroundColeccion');
     if (!darkBackground) {
         darkBackground = document.createElement('div');
-        darkBackground.id = 'submenu-background5322';
+        darkBackground.id = 'submenu-backgroundColeccion';
         darkBackground.style.position = 'fixed';
         darkBackground.style.top = 0;
         darkBackground.style.left = 0;
         darkBackground.style.width = '100%';
         darkBackground.style.height = '100%';
         darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-        darkBackground.style.zIndex = 1000;
+        darkBackground.style.zIndex = 1003;
         darkBackground.style.display = 'none';
         darkBackground.style.pointerEvents = 'none';
         darkBackground.style.opacity = '0';
@@ -283,7 +283,7 @@ window.createColecDarkBackground = function () {
 };
 
 window.removeColecDarkBackground = function () {
-    const darkBackground = document.getElementById('submenu-background5322');
+    const darkBackground = document.getElementById('backgroundColeccion');
     if (darkBackground) {
         darkBackground.style.opacity = '0';
         setTimeout(() => {
