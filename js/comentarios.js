@@ -11,6 +11,8 @@ let comIniciado = false;
 [x] background
 [x] Cerrar modal 
 [x] Eliminar imagen
+[x] Ocultar comentario a enviar comentario
+[x] Esperar que los elementos se carguen 
 [ ] Ver comentarios anteriores 
 [ ] Responder comentarios 
 [ ] Notificacion de comentarios 
@@ -50,6 +52,8 @@ function limpiarcamposCom() {
     });
 }
 function iniciarcm() {
+    ocultarColec();
+    limpiarcamposCom();
     if (comIniciado) return;
     comIniciado = true;
     if (document.getElementById('rsComentario')) {
@@ -61,11 +65,9 @@ function iniciarcm() {
         subidasEnProgreso = 0;
         enviarComentario();
         subidaComentario();
-        //aqui la funcion para establecer el evento de WNLOFT
         abrirComentario();
     }
 }
-
 
 function verificarComentario() {
     function verificarCamposCom() {
@@ -87,6 +89,11 @@ function verificarComentario() {
         }
 
         return true;
+    }
+
+    if (typeof subidasEnProgreso !== 'undefined' && subidasEnProgreso > 0) {
+        alert('Por favor, espera a que se completen las subidas de los archivos adjuntos antes de enviar el comentario.');
+        return false;
     }
 
     return verificarCamposCom();
@@ -145,6 +152,7 @@ async function enviarComentario() {
             const response = await enviarAjax('procesarComentario', data);
             if (response.success) {
                 limpiarcamposCom();
+                ocultarColec();
                 alert('Comentario enviado con éxito');
             } else {
                 alert('Error al enviar el comentario');
