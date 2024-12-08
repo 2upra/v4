@@ -108,7 +108,7 @@ function renderComentarios()
                                 </div>
                             <? endif; ?>
                             <div class="controlComentario">
-                            <? echo renderPostControls($postId, '', $audio); ?>
+                                <? echo renderPostControls($postId, '', $audio); ?>
                             </div>
                         </div>
                     </div>

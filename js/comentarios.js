@@ -545,6 +545,7 @@ function abrirComentario() {
             comentariosPost.style.display = 'flex';
             listComentarios.style.display = 'flex';
             rsComentario.style.display = 'flex';
+            submenu();
             createComDarkBackground();
 
             rsComentario.addEventListener('click', event => {
