@@ -273,7 +273,7 @@ if (!defined('ABSPATH')) {
                     <? echo modalGeneros() ?>
                 </div>
 
-                <div class="comentariosPost modal" display="none" id="comentariosPost">
+                <div class="comentariosPost modal" style="display: none" id="comentariosPost">
                     <div class="listComentarios">
 
                     </div>
