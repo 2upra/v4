@@ -79,7 +79,6 @@ function abrirComentario() {
     document.body.addEventListener('click', event => {
         const boton = event.target.closest('.WNLOFT');
         if (boton) {
-            limpiarcamposCom();
             CpostId = boton.dataset.postId;
             rsComentario.style.display = 'flex';
             createComDarkBackground();
