@@ -445,7 +445,7 @@ function cargarComentarios() {
     let paginaActual = 1;
     let cargando = false;
     const comentariosList = document.querySelector('.listComentarios');
-    comentariosList.style.display = 'flex';
+    
     console.log('Función cargarComentarios iniciada.');
 
     function cargarPaginaComentario() {
@@ -479,7 +479,7 @@ function cargarComentarios() {
                 // }
 
                 if (data.noComentarios) {
-                    comentariosList.style.display = 'none';
+                    
                     console.log('No hay más comentarios o no hay comentarios.');
                     cargando = true; // Lo dejamos en true para que no intente cargar más páginas.
 
@@ -491,6 +491,7 @@ function cargarComentarios() {
                 }
 
                 if (paginaActual === 1) {
+                    comentariosList.style.display = 'flex';
                     console.log('Reemplazando contenido de comentariosList.');
                     comentariosList.innerHTML = data.html;
                 } else {
