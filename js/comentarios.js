@@ -434,6 +434,38 @@ function ocultarColec() {
     removeComDarkBackground(); // Asegúrate de eliminar el fondo también
 }
 
+/*
+sucede este problema cuando no hay comentarios 
+
+
+genericAjax.js?ver=3.0.53.1071147829:733  No se pudo interpretar la respuesta como JSON: {error: SyntaxError: Unexpected token '<', " <p class=""... is not valid JSON
+at JSON.parse (<anonymous…, responseText: ' <p class="sinnotifi">No hay comentarios para este post</p>0', action: 'renderComentarios', requestData: {…}}
+
+
+} else {
+    echo '0';
+}
+wp_reset_postdata();
+$output = ob_get_clean();
+
+$response = array();
+if (trim($output) === '0') { // Compara con el nuevo valor
+    $response['noComentarios'] = true;
+    $response['html'] = '';
+} else {
+    $response['noComentarios'] = false;
+    $response['html'] = $output;
+}
+
+// Devuelve la respuesta como JSON
+header('Content-Type: application/json');
+echo json_encode($response);
+wp_die();
+}
+
+add_action('wp_ajax_renderComentarios', 'renderComentarios');
+
+*/
 function cargarComentarios() {
     let paginaActual = 1;
     let cargando = false;

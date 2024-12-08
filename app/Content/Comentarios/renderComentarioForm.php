@@ -125,18 +125,21 @@ function renderComentarios()
 <?
         }
         echo '</ul>';
-
+    /*
+    genericAjax.js?ver=3.0.53.1071147829:733  No se pudo interpretar la respuesta como JSON: {error: SyntaxError: Unexpected token '<', " <p class=""... is not valid JSON
+    at JSON.parse (<anonymous…, responseText: ' <p class="sinnotifi">No hay comentarios para este post</p>0', action: 'renderComentarios', requestData: {…}}
+    */
 
     } else {
-        echo '0'; // Cambia esto a un valor numérico o una cadena vacía
+        echo '0';
     }
     wp_reset_postdata();
     $output = ob_get_clean();
 
     $response = array();
-    if (trim($output) === '0') { // Compara con el nuevo valor
+    if (trim($output) === '0') {
         $response['noComentarios'] = true;
-        $response['html'] = '';
+        $response['html'] = '<p class="sinnotifi">No hay comentarios para este post</p>'; // Se incluye el mensaje
     } else {
         $response['noComentarios'] = false;
         $response['html'] = $output;
