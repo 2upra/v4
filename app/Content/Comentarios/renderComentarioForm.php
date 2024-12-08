@@ -131,23 +131,30 @@ function renderComentarios()
     */
 
     } else {
-        echo '0';
+        //echo '0';
     }
     wp_reset_postdata();
+
+    // Obtén el contenido del buffer y límpialo
     $output = ob_get_clean();
 
+    // Construye la respuesta
     $response = array();
-    if (trim($output) === '0') {
+    if (trim($output) === '0' || empty($output)) {
         $response['noComentarios'] = true;
-        $response['html'] = '<p class="sinnotifi">No hay comentarios para este post</p>'; 
+        $response['html'] = '<p class="sinnotifi">No hay comentarios para este post</p>';
     } else {
         $response['noComentarios'] = false;
         $response['html'] = $output;
     }
 
-    // Devuelve la respuesta como JSON
+    // Establece el encabezado de tipo de contenido como JSON
     header('Content-Type: application/json');
+    
+    // Devuelve la respuesta como JSON
     echo json_encode($response);
+
+    // Finaliza la ejecución del script
     wp_die();
 }
 

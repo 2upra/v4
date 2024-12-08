@@ -442,9 +442,9 @@ comentarios.js?ver=3.0.53.1448960775:489 Enviando datos: {postId: '322741', page
 comentarios.js?ver=3.0.53.1448960775:493 Respuesta recibida:  <p class="sinnotifi">No hay comentarios para este post</p>0
 comentarios.js?ver=3.0.53.1448960775:505 Reemplazando contenido de comentariosList.
 comentarios.js?ver=3.0.53.1448960775:514 Página cargada. Nueva página actual: 2
-genericAjax.js?ver=3.0.53.1071147829:733  No se pudo interpretar la respuesta como JSON: {error: SyntaxError: Unexpected token '<', " <p class=""... is not valid JSON
+genericAjax.js?ver=3.0.53.1869427897:733  No se pudo interpretar la respuesta como JSON: {error: SyntaxError: Unexpected token '<', " <p class=""... is not valid JSON
 at JSON.parse (<anonymous…, responseText: ' <p class="sinnotifi">No hay comentarios para este post</p>0', action: 'renderComentarios', requestData: {…}}
-
+y imprime un 0 que no puedo quitar 
 
     } else {
         echo '0';
@@ -496,40 +496,33 @@ function cargarComentarios() {
             .then(response => {
                 console.log('Respuesta recibida:', response);
 
-                let data;
-                // Intenta interpretar la respuesta como JSON
-                try {
-                    data = JSON.parse(response);
-                } catch (e) {
-                    // Si falla, asume que es HTML
-                    console.warn('No se pudo interpretar la respuesta como JSON:', e, 'responseText:', response, 'action:', 'renderComentarios', 'requestData:', data);
-                    data = {
-                        noComentarios: true,
-                        html: response // Asigna la respuesta completa como HTML
-                    };
-                }
-
-                if (data.noComentarios) {
+                // La respuesta ya es JSON, no es necesario parsear
+                if (response.noComentarios) {
                     console.log('No hay más comentarios.');
-                    cargando = true;
+                    cargando = false;
+
+                    // Si es la primera página, muestra el mensaje
                     if (paginaActual === 1) {
-                        // Usa data.html para mostrar el mensaje
-                        comentariosList.innerHTML = data.html.includes('No hay comentarios') ? data.html : '<p class="sinnotifi">No hay comentarios</p>';
+                        comentariosList.innerHTML = response.html;
                     }
                     return;
                 }
 
+                // Agrega los comentarios a la lista
                 if (paginaActual === 1) {
                     console.log('Reemplazando contenido de comentariosList.');
-                    comentariosList.innerHTML = data.html;
+                    comentariosList.innerHTML = response.html;
                 } else {
                     console.log('Agregando contenido a comentariosList.');
-                    comentariosList.insertAdjacentHTML('beforeend', data.html);
+                    comentariosList.insertAdjacentHTML('beforeend', response.html);
                 }
 
+                // Incrementa el número de página
                 paginaActual++;
                 cargando = false;
                 console.log(`Página cargada. Nueva página actual: ${paginaActual}`);
+
+                // Inicializa otras funciones si es necesario
                 createSubmenu('.submenucomentario', 'opcionescomentarios', 'abajo');
                 ['inicializarWaveforms', 'empezarcolab', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'colec'].forEach(funcion => {
                     if (typeof window[funcion] === 'function') window[funcion]();
@@ -548,8 +541,7 @@ function cargarComentarios() {
         console.log(`ScrollTop: ${comentariosList.scrollTop}, ScrollHeight: ${comentariosList.scrollHeight}, ClientHeight: ${comentariosList.clientHeight}`);
         if (comentariosList.scrollHeight - (comentariosList.scrollTop + comentariosList.clientHeight) <= 200 && !cargando) {
             console.log('Condición de carga de nueva página cumplida.');
-            cargando = true;
-            cargarPaginaComentario(paginaActual);
+            cargarPaginaComentario();
         }
     });
 }
