@@ -503,7 +503,7 @@ function cargarComentarios() {
                 paginaActual++;
                 cargando = false;
                 console.log(`Página cargada. Nueva página actual: ${paginaActual}`);
-                submenu();
+                createSubmenu(".submenucomentario", "opcionescomentarios", 'abajo');
             })
             .catch(error => {
                 console.error('Error en la promesa:', error);

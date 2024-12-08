@@ -155,9 +155,9 @@ function opcionesComentarios($postId, $autorId)
     $usuarioActual = get_current_user_id();
     ob_start();
 ?>
-    <button class="HR695R8" data-post-id="<? echo $postId; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
+    <button class="submenucomentario" data-post-id="<? echo $postId; ?>"><? echo $GLOBALS['iconotrespuntos']; ?></button>
 
-    <div class="A1806241" id="opcionespost-<? echo $postId; ?>">
+    <div class="A1806241" id="opcionescomentarios-<? echo $postId; ?>">
         <div class="A1806242">
             <? if (current_user_can('administrator')) : ?>
                 <button class="eliminarPost" data-post-id="<? echo $postId; ?>">Eliminar</button>
