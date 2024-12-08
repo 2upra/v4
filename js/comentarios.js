@@ -2,15 +2,16 @@ let CimagenUrl, CimagenId, CaudioId, CaudioUrl, CpostId;
 let subidasEnProgreso = 0;
 
 let enablelogCom = true;
-const logCOM = enablelogCom ? console.log : function () {};
+const logcm = enablelogCom ? console.log : function () {};
 let waveSurferInstancesCom = {};
 
 let comIniciado = false;
 
-function iniciarCOM() {
+function iniciarcm() {
     if (comIniciado) return;
     comIniciado = true;
     if (document.getElementById('rsComentario')) {
+        logcm('IniciarCOM start');
         CimagenId = null;
         CimagenUrl = null;
         CaudioId = null;

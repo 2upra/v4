@@ -82,7 +82,8 @@
         'establecerFiltros',
         'actualizarBotonFiltro',
         'iniciarCargaNotificaciones',
-        'busquedaMenuMovil'
+        'busquedaMenuMovil',
+        'iniciarcm',
     ];
 
     function initScripts() {
