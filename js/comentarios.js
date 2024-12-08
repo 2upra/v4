@@ -16,6 +16,7 @@ let comIniciado = false;
 [ ] Ver comentarios anteriores 
 [ ] Responder comentarios 
 [ ] Notificacion de comentarios 
+[ ] Parece que no regresa los id hash
 */
 
 function limpiarcamposCom() {
@@ -29,20 +30,25 @@ function limpiarcamposCom() {
     waveSurferInstancesCom = {};
 
     // Eliminar contenido de los divs
-    const audioDiv = document.querySelector(".previewAreaArchivos.paudio#pcomentAudio");
-    const imagenDiv = document.querySelector(".previewAreaArchivos.pimagen#pcomentImagen");
+    const audioDiv = document.querySelector('.previewAreaArchivos.paudio#pcomentAudio');
+    const imagenDiv = document.querySelector('.previewAreaArchivos.pimagen#pcomentImagen');
+    const comentarios = document.querySelector('.listComentarios');
 
     if (audioDiv) {
-        audioDiv.innerHTML = ''; // Elimina el contenido interno
-        audioDiv.style.display = 'none'; // Oculta el div si aún no está oculto
+        audioDiv.innerHTML = ''; 
+        audioDiv.style.display = 'none';
     }
 
     if (imagenDiv) {
-        imagenDiv.innerHTML = ''; // Elimina el contenido interno
-        imagenDiv.style.display = 'none'; // Oculta el div si aún no está oculto
+        imagenDiv.innerHTML = ''; 
+        imagenDiv.style.display = 'none'; 
     }
-    
-    // Ocultar elementos adicionales (si ya no están ocultos por los pasos anteriores)
+
+    if (comentarios) {
+        comenterios.innerHTML = '';
+        comentarios.style.display = 'none';
+    }
+
     const elementsToHide = ['pcomentImagen', 'pcomentAudio', 'previevsComent'];
     elementsToHide.forEach(id => {
         const element = document.getElementById(id);
@@ -428,7 +434,54 @@ function ocultarColec() {
     removeComDarkBackground(); // Asegúrate de eliminar el fondo también
 }
 
+function cargarComentarios() {
+    let paginaActual = 1;
+    let cargando = false;
+    const comentariosList = document.querySelector('.listComentarios');
+
+    const cargarPaginaComentario = () => {
+        if (cargando) return;
+        cargando = true;
+
+        const data = {
+            postId: CpostId,
+            page: paginaActual
+        };
+
+        enviarAjax('renderComentarios', data)
+            .then(data => {
+                const noCom = data.replace(/\s+/g, ' ').trim();
+
+                if (noCom.includes('No hay comentarios') || data.trim() === '') {
+                    cargando = true;
+                    return;
+                }
+
+                if (paginaActual === 1) {
+                    comentariosList.innerHTML = data;
+                } else {
+                    comentariosList.insertAdjacentHTML('beforeend', data);
+                }
+                paginaActual++;
+                cargando = false;
+            })
+            .catch(() => {
+                cargando = false;
+            });
+    };
+
+    cargarPaginaComentario();
+
+    comentariosList.addEventListener('scroll', () => {
+        if (comentariosList.scrollHeight - (comentariosList.scrollTop + comentariosList.clientHeight) <= 200 && !cargando) {
+            cargando = true;
+            cargarPaginaComentario(paginaActual);
+        }
+    });
+}
+
 function abrirComentario() {
+    const comentariosPost = document.getElementById('comentariosPost');
     const rsComentario = document.getElementById('rsComentario');
     if (!rsComentario) return;
 
@@ -437,11 +490,12 @@ function abrirComentario() {
         if (boton) {
             event.stopPropagation(); // Detiene la propagación aquí
             CpostId = boton.dataset.postId;
+            cargarComentarios();
+            comentariosPost.style.display = 'flex';
             rsComentario.style.display = 'flex';
             createComDarkBackground();
 
-            // Evita que el clic se propague desde el comentario
-            rsComentario.addEventListener('click', (event) => {
+            rsComentario.addEventListener('click', event => {
                 event.stopPropagation();
             });
         }
@@ -481,12 +535,13 @@ window.createComDarkBackground = function () {
 
 // Eliminar el fondo oscuro
 window.removeComDarkBackground = function () {
+    const comentariosPost = document.getElementById('comentariosPost');
     const darkBackground = document.getElementById('submenu-background5323');
     if (darkBackground) {
         darkBackground.style.opacity = '0';
         setTimeout(() => {
             darkBackground.style.display = 'none';
-            // darkBackground.style.pointerEvents = 'none'; // No es necesario, se elimina al hacer display none
+            comentariosPost.style.display = 'none';
         }, 300);
     }
 };

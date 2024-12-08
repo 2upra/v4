@@ -17,6 +17,8 @@ function subirImagenDesdeURL($image_url, $post_id) {
 
 function adjuntarArchivo($newPostId, $fileUrl) {
     global $wpdb;
+
+    // Obtener ID del adjunto si ya existe
     $attachment_id = $wpdb->get_var($wpdb->prepare(
         "SELECT ID FROM {$wpdb->posts} WHERE guid = %s",
         $fileUrl
@@ -50,13 +52,39 @@ function adjuntarArchivo($newPostId, $fileUrl) {
     }
 
     if ($attachment_id) {
-        update_post_meta($newPostId, 'colabFileId', $attachment_id);
-        update_post_meta($newPostId, 'colabFileUrl', $fileUrl);
-        $mime_type = get_post_mime_type($attachment_id); 
+        // Recuperar metadatos existentes
+        $fileAdjIds = get_post_meta($newPostId, 'fileAdjIds', true) ?: [];
+        $fileAdjUrls = get_post_meta($newPostId, 'fileAdjUrls', true) ?: [];
+
+        // Actualizar las listas
+        $fileAdjIds[] = $attachment_id;
+        $fileAdjUrls[] = $fileUrl;
+
+        // Guardar los datos actualizados
+        update_post_meta($newPostId, 'fileAdjIds', array_unique($fileAdjIds));
+        update_post_meta($newPostId, 'fileAdjUrls', array_unique($fileAdjUrls));
+
+        // Obtener MIME type y procesar según el tipo
+        $mime_type = get_post_mime_type($attachment_id);
+
         if (strpos($mime_type, 'audio') !== false) {
-            $audio_id = $attachment_id; 
-            $index = 1; 
-            procesarAudioLigero($newPostId, $audio_id, $index);
+            // Actualizar lista de audios
+            $audioAdjIds = get_post_meta($newPostId, 'audioAdjIds', true) ?: [];
+            $audioAdjIds[] = $attachment_id;
+            update_post_meta($newPostId, 'audioAdjIds', array_unique($audioAdjIds));
+
+            $index = 1; // O ajusta el índice según sea necesario
+            procesarAudioLigero($newPostId, $attachment_id, $index);
+        } elseif (strpos($mime_type, 'image') !== false) {
+            // Establecer la primera imagen como portada
+            $imgAdjIds = get_post_meta($newPostId, 'imgAdjIds', true) ?: [];
+            if (empty($imgAdjIds)) {
+                set_post_thumbnail($newPostId, $attachment_id);
+            }
+            $imgAdjIds[] = $attachment_id;
+            update_post_meta($newPostId, 'imgAdjIds', array_unique($imgAdjIds));
+        } else {
+            guardarLog("Archivo adjuntado (tipo desconocido) con ID: $attachment_id");
         }
 
         guardarLog("Archivo adjuntado con ID: $attachment_id");

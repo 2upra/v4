@@ -167,6 +167,7 @@ function listarNotificaciones($pagina = 1)
 }
 
 add_action('wp_ajax_marcar_notificacion_vista', 'marcarNotificacionVista');
+
 function marcarNotificacionVista() {
     if (!is_user_logged_in()) {
         error_log('Acceso denegado: Usuario no autenticado.');

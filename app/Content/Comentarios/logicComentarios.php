@@ -1,40 +1,5 @@
 <?
 
-/*
-const data = {
-    comentario: document.getElementById('comentContent').value,
-    imagenUrl: CimagenUrl,
-    audioUrl: CaudioUrl,
-    imagenId: CimagenId,
-    audioId: CaudioId,
-    postId: CpostId #post al que se le hace el oomentario
-
-};
-
-wordpress 
-
-usa para adjuntar al post, la imagen y el audio no son obligatorios
-adjuntarArchivo($newPostId, $fileUrl) 
-
-la funcion va a crear un post type comentarios
-
-confima los id con confirmarHashId al completarse el post 
-
-el titulo va a hacer Usuario hace comentario en (titulo del post postId) (recortado)
-
-el nombre de usuario obviamente es el nombre del usuario actual
-
-toda la informacion la vas a guardar en la meta del post, las imagenes o audio si existen (sus id de adjunto y sus id que llegan), no confundas las id de adjunto con las id que llegan que esas que llegan son id para confirmar el hash, asi que la meta de CimagenId y CaudioId serían hashIdImg y hashIdAudio 
-
-no se si olvido algo pero santiiza y el autor del post es quien hace el comentario, importante guardar el postId en la meta  
-
-el post al que se hace el comentario tiene que estar publicado
-
-agrega un limite de comentarios a los usuarios de 3 comentarios por minuto como maximo
-
-usa wp_send, y los error_log estos para errores importantes
-*/
-
 
 
 
@@ -114,19 +79,19 @@ function procesarComentario()
     }
 
     // Actualizar metadatos del comentario
-    update_post_meta($comentarioId, 'postId', $postId); // ID del post al que se comenta
-    update_post_meta($comentarioId, 'hashIdImg', $imagenId); // ID para confirmar el hash de la imagen
-    update_post_meta($comentarioId, 'hashIdAudio', $audioId); // ID para confirmar el hash del audio
+    update_post_meta($comentarioId, 'postId', $postId);
+    update_post_meta($comentarioId, 'hashIdImg', $imagenId); 
+    update_post_meta($comentarioId, 'hashIdAudio', $audioId); 
 
     if ($attachment_image_id) {
-        update_post_meta($comentarioId, 'imagenId', $attachment_image_id); // ID del adjunto de la imagen
+        update_post_meta($comentarioId, 'imagenId', $attachment_image_id);
     }
 
     if ($attachment_audio_id) {
         update_post_meta($comentarioId, 'audioId', $attachment_audio_id); // ID del adjunto del audio
     }
 
-    // Confirmar hashes si existen
+
     if (!empty($imagenId)) {
         confirmarHashId($imagenId, $comentarioId, 'imagen');
     }
@@ -134,8 +99,13 @@ function procesarComentario()
         confirmarHashId($audioId, $comentarioId, 'audio');
     }
 
-    // Guardar ID del comentario en los metadatos del post
-    add_post_meta($postId, 'comentario_id', $comentarioId, false); // Permite múltiples valores
+    $comentarios_ids = get_post_meta($postId, 'comentarios_ids', true);
+    if (!is_array($comentarios_ids)) {
+        $comentarios_ids = array(); 
+    }
+
+    $comentarios_ids[] = $comentarioId; // Añadir el nuevo ID
+    update_post_meta($postId, 'comentarios_ids', $comentarios_ids); // Guardar el array actualizado
 
     // Incrementar el contador de comentarios recientes y actualizar el transient
     $comentarios_recientes++;

@@ -1,0 +1,127 @@
+<?
+
+function comentariosForm()
+{
+    ob_start();
+    $user = wp_get_current_user();
+    $nombreUsuario = $user->display_name;
+    $urlImagenperfil = imagenPerfil($user->ID);
+?>
+    <div class="bloque anadircomentario" id="rsComentario" style="display: none;">
+
+        <div class="W8DK25">
+            <img id="perfil-imagen" src="<? echo esc_url($urlImagenperfil); ?>" alt="Perfil"
+                style="max-width: 35px; max-height: 35px; border-radius: 50%;">
+            <p><? echo $nombreUsuario ?></p>
+        </div>
+
+        <div>
+            <textarea id="comentContent" name="comentContent" rows="1" required placeholder="Escribe tu comentario"></textarea>
+        </div>
+
+        <div class="previevsComent" id="previevsComent" style="display: none;">
+            <div class="previewAreaArchivos pimagen" id="pcomentImagen" style="display: none;">
+                <label></label>
+            </div>
+            <div class="previewAreaArchivos paudio" id="pcomentAudio" style="display: none;">
+                <label></label>
+            </div>
+        </div>
+
+        <div class="botonesForm R0A915">
+            <button class="botonicono borde" id="audioComent"><? echo $GLOBALS['subiraudio']; ?></button>
+
+            <button class="botonicono borde" id="imagenComent"><? echo $GLOBALS['subirimagen']; ?></button>
+
+            <button class="botonicono borde" id="ArchivoComent" style="display: none;"><? echo $GLOBALS['subirarchivo']; ?></button>
+
+            <button class="borde" id="enviarComent">Publicar</button>
+        </div>
+
+    </div>
+    <?
+    return ob_get_clean();
+}
+
+
+
+
+function renderComentarios()
+{
+    $postId = isset($_POST['postId']) ? intval($_POST['postId']) : 0;
+    $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
+    $userId = get_current_user_id();
+    $comentariosPorPagina = 12;
+    $offset = ($page - 1) * $comentariosPorPagina;
+
+
+    if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
+        $offset = $comentariosPorPagina;
+        $comentariosPorPagina = 0;
+    }
+
+    $args = array(
+        'post_type' => 'comentarios',
+        'post_status' => 'publish',
+        'posts_per_page' => $comentariosPorPagina,
+        'offset' => $offset,
+        'post__in' => get_post_meta($postId, 'comentarios_ids', true)
+    );
+
+    $query = new WP_Query($args);
+
+    ob_start();
+    echo '<ul class="lista-comentarios">';
+    if ($query->have_posts()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+            $comentarioId = get_the_ID();
+            $autorComentarioId = get_the_author_meta('ID');
+            $autorComentario = get_the_author();
+            $contenidoComentario = get_the_content();
+            $audio = get_post_meta($comentarioId, 'post_audio_lite', true);
+            $imagenPortada = get_the_post_thumbnail_url($comentarioId, 'full');
+            if ($imagenPortada) {
+                $imagenPortadaOptimizada = img($imagenPortada);
+            }
+            $nombreUsuario = $autorComentario->display_name;
+            $fechaPublicacion = get_the_date('Y-m-d H:i:s');
+            $fechaRelativa = tiempoRelativo($fechaPublicacion);
+            $avatar_optimizado = imagenPerfil($autorComentarioId)
+    ?>
+
+            <li class="comentarioPost" id="comentario-<? echo $comentarioId ?>">
+                <div class="avatarComentario">
+                    <img class="avatar" src="<? echo esc_url($avatar_optimizado); ?>" alt="Avatar del emisor">
+                    <div class="MGDEOP">
+                        <p><? echo $nombreUsuario ?> </p>
+                        <span class="fecha"><? echo $fechaRelativa ?></span>
+                    </div>
+                </div>
+                <div class="contenidoComentario">
+                    <span class="fecha"><? echo $fechaRelativa ?></span>
+                    <div class="texto"><? echo $contenidoComentario ?></div>
+                    <div class="imagenComentario">
+                        <? if ($imagenPortadaOptimizada): ?>
+                            <img src="<? echo $imagenPortadaOptimizada ?>" alt="Imagen de portada" />
+                        <? endif; ?>
+                    </div>
+                </div>
+            </li>
+<?
+        }
+        echo '</ul>';
+    } else {
+        echo '<p class="sinnotifi">No hay comentarios</p>';
+    }
+    wp_reset_postdata();
+    $output = ob_get_clean();
+
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        wp_send_json_success($output);
+    } else {
+        return $output;
+    }
+}
+
+add_action('wp_ajax_renderComentarios', 'renderComentarios');
