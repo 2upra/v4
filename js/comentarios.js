@@ -457,26 +457,34 @@ function cargarComentarios() {
         console.log('Enviando datos:', data);
 
         enviarAjax('renderComentarios', data)
-            .then(data => {
-                console.log('Respuesta recibida:', data);
-                const noCom = data.replace(/\s+/g, ' ').trim();
+            .then(response => {
+                // Cambia 'data' por 'response' para mayor claridad
+                console.log('Respuesta recibida (objeto JSON):', response);
 
-                if (noCom.includes('No hay comentarios') || data.trim() === '') {
-                    console.log('No hay más comentarios o respuesta vacía.');
-                    cargando = true;
-                    return;
-                }
+                if (response && response.success && typeof response.data === 'string') {
+                    const data = response.data; // Accede a la propiedad 'data' del objeto
+                    const noCom = data.replace(/\s+/g, ' ').trim();
 
-                if (paginaActual === 1) {
-                    console.log('Reemplazando contenido de comentariosList.');
-                    comentariosList.innerHTML = data;
+                    if (noCom.includes('No hay comentarios') || data.trim() === '') {
+                        console.log('No hay más comentarios o respuesta vacía.');
+                        cargando = true;
+                        return;
+                    }
+
+                    if (paginaActual === 1) {
+                        console.log('Reemplazando contenido de comentariosList.');
+                        comentariosList.innerHTML = data;
+                    } else {
+                        console.log('Agregando contenido a comentariosList.');
+                        comentariosList.insertAdjacentHTML('beforeend', data);
+                    }
+                    paginaActual++;
+                    cargando = false;
+                    console.log(`Página cargada. Nueva página actual: ${paginaActual}`);
                 } else {
-                    console.log('Agregando contenido a comentariosList.');
-                    comentariosList.insertAdjacentHTML('beforeend', data);
+                    console.error("La respuesta del servidor no es un objeto JSON válido o la propiedad 'data' no es una cadena.", response);
+                    cargando = false;
                 }
-                paginaActual++;
-                cargando = false;
-                console.log(`Página cargada. Nueva página actual: ${paginaActual}`);
             })
             .catch(error => {
                 console.error('Error en la promesa:', error);
