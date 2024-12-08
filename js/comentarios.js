@@ -1,5 +1,5 @@
 let CimagenUrl, CimagenId, CaudioId, CaudioUrl, CpostId;
-let subidasEnProgreso = 0;
+let uploadInProgressCount = 0;
 
 let enablelogCom = true;
 const logcm = enablelogCom ? console.log : function () {};
@@ -25,7 +25,7 @@ function limpiarcamposCom() {
     CimagenId = null;
     CaudioId = null;
     CpostId = null;
-    subidasEnProgreso = 0;
+    uploadInProgressCount = 0;
     waveSurferInstancesCom = {};
 
     // Eliminar contenido de los divs
@@ -91,7 +91,7 @@ function verificarComentario() {
         return true;
     }
 
-    if (typeof subidasEnProgreso !== 'undefined' && subidasEnProgreso > 0) {
+    if (typeof uploadInProgressCount !== 'undefined' && uploadInProgressCount > 0) {
         alert('Por favor, espera a que se completen las subidas de los archivos adjuntos antes de enviar el comentario.');
         return false;
     }
