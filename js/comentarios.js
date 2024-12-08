@@ -1,5 +1,5 @@
 let CimagenUrl, CimagenId, CaudioId, CaudioUrl, CpostId;
-let uploadInProgressCount = 0;
+let subidaEnComentario = 0;
 
 let enablelogCom = true;
 const logcm = enablelogCom ? console.log : function () {};
@@ -25,7 +25,7 @@ function limpiarcamposCom() {
     CimagenId = null;
     CaudioId = null;
     CpostId = null;
-    uploadInProgressCount = 0;
+    subidaEnComentario = 0;
     waveSurferInstancesCom = {};
 
     // Eliminar contenido de los divs
@@ -91,7 +91,7 @@ function verificarComentario() {
         return true;
     }
 
-    if (typeof uploadInProgressCount !== 'undefined' && uploadInProgressCount > 0) {
+    if (typeof subidaEnComentario !== 'undefined' && subidaEnComentario > 0) {
         alert('Por favor, espera a que se completen las subidas de los archivos adjuntos antes de enviar el comentario.');
         return false;
     }
@@ -356,7 +356,7 @@ async function subidaComBackend(file, progressBarId) {
     logcm('Iniciando subida de archivo', {fileName: file.name, fileSize: file.size});
 
     // Incrementar el contador de subidas en progreso
-    uploadInProgressCount++;
+    subidaEnComentario++;
 
     const formData = new FormData();
     formData.append('action', 'file_upload');
@@ -383,7 +383,7 @@ async function subidaComBackend(file, progressBarId) {
             logcm('Respuesta recibida', {status: xhr.status, response: xhr.responseText});
 
             // Decrementar el contador al finalizar la subida
-            uploadInProgressCount--;
+            subidaEnComentario--;
 
             if (xhr.status === 200) {
                 try {
@@ -407,7 +407,7 @@ async function subidaComBackend(file, progressBarId) {
 
         xhr.onerror = () => {
             logcm('Error en la conexión con el servidor', {status: xhr.status});
-            uploadInProgressCount--; // Decrementar el contador en caso de error
+            subidaEnComentario--; // Decrementar el contador en caso de error
             reject(new Error('Error en la conexión con el servidor'));
         };
 
@@ -416,7 +416,7 @@ async function subidaComBackend(file, progressBarId) {
             xhr.send(formData);
         } catch (error) {
             logcm('Error al enviar la solicitud AJAX', {errorMessage: error.message});
-            uploadInProgressCount--; // Decrementar el contador en caso de error
+            subidaEnComentario--; // Decrementar el contador en caso de error
             reject(new Error('Error al enviar la solicitud AJAX'));
         }
     });
