@@ -59,8 +59,9 @@ function config()
                     </label>
                 </div>
             </div>
-            <button class="guardarConfig">Guardar cambios</button>
+
         </form>
+        <button class="guardarConfig">Guardar cambios</button>
     </div>
 <?php
     return ob_get_clean();
