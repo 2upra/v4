@@ -491,7 +491,7 @@ function cargarComentarios() {
                     }
                     return;
                 }
-    
+
                 if (paginaActual === 1) {
                     console.log('Reemplazando contenido de comentariosList.');
                     comentariosList.innerHTML = data.html;
@@ -499,11 +499,14 @@ function cargarComentarios() {
                     console.log('Agregando contenido a comentariosList.');
                     comentariosList.insertAdjacentHTML('beforeend', data.html);
                 }
-    
+
                 paginaActual++;
                 cargando = false;
                 console.log(`Página cargada. Nueva página actual: ${paginaActual}`);
-                createSubmenu(".submenucomentario", "opcionescomentarios", 'abajo');
+                createSubmenu('.submenucomentario', 'opcionescomentarios', 'abajo');
+                ['inicializarWaveforms', 'empezarcolab', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'colec'].forEach(funcion => {
+                    if (typeof window[funcion] === 'function') window[funcion]();
+                });
             })
             .catch(error => {
                 console.error('Error en la promesa:', error);
@@ -546,13 +549,12 @@ function abrirComentario() {
             comentariosPost.style.display = 'flex';
             listComentarios.style.display = 'flex';
             rsComentario.style.display = 'flex';
-            
+
             createComDarkBackground();
 
             rsComentario.addEventListener('click', event => {
                 console.log('Click dentro de rsComentario. Deteniendo propagación.');
                 event.stopPropagation();
-                
             });
         }
     });
