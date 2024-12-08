@@ -103,6 +103,7 @@ VM2592:1  Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Ident
         'iniciarcm'
     ];
 
+  
     function initScripts() {
         funcs.forEach(f => (typeof window[f] === 'function' ? window[f]() : console.warn(`Función ${f} no definida.`)));
     }
@@ -208,18 +209,25 @@ VM2592:1  Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Ident
             if (login && typeof loadStripe === 'function') loadStripe(initStripeFuncs);
         }
 
-        function handleLoad(e, url, el) {
-            if (el.classList.contains('no-ajax') || el.closest('.no-ajax')) return true;
-            if (typeof url !== 'string' || !url) return console.warn('Invalid URL:', url), true;
-            const lowerUrl = url.trim().toLowerCase();
-            if (/\.pdf$|^(javascript|data|vbscript):|#/.test(lowerUrl)) return true;
-            e.preventDefault();
+        // Función para manejar los clics en los enlaces
+        function handleLinkClick(event) {
+            const link = event.target.closest('a');
+
+            // Si no hay enlace, no hacer nada
+            if (!link) return;
+
+            const url = link.getAttribute('href');
+
+            // Si la URL es inválida, o es un PDF, o comienza con 'javascript', 'data', 'vbscript', o '#', o si tiene la clase 'no-ajax', o si está dentro de un elemento 'no-ajax' no hacer nada
+            if (typeof url !== 'string' || !url || /\.pdf$|^(javascript|data|vbscript):|#/.test(url.toLowerCase()) || link.classList.contains('no-ajax') || link.closest('.no-ajax')) return;
+
+            // Prevenir el comportamiento por defecto y cargar la URL con AJAX
+            event.preventDefault();
             load(url, true);
         }
 
-        document.querySelectorAll('a, button a, .botones-panel').forEach(el => {
-            el.addEventListener('click', e => handleLoad(e, el.getAttribute('href') || el.getAttribute('data-href') || (el.querySelector('a') && el.querySelector('a').getAttribute('href')), el));
-        });
+        // Añadir la función de manejo de clics a todos los enlaces
+        document.addEventListener('click', handleLinkClick);
 
         window.addEventListener('popstate', () => load(location.href, false));
     });
