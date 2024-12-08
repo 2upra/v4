@@ -256,7 +256,7 @@ window.createColecDarkBackground = function () {
     let darkBackground = document.getElementById('backgroundColeccion');
     if (!darkBackground) {
         darkBackground = document.createElement('div');
-        darkBackground.id = 'submenu-backgroundColeccion';
+        darkBackground.id = 'backgroundColeccion';
         darkBackground.style.position = 'fixed';
         darkBackground.style.top = 0;
         darkBackground.style.left = 0;
