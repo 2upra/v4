@@ -37,10 +37,13 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish') {
     // Obtener los seguidores del autor
     $seguidores = get_user_meta($autor, 'seguidores', true);
     if (!empty($seguidores) && is_array($seguidores)) {
+        $autor_nombre = get_the_author_meta('display_name', $autor); // Obtener el nombre del autor
+        $contenido_corto = wp_trim_words($contenido, 10, '...'); // Crear una versión corta del contenido
+        
         foreach ($seguidores as $seguidor_id) {
             crearNotificacion(
                 $seguidor_id, 
-                "El usuario {$autor} ha creado un nuevo post.",
+                "{$autor_nombre} ha publicado: \"{$contenido_corto}\"",
                 false,   // MetaSolicitud
                 $postId, // Post ID relacionado
                 'Nueva publicación',
@@ -53,6 +56,7 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish') {
     
     return $postId;
 }
+
 
 
 #Paso 2
