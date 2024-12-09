@@ -114,7 +114,13 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         error_log("[configuracionQueryArgs] Identifier: " . $identifier);
         error_log("[configuracionQueryArgs] user_id: " . $user_id);
 
-        if ($user_id !== null) {
+        /*
+        [09-Dec-2024 08:59:50 UTC] [configuracionQueryArgs] Identifier: test2
+        [09-Dec-2024 08:59:50 UTC] [configuracionQueryArgs] user_id: 
+        [09-Dec-2024 08:59:50 UTC] [configuracionQueryArgs] User ID found, returning early.
+        */
+
+        if (!empty($user_id)) {
             $query_args = [
                 'post_type' => $args['post_type'],
                 'posts_per_page' => $args['posts'],
