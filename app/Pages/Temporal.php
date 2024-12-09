@@ -216,17 +216,22 @@ add_filter('wp_check_filetype_and_ext', 'verificar_subida_apk', 10, 4);
 function dev()
 {
     ob_start();
-    //      
+
 ?>
 
     <div class="tabs">
         <div class="tab-content">
             <div class="tab active GMXSUJ" id="inicio">
-                div
+
                 <div class="SOKDEOD">
                     <div class="ADEED">
-                        <img src="https://2upra.com/wp-content/uploads/2024/12/asdfasdfasdf.jpg" alt="">
-
+                        la primera imagen https://2upra.com/wp-content/uploads/2024/12/asdfasdfasdf.jpg
+                        luego https://2upra.com/wp-content/uploads/2024/12/03.jpg
+                        y https://2upra.com/wp-content/uploads/2024/12/02.jpg
+                        https://2upra.com/wp-content/uploads/2024/12/04.jpg
+                        esta es la imagen que va a cargar
+                        <img id="imagenbeta02" src="https://2upra.com/wp-content/uploads/2024/12/asdfasdfasdf.jpg" alt="">
+                        lo que necesito es cuando se de click en imagenbeta02, aparezca la imagen siguiente, por favor, que aparezca solo si esta cargada para que no se vea mal, y el resto cargue diferido para optimizar, al llegar al final repite, es un bucle
                         <div class="adsfkadsf">
                             <button class="start2upra boton-sesion"><a>Empezar</a></button>
                             <button class="androidbutton">
@@ -243,6 +248,51 @@ function dev()
                         </div>
                     </div>
                 </div>
+
+                <script>
+                    // Lista de URLs de las imágenes
+                    const imageUrls = [
+                        "https://2upra.com/wp-content/uploads/2024/12/asdfasdfasdf.jpg",
+                        "https://2upra.com/wp-content/uploads/2024/12/03.jpg",
+                        "https://2upra.com/wp-content/uploads/2024/12/02.jpg",
+                        "https://2upra.com/wp-content/uploads/2024/12/04.jpg"
+                    ];
+
+                    // Índice actual
+                    let currentIndex = 0;
+
+                    // Imagen en la página
+                    const imagenElement = document.getElementById("imagenbeta02");
+
+                    // Manejar el clic
+                    imagenElement.addEventListener("click", () => {
+                        // Calcular el índice de la siguiente imagen
+                        const nextIndex = (currentIndex + 1) % imageUrls.length;
+                        const nextImageUrl = imageUrls[nextIndex];
+
+                        // Crear un nuevo objeto de imagen para precargar
+                        const preloadedImage = new Image();
+                        preloadedImage.src = nextImageUrl;
+
+                        // Manejar cuando la imagen se carga completamente
+                        preloadedImage.onload = () => {
+                            // Cambiar la imagen mostrada
+                            imagenElement.src = nextImageUrl;
+                            // Actualizar el índice actual
+                            currentIndex = nextIndex;
+                        };
+                    });
+
+                    // Precargar imágenes restantes de forma diferida
+                    window.onload = () => {
+                        imageUrls.forEach((url, index) => {
+                            if (index !== currentIndex) {
+                                const img = new Image();
+                                img.src = url;
+                            }
+                        });
+                    };
+                </script>
                 <div class=" BKXAFN">
                     <div style="display: none">
                         <div class="JMIOCI">
