@@ -224,7 +224,7 @@ function dev()
             <div class="tab active GMXSUJ" id="inicio">
 
                 <div class="SOKDEOD">
-                    div
+
                     <img src="https://2upra.com/wp-content/uploads/2024/12/asdfasdfasdf.jpg" alt="">
 
                     <div class="adsfkadsf">
