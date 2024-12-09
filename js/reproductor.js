@@ -170,17 +170,18 @@ function inicializarReproductorAudio() {
         const audioSrc = audioContainer?.querySelector('audio')?.getAttribute('src');
         const postId = audioContainer?.getAttribute('data-post-id');
         const artistId = audioContainer?.getAttribute('artista-id');
-    
+
         if (!audioSrc) return;
-    
+
         document.querySelector('.TMLIWT').style.display = 'block';
-    
-        if (audio.src !== audioSrc) {
-            // Solo si la URL es diferente, procesamos el audio
+
+        if (audio.src === audioSrc) {
+            togglePlayPause();
+        } else {
             try {
                 // Primero registramos la reproducción
                 await registrarReproduccionYOyente(audioSrc, postId, artistId);
-    
+
                 // Realizamos la solicitud fetch para obtener el audio
                 const response = await fetch(audioSrc, {
                     method: 'GET',
@@ -190,66 +191,59 @@ function inicializarReproductorAudio() {
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
-    
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-    
+
                 // Creamos un blob del stream de audio
                 const blob = await response.blob();
                 const audioUrl = URL.createObjectURL(blob);
-    
-                // Envío de información a Android ANTES de actualizar audio.src
-                if (typeof Android !== 'undefined') {
-                    const title = element.querySelector('.title-audio')?.textContent || 'Título Desconocido';
-                    const author = element.querySelector('.autor-audio')?.textContent || 'Autor Desconocido';
-                    const imageUrl = element.querySelector('.cover-art img')?.src || '';
-    
-                    Android.sendAudioInfo(title, author, imageUrl, audioSrc);
-                }
-    
-                // Actualizamos el source del audio
+
+                // Actualizamos el source del audio y lo reproducimos
                 audio.src = audioUrl;
-    
-                // Intentamos reproducir y manejamos la promesa
-                audio.play()
-                    .then(() => {
-                        Cover(element);
-                        Info(element);
-                        currentAudioIndex = index;
-                    })
-                    .catch(error => {
-                        console.error('Error al reproducir el audio:', error);
-                    });
+                audio.play().then(() => {
+                    Cover(element);
+                    Info(element);
+                    currentAudioIndex = index;
+
+                    // Enviar información a Android
+                    if (typeof Android !== 'undefined') {
+                        const title = element.querySelector('.title-audio')?.textContent || 'Título Desconocido';
+                        const author = element.querySelector('.autor-audio')?.textContent || 'Autor Desconocido';
+                        const imageUrl = element.querySelector('.cover-art img')?.src || '';
+
+                        Android.sendAudioInfo(title, author, imageUrl, audioSrc);
+                        Android.updateNotificationPlaybackState('playing'); // También actualiza el estado aquí
+                    }
+                });
             } catch (error) {
                 console.error('Error al cargar el audio:', error);
             }
-        } else {
-            // Si la URL es la misma, solo alternamos play/pause
-            togglePlayPause();
         }
     }
+
     let isPlayingPromise = null;
 
-    async function togglePlayPause() {
-        try {
-            if (audio.paused) {
-                await audio.play();
-                if (typeof Android !== 'undefined') {
-                    Android.updateNotificationPlaybackState('playing');
-                }
-            } else {
-                await audio.pause();
-                if (typeof Android !== 'undefined') {
-                    Android.updateNotificationPlaybackState('paused');
-                }
+async function togglePlayPause() {
+    try {
+        if (audio.paused) {
+            await audio.play();
+            if (typeof Android !== 'undefined') {
+                Android.updateNotificationPlaybackState("playing");
             }
-            updatePlayPauseButton();
-        } catch (error) {
-            console.error('Error al toggle play/pause:', error);
-            updatePlayPauseButton();
+        } else {
+            await audio.pause();
+            if (typeof Android !== 'undefined') {
+                Android.updateNotificationPlaybackState("paused");
+            }
         }
+        updatePlayPauseButton();
+    } catch (error) {
+        console.error('Error al toggle play/pause:', error);
+        updatePlayPauseButton();
     }
+}
 
     function updatePlayPauseButton() {
         const playButton = document.querySelector('.play-btn');
@@ -269,48 +263,6 @@ function inicializarReproductorAudio() {
     function playPreviousAudio() {
         if (currentAudioIndex > 0) {
             playAudioAtIndex(currentAudioIndex - 1);
-        }
-    }
-
-    document.querySelector('.play-btn')?.addEventListener('click', () => {
-        togglePlayPause();
-    });
-    document.querySelector('.pause-btn')?.addEventListener('click', () => {
-        togglePlayPause();
-    });
-
-    function playAudio() {
-        audio
-            .play()
-            .then(() => {
-                if (typeof Android !== 'undefined') {
-                    Android.updateNotificationPlaybackState('playing');
-                }
-                updatePlayPauseButton();
-            })
-            .catch(error => {
-                console.error('Error al reproducir el audio:', error);
-            });
-    }
-
-    function pauseAudio() {
-        audio.pause();
-        if (typeof Android !== 'undefined') {
-            Android.updateNotificationPlaybackState('paused');
-        }
-        updatePlayPauseButton();
-    }
-
-    function updatePlayPauseButton() {
-        const playButton = document.querySelector('.play-btn');
-        const pauseButton = document.querySelector('.pause-btn');
-    
-        if (audio.paused) {
-            playButton.style.display = 'block';
-            pauseButton.style.display = 'none';
-        } else {
-            playButton.style.display = 'none';
-            pauseButton.style.display = 'block';
         }
     }
 
