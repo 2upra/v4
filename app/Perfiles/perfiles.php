@@ -50,7 +50,7 @@ function perfil()
                         <? echo perfilBanner($user_id); ?>
                     </div>
                     <div class="JNDKWD">
-                        <? echo publicaciones(['filtro' => 'nada', 'tab_id' => 'perfil', 'posts' => 12]);?>
+                        <? echo publicaciones(['filtro' => 'nada', 'tab_id' => 'perfil', 'posts' => 12, 'user_id' => $user_id]);?>
                     </div>
                 </div>
             </div>
