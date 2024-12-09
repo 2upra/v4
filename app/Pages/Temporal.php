@@ -190,6 +190,29 @@ function papelera()
 <?
 }
 
+function permitir_subir_apks($mime_types)
+{
+    $mime_types['apk'] = 'application/vnd.android.package-archive';
+    return $mime_types;
+}
+
+function verificar_subida_apk($data, $file, $filename, $mimes)
+{
+
+    if (substr($filename, -4) === '.apk') {
+        if (! current_user_can('manage_options')) {
+            $data['error'] = 'Lo siento, no tienes permisos para subir archivos APK.';
+        } else {
+            $data['type'] = 'application/vnd.android.package-archive';
+        }
+    }
+
+    return $data;
+}
+
+add_filter('upload_mimes', 'permitir_subir_apks');
+add_filter('wp_check_filetype_and_ext', 'verificar_subida_apk', 10, 4);
+
 function dev()
 {
     ob_start();
@@ -202,12 +225,13 @@ function dev()
 
                 <div class="SOKDEOD">
                     <img src="https://2upra.com/wp-content/uploads/2024/12/adfadfasdf.jpg" alt="">
-                    <button class="start2upra">Empezar</button>
-                    <button class="androidbutton">Android</button>
-                    <button class="sync2upra">Sync</button>
+                    <button class="start2upra boton-sesion">Empezar</button>
+                    <button class="androidbutton">
+                        <a class="no-ajax" href="https://2upra.com/wp-content/uploads/2024/12/2upra101.apk"">Android</a></button>
+                    <button class=" sync2upra" href="https://github.com/1ndoryu/sync2upra/releases/download/v1.0.2/Sync-2upra-Setup-1.0.2.exe"><a class="no-ajax">Sync Window</a></button>
                 </div>
 
-                <div class="BKXAFN">
+                <div class=" BKXAFN">
                     <div style="display: none">
                         <div class="JMIOCI">
                             <h1>Libertad música para almas libres</h1>
