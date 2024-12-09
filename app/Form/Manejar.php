@@ -84,17 +84,35 @@ function procesar_notificaciones() {
 
     foreach ($lote as $notificacion) {
 
-        $url = $notificacion['url'] ?? ''; 
+        $url = $notificacion['url'] ?? '';
+        $autor_id = $notificacion['autor_id'];
 
-        crearNotificacion(
-            $notificacion['seguidor_id'],
-            $notificacion['mensaje'],
-            false,
-            $notificacion['post_id'],
-            $notificacion['titulo'],
-            $url,
-            $notificacion['autor_id'] // Usar el ID del autor almacenado
-        );
+        if ($autor_id == 1) {
+            // Enviar a todos los usuarios
+            $usuarios = get_users();
+            foreach ($usuarios as $usuario) {
+                crearNotificacion(
+                    $usuario->ID, // Usamos el ID del usuario como seguidor_id
+                    $notificacion['mensaje'],
+                    false,
+                    $notificacion['post_id'],
+                    $notificacion['titulo'],
+                    $url,
+                    $autor_id
+                );
+            }
+        } else {
+            // Comportamiento original - enviar a seguidores
+            crearNotificacion(
+                $notificacion['seguidor_id'],
+                $notificacion['mensaje'],
+                false,
+                $notificacion['post_id'],
+                $notificacion['titulo'],
+                $url,
+                $autor_id
+            );
+        }
     }
 
     update_option('notificaciones_pendientes', $notificaciones_pendientes);
@@ -105,9 +123,10 @@ function procesar_notificaciones() {
     }
 }
 
+
 add_filter('cron_schedules', function($schedules) {
     $schedules['minute'] = [
-        'interval' => 5, // cambiado a 5 segundos para pruebas mas rapidas, cambiar a 60 para un minuto real
+        'interval' => 15, 
         'display'  => __('Cada minuto')
     ];
     return $schedules;
