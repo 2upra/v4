@@ -71,7 +71,7 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish') {
 add_action('wp_enqueue_notifications', 'procesar_notificaciones');
 
 function procesar_notificaciones() {
-    error_log('Cron wp_enqueue_notifications ejecutado.'); // Agregar error_log para el cron
+    error_log('Cron wp_enqueue_notifications ejecutado.');
 
     $notificaciones_pendientes = get_option('notificaciones_pendientes', []);
     if (empty($notificaciones_pendientes)) {
@@ -79,24 +79,24 @@ function procesar_notificaciones() {
         return;
     }
 
-    // Procesar un lote de notificaciones (por ejemplo, 5)
     $lote = array_splice($notificaciones_pendientes, 0, 5);
 
     foreach ($lote as $notificacion) {
+        // Verificar si la clave 'url' existe
+        $url = $notificacion['url'] ?? ''; // Asigna una cadena vacía si no existe
+
         crearNotificacion(
             $notificacion['seguidor_id'],
             $notificacion['mensaje'],
             false,
             $notificacion['post_id'],
             $notificacion['titulo'],
-            $notificacion['url'] // Pasar la URL a crearNotificacion
+            $url // Pasar la URL o una cadena vacía
         );
     }
 
-    // Guardar las notificaciones restantes
     update_option('notificaciones_pendientes', $notificaciones_pendientes);
 
-    // Si ya no quedan notificaciones, elimina la tarea programada
     if (empty($notificaciones_pendientes)) {
         error_log('No quedan notificaciones pendientes. Desactivando el cron.');
         wp_clear_scheduled_hook('wp_enqueue_notifications');
