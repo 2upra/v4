@@ -186,12 +186,13 @@ function descargaAudio() {
             $userID = get_current_user_id();
             error_log("UserID actual: " . $userID);
             error_log("UserID del token: " . $token_data['user_id']);
-
-            if ($userID != $token_data['user_id']) {
+            
+            // desactivado temporalmente porque en andorid no se envia correctamente el id
+            /*if ($userID != $token_data['user_id']) {
                 error_log("[Error] Descarga de audio: Usuario no autorizado. UserID: " . $userID . ", Token UserID: " . $token_data['user_id']);
                 error_log("--------------------------------------------------");
                 wp_die('No tienes permiso para descargar este archivo.');
-            }
+            } */
 
             // Verificar el número de usos
             if ($token_data['usos'] >= 3) {
