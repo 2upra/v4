@@ -1,7 +1,7 @@
 //////////////////////////////////////////////
 //ACTIVAR O DESACTIVAR LOGS
-const A06 = false; // Cambia a true para activar los logs
-const log06 = A06 ? console.log : function () {};
+const A06 = true; // Cambia a true para activar los logs
+const log06 = A06 ? log06 : function () {};
 //////////////////////////////////////////////
 
 function inicializarReproductorAudio() {
@@ -90,13 +90,16 @@ function inicializarReproductorAudio() {
     let currentAudioIndex = -1;
 
     function inicializarEventosReproductor() {
+        log06("inicializarEventosReproductor ejecutado");
         document.addEventListener('click', event => {
             const clickedElement = event.target;
-
+            log06("Elemento clickeado:", clickedElement);
+    
             // Manejo del reproductor de audio
             const audioContainer = clickedElement.closest('.EDYQHV');
             if (audioContainer && !isExcludedElement(clickedElement)) {
                 const index = Array.from(document.querySelectorAll('.EDYQHV')).indexOf(audioContainer);
+                log06("Reproduciendo audio desde el elemento, index:", index);
                 playAudioFromElement(audioContainer, index);
                 event.stopPropagation();
                 return;
@@ -139,22 +142,53 @@ function inicializarReproductorAudio() {
     });
 
     function setupControls() {
-        document.querySelector('.next-btn')?.addEventListener('click', playNextAudio);
-        document.querySelector('.prev-btn')?.addEventListener('click', playPreviousAudio);
-        document.querySelector('.play-btn')?.addEventListener('click', togglePlayPause);
-        document.querySelector('.pause-btn')?.addEventListener('click', togglePlayPause);
+        log06("Configurando controles");
+        document.querySelector('.next-btn')?.addEventListener('click', () => {
+            log06("Botón siguiente clickeado");
+            playNextAudio();
+        });
+        document.querySelector('.prev-btn')?.addEventListener('click', () => {
+            log06("Botón anterior clickeado");
+            playPreviousAudio();
+        });
+        const playButton = document.querySelector('.play-btn');
+        const pauseButton = document.querySelector('.pause-btn');
+    
+        if (playButton) {
+            playButton.addEventListener('click', () => {
+                log06("Botón play clickeado");
+                togglePlayPause();
+            });
+        }
+    
+        if (pauseButton) {
+            pauseButton.addEventListener('click', () => {
+                log06("Botón pause clickeado");
+                togglePlayPause();
+            });
+        }
     }
 
     function setupProgressBar() {
+        log06("Configurando barra de progreso");
         const progressContainer = document.querySelector('.progress-container');
-        progressContainer?.addEventListener('click', updateProgress);
-        audio.addEventListener('timeupdate', updateProgressBar);
+        progressContainer?.addEventListener('click', (e) => {
+            log06("Barra de progreso clickeada");
+            updateProgress(e);
+        });
+        audio.addEventListener('timeupdate', () => {
+            log06("Evento timeupdate disparado");
+            updateProgressBar();
+        });
     }
+    
 
     function updateProgress(e) {
+        log06("Actualizando progreso");
         const rect = e.currentTarget.getBoundingClientRect();
         const clickedPercentage = (e.clientX - rect.left) / rect.width;
         audio.currentTime = audio.duration * clickedPercentage;
+        log06("Nuevo currentTime:", audio.currentTime);
     }
 
     function updateProgressBar() {
@@ -165,88 +199,97 @@ function inicializarReproductorAudio() {
         }
     }
 
-    async function playAudioFromElement(element, index) {
-        const audioContainer = element.querySelector('.audio-container');
-        const audioSrc = audioContainer?.querySelector('audio')?.getAttribute('src');
-        const postId = audioContainer?.getAttribute('data-post-id');
-        const artistId = audioContainer?.getAttribute('artista-id');
-    
-        if (!audioSrc) return;
-    
-        document.querySelector('.TMLIWT').style.display = 'block';
-    
-        if (audio.src === audioSrc) {
-            togglePlayPause();
-        } else {
-            try {
-                // Primero registramos la reproducción
-                await registrarReproduccionYOyente(audioSrc, postId, artistId);
-    
-                // Realizamos la solicitud fetch para obtener el audio
-                const response = await fetch(audioSrc, {
-                    method: 'GET',
-                    credentials: 'same-origin',
-                    headers: {
-                        'X-WP-Nonce': audioSettings.nonce,
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-    
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+ 
+function updateProgressBar() {
+    const progressBar = document.querySelector('.progress-bar');
+    if (progressBar) {
+        const value = audio.currentTime > 0 ? (100 / audio.duration) * audio.currentTime : 0;
+        progressBar.style.width = `${value}%`;
+        log06("Progreso de la barra actualizado:", value);
+    }
+}
+
+async function playAudioFromElement(element, index) {
+    const audioContainer = element.querySelector('.audio-container');
+    const audioSrc = audioContainer?.querySelector('audio')?.getAttribute('src');
+    const postId = audioContainer?.getAttribute('data-post-id');
+    const artistId = audioContainer?.getAttribute('artista-id');
+
+    if (!audioSrc) {
+        log06("No se encontró audioSrc");
+        return;
+    }
+
+    log06("Mostrando reproductor");
+    document.querySelector('.TMLIWT').style.display = 'block';
+
+    if (audio.src === audioSrc) {
+        log06("Mismo audio, toggle play/pause");
+        togglePlayPause();
+    } else {
+        try {
+            log06("Registrando reproducción y oyente");
+            await registrarReproduccionYOyente(audioSrc, postId, artistId);
+
+            log06("Obteniendo audio desde:", audioSrc);
+            const response = await fetch(audioSrc, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'X-WP-Nonce': audioSettings.nonce,
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
-    
-                // Creamos un blob del stream de audio
-                const blob = await response.blob();
-                const audioUrl = URL.createObjectURL(blob);
-    
-                // Actualizamos el source del audio y lo reproducimos
-                audio.src = audioUrl;
-                audio
-                    .play()
-                    .then(() => {
-                        Cover(element);
-                        Info(element); // Asegúrate de que Info(element) se llama aquí
-                        currentAudioIndex = index;
-                    })
-                    .catch(error => {
-                        console.error('Error al reproducir el audio:', error);
-                    });
-            } catch (error) {
-                console.error('Error al cargar el audio:', error);
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+
+            const blob = await response.blob();
+            const audioUrl = URL.createObjectURL(blob);
+
+            audio.src = audioUrl;
+            log06("Reproduciendo audio");
+            await audio.play();
+            Cover(element);
+            Info(element);
+            currentAudioIndex = index;
+        } catch (error) {
+            console.error('Error al cargar el audio:', error);
         }
     }
+}
 
     let isPlayingPromise = null;
     
     async function togglePlayPause() {
+        log06("togglePlayPause ejecutado, estado actual:", audio.paused ? "paused" : "playing");
         try {
             if (audio.paused) {
+                log06("Intentando reproducir");
                 await audio.play();
+                log06("Reproducción iniciada");
             } else {
+                log06("Intentando pausar");
                 await audio.pause();
+                log06("Reproducción pausada");
             }
-            updatePlayPauseButton();
         } catch (error) {
-            console.error('Error al toggle play/pause:', error);
+            console.error('Error en togglePlayPause:', error);
+        } finally {
             updatePlayPauseButton();
         }
     }
-
-    /*
-    aqui por ejemplo como uso esto
-       if (typeof Android !== 'undefined') {
-        Android.sendAudioInfo(title, author, imageUrl, audioUrl);
-    }
-    */
+    
 
     function updatePlayPauseButton() {
+        log06("Actualizando botones de play/pause");
         const playButton = document.querySelector('.play-btn');
         const pauseButton = document.querySelector('.pause-btn');
         if (playButton && pauseButton) {
             playButton.style.display = audio.paused ? 'block' : 'none';
             pauseButton.style.display = audio.paused ? 'none' : 'block';
+            log06("Botones actualizados, estado:", audio.paused ? "paused" : "playing");
         }
     }
 
