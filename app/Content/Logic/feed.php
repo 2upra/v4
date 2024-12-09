@@ -8,7 +8,8 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             return ['post_ids' => [], 'post_not_in' => []];
         }
 
-        // Manejo de posts similares
+        error_log("Identifier recibido obtenerFeedPersonalizado: " . $identifier);
+
         if ($similar_to) {
             $resultado_similares = obtenerPostsSimilares($current_user_id, $similar_to);
             $posts_personalizados = $resultado_similares['posts_personalizados'];
@@ -23,6 +24,8 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             $cache_data = obtenerCache($cache_key);
 
             if ($cache_data) {
+            error_log("Cache utilizada: " . $cache_key);
+
                 guardarLog("Usuario ID: $current_user_id usando caché para feed personalizado");
                 $posts_personalizados = $cache_data['posts'];
             } else {
