@@ -15,8 +15,7 @@ function publicacionAjax()
     $colec = isset($_POST['colec']) ? intval($_POST['colec']) : null;
     $idea = isset($_POST['idea']) ? filter_var($_POST['idea'], FILTER_VALIDATE_BOOLEAN) : false;
 
-
-    error_log("[publicacionAjax] identifier: " . $data_identifier);
+    error_log("[publicacionAjax] Received identifier: " . $data_identifier);
 
     publicaciones(
         array(
@@ -43,10 +42,6 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         $user_id = obtenerUserId($is_ajax);
         $current_user_id = get_current_user_id();
 
-        if (!$current_user_id) {
-            // error_log("[publicaciones] Advertencia: No se encontró ID de usuario");
-        }
-
         $defaults = [
             'filtro' => '',
             'tab_id' => '',
@@ -57,9 +52,12 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             'colec' => null,
             'idea' => null,
             'perfil' => null,
+            'identifier' => '', // Add identifier to defaults
         ];
 
         $args = array_merge($defaults, $args);
+        
+        error_log("[publicaciones] Identifier after merge: " . $args['identifier']);
 
         if (filter_var($args['idea'], FILTER_VALIDATE_BOOLEAN)) {
             $query_args = manejarIdea($args, $paged);
@@ -70,11 +68,17 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         } else if (!empty($args['colec']) && is_numeric($args['colec'])) {
             $query_args = manejarColeccion($args, $paged);
             if (!$query_args) {
+                 error_log("[publicaciones] Error al procesar coleccion.");
                 return false;
             }
         } else {
             $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
         }
+
+        if (isset($query_args['post__not_in'])) {
+            error_log("[publicaciones] Excluded posts: " . implode(",", $query_args['post__not_in']));
+        }
+        
 
         $output = procesarPublicaciones($query_args, $args, $is_ajax);
 
@@ -89,7 +93,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         return false;
     }
 }
-//manejar ideas es disintas para cada usuario, como se distingue? y si quiero borrar la cache en un evento, como hago si el elemento paged me lo complica 
+
 function manejarIdea($args, $paged)
 {
     // Obtener el ID del usuario para diferenciar la caché por usuario
