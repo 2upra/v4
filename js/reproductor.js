@@ -27,19 +27,6 @@ function inicializarReproductorAudio() {
         }
     }
 
-    function checkAndroidInterface(container) {
-        if (typeof Android !== 'undefined') {
-            // La interfaz Android está disponible, puedes ejecutar Info()
-
-                Info(container);
-
-        } else {
-            // La interfaz Android no está disponible, espera un poco y vuelve a intentar
-            console.log("panjamon: La interfaz Android no está lista, reintentando...");
-            setTimeout(checkAndroidInterface, 500); // Reintenta después de 500ms
-        }
-    }
-
     function Info(container) {
         const infoDiv = container.querySelector('.CPQBEN');
         if (infoDiv) {
@@ -47,10 +34,6 @@ function inicializarReproductorAudio() {
             const content = infoDiv.querySelector('.CPQBCO').textContent.trim();
             const imgElement = infoDiv.querySelector('img');
             const imageUrl = imgElement ? imgElement.getAttribute('src') : ''; // Extrae la URL de la imagen
-    
-            Android.log('panjamon Info - Author:', author);
-            Android.log('panjamon Info - Content:', content);
-            Android.log('panjamon Info - Image URL:', imageUrl);
     
             const shortAuthor = author.length > 40 ? author.slice(0, 40) + '...' : author;
             const shortTitle = content.length > 40 ? content.slice(0, 40) + '...' : content;
@@ -60,18 +43,15 @@ function inicializarReproductorAudio() {
             if (titleElement) titleElement.textContent = shortTitle;
             if (authorElement) authorElement.textContent = shortAuthor;
     
-            Android.log('panjamon Info - Updated title and author:', shortTitle, shortAuthor);
+            log06('Updated title and author:', shortTitle, shortAuthor);
     
             // Envía la información a Android
             if (typeof Android !== 'undefined') {
                 const audioSrc = container.querySelector('.audio-container audio')?.getAttribute('src');
-                Android.log('panjamon Info - Sending to Android: title=' + shortTitle + ', author=' + shortAuthor + ', imageUrl=' + imageUrl + ', audioSrc=' + audioSrc);
                 Android.sendAudioInfo(shortTitle, shortAuthor, imageUrl, audioSrc);
-            } else {
-                Android.log('panjamon Info - Android object not found.');
             }
         } else {
-            Android.log('panjamon Info - Info div not found');
+            log06('Info div not found');
         }
     }
 
@@ -286,8 +266,7 @@ function inicializarReproductorAudio() {
                 isPlayingPromise
                     .then(() => {
                         Cover(audioInfo.element);
-                        checkAndroidInterface(audioInfo.element);
-                        //Info(audioInfo.element);
+                        Info(audioInfo.element);
                         currentAudioIndex = index;
                         updatePlayPauseButton();
                     })
