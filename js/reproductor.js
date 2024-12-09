@@ -28,30 +28,44 @@ function inicializarReproductorAudio() {
     }
 
     function Info(container) {
-        const infoDiv = container.querySelector('.CPQBEN');
-        if (infoDiv) {
-            const author = infoDiv.querySelector('.CPQBAU').textContent.trim();
-            const content = infoDiv.querySelector('.CPQBCO').textContent.trim();
+        try {
+            const infoDiv = container.querySelector('.CPQBEN'); // Contenedor principal de la información
+            if (!infoDiv) {
+                log06('Info div not found');
+                return; // Si no se encuentra el contenedor, termina la ejecución
+            }
+
+            // Obtén los datos principales
+            const author = infoDiv.querySelector('.CPQBAU')?.textContent?.trim() || 'Autor desconocido';
+            const content = infoDiv.querySelector('.CPQBCO')?.textContent?.trim() || 'Sin título';
             const imgElement = infoDiv.querySelector('img');
-            const imageUrl = imgElement ? imgElement.getAttribute('src') : ''; // Extrae la URL de la imagen
-    
+            const imageUrl = imgElement?.getAttribute('src') || ''; // URL de la imagen o cadena vacía si no existe
+
+            // Ajustar longitud de los textos si son demasiado largos
             const shortAuthor = author.length > 40 ? author.slice(0, 40) + '...' : author;
             const shortTitle = content.length > 40 ? content.slice(0, 40) + '...' : content;
+
+            // Actualiza los elementos del DOM
             const titleElement = document.querySelector('.XKPMGD .tituloR');
             const authorElement = document.querySelector('.XKPMGD .AutorR');
-    
             if (titleElement) titleElement.textContent = shortTitle;
             if (authorElement) authorElement.textContent = shortAuthor;
-    
+
             log06('Updated title and author:', shortTitle, shortAuthor);
-    
-            // Envía la información a Android
-            if (typeof Android !== 'undefined') {
-                const audioSrc = container.querySelector('.audio-container audio')?.getAttribute('src');
+
+            // Obtén la URL del audio
+            const audioSrc = container.querySelector('.audio-container audio')?.getAttribute('src') || '';
+
+            // Envía la información a Android si está disponible
+            if (typeof Android !== 'undefined' && typeof Android.sendAudioInfo === 'function') {
                 Android.sendAudioInfo(shortTitle, shortAuthor, imageUrl, audioSrc);
+                log06('Sent audio info to Android:', {shortTitle, shortAuthor, imageUrl, audioSrc});
+                Android.updatePlaybackState('playing'); 
+            } else {
+                log06('Android object or sendAudioInfo method not found');
             }
-        } else {
-            log06('Info div not found');
+        } catch (error) {
+            log06('Error in Info function:', error.message);
         }
     }
 
@@ -170,18 +184,18 @@ function inicializarReproductorAudio() {
         const audioSrc = audioContainer?.querySelector('audio')?.getAttribute('src');
         const postId = audioContainer?.getAttribute('data-post-id');
         const artistId = audioContainer?.getAttribute('artista-id');
-    
+
         if (!audioSrc) return;
-    
+
         document.querySelector('.TMLIWT').style.display = 'block';
-    
+
         if (audio.src === audioSrc) {
             togglePlayPause();
         } else {
             try {
                 // Primero registramos la reproducción
                 await registrarReproduccionYOyente(audioSrc, postId, artistId);
-    
+
                 // Realizamos la solicitud fetch para obtener el audio
                 const response = await fetch(audioSrc, {
                     method: 'GET',
@@ -191,15 +205,15 @@ function inicializarReproductorAudio() {
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 });
-    
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-    
+
                 // Creamos un blob del stream de audio
                 const blob = await response.blob();
                 const audioUrl = URL.createObjectURL(blob);
-    
+
                 // Actualizamos el source del audio y lo reproducimos
                 audio.src = audioUrl;
                 audio
@@ -219,46 +233,85 @@ function inicializarReproductorAudio() {
     }
 
     let isPlayingPromise = null;
-    
+
     async function togglePlayPause() {
         try {
             if (audio.paused) {
                 await audio.play();
+                notifyAndroidPlaybackState('playing');
             } else {
                 await audio.pause();
+                notifyAndroidPlaybackState('paused');
             }
-            updatePlayPauseButton();
         } catch (error) {
-            console.error('Error al toggle play/pause:', error);
+            console.error('Error al alternar play/pause:', error);
+        } finally {
             updatePlayPauseButton();
         }
     }
-
-    /*
-    aqui por ejemplo como uso esto
-       if (typeof Android !== 'undefined') {
-        Android.sendAudioInfo(title, author, imageUrl, audioUrl);
-    }
-    */
 
     function updatePlayPauseButton() {
         const playButton = document.querySelector('.play-btn');
         const pauseButton = document.querySelector('.pause-btn');
         if (playButton && pauseButton) {
-            playButton.style.display = audio.paused ? 'block' : 'none';
-            pauseButton.style.display = audio.paused ? 'none' : 'block';
+            const isPaused = audio.paused;
+            playButton.style.display = isPaused ? 'block' : 'none';
+            pauseButton.style.display = isPaused ? 'none' : 'block';
         }
     }
 
     function playNextAudio() {
         if (currentAudioIndex < audioList.length - 1) {
             playAudioAtIndex(currentAudioIndex + 1);
+        } else {
+            console.log('Ya estás en la última pista.');
         }
     }
 
     function playPreviousAudio() {
         if (currentAudioIndex > 0) {
             playAudioAtIndex(currentAudioIndex - 1);
+        } else {
+            console.log('Ya estás en la primera pista.');
+        }
+    }
+
+    function playAudioAtIndex(index) {
+        try {
+            if (index < 0 || index >= audioList.length) {
+                console.warn(`Índice de audio inválido: ${index}`);
+                return;
+            }
+            currentAudioIndex = index;
+            audio.src = audioList[index]; // Cambia la fuente del audio
+            audio
+                .play()
+                .then(() => {
+                    updatePlayPauseButton();
+                    notifyAndroidPlaybackState('playing');
+                    notifyAndroidCurrentAudio(index);
+                })
+                .catch(error => {
+                    console.error('Error al reproducir el audio:', error);
+                });
+        } catch (error) {
+            console.error('Error en playAudioAtIndex:', error);
+        }
+    }
+
+    function notifyAndroidPlaybackState(state) {
+        if (typeof Android !== 'undefined' && typeof Android.onPlaybackStateChange === 'function') {
+            Android.onPlaybackStateChange(state); // Ejemplo: 'playing', 'paused', etc.
+            console.log(`Estado de reproducción enviado a Android: ${state}`);
+        }
+    }
+
+    function notifyAndroidCurrentAudio(index) {
+        if (typeof Android !== 'undefined' && typeof Android.onCurrentAudioChange === 'function') {
+            const audioInfo = audioList[index] || {};
+            const {title = 'Sin título', author = 'Desconocido', imageUrl = '', src = ''} = audioInfo;
+            Android.onCurrentAudioChange(title, author, imageUrl, src);
+            console.log(`Información de audio enviada a Android: ${title}, ${author}`);
         }
     }
 
