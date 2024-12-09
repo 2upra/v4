@@ -15,7 +15,7 @@ function publicacionAjax()
     $colec = isset($_POST['colec']) ? intval($_POST['colec']) : null;
     $idea = isset($_POST['idea']) ? filter_var($_POST['idea'], FILTER_VALIDATE_BOOLEAN) : false;
 
-    error_log("[publicacionAjax] Received identifier: " . $data_identifier);
+    //error_log("[publicacionAjax] Received identifier: " . $data_identifier);
 
     publicaciones(
         array(
@@ -59,7 +59,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
         if (!$is_ajax && isset($_GET['busqueda'])) {
             $args['identifier'] = sanitize_text_field($_GET['busqueda']);
-            error_log("[publicaciones] Identifier from URL: " . $args['identifier']);
+            //error_log("[publicaciones] Identifier from URL: " . $args['identifier']);
         }
 
         $user_id = isset($args['user_id']) ? $args['user_id'] : '';
@@ -70,27 +70,27 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
         $args = array_merge($defaults, $args);
 
-        error_log("[publicaciones] Identifier after merge: " . $args['identifier']);
+        //error_log("[publicaciones] Identifier after merge: " . $args['identifier']);
 
         if (filter_var($args['idea'], FILTER_VALIDATE_BOOLEAN)) {
             $query_args = manejarIdea($args, $paged);
             if (!$query_args) {
-                error_log("[publicaciones] Error al procesar ideas.");
+                //error_log("[publicaciones] Error al procesar ideas.");
                 return false;
             }
         } else if (!empty($args['colec']) && is_numeric($args['colec'])) {
             $query_args = manejarColeccion($args, $paged);
             if (!$query_args) {
-                error_log("[publicaciones] Error al procesar coleccion.");
+                //error_log("[publicaciones] Error al procesar coleccion.");
                 return false;
             }
         } else {
-            error_log("[publicaciones] ejecutando configuracionQueryArgs " . $args['identifier']);
+            //error_log("[publicaciones] ejecutando configuracionQueryArgs " . $args['identifier']);
             $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id, $tipoUsuario);
         }
 
         if (isset($query_args['post__not_in'])) {
-            error_log("[publicaciones] Excluded posts: " . implode(",", $query_args['post__not_in']));
+            //error_log("[publicaciones] Excluded posts: " . implode(",", $query_args['post__not_in']));
         }
 
         $output = procesarPublicaciones($query_args, $args, $is_ajax);
@@ -102,7 +102,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
         return $output;
     } catch (Exception $e) {
-        error_log("[publicaciones] Error crítico: " . $e->getMessage());
+        //error_log("[publicaciones] Error crítico: " . $e->getMessage());
         return false;
     }
 }
@@ -121,8 +121,8 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id, $tipo
         // Moviendo la asignación de $identifier antes del condicional $user_id
         $identifier = isset($args['identifier']) ? $args['identifier'] : '';
 
-        error_log("[configuracionQueryArgs] Identifier: " . $identifier);
-        error_log("[configuracionQueryArgs] user_id: " . $user_id);
+        //error_log("[configuracionQueryArgs] Identifier: " . $identifier);
+        //error_log("[configuracionQueryArgs] user_id: " . $user_id);
 
         /*
         [09-Dec-2024 08:59:50 UTC] [configuracionQueryArgs] Identifier: test2
@@ -143,11 +143,11 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id, $tipo
             ];
 
             $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
-            error_log("[configuracionQueryArgs] User ID found, returning early.");
+            //error_log("[configuracionQueryArgs] User ID found, returning early.");
             return $query_args;
         }
 
-        error_log("[configuracionQueryArgs] No user ID provided, proceeding with general query.");
+        //error_log("[configuracionQueryArgs] No user ID provided, proceeding with general query.");
 
         $posts = $args['posts'];
         $similar_to = $args['similar_to'] ?? null;
@@ -156,30 +156,30 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id, $tipo
         $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
 
         if ($filtroTiempo === false) {
-            error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
+            //error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
         }
 
 
 
-        error_log("[configuracionQueryArgs] Calling construirQueryArgs with identifier: " . $identifier);
+        //error_log("[configuracionQueryArgs] Calling construirQueryArgs with identifier: " . $identifier);
         $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario);
-        error_log("[configuracionQueryArgs] query args built: " . print_r($query_args, true));
+        //error_log("[configuracionQueryArgs] query args built: " . print_r($query_args, true));
 
         if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
-            error_log("[configuracionQueryArgs] Applying user-specific filters if not 'Fan'.");
+            //error_log("[configuracionQueryArgs] Applying user-specific filters if not 'Fan'.");
             if ($tipoUsuario !== 'Fan') {
                 $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
-                error_log("[configuracionQueryArgs] User-specific filters applied.");
+                //error_log("[configuracionQueryArgs] User-specific filters applied.");
             }
         }
 
-        error_log("[configuracionQueryArgs] Applying global filters.");
+        //error_log("[configuracionQueryArgs] Applying global filters.");
         $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id, $tipoUsuario);
-        error_log("[configuracionQueryArgs] Global filters applied: " . print_r($query_args, true));
+        //error_log("[configuracionQueryArgs] Global filters applied: " . print_r($query_args, true));
 
         return $query_args;
     } catch (Exception $e) {
-        error_log("[configuracionQueryArgs] Error crítico: " . $e->getMessage());
+        //error_log("[configuracionQueryArgs] Error crítico: " . $e->getMessage());
         return false;
     }
 }
@@ -202,7 +202,7 @@ function manejarIdea($args, $paged)
     guardarLog("Cargando más ideas desde la base de datos para el usuario {$user_id}");
     $query_args = procesarIdeas($args, $paged);
     if (!$query_args) {
-        error_log("[manejarIdea] Error al procesar ideas.");
+        //error_log("[manejarIdea] Error al procesar ideas.");
         return false;
     }
 
@@ -256,7 +256,7 @@ function manejarColeccion($args, $paged)
 
         return $query_args;
     } else {
-        error_log("[manejarColeccion] El meta 'samples' no es un array válido.");
+        //error_log("[manejarColeccion] El meta 'samples' no es un array válido.");
         return false;
     }
 }
@@ -268,7 +268,7 @@ function procesarIdeas($args, $paged)
 
         // Validar que 'colec' es un número válido
         if (empty($args['colec']) || !is_numeric($args['colec'])) {
-            error_log("[procesarIdeas] 'colec' no es válido. Valor recibido: " . print_r($args['colec'], true));
+            //error_log("[procesarIdeas] 'colec' no es válido. Valor recibido: " . print_r($args['colec'], true));
             //guardarLog("[procesarIdeas] 'colec' no es válido. Valor recibido: " . print_r($args['colec'], true));
             return false;
         }
@@ -322,7 +322,7 @@ function procesarIdeas($args, $paged)
                             //guardarLog("[procesarIdeas] Cache guardado para post_id $post_id con posts: " . implode(', ', $posts_similares));
                         }
                     } else {
-                        error_log("[procesarIdeas] No se pudieron calcular posts similares para post_id $post_id.");
+                        //error_log("[procesarIdeas] No se pudieron calcular posts similares para post_id $post_id.");
                         //guardarLog("[procesarIdeas] No se pudieron calcular posts similares para post_id $post_id.");
                         continue;
                     }
@@ -396,12 +396,12 @@ function procesarIdeas($args, $paged)
 
             return $query_args;
         } else {
-            error_log("[procesarIdeas] El meta 'samples' no es un array válido. Valor recibido: " . print_r($samples_meta, true));
+            //error_log("[procesarIdeas] El meta 'samples' no es un array válido. Valor recibido: " . print_r($samples_meta, true));
             //guardarLog("[procesarIdeas] El meta 'samples' no es un array válido. Valor recibido: " . print_r($samples_meta, true));
             return false;
         }
     } catch (Exception $e) {
-        error_log("[procesarIdeas] Error crítico: " . $e->getMessage());
+        //error_log("[procesarIdeas] Error crítico: " . $e->getMessage());
         //guardarLog("[procesarIdeas] Error crítico: " . $e->getMessage());
         return false;
     }
@@ -414,13 +414,13 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 
     // Verificar que query_args no esté vacío
     if (empty($query_args)) {
-        error_log('Query args está vacío en procesarPublicaciones');
+        //error_log('Query args está vacío en procesarPublicaciones');
         return '';
     }
 
     // Asegurarse de que query_args sea un array
     if (!is_array($query_args)) {
-        error_log('Query args no es un array en procesarPublicaciones');
+        //error_log('Query args no es un array en procesarPublicaciones');
         return '';
     }
 
@@ -430,17 +430,17 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 
         // Verificar si la consulta es válida
         if (!is_a($query, 'WP_Query')) {
-            error_log('Error al crear WP_Query');
+            //error_log('Error al crear WP_Query');
             return '';
         }
     } catch (Exception $e) {
-        error_log('Error en WP_Query: ' . $e->getMessage());
+        //error_log('Error en WP_Query: ' . $e->getMessage());
         return '';
     }
 
     // Verificar que $query sea válido antes de continuar
     if (!is_object($query) || !method_exists($query, 'have_posts')) {
-        error_log('Query inválido en procesarPublicaciones');
+        //error_log('Query inválido en procesarPublicaciones');
         return '';
     }
 
@@ -571,7 +571,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     try {
         global $wpdb;
         if (!$wpdb) {
-            error_log("[construirQueryArgs] Error crítico: No se pudo acceder a la base de datos wpdb");
+            //error_log("[construirQueryArgs] Error crítico: No se pudo acceder a la base de datos wpdb");
             return false;
         }
 
@@ -586,7 +586,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
         if (!empty($identifier)) {
             $query_args = prefiltrarIdentifier($identifier, $query_args);
             if (!$query_args) {
-                error_log("[construirQueryArgs] Error: Falló el filtrado por identifier: " . $identifier);
+                //error_log("[construirQueryArgs] Error: Falló el filtrado por identifier: " . $identifier);
             }
         }
 
@@ -594,13 +594,13 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
         if ($args['post_type'] === 'social_post' && (!isset($args['filtro']) || $args['filtro'] !== 'rola')) {
             $query_args = ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts, $tipoUsuario);
             if (!$query_args) {
-                error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
+                //error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
             }
         }
 
         return $query_args;
     } catch (Exception $e) {
-        error_log("[construirQueryArgs] Error crítico: " . $e->getMessage());
+        //error_log("[construirQueryArgs] Error crítico: " . $e->getMessage());
         return false;
     }
 }
@@ -649,7 +649,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
         }
     }
 
-    error_log("[ordenamientoQuery] Identifier: " . $identifier);
+    //error_log("[ordenamientoQuery] Identifier: " . $identifier);
 
 
     try {
@@ -708,7 +708,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                 break;
 
             default: // Feed personalizado
-                error_log("[ordenamientoQuery] Identifier: " . $identifier);
+                //error_log("[ordenamientoQuery] Identifier: " . $identifier);
 
 
                 $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);

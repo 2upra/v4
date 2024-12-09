@@ -1,18 +1,17 @@
 <?
 
-# Paso 1 
 function crearPost($tipoPost = 'social_post', $estadoPost = 'publish') {
     $contenido = sanitize_textarea_field($_POST['textoNormal'] ?? '');
     $tags = sanitize_text_field($_POST['tags'] ?? '');
-    
+
     if (empty($contenido)) {
         error_log('Error en crearPost: El contenido no puede estar vacío.');
         return new WP_Error('empty_content', 'El contenido no puede estar vacío.');
     }
-    
+
     $titulo = wp_trim_words($contenido, 15, '...');
     $autor = get_current_user_id();
-    
+
     // Insertar el post
     $postId = wp_insert_post([
         'post_title'   => $titulo,
@@ -21,12 +20,12 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish') {
         'post_author'  => $autor,
         'post_type'    => $tipoPost,
     ]);
-    
+
     if (is_wp_error($postId)) {
         error_log('Error en crearPost: Error al insertar el post. Detalles: ' . $postId->get_error_message());
         return $postId;
     }
-    
+
     // Actualizar metadatos (tags)
     if (!empty($tags)) {
         if (update_post_meta($postId, 'tagsUsuario', $tags) === false) {
@@ -40,13 +39,17 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish') {
         $autor_nombre = get_the_author_meta('display_name', $autor);
         $contenido_corto = wp_trim_words($contenido, 10, '...');
 
+        // Obtener la URL del post
+        $post_url = get_permalink($postId);
+
         $notificaciones = get_option('notificaciones_pendientes', []);
         foreach ($seguidores as $seguidor_id) {
             $notificaciones[] = [
                 'seguidor_id' => $seguidor_id,
                 'mensaje' => "{$autor_nombre} ha publicado: \"{$contenido_corto}\"",
                 'post_id' => $postId,
-                'titulo' => 'Nueva publicación'
+                'titulo' => 'Nueva publicación',
+                'url'  => $post_url // Agregar la URL del post
             ];
         }
 
@@ -59,19 +62,23 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish') {
     } else {
         error_log("El usuario $autor no tiene seguidores o la lista de seguidores no es válida.");
     }
-    
+
     return $postId;
 }
+
 
 
 add_action('wp_enqueue_notifications', 'procesar_notificaciones');
 
 function procesar_notificaciones() {
+    error_log('Cron wp_enqueue_notifications ejecutado.'); // Agregar error_log para el cron
+
     $notificaciones_pendientes = get_option('notificaciones_pendientes', []);
     if (empty($notificaciones_pendientes)) {
+        error_log('No hay notificaciones pendientes.');
         return;
     }
-    
+
     // Procesar un lote de notificaciones (por ejemplo, 5)
     $lote = array_splice($notificaciones_pendientes, 0, 5);
 
@@ -82,7 +89,7 @@ function procesar_notificaciones() {
             false,
             $notificacion['post_id'],
             $notificacion['titulo'],
-            null
+            $notificacion['url'] // Pasar la URL a crearNotificacion
         );
     }
 
@@ -91,9 +98,18 @@ function procesar_notificaciones() {
 
     // Si ya no quedan notificaciones, elimina la tarea programada
     if (empty($notificaciones_pendientes)) {
+        error_log('No quedan notificaciones pendientes. Desactivando el cron.');
         wp_clear_scheduled_hook('wp_enqueue_notifications');
     }
 }
+
+add_filter('cron_schedules', function($schedules) {
+    $schedules['minute'] = [
+        'interval' => 5,
+        'display'  => __('Cada minuto')
+    ];
+    return $schedules;
+});
 
 
 
