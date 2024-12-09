@@ -144,6 +144,7 @@ function generarEnlaceDescarga($userID, $audioID) {
         'user_id' => $userID,
         'audio_id' => $audioID,
         'time' => time(),
+        'usos' => 0, // Inicializar el contador de usos
     );
 
     error_log("--------------------------------------------------");
@@ -190,6 +191,15 @@ function descargaAudio() {
                 error_log("[Error] Descarga de audio: Usuario no autorizado. UserID: " . $userID . ", Token UserID: " . $token_data['user_id']);
                 error_log("--------------------------------------------------");
                 wp_die('No tienes permiso para descargar este archivo.');
+            }
+
+            // Verificar el número de usos
+            if ($token_data['usos'] >= 3) {
+                error_log("[Error] Descarga de audio: Token ha excedido el número de usos permitidos. Usos: " . $token_data['usos']);
+                delete_transient('descarga_token_' . $token);
+                error_log("[Error] Token de descarga eliminado por exceder usos: " . $token);
+                error_log("--------------------------------------------------");
+                wp_die('El enlace de descarga ha excedido el número de usos permitidos.');
             }
 
             $audioID = $token_data['audio_id'];
@@ -283,9 +293,17 @@ function descargaAudio() {
                 fclose($fp);
                 error_log("Transmisión del archivo finalizada con éxito.");
 
-                // Eliminar el token después de la descarga
-                delete_transient('descarga_token_' . $token);
-                error_log("[OK] Token de descarga eliminado: " . $token);
+                // Incrementar el contador de usos y actualizar el token
+                $token_data['usos']++;
+                set_transient('descarga_token_' . $token, $token_data, HOUR_IN_SECONDS);
+                error_log("Contador de usos incrementado a: " . $token_data['usos']);
+
+                // Eliminar el token si ha alcanzado el límite de usos
+                if ($token_data['usos'] >= 3) {
+                    delete_transient('descarga_token_' . $token);
+                    error_log("[OK] Token de descarga eliminado después de 3 usos: " . $token);
+                }
+
                 error_log("[Fin] Descarga de audio completada.");
                 error_log("--------------------------------------------------");
                 exit;
@@ -301,6 +319,7 @@ function descargaAudio() {
         }
     }
 }
+
 
 add_action('wp_ajax_descargar_audio', 'procesarDescarga');
 add_action('template_redirect', 'descargaAudio');
