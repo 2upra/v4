@@ -222,26 +222,27 @@ function dev()
     <div class="tabs">
         <div class="tab-content">
             <div class="tab active GMXSUJ" id="inicio">
-
+                div
                 <div class="SOKDEOD">
+                    <div class="ADEED">
+                        <img src="https://2upra.com/wp-content/uploads/2024/12/asdfasdfasdf.jpg" alt="">
 
-                    <img src="https://2upra.com/wp-content/uploads/2024/12/asdfasdfasdf.jpg" alt="">
+                        <div class="adsfkadsf">
+                            <button class="start2upra boton-sesion"><a>Empezar</a></button>
+                            <button class="androidbutton">
+                                <a class="no-ajax" href="https://2upra.com/wp-content/uploads/2024/12/2upra101.apk">
+                                    Android
+                                </a>
+                            </button>
+                            <button class=" sync2upra">
+                                <a class="no-ajax" href="https://github.com/1ndoryu/sync2upra/releases/download/v1.0.2/Sync-2upra-Setup-1.0.2.exe">
+                                    Sync Window
+                                </a>
+                            </button>
 
-                    <div class="adsfkadsf">
-                        <button class="start2upra boton-sesion"><a>Empezar</a></button>
-                        <button class="androidbutton">
-                            <a class="no-ajax" href="https://2upra.com/wp-content/uploads/2024/12/2upra101.apk">
-                                Android
-                            </a>
-                        </button>
-                        <button class=" sync2upra">
-                            <a class="no-ajax" href="https://github.com/1ndoryu/sync2upra/releases/download/v1.0.2/Sync-2upra-Setup-1.0.2.exe">
-                                Sync Window
-                            </a>
-                        </button>
+                        </div>
                     </div>
                 </div>
-
                 <div class=" BKXAFN">
                     <div style="display: none">
                         <div class="JMIOCI">
