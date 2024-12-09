@@ -179,9 +179,13 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         $is_authenticated = $current_user_id && $current_user_id != 0;
         $is_admin = current_user_can('administrator');
 
-        if (!$is_authenticated) {
-            $current_user_id = $FALLBACK_USER_ID;
-        }
+        // if (!$is_authenticated) {
+        //     $current_user_id = $FALLBACK_USER_ID;
+        // }
+
+        // Moviendo la asignación de $identifier antes del condicional $user_id
+        $identifier = isset($args['identifier']) ? $args['identifier'] : '';
+        error_log("[configuracionQueryArgs] Identifier: " . $identifier);
 
         if ($user_id !== null) {
             $query_args = [
@@ -196,16 +200,16 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             ];
 
             $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
+            error_log("[configuracionQueryArgs] User ID found, returning early.");
             return $query_args;
         }
 
-        // Usar el identifier pasado en $args
-        $identifier = isset($args['identifier']) ? $args['identifier'] : '';
-        error_log("[configuracionQueryArgs] Identifier: " . $identifier);
-
+        error_log("[configuracionQueryArgs] No user ID provided, proceeding with general query.");
 
         $posts = $args['posts'];
         $similar_to = $args['similar_to'] ?? null;
+        
+        // Usa $current_user_id directamente, no necesitas $is_authenticated aquí para obtener el meta
         $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
 
         if ($filtroTiempo === false) {
@@ -215,14 +219,17 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         $tipoUsuario = get_user_meta($current_user_id, 'tipoUsuario', true);
 
         $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario);
+        error_log("[configuracionQueryArgs] query args built: " . print_r($query_args, true));
 
         if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
             if ($tipoUsuario !== 'Fan') {
                 $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+                error_log("[configuracionQueryArgs] User-specific filters applied.");
             }
         }
 
         $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id, $tipoUsuario);
+        error_log("[configuracionQueryArgs] Global filters applied.");
 
         return $query_args;
     } catch (Exception $e) {
@@ -230,7 +237,6 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
         return false;
     }
 }
-
 function procesarIdeas($args, $paged)
 {
     try {
