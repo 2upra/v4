@@ -3,7 +3,7 @@
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging;
 
-function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false, $postIdRelacionado = 0, $Titulo = 'Nueva notificación', $url = null)
+function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false, $postIdRelacionado = 0, $Titulo = 'Nueva notificación', $url = null, $emisor = null)
 {
     // Verifica que el usuario receptor sea válido
     $usuario = get_user_by('ID', $usuarioReceptor);
@@ -16,6 +16,17 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
     $metaSolicitud = is_bool($metaSolicitud) ? $metaSolicitud : false;
     $postIdRelacionado = is_numeric($postIdRelacionado) ? intval($postIdRelacionado) : 0;
 
+    // Determinar el emisor de la notificación
+    $emisorId = get_current_user_id();
+    if ($emisorId === 0 || $emisorId === null) {
+        $emisorId = $emisor;
+    }
+    // Verificar si el emisor es válido
+    if($emisorId === null){
+        error_log("Error: No se pudo determinar el emisor de la notificacion.");
+        return false;
+    }
+
     // Crear el post de la notificación
     $nuevoPost = [
         'post_type'   => 'notificaciones',
@@ -24,7 +35,7 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
         'post_author'  => $usuarioReceptor,
         'post_status'  => 'publish',
         'meta_input'   => [
-            'emisor' => get_current_user_id(),
+            'emisor' => $emisorId,
             'solicitud' => $metaSolicitud,
             'post_relacionado' => $postIdRelacionado
         ]

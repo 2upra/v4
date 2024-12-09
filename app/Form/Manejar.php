@@ -49,7 +49,8 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish') {
                 'mensaje' => "{$autor_nombre} ha publicado: \"{$contenido_corto}\"",
                 'post_id' => $postId,
                 'titulo' => 'Nueva publicación',
-                'url'  => $post_url // Agregar la URL del post
+                'url'  => $post_url, // Agregar la URL del post
+                'autor_id' => $autor // Agregar el ID del autor
             ];
         }
 
@@ -82,8 +83,8 @@ function procesar_notificaciones() {
     $lote = array_splice($notificaciones_pendientes, 0, 5);
 
     foreach ($lote as $notificacion) {
-        // Verificar si la clave 'url' existe
-        $url = $notificacion['url'] ?? ''; // Asigna una cadena vacía si no existe
+
+        $url = $notificacion['url'] ?? ''; 
 
         crearNotificacion(
             $notificacion['seguidor_id'],
@@ -91,7 +92,8 @@ function procesar_notificaciones() {
             false,
             $notificacion['post_id'],
             $notificacion['titulo'],
-            $url // Pasar la URL o una cadena vacía
+            $url,
+            $notificacion['autor_id'] // Usar el ID del autor almacenado
         );
     }
 
@@ -105,12 +107,11 @@ function procesar_notificaciones() {
 
 add_filter('cron_schedules', function($schedules) {
     $schedules['minute'] = [
-        'interval' => 5,
+        'interval' => 5, // cambiado a 5 segundos para pruebas mas rapidas, cambiar a 60 para un minuto real
         'display'  => __('Cada minuto')
     ];
     return $schedules;
 });
-
 
 
 #Paso 2
