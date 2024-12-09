@@ -224,11 +224,22 @@ function dev()
             <div class="tab active GMXSUJ" id="inicio">
 
                 <div class="SOKDEOD">
+                    div
                     <img src="https://2upra.com/wp-content/uploads/2024/12/asdfasdfasdf.jpg" alt="">
-                    <button class="start2upra boton-sesion">Empezar</button>
-                    <button class="androidbutton">
-                        <a class="no-ajax" href="https://2upra.com/wp-content/uploads/2024/12/2upra101.apk"">Android</a></button>
-                    <button class=" sync2upra" href="https://github.com/1ndoryu/sync2upra/releases/download/v1.0.2/Sync-2upra-Setup-1.0.2.exe"><a class="no-ajax">Sync Window</a></button>
+
+                    <div class="adsfkadsf">
+                        <button class="start2upra boton-sesion"><a>Empezar</a></button>
+                        <button class="androidbutton">
+                            <a class="no-ajax" href="https://2upra.com/wp-content/uploads/2024/12/2upra101.apk">
+                                Android
+                            </a>
+                        </button>
+                        <button class=" sync2upra">
+                            <a class="no-ajax" href="https://github.com/1ndoryu/sync2upra/releases/download/v1.0.2/Sync-2upra-Setup-1.0.2.exe">
+                                Sync Window
+                            </a>
+                        </button>
+                    </div>
                 </div>
 
                 <div class=" BKXAFN">
