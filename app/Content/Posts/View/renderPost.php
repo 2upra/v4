@@ -22,7 +22,7 @@ function htmlPost($filtro)
     }
     ob_start();
 ?>
-    <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV"
+    <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV <? echo get_the_ID(); ?>"
         filtro="<? echo esc_attr($filtro); ?>"
         id-post="<? echo get_the_ID(); ?>"
         autor="<? echo esc_attr($author_id); ?>">
