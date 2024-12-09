@@ -224,7 +224,7 @@ function dev()
             <div class="tab active GMXSUJ" id="inicio">
 
                 <div class="SOKDEOD">
-                    <img src="https://2upra.com/wp-content/uploads/2024/12/adfadfasdf.jpg" alt="">
+                    <img src="https://2upra.com/wp-content/uploads/2024/12/asdfasdfasdf.jpg" alt="">
                     <button class="start2upra boton-sesion">Empezar</button>
                     <button class="androidbutton">
                         <a class="no-ajax" href="https://2upra.com/wp-content/uploads/2024/12/2upra101.apk"">Android</a></button>
