@@ -230,12 +230,12 @@ function inicializarReproductorAudio() {
             if (audio.paused) {
                 await audio.play();
                 if (typeof Android !== 'undefined') {
-                    Android.updateNotificationPlaybackState('playing');
+                    Android.updateNotificationPlaybackState("playing");
                 }
             } else {
                 await audio.pause();
                 if (typeof Android !== 'undefined') {
-                    Android.updateNotificationPlaybackState('paused');
+                    Android.updateNotificationPlaybackState("paused");
                 }
             }
             updatePlayPauseButton();
@@ -263,48 +263,6 @@ function inicializarReproductorAudio() {
     function playPreviousAudio() {
         if (currentAudioIndex > 0) {
             playAudioAtIndex(currentAudioIndex - 1);
-        }
-    }
-
-    document.querySelector('.play-btn')?.addEventListener('click', () => {
-        togglePlayPause();
-    });
-    document.querySelector('.pause-btn')?.addEventListener('click', () => {
-        togglePlayPause();
-    });
-
-    function playAudio() {
-        audio
-            .play()
-            .then(() => {
-                if (typeof Android !== 'undefined') {
-                    Android.updateNotificationPlaybackState('playing');
-                }
-                updatePlayPauseButton();
-            })
-            .catch(error => {
-                console.error('Error al reproducir el audio:', error);
-            });
-    }
-
-    function pauseAudio() {
-        audio.pause();
-        if (typeof Android !== 'undefined') {
-            Android.updateNotificationPlaybackState('paused');
-        }
-        updatePlayPauseButton();
-    }
-
-    function updatePlayPauseButton() {
-        const playButton = document.querySelector('.play-btn');
-        const pauseButton = document.querySelector('.pause-btn');
-    
-        if (audio.paused) {
-            playButton.style.display = 'block';
-            pauseButton.style.display = 'none';
-        } else {
-            playButton.style.display = 'none';
-            pauseButton.style.display = 'block';
         }
     }
 
