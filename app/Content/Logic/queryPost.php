@@ -194,6 +194,8 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
         // Usar el identifier pasado en $args
         $identifier = isset($args['identifier']) ? $args['identifier'] : '';
+        error_log("[configuracionQueryArgs] Identifier: " . $identifier);
+
 
         $posts = $args['posts'];
         $similar_to = $args['similar_to'] ?? null;
@@ -610,6 +612,9 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
         }
     }
 
+    error_log("[ordenamientoQuery] Identifier: " . $identifier);
+
+
     try {
         global $wpdb;
         if (!$wpdb) {
@@ -666,6 +671,9 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                 break;
 
             default: // Feed personalizado
+                error_log("[ordenamientoQuery] Identifier: " . $identifier);
+
+
                 $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
 
                 if (!empty($feed_result['post_ids'])) {
