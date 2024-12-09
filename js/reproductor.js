@@ -31,6 +31,10 @@ function inicializarReproductorAudio() {
             const imgElement = infoDiv.querySelector('img');
             const imageUrl = imgElement ? imgElement.getAttribute('src') : ''; // Extrae la URL de la imagen
     
+            Android.log('panjamon Info - Author:', author);
+            Android.log('panjamon Info - Content:', content);
+            Android.log('panjamon Info - Image URL:', imageUrl);
+    
             const shortAuthor = author.length > 40 ? author.slice(0, 40) + '...' : author;
             const shortTitle = content.length > 40 ? content.slice(0, 40) + '...' : content;
             const titleElement = document.querySelector('.XKPMGD .tituloR');
@@ -39,15 +43,18 @@ function inicializarReproductorAudio() {
             if (titleElement) titleElement.textContent = shortTitle;
             if (authorElement) authorElement.textContent = shortAuthor;
     
-            console.log('Updated title and author:', shortTitle, shortAuthor);
+            Android.log('panjamon Info - Updated title and author:', shortTitle, shortAuthor);
     
             // Envía la información a Android
             if (typeof Android !== 'undefined') {
                 const audioSrc = container.querySelector('.audio-container audio')?.getAttribute('src');
+                Android.log('panjamon Info - Sending to Android: title=' + shortTitle + ', author=' + shortAuthor + ', imageUrl=' + imageUrl + ', audioSrc=' + audioSrc);
                 Android.sendAudioInfo(shortTitle, shortAuthor, imageUrl, audioSrc);
+            } else {
+                Android.log('panjamon Info - Android object not found.');
             }
         } else {
-            console.log('Info div not found');
+            Android.log('panjamon Info - Info div not found');
         }
     }
 
