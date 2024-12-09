@@ -1,11 +1,11 @@
 <?
-//por alguna extraña razon el $post_ identifier no llega a configuracionQueryArgs, asi que mejor la enviamos directamente en una variable desde publicaciones a configuracionQueryArgs o si sabes resolver el problema mejor
+
 function publicacionAjax()
 {
     $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
     $filtro = isset($_POST['filtro']) ? sanitize_text_field($_POST['filtro']) : '';
     $tipoPost = isset($_POST['posttype']) ? sanitize_text_field($_POST['posttype']) : '';
-    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : ''; // Aseguramos que el identifier se obtenga correctamente
+    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : ''; 
     $tab_id = isset($_POST['tab_id']) ? sanitize_text_field($_POST['tab_id']) : '';
     $user_id = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
     $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas'])
@@ -15,7 +15,9 @@ function publicacionAjax()
     $colec = isset($_POST['colec']) ? intval($_POST['colec']) : null;
     $idea = isset($_POST['idea']) ? filter_var($_POST['idea'], FILTER_VALIDATE_BOOLEAN) : false;
 
-    // Pasamos explícitamente el identifier en el array de argumentos
+
+    error_log("[publicacionAjax] identifier: " . $data_identifier);
+
     publicaciones(
         array(
             'filtro' => $filtro,
