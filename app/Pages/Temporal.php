@@ -225,13 +225,7 @@ function dev()
 
                 <div class="SOKDEOD">
                     <div class="ADEED">
-                        la primera imagen https://2upra.com/wp-content/uploads/2024/12/asdfasdfasdf.jpg
-                        luego https://2upra.com/wp-content/uploads/2024/12/03.jpg
-                        y https://2upra.com/wp-content/uploads/2024/12/02.jpg
-                        https://2upra.com/wp-content/uploads/2024/12/04.jpg
-                        esta es la imagen que va a cargar
                         <img id="imagenbeta02" src="https://2upra.com/wp-content/uploads/2024/12/asdfasdfasdf.jpg" alt="">
-                        lo que necesito es cuando se de click en imagenbeta02, aparezca la imagen siguiente, por favor, que aparezca solo si esta cargada para que no se vea mal, y el resto cargue diferido para optimizar, al llegar al final repite, es un bucle
                         <div class="adsfkadsf">
                             <button class="start2upra boton-sesion"><a>Empezar</a></button>
                             <button class="androidbutton">
