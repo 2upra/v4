@@ -72,6 +72,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
                 return false;
             }
         } else {
+            error_log("[publicaciones] ejecutando configuracionQueryArgs " . $args['identifier']);
             $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
         }
 
