@@ -32,8 +32,11 @@ function register_custom_post_types() {
         'colecciones' =>  ['Colecciones', 'Colección', 'colecciones', 'dashicons-book'],
         'notificaciones' => ['Notificaciones', 'Notificación', 'notificacion', 'dashicons-bell'],  
         'comentarios' => ['Comentarios', 'Comentario', 'comentario', 'dashicons-admin-comments'],
+        'reporte' => ['Reportes', 'Reporte', 'reporte', 'dashicons-flag'],
         
+
     ];
+
 
     foreach ($post_types as $key => $type) {
         $name = $type[0];

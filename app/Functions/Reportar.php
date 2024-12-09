@@ -1,48 +1,45 @@
 <?
 
-// Función para guardar reporte
+//que esto en vez de guardarlo en una tabla lo guarde en un post type reporte
 function guardarReporte() {
-    global $wpdb;
-    $tabla = $wpdb->prefix . 'tablaReportes';
     $idUser = get_current_user_id();
     $idContenido = intval($_POST['post_id']);
     $tipoContenido = sanitize_text_field($_POST['tipoContenido']);
     $detalles = sanitize_textarea_field($_POST['detalles']);
 
-    $wpdb->insert($tabla, [
-        'idUser' => $idUser,
-        'idContenido' => $idContenido,
-        'tipoContenido' => $tipoContenido,
-        'detalles' => $detalles,
-        'metadatos' => null
-    ]);
-
-    if ($wpdb->last_error) {
-        wp_send_json_error('Error al guardar el reporte: ' . $wpdb->last_error);
+    // Crear el título del reporte
+    $user_name = get_userdata($idUser)->display_name;
+    $post_title = "Reporte de " . $user_name;
+    if ($tipoContenido === 'comentario') {
+        $comentario_title = get_the_title($idContenido);
+        $comentario_title_short = wp_trim_words($comentario_title, 10, '...');
+        $post_title .= " sobre el comentario: " . $comentario_title_short;
     } else {
-        wp_send_json_success('Reporte guardado');
+        $post_title .= " sobre la publicación ID: " . $idContenido;
     }
+
+    // Crear el post del reporte
+    $reporte_id = wp_insert_post(array(
+        'post_title'    => $post_title,
+        'post_content'  => $detalles,
+        'post_status'   => 'publish',  // O 'draft', 'pending' según tus necesidades
+        'post_type'     => 'reporte',  // Asegúrate de que este post type esté registrado
+        'post_author'   => $idUser,
+    ));
+
+    if (is_wp_error($reporte_id)) {
+        wp_send_json_error('Error al crear el reporte: ' . $reporte_id->get_error_message());
+        return;
+    }
+
+    // Guardar metadatos del reporte
+    update_post_meta($reporte_id, 'idContenido', $idContenido);
+    update_post_meta($reporte_id, 'tipoContenido', $tipoContenido);
+
+    wp_send_json_success('Reporte guardado con ID: ' . $reporte_id);
 }
 add_action('wp_ajax_guardarReporte', 'guardarReporte');
 
 
-function eliminarReporte() {
-    global $wpdb;
-    $tabla = $wpdb->prefix . 'tablaReportes';
-    $idReporte = intval($_POST['idReporte']);
 
-    $wpdb->delete($tabla, ['idReporte' => $idReporte]);
-
-    wp_send_json_success('Reporte eliminado');
-}
-add_action('wp_ajax_eliminarReport', 'eliminarReporte');
-
-function verReportes() {
-    global $wpdb;
-    $tabla = $wpdb->prefix . 'tablaReportes';
-    $reportes = $wpdb->get_results("SELECT * FROM $tabla");
-
-    wp_send_json_success($reportes);
-}
-add_action('wp_ajax_verReportes', 'verReportes');
 
