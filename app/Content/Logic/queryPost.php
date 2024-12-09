@@ -36,10 +36,8 @@ function publicacionAjax()
 add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
 add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
 
-function publicaciones($args = [], $is_ajax = false, $paged = 1)
-{
+function publicaciones($args = [], $is_ajax = false, $paged = 1) {
     try {
-        //$user_id = obtenerUserId($is_ajax);
         $current_user_id = get_current_user_id();
 
         $defaults = [
@@ -52,12 +50,18 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             'colec' => null,
             'idea' => null,
             'user_id' => null,
-            'identifier' => '', // Add identifier to defaults
+            'identifier' => '', 
         ];
 
         $user_id = isset($args['user_id']) ? $args['user_id'] : '';
-        $args = array_merge($defaults, $args);
         
+        // Extract identifier from URL if it's an AJAX request and 'busqueda' parameter exists
+        if ($is_ajax && isset($_GET['busqueda'])) {
+            $args['identifier'] = sanitize_text_field($_GET['busqueda']);
+            error_log("[publicaciones] Identifier from URL (AJAX): " . $args['identifier']);
+        }
+
+        $args = array_merge($defaults, $args);
         error_log("[publicaciones] Identifier after merge: " . $args['identifier']);
 
         if (filter_var($args['idea'], FILTER_VALIDATE_BOOLEAN)) {
@@ -69,18 +73,17 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         } else if (!empty($args['colec']) && is_numeric($args['colec'])) {
             $query_args = manejarColeccion($args, $paged);
             if (!$query_args) {
-                 error_log("[publicaciones] Error al procesar coleccion.");
+                error_log("[publicaciones] Error al procesar coleccion.");
                 return false;
             }
         } else {
-            error_log("[publicaciones] ejecutando configuracionQueryArgs " . $args['identifier']);
+           
             $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
         }
 
         if (isset($query_args['post__not_in'])) {
             error_log("[publicaciones] Excluded posts: " . implode(",", $query_args['post__not_in']));
         }
-        
 
         $output = procesarPublicaciones($query_args, $args, $is_ajax);
 
@@ -95,7 +98,6 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         return false;
     }
 }
-
 
 function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 {
