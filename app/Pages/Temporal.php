@@ -202,7 +202,9 @@ function dev()
 
                 <div class="SOKDEOD">
                     <img src="https://2upra.com/wp-content/uploads/2024/12/adfadfasdf.jpg" alt="">
-
+                    <button class="start2upra">Empezar</button>
+                    <button class="androidbutton">Android</button>
+                    <button class="sync2upra">Sync</button>
                 </div>
 
                 <div class="BKXAFN">
