@@ -7,11 +7,11 @@ function add_pro_modal_to_footer()
     $highlight = '✨';
     $modal_content = '
         <p class="priceplan">$5 <span>USD/mensual</span></p>
-        <p class="beneficiosplan">+ Acceso anticipado</p>
         <p class="beneficiosplan">+ Contenido exclusivo</p>
         <p class="beneficiosplan">+ Reconocimiento</p>
         <p class="beneficiosplan">+ Sin limites de descarga</p>
-        <p class="beneficiosplan">+ Sin limites de almacenamiento</p>
+        <p class="beneficiosplan">+ Sin limites de sincronización</p>
+        <p class="beneficiosplan">+ Reprodución HD</p>
         <button class="DZYBQD MQKUSE">Suscribirte</button>';
 
 ?>

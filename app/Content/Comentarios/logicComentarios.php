@@ -91,7 +91,6 @@ function procesarComentario()
         update_post_meta($comentarioId, 'audioId', $attachment_audio_id); // ID del adjunto del audio
     }
 
-
     if (!empty($imagenId)) {
         confirmarHashId($imagenId, $comentarioId, 'imagen');
     }
@@ -106,6 +105,15 @@ function procesarComentario()
 
     $comentarios_ids[] = $comentarioId; // Añadir el nuevo ID
     update_post_meta($postId, 'comentarios_ids', $comentarios_ids); // Guardar el array actualizado
+
+    // **Crear la notificación**
+    $usuarioReceptor = $post_to_comment->post_author; // Autor del post original
+    $contenido = $user_name . " ha comentado tu post."; // Contenido de la notificación
+    $postIdRelacionado = $postId; // Post relacionado
+    $Titulo = "Nuevo comentario"; // Título de la notificación
+    $url = null; // URL (en este caso, null)
+
+    crearNotificacion($usuarioReceptor, $contenido, false, $postIdRelacionado, $Titulo, $url);
 
     // Incrementar el contador de comentarios recientes y actualizar el transient
     $comentarios_recientes++;
