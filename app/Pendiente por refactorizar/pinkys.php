@@ -113,12 +113,13 @@ function generarEnlaceDescarga($userID, $audioID) {
         'time' => time(),
     );
 
+    error_log("Generando enlace de descarga. UserID: " . $userID . ", AudioID: " . $audioID . ", Token: " . $token . ", Time: " . time()); // Log de creación del token
+
     set_transient('descarga_token_' . $token, $token_data, HOUR_IN_SECONDS); // válido por 1 hora
 
     $enlaceDescarga = add_query_arg([
         'descarga_token' => $token,
     ], home_url());
-
 
     return $enlaceDescarga;
 }
@@ -127,13 +128,17 @@ function descargaAudio() {
     if (isset($_GET['descarga_token'])) {
         $token = sanitize_text_field($_GET['descarga_token']);
 
+        error_log("Intentando descargar con token: " . $token); // Log del token recibido
+
         $token_data = get_transient('descarga_token_' . $token);
 
         if ($token_data) {
+            error_log("Datos del token recuperados: " . print_r($token_data, true)); // Log de los datos del token
+
             $userID = get_current_user_id();
 
             if ($userID != $token_data['user_id']) {
-                error_log("Descarga de audio: Usuario no autorizado. UserID: " . $userID . ", Token UserID: " . $token_data['user_id']); // Log de error
+                error_log("Descarga de audio: Usuario no autorizado. UserID: " . $userID . ", Token UserID: " . $token_data['user_id']);
                 wp_die('No tienes permiso para descargar este archivo.');
             }
 
@@ -218,18 +223,17 @@ function descargaAudio() {
                 delete_transient('descarga_token_' . $token);
                 exit;
             } else {
-                error_log("Descarga de audio: El archivo no existe o no es accesible. Ruta: " . $audio_path); // Log de error
+                error_log("Descarga de audio: El archivo no existe o no es accesible. Ruta: " . $audio_path);
                 wp_die('El archivo no existe o no es accesible.');
             }
         } else {
-            error_log("Descarga de audio: Token de descarga no válido o expirado. Token: " . $token); // Log de error
+            error_log("Descarga de audio: Token de descarga no válido o expirado. Token: " . $token);
             wp_die('El enlace de descarga no es válido o ha expirado.');
         }
     }
 }
 
 add_action('template_redirect', 'descargaAudio');
-
 /*
 async function procesarDescarga(postId, usuarioId) {
     console.log('Iniciando procesarDescarga', postId, usuarioId);
