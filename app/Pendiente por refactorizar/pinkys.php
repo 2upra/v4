@@ -29,35 +29,54 @@ function restarPinkysEliminacion($postID)
 }
 add_action('wp_ajax_procesarDescarga', 'procesarDescarga');
 
+
+/**
+ * Procesa la solicitud de descarga de un audio.
+ *
+ * Verifica la autorización del usuario, la validez del post y del audio asociado.
+ * Actualiza el contador de descargas del usuario y del post.
+ * Genera un enlace de descarga único y lo envía como respuesta.
+ */
 function procesarDescarga() {
-    error_log('Function procesarDescarga started');
+    error_log('--------------------------------------------------');
+    error_log('[Inicio] Function procesarDescarga started');
 
     $userID = get_current_user_id();
     error_log('User ID: ' . $userID);
+    error_log('User Agent: ' . $_SERVER['HTTP_USER_AGENT']);
+    error_log('Request Headers: ' . print_r(getallheaders(), true));
+
     if (!$userID) {
+        error_log('[Error] No autorizado. Usuario no logueado.');
         wp_send_json_error(['message' => 'No autorizado.']);
         return;
     }
 
     $postID = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
     error_log('Post ID: ' . $postID);
+
     $post = get_post($postID);
     if (!$post || $post->post_status !== 'publish') {
+        error_log('[Error] Post no válido o no publicado. Post ID: ' . $postID);
         wp_send_json_error(['message' => 'Post no válido.']);
         return;
     }
 
     $audioID = get_post_meta($postID, 'post_audio', true);
     error_log('Audio ID: ' . $audioID);
+
     if (!$audioID) {
+        error_log('[Error] Audio no encontrado para el Post ID: ' . $postID);
         wp_send_json_error(['message' => 'Audio no encontrado.']);
         return;
     }
 
     $descargasAnteriores = get_user_meta($userID, 'descargas', true);
     error_log('Descargas before: ' . print_r($descargasAnteriores, true));
-    if (!$descargasAnteriores) {
+
+    if (!is_array($descargasAnteriores)) {
         $descargasAnteriores = [];
+        error_log('[Info] El usuario no tenía descargas previas. Se inicializa el array.');
     }
 
     $yaDescargado = isset($descargasAnteriores[$postID]);
@@ -66,7 +85,9 @@ function procesarDescarga() {
     if (!$yaDescargado) {
         $pinky = (int)get_user_meta($userID, 'pinky', true);
         error_log('Pinky count: ' . $pinky);
+
         if ($pinky < 1) {
+            error_log('[Error] No tienes suficientes Pinkys para esta descarga. Pinkys: ' . $pinky);
             wp_send_json_error(['message' => 'No tienes suficientes Pinkys para esta descarga.']);
             return;
         }
@@ -75,35 +96,47 @@ function procesarDescarga() {
 
     if (!$yaDescargado) {
         $descargasAnteriores[$postID] = 1;
+        error_log('[Info] Primera descarga de este audio. Se incrementa a 1.');
     } else {
         $descargasAnteriores[$postID]++;
+        error_log('[Info] Descarga repetida. Se incrementa a: ' . $descargasAnteriores[$postID]);
     }
+
     error_log('Descargas after: ' . print_r($descargasAnteriores, true));
 
     $updateResult = update_user_meta($userID, 'descargas', $descargasAnteriores);
-    if ( ! $updateResult ) {
-        error_log('Failed to update descargas meta for user ID ' . $userID);
+    if (!$updateResult) {
+        error_log('[Error] Failed to update descargas meta for user ID ' . $userID);
     } else {
-        error_log('Successfully updated descargas meta for user ID ' . $userID);
+        error_log('[OK] Successfully updated descargas meta for user ID ' . $userID);
     }
 
     $total_descargas = (int)get_post_meta($postID, 'totalDescargas', true);
     $total_descargas++;
     $updatePostMeta = update_post_meta($postID, 'totalDescargas', $total_descargas);
-    if ( ! $updatePostMeta ) {
-        error_log('Failed to update totalDescargas meta for post ID ' . $postID);
+
+    if (!$updatePostMeta) {
+        error_log('[Error] Failed to update totalDescargas meta for post ID ' . $postID);
     } else {
-        error_log('Successfully updated totalDescargas meta for post ID ' . $postID);
+        error_log('[OK] Successfully updated totalDescargas meta for post ID ' . $postID);
     }
 
     $download_url = generarEnlaceDescarga($userID, $audioID);
     error_log('Download URL: ' . $download_url);
+
     actualizarTimestampDescargas($userID);
+    error_log('[Fin] Function procesarDescarga finished');
+    error_log('--------------------------------------------------');
     wp_send_json_success(['download_url' => $download_url]);
 }
 
-
-
+/**
+ * Genera un enlace de descarga único con un token de seguridad.
+ *
+ * @param int $userID ID del usuario.
+ * @param int $audioID ID del audio.
+ * @return string Enlace de descarga con token.
+ */
 function generarEnlaceDescarga($userID, $audioID) {
     $token = bin2hex(random_bytes(16));
 
@@ -113,32 +146,49 @@ function generarEnlaceDescarga($userID, $audioID) {
         'time' => time(),
     );
 
-    error_log("Generando enlace de descarga. UserID: " . $userID . ", AudioID: " . $audioID . ", Token: " . $token . ", Time: " . time()); // Log de creación del token
+    error_log("--------------------------------------------------");
+    error_log("[Inicio] Generando enlace de descarga. UserID: " . $userID . ", AudioID: " . $audioID . ", Token: " . $token . ", Time: " . time());
 
     set_transient('descarga_token_' . $token, $token_data, HOUR_IN_SECONDS); // válido por 1 hora
+    error_log("Token data set in transient: " . print_r($token_data, true));
 
     $enlaceDescarga = add_query_arg([
         'descarga_token' => $token,
     ], home_url());
 
+    error_log("Enlace de descarga generado: " . $enlaceDescarga);
+    error_log("[Fin] Generando enlace de descarga.");
+    error_log("--------------------------------------------------");
     return $enlaceDescarga;
 }
 
+/**
+ * Procesa la descarga del audio utilizando un token único.
+ *
+ * Verifica la validez del token y la autorización del usuario.
+ * Envía el archivo al usuario si la verificación es exitosa.
+ */
 function descargaAudio() {
     if (isset($_GET['descarga_token'])) {
         $token = sanitize_text_field($_GET['descarga_token']);
 
-        error_log("Intentando descargar con token: " . $token); // Log del token recibido
+        error_log("--------------------------------------------------");
+        error_log("[Inicio] Intentando descargar con token: " . $token);
+        error_log('User Agent: ' . $_SERVER['HTTP_USER_AGENT']);
+        error_log('Request Headers: ' . print_r(getallheaders(), true));
 
         $token_data = get_transient('descarga_token_' . $token);
 
         if ($token_data) {
-            error_log("Datos del token recuperados: " . print_r($token_data, true)); // Log de los datos del token
+            error_log("Datos del token recuperados: " . print_r($token_data, true));
 
             $userID = get_current_user_id();
+            error_log("UserID actual: " . $userID);
+            error_log("UserID del token: " . $token_data['user_id']);
 
             if ($userID != $token_data['user_id']) {
-                error_log("Descarga de audio: Usuario no autorizado. UserID: " . $userID . ", Token UserID: " . $token_data['user_id']);
+                error_log("[Error] Descarga de audio: Usuario no autorizado. UserID: " . $userID . ", Token UserID: " . $token_data['user_id']);
+                error_log("--------------------------------------------------");
                 wp_die('No tienes permiso para descargar este archivo.');
             }
 
@@ -155,19 +205,25 @@ function descargaAudio() {
                 ini_set('zlib.output_compression', 'Off');
                 ini_set('output_buffering', 'Off');
                 set_time_limit(0);
+                error_log("Configuración del servidor ajustada para la descarga.");
 
                 // Obtener el tipo MIME y el nombre del archivo
                 $finfo = finfo_open(FILEINFO_MIME_TYPE);
                 if ($finfo === false) {
-                  error_log("Descarga de audio: Error al abrir finfo."); // Log de error
+                    error_log("[Error] Descarga de audio: Error al abrir finfo.");
+                    wp_die('Error al obtener información del archivo.');
                 }
                 $mime_type = finfo_file($finfo, $audio_path);
                 if ($mime_type === false) {
-                  error_log("Descarga de audio: Error al obtener el tipo MIME del archivo: " . $audio_path); // Log de error
+                    error_log("[Error] Descarga de audio: Error al obtener el tipo MIME del archivo: " . $audio_path);
+                    finfo_close($finfo);
+                    wp_die('Error al obtener el tipo de archivo.');
                 }
                 finfo_close($finfo);
+                error_log("Tipo MIME del archivo: " . $mime_type);
 
                 $filename = basename($audio_path);
+                error_log("Nombre del archivo: " . $filename);
 
                 // Cabeceras HTTP
                 header('Content-Type: ' . $mime_type);
@@ -177,9 +233,11 @@ function descargaAudio() {
                 header('Cache-Control: no-cache, must-revalidate');
                 header('Pragma: no-cache');
                 header('Expires: 0');
+                error_log("Cabeceras HTTP configuradas correctamente.");
 
                 // Manejo de rangos para descarga parcial
                 if (isset($_SERVER['HTTP_RANGE'])) {
+                    error_log("Solicitud de rango recibida: " . $_SERVER['HTTP_RANGE']);
                     list($a, $range) = explode("=", $_SERVER['HTTP_RANGE'], 2);
                     list($range) = explode(",", $range, 2);
                     list($range, $range_end) = explode("-", $range);
@@ -190,49 +248,61 @@ function descargaAudio() {
                     header('HTTP/1.1 206 Partial Content');
                     header("Content-Range: bytes $range-$range_end/$size");
                     header('Content-Length: ' . ($range_end - $range + 1));
+                    error_log("Respondiendo con contenido parcial. Rango: $range-$range_end");
                 } else {
                     $range = 0;
+                    error_log("No se solicitó rango. Se enviará el archivo completo.");
                 }
 
                 // Abrir y enviar el archivo
                 $fp = fopen($audio_path, 'rb');
                 if ($fp === false) {
-                    error_log("Descarga de audio: Error al abrir el archivo: " . $audio_path); // Log de error
+                    error_log("[Error] Descarga de audio: Error al abrir el archivo: " . $audio_path);
+                    wp_die('Error al abrir el archivo.');
                 }
                 fseek($fp, $range);
+                error_log("Posición del puntero de archivo ajustada a: " . $range);
 
+                error_log("Iniciando la transmisión del archivo...");
                 while (!feof($fp)) {
                     $data = fread($fp, 8192);
                     if ($data === false) {
-                        error_log("Descarga de audio: Error al leer el archivo: " . $audio_path); // Log de error
+                        error_log("[Error] Descarga de audio: Error al leer el archivo: " . $audio_path);
                         fclose($fp);
-                        exit;
+                        wp_die('Error al leer el archivo.');
                     }
                     print($data);
                     flush();
                     if (connection_status() != 0) {
-                        error_log("Descarga de audio: Conexión interrumpida. Estado: " . connection_status()); // Log de error
+                        error_log("[Error] Descarga de audio: Conexión interrumpida. Estado: " . connection_status());
                         fclose($fp);
                         exit;
                     }
                 }
 
                 fclose($fp);
+                error_log("Transmisión del archivo finalizada con éxito.");
 
                 // Eliminar el token después de la descarga
                 delete_transient('descarga_token_' . $token);
+                error_log("[OK] Token de descarga eliminado: " . $token);
+                error_log("[Fin] Descarga de audio completada.");
+                error_log("--------------------------------------------------");
                 exit;
             } else {
-                error_log("Descarga de audio: El archivo no existe o no es accesible. Ruta: " . $audio_path);
+                error_log("[Error] Descarga de audio: El archivo no existe o no es accesible. Ruta: " . $audio_path);
+                error_log("--------------------------------------------------");
                 wp_die('El archivo no existe o no es accesible.');
             }
         } else {
-            error_log("Descarga de audio: Token de descarga no válido o expirado. Token: " . $token);
+            error_log("[Error] Descarga de audio: Token de descarga no válido o expirado. Token: " . $token);
+            error_log("--------------------------------------------------");
             wp_die('El enlace de descarga no es válido o ha expirado.');
         }
     }
 }
 
+add_action('wp_ajax_descargar_audio', 'procesarDescarga');
 add_action('template_redirect', 'descargaAudio');
 /*
 async function procesarDescarga(postId, usuarioId) {
