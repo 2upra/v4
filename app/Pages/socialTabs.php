@@ -38,7 +38,7 @@ function socialTabs()
                 <div class="tab INICIO S4K7I3" id="Samples">
                     <div class="BPLBDE">
                         <div class="FOFDV5">
-                            <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12]); ?>
+                            <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12, 'tipoUsuario' => 'Arista']); ?>
                         </div>
                     </div>
                 </div>
@@ -50,7 +50,7 @@ function socialTabs()
                     <div class="OXMGLZ">
                         <div class="OAXRVB">
                             <div class="FEDAG5">
-                                <? echo publicaciones(['filtro' => 'sample', 'tab_id' => 'Feed', 'posts' => 12]); ?>
+                                <? echo publicaciones(['filtro' => 'sample', 'tab_id' => 'Feed', 'posts' => 12, 'tipoUsuario' => 'Fan']); ?>
                             </div>
                         </div>
                     </div>
@@ -100,7 +100,7 @@ function socialTabsFEED()
                 <div class="tab INICIO S4K7I3" id="Samples">
                     <div class="BPLBDE">
                         <div class="FOFDV5">
-                            <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12]); ?>
+                            <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12, 'tipoUsuario' => 'Artista']); ?>
                         </div>
                     </div>
                 </div>
@@ -112,7 +112,7 @@ function socialTabsFEED()
                     <div class="OXMGLZ">
                         <div class="OAXRVB">
                             <div class="FEDAG5">
-                                <? echo publicaciones(['filtro' => 'sample', 'tab_id' => 'Feed', 'posts' => 12]); ?>
+                                <? echo publicaciones(['filtro' => 'sample', 'tab_id' => 'Feed', 'posts' => 12, 'tipoUsuario' => 'Fan']); ?>
                             </div>
                         </div>
                     </div>
@@ -161,7 +161,7 @@ function socialTabsSAMPLE()
                 <div class="tab INICIO S4K7I3" id="Samples">
                     <div class="BPLBDE">
                         <div class="FOFDV5">
-                            <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12]); ?>
+                            <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12, 'tipoUsuario' => 'Artista']); ?>
                         </div>
                     </div>
                 </div>
@@ -173,7 +173,7 @@ function socialTabsSAMPLE()
                     <div class="OXMGLZ">
                         <div class="OAXRVB">
                             <div class="FEDAG5">
-                                <? echo publicaciones(['filtro' => 'sample', 'tab_id' => 'Feed', 'posts' => 12]); ?>
+                                <? echo publicaciones(['filtro' => 'sample', 'tab_id' => 'Feed', 'posts' => 12, 'tipoUsuario' => 'Fan']); ?>
                             </div>
                         </div>
                     </div>

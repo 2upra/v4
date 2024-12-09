@@ -5,7 +5,7 @@ function publicacionAjax()
     $paged = isset($_POST['paged']) ? (int) $_POST['paged'] : 1;
     $filtro = isset($_POST['filtro']) ? sanitize_text_field($_POST['filtro']) : '';
     $tipoPost = isset($_POST['posttype']) ? sanitize_text_field($_POST['posttype']) : '';
-    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : ''; 
+    $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : '';
     $tab_id = isset($_POST['tab_id']) ? sanitize_text_field($_POST['tab_id']) : '';
     $user_id = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
     $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas'])
@@ -27,7 +27,8 @@ function publicacionAjax()
             'exclude' => $publicacionesCargadas,
             'similar_to' => $similar_to,
             'colec' => $colec,
-            'idea' => $idea
+            'idea' => $idea,
+
         ),
         true,
         $paged
@@ -53,17 +54,22 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             'idea' => null,
             'user_id' => null,
             'identifier' => '',
+            'tipoUsuario' => '', 
         ];
 
-        // Obtener 'identifier' de la URL si no es AJAX
         if (!$is_ajax && isset($_GET['busqueda'])) {
             $args['identifier'] = sanitize_text_field($_GET['busqueda']);
             error_log("[publicaciones] Identifier from URL: " . $args['identifier']);
         }
 
         $user_id = isset($args['user_id']) ? $args['user_id'] : '';
+
+        $tipoUsuario = isset($args['tipoUsuario']) && !empty($args['tipoUsuario'])
+            ? $args['tipoUsuario']
+            : get_user_meta($current_user_id, 'tipoUsuario', true);
+
         $args = array_merge($defaults, $args);
-        
+
         error_log("[publicaciones] Identifier after merge: " . $args['identifier']);
 
         if (filter_var($args['idea'], FILTER_VALIDATE_BOOLEAN)) {
@@ -75,17 +81,17 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         } else if (!empty($args['colec']) && is_numeric($args['colec'])) {
             $query_args = manejarColeccion($args, $paged);
             if (!$query_args) {
-                 error_log("[publicaciones] Error al procesar coleccion.");
+                error_log("[publicaciones] Error al procesar coleccion.");
                 return false;
             }
         } else {
             error_log("[publicaciones] ejecutando configuracionQueryArgs " . $args['identifier']);
-            $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id);
+            $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id, $tipoUsuario);
         }
 
         if (isset($query_args['post__not_in'])) {
             error_log("[publicaciones] Excluded posts: " . implode(",", $query_args['post__not_in']));
-        }        
+        }
 
         $output = procesarPublicaciones($query_args, $args, $is_ajax);
 
@@ -101,7 +107,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
     }
 }
 
-function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
+function configuracionQueryArgs($args, $paged, $user_id, $current_user_id, $tipoUsuario)
 {
     try {
         $FALLBACK_USER_ID = 44;
@@ -114,7 +120,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
         // Moviendo la asignación de $identifier antes del condicional $user_id
         $identifier = isset($args['identifier']) ? $args['identifier'] : '';
-        
+
         error_log("[configuracionQueryArgs] Identifier: " . $identifier);
         error_log("[configuracionQueryArgs] user_id: " . $user_id);
 
@@ -145,7 +151,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
         $posts = $args['posts'];
         $similar_to = $args['similar_to'] ?? null;
-        
+
         // Usa $current_user_id directamente, no necesitas $is_authenticated aquí para obtener el meta
         $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
 
@@ -153,7 +159,7 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
             error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
         }
 
-        $tipoUsuario = get_user_meta($current_user_id, 'tipoUsuario', true);
+
 
         error_log("[configuracionQueryArgs] Calling construirQueryArgs with identifier: " . $identifier);
         $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario);

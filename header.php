@@ -5,7 +5,7 @@ if (!is_user_logged_in()) {
     $user_id = get_current_user_id();
     $nombre_usuario = $usuario->display_name;
     $url_imagen_perfil = imagenPerfil($usuario->ID);
-
+    $usuarioTipo = get_user_meta(get_current_user_id(), 'tipoUsuario', true);
     if (function_exists('jetpack_photon_url')) {
         $url_imagen_perfil = jetpack_photon_url($url_imagen_perfil, array('quality' => 40, 'strip' => 'all'));
     }
@@ -59,7 +59,6 @@ if (!defined('ABSPATH')) {
 
     <header id="header">
         <style>
-
             @font-face {
                 font-family: 'Gothic №60';
                 src: url('https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/Gothic60-Regular.otf') format('opentype');
@@ -132,12 +131,25 @@ if (!defined('ABSPATH')) {
                             </a>
                         </div>
 
-                        <div class="menu-item iconocolab">
+                        <div class="menu-item iconocolab" style="display: none;">
                             <a href="https://2upra.com/colabs">
                                 <? echo $GLOBALS['iconocolab']; ?>
                             </a>
                         </div>
-
+                        <? if ($usuarioTipo === 'Fan'):  ?>
+                            <div class="menu-item iconoFeedSample">
+                                <a href="https://2upra.com/feedSample">
+                                    <? echo $GLOBALS['iconRandom']; ?>
+                                </a>
+                            </div>
+                        <? endif; ?>
+                        <? if ($usuarioTipo === 'Artista'):  ?>
+                            <div class="menu-item iconoFeedSocial">
+                                <a href="https://2upra.com/feedSocial">
+                                    <? echo $GLOBALS['iconSocial']; ?>
+                                </a>
+                            </div>
+                        <? endif; ?>
                         <div class="menu-item iconoColec">
                             <a href="https://2upra.com/packs">
                                 <? echo $GLOBALS['iconoColec']; ?>
