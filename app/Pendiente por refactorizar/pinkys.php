@@ -133,6 +133,7 @@ function descargaAudio() {
             $userID = get_current_user_id();
 
             if ($userID != $token_data['user_id']) {
+                error_log("Descarga de audio: Usuario no autorizado. UserID: " . $userID . ", Token UserID: " . $token_data['user_id']); // Log de error
                 wp_die('No tienes permiso para descargar este archivo.');
             }
 
@@ -152,9 +153,15 @@ function descargaAudio() {
 
                 // Obtener el tipo MIME y el nombre del archivo
                 $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                if ($finfo === false) {
+                  error_log("Descarga de audio: Error al abrir finfo."); // Log de error
+                }
                 $mime_type = finfo_file($finfo, $audio_path);
+                if ($mime_type === false) {
+                  error_log("Descarga de audio: Error al obtener el tipo MIME del archivo: " . $audio_path); // Log de error
+                }
                 finfo_close($finfo);
-                
+
                 $filename = basename($audio_path);
 
                 // Cabeceras HTTP
@@ -174,7 +181,7 @@ function descargaAudio() {
                     $range = intval($range);
                     $size = filesize($audio_path);
                     $range_end = ($range_end) ? intval($range_end) : $size - 1;
-                    
+
                     header('HTTP/1.1 206 Partial Content');
                     header("Content-Range: bytes $range-$range_end/$size");
                     header('Content-Length: ' . ($range_end - $range + 1));
@@ -184,26 +191,38 @@ function descargaAudio() {
 
                 // Abrir y enviar el archivo
                 $fp = fopen($audio_path, 'rb');
+                if ($fp === false) {
+                    error_log("Descarga de audio: Error al abrir el archivo: " . $audio_path); // Log de error
+                }
                 fseek($fp, $range);
-                
+
                 while (!feof($fp)) {
-                    print(fread($fp, 8192));
+                    $data = fread($fp, 8192);
+                    if ($data === false) {
+                        error_log("Descarga de audio: Error al leer el archivo: " . $audio_path); // Log de error
+                        fclose($fp);
+                        exit;
+                    }
+                    print($data);
                     flush();
                     if (connection_status() != 0) {
+                        error_log("Descarga de audio: Conexión interrumpida. Estado: " . connection_status()); // Log de error
                         fclose($fp);
                         exit;
                     }
                 }
-                
+
                 fclose($fp);
-                
+
                 // Eliminar el token después de la descarga
                 delete_transient('descarga_token_' . $token);
                 exit;
             } else {
+                error_log("Descarga de audio: El archivo no existe o no es accesible. Ruta: " . $audio_path); // Log de error
                 wp_die('El archivo no existe o no es accesible.');
             }
         } else {
+            error_log("Descarga de audio: Token de descarga no válido o expirado. Token: " . $token); // Log de error
             wp_die('El enlace de descarga no es válido o ha expirado.');
         }
     }
