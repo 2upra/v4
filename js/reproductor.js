@@ -27,13 +27,12 @@ function inicializarReproductorAudio() {
         }
     }
 
-    function checkAndroidInterface() {
+    function checkAndroidInterface(container) {
         if (typeof Android !== 'undefined') {
             // La interfaz Android está disponible, puedes ejecutar Info()
-            const container = document.querySelector('.tu-contenedor-de-audio'); // Ajusta el selector
-            if (container) {
+
                 Info(container);
-            }
+
         } else {
             // La interfaz Android no está disponible, espera un poco y vuelve a intentar
             console.log("panjamon: La interfaz Android no está lista, reintentando...");
@@ -287,7 +286,8 @@ function inicializarReproductorAudio() {
                 isPlayingPromise
                     .then(() => {
                         Cover(audioInfo.element);
-                        Info(audioInfo.element);
+                        checkAndroidInterface(audioInfo.element);
+                        //Info(audioInfo.element);
                         currentAudioIndex = index;
                         updatePlayPauseButton();
                     })
