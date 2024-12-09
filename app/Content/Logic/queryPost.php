@@ -39,7 +39,7 @@ add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
     try {
-        $user_id = obtenerUserId($is_ajax);
+        //$user_id = obtenerUserId($is_ajax);
         $current_user_id = get_current_user_id();
 
         $defaults = [
@@ -51,7 +51,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             'similar_to' => null,
             'colec' => null,
             'idea' => null,
-            'perfil' => null,
+            'user_id' => null,
             'identifier' => '', // Add identifier to defaults
         ];
 
@@ -91,6 +91,77 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         return $output;
     } catch (Exception $e) {
         error_log("[publicaciones] Error crítico: " . $e->getMessage());
+        return false;
+    }
+}
+
+
+function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
+{
+    try {
+        $FALLBACK_USER_ID = 44;
+        $is_authenticated = $current_user_id && $current_user_id != 0;
+        $is_admin = current_user_can('administrator');
+
+        // if (!$is_authenticated) {
+        //     $current_user_id = $FALLBACK_USER_ID;
+        // }
+
+        // Moviendo la asignación de $identifier antes del condicional $user_id
+        $identifier = isset($args['identifier']) ? $args['identifier'] : '';
+        $user_id = isset($args['user_id']) ? $args['user_id'] : '';
+        error_log("[configuracionQueryArgs] Identifier: " . $identifier);
+
+        if ($user_id !== null) {
+            $query_args = [
+                'post_type' => $args['post_type'],
+                'posts_per_page' => $args['posts'],
+                'paged' => $paged,
+                'ignore_sticky_posts' => true,
+                'suppress_filters' => false,
+                'orderby' => 'date',
+                'order' => 'DESC',
+                'author' => $user_id,
+            ];
+
+            $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
+            error_log("[configuracionQueryArgs] User ID found, returning early.");
+            return $query_args;
+        }
+
+        error_log("[configuracionQueryArgs] No user ID provided, proceeding with general query.");
+
+        $posts = $args['posts'];
+        $similar_to = $args['similar_to'] ?? null;
+        
+        // Usa $current_user_id directamente, no necesitas $is_authenticated aquí para obtener el meta
+        $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
+
+        if ($filtroTiempo === false) {
+            error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
+        }
+
+        $tipoUsuario = get_user_meta($current_user_id, 'tipoUsuario', true);
+
+        error_log("[configuracionQueryArgs] Calling construirQueryArgs with identifier: " . $identifier);
+        $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario);
+        error_log("[configuracionQueryArgs] query args built: " . print_r($query_args, true));
+
+        if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
+            error_log("[configuracionQueryArgs] Applying user-specific filters if not 'Fan'.");
+            if ($tipoUsuario !== 'Fan') {
+                $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+                error_log("[configuracionQueryArgs] User-specific filters applied.");
+            }
+        }
+
+        error_log("[configuracionQueryArgs] Applying global filters.");
+        $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id, $tipoUsuario);
+        error_log("[configuracionQueryArgs] Global filters applied: " . print_r($query_args, true));
+
+        return $query_args;
+    } catch (Exception $e) {
+        error_log("[configuracionQueryArgs] Error crítico: " . $e->getMessage());
         return false;
     }
 }
@@ -172,74 +243,6 @@ function manejarColeccion($args, $paged)
     }
 }
 
-function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
-{
-    try {
-        $FALLBACK_USER_ID = 44;
-        $is_authenticated = $current_user_id && $current_user_id != 0;
-        $is_admin = current_user_can('administrator');
-
-        // if (!$is_authenticated) {
-        //     $current_user_id = $FALLBACK_USER_ID;
-        // }
-
-        // Moviendo la asignación de $identifier antes del condicional $user_id
-        $identifier = isset($args['identifier']) ? $args['identifier'] : '';
-        error_log("[configuracionQueryArgs] Identifier: " . $identifier);
-
-        if ($user_id !== null) {
-            $query_args = [
-                'post_type' => $args['post_type'],
-                'posts_per_page' => $args['posts'],
-                'paged' => $paged,
-                'ignore_sticky_posts' => true,
-                'suppress_filters' => false,
-                'orderby' => 'date',
-                'order' => 'DESC',
-                'author' => $user_id,
-            ];
-
-            $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
-            error_log("[configuracionQueryArgs] User ID found, returning early.");
-            return $query_args;
-        }
-
-        error_log("[configuracionQueryArgs] No user ID provided, proceeding with general query.");
-
-        $posts = $args['posts'];
-        $similar_to = $args['similar_to'] ?? null;
-        
-        // Usa $current_user_id directamente, no necesitas $is_authenticated aquí para obtener el meta
-        $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
-
-        if ($filtroTiempo === false) {
-            error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
-        }
-
-        $tipoUsuario = get_user_meta($current_user_id, 'tipoUsuario', true);
-
-        error_log("[configuracionQueryArgs] Calling construirQueryArgs with identifier: " . $identifier);
-        $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario);
-        error_log("[configuracionQueryArgs] query args built: " . print_r($query_args, true));
-
-        if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
-            error_log("[configuracionQueryArgs] Applying user-specific filters if not 'Fan'.");
-            if ($tipoUsuario !== 'Fan') {
-                $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
-                error_log("[configuracionQueryArgs] User-specific filters applied.");
-            }
-        }
-
-        error_log("[configuracionQueryArgs] Applying global filters.");
-        $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id, $tipoUsuario);
-        error_log("[configuracionQueryArgs] Global filters applied: " . print_r($query_args, true));
-
-        return $query_args;
-    } catch (Exception $e) {
-        error_log("[configuracionQueryArgs] Error crítico: " . $e->getMessage());
-        return false;
-    }
-}
 function procesarIdeas($args, $paged)
 {
     try {
