@@ -39,6 +39,7 @@ add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
     try {
+        $user_id = obtenerUserId($is_ajax);
         $current_user_id = get_current_user_id();
 
         $defaults = [
