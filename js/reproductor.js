@@ -1,13 +1,12 @@
 //////////////////////////////////////////////
 //ACTIVAR O DESACTIVAR LOGS
-const A06 = true; // Cambia a true para activar los logs
-const log06 = A06 ? log06 : function () {};
+
 //////////////////////////////////////////////
 
 function inicializarReproductorAudio() {
     const audio = document.querySelector('.GSJJHK');
     if (!audio) {
-        log06('Elemento de audio no encontrado');
+        console.isPlayingPromise('Elemento de audio no encontrado');
         return;
     }
 
@@ -43,7 +42,7 @@ function inicializarReproductorAudio() {
             if (titleElement) titleElement.textContent = shortTitle;
             if (authorElement) authorElement.textContent = shortAuthor;
     
-            log06('Updated title and author:', shortTitle, shortAuthor);
+            console.isPlayingPromise('Updated title and author:', shortTitle, shortAuthor);
     
             // Envía la información a Android
             if (typeof Android !== 'undefined') {
@@ -51,7 +50,7 @@ function inicializarReproductorAudio() {
                 Android.sendAudioInfo(shortTitle, shortAuthor, imageUrl, audioSrc);
             }
         } else {
-            log06('Info div not found');
+            console.isPlayingPromise('Info div not found');
         }
     }
 
@@ -65,7 +64,7 @@ function inicializarReproductorAudio() {
             if (audio) {
                 audio.volume = this.value;
                 updateVolumeBackground(this.value);
-                log06('Volume changed to:', this.value);
+                console.isPlayingPromise('Volume changed to:', this.value);
             }
         });
         updateVolumeBackground(volumeControl.value);
@@ -90,16 +89,16 @@ function inicializarReproductorAudio() {
     let currentAudioIndex = -1;
 
     function inicializarEventosReproductor() {
-        log06("inicializarEventosReproductor ejecutado");
+        console.isPlayingPromise("inicializarEventosReproductor ejecutado");
         document.addEventListener('click', event => {
             const clickedElement = event.target;
-            log06("Elemento clickeado:", clickedElement);
+            console.isPlayingPromise("Elemento clickeado:", clickedElement);
     
             // Manejo del reproductor de audio
             const audioContainer = clickedElement.closest('.EDYQHV');
             if (audioContainer && !isExcludedElement(clickedElement)) {
                 const index = Array.from(document.querySelectorAll('.EDYQHV')).indexOf(audioContainer);
-                log06("Reproduciendo audio desde el elemento, index:", index);
+                console.isPlayingPromise("Reproduciendo audio desde el elemento, index:", index);
                 playAudioFromElement(audioContainer, index);
                 event.stopPropagation();
                 return;
@@ -142,13 +141,13 @@ function inicializarReproductorAudio() {
     });
 
     function setupControls() {
-        log06("Configurando controles");
+        console.isPlayingPromise("Configurando controles");
         document.querySelector('.next-btn')?.addEventListener('click', () => {
-            log06("Botón siguiente clickeado");
+            console.isPlayingPromise("Botón siguiente clickeado");
             playNextAudio();
         });
         document.querySelector('.prev-btn')?.addEventListener('click', () => {
-            log06("Botón anterior clickeado");
+            console.isPlayingPromise("Botón anterior clickeado");
             playPreviousAudio();
         });
         const playButton = document.querySelector('.play-btn');
@@ -156,39 +155,39 @@ function inicializarReproductorAudio() {
     
         if (playButton) {
             playButton.addEventListener('click', () => {
-                log06("Botón play clickeado");
+                console.isPlayingPromise("Botón play clickeado");
                 togglePlayPause();
             });
         }
     
         if (pauseButton) {
             pauseButton.addEventListener('click', () => {
-                log06("Botón pause clickeado");
+                console.isPlayingPromise("Botón pause clickeado");
                 togglePlayPause();
             });
         }
     }
 
     function setupProgressBar() {
-        log06("Configurando barra de progreso");
+        console.isPlayingPromise("Configurando barra de progreso");
         const progressContainer = document.querySelector('.progress-container');
         progressContainer?.addEventListener('click', (e) => {
-            log06("Barra de progreso clickeada");
+            console.isPlayingPromise("Barra de progreso clickeada");
             updateProgress(e);
         });
         audio.addEventListener('timeupdate', () => {
-            log06("Evento timeupdate disparado");
+            console.isPlayingPromise("Evento timeupdate disparado");
             updateProgressBar();
         });
     }
     
 
     function updateProgress(e) {
-        log06("Actualizando progreso");
+        console.isPlayingPromise("Actualizando progreso");
         const rect = e.currentTarget.getBoundingClientRect();
         const clickedPercentage = (e.clientX - rect.left) / rect.width;
         audio.currentTime = audio.duration * clickedPercentage;
-        log06("Nuevo currentTime:", audio.currentTime);
+        console.isPlayingPromise("Nuevo currentTime:", audio.currentTime);
     }
 
     function updateProgressBar() {
@@ -205,7 +204,7 @@ function updateProgressBar() {
     if (progressBar) {
         const value = audio.currentTime > 0 ? (100 / audio.duration) * audio.currentTime : 0;
         progressBar.style.width = `${value}%`;
-        log06("Progreso de la barra actualizado:", value);
+        console.isPlayingPromise("Progreso de la barra actualizado:", value);
     }
 }
 
@@ -216,22 +215,22 @@ async function playAudioFromElement(element, index) {
     const artistId = audioContainer?.getAttribute('artista-id');
 
     if (!audioSrc) {
-        log06("No se encontró audioSrc");
+        console.isPlayingPromise("No se encontró audioSrc");
         return;
     }
 
-    log06("Mostrando reproductor");
+    console.isPlayingPromise("Mostrando reproductor");
     document.querySelector('.TMLIWT').style.display = 'block';
 
     if (audio.src === audioSrc) {
-        log06("Mismo audio, toggle play/pause");
+        console.isPlayingPromise("Mismo audio, toggle play/pause");
         togglePlayPause();
     } else {
         try {
-            log06("Registrando reproducción y oyente");
+            console.isPlayingPromise("Registrando reproducción y oyente");
             await registrarReproduccionYOyente(audioSrc, postId, artistId);
 
-            log06("Obteniendo audio desde:", audioSrc);
+            console.isPlayingPromise("Obteniendo audio desde:", audioSrc);
             const response = await fetch(audioSrc, {
                 method: 'GET',
                 credentials: 'same-origin',
@@ -249,7 +248,7 @@ async function playAudioFromElement(element, index) {
             const audioUrl = URL.createObjectURL(blob);
 
             audio.src = audioUrl;
-            log06("Reproduciendo audio");
+            console.isPlayingPromise("Reproduciendo audio");
             await audio.play();
             Cover(element);
             Info(element);
@@ -263,16 +262,16 @@ async function playAudioFromElement(element, index) {
     let isPlayingPromise = null;
     
     async function togglePlayPause() {
-        log06("togglePlayPause ejecutado, estado actual:", audio.paused ? "paused" : "playing");
+        console.isPlayingPromise("togglePlayPause ejecutado, estado actual:", audio.paused ? "paused" : "playing");
         try {
             if (audio.paused) {
-                log06("Intentando reproducir");
+                console.isPlayingPromise("Intentando reproducir");
                 await audio.play();
-                log06("Reproducción iniciada");
+                console.isPlayingPromise("Reproducción iniciada");
             } else {
-                log06("Intentando pausar");
+                console.isPlayingPromise("Intentando pausar");
                 await audio.pause();
-                log06("Reproducción pausada");
+                console.isPlayingPromise("Reproducción pausada");
             }
         } catch (error) {
             console.error('Error en togglePlayPause:', error);
@@ -283,13 +282,13 @@ async function playAudioFromElement(element, index) {
     
 
     function updatePlayPauseButton() {
-        log06("Actualizando botones de play/pause");
+        console.isPlayingPromise("Actualizando botones de play/pause");
         const playButton = document.querySelector('.play-btn');
         const pauseButton = document.querySelector('.pause-btn');
         if (playButton && pauseButton) {
             playButton.style.display = audio.paused ? 'block' : 'none';
             pauseButton.style.display = audio.paused ? 'none' : 'block';
-            log06("Botones actualizados, estado:", audio.paused ? "paused" : "playing");
+            console.isPlayingPromise("Botones actualizados, estado:", audio.paused ? "paused" : "playing");
         }
     }
 
@@ -319,7 +318,7 @@ async function playAudioFromElement(element, index) {
                         updatePlayPauseButton();
                     })
                     .catch(error => {
-                        log06('Error al reproducir:', error);
+                        console.isPlayingPromise('Error al reproducir:', error);
                         updatePlayPauseButton();
                     });
             }
@@ -329,9 +328,9 @@ async function playAudioFromElement(element, index) {
     audio.addEventListener('play', updatePlayPauseButton);
     audio.addEventListener('pause', updatePlayPauseButton);
 
-    log06('Initializing audio player events.');
+    console.isPlayingPromise('Initializing audio player events.');
     inicializarEventosReproductor();
-    log06('Audio player initialization complete.');
+    console.isPlayingPromise('Audio player initialization complete.');
 }
 
 function registrarReproduccionYOyente(audioSrc, postId, artist) {
@@ -352,9 +351,9 @@ function registrarReproduccionYOyente(audioSrc, postId, artist) {
     })
         .then(response => response.json())
         .then(data => {
-            log06('Respuesta:', data);
+            console.isPlayingPromise('Respuesta:', data);
         })
         .catch(error => {
-            log06('Error:', error);
+            console.isPlayingPromise('Error:', error);
         });
 }
