@@ -173,7 +173,6 @@ function inicializarReproductorAudio() {
             updateProgress(e);
         });
         audio.addEventListener('timeupdate', () => {
-            console.log("Evento timeupdate disparado");
             updateProgressBar();
         });
     }
@@ -184,7 +183,6 @@ function inicializarReproductorAudio() {
         const rect = e.currentTarget.getBoundingClientRect();
         const clickedPercentage = (e.clientX - rect.left) / rect.width;
         audio.currentTime = audio.duration * clickedPercentage;
-        console.log("Nuevo currentTime:", audio.currentTime);
     }
 
     function updateProgressBar() {
@@ -201,7 +199,6 @@ function updateProgressBar() {
     if (progressBar) {
         const value = audio.currentTime > 0 ? (100 / audio.duration) * audio.currentTime : 0;
         progressBar.style.width = `${value}%`;
-        console.log("Progreso de la barra actualizado:", value);
     }
 }
 
