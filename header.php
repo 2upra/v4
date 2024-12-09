@@ -59,6 +59,15 @@ if (!defined('ABSPATH')) {
 
     <header id="header">
         <style>
+
+            @font-face {
+                font-family: 'Gothic №60';
+                src: url('https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/Gothic60-regular.otf') format('opentype');
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
+            }
+
             @font-face {
                 font-family: 'Source Sans 3';
                 src: url('https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Regular.woff2') format('woff2');

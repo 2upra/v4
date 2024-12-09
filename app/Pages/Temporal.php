@@ -200,6 +200,11 @@ function dev()
         <div class="tab-content">
             <div class="tab active GMXSUJ" id="inicio">
 
+                <div class="SOKDEOD">
+                    <img src="https://2upra.com/wp-content/uploads/2024/12/adfadfasdf.jpg" alt="">
+
+                </div>
+
                 <div class="BKXAFN">
                     <div style="display: none">
                         <div class="JMIOCI">
