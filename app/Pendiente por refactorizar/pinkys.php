@@ -195,7 +195,7 @@ function descargaAudio() {
             } */
 
             // Verificar el número de usos
-            if ($token_data['usos'] >= 1) {
+            if ($token_data['usos'] >= 2) {
                 error_log("[Error] Descarga de audio: Token ha excedido el número de usos permitidos. Usos: " . $token_data['usos']);
                 delete_transient('descarga_token_' . $token);
                 error_log("[Error] Token de descarga eliminado por exceder usos: " . $token);
