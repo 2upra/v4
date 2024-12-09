@@ -1,16 +1,19 @@
 <?
 
 # Paso 1 
-function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
-{
+function crearPost($tipoPost = 'social_post', $estadoPost = 'publish') {
     $contenido = sanitize_textarea_field($_POST['textoNormal'] ?? '');
     $tags = sanitize_text_field($_POST['tags'] ?? '');
+    
     if (empty($contenido)) {
         error_log('Error en crearPost: El contenido no puede estar vacío.');
         return new WP_Error('empty_content', 'El contenido no puede estar vacío.');
     }
+    
     $titulo = wp_trim_words($contenido, 15, '...');
     $autor = get_current_user_id();
+    
+    // Insertar el post
     $postId = wp_insert_post([
         'post_title'   => $titulo,
         'post_content' => $contenido,
@@ -18,17 +21,39 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
         'post_author'  => $autor,
         'post_type'    => $tipoPost,
     ]);
+    
     if (is_wp_error($postId)) {
         error_log('Error en crearPost: Error al insertar el post. Detalles: ' . $postId->get_error_message());
         return $postId;
     }
+    
+    // Actualizar metadatos (tags)
     if (!empty($tags)) {
         if (update_post_meta($postId, 'tagsUsuario', $tags) === false) {
             error_log('Error en crearPost: Fallo al actualizar meta tagsUsuario para el post ID ' . $postId);
         }
     }
+    
+    // Obtener los seguidores del autor
+    $seguidores = get_user_meta($autor, 'seguidores', true);
+    if (!empty($seguidores) && is_array($seguidores)) {
+        foreach ($seguidores as $seguidor_id) {
+            crearNotificacion(
+                $seguidor_id, 
+                "El usuario {$autor} ha creado un nuevo post.",
+                false,   // MetaSolicitud
+                $postId, // Post ID relacionado
+                'Nueva publicación',
+                null     // URL de la notificación
+            );
+        }
+    } else {
+        error_log("El usuario $autor no tiene seguidores o la lista de seguidores no es válida.");
+    }
+    
     return $postId;
 }
+
 
 #Paso 2
 function actualizarMetaDatos($postId)
