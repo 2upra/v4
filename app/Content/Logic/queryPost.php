@@ -218,18 +218,21 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
         $tipoUsuario = get_user_meta($current_user_id, 'tipoUsuario', true);
 
+        error_log("[configuracionQueryArgs] Calling construirQueryArgs with identifier: " . $identifier);
         $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario);
         error_log("[configuracionQueryArgs] query args built: " . print_r($query_args, true));
 
         if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
+            error_log("[configuracionQueryArgs] Applying user-specific filters if not 'Fan'.");
             if ($tipoUsuario !== 'Fan') {
                 $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
                 error_log("[configuracionQueryArgs] User-specific filters applied.");
             }
         }
 
+        error_log("[configuracionQueryArgs] Applying global filters.");
         $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id, $tipoUsuario);
-        error_log("[configuracionQueryArgs] Global filters applied.");
+        error_log("[configuracionQueryArgs] Global filters applied: " . print_r($query_args, true));
 
         return $query_args;
     } catch (Exception $e) {
