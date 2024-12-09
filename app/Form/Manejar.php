@@ -33,28 +33,66 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish') {
             error_log('Error en crearPost: Fallo al actualizar meta tagsUsuario para el post ID ' . $postId);
         }
     }
-    
-    // Obtener los seguidores del autor
+
+    // Guardar notificaciones pendientes
     $seguidores = get_user_meta($autor, 'seguidores', true);
     if (!empty($seguidores) && is_array($seguidores)) {
-        $autor_nombre = get_the_author_meta('display_name', $autor); // Obtener el nombre del autor
-        $contenido_corto = wp_trim_words($contenido, 10, '...'); // Crear una versión corta del contenido
-        
+        $autor_nombre = get_the_author_meta('display_name', $autor);
+        $contenido_corto = wp_trim_words($contenido, 10, '...');
+
+        $notificaciones = get_option('notificaciones_pendientes', []);
         foreach ($seguidores as $seguidor_id) {
-            crearNotificacion(
-                $seguidor_id, 
-                "{$autor_nombre} ha publicado: \"{$contenido_corto}\"",
-                false,   // MetaSolicitud
-                $postId, // Post ID relacionado
-                'Nueva publicación',
-                null     // URL de la notificación
-            );
+            $notificaciones[] = [
+                'seguidor_id' => $seguidor_id,
+                'mensaje' => "{$autor_nombre} ha publicado: \"{$contenido_corto}\"",
+                'post_id' => $postId,
+                'titulo' => 'Nueva publicación'
+            ];
+        }
+
+        update_option('notificaciones_pendientes', $notificaciones);
+
+        // Asegurar que el cron esté programado
+        if (!wp_next_scheduled('wp_enqueue_notifications')) {
+            wp_schedule_event(time(), 'minute', 'wp_enqueue_notifications');
         }
     } else {
         error_log("El usuario $autor no tiene seguidores o la lista de seguidores no es válida.");
     }
     
     return $postId;
+}
+
+
+add_action('wp_enqueue_notifications', 'procesar_notificaciones');
+
+function procesar_notificaciones() {
+    $notificaciones_pendientes = get_option('notificaciones_pendientes', []);
+    if (empty($notificaciones_pendientes)) {
+        return;
+    }
+    
+    // Procesar un lote de notificaciones (por ejemplo, 5)
+    $lote = array_splice($notificaciones_pendientes, 0, 5);
+
+    foreach ($lote as $notificacion) {
+        crearNotificacion(
+            $notificacion['seguidor_id'],
+            $notificacion['mensaje'],
+            false,
+            $notificacion['post_id'],
+            $notificacion['titulo'],
+            null
+        );
+    }
+
+    // Guardar las notificaciones restantes
+    update_option('notificaciones_pendientes', $notificaciones_pendientes);
+
+    // Si ya no quedan notificaciones, elimina la tarea programada
+    if (empty($notificaciones_pendientes)) {
+        wp_clear_scheduled_hook('wp_enqueue_notifications');
+    }
 }
 
 
@@ -83,6 +121,10 @@ function actualizarMetaDatos($postId)
         registrarNombreRolas($postId);
     }
 }
+
+
+
+
 #Paso 2.1
 function registrarNombreRolas($postId)
 {
