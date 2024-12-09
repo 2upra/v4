@@ -62,7 +62,7 @@ if (!defined('ABSPATH')) {
 
             @font-face {
                 font-family: 'Gothic №60';
-                src: url('https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/Gothic60-regular.otf') format('opentype');
+                src: url('https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/Gothic60-Regular.otf') format('opentype');
                 font-weight: 400;
                 font-style: normal;
                 font-display: swap;
