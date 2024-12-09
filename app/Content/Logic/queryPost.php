@@ -55,6 +55,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             'identifier' => '', // Add identifier to defaults
         ];
 
+        $user_id = isset($args['user_id']) ? $args['user_id'] : '';
         $args = array_merge($defaults, $args);
         
         error_log("[publicaciones] Identifier after merge: " . $args['identifier']);
@@ -109,8 +110,9 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id)
 
         // Moviendo la asignación de $identifier antes del condicional $user_id
         $identifier = isset($args['identifier']) ? $args['identifier'] : '';
-        $user_id = isset($args['user_id']) ? $args['user_id'] : '';
+        
         error_log("[configuracionQueryArgs] Identifier: " . $identifier);
+        error_log("[configuracionQueryArgs] user_id: " . $user_id);
 
         if ($user_id !== null) {
             $query_args = [
