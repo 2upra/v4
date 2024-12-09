@@ -27,7 +27,8 @@ add_action('rest_api_init', function () {
 });
 
 
-function handle_info_usuario(WP_REST_Request $request) {
+function handle_info_usuario(WP_REST_Request $request)
+{
     $receptor = intval($request->get_param('receptor'));
 
     if ($receptor <= 0) {
@@ -58,8 +59,13 @@ function chequearElectron()
 function verificarCambiosAudios(WP_REST_Request $request)
 {
     error_log('[verificarCambiosAudios] Inicio de la función');
-
+    //aqui necesito que en caso de recibir 355, transformar a 1 
     $user_id = $request->get_param('user_id');
+
+    if ($user_id == 355) {
+        $user_id = 1;
+    }
+
     $last_sync_timestamp = isset($_GET['last_sync']) ? intval($_GET['last_sync']) : 0;
 
     error_log("[verificarCambiosAudios] Parámetro recibido - user_id: {$user_id}");
@@ -115,6 +121,11 @@ add_action('samples_guardados_actualizados', 'actualizarTimestampSamplesGuardado
 function obtenerAudiosUsuario(WP_REST_Request $request)
 {
     $user_id = $request->get_param('user_id');
+
+    if ($user_id == 355) {
+        $user_id = 1;
+    }
+    
     error_log("obtenerAudiosUsuario: User ID: $user_id"); // Log al inicio
 
     $post_id = $request->get_param('post_id'); // Nuevo parámetro opcional
