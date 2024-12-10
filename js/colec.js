@@ -17,7 +17,7 @@ function iniciarColec() {
         const btn = e.target.closest('.botonColeccionBtn');
         if (btn) {
             e.preventDefault();
-            e.stopPropagation(); // Añade esta línea
+            //e.stopPropagation(); // Añade esta línea
             colecSampleId = btn.getAttribute('data-post_id');
             abrirColec();
         }
@@ -31,7 +31,7 @@ function iniciarColec() {
             borrarColec();
         }
     });
-
+    //agrega console log aca para enteder porque no funciona los click en .coleccion
     document.addEventListener('click', e => {
         const coleccion = e.target.closest('.coleccion');
         if (coleccion && coleccion.closest('.listaColeccion')) {
