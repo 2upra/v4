@@ -18,7 +18,6 @@ function iniciarColec() {
         if (btn) {
             console.log('Click en .botonColeccionBtn', e.target);
             e.preventDefault();
-            //e.stopPropagation(); // No es necesario aquí
             colecSampleId = btn.getAttribute('data-post_id');
             abrirColec();
         }
@@ -34,14 +33,19 @@ function iniciarColec() {
         }
     });
 
-    // Usar delegación de eventos en document.body para .coleccion dentro de .listaColeccion
-    document.body.addEventListener('click', e => {
-        const coleccion = e.target.closest('.listaColeccion .coleccion');
-        if (coleccion) {
-            console.log('Click en .coleccion', e.target);
-            manejarClickColec(coleccion);
-        }
-    });
+    // Delegación de eventos para .coleccion
+    const listaColeccion = document.querySelector('.listaColeccion');
+    if (listaColeccion) {
+        listaColeccion.addEventListener('click', e => {
+            const coleccion = e.target.closest('.coleccion');
+            if (coleccion) {
+                console.log('Click en .coleccion', e.target);
+                manejarClickColec(coleccion);
+            }
+        });
+    } else {
+        console.error("No se encontró el elemento .listaColeccion");
+    }
 
     function a(selector) {
         return document.querySelector(selector);
@@ -59,7 +63,6 @@ function iniciarColec() {
         });
     } else {
         console.warn('No se encontró el elemento #buscarColeccion');
-        return; // Considera si realmente quieres un return aquí o solo un warning
     }
 
     subidaImagenColec();
@@ -69,8 +72,29 @@ function iniciarColec() {
     });
 }
 
+async function abrirColec() {
+    if (!colecSampleId) return;
+
+    const modal = document.querySelector('.modalColec');
+    if (!modal) {
+        console.error("No se encontró el elemento .modalColec");
+        return;
+    }
+
+    if (getComputedStyle(modal).display !== 'none') return;
+
+    mostrar(modal);
+    createColecDarkBackground();
+    document.body.classList.add('no-scroll');
+    await verificarSampleEnColecciones();
+}
+
 function manejarClickColec(coleccion) {
     const button = document.querySelector('#btnListo');
+    if (!button) {
+        console.error("No se encontró el elemento #btnListo");
+        return;
+    }
 
     if (coleccion.classList.toggle('seleccion')) {
         // Se agregó la clase 'seleccion'
@@ -216,19 +240,6 @@ async function crearNuevaColec() {
     }
 }
 
-async function abrirColec() {
-    if (!colecSampleId) return;
-
-    const modal = document.querySelector('.modalColec');
-    if (!modal) return;
-
-    if (getComputedStyle(modal).display !== 'none') return;
-
-    mostrar(modal);
-    createColecDarkBackground();
-    document.body.classList.add('no-scroll');
-    await verificarSampleEnColecciones();
-}
 
 window.cerrarColec = function () {
     const modal = document.querySelector('.modalColec');
