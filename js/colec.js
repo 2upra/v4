@@ -16,8 +16,9 @@ function iniciarColec() {
     document.body.addEventListener('click', e => {
         const btn = e.target.closest('.botonColeccionBtn');
         if (btn) {
+            console.log('Click en .botonColeccionBtn', e.target);
             e.preventDefault();
-            //e.stopPropagation(); // Añade esta línea
+            //e.stopPropagation(); // No es necesario aquí
             colecSampleId = btn.getAttribute('data-post_id');
             abrirColec();
         }
@@ -26,18 +27,25 @@ function iniciarColec() {
     document.body.addEventListener('click', e => {
         const btnEliminar = e.target.closest('.borrarColec');
         if (btnEliminar) {
+            console.log('Click en .borrarColec', e.target);
             e.preventDefault();
             colecABorrar = btnEliminar.getAttribute('data-post_id');
             borrarColec();
         }
     });
-    //agrega console log aca para enteder porque no funciona los click en .coleccion
-    document.addEventListener('click', e => {
-        const coleccion = e.target.closest('.coleccion');
-        if (coleccion && coleccion.closest('.listaColeccion')) {
+
+    // Usar delegación de eventos en document.body para .coleccion dentro de .listaColeccion
+    document.body.addEventListener('click', e => {
+        const coleccion = e.target.closest('.listaColeccion .coleccion');
+        if (coleccion) {
+            console.log('Click en .coleccion', e.target);
             manejarClickColec(coleccion);
         }
     });
+
+    function a(selector) {
+        return document.querySelector(selector);
+    }
 
     a('#btnEmpezarCreaColec')?.addEventListener('click', abrirModalCrearColec);
     a('#btnCrearColec')?.addEventListener('click', crearNuevaColec);
@@ -50,12 +58,43 @@ function iniciarColec() {
             busquedaColec(query);
         });
     } else {
-        return;
+        console.warn('No se encontró el elemento #buscarColeccion');
+        return; // Considera si realmente quieres un return aquí o solo un warning
     }
+
     subidaImagenColec();
+
     document.addEventListener('modalOpened', () => {
         resetColec();
     });
+}
+
+function manejarClickColec(coleccion) {
+    const button = document.querySelector('#btnListo');
+
+    if (coleccion.classList.toggle('seleccion')) {
+        // Se agregó la clase 'seleccion'
+        colecSelecionado = coleccion.getAttribute('data-post_id') || coleccion.id;
+        button.innerText = 'Guardar';
+        button.onclick = manejarClickListoColec;
+    } else {
+        // Se removió la clase 'seleccion'
+        colecSelecionado = null;
+        button.innerText = 'Listo';
+        button.onclick = null;
+    }
+}
+
+async function crearNuevaColecConTitulo(titulo) {
+    const button = document.querySelector('#btnListo');
+    if (button.disabled) return;
+
+    button.disabled = true;
+    document.querySelector('#tituloColec').value = titulo;
+    button.innerText = 'Creando nueva colección...';
+
+    await crearNuevaColec();
+    button.disabled = false;
 }
 
 async function borrarColec() {
@@ -134,35 +173,6 @@ function busquedaColec(query) {
         button.innerText = colecSelecionado ? 'Guardar' : 'Listo';
         button.onclick = colecSelecionado ? manejarClickListoColec : null;
     }
-}
-
-function manejarClickColec(coleccion) {
-    const button = a('#btnListo');
-
-    if (coleccion.classList.contains('seleccion')) {
-        coleccion.classList.remove('seleccion');
-        colecSelecionado = null;
-        button.innerText = 'Listo';
-        button.onclick = null;
-    } else {
-        a.quitar('.coleccion', 'seleccion');
-        coleccion.classList.add('seleccion');
-        colecSelecionado = coleccion.getAttribute('data-post_id') || coleccion.id;
-        button.innerText = 'Guardar';
-        button.onclick = manejarClickListoColec;
-    }
-}
-
-async function crearNuevaColecConTitulo(titulo) {
-    const button = a('#btnListo');
-    if (button.disabled) return; // Previene múltiples clics
-
-    button.disabled = true;
-    a('#tituloColec').value = titulo;
-    button.innerText = 'Creando nueva colección...';
-
-    await crearNuevaColec(); // Espera a que la creación termine
-    button.disabled = false; // Rehabilita el botón después de finalizar
 }
 
 // Funcion para crear colec
@@ -295,7 +305,7 @@ window.removeColecDarkBackground = function () {
 
 const modal = document.querySelector('.modalColec');
 if (modal) {
-    modal.addEventListener('click', (event) => {
+    modal.addEventListener('click', event => {
         event.stopPropagation();
     });
 }
