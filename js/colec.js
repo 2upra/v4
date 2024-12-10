@@ -96,16 +96,24 @@ function manejarClickColec(coleccion) {
         return;
     }
 
-    if (coleccion.classList.toggle('seleccion')) {
-        // Se agregó la clase 'seleccion'
-        colecSelecionado = coleccion.getAttribute('data-post_id') || coleccion.id;
-        button.innerText = 'Guardar';
-        button.onclick = manejarClickListoColec;
-    } else {
-        // Se removió la clase 'seleccion'
+    // Obtener todas las colecciones seleccionadas actualmente
+    const coleccionesSeleccionadas = document.querySelectorAll('.listaColeccion .coleccion.seleccion');
+
+    if (coleccion.classList.contains('seleccion')) {
+        // Deseleccionar la colección actual si ya está seleccionada
+        coleccion.classList.remove('seleccion');
         colecSelecionado = null;
         button.innerText = 'Listo';
         button.onclick = null;
+    } else {
+        // Deseleccionar todas las colecciones previamente seleccionadas
+        coleccionesSeleccionadas.forEach(c => c.classList.remove('seleccion'));
+
+        // Seleccionar la nueva colección
+        coleccion.classList.add('seleccion');
+        colecSelecionado = coleccion.getAttribute('data-post_id') || coleccion.id;
+        button.innerText = 'Guardar';
+        button.onclick = manejarClickListoColec;
     }
 }
 
