@@ -222,18 +222,33 @@ function procesarColeccion($postId, $userId) {
 }
 
 
+/*
+[11-Dec-2024 08:21:05 UTC] [agregarArchivosAlZip] IDs de audio para sample 310675: "310676"
+[11-Dec-2024 08:21:05 UTC] [agregarArchivosAlZip] Error: El valor de 'post_audio' para el sample 310675 no es un array.
+[11-Dec-2024 08:21:05 UTC] [agregarArchivosAlZip] IDs de audio para sample 269818: "269819"
+[11-Dec-2024 08:21:05 UTC] [agregarArchivosAlZip] Error: El valor de 'post_audio' para el sample 269818 no es un array.
+[11-Dec-2024 08:21:05 UTC] [agregarArchivosAlZip] IDs de audio para sample 258647: "258648" 
+arregla plis
+*/
+
+
 function agregarArchivosAlZip(ZipArchive &$zip, array $samples): bool
 {
     $agregado = false;
-    $functionName = __FUNCTION__; 
+    $functionName = __FUNCTION__;
 
     foreach ($samples as $sampleId) {
         $audioIds = get_post_meta($sampleId, 'post_audio', true);
         error_log("[{$functionName}] IDs de audio para sample {$sampleId}: " . json_encode($audioIds));
 
+        // Convertir $audioIds a un array si no lo es
         if (!is_array($audioIds)) {
-            error_log("[{$functionName}] Error: El valor de 'post_audio' para el sample {$sampleId} no es un array.");
-            continue; // Salta a la siguiente iteración del bucle principal
+            if (is_string($audioIds) && !empty($audioIds)) {
+                $audioIds = [$audioIds]; // Crea un array con el string como único elemento
+            } else {
+                error_log("[{$functionName}] Error: El valor de 'post_audio' para el sample {$sampleId} no es un array ni un string válido.");
+                continue; // Salta a la siguiente iteración del bucle principal
+            }
         }
 
         foreach ($audioIds as $audioId) {
@@ -262,6 +277,8 @@ function agregarArchivosAlZip(ZipArchive &$zip, array $samples): bool
 
     return $agregado;
 }
+
+?>
 
 function clasificarSamples(array $samples, int $userId): array
 {
