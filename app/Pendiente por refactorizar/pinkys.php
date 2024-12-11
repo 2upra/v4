@@ -249,6 +249,159 @@ function generarEnlaceDescargaColeccion($userID, $zipPath, $postId)
     return $enlaceDescarga;
 }
 
+function descargaAudioColeccion() {
+    if (isset($_GET['descarga_token']) && isset($_GET['tipo']) && $_GET['tipo'] === 'coleccion') {
+        $token = sanitize_text_field($_GET['descarga_token']);
+
+        error_log("--------------------------------------------------");
+        error_log("[Inicio] Intentando descargar colección con token: " . $token);
+        error_log('User Agent: ' . $_SERVER['HTTP_USER_AGENT']);
+        //error_log('Request Headers: ' . print_r(getallheaders(), true));
+
+        $token_data = get_transient('descarga_token_' . $token);
+
+        if ($token_data) {
+            error_log("Datos del token recuperados: " . print_r($token_data, true));
+
+            $userID = get_current_user_id();
+            error_log("UserID actual: " . $userID);
+            error_log("UserID del token: " . $token_data['user_id']);
+
+            // Desactivado temporalmente por problemas en Android. 
+            /*
+            if ($userID != $token_data['user_id']) {
+                error_log("[Error] Descarga de colección: Usuario no autorizado. UserID: " . $userID . ", Token UserID: " . $token_data['user_id']);
+                error_log("--------------------------------------------------");
+                wp_die('No tienes permiso para descargar este archivo.');
+            }
+            */
+
+            // Verificar el número de usos
+            if ($token_data['usos'] >= 2) {
+                error_log("[Error] Descarga de colección: Token ha excedido el número de usos permitidos. Usos: " . $token_data['usos']);
+                delete_transient('descarga_token_' . $token);
+                error_log("[Error] Token de descarga eliminado por exceder usos: " . $token);
+                error_log("--------------------------------------------------");
+                wp_die('El enlace de descarga ha excedido el número de usos permitidos.');
+            }
+
+            $zipPath = $token_data['zip_path'];
+
+            if ($zipPath && file_exists($zipPath) && is_readable($zipPath)) {
+                // Limpiar cualquier salida previa
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+
+                // Configuración del servidor
+                ini_set('zlib.output_compression', 'Off');
+                ini_set('output_buffering', 'Off');
+                set_time_limit(0);
+                error_log("Configuración del servidor ajustada para la descarga.");
+
+                // Obtener el tipo MIME y el nombre del archivo
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                if ($finfo === false) {
+                    error_log("[Error] Descarga de colección: Error al abrir finfo.");
+                    wp_die('Error al obtener información del archivo.');
+                }
+                $mime_type = finfo_file($finfo, $zipPath);
+                if ($mime_type === false) {
+                    error_log("[Error] Descarga de colección: Error al obtener el tipo MIME del archivo: " . $zipPath);
+                    finfo_close($finfo);
+                    wp_die('Error al obtener el tipo de archivo.');
+                }
+                finfo_close($finfo);
+                error_log("Tipo MIME del archivo: " . $mime_type);
+
+                $filename = basename($zipPath);
+                error_log("Nombre del archivo: " . $filename);
+
+                // Cabeceras HTTP
+                header('Content-Type: ' . $mime_type);
+                header('Content-Disposition: attachment; filename="' . $filename . '"');
+                header('Content-Length: ' . filesize($zipPath));
+                header('Accept-Ranges: bytes');
+                header('Cache-Control: no-cache, must-revalidate');
+                header('Pragma: no-cache');
+                header('Expires: 0');
+                error_log("Cabeceras HTTP configuradas correctamente.");
+
+                // Manejo de rangos para descarga parcial
+                if (isset($_SERVER['HTTP_RANGE'])) {
+                    error_log("Solicitud de rango recibida: " . $_SERVER['HTTP_RANGE']);
+                    list($a, $range) = explode("=", $_SERVER['HTTP_RANGE'], 2);
+                    list($range) = explode(",", $range, 2);
+                    list($range, $range_end) = explode("-", $range);
+                    $range = intval($range);
+                    $size = filesize($zipPath);
+                    $range_end = ($range_end) ? intval($range_end) : $size - 1;
+
+                    header('HTTP/1.1 206 Partial Content');
+                    header("Content-Range: bytes $range-$range_end/$size");
+                    header('Content-Length: ' . ($range_end - $range + 1));
+                    error_log("Respondiendo con contenido parcial. Rango: $range-$range_end");
+                } else {
+                    $range = 0;
+                    error_log("No se solicitó rango. Se enviará el archivo completo.");
+                }
+
+                // Abrir y enviar el archivo
+                $fp = fopen($zipPath, 'rb');
+                if ($fp === false) {
+                    error_log("[Error] Descarga de colección: Error al abrir el archivo: " . $zipPath);
+                    wp_die('Error al abrir el archivo.');
+                }
+                fseek($fp, $range);
+                error_log("Posición del puntero de archivo ajustada a: " . $range);
+
+                error_log("Iniciando la transmisión del archivo...");
+                while (!feof($fp)) {
+                    $data = fread($fp, 8192);
+                    if ($data === false) {
+                        error_log("[Error] Descarga de colección: Error al leer el archivo: " . $zipPath);
+                        fclose($fp);
+                        wp_die('Error al leer el archivo.');
+                    }
+                    print($data);
+                    flush();
+                    if (connection_status() != 0) {
+                        error_log("[Error] Descarga de colección: Conexión interrumpida. Estado: " . connection_status());
+                        fclose($fp);
+                        exit;
+                    }
+                }
+
+                fclose($fp);
+                error_log("Transmisión del archivo finalizada con éxito.");
+
+                // Incrementar el contador de usos y actualizar el token
+                $token_data['usos']++;
+                set_transient('descarga_token_' . $token, $token_data, HOUR_IN_SECONDS);
+                error_log("Contador de usos incrementado a: " . $token_data['usos']);
+
+                // Eliminar el token si ha alcanzado el límite de usos
+                if ($token_data['usos'] >= 3) {
+                    delete_transient('descarga_token_' . $token);
+                    error_log("[OK] Token de descarga eliminado después de 3 usos: " . $token);
+                }
+
+                error_log("[Fin] Descarga de colección completada.");
+                error_log("--------------------------------------------------");
+                exit;
+            } else {
+                error_log("[Error] Descarga de colección: El archivo no existe o no es accesible. Ruta: " . $zipPath);
+                error_log("--------------------------------------------------");
+                wp_die('El archivo no existe o no es accesible.');
+            }
+        } else {
+            error_log("[Error] Descarga de colección: Token de descarga no válido o expirado. Token: " . $token);
+            error_log("--------------------------------------------------");
+            wp_die('El enlace de descarga no es válido o ha expirado.');
+        }
+    }
+}
+
 
 function agregarArchivosAlZip(ZipArchive &$zip, array $samples): bool
 {
@@ -358,7 +511,7 @@ function actualizarDescargas(int $userId, array $samplesNoDescargados, array $sa
 
 
 add_action('template_redirect', 'descargaAudioColeccion');
-//esto funciona bien (no hay que tocar nada)
+
 function generarEnlaceDescarga($userID, $audioID)
 {
     $token = bin2hex(random_bytes(16));
