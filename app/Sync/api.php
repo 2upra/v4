@@ -205,6 +205,13 @@ function obtenerImagenOptimizada($post_id)
     return null;
 }
 
+/*
+pasa esto con los wav que se descarga, tenia ese problema antes pero no recuerdo como lo resolvi en otro codigo
+File: C:\Users\1u\Documents\test\Sync 2upra (1)\samples-hip-hop-soul\Vintage-Loop-70BPM_qH4j_2upra.wav
+Code: -1 (FFFFFFFF)
+Message: Decoder was not found for this format.
+*/
+
 function descargarAudiosSync(WP_REST_Request $request)
 {
     $token = $request->get_param('token');
@@ -218,19 +225,63 @@ function descargarAudiosSync(WP_REST_Request $request)
         delete_transient('sync_token_' . $token);
         $file_path = get_attached_file($attachment_id);
         if ($file_path && file_exists($file_path)) {
-            $mime_type = mime_content_type($file_path);
+
+            // Limpiar todos los niveles del buffer de salida
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+
+            // Configuración del servidor
+            ini_set('zlib.output_compression', 'Off');
+            ini_set('output_buffering', 'Off');
+            set_time_limit(0);
+
+            // Usar finfo para obtener el tipo MIME
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime_type = finfo_file($finfo, $file_path);
+            finfo_close($finfo);
+
             if (strpos($mime_type, 'audio/') !== 0) {
                 error_log("Intento de acceso a archivo no de audio. Ruta: $file_path");
                 return new WP_Error('invalid_file_type', 'Tipo de archivo inválido.', array('status' => 400));
             }
+
             header('Content-Description: File Transfer');
             header('Content-Type: ' . $mime_type);
             header('Content-Disposition: attachment; filename="' . basename($file_path) . '"');
             header('Expires: 0');
-            header('Cache-Control: no-cache');
-            header('Pragma: public');
+            header('Cache-Control: no-cache, must-revalidate'); // Añadido must-revalidate
+            header('Pragma: no-cache');
             header('Content-Length: ' . filesize($file_path));
-            readfile($file_path);
+            header('Accept-Ranges: bytes'); // Añadido para soportar rangos
+
+            // Manejo básico de rangos (opcional, pero recomendado)
+            if (isset($_SERVER['HTTP_RANGE'])) {
+                list($a, $range) = explode("=", $_SERVER['HTTP_RANGE'], 2);
+                list($range) = explode(",", $range, 2);
+                list($range, $range_end) = explode("-", $range);
+                $range = intval($range);
+                $size = filesize($file_path);
+                $range_end = ($range_end) ? intval($range_end) : $size - 1;
+
+                header('HTTP/1.1 206 Partial Content');
+                header("Content-Range: bytes $range-$range_end/$size");
+                header('Content-Length: ' . ($range_end - $range + 1));
+            } else {
+                $range = 0;
+            }
+
+            // Enviar el archivo con fpassthru()
+            $handle = fopen($file_path, 'rb');
+            if ($handle !== false) {
+                fseek($handle, $range); // Ajustar para rangos
+                fpassthru($handle);
+                fclose($handle);
+            } else {
+                error_log("Error al abrir el archivo: $file_path");
+                return new WP_Error('file_open_error', 'Error al abrir el archivo.', array('status' => 500));
+            }
+            flush();
             exit;
         } else {
             error_log("Archivo no encontrado en la ruta: $file_path. Token: $token");
@@ -241,3 +292,4 @@ function descargarAudiosSync(WP_REST_Request $request)
         return new WP_Error('invalid_token', 'Token inválido o expirado.', array('status' => 403));
     }
 }
+
