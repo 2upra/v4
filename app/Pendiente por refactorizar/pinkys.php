@@ -131,7 +131,7 @@ function procesarColeccion($postId, $userId) {
     $samples = get_post_meta($postId, 'samples', true);
     $numSamples = is_array($samples) ? count($samples) : 0;
 
-    error_log("[procesarColeccion] Samples obtenidos: " . print_r($samples, true));
+    //error_log("[procesarColeccion] Samples obtenidos: " . print_r($samples, true));
     error_log("[procesarColeccion] Número de samples: " . $numSamples);
 
     if ($numSamples === 0) {
@@ -158,7 +158,7 @@ function procesarColeccion($postId, $userId) {
 
     if (file_exists($zipPath)) {
         error_log("[procesarColeccion] El archivo ZIP ya existe.");
-        error_log("[procesarColeccion] Samples descargados: " . print_r($samplesDescargados, true));
+        //error_log("[procesarColeccion] Samples descargados: " . print_r($samplesDescargados, true));
         error_log("[procesarColeccion] Samples no descargados: " . print_r($samplesNoDescargados, true));
         error_log("[procesarColeccion] Número de samples no descargados: " . $numSamplesNoDescargados);
 
@@ -300,8 +300,8 @@ function clasificarSamples(array $samples, int $userId): array
         }
     }
 
-    error_log("[{$functionName}] Samples descargados para el usuario {$userId}: " . json_encode($samplesDescargados));
-    error_log("[{$functionName}] Samples no descargados para el usuario {$userId}: " . json_encode($samplesNoDescargados));
+    //error_log("[{$functionName}] Samples descargados para el usuario {$userId}: " . json_encode($samplesDescargados));
+    //error_log("[{$functionName}] Samples no descargados para el usuario {$userId}: " . json_encode($samplesNoDescargados));
 
     return [$samplesDescargados, $samplesNoDescargados];
 }
@@ -334,7 +334,7 @@ function actualizarDescargas(int $userId, array $samplesNoDescargados, array $sa
         if (isset($descargasAnteriores[$sampleId])) {
             $descargasAnteriores[$sampleId]++;
             update_user_meta($userId, 'descargas', $descargasAnteriores);
-            error_log("[{$functionName}] Contador de descargas incrementado para sample {$sampleId} (usuario {$userId}). Nuevo valor: {$descargasAnteriores[$sampleId]}");
+            //error_log("[{$functionName}] Contador de descargas incrementado para sample {$sampleId} (usuario {$userId}). Nuevo valor: {$descargasAnteriores[$sampleId]}");
         }
     }
 }
@@ -376,7 +376,7 @@ function descargaAudioColeccion() {
         error_log("--------------------------------------------------");
         error_log("[Inicio] Intentando descargar colección con token: " . $token);
         error_log('User Agent: ' . $_SERVER['HTTP_USER_AGENT']);
-        error_log('Request Headers: ' . print_r(getallheaders(), true));
+        //error_log('Request Headers: ' . print_r(getallheaders(), true));
 
         $token_data = get_transient('descarga_token_' . $token);
 
@@ -560,7 +560,7 @@ function descargaAudio()
         error_log("--------------------------------------------------");
         error_log("[Inicio] Intentando descargar con token: " . $token);
         error_log('User Agent: ' . $_SERVER['HTTP_USER_AGENT']);
-        error_log('Request Headers: ' . print_r(getallheaders(), true));
+        //error_log('Request Headers: ' . print_r(getallheaders(), true));
 
         $token_data = get_transient('descarga_token_' . $token);
 
