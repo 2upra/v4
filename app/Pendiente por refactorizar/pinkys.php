@@ -30,15 +30,9 @@ function restarPinkysEliminacion($postID)
 add_action('wp_ajax_procesarDescarga', 'procesarDescarga');
 
 
-/**
- * Procesa la solicitud de descarga de un audio.
- *
- * Verifica la autorización del usuario, la validez del post y del audio asociado.
- * Actualiza el contador de descargas del usuario y del post.
- * Genera un enlace de descarga único y lo envía como respuesta.
- */
-
- function procesarDescarga() {
+//aqui hay 2 problema con las colecciones, 1 una el zip da 404 y no veo que se este creando en el servidor, y 2, las colecciones deben descargarse tambien con generarEnlaceDescarga, por favor dame 
+function procesarDescarga()
+{
     $userId = get_current_user_id();
     error_log("Inicio del proceso de descarga. User ID: " . $userId);
 
@@ -61,12 +55,16 @@ add_action('wp_ajax_procesarDescarga', 'procesarDescarga');
 
     if ($esColeccion) {
         error_log("Procesando colección. Post ID: " . $postId);
-        $downloadUrl = procesarColeccion($postId, $userId);
-        if (is_wp_error($downloadUrl)){
-            error_log("Error en procesarColeccion: " . $downloadUrl->get_error_message());
-            wp_send_json_error(['message' => $downloadUrl->get_error_message()]);
+        $zipUrl = procesarColeccion($postId, $userId);
+        if (is_wp_error($zipUrl)) {
+            error_log("Error en procesarColeccion: " . $zipUrl->get_error_message());
+            wp_send_json_error(['message' => $zipUrl->get_error_message()]);
             return;
         }
+
+        // Generar enlace de descarga para la colección
+        $downloadUrl = generarEnlaceDescargaColeccion($userId, $zipUrl, $postId);
+        error_log("URL de descarga de colección generada: " . $downloadUrl);
     } else {
         error_log("Procesando descarga individual. Post ID: " . $postId);
         $audioId = get_post_meta($postId, 'post_audio', true);
@@ -125,7 +123,8 @@ add_action('wp_ajax_procesarDescarga', 'procesarDescarga');
     error_log("Fin del proceso de descarga.");
 }
 
-function procesarColeccion($postId, $userId) {
+function procesarColeccion($postId, $userId)
+{
     error_log("Inicio de procesarColeccion. Post ID: " . $postId . ", User ID: " . $userId);
 
     $samples = get_post_meta($postId, 'samples', true);
@@ -136,7 +135,7 @@ function procesarColeccion($postId, $userId) {
 
     if ($numSamples === 0) {
         error_log("Error: No hay samples en esta colección.");
-        return new WP_Error( 'no_samples', __( 'No hay samples en esta colección.', 'text-domain' ) );
+        return new WP_Error('no_samples', __('No hay samples en esta colección.', 'text-domain'));
     }
 
     $zipName = 'coleccion-' . $postId . '-' . $numSamples . '.zip';
@@ -147,6 +146,14 @@ function procesarColeccion($postId, $userId) {
     error_log("Nombre del archivo ZIP: " . $zipName);
     error_log("Ruta del archivo ZIP: " . $zipPath);
     error_log("URL del archivo ZIP: " . $zipUrl);
+
+    if (!is_dir($upload_dir['path']) || !is_writable($upload_dir['path'])) {
+        error_log("Error: El directorio de uploads no existe o no tiene permisos de escritura.");
+        return new WP_Error('upload_dir_error', __('Error: El directorio de uploads no existe o no tiene permisos de escritura.', 'text-domain'));
+    }
+
+    $zip = new ZipArchive();
+    $zipCreado = false; // Bandera para saber si el zip se ha creado correctamente
 
     if (file_exists($zipPath)) {
         error_log("El archivo ZIP ya existe.");
@@ -176,7 +183,7 @@ function procesarColeccion($postId, $userId) {
 
             if ($pinky < $numSamplesNoDescargados) {
                 error_log("Error: No tienes suficientes Pinkys. Requeridos: " . $numSamplesNoDescargados);
-                return new WP_Error( 'no_pinkys', __( 'No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys', 'text-domain' ) );
+                return new WP_Error('no_pinkys', __('No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys', 'text-domain'));
             }
             restarPinkys($userId, $numSamplesNoDescargados);
             error_log("Pinkys restados: " . $numSamplesNoDescargados);
@@ -204,32 +211,41 @@ function procesarColeccion($postId, $userId) {
         }
     } else {
         error_log("El archivo ZIP no existe. Creando...");
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
 
-        $zip = new ZipArchive();
-        if ($zip->open($zipPath, ZipArchive::CREATE) !== TRUE) {
-            error_log("Error al crear el archivo ZIP.");
-            return new WP_Error( 'zip_error', __( 'Error al crear el archivo ZIP.', 'text-domain' ) );
-        }
+            $zip = new ZipArchive();
+            if ($zip->open($zipPath, ZipArchive::CREATE) !== TRUE) {
+                error_log("Error al crear el archivo ZIP.");
+                return new WP_Error('zip_error', __('Error al crear el archivo ZIP.', 'text-domain'));
+            }
 
-        $samplesDescargados = [];
-        $samplesNoDescargados = [];
-        foreach ($samples as $sampleId) {
-            $audioIds = get_post_meta($sampleId, 'post_audio', true);
-            error_log("IDs de audio para sample " . $sampleId . ": " . print_r($audioIds, true));
-            if (is_array($audioIds)) {
-                foreach ($audioIds as $audioId) {
-                    $audioFile = get_attached_file($audioId);
-                    error_log("Ruta del archivo de audio: " . $audioFile);
+            $samplesDescargados = [];
+            $samplesNoDescargados = [];
 
-                    if ($audioFile) {
-                        if ($zip->addFile($audioFile, basename($audioFile))){
-                            error_log("Archivo agregado al ZIP: " . basename($audioFile));
+            foreach ($samples as $sampleId) {
+                $audioIds = get_post_meta($sampleId, 'post_audio', true);
+                error_log("IDs de audio para sample " . $sampleId . ": " . print_r($audioIds, true));
+
+                if (is_array($audioIds)) {
+                    foreach ($audioIds as $audioId) {
+                        $audioFile = get_attached_file($audioId);
+                        error_log("Ruta del archivo de audio: " . $audioFile);
+
+                        if ($audioFile && file_exists($audioFile)) {
+                            if ($zip->addFile($audioFile, basename($audioFile))) {
+                                error_log("Archivo agregado al ZIP: " . basename($audioFile));
+                                $zipCreado = true;
+                            } else {
+                                error_log("Error al agregar archivo al ZIP: " . basename($audioFile));
+                                $zip->close();
+                                if (file_exists($zipPath)) {
+                                    unlink($zipPath);
+                                }
+                                return new WP_Error('add_file_error', __('Error al agregar archivo al ZIP.', 'text-domain'));
+                            }
                         } else {
-                            error_log("Error al agregar archivo al ZIP: " . basename($audioFile));
+                            error_log("Error: No se pudo obtener la ruta del archivo de audio con ID: " . $audioId);
                         }
-
-                    } else {
-                        error_log("Error: No se pudo obtener la ruta del archivo de audio con ID: " . $audioId);
                     }
                 }
             }
@@ -246,6 +262,15 @@ function procesarColeccion($postId, $userId) {
         $zip->close();
         error_log("Archivo ZIP cerrado.");
 
+        // Verificar si se agregaron archivos al ZIP antes de restar Pinkys
+        if (!$zipCreado) {
+            error_log("Error: No se agregaron archivos al ZIP.");
+            if (file_exists($zipPath)) {
+                unlink($zipPath);
+            }
+            return new WP_Error('no_files_added', __('No se agregaron archivos al ZIP.', 'text-domain'));
+        }
+
         $numSamplesNoDescargados = count($samplesNoDescargados);
         error_log("Número de samples no descargados: " . $numSamplesNoDescargados);
 
@@ -260,7 +285,7 @@ function procesarColeccion($postId, $userId) {
                     unlink($zipPath);
                     error_log("Archivo ZIP eliminado debido a la falta de Pinkys: " . $zipPath);
                 }
-                return new WP_Error( 'no_pinkys', __( 'No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys', 'text-domain' ) );
+                return new WP_Error('no_pinkys', __('No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys', 'text-domain'));
             }
             restarPinkys($userId, $numSamplesNoDescargados);
             error_log("Pinkys restados: " . $numSamplesNoDescargados);
@@ -297,13 +322,35 @@ function procesarColeccion($postId, $userId) {
     error_log("Fin de procesarColeccion. Retornando URL del ZIP: " . $zipUrl);
     return $zipUrl;
 }
-/**
- * Genera un enlace de descarga único con un token de seguridad.
- *
- * @param int $userID ID del usuario.
- * @param int $audioID ID del audio.
- * @return string Enlace de descarga con token.
- */
+
+function generarEnlaceDescargaColeccion($userID, $zipUrl, $postId) {
+    $token = bin2hex(random_bytes(16));
+
+    $token_data = array(
+        'user_id' => $userID,
+        'zip_url' => $zipUrl,
+        'post_id' => $postId, // Podrías necesitar el post ID para luego en descargaAudioColeccion
+        'time' => time(),
+        'usos' => 0, // Inicializar el contador de usos
+        'tipo' => 'coleccion' // Identificar que es una colección
+    );
+
+    error_log("--------------------------------------------------");
+    error_log("[Inicio] Generando enlace de descarga de colección. UserID: " . $userID . ", ZipURL: " . $zipUrl . ", Token: " . $token . ", Time: " . time());
+
+    set_transient('descarga_token_' . $token, $token_data, HOUR_IN_SECONDS); // válido por 1 hora
+    error_log("Token data set in transient: " . print_r($token_data, true));
+
+    $enlaceDescarga = add_query_arg([
+        'descarga_token' => $token,
+    ], home_url());
+
+    error_log("Enlace de descarga de colección generado: " . $enlaceDescarga);
+    error_log("[Fin] Generando enlace de descarga de colección.");
+    error_log("--------------------------------------------------");
+    return $enlaceDescarga;
+}
+
 function generarEnlaceDescarga($userID, $audioID)
 {
     $token = bin2hex(random_bytes(16));
@@ -331,14 +378,12 @@ function generarEnlaceDescarga($userID, $audioID)
     return $enlaceDescarga;
 }
 
-/**
- * Procesa la descarga del audio utilizando un token único.
- *
- * Verifica la validez del token y la autorización del usuario.
- * Envía el archivo al usuario si la verificación es exitosa.
- */
+add_action('wp_ajax_descargar_audio', 'procesarDescarga');
+add_action('template_redirect', 'descargaAudio');
+
 function descargaAudio()
 {
+    //(codigo omitido)
     if (isset($_GET['descarga_token'])) {
         $token = sanitize_text_field($_GET['descarga_token']);
 
@@ -491,8 +536,7 @@ function descargaAudio()
 }
 
 
-add_action('wp_ajax_descargar_audio', 'procesarDescarga');
-add_action('template_redirect', 'descargaAudio');
+
 /*
 async function procesarDescarga(postId, usuarioId) {
     console.log('Iniciando procesarDescarga', postId, usuarioId);
@@ -560,7 +604,7 @@ function botonDescarga($postId)
                 error_log("botonDescarga - esColeccion: " . $esColeccion);
             }
 
-            ?>
+?>
             <div class="ZAQIBB">
                 <button class="icon-arrow-down <?php echo esc_attr($claseExtra); ?>"
                     data-post-id="<?php echo esc_attr($postId); ?>"
