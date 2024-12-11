@@ -37,99 +37,180 @@ add_action('wp_ajax_procesarDescarga', 'procesarDescarga');
  * Actualiza el contador de descargas del usuario y del post.
  * Genera un enlace de descarga único y lo envía como respuesta.
  */
-function procesarDescarga() {
-    error_log('--------------------------------------------------');
-    error_log('[Inicio] Function procesarDescarga started');
 
-    $userID = get_current_user_id();
-    error_log('User ID: ' . $userID);
-    error_log('User Agent: ' . $_SERVER['HTTP_USER_AGENT']);
-    error_log('Request Headers: ' . print_r(getallheaders(), true));
-
-    if (!$userID) {
-        error_log('[Error] No autorizado. Usuario no logueado.');
+function procesarDescarga()
+{
+    $userId = get_current_user_id();
+    if (!$userId) {
         wp_send_json_error(['message' => 'No autorizado.']);
         return;
     }
-
-    $postID = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
-    error_log('Post ID: ' . $postID);
-
-    $post = get_post($postID);
+    $postId = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+    $esColeccion = isset($_POST['coleccion']) && $_POST['coleccion'] === 'true';
+    $post = get_post($postId);
     if (!$post || $post->post_status !== 'publish') {
-        error_log('[Error] Post no válido o no publicado. Post ID: ' . $postID);
         wp_send_json_error(['message' => 'Post no válido.']);
         return;
     }
+    if ($esColeccion) {
+        $downloadUrl = procesarColeccion($postId, $userId);
+    } else {
+        $audioId = get_post_meta($postId, 'post_audio', true);
+        if (!$audioId) {
+            wp_send_json_error(['message' => 'Audio no encontrado.']);
+            return;
+        }
+        $descargasAnteriores = get_user_meta($userId, 'descargas', true);
+        if (!is_array($descargasAnteriores)) {
+            $descargasAnteriores = [];
+        }
+        $yaDescargado = isset($descargasAnteriores[$postId]);
+        if (!$yaDescargado) {
+            $pinky = (int)get_user_meta($userId, 'pinky', true);
+            if ($pinky < 1) {
+                wp_send_json_error(['message' => 'No tienes suficientes Pinkys para esta descarga.']);
+                return;
+            }
+            restarPinkys($userId, 1);
+        }
+        if (!$yaDescargado) {
+            $descargasAnteriores[$postId] = 1;
+        } else {
+            $descargasAnteriores[$postId]++;
+        }
+        update_user_meta($userId, 'descargas', $descargasAnteriores);
+        $totalDescargas = (int)get_post_meta($postId, 'totalDescargas', true);
+        $totalDescargas++;
+        update_post_meta($postId, 'totalDescargas', $totalDescargas);
+        $downloadUrl = generarEnlaceDescarga($userId, $audioId);
+    }
+    actualizarTimestampDescargas($userId);
+    wp_send_json_success(['download_url' => $downloadUrl]);
+}
 
-    $audioID = get_post_meta($postID, 'post_audio', true);
-    error_log('Audio ID: ' . $audioID);
-
-    if (!$audioID) {
-        error_log('[Error] Audio no encontrado para el Post ID: ' . $postID);
-        wp_send_json_error(['message' => 'Audio no encontrado.']);
+function procesarColeccion($postId, $userId) {
+    $samples = get_post_meta($postId, 'samples', true);
+    $numSamples = is_array($samples) ? count($samples) : 0;
+    if ($numSamples === 0) {
+        wp_send_json_error(['message' => 'No hay samples en esta colección.']);
         return;
     }
 
-    $descargasAnteriores = get_user_meta($userID, 'descargas', true);
-    error_log('Descargas before: ' . print_r($descargasAnteriores, true));
+    $zipName = 'coleccion-' . $postId . '-' . $numSamples . '.zip';
+    $zipPath = wp_upload_dir()['path'] . '/' . $zipName;
+    $zipUrl = wp_upload_dir()['url'] . '/' . $zipName;
 
-    if (!is_array($descargasAnteriores)) {
-        $descargasAnteriores = [];
-        error_log('[Info] El usuario no tenía descargas previas. Se inicializa el array.');
-    }
+    if (file_exists($zipPath)) {
+        $samplesDescargados = [];
+        $samplesNoDescargados = [];
+        foreach ($samples as $sampleId) {
+            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
+            if (!is_array($descargasAnteriores)) {
+                $descargasAnteriores = [];
+            }
+            $yaDescargado = isset($descargasAnteriores[$sampleId]);
+            if (!$yaDescargado) {
+                $samplesNoDescargados[] = $sampleId;
+            }
+            $samplesDescargados[] = $sampleId;
+        }
 
-    $yaDescargado = isset($descargasAnteriores[$postID]);
-    error_log('Ya descargado: ' . ($yaDescargado ? 'true' : 'false'));
+        $numSamplesNoDescargados = count($samplesNoDescargados);
+        if ($numSamplesNoDescargados > 0) {
+            $pinky = (int)get_user_meta($userId, 'pinky', true);
+            if ($pinky < $numSamplesNoDescargados) {
+                wp_send_json_error(['message' => 'No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys']);
+                return;
+            }
+            restarPinkys($userId, $numSamplesNoDescargados);
+        }
 
-    if (!$yaDescargado) {
-        $pinky = (int)get_user_meta($userID, 'pinky', true);
-        error_log('Pinky count: ' . $pinky);
-
-        if ($pinky < 1) {
-            error_log('[Error] No tienes suficientes Pinkys para esta descarga. Pinkys: ' . $pinky);
-            wp_send_json_error(['message' => 'No tienes suficientes Pinkys para esta descarga.']);
+        foreach ($samplesNoDescargados as $sampleId) {
+            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
+            if (!is_array($descargasAnteriores)) {
+                $descargasAnteriores = [];
+            }
+            $descargasAnteriores[$sampleId] = 1;
+            update_user_meta($userId, 'descargas', $descargasAnteriores);
+        }
+        foreach ($samplesDescargados as $sampleId) {
+            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
+            if (!is_array($descargasAnteriores)) {
+                $descargasAnteriores = [];
+            }
+            if (isset($descargasAnteriores[$sampleId])) {
+                $descargasAnteriores[$sampleId]++;
+                update_user_meta($userId, 'descargas', $descargasAnteriores);
+            }
+        }
+    } else {
+        $zip = new ZipArchive();
+        if ($zip->open($zipPath, ZipArchive::CREATE) !== TRUE) {
+            wp_send_json_error(['message' => 'Error al crear el archivo ZIP.']);
             return;
         }
-        restarPinkys($userID, 1);
+
+        $samplesDescargados = [];
+        $samplesNoDescargados = [];
+        foreach ($samples as $sampleId) {
+            $audioIds = get_post_meta($sampleId, 'post_audio', true);
+            if (is_array($audioIds)) {
+                foreach ($audioIds as $audioId) {
+                    $audioFile = get_attached_file($audioId);
+                    if ($audioFile) {
+                        $zip->addFile($audioFile, basename($audioFile));
+                    }
+                }
+            }
+            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
+            if (!is_array($descargasAnteriores)) {
+                $descargasAnteriores = [];
+            }
+            $yaDescargado = isset($descargasAnteriores[$sampleId]);
+            if (!$yaDescargado) {
+                $samplesNoDescargados[] = $sampleId;
+            }
+            $samplesDescargados[] = $sampleId;
+        }
+        $zip->close();
+
+        $numSamplesNoDescargados = count($samplesNoDescargados);
+
+        if ($numSamplesNoDescargados > 0) {
+            $pinky = (int)get_user_meta($userId, 'pinky', true);
+            if ($pinky < $numSamplesNoDescargados) {
+                wp_send_json_error(['message' => 'No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys']);
+                return;
+            }
+            restarPinkys($userId, $numSamplesNoDescargados);
+        }
+
+        foreach ($samplesNoDescargados as $sampleId) {
+            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
+            if (!is_array($descargasAnteriores)) {
+                $descargasAnteriores = [];
+            }
+            $descargasAnteriores[$sampleId] = 1;
+            update_user_meta($userId, 'descargas', $descargasAnteriores);
+        }
+
+        foreach ($samplesDescargados as $sampleId) {
+            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
+            if (!is_array($descargasAnteriores)) {
+                $descargasAnteriores = [];
+            }
+            if (isset($descargasAnteriores[$sampleId])) {
+                $descargasAnteriores[$sampleId]++;
+                update_user_meta($userId, 'descargas', $descargasAnteriores);
+            }
+        }
     }
 
-    if (!$yaDescargado) {
-        $descargasAnteriores[$postID] = 1;
-        error_log('[Info] Primera descarga de este audio. Se incrementa a 1.');
-    } else {
-        $descargasAnteriores[$postID]++;
-        error_log('[Info] Descarga repetida. Se incrementa a: ' . $descargasAnteriores[$postID]);
-    }
-
-    error_log('Descargas after: ' . print_r($descargasAnteriores, true));
-
-    $updateResult = update_user_meta($userID, 'descargas', $descargasAnteriores);
-    if (!$updateResult) {
-        error_log('[Error] Failed to update descargas meta for user ID ' . $userID);
-    } else {
-        error_log('[OK] Successfully updated descargas meta for user ID ' . $userID);
-    }
-
-    $total_descargas = (int)get_post_meta($postID, 'totalDescargas', true);
-    $total_descargas++;
-    $updatePostMeta = update_post_meta($postID, 'totalDescargas', $total_descargas);
-
-    if (!$updatePostMeta) {
-        error_log('[Error] Failed to update totalDescargas meta for post ID ' . $postID);
-    } else {
-        error_log('[OK] Successfully updated totalDescargas meta for post ID ' . $postID);
-    }
-
-    $download_url = generarEnlaceDescarga($userID, $audioID);
-    error_log('Download URL: ' . $download_url);
-
-    actualizarTimestampDescargas($userID);
-    error_log('[Fin] Function procesarDescarga finished');
-    error_log('--------------------------------------------------');
-    wp_send_json_success(['download_url' => $download_url]);
+    $totalDescargas = (int)get_post_meta($postId, 'totalDescargas', true);
+    $totalDescargas++;
+    update_post_meta($postId, 'totalDescargas', $totalDescargas);
+    return $zipUrl;
 }
-
 /**
  * Genera un enlace de descarga único con un token de seguridad.
  *
@@ -137,7 +218,8 @@ function procesarDescarga() {
  * @param int $audioID ID del audio.
  * @return string Enlace de descarga con token.
  */
-function generarEnlaceDescarga($userID, $audioID) {
+function generarEnlaceDescarga($userID, $audioID)
+{
     $token = bin2hex(random_bytes(16));
 
     $token_data = array(
@@ -169,7 +251,8 @@ function generarEnlaceDescarga($userID, $audioID) {
  * Verifica la validez del token y la autorización del usuario.
  * Envía el archivo al usuario si la verificación es exitosa.
  */
-function descargaAudio() {
+function descargaAudio()
+{
     if (isset($_GET['descarga_token'])) {
         $token = sanitize_text_field($_GET['descarga_token']);
 
@@ -186,7 +269,7 @@ function descargaAudio() {
             $userID = get_current_user_id();
             error_log("UserID actual: " . $userID);
             error_log("UserID del token: " . $token_data['user_id']);
-            
+
             // desactivado temporalmente porque en andorid no se envia correctamente el id
             /*if ($userID != $token_data['user_id']) {
                 error_log("[Error] Descarga de audio: Usuario no autorizado. UserID: " . $userID . ", Token UserID: " . $token_data['user_id']);
@@ -371,42 +454,38 @@ async function procesarDescarga(postId, usuarioId) {
 */
 
 // Función para generar el botón de descarga
-function botonDescarga($postID)
+function botonDescarga($postId)
 {
     ob_start();
-
-    $paraDescarga = get_post_meta($postID, 'paraDescarga', true);
-    $userID = get_current_user_id();
-
+    $paraDescarga = get_post_meta($postId, 'paraDescarga', true);
+    $userId = get_current_user_id();
     if ($paraDescarga == '1') {
-        if ($userID) {
-            // Obtener descargas previas del usuario
-            $descargas_anteriores = get_user_meta($userID, 'descargas', true);
-            $yaDescargado = isset($descargas_anteriores[$postID]);
+        if ($userId) {
+            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
+            $yaDescargado = isset($descargasAnteriores[$postId]);
             $claseExtra = $yaDescargado ? 'yaDescargado' : '';
-
-            ?>
+            $esColeccion = get_post_type($postId) === 'colecciones' ? 'true' : '';
+?>
             <div class="ZAQIBB">
                 <button class="icon-arrow-down <?php echo esc_attr($claseExtra); ?>"
-                        data-post-id="<?php echo esc_attr($postID); ?>"
-                        aria-label="Boton Descarga" 
-                        id="download-button-<?php echo esc_attr($postID); ?>"
-                        onclick="return procesarDescarga('<?php echo esc_js($postID); ?>', '<?php echo esc_js($userID); ?>')">
+                    data-post-id="<?php echo esc_attr($postId); ?>"
+                    aria-label="Boton Descarga"
+                    id="download-button-<?php echo esc_attr($postId); ?>"
+                    onclick="return procesarDescarga('<?php echo esc_js($postId); ?>', '<?php echo esc_js($userId); ?>', '<?php echo $esColeccion; ?>')">
                     <?php echo $GLOBALS['descargaicono']; ?>
                 </button>
             </div>
-            <?php
+        <?php
         } else {
-            ?>
+        ?>
             <div class="ZAQIBB">
-                <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down" aria-label="Descargar" >
+                <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down" aria-label="Descargar">
                     <?php echo $GLOBALS['descargaicono']; ?>
                 </button>
             </div>
-            <?php
+    <?php
         }
     }
-
     return ob_get_clean();
 }
 // Agregar pinkys al registrarse un nuevo usuario
@@ -446,7 +525,7 @@ function botonDescargaPrueba()
     ob_start();
     ?>
     <div class="ZAQIBB ASDGD8">
-        <button aria-label="Descarga ejemplo" >
+        <button aria-label="Descarga ejemplo">
             <? echo $GLOBALS['descargaicono']; ?>
         </button>
     </div>

@@ -1,5 +1,5 @@
-async function procesarDescarga(postId, usuarioId) {
-    console.log('Iniciando procesarDescarga', postId, usuarioId);
+async function procesarDescarga(postId, usuarioId, Coleccion = false) {
+    console.log('Iniciando procesarDescarga', postId, usuarioId, Coleccion);
 
     const confirmed = await new Promise(resolve => {
         const confirmBox = confirm('Esta descarga costará 1 Pinky. ¿Deseas continuar?');
@@ -13,7 +13,8 @@ async function procesarDescarga(postId, usuarioId) {
 
     try {
         const data = {
-            post_id: postId 
+            post_id: postId,
+            coleccion: Coleccion
         };
 
         // Enviar la solicitud AJAX
@@ -25,7 +26,7 @@ async function procesarDescarga(postId, usuarioId) {
             // Acceder a la propiedad download_url dentro de responseData.data
             if (responseData.data && responseData.data.download_url) {
                 console.log('Descarga autorizada, iniciando descarga');
-                
+
                 // Redirige a la URL de descarga
                 window.location.href = responseData.data.download_url;
 
@@ -52,3 +53,4 @@ async function procesarDescarga(postId, usuarioId) {
 
     return false;
 }
+
