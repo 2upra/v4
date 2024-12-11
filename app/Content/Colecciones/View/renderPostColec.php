@@ -389,25 +389,24 @@ function botonDescargaColec($postId)
 
     ?>
         <div class="ZAQIBB">
-            <button class="icon-arrow-down botonprincipal <? echo esc_attr($claseExtra); ?>"
-                data-post-id="<? echo esc_attr($postId); ?>"
+            <button class="icon-arrow-down botonprincipal <?php echo esc_attr($claseExtra); ?>"
+                data-post-id="<?php echo esc_attr($postId); ?>"
                 aria-label="Boton Descarga"
-                id="download-button-<? echo esc_attr($postId); ?>"
-                onclick="return procesarDescarga('<? echo esc_js($postId); ?>', '<? echo esc_js($userID); ?>')">
-                <? echo $GLOBALS['descargaicono']; ?> Descargar
+                id="download-button-<?php echo esc_attr($postId); ?>"
+                onclick="return procesarDescarga('<?php echo esc_js($postId); ?>', '<?php echo esc_js($userID); ?>', 'true')">
+                <?php echo $GLOBALS['descargaicono']; ?> Descargar
             </button>
         </div>
-    <?
+    <?php
     } else {
     ?>
         <div class="ZAQIBB">
             <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down" aria-label="Descargar">
-                <? echo $GLOBALS['descargaicono']; ?>
+                <?php echo $GLOBALS['descargaicono']; ?>
             </button>
         </div>
-<?
+<?php
     }
-
 
     return ob_get_clean();
 }
