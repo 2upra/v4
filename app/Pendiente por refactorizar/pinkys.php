@@ -123,6 +123,65 @@ function procesarDescarga()
     error_log("Fin del proceso de descarga.");
 }
 
+/*
+
+TENGO UN PROBLEMA ACA, ENVIA LA URL Y NO LA UBICACION FISICA
+[11-Dec-2024 14:57:29 UTC] --------------------------------------------------
+[11-Dec-2024 14:58:01 UTC] Inicio de la función datosColeccion para el post ID: 320353
+[11-Dec-2024 14:58:01 UTC] Función datosColeccion completada con éxito para el post ID: 320353
+[11-Dec-2024 14:58:07 UTC] Inicio del proceso de descarga. User ID: 1
+[11-Dec-2024 14:58:07 UTC] Post ID: 320353, esColeccion: true
+[11-Dec-2024 14:58:07 UTC] Procesando colección. Post ID: 320353
+[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Inicio de procesarColeccion. Post ID: 320353, User ID: 1
+[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Número de samples: 24
+[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Nombre del archivo ZIP: coleccion-320353-24.zip
+[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Ruta del archivo ZIP: /var/www/wordpress/wp-content/uploads/2024/12/coleccion-320353-24.zip
+[11-Dec-2024 14:58:07 UTC] [procesarColeccion] URL del archivo ZIP: https://2upra.com/wp-content/uploads/2024/12/coleccion-320353-24.zip
+[11-Dec-2024 14:58:07 UTC] [procesarColeccion] El archivo ZIP ya existe.
+[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Samples no descargados: Array
+(
+)
+
+[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Número de samples no descargados: 0
+[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Total de descargas del post actualizado: 15
+[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Fin de procesarColeccion. Retornando URL del ZIP: https://2upra.com/wp-content/uploads/2024/12/coleccion-320353-24.zip
+[11-Dec-2024 14:58:07 UTC] --------------------------------------------------
+[11-Dec-2024 14:58:07 UTC] [Inicio] Generando enlace de descarga de colección. UserID: 1, ZipPath: https://2upra.com/wp-content/uploads/2024/12/coleccion-320353-24.zip, Token: 30e5fbfcce15017b6d53302cf0132385, Time: 1733929087
+[11-Dec-2024 14:58:07 UTC] Token data set in transient: Array
+(
+    [user_id] => 1
+    [zip_path] => https://2upra.com/wp-content/uploads/2024/12/coleccion-320353-24.zip
+    [post_id] => 320353
+    [time] => 1733929087
+    [usos] => 0
+    [tipo] => coleccion
+)
+
+[11-Dec-2024 14:58:07 UTC] Enlace de descarga de colección generado: https://2upra.com?descarga_token=30e5fbfcce15017b6d53302cf0132385&tipo=coleccion
+[11-Dec-2024 14:58:07 UTC] [Fin] Generando enlace de descarga de colección.
+[11-Dec-2024 14:58:07 UTC] --------------------------------------------------
+[11-Dec-2024 14:58:07 UTC] URL de descarga de colección generada: https://2upra.com?descarga_token=30e5fbfcce15017b6d53302cf0132385&tipo=coleccion
+[11-Dec-2024 14:58:07 UTC] actualizarTimestampDescargas: User ID: 1, Timestamp actualizado a: 1733929087
+[11-Dec-2024 14:58:07 UTC] Timestamp de descargas actualizado.
+[11-Dec-2024 14:58:08 UTC] --------------------------------------------------
+[11-Dec-2024 14:58:08 UTC] [Inicio] Intentando descargar colección con token: 30e5fbfcce15017b6d53302cf0132385
+[11-Dec-2024 14:58:08 UTC] User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0
+[11-Dec-2024 14:58:08 UTC] Datos del token recuperados: Array
+(
+    [user_id] => 1
+    [zip_path] => https://2upra.com/wp-content/uploads/2024/12/coleccion-320353-24.zip
+    [post_id] => 320353
+    [time] => 1733929087
+    [usos] => 0
+    [tipo] => coleccion
+)
+
+[11-Dec-2024 14:58:08 UTC] UserID actual: 1
+[11-Dec-2024 14:58:08 UTC] UserID del token: 1
+[11-Dec-2024 14:58:08 UTC] [Error] Descarga de colección: El archivo no existe o no es accesible. Ruta: https://2upra.com/wp-content/uploads/2024/12/coleccion-320353-24.zip
+[11-Dec-2024 14:58:08 UTC] --------------------------------------------------
+*/
+
 function procesarColeccion($postId, $userId)
 {
     error_log("[procesarColeccion] Inicio de procesarColeccion. Post ID: " . $postId . ", User ID: " . $userId);
@@ -253,10 +312,16 @@ function descargaAudioColeccion() {
     if (isset($_GET['descarga_token']) && isset($_GET['tipo']) && $_GET['tipo'] === 'coleccion') {
         $token = sanitize_text_field($_GET['descarga_token']);
 
+        // Validación más estricta del token (recomendado)
+        if (!ctype_xdigit($token)) {
+            error_log("[Error] Descarga de colección: Token inválido. Token: " . $token);
+            error_log("--------------------------------------------------");
+            wp_die('El token de descarga no es válido.');
+        }
+
         error_log("--------------------------------------------------");
         error_log("[Inicio] Intentando descargar colección con token: " . $token);
         error_log('User Agent: ' . $_SERVER['HTTP_USER_AGENT']);
-        //error_log('Request Headers: ' . print_r(getallheaders(), true));
 
         $token_data = get_transient('descarga_token_' . $token);
 
@@ -285,7 +350,7 @@ function descargaAudioColeccion() {
                 wp_die('El enlace de descarga ha excedido el número de usos permitidos.');
             }
 
-            $zipPath = $token_data['zip_path'];
+            $zipPath = $token_data['zip_path']; // Ahora $zipPath es la ruta física correcta
 
             if ($zipPath && file_exists($zipPath) && is_readable($zipPath)) {
                 // Limpiar cualquier salida previa
@@ -394,11 +459,10 @@ function descargaAudioColeccion() {
                 error_log("--------------------------------------------------");
                 wp_die('El archivo no existe o no es accesible.');
             }
-        } else {
-            error_log("[Error] Descarga de colección: Token de descarga no válido o expirado. Token: " . $token);
-            error_log("--------------------------------------------------");
-            wp_die('El enlace de descarga no es válido o ha expirado.');
         }
+        error_log("[Error] Descarga de colección: Token de descarga no válido o expirado. Token: " . $token);
+        error_log("--------------------------------------------------");
+        wp_die('El enlace de descarga no es válido o ha expirado.');
     }
 }
 
