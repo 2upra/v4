@@ -278,7 +278,6 @@ function agregarArchivosAlZip(ZipArchive &$zip, array $samples): bool
     return $agregado;
 }
 
-?>
 
 function clasificarSamples(array $samples, int $userId): array
 {
