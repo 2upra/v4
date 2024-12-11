@@ -38,69 +38,119 @@ add_action('wp_ajax_procesarDescarga', 'procesarDescarga');
  * Genera un enlace de descarga único y lo envía como respuesta.
  */
 
-function procesarDescarga()
-{
+ function procesarDescarga() {
     $userId = get_current_user_id();
+    error_log("Inicio del proceso de descarga. User ID: " . $userId);
+
     if (!$userId) {
+        error_log("Error: Usuario no autorizado.");
         wp_send_json_error(['message' => 'No autorizado.']);
         return;
     }
+
     $postId = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
     $esColeccion = isset($_POST['coleccion']) && $_POST['coleccion'] === 'true';
+    error_log("Post ID: " . $postId . ", esColeccion: " . ($esColeccion ? 'true' : 'false'));
+
     $post = get_post($postId);
     if (!$post || $post->post_status !== 'publish') {
+        error_log("Error: Post no válido o no publicado. Post ID: " . $postId);
         wp_send_json_error(['message' => 'Post no válido.']);
         return;
     }
+
     if ($esColeccion) {
+        error_log("Procesando colección. Post ID: " . $postId);
         $downloadUrl = procesarColeccion($postId, $userId);
+        if (is_wp_error($downloadUrl)){
+            error_log("Error en procesarColeccion: " . $downloadUrl->get_error_message());
+            wp_send_json_error(['message' => $downloadUrl->get_error_message()]);
+            return;
+        }
     } else {
+        error_log("Procesando descarga individual. Post ID: " . $postId);
         $audioId = get_post_meta($postId, 'post_audio', true);
         if (!$audioId) {
+            error_log("Error: Audio no encontrado. Post ID: " . $postId);
             wp_send_json_error(['message' => 'Audio no encontrado.']);
             return;
         }
+
         $descargasAnteriores = get_user_meta($userId, 'descargas', true);
+        error_log("Descargas anteriores: " . print_r($descargasAnteriores, true));
+
         if (!is_array($descargasAnteriores)) {
             $descargasAnteriores = [];
+            error_log("Descargas anteriores no era un array, se inicializa como array vacío.");
         }
+
         $yaDescargado = isset($descargasAnteriores[$postId]);
+        error_log("Ya descargado: " . ($yaDescargado ? 'true' : 'false'));
+
         if (!$yaDescargado) {
             $pinky = (int)get_user_meta($userId, 'pinky', true);
+            error_log("Pinkys del usuario: " . $pinky);
             if ($pinky < 1) {
+                error_log("Error: No hay suficientes Pinkys.");
                 wp_send_json_error(['message' => 'No tienes suficientes Pinkys para esta descarga.']);
                 return;
             }
             restarPinkys($userId, 1);
+            error_log("Pinkys restados.");
         }
+
         if (!$yaDescargado) {
             $descargasAnteriores[$postId] = 1;
+            error_log("Primera descarga, se agrega al registro.");
         } else {
             $descargasAnteriores[$postId]++;
+            error_log("Descarga repetida, se incrementa el contador.");
         }
+
         update_user_meta($userId, 'descargas', $descargasAnteriores);
+        error_log("Descargas del usuario actualizadas.");
+
         $totalDescargas = (int)get_post_meta($postId, 'totalDescargas', true);
         $totalDescargas++;
         update_post_meta($postId, 'totalDescargas', $totalDescargas);
+        error_log("Total de descargas del post actualizado: " . $totalDescargas);
+
         $downloadUrl = generarEnlaceDescarga($userId, $audioId);
+        error_log("URL de descarga generada: " . $downloadUrl);
     }
+
     actualizarTimestampDescargas($userId);
+    error_log("Timestamp de descargas actualizado.");
     wp_send_json_success(['download_url' => $downloadUrl]);
+    error_log("Fin del proceso de descarga.");
 }
 
 function procesarColeccion($postId, $userId) {
+    error_log("Inicio de procesarColeccion. Post ID: " . $postId . ", User ID: " . $userId);
+
     $samples = get_post_meta($postId, 'samples', true);
+    error_log("Samples obtenidos: " . print_r($samples, true));
+
     $numSamples = is_array($samples) ? count($samples) : 0;
+    error_log("Número de samples: " . $numSamples);
+
     if ($numSamples === 0) {
-        wp_send_json_error(['message' => 'No hay samples en esta colección.']);
-        return;
+        error_log("Error: No hay samples en esta colección.");
+        return new WP_Error( 'no_samples', __( 'No hay samples en esta colección.', 'text-domain' ) );
     }
 
     $zipName = 'coleccion-' . $postId . '-' . $numSamples . '.zip';
-    $zipPath = wp_upload_dir()['path'] . '/' . $zipName;
-    $zipUrl = wp_upload_dir()['url'] . '/' . $zipName;
+    $upload_dir = wp_upload_dir();
+    $zipPath = $upload_dir['path'] . '/' . $zipName;
+    $zipUrl = $upload_dir['url'] . '/' . $zipName;
+
+    error_log("Nombre del archivo ZIP: " . $zipName);
+    error_log("Ruta del archivo ZIP: " . $zipPath);
+    error_log("URL del archivo ZIP: " . $zipUrl);
 
     if (file_exists($zipPath)) {
+        error_log("El archivo ZIP ya existe.");
+
         $samplesDescargados = [];
         $samplesNoDescargados = [];
         foreach ($samples as $sampleId) {
@@ -114,15 +164,22 @@ function procesarColeccion($postId, $userId) {
             }
             $samplesDescargados[] = $sampleId;
         }
+        error_log("Samples descargados: " . print_r($samplesDescargados, true));
+        error_log("Samples no descargados: " . print_r($samplesNoDescargados, true));
 
         $numSamplesNoDescargados = count($samplesNoDescargados);
+        error_log("Número de samples no descargados: " . $numSamplesNoDescargados);
+
         if ($numSamplesNoDescargados > 0) {
             $pinky = (int)get_user_meta($userId, 'pinky', true);
+            error_log("Pinkys del usuario: " . $pinky);
+
             if ($pinky < $numSamplesNoDescargados) {
-                wp_send_json_error(['message' => 'No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys']);
-                return;
+                error_log("Error: No tienes suficientes Pinkys. Requeridos: " . $numSamplesNoDescargados);
+                return new WP_Error( 'no_pinkys', __( 'No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys', 'text-domain' ) );
             }
             restarPinkys($userId, $numSamplesNoDescargados);
+            error_log("Pinkys restados: " . $numSamplesNoDescargados);
         }
 
         foreach ($samplesNoDescargados as $sampleId) {
@@ -132,6 +189,7 @@ function procesarColeccion($postId, $userId) {
             }
             $descargasAnteriores[$sampleId] = 1;
             update_user_meta($userId, 'descargas', $descargasAnteriores);
+            error_log("Sample no descargado agregado a descargas: " . $sampleId);
         }
         foreach ($samplesDescargados as $sampleId) {
             $descargasAnteriores = get_user_meta($userId, 'descargas', true);
@@ -141,24 +199,37 @@ function procesarColeccion($postId, $userId) {
             if (isset($descargasAnteriores[$sampleId])) {
                 $descargasAnteriores[$sampleId]++;
                 update_user_meta($userId, 'descargas', $descargasAnteriores);
+                error_log("Contador de descargas incrementado para sample: " . $sampleId);
             }
         }
     } else {
+        error_log("El archivo ZIP no existe. Creando...");
+
         $zip = new ZipArchive();
         if ($zip->open($zipPath, ZipArchive::CREATE) !== TRUE) {
-            wp_send_json_error(['message' => 'Error al crear el archivo ZIP.']);
-            return;
+            error_log("Error al crear el archivo ZIP.");
+            return new WP_Error( 'zip_error', __( 'Error al crear el archivo ZIP.', 'text-domain' ) );
         }
 
         $samplesDescargados = [];
         $samplesNoDescargados = [];
         foreach ($samples as $sampleId) {
             $audioIds = get_post_meta($sampleId, 'post_audio', true);
+            error_log("IDs de audio para sample " . $sampleId . ": " . print_r($audioIds, true));
             if (is_array($audioIds)) {
                 foreach ($audioIds as $audioId) {
                     $audioFile = get_attached_file($audioId);
+                    error_log("Ruta del archivo de audio: " . $audioFile);
+
                     if ($audioFile) {
-                        $zip->addFile($audioFile, basename($audioFile));
+                        if ($zip->addFile($audioFile, basename($audioFile))){
+                            error_log("Archivo agregado al ZIP: " . basename($audioFile));
+                        } else {
+                            error_log("Error al agregar archivo al ZIP: " . basename($audioFile));
+                        }
+
+                    } else {
+                        error_log("Error: No se pudo obtener la ruta del archivo de audio con ID: " . $audioId);
                     }
                 }
             }
@@ -173,16 +244,26 @@ function procesarColeccion($postId, $userId) {
             $samplesDescargados[] = $sampleId;
         }
         $zip->close();
+        error_log("Archivo ZIP cerrado.");
 
         $numSamplesNoDescargados = count($samplesNoDescargados);
+        error_log("Número de samples no descargados: " . $numSamplesNoDescargados);
 
         if ($numSamplesNoDescargados > 0) {
             $pinky = (int)get_user_meta($userId, 'pinky', true);
+            error_log("Pinkys del usuario: " . $pinky);
+
             if ($pinky < $numSamplesNoDescargados) {
-                wp_send_json_error(['message' => 'No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys']);
-                return;
+                error_log("Error: No tienes suficientes Pinkys. Requeridos: " . $numSamplesNoDescargados);
+                // Eliminar el zip si no hay suficientes pinkys
+                if (file_exists($zipPath)) {
+                    unlink($zipPath);
+                    error_log("Archivo ZIP eliminado debido a la falta de Pinkys: " . $zipPath);
+                }
+                return new WP_Error( 'no_pinkys', __( 'No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys', 'text-domain' ) );
             }
             restarPinkys($userId, $numSamplesNoDescargados);
+            error_log("Pinkys restados: " . $numSamplesNoDescargados);
         }
 
         foreach ($samplesNoDescargados as $sampleId) {
@@ -192,6 +273,7 @@ function procesarColeccion($postId, $userId) {
             }
             $descargasAnteriores[$sampleId] = 1;
             update_user_meta($userId, 'descargas', $descargasAnteriores);
+            error_log("Sample no descargado agregado a descargas: " . $sampleId);
         }
 
         foreach ($samplesDescargados as $sampleId) {
@@ -202,6 +284,7 @@ function procesarColeccion($postId, $userId) {
             if (isset($descargasAnteriores[$sampleId])) {
                 $descargasAnteriores[$sampleId]++;
                 update_user_meta($userId, 'descargas', $descargasAnteriores);
+                error_log("Contador de descargas incrementado para sample: " . $sampleId);
             }
         }
     }
@@ -209,6 +292,9 @@ function procesarColeccion($postId, $userId) {
     $totalDescargas = (int)get_post_meta($postId, 'totalDescargas', true);
     $totalDescargas++;
     update_post_meta($postId, 'totalDescargas', $totalDescargas);
+    error_log("Total de descargas del post actualizado: " . $totalDescargas);
+
+    error_log("Fin de procesarColeccion. Retornando URL del ZIP: " . $zipUrl);
     return $zipUrl;
 }
 /**
