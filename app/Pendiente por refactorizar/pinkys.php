@@ -123,18 +123,19 @@ function procesarDescarga()
     error_log("Fin del proceso de descarga.");
 }
 
-function procesarColeccion($postId, $userId)
-{
-    error_log("Inicio de procesarColeccion. Post ID: " . $postId . ", User ID: " . $userId);
+
+
+function procesarColeccion($postId, $userId) {
+    error_log("[procesarColeccion] Inicio de procesarColeccion. Post ID: " . $postId . ", User ID: " . $userId);
 
     $samples = get_post_meta($postId, 'samples', true);
-    error_log("Samples obtenidos: " . print_r($samples, true));
-
     $numSamples = is_array($samples) ? count($samples) : 0;
-    error_log("Número de samples: " . $numSamples);
+
+    error_log("[procesarColeccion] Samples obtenidos: " . print_r($samples, true));
+    error_log("[procesarColeccion] Número de samples: " . $numSamples);
 
     if ($numSamples === 0) {
-        error_log("Error: No hay samples en esta colección.");
+        error_log("[procesarColeccion] Error: No hay samples en esta colección.");
         return new WP_Error('no_samples', __('No hay samples en esta colección.', 'text-domain'));
     }
 
@@ -143,185 +144,185 @@ function procesarColeccion($postId, $userId)
     $zipPath = $upload_dir['path'] . '/' . $zipName;
     $zipUrl = $upload_dir['url'] . '/' . $zipName;
 
-    error_log("Nombre del archivo ZIP: " . $zipName);
-    error_log("Ruta del archivo ZIP: " . $zipPath);
-    error_log("URL del archivo ZIP: " . $zipUrl);
+    error_log("[procesarColeccion] Nombre del archivo ZIP: " . $zipName);
+    error_log("[procesarColeccion] Ruta del archivo ZIP: " . $zipPath);
+    error_log("[procesarColeccion] URL del archivo ZIP: " . $zipUrl);
 
     if (!is_dir($upload_dir['path']) || !is_writable($upload_dir['path'])) {
-        error_log("Error: El directorio de uploads no existe o no tiene permisos de escritura.");
+        error_log("[procesarColeccion] Error: El directorio de uploads no existe o no tiene permisos de escritura.");
         return new WP_Error('upload_dir_error', __('Error: El directorio de uploads no existe o no tiene permisos de escritura.', 'text-domain'));
     }
 
-    $zip = new ZipArchive();
-    $zipCreado = false; // Bandera para saber si el zip se ha creado correctamente
+    list($samplesDescargados, $samplesNoDescargados) = clasificarSamples($samples, $userId);
+    $numSamplesNoDescargados = count($samplesNoDescargados);
 
     if (file_exists($zipPath)) {
-        error_log("El archivo ZIP ya existe.");
-
-        $samplesDescargados = [];
-        $samplesNoDescargados = [];
-        foreach ($samples as $sampleId) {
-            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
-            if (!is_array($descargasAnteriores)) {
-                $descargasAnteriores = [];
-            }
-            $yaDescargado = isset($descargasAnteriores[$sampleId]);
-            if (!$yaDescargado) {
-                $samplesNoDescargados[] = $sampleId;
-            }
-            $samplesDescargados[] = $sampleId;
-        }
-        error_log("Samples descargados: " . print_r($samplesDescargados, true));
-        error_log("Samples no descargados: " . print_r($samplesNoDescargados, true));
-
-        $numSamplesNoDescargados = count($samplesNoDescargados);
-        error_log("Número de samples no descargados: " . $numSamplesNoDescargados);
+        error_log("[procesarColeccion] El archivo ZIP ya existe.");
+        error_log("[procesarColeccion] Samples descargados: " . print_r($samplesDescargados, true));
+        error_log("[procesarColeccion] Samples no descargados: " . print_r($samplesNoDescargados, true));
+        error_log("[procesarColeccion] Número de samples no descargados: " . $numSamplesNoDescargados);
 
         if ($numSamplesNoDescargados > 0) {
             $pinky = (int)get_user_meta($userId, 'pinky', true);
-            error_log("Pinkys del usuario: " . $pinky);
+            error_log("[procesarColeccion] Pinkys del usuario: " . $pinky);
 
             if ($pinky < $numSamplesNoDescargados) {
-                error_log("Error: No tienes suficientes Pinkys. Requeridos: " . $numSamplesNoDescargados);
+                error_log("[procesarColeccion] Error: No tienes suficientes Pinkys. Requeridos: " . $numSamplesNoDescargados);
                 return new WP_Error('no_pinkys', __('No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys', 'text-domain'));
             }
             restarPinkys($userId, $numSamplesNoDescargados);
-            error_log("Pinkys restados: " . $numSamplesNoDescargados);
+             error_log("[procesarColeccion] Pinkys restados: " . $numSamplesNoDescargados);
         }
-
-        foreach ($samplesNoDescargados as $sampleId) {
-            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
-            if (!is_array($descargasAnteriores)) {
-                $descargasAnteriores = [];
-            }
-            $descargasAnteriores[$sampleId] = 1;
-            update_user_meta($userId, 'descargas', $descargasAnteriores);
-            error_log("Sample no descargado agregado a descargas: " . $sampleId);
-        }
-        foreach ($samplesDescargados as $sampleId) {
-            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
-            if (!is_array($descargasAnteriores)) {
-                $descargasAnteriores = [];
-            }
-            if (isset($descargasAnteriores[$sampleId])) {
-                $descargasAnteriores[$sampleId]++;
-                update_user_meta($userId, 'descargas', $descargasAnteriores);
-                error_log("Contador de descargas incrementado para sample: " . $sampleId);
-            }
-        }
+        
     } else {
-        error_log("El archivo ZIP no existe. Creando...");
+        error_log("[procesarColeccion] El archivo ZIP no existe. Creando...");
+        $zip = new ZipArchive();
+        
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
-
-            $zip = new ZipArchive();
-            if ($zip->open($zipPath, ZipArchive::CREATE) !== TRUE) {
-                error_log("Error al crear el archivo ZIP.");
-                return new WP_Error('zip_error', __('Error al crear el archivo ZIP.', 'text-domain'));
-            }
-
-            $samplesDescargados = [];
-            $samplesNoDescargados = [];
-
-            foreach ($samples as $sampleId) {
-                $audioIds = get_post_meta($sampleId, 'post_audio', true);
-                error_log("IDs de audio para sample " . $sampleId . ": " . print_r($audioIds, true));
-
-                if (is_array($audioIds)) {
-                    foreach ($audioIds as $audioId) {
-                        $audioFile = get_attached_file($audioId);
-                        error_log("Ruta del archivo de audio: " . $audioFile);
-
-                        if ($audioFile && file_exists($audioFile)) {
-                            if ($zip->addFile($audioFile, basename($audioFile))) {
-                                error_log("Archivo agregado al ZIP: " . basename($audioFile));
-                                $zipCreado = true;
-                            } else {
-                                error_log("Error al agregar archivo al ZIP: " . basename($audioFile));
-                                $zip->close();
-                                if (file_exists($zipPath)) {
-                                    unlink($zipPath);
-                                }
-                                return new WP_Error('add_file_error', __('Error al agregar archivo al ZIP.', 'text-domain'));
-                            }
-                        } else {
-                            error_log("Error: No se pudo obtener la ruta del archivo de audio con ID: " . $audioId);
-                        }
-                    }
-                }
-            }
-            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
-            if (!is_array($descargasAnteriores)) {
-                $descargasAnteriores = [];
-            }
-            $yaDescargado = isset($descargasAnteriores[$sampleId]);
-            if (!$yaDescargado) {
-                $samplesNoDescargados[] = $sampleId;
-            }
-            $samplesDescargados[] = $sampleId;
+            error_log("[procesarColeccion] Error al crear el archivo ZIP.");
+            return new WP_Error('zip_error', __('Error al crear el archivo ZIP.', 'text-domain'));
         }
-        $zip->close();
-        error_log("Archivo ZIP cerrado.");
 
-        // Verificar si se agregaron archivos al ZIP antes de restar Pinkys
-        if (!$zipCreado) {
-            error_log("Error: No se agregaron archivos al ZIP.");
-            if (file_exists($zipPath)) {
+        if (!agregarArchivosAlZip($zip, $samples)) {
+            $zip->close();
+            if(file_exists($zipPath)){
                 unlink($zipPath);
             }
-            return new WP_Error('no_files_added', __('No se agregaron archivos al ZIP.', 'text-domain'));
+            error_log("[procesarColeccion] Error al agregar archivos al ZIP.");
+            return new WP_Error('add_file_error', __('Error al agregar archivo al ZIP.', 'text-domain'));
         }
-
-        $numSamplesNoDescargados = count($samplesNoDescargados);
-        error_log("Número de samples no descargados: " . $numSamplesNoDescargados);
+        
+        $zip->close();
+        error_log("[procesarColeccion] Archivo ZIP cerrado.");
 
         if ($numSamplesNoDescargados > 0) {
             $pinky = (int)get_user_meta($userId, 'pinky', true);
-            error_log("Pinkys del usuario: " . $pinky);
-
+            error_log("[procesarColeccion] Pinkys del usuario: " . $pinky);
+            
             if ($pinky < $numSamplesNoDescargados) {
-                error_log("Error: No tienes suficientes Pinkys. Requeridos: " . $numSamplesNoDescargados);
-                // Eliminar el zip si no hay suficientes pinkys
+                error_log("[procesarColeccion] Error: No tienes suficientes Pinkys. Requeridos: " . $numSamplesNoDescargados);
                 if (file_exists($zipPath)) {
                     unlink($zipPath);
-                    error_log("Archivo ZIP eliminado debido a la falta de Pinkys: " . $zipPath);
+                    error_log("[procesarColeccion] Archivo ZIP eliminado debido a la falta de Pinkys: " . $zipPath);
                 }
                 return new WP_Error('no_pinkys', __('No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys', 'text-domain'));
             }
-            restarPinkys($userId, $numSamplesNoDescargados);
-            error_log("Pinkys restados: " . $numSamplesNoDescargados);
+             restarPinkys($userId, $numSamplesNoDescargados);
+             error_log("[procesarColeccion] Pinkys restados: " . $numSamplesNoDescargados);
+        }
+    }
+
+    actualizarDescargas($userId, $samplesNoDescargados, $samplesDescargados);
+    $totalDescargas = (int)get_post_meta($postId, 'totalDescargas', true);
+    $totalDescargas++;
+    update_post_meta($postId, 'totalDescargas', $totalDescargas);
+    error_log("[procesarColeccion] Total de descargas del post actualizado: " . $totalDescargas);
+    error_log("[procesarColeccion] Fin de procesarColeccion. Retornando URL del ZIP: " . $zipUrl);
+    return $zipUrl;
+}
+
+
+function agregarArchivosAlZip(ZipArchive &$zip, array $samples): bool
+{
+    $agregado = false;
+    $functionName = __FUNCTION__; 
+
+    foreach ($samples as $sampleId) {
+        $audioIds = get_post_meta($sampleId, 'post_audio', true);
+        error_log("[{$functionName}] IDs de audio para sample {$sampleId}: " . json_encode($audioIds));
+
+        if (!is_array($audioIds)) {
+            error_log("[{$functionName}] Error: El valor de 'post_audio' para el sample {$sampleId} no es un array.");
+            continue; // Salta a la siguiente iteración del bucle principal
         }
 
-        foreach ($samplesNoDescargados as $sampleId) {
-            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
-            if (!is_array($descargasAnteriores)) {
-                $descargasAnteriores = [];
-            }
-            $descargasAnteriores[$sampleId] = 1;
-            update_user_meta($userId, 'descargas', $descargasAnteriores);
-            error_log("Sample no descargado agregado a descargas: " . $sampleId);
-        }
+        foreach ($audioIds as $audioId) {
+            $audioFile = get_attached_file($audioId);
+            error_log("[{$functionName}] Ruta del archivo de audio {$audioId}: " . ($audioFile ?: 'No disponible'));
 
-        foreach ($samplesDescargados as $sampleId) {
-            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
-            if (!is_array($descargasAnteriores)) {
-                $descargasAnteriores = [];
+            if (!$audioFile) {
+                error_log("[{$functionName}] Error: No se pudo obtener la ruta del archivo de audio con ID: {$audioId}");
+                continue; // Salta a la siguiente iteración del bucle de audioIds
             }
-            if (isset($descargasAnteriores[$sampleId])) {
-                $descargasAnteriores[$sampleId]++;
-                update_user_meta($userId, 'descargas', $descargasAnteriores);
-                error_log("Contador de descargas incrementado para sample: " . $sampleId);
+
+            if (!file_exists($audioFile)) {
+                error_log("[{$functionName}] Error: El archivo de audio no existe: {$audioFile}");
+                continue; // Salta a la siguiente iteración del bucle de audioIds
+            }
+
+            if ($zip->addFile($audioFile, basename($audioFile))) {
+                error_log("[{$functionName}] Archivo agregado al ZIP: " . basename($audioFile));
+                $agregado = true;
+            } else {
+                error_log("[{$functionName}] Error al agregar archivo al ZIP: " . basename($audioFile));
+                return false; // Retorna falso inmediatamente en caso de error
             }
         }
     }
 
-    $totalDescargas = (int)get_post_meta($postId, 'totalDescargas', true);
-    $totalDescargas++;
-    update_post_meta($postId, 'totalDescargas', $totalDescargas);
-    error_log("Total de descargas del post actualizado: " . $totalDescargas);
-
-    error_log("Fin de procesarColeccion. Retornando URL del ZIP: " . $zipUrl);
-    return $zipUrl;
+    return $agregado;
 }
+
+function clasificarSamples(array $samples, int $userId): array
+{
+    $functionName = __FUNCTION__;
+    $samplesDescargados = [];
+    $samplesNoDescargados = [];
+
+    foreach ($samples as $sampleId) {
+        $descargasAnteriores = get_user_meta($userId, 'descargas', true) ?: [];
+
+        if (!is_array($descargasAnteriores)) {
+            error_log("[{$functionName}] Error: El valor de 'descargas' para el usuario {$userId} no es un array.");
+            $descargasAnteriores = [];
+        }
+
+        if (isset($descargasAnteriores[$sampleId])) {
+            $samplesDescargados[] = $sampleId;
+        } else {
+            $samplesNoDescargados[] = $sampleId;
+        }
+    }
+
+    error_log("[{$functionName}] Samples descargados para el usuario {$userId}: " . json_encode($samplesDescargados));
+    error_log("[{$functionName}] Samples no descargados para el usuario {$userId}: " . json_encode($samplesNoDescargados));
+
+    return [$samplesDescargados, $samplesNoDescargados];
+}
+
+function actualizarDescargas(int $userId, array $samplesNoDescargados, array $samplesDescargados): void
+{
+    $functionName = __FUNCTION__;
+
+    foreach ($samplesNoDescargados as $sampleId) {
+        $descargasAnteriores = get_user_meta($userId, 'descargas', true) ?: [];
+
+        if (!is_array($descargasAnteriores)) {
+            error_log("[{$functionName}] Error: El valor de 'descargas' para el usuario {$userId} no es un array.");
+            $descargasAnteriores = [];
+        }
+
+        $descargasAnteriores[$sampleId] = 1;
+        update_user_meta($userId, 'descargas', $descargasAnteriores);
+        error_log("[{$functionName}] Sample no descargado ({$sampleId}) agregado a descargas para el usuario {$userId}.");
+    }
+
+    foreach ($samplesDescargados as $sampleId) {
+        $descargasAnteriores = get_user_meta($userId, 'descargas', true) ?: [];
+
+        if (!is_array($descargasAnteriores)) {
+            error_log("[{$functionName}] Error: El valor de 'descargas' para el usuario {$userId} no es un array.");
+            $descargasAnteriores = [];
+        }
+
+        if (isset($descargasAnteriores[$sampleId])) {
+            $descargasAnteriores[$sampleId]++;
+            update_user_meta($userId, 'descargas', $descargasAnteriores);
+            error_log("[{$functionName}] Contador de descargas incrementado para sample {$sampleId} (usuario {$userId}). Nuevo valor: {$descargasAnteriores[$sampleId]}");
+        }
+    }
+}
+
 
 function generarEnlaceDescargaColeccion($userID, $zipUrl, $postId) {
     $token = bin2hex(random_bytes(16));
