@@ -545,13 +545,22 @@ function botonDescarga($postId)
     ob_start();
     $paraDescarga = get_post_meta($postId, 'paraDescarga', true);
     $userId = get_current_user_id();
+
     if ($paraDescarga == '1') {
         if ($userId) {
             $descargasAnteriores = get_user_meta($userId, 'descargas', true);
             $yaDescargado = isset($descargasAnteriores[$postId]);
             $claseExtra = $yaDescargado ? 'yaDescargado' : '';
-            $esColeccion = get_post_type($postId) === 'colecciones' ? 'true' : '';
-?>
+            $esColeccion = get_post_type($postId) === 'colecciones' ? 'true' : 'false';
+
+            // Error log para postId 320353
+            if ($postId == 320353) {
+                error_log("botonDescarga - Post ID: 320353");
+                error_log("botonDescarga - get_post_type(320353): " . get_post_type($postId));
+                error_log("botonDescarga - esColeccion: " . $esColeccion);
+            }
+
+            ?>
             <div class="ZAQIBB">
                 <button class="icon-arrow-down <?php echo esc_attr($claseExtra); ?>"
                     data-post-id="<?php echo esc_attr($postId); ?>"
