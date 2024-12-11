@@ -124,62 +124,9 @@ function procesarDescarga()
 }
 
 /*
+ESTO SIGUE FALLANDO PORQUE NO TIENE BASARSE EN LA URL NI GENERARLA 
 
-TENGO UN PROBLEMA ACA, ENVIA LA URL Y NO LA UBICACION FISICA
-[11-Dec-2024 14:57:29 UTC] --------------------------------------------------
-[11-Dec-2024 14:58:01 UTC] Inicio de la función datosColeccion para el post ID: 320353
-[11-Dec-2024 14:58:01 UTC] Función datosColeccion completada con éxito para el post ID: 320353
-[11-Dec-2024 14:58:07 UTC] Inicio del proceso de descarga. User ID: 1
-[11-Dec-2024 14:58:07 UTC] Post ID: 320353, esColeccion: true
-[11-Dec-2024 14:58:07 UTC] Procesando colección. Post ID: 320353
-[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Inicio de procesarColeccion. Post ID: 320353, User ID: 1
-[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Número de samples: 24
-[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Nombre del archivo ZIP: coleccion-320353-24.zip
-[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Ruta del archivo ZIP: /var/www/wordpress/wp-content/uploads/2024/12/coleccion-320353-24.zip
-[11-Dec-2024 14:58:07 UTC] [procesarColeccion] URL del archivo ZIP: https://2upra.com/wp-content/uploads/2024/12/coleccion-320353-24.zip
-[11-Dec-2024 14:58:07 UTC] [procesarColeccion] El archivo ZIP ya existe.
-[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Samples no descargados: Array
-(
-)
-
-[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Número de samples no descargados: 0
-[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Total de descargas del post actualizado: 15
-[11-Dec-2024 14:58:07 UTC] [procesarColeccion] Fin de procesarColeccion. Retornando URL del ZIP: https://2upra.com/wp-content/uploads/2024/12/coleccion-320353-24.zip
-[11-Dec-2024 14:58:07 UTC] --------------------------------------------------
-[11-Dec-2024 14:58:07 UTC] [Inicio] Generando enlace de descarga de colección. UserID: 1, ZipPath: https://2upra.com/wp-content/uploads/2024/12/coleccion-320353-24.zip, Token: 30e5fbfcce15017b6d53302cf0132385, Time: 1733929087
-[11-Dec-2024 14:58:07 UTC] Token data set in transient: Array
-(
-    [user_id] => 1
-    [zip_path] => https://2upra.com/wp-content/uploads/2024/12/coleccion-320353-24.zip
-    [post_id] => 320353
-    [time] => 1733929087
-    [usos] => 0
-    [tipo] => coleccion
-)
-
-[11-Dec-2024 14:58:07 UTC] Enlace de descarga de colección generado: https://2upra.com?descarga_token=30e5fbfcce15017b6d53302cf0132385&tipo=coleccion
-[11-Dec-2024 14:58:07 UTC] [Fin] Generando enlace de descarga de colección.
-[11-Dec-2024 14:58:07 UTC] --------------------------------------------------
-[11-Dec-2024 14:58:07 UTC] URL de descarga de colección generada: https://2upra.com?descarga_token=30e5fbfcce15017b6d53302cf0132385&tipo=coleccion
-[11-Dec-2024 14:58:07 UTC] actualizarTimestampDescargas: User ID: 1, Timestamp actualizado a: 1733929087
-[11-Dec-2024 14:58:07 UTC] Timestamp de descargas actualizado.
-[11-Dec-2024 14:58:08 UTC] --------------------------------------------------
-[11-Dec-2024 14:58:08 UTC] [Inicio] Intentando descargar colección con token: 30e5fbfcce15017b6d53302cf0132385
-[11-Dec-2024 14:58:08 UTC] User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0
-[11-Dec-2024 14:58:08 UTC] Datos del token recuperados: Array
-(
-    [user_id] => 1
-    [zip_path] => https://2upra.com/wp-content/uploads/2024/12/coleccion-320353-24.zip
-    [post_id] => 320353
-    [time] => 1733929087
-    [usos] => 0
-    [tipo] => coleccion
-)
-
-[11-Dec-2024 14:58:08 UTC] UserID actual: 1
-[11-Dec-2024 14:58:08 UTC] UserID del token: 1
-[11-Dec-2024 14:58:08 UTC] [Error] Descarga de colección: El archivo no existe o no es accesible. Ruta: https://2upra.com/wp-content/uploads/2024/12/coleccion-320353-24.zip
-[11-Dec-2024 14:58:08 UTC] --------------------------------------------------
+TIENE QUE TRANSMITIR EL ARCHIVO EN BASE A SU UBICACION EN EL SERVIDOR!!!!
 */
 
 function procesarColeccion($postId, $userId)
@@ -189,7 +136,6 @@ function procesarColeccion($postId, $userId)
     $samples = get_post_meta($postId, 'samples', true);
     $numSamples = is_array($samples) ? count($samples) : 0;
 
-    //error_log("[procesarColeccion] Samples obtenidos: " . print_r($samples, true));
     error_log("[procesarColeccion] Número de samples: " . $numSamples);
 
     if ($numSamples === 0) {
@@ -200,11 +146,12 @@ function procesarColeccion($postId, $userId)
     $zipName = 'coleccion-' . $postId . '-' . $numSamples . '.zip';
     $upload_dir = wp_upload_dir();
     $zipPath = $upload_dir['path'] . '/' . $zipName;
-    $zipUrl = $upload_dir['url'] . '/' . $zipName;
+    // $zipUrl = $upload_dir['url'] . '/' . $zipName; // <- Eliminamos la variable $zipUrl
 
     error_log("[procesarColeccion] Nombre del archivo ZIP: " . $zipName);
     error_log("[procesarColeccion] Ruta del archivo ZIP: " . $zipPath);
-    error_log("[procesarColeccion] URL del archivo ZIP: " . $zipUrl);
+    // Eliminamos el log que usaba $zipUrl
+    // error_log("[procesarColeccion] URL del archivo ZIP: " . $zipUrl);
 
     if (!is_dir($upload_dir['path']) || !is_writable($upload_dir['path'])) {
         error_log("[procesarColeccion] Error: El directorio de uploads no existe o no tiene permisos de escritura.");
@@ -216,7 +163,6 @@ function procesarColeccion($postId, $userId)
 
     if (file_exists($zipPath)) {
         error_log("[procesarColeccion] El archivo ZIP ya existe.");
-        //error_log("[procesarColeccion] Samples descargados: " . print_r($samplesDescargados, true));
         error_log("[procesarColeccion] Samples no descargados: " . print_r($samplesNoDescargados, true));
         error_log("[procesarColeccion] Número de samples no descargados: " . $numSamplesNoDescargados);
 
@@ -274,8 +220,8 @@ function procesarColeccion($postId, $userId)
     $totalDescargas++;
     update_post_meta($postId, 'totalDescargas', $totalDescargas);
     error_log("[procesarColeccion] Total de descargas del post actualizado: " . $totalDescargas);
-    error_log("[procesarColeccion] Fin de procesarColeccion. Retornando URL del ZIP: " . $zipUrl);
-    return $zipUrl;
+    error_log("[procesarColeccion] Fin de procesarColeccion. Retornando ruta del ZIP: " . $zipPath); // Modificamos el mensaje del log
+    return $zipPath; // Devolvemos la ruta física
 }
 
 function generarEnlaceDescargaColeccion($userID, $zipPath, $postId)
@@ -284,7 +230,7 @@ function generarEnlaceDescargaColeccion($userID, $zipPath, $postId)
 
     $token_data = array(
         'user_id' => $userID,
-        'zip_path' => $zipPath, // Ahora guarda la ruta física correcta
+        'zip_path' => $zipPath, // Guarda la ruta física
         'post_id' => $postId,
         'time' => time(),
         'usos' => 0,
@@ -299,7 +245,7 @@ function generarEnlaceDescargaColeccion($userID, $zipPath, $postId)
 
     $enlaceDescarga = add_query_arg([
         'descarga_token' => $token,
-        'tipo'          => 'coleccion' // Añadimos un parámetro para saber que es una colección
+        'tipo'          => 'coleccion'
     ], home_url());
 
     error_log("Enlace de descarga de colección generado: " . $enlaceDescarga);
@@ -466,116 +412,7 @@ function descargaAudioColeccion() {
     }
 }
 
-
-function agregarArchivosAlZip(ZipArchive &$zip, array $samples): bool
-{
-    $agregado = false;
-    $functionName = __FUNCTION__;
-
-    foreach ($samples as $sampleId) {
-        $audioIds = get_post_meta($sampleId, 'post_audio', true);
-        error_log("[{$functionName}] IDs de audio para sample {$sampleId}: " . json_encode($audioIds));
-
-        // Convertir $audioIds a un array si no lo es
-        if (!is_array($audioIds)) {
-            if (is_string($audioIds) && !empty($audioIds)) {
-                $audioIds = [$audioIds]; // Crea un array con el string como único elemento
-            } else {
-                error_log("[{$functionName}] Error: El valor de 'post_audio' para el sample {$sampleId} no es un array ni un string válido.");
-                continue; // Salta a la siguiente iteración del bucle principal
-            }
-        }
-
-        foreach ($audioIds as $audioId) {
-            $audioFile = get_attached_file($audioId);
-            error_log("[{$functionName}] Ruta del archivo de audio {$audioId}: " . ($audioFile ?: 'No disponible'));
-
-            if (!$audioFile) {
-                error_log("[{$functionName}] Error: No se pudo obtener la ruta del archivo de audio con ID: {$audioId}");
-                continue; // Salta a la siguiente iteración del bucle de audioIds
-            }
-
-            if (!file_exists($audioFile)) {
-                error_log("[{$functionName}] Error: El archivo de audio no existe: {$audioFile}");
-                continue; // Salta a la siguiente iteración del bucle de audioIds
-            }
-
-            if ($zip->addFile($audioFile, basename($audioFile))) {
-                error_log("[{$functionName}] Archivo agregado al ZIP: " . basename($audioFile));
-                $agregado = true;
-            } else {
-                error_log("[{$functionName}] Error al agregar archivo al ZIP: " . basename($audioFile));
-                return false; // Retorna falso inmediatamente en caso de error
-            }
-        }
-    }
-
-    return $agregado;
-}
-
-function clasificarSamples(array $samples, int $userId): array
-{
-    $functionName = __FUNCTION__;
-    $samplesDescargados = [];
-    $samplesNoDescargados = [];
-
-    foreach ($samples as $sampleId) {
-        $descargasAnteriores = get_user_meta($userId, 'descargas', true) ?: [];
-
-        if (!is_array($descargasAnteriores)) {
-            error_log("[{$functionName}] Error: El valor de 'descargas' para el usuario {$userId} no es un array.");
-            $descargasAnteriores = [];
-        }
-
-        if (isset($descargasAnteriores[$sampleId])) {
-            $samplesDescargados[] = $sampleId;
-        } else {
-            $samplesNoDescargados[] = $sampleId;
-        }
-    }
-
-    //error_log("[{$functionName}] Samples descargados para el usuario {$userId}: " . json_encode($samplesDescargados));
-    //error_log("[{$functionName}] Samples no descargados para el usuario {$userId}: " . json_encode($samplesNoDescargados));
-
-    return [$samplesDescargados, $samplesNoDescargados];
-}
-
-function actualizarDescargas(int $userId, array $samplesNoDescargados, array $samplesDescargados): void
-{
-    $functionName = __FUNCTION__;
-
-    foreach ($samplesNoDescargados as $sampleId) {
-        $descargasAnteriores = get_user_meta($userId, 'descargas', true) ?: [];
-
-        if (!is_array($descargasAnteriores)) {
-            error_log("[{$functionName}] Error: El valor de 'descargas' para el usuario {$userId} no es un array.");
-            $descargasAnteriores = [];
-        }
-
-        $descargasAnteriores[$sampleId] = 1;
-        update_user_meta($userId, 'descargas', $descargasAnteriores);
-        error_log("[{$functionName}] Sample no descargado ({$sampleId}) agregado a descargas para el usuario {$userId}.");
-    }
-
-    foreach ($samplesDescargados as $sampleId) {
-        $descargasAnteriores = get_user_meta($userId, 'descargas', true) ?: [];
-
-        if (!is_array($descargasAnteriores)) {
-            error_log("[{$functionName}] Error: El valor de 'descargas' para el usuario {$userId} no es un array.");
-            $descargasAnteriores = [];
-        }
-
-        if (isset($descargasAnteriores[$sampleId])) {
-            $descargasAnteriores[$sampleId]++;
-            update_user_meta($userId, 'descargas', $descargasAnteriores);
-            //error_log("[{$functionName}] Contador de descargas incrementado para sample {$sampleId} (usuario {$userId}). Nuevo valor: {$descargasAnteriores[$sampleId]}");
-        }
-    }
-}
-
-
-add_action('template_redirect', 'descargaAudioColeccion');
-
+//EJEMPLO DE OTRO CODIGO BIEN HECHO 
 function generarEnlaceDescarga($userID, $audioID)
 {
     $token = bin2hex(random_bytes(16));
@@ -603,8 +440,6 @@ function generarEnlaceDescarga($userID, $audioID)
     return $enlaceDescarga;
 }
 
-
-//te muestro el codigo (no hay que cambiar esta funcion)
 function descargaAudio()
 {
     if (isset($_GET['descarga_token'])) {
@@ -757,6 +592,118 @@ function descargaAudio()
         }
     }
 }
+
+
+function agregarArchivosAlZip(ZipArchive &$zip, array $samples): bool
+{
+    $agregado = false;
+    $functionName = __FUNCTION__;
+
+    foreach ($samples as $sampleId) {
+        $audioIds = get_post_meta($sampleId, 'post_audio', true);
+        error_log("[{$functionName}] IDs de audio para sample {$sampleId}: " . json_encode($audioIds));
+
+        // Convertir $audioIds a un array si no lo es
+        if (!is_array($audioIds)) {
+            if (is_string($audioIds) && !empty($audioIds)) {
+                $audioIds = [$audioIds]; // Crea un array con el string como único elemento
+            } else {
+                error_log("[{$functionName}] Error: El valor de 'post_audio' para el sample {$sampleId} no es un array ni un string válido.");
+                continue; // Salta a la siguiente iteración del bucle principal
+            }
+        }
+
+        foreach ($audioIds as $audioId) {
+            $audioFile = get_attached_file($audioId);
+            error_log("[{$functionName}] Ruta del archivo de audio {$audioId}: " . ($audioFile ?: 'No disponible'));
+
+            if (!$audioFile) {
+                error_log("[{$functionName}] Error: No se pudo obtener la ruta del archivo de audio con ID: {$audioId}");
+                continue; // Salta a la siguiente iteración del bucle de audioIds
+            }
+
+            if (!file_exists($audioFile)) {
+                error_log("[{$functionName}] Error: El archivo de audio no existe: {$audioFile}");
+                continue; // Salta a la siguiente iteración del bucle de audioIds
+            }
+
+            if ($zip->addFile($audioFile, basename($audioFile))) {
+                error_log("[{$functionName}] Archivo agregado al ZIP: " . basename($audioFile));
+                $agregado = true;
+            } else {
+                error_log("[{$functionName}] Error al agregar archivo al ZIP: " . basename($audioFile));
+                return false; // Retorna falso inmediatamente en caso de error
+            }
+        }
+    }
+
+    return $agregado;
+}
+
+function clasificarSamples(array $samples, int $userId): array
+{
+    $functionName = __FUNCTION__;
+    $samplesDescargados = [];
+    $samplesNoDescargados = [];
+
+    foreach ($samples as $sampleId) {
+        $descargasAnteriores = get_user_meta($userId, 'descargas', true) ?: [];
+
+        if (!is_array($descargasAnteriores)) {
+            error_log("[{$functionName}] Error: El valor de 'descargas' para el usuario {$userId} no es un array.");
+            $descargasAnteriores = [];
+        }
+
+        if (isset($descargasAnteriores[$sampleId])) {
+            $samplesDescargados[] = $sampleId;
+        } else {
+            $samplesNoDescargados[] = $sampleId;
+        }
+    }
+
+    //error_log("[{$functionName}] Samples descargados para el usuario {$userId}: " . json_encode($samplesDescargados));
+    //error_log("[{$functionName}] Samples no descargados para el usuario {$userId}: " . json_encode($samplesNoDescargados));
+
+    return [$samplesDescargados, $samplesNoDescargados];
+}
+
+function actualizarDescargas(int $userId, array $samplesNoDescargados, array $samplesDescargados): void
+{
+    $functionName = __FUNCTION__;
+
+    foreach ($samplesNoDescargados as $sampleId) {
+        $descargasAnteriores = get_user_meta($userId, 'descargas', true) ?: [];
+
+        if (!is_array($descargasAnteriores)) {
+            error_log("[{$functionName}] Error: El valor de 'descargas' para el usuario {$userId} no es un array.");
+            $descargasAnteriores = [];
+        }
+
+        $descargasAnteriores[$sampleId] = 1;
+        update_user_meta($userId, 'descargas', $descargasAnteriores);
+        error_log("[{$functionName}] Sample no descargado ({$sampleId}) agregado a descargas para el usuario {$userId}.");
+    }
+
+    foreach ($samplesDescargados as $sampleId) {
+        $descargasAnteriores = get_user_meta($userId, 'descargas', true) ?: [];
+
+        if (!is_array($descargasAnteriores)) {
+            error_log("[{$functionName}] Error: El valor de 'descargas' para el usuario {$userId} no es un array.");
+            $descargasAnteriores = [];
+        }
+
+        if (isset($descargasAnteriores[$sampleId])) {
+            $descargasAnteriores[$sampleId]++;
+            update_user_meta($userId, 'descargas', $descargasAnteriores);
+            //error_log("[{$functionName}] Contador de descargas incrementado para sample {$sampleId} (usuario {$userId}). Nuevo valor: {$descargasAnteriores[$sampleId]}");
+        }
+    }
+}
+
+
+add_action('template_redirect', 'descargaAudioColeccion');
+
+
 add_action('wp_ajax_descargar_audio', 'procesarDescarga');
 add_action('template_redirect', 'descargaAudio');
 
