@@ -22,30 +22,25 @@ function procesarIdeas(array $args, int $paged): array|false
         $post_weights = []; // Array para guardar el peso de cada post
 
         foreach ($samples_meta as $post_id) {
-            $similar_to_cache_key = "similar_to_$post_id";
-            $cached_similars = obtenerCache($similar_to_cache_key);
+            // La caché está desactivada, así que siempre calculamos los similares
+            $posts_similares = calcularFeedPersonalizado(44, '', $post_id);
 
-            if ($cached_similars) {
-                arsort($cached_similars);
-                $posts_similares = array_keys($cached_similars);
-            } else {
-                $posts_similares = calcularFeedPersonalizado(44, '', $post_id);
-
-                if (!$posts_similares) {
-                    continue;
-                }
-
-                if (is_array($posts_similares)) {
-                    $posts_similares_ids = array_keys($posts_similares);
-                    guardarCache($similar_to_cache_key, $posts_similares, 15 * DAY_IN_SECONDS);
-                    $posts_similares = $posts_similares_ids;
-                } else {
-                    guardarCache($similar_to_cache_key, $posts_similares, 15 * DAY_IN_SECONDS);
-                }
+            if (!$posts_similares) {
+                continue;
             }
 
+            // Si es un array, obtenemos las claves (IDs de los posts)
+            if (is_array($posts_similares)) {
+                $posts_similares = array_keys($posts_similares);
+            }
+
+            // Filtrar posts: el mismo post, los que ya están en $samples_meta y los que ya están en $all_similar_posts
             $posts_similares = array_diff($posts_similares, [$post_id], $samples_meta, $all_similar_posts);
+            
+            // Limitar a 5 posts similares
             $posts_similares = array_slice($posts_similares, 0, 5);
+            
+            // Añadir los posts similares al array general
             $all_similar_posts = array_merge($all_similar_posts, $posts_similares);
         }
 
