@@ -1,5 +1,10 @@
 <? 
 
+/*
+[12-Dec-2024 08:25:19 UTC] Caché guardada exitosamente. Nombre de la caché: feed_personalizado_user_1_.cache
+[12-Dec-2024 08:25:19 UTC] [borrarCache] Archivo de caché no encontrado: /var/www/wordpress/wp-content/cache/feed/feed_datos_1.cache
+*/
+
 function reiniciarFeed($current_user_id)
 {
     $tipoUsuario = get_user_meta($current_user_id, 'tipoUsuario', true);
@@ -65,6 +70,7 @@ function reiniciarFeed($current_user_id)
         }
     }
     */
+    //borra la cache de calculo de posts
     borrarCache('feed_datos_' . $current_user_id);
     guardarLog("Caché específica eliminada: feed_datos_$current_user_id");
 

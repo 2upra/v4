@@ -15,7 +15,7 @@ function guardarCache($cache_key, $data, $expiration) {
         'expiration' => time() + $expiration,
         'data' => $data,
     ];
-    error_log("Datos a guardar en caché: " . print_r($data_to_store, true));
+    //error_log("Datos a guardar en caché: " . print_r($data_to_store, true));
     $serialized_data = serialize($data_to_store);
     error_log("Datos serializados");
     $compressed_data = gzcompress($serialized_data);
