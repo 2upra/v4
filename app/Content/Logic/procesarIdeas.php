@@ -35,7 +35,7 @@ function procesarIdeas($args, $paged)
                 $cached_similars = obtenerCache($similar_to_cache_key);
 
                 // Log adicional para inspeccionar el contenido del cache
-                error_log("[procesarIdeas] Cache obtenido para post_id $post_id: " . print_r($cached_similars, true));
+                //error_log("[procesarIdeas] Cache obtenido para post_id $post_id: " . print_r($cached_similars, true));
 
                 if ($cached_similars) {
                     // Ensure the cached similars are sorted if needed
