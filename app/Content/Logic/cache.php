@@ -3,20 +3,29 @@
 // Función para guardar datos en caché en archivos con compresión y serialización
 function guardarCache($cache_key, $data, $expiration) {
     $cache_dir = WP_CONTENT_DIR . '/cache/feed/';
+    error_log("Intentando guardar caché. Directorio: " . $cache_dir);
     if (!file_exists($cache_dir)) {
         mkdir($cache_dir, 0755, true);
+        error_log("Directorio de caché creado: " . $cache_dir);
     }
     $file_path = $cache_dir . $cache_key . '.cache';
+    error_log("Ruta completa del archivo de caché: " . $file_path);
 
     $data_to_store = [
         'expiration' => time() + $expiration,
         'data' => $data,
     ];
+    error_log("Datos a guardar en caché: " . print_r($data_to_store, true));
     $serialized_data = serialize($data_to_store);
+    error_log("Datos serializados");
     $compressed_data = gzcompress($serialized_data);
-    file_put_contents($file_path, $compressed_data);
+    error_log("Datos comprimidos");
+    if (file_put_contents($file_path, $compressed_data)) {
+        error_log("Caché guardada exitosamente. Nombre de la caché: " . $cache_key . ".cache");
+    } else {
+        error_log("Error al guardar la caché. Nombre de la caché: " . $cache_key . ".cache");
+    }
 }
-
 function obtenerCache($cache_key) {
     $file_path = WP_CONTENT_DIR . '/cache/feed/' . $cache_key . '.cache';
     if (file_exists($file_path)) {
