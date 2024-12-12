@@ -278,7 +278,7 @@ if (!defined('ABSPATH')) {
 
                         <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil fotoperfilsub" id="fotoperfilsub">
                             <a>
-                                <img src="<?php echo home_url(esc_url($url_imagen_perfil)); ?>" alt="Perfil" style="border-radius: 50%;">
+                                <img src="<?php echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
                             </a>
                         </div>
 
