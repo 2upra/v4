@@ -1,58 +1,113 @@
 <?
 
-if (!function_exists('tablasMensaje')) {
-    function tablasMensaje()
-    {
-        global $wpdb;
-        $charset_collate = $wpdb->get_charset_collate();
-        $tablaMensajes = $wpdb->prefix . 'mensajes';
-        $tablaConversacion = $wpdb->prefix . 'conversacion';
+//necesito una funcion como esta
+function tablas()
+{
+  global $wpdb;
 
-        // Verifica si las tablas ya existen correctamente
-        $existeMensajes = $wpdb->get_var("SHOW TABLES LIKE '$tablaMensajes'") === $tablaMensajes;
-        $existeConversacion = $wpdb->get_var("SHOW TABLES LIKE '$tablaConversacion'") === $tablaConversacion;
+  if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === false)) {
+    update_option('tablasIniciales', '1');
+    return;
+  }
 
-        if ($existeMensajes && $existeConversacion) {
-            return; // Si ambas tablas existen, no hacemos nada
-        }
+  if (get_option('tablasIniciales')) {
+    return;
+  }
 
+  // Crear tabla mensajes
+  $tabla_mensajes = $wpdb->prefix . 'mensajes';
+  $charset_collate = $wpdb->get_charset_collate();
 
-        $sql_conversacion = "CREATE TABLE $tablaConversacion (
-            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-            tipo TINYINT(1) NOT NULL,  -- Tipo de conversación (unouno o grupo)
-            participantes LONGTEXT NOT NULL,  -- Almacena los participantes en formato JSON
-            fecha DATETIME NOT NULL,  -- Fecha de creación de la conversación
-            PRIMARY KEY (id)
-        ) $charset_collate;";
+  $sql_mensajes = "CREATE TABLE IF NOT EXISTS $tabla_mensajes (
+      id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+      conversacion BIGINT(20) UNSIGNED NOT NULL,
+      emisor BIGINT(20) UNSIGNED NOT NULL,
+      mensaje TEXT NOT NULL,
+      fecha DATETIME NOT NULL,
+      adjunto LONGTEXT,
+      metadata LONGTEXT,
+      iv BINARY(16) NOT NULL,
+      leido TINYINT(1) NOT NULL DEFAULT 0,
+      PRIMARY KEY (id),
+      KEY conversacion (conversacion),
+      KEY emisor (emisor)
+  ) $charset_collate;";
 
-        $sql_mensajes = "CREATE TABLE $tablaMensajes (
-            id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-            conversacion BIGINT(20) UNSIGNED NOT NULL,  -- Relación con la tabla de conversaciones
-            emisor BIGINT(20) UNSIGNED NOT NULL,  -- ID del usuario que envía el mensaje
-            mensaje TEXT NOT NULL,  -- Contenido del mensaje
-            fecha DATETIME NOT NULL,  -- Fecha de envío del mensaje
-            adjunto LONGTEXT DEFAULT NULL,  -- Almacena múltiples ID de adjuntos en formato JSON
-            metadata LONGTEXT DEFAULT NULL,  -- Metadatos adicionales
-            iv BINARY(16) NOT NULL,  -- IV para cifrado (no se va a usar mientras tanto)
-            leido BOOLEAN NOT NULL DEFAULT FALSE; -- **nuevo para confirmacion de mensajes
-            PRIMARY KEY (id),
-            KEY conversacion (conversacion),
-            KEY emisor (emisor)
-        ) $charset_collate;";
+  // Crear tabla conversaciones
+  $tabla_conversaciones = $wpdb->prefix . 'conversacion';
 
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+  $sql_conversaciones = "CREATE TABLE IF NOT EXISTS $tabla_conversaciones (
+      id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+      tipo TINYINT(1) NOT NULL,
+      participantes LONGTEXT NOT NULL,
+      fecha DATETIME NOT NULL,
+      PRIMARY KEY (id)
+  ) $charset_collate;";
 
-        dbDelta($sql_conversacion);
-        dbDelta($sql_mensajes);
+  // Incluir funciones de WordPress para ejecutar SQL
+  require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
-        if (!$existeMensajes) {
-            $wpdb->query("
-                ALTER TABLE $tablaMensajes 
-                ADD CONSTRAINT fk_mensajes_conversacion 
-                FOREIGN KEY (conversacion) 
-                REFERENCES $tablaConversacion(id) 
-                ON DELETE CASCADE;
-            ");
-        }
-    }
+  // Ejecutar las consultas
+  $wpdb->query($sql_mensajes);
+  $wpdb->query($sql_conversaciones);
+
+  // Guardar opción para no volver a ejecutar esta función
+  update_option('tablasIniciales', true);
 }
+
+// Hook para verificar y crear las tablas al cargar WordPress
+add_action('init', 'tablas');
+
+function tablasPost()
+{
+  global $wpdb;
+
+  if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === false)) {
+    update_option('tablasPost', '1');
+    return;
+  }
+
+  if (get_option('tablasPost')) {
+    return;
+  }
+
+  // Crear tabla interes
+  $tabla_interes = $wpdb->prefix . 'interes';
+  $charset_collate = $wpdb->get_charset_collate();
+
+  $sql_interes = "CREATE TABLE IF NOT EXISTS $tabla_interes (
+      id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+      user_id BIGINT(20) UNSIGNED NOT NULL,
+      interest VARCHAR(255) NOT NULL,
+      intensity INT NOT NULL DEFAULT 1,
+      PRIMARY KEY (id),
+      KEY user_id (user_id),
+      KEY interest (interest)
+  ) $charset_collate;";
+
+  // Crear tabla post_likes
+  $tabla_post_likes = $wpdb->prefix . 'post_likes';
+
+  $sql_post_likes = "CREATE TABLE IF NOT EXISTS $tabla_post_likes (
+      like_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+      user_id BIGINT(20) UNSIGNED NOT NULL,
+      post_id BIGINT(20) UNSIGNED NOT NULL,
+      like_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (like_id),
+      KEY post_id (post_id),
+      KEY like_date (like_date)
+  ) $charset_collate;";
+
+  // Incluir funciones de WordPress para ejecutar SQL
+  require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+  // Ejecutar las consultas
+  $wpdb->query($sql_interes);
+  $wpdb->query($sql_post_likes);
+
+  // Guardar opción para no volver a ejecutar esta función
+  update_option('tablasPost', true);
+}
+
+// Hook para verificar y crear las tablas al cargar WordPress
+add_action('init', 'tablasPost');

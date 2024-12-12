@@ -53,5 +53,5 @@ get_header();
 	</main><!-- #main -->
 
 <?
-get_sidebar();
+//get_sidebar();
 get_footer();

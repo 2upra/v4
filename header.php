@@ -51,17 +51,36 @@ if (!defined('ABSPATH')) {
     </style>
 */
 ?>
-
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 
-<body <? body_class(); ?>>
+<body <?php body_class(); ?>>
 
     <header id="header">
+        <?php
+        if (LOCAL) {
+        ?>
+            <link rel="stylesheet" href="<?php echo get_stylesheet_uri(); ?>"> <?php
+                                                                            } else {
+                                                                            }
+                                                                                ?>
         <style>
-            @font-face {
+            <?php
+
+            if (LOCAL) {
+                $font_path_gothic = get_template_directory_uri() . '/assets/Fonts/Gothic60-Regular.otf';
+                $font_path_source_sans_3_regular = get_template_directory_uri() . '/assets/Fonts/SourceSans3-Regular.woff2';
+                $font_path_source_sans_3_semibold = get_template_directory_uri() . '/assets/Fonts/SourceSans3-SemiBold.woff2';
+                $font_path_source_sans_3_bold = get_template_directory_uri() . '/assets/Fonts/SourceSans3-Bold.woff2';
+            } else {
+                $font_path_gothic = 'https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/Gothic60-Regular.otf';
+                $font_path_source_sans_3_regular = 'https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Regular.woff2';
+                $font_path_source_sans_3_semibold = 'https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-SemiBold.woff2';
+                $font_path_source_sans_3_bold = 'https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Bold.woff2';
+            }
+            ?>@font-face {
                 font-family: 'Gothic №60';
-                src: url('https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/Gothic60-Regular.otf') format('opentype');
+                src: url('<?php echo $font_path_gothic; ?>') format('opentype');
                 font-weight: 400;
                 font-style: normal;
                 font-display: swap;
@@ -69,7 +88,7 @@ if (!defined('ABSPATH')) {
 
             @font-face {
                 font-family: 'Source Sans 3';
-                src: url('https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Regular.woff2') format('woff2');
+                src: url('<?php echo $font_path_source_sans_3_regular; ?>') format('woff2');
                 font-weight: 400;
                 font-style: normal;
                 font-display: swap;
@@ -77,21 +96,21 @@ if (!defined('ABSPATH')) {
 
             @font-face {
                 font-family: 'Source Sans 3';
-                src: url('https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-SemiBold.woff2') format('woff2');
+                src: url('<?php echo $font_path_source_sans_3_semibold; ?>') format('woff2');
                 font-weight: 500;
                 font-style: normal;
                 font-display: swap;
             }
 
-
             @font-face {
                 font-family: 'Source Sans 3';
-                src: url('https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Bold.woff2') format('woff2');
+                src: url('<?php echo $font_path_source_sans_3_bold; ?>') format('woff2');
                 font-weight: 700;
                 font-style: normal;
                 font-display: swap;
             }
         </style>
+
         <div id="overlay"></div>
         <? if (is_page('asley')) : ?>
             <style>
@@ -109,55 +128,55 @@ if (!defined('ABSPATH')) {
                     <div class="centermenu">
 
                         <div class="menu-item botoniniciomenu">
-                            <a href="https://2upra.com/">
+                            <a href="<?php echo home_url('/'); ?>">
                                 <? echo $GLOBALS['iconoinicio'];
                                 ?>
                             </a>
                         </div>
                         <!--
-                        <div class="xaxa1 menu-item">
-                            <a href="https://2upra.com/sello">
-                                <? // echo $GLOBALS['icononube']; 
-                                ?>
-                            </a>
-                        </div>
-                        -->
+        <div class="xaxa1 menu-item">
+            <a href="<?php echo home_url('/sello'); ?>">
+                <? // echo $GLOBALS['icononube']; 
+                ?>
+            </a>
+        </div>
+        -->
                         <!--
 
-                        -->
+        -->
                         <div class="menu-item">
-                            <a href="https://2upra.com/mu">
+                            <a href="<?php echo home_url('/mu'); ?>">
                                 <? echo $GLOBALS['iconomusic']; ?>
                             </a>
                         </div>
 
                         <div class="menu-item iconocolab" style="display: none;">
-                            <a href="https://2upra.com/colabs">
+                            <a href="<?php echo home_url('/colabs'); ?>">
                                 <? echo $GLOBALS['iconocolab']; ?>
                             </a>
                         </div>
                         <? if ($usuarioTipo === 'Fan'):  ?>
                             <div class="menu-item iconoFeedSample">
-                                <a href="https://2upra.com/feedSample">
+                                <a href="<?php echo home_url('/feedSample'); ?>">
                                     <? echo $GLOBALS['iconRandom']; ?>
                                 </a>
                             </div>
                         <? endif; ?>
                         <? if ($usuarioTipo === 'Artista'):  ?>
                             <div class="menu-item iconoFeedSocial">
-                                <a href="https://2upra.com/feedSocial">
+                                <a href="<?php echo home_url('/feedSocial'); ?>">
                                     <? echo $GLOBALS['iconSocial']; ?>
                                 </a>
                             </div>
                         <? endif; ?>
                         <div class="menu-item iconoColec">
-                            <a href="https://2upra.com/packs">
+                            <a href="<?php echo home_url('/packs'); ?>">
                                 <? echo $GLOBALS['iconoColec']; ?>
                             </a>
                         </div>
 
                         <div class="menu-item iconoInver">
-                            <a href="https://2upra.com/inversion">
+                            <a href="<?php echo home_url('/inversion'); ?>">
                                 <? echo $GLOBALS['iconoInver']; ?>
                             </a>
                         </div>
@@ -239,7 +258,6 @@ if (!defined('ABSPATH')) {
 
                             <div class="menuarribamovil">
 
-
                                 <div class="xaxa1 menu-item">
                                     <a>
                                         <? echo iconoNotificaciones() ?>
@@ -260,10 +278,9 @@ if (!defined('ABSPATH')) {
 
                         <div class="xaxa1 menu-item iconoperfil menu-imagen-perfil fotoperfilsub" id="fotoperfilsub">
                             <a>
-                                <img src="<? echo esc_url($url_imagen_perfil); ?>" alt="Perfil" style="border-radius: 50%;">
+                                <img src="<?php echo home_url(esc_url($url_imagen_perfil)); ?>" alt="Perfil" style="border-radius: 50%;">
                             </a>
                         </div>
-
 
                     </div>
                 </nav>
@@ -273,7 +290,7 @@ if (!defined('ABSPATH')) {
                         <? echo $GLOBALS['iconologo']; ?>
                     </div>
                     <div class="nologinbotones">
-                        <button><a href="https://2upra.com/">Inicio</a></button>
+                        <button><a href="<?php echo home_url('/'); ?>">Inicio</a></button>
                     </div>
                     <div class="nologinboton">
                         <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Iniciar sesión</button>
@@ -289,10 +306,8 @@ if (!defined('ABSPATH')) {
         <? if (is_user_logged_in()) : ?>
             <div id="submenusyinfos">
 
-
                 <? //echo publicaciones(['post_type' => 'colab', 'filtro' => 'colab', 'posts' => 3]); 
                 ?>
-
 
                 <!-- Fondo oscuro para los submenus -->
                 <div id="modalBackground2" class="modal-background submenu modalBackground2" style="display: none;"></div>
@@ -339,7 +354,6 @@ if (!defined('ABSPATH')) {
                 <? echo config() ?>
                 <? echo formRs() ?>
 
-
                 <!-- Enviar mensaje de error -->
                 <div id="formularioError" class="formularioError" style="display:none;">
                     <textarea id="mensajeError" placeholder="Describe el error"></textarea>
@@ -356,12 +370,11 @@ if (!defined('ABSPATH')) {
 
                 <div class="A1806241" id="fotoperfilsub-fotoperfilsub">
                     <div class="A1806242">
-                        <button><a href="https://2upra.com/perfil/">Perfil</a></button>
+                        <button><a href="<?php echo home_url('/perfil/'); ?>">Perfil</a></button>
                         <button class="reporte">Reportar un error</button>
                         <button class="no-ajax"><a class="no-ajax" href="<?php echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>
                     </div>
                 </div>
-
 
                 <!-- Modal formulario subir rola comprobación -->
                 <div id="a84J76WY" class="a84J76WY" style="display:none;">
@@ -380,10 +393,10 @@ if (!defined('ABSPATH')) {
                 <!-- submenu al dar foto de perfil movil -->
                 <div class="A1806241" id="submenuperfil-default">
                     <div class="A1806242">
-                        <button><a href="https://2upra.com/perfil/">Mi perfil</a></button>
+                        <button><a href="<?php echo home_url('/perfil/'); ?>">Mi perfil</a></button>
                         <button class="botonConfig">Editar perfil</button>
                         <button class="reporte">Reportar un error</button>
-                        <button><a href="https://2upra.com/colabs/">Mis colabs</a></button>
+                        <button><a href="<?php echo home_url('/colabs/'); ?>">Mis colabs</a></button>
                         <button class="no-ajax"><a class="no-ajax" href="<?php echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>
                     </div>
                 </div>
@@ -404,9 +417,7 @@ if (!defined('ABSPATH')) {
                     </div>
                 </div>
 
-
                 <!-- Configuración -->
-
 
                 <!-- Información usuario -->
                 <?

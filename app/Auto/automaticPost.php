@@ -59,9 +59,6 @@ function autProcesarAudio($rutaOriginalOne)
         }
     }
 
-    // Resto del código para crear el lite y moverlo a wp_upload_dir permanece igual
-    // ...
-
     $rutaWpLiteDos = "$directory/{$basename}_lite.mp3";
     $comando_lite = "/usr/bin/ffmpeg -i " . escapeshellarg($rutaOriginalOne) . " -b:a 128k " . escapeshellarg($rutaWpLiteDos) . " -y";
     exec($comando_lite, $output_lite, $return_lite);
