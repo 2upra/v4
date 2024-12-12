@@ -111,9 +111,9 @@ function procesarIdeas($args, $paged)
                 $posts_similares = array_slice($posts_similares, 0, 5);
                 error_log("[procesarIdeas] Limitados a 5 posts similares para post_id $post_id");
 
-                // Añadir a la lista total de posts
-                $all_similar_posts = array_merge($all_similar_posts, $posts_similares);
-                error_log("[procesarIdeas] Total de posts similares acumulados");
+                 // Añadir a la lista total de posts
+                 $all_similar_posts = array_merge($all_similar_posts, $posts_similares);
+                 error_log("[procesarIdeas] Total de posts similares acumulados");
             }
 
             // Eliminar duplicados y limitar a 620 posts
@@ -122,49 +122,59 @@ function procesarIdeas($args, $paged)
             $unique_count = count($all_similar_posts);
             error_log("[procesarIdeas] Eliminados duplicados. Antes: $prev_unique_count, Después: $unique_count");
 
-            if ($unique_count > 620) {
-                $all_similar_posts = array_slice($all_similar_posts, 0, 620);
-                error_log("[procesarIdeas] Limitados a 620 posts: (oculto)");
-            }
+             if ($unique_count > 620) {
+                 $all_similar_posts = array_slice($all_similar_posts, 0, 620);
+                  error_log("[procesarIdeas] Limitados a 620 posts (después de eliminar duplicados)");
+             }
 
-            // Aplicar aleatoriedad del 20%
-            if (count($all_similar_posts) > 1) {
-                $total_posts = count($all_similar_posts);
+             // Aplicar puntuación y ordenamiento por vistas
+             $all_similar_posts_scored = asignarPuntuacionPorVistas($all_similar_posts);
+
+            if (count($all_similar_posts_scored) > 1) {
+                $total_posts = count($all_similar_posts_scored);
                 $randomize_count = ceil($total_posts * 0.2);
                 error_log("[procesarIdeas] Aplicando aleatoriedad. Total posts: $total_posts, Cantidad a randomizar: $randomize_count");
-
+            
                 if ($randomize_count > 1) {
-                    $random_indices = array_rand($all_similar_posts, $randomize_count);
+                    $keys = array_keys($all_similar_posts_scored);
+                    $random_indices = array_rand($keys, $randomize_count);
+            
                     if (!is_array($random_indices)) {
                         $random_indices = [$random_indices];
                     }
+            
                     $random_posts = [];
                     foreach ($random_indices as $index) {
-                        $random_posts[] = $all_similar_posts[$index];
+                        $random_posts[] = $keys[$index];
                     }
                     shuffle($random_posts);
-                    error_log("[procesarIdeas] Posts seleccionados para aleatorizar: (oculto)");
-
+                   error_log("[procesarIdeas] Posts seleccionados para aleatorizar: (oculto)");
+            
+            
                     $i = 0;
                     foreach ($random_indices as $index) {
-                        $all_similar_posts[$index] = $random_posts[$i];
+                        $all_similar_posts_scored[$keys[$index]] = $all_similar_posts_scored[$random_posts[$i]];
                         $i++;
                     }
-                   error_log("[procesarIdeas] Posts después de aleatorizar: (oculto)");
+                  
                 }
             }
-
-            error_log("[procesarIdeas] Total final de posts similares: " . count($all_similar_posts));
+             // Extraer los IDs de los posts ordenados
+            
+            $all_similar_posts_sorted = array_keys($all_similar_posts_scored);
+            error_log("[procesarIdeas] Posts después de ordenar por vistas y aleatorizar: (oculto)");
+            
+            error_log("[procesarIdeas] Total final de posts similares: " . count($all_similar_posts_sorted));
 
             // Configurar argumentos de la consulta
             $query_args = [
                 'post_type'      => $args['post_type'],
-                'post__in'       => $all_similar_posts,
+                'post__in'       => $all_similar_posts_sorted,
                 'orderby'        => 'post__in',
                 'posts_per_page' => 12,
                 'paged'          => $paged,
             ];
-
+            
             error_log("[procesarIdeas] Query args configurados: (oculto)");
 
             return $query_args;
@@ -176,4 +186,27 @@ function procesarIdeas($args, $paged)
         error_log("[procesarIdeas] Error crítico: " . $e->getMessage());
         return false;
     }
+}
+
+function asignarPuntuacionPorVistas($post_ids) {
+    $user_id = get_current_user_id();
+    $vistas_usuario = get_user_meta($user_id, 'vistas_posts', true);
+    $post_scores = [];
+    
+    if(!$vistas_usuario){
+        $vistas_usuario = [];
+    }
+    foreach ($post_ids as $post_id) {
+        $score = 0;
+        if (isset($vistas_usuario[$post_id])) {
+            $score = 1 / (1 + $vistas_usuario[$post_id]['count']);
+        } else {
+             $score = 2;
+        }
+        
+        $post_scores[$post_id] = $score;
+    }
+    
+    arsort($post_scores);
+    return $post_scores;
 }
