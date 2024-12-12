@@ -39,12 +39,11 @@ function manejarIdea($args, $paged)
 function procesarIdeas($args, $paged)
 {
     try {
-        error_log("[procesarIdeas] Iniciando procesamiento con args: " . print_r($args, true));
+        error_log("[procesarIdeas] Iniciando procesamiento con args: (oculto)");
 
         // Validar que 'colec' es un número válido
         if (empty($args['colec']) || !is_numeric($args['colec'])) {
-            //error_log("[procesarIdeas] 'colec' no es válido. Valor recibido: " . print_r($args['colec'], true));
-            error_log("[procesarIdeas] 'colec' no es válido. Valor recibido: " . print_r($args['colec'], true));
+            error_log("[procesarIdeas] 'colec' no es válido. Valor recibido: (oculto)");
             return false;
         }
 
@@ -52,11 +51,11 @@ function procesarIdeas($args, $paged)
 
         // Obtener meta 'samples' del post
         $samples_meta = get_post_meta($args['colec'], 'samples', true);
-        error_log("[procesarIdeas] Obtención de meta 'samples' para colec {$args['colec']}: " . print_r($samples_meta, true));
+        error_log("[procesarIdeas] Obtención de meta 'samples' para colec {$args['colec']}");
 
         if (!is_array($samples_meta)) {
             $samples_meta = maybe_unserialize($samples_meta);
-            error_log("[procesarIdeas] Intentando deserializar 'samples': " . print_r($samples_meta, true));
+            error_log("[procesarIdeas] Intentando deserializar 'samples'");
         }
 
         if (is_array($samples_meta)) {
@@ -70,7 +69,7 @@ function procesarIdeas($args, $paged)
                 $cached_similars = obtenerCache($similar_to_cache_key);
 
                 // Log adicional para inspeccionar el contenido del cache
-                //error_log("[procesarIdeas] Cache obtenido para post_id $post_id: " . print_r($cached_similars, true));
+                error_log("[procesarIdeas] Cache obtenido para post_id $post_id");
 
                 if ($cached_similars) {
                     // Ensure the cached similars are sorted if needed
@@ -79,7 +78,7 @@ function procesarIdeas($args, $paged)
                     // Extract post IDs from the cached similars
                     $posts_similares = array_keys($cached_similars);
 
-                    error_log("[procesarIdeas] Usando cache para post_id $post_id. Posts similares obtenidos: " . implode(', ', $posts_similares));
+                    error_log("[procesarIdeas] Usando cache para post_id $post_id. Posts similares obtenidos");
                 } else {
                     error_log("[procesarIdeas] Cache no encontrado para post_id $post_id. Calculando posts similares.");
                     $posts_similares = calcularFeedPersonalizado(44, '', $post_id);
@@ -89,15 +88,14 @@ function procesarIdeas($args, $paged)
                         if (is_array($posts_similares)) {
                             $posts_similares_ids = array_keys($posts_similares);
                             guardarCache($similar_to_cache_key, $posts_similares, 15 * DAY_IN_SECONDS);
-                            error_log("[procesarIdeas] Cache guardado para post_id $post_id con posts: " . implode(', ', $posts_similares_ids));
+                            error_log("[procesarIdeas] Cache guardado para post_id $post_id");
                             $posts_similares = $posts_similares_ids; // Update for consistency
                         } else {
                             // Handle case where it returns an indexed array of post IDs
                             guardarCache($similar_to_cache_key, $posts_similares, 15 * DAY_IN_SECONDS);
-                            error_log("[procesarIdeas] Cache guardado para post_id $post_id con posts: " . implode(', ', $posts_similares));
+                            error_log("[procesarIdeas] Cache guardado para post_id $post_id con posts");
                         }
                     } else {
-                        //error_log("[procesarIdeas] No se pudieron calcular posts similares para post_id $post_id.");
                         error_log("[procesarIdeas] No se pudieron calcular posts similares para post_id $post_id.");
                         continue;
                     }
@@ -111,11 +109,11 @@ function procesarIdeas($args, $paged)
 
                 // Asegurar que tengamos al menos 5 posts similares
                 $posts_similares = array_slice($posts_similares, 0, 5);
-                error_log("[procesarIdeas] Limitados a 5 posts similares para post_id $post_id: " . implode(', ', $posts_similares));
+                error_log("[procesarIdeas] Limitados a 5 posts similares para post_id $post_id");
 
                 // Añadir a la lista total de posts
                 $all_similar_posts = array_merge($all_similar_posts, $posts_similares);
-                error_log("[procesarIdeas] Total de posts similares acumulados: " . count($all_similar_posts));
+                error_log("[procesarIdeas] Total de posts similares acumulados");
             }
 
             // Eliminar duplicados y limitar a 620 posts
@@ -126,7 +124,7 @@ function procesarIdeas($args, $paged)
 
             if ($unique_count > 620) {
                 $all_similar_posts = array_slice($all_similar_posts, 0, 620);
-                error_log("[procesarIdeas] Limitados a 620 posts: " . implode(', ', $all_similar_posts));
+                error_log("[procesarIdeas] Limitados a 620 posts: (oculto)");
             }
 
             // Aplicar aleatoriedad del 20%
@@ -145,14 +143,14 @@ function procesarIdeas($args, $paged)
                         $random_posts[] = $all_similar_posts[$index];
                     }
                     shuffle($random_posts);
-                    error_log("[procesarIdeas] Posts seleccionados para aleatorizar: " . implode(', ', $random_posts));
+                    error_log("[procesarIdeas] Posts seleccionados para aleatorizar: (oculto)");
 
                     $i = 0;
                     foreach ($random_indices as $index) {
                         $all_similar_posts[$index] = $random_posts[$i];
                         $i++;
                     }
-                    error_log("[procesarIdeas] Posts después de aleatorizar: " . implode(', ', $all_similar_posts));
+                   error_log("[procesarIdeas] Posts después de aleatorizar: (oculto)");
                 }
             }
 
@@ -167,11 +165,11 @@ function procesarIdeas($args, $paged)
                 'paged'          => $paged,
             ];
 
-            error_log("[procesarIdeas] Query args configurados: " . print_r($query_args, true));
+            error_log("[procesarIdeas] Query args configurados: (oculto)");
 
             return $query_args;
         } else {
-            error_log("[procesarIdeas] El meta 'samples' no es un array válido. Valor recibido: " . print_r($samples_meta, true));
+            error_log("[procesarIdeas] El meta 'samples' no es un array válido. Valor recibido: (oculto)");
             return false;
         }
     } catch (Exception $e) {
