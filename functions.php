@@ -7,7 +7,7 @@ $stripe_init_path = ABSPATH . 'wp-content/stripe/init.php';
 
 if (file_exists($stripe_init_path)) {
     require_once $stripe_init_path;
-} 
+}
 /*
 composer install --ignore-platform-reqs
 */
@@ -47,11 +47,12 @@ function debug_page_load_time() {
 add_action('shutdown', 'debug_page_load_time');
 */
 
-function paginasIniciales() {
+function paginasIniciales()
+{
     // Verificar si las páginas ya fueron creadas
     if (get_option('paginasIniciales') == '1') return;
 
-    
+
     if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === false)) {
         update_option('paginasIniciales', '1');
         return;
@@ -155,7 +156,12 @@ add_action('init', 'paginasIniciales');
 
 function headGeneric()
 {
+    if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === true)) {
+        update_option('paginasIniciales', '1');
+        return;
+    }
 ?>
+
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -356,7 +362,7 @@ function scriptsOrdenados()
 {
     $global_version = '3.0.80';
     $dev_mode = defined('LOCAL') && LOCAL;
-    $error_log = [];
+    //$error_log = [];
 
     $scripts_only_for_logged_in_users = [
         'galleV2',
@@ -425,15 +431,15 @@ function scriptsOrdenados()
     ];
 
     // Registro de la configuración inicial
-    $error_log[] = "Modo de desarrollo activado: " . ($dev_mode ? 'Sí' : 'No');
-    $error_log[] = "Versión global de scripts: " . $global_version;
+    //$error_log[] = "Modo de desarrollo activado: " . ($dev_mode ? 'Sí' : 'No');
+    //$error_log[] = "Versión global de scripts: " . $global_version;
 
     foreach ($script_handles as $handle => $data) {
         $version = $global_version;
         $deps = is_array($data) && isset($data[1]) ? $data[1] : [];
 
         if (!is_user_logged_in() && in_array($handle, $scripts_only_for_logged_in_users)) {
-            $error_log[] = "Usuario no logueado, omitiendo script: " . $handle;
+            //$error_log[] = "Usuario no logueado, omitiendo script: " . $handle;
             continue;
         }
 
@@ -445,15 +451,15 @@ function scriptsOrdenados()
         $script_url = get_template_directory_uri() . "/js/{$handle}.js";
 
         // Registro de cada script antes de verificar su existencia
-        $error_log[] = "Intentando cargar script: " . $handle . " desde " . $script_path;
+        //$error_log[] = "Intentando cargar script: " . $handle . " desde " . $script_path;
 
         if (!file_exists($script_path)) {
-            $error_log[] = "Error: El archivo " . $handle . ".js no existe en la ruta: " . $script_path;
+            //$error_log[] = "Error: El archivo " . $handle . ".js no existe en la ruta: " . $script_path;
             continue;
         }
 
         wp_enqueue_script($handle, $script_url, $deps, $version, true);
-        $error_log[] = "Script " . $handle . " encolado correctamente con versión: " . $version;
+        //$error_log[] = "Script " . $handle . " encolado correctamente con versión: " . $version;
     }
 
     // Scripts adicionales y localizaciones
@@ -464,29 +470,29 @@ function scriptsOrdenados()
             'apiUrl'    => esc_url_raw(rest_url('galle/v2/guardarMensaje/')),
             'emisor'    => get_current_user_id()
         ]);
-        $error_log[] = "Script galleV2 localizado con nonce y apiUrl para usuario logueado.";
+        //$error_log[] = "Script galleV2 localizado con nonce y apiUrl para usuario logueado.";
 
         wp_enqueue_script('jquery');
         wp_enqueue_script('chart-js', 'https://cdn.jsdelivr.net/npm/chart.js', [], null, true);
         wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', ['chart-js'], null, true);
-        $error_log[] = "Scripts chart-js y chartjs-adapter-date-fns encolados para usuario logueado.";
+        //$error_log[] = "Scripts chart-js y chartjs-adapter-date-fns encolados para usuario logueado.";
     }
 
     wp_localize_script('ajaxPage', 'ajaxPage', ['logeado' => is_user_logged_in()]);
-    $error_log[] = "Script ajaxPage localizado.";
+    //$error_log[] = "Script ajaxPage localizado.";
 
     // Manejo de scripts externos
     if (is_front_page() && !is_user_logged_in()) {
         wp_dequeue_script('jquery');
         wp_dequeue_script('wavesurfer');
-        $error_log[] = "jQuery y wavesurfer.js no se cargan en la página de inicio para usuarios no logueados.";
+        //$error_log[] = "jQuery y wavesurfer.js no se cargan en la página de inicio para usuarios no logueados.";
     }
 
     wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.7.10', true);
-    $error_log[] = "Script wavesurfer encolado desde unpkg.";
+    //$error_log[] = "Script wavesurfer encolado desde unpkg.";
 
     wp_add_inline_script('genericAjax', 'const wpAdminUrl = "' . admin_url() . '";', 'before');
-    $error_log[] = "Script en línea para genericAjax añadido con wpAdminUrl.";
+    //$error_log[] = "Script en línea para genericAjax añadido con wpAdminUrl.";
 
     // Localización de scripts adicionales
     $ajax_url = admin_url('admin-ajax.php');
@@ -501,13 +507,13 @@ function scriptsOrdenados()
 
     foreach ($script_localizations as $handle => $data) {
         wp_localize_script($handle, $data[0], $data[1]);
-        $error_log[] = "Script " . $handle . " localizado con éxito.";
+        //$error_log[] = "Script " . $handle . " localizado con éxito.";
     }
 
     // Registro de errores
     if (!empty($error_log)) {
         $log_message = "Detalles de scriptsOrdenados:\n" . implode("\n", $error_log) . "\n";
-        error_log($log_message);
+        //error_log($log_message);
     }
 }
 add_action('wp_enqueue_scripts', 'scriptsOrdenados');

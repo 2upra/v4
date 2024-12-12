@@ -150,7 +150,7 @@ async function envioRs() {
 
             if (!isValidUrl(audio.audioUrl)) {
                 console.warn(`URL inválida para el audio con ID ${audio.audioId}: ${audio.audioUrl}`);
-                return;
+                //return;
             }
 
             if (!uniqueAudioUrls.has(audio.audioUrl) && !uniqueAudioIds.has(audio.audioId)) {
@@ -203,7 +203,7 @@ async function envioRs() {
                 alert('Cuando seleccionas "Music", es obligatorio incluir una imagen válida');
                 button.innerText = originalText;
                 button.disabled = false;
-                return; // Asegúrate de detener el flujo si no es válido
+                //return; // Asegúrate de detener el flujo si no es válido
             }
 
             // Verificar que todos los nombres de audio tienen al menos 3 caracteres

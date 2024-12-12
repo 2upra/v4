@@ -111,3 +111,37 @@ function tablasPost()
 
 // Hook para verificar y crear las tablas al cargar WordPress
 add_action('init', 'tablasPost');
+
+function fileHashTable() {
+  global $wpdb;
+
+  // Evitar ejecutar en producción o si ya se ejecutó.
+  if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === false)) {
+    return; 
+  }
+
+  if (get_option('tablaFileHashesCreada')) {
+    return;
+  }
+
+  $tabla_file_hashes = $wpdb->prefix . 'file_hashes';
+  $charset_collate = $wpdb->get_charset_collate();
+
+  $sql_file_hashes = "CREATE TABLE IF NOT EXISTS $tabla_file_hashes (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    file_hash VARCHAR(64) NOT NULL,
+    file_url TEXT NOT NULL,
+    upload_date DATETIME NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending',
+    user_id BIGINT UNSIGNED NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY file_hash (file_hash)
+  ) $charset_collate;";
+
+  require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+  dbDelta($sql_file_hashes); // Usamos dbDelta para una mejor gestión de actualizaciones de la tabla
+
+  update_option('tablaFileHashesCreada', true);
+}
+
+add_action('init', 'fileHashTable');

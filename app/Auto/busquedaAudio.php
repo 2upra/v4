@@ -28,6 +28,11 @@ add_action('cada55seg', 'procesarAudios');
 
 function procesarAudios()
 {
+
+    if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === true)) {
+        return;
+    }
+
     autLog("procesarAudios start ");
     $directorio_audios = '/home/asley01/MEGA/Waw/Kits/';
     $lock_file = '/tmp/procesar_audios.lock';
