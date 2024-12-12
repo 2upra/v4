@@ -108,7 +108,7 @@ function procesarIdeas($args, $paged)
                 //error_log("[procesarIdeas] Filtrados posts similares para post_id $post_id. Antes: $original_count, Después: $filtered_count");
 
                 // Asegurar que tengamos al menos 5 posts similares
-                $posts_similares = array_slice($posts_similares, 0, 5);
+                $posts_similares = array_slice($posts_similares, 0, 10);
                 //error_log("[procesarIdeas] Limitados a 5 posts similares para post_id $post_id");
 
                  // Añadir a la lista total de posts
