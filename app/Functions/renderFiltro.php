@@ -1,6 +1,6 @@
 <?
 
-function renderFiltro() {
+function renderFiltroSampleList() {
     // Obtener el filtro actual del usuario
     $user_id = get_current_user_id();
     $filtro_tiempo = get_user_meta($user_id, 'filtroTiempo', true);
@@ -81,7 +81,7 @@ function renderFiltro() {
                     <p class="description">Solo se muestra lo que publicaste.</p>
                 </div>
                 <label class="switch">
-                    <input type="checkbox" name="misColecciones" id="misColecciones">
+                    <input type="checkbox" name="misPost" id="misPost">
                     <span class="slider"></span>
                 </label>
             </div>

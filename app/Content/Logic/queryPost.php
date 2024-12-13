@@ -154,19 +154,18 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
         $query_args['author'] = $userId;
         return $query_args;
     }
+
     $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
-
-    //Obtiene los filtros de publicación del usuario actual. Si el usuario tiene el filtro 'misColecciones' activo, modifica la consulta para mostrar solo publicaciones de ese usuario.
-
-    if (is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
-        $query_args['author'] = $usuarioActual;
-
-    }
-
-    // Obtener el filtro solicitado en $args
     $filtro = $args['filtro'] ?? 'nada';
 
-    // Definir las condiciones de meta_query y otros parámetros
+    if ($filtro === 'sampleList' && is_array($filtrosUsuario) && in_array('misPost', $filtrosUsuario)) {
+        $query_args['author'] = $usuarioActual;
+    }
+    
+    if ($filtro === 'colecciones' && is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
+       $query_args['author'] = $usuarioActual;
+    }
+
     $meta_query_conditions = [
         'rolasEliminadas' => fn() => $query_args['post_status'] = 'pending_deletion',
         'rolasRechazadas' => fn() => $query_args['post_status'] = 'rejected',
@@ -179,26 +178,23 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
         'libres' => [
             ['key' => 'esExclusivo', 'value' => '0', 'compare' => '='],
             ['key' => 'post_price', 'compare' => 'NOT EXISTS'],
-            ['key' => 'rola', 'value' => '1', 'compare' => '!=']
+            ['key' => 'rola', 'value' => '1', 'compare' => '!='],
         ],
         'momento' => [
             ['key' => 'momento', 'value' => '1', 'compare' => '='],
-            ['key' => '_thumbnail_id', 'compare' => 'EXISTS']
+            ['key' => '_thumbnail_id', 'compare' => 'EXISTS'],
         ],
         'sample' => function () use ($tipoUsuario, &$query_args) {
             if ($tipoUsuario === 'Fan') {
-                // Si es un Fan, solo devolvemos publicaciones publicadas
                 $query_args['post_status'] = 'publish';
             } else {
-                // Si no es Fan, aplicamos el filtro normal de sample
                 $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], [
                     ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
                     ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
                 ]);
             }
         },
-        'sampleList' => [
-            // Necesitamos que cumpla con ambos: 'paraDescarga' y que tenga 'post_audio_lite'
+         'sampleList' => [
             ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
             ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
         ],
@@ -207,30 +203,25 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
             $query_args['author'] = get_current_user_id();
             $query_args['post_status'] = 'pending';
         },
-        // Nuevo filtro: rola
         'rola' => [
             ['key' => 'rola', 'value' => '1', 'compare' => '='],
-            ['key' => 'post_audio_lite', 'compare' => 'EXISTS']
+            ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
         ],
     ];
 
-    // Aplicar el filtro solicitado
     if (isset($meta_query_conditions[$filtro])) {
         $result = $meta_query_conditions[$filtro];
 
         if (is_callable($result)) {
-            // Si es una función, ejecutamos la lógica personalizada
-            $result();
+             $result();
         } else {
-            // Si es una condición de meta_query, lo agregamos al array de 'meta_query'
-            $query_args['post_status'] = 'publish'; // Aseguramos que el estado sea 'publish'
-            $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], $result);
+             $query_args['post_status'] = 'publish';
+             $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], $result);
         }
     }
 
     return $query_args;
 }
-
 function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $isAdmin, $posts, $filtroTiempo, $similarTo, $tipoUsuario = null)
 {
     try {
