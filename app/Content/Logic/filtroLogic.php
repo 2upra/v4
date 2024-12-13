@@ -156,15 +156,12 @@ function obtenerFiltrosTotal()
     $filtro_post = get_user_meta($user_id, 'filtroPost', true) ?: 'a:0:{}';
     $filtro_tiempo = get_user_meta($user_id, 'filtroTiempo', true) ?: 0;
 
-    // Asegúrate de que $filtro_post sea una cadena antes de intentar deserializarla.
     if (empty($filtro_post) || $filtro_post === 'a:0:{}') {
-        $filtro_post_json = '{}'; // Objeto JSON vacío
+        $filtro_post_json = '{}';
     } else {
-        // Verifica si $filtro_post es una cadena serializada válida.
         if (is_string($filtro_post) && preg_match('/^a:\d+:{/', $filtro_post)) {
             $unserialized = @unserialize($filtro_post);
             if ($unserialized === false) {
-                // Manejar el error de deserialización, por ejemplo, registrando el error o usando un valor predeterminado.
                 error_log("Error al deserializar filtroPost para el usuario: " . $user_id);
                 $filtro_post_json = '{}';
             } else {
@@ -176,13 +173,11 @@ function obtenerFiltrosTotal()
     }
 
     wp_send_json_success([
-        'filtroPost' => $filtro_post_json, // Envía el objeto como JSON
+        'filtroPost' => $filtro_post_json,
         'filtroTiempo' => $filtro_tiempo,
     ]);
 }
 add_action('wp_ajax_obtenerFiltrosTotal', 'obtenerFiltrosTotal');
-
-
 function guardarFiltroPost()
 {
     if (!is_user_logged_in()) {
