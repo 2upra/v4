@@ -19,7 +19,7 @@ function colecTabs()
                     <p id="resultadosPost-sampleList" typepost="colecciones"></p>
                     <div class="OPCDGED">
 
-                        <button class="restablecerBusqueda" style="display: none;">Restablecer filtros</button>
+                        <button class="restablecerBusqueda coleccionRestablecer" style="display: none;">Restablecer filtros</button>
 
                         <button class="ORDENPOSTSL" id="ORDENPOSTSL">Opciones<? echo $GLOBALS['flechaAbajo']; ?></button>
                         <div class="opcionCheckBox modal" id="filtrosPost" style="display: none;">

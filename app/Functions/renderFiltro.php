@@ -26,7 +26,7 @@ function renderFiltroSampleList() {
     ?>
     <div class="OPCDGED">
 
-        <button class="restablecerBusqueda" style="display: none;">Restablecer filtros</button>
+        <button class="restablecerBusqueda postRestablecer" style="display: none;">Restablecer filtros</button>
         <button class="filtrosboton">
             <?= $nombre_filtro . ' ' . $icono_flecha_arriba_abajo; ?>
         </button>

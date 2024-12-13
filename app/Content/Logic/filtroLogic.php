@@ -23,18 +23,42 @@ add_action('wp_ajax_obtenerFiltroActual', 'obtenerFiltroActual');
 function restablecerFiltros() {
     if (!is_user_logged_in()) {
         wp_send_json_error('Usuario no autenticado');
-        return;
     }
 
     $user_id = get_current_user_id();
-    delete_user_meta($user_id, 'filtroPost');
+    $filtroPost = get_user_meta($user_id, 'filtroPost', true);
+    $filtroPost_array = unserialize($filtroPost);
+
+    if (isset($_POST['post']) && $_POST['post'] === 'true') {
+        $filtros_a_eliminar = ['misPost', 'mostrarMeGustan', 'ocultarEnColeccion', 'ocultarDescargados'];
+        if(is_array($filtroPost_array)){
+        foreach ($filtros_a_eliminar as $filtro) {
+            $index = array_search($filtro, $filtroPost_array);
+            if ($index !== false) {
+                unset($filtroPost_array[$index]);
+            }
+        }
+      }
+    }
+
+    if (isset($_POST['coleccion']) && $_POST['coleccion'] === 'true') {
+        $index = array_search('misColecciones', $filtroPost_array);
+        if ($index !== false) {
+            unset($filtroPost_array[$index]);
+        }
+    }
+
+    if (empty($filtroPost_array)) {
+      delete_user_meta($user_id, 'filtroPost');
+    } else {
+      update_user_meta($user_id, 'filtroPost', serialize(array_values($filtroPost_array)));
+    }
+
     delete_user_meta($user_id, 'filtroTiempo');
     
     wp_send_json_success(['message' => 'Filtros restablecidos']);
-
 }
 add_action('wp_ajax_restablecerFiltros', 'restablecerFiltros');
-
 
 function obtenerFiltrosTotal() {
     if (!is_user_logged_in()) {

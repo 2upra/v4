@@ -750,52 +750,72 @@ function inicializarCambiarImagen() {
     });
 }
 
-
-
 async function establecerFiltros() {
     try {
         const response = await enviarAjax('obtenerFiltrosTotal');
-
         if (response.success) {
-            const {filtroPost, filtroTiempo} = response.data;
+            const { filtroPost, filtroTiempo } = response.data;
             const hayFiltrosActivados = filtroTiempo !== 0 || filtroPost !== 'a:0:{}';
             const botonRestablecer = document.querySelector('.restablecerBusqueda');
-
-            // Comprobación para asegurar que el botón existe
-            if (!botonRestablecer) return;
+            const botonPostRestablecer = document.querySelector('.postRestablecer');
+            const botonColeccionRestablecer = document.querySelector('.coleccionRestablecer');
+            
+            // Ocultar ambos botones por defecto
+            if (botonPostRestablecer) botonPostRestablecer.style.display = 'none';
+            if (botonColeccionRestablecer) botonColeccionRestablecer.style.display = 'none';
 
             if (hayFiltrosActivados) {
-                botonRestablecer.style.display = 'block';
+              
+                const filtroPostObj = JSON.parse(filtroPost.replace(/s:(\d+):"(.*?)";/g, '"$2":'));
 
+                const filtrosPost = ['misPost', 'mostrarMeGustan', 'ocultarEnColeccion', 'ocultarDescargados'];
+                const hayFiltrosPost = Object.keys(filtroPostObj).some(filtro => filtrosPost.includes(filtro));
+                const hayFiltroColeccion = Object.keys(filtroPostObj).includes('misColecciones');
+                
+                // Mostrar el botón correspondiente si es necesario
+                if (hayFiltrosPost && botonPostRestablecer) {
+                    botonPostRestablecer.style.display = 'block';
+                }
+                if (hayFiltroColeccion && botonColeccionRestablecer) {
+                    botonColeccionRestablecer.style.display = 'block';
+                }
+
+                // Evento para restablecer filtros
                 if (!botonRestablecer.dataset.listenerAdded) {
-                    botonRestablecer.addEventListener('click', async function () {
+                  botonRestablecer.addEventListener('click', async function() {
+                        let data = {};
+                        if (this.dataset.hasOwnProperty('postRestablecer')) {
+                            data.post = true;
+                        } else if (this.dataset.hasOwnProperty('coleccionRestablecer')) {
+                            data.coleccion = true;
+                        }
+
                         try {
-                            const restablecerResponse = await enviarAjax('restablecerFiltros');
+                            const restablecerResponse = await enviarAjax('restablecerFiltros', data);
                             if (restablecerResponse.success) {
                                 alert(restablecerResponse.data.message);
                                 window.limpiarBusqueda();
-                                botonRestablecer.style.display = 'none';
+                                if (botonPostRestablecer) botonPostRestablecer.style.display = 'none';
+                                if (botonColeccionRestablecer) botonColeccionRestablecer.style.display = 'none';
                             } else {
-                                alert('Error: ' + (restablecerResponse.data?.message || 'No se pudo restablecer los filtros'));
+                                alert('Error: ' + (restablecerResponse.data?.message || 'No se pudo restablecer'));
                             }
                         } catch (error) {
-                            console.error('Error al restablecer filtros:', error);
-                            alert('Hubo un error en la solicitud. Por favor, inténtalo de nuevo.');
+                            console.error('Error al restablecer:', error);
+                            alert('Error en la solicitud.');
                         }
                     });
-
                     botonRestablecer.dataset.listenerAdded = true;
                 }
-            } else {
-                botonRestablecer.style.display = 'none';
             }
         } else {
-            console.error('Error al obtener los filtros:', response.data?.message || 'Error desconocido');
+            console.error('Error al obtener filtros:', response.data?.message || 'Error desconocido');
         }
     } catch (error) {
-        console.error('Error en la solicitud AJAX para obtener filtros:', error);
+        console.error('Error en AJAX:', error);
     }
 }
+
 
 const FLECHA_SVG = '<svg data-testid="geist-icon" height="16" stroke-linejoin="round" viewBox="0 0 16 16" width="16" style="color: currentcolor;"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.7071 2.39644C8.31658 2.00592 7.68341 2.00592 7.29289 2.39644L4.46966 5.21966L3.93933 5.74999L4.99999 6.81065L5.53032 6.28032L7.99999 3.81065L10.4697 6.28032L11 6.81065L12.0607 5.74999L11.5303 5.21966L8.7071 2.39644ZM5.53032 9.71966L4.99999 9.18933L3.93933 10.25L4.46966 10.7803L7.29289 13.6035C7.68341 13.9941 8.31658 13.9941 8.7071 13.6035L11.5303 10.7803L12.0607 10.25L11 9.18933L10.4697 9.71966L7.99999 12.1893L5.53032 9.71966Z" fill="currentColor"></path></svg>';
 
@@ -1029,6 +1049,7 @@ window.contadorDeSamples = () => {
         contarPostsFiltrados();
     }
 };
+
 document.addEventListener('DOMContentLoaded', function () {
     // Verificar si existe el modalTipoUsuario en la página
     const modalTipoUsuario = document.querySelector('.selectorModalUsuario');
