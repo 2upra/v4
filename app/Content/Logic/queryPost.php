@@ -162,9 +162,9 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
         $query_args['author'] = $usuarioActual;
     }
     
-    if ($filtro === 'colecciones' && is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
+    /* if ($filtro === 'colecciones' && is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
        $query_args['author'] = $usuarioActual;
-    }
+    } */
 
     $meta_query_conditions = [
         'rolasEliminadas' => fn() => $query_args['post_status'] = 'pending_deletion',
@@ -304,9 +304,6 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
             return $query_args;
         }
     }
-
-    //error_log("[ordenamiento] Identifier: " . $identifier);
-
 
     try {
         global $wpdb;
