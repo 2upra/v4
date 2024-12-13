@@ -20,19 +20,16 @@ function obtenerFiltroActual()
 }
 add_action('wp_ajax_obtenerFiltroActual', 'obtenerFiltroActual');
 
-
+//CUANDO SE AÑADEN LOS FILTROS SE AÑADEN BIEN ASI a:2:{i:0;s:15:"mostrarMeGustan";i:1;s:14:"misColecciones";}, EL PROBLEMA ES CUANDO SE RESTABLECEN, DAME EL CODIGO QUE TENGO QUE AJUSTAR
 /*
 el error que causadespues de restablecer: 
 
-genericAjax.js?ver=0.2.102:765 
- establecerFiltros: Error al parsear filtroPost como JSON SyntaxError: Unexpected token 's', "s:a:1:{i:0"... is not valid JSON
+genericAjax.js?ver=0.2.104:775  establecerFiltros: Error al parsear filtroPost como JSON SyntaxError: Unexpected token 'a', "a:1:{i:0;s"... is not valid JSON
     at JSON.parse (<anonymous>)
-    at establecerFiltros (genericAjax.js?ver=0.2.102:763:39)
-﻿
-
+    at establecerFiltros (genericAjax.js?ver=0.2.104:773:39)
 como se guardan correctamente los filtros y se leen correctamente a:2:{i:0;s:15:"mostrarMeGustan";i:1;s:14:"misColecciones";}
 
-despues de restablecer s:a:1:{i:0;s:14:"misColecciones";}
+despues de restablecer primero s:a:1:{i:0;s:14:"misColecciones";} ahora falla con s:32:"a:1:{i:0;s:14:"misColecciones";}";
 */
 
 function restablecerFiltros()
@@ -122,7 +119,7 @@ function restablecerFiltros()
         error_log('restablecerFiltros: filtroPost_array vacio, eliminando meta filtroPost');
     } else {
         // Serializar el array normalmente
-        $serialized_filtroPost = serialize($filtroPost_array); // Cambio aquí: Se quita el prefijo 's:'
+        $serialized_filtroPost = serialize($filtroPost_array);
         error_log('restablecerFiltros: filtroPost_array no vacio, serializando: ' . print_r($serialized_filtroPost, true));
         update_user_meta($user_id, 'filtroPost', $serialized_filtroPost);
         error_log('restablecerFiltros: filtroPost actualizado con: ' . print_r($serialized_filtroPost, true));
@@ -135,6 +132,141 @@ function restablecerFiltros()
     error_log('restablecerFiltros: Fin');
 }
 add_action('wp_ajax_restablecerFiltros', 'restablecerFiltros');
+
+/*
+codigo js
+async function establecerFiltros() {
+    console.log('establecerFiltros: Inicio');
+    try {
+        const response = await enviarAjax('obtenerFiltrosTotal');
+        console.log('establecerFiltros: Respuesta de obtenerFiltrosTotal', response);
+        if (response.success) {
+            let {filtroPost, filtroTiempo} = response.data;
+            // Asegurarse de que filtroPost sea un objeto
+            if (typeof filtroPost === 'string' && filtroPost.startsWith('s:')) {
+                try {
+                    // Eliminar el prefijo 's:' antes de intentar deserializar
+                    filtroPost = PHPUnserialize.unserialize(filtroPost.substring(2));
+                } catch (error) {
+                    console.error('establecerFiltros: Error al deserializar filtroPost', error);
+                    filtroPost = {};
+                }
+            } else if (typeof filtroPost === 'string') {
+                // Intenta analizar como JSON solo si no es un string serializado
+                try {
+                    filtroPost = JSON.parse(filtroPost);
+                } catch (error) {
+                    console.error('establecerFiltros: Error al parsear filtroPost como JSON', error);
+                    filtroPost = {};
+                }
+            }
+
+            //Si filtroPost es un array, convertirlo a objeto
+            if (Array.isArray(filtroPost)) {
+                const tempObj = {};
+                filtroPost.forEach(item => {
+                    tempObj[item] = true; // Puedes asignar cualquier valor, por ejemplo, true
+                });
+                filtroPost = tempObj;
+            }
+
+            const hayFiltrosActivados = filtroTiempo !== 0 || Object.keys(filtroPost).length > 0;
+            console.log('establecerFiltros: Hay filtros activados:', hayFiltrosActivados);
+            const botonRestablecer = document.querySelector('.restablecerBusqueda');
+            console.log('establecerFiltros: botonRestablecer:', botonRestablecer);
+            const botonPostRestablecer = document.querySelector('.postRestablecer');
+            console.log('establecerFiltros: botonPostRestablecer:', botonPostRestablecer);
+            const botonColeccionRestablecer = document.querySelector('.coleccionRestablecer');
+            console.log('establecerFiltros: botonColeccionRestablecer:', botonColeccionRestablecer);
+
+            // Ocultar ambos botones por defecto
+            if (botonPostRestablecer) {
+                botonPostRestablecer.style.display = 'none';
+                console.log('establecerFiltros: Ocultando botonPostRestablecer');
+            }
+            if (botonColeccionRestablecer) {
+                botonColeccionRestablecer.style.display = 'none';
+                console.log('establecerFiltros: Ocultando botonColeccionRestablecer');
+            }
+
+            if (hayFiltrosActivados) {
+                console.log('establecerFiltros: Hay filtros activos, procesando...');
+
+                const filtrosPost = ['misPost', 'mostrarMeGustan', 'ocultarEnColeccion', 'ocultarDescargados'];
+                const hayFiltrosPost = Object.keys(filtroPost).some(filtro => filtrosPost.includes(filtro));
+                console.log('establecerFiltros: hayFiltrosPost', hayFiltrosPost);
+                const hayFiltroColeccion = filtroPost.hasOwnProperty('misColecciones');
+                console.log('establecerFiltros: hayFiltroColeccion', hayFiltroColeccion);
+
+                // Mostrar el botón correspondiente si es necesario
+                if (hayFiltrosPost && botonPostRestablecer) {
+                    botonPostRestablecer.style.display = 'block';
+                    console.log('establecerFiltros: Mostrando botonPostRestablecer');
+                }
+                if (hayFiltroColeccion && botonColeccionRestablecer) {
+                    botonColeccionRestablecer.style.display = 'block';
+                    console.log('establecerFiltros: Mostrando botonColeccionRestablecer');
+                }
+
+                // Evento para restablecer filtros
+                if (botonRestablecer && !botonRestablecer.dataset.listenerAdded) {
+                    console.log('establecerFiltros: Agregando event listener a botonRestablecer');
+
+                    // Función para restablecer filtros (se puede reutilizar)
+                    const restablecerFiltro = async function (data) {
+                        try {
+                            console.log('establecerFiltros: Enviando solicitud para restablecer filtros', data);
+                            const restablecerResponse = await enviarAjax('restablecerFiltros', data);
+                            console.log('establecerFiltros: Respuesta de restablecerFiltros', restablecerResponse);
+                            if (restablecerResponse.success) {
+                                alert(restablecerResponse.data.message);
+                                window.limpiarBusqueda(); // Llamar a limpiarBusqueda después del restablecimiento
+                                if (botonPostRestablecer) {
+                                    botonPostRestablecer.style.display = 'none';
+                                    console.log('establecerFiltros: Ocultando botonPostRestablecer tras restablecer');
+                                }
+                                if (botonColeccionRestablecer) {
+                                    botonColeccionRestablecer.style.display = 'none';
+                                    console.log('establecerFiltros: Ocultando botonColeccionRestablecer tras restablecer');
+                                }
+                            } else {
+                                alert('Error: ' + (restablecerResponse.data?.message || 'No se pudo restablecer'));
+                            }
+                        } catch (error) {
+                            console.error('establecerFiltros: Error al restablecer:', error);
+                            alert('Error en la solicitud.');
+                        }
+                    };
+
+                    // Evento click para botón de post
+                    if (botonPostRestablecer) {
+                        botonPostRestablecer.addEventListener('click', async function () {
+                            console.log('establecerFiltros: Evento click en botonPostRestablecer');
+                            await restablecerFiltro({post: true});
+                        });
+                    }
+
+                    // Evento click para botón de coleccion
+                    if (botonColeccionRestablecer) {
+                        botonColeccionRestablecer.addEventListener('click', async function () {
+                            console.log('establecerFiltros: Evento click en botonColeccionRestablecer');
+                            await restablecerFiltro({coleccion: true});
+                        });
+                    }
+
+                    botonRestablecer.dataset.listenerAdded = true;
+                    console.log('establecerFiltros: Listener agregado');
+                }
+            }
+        } else {
+            console.error('establecerFiltros: Error al obtener filtros:', response.data?.message || 'Error desconocido');
+        }
+    } catch (error) {
+        console.error('establecerFiltros: Error en AJAX:', error);
+    }
+    console.log('establecerFiltros: Fin');
+}
+*/
 
 function obtenerFiltrosTotal()
 {

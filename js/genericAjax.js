@@ -750,7 +750,7 @@ function inicializarCambiarImagen() {
     });
 }
 
-//aqui se sigue guardando como s:a:1:{i:0;s:14:"misColecciones";} en vez de a:1:{i:0;s:14:"misColecciones";} cuando se restablece
+
 async function establecerFiltros() {
     console.log('establecerFiltros: Inicio');
     try {
@@ -759,10 +759,10 @@ async function establecerFiltros() {
         if (response.success) {
             let {filtroPost, filtroTiempo} = response.data;
             // Asegurarse de que filtroPost sea un objeto
-            if (typeof filtroPost === 'string' && filtroPost.startsWith('s:')) {
+            if (typeof filtroPost === 'string') {
                 try {
-                    // Eliminar el prefijo 's:' antes de intentar deserializar
-                    filtroPost = PHPUnserialize.unserialize(filtroPost.substring(2));
+                    // Usar PHPUnserialize.unserialize directamente si es una cadena
+                    filtroPost = PHPUnserialize.unserialize(filtroPost); 
                 } catch (error) {
                     console.error('establecerFiltros: Error al deserializar filtroPost', error);
                     filtroPost = {};
