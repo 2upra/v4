@@ -134,16 +134,14 @@ if (!defined('ABSPATH')) {
                             </a>
                         </div>
                         <!--
-        <div class="xaxa1 menu-item">
-            <a href="<?php echo home_url('/sello'); ?>">
-                <? // echo $GLOBALS['icononube']; 
-                ?>
-            </a>
-        </div>
-        -->
-                        <!--
+                        <div class="xaxa1 menu-item">
+                            <a href="<?php echo home_url('/sello'); ?>">
+                                <? // echo $GLOBALS['icononube']; 
+                                ?>
+                            </a>
+                        </div>
+                        -->
 
-        -->
                         <div class="menu-item">
                             <a href="<?php echo home_url('/mu'); ?>">
                                 <? echo $GLOBALS['iconomusic']; ?>
@@ -226,6 +224,9 @@ if (!defined('ABSPATH')) {
                             <button id="clearSearch" class="clear-search" style="display: none;">
                                 <? echo $GLOBALS['flechaAtras']; ?>
                             </button>
+                            <div class="resultados modal">
+                                
+                            </div>
                         </div>
 
                         <div class="menuArribaLogin">
