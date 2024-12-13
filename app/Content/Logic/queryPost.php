@@ -361,9 +361,7 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
                 break;
 
             default: // Feed personalizado
-                //error_log("[ordenamiento] Identifier: " . $identifier);
-
-
+                //error_log("[ordenamiento] caso default!);
                 $feed_result = obtenerFeedPersonalizado($usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts);
 
                 if (!empty($feed_result['post_ids'])) {
@@ -401,10 +399,10 @@ function aplicarFiltrosUsuario($query_args, $usuarioActual)
     $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
 
     //guardarLog("Filtros del usuario: " . print_r($filtrosUsuario, true));
-    return $query_args;
+
     if (empty($filtrosUsuario) || !is_array($filtrosUsuario)) {
         //guardarLog("No hay filtros aplicables o el formato es incorrecto.");
-        
+        return $query_args;
     }
 
     // Inicializar variables para mantener los IDs a incluir y excluir
