@@ -298,7 +298,7 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
     }
 
     // Continuar con el comportamiento normal si no es "Fan"
-    $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
+    /* $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
 
     if (!empty($filtrosUsuario) && is_array($filtrosUsuario)) {
         if (!in_array($filtroTiempo, [2, 3])) {
@@ -307,8 +307,8 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
         }
     } else {
         error_log("[ordenamiento] Filtros de usuario vacíos o no válidos. Usuario: " . $usuarioActual . ". Valor de get_user_meta: " . var_export(get_user_meta($usuarioActual, 'filtroPost', true), true) . ". Motivo: La función get_user_meta no devolvió un array o devolvió un array vacío para la clave 'filtroPost' del usuario.");
-    }
-    
+    } */
+
     error_log("[ordenamiento] aplicando ordenamiento");
     try {
         global $wpdb;
