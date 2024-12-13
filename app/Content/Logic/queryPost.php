@@ -132,7 +132,7 @@ function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsu
 
         if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
             if ($tipoUsuario !== 'Fan') {
-                //$query_args = aplicarFiltrosUsuario($query_args, $usuarioActual);
+                $query_args = aplicarFiltrosUsuario($query_args, $usuarioActual);
             }
         }
 
