@@ -1042,24 +1042,15 @@ function filtrosPost() {
 
             if (respuesta.success && respuesta.data && respuesta.data.filtros) {
                 try {
-                    const serializedFilters = respuesta.data.filtros;
-                    if (typeof serializedFilters !== 'string') {
-                        throw new Error('serializedFilters no es una cadena');
+                    const filtroPostString = respuesta.data.filtros;
+
+                    // Verificar si es un objeto JSON válido
+                    if (typeof filtroPostString === 'string' && filtroPostString.startsWith('{')) {
+                        const deserialized = JSON.parse(filtroPostString);
+                        filtrosActivos = Array.isArray(deserialized) ? deserialized : [];
+                    } else {
+                        filtrosActivos = [];
                     }
-                    const deserialized = JSON.parse(
-                        JSON.stringify(
-                            eval(
-                                '(' +
-                                    serializedFilters
-                                        .replace(/a:(\d+):\{/g, '[')
-                                        .replace(/i:(\d+);/g, '')
-                                        .replace(/s:(\d+):"([^"]+)";/g, '"$2"')
-                                        .replace(/\}/g, ']') +
-                                    ')'
-                            )
-                        )
-                    );
-                    filtrosActivos = Array.isArray(deserialized) ? deserialized : [];
                 } catch (e) {
                     console.error('Error al deserializar la respuesta:', e);
                     filtrosActivos = [];
@@ -1138,6 +1129,8 @@ function filtrosPost() {
 
     cargarFiltrosGuardados();
 }
+
+
 window.contadorDeSamples = () => {
     // Obtener el elemento donde se mostrarán los resultados
     const resultadosElement = document.getElementById('resultadosPost-sampleList');
