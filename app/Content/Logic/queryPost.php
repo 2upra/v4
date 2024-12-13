@@ -136,7 +136,7 @@ function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsu
             }
         }
 
-        //$query_args = aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoUsuario);
+        $query_args = aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoUsuario);
 
         return $query_args;
     } catch (Exception $e) {
