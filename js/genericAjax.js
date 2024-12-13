@@ -758,7 +758,16 @@ async function establecerFiltros() {
         if (response.success) {
             let {filtroPost, filtroTiempo} = response.data;
             // Asegurarse de que filtroPost sea un objeto
-            if (typeof filtroPost === 'string') {
+            if (typeof filtroPost === 'string' && filtroPost.startsWith('s:')) {
+                try {
+                    // Eliminar el prefijo 's:' antes de intentar deserializar
+                    filtroPost = PHPUnserialize.unserialize(filtroPost.substring(2));
+                } catch (error) {
+                    console.error('establecerFiltros: Error al deserializar filtroPost', error);
+                    filtroPost = {};
+                }
+            } else if (typeof filtroPost === 'string') {
+                // Intenta analizar como JSON solo si no es un string serializado
                 try {
                     filtroPost = JSON.parse(filtroPost);
                 } catch (error) {

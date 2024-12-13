@@ -24,13 +24,15 @@ add_action('wp_ajax_obtenerFiltroActual', 'obtenerFiltroActual');
 /*
 el error que causadespues de restablecer: 
 
-genericAjax.js?ver=0.2.102:765  establecerFiltros: Error al parsear filtroPost como JSON SyntaxError: Unexpected token 'a', "a:1:{i:0;s"... is not valid JSON
+genericAjax.js?ver=0.2.102:765 
+ establecerFiltros: Error al parsear filtroPost como JSON SyntaxError: Unexpected token 's', "s:a:1:{i:0"... is not valid JSON
     at JSON.parse (<anonymous>)
     at establecerFiltros (genericAjax.js?ver=0.2.102:763:39)
+﻿
 
 como se guardan correctamente los filtros y se leen correctamente a:2:{i:0;s:15:"mostrarMeGustan";i:1;s:14:"misColecciones";}
 
-despues de restablecer s:32:"a:1:{i:0;s:14:"misColecciones";}";
+despues de restablecer s:a:1:{i:0;s:14:"misColecciones";}
 */
 
 function restablecerFiltros() {
