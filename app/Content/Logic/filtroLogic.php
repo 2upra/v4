@@ -40,7 +40,6 @@ function restablecerFiltros() {
     error_log('restablecerFiltros: Inicio');
     error_log('restablecerFiltros: $_POST recibido: ' . print_r($_POST, true));
 
-
     if (!is_user_logged_in()) {
         error_log('restablecerFiltros: Usuario no autenticado');
         wp_send_json_error('Usuario no autenticado');
@@ -72,7 +71,6 @@ function restablecerFiltros() {
     
     error_log('restablecerFiltros: filtroPost despues de manejo: ' . print_r($filtroPost_array, true));
 
-
     // Procesamiento de filtros de post
     if (isset($_POST['post']) && $_POST['post'] === 'true') {
         error_log('restablecerFiltros: $_POST[post] es true');
@@ -81,15 +79,12 @@ function restablecerFiltros() {
         
         if(is_array($filtroPost_array)){
           error_log('restablecerFiltros: filtroPost_array es array, procesando...');
-            foreach ($filtros_a_eliminar as $filtro) {
-              $index = array_search($filtro, $filtroPost_array);
-              if ($index !== false) {
-                  unset($filtroPost_array[$index]);
-                  error_log('restablecerFiltros: Filtro "' . $filtro . '" eliminado. Indice: ' . $index);
-              } else{
-                  error_log('restablecerFiltros: Filtro "' . $filtro . '" no encontrado.');
-              }
-          }
+            
+            // Usar array_filter para eliminar los filtros
+            $filtroPost_array = array_filter($filtroPost_array, function($filtro) use ($filtros_a_eliminar) {
+                return !in_array($filtro, $filtros_a_eliminar);
+            });
+          
         } else {
            error_log('restablecerFiltros: filtroPost_array no es array');
         }
@@ -106,13 +101,12 @@ function restablecerFiltros() {
       error_log('restablecerFiltros: $_POST[coleccion] es true');
       error_log('restablecerFiltros: Restablecer filtros de coleccion');
          if(is_array($filtroPost_array)){
-             $index = array_search('misColecciones', $filtroPost_array);
-            if ($index !== false) {
-                unset($filtroPost_array[$index]);
-                error_log('restablecerFiltros: Filtro "misColecciones" eliminado. Indice: ' . $index);
-            } else {
-                error_log('restablecerFiltros: Filtro "misColecciones" no encontrado.');
-            }
+             
+            // Usar array_filter para eliminar el filtro
+            $filtroPost_array = array_filter($filtroPost_array, function($filtro) {
+                return $filtro !== 'misColecciones';
+            });
+             
          } else {
            error_log('restablecerFiltros: filtroPost_array no es array para coleccion');
         }
@@ -133,7 +127,7 @@ function restablecerFiltros() {
       $serialized_filtroPost = serialize(array_values($filtroPost_array));
        error_log('restablecerFiltros: filtroPost_array no vacio, serializando: ' . print_r($serialized_filtroPost, true));
       update_user_meta($user_id, 'filtroPost', $serialized_filtroPost);
-        error_log('restablecerFiltros: filtroPost actualizado con: ' .  print_r($serialized_filtroPost, true) );
+        error_log('restablecerFiltros: filtroPost actualizado con: ' . print_r($serialized_filtroPost, true) );
     }
 
     // Eliminacion de filtro de tiempo
