@@ -837,7 +837,7 @@ async function establecerFiltros() {
                             if (restablecerResponse.success) {
                                 alert(restablecerResponse.data.message);
                                 window.limpiarBusqueda(); // Llamar a limpiarBusqueda después del restablecimiento
-                                recargarFiltros();
+
                                 if (botonPostRestablecer) {
                                     botonPostRestablecer.style.display = 'none';
                                     console.log('establecerFiltros: Ocultando botonPostRestablecer tras restablecer');
@@ -1050,7 +1050,7 @@ Object
 console.error("Error: La respuesta no es un objeto JSON válido o está vacía.");
 */
 
-//necesito que esto siga funcionando pero necesito alguna funcion que pueda llamar en cualquier contexto para releer los filtros y reiniciar los checj y poner los true los que deben 
+// recargarFiltros(); //cuando llamo esto, no se restablece o los check, cuando se llama debería pedir la info al servidor para colocar los correctos despues de un cambio
 function filtrosPost() {
     const filtrosPost = document.getElementById('filtrosPost');
     if (!filtrosPost) {
@@ -1060,20 +1060,20 @@ function filtrosPost() {
 
     let filtrosActivos = [];
 
-    async function cargarFiltrosGuardados() {
-        try {
-            const respuesta = await enviarAjax('obtenerFiltros');
-            console.log('Respuesta de obtenerFiltros:', respuesta);
+    function cargarFiltrosGuardados() {
+        return new Promise(async (resolve) => { // Devuelve una Promesa
+            try {
+                const respuesta = await enviarAjax('obtenerFiltros');
+                console.log('Respuesta de obtenerFiltros:', respuesta);
 
-            if (respuesta.success && respuesta.data && respuesta.data.filtros) {
-                filtrosActivos = respuesta.data.filtros;
-            } else {
-                console.warn('Advertencia: No se encontraron filtros guardados o la respuesta no fue exitosa.');
-                filtrosActivos = [];
-            }
+                if (respuesta.success && respuesta.data && respuesta.data.filtros) {
+                    filtrosActivos = respuesta.data.filtros;
+                } else {
+                    console.warn('Advertencia: No se encontraron filtros guardados o la respuesta no fue exitosa.');
+                    filtrosActivos = [];
+                }
 
-            if (Array.isArray(filtrosActivos)) {
-                setTimeout(() => {
+                if (Array.isArray(filtrosActivos)) {
                     filtrosActivos.forEach(filtro => {
                         const checkbox = document.querySelector(`input[name="${filtro}"]`);
                         if (checkbox) {
@@ -1082,12 +1082,14 @@ function filtrosPost() {
                             console.warn(`Advertencia: No se encontró el checkbox con el nombre '${filtro}'.`);
                         }
                     });
-                }, 100);
+                }
+                resolve(); // Resuelve la Promesa después de actualizar los checkboxes
+            } catch (error) {
+                console.error('Error al cargar filtros:', error);
+                filtrosActivos = [];
+                resolve(); // Resuelve la Promesa incluso si hay un error
             }
-        } catch (error) {
-            console.error('Error al cargar filtros:', error);
-            filtrosActivos = [];
-        }
+        });
     }
 
     const checkboxes = filtrosPost.querySelectorAll('input[type="checkbox"]');
