@@ -361,7 +361,7 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
                 break;
 
             default: // Feed personalizado
-                //error_log("[ordenamiento] caso default!);
+                error_log("[ordenamiento] caso default!");
                 $feed_result = obtenerFeedPersonalizado($usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts);
 
                 if (!empty($feed_result['post_ids'])) {
