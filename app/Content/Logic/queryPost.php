@@ -297,19 +297,19 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
         }
     }
 
-    // Continuar con el comportamiento normal si no es "Fan"
-    /* $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
+    // Obtener los filtros del usuario
+    $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
 
-    if (!empty($filtrosUsuario) && is_array($filtrosUsuario)) {
-        if (!in_array($filtroTiempo, [2, 3])) {
-            error_log("[ordenamiento] Filtro de tiempo no aplicado. Filtro tiempo recibido: " . $filtroTiempo . ". Usuario: " . $usuarioActual . ". Filtros de usuario: " . print_r($filtrosUsuario, true) . ". Motivo: El valor de \$filtroTiempo no coincide con los valores permitidos (2 o 3) según los filtros del usuario.");
-            return $query_args;
+    // Verificar si los filtros del usuario tienen algún valor diferente a `a:0:{}`
+    if (!empty($filtrosUsuario) && $filtrosUsuario !== 'a:0:{}') {
+        // No usar el caso default si existen filtros específicos
+        if ($filtroTiempo === 0) {
+            return $query_args; // Si pide default, regresar la query sin modificaciones
         }
-    } else {
-        error_log("[ordenamiento] Filtros de usuario vacíos o no válidos. Usuario: " . $usuarioActual . ". Valor de get_user_meta: " . var_export(get_user_meta($usuarioActual, 'filtroPost', true), true) . ". Motivo: La función get_user_meta no devolvió un array o devolvió un array vacío para la clave 'filtroPost' del usuario.");
-    } */
+    }
 
     error_log("[ordenamiento] aplicando ordenamiento");
+
     try {
         global $wpdb;
         if (!$wpdb) {
@@ -324,7 +324,7 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
         }
 
         switch ($filtroTiempo) {
-            case 1:
+            case 1: // Recientes
                 error_log("[ordenamiento] caso reciente!!");
                 $query_args['orderby'] = 'date';
                 $query_args['order'] = 'DESC';
@@ -369,22 +369,26 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
 
             default: // Feed personalizado
                 error_log("[ordenamiento] caso default!");
-                $feed_result = obtenerFeedPersonalizado($usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts);
 
-                if (!empty($feed_result['post_ids'])) {
-                    $query_args['post__in'] = $feed_result['post_ids'];
-                    $query_args['orderby'] = 'post__in';
+                // Si no hay filtros, permitir el caso default solo si filtrosUsuario está vacío
+                if (empty($filtrosUsuario) || $filtrosUsuario === 'a:0:{}') {
+                    $feed_result = obtenerFeedPersonalizado($usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts);
 
-                    if (count($feed_result['post_ids']) > POSTINLIMIT) {
-                        $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, POSTINLIMIT);
+                    if (!empty($feed_result['post_ids'])) {
+                        $query_args['post__in'] = $feed_result['post_ids'];
+                        $query_args['orderby'] = 'post__in';
+
+                        if (count($feed_result['post_ids']) > POSTINLIMIT) {
+                            $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, POSTINLIMIT);
+                        }
+
+                        if (!empty($feed_result['post_not_in'])) {
+                            $query_args['post__not_in'] = $feed_result['post_not_in'];
+                        }
+                    } else {
+                        $query_args['orderby'] = 'date';
+                        $query_args['order'] = 'DESC';
                     }
-
-                    if (!empty($feed_result['post_not_in'])) {
-                        $query_args['post__not_in'] = $feed_result['post_not_in'];
-                    }
-                } else {
-                    $query_args['orderby'] = 'date';
-                    $query_args['order'] = 'DESC';
                 }
                 break;
         }
