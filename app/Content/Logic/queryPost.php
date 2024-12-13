@@ -154,6 +154,14 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
         $query_args['author'] = $userId;
         return $query_args;
     }
+    $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
+
+    //Obtiene los filtros de publicación del usuario actual. Si el usuario tiene el filtro 'misColecciones' activo, modifica la consulta para mostrar solo publicaciones de ese usuario.
+
+    if (is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
+        $query_args['author'] = $usuarioActual;
+        return $query_args;
+    }
 
     // Obtener el filtro solicitado en $args
     $filtro = $args['filtro'] ?? 'nada';
