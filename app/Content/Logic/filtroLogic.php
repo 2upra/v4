@@ -30,14 +30,24 @@ function restablecerFiltros() {
     $user_id = get_current_user_id();
     error_log('restablecerFiltros: User ID: ' . $user_id);
     $filtroPost = get_user_meta($user_id, 'filtroPost', true);
-     error_log('restablecerFiltros: filtroPost obtenido: ' . print_r($filtroPost, true));
-    $filtroPost_array = @unserialize($filtroPost);
+    error_log('restablecerFiltros: filtroPost obtenido: ' . print_r($filtroPost, true));
     
-     if ($filtroPost_array === false && $filtroPost !== 'b:0;') {
-        error_log('restablecerFiltros: Error al unserializar filtroPost. valor:' . $filtroPost);
-         $filtroPost_array = []; // Inicializar como array vacío para evitar errores posteriores
+    // Verifica si $filtroPost es una string, si no, inicializa como array
+     if (is_string($filtroPost)) {
+        $filtroPost_array = @unserialize($filtroPost);
+        if ($filtroPost_array === false && $filtroPost !== 'b:0;') {
+            error_log('restablecerFiltros: Error al unserializar filtroPost. valor:' . $filtroPost);
+             $filtroPost_array = []; // Inicializar como array vacío para evitar errores posteriores
+        }
+     } else if (is_array($filtroPost)) {
+         $filtroPost_array = $filtroPost;
+        error_log('restablecerFiltros: filtroPost es un array directamente');
+     } else {
+        $filtroPost_array = [];
+         error_log('restablecerFiltros: filtroPost no es string ni array, inicializado como vacio');
     }
-     error_log('restablecerFiltros: filtroPost unserialized: ' . print_r($filtroPost_array, true));
+   
+     error_log('restablecerFiltros: filtroPost unserialized/handled: ' . print_r($filtroPost_array, true));
 
     if (isset($_POST['post']) && $_POST['post'] === 'true') {
          error_log('restablecerFiltros: Restablecer filtros de post');
@@ -91,6 +101,7 @@ function restablecerFiltros() {
      error_log('restablecerFiltros: Fin');
 }
 add_action('wp_ajax_restablecerFiltros', 'restablecerFiltros');
+
 
 function obtenerFiltrosTotal() {
     if (!is_user_logged_in()) {
