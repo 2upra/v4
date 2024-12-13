@@ -1031,28 +1031,21 @@ async function cambiarFiltroTiempo() {
 }
 
 function filtrosPost() {
-    console.log('Iniciando filtrosPost');
     const filtrosPost = document.getElementById('filtrosPost');
-    if (!filtrosPost) {
-        console.log('No se encontró el elemento filtrosPost');
-        return;
-    }
+    if (!filtrosPost) return;
 
     let filtrosActivos = null;
-    console.log('filtrosActivos inicializado:', filtrosActivos);
 
     async function cargarFiltrosGuardados() {
-        console.log('Iniciando cargarFiltrosGuardados');
         try {
-            console.log("Llamando a enviarAjax('obtenerFiltros')");
             const respuesta = await enviarAjax('obtenerFiltros');
-            console.log('Respuesta de obtenerFiltros:', respuesta);
 
             if (respuesta.success && respuesta.data && respuesta.data.filtros) {
                 try {
                     const serializedFilters = respuesta.data.filtros;
-                    //  console.log("String de filtros:",serializedFilters)
-                    //  const deserialized = unserialize(serializedFilters); // Usar una libreria
+                    if (typeof serializedFilters !== 'string') {
+                        throw new Error('serializedFilters no es una cadena');
+                    }
                     const deserialized = JSON.parse(
                         JSON.stringify(
                             eval(
@@ -1065,31 +1058,22 @@ function filtrosPost() {
                                     ')'
                             )
                         )
-                    ); // Usar una libreria
-
+                    );
                     filtrosActivos = Array.isArray(deserialized) ? deserialized : [];
-                    console.log('Filtros cargados desde el servidor despues de parseo:', filtrosActivos);
                 } catch (e) {
                     console.error('Error al deserializar la respuesta:', e);
                     filtrosActivos = [];
                 }
             } else {
                 filtrosActivos = [];
-                console.log('No se encontraron filtros guardados, inicializando a array vacío.');
             }
 
-            console.log('Valor de filtrosActivos después de cargar:', filtrosActivos);
             if (Array.isArray(filtrosActivos)) {
                 setTimeout(() => {
-                    console.log('Recorriendo filtrosActivos:', filtrosActivos);
                     filtrosActivos.forEach(filtro => {
                         const checkbox = document.querySelector(`input[name="${filtro}"]`);
                         if (checkbox) {
-                            console.log('Checkbox encontrado para el filtro:', filtro);
                             checkbox.checked = true;
-                            console.log('Checkbox marcado:', checkbox);
-                        } else {
-                            console.log('No se encontró checkbox para el filtro:', filtro);
                         }
                     });
                 }, 100);
@@ -1097,95 +1081,63 @@ function filtrosPost() {
         } catch (error) {
             console.error('Error al cargar filtros:', error);
             filtrosActivos = [];
-            console.log('Error al cargar filtros, inicializando a array vacío.');
         }
-        console.log('Finalizando cargarFiltrosGuardados');
     }
 
     const checkboxes = filtrosPost.querySelectorAll('input[type="checkbox"]');
-    console.log('Checkbox encontrados:', checkboxes);
-    if (!checkboxes.length) {
-        console.log('No se encontraron checkboxes');
-        return;
-    }
+    if (!checkboxes.length) return;
 
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function () {
-            console.log('Checkbox changed:', this.name, 'Estado:', this.checked);
             if (!Array.isArray(filtrosActivos)) {
                 filtrosActivos = [];
-                console.log('filtrosActivos no es array, inicializando a array vacío.');
             }
 
             if (this.checked) {
                 if (!filtrosActivos.includes(this.name)) {
                     filtrosActivos.push(this.name);
-                    console.log('Checkbox activado, filtro agregado:', this.name);
-                } else {
-                    console.log('Checkbox activado, filtro ya existía:', this.name);
                 }
             } else {
                 filtrosActivos = filtrosActivos.filter(filtro => filtro !== this.name);
-                console.log('Checkbox desactivado, filtro removido:', this.name);
             }
-            console.log('filtrosActivos actual:', filtrosActivos);
         });
     });
 
     const botonGuardar = filtrosPost.querySelector('.botonprincipal');
-    if (!botonGuardar) {
-        console.log('No se encontró el botón de guardar');
-        return;
-    }
+    if (!botonGuardar) return;
 
     botonGuardar.addEventListener('click', async function () {
-        console.log('Botón Guardar clickeado');
         const filtrosParaGuardar = Array.isArray(filtrosActivos) ? filtrosActivos : [];
-        console.log('Filtros para guardar:', filtrosParaGuardar);
-        console.log("Llamando a enviarAjax('guardarFiltroPost', ...)");
         const respuesta = await enviarAjax('guardarFiltroPost', {
             filtros: JSON.stringify(filtrosParaGuardar)
         });
-        console.log('Respuesta de guardarFiltroPost:', respuesta);
 
         if (respuesta.success) {
-            console.log('Guardado con éxito, limpiando búsqueda y estableciendo filtros.');
             window.limpiarBusqueda();
             establecerFiltros();
         }
     });
 
     const botonRestablecer = filtrosPost.querySelector('.botonsecundario');
-    if (!botonRestablecer) {
-        console.log('No se encontró el botón de restablecer');
-        return;
-    }
+    if (!botonRestablecer) return;
 
     botonRestablecer.addEventListener('click', async function () {
-        console.log('Botón Restablecer clickeado');
         filtrosActivos = [];
-        console.log('filtrosActivos restablecido a array vacío:', filtrosActivos);
         checkboxes.forEach(checkbox => {
             checkbox.checked = false;
-            console.log('Checkbox desmarcado:', checkbox);
         });
-        console.log("Llamando a enviarAjax('guardarFiltroPost', ...)");
         const respuesta = await enviarAjax('guardarFiltroPost', {
             filtros: JSON.stringify([])
         });
-        console.log('Respuesta de guardarFiltroPost (restablecer):', respuesta);
 
         if (respuesta.success) {
-            console.log('Restablecido con éxito, limpiando búsqueda y estableciendo filtros.');
             window.limpiarBusqueda();
             establecerFiltros();
         }
     });
 
     cargarFiltrosGuardados();
-    console.log('Finalizando filtrosPost');
 }
-
 window.contadorDeSamples = () => {
     // Obtener el elemento donde se mostrarán los resultados
     const resultadosElement = document.getElementById('resultadosPost-sampleList');
