@@ -750,6 +750,7 @@ function inicializarCambiarImagen() {
     });
 }
 
+//aqui se sigue guardando como s:a:1:{i:0;s:14:"misColecciones";} en vez de a:1:{i:0;s:14:"misColecciones";} cuando se restablece
 async function establecerFiltros() {
     console.log('establecerFiltros: Inicio');
     try {
