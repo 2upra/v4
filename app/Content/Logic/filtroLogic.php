@@ -36,9 +36,10 @@ add_action('wp_ajax_obtenerFiltroActual', 'obtenerFiltroActual');
 NO RESTABLECE LOS FILTROS!!! PORQUE?
 */
 
-function restablecerFiltros()
-{
+function restablecerFiltros() {
     error_log('restablecerFiltros: Inicio');
+    error_log('restablecerFiltros: $_POST recibido: ' . print_r($_POST, true));
+
 
     if (!is_user_logged_in()) {
         error_log('restablecerFiltros: Usuario no autenticado');
@@ -50,16 +51,16 @@ function restablecerFiltros()
 
     $filtroPost = get_user_meta($user_id, 'filtroPost', true);
     error_log('restablecerFiltros: filtroPost obtenido: ' . print_r($filtroPost, true));
-
+    
     // Manejo de la variable $filtroPost y su conversion a array
     if (is_string($filtroPost)) {
-        error_log('restablecerFiltros: filtroPost es string, intentando unserializar');
-        $filtroPost_array = @unserialize($filtroPost);
+      error_log('restablecerFiltros: filtroPost es string, intentando unserializar');
+      $filtroPost_array = @unserialize($filtroPost);
         if ($filtroPost_array === false && $filtroPost !== 'b:0;') {
             error_log('restablecerFiltros: Error al unserializar filtroPost. valor:' . $filtroPost);
             $filtroPost_array = []; // Inicializar como array vacío para evitar errores posteriores
-        } else {
-            error_log('restablecerFiltros: unserializado exitoso: ' . print_r($filtroPost_array, true));
+        } else{
+            error_log('restablecerFiltros: unserializado exitoso: '. print_r($filtroPost_array, true));
         }
     } else if (is_array($filtroPost)) {
         $filtroPost_array = $filtroPost;
@@ -68,45 +69,59 @@ function restablecerFiltros()
         $filtroPost_array = [];
         error_log('restablecerFiltros: filtroPost no es string ni array, inicializado como vacio');
     }
-
+    
     error_log('restablecerFiltros: filtroPost despues de manejo: ' . print_r($filtroPost_array, true));
 
 
     // Procesamiento de filtros de post
     if (isset($_POST['post']) && $_POST['post'] === 'true') {
+        error_log('restablecerFiltros: $_POST[post] es true');
         error_log('restablecerFiltros: Restablecer filtros de post');
         $filtros_a_eliminar = ['misPost', 'mostrarMeGustan', 'ocultarEnColeccion', 'ocultarDescargados'];
-
-        if (is_array($filtroPost_array)) {
-            error_log('restablecerFiltros: filtroPost_array es array, procesando...');
+        
+        if(is_array($filtroPost_array)){
+          error_log('restablecerFiltros: filtroPost_array es array, procesando...');
             foreach ($filtros_a_eliminar as $filtro) {
-                $index = array_search($filtro, $filtroPost_array);
-                if ($index !== false) {
-                    unset($filtroPost_array[$index]);
-                    error_log('restablecerFiltros: Filtro "' . $filtro . '" eliminado. Indice: ' . $index);
-                } else {
-                    error_log('restablecerFiltros: Filtro "' . $filtro . '" no encontrado.');
-                }
-            }
+              $index = array_search($filtro, $filtroPost_array);
+              if ($index !== false) {
+                  unset($filtroPost_array[$index]);
+                  error_log('restablecerFiltros: Filtro "' . $filtro . '" eliminado. Indice: ' . $index);
+              } else{
+                  error_log('restablecerFiltros: Filtro "' . $filtro . '" no encontrado.');
+              }
+          }
         } else {
-            error_log('restablecerFiltros: filtroPost_array no es array');
+           error_log('restablecerFiltros: filtroPost_array no es array');
         }
+    } else {
+       if(isset($_POST['post'])){
+         error_log('restablecerFiltros: $_POST[post] existe pero no es "true", valor: '. $_POST['post']);
+       } else {
+            error_log('restablecerFiltros: $_POST[post] no esta definido');
+       }
     }
 
     // Procesamiento de filtros de coleccion
     if (isset($_POST['coleccion']) && $_POST['coleccion'] === 'true') {
-        error_log('restablecerFiltros: Restablecer filtros de coleccion');
-        if (is_array($filtroPost_array)) {
-            $index = array_search('misColecciones', $filtroPost_array);
+      error_log('restablecerFiltros: $_POST[coleccion] es true');
+      error_log('restablecerFiltros: Restablecer filtros de coleccion');
+         if(is_array($filtroPost_array)){
+             $index = array_search('misColecciones', $filtroPost_array);
             if ($index !== false) {
                 unset($filtroPost_array[$index]);
                 error_log('restablecerFiltros: Filtro "misColecciones" eliminado. Indice: ' . $index);
             } else {
                 error_log('restablecerFiltros: Filtro "misColecciones" no encontrado.');
             }
-        } else {
-            error_log('restablecerFiltros: filtroPost_array no es array para coleccion');
+         } else {
+           error_log('restablecerFiltros: filtroPost_array no es array para coleccion');
         }
+    } else {
+          if(isset($_POST['coleccion'])){
+         error_log('restablecerFiltros: $_POST[coleccion] existe pero no es "true", valor: '. $_POST['coleccion']);
+       } else {
+            error_log('restablecerFiltros: $_POST[coleccion] no esta definido');
+       }
     }
 
     // Actualizacion o eliminacion de la meta data
@@ -114,20 +129,21 @@ function restablecerFiltros()
         delete_user_meta($user_id, 'filtroPost');
         error_log('restablecerFiltros: filtroPost_array vacio, eliminando meta filtroPost');
     } else {
-
-        $serialized_filtroPost = serialize(array_values($filtroPost_array));
-        error_log('restablecerFiltros: filtroPost_array no vacio, serializando: ' . print_r($serialized_filtroPost, true));
-        update_user_meta($user_id, 'filtroPost', $serialized_filtroPost);
-        error_log('restablecerFiltros: filtroPost actualizado con: ' .  print_r($serialized_filtroPost, true));
+       
+      $serialized_filtroPost = serialize(array_values($filtroPost_array));
+       error_log('restablecerFiltros: filtroPost_array no vacio, serializando: ' . print_r($serialized_filtroPost, true));
+      update_user_meta($user_id, 'filtroPost', $serialized_filtroPost);
+        error_log('restablecerFiltros: filtroPost actualizado con: ' .  print_r($serialized_filtroPost, true) );
     }
 
     // Eliminacion de filtro de tiempo
     delete_user_meta($user_id, 'filtroTiempo');
     error_log('restablecerFiltros: filtroTiempo eliminado');
-
+    
     wp_send_json_success(['message' => 'Filtros restablecidos']);
-    error_log('restablecerFiltros: Fin');
+     error_log('restablecerFiltros: Fin');
 }
+add_action('wp_ajax_restablecerFiltros', 'restablecerFiltros');
 add_action('wp_ajax_restablecerFiltros', 'restablecerFiltros');
 
 
