@@ -22,18 +22,15 @@ add_action('wp_ajax_obtenerFiltroActual', 'obtenerFiltroActual');
 
 
 /*
-[13-Dec-2024 14:40:56 UTC] restablecerFiltros: Inicio
-[13-Dec-2024 14:40:56 UTC] restablecerFiltros: User ID: 1
-[13-Dec-2024 14:40:56 UTC] restablecerFiltros: filtroPost obtenido: a:2:{i:0;s:14:"misColecciones";i:1;s:18:"ocultarEnColeccion";}
-[13-Dec-2024 14:40:56 UTC] restablecerFiltros: filtroPost unserialized/handled: Array
-(
-    [0] => misColecciones
-    [1] => ocultarEnColeccion
-)
+el error que causadespues de restablecer: 
 
-[13-Dec-2024 14:40:56 UTC] restablecerFiltros: filtroPost_array no vacio, serializando: a:2:{i:0;s:14:"misColecciones";i:1;s:18:"ocultarEnColeccion";}
-[13-Dec-2024 14:40:56 UTC] restablecerFiltros: filtroPost actualizado con: a:2:{i:0;s:14:"misColecciones";i:1;s:18:"ocultarEnColeccion";}
-NO RESTABLECE LOS FILTROS!!! PORQUE?
+genericAjax.js?ver=0.2.102:765  establecerFiltros: Error al parsear filtroPost como JSON SyntaxError: Unexpected token 'a', "a:1:{i:0;s"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at establecerFiltros (genericAjax.js?ver=0.2.102:763:39)
+
+como se guardan correctamente los filtros y se leen correctamente a:2:{i:0;s:15:"mostrarMeGustan";i:1;s:14:"misColecciones";}
+
+despues de restablecer s:32:"a:1:{i:0;s:14:"misColecciones";}";
 */
 
 function restablecerFiltros() {
@@ -123,13 +120,12 @@ function restablecerFiltros() {
         delete_user_meta($user_id, 'filtroPost');
         error_log('restablecerFiltros: filtroPost_array vacio, eliminando meta filtroPost');
     } else {
-       
-      $serialized_filtroPost = serialize(array_values($filtroPost_array));
-       error_log('restablecerFiltros: filtroPost_array no vacio, serializando: ' . print_r($serialized_filtroPost, true));
-      update_user_meta($user_id, 'filtroPost', $serialized_filtroPost);
-        error_log('restablecerFiltros: filtroPost actualizado con: ' . print_r($serialized_filtroPost, true) );
+        // Forzar a que se guarde como string, no como array
+        $serialized_filtroPost = 's:' . serialize(array_values($filtroPost_array));
+        error_log('restablecerFiltros: filtroPost_array no vacio, serializando como string: ' . print_r($serialized_filtroPost, true));
+        update_user_meta($user_id, 'filtroPost', $serialized_filtroPost);
+        error_log('restablecerFiltros: filtroPost actualizado con: ' . print_r($serialized_filtroPost, true));
     }
-
     // Eliminacion de filtro de tiempo
     delete_user_meta($user_id, 'filtroTiempo');
     error_log('restablecerFiltros: filtroTiempo eliminado');
