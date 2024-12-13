@@ -818,24 +818,16 @@ async function establecerFiltros() {
                 // Evento para restablecer filtros
                 if (botonRestablecer && !botonRestablecer.dataset.listenerAdded) {
                     console.log('establecerFiltros: Agregando event listener a botonRestablecer');
-                    botonRestablecer.addEventListener('click', async function () {
-                        console.log('establecerFiltros: Evento click en botonRestablecer');
-                        let data = {};
-                        if (this.dataset.hasOwnProperty('postRestablecer')) {
-                            console.log('establecerFiltros: Restablecer filtro post');
-                            data.post = true;
-                        } else if (this.dataset.hasOwnProperty('coleccionRestablecer')) {
-                            console.log('establecerFiltros: Restablecer filtro colección');
-                            data.coleccion = true;
-                        }
 
+                    // Función para restablecer filtros (se puede reutilizar)
+                    const restablecerFiltro = async function (data) {
                         try {
-                            console.log('establecerFiltros: Enviando solicitud para restablecer filtros');
+                            console.log('establecerFiltros: Enviando solicitud para restablecer filtros', data);
                             const restablecerResponse = await enviarAjax('restablecerFiltros', data);
                             console.log('establecerFiltros: Respuesta de restablecerFiltros', restablecerResponse);
                             if (restablecerResponse.success) {
                                 alert(restablecerResponse.data.message);
-                                window.limpiarBusqueda();
+                                window.limpiarBusqueda(); // Llamar a limpiarBusqueda después del restablecimiento
                                 if (botonPostRestablecer) {
                                     botonPostRestablecer.style.display = 'none';
                                     console.log('establecerFiltros: Ocultando botonPostRestablecer tras restablecer');
@@ -851,7 +843,34 @@ async function establecerFiltros() {
                             console.error('establecerFiltros: Error al restablecer:', error);
                             alert('Error en la solicitud.');
                         }
+                    };
+
+                    // Evento click en el botón principal
+                    botonRestablecer.addEventListener('click', async function () {
+                        console.log('establecerFiltros: Evento click en botonRestablecer');
+
+                        let data = {};
+
+                        // Llama a la función genérica sin data, se usará la del botón individual
+                        await restablecerFiltro(data);
                     });
+
+                    // Evento click para botón de post
+                    if (botonPostRestablecer) {
+                        botonPostRestablecer.addEventListener('click', async function () {
+                            console.log('establecerFiltros: Evento click en botonPostRestablecer');
+                            await restablecerFiltro({post: true});
+                        });
+                    }
+
+                    // Evento click para botón de coleccion
+                    if (botonColeccionRestablecer) {
+                        botonColeccionRestablecer.addEventListener('click', async function () {
+                            console.log('establecerFiltros: Evento click en botonColeccionRestablecer');
+                            await restablecerFiltro({coleccion: true});
+                        });
+                    }
+
                     botonRestablecer.dataset.listenerAdded = true;
                     console.log('establecerFiltros: Listener agregado');
                 }
@@ -864,6 +883,49 @@ async function establecerFiltros() {
     }
     console.log('establecerFiltros: Fin');
 }
+/*
+//no se puede cambiar
+async function enviarAjax(action, data = {}) {
+    try {
+        const body = new URLSearchParams({
+            action: action,
+            ...data
+        });
+        const response = await fetch(ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: body
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+        }
+        let responseData;
+        const responseText = await response.text();
+        try {
+            responseData = JSON.parse(responseText);
+        } catch (jsonError) {
+            console.error('No se pudo interpretar la respuesta como JSON:', {
+                error: jsonError,
+                responseText: responseText,
+                action: action,
+                requestData: data
+            });
+            responseData = responseText;
+        }
+        return responseData;
+    } catch (error) {
+        console.error('Error en la solicitud AJAX:', {
+            error: error,
+            action: action,
+            requestData: data,
+            ajaxUrl: ajaxUrl
+        });
+        return {success: false, message: error.message};
+    }
+}
+*/
 
 function phpUnserialize(str) {
     try {
