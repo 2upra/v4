@@ -532,7 +532,49 @@
     };
 
     //
+    //necesito que cuando se click fuera de resultadoBusqueda (en el background mejor dcho), se oculte, y mientras resultado busqueda es es visible, por debajo se genera un background, este:
 
+    window.createBusquedaDarkBackground = function () {
+        let darkBackground = document.getElementById('busquedaBackground');
+        if (!darkBackground) {
+            darkBackground = document.createElement('div');
+            darkBackground.id = 'busquedaBackground';
+            darkBackground.style.position = 'fixed';
+            darkBackground.style.top = 0;
+            darkBackground.style.left = 0;
+            darkBackground.style.width = '100%';
+            darkBackground.style.height = '100%';
+            darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            darkBackground.style.zIndex = 1003;
+            darkBackground.style.display = 'none';
+            darkBackground.style.pointerEvents = 'none';
+            darkBackground.style.opacity = '0';
+            darkBackground.style.transition = 'opacity 0.3s ease';
+            document.body.appendChild(darkBackground);
+
+            darkBackground.addEventListener('click', () => {
+                cerrarColec();
+            });
+        }
+
+        darkBackground.style.display = 'block';
+        setTimeout(() => {
+            darkBackground.style.opacity = '1';
+        }, 10);
+        darkBackground.style.pointerEvents = 'auto';
+    };
+
+    window.removeBusquedaDarkBackground = function () {
+        const darkBackground = document.getElementById('busquedaBackground');
+        if (darkBackground) {
+            darkBackground.style.opacity = '0';
+            setTimeout(() => {
+                darkBackground.style.display = 'none';
+                darkBackground.style.pointerEvents = 'none';
+            }, 300);
+        }
+    };
+    
     const inputBusqueda = document.getElementById('identifier');
     const divResultados = document.getElementById('resultadoBusqueda');
 
@@ -540,11 +582,11 @@
         const textoBusqueda = inputBusqueda.value.trim();
 
         if (textoBusqueda.length > 0) {
-            divResultados.classList.add('flex');
+            divResultados.style.display = 'flex';
             divResultados.classList.remove('hidden');
             buscar(textoBusqueda);
         } else {
-            divResultados.classList.remove('flex');
+            divResultados.style.display = 'none';
             divResultados.classList.add('hidden');
             divResultados.innerHTML = '';
         }
@@ -566,7 +608,6 @@
     function mostrarResultados(html) {
         divResultados.innerHTML = html;
     }
-
     //
 })();
 
