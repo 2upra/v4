@@ -1163,6 +1163,8 @@ function filtrosPost() {
     cargarFiltrosGuardados();
     console.log('Finalizando filtrosPost');
 }
+
+
 window.contadorDeSamples = () => {
     // Obtener el elemento donde se mostrarán los resultados
     const resultadosElement = document.getElementById('resultadosPost-sampleList');
