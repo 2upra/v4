@@ -532,7 +532,6 @@
     };
 
     //
-    //necesito que cuando se click fuera de resultadoBusqueda (en el background mejor dcho), se oculte, y mientras resultado busqueda es es visible, por debajo se genera un background, este:
 
     window.createBusquedaDarkBackground = function () {
         let darkBackground = document.getElementById('busquedaBackground');
@@ -553,7 +552,7 @@
             document.body.appendChild(darkBackground);
 
             darkBackground.addEventListener('click', () => {
-                cerrarColec();
+                ocultarFondoYResultados();
             });
         }
 
@@ -574,9 +573,21 @@
             }, 300);
         }
     };
-    
+
     const inputBusqueda = document.getElementById('identifier');
     const divResultados = document.getElementById('resultadoBusqueda');
+
+    // Función para mostrar el fondo oscuro
+    function mostrarFondoOscuro() {
+        window.createBusquedaDarkBackground();
+    }
+
+    // Función para ocultar el fondo oscuro y resultadoBusqueda
+    function ocultarFondoYResultados() {
+        window.removeBusquedaDarkBackground();
+        divResultados.style.display = 'none';
+        divResultados.classList.add('hidden');
+    }
 
     inputBusqueda.addEventListener('input', () => {
         const textoBusqueda = inputBusqueda.value.trim();
@@ -585,9 +596,9 @@
             divResultados.style.display = 'flex';
             divResultados.classList.remove('hidden');
             buscar(textoBusqueda);
+            mostrarFondoOscuro(); // Mostrar fondo oscuro al empezar a escribir
         } else {
-            divResultados.style.display = 'none';
-            divResultados.classList.add('hidden');
+            ocultarFondoYResultados(); // Ocultar si no hay texto
             divResultados.innerHTML = '';
         }
     });
@@ -607,8 +618,8 @@
 
     function mostrarResultados(html) {
         divResultados.innerHTML = html;
+        mostrarFondoOscuro(); 
     }
-    //
 })();
 
 if ('IntersectionObserver' in window) {
