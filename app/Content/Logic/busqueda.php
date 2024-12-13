@@ -3,17 +3,25 @@
 add_action('wp_ajax_buscarResultado', 'buscar_resultados');
 add_action('wp_ajax_nopriv_buscarResultado', 'buscar_resultados');
 
+//esto funciona perfecto, solo falta que muestre la foto de portada para los post, y la foto de perfil del usuario
+/*
+a considerar: la foto de portada no existe, entonces buscar si en el post contiene una meta de "imagenTemporal" que es un id de una imagen adjunta y usarla, 
+
+la imagen de perfil se obtiene con imagenPerfil($user_id)
+*/
+
+
 function buscar_resultados()
 {
 
     $texto = sanitize_text_field($_POST['busqueda']);
     $cache_key = 'resultados_busqueda_' . md5($texto);
-    //$resultados_cache = obtenerCache($cache_key);
+    $resultados_cache = obtenerCache($cache_key);
 
-    //if ($resultados_cache !== false) {
-    //   wp_send_json(array('success' => true, 'data' => $resultados_cache));
-    //    return;
-    // }
+    if ($resultados_cache !== false) {
+        wp_send_json(array('success' => true, 'data' => $resultados_cache));
+        return;
+    }
 
     ob_start();
 
@@ -22,6 +30,28 @@ function buscar_resultados()
         'colecciones' => array(),
         'perfiles'    => array(),
     );
+
+    // Función para obtener la imagen de un post
+    function obtenerImagenPost($post_id)
+    {
+        $imagen_url = false;
+
+        if (has_post_thumbnail($post_id)) {
+            $imagen_url = get_the_post_thumbnail_url($post_id, 'thumbnail');
+        } else {
+            $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true);
+            if ($imagen_temporal_id) {
+                $imagen_url = wp_get_attachment_image_url($imagen_temporal_id, 'thumbnail');
+            }
+        }
+
+        if ($imagen_url) {
+            return img($imagen_url);
+        }
+
+        return false;
+    }
+
 
     // Buscar en social_post
     $args_social = array(
@@ -34,10 +64,12 @@ function buscar_resultados()
     if ($query_social->have_posts()) {
         while ($query_social->have_posts()) {
             $query_social->the_post();
+            $imagen = obtenerImagenPost(get_the_ID());
             $resultados['social_post'][] = array(
                 'titulo' => get_the_title(),
                 'url'    => get_permalink(),
-                'tipo'   => 'Social Post',
+                'tipo'   => 'Post',
+                'imagen' => $imagen,
             );
         }
     }
@@ -54,10 +86,12 @@ function buscar_resultados()
     if ($query_colecciones->have_posts()) {
         while ($query_colecciones->have_posts()) {
             $query_colecciones->the_post();
+            $imagen = obtenerImagenPost(get_the_ID());
             $resultados['colecciones'][] = array(
                 'titulo' => get_the_title(),
                 'url'    => get_permalink(),
                 'tipo'   => 'Colección',
+                'imagen' => $imagen,
             );
         }
     }
@@ -79,6 +113,7 @@ function buscar_resultados()
                 'titulo' => $user->display_name,
                 'url'    => get_author_posts_url($user->ID),
                 'tipo'   => 'Perfil',
+                'imagen' => imagenPerfil($user->ID),
             );
         }
     }
@@ -115,8 +150,13 @@ function buscar_resultados()
         foreach ($grupo as $resultado) {
 ?>
             <div class="resultado-item">
-                <a href="<?php echo $resultado['url']; ?>"><?php echo $resultado['titulo']; ?></a>
-                <p><?php echo $resultado['tipo']; ?></p>
+                <?php if (!empty($resultado['imagen'])): ?>
+                    <img class="resultado-imagen" src="<?php echo $resultado['imagen']; ?>" alt="<?php echo $resultado['titulo']; ?>">
+                <?php endif; ?>
+                <div class="resultado-info">
+                    <a href="<?php echo $resultado['url']; ?>"><?php echo $resultado['titulo']; ?></a>
+                    <p><?php echo $resultado['tipo']; ?></p>
+                </div>
             </div>
         <?php
         }
@@ -129,6 +169,6 @@ function buscar_resultados()
     }
 
     $html = ob_get_clean();
-    //guardarCache($cache_key, $html, 7200); // Guardar en caché por 2 horas (7200 segundos)
+    guardarCache($cache_key, $html, 7200); // Guardar en caché por 2 horas (7200 segundos)
     wp_send_json(array('success' => true, 'data' => $html));
 }
