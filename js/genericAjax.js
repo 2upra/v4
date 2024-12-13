@@ -1,5 +1,47 @@
 const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
 
+//GENERIC FETCH (NO SE PUEDE CAMBIAR O ALTERAR )
+async function enviarAjax(action, data = {}) {
+    try {
+        const body = new URLSearchParams({
+            action: action,
+            ...data
+        });
+        const response = await fetch(ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: body
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+        }
+        let responseData;
+        const responseText = await response.text();
+        try {
+            responseData = JSON.parse(responseText);
+        } catch (jsonError) {
+            console.error('No se pudo interpretar la respuesta como JSON:', {
+                error: jsonError,
+                responseText: responseText,
+                action: action,
+                requestData: data
+            });
+            responseData = responseText;
+        }
+        return responseData;
+    } catch (error) {
+        console.error('Error en la solicitud AJAX:', {
+            error: error,
+            action: action,
+            requestData: data,
+            ajaxUrl: ajaxUrl
+        });
+        return {success: false, message: error.message};
+    }
+}
+
 //ejemplo de algunas acciones
 async function eliminarPost() {
     await accionClick(
@@ -708,47 +750,7 @@ function inicializarCambiarImagen() {
     });
 }
 
-//GENERIC FETCH (NO SE PUEDE CAMBIAR O ALTERAR )
-async function enviarAjax(action, data = {}) {
-    try {
-        const body = new URLSearchParams({
-            action: action,
-            ...data
-        });
-        const response = await fetch(ajaxUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: body
-        });
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
-        }
-        let responseData;
-        const responseText = await response.text();
-        try {
-            responseData = JSON.parse(responseText);
-        } catch (jsonError) {
-            console.error('No se pudo interpretar la respuesta como JSON:', {
-                error: jsonError,
-                responseText: responseText,
-                action: action,
-                requestData: data
-            });
-            responseData = responseText;
-        }
-        return responseData;
-    } catch (error) {
-        console.error('Error en la solicitud AJAX:', {
-            error: error,
-            action: action,
-            requestData: data,
-            ajaxUrl: ajaxUrl
-        });
-        return {success: false, message: error.message};
-    }
-}
+
 
 async function establecerFiltros() {
     try {

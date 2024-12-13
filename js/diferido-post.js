@@ -69,13 +69,9 @@
 
                 // Guarda el ID de usuario en una variable global (opcional)
                 window.idUsuarioActual = idUsuario;
-
-
             } else {
-
             }
         } else {
-
         }
     }
 
@@ -95,7 +91,7 @@
             //log('Evento de scroll detectado:', {scrollTop, alturaVentana, alturaDocumento, estaCargando});
 
             if (scrollTop + alturaVentana > alturaDocumento - 100 && !estaCargando && hayMasContenido) {
-                log('Condiciones para cargar más contenido cumplidas estaCargando', 'estaCargando:', {estaCargando}, 'hayMasContenido:', {hayMasContenido} );
+                log('Condiciones para cargar más contenido cumplidas estaCargando', 'estaCargando:', {estaCargando}, 'hayMasContenido:', {hayMasContenido});
                 const elementoPestañaActiva = document.querySelector('.tab.active');
                 if (elementoPestañaActiva?.getAttribute('ajax') === 'no') {
                     log('ajax no carga detenido');
@@ -534,42 +530,69 @@
             botonLimpiar.style.display = 'none';
         }
     };
+
+    //
+
+    const inputBusqueda = document.getElementById('identifier');
+    const divResultados = document.getElementById('resultadoBusqueda');
+
+    inputBusqueda.addEventListener('input', () => {
+        const textoBusqueda = inputBusqueda.value.trim();
+
+        if (textoBusqueda.length > 0) {
+            divResultados.classList.add('flex');
+            divResultados.classList.remove('hidden');
+            buscar(textoBusqueda);
+        } else {
+            divResultados.classList.remove('flex');
+            divResultados.classList.add('hidden');
+            divResultados.innerHTML = '';
+        }
+    });
+
+    async function buscar(texto) {
+        const data = {
+            busqueda: texto
+        };
+
+        const resultados = await enviarAjax('buscarResultado', data);
+        if (resultados && resultados.success) {
+            mostrarResultados(resultados.data);
+        } else {
+            divResultados.innerHTML = 'Error al realizar la búsqueda.';
+        }
+    }
+
+    function mostrarResultados(html) {
+        divResultados.innerHTML = html;
+    }
+
+    //
 })();
 
 if ('IntersectionObserver' in window) {
-
-
     const observer = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-
-
                 const div = entry.target;
                 const src = div.getAttribute('data-src');
                 if (src) {
- 
-
                     // Usa fetch para cargar el contenido del SVG
                     fetch(src)
                         .then(response => {
                             if (!response.ok) {
-
                                 throw new Error('Error al cargar el SVG');
                             }
                             return response.text();
                         })
                         .then(svg => {
-
                             div.innerHTML = svg; // Inserta el SVG en el div
                             div.removeAttribute('data-src'); // Limpia el data-src
                         })
-                        .catch(err => {
-
-                        });
+                        .catch(err => {});
 
                     observer.unobserve(div); // Deja de observar el elemento
                 } else {
-
                 }
             }
         });
@@ -578,13 +601,10 @@ if ('IntersectionObserver' in window) {
     // Seleccionamos todos los elementos con la clase 'lazy-svg'
     const lazySvgs = document.querySelectorAll('.lazy-svg');
 
-
     lazySvgs.forEach(div => {
-
         observer.observe(div);
     });
 } else {
-
 }
 
 document.addEventListener('DOMContentLoaded', function () {
