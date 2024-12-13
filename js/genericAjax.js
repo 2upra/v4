@@ -749,6 +749,7 @@ function inicializarCambiarImagen() {
         boton.dataset.eventoInicializado = 'true';
     });
 }
+
 async function establecerFiltros() {
     console.log('establecerFiltros: Inicio');
     try {
@@ -842,16 +843,6 @@ async function establecerFiltros() {
                             alert('Error en la solicitud.');
                         }
                     };
-
-                    // Evento click en el botón principal
-                    botonRestablecer.addEventListener('click', async function () {
-                        console.log('establecerFiltros: Evento click en botonRestablecer');
-
-                        let data = {};
-
-                        // Llama a la función genérica sin data, se usará la del botón individual
-                        await restablecerFiltro(data);
-                    });
 
                     // Evento click para botón de post
                     if (botonPostRestablecer) {
