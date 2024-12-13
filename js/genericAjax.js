@@ -1038,7 +1038,7 @@ function filtrosPost() {
         return;
     }
 
-    let filtrosActivos = null; // Inicializar como null
+    let filtrosActivos = null;
     console.log('filtrosActivos inicializado:', filtrosActivos);
 
     async function cargarFiltrosGuardados() {
@@ -1049,8 +1049,30 @@ function filtrosPost() {
             console.log('Respuesta de obtenerFiltros:', respuesta);
 
             if (respuesta.success && respuesta.data && respuesta.data.filtros) {
-                filtrosActivos = Array.isArray(respuesta.data.filtros) ? respuesta.data.filtros : [];
-                console.log('Filtros cargados desde el servidor:', filtrosActivos);
+                try {
+                    const serializedFilters = respuesta.data.filtros;
+                    //  console.log("String de filtros:",serializedFilters)
+                    //  const deserialized = unserialize(serializedFilters); // Usar una libreria
+                    const deserialized = JSON.parse(
+                        JSON.stringify(
+                            eval(
+                                '(' +
+                                    serializedFilters
+                                        .replace(/a:(\d+):\{/g, '[')
+                                        .replace(/i:(\d+);/g, '')
+                                        .replace(/s:(\d+):"([^"]+)";/g, '"$2"')
+                                        .replace(/\}/g, ']') +
+                                    ')'
+                            )
+                        )
+                    ); // Usar una libreria
+
+                    filtrosActivos = Array.isArray(deserialized) ? deserialized : [];
+                    console.log('Filtros cargados desde el servidor despues de parseo:', filtrosActivos);
+                } catch (e) {
+                    console.error('Error al deserializar la respuesta:', e);
+                    filtrosActivos = [];
+                }
             } else {
                 filtrosActivos = [];
                 console.log('No se encontraron filtros guardados, inicializando a array vacío.');
@@ -1074,7 +1096,7 @@ function filtrosPost() {
             }
         } catch (error) {
             console.error('Error al cargar filtros:', error);
-            filtrosActivos = []; // Inicializar como array vacío en caso de error
+            filtrosActivos = [];
             console.log('Error al cargar filtros, inicializando a array vacío.');
         }
         console.log('Finalizando cargarFiltrosGuardados');
@@ -1141,7 +1163,7 @@ function filtrosPost() {
 
     botonRestablecer.addEventListener('click', async function () {
         console.log('Botón Restablecer clickeado');
-        filtrosActivos = []; // Restablecer a array vacío
+        filtrosActivos = [];
         console.log('filtrosActivos restablecido a array vacío:', filtrosActivos);
         checkboxes.forEach(checkbox => {
             checkbox.checked = false;
@@ -1149,7 +1171,7 @@ function filtrosPost() {
         });
         console.log("Llamando a enviarAjax('guardarFiltroPost', ...)");
         const respuesta = await enviarAjax('guardarFiltroPost', {
-            filtros: JSON.stringify([]) // Enviar array vacío
+            filtros: JSON.stringify([])
         });
         console.log('Respuesta de guardarFiltroPost (restablecer):', respuesta);
 
@@ -1163,7 +1185,6 @@ function filtrosPost() {
     cargarFiltrosGuardados();
     console.log('Finalizando filtrosPost');
 }
-
 
 window.contadorDeSamples = () => {
     // Obtener el elemento donde se mostrarán los resultados
