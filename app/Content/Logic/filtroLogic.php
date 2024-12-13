@@ -21,42 +21,74 @@ add_action('wp_ajax_obtenerFiltroActual', 'obtenerFiltroActual');
 
 
 function restablecerFiltros() {
+    error_log('restablecerFiltros: Inicio');
     if (!is_user_logged_in()) {
+        error_log('restablecerFiltros: Usuario no autenticado');
         wp_send_json_error('Usuario no autenticado');
     }
 
     $user_id = get_current_user_id();
+    error_log('restablecerFiltros: User ID: ' . $user_id);
     $filtroPost = get_user_meta($user_id, 'filtroPost', true);
-    $filtroPost_array = unserialize($filtroPost);
+     error_log('restablecerFiltros: filtroPost obtenido: ' . print_r($filtroPost, true));
+    $filtroPost_array = @unserialize($filtroPost);
+    
+     if ($filtroPost_array === false && $filtroPost !== 'b:0;') {
+        error_log('restablecerFiltros: Error al unserializar filtroPost. valor:' . $filtroPost);
+         $filtroPost_array = []; // Inicializar como array vacío para evitar errores posteriores
+    }
+     error_log('restablecerFiltros: filtroPost unserialized: ' . print_r($filtroPost_array, true));
 
     if (isset($_POST['post']) && $_POST['post'] === 'true') {
+         error_log('restablecerFiltros: Restablecer filtros de post');
         $filtros_a_eliminar = ['misPost', 'mostrarMeGustan', 'ocultarEnColeccion', 'ocultarDescargados'];
-        if(is_array($filtroPost_array)){
-        foreach ($filtros_a_eliminar as $filtro) {
-            $index = array_search($filtro, $filtroPost_array);
-            if ($index !== false) {
-                unset($filtroPost_array[$index]);
-            }
+         if(is_array($filtroPost_array)){
+          error_log('restablecerFiltros: filtroPost_array es array, procesando...');
+            foreach ($filtros_a_eliminar as $filtro) {
+              $index = array_search($filtro, $filtroPost_array);
+              if ($index !== false) {
+                  unset($filtroPost_array[$index]);
+                  error_log('restablecerFiltros: Filtro "' . $filtro . '" eliminado. Indice: ' . $index);
+              } else{
+                  error_log('restablecerFiltros: Filtro "' . $filtro . '" no encontrado.');
+              }
+          }
+        } else {
+           error_log('restablecerFiltros: filtroPost_array no es array');
         }
-      }
     }
 
     if (isset($_POST['coleccion']) && $_POST['coleccion'] === 'true') {
-        $index = array_search('misColecciones', $filtroPost_array);
-        if ($index !== false) {
-            unset($filtroPost_array[$index]);
+      error_log('restablecerFiltros: Restablecer filtros de coleccion');
+         if(is_array($filtroPost_array)){
+             $index = array_search('misColecciones', $filtroPost_array);
+            if ($index !== false) {
+                unset($filtroPost_array[$index]);
+                error_log('restablecerFiltros: Filtro "misColecciones" eliminado. Indice: ' . $index);
+            } else {
+                error_log('restablecerFiltros: Filtro "misColecciones" no encontrado.');
+            }
+         } else {
+           error_log('restablecerFiltros: filtroPost_array no es array para coleccion');
         }
     }
 
     if (empty($filtroPost_array)) {
-      delete_user_meta($user_id, 'filtroPost');
+        delete_user_meta($user_id, 'filtroPost');
+        error_log('restablecerFiltros: filtroPost_array vacio, eliminando meta filtroPost');
     } else {
-      update_user_meta($user_id, 'filtroPost', serialize(array_values($filtroPost_array)));
+       
+      $serialized_filtroPost = serialize(array_values($filtroPost_array));
+       error_log('restablecerFiltros: filtroPost_array no vacio, serializando: ' . print_r($serialized_filtroPost, true));
+      update_user_meta($user_id, 'filtroPost', $serialized_filtroPost);
+        error_log('restablecerFiltros: filtroPost actualizado con: ' .  print_r($serialized_filtroPost, true) );
     }
 
     delete_user_meta($user_id, 'filtroTiempo');
+    error_log('restablecerFiltros: filtroTiempo eliminado');
     
     wp_send_json_success(['message' => 'Filtros restablecidos']);
+     error_log('restablecerFiltros: Fin');
 }
 add_action('wp_ajax_restablecerFiltros', 'restablecerFiltros');
 
