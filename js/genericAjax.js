@@ -1030,6 +1030,26 @@ async function cambiarFiltroTiempo() {
     });
 }
 
+/*
+Respuesta de obtenerFiltros: 
+{success: true, data: {…}}
+data
+: 
+filtros
+: 
+(2) ['misColecciones', 'mostrarMeGustan']
+[[Prototype]]
+: 
+Object
+success
+: 
+true
+[[Prototype]]
+: 
+Object
+console.error("Error: La respuesta no es un objeto JSON válido o está vacía.");
+*/
+
 function filtrosPost() {
     const filtrosPost = document.getElementById('filtrosPost');
     if (!filtrosPost) {
@@ -1037,7 +1057,7 @@ function filtrosPost() {
         return;
     }
 
-    let filtrosActivos = null;
+    let filtrosActivos = [];
 
     async function cargarFiltrosGuardados() {
         try {
@@ -1045,20 +1065,7 @@ function filtrosPost() {
             console.log("Respuesta de obtenerFiltros:", respuesta);
 
             if (respuesta.success && respuesta.data && respuesta.data.filtros) {
-                try {
-                    const filtroPostString = respuesta.data.filtros;
-
-                    if (typeof filtroPostString === 'string' && filtroPostString.trim().startsWith('{')) {
-                        const deserialized = JSON.parse(filtroPostString);
-                        filtrosActivos = Array.isArray(deserialized) ? deserialized : [];
-                    } else {
-                        console.error("Error: La respuesta no es un objeto JSON válido o está vacía.");
-                        filtrosActivos = [];
-                    }
-                } catch (e) {
-                    console.error('Error al deserializar la respuesta:', e);
-                    filtrosActivos = [];
-                }
+                filtrosActivos = respuesta.data.filtros;
             } else {
                 console.warn("Advertencia: No se encontraron filtros guardados o la respuesta no fue exitosa.");
                 filtrosActivos = [];
