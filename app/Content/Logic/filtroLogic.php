@@ -153,31 +153,34 @@ function obtenerFiltrosTotal()
     }
 
     $user_id = get_current_user_id();
-    $filtro_post = get_user_meta($user_id, 'filtroPost', true) ?: 'a:0:{}';
+    $filtro_post = get_user_meta($user_id, 'filtroPost', true) ?: '{}'; // Valor predeterminado: JSON vacío
     $filtro_tiempo = get_user_meta($user_id, 'filtroTiempo', true) ?: 0;
 
-    if (empty($filtro_post) || $filtro_post === 'a:0:{}') {
-        $filtro_post_json = '{}';
-    } else {
-        if (is_string($filtro_post) && preg_match('/^a:\d+:{/', $filtro_post)) {
-            $unserialized = @unserialize($filtro_post);
-            if ($unserialized === false) {
-                error_log("Error al deserializar filtroPost para el usuario: " . $user_id);
-                $filtro_post_json = '{}';
-            } else {
-                 $filtro_post_json = json_encode($unserialized);
-            }
+    // Si usas JSON directamente
+    // No se necesita hacer nada más aquí, $filtro_post ya es un JSON válido o un JSON vacío '{}'
+
+    // Si usas serialización (asegúrate de que se guarde correctamente serializado)
+    /*
+    if (is_string($filtro_post) && preg_match('/^a:\d+:{/', $filtro_post)) {
+        $unserialized = @unserialize($filtro_post);
+        if ($unserialized === false) {
+            error_log("Error al deserializar filtroPost para el usuario: " . $user_id);
+            $filtro_post_json = '{}';
         } else {
-             $filtro_post_json = '{}';
+            $filtro_post_json = json_encode($unserialized);
         }
+    } else {
+        $filtro_post_json = '{}';
     }
+    */
 
     wp_send_json_success([
-        'filtroPost' => $filtro_post_json,
+        'filtroPost' => $filtro_post, // $filtro_post ya es un JSON
         'filtroTiempo' => $filtro_tiempo,
     ]);
 }
 add_action('wp_ajax_obtenerFiltrosTotal', 'obtenerFiltrosTotal');
+
 function guardarFiltroPost()
 {
     if (!is_user_logged_in()) {
