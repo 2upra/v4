@@ -8,12 +8,12 @@ function buscar_resultados()
 
     $texto = sanitize_text_field($_POST['busqueda']);
     $cache_key = 'resultados_busqueda_' . md5($texto);
-    $resultados_cache = obtenerCache($cache_key);
+    //$resultados_cache = obtenerCache($cache_key);
 
-    if ($resultados_cache !== false) {
-        wp_send_json(array('success' => true, 'data' => $resultados_cache));
-        return;
-    }
+    //if ($resultados_cache !== false) {
+    //   wp_send_json(array('success' => true, 'data' => $resultados_cache));
+    //    return;
+    // }
 
     ob_start();
 
@@ -129,6 +129,6 @@ function buscar_resultados()
     }
 
     $html = ob_get_clean();
-    guardarCache($cache_key, $html, 7200); // Guardar en caché por 2 horas (7200 segundos)
+    //guardarCache($cache_key, $html, 7200); // Guardar en caché por 2 horas (7200 segundos)
     wp_send_json(array('success' => true, 'data' => $html));
 }
