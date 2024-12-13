@@ -160,7 +160,7 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
 
     if (is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
         $query_args['author'] = $usuarioActual;
-        return $query_args;
+
     }
 
     // Obtener el filtro solicitado en $args
