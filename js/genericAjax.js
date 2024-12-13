@@ -837,7 +837,7 @@ async function establecerFiltros() {
                             if (restablecerResponse.success) {
                                 alert(restablecerResponse.data.message);
                                 window.limpiarBusqueda(); // Llamar a limpiarBusqueda después del restablecimiento
-                                filtrosPost();
+                                cargarFiltrosGuardados();
                                 if (botonPostRestablecer) {
                                     botonPostRestablecer.style.display = 'none';
                                     console.log('establecerFiltros: Ocultando botonPostRestablecer tras restablecer');
@@ -1050,6 +1050,7 @@ Object
 console.error("Error: La respuesta no es un objeto JSON válido o está vacía.");
 */
 
+//necesito que esto siga funcionando pero necesito alguna funcion que pueda llamar en cualquier contexto para releer los filtros y reiniciar los checj y poner los true los que deben 
 function filtrosPost() {
     const filtrosPost = document.getElementById('filtrosPost');
     if (!filtrosPost) {
