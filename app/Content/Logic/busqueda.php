@@ -3,7 +3,7 @@
 function buscar_resultados()
 {
     $texto = sanitize_text_field($_POST['busqueda']);
-    $cache_key = 'resultadosBusqueda_' . md5($texto);
+    $cache_key = 'resultadoBusqueda_' . md5($texto);
     $resultados_cache = obtenerCache($cache_key);
 
     if ($resultados_cache !== false) {
@@ -146,15 +146,17 @@ function generar_html_resultados($resultados)
         $num_resultados += count($grupo);
         foreach ($grupo as $resultado) {
 ?>
-            <div class="resultado-item">
-                <?php if (!empty($resultado['imagen'])): ?>
-                    <img class="resultado-imagen" src="<?php echo esc_url($resultado['imagen']); ?>" alt="<?php echo esc_attr($resultado['titulo']); ?>">
-                <?php endif; ?>
-                <div class="resultado-info">
-                    <a href="<?php echo esc_url($resultado['url']); ?>"><?php echo esc_html($resultado['titulo']); ?></a>
-                    <p><?php echo esc_html($resultado['tipo']); ?></p>
+            <a href="<?php echo esc_url($resultado['url']); ?>">
+                <div class="resultado-item">
+                    <?php if (!empty($resultado['imagen'])): ?>
+                        <img class="resultado-imagen" src="<?php echo esc_url($resultado['imagen']); ?>" alt="<?php echo esc_attr($resultado['titulo']); ?>">
+                    <?php endif; ?>
+                    <div class="resultado-info">
+                        <h3><?php echo esc_html($resultado['titulo']); ?></h3>
+                        <p><?php echo esc_html($resultado['tipo']); ?></p>
+                    </div>
                 </div>
-            </div>
+            </a>
         <?php
         }
     }
