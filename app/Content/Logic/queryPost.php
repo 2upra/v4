@@ -301,10 +301,14 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
     $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
     if (!empty($filtrosUsuario) && is_array($filtrosUsuario)) {
         if (!in_array($filtroTiempo, [2, 3])) {
+            error_log("[ordenamiento] Filtro de tiempo no aplicado. Filtro tiempo: " . $filtroTiempo . ". Usuario: " . $usuarioActual);
             return $query_args;
         }
+    } else {
+        error_log("[ordenamiento] Filtros de usuario vacíos o no válidos. Usuario: " . $usuarioActual);
     }
 
+    error_log("[ordenamiento] aplicando ordenamiento");
     try {
         global $wpdb;
         if (!$wpdb) {
@@ -320,12 +324,14 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
 
         switch ($filtroTiempo) {
             case 1:
+                error_log("[ordenamiento] caso reciente!!");
                 $query_args['orderby'] = 'date';
                 $query_args['order'] = 'DESC';
                 break;
 
             case 2: // Top semanal
             case 3: // Top mensual
+                error_log("[ordenamiento] caso mensual!!");
                 $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
 
                 $sql = "
