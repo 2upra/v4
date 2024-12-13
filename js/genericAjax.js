@@ -1159,7 +1159,7 @@ function filtrosPost() {
             console.error('Error al restablecer los filtros.');
         }
     });
-
+    window.recargarFiltros = cargarFiltrosGuardados;
     cargarFiltrosGuardados();
 }
 
