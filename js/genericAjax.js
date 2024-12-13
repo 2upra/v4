@@ -750,7 +750,6 @@ function inicializarCambiarImagen() {
     });
 }
 
-
 async function establecerFiltros() {
     console.log('establecerFiltros: Inicio');
     try {
@@ -762,7 +761,7 @@ async function establecerFiltros() {
             if (typeof filtroPost === 'string') {
                 try {
                     // Usar PHPUnserialize.unserialize directamente si es una cadena
-                    filtroPost = PHPUnserialize.unserialize(filtroPost); 
+                    filtroPost = PHPUnserialize.unserialize(filtroPost);
                 } catch (error) {
                     console.error('establecerFiltros: Error al deserializar filtroPost', error);
                     filtroPost = {};
@@ -837,7 +836,7 @@ async function establecerFiltros() {
                             if (restablecerResponse.success) {
                                 alert(restablecerResponse.data.message);
                                 window.limpiarBusqueda(); // Llamar a limpiarBusqueda después del restablecimiento
-
+                                await window.recargarFiltros();
                                 if (botonPostRestablecer) {
                                     botonPostRestablecer.style.display = 'none';
                                     console.log('establecerFiltros: Ocultando botonPostRestablecer tras restablecer');
@@ -1061,7 +1060,8 @@ function filtrosPost() {
     let filtrosActivos = [];
 
     function cargarFiltrosGuardados() {
-        return new Promise(async (resolve) => { // Devuelve una Promesa
+        return new Promise(async resolve => {
+            // Devuelve una Promesa
             try {
                 const respuesta = await enviarAjax('obtenerFiltros');
                 console.log('Respuesta de obtenerFiltros:', respuesta);
