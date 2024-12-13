@@ -750,6 +750,7 @@ function inicializarCambiarImagen() {
     });
 }
 
+
 async function establecerFiltros() {
     console.log('establecerFiltros: Inicio');
     try {
@@ -761,7 +762,7 @@ async function establecerFiltros() {
             if (typeof filtroPost === 'string') {
                 try {
                     // Usar PHPUnserialize.unserialize directamente si es una cadena
-                    filtroPost = PHPUnserialize.unserialize(filtroPost);
+                    filtroPost = PHPUnserialize.unserialize(filtroPost); 
                 } catch (error) {
                     console.error('establecerFiltros: Error al deserializar filtroPost', error);
                     filtroPost = {};
@@ -836,10 +837,8 @@ async function establecerFiltros() {
                             if (restablecerResponse.success) {
                                 alert(restablecerResponse.data.message);
                                 window.limpiarBusqueda(); // Llamar a limpiarBusqueda después del restablecimiento
-                                const filtros = filtrosPost();
-
-                                // Llamar a la función para actualizar los filtros cuando sea necesario
-                                filtros.actualizarFiltrosDesdeGuardados();
+                                window.recargarFiltros();
+                                
                                 if (botonPostRestablecer) {
                                     botonPostRestablecer.style.display = 'none';
                                     console.log('establecerFiltros: Ocultando botonPostRestablecer tras restablecer');
@@ -1060,6 +1059,7 @@ function filtrosPost() {
     }
 
     let filtrosActivos = [];
+    const checkboxes = filtrosPost.querySelectorAll('input[type="checkbox"]');
 
     async function cargarFiltrosGuardados() {
         try {
@@ -1073,34 +1073,36 @@ function filtrosPost() {
                 filtrosActivos = [];
             }
 
-            actualizarFiltrosDesdeGuardados();
+            if (Array.isArray(filtrosActivos)) {
+                // No es necesario el timeout aquí, la asignación debe ser síncrona
+                filtrosActivos.forEach(filtro => {
+                    const checkbox = document.querySelector(`input[name="${filtro}"]`);
+                    if (checkbox) {
+                        checkbox.checked = true;
+                    } else {
+                        console.warn(`Advertencia: No se encontró el checkbox con el nombre '${filtro}'.`);
+                    }
+                });
+            }
         } catch (error) {
             console.error('Error al cargar filtros:', error);
             filtrosActivos = [];
         }
     }
 
-    function actualizarFiltrosDesdeGuardados() {
-        if (!Array.isArray(filtrosActivos)) {
-            console.warn("Advertencia: 'filtrosActivos' no es un array válido.");
-            return;
-        }
-
-        const checkboxes = filtrosPost.querySelectorAll('input[type="checkbox"]');
-        if (!checkboxes.length) {
-            console.error("Error: No se encontraron checkboxes dentro de 'filtrosPost'.");
-            return;
-        }
-
+    function reiniciarCheckboxes() {
         checkboxes.forEach(checkbox => {
-            const debeEstarActivo = filtrosActivos.includes(checkbox.name);
-            checkbox.checked = debeEstarActivo;
+            checkbox.checked = filtrosActivos.includes(checkbox.name);
         });
-
-        console.log('Filtros actualizados con los valores guardados:', filtrosActivos);
+    }
+    // Nueva función para recargar filtros
+    async function recargarFiltros() {
+        await cargarFiltrosGuardados();
+        reiniciarCheckboxes();
+        console.log('Filtros recargados y checkboxes reiniciados.');
     }
 
-    const checkboxes = filtrosPost.querySelectorAll('input[type="checkbox"]');
+    // Evento para cada checkbox
     if (!checkboxes.length) {
         console.error("Error: No se encontraron checkboxes dentro de 'filtrosPost'.");
         return;
@@ -1123,6 +1125,7 @@ function filtrosPost() {
         });
     });
 
+    // Evento para el botón de guardar
     const botonGuardar = filtrosPost.querySelector('.botonprincipal');
     if (!botonGuardar) {
         console.error("Error: No se encontró el botón con la clase 'botonprincipal'.");
@@ -1145,6 +1148,7 @@ function filtrosPost() {
         }
     });
 
+    // Evento para el botón de restablecer
     const botonRestablecer = filtrosPost.querySelector('.botonsecundario');
     if (!botonRestablecer) {
         console.error("Error: No se encontró el botón con la clase 'botonsecundario'.");
@@ -1170,13 +1174,12 @@ function filtrosPost() {
         }
     });
 
+    // Cargar los filtros al inicio
     cargarFiltrosGuardados();
-
-    // Exponer la función de actualización para uso externo
-    return {
-        actualizarFiltrosDesdeGuardados
-    };
+    window.recargarFiltros = recargarFiltros;
 }
+
+
 
 window.contadorDeSamples = () => {
     // Obtener el elemento donde se mostrarán los resultados
