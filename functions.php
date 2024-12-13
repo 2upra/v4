@@ -360,7 +360,7 @@ add_action('wp_enqueue_scripts', 'custom_deregister_jquery', 100);
 
 function scriptsOrdenados()
 {
-    $global_version = '0.2.113';
+    $global_version = '0.2.114';
     $dev_mode = defined('LOCAL') && LOCAL;
     //$error_log = [];
 
@@ -477,7 +477,7 @@ function scriptsOrdenados()
         wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', ['chart-js'], null, true);
         //$error_log[] = "Scripts chart-js y chartjs-adapter-date-fns encolados para usuario logueado.";
     }
-
+    
     wp_localize_script('ajaxPage', 'ajaxPage', ['logeado' => is_user_logged_in()]);
     //$error_log[] = "Script ajaxPage localizado.";
 
