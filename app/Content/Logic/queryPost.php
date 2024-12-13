@@ -162,9 +162,9 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
         $query_args['author'] = $usuarioActual;
     }
     
-    /* if ($filtro === 'colecciones' && is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
+    if ($filtro === 'colecciones' && is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
        $query_args['author'] = $usuarioActual;
-    } */
+    }
 
     $meta_query_conditions = [
         'rolasEliminadas' => fn() => $query_args['post_status'] = 'pending_deletion',
@@ -401,10 +401,10 @@ function aplicarFiltrosUsuario($query_args, $usuarioActual)
     $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
 
     //guardarLog("Filtros del usuario: " . print_r($filtrosUsuario, true));
-
+    return $query_args;
     if (empty($filtrosUsuario) || !is_array($filtrosUsuario)) {
         //guardarLog("No hay filtros aplicables o el formato es incorrecto.");
-        return $query_args;
+        
     }
 
     // Inicializar variables para mantener los IDs a incluir y excluir
