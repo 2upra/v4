@@ -969,36 +969,36 @@ async function cambiarFiltroTiempo() {
 }
 
 function filtrosPost() {
-    //console.log('Iniciando filtrosPost()');
-
     const filtrosPost = document.getElementById('filtrosPost');
     if (!filtrosPost) return;
 
-    let filtrosActivos = [];
+    let filtrosActivos = null; // Inicializar como null
 
     async function cargarFiltrosGuardados() {
-        //console.log('Cargando filtros guardados...');
         try {
             const respuesta = await enviarAjax('obtenerFiltros');
-            //console.log('Respuesta obtenerFiltros:', respuesta);
 
+            // Asegurar que filtrosActivos sea un array
             if (respuesta.success && respuesta.data && respuesta.data.filtros) {
-                filtrosActivos = respuesta.data.filtros;
-                //console.log('Filtros a activar:', filtrosActivos);
+                filtrosActivos = Array.isArray(respuesta.data.filtros) ? respuesta.data.filtros : [];
+            } else {
+                filtrosActivos = []; // Inicializar como array vacío si no hay datos
+            }
 
+            if (Array.isArray(filtrosActivos)) {
+                // Verificar que sea un array antes de usar forEach
                 setTimeout(() => {
                     filtrosActivos.forEach(filtro => {
                         const checkbox = document.querySelector(`input[name="${filtro}"]`);
-                        //console.log('Buscando checkbox para filtro:', filtro, 'Encontrado:', checkbox);
                         if (checkbox) {
                             checkbox.checked = true;
-                            //console.log('Checkbox marcado:', filtro);
                         }
                     });
                 }, 100);
             }
         } catch (error) {
             console.error('Error al cargar filtros:', error);
+            filtrosActivos = []; // Inicializar como array vacío en caso de error
         }
     }
 
@@ -1007,7 +1007,11 @@ function filtrosPost() {
 
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function () {
-            //console.log('Checkbox cambiado:', this.name, 'Estado:', this.checked);
+            // Verificar que filtrosActivos sea un array antes de usar includes y push
+            if (!Array.isArray(filtrosActivos)) {
+                filtrosActivos = [];
+            }
+
             if (this.checked) {
                 if (!filtrosActivos.includes(this.name)) {
                     filtrosActivos.push(this.name);
@@ -1015,7 +1019,6 @@ function filtrosPost() {
             } else {
                 filtrosActivos = filtrosActivos.filter(filtro => filtro !== this.name);
             }
-            //console.log('filtrosActivos actualizados:', filtrosActivos);
         });
     });
 
@@ -1023,8 +1026,10 @@ function filtrosPost() {
     if (!botonGuardar) return;
 
     botonGuardar.addEventListener('click', async function () {
+        // Asegurar que se envía un array al servidor
+        const filtrosParaGuardar = Array.isArray(filtrosActivos) ? filtrosActivos : [];
         const respuesta = await enviarAjax('guardarFiltroPost', {
-            filtros: JSON.stringify(filtrosActivos)
+            filtros: JSON.stringify(filtrosParaGuardar)
         });
 
         if (respuesta.success) {
@@ -1037,11 +1042,11 @@ function filtrosPost() {
     if (!botonRestablecer) return;
 
     botonRestablecer.addEventListener('click', async function () {
-        filtrosActivos = [];
+        filtrosActivos = []; // Restablecer a array vacío
         checkboxes.forEach(checkbox => (checkbox.checked = false));
 
         const respuesta = await enviarAjax('guardarFiltroPost', {
-            filtros: JSON.stringify([])
+            filtros: JSON.stringify([]) // Enviar array vacío
         });
 
         if (respuesta.success) {
@@ -1050,7 +1055,6 @@ function filtrosPost() {
         }
     });
 
-    // Iniciar la carga de filtros
     cargarFiltrosGuardados();
 }
 
