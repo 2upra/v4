@@ -750,10 +750,6 @@ function inicializarCambiarImagen() {
     });
 }
 
-/*
-establecerFiltros: Error al deserializar filtroPost ReferenceError: PHPUnserialize is not defined
-    at establecerFiltros (genericAjax.js?ver=0.2.113:765:21)
-*/
 async function establecerFiltros() {
     console.log('establecerFiltros: Inicio');
     try {
@@ -761,42 +757,40 @@ async function establecerFiltros() {
         console.log('establecerFiltros: Respuesta de obtenerFiltrosTotal', response);
         if (response.success) {
             let {filtroPost, filtroTiempo} = response.data;
-            // Asegurarse de que filtroPost sea un objeto
+
+            // Verificar si filtroPost es una cadena y tratar de deserializarla como JSON
             if (typeof filtroPost === 'string') {
                 try {
-                    // Usar PHPUnserialize.unserialize directamente si es una cadena
-                    filtroPost = PHPUnserialize.unserialize(filtroPost);
-                } catch (error) {
-                    console.error('establecerFiltros: Error al deserializar filtroPost', error);
-                    filtroPost = {};
-                }
-            } else if (typeof filtroPost === 'string') {
-                // Intenta analizar como JSON solo si no es un string serializado
-                try {
                     filtroPost = JSON.parse(filtroPost);
+                    console.log('establecerFiltros: filtroPost deserializado como JSON:', filtroPost);
                 } catch (error) {
                     console.error('establecerFiltros: Error al parsear filtroPost como JSON', error);
                     filtroPost = {};
                 }
             }
 
-            //Si filtroPost es un array, convertirlo a objeto
+            // Si filtroPost es un array (posiblemente datos serializados), convertirlo a un objeto
             if (Array.isArray(filtroPost)) {
                 const tempObj = {};
                 filtroPost.forEach(item => {
-                    tempObj[item] = true; // Puedes asignar cualquier valor, por ejemplo, true
+                    tempObj[item] = true; // Asignar un valor genérico
                 });
                 filtroPost = tempObj;
+                console.log('establecerFiltros: filtroPost convertido de array a objeto:', filtroPost);
+            }
+
+            // Asegurarse de que filtroPost sea un objeto
+            if (typeof filtroPost !== 'object' || filtroPost === null) {
+                filtroPost = {};
+                console.log('establecerFiltros: filtroPost no era un objeto válido, inicializado como objeto vacío');
             }
 
             const hayFiltrosActivados = filtroTiempo !== 0 || Object.keys(filtroPost).length > 0;
             console.log('establecerFiltros: Hay filtros activados:', hayFiltrosActivados);
+
             const botonRestablecer = document.querySelector('.restablecerBusqueda');
-            console.log('establecerFiltros: botonRestablecer:', botonRestablecer);
             const botonPostRestablecer = document.querySelector('.postRestablecer');
-            console.log('establecerFiltros: botonPostRestablecer:', botonPostRestablecer);
             const botonColeccionRestablecer = document.querySelector('.coleccionRestablecer');
-            console.log('establecerFiltros: botonColeccionRestablecer:', botonColeccionRestablecer);
 
             // Ocultar ambos botones por defecto
             if (botonPostRestablecer) {
@@ -831,7 +825,7 @@ async function establecerFiltros() {
                 if (botonRestablecer && !botonRestablecer.dataset.listenerAdded) {
                     console.log('establecerFiltros: Agregando event listener a botonRestablecer');
 
-                    // Función para restablecer filtros (se puede reutilizar)
+                    // Función para restablecer filtros
                     const restablecerFiltro = async function (data) {
                         try {
                             console.log('establecerFiltros: Enviando solicitud para restablecer filtros', data);
