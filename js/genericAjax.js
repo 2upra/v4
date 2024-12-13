@@ -1021,7 +1021,7 @@ async function cambiarFiltroTiempo() {
                 button.classList.add('filtroSelec');
                 await actualizarBotonFiltro(); // Actualizar el botón después de cambiar el filtro
                 window.limpiarBusqueda();
-                establecerFiltros();
+                //establecerFiltros();
             } else {
                 console.error('Error al guardar el filtro:', resultado.message);
             }
@@ -1131,7 +1131,7 @@ function filtrosPost() {
 
         if (respuesta.success) {
             window.limpiarBusqueda();
-            establecerFiltros();
+            //establecerFiltros();
         } else {
             console.error('Error al guardar los filtros.');
         }
