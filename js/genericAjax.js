@@ -751,65 +751,65 @@ function inicializarCambiarImagen() {
 }
 
 async function establecerFiltros() {
-    //console.log('establecerFiltros: Inicio');
+    console.log('establecerFiltros: Inicio');
     try {
         const response = await enviarAjax('obtenerFiltrosTotal');
-        //console.log('establecerFiltros: Respuesta de obtenerFiltrosTotal', response);
+        console.log('establecerFiltros: Respuesta de obtenerFiltrosTotal', response);
         if (response.success) {
             const {filtroPost, filtroTiempo} = response.data;
             const hayFiltrosActivados = filtroTiempo !== 0 || filtroPost !== 'a:0:{}';
-            //console.log('establecerFiltros: Hay filtros activados:', hayFiltrosActivados);
+            console.log('establecerFiltros: Hay filtros activados:', hayFiltrosActivados);
             const botonRestablecer = document.querySelector('.restablecerBusqueda');
-            //console.log('establecerFiltros: botonRestablecer:', botonRestablecer);
+            console.log('establecerFiltros: botonRestablecer:', botonRestablecer);
             const botonPostRestablecer = document.querySelector('.postRestablecer');
-            //console.log('establecerFiltros: botonPostRestablecer:', botonPostRestablecer);
+            console.log('establecerFiltros: botonPostRestablecer:', botonPostRestablecer);
             const botonColeccionRestablecer = document.querySelector('.coleccionRestablecer');
-            //console.log('establecerFiltros: botonColeccionRestablecer:', botonColeccionRestablecer);
+            console.log('establecerFiltros: botonColeccionRestablecer:', botonColeccionRestablecer);
 
             // Ocultar ambos botones por defecto
             if (botonPostRestablecer) {
                 botonPostRestablecer.style.display = 'none';
-                //console.log('establecerFiltros: Ocultando botonPostRestablecer');
+                console.log('establecerFiltros: Ocultando botonPostRestablecer');
             }
             if (botonColeccionRestablecer) {
                 botonColeccionRestablecer.style.display = 'none';
-                //console.log('establecerFiltros: Ocultando botonColeccionRestablecer');
+                console.log('establecerFiltros: Ocultando botonColeccionRestablecer');
             }
 
             if (hayFiltrosActivados) {
-                //console.log('establecerFiltros: Hay filtros activos, procesando...');
+                console.log('establecerFiltros: Hay filtros activos, procesando...');
                 try {
                     let filtroPostObj;
                     if (typeof filtroPost === 'string') {
                         try {
                             // Intentamos parsear el JSON directamente
                             filtroPostObj = JSON.parse(filtroPost);
-                            //console.log('establecerFiltros: filtroPost parseado como JSON', filtroPostObj);
+                            console.log('establecerFiltros: filtroPost parseado como JSON', filtroPostObj);
                         } catch (error) {
                             console.error('establecerFiltros: Error al parsear filtroPost como JSON', error);
                             filtroPostObj = {};
                         }
                     } else {
                         filtroPostObj = {};
-                        //console.log('establecerFiltros: filtroPost no es string', filtroPostObj);
+                        console.log('establecerFiltros: filtroPost no es string', filtroPostObj);
                     }
 
-                    //console.log('establecerFiltros: filtroPostObj', filtroPostObj);
+                    console.log('establecerFiltros: filtroPostObj', filtroPostObj);
 
                     const filtrosPost = ['misPost', 'mostrarMeGustan', 'ocultarEnColeccion', 'ocultarDescargados'];
                     const hayFiltrosPost = Array.isArray(filtroPostObj) ? filtroPostObj.some(filtro => filtrosPost.includes(filtro)) : Object.keys(filtroPostObj).some(filtro => filtrosPost.includes(filtro));
-                    //console.log('establecerFiltros: hayFiltrosPost', hayFiltrosPost);
+                    console.log('establecerFiltros: hayFiltrosPost', hayFiltrosPost);
                     const hayFiltroColeccion = Array.isArray(filtroPostObj) ? filtroPostObj.includes('misColecciones') : Object.keys(filtroPostObj).includes('misColecciones');
-                    //console.log('establecerFiltros: hayFiltroColeccion', hayFiltroColeccion);
+                    console.log('establecerFiltros: hayFiltroColeccion', hayFiltroColeccion);
 
                     // Mostrar el botón correspondiente si es necesario
                     if (hayFiltrosPost && botonPostRestablecer) {
                         botonPostRestablecer.style.display = 'block';
-                        //console.log('establecerFiltros: Mostrando botonPostRestablecer');
+                        console.log('establecerFiltros: Mostrando botonPostRestablecer');
                     }
                     if (hayFiltroColeccion && botonColeccionRestablecer) {
                         botonColeccionRestablecer.style.display = 'block';
-                        //console.log('establecerFiltros: Mostrando botonColeccionRestablecer');
+                        console.log('establecerFiltros: Mostrando botonColeccionRestablecer');
                     }
                 } catch (e) {
                     console.error('establecerFiltros: Error al parsear filtroPost o encontrar filtros', e);
@@ -817,24 +817,24 @@ async function establecerFiltros() {
 
                 // Evento para restablecer filtros
                 if (botonRestablecer && !botonRestablecer.dataset.listenerAdded) {
-                    //console.log('establecerFiltros: Agregando event listener a botonRestablecer');
+                    console.log('establecerFiltros: Agregando event listener a botonRestablecer');
 
                     // Función para restablecer filtros (se puede reutilizar)
                     const restablecerFiltro = async function (data) {
                         try {
-                            //console.log('establecerFiltros: Enviando solicitud para restablecer filtros', data);
+                            console.log('establecerFiltros: Enviando solicitud para restablecer filtros', data);
                             const restablecerResponse = await enviarAjax('restablecerFiltros', data);
-                            //console.log('establecerFiltros: Respuesta de restablecerFiltros', restablecerResponse);
+                            console.log('establecerFiltros: Respuesta de restablecerFiltros', restablecerResponse);
                             if (restablecerResponse.success) {
                                 alert(restablecerResponse.data.message);
                                 window.limpiarBusqueda(); // Llamar a limpiarBusqueda después del restablecimiento
                                 if (botonPostRestablecer) {
                                     botonPostRestablecer.style.display = 'none';
-                                    //console.log('establecerFiltros: Ocultando botonPostRestablecer tras restablecer');
+                                    console.log('establecerFiltros: Ocultando botonPostRestablecer tras restablecer');
                                 }
                                 if (botonColeccionRestablecer) {
                                     botonColeccionRestablecer.style.display = 'none';
-                                    //console.log('establecerFiltros: Ocultando botonColeccionRestablecer tras restablecer');
+                                    console.log('establecerFiltros: Ocultando botonColeccionRestablecer tras restablecer');
                                 }
                             } else {
                                 alert('Error: ' + (restablecerResponse.data?.message || 'No se pudo restablecer'));
@@ -847,7 +847,7 @@ async function establecerFiltros() {
 
                     // Evento click en el botón principal
                     botonRestablecer.addEventListener('click', async function () {
-                        //console.log('establecerFiltros: Evento click en botonRestablecer');
+                        console.log('establecerFiltros: Evento click en botonRestablecer');
 
                         let data = {};
 
@@ -858,7 +858,7 @@ async function establecerFiltros() {
                     // Evento click para botón de post
                     if (botonPostRestablecer) {
                         botonPostRestablecer.addEventListener('click', async function () {
-                            //console.log('establecerFiltros: Evento click en botonPostRestablecer');
+                            console.log('establecerFiltros: Evento click en botonPostRestablecer');
                             await restablecerFiltro({post: true});
                         });
                     }
@@ -866,13 +866,13 @@ async function establecerFiltros() {
                     // Evento click para botón de coleccion
                     if (botonColeccionRestablecer) {
                         botonColeccionRestablecer.addEventListener('click', async function () {
-                            //console.log('establecerFiltros: Evento click en botonColeccionRestablecer');
+                            console.log('establecerFiltros: Evento click en botonColeccionRestablecer');
                             await restablecerFiltro({coleccion: true});
                         });
                     }
 
                     botonRestablecer.dataset.listenerAdded = true;
-                    //console.log('establecerFiltros: Listener agregado');
+                    console.log('establecerFiltros: Listener agregado');
                 }
             }
         } else {
@@ -881,7 +881,7 @@ async function establecerFiltros() {
     } catch (error) {
         console.error('establecerFiltros: Error en AJAX:', error);
     }
-    //console.log('establecerFiltros: Fin');
+    console.log('establecerFiltros: Fin');
 }
 /*
 //no se puede cambiar
