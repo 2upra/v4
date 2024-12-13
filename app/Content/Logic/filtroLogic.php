@@ -27,11 +27,13 @@ function restablecerFiltros()
     error_log('restablecerFiltros: Inicio');
     error_log('restablecerFiltros: $_POST recibido: ' . print_r($_POST, true));
 
+    // Validar si el usuario está autenticado
     if (!is_user_logged_in()) {
         error_log('restablecerFiltros: Usuario no autenticado');
         wp_send_json_error('Usuario no autenticado');
     }
 
+    // Obtener el ID del usuario actual
     $user_id = get_current_user_id();
     error_log('restablecerFiltros: User ID: ' . $user_id);
 
@@ -39,19 +41,19 @@ function restablecerFiltros()
     $filtroPost = get_user_meta($user_id, 'filtroPost', true);
     error_log('restablecerFiltros: filtroPost obtenido: ' . print_r($filtroPost, true));
 
-    // Manejo de la variable $filtroPost y su conversión a array
+    // Asegurarse de que filtroPost sea un array válido
     if (is_string($filtroPost)) {
         error_log('restablecerFiltros: filtroPost es string, intentando unserializar');
         $filtroPost_array = @unserialize($filtroPost);
         if ($filtroPost_array === false && $filtroPost !== 'b:0;') {
             error_log('restablecerFiltros: Error al unserializar filtroPost. Valor: ' . $filtroPost);
-            $filtroPost_array = []; // Inicializar como array vacío para evitar errores posteriores
+            $filtroPost_array = [];
         } else {
             error_log('restablecerFiltros: unserializado exitoso: ' . print_r($filtroPost_array, true));
         }
     } elseif (is_array($filtroPost)) {
         $filtroPost_array = $filtroPost;
-        error_log('restablecerFiltros: filtroPost es un array directamente');
+        error_log('restablecerFiltros: filtroPost ya es un array');
     } else {
         $filtroPost_array = [];
         error_log('restablecerFiltros: filtroPost no es string ni array, inicializado como vacío');
@@ -59,7 +61,7 @@ function restablecerFiltros()
 
     error_log('restablecerFiltros: filtroPost después de manejo: ' . print_r($filtroPost_array, true));
 
-    // Procesamiento de filtros de post
+    // Procesar el filtro de "post"
     if (isset($_POST['post']) && $_POST['post'] === 'true') {
         error_log('restablecerFiltros: $_POST[post] es true');
         $filtros_a_eliminar = ['misPost', 'mostrarMeGustan', 'ocultarEnColeccion', 'ocultarDescargados'];
@@ -71,7 +73,7 @@ function restablecerFiltros()
         }
     }
 
-    // Procesamiento de filtros de coleccion
+    // Procesar el filtro de "coleccion"
     if (isset($_POST['coleccion']) && $_POST['coleccion'] === 'true') {
         error_log('restablecerFiltros: $_POST[coleccion] es true');
         if (is_array($filtroPost_array)) {
@@ -81,22 +83,21 @@ function restablecerFiltros()
         }
     }
 
-    // Actualización o eliminación de la meta data
+    // Guardar o eliminar la meta de usuario según el contenido del array
     if (empty($filtroPost_array)) {
         delete_user_meta($user_id, 'filtroPost');
         error_log('restablecerFiltros: filtroPost_array vacío, eliminando meta filtroPost');
     } else {
-        // Serializar el array normalmente
-        $serialized_filtroPost = serialize($filtroPost_array);
-        error_log('restablecerFiltros: filtroPost_array no vacío, serializando: ' . print_r($serialized_filtroPost, true));
-        update_user_meta($user_id, 'filtroPost', $serialized_filtroPost);
-        error_log('restablecerFiltros: filtroPost actualizado con: ' . print_r($serialized_filtroPost, true));
+        // Guardar el array directamente, sin serializar
+        update_user_meta($user_id, 'filtroPost', $filtroPost_array);
+        error_log('restablecerFiltros: filtroPost_array no vacío, actualizado: ' . print_r($filtroPost_array, true));
     }
 
-    // Eliminación de filtro de tiempo
+    // Eliminar el filtro de tiempo
     delete_user_meta($user_id, 'filtroTiempo');
     error_log('restablecerFiltros: filtroTiempo eliminado');
 
+    // Respuesta de éxito
     wp_send_json_success(['message' => 'Filtros restablecidos']);
     error_log('restablecerFiltros: Fin');
 }
