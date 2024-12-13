@@ -54,7 +54,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             'idea' => null,
             'user_id' => null,
             'identifier' => '',
-            'tipoUsuario' => '', 
+            'tipoUsuario' => '',
         ];
 
         if (!$is_ajax && isset($_GET['busqueda'])) {
@@ -102,7 +102,7 @@ function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsu
         $isAdmin = current_user_can('administrator');
 
         if (!$is_authenticated) {
-             $usuarioActual = $FALLBACK_USER_ID;
+            $usuarioActual = $FALLBACK_USER_ID;
         }
 
         $identifier = isset($args['identifier']) ? $args['identifier'] : '';
@@ -128,12 +128,8 @@ function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsu
 
         $filtroTiempo = (int)get_user_meta($usuarioActual, 'filtroTiempo', true);
 
-        if ($filtroTiempo === false) {
-        }
-
         $query_args = construirQueryArgs($args, $paged, $usuarioActual, $identifier, $isAdmin, $posts, $filtroTiempo, $similarTo, $tipoUsuario);
 
-        //Si el tipo de publicación es 'social_post' y el filtro es 'sampleList' o 'sample', aplica filtros de usuario a la consulta si el usuario no es 'Fan'.
         if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
             if ($tipoUsuario !== 'Fan') {
                 $query_args = aplicarFiltrosUsuario($query_args, $usuarioActual);
@@ -144,6 +140,48 @@ function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsu
 
         return $query_args;
     } catch (Exception $e) {
+        return false;
+    }
+}
+
+
+function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $isAdmin, $posts, $filtroTiempo, $similarTo, $tipoUsuario = null)
+{
+    try {
+        global $wpdb;
+        if (!$wpdb) {
+
+            return false;
+        }
+        error_log("[construirQueryArgs] construirQueryArgs!!");
+
+        $query_args = [
+            'post_type' => $args['post_type'],
+            'posts_per_page' => $posts,
+            'paged' => $paged,
+            'ignore_sticky_posts' => true,
+            'suppress_filters' => false,
+        ];
+
+        if (!empty($identifier)) {
+            $query_args = prefiltrarIdentifier($identifier, $query_args);
+            if (!$query_args) {
+                //error_log("[construirQueryArgs] Error: Falló el filtrado por identifier: " . $identifier);
+            }
+        }
+
+        // Only apply ordenamiento if post_type is social_post AND filtro is not 'rola'
+        if ($args['post_type'] === 'social_post' && (!isset($args['filtro']) || $args['filtro'] !== 'rola')) {
+            error_log("[construirQueryArgs] ordenamiento!!");
+            $query_args = ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
+            if (!$query_args) {
+                //error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
+            }
+        }
+
+        return $query_args;
+    } catch (Exception $e) {
+        //error_log("[construirQueryArgs] Error crítico: " . $e->getMessage());
         return false;
     }
 }
@@ -161,9 +199,9 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
     if ($filtro === 'sampleList' && is_array($filtrosUsuario) && in_array('misPost', $filtrosUsuario)) {
         $query_args['author'] = $usuarioActual;
     }
-    
+
     if ($filtro === 'colecciones' && is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
-       $query_args['author'] = $usuarioActual;
+        $query_args['author'] = $usuarioActual;
     }
 
     $meta_query_conditions = [
@@ -194,7 +232,7 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
                 ]);
             }
         },
-         'sampleList' => [
+        'sampleList' => [
             ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
             ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
         ],
@@ -213,52 +251,14 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
         $result = $meta_query_conditions[$filtro];
 
         if (is_callable($result)) {
-             $result();
+            $result();
         } else {
-             $query_args['post_status'] = 'publish';
-             $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], $result);
+            $query_args['post_status'] = 'publish';
+            $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], $result);
         }
     }
 
     return $query_args;
-}
-function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $isAdmin, $posts, $filtroTiempo, $similarTo, $tipoUsuario = null)
-{
-    try {
-        global $wpdb;
-        if (!$wpdb) {
-            //error_log("[construirQueryArgs] Error crítico: No se pudo acceder a la base de datos wpdb");
-            return false;
-        }
-
-        $query_args = [
-            'post_type' => $args['post_type'],
-            'posts_per_page' => $posts,
-            'paged' => $paged,
-            'ignore_sticky_posts' => true,
-            'suppress_filters' => false,
-        ];
-
-        if (!empty($identifier)) {
-            $query_args = prefiltrarIdentifier($identifier, $query_args);
-            if (!$query_args) {
-                //error_log("[construirQueryArgs] Error: Falló el filtrado por identifier: " . $identifier);
-            }
-        }
-
-        // Only apply ordenamiento if post_type is social_post AND filtro is not 'rola'
-        if ($args['post_type'] === 'social_post' && (!isset($args['filtro']) || $args['filtro'] !== 'rola')) {
-            $query_args = ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
-            if (!$query_args) {
-                //error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
-            }
-        }
-
-        return $query_args;
-    } catch (Exception $e) {
-        //error_log("[construirQueryArgs] Error crítico: " . $e->getMessage());
-        return false;
-    }
 }
 
 function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario = null)
@@ -549,7 +549,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     try {
         $query = new WP_Query($query_args);
         if (!is_a($query, 'WP_Query') || !is_object($query) || !method_exists($query, 'have_posts')) {
-           return '';
+            return '';
         }
     } catch (Exception $e) {
         return '';
