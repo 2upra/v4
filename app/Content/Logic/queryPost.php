@@ -7,7 +7,7 @@ function publicacionAjax()
     $tipoPost = isset($_POST['posttype']) ? sanitize_text_field($_POST['posttype']) : '';
     $data_identifier = isset($_POST['identifier']) ? sanitize_text_field($_POST['identifier']) : '';
     $tab_id = isset($_POST['tab_id']) ? sanitize_text_field($_POST['tab_id']) : '';
-    $user_id = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
+    $userId = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
     $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas'])
         ? array_map('intval', $_POST['cargadas'])
         : array();
@@ -22,7 +22,7 @@ function publicacionAjax()
             'filtro' => $filtro,
             'post_type' => $tipoPost,
             'tab_id' => $tab_id,
-            'user_id' => $user_id,
+            'user_id' => $userId,
             'identifier' => $data_identifier,
             'exclude' => $publicacionesCargadas,
             'similar_to' => $similar_to,
@@ -40,8 +40,8 @@ add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
 function publicaciones($args = [], $is_ajax = false, $paged = 1)
 {
     try {
-        //$user_id = obtenerUserId($is_ajax);
-        $current_user_id = get_current_user_id();
+        //$userId = obtenerUserId($is_ajax);
+        $usuarioActual = get_current_user_id();
 
         $defaults = [
             'filtro' => '',
@@ -62,11 +62,11 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             //error_log("[publicaciones] Identifier from URL: " . $args['identifier']);
         }
 
-        $user_id = isset($args['user_id']) ? $args['user_id'] : '';
+        $userId = isset($args['user_id']) ? $args['user_id'] : '';
 
         $tipoUsuario = isset($args['tipoUsuario']) && !empty($args['tipoUsuario'])
             ? $args['tipoUsuario']
-            : get_user_meta($current_user_id, 'tipoUsuario', true);
+            : get_user_meta($usuarioActual, 'tipoUsuario', true);
 
         $args = array_merge($defaults, $args);
 
@@ -86,7 +86,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             }
         } else {
             //error_log("[publicaciones] ejecutando configuracionQueryArgs " . $args['identifier']);
-            $query_args = configuracionQueryArgs($args, $paged, $user_id, $current_user_id, $tipoUsuario);
+            $query_args = configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsuario);
         }
 
         if (isset($query_args['post__not_in'])) {
@@ -107,30 +107,24 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
     }
 }
 
-function configuracionQueryArgs($args, $paged, $user_id, $current_user_id, $tipoUsuario)
+function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsuario)
 {
     try {
         $FALLBACK_USER_ID = 44;
-        $is_authenticated = $current_user_id && $current_user_id != 0;
+        $is_authenticated = $usuarioActual && $usuarioActual != 0;
         $is_admin = current_user_can('administrator');
 
         // if (!$is_authenticated) {
-        //     $current_user_id = $FALLBACK_USER_ID;
+        //     $usuarioActual = $FALLBACK_USER_ID;
         // }
 
-        // Moviendo la asignación de $identifier antes del condicional $user_id
+        // Moviendo la asignación de $identifier antes del condicional $userId
         $identifier = isset($args['identifier']) ? $args['identifier'] : '';
 
         //error_log("[configuracionQueryArgs] Identifier: " . $identifier);
-        //error_log("[configuracionQueryArgs] user_id: " . $user_id);
+        //error_log("[configuracionQueryArgs] user_id: " . $userId);
 
-        /*
-        [09-Dec-2024 08:59:50 UTC] [configuracionQueryArgs] Identifier: test2
-        [09-Dec-2024 08:59:50 UTC] [configuracionQueryArgs] user_id: 
-        [09-Dec-2024 08:59:50 UTC] [configuracionQueryArgs] User ID found, returning early.
-        */
-
-        if (!empty($user_id)) {
+        if (!empty($userId)) {
             $query_args = [
                 'post_type' => $args['post_type'],
                 'posts_per_page' => $args['posts'],
@@ -139,10 +133,10 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id, $tipo
                 'suppress_filters' => false,
                 'orderby' => 'date',
                 'order' => 'DESC',
-                'author' => $user_id,
+                'author' => $userId,
             ];
 
-            $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id);
+            $query_args = aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId);
             //error_log("[configuracionQueryArgs] User ID found, returning early.");
             return $query_args;
         }
@@ -152,29 +146,29 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id, $tipo
         $posts = $args['posts'];
         $similar_to = $args['similar_to'] ?? null;
 
-        // Usa $current_user_id directamente, no necesitas $is_authenticated aquí para obtener el meta
-        $filtroTiempo = (int)get_user_meta($current_user_id, 'filtroTiempo', true);
+        // Usa $usuarioActual directamente, no necesitas $is_authenticated aquí para obtener el meta
+        $filtroTiempo = (int)get_user_meta($usuarioActual, 'filtroTiempo', true);
 
         if ($filtroTiempo === false) {
-            //error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $current_user_id);
+            //error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $usuarioActual);
         }
 
 
 
         //error_log("[configuracionQueryArgs] Calling construirQueryArgs with identifier: " . $identifier);
-        $query_args = construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario);
+        $query_args = construirQueryArgs($args, $paged, $usuarioActual, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario);
         //error_log("[configuracionQueryArgs] query args built: " . print_r($query_args, true));
 
         if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
             //error_log("[configuracionQueryArgs] Applying user-specific filters if not 'Fan'.");
             if ($tipoUsuario !== 'Fan') {
-                $query_args = aplicarFiltrosUsuario($query_args, $current_user_id);
+                $query_args = aplicarFiltrosUsuario($query_args, $usuarioActual);
                 //error_log("[configuracionQueryArgs] User-specific filters applied.");
             }
         }
 
         //error_log("[configuracionQueryArgs] Applying global filters.");
-        $query_args = aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id, $tipoUsuario);
+        $query_args = aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoUsuario);
         //error_log("[configuracionQueryArgs] Global filters applied: " . print_r($query_args, true));
 
         return $query_args;
@@ -184,55 +178,10 @@ function configuracionQueryArgs($args, $paged, $user_id, $current_user_id, $tipo
     }
 }
 
-
-function manejarColeccion($args, $paged)
-{
-    // Crear una clave de caché única basada en la colección y la paginación
-    $cache_key = 'coleccion_' . $args['colec'] . '_paged_' . $paged;
-
-    // Intentar obtener datos desde la caché
-    $cached_data = obtenerCache($cache_key);
-    if ($cached_data !== false) {
-        guardarLog("Cargando colección desde la caché para colección {$args['colec']}");
-        return $cached_data;
-    }
-
-    guardarLog("Cargando posts de la colección desde la base de datos para colección {$args['colec']}");
-    $samples_meta = get_post_meta($args['colec'], 'samples', true);
-    if (!is_array($samples_meta)) {
-        $samples_meta = maybe_unserialize($samples_meta);
-    }
-
-    if (is_array($samples_meta)) {
-        $query_args = [
-            'post_type' => $args['post_type'],
-            'post__in' => array_values($samples_meta),
-            'orderby' => 'post__in',
-            'posts_per_page' => 12,
-            'paged' => $paged,
-        ];
-
-        // Guardamos la clave de la caché en una lista asociada a la colección, para facilitar su eliminación
-        $cache_master_key = 'cache_colec_' . $args['colec'];
-        $cache_keys = obtenerCache($cache_master_key) ?: [];
-        $cache_keys[] = $cache_key;
-        guardarCache($cache_master_key, $cache_keys, 86400); // Guardar lista de claves de caché
-
-        // Guardar los resultados en la caché con una expiración de 1 día
-        guardarCache($cache_key, $query_args, 86400);
-
-        return $query_args;
-    } else {
-        //error_log("[manejarColeccion] El meta 'samples' no es un array válido.");
-        return false;
-    }
-}
-
-
 function procesarPublicaciones($query_args, $args, $is_ajax)
 {
     ob_start();
-    $user_id = get_current_user_id();
+    $userId = get_current_user_id();
 
     // Verificar que query_args no esté vacío
     if (empty($query_args)) {
@@ -307,17 +256,17 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
     return ob_get_clean();
 }
 
-function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id, $tipoUsuario = null)
+function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoUsuario = null)
 {
-    if (!empty($user_id)) {
-        $query_args['author'] = $user_id;
+    if (!empty($userId)) {
+        $query_args['author'] = $userId;
         return $query_args;
     }
 
     // Obtener filtros personalizados del usuario actual
-    $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
+    $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
     if (is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
-        $query_args['author'] = $current_user_id;
+        $query_args['author'] = $usuarioActual;
         return $query_args;
     }
 
@@ -329,7 +278,7 @@ function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id, $ti
         'rolasEliminadas' => fn() => $query_args['post_status'] = 'pending_deletion',
         'rolasRechazadas' => fn() => $query_args['post_status'] = 'rejected',
         'rolasPendiente' => fn() => $query_args['post_status'] = 'pending',
-        'likesRolas' => fn() => ($userLikedPostIds = obtenerLikesDelUsuario($current_user_id))
+        'likesRolas' => fn() => ($userLikedPostIds = obtenerLikesDelUsuario($usuarioActual))
             ? $query_args['post__in'] = $userLikedPostIds
             : $query_args['posts_per_page'] = 0,
         'nada' => fn() => $query_args['post_status'] = 'publish',
@@ -388,7 +337,7 @@ function aplicarFiltroGlobal($query_args, $args, $current_user_id, $user_id, $ti
 
     return $query_args;
 }
-function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario = null)
+function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario = null)
 {
     try {
         global $wpdb;
@@ -414,7 +363,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
 
         // Only apply ordenamientoQuery if post_type is social_post AND filtro is not 'rola'
         if ($args['post_type'] === 'social_post' && (!isset($args['filtro']) || $args['filtro'] !== 'rola')) {
-            $query_args = ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts, $tipoUsuario);
+            $query_args = ordenamientoQuery($query_args, $filtroTiempo, $usuarioActual, $identifier, $similar_to, $paged, $is_admin, $posts, $tipoUsuario);
             if (!$query_args) {
                 //error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
             }
@@ -427,7 +376,7 @@ function construirQueryArgs($args, $paged, $current_user_id, $identifier, $is_ad
     }
 }
 
-function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts, $tipoUsuario = null)
+function ordenamientoQuery($query_args, $filtroTiempo, $usuarioActual, $identifier, $similar_to, $paged, $is_admin, $posts, $tipoUsuario = null)
 {
     // Si el tipo de usuario es "Fan", forzamos el caso default
     if ($tipoUsuario === 'Fan') {
@@ -438,7 +387,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
             }
 
             // Caso default: Feed personalizado
-            $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts, $tipoUsuario);
+            $feed_result = obtenerFeedPersonalizado($usuarioActual, $identifier, $similar_to, $paged, $is_admin, $posts, $tipoUsuario);
 
             if (!empty($feed_result['post_ids'])) {
                 $query_args['post__in'] = $feed_result['post_ids'];
@@ -464,7 +413,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
     }
 
     // Continuar con el comportamiento normal si no es "Fan"
-    $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
+    $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
     if (!empty($filtrosUsuario) && is_array($filtrosUsuario)) {
         if (!in_array($filtroTiempo, [2, 3])) {
             return $query_args;
@@ -533,7 +482,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
                 //error_log("[ordenamientoQuery] Identifier: " . $identifier);
 
 
-                $feed_result = obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $paged, $is_admin, $posts);
+                $feed_result = obtenerFeedPersonalizado($usuarioActual, $identifier, $similar_to, $paged, $is_admin, $posts);
 
                 if (!empty($feed_result['post_ids'])) {
                     $query_args['post__in'] = $feed_result['post_ids'];
@@ -565,10 +514,10 @@ function ordenamientoQuery($query_args, $filtroTiempo, $current_user_id, $identi
 }
 
 
-function aplicarFiltrosUsuario($query_args, $current_user_id)
+function aplicarFiltrosUsuario($query_args, $usuarioActual)
 {
-    //guardarLog("Iniciando aplicarFiltrosUsuario para el usuario $current_user_id");
-    $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
+    //guardarLog("Iniciando aplicarFiltrosUsuario para el usuario $usuarioActual");
+    $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
 
     //guardarLog("Filtros del usuario: " . print_r($filtrosUsuario, true));
 
@@ -583,7 +532,7 @@ function aplicarFiltrosUsuario($query_args, $current_user_id)
 
     // Filtro para ocultar posts descargados
     if (in_array('ocultarDescargados', $filtrosUsuario)) {
-        $descargasAnteriores = get_user_meta($current_user_id, 'descargas', true) ?: [];
+        $descargasAnteriores = get_user_meta($usuarioActual, 'descargas', true) ?: [];
         //guardarLog("Descargas anteriores: " . print_r($descargasAnteriores, true));
         if (!empty($descargasAnteriores)) {
             $post_not_in = array_merge(
@@ -596,7 +545,7 @@ function aplicarFiltrosUsuario($query_args, $current_user_id)
 
     // Filtro para ocultar posts en colección
     if (in_array('ocultarEnColeccion', $filtrosUsuario)) {
-        $samplesGuardados = get_user_meta($current_user_id, 'samplesGuardados', true) ?: [];
+        $samplesGuardados = get_user_meta($usuarioActual, 'samplesGuardados', true) ?: [];
         //guardarLog("Samples guardados: " . print_r($samplesGuardados, true));
         if (!empty($samplesGuardados)) {
             $guardadosIDs = array_keys($samplesGuardados);
@@ -610,7 +559,7 @@ function aplicarFiltrosUsuario($query_args, $current_user_id)
 
     // Filtro para mostrar solo los posts que le han gustado al usuario
     if (in_array('mostrarMeGustan', $filtrosUsuario)) {
-        $userLikedPostIds = obtenerLikesDelUsuario($current_user_id);
+        $userLikedPostIds = obtenerLikesDelUsuario($usuarioActual);
         //guardarLog("Post IDs que le gustan al usuario: " . print_r($userLikedPostIds, true));
         if (!empty($userLikedPostIds)) {
             if (!empty($post_in)) {
