@@ -779,27 +779,13 @@ async function establecerFiltros() {
             if (hayFiltrosActivados) {
                 console.log('establecerFiltros: Hay filtros activos, procesando...');
                 try {
-                    let filtroPostObj;
-                    if (typeof filtroPost === 'string') {
-                        try {
-                            // Intentamos parsear el JSON directamente
-                            filtroPostObj = JSON.parse(filtroPost);
-                            console.log('establecerFiltros: filtroPost parseado como JSON', filtroPostObj);
-                        } catch (error) {
-                            console.error('establecerFiltros: Error al parsear filtroPost como JSON', error);
-                            filtroPostObj = {};
-                        }
-                    } else {
-                        filtroPostObj = {};
-                        console.log('establecerFiltros: filtroPost no es string', filtroPostObj);
-                    }
-
+                    const filtroPostObj = JSON.parse(filtroPost.replace(/s:(\d+):"(.*?)";/g, '"$2":'));
                     console.log('establecerFiltros: filtroPostObj', filtroPostObj);
 
                     const filtrosPost = ['misPost', 'mostrarMeGustan', 'ocultarEnColeccion', 'ocultarDescargados'];
-                    const hayFiltrosPost = Array.isArray(filtroPostObj) ? filtroPostObj.some(filtro => filtrosPost.includes(filtro)) : Object.keys(filtroPostObj).some(filtro => filtrosPost.includes(filtro));
+                    const hayFiltrosPost = Object.keys(filtroPostObj).some(filtro => filtrosPost.includes(filtro));
                     console.log('establecerFiltros: hayFiltrosPost', hayFiltrosPost);
-                    const hayFiltroColeccion = Array.isArray(filtroPostObj) ? filtroPostObj.includes('misColecciones') : Object.keys(filtroPostObj).includes('misColecciones');
+                    const hayFiltroColeccion = Object.keys(filtroPostObj).includes('misColecciones');
                     console.log('establecerFiltros: hayFiltroColeccion', hayFiltroColeccion);
 
                     // Mostrar el botón correspondiente si es necesario
@@ -863,36 +849,6 @@ async function establecerFiltros() {
         console.error('establecerFiltros: Error en AJAX:', error);
     }
     console.log('establecerFiltros: Fin');
-}
-
-/*
-en el servidor
-
-function obtenerFiltrosTotal() {
-    if (!is_user_logged_in()) {
-        wp_send_json_error('Usuario no autenticado');
-        return;
-    }
-
-    $user_id = get_current_user_id();
-    $filtro_post = get_user_meta($user_id, 'filtroPost', true) ?: 'a:0:{}';
-    $filtro_tiempo = get_user_meta($user_id, 'filtroTiempo', true) ?: 0;
-
-    wp_send_json_success([
-        'filtroPost' => $filtro_post,
-        'filtroTiempo' => $filtro_tiempo,
-    ]);
-}
-add_action('wp_ajax_obtenerFiltrosTotal', 'obtenerFiltrosTotal');
-*/
-
-function phpUnserialize(str) {
-    try {
-        return unserialize(str);
-    } catch (e) {
-        console.error('Error al unserializar con la libreria php-unserialize:', e);
-        return null;
-    }
 }
 
 const FLECHA_SVG = '<svg data-testid="geist-icon" height="16" stroke-linejoin="round" viewBox="0 0 16 16" width="16" style="color: currentcolor;"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.7071 2.39644C8.31658 2.00592 7.68341 2.00592 7.29289 2.39644L4.46966 5.21966L3.93933 5.74999L4.99999 6.81065L5.53032 6.28032L7.99999 3.81065L10.4697 6.28032L11 6.81065L12.0607 5.74999L11.5303 5.21966L8.7071 2.39644ZM5.53032 9.71966L4.99999 9.18933L3.93933 10.25L4.46966 10.7803L7.29289 13.6035C7.68341 13.9941 8.31658 13.9941 8.7071 13.6035L11.5303 10.7803L12.0607 10.25L11 9.18933L10.4697 9.71966L7.99999 12.1893L5.53032 9.71966Z" fill="currentColor"></path></svg>';
