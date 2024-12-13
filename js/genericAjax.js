@@ -780,27 +780,18 @@ async function establecerFiltros() {
                 console.log('establecerFiltros: Hay filtros activos, procesando...');
                 try {
                     let filtroPostObj;
-                    if (Array.isArray(filtroPost)) {
-                        filtroPostObj = filtroPost;
-                        console.log('establecerFiltros: filtroPost es array', filtroPostObj);
-                    } else if (typeof filtroPost === 'string' && filtroPost.startsWith('a:')) {
-                        // Deserializa la cadena de PHP
+                    if (typeof filtroPost === 'string') {
                         try {
-                            const tempDiv = document.createElement('div');
-                            tempDiv.innerHTML = `<textarea>${filtroPost}</textarea>`;
-                            const textarea = tempDiv.querySelector('textarea');
-                            const valor = textarea.value;
-
-                            filtroPostObj = JSON.parse(JSON.stringify(phpUnserialize(valor)));
-
-                            console.log('establecerFiltros: filtroPost deserializado', filtroPostObj);
+                            // Intentamos parsear el JSON directamente
+                            filtroPostObj = JSON.parse(filtroPost);
+                            console.log('establecerFiltros: filtroPost parseado como JSON', filtroPostObj);
                         } catch (error) {
-                            console.error('establecerFiltros: Error al deserializar filtroPost', error);
+                            console.error('establecerFiltros: Error al parsear filtroPost como JSON', error);
                             filtroPostObj = {};
                         }
                     } else {
                         filtroPostObj = {};
-                        console.log('establecerFiltros: filtroPost no es string ni array', filtroPostObj);
+                        console.log('establecerFiltros: filtroPost no es string', filtroPostObj);
                     }
 
                     console.log('establecerFiltros: filtroPostObj', filtroPostObj);
@@ -873,6 +864,27 @@ async function establecerFiltros() {
     }
     console.log('establecerFiltros: Fin');
 }
+
+/*
+en el servidor
+
+function obtenerFiltrosTotal() {
+    if (!is_user_logged_in()) {
+        wp_send_json_error('Usuario no autenticado');
+        return;
+    }
+
+    $user_id = get_current_user_id();
+    $filtro_post = get_user_meta($user_id, 'filtroPost', true) ?: 'a:0:{}';
+    $filtro_tiempo = get_user_meta($user_id, 'filtroTiempo', true) ?: 0;
+
+    wp_send_json_success([
+        'filtroPost' => $filtro_post,
+        'filtroTiempo' => $filtro_tiempo,
+    ]);
+}
+add_action('wp_ajax_obtenerFiltrosTotal', 'obtenerFiltrosTotal');
+*/
 
 function phpUnserialize(str) {
     try {

@@ -113,8 +113,16 @@ function obtenerFiltrosTotal() {
     $filtro_post = get_user_meta($user_id, 'filtroPost', true) ?: 'a:0:{}';
     $filtro_tiempo = get_user_meta($user_id, 'filtroTiempo', true) ?: 0;
 
+    // Asegurar que filtroPost sea un objeto, incluso si está vacío
+    if ($filtro_post === 'a:0:{}') {
+        $filtro_post = json_encode(new stdClass());
+    } else {
+        // Si no es 'a:0:{}', asumimos que es un array serializado y lo convertimos a JSON
+        $filtro_post = json_encode(unserialize($filtro_post));
+    }
+
     wp_send_json_success([
-        'filtroPost' => $filtro_post,
+        'filtroPost' => $filtro_post, // Ahora enviamos un JSON string
         'filtroTiempo' => $filtro_tiempo,
     ]);
 }
