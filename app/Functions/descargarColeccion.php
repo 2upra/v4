@@ -21,6 +21,17 @@ function procesarColeccion($postId, $userId)
     error_log("[procesarColeccion] Nombre del archivo ZIP: " . $zipName);
     error_log("[procesarColeccion] Ruta del archivo ZIP: " . $zipPath);
 
+    // Buscar y eliminar ZIPs antiguos
+    $files = glob($upload_dir['path'] . '/coleccion-' . $postId . '-*.zip');
+    if ($files) {
+        foreach ($files as $file) {
+            if ($file !== $zipPath && file_exists($file)) {
+                unlink($file);
+                error_log("[procesarColeccion] Archivo ZIP antiguo eliminado: " . $file);
+            }
+        }
+    }
+
     if (!is_dir($upload_dir['path']) || !is_writable($upload_dir['path'])) {
         error_log("[procesarColeccion] Error: El directorio de uploads no existe o no tiene permisos de escritura.");
         return new WP_Error('upload_dir_error', __('Error: El directorio de uploads no existe o no tiene permisos de escritura.', 'text-domain'));
