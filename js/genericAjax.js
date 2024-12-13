@@ -749,15 +749,33 @@ function inicializarCambiarImagen() {
         boton.dataset.eventoInicializado = 'true';
     });
 }
-
 async function establecerFiltros() {
     console.log('establecerFiltros: Inicio');
     try {
         const response = await enviarAjax('obtenerFiltrosTotal');
         console.log('establecerFiltros: Respuesta de obtenerFiltrosTotal', response);
         if (response.success) {
-            const {filtroPost, filtroTiempo} = response.data;
-            const hayFiltrosActivados = filtroTiempo !== 0 || filtroPost !== 'a:0:{}';
+            let {filtroPost, filtroTiempo} = response.data;
+            // Asegurarse de que filtroPost sea un objeto
+            if (typeof filtroPost === 'string') {
+                try {
+                    filtroPost = JSON.parse(filtroPost);
+                } catch (error) {
+                    console.error('establecerFiltros: Error al parsear filtroPost como JSON', error);
+                    filtroPost = {};
+                }
+            }
+
+            //Si filtroPost es un array, convertirlo a objeto
+            if (Array.isArray(filtroPost)) {
+                const tempObj = {};
+                filtroPost.forEach(item => {
+                    tempObj[item] = true; // Puedes asignar cualquier valor, por ejemplo, true
+                });
+                filtroPost = tempObj;
+            }
+
+            const hayFiltrosActivados = filtroTiempo !== 0 || Object.keys(filtroPost).length > 0;
             console.log('establecerFiltros: Hay filtros activados:', hayFiltrosActivados);
             const botonRestablecer = document.querySelector('.restablecerBusqueda');
             console.log('establecerFiltros: botonRestablecer:', botonRestablecer);
@@ -778,41 +796,21 @@ async function establecerFiltros() {
 
             if (hayFiltrosActivados) {
                 console.log('establecerFiltros: Hay filtros activos, procesando...');
-                try {
-                    let filtroPostObj;
-                    if (typeof filtroPost === 'string') {
-                        try {
-                            // Intentamos parsear el JSON directamente
-                            filtroPostObj = JSON.parse(filtroPost);
-                            console.log('establecerFiltros: filtroPost parseado como JSON', filtroPostObj);
-                        } catch (error) {
-                            console.error('establecerFiltros: Error al parsear filtroPost como JSON', error);
-                            filtroPostObj = {};
-                        }
-                    } else {
-                        filtroPostObj = {};
-                        console.log('establecerFiltros: filtroPost no es string', filtroPostObj);
-                    }
 
-                    console.log('establecerFiltros: filtroPostObj', filtroPostObj);
+                const filtrosPost = ['misPost', 'mostrarMeGustan', 'ocultarEnColeccion', 'ocultarDescargados'];
+                const hayFiltrosPost = Object.keys(filtroPost).some(filtro => filtrosPost.includes(filtro));
+                console.log('establecerFiltros: hayFiltrosPost', hayFiltrosPost);
+                const hayFiltroColeccion = filtroPost.hasOwnProperty('misColecciones');
+                console.log('establecerFiltros: hayFiltroColeccion', hayFiltroColeccion);
 
-                    const filtrosPost = ['misPost', 'mostrarMeGustan', 'ocultarEnColeccion', 'ocultarDescargados'];
-                    const hayFiltrosPost = Array.isArray(filtroPostObj) ? filtroPostObj.some(filtro => filtrosPost.includes(filtro)) : Object.keys(filtroPostObj).some(filtro => filtrosPost.includes(filtro));
-                    console.log('establecerFiltros: hayFiltrosPost', hayFiltrosPost);
-                    const hayFiltroColeccion = Array.isArray(filtroPostObj) ? filtroPostObj.includes('misColecciones') : Object.keys(filtroPostObj).includes('misColecciones');
-                    console.log('establecerFiltros: hayFiltroColeccion', hayFiltroColeccion);
-
-                    // Mostrar el botón correspondiente si es necesario
-                    if (hayFiltrosPost && botonPostRestablecer) {
-                        botonPostRestablecer.style.display = 'block';
-                        console.log('establecerFiltros: Mostrando botonPostRestablecer');
-                    }
-                    if (hayFiltroColeccion && botonColeccionRestablecer) {
-                        botonColeccionRestablecer.style.display = 'block';
-                        console.log('establecerFiltros: Mostrando botonColeccionRestablecer');
-                    }
-                } catch (e) {
-                    console.error('establecerFiltros: Error al parsear filtroPost o encontrar filtros', e);
+                // Mostrar el botón correspondiente si es necesario
+                if (hayFiltrosPost && botonPostRestablecer) {
+                    botonPostRestablecer.style.display = 'block';
+                    console.log('establecerFiltros: Mostrando botonPostRestablecer');
+                }
+                if (hayFiltroColeccion && botonColeccionRestablecer) {
+                    botonColeccionRestablecer.style.display = 'block';
+                    console.log('establecerFiltros: Mostrando botonColeccionRestablecer');
                 }
 
                 // Evento para restablecer filtros
@@ -1062,12 +1060,12 @@ function filtrosPost() {
     async function cargarFiltrosGuardados() {
         try {
             const respuesta = await enviarAjax('obtenerFiltros');
-            console.log("Respuesta de obtenerFiltros:", respuesta);
+            console.log('Respuesta de obtenerFiltros:', respuesta);
 
             if (respuesta.success && respuesta.data && respuesta.data.filtros) {
                 filtrosActivos = respuesta.data.filtros;
             } else {
-                console.warn("Advertencia: No se encontraron filtros guardados o la respuesta no fue exitosa.");
+                console.warn('Advertencia: No se encontraron filtros guardados o la respuesta no fue exitosa.');
                 filtrosActivos = [];
             }
 
@@ -1108,7 +1106,7 @@ function filtrosPost() {
             } else {
                 filtrosActivos = filtrosActivos.filter(filtro => filtro !== this.name);
             }
-            console.log("Filtros activos después del cambio:", filtrosActivos);
+            console.log('Filtros activos después del cambio:', filtrosActivos);
         });
     });
 
@@ -1120,17 +1118,17 @@ function filtrosPost() {
 
     botonGuardar.addEventListener('click', async function () {
         const filtrosParaGuardar = Array.isArray(filtrosActivos) ? filtrosActivos : [];
-        console.log("Filtros a guardar:", filtrosParaGuardar);
+        console.log('Filtros a guardar:', filtrosParaGuardar);
         const respuesta = await enviarAjax('guardarFiltroPost', {
             filtros: JSON.stringify(filtrosParaGuardar)
         });
-        console.log("Respuesta de guardarFiltroPost:", respuesta);
+        console.log('Respuesta de guardarFiltroPost:', respuesta);
 
         if (respuesta.success) {
             window.limpiarBusqueda();
             establecerFiltros();
         } else {
-            console.error("Error al guardar los filtros.");
+            console.error('Error al guardar los filtros.');
         }
     });
 
@@ -1145,17 +1143,17 @@ function filtrosPost() {
         checkboxes.forEach(checkbox => {
             checkbox.checked = false;
         });
-        console.log("Restableciendo filtros...");
+        console.log('Restableciendo filtros...');
         const respuesta = await enviarAjax('guardarFiltroPost', {
             filtros: JSON.stringify([])
         });
-        console.log("Respuesta de guardarFiltroPost (restablecer):", respuesta);
+        console.log('Respuesta de guardarFiltroPost (restablecer):', respuesta);
 
         if (respuesta.success) {
             window.limpiarBusqueda();
             establecerFiltros();
         } else {
-            console.error("Error al restablecer los filtros.");
+            console.error('Error al restablecer los filtros.');
         }
     });
 
