@@ -1,7 +1,8 @@
 <?
 //saber el filtro tiempo
 
-function obtenerFiltroActual() {
+function obtenerFiltroActual()
+{
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'Usuario no autenticado']);
         return;
@@ -20,8 +21,25 @@ function obtenerFiltroActual() {
 add_action('wp_ajax_obtenerFiltroActual', 'obtenerFiltroActual');
 
 
-function restablecerFiltros() {
+/*
+[13-Dec-2024 14:40:56 UTC] restablecerFiltros: Inicio
+[13-Dec-2024 14:40:56 UTC] restablecerFiltros: User ID: 1
+[13-Dec-2024 14:40:56 UTC] restablecerFiltros: filtroPost obtenido: a:2:{i:0;s:14:"misColecciones";i:1;s:18:"ocultarEnColeccion";}
+[13-Dec-2024 14:40:56 UTC] restablecerFiltros: filtroPost unserialized/handled: Array
+(
+    [0] => misColecciones
+    [1] => ocultarEnColeccion
+)
+
+[13-Dec-2024 14:40:56 UTC] restablecerFiltros: filtroPost_array no vacio, serializando: a:2:{i:0;s:14:"misColecciones";i:1;s:18:"ocultarEnColeccion";}
+[13-Dec-2024 14:40:56 UTC] restablecerFiltros: filtroPost actualizado con: a:2:{i:0;s:14:"misColecciones";i:1;s:18:"ocultarEnColeccion";}
+NO RESTABLECE LOS FILTROS!!! PORQUE?
+*/
+
+function restablecerFiltros()
+{
     error_log('restablecerFiltros: Inicio');
+
     if (!is_user_logged_in()) {
         error_log('restablecerFiltros: Usuario no autenticado');
         wp_send_json_error('Usuario no autenticado');
@@ -29,81 +47,93 @@ function restablecerFiltros() {
 
     $user_id = get_current_user_id();
     error_log('restablecerFiltros: User ID: ' . $user_id);
+
     $filtroPost = get_user_meta($user_id, 'filtroPost', true);
     error_log('restablecerFiltros: filtroPost obtenido: ' . print_r($filtroPost, true));
-    
-    // Verifica si $filtroPost es una string, si no, inicializa como array
-     if (is_string($filtroPost)) {
+
+    // Manejo de la variable $filtroPost y su conversion a array
+    if (is_string($filtroPost)) {
+        error_log('restablecerFiltros: filtroPost es string, intentando unserializar');
         $filtroPost_array = @unserialize($filtroPost);
         if ($filtroPost_array === false && $filtroPost !== 'b:0;') {
             error_log('restablecerFiltros: Error al unserializar filtroPost. valor:' . $filtroPost);
-             $filtroPost_array = []; // Inicializar como array vacío para evitar errores posteriores
-        }
-     } else if (is_array($filtroPost)) {
-         $filtroPost_array = $filtroPost;
-        error_log('restablecerFiltros: filtroPost es un array directamente');
-     } else {
-        $filtroPost_array = [];
-         error_log('restablecerFiltros: filtroPost no es string ni array, inicializado como vacio');
-    }
-   
-     error_log('restablecerFiltros: filtroPost unserialized/handled: ' . print_r($filtroPost_array, true));
-
-    if (isset($_POST['post']) && $_POST['post'] === 'true') {
-         error_log('restablecerFiltros: Restablecer filtros de post');
-        $filtros_a_eliminar = ['misPost', 'mostrarMeGustan', 'ocultarEnColeccion', 'ocultarDescargados'];
-         if(is_array($filtroPost_array)){
-          error_log('restablecerFiltros: filtroPost_array es array, procesando...');
-            foreach ($filtros_a_eliminar as $filtro) {
-              $index = array_search($filtro, $filtroPost_array);
-              if ($index !== false) {
-                  unset($filtroPost_array[$index]);
-                  error_log('restablecerFiltros: Filtro "' . $filtro . '" eliminado. Indice: ' . $index);
-              } else{
-                  error_log('restablecerFiltros: Filtro "' . $filtro . '" no encontrado.');
-              }
-          }
+            $filtroPost_array = []; // Inicializar como array vacío para evitar errores posteriores
         } else {
-           error_log('restablecerFiltros: filtroPost_array no es array');
+            error_log('restablecerFiltros: unserializado exitoso: ' . print_r($filtroPost_array, true));
+        }
+    } else if (is_array($filtroPost)) {
+        $filtroPost_array = $filtroPost;
+        error_log('restablecerFiltros: filtroPost es un array directamente');
+    } else {
+        $filtroPost_array = [];
+        error_log('restablecerFiltros: filtroPost no es string ni array, inicializado como vacio');
+    }
+
+    error_log('restablecerFiltros: filtroPost despues de manejo: ' . print_r($filtroPost_array, true));
+
+
+    // Procesamiento de filtros de post
+    if (isset($_POST['post']) && $_POST['post'] === 'true') {
+        error_log('restablecerFiltros: Restablecer filtros de post');
+        $filtros_a_eliminar = ['misPost', 'mostrarMeGustan', 'ocultarEnColeccion', 'ocultarDescargados'];
+
+        if (is_array($filtroPost_array)) {
+            error_log('restablecerFiltros: filtroPost_array es array, procesando...');
+            foreach ($filtros_a_eliminar as $filtro) {
+                $index = array_search($filtro, $filtroPost_array);
+                if ($index !== false) {
+                    unset($filtroPost_array[$index]);
+                    error_log('restablecerFiltros: Filtro "' . $filtro . '" eliminado. Indice: ' . $index);
+                } else {
+                    error_log('restablecerFiltros: Filtro "' . $filtro . '" no encontrado.');
+                }
+            }
+        } else {
+            error_log('restablecerFiltros: filtroPost_array no es array');
         }
     }
 
+    // Procesamiento de filtros de coleccion
     if (isset($_POST['coleccion']) && $_POST['coleccion'] === 'true') {
-      error_log('restablecerFiltros: Restablecer filtros de coleccion');
-         if(is_array($filtroPost_array)){
-             $index = array_search('misColecciones', $filtroPost_array);
+        error_log('restablecerFiltros: Restablecer filtros de coleccion');
+        if (is_array($filtroPost_array)) {
+            $index = array_search('misColecciones', $filtroPost_array);
             if ($index !== false) {
                 unset($filtroPost_array[$index]);
                 error_log('restablecerFiltros: Filtro "misColecciones" eliminado. Indice: ' . $index);
             } else {
                 error_log('restablecerFiltros: Filtro "misColecciones" no encontrado.');
             }
-         } else {
-           error_log('restablecerFiltros: filtroPost_array no es array para coleccion');
+        } else {
+            error_log('restablecerFiltros: filtroPost_array no es array para coleccion');
         }
     }
 
+    // Actualizacion o eliminacion de la meta data
     if (empty($filtroPost_array)) {
         delete_user_meta($user_id, 'filtroPost');
         error_log('restablecerFiltros: filtroPost_array vacio, eliminando meta filtroPost');
     } else {
-       
-      $serialized_filtroPost = serialize(array_values($filtroPost_array));
-       error_log('restablecerFiltros: filtroPost_array no vacio, serializando: ' . print_r($serialized_filtroPost, true));
-      update_user_meta($user_id, 'filtroPost', $serialized_filtroPost);
-        error_log('restablecerFiltros: filtroPost actualizado con: ' .  print_r($serialized_filtroPost, true) );
+
+        $serialized_filtroPost = serialize(array_values($filtroPost_array));
+        error_log('restablecerFiltros: filtroPost_array no vacio, serializando: ' . print_r($serialized_filtroPost, true));
+        update_user_meta($user_id, 'filtroPost', $serialized_filtroPost);
+        error_log('restablecerFiltros: filtroPost actualizado con: ' .  print_r($serialized_filtroPost, true));
     }
 
+    // Eliminacion de filtro de tiempo
     delete_user_meta($user_id, 'filtroTiempo');
     error_log('restablecerFiltros: filtroTiempo eliminado');
-    
+
     wp_send_json_success(['message' => 'Filtros restablecidos']);
-     error_log('restablecerFiltros: Fin');
+    error_log('restablecerFiltros: Fin');
 }
 add_action('wp_ajax_restablecerFiltros', 'restablecerFiltros');
 
 
-function obtenerFiltrosTotal() {
+
+function obtenerFiltrosTotal()
+{
     if (!is_user_logged_in()) {
         wp_send_json_error('Usuario no autenticado');
         return;
@@ -129,7 +159,8 @@ function obtenerFiltrosTotal() {
 add_action('wp_ajax_obtenerFiltrosTotal', 'obtenerFiltrosTotal');
 
 
-function guardarFiltroPost() {
+function guardarFiltroPost()
+{
     if (!is_user_logged_in()) {
         wp_send_json_error('Usuario no autenticado');
         return;
@@ -144,7 +175,8 @@ function guardarFiltroPost() {
 }
 add_action('wp_ajax_guardarFiltroPost', 'guardarFiltroPost');
 
-function obtenerFiltros() {
+function obtenerFiltros()
+{
     if (!is_user_logged_in()) {
         wp_send_json_error('Usuario no autenticado');
         return;
@@ -158,7 +190,8 @@ function obtenerFiltros() {
 add_action('wp_ajax_obtenerFiltros', 'obtenerFiltros');
 
 
-function guardarFiltro() {
+function guardarFiltro()
+{
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'Usuario no autenticado']);
         return;
@@ -173,14 +206,13 @@ function guardarFiltro() {
     $filtro_tiempo = intval($_POST['filtroTiempo']);
 
     if (update_user_meta($user_id, 'filtroTiempo', $filtro_tiempo)) {
-         wp_send_json_success([
+        wp_send_json_success([
             'message' => 'Filtro guardado correctamente',
             'filtroTiempo' => $filtro_tiempo,
             'userId' => $user_id
         ]);
-    }else{
+    } else {
         wp_send_json_error(['message' => 'Error al guardar el filtro']);
     }
-
 }
 add_action('wp_ajax_guardarFiltro', 'guardarFiltro');
