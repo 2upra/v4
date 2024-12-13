@@ -224,7 +224,7 @@ if (!defined('ABSPATH')) {
                             <button id="clearSearch" class="clear-search" style="display: none;">
                                 <? echo $GLOBALS['flechaAtras']; ?>
                             </button>
-                            <div class="resultados modal">
+                            <div class="resultadosBusqueda modal">
                                 
                             </div>
                         </div>
