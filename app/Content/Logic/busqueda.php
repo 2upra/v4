@@ -1,124 +1,91 @@
 <?
 
-add_action('wp_ajax_buscarResultado', 'buscar_resultados');
-add_action('wp_ajax_nopriv_buscarResultado', 'buscar_resultados');
-
-//esto funciona perfecto, solo falta que muestre la foto de portada para los post, y la foto de perfil del usuario
-/*
-a considerar: la foto de portada no existe, entonces buscar si en el post contiene una meta de "imagenTemporal" que es un id de una imagen adjunta y usarla, 
-
-la imagen de perfil se obtiene con imagenPerfil($user_id)
-*/
-
-
 function buscar_resultados()
 {
-
     $texto = sanitize_text_field($_POST['busqueda']);
     $cache_key = 'resultados_busqueda_' . md5($texto);
     $resultados_cache = obtenerCache($cache_key);
 
     if ($resultados_cache !== false) {
-        wp_send_json(array('success' => true, 'data' => $resultados_cache));
+        wp_send_json(['success' => true, 'data' => $resultados_cache]);
         return;
     }
 
-    ob_start();
+    $resultados = realizar_busqueda($texto);
+    $html = generar_html_resultados($resultados);
 
-    $resultados = array(
-        'social_post' => array(),
-        'colecciones' => array(),
-        'perfiles'    => array(),
-    );
+    guardarCache($cache_key, $html, 7200);
+    wp_send_json(['success' => true, 'data' => $html]);
+}
 
-    // Función para obtener la imagen de un post
-    function obtenerImagenPost($post_id)
-    {
-        $imagen_url = false;
+add_action('wp_ajax_buscarResultado', 'buscar_resultados');
+add_action('wp_ajax_nopriv_buscarResultado', 'buscar_resultados');
 
-        if (has_post_thumbnail($post_id)) {
-            $imagen_url = get_the_post_thumbnail_url($post_id, 'thumbnail');
-        } else {
-            $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true);
-            if ($imagen_temporal_id) {
-                $imagen_url = wp_get_attachment_image_url($imagen_temporal_id, 'thumbnail');
-            }
-        }
+function realizar_busqueda($texto)
+{
+    $resultados = [
+        'social_post' => [],
+        'colecciones' => [],
+        'perfiles'    => [],
+    ];
 
-        if ($imagen_url) {
-            return img($imagen_url);
-        }
+    $resultados['social_post'] = buscar_posts('social_post', $texto);
+    $resultados['colecciones'] = buscar_posts('colecciones', $texto);
+    $resultados['perfiles'] = buscar_usuarios($texto);
 
-        return false;
-    }
+    return balancear_resultados($resultados);
+}
 
-
-    // Buscar en social_post
-    $args_social = array(
-        'post_type'      => 'social_post',
+function buscar_posts($post_type, $texto)
+{
+    $args = [
+        'post_type'      => $post_type,
         'post_status'    => 'publish',
         's'              => $texto,
         'posts_per_page' => 3,
-    );
-    $query_social = new WP_Query($args_social);
-    if ($query_social->have_posts()) {
-        while ($query_social->have_posts()) {
-            $query_social->the_post();
-            $imagen = obtenerImagenPost(get_the_ID());
-            $resultados['social_post'][] = array(
+    ];
+    $query = new WP_Query($args);
+    $resultados = [];
+
+    if ($query->have_posts()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+            $resultados[] = [
                 'titulo' => get_the_title(),
                 'url'    => get_permalink(),
-                'tipo'   => 'Post',
-                'imagen' => $imagen,
-            );
+                'tipo'   => ucfirst(str_replace('_', ' ', $post_type)),
+                'imagen' => obtenerImagenPost(get_the_ID()),
+            ];
         }
     }
     wp_reset_postdata();
+    return $resultados;
+}
 
-    // Buscar en colecciones
-    $args_colecciones = array(
-        'post_type'      => 'colecciones',
-        'post_status'    => 'publish',
-        's'              => $texto,
-        'posts_per_page' => 3,
-    );
-    $query_colecciones = new WP_Query($args_colecciones);
-    if ($query_colecciones->have_posts()) {
-        while ($query_colecciones->have_posts()) {
-            $query_colecciones->the_post();
-            $imagen = obtenerImagenPost(get_the_ID());
-            $resultados['colecciones'][] = array(
-                'titulo' => get_the_title(),
-                'url'    => get_permalink(),
-                'tipo'   => 'Colección',
-                'imagen' => $imagen,
-            );
-        }
-    }
-    wp_reset_postdata();
-
-    // Buscar usuarios
-    $user_query = new WP_User_Query(array(
+function buscar_usuarios($texto)
+{
+    $user_query = new WP_User_Query([
         'search'         => '*' . esc_attr($texto) . '*',
-        'search_columns' => array(
-            'user_login',
-            'display_name',
-        ),
+        'search_columns' => ['user_login', 'display_name'],
         'number'         => 3,
-    ));
-    $users = $user_query->get_results();
-    if (!empty($users)) {
-        foreach ($users as $user) {
-            $resultados['perfiles'][] = array(
+    ]);
+    $resultados = [];
+
+    if (!empty($user_query->get_results())) {
+        foreach ($user_query->get_results() as $user) {
+            $resultados[] = [
                 'titulo' => $user->display_name,
                 'url'    => get_author_posts_url($user->ID),
                 'tipo'   => 'Perfil',
                 'imagen' => imagenPerfil($user->ID),
-            );
+            ];
         }
     }
+    return $resultados;
+}
 
-    // Balancear resultados
+function balancear_resultados($resultados)
+{
     $num_resultados = count($resultados['social_post']) + count($resultados['colecciones']) + count($resultados['perfiles']);
     if ($num_resultados > 6) {
         $social_post_count = count($resultados['social_post']);
@@ -129,35 +96,67 @@ function buscar_resultados()
 
         if ($social_post_count < $max_each) {
             $diff = $max_each - $social_post_count;
-            $colecciones_count >= $max_each + $diff ? $max_each += $diff : ($perfiles_count >= $max_each + $diff ? $max_each += $diff : null);
+            if ($colecciones_count >= $max_each + $diff) {
+                $max_each += $diff;
+            } elseif ($perfiles_count >= $max_each + $diff) {
+                $max_each += $diff;
+            }
         }
         if ($colecciones_count < $max_each) {
             $diff = $max_each - $colecciones_count;
-            $social_post_count >= $max_each + $diff ? $max_each += $diff : ($perfiles_count >= $max_each + $diff ? $max_each += $diff : null);
+            if ($social_post_count >= $max_each + $diff) {
+                $max_each += $diff;
+            } elseif ($perfiles_count >= $max_each + $diff) {
+                $max_each += $diff;
+            }
         }
         if ($perfiles_count < $max_each) {
             $diff = $max_each - $perfiles_count;
-            $social_post_count >= $max_each + $diff ? $max_each += $diff : ($colecciones_count >= $max_each + $diff ? $max_each += $diff : null);
+            if ($social_post_count >= $max_each + $diff) {
+                $max_each += $diff;
+            } elseif ($colecciones_count >= $max_each + $diff) {
+                $max_each += $diff;
+            }
         }
 
         $resultados['social_post'] = array_slice($resultados['social_post'], 0, $max_each);
         $resultados['colecciones'] = array_slice($resultados['colecciones'], 0, $max_each);
         $resultados['perfiles'] = array_slice($resultados['perfiles'], 0, $max_each);
     }
+    return $resultados;
+}
 
-    // Generar HTML
-    foreach ($resultados as $tipo_grupo => $grupo) {
+function obtenerImagenPost($post_id)
+{
+    if (has_post_thumbnail($post_id)) {
+        return img(get_the_post_thumbnail_url($post_id, 'thumbnail'));
+    }
+    $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true);
+    if ($imagen_temporal_id) {
+        return img(wp_get_attachment_image_url($imagen_temporal_id, 'thumbnail'));
+    }
+    return false;
+}
+
+function generar_html_resultados($resultados)
+{
+    ob_start();
+    $num_resultados = 0;
+    foreach ($resultados as $grupo) {
+        $num_resultados += count($grupo);
         foreach ($grupo as $resultado) {
 ?>
-            <div class="resultado-item">
-                <?php if (!empty($resultado['imagen'])): ?>
-                    <img class="resultado-imagen" src="<?php echo $resultado['imagen']; ?>" alt="<?php echo $resultado['titulo']; ?>">
-                <?php endif; ?>
-                <div class="resultado-info">
-                    <a href="<?php echo $resultado['url']; ?>"><?php echo $resultado['titulo']; ?></a>
-                    <p><?php echo $resultado['tipo']; ?></p>
+            <a href="<?php echo esc_url($resultado['url']); ?>">
+                <div class="resultado-item">
+                    <?php if (!empty($resultado['imagen'])): ?>
+                        <img class="resultado-imagen" src="<?php echo esc_url($resultado['imagen']); ?>" alt="<?php echo esc_attr($resultado['titulo']); ?>">
+                    <?php endif; ?>
+                    <div class="resultado-info">
+                        <a href="<?php echo esc_url($resultado['url']); ?>"><?php echo esc_html($resultado['titulo']); ?></a>
+                        <p><?php echo esc_html($resultado['tipo']); ?></p>
+                    </div>
                 </div>
-            </div>
+            </a>
         <?php
         }
     }
@@ -168,7 +167,6 @@ function buscar_resultados()
 <?php
     }
 
-    $html = ob_get_clean();
-    guardarCache($cache_key, $html, 7200); // Guardar en caché por 2 horas (7200 segundos)
-    wp_send_json(array('success' => true, 'data' => $html));
+    return ob_get_clean();
 }
+?>

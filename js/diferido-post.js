@@ -544,7 +544,7 @@
             darkBackground.style.width = '100%';
             darkBackground.style.height = '100%';
             darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-            darkBackground.style.zIndex = 1003;
+            darkBackground.style.zIndex = 998;
             darkBackground.style.display = 'none';
             darkBackground.style.pointerEvents = 'none';
             darkBackground.style.opacity = '0';
@@ -573,6 +573,7 @@
             }, 300);
         }
     };
+
 
     const inputBusqueda = document.getElementById('identifier');
     const divResultados = document.getElementById('resultadoBusqueda');
