@@ -11,7 +11,7 @@ function publicacionAjax()
     $publicacionesCargadas = isset($_POST['cargadas']) && is_array($_POST['cargadas'])
         ? array_map('intval', $_POST['cargadas'])
         : array();
-    $similar_to = isset($_POST['similar_to']) ? intval($_POST['similar_to']) : null;
+    $similarTo = isset($_POST['similar_to']) ? intval($_POST['similar_to']) : null;
     $colec = isset($_POST['colec']) ? intval($_POST['colec']) : null;
     $idea = isset($_POST['idea']) ? filter_var($_POST['idea'], FILTER_VALIDATE_BOOLEAN) : false;
 
@@ -25,7 +25,7 @@ function publicacionAjax()
             'user_id' => $userId,
             'identifier' => $data_identifier,
             'exclude' => $publicacionesCargadas,
-            'similar_to' => $similar_to,
+            'similar_to' => $similarTo,
             'colec' => $colec,
             'idea' => $idea,
 
@@ -59,38 +59,26 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
         if (!$is_ajax && isset($_GET['busqueda'])) {
             $args['identifier'] = sanitize_text_field($_GET['busqueda']);
-            //error_log("[publicaciones] Identifier from URL: " . $args['identifier']);
         }
 
         $userId = isset($args['user_id']) ? $args['user_id'] : '';
-
         $tipoUsuario = isset($args['tipoUsuario']) && !empty($args['tipoUsuario'])
             ? $args['tipoUsuario']
             : get_user_meta($usuarioActual, 'tipoUsuario', true);
-
         $args = array_merge($defaults, $args);
-
-        //error_log("[publicaciones] Identifier after merge: " . $args['identifier']);
 
         if (filter_var($args['idea'], FILTER_VALIDATE_BOOLEAN)) {
             $query_args = manejarIdea($args, $paged);
             if (!$query_args) {
-                //error_log("[publicaciones] Error al procesar ideas.");
                 return false;
             }
         } else if (!empty($args['colec']) && is_numeric($args['colec'])) {
             $query_args = manejarColeccion($args, $paged);
             if (!$query_args) {
-                //error_log("[publicaciones] Error al procesar coleccion.");
                 return false;
             }
         } else {
-            //error_log("[publicaciones] ejecutando configuracionQueryArgs " . $args['identifier']);
             $query_args = configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsuario);
-        }
-
-        if (isset($query_args['post__not_in'])) {
-            //error_log("[publicaciones] Excluded posts: " . implode(",", $query_args['post__not_in']));
         }
 
         $output = procesarPublicaciones($query_args, $args, $is_ajax);
@@ -102,7 +90,6 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
         return $output;
     } catch (Exception $e) {
-        //error_log("[publicaciones] Error crítico: " . $e->getMessage());
         return false;
     }
 }
@@ -112,17 +99,13 @@ function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsu
     try {
         $FALLBACK_USER_ID = 44;
         $is_authenticated = $usuarioActual && $usuarioActual != 0;
-        $is_admin = current_user_can('administrator');
+        $isAdmin = current_user_can('administrator');
 
-        // if (!$is_authenticated) {
-        //     $usuarioActual = $FALLBACK_USER_ID;
-        // }
+        if (!$is_authenticated) {
+             $usuarioActual = $FALLBACK_USER_ID;
+        }
 
-        // Moviendo la asignación de $identifier antes del condicional $userId
         $identifier = isset($args['identifier']) ? $args['identifier'] : '';
-
-        //error_log("[configuracionQueryArgs] Identifier: " . $identifier);
-        //error_log("[configuracionQueryArgs] user_id: " . $userId);
 
         if (!empty($userId)) {
             $query_args = [
@@ -137,123 +120,32 @@ function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsu
             ];
 
             $query_args = aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId);
-            //error_log("[configuracionQueryArgs] User ID found, returning early.");
             return $query_args;
         }
 
-        //error_log("[configuracionQueryArgs] No user ID provided, proceeding with general query.");
-
         $posts = $args['posts'];
-        $similar_to = $args['similar_to'] ?? null;
+        $similarTo = $args['similar_to'] ?? null;
 
-        // Usa $usuarioActual directamente, no necesitas $is_authenticated aquí para obtener el meta
         $filtroTiempo = (int)get_user_meta($usuarioActual, 'filtroTiempo', true);
 
         if ($filtroTiempo === false) {
-            //error_log("[configuracionQueryArgs] Error: No se pudo obtener filtroTiempo para el usuario ID: " . $usuarioActual);
         }
 
+        $query_args = construirQueryArgs($args, $paged, $usuarioActual, $identifier, $isAdmin, $posts, $filtroTiempo, $similarTo, $tipoUsuario);
 
-
-        //error_log("[configuracionQueryArgs] Calling construirQueryArgs with identifier: " . $identifier);
-        $query_args = construirQueryArgs($args, $paged, $usuarioActual, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario);
-        //error_log("[configuracionQueryArgs] query args built: " . print_r($query_args, true));
-
+        //Si el tipo de publicación es 'social_post' y el filtro es 'sampleList' o 'sample', aplica filtros de usuario a la consulta si el usuario no es 'Fan'.
         if ($args['post_type'] === 'social_post' && in_array($args['filtro'], ['sampleList', 'sample'])) {
-            //error_log("[configuracionQueryArgs] Applying user-specific filters if not 'Fan'.");
             if ($tipoUsuario !== 'Fan') {
                 $query_args = aplicarFiltrosUsuario($query_args, $usuarioActual);
-                //error_log("[configuracionQueryArgs] User-specific filters applied.");
             }
         }
 
-        //error_log("[configuracionQueryArgs] Applying global filters.");
         $query_args = aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoUsuario);
-        //error_log("[configuracionQueryArgs] Global filters applied: " . print_r($query_args, true));
 
         return $query_args;
     } catch (Exception $e) {
-        //error_log("[configuracionQueryArgs] Error crítico: " . $e->getMessage());
         return false;
     }
-}
-
-function procesarPublicaciones($query_args, $args, $is_ajax)
-{
-    ob_start();
-    $userId = get_current_user_id();
-
-    // Verificar que query_args no esté vacío
-    if (empty($query_args)) {
-        //error_log('Query args está vacío en procesarPublicaciones');
-        return '';
-    }
-
-    // Asegurarse de que query_args sea un array
-    if (!is_array($query_args)) {
-        //error_log('Query args no es un array en procesarPublicaciones');
-        return '';
-    }
-
-    // Crear la consulta con manejo de errores
-    try {
-        $query = new WP_Query($query_args);
-
-        // Verificar si la consulta es válida
-        if (!is_a($query, 'WP_Query')) {
-            //error_log('Error al crear WP_Query');
-            return '';
-        }
-    } catch (Exception $e) {
-        //error_log('Error en WP_Query: ' . $e->getMessage());
-        return '';
-    }
-
-    // Verificar que $query sea válido antes de continuar
-    if (!is_object($query) || !method_exists($query, 'have_posts')) {
-        //error_log('Query inválido en procesarPublicaciones');
-        return '';
-    }
-
-    $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
-    if ($query->have_posts()) {
-        $tipoPost = $args['post_type'];
-        if (!wp_doing_ajax()) {
-            $clase_extra = 'clase-' . esc_attr($filtro);
-            if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
-                $clase_extra = 'clase-rolastatus';
-            }
-
-            echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
-                  data-filtro="' . esc_attr($filtro) . '" 
-                  data-posttype="' . esc_attr($tipoPost) . '" 
-                  data-tab-id="' . esc_attr($args['tab_id']) . '">';
-        }
-
-        while ($query->have_posts()) {
-            $query->the_post();
-
-            if ($tipoPost === 'social_post') {
-                echo htmlPost($filtro);
-            } elseif ($tipoPost === 'colab') {
-                echo htmlColab($filtro);
-            } elseif ($tipoPost === 'colecciones') {
-                echo htmlColec($filtro);
-            } elseif ($tipoPost === 'post') {
-                echo htmlArticulo($filtro);
-            } else {
-                echo '<p>Tipo de publicación no reconocido.</p>';
-            }
-        }
-
-        if (!wp_doing_ajax()) {
-            echo '</ul>';
-        }
-    } else {
-        echo nohayPost($filtro, $is_ajax);
-    }
-    wp_reset_postdata();
-    return ob_get_clean();
 }
 
 function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoUsuario = null)
@@ -262,11 +154,13 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
         $query_args['author'] = $userId;
         return $query_args;
     }
-
-    // Obtener filtros personalizados del usuario actual
     $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
+
+    //Obtiene los filtros de publicación del usuario actual. Si el usuario tiene el filtro 'misColecciones' activo, modifica la consulta para mostrar solo publicaciones de ese usuario.
+
+    # Condiciones para colec
     if (is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
-        $query_args['author'] = $usuarioActual;
+        //$query_args['author'] = $usuarioActual;
         return $query_args;
     }
 
@@ -337,7 +231,8 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
 
     return $query_args;
 }
-function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $is_admin, $posts, $filtroTiempo, $similar_to, $tipoUsuario = null)
+
+function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $isAdmin, $posts, $filtroTiempo, $similarTo, $tipoUsuario = null)
 {
     try {
         global $wpdb;
@@ -361,9 +256,9 @@ function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $is_admi
             }
         }
 
-        // Only apply ordenamientoQuery if post_type is social_post AND filtro is not 'rola'
+        // Only apply ordenamiento if post_type is social_post AND filtro is not 'rola'
         if ($args['post_type'] === 'social_post' && (!isset($args['filtro']) || $args['filtro'] !== 'rola')) {
-            $query_args = ordenamientoQuery($query_args, $filtroTiempo, $usuarioActual, $identifier, $similar_to, $paged, $is_admin, $posts, $tipoUsuario);
+            $query_args = ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
             if (!$query_args) {
                 //error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
             }
@@ -376,7 +271,7 @@ function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $is_admi
     }
 }
 
-function ordenamientoQuery($query_args, $filtroTiempo, $usuarioActual, $identifier, $similar_to, $paged, $is_admin, $posts, $tipoUsuario = null)
+function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario = null)
 {
     // Si el tipo de usuario es "Fan", forzamos el caso default
     if ($tipoUsuario === 'Fan') {
@@ -387,7 +282,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $usuarioActual, $identifi
             }
 
             // Caso default: Feed personalizado
-            $feed_result = obtenerFeedPersonalizado($usuarioActual, $identifier, $similar_to, $paged, $is_admin, $posts, $tipoUsuario);
+            $feed_result = obtenerFeedPersonalizado($usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
 
             if (!empty($feed_result['post_ids'])) {
                 $query_args['post__in'] = $feed_result['post_ids'];
@@ -420,7 +315,7 @@ function ordenamientoQuery($query_args, $filtroTiempo, $usuarioActual, $identifi
         }
     }
 
-    //error_log("[ordenamientoQuery] Identifier: " . $identifier);
+    //error_log("[ordenamiento] Identifier: " . $identifier);
 
 
     try {
@@ -479,10 +374,10 @@ function ordenamientoQuery($query_args, $filtroTiempo, $usuarioActual, $identifi
                 break;
 
             default: // Feed personalizado
-                //error_log("[ordenamientoQuery] Identifier: " . $identifier);
+                //error_log("[ordenamiento] Identifier: " . $identifier);
 
 
-                $feed_result = obtenerFeedPersonalizado($usuarioActual, $identifier, $similar_to, $paged, $is_admin, $posts);
+                $feed_result = obtenerFeedPersonalizado($usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts);
 
                 if (!empty($feed_result['post_ids'])) {
                     $query_args['post__in'] = $feed_result['post_ids'];
@@ -512,7 +407,6 @@ function ordenamientoQuery($query_args, $filtroTiempo, $usuarioActual, $identifi
         return false;
     }
 }
-
 
 function aplicarFiltrosUsuario($query_args, $usuarioActual)
 {
@@ -607,7 +501,6 @@ function aplicarFiltrosUsuario($query_args, $usuarioActual)
     return $query_args;
 }
 
-
 function prefiltrarIdentifier($identifier, $query_args)
 {
     global $wpdb;
@@ -657,6 +550,66 @@ function prefiltrarIdentifier($identifier, $query_args)
     }, 10, 2);
 
     return $query_args;
+}
+
+function procesarPublicaciones($query_args, $args, $is_ajax)
+{
+    ob_start();
+    $userId = get_current_user_id();
+
+    if (empty($query_args) || !is_array($query_args)) {
+        return '';
+    }
+
+    try {
+        $query = new WP_Query($query_args);
+        if (!is_a($query, 'WP_Query') || !is_object($query) || !method_exists($query, 'have_posts')) {
+           return '';
+        }
+    } catch (Exception $e) {
+        return '';
+    }
+
+
+    $filtro = !empty($args['filtro']) ? $args['filtro'] : $args['filtro'];
+    if ($query->have_posts()) {
+        $tipoPost = $args['post_type'];
+        if (!wp_doing_ajax()) {
+            $clase_extra = 'clase-' . esc_attr($filtro);
+            if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
+                $clase_extra = 'clase-rolastatus';
+            }
+
+            echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
+                  data-filtro="' . esc_attr($filtro) . '" 
+                  data-posttype="' . esc_attr($tipoPost) . '" 
+                  data-tab-id="' . esc_attr($args['tab_id']) . '">';
+        }
+
+        while ($query->have_posts()) {
+            $query->the_post();
+
+            if ($tipoPost === 'social_post') {
+                echo htmlPost($filtro);
+            } elseif ($tipoPost === 'colab') {
+                echo htmlColab($filtro);
+            } elseif ($tipoPost === 'colecciones') {
+                echo htmlColec($filtro);
+            } elseif ($tipoPost === 'post') {
+                echo htmlArticulo($filtro);
+            } else {
+                echo '<p>Tipo de publicación no reconocido.</p>';
+            }
+        }
+
+        if (!wp_doing_ajax()) {
+            echo '</ul>';
+        }
+    } else {
+        echo nohayPost($filtro, $is_ajax);
+    }
+    wp_reset_postdata();
+    return ob_get_clean();
 }
 
 function obtenerUserId($is_ajax)
