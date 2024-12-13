@@ -144,9 +144,6 @@ function restablecerFiltros() {
      error_log('restablecerFiltros: Fin');
 }
 add_action('wp_ajax_restablecerFiltros', 'restablecerFiltros');
-add_action('wp_ajax_restablecerFiltros', 'restablecerFiltros');
-
-
 
 function obtenerFiltrosTotal()
 {
@@ -159,16 +156,27 @@ function obtenerFiltrosTotal()
     $filtro_post = get_user_meta($user_id, 'filtroPost', true) ?: 'a:0:{}';
     $filtro_tiempo = get_user_meta($user_id, 'filtroTiempo', true) ?: 0;
 
-    // Asegurar que filtroPost sea un objeto, incluso si está vacío
-    if ($filtro_post === 'a:0:{}') {
-        $filtro_post = json_encode(new stdClass());
+    // Asegúrate de que $filtro_post sea una cadena antes de intentar deserializarla.
+    if (empty($filtro_post) || $filtro_post === 'a:0:{}') {
+        $filtro_post_json = '{}'; // Objeto JSON vacío
     } else {
-        // Si no es 'a:0:{}', asumimos que es un array serializado y lo convertimos a JSON
-        $filtro_post = json_encode(unserialize($filtro_post));
+        // Verifica si $filtro_post es una cadena serializada válida.
+        if (is_string($filtro_post) && preg_match('/^a:\d+:{/', $filtro_post)) {
+            $unserialized = @unserialize($filtro_post);
+            if ($unserialized === false) {
+                // Manejar el error de deserialización, por ejemplo, registrando el error o usando un valor predeterminado.
+                error_log("Error al deserializar filtroPost para el usuario: " . $user_id);
+                $filtro_post_json = '{}';
+            } else {
+                 $filtro_post_json = json_encode($unserialized);
+            }
+        } else {
+             $filtro_post_json = '{}';
+        }
     }
 
     wp_send_json_success([
-        'filtroPost' => $filtro_post, // Ahora enviamos un JSON string
+        'filtroPost' => $filtro_post_json, // Envía el objeto como JSON
         'filtroTiempo' => $filtro_tiempo,
     ]);
 }
