@@ -837,6 +837,7 @@ async function establecerFiltros() {
                             if (restablecerResponse.success) {
                                 alert(restablecerResponse.data.message);
                                 window.limpiarBusqueda(); // Llamar a limpiarBusqueda después del restablecimiento
+                                filtrosPost();
                                 if (botonPostRestablecer) {
                                     botonPostRestablecer.style.display = 'none';
                                     console.log('establecerFiltros: Ocultando botonPostRestablecer tras restablecer');
