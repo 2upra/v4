@@ -92,7 +92,7 @@ function iniciar_sesion()
 <?php
     return ob_get_clean();
 }
-
+/*
 function handle_google_callback()
 {
     if (isset($_GET['code'])) {
@@ -186,7 +186,7 @@ function handle_google_callback()
     }
 }
 add_action('init', 'handle_google_callback');
-
+*/
 
 function is_electron_app()
 {
