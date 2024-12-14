@@ -51,7 +51,6 @@ function iniciar_sesion()
                     <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn">
                         <?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google
                     </button>
-
                     <script>
                         document.getElementById('google-login-btn').addEventListener('click', function() {
                             // URL de autenticación de Google OAuth
@@ -68,46 +67,16 @@ function iniciar_sesion()
                                 return /Instagram|FBAN|FBAV|Messenger|Line|WebView|Threads|Twitter|Snapchat|TikTok/.test(ua);
                             };
 
-                            // Función para abrir un enlace en el navegador externo
-                            const openInExternalBrowser = (url) => {
-                                const isAndroid = /Android/i.test(navigator.userAgent);
-                                const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-                                if (isAndroid) {
-                                    // Intent para abrir en Chrome en Android
-                                    try {
-                                        window.location.href = `intent:${url}#Intent;scheme=https;package=com.android.chrome;end;`;
-                                    } catch (e) {
-                                        // Si falla el Intent, mostramos una alerta con el enlace
-                                        alert(`Por favor, abre este enlace en tu navegador:\n\n${url}`);
-                                    }
-                                } else if (isIOS) {
-                                    // Intentamos abrir en Safari para iOS
-                                    try {
-                                        window.location.href = url;
-                                        setTimeout(() => {
-                                            alert(`Si el navegador no se abrió, copia y pega este enlace en Safari:\n\n${url}`);
-                                        }, 2000); // Tiempo para que el usuario vea el mensaje si el navegador no responde
-                                    } catch (e) {
-                                        alert(`Por favor, abre este enlace en tu navegador:\n\n${url}`);
-                                    }
-                                } else {
-                                    // Otros dispositivos o navegadores
-                                    alert(`Por favor, abre este enlace en tu navegador:\n\n${url}`);
-                                }
-                            };
-
                             // Lógica principal
                             if (isEmbeddedBrowser()) {
-                                // Si estamos en un navegador embebido, intentamos abrir en navegador externo
-                                openInExternalBrowser(googleOAuthURL);
+                                // Si estamos en un navegador embebido, redirigimos a 2upra.com
+                                window.location.href = 'https://2upra.com';
                             } else {
-                                // Si estamos en un navegador normal, redirigimos directamente
+                                // Si estamos en un navegador normal, redirigimos a Google OAuth
                                 window.location.href = googleOAuthURL;
                             }
                         });
                     </script>
-
 
 
                     <button type="button" class="R0A915 A1 boton-cerrar">Volver</button>
