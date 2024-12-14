@@ -116,6 +116,13 @@
         return !/https:\/\/2upra\.com\/nocache/.test(url);
     }
 
+    /*
+    VM3724:1  Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Identifier 'wpAdminUrl' has already been declared
+    at ajaxPage.js?ver=0.2.130:142:39
+    at NodeList.forEach (<anonymous>)
+    at ajaxPage.js?ver=0.2.130:138:48
+    */
+
     function load(url, pushState) {
         if (!url || /^(javascript|data|vbscript):|#/.test(url.toLowerCase()) || url.includes('descarga_token')) return;
         if (pageCache[url] && shouldCache(url)) {
@@ -139,7 +146,12 @@
                     if (s.src && !document.querySelector(`script[src="${s.src}"]`)) {
                         document.body.appendChild(Object.assign(document.createElement('script'), {src: s.src, async: false}));
                     } else if (!s.src) {
-                        document.body.appendChild(Object.assign(document.createElement('script'), {textContent: s.textContent}));
+                        // Verificar si el script define wpAdminUrl y si ya existe
+                        if (s.textContent.includes('wpAdminUrl') && typeof wpAdminUrl !== 'undefined') {
+                            console.warn('wpAdminUrl ya está definido. No se agregará el script.');
+                        } else {
+                            document.body.appendChild(Object.assign(document.createElement('script'), {textContent: s.textContent}));
+                        }
                     }
                 });
 
