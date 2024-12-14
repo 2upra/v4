@@ -224,9 +224,13 @@ if (!defined('ABSPATH')) {
                             <button id="clearSearch" class="clear-search" style="display: none;">
                                 <? echo $GLOBALS['flechaAtras']; ?>
                             </button>
-                            <div class="resultadosBusqueda modal" id="resultadoBusqueda" style="display: none;">         
+                            <div class="resultadosBusqueda modal" id="resultadoBusqueda" style="display: none;">
                             </div>
                         </div>
+
+
+
+
 
                         <div class="menuArribaLogin">
 
@@ -316,6 +320,8 @@ if (!defined('ABSPATH')) {
                     <? echo modalTipoUsuario() ?>
                     <? echo modalGeneros() ?>
                 </div>
+                
+                <? echo modalApp() ?>
 
                 <div class="comentariosPost modal no-refresh" style="display: none" id="comentariosPost">
                     <div class="listComentarios no-refresh" id="listComentarios" style="display: none;">

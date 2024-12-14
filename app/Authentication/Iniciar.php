@@ -274,6 +274,14 @@ add_action('rest_api_init', function () {
     ));
 });
 
+
+/**
+ * Guarda el token de Firebase para un usuario específico y evita duplicados.
+ * También guarda la versión de la aplicación.
+ *
+ * @param WP_REST_Request $request La solicitud REST.
+ * @return array|WP_Error Respuesta de éxito o error.
+ */
 function save_firebase_token($request) {
     $user_id = $request->get_param('userId'); // Obtener el userId desde la solicitud
 
@@ -283,7 +291,7 @@ function save_firebase_token($request) {
     }
 
     $firebase_token = sanitize_text_field($request->get_param('token'));
-    
+
     // Verificar que el token no esté vacío
     if (!$firebase_token) {
         return new WP_Error('no_token', 'El token es requerido.', array('status' => 400));
@@ -292,46 +300,56 @@ function save_firebase_token($request) {
     // Guardar el token, solo si es diferente al actual
     $current_token = get_user_meta($user_id, 'firebase_token', true);
 
-    if ($current_token === $firebase_token) {
-        // Verificar si también se necesita actualizar la versión de la app
-        save_version_meta($user_id, $request);
-        return array(
-            'success' => true,
-            'message' => 'El token ya estaba guardado. Solo se actualizó la versión de la app si era necesario.',
-        );
-    }
+    if ($current_token !== $firebase_token) {
+        // Actualizar el token del usuario
+        $updated = update_user_meta($user_id, 'firebase_token', $firebase_token);
 
-    // Actualizar el token del usuario
-    $updated = update_user_meta($user_id, 'firebase_token', $firebase_token);
+        if (!$updated) {
+            return new WP_Error('save_failed', 'No se pudo guardar el token.', array('status' => 500));
+        }
+    }
 
     // Guardar la versión de la app
     save_version_meta($user_id, $request);
-
-    if ($updated) {
-        return array(
+    
+    // Verificar si el token se guardó correctamente o si ya existía
+    if ($current_token === $firebase_token) {
+          return array(
+            'success' => true,
+            'message' => 'El token ya estaba guardado. Versión de la app actualizada correctamente.',
+        );
+    } else {
+          return array(
             'success' => true,
             'message' => 'Token y versión de la app guardados correctamente.',
         );
-    } else {
-        return new WP_Error('save_failed', 'No se pudo guardar el token.', array('status' => 500));
     }
 }
 
 /**
  * Función auxiliar para guardar la versión de la app.
+ * Evita que se creen metas duplicadas.
+ *
+ * @param int $user_id ID del usuario.
+ * @param WP_REST_Request $request La solicitud REST.
  */
 function save_version_meta($user_id, $request) {
     // Obtener la versión de la app desde la solicitud
     $app_version_name = sanitize_text_field($request->get_param('appVersionName'));
     $app_version_code = intval($request->get_param('appVersionCode')); // Convertir a entero
 
-    // Guardar la versión de la app solo si están presentes
+    // Guardar la versión de la app solo si están presentes y son diferentes a las actuales
     if ($app_version_name) {
-        update_user_meta($user_id, 'app_version_name', $app_version_name);
+        $current_app_version_name = get_user_meta($user_id, 'app_version_name', true);
+        if ($current_app_version_name !== $app_version_name) {
+            update_user_meta($user_id, 'app_version_name', $app_version_name);
+        }
     }
 
     if ($app_version_code) {
-        update_user_meta($user_id, 'app_version_code', $app_version_code);
+        $current_app_version_code = get_user_meta($user_id, 'app_version_code', true);
+        if ($current_app_version_code !== $app_version_code) {
+            update_user_meta($user_id, 'app_version_code', $app_version_code);
+        }
     }
 }
-
