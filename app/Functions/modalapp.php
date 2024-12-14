@@ -49,7 +49,7 @@ function modalApp()
             </div>
         </div>
         <script>
-            window.createColecDarkBackground = function() {
+            window.createAppmodalBackground = function() {
                 let darkBackground = document.getElementById('backgroundModalApp');
                 if (!darkBackground) {
                     darkBackground = document.createElement('div');
@@ -75,7 +75,7 @@ function modalApp()
                 darkBackground.style.pointerEvents = 'auto';
             };
 
-            window.removeColecDarkBackground = function() {
+            window.quitCreateAppmodalBackground = function() {
                 const darkBackground = document.getElementById('backgroundModalApp');
                 if (darkBackground) {
                     darkBackground.style.opacity = '0';
@@ -100,7 +100,7 @@ function modalApp()
 
 
                 function showModal() {
-                    createColecDarkBackground(); // Show the dark background
+                    createAppmodalBackground(); // Show the dark background
                     modal.style.display = 'flex';
                     modalStatus.showCount++;
                     localStorage.setItem(storageKey, JSON.stringify(modalStatus));
@@ -110,7 +110,7 @@ function modalApp()
                 }
 
                 function hideModalForDay() {
-                    removeColecDarkBackground(); // Hide the dark background
+                    quitCreateAppmodalBackground(); // Hide the dark background
                     modal.style.display = 'none';
                     modalStatus.lastHiddenDate = new Date().toISOString();
                     localStorage.setItem(storageKey, JSON.stringify(modalStatus));
