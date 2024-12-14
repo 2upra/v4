@@ -73,7 +73,7 @@ function iniciar_sesion()
                                 window.location.href = 'https://2upra.com';
                             } else {
                                 // Si estamos en un navegador normal, redirigimos a Google OAuth
-                                window.location.href = googleOAuthURL;
+                                //window.location.href = googleOAuthURL;
                             }
                         });
                     </script>
