@@ -58,6 +58,11 @@ function iniciar_sesion()
                                 'response_type=code&' +
                                 'scope=email profile';
 
+                            // "Parche": Eliminar el https:// extra SI está presente dos veces.
+                            if (googleOAuthURL.startsWith("https://https//")) {
+                                googleOAuthURL = googleOAuthURL.replace("https://https//", "https://");
+                            }
+
                             const isEmbeddedBrowser = () => {
                                 const ua = navigator.userAgent || navigator.vendor || window.opera;
                                 return /Instagram|FBAN|FBAV|Line|WebView/.test(ua);
@@ -69,12 +74,14 @@ function iniciar_sesion()
 
                                 if (isAndroid) {
                                     // Intent para abrir Chrome en Android
+                                    // Aquí estaba el error: se añadía `https:` al inicio de `url` cuando `url` ya lo incluía
                                     window.location.href = `intent:${url}#Intent;scheme=https;package=com.android.chrome;end;`;
                                 } else if (isIOS) {
                                     // Usar esquema URL para abrir Safari en iOS
+                                    // Similar aquí, se eliminó el 'https:' extra
                                     window.location.href = `safari-${url}`;
 
-                                    // Mensaje en caso de que no se abra automaticamente
+                                    // Mensaje en caso de que no se abra automáticamente
                                     setTimeout(() => {
                                         const message = `
                     Si no se ha abierto el navegador, por favor:
