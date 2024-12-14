@@ -64,19 +64,23 @@ function iniciar_sesion()
                             };
 
                             if (isEmbedded()) {
-                                // Sugerir usar un navegador externo
-                                alert('Por favor abre este enlace en tu navegador predeterminado (como Chrome o Safari) para iniciar sesión.');
+                                // Mostrar alerta indicando que se debe usar un navegador externo
+                                alert('No se puede iniciar sesión directamente desde este navegador. Por favor, abre este enlace en tu navegador predeterminado como Chrome o Safari.');
 
-                                // Si es Android, intentar abrir Chrome con un intent
+                                // Intentar abrir Chrome en Android
                                 if (/Android/i.test(navigator.userAgent)) {
                                     window.location.href = `intent:${url}#Intent;scheme=https;package=com.android.chrome;end;`;
+                                } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                                    // En iOS no hay intents, solo sugerir abrir Safari
+                                    alert('Copia el siguiente enlace y ábrelo en Safari:\n\n' + url);
                                 }
                             } else {
-                                // Para otros dispositivos, redirigir normalmente
+                                // Redirigir normalmente si no es un navegador embebido
                                 window.location.href = url;
                             }
                         });
                     </script>
+
 
                     <button type="button" class="R0A915 A1 boton-cerrar">Volver</button>
                     <p><a href="https://2upra.com/tc/">Política de privacidad</a></p>
