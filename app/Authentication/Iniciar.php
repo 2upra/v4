@@ -46,29 +46,34 @@ function iniciar_sesion()
             <div class="XUSEOO">
                 <div class="XYSRLL">
 
-                    <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn"><?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google</button>
+                    <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn">
+                        <?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google
+                    </button>
 
                     <script>
-                        document.getElementById('google-login-btn').addEventListener('click', function(event) {
-                            event.preventDefault(); // Evita el comportamiento predeterminado del botón
-
-                            // Construye la URL de autenticación de Google
-                            var authUrl = 'https://accounts.google.com/o/oauth2/auth?' +
+                        document.getElementById('google-login-btn').addEventListener('click', function() {
+                            const url = 'https://accounts.google.com/o/oauth2/auth?' +
                                 'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' +
                                 'redirect_uri=https://2upra.com/google-callback&' +
                                 'response_type=code&' +
                                 'scope=email profile';
 
-                            // Intenta abrir la URL en un navegador externo
-                            if (typeof Android !== 'undefined' && typeof Android.openUrl === 'function') {
-                                // Si existe la interfaz de Android, úsala (para apps Android)
-                                Android.openUrl(authUrl);
-                            } else if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.openUrl) {
-                                // Si existe la interfaz de WKWebView (iOS), úsala
-                                window.webkit.messageHandlers.openUrl.postMessage(authUrl);
+                            const isEmbedded = () => {
+                                const ua = navigator.userAgent || navigator.vendor || window.opera;
+                                return (ua.includes('Instagram') || ua.includes('FBAN') || ua.includes('FBAV'));
+                            };
+
+                            if (isEmbedded()) {
+                                // Sugerir usar un navegador externo
+                                alert('Por favor abre este enlace en tu navegador predeterminado (como Chrome o Safari) para iniciar sesión.');
+
+                                // Si es Android, intentar abrir Chrome con un intent
+                                if (/Android/i.test(navigator.userAgent)) {
+                                    window.location.href = `intent:${url}#Intent;scheme=https;package=com.android.chrome;end;`;
+                                }
                             } else {
-                                // Como último recurso, abre la URL en la misma ventana (probablemente un navegador)
-                                window.location.href = authUrl;
+                                // Para otros dispositivos, redirigir normalmente
+                                window.location.href = url;
                             }
                         });
                     </script>
