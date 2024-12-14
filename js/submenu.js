@@ -5,7 +5,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         const trigger = event.target.closest(triggerSelector);
         if (!trigger) return;
 
-        const submenuId = `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || "default"}`;
+        const submenuId = `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || 'default'}`;
         const submenu = document.getElementById(submenuId);
 
         if (!submenu) return;
@@ -14,27 +14,27 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
 
         submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
 
-        if (submenu.style.display === "block") {
+        if (submenu.style.display === 'block') {
             hideSubmenu(submenu);
         } else {
             showSubmenu(event, trigger, submenu, submenu._position);
         }
 
-        event.stopPropagation();
+        event.stopPropagation(); // Esto evita que el evento se propague al document y cierre otros menús
     }
 
     function showSubmenu(event, trigger, submenu, position) {
-        const { innerWidth: vw, innerHeight: vh } = window;
+        const {innerWidth: vw, innerHeight: vh} = window;
 
         if (submenu.parentNode !== document.body) {
             document.body.appendChild(submenu);
         }
 
-        submenu.style.position = "fixed";
+        submenu.style.position = 'fixed';
         submenu.style.zIndex = 1003;
 
-        submenu.style.display = "block";
-        submenu.style.visibility = "hidden";
+        submenu.style.display = 'block';
+        submenu.style.visibility = 'hidden';
 
         let submenuWidth = submenu.offsetWidth;
         let submenuHeight = submenu.offsetHeight;
@@ -45,7 +45,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             submenu.style.top = `${(vh - submenuHeight) / 2}px`;
             submenu.style.left = `${(vw - submenuWidth) / 2}px`;
         } else {
-            let { top, left } = calculatePosition(rect, submenuWidth, submenuHeight, position);
+            let {top, left} = calculatePosition(rect, submenuWidth, submenuHeight, position);
 
             if (top + submenuHeight > vh) top = vh - submenuHeight;
             if (left + submenuWidth > vw) left = vw - submenuWidth;
@@ -56,32 +56,33 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             submenu.style.left = `${left}px`;
         }
 
-        submenu.style.visibility = "visible";
+        submenu.style.visibility = 'visible';
 
         createSubmenuDarkBackground();
 
         document.body.classList.add('no-scroll');
 
-        submenu.addEventListener('click', (e) => {
+        submenu.addEventListener('click', e => {
             e.stopPropagation();
         });
 
-        const submenuButtons = submenu.querySelectorAll('button');
-        submenuButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                hideSubmenu(submenu);
-            });
-        });
+        // Modificación aquí: Eliminar el manejador de clic que oculta el menú para los botones dentro del submenu
+        //  const submenuButtons = submenu.querySelectorAll('button');
+        // submenuButtons.forEach(button => {
+        //     button.addEventListener('click', () => {
+        //         hideSubmenu(submenu);
+        //     });
+        // });
     }
 
     function hideSubmenu(submenu) {
         if (submenu) {
-            submenu.style.display = "none";
+            submenu.style.display = 'none';
         }
 
         removeSubmenuDarkBackground();
 
-        const activeSubmenus = Array.from(document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`)).filter(menu => menu.style.display === "block");
+        const activeSubmenus = Array.from(document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`)).filter(menu => menu.style.display === 'block');
 
         if (activeSubmenus.length === 0) {
             document.body.classList.remove('no-scroll');
@@ -91,15 +92,15 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     triggers.forEach(trigger => {
         if (trigger.dataset.submenuInitialized) return;
 
-        trigger.addEventListener("click", toggleSubmenu);
-        trigger.dataset.submenuInitialized = "true";
+        trigger.addEventListener('click', toggleSubmenu);
+        trigger.dataset.submenuInitialized = 'true';
     });
 
-    document.addEventListener("click", (event) => {
+    document.addEventListener('click', event => {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
-            if (!submenu.contains(event.target) && !event.target.matches(triggerSelector)) {
+            // Modificación aquí: Comprobar si el clic proviene de un botón dentro del submenú o el trigger
+            if (!submenu.contains(event.target) && !event.target.closest(triggerSelector)) {
                 hideSubmenu(submenu);
-                
             }
         });
     });
@@ -130,7 +131,6 @@ window.createSubmenuDarkBackground = function () {
         darkBackground.style.transition = 'opacity 0.3s ease';
         document.body.appendChild(darkBackground);
 
-
         // Agregar evento para cerrar submenús al hacer clic en el fondo oscuro
         darkBackground.addEventListener('click', () => {
             document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
@@ -159,24 +159,24 @@ window.removeSubmenuDarkBackground = function () {
 };
 
 function calculatePosition(rect, submenuWidth, submenuHeight, position) {
-    const { innerWidth: vw, innerHeight: vh } = window;
+    const {innerWidth: vw, innerHeight: vh} = window;
     let top, left;
 
     switch (position) {
         case 'arriba':
             top = rect.top - submenuHeight;
-            left = rect.left + (rect.width / 2) - (submenuWidth / 2);
+            left = rect.left + rect.width / 2 - submenuWidth / 2;
             break;
         case 'abajo':
             top = rect.bottom;
-            left = rect.left + (rect.width / 2) - (submenuWidth / 2);
+            left = rect.left + rect.width / 2 - submenuWidth / 2;
             break;
         case 'izquierda':
-            top = rect.top + (rect.height / 2) - (submenuHeight / 2);
+            top = rect.top + rect.height / 2 - submenuHeight / 2;
             left = rect.left - submenuWidth;
             break;
         case 'derecha':
-            top = rect.top + (rect.height / 2) - (submenuHeight / 2);
+            top = rect.top + rect.height / 2 - submenuHeight / 2;
             left = rect.right;
             break;
         case 'centro':
@@ -190,23 +190,23 @@ function calculatePosition(rect, submenuWidth, submenuHeight, position) {
             break;
     }
 
-    return { top, left };
+    return {top, left};
 }
 
 function initializeStaticMenus() {
     // Ejemplos de uso con la nueva parametrización de posición
-    createSubmenu(".chatIcono", "bloqueConversaciones", 'abajo');
-    createSubmenu(".fotoperfilsub", "fotoperfilsub", 'abajo');
+    createSubmenu('.chatIcono', 'bloqueConversaciones', 'abajo');
+    createSubmenu('.fotoperfilsub', 'fotoperfilsub', 'abajo');
 }
 
 // Esto se reinicia cada vez que cargan nuevos posts
 function submenu() {
     // Botón clase - submenu id - posición
-    createSubmenu(".filtrosboton", "filtrosMenu", 'abajo');
-    createSubmenu(".mipsubmenu", "submenuperfil", 'abajo');
-    createSubmenu(".HR695R7", "opcionesrola", 'abajo');
-    createSubmenu(".HR695R8", "opcionespost", 'abajo');
-    createSubmenu(".submenucolab", "opcionescolab", 'abajo');
+    createSubmenu('.filtrosboton', 'filtrosMenu', 'abajo');
+    createSubmenu('.mipsubmenu', 'submenuperfil', 'abajo');
+    createSubmenu('.HR695R7', 'opcionesrola', 'abajo');
+    createSubmenu('.HR695R8', 'opcionespost', 'abajo');
+    createSubmenu('.submenucolab', 'opcionescolab', 'abajo');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
