@@ -51,7 +51,7 @@ function iniciar_sesion()
                     <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn">
                         <?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google
                     </button>
-                    sigue sin funciona redirije mal, mejor simplemente en caso de los webview que redirija a 2upra.com
+
                     <script>
                         document.getElementById('google-login-btn').addEventListener('click', function() {
                             // URL de autenticación de Google OAuth
