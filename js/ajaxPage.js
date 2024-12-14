@@ -164,18 +164,31 @@
             e.preventDefault();
             load(url, true);
         }
-        /*
-        ya se arreglo, faltan los botones, como va esta parte
-        <button class="iralpost"><a href="https://2upra.com/sample/joe-bataan-vocal-loop-ideal-for-hip-hop/">Ir al post</a></button>
-        */
+
+        <button class="iralpost">
+            <a href="https://2upra.com/sample/joe-bataan-vocal-loop-ideal-for-hip-hop/">Ir al post</a>
+        </button>;
+
         // Usando delegación de eventos en el body
         document.body.addEventListener('click', e => {
             // Seleccionamos el elemento 'a' más cercano o los elementos específicos que nos interesan
-            const el = e.target.closest('a, button a, button.iralpost, .botones-panel a, .post-image-container a');
-            // Si se encontró un elemento y coincide con nuestros selectores, ejecutamos handleLoad
+            const el = e.target.closest('a, button.iralpost > a, button a, .botones-panel a, .post-image-container a');
+
             if (el) {
-                const url = el.getAttribute('href') || el.getAttribute('data-href'); // Simplificado para tu caso
-                handleLoad(e, url, el);
+                // Obtenemos la URL del href si es un 'a', o del 'data-href' si está definido
+                let url;
+                if (el.tagName === 'A') {
+                    url = el.getAttribute('href');
+                } else if (el.closest('button.iralpost') && el.closest('button.iralpost').querySelector('a')) {
+                    url = el.closest('button.iralpost').querySelector('a').getAttribute('href');
+                } else if (el.hasAttribute('data-href')) {
+                    url = el.getAttribute('data-href');
+                }
+
+                // Si encontramos una URL, manejamos la carga
+                if (url) {
+                    handleLoad(e, url, el);
+                }
             }
         });
 
