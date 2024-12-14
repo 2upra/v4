@@ -54,20 +54,18 @@ function iniciar_sesion()
 
                     <script>
                         document.getElementById('google-login-btn').addEventListener('click', function() {
-                            let googleOAuthURL = 'https://accounts.google.com/o/oauth2/auth?' +
+                            // URL de autenticación de Google OAuth
+                            const googleOAuthURL = 'https://accounts.google.com/o/oauth2/auth?' +
                                 'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' +
                                 'redirect_uri=https://2upra.com/google-callback&' +
                                 'response_type=code&' +
                                 'scope=email profile';
 
-                            // Reparar URL malformada en caso de que ya venga con "https://https//"
-                            googleOAuthURL = googleOAuthURL.replace("https://https//", "https://");
-
-                            // Función para detectar si estamos en un navegador embebido
+                            // Función para detectar navegadores embebidos
                             const isEmbeddedBrowser = () => {
                                 const ua = navigator.userAgent || navigator.vendor || window.opera;
-                                // Añadimos más casos comunes para detectar navegadores embebidos
-                                return /Instagram|FBAN|FBAV|Messenger|Line|WebView|Threads|Twitter/.test(ua);
+                                // Detectamos navegadores embebidos más comunes
+                                return /Instagram|FBAN|FBAV|Messenger|Line|WebView|Threads|Twitter|Snapchat|TikTok/.test(ua);
                             };
 
                             // Función para abrir un enlace en el navegador externo
@@ -76,33 +74,35 @@ function iniciar_sesion()
                                 const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
                                 if (isAndroid) {
-                                    // Abrir Chrome en Android usando Intent
-                                    window.location.href = `intent:${url}#Intent;scheme=https;package=com.android.chrome;end;`;
+                                    // Intent para abrir en Chrome en Android
+                                    try {
+                                        window.location.href = `intent:${url}#Intent;scheme=https;package=com.android.chrome;end;`;
+                                    } catch (e) {
+                                        // Si falla el Intent, mostramos una alerta con el enlace
+                                        alert(`Por favor, abre este enlace en tu navegador:\n\n${url}`);
+                                    }
                                 } else if (isIOS) {
-                                    // Abrir Safari en iOS
-                                    window.location.href = `safari-${url}`;
-
-                                    // Mensaje de ayuda en caso de que no se abra automáticamente
-                                    setTimeout(() => {
-                                        alert(`
-                        Si no se ha abierto el navegador, por favor:
-                        1. Copia el siguiente enlace.
-                        2. Ábrelo manualmente en Safari.
-
-                        ${url}
-                    `);
-                                    }, 2000); // Espera 2 segundos antes de mostrar el mensaje
+                                    // Intentamos abrir en Safari para iOS
+                                    try {
+                                        window.location.href = url;
+                                        setTimeout(() => {
+                                            alert(`Si el navegador no se abrió, copia y pega este enlace en Safari:\n\n${url}`);
+                                        }, 2000); // Tiempo para que el usuario vea el mensaje si el navegador no responde
+                                    } catch (e) {
+                                        alert(`Por favor, abre este enlace en tu navegador:\n\n${url}`);
+                                    }
                                 } else {
-                                    // Caso no identificado: Mostrar un mensaje con el enlace
-                                    alert('Por favor, abre el siguiente enlace en tu navegador predeterminado:\n\n' + url);
+                                    // Otros dispositivos o navegadores
+                                    alert(`Por favor, abre este enlace en tu navegador:\n\n${url}`);
                                 }
                             };
 
+                            // Lógica principal
                             if (isEmbeddedBrowser()) {
-                                // Si estamos en un navegador embebido, abrir en navegador externo
+                                // Si estamos en un navegador embebido, intentamos abrir en navegador externo
                                 openInExternalBrowser(googleOAuthURL);
                             } else {
-                                // Si no, redirigir normalmente
+                                // Si estamos en un navegador normal, redirigimos directamente
                                 window.location.href = googleOAuthURL;
                             }
                         });
