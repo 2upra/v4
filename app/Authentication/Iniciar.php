@@ -55,8 +55,8 @@ function iniciar_sesion()
                         document.getElementById('google-login-btn').addEventListener('click', function() {
                             // URL de autenticación de Google OAuth
                             const googleOAuthURL = 'https://accounts.google.com/o/oauth2/auth?' +
-                                'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' +
-                                'redirect_uri=https://2upra.com/google-callback&' +
+                                //'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' +
+                                //'redirect_uri=https://2upra.com/google-callback&' +
                                 'response_type=code&' +
                                 'scope=email profile';
 
