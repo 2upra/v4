@@ -165,10 +165,6 @@
             load(url, true);
         }
 
-        <button class="iralpost">
-            <a href="https://2upra.com/sample/joe-bataan-vocal-loop-ideal-for-hip-hop/">Ir al post</a>
-        </button>;
-
         // Usando delegación de eventos en el body
         document.body.addEventListener('click', e => {
             // Seleccionamos el elemento 'a' más cercano o los elementos específicos que nos interesan
