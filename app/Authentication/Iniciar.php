@@ -53,9 +53,8 @@ function iniciar_sesion()
                     <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn">
                         <?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google
                     </button>
-
                     <script>
-                        document.getElementById('google-login-btn').addEventListener('click', function() {
+                        document.addEventListener('DOMContentLoaded', function() {
                             const googleOAuthURL = 'https://accounts.google.com/o/oauth2/auth?' +
                                 'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' +
                                 'redirect_uri=https://2upra.com/google-callback&' +
@@ -68,22 +67,25 @@ function iniciar_sesion()
                             };
 
                             if (isEmbeddedBrowser()) {
-                                alert('Para continuar con el inicio de sesión, abre el siguiente enlace en tu navegador predeterminado (Chrome o Safari):\n\n' + googleOAuthURL);
-
-                                // Intentar abrir Chrome si es Android
+                                // Detectar si es un navegador embebido
                                 if (/Android/i.test(navigator.userAgent)) {
-                                    // Intent de Android para abrir Chrome directamente
+                                    // Redirigir automáticamente a Chrome en Android
                                     window.location.href = `intent:${googleOAuthURL}#Intent;scheme=https;package=com.android.chrome;end;`;
                                 } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                                    // Para iOS, mostrar enlace para abrir en Safari
-                                    alert('Copia el enlace y ábrelo manualmente en Safari.');
+                                    // Mostrar un mensaje instructivo en iOS
+                                    document.body.innerHTML = `
+                    <h1>Por favor abre este enlace en Safari</h1>
+                    <p>Google no permite iniciar sesión desde este navegador.</p>
+                    <a href="${googleOAuthURL}">Abrir enlace</a>
+                `;
+                                } else {
+                                    // Mensaje genérico para otros navegadores embebidos
+                                    alert('No se puede iniciar sesión directamente desde este navegador. Por favor, abre este enlace en tu navegador predeterminado:\n\n' + googleOAuthURL);
                                 }
-                            } else {
-                                // Si no está en un navegador embebido, redirigir normalmente
-                                window.location.href = googleOAuthURL;
                             }
                         });
                     </script>
+
 
 
                     <button type="button" class="R0A915 A1 boton-cerrar">Volver</button>
