@@ -173,7 +173,7 @@
 
             if (el) {
                 let url;
-                hideAllSubmenus();
+                window.hideAllSubmenus();
                 // Prioridad 1: ajaxUrl dentro de button.iralpost
                 const buttonIralpost = el.closest('button.iralpost');
                 if (buttonIralpost) {
