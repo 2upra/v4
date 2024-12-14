@@ -85,13 +85,43 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             document.body.classList.remove('no-scroll');
         }
     }
-
     window.hideAllSubmenus = function () {
-        triggers.forEach(trigger => {
-            const submenuId = `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || 'default'}`;
+        console.log('Ejecutando hideAllSubmenus'); // Indica el inicio de la función
+
+        // Asumiendo que 'triggers' está definido en otro lugar y es un array o NodeList
+        if (!triggers || triggers.length === 0) {
+            console.log("No se encontraron 'triggers'. Verifica que la variable 'triggers' esté definida correctamente y contenga elementos.");
+            return; // Salir de la función si no hay triggers
+        }
+
+        console.log(`Se encontraron ${triggers.length} triggers:`, triggers); // Muestra la cantidad de triggers y los propios triggers
+
+        triggers.forEach((trigger, index) => {
+            console.log(`Procesando trigger ${index + 1}:`, trigger); // Muestra el trigger actual
+
+            // Mejorando la lógica para obtener postId
+            const postId = trigger.dataset.postId || trigger.id;
+            console.log(`postId obtenido: ${postId}`);
+
+            if (!postId) {
+                console.warn(`El trigger ${index + 1} no tiene postId ni id. Se usará 'default'.`, trigger);
+            }
+
+            const submenuId = `${submenuIdPrefix}-${postId || 'default'}`;
+            console.log(`submenuId generado: ${submenuId}`);
+
             const submenu = document.getElementById(submenuId);
-            hideSubmenu(submenu);
+            console.log(`Elemento submenu encontrado con ID ${submenuId}:`, submenu);
+
+            if (submenu) {
+                hideSubmenu(submenu);
+                console.log(`Se intentó ocultar el submenu con ID ${submenuId}`);
+            } else {
+                console.error(`No se encontró un elemento con el ID ${submenuId}. Verifica el ID generado y la estructura del DOM.`);
+            }
         });
+
+        console.log('hideAllSubmenus finalizado'); // Indica el final de la función
     };
 
     triggers.forEach(trigger => {
