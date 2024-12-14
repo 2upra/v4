@@ -298,6 +298,10 @@ window.createColecDarkBackground = function () {
         darkBackground.style.opacity = '0';
         darkBackground.style.transition = 'opacity 0.3s ease';
         document.body.appendChild(darkBackground);
+
+        darkBackground.addEventListener('click', () => {
+            cerrarColec();
+        });
     }
 
     darkBackground.style.display = 'block';
