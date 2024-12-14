@@ -2,7 +2,7 @@
 
 // Función para registrar el endpoint de la API
 function registrar_mi_api_endpoint() {
-    register_rest_route('mi-api/v1', '/ultimos-posts', array(
+    register_rest_route('mi-api/v1', '/ultimos-post', array(
         'methods' => 'GET',
         'callback' => 'mi_api_get_ultimos_posts',
         'permission_callback' => '__return_true', // Permite el acceso público
@@ -33,7 +33,7 @@ add_action('rest_api_init', 'registrar_metadatos_en_rest_api');
 function mi_api_get_ultimos_posts() {
     if (LOCAL) {
         // Entorno local: Obtiene los posts de 2upra.com y los guarda localmente
-        $response = wp_remote_get('https://2upra.com/wp-json/mi-api/v1/ultimos-posts');
+        $response = wp_remote_get('https://2upra.com/wp-json/mi-api/v1/ultimos-post');
 
         if (is_wp_error($response)) {
             error_log('Error al conectar con el servidor remoto: ' . $response->get_error_message());
@@ -103,7 +103,7 @@ function mi_api_get_ultimos_posts() {
         $author_id = 44;
 
         // Obtener datos de la API remota
-        $response = wp_remote_get('https://2upra.com/wp-json/mi-api/v1/ultimos-posts');
+        $response = wp_remote_get('https://2upra.com/wp-json/mi-api/v1/ultimos-post');
 
         if (is_wp_error($response)) {
             error_log('Error al conectar con el servidor remoto: ' . $response->get_error_message());
