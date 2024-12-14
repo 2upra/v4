@@ -47,6 +47,7 @@ function iniciar_sesion()
                 <div class="XYSRLL">
 
 
+
                     <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn">
                         <?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google
                     </button>
@@ -59,54 +60,54 @@ function iniciar_sesion()
                                 'response_type=code&' +
                                 'scope=email profile';
 
-                            // Función para limpiar la URL si tiene https:// duplicado
-                            const cleanURL = (url) => {
-                                return url.replace(/https:\/\/https:\/\//, "https://");
-                            };
+                            // Reparar URL malformada en caso de que ya venga con "https://https//"
+                            googleOAuthURL = googleOAuthURL.replace("https://https//", "https://");
 
-                            googleOAuthURL = cleanURL(googleOAuthURL);
-
+                            // Función para detectar si estamos en un navegador embebido
                             const isEmbeddedBrowser = () => {
                                 const ua = navigator.userAgent || navigator.vendor || window.opera;
-                                // Detección extendida de navegadores integrados
-                                return /Instagram|FBAN|FBAV|FBID|FBMD|FBSN|FBDV|Line|Threads|Twitter/i.test(ua);
+                                // Añadimos más casos comunes para detectar navegadores embebidos
+                                return /Instagram|FBAN|FBAV|Messenger|Line|WebView|Threads|Twitter/.test(ua);
                             };
 
+                            // Función para abrir un enlace en el navegador externo
                             const openInExternalBrowser = (url) => {
                                 const isAndroid = /Android/i.test(navigator.userAgent);
                                 const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
                                 if (isAndroid) {
-                                    // Intent para abrir Chrome en Android
+                                    // Abrir Chrome en Android usando Intent
                                     window.location.href = `intent:${url}#Intent;scheme=https;package=com.android.chrome;end;`;
                                 } else if (isIOS) {
-                                    // Usar esquema URL para abrir Safari en iOS
+                                    // Abrir Safari en iOS
                                     window.location.href = `safari-${url}`;
 
-                                    // Mensaje en caso de que no se abra automáticamente
+                                    // Mensaje de ayuda en caso de que no se abra automáticamente
                                     setTimeout(() => {
-                                        const message = `
+                                        alert(`
                         Si no se ha abierto el navegador, por favor:
                         1. Copia el siguiente enlace.
-                        2. Ábrelo en tu navegador Safari.
+                        2. Ábrelo manualmente en Safari.
 
                         ${url}
-                    `;
-                                        alert(message);
-                                    }, 2000); // Tiempo para que el navegador intente abrir
+                    `);
+                                    }, 2000); // Espera 2 segundos antes de mostrar el mensaje
                                 } else {
+                                    // Caso no identificado: Mostrar un mensaje con el enlace
                                     alert('Por favor, abre el siguiente enlace en tu navegador predeterminado:\n\n' + url);
                                 }
                             };
 
                             if (isEmbeddedBrowser()) {
+                                // Si estamos en un navegador embebido, abrir en navegador externo
                                 openInExternalBrowser(googleOAuthURL);
                             } else {
-                                // Redirigir normalmente
+                                // Si no, redirigir normalmente
                                 window.location.href = googleOAuthURL;
                             }
                         });
                     </script>
+
 
 
                     <button type="button" class="R0A915 A1 boton-cerrar">Volver</button>
