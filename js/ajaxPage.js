@@ -165,27 +165,32 @@
             load(url, true);
         }
 
-        // Usando delegación de eventos en el body
+        //sin motivo alguno sigue sin funcionar para <button class="iralpost"><a ajaxurl="https://2upra.com/sample/memphis-rap-vocal-sample-19/">Ir al post</a></button>
+
         document.body.addEventListener('click', e => {
-            // Seleccionamos el elemento 'a' más cercano o los elementos específicos que nos interesan
-            const el = e.target.closest('a, button.iralpost > a, button a, .botones-panel a, .post-image-container a');
-        
+            // Selección optimizada de elementos 'a' y botones con 'data-href'
+            const el = e.target.closest('a, button[data-href], .botones-panel [data-href], .post-image-container [data-href]');
+
             if (el) {
-                // Obtenemos la URL. Priorizamos ajaxUrl dentro de button.iralpost, luego href, luego data-href
                 let url;
-        
-                if (el.tagName === 'A' && el.closest('button.iralpost') && el.closest('button.iralpost').querySelector('a').hasAttribute('ajaxUrl')) {
-                    // Caso especial: <a> dentro de button.iralpost con ajaxUrl
-                    url = el.closest('button.iralpost').querySelector('a').getAttribute('ajaxUrl');
-                } else if (el.tagName === 'A') {
-                    // Caso general: <a> con href
-                    url = el.getAttribute('href');
-                } else if (el.hasAttribute('data-href')) {
-                    // Caso general: elemento con data-href
-                    url = el.getAttribute('data-href');
-                } else if (el.closest('button.iralpost') && el.closest('button.iralpost').hasAttribute('ajaxUrl')){
-                    url = el.closest('button.iralpost').getAttribute('ajaxUrl');
+
+                // Prioridad 1: ajaxUrl dentro de button.iralpost
+                const buttonIralpost = el.closest('button.iralpost');
+                if (buttonIralpost) {
+                    const innerLink = buttonIralpost.querySelector('a');
+                    url = innerLink && innerLink.hasAttribute('ajaxUrl') ? innerLink.getAttribute('ajaxUrl') : buttonIralpost.getAttribute('ajaxUrl');
                 }
+
+                // Prioridad 2: href en elementos 'a'
+                if (!url && el.tagName === 'A') {
+                    url = el.getAttribute('href');
+                }
+
+                // Prioridad 3: data-href en cualquier elemento (incluyendo botones)
+                if (!url) {
+                    url = el.getAttribute('data-href');
+                }
+
                 // Si encontramos una URL, manejamos la carga
                 if (url) {
                     handleLoad(e, url, el);
