@@ -63,26 +63,35 @@ function iniciar_sesion()
                                 return /Instagram|FBAN|FBAV|Line|WebView/.test(ua);
                             };
 
-                            if (isEmbeddedBrowser()) {
+                            const openInExternalBrowser = (url) => {
                                 const isAndroid = /Android/i.test(navigator.userAgent);
                                 const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
                                 if (isAndroid) {
                                     // Intent para abrir Chrome en Android
-                                    window.location.href = `intent:${googleOAuthURL}#Intent;scheme=https;package=com.android.chrome;end;`;
+                                    window.location.href = `intent:${url}#Intent;scheme=https;package=com.android.chrome;end;`;
                                 } else if (isIOS) {
-                                    // Mostrar mensaje para iOS
-                                    const message = `
-                    Para continuar con el inicio de sesión:
+                                    // Usar esquema URL para abrir Safari en iOS
+                                    window.location.href = `safari-${url}`;
+
+                                    // Mensaje en caso de que no se abra automaticamente
+                                    setTimeout(() => {
+                                        const message = `
+                    Si no se ha abierto el navegador, por favor:
                     1. Copia el siguiente enlace.
                     2. Ábrelo en tu navegador Safari.
 
-                    ${googleOAuthURL}
+                    ${url}
                 `;
-                                    alert(message);
+                                        alert(message);
+                                    }, 2000); // Tiempo para que el navegador intente abrir
                                 } else {
-                                    alert('Por favor, abre el siguiente enlace en tu navegador predeterminado:\n\n' + googleOAuthURL);
+                                    alert('Por favor, abre el siguiente enlace en tu navegador predeterminado:\n\n' + url);
                                 }
+                            };
+
+                            if (isEmbeddedBrowser()) {
+                                openInExternalBrowser(googleOAuthURL);
                             } else {
                                 // Redirigir normalmente
                                 window.location.href = googleOAuthURL;
