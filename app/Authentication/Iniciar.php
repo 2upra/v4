@@ -50,33 +50,37 @@ function iniciar_sesion()
                         <?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google
                     </button>
 
+                    <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn">
+                        <?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google
+                    </button>
+
                     <script>
                         document.getElementById('google-login-btn').addEventListener('click', function() {
-                            const url = 'https://accounts.google.com/o/oauth2/auth?' +
+                            const googleOAuthURL = 'https://accounts.google.com/o/oauth2/auth?' +
                                 'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' +
                                 'redirect_uri=https://2upra.com/google-callback&' +
                                 'response_type=code&' +
                                 'scope=email profile';
 
-                            const isEmbedded = () => {
+                            const isEmbeddedBrowser = () => {
                                 const ua = navigator.userAgent || navigator.vendor || window.opera;
-                                return (ua.includes('Instagram') || ua.includes('FBAN') || ua.includes('FBAV'));
+                                return ua.includes('Instagram') || ua.includes('FBAN') || ua.includes('FBAV') || ua.includes('Line');
                             };
 
-                            if (isEmbedded()) {
-                                // Mostrar alerta indicando que se debe usar un navegador externo
-                                alert('No se puede iniciar sesión directamente desde este navegador. Por favor, abre este enlace en tu navegador predeterminado como Chrome o Safari.');
+                            if (isEmbeddedBrowser()) {
+                                alert('Para continuar con el inicio de sesión, abre el siguiente enlace en tu navegador predeterminado (Chrome o Safari):\n\n' + googleOAuthURL);
 
-                                // Intentar abrir Chrome en Android
+                                // Intentar abrir Chrome si es Android
                                 if (/Android/i.test(navigator.userAgent)) {
-                                    window.location.href = `intent:${url}#Intent;scheme=https;package=com.android.chrome;end;`;
+                                    // Intent de Android para abrir Chrome directamente
+                                    window.location.href = `intent:${googleOAuthURL}#Intent;scheme=https;package=com.android.chrome;end;`;
                                 } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                                    // En iOS no hay intents, solo sugerir abrir Safari
-                                    alert('Copia el siguiente enlace y ábrelo en Safari:\n\n' + url);
+                                    // Para iOS, mostrar enlace para abrir en Safari
+                                    alert('Copia el enlace y ábrelo manualmente en Safari.');
                                 }
                             } else {
-                                // Redirigir normalmente si no es un navegador embebido
-                                window.location.href = url;
+                                // Si no está en un navegador embebido, redirigir normalmente
+                                window.location.href = googleOAuthURL;
                             }
                         });
                     </script>
