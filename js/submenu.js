@@ -93,7 +93,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             hideSubmenu(submenu);
         });
     };
-    
+
     triggers.forEach(trigger => {
         if (trigger.dataset.submenuInitialized) return;
 
@@ -103,8 +103,8 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
 
     document.addEventListener('click', event => {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
-            // Si el clic no está dentro del submenú, ni dentro del trigger, ni dentro de un elemento 'a' dentro del submenú
-            if (!submenu.contains(event.target) && !event.target.closest(triggerSelector) && !event.target.closest('a')) {
+            // Verificar si el submenú está visible antes de intentar ocultarlo
+            if (submenu.style.display === 'block' && !submenu.contains(event.target) && !event.target.closest(triggerSelector) && !event.target.closest('a')) {
                 hideSubmenu(submenu);
             }
         });

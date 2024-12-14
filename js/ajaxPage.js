@@ -163,13 +163,17 @@
             if (/\.pdf$|^(https:\/\/2upra\.com\/nocache|javascript|data|vbscript):|#/.test(lowerUrl)) return true;
             e.preventDefault();
 
-            // Cerrar submenús y detener la propagación inmediata del evento
+            // Cerrar submenús
             if (typeof window.hideAllSubmenus === 'function') {
                 window.hideAllSubmenus();
             }
-            e.stopImmediatePropagation();
 
-            load(url, true);
+            // Usar setTimeout para retrasar la ejecución de load
+            setTimeout(() => {
+                load(url, true);
+            }, 0); // Un retraso de 0 milisegundos es suficiente
+
+            e.stopImmediatePropagation(); // Asegurarse de que no se propague a otros listeners después del setTimeout
         }
 
         document.body.addEventListener('click', e => {
