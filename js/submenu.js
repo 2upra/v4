@@ -1,5 +1,6 @@
 function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     const triggers = document.querySelectorAll(triggerSelector);
+    let openSubmenu = null; // Variable para mantener un registro del submenú abierto
 
     function toggleSubmenu(event) {
         const trigger = event.target.closest(triggerSelector);
@@ -9,6 +10,11 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         const submenu = document.getElementById(submenuId);
 
         if (!submenu) return;
+
+        // Cerrar el submenú actualmente abierto si se abre uno nuevo
+        if (openSubmenu && openSubmenu !== submenu) {
+            hideSubmenu(openSubmenu);
+        }
 
         submenu._position = position;
 
@@ -20,21 +26,21 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             showSubmenu(event, trigger, submenu, submenu._position);
         }
 
-        event.stopPropagation(); // Esto evita que el evento se propague al document y cierre otros menús
+        event.stopPropagation(); // Necesario para evitar conflictos con otros manejadores de eventos
     }
 
     function showSubmenu(event, trigger, submenu, position) {
-        const {innerWidth: vw, innerHeight: vh} = window;
+        const { innerWidth: vw, innerHeight: vh } = window;
 
         if (submenu.parentNode !== document.body) {
             document.body.appendChild(submenu);
         }
 
-        submenu.style.position = 'fixed';
+        submenu.style.position = "fixed";
         submenu.style.zIndex = 1003;
 
-        submenu.style.display = 'block';
-        submenu.style.visibility = 'hidden';
+        submenu.style.display = "block";
+        submenu.style.visibility = "hidden";
 
         let submenuWidth = submenu.offsetWidth;
         let submenuHeight = submenu.offsetHeight;
@@ -45,7 +51,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             submenu.style.top = `${(vh - submenuHeight) / 2}px`;
             submenu.style.left = `${(vw - submenuWidth) / 2}px`;
         } else {
-            let {top, left} = calculatePosition(rect, submenuWidth, submenuHeight, position);
+            let { top, left } = calculatePosition(rect, submenuWidth, submenuHeight, position);
 
             if (top + submenuHeight > vh) top = vh - submenuHeight;
             if (left + submenuWidth > vw) left = vw - submenuWidth;
@@ -56,28 +62,24 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             submenu.style.left = `${left}px`;
         }
 
-        submenu.style.visibility = 'visible';
+        submenu.style.visibility = "visible";
 
         createSubmenuDarkBackground();
 
         document.body.classList.add('no-scroll');
 
-        submenu.addEventListener('click', e => {
-            e.stopPropagation();
-        });
+        openSubmenu = submenu; // Registrar el submenú abierto
 
-        // Modificación aquí: Eliminar el manejador de clic que oculta el menú para los botones dentro del submenu
-        //  const submenuButtons = submenu.querySelectorAll('button');
-        // submenuButtons.forEach(button => {
-        //     button.addEventListener('click', () => {
-        //         hideSubmenu(submenu);
-        //     });
+        // Eliminamos el event listener que detiene la propagación en el submenu
+        // submenu.addEventListener('click', e => {
+        //     e.stopPropagation();
         // });
     }
 
     function hideSubmenu(submenu) {
         if (submenu) {
-            submenu.style.display = 'none';
+            submenu.style.display = "none";
+            openSubmenu = null; // Restablecer el submenú abierto
         }
 
         removeSubmenuDarkBackground();
@@ -92,14 +94,14 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     triggers.forEach(trigger => {
         if (trigger.dataset.submenuInitialized) return;
 
-        trigger.addEventListener('click', toggleSubmenu);
-        trigger.dataset.submenuInitialized = 'true';
+        trigger.addEventListener("click", toggleSubmenu);
+        trigger.dataset.submenuInitialized = "true";
     });
 
-    document.addEventListener('click', event => {
+    document.addEventListener("click", (event) => {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
-            // Modificación aquí: Comprobar si el clic proviene de un botón dentro del submenú o el trigger
-            if (!submenu.contains(event.target) && !event.target.closest(triggerSelector)) {
+             // Si el clic no está dentro del submenú, ni dentro del trigger, ni dentro de un elemento 'a' dentro del submenú
+            if (!submenu.contains(event.target) && !event.target.closest(triggerSelector) && !event.target.closest('a')) {
                 hideSubmenu(submenu);
             }
         });
