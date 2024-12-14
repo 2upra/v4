@@ -157,6 +157,9 @@
         }
 
         function handleLoad(e, url, el) {
+            if (typeof window.hideAllSubmenus === 'function') {
+                
+            }
             if (el.classList.contains('no-ajax') || el.closest('.no-ajax')) return true;
             if (typeof url !== 'string' || !url) return console.warn('Invalid URL:', url), true;
             const lowerUrl = url.trim().toLowerCase();
@@ -164,9 +167,6 @@
             e.preventDefault();
 
             // Cerrar submenús
-            if (typeof window.hideAllSubmenus === 'function') {
-                window.hideAllSubmenus();
-            }
 
             // Usar setTimeout para retrasar la ejecución de load
             setTimeout(() => {
@@ -182,6 +182,7 @@
 
             if (el) {
                 let url;
+                window.hideAllSubmenus();
 
                 // Prioridad 1: ajaxUrl dentro de button.iralpost
                 const buttonIralpost = el.closest('button.iralpost');
