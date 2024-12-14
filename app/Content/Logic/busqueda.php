@@ -153,7 +153,15 @@ function generar_html_resultados($resultados)
                     <?php endif; ?>
                     <div class="resultado-info">
                         <h3><?php echo esc_html($resultado['titulo']); ?></h3>
-                        <p><?php echo esc_html($resultado['tipo']); ?></p>
+                        <p>
+                            <?php 
+                            if ($resultado['tipo'] === 'social post') {
+                                echo 'Post';
+                            } else {
+                                echo esc_html($resultado['tipo']);
+                            }
+                            ?>
+                        </p>
                     </div>
                 </div>
             </a>

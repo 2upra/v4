@@ -49,12 +49,27 @@ function iniciar_sesion()
                     <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn"><?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google</button>
 
                     <script>
-                        document.getElementById('google-login-btn').addEventListener('click', function() {
-                            window.location.href = 'https://accounts.google.com/o/oauth2/auth?' +
+                        document.getElementById('google-login-btn').addEventListener('click', function(event) {
+                            event.preventDefault(); // Evita el comportamiento predeterminado del botón
+
+                            // Construye la URL de autenticación de Google
+                            var authUrl = 'https://accounts.google.com/o/oauth2/auth?' +
                                 'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' +
                                 'redirect_uri=https://2upra.com/google-callback&' +
                                 'response_type=code&' +
                                 'scope=email profile';
+
+                            // Intenta abrir la URL en un navegador externo
+                            if (typeof Android !== 'undefined' && typeof Android.openUrl === 'function') {
+                                // Si existe la interfaz de Android, úsala (para apps Android)
+                                Android.openUrl(authUrl);
+                            } else if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.openUrl) {
+                                // Si existe la interfaz de WKWebView (iOS), úsala
+                                window.webkit.messageHandlers.openUrl.postMessage(authUrl);
+                            } else {
+                                // Como último recurso, abre la URL en la misma ventana (probablemente un navegador)
+                                window.location.href = authUrl;
+                            }
                         });
                     </script>
 
@@ -72,7 +87,8 @@ function iniciar_sesion()
     return ob_get_clean();
 }
 
-function handle_google_callback() {
+function handle_google_callback()
+{
     if (isset($_GET['code'])) {
         $code = $_GET['code'];
         $client_id = '84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com';
@@ -133,7 +149,7 @@ function handle_google_callback() {
 
                 // Limpiar el nombre para crear un user_login válido
                 $user_login = sanitize_user(str_replace(' ', '', strtolower($name)), true);
-                
+
                 // Asegurarse de que el user_login sea único
                 $original_user_login = $user_login;
                 $counter = 1;
@@ -282,7 +298,8 @@ add_action('rest_api_init', function () {
  * @param WP_REST_Request $request La solicitud REST.
  * @return array|WP_Error Respuesta de éxito o error.
  */
-function save_firebase_token($request) {
+function save_firebase_token($request)
+{
     $user_id = $request->get_param('userId'); // Obtener el userId desde la solicitud
 
     // Verificar si el ID de usuario es válido
@@ -311,15 +328,15 @@ function save_firebase_token($request) {
 
     // Guardar la versión de la app
     save_version_meta($user_id, $request);
-    
+
     // Verificar si el token se guardó correctamente o si ya existía
     if ($current_token === $firebase_token) {
-          return array(
+        return array(
             'success' => true,
             'message' => 'El token ya estaba guardado. Versión de la app actualizada correctamente.',
         );
     } else {
-          return array(
+        return array(
             'success' => true,
             'message' => 'Token y versión de la app guardados correctamente.',
         );
@@ -333,7 +350,8 @@ function save_firebase_token($request) {
  * @param int $user_id ID del usuario.
  * @param WP_REST_Request $request La solicitud REST.
  */
-function save_version_meta($user_id, $request) {
+function save_version_meta($user_id, $request)
+{
     // Obtener la versión de la app desde la solicitud
     $app_version_name = sanitize_text_field($request->get_param('appVersionName'));
     $app_version_code = intval($request->get_param('appVersionCode')); // Convertir a entero
