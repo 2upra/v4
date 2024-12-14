@@ -86,42 +86,23 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         }
     }
     window.hideAllSubmenus = function () {
-        console.log('Ejecutando hideAllSubmenus'); // Indica el inicio de la función
+        console.log('Ejecutando hideAllSubmenus (versión simplificada)'); // Indica el inicio de la función
 
-        // Asumiendo que 'triggers' está definido en otro lugar y es un array o NodeList
-        if (!triggers || triggers.length === 0) {
-            console.log("No se encontraron 'triggers'. Verifica que la variable 'triggers' esté definida correctamente y contenga elementos.");
-            return; // Salir de la función si no hay triggers
+        const allSubmenus = document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`);
+
+        if (allSubmenus.length === 0) {
+            console.log(`No se encontraron submenús con el prefijo '${submenuIdPrefix}-'.`);
+            return;
         }
 
-        console.log(`Se encontraron ${triggers.length} triggers:`, triggers); // Muestra la cantidad de triggers y los propios triggers
+        console.log(`Se encontraron ${allSubmenus.length} submenús:`, allSubmenus);
 
-        triggers.forEach((trigger, index) => {
-            console.log(`Procesando trigger ${index + 1}:`, trigger); // Muestra el trigger actual
-
-            // Mejorando la lógica para obtener postId
-            const postId = trigger.dataset.postId || trigger.id;
-            console.log(`postId obtenido: ${postId}`);
-
-            if (!postId) {
-                console.warn(`El trigger ${index + 1} no tiene postId ni id. Se usará 'default'.`, trigger);
-            }
-
-            const submenuId = `${submenuIdPrefix}-${postId || 'default'}`;
-            console.log(`submenuId generado: ${submenuId}`);
-
-            const submenu = document.getElementById(submenuId);
-            console.log(`Elemento submenu encontrado con ID ${submenuId}:`, submenu);
-
-            if (submenu) {
-                hideSubmenu(submenu);
-                console.log(`Se intentó ocultar el submenu con ID ${submenuId}`);
-            } else {
-                console.error(`No se encontró un elemento con el ID ${submenuId}. Verifica el ID generado y la estructura del DOM.`);
-            }
+        allSubmenus.forEach((submenu, index) => {
+            console.log(`Ocultando submenú ${index + 1}:`, submenu);
+            hideSubmenu(submenu);
         });
 
-        console.log('hideAllSubmenus finalizado'); // Indica el final de la función
+        console.log('hideAllSubmenus (versión simplificada) finalizado');
     };
 
     triggers.forEach(trigger => {
