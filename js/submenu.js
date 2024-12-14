@@ -30,17 +30,17 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     }
 
     function showSubmenu(event, trigger, submenu, position) {
-        const { innerWidth: vw, innerHeight: vh } = window;
+        const {innerWidth: vw, innerHeight: vh} = window;
 
         if (submenu.parentNode !== document.body) {
             document.body.appendChild(submenu);
         }
 
-        submenu.style.position = "fixed";
+        submenu.style.position = 'fixed';
         submenu.style.zIndex = 1003;
 
-        submenu.style.display = "block";
-        submenu.style.visibility = "hidden";
+        submenu.style.display = 'block';
+        submenu.style.visibility = 'hidden';
 
         let submenuWidth = submenu.offsetWidth;
         let submenuHeight = submenu.offsetHeight;
@@ -51,7 +51,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             submenu.style.top = `${(vh - submenuHeight) / 2}px`;
             submenu.style.left = `${(vw - submenuWidth) / 2}px`;
         } else {
-            let { top, left } = calculatePosition(rect, submenuWidth, submenuHeight, position);
+            let {top, left} = calculatePosition(rect, submenuWidth, submenuHeight, position);
 
             if (top + submenuHeight > vh) top = vh - submenuHeight;
             if (left + submenuWidth > vw) left = vw - submenuWidth;
@@ -62,7 +62,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             submenu.style.left = `${left}px`;
         }
 
-        submenu.style.visibility = "visible";
+        submenu.style.visibility = 'visible';
 
         createSubmenuDarkBackground();
 
@@ -78,7 +78,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
 
     function hideSubmenu(submenu) {
         if (submenu) {
-            submenu.style.display = "none";
+            submenu.style.display = 'none';
             openSubmenu = null; // Restablecer el submenú abierto
         }
 
@@ -90,17 +90,23 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             document.body.classList.remove('no-scroll');
         }
     }
+    
+    window.hideAllSubmenus = function () {
+        document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
+            hideSubmenu(submenu);
+        });
+    };
 
     triggers.forEach(trigger => {
         if (trigger.dataset.submenuInitialized) return;
 
-        trigger.addEventListener("click", toggleSubmenu);
-        trigger.dataset.submenuInitialized = "true";
+        trigger.addEventListener('click', toggleSubmenu);
+        trigger.dataset.submenuInitialized = 'true';
     });
 
-    document.addEventListener("click", (event) => {
+    document.addEventListener('click', event => {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
-             // Si el clic no está dentro del submenú, ni dentro del trigger, ni dentro de un elemento 'a' dentro del submenú
+            // Si el clic no está dentro del submenú, ni dentro del trigger, ni dentro de un elemento 'a' dentro del submenú
             if (!submenu.contains(event.target) && !event.target.closest(triggerSelector) && !event.target.closest('a')) {
                 hideSubmenu(submenu);
             }

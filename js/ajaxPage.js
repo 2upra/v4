@@ -193,6 +193,7 @@
 
                 // Si encontramos una URL, manejamos la carga
                 if (url) {
+                    hideAllSubmenus();
                     handleLoad(e, url, el);
                 }
             }
