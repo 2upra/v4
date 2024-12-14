@@ -144,7 +144,6 @@ function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsu
     }
 }
 
-
 function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $isAdmin, $posts, $filtroTiempo, $similarTo, $tipoUsuario = null)
 {
     try {
@@ -179,12 +178,105 @@ function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $isAdmin
             }
         }
 
+        if ($args['post_type'] === 'colecciones') {
+            error_log("[construirQueryArgs] ordenamiento!! ordenamientoColecciones");
+            $query_args = ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
+            if (!$query_args) {
+                //error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
+            }
+        }
+
         return $query_args;
     } catch (Exception $e) {
         //error_log("[construirQueryArgs] Error crítico: " . $e->getMessage());
         return false;
     }
 }
+
+function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario = null)
+{
+    global $wpdb;
+    $likes_table = $wpdb->prefix . 'splt_likes';
+
+    // 1. Cache Key
+    $cache_key = 'colecciones_ordenadas_' . $usuarioActual . '_' . $filtroTiempo;
+    $cached_data = obtenerCache($cache_key);
+
+    if ($cached_data) {
+        error_log("[ordenamientoColecciones] Retornando datos desde cache: " . $cache_key);
+        $query_args['post__in'] = $cached_data;
+        $query_args['orderby'] = 'post__in';
+        return $query_args;
+    }
+
+    // 2. Filtrar "Usar más tarde" y "Favoritos" (a menos que sean del usuario actual)
+    $excluded_titles = ['Usar más tarde', 'Favoritos'];
+    $excluded_ids = [];
+
+    if ($usuarioActual) {
+        $excluded_ids = $wpdb->get_col($wpdb->prepare(
+            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND (post_title LIKE '%%%s%%' OR post_title LIKE '%%%s%%') AND post_author != %d",
+            $excluded_titles[0],
+            $excluded_titles[1],
+            $usuarioActual
+        ));
+    } else {
+        $excluded_ids = $wpdb->get_col($wpdb->prepare(
+            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND (post_title LIKE '%%%s%%' OR post_title LIKE '%%%s%%')",
+            $excluded_titles[0],
+            $excluded_titles[1]
+        ));
+    }
+
+    // 3. Obtener IDs de colecciones con más likes en los últimos 30 días
+    $interval = 30;
+    $popular_ids = $wpdb->get_results(
+        "SELECT p.ID, COUNT(pl.post_id) as like_count 
+        FROM {$wpdb->posts} p 
+        LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
+        WHERE p.post_type = 'colecciones' 
+        AND p.post_status = 'publish'
+        AND pl.like_date >= DATE_SUB(NOW(), INTERVAL {$interval} DAY)
+        GROUP BY p.ID
+        ORDER BY like_count DESC, p.post_date DESC",
+        ARRAY_A // Get results as an associative array
+    );
+
+    // 4. Combinar y aleatorizar
+    $all_ids = [];
+    $popular_ids_list = [];
+
+    foreach ($popular_ids as $post) {
+        $popular_ids_list[] = $post['ID'];
+    }
+
+    $all_ids = array_unique(array_merge($popular_ids_list, $wpdb->get_col(
+        $wpdb->prepare(
+            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND ID NOT IN (%s)",
+            implode(',', array_merge($excluded_ids, $popular_ids_list ? $popular_ids_list : [0]))
+        )
+    )));
+
+    // Mezclar las IDs que no son populares para agregar aleatoriedad.
+    $non_popular_ids = array_diff($all_ids, $popular_ids_list);
+    shuffle($non_popular_ids);
+
+    // Combinar IDs populares con IDs no populares mezcladas.
+    $ordered_ids = array_merge($popular_ids_list, $non_popular_ids);
+
+    // 5. Guardar en caché
+    guardarCache($cache_key, $ordered_ids, 3600); // 1 hora
+
+    // 6. Actualizar $query_args
+    $query_args['post__in'] = $ordered_ids;
+    $query_args['orderby'] = 'post__in';
+    $query_args['post__not_in'] = $excluded_ids;
+
+    error_log("[ordenamientoColecciones] IDs ordenadas: " . implode(', ', $ordered_ids));
+
+    return $query_args;
+}
+
 
 function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoUsuario = null)
 {
