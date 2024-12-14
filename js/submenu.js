@@ -1,6 +1,12 @@
+let submenuIdPrefixes = [];
+
 function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     const triggers = document.querySelectorAll(triggerSelector);
     let openSubmenu = null; // Variable para mantener un registro del submenú abierto
+
+    if (!submenuIdPrefixes.includes(submenuIdPrefix)) {
+        submenuIdPrefixes.push(submenuIdPrefix);
+    }
 
     function toggleSubmenu(event) {
         const trigger = event.target.closest(triggerSelector);
@@ -85,26 +91,26 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             document.body.classList.remove('no-scroll');
         }
     }
+    
     window.hideAllSubmenus = function () {
-        console.log('Ejecutando hideAllSubmenus (versión simplificada)'); // Indica el inicio de la función
-
-        const allSubmenus = document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`);
-
-        if (allSubmenus.length === 0) {
-            console.log(`No se encontraron submenús con el prefijo '${submenuIdPrefix}-'.`);
-            return;
-        }
-
-        console.log(`Se encontraron ${allSubmenus.length} submenús:`, allSubmenus);
-
-        allSubmenus.forEach((submenu, index) => {
-            console.log(`Ocultando submenú ${index + 1}:`, submenu);
-            hideSubmenu(submenu);
+        console.log('Ejecutando hideAllSubmenus (versión simplificada)');
+    
+        submenuIdPrefixes.forEach(prefix => {
+            const allSubmenus = document.querySelectorAll(`[id^="${prefix}-"]`);
+    
+            if (allSubmenus.length === 0) {
+                console.log(`No se encontraron submenús con el prefijo '${prefix}-'.`);
+            } else {
+                console.log(`Se encontraron ${allSubmenus.length} submenús con el prefijo '${prefix}-':`, allSubmenus);
+                allSubmenus.forEach((submenu, index) => {
+                    console.log(`Ocultando submenú ${index + 1} con prefijo '${prefix}-':`, submenu);
+                    hideSubmenu(submenu);
+                });
+            }
         });
-
+    
         console.log('hideAllSubmenus (versión simplificada) finalizado');
     };
-
     triggers.forEach(trigger => {
         if (trigger.dataset.submenuInitialized) return;
 
