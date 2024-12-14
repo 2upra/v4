@@ -51,7 +51,32 @@ function iniciar_sesion()
                     <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn">
                         <?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google
                     </button>
+                    <script>
+                        document.getElementById('google-login-btn').addEventListener('click', function() {
+                            // URL de autenticación de Google OAuth
+                            const googleOAuthURL = 'https://accounts.google.com/o/oauth2/auth?' +
+                                'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' +
+                                'redirect_uri=https://2upra.com/google-callback&' +
+                                'response_type=code&' +
+                                'scope=email profile';
 
+                            // Función para detectar navegadores embebidos
+                            const isEmbeddedBrowser = () => {
+                                const ua = navigator.userAgent || navigator.vendor || window.opera;
+                                // Detectamos navegadores embebidos más comunes
+                                return /Instagram|FBAN|FBAV|Messenger|Line|WebView|Threads|Twitter|Snapchat|TikTok/.test(ua);
+                            };
+
+                            // Lógica principal
+                            if (isEmbeddedBrowser()) {
+                                // Si estamos en un navegador embebido, redirigimos a 2upra.com
+                                window.location.href = 'https://2upra.com';
+                            } else {
+                                // Si estamos en un navegador normal, redirigimos a Google OAuth
+                                window.location.href = googleOAuthURL;
+                            }
+                        });
+                    </script>
 
 
                     <button type="button" class="R0A915 A1 boton-cerrar">Volver</button>
@@ -67,7 +92,7 @@ function iniciar_sesion()
 <?php
     return ob_get_clean();
 }
-/*
+
 function handle_google_callback()
 {
     if (isset($_GET['code'])) {
@@ -161,7 +186,7 @@ function handle_google_callback()
     }
 }
 add_action('init', 'handle_google_callback');
-*/
+
 
 function is_electron_app()
 {
