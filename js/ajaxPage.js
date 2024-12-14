@@ -165,8 +165,15 @@
             load(url, true);
         }
 
-        document.querySelectorAll('a, button a, .botones-panel').forEach(el => {
-            el.addEventListener('click', e => handleLoad(e, el.getAttribute('href') || el.getAttribute('data-href') || (el.querySelector('a') && el.querySelector('a').getAttribute('href')), el));
+        // Usando delegación de eventos en el body
+        document.body.addEventListener('click', e => {
+          // Seleccionamos el elemento 'a' más cercano o los elementos específicos que nos interesan
+          const el = e.target.closest('a, button a, .botones-panel a, .post-image-container a');
+          // Si se encontró un elemento y coincide con nuestros selectores, ejecutamos handleLoad
+          if (el) {
+            const url = el.getAttribute('href') || el.getAttribute('data-href'); // Simplificado para tu caso
+            handleLoad(e, url, el);
+          }
         });
 
         window.addEventListener('popstate', () => load(location.href, false));
