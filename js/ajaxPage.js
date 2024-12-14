@@ -169,18 +169,23 @@
         document.body.addEventListener('click', e => {
             // Seleccionamos el elemento 'a' más cercano o los elementos específicos que nos interesan
             const el = e.target.closest('a, button.iralpost > a, button a, .botones-panel a, .post-image-container a');
-
+        
             if (el) {
-                // Obtenemos la URL del href si es un 'a', o del 'data-href' si está definido
+                // Obtenemos la URL. Priorizamos ajaxUrl dentro de button.iralpost, luego href, luego data-href
                 let url;
-                if (el.tagName === 'A') {
+        
+                if (el.tagName === 'A' && el.closest('button.iralpost') && el.closest('button.iralpost').querySelector('a').hasAttribute('ajaxUrl')) {
+                    // Caso especial: <a> dentro de button.iralpost con ajaxUrl
+                    url = el.closest('button.iralpost').querySelector('a').getAttribute('ajaxUrl');
+                } else if (el.tagName === 'A') {
+                    // Caso general: <a> con href
                     url = el.getAttribute('href');
-                } else if (el.closest('button.iralpost') && el.closest('button.iralpost').querySelector('a')) {
-                    url = el.closest('button.iralpost').querySelector('a').getAttribute('href');
                 } else if (el.hasAttribute('data-href')) {
+                    // Caso general: elemento con data-href
                     url = el.getAttribute('data-href');
+                } else if (el.closest('button.iralpost') && el.closest('button.iralpost').hasAttribute('ajaxUrl')){
+                    url = el.closest('button.iralpost').getAttribute('ajaxUrl');
                 }
-
                 // Si encontramos una URL, manejamos la carga
                 if (url) {
                     handleLoad(e, url, el);
