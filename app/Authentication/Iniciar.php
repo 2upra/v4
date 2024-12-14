@@ -46,26 +46,30 @@ function iniciar_sesion()
             <div class="XUSEOO">
                 <div class="XYSRLL">
 
+
                     <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn">
                         <?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google
                     </button>
 
                     <script>
                         document.getElementById('google-login-btn').addEventListener('click', function() {
-                            const googleOAuthURL = 'https://accounts.google.com/o/oauth2/auth?' +
+                            let googleOAuthURL = 'https://accounts.google.com/o/oauth2/auth?' +
                                 'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' +
                                 'redirect_uri=https://2upra.com/google-callback&' +
                                 'response_type=code&' +
                                 'scope=email profile';
 
-                            // "Parche": Eliminar el https:// extra SI está presente dos veces.
-                            if (googleOAuthURL.startsWith("https://https//")) {
-                                googleOAuthURL = googleOAuthURL.replace("https://https//", "https://");
-                            }
+                            // Función para limpiar la URL si tiene https:// duplicado
+                            const cleanURL = (url) => {
+                                return url.replace(/https:\/\/https:\/\//, "https://");
+                            };
+
+                            googleOAuthURL = cleanURL(googleOAuthURL);
 
                             const isEmbeddedBrowser = () => {
                                 const ua = navigator.userAgent || navigator.vendor || window.opera;
-                                return /Instagram|FBAN|FBAV|Line|WebView/.test(ua);
+                                // Detección extendida de navegadores integrados
+                                return /Instagram|FBAN|FBAV|FBID|FBMD|FBSN|FBDV|Line|Threads|Twitter/i.test(ua);
                             };
 
                             const openInExternalBrowser = (url) => {
@@ -74,22 +78,20 @@ function iniciar_sesion()
 
                                 if (isAndroid) {
                                     // Intent para abrir Chrome en Android
-                                    // Aquí estaba el error: se añadía `https:` al inicio de `url` cuando `url` ya lo incluía
                                     window.location.href = `intent:${url}#Intent;scheme=https;package=com.android.chrome;end;`;
                                 } else if (isIOS) {
                                     // Usar esquema URL para abrir Safari en iOS
-                                    // Similar aquí, se eliminó el 'https:' extra
                                     window.location.href = `safari-${url}`;
 
                                     // Mensaje en caso de que no se abra automáticamente
                                     setTimeout(() => {
                                         const message = `
-                    Si no se ha abierto el navegador, por favor:
-                    1. Copia el siguiente enlace.
-                    2. Ábrelo en tu navegador Safari.
+                        Si no se ha abierto el navegador, por favor:
+                        1. Copia el siguiente enlace.
+                        2. Ábrelo en tu navegador Safari.
 
-                    ${url}
-                `;
+                        ${url}
+                    `;
                                         alert(message);
                                     }, 2000); // Tiempo para que el navegador intente abrir
                                 } else {
@@ -105,7 +107,6 @@ function iniciar_sesion()
                             }
                         });
                     </script>
-
 
 
                     <button type="button" class="R0A915 A1 boton-cerrar">Volver</button>
