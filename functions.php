@@ -47,14 +47,14 @@ function debug_page_load_time() {
 add_action('shutdown', 'debug_page_load_time');
 */
 
-function paginasIniciales()
+function paginasIniciales1()
 {
     // Verificar si las páginas ya fueron creadas
-    if (get_option('paginasIniciales') == '1') return;
+    if (get_option('paginasIniciales1') == '1') return;
 
 
     if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === false)) {
-        update_option('paginasIniciales', '1');
+        update_option('paginasIniciales1', '1');
         return;
     }
 
@@ -148,16 +148,16 @@ function paginasIniciales()
     }
 
     // Marcar que las páginas ya fueron creadas
-    update_option('paginasIniciales', '1');
+    update_option('paginasIniciales1', '1');
 }
 
-add_action('init', 'paginasIniciales');
+add_action('init', 'paginasIniciales1');
 
 
 function headGeneric()
 {
     if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === true)) {
-        update_option('paginasIniciales', '1');
+        update_option('paginasIniciales1', '1');
         return;
     }
 ?>
@@ -360,7 +360,7 @@ add_action('wp_enqueue_scripts', 'custom_deregister_jquery', 100);
 
 function scriptsOrdenados()
 {
-    $global_version = '0.2.115';
+    $global_version = '0.2.116';
     $dev_mode = defined('LOCAL') && LOCAL;
     //$error_log = [];
 
