@@ -30,8 +30,9 @@ add_action('rest_api_init', 'registrar_metadatos_en_rest_api');
 
 //mi_api_get_ultimos_posts();
 //no estan guardado las meta de los post en la version loca, porfavor dame el codigo completo corregido
+
 function mi_api_get_ultimos_posts() {
-    if (LOCAL) {
+    if (defined('LOCAL') && LOCAL) {
         // Entorno local: Obtiene los posts de 2upra.com y los guarda localmente
         $response = wp_remote_get('https://2upra.com/wp-json/mi-api/v1/ultimos-post');
 
@@ -74,6 +75,13 @@ function mi_api_get_ultimos_posts() {
                 } else {
                     update_post_meta($new_post_id, 'external_id', $post_data['id']);
                     error_log('Post insertado con ID: ' . $new_post_id);
+                    
+                    // Guardar los metadatos del post remoto
+                    if (isset($post_data['metadata']) && is_array($post_data['metadata'])) {
+                        foreach ($post_data['metadata'] as $meta_key => $meta_value) {
+                            update_post_meta($new_post_id, $meta_key, $meta_value);
+                        }
+                    }
                 }
             } else {
                 error_log('El post con ID externo ' . $post_data['id'] . ' ya existe en la base de datos.');
@@ -152,11 +160,7 @@ function mi_api_get_ultimos_posts() {
                     // Guardar los metadatos del post remoto
                     if (isset($remote_post['metadata']) && is_array($remote_post['metadata'])) {
                         foreach ($remote_post['metadata'] as $meta_key => $meta_value) {
-                            if (is_array($meta_value)) {
-                                update_post_meta($new_post_id, $meta_key, $meta_value);
-                            } else {
-                                update_post_meta($new_post_id, $meta_key, $meta_value);
-                            }
+                            update_post_meta($new_post_id, $meta_key, $meta_value);
                         }
                     }
                 }
@@ -179,11 +183,7 @@ function mi_api_get_ultimos_posts() {
                     // Actualizar metadatos
                     if (isset($remote_post['metadata']) && is_array($remote_post['metadata'])) {
                         foreach ($remote_post['metadata'] as $meta_key => $meta_value) {
-                            if (is_array($meta_value)) {
-                                update_post_meta($existing_post_id, $meta_key, $meta_value);
-                            } else {
-                                update_post_meta($existing_post_id, $meta_key, $meta_value);
-                            }
+                            update_post_meta($existing_post_id, $meta_key, $meta_value);
                         }
                     }
                 }
