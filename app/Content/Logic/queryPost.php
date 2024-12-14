@@ -196,18 +196,77 @@ function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $isAdmin
 function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario = null)
 {
     global $wpdb;
-    $likes_table = $wpdb->prefix . 'splt_likes';
+    $likes_table = $wpdb->prefix . 'post_likes';
+
+    /*
+      try {
+        global $wpdb;
+        if (!$wpdb) {
+            return false;
+        }
+
+        $likes_table = $wpdb->prefix . 'post_likes';
+
+        // Validación de query_args
+        if (!is_array($query_args)) {
+            $query_args = array();
+        }
+
+        switch ($filtroTiempo) {
+            case 1: // Recientes
+                error_log("[ordenamiento] caso reciente!!");
+                $query_args['orderby'] = 'date';
+                $query_args['order'] = 'DESC';
+                break;
+
+            case 2: // Top semanal
+            case 3: // Top mensual
+                error_log("[ordenamiento] caso mensual!!");
+                $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
+
+                $sql = "
+                    SELECT p.ID, 
+                           COUNT(pl.post_id) as like_count 
+                    FROM {$wpdb->posts} p 
+                    LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
+                    WHERE p.post_type = 'social_post' 
+                    AND p.post_status = 'publish'
+                    AND p.post_date >= DATE_SUB(NOW(), INTERVAL $interval)  
+                    AND pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval) 
+                    GROUP BY p.ID
+                    HAVING like_count > 0
+                    ORDER BY like_count DESC, p.post_date DESC
+                ";
+
+                $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
+
+                if ($wpdb->last_error) {
+                    // Log de error si es necesario
+                }
+
+                if (!empty($posts_with_likes)) {
+                    $post_ids = wp_list_pluck($posts_with_likes, 'ID');
+                    if (!empty($post_ids)) {
+                        $query_args['post__in'] = $post_ids;
+                        $query_args['orderby'] = 'post__in';
+                    }
+                } else {
+                    $query_args['orderby'] = 'date';
+                    $query_args['order'] = 'DESC';
+                }
+                break;
+    */
 
     // 1. Cache Key
     $cache_key = 'colecciones_ordenadas_' . $usuarioActual . '_' . $filtroTiempo;
-    $cached_data = obtenerCache($cache_key);
+    //$cached_data = obtenerCache($cache_key);
 
-    if ($cached_data) {
+    /* if ($cached_data) {
         error_log("[ordenamientoColecciones] Retornando datos desde cache: " . $cache_key);
         $query_args['post__in'] = $cached_data;
         $query_args['orderby'] = 'post__in';
         return $query_args;
-    }
+    } */
 
     // 2. Filtrar "Usar más tarde" y "Favoritos" (a menos que sean del usuario actual)
     $excluded_titles = ['Usar más tarde', 'Favoritos'];
@@ -265,7 +324,7 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual, $id
     $ordered_ids = array_merge($popular_ids_list, $non_popular_ids);
 
     // 5. Guardar en caché
-    guardarCache($cache_key, $ordered_ids, 3600); // 1 hora
+    //guardarCache($cache_key, $ordered_ids, 3600); // 1 hora
 
     // 6. Actualizar $query_args
     $query_args['post__in'] = $ordered_ids;
