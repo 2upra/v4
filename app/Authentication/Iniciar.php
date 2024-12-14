@@ -50,11 +50,8 @@ function iniciar_sesion()
                         <?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google
                     </button>
 
-                    <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn">
-                        <?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google
-                    </button>
                     <script>
-                        document.addEventListener('DOMContentLoaded', function() {
+                        document.getElementById('google-login-btn').addEventListener('click', function() {
                             const googleOAuthURL = 'https://accounts.google.com/o/oauth2/auth?' +
                                 'client_id=84327954353-lb14ubs4vj4q2q57pt3sdfmapfhdq7ef.apps.googleusercontent.com&' +
                                 'redirect_uri=https://2upra.com/google-callback&' +
@@ -63,25 +60,32 @@ function iniciar_sesion()
 
                             const isEmbeddedBrowser = () => {
                                 const ua = navigator.userAgent || navigator.vendor || window.opera;
-                                return ua.includes('Instagram') || ua.includes('FBAN') || ua.includes('FBAV') || ua.includes('Line');
+                                return /Instagram|FBAN|FBAV|Line|WebView/.test(ua);
                             };
 
                             if (isEmbeddedBrowser()) {
-                                // Detectar si es un navegador embebido
-                                if (/Android/i.test(navigator.userAgent)) {
-                                    // Redirigir automáticamente a Chrome en Android
+                                const isAndroid = /Android/i.test(navigator.userAgent);
+                                const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+                                if (isAndroid) {
+                                    // Intent para abrir Chrome en Android
                                     window.location.href = `intent:${googleOAuthURL}#Intent;scheme=https;package=com.android.chrome;end;`;
-                                } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                                    // Mostrar un mensaje instructivo en iOS
-                                    document.body.innerHTML = `
-                    <h1>Por favor abre este enlace en Safari</h1>
-                    <p>Google no permite iniciar sesión desde este navegador.</p>
-                    <a href="${googleOAuthURL}">Abrir enlace</a>
+                                } else if (isIOS) {
+                                    // Mostrar mensaje para iOS
+                                    const message = `
+                    Para continuar con el inicio de sesión:
+                    1. Copia el siguiente enlace.
+                    2. Ábrelo en tu navegador Safari.
+
+                    ${googleOAuthURL}
                 `;
+                                    alert(message);
                                 } else {
-                                    // Mensaje genérico para otros navegadores embebidos
-                                    alert('No se puede iniciar sesión directamente desde este navegador. Por favor, abre este enlace en tu navegador predeterminado:\n\n' + googleOAuthURL);
+                                    alert('Por favor, abre el siguiente enlace en tu navegador predeterminado:\n\n' + googleOAuthURL);
                                 }
+                            } else {
+                                // Redirigir normalmente
+                                window.location.href = googleOAuthURL;
                             }
                         });
                     </script>
