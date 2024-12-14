@@ -51,7 +51,7 @@ function iniciar_sesion()
                     <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn">
                         <?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google
                     </button>
-
+                    cuando es openInExternalBrowser(googleOAuthURL); abre asi https://https//accounts.google.com en vez de https//accounts.google.com
                     <script>
                         document.getElementById('google-login-btn').addEventListener('click', function() {
                             // URL de autenticación de Google OAuth
@@ -65,7 +65,7 @@ function iniciar_sesion()
                             const isEmbeddedBrowser = () => {
                                 const ua = navigator.userAgent || navigator.vendor || window.opera;
                                 // Detectamos navegadores embebidos más comunes
-                                return /Instagram|FBAN|FBAV|Messenger|Line|WebView|Threads|Twitter|Snapchat|TikTok/.test(ua);
+                                return /Instagram|FBAN|FBAV|Messenger|Meta|Facebook|Line|WebView|Threads|Twitter|Snapchat|TikTok/.test(ua);
                             };
 
                             // Función para abrir un enlace en el navegador externo
@@ -76,7 +76,9 @@ function iniciar_sesion()
                                 if (isAndroid) {
                                     // Intent para abrir en Chrome en Android
                                     try {
-                                        window.location.href = `intent:${url}#Intent;scheme=https;package=com.android.chrome;end;`;
+                                        // Eliminar https:// de la URL
+                                        const urlSinHttps = url.replace(/^https?:\/\//, '');
+                                        window.location.href = `intent://${urlSinHttps}#Intent;scheme=https;package=com.android.chrome;end;`;
                                     } catch (e) {
                                         // Si falla el Intent, mostramos una alerta con el enlace
                                         alert(`Por favor, abre este enlace en tu navegador:\n\n${url}`);
