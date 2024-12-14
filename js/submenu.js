@@ -69,11 +69,6 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         document.body.classList.add('no-scroll');
 
         openSubmenu = submenu; // Registrar el submenú abierto
-
-        // Eliminamos el event listener que detiene la propagación en el submenu
-        // submenu.addEventListener('click', e => {
-        //     e.stopPropagation();
-        // });
     }
 
     function hideSubmenu(submenu) {
@@ -90,13 +85,15 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             document.body.classList.remove('no-scroll');
         }
     }
-    
+
     window.hideAllSubmenus = function () {
-        document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
+        triggers.forEach(trigger => {
+            const submenuId = `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || 'default'}`;
+            const submenu = document.getElementById(submenuId);
             hideSubmenu(submenu);
         });
     };
-
+    
     triggers.forEach(trigger => {
         if (trigger.dataset.submenuInitialized) return;
 
@@ -119,6 +116,65 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         });
     });
 }
+
+function submenu() {
+    // Botón clase - submenu id - posición
+    createSubmenu('.filtrosboton', 'filtrosMenu', 'abajo');
+    createSubmenu('.mipsubmenu', 'submenuperfil', 'abajo');
+    createSubmenu('.HR695R7', 'opcionesrola', 'abajo');
+    createSubmenu('.HR695R8', 'opcionespost', 'abajo'); //especialmente este es el qume gustaría cerrar pero debería cerrar todos
+    createSubmenu('.submenucolab', 'opcionescolab', 'abajo');
+}
+
+/*
+
+por ejemplo cuando lo llamo aca
+
+    function load(url, pushState) {
+        if (!url || /^(javascript|data|vbscript):|#/.test(url.toLowerCase()) || url.includes('descarga_token')) return;
+        if (pageCache[url] && shouldCache(url)) {
+            document.getElementById('content').innerHTML = pageCache[url];
+            if (pushState) history.pushState(null, '', url);
+            reinit();
+            // Llamar a hideAllSubmenus después de reinit si es necesario
+            if (typeof window.hideAllSubmenus === 'function') {
+                window.hideAllSubmenus();
+            } else {
+                error.log('hideAllSubmenus no definido');
+            }
+            return;
+        }
+        document.getElementById('loadingBar').style.cssText = 'width: 70%; opacity: 1; transition: width 0.4s ease';
+        fetch(url)
+            .then(r => r.text())
+            .then(data => {
+                const doc = new DOMParser().parseFromString(data, 'text/html');
+                const content = doc.getElementById('content').innerHTML;
+                document.getElementById('content').innerHTML = content;
+                if (shouldCache(url)) pageCache[url] = content;
+                document.getElementById('loadingBar').style.cssText = 'width: 100%; transition: width 0.1s ease, opacity 0.3s ease';
+                setTimeout(() => (document.getElementById('loadingBar').style.cssText = 'width: 0%; opacity: 0'), 100);
+                if (pushState) history.pushState(null, '', url);
+                doc.querySelectorAll('script').forEach(s => {
+                    if (s.src && !document.querySelector(`script[src="${s.src}"]`)) {
+                        document.body.appendChild(Object.assign(document.createElement('script'), {src: s.src, async: false}));
+                    } else if (!s.src) {
+                        document.body.appendChild(Object.assign(document.createElement('script'), {textContent: s.textContent}));
+                    }
+                });
+                setTimeout(reinit, 100);
+
+                // Llamar a hideAllSubmenus después de reinit y después de que el DOM se haya actualizado
+                setTimeout(() => {
+                    if (typeof window.hideAllSubmenus === 'function') {
+                        window.hideAllSubmenus();
+                    }
+                }, 150); // Ajusta el tiempo de espera según sea necesario
+            })
+            .catch(e => console.error('Load error:', e));
+    }
+
+*/
 
 window.createSubmenuDarkBackground = function () {
     let darkBackground = document.getElementById('submenu-background5322');
@@ -208,14 +264,6 @@ function initializeStaticMenus() {
 }
 
 // Esto se reinicia cada vez que cargan nuevos posts
-function submenu() {
-    // Botón clase - submenu id - posición
-    createSubmenu('.filtrosboton', 'filtrosMenu', 'abajo');
-    createSubmenu('.mipsubmenu', 'submenuperfil', 'abajo');
-    createSubmenu('.HR695R7', 'opcionesrola', 'abajo');
-    createSubmenu('.HR695R8', 'opcionespost', 'abajo');
-    createSubmenu('.submenucolab', 'opcionescolab', 'abajo');
-}
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeStaticMenus();

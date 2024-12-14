@@ -122,12 +122,6 @@
             document.getElementById('content').innerHTML = pageCache[url];
             if (pushState) history.pushState(null, '', url);
             reinit();
-            // Llamar a hideAllSubmenus después de reinit si es necesario
-            if (typeof window.hideAllSubmenus === 'function') {
-                window.hideAllSubmenus();
-            } else {
-                error.log('hideAllSubmenus no definido');
-            }
             return;
         }
         document.getElementById('loadingBar').style.cssText = 'width: 70%; opacity: 1; transition: width 0.4s ease';
@@ -148,14 +142,12 @@
                         document.body.appendChild(Object.assign(document.createElement('script'), {textContent: s.textContent}));
                     }
                 });
-                setTimeout(reinit, 100);
 
-                // Llamar a hideAllSubmenus después de reinit y después de que el DOM se haya actualizado
-                setTimeout(() => {
-                    if (typeof window.hideAllSubmenus === 'function') {
-                        window.hideAllSubmenus();
-                    }
-                }, 150); // Ajusta el tiempo de espera según sea necesario
+                if (typeof window.hideAllSubmenus === 'function') {
+                    window.hideAllSubmenus();
+                } else {
+                    console.error('hideAllSubmenus no definido');
+                }
             })
             .catch(e => console.error('Load error:', e));
     }
