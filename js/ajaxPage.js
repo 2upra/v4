@@ -162,10 +162,15 @@
             const lowerUrl = url.trim().toLowerCase();
             if (/\.pdf$|^(https:\/\/2upra\.com\/nocache|javascript|data|vbscript):|#/.test(lowerUrl)) return true;
             e.preventDefault();
+
+            // Cerrar submenús y detener la propagación inmediata del evento
+            if (typeof window.hideAllSubmenus === 'function') {
+                window.hideAllSubmenus();
+            }
+            e.stopImmediatePropagation();
+
             load(url, true);
         }
-
-        //sin motivo alguno sigue sin funcionar para <button class="iralpost"><a ajaxurl="https://2upra.com/sample/memphis-rap-vocal-sample-19/">Ir al post</a></button>
 
         document.body.addEventListener('click', e => {
             // Selección optimizada de elementos 'a' y botones con 'data-href'
@@ -173,7 +178,7 @@
 
             if (el) {
                 let url;
-                window.hideAllSubmenus();
+
                 // Prioridad 1: ajaxUrl dentro de button.iralpost
                 const buttonIralpost = el.closest('button.iralpost');
                 if (buttonIralpost) {
@@ -193,7 +198,6 @@
 
                 // Si encontramos una URL, manejamos la carga
                 if (url) {
-                    
                     handleLoad(e, url, el);
                 }
             }
