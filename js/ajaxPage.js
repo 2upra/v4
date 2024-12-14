@@ -116,20 +116,12 @@
         return !/https:\/\/2upra\.com\/nocache/.test(url);
     }
 
-    /*
-    VM3724:1  Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Identifier 'wpAdminUrl' has already been declared
-    at ajaxPage.js?ver=0.2.130:142:39
-    at NodeList.forEach (<anonymous>)
-    at ajaxPage.js?ver=0.2.130:138:48
-    */
-
     function load(url, pushState) {
         if (!url || /^(javascript|data|vbscript):|#/.test(url.toLowerCase()) || url.includes('descarga_token')) return;
         if (pageCache[url] && shouldCache(url)) {
             document.getElementById('content').innerHTML = pageCache[url];
             if (pushState) history.pushState(null, '', url);
-            reinit();
-            return;
+            return reinit();
         }
         document.getElementById('loadingBar').style.cssText = 'width: 70%; opacity: 1; transition: width 0.4s ease';
         fetch(url)
@@ -146,20 +138,10 @@
                     if (s.src && !document.querySelector(`script[src="${s.src}"]`)) {
                         document.body.appendChild(Object.assign(document.createElement('script'), {src: s.src, async: false}));
                     } else if (!s.src) {
-                        // Verificar si el script define wpAdminUrl y si ya existe
-                        if (s.textContent.includes('wpAdminUrl') && typeof wpAdminUrl !== 'undefined') {
-                            console.warn('wpAdminUrl ya está definido. No se agregará el script.');
-                        } else {
-                            document.body.appendChild(Object.assign(document.createElement('script'), {textContent: s.textContent}));
-                        }
+                        document.body.appendChild(Object.assign(document.createElement('script'), {textContent: s.textContent}));
                     }
                 });
-
-                if (typeof window.hideAllSubmenus === 'function') {
-                    window.hideAllSubmenus();
-                } else {
-                    console.error('hideAllSubmenus no definido');
-                }
+                setTimeout(reinit, 100);
             })
             .catch(e => console.error('Load error:', e));
     }
