@@ -51,11 +51,6 @@ function iniciar_sesion()
                     <button type="button" class="R0A915 botonprincipal A1 A2" id="google-login-btn">
                         <?php echo $GLOBALS['Google']; ?>Iniciar sesión con Google
                     </button>
-
-                    esto es lo que detecta cuando es threads(es mi telefono), hace que de error 403 porque no redirige al navegador
-                    [14-Dec-2024 19:49:02 UTC] UserAgent detectado (deteccion_normal): Mozilla/5.0 (Linux; Android 12; SM-A125M Build/SP1A.210812.016; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/131.0.6778.104 Mobile Safari/537.36 Barcelona 361.0.0.7.106 Android (31/12; 280dpi; 720x1471; samsung; SM-A125M; a12; mt6765; es_US; 673639977)
-
-                    no funciona con esa red social 
                     
                     <script>
                         document.getElementById('google-login-btn').addEventListener('click', function() {
