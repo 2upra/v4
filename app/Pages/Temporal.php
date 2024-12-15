@@ -224,69 +224,15 @@ function dev()
             <div class="tab active GMXSUJ" id="inicio">
 
                 <div class="SOKDEOD">
-                    <div class="ADEED">
-                        <img id="imagenbeta02" src="https://2upra.com/wp-content/uploads/2024/12/asdfasdfasdf.jpg" alt="">
-                        <div class="adsfkadsf">
-                            <button class="start2upra boton-sesion"><a>Empezar</a></button>
-                            <button class="androidbutton">
-                                <a class="no-ajax" href="https://2upra.com/wp-content/uploads/2024/12/2upra101.apk">
-                                    Android
-                                </a>
-                            </button>
-                            <button class=" sync2upra">
-                                <a class="no-ajax" href="https://github.com/1ndoryu/sync2upra/releases/download/v1.0.2/Sync-2upra-Setup-1.0.2.exe">
-                                    Sync Window
-                                </a>
-                            </button>
-
-                        </div>
-                    </div>
+                    <h2>Esta si es la mejor biblioteca de samples del planeta</h2>
+                    <p>Mejor y más inteligente...</p>
+                    <input type="text" placeholder="Encuentra cualquier sonido">
                 </div>
 
-                <script>
-                    // Lista de URLs de las imágenes
-                    const imageUrls = [
-                        "https://2upra.com/wp-content/uploads/2024/12/asdfasdfasdf.jpg",
-                        "https://2upra.com/wp-content/uploads/2024/12/03.jpg",
-                        "https://2upra.com/wp-content/uploads/2024/12/02.jpg",
-                        "https://2upra.com/wp-content/uploads/2024/12/04.jpg"
-                    ];
+                <div class="resultadosBusquedaInicio" id="resultadosBusquedaInicio">
 
-                    // Índice actual
-                    let currentIndex = 0;
+                </div>
 
-                    // Imagen en la página
-                    const imagenElement = document.getElementById("imagenbeta02");
-
-                    // Manejar el clic
-                    imagenElement.addEventListener("click", () => {
-                        // Calcular el índice de la siguiente imagen
-                        const nextIndex = (currentIndex + 1) % imageUrls.length;
-                        const nextImageUrl = imageUrls[nextIndex];
-
-                        // Crear un nuevo objeto de imagen para precargar
-                        const preloadedImage = new Image();
-                        preloadedImage.src = nextImageUrl;
-
-                        // Manejar cuando la imagen se carga completamente
-                        preloadedImage.onload = () => {
-                            // Cambiar la imagen mostrada
-                            imagenElement.src = nextImageUrl;
-                            // Actualizar el índice actual
-                            currentIndex = nextIndex;
-                        };
-                    });
-
-                    // Precargar imágenes restantes de forma diferida
-                    window.onload = () => {
-                        imageUrls.forEach((url, index) => {
-                            if (index !== currentIndex) {
-                                const img = new Image();
-                                img.src = url;
-                            }
-                        });
-                    };
-                </script>
                 <div class=" BKXAFN">
                     <div style="display: none">
                         <div class="JMIOCI">
