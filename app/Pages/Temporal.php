@@ -226,7 +226,7 @@ function dev()
 
     <div class="tabs">
         <div class="tab-content">
-            <div class="tab active GMXSUJ" id="Inicio">
+            <div class="tab active GMXSUJ" id="Inicio" ajax="no">
 
                 <div class="SOKDEOD">
                     <h2>Esta si es la mejor biblioteca de samples del planeta</h2>
