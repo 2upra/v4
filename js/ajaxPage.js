@@ -1,3 +1,5 @@
+const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? ajax_params.ajax_url : '/wp-admin/admin-ajax.php';
+
 (function () {
     const pageCache = {},
         isFirefox = typeof InstallTrigger !== 'undefined';
