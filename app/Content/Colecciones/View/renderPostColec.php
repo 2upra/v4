@@ -252,6 +252,7 @@ function variablesColec($postId)
         'autorId' => $autorId,
         'samples' => $sampleCount . ' samples',
         'datosColeccion' => $datosColeccion,
+        'sampleCount' => $sampleCount,
     ];
 }
 
