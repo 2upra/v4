@@ -357,6 +357,7 @@ function singleColec($postId)
                 </div>
                 <div class="BOTONESCOLEC">
                     <? echo botonDescargaColec($postId, $sampleCount); ?>
+                    <? echo botonSincronizarColec($postId, $sampleCount); ?>
                     <? echo like($postId); ?>
                     <? echo opcionesColec($postId, $autorId); ?>
                 </div>

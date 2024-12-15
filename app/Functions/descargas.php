@@ -13,7 +13,8 @@ function procesarDescarga()
 
     $postId = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
     $esColeccion = isset($_POST['coleccion']) && $_POST['coleccion'] === 'true';
-    error_log("Post ID: " . $postId . ", esColeccion: " . ($esColeccion ? 'true' : 'false'));
+    $sync = isset($_POST['sync']) && $_POST['sync'] === 'true';
+    error_log("Post ID: " . $postId . ", esColeccion: " . ($esColeccion ? 'true' : 'false') . ", sync: " . ($sync ? 'true' : 'false'));
 
     $post = get_post($postId);
     if (!$post || $post->post_status !== 'publish') {
@@ -24,16 +25,20 @@ function procesarDescarga()
 
     if ($esColeccion) {
         error_log("Procesando colección. Post ID: " . $postId);
-        $zipUrl = procesarColeccion($postId, $userId);
-        if (is_wp_error($zipUrl)) {
-            error_log("Error en procesarColeccion: " . $zipUrl->get_error_message());
-            wp_send_json_error(['message' => $zipUrl->get_error_message()]);
-            return;
-        }
 
-        // Generar enlace de descarga para la colección
-        $downloadUrl = generarEnlaceDescargaColeccion($userId, $zipUrl, $postId);
-        error_log("URL de descarga de colección generada: " . $downloadUrl);
+        if (!$sync) {
+            $zipUrl = procesarColeccion($postId, $userId);
+            if (is_wp_error($zipUrl)) {
+                error_log("Error en procesarColeccion: " . $zipUrl->get_error_message());
+                wp_send_json_error(['message' => $zipUrl->get_error_message()]);
+                return;
+            }
+            // Generar enlace de descarga para la colección
+            $downloadUrl = generarEnlaceDescargaColeccion($userId, $zipUrl, $postId);
+            error_log("URL de descarga de colección generada: " . $downloadUrl);
+        } else {
+            procesarColeccion($postId, $userId, true);
+        }
     } else {
         error_log("Procesando descarga individual. Post ID: " . $postId);
         $audioId = get_post_meta($postId, 'post_audio', true);
@@ -82,13 +87,21 @@ function procesarDescarga()
         update_post_meta($postId, 'totalDescargas', $totalDescargas);
         error_log("Total de descargas del post actualizado: " . $totalDescargas);
 
-        $downloadUrl = generarEnlaceDescarga($userId, $audioId);
-        error_log("URL de descarga generada: " . $downloadUrl);
+        if (!$sync) {
+            $downloadUrl = generarEnlaceDescarga($userId, $audioId);
+            error_log("URL de descarga generada: " . $downloadUrl);
+        }
     }
 
     actualizarTimestampDescargas($userId);
     error_log("Timestamp de descargas actualizado.");
-    wp_send_json_success(['download_url' => $downloadUrl]);
+
+    if (!$sync) {
+        wp_send_json_success(['download_url' => $downloadUrl]);
+    } else {
+        wp_send_json_success(['message' => 'Sincronizado.']);
+    }
+
     error_log("Fin del proceso de descarga.");
 }
 
@@ -288,12 +301,43 @@ function botonDescarga($postId)
             $claseExtra = $yaDescargado ? 'yaDescargado' : '';
             $esColeccion = get_post_type($postId) === 'colecciones' ? 'true' : 'false';
 
-            // Error log para postId 320353
-            if ($postId == 320353) {
-                error_log("botonDescarga - Post ID: 320353");
-                error_log("botonDescarga - get_post_type(320353): " . get_post_type($postId));
-                error_log("botonDescarga - esColeccion: " . $esColeccion);
-            }
+?>
+            <div class="ZAQIBB">
+                <button class="icon-arrow-down <?php echo esc_attr($claseExtra); ?>"
+                    data-post-id="<?php echo esc_attr($postId); ?>"
+                    aria-label="Boton Descarga"
+                    id="download-button-<?php echo esc_attr($postId); ?>"
+                    onclick="return procesarDescarga('<?php echo esc_js($postId); ?>', '<?php echo esc_js($userId); ?>', '<?php echo $esColeccion; ?>')">
+                    <?php echo $GLOBALS['descargaicono']; ?>
+                </button>
+            </div>
+        <?php
+        } else {
+        ?>
+            <div class="ZAQIBB">
+                <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down" aria-label="Descargar">
+                    <?php echo $GLOBALS['descargaicono']; ?>
+                </button>
+            </div>
+<?php
+        }
+    }
+    return ob_get_clean();
+}
+
+function botonSincronizar($postId)
+{
+    ob_start();
+    $paraDescarga = get_post_meta($postId, 'paraDescarga', true);
+    $userId = get_current_user_id();
+
+    if ($paraDescarga == '1') {
+        if ($userId) {
+            $descargasAnteriores = get_user_meta($userId, 'descargas', true);
+            $yaDescargado = isset($descargasAnteriores[$postId]);
+            $claseExtra = $yaDescargado ? 'yaDescargado' : '';
+            $esColeccion = get_post_type($postId) === 'colecciones' ? 'true' : 'false';
+
 
 ?>
             <div class="ZAQIBB">
@@ -313,11 +357,8 @@ function botonDescarga($postId)
                     <?php echo $GLOBALS['descargaicono']; ?>
                 </button>
             </div>
-    <?php
+<?php
         }
     }
     return ob_get_clean();
 }
-
-
-

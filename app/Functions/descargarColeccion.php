@@ -1,8 +1,8 @@
 <?
 
-function procesarColeccion($postId, $userId)
+function procesarColeccion($postId, $userId, $sync = false)
 {
-    error_log("[procesarColeccion] Inicio de procesarColeccion. Post ID: " . $postId . ", User ID: " . $userId);
+    error_log("[procesarColeccion] Inicio de procesarColeccion. Post ID: " . $postId . ", User ID: " . $userId . ", Sync: " . ($sync ? 'true' : 'false'));
 
     $samples = get_post_meta($postId, 'samples', true);
     $numSamples = is_array($samples) ? count($samples) : 0;
@@ -14,93 +14,107 @@ function procesarColeccion($postId, $userId)
         return new WP_Error('no_samples', __('No hay samples en esta colección.', 'text-domain'));
     }
 
-    $zipName = 'coleccion-' . $postId . '-' . $numSamples . '.zip';
-    $upload_dir = wp_upload_dir();
-    $zipPath = $upload_dir['path'] . '/' . $zipName;
+    if (!$sync) {
+        $zipName = 'coleccion-' . $postId . '-' . $numSamples . '.zip';
+        $upload_dir = wp_upload_dir();
+        $zipPath = $upload_dir['path'] . '/' . $zipName;
 
-    error_log("[procesarColeccion] Nombre del archivo ZIP: " . $zipName);
-    error_log("[procesarColeccion] Ruta del archivo ZIP: " . $zipPath);
+        error_log("[procesarColeccion] Nombre del archivo ZIP: " . $zipName);
+        error_log("[procesarColeccion] Ruta del archivo ZIP: " . $zipPath);
 
-    // Buscar y eliminar ZIPs antiguos
-    $files = glob($upload_dir['path'] . '/coleccion-' . $postId . '-*.zip');
-    if ($files) {
-        foreach ($files as $file) {
-            if ($file !== $zipPath && file_exists($file)) {
-                unlink($file);
-                error_log("[procesarColeccion] Archivo ZIP antiguo eliminado: " . $file);
+        // Buscar y eliminar ZIPs antiguos
+        $files = glob($upload_dir['path'] . '/coleccion-' . $postId . '-*.zip');
+        if ($files) {
+            foreach ($files as $file) {
+                if ($file !== $zipPath && file_exists($file)) {
+                    unlink($file);
+                    error_log("[procesarColeccion] Archivo ZIP antiguo eliminado: " . $file);
+                }
             }
         }
-    }
 
-    if (!is_dir($upload_dir['path']) || !is_writable($upload_dir['path'])) {
-        error_log("[procesarColeccion] Error: El directorio de uploads no existe o no tiene permisos de escritura.");
-        return new WP_Error('upload_dir_error', __('Error: El directorio de uploads no existe o no tiene permisos de escritura.', 'text-domain'));
+        if (!is_dir($upload_dir['path']) || !is_writable($upload_dir['path'])) {
+            error_log("[procesarColeccion] Error: El directorio de uploads no existe o no tiene permisos de escritura.");
+            return new WP_Error('upload_dir_error', __('Error: El directorio de uploads no existe o no tiene permisos de escritura.', 'text-domain'));
+        }
     }
 
     list($samplesDescargados, $samplesNoDescargados) = clasificarSamples($samples, $userId);
     $numSamplesNoDescargados = count($samplesNoDescargados);
 
-    if (file_exists($zipPath)) {
-        error_log("[procesarColeccion] El archivo ZIP ya existe.");
-        error_log("[procesarColeccion] Samples no descargados: " . print_r($samplesNoDescargados, true));
-        error_log("[procesarColeccion] Número de samples no descargados: " . $numSamplesNoDescargados);
+    if (!$sync) {
+        if (file_exists($zipPath)) {
+            error_log("[procesarColeccion] El archivo ZIP ya existe.");
+            error_log("[procesarColeccion] Samples no descargados: " . print_r($samplesNoDescargados, true));
+            error_log("[procesarColeccion] Número de samples no descargados: " . $numSamplesNoDescargados);
 
-        if ($numSamplesNoDescargados > 0) {
-            $pinky = (int)get_user_meta($userId, 'pinky', true);
-            error_log("[procesarColeccion] Pinkys del usuario: " . $pinky);
+            if ($numSamplesNoDescargados > 0) {
+                $pinky = (int)get_user_meta($userId, 'pinky', true);
+                error_log("[procesarColeccion] Pinkys del usuario: " . $pinky);
 
-            if ($pinky < $numSamplesNoDescargados) {
-                error_log("[procesarColeccion] Error: No tienes suficientes Pinkys. Requeridos: " . $numSamplesNoDescargados);
-                return new WP_Error('no_pinkys', __('No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys', 'text-domain'));
+                if ($pinky < $numSamplesNoDescargados) {
+                    error_log("[procesarColeccion] Error: No tienes suficientes Pinkys. Requeridos: " . $numSamplesNoDescargados);
+                    return new WP_Error('no_pinkys', __('No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys', 'text-domain'));
+                }
+                restarPinkys($userId, $numSamplesNoDescargados);
+                error_log("[procesarColeccion] Pinkys restados: " . $numSamplesNoDescargados);
             }
-            restarPinkys($userId, $numSamplesNoDescargados);
-            error_log("[procesarColeccion] Pinkys restados: " . $numSamplesNoDescargados);
-        }
-    } else {
-        error_log("[procesarColeccion] El archivo ZIP no existe. Creando...");
-        $zip = new ZipArchive();
+        } else {
+            error_log("[procesarColeccion] El archivo ZIP no existe. Creando...");
+            $zip = new ZipArchive();
 
-        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
-            error_log("[procesarColeccion] Error al crear el archivo ZIP.");
-            return new WP_Error('zip_error', __('Error al crear el archivo ZIP.', 'text-domain'));
-        }
-
-        if (!agregarArchivosAlZip($zip, $samples)) {
-            $zip->close();
-            if (file_exists($zipPath)) {
-                unlink($zipPath);
+            if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
+                error_log("[procesarColeccion] Error al crear el archivo ZIP.");
+                return new WP_Error('zip_error', __('Error al crear el archivo ZIP.', 'text-domain'));
             }
-            error_log("[procesarColeccion] Error al agregar archivos al ZIP.");
-            return new WP_Error('add_file_error', __('Error al agregar archivo al ZIP.', 'text-domain'));
-        }
 
-        $zip->close();
-        error_log("[procesarColeccion] Archivo ZIP cerrado.");
-
-        if ($numSamplesNoDescargados > 0) {
-            $pinky = (int)get_user_meta($userId, 'pinky', true);
-            error_log("[procesarColeccion] Pinkys del usuario: " . $pinky);
-
-            if ($pinky < $numSamplesNoDescargados) {
-                error_log("[procesarColeccion] Error: No tienes suficientes Pinkys. Requeridos: " . $numSamplesNoDescargados);
+            if (!agregarArchivosAlZip($zip, $samples)) {
+                $zip->close();
                 if (file_exists($zipPath)) {
                     unlink($zipPath);
-                    error_log("[procesarColeccion] Archivo ZIP eliminado debido a la falta de Pinkys: " . $zipPath);
                 }
-                return new WP_Error('no_pinkys', __('No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys', 'text-domain'));
+                error_log("[procesarColeccion] Error al agregar archivos al ZIP.");
+                return new WP_Error('add_file_error', __('Error al agregar archivo al ZIP.', 'text-domain'));
             }
-            restarPinkys($userId, $numSamplesNoDescargados);
-            error_log("[procesarColeccion] Pinkys restados: " . $numSamplesNoDescargados);
+
+            $zip->close();
+            error_log("[procesarColeccion] Archivo ZIP cerrado.");
         }
     }
 
+    error_log("[procesarColeccion] Samples no descargados: " . print_r($samplesNoDescargados, true));
+    error_log("[procesarColeccion] Número de samples no descargados: " . $numSamplesNoDescargados);
+
+    if ($numSamplesNoDescargados > 0) {
+        $pinky = (int)get_user_meta($userId, 'pinky', true);
+        error_log("[procesarColeccion] Pinkys del usuario: " . $pinky);
+
+        if ($pinky < $numSamplesNoDescargados) {
+            error_log("[procesarColeccion] Error: No tienes suficientes Pinkys. Requeridos: " . $numSamplesNoDescargados);
+            if (!$sync && file_exists($zipPath)) {
+                unlink($zipPath);
+                error_log("[procesarColeccion] Archivo ZIP eliminado debido a la falta de Pinkys: " . $zipPath);
+            }
+            return new WP_Error('no_pinkys', __('No tienes suficientes Pinkys para esta descarga. Se requieren ' . $numSamplesNoDescargados . ' pinkys', 'text-domain'));
+        }
+        restarPinkys($userId, $numSamplesNoDescargados);
+        error_log("[procesarColeccion] Pinkys restados: " . $numSamplesNoDescargados);
+    }
+
+    actualizarTimestampDescargas($userId);
     actualizarDescargas($userId, $samplesNoDescargados, $samplesDescargados);
     $totalDescargas = (int)get_post_meta($postId, 'totalDescargas', true);
     $totalDescargas++;
     update_post_meta($postId, 'totalDescargas', $totalDescargas);
     error_log("[procesarColeccion] Total de descargas del post actualizado: " . $totalDescargas);
-    error_log("[procesarColeccion] Fin de procesarColeccion. Retornando ruta del ZIP: " . $zipPath); // Modificamos el mensaje del log
-    return $zipPath; // Devolvemos la ruta física
+    error_log("[procesarColeccion] Fin de procesarColeccion.");
+
+    if (!$sync) {
+        error_log("[procesarColeccion] Retornando ruta del ZIP: " . $zipPath);
+        return $zipPath; // Devolvemos la ruta física
+    } else {
+        return true;
+    }
 }
 
 function generarEnlaceDescargaColeccion($userID, $zipPath, $postId)
@@ -412,23 +426,59 @@ function botonDescargaColec($postId, $sampleCount)
 
 ?>
         <div class="ZAQIBB">
-            <button class="icon-arrow-down botonprincipal <?php echo esc_attr($claseExtra); ?>"
-                data-post-id="<?php echo esc_attr($postId); ?>"
+            <button class="icon-arrow-down botonprincipal <? echo esc_attr($claseExtra); ?>"
+                data-post-id="<? echo esc_attr($postId); ?>"
                 aria-label="Boton Descarga"
-                id="download-button-<?php echo esc_attr($postId); ?>"
-                onclick="return procesarDescarga('<?php echo esc_js($postId); ?>', '<?php echo esc_js($userID); ?>', 'true', '<?php echo esc_js($sampleCount); ?>')">
-                <?php echo $GLOBALS['descargaicono']; ?> Descargar
+                id="download-button-<? echo esc_attr($postId); ?>"
+                onclick="return procesarDescarga('<? echo esc_js($postId); ?>', '<? echo esc_js($userID); ?>', 'true', '<? echo esc_js($sampleCount); ?>')">
+                <? echo $GLOBALS['descargaicono']; ?> Descargar
             </button>
         </div>
-    <?php
+    <?
     } else {
     ?>
         <div class="ZAQIBB">
             <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down" aria-label="Descargar">
-                <?php echo $GLOBALS['descargaicono']; ?>
+                <? echo $GLOBALS['descargaicono']; ?>
             </button>
         </div>
-<?php
+    <?
+    }
+
+    return ob_get_clean();
+}
+
+function botonSincronizarColec($postId, $sampleCount)
+{
+    ob_start();
+
+    $userID = get_current_user_id();
+
+    if ($userID) {
+        $descargas_anteriores = get_user_meta($userID, 'descargas', true);
+        $yaDescargado = isset($descargas_anteriores[$postId]);
+        $claseExtra = $yaDescargado ? 'yaDescargado' : '';
+
+    ?>
+        <div class="ZAQIBB">
+            <button class="icon-arrow-down botonprincipal <? echo esc_attr($claseExtra); ?>"
+                data-post-id="<? echo esc_attr($postId); ?>"
+                aria-label="Boton Descarga"
+                id="download-button-<? echo esc_attr($postId); ?>"
+                aca necesito que envie otro valor en true de forma de segura, ahora procesarDescarga recibira otro valor
+                onclick="return procesarDescarga('<? echo esc_js($postId); ?>', '<? echo esc_js($userID); ?>', 'true', '<? echo esc_js($sampleCount); ?>', 'true')">
+                Sincronizar
+            </button>
+        </div>
+    <?
+    } else {
+    ?>
+        <div class="ZAQIBB">
+            <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down" aria-label="Descargar">
+                Sincronizar
+            </button>
+        </div>
+<?
     }
 
     return ob_get_clean();

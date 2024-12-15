@@ -1,4 +1,4 @@
-async function procesarDescarga(postId, usuarioId, Coleccion = false, costo = 1) {
+async function procesarDescarga(postId, usuarioId, Coleccion = false, costo = 1, Sync = false) {
     console.log('Iniciando procesarDescarga', postId, usuarioId, Coleccion, costo);
     const confirmed = await new Promise(resolve => {
         const confirmBox = confirm(`Esta descarga costará ${costo} Pinky${costo > 1 ? 's' : ''}. ¿Deseas continuar?`);
@@ -13,7 +13,8 @@ async function procesarDescarga(postId, usuarioId, Coleccion = false, costo = 1)
     try {
         const data = {
             post_id: postId,
-            coleccion: Coleccion
+            coleccion: Coleccion,
+            sync: Sync
         };
 
         // Enviar la solicitud AJAX
