@@ -1,9 +1,6 @@
 <?
 
-/*
-tengo este codigo en mi servidor, pero cuando doy click en la app, no funciona (si funciona en la web y tiene que seguir funcionando en la web), que tengo que hacer
-por favor no confundas la app de electron que es diferente con la app de android que estoy haciendo
-*/
+
 
 
 function iniciar_sesion()

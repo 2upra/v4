@@ -9,8 +9,8 @@ $filtro = 'singleColec';
 // Obtener el título de la colección
 $post_title = get_the_title();
 
-// Generar el título SEO
-$seo_title = $post_title;
+// Generar el título SEO: Primera letra en mayúscula y añadir "| Drum kit & Sample Pack"
+$seo_title = ucfirst($post_title) . ' | Drum kit & Sample Pack'; // Modificado aquí
 add_action('wp_head', function () use ($seo_title) {
     echo '<title>' . esc_html($seo_title) . '</title>' . "\n";
 }, 1);
