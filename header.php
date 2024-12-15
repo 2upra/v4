@@ -385,8 +385,8 @@ if (!defined('ABSPATH')) {
                     <div class="A1806242">
                         <button><a href="<?php echo home_url('/perfil/'); ?>">Perfil</a></button>
                         <button class="reporte">Reportar un error</button>
-                        <button class="no-ajax"><a href="https://2upra.com/wp-content/uploads/2024/12/2upra101.apk">Descargar app Android</a></button>
-                        <button class="no-ajax"><a href="https://github.com/1ndoryu/sync2upra/releases/download/v1.0.2/Sync-2upra-Setup-1.0.2.exe">Descargar Sync Windows</a></button>
+                        <button class="no-ajax"><a href="https://2upra.com/wp-content/uploads/2024/12/2upra101.apk">App Android</a></button>
+                        <button class="no-ajax"><a href="https://github.com/1ndoryu/sync2upra/releases/download/v1.0.2/Sync-2upra-Setup-1.0.2.exe">Sync Windows</a></button>
 
                         <button class="no-ajax"><a class="no-ajax" href="<?php echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>
                     </div>
