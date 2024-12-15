@@ -15,7 +15,7 @@ function publicacionAjax()
     $colec = isset($_POST['colec']) ? intval($_POST['colec']) : null;
     $idea = isset($_POST['idea']) ? filter_var($_POST['idea'], FILTER_VALIDATE_BOOLEAN) : false;
 
-    //error_log("[publicacionAjax] Received identifier: " . $data_identifier);
+    ////error_log("[publicacionAjax] Received identifier: " . $data_identifier);
 
     publicaciones(
         array(
@@ -152,7 +152,7 @@ function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $isAdmin
 
             return false;
         }
-        error_log("[construirQueryArgs] construirQueryArgs!!");
+        //error_log("[construirQueryArgs] construirQueryArgs!!");
 
         $query_args = [
             'post_type' => $args['post_type'],
@@ -165,30 +165,30 @@ function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $isAdmin
         if (!empty($identifier)) {
             $query_args = prefiltrarIdentifier($identifier, $query_args);
             if (!$query_args) {
-                //error_log("[construirQueryArgs] Error: Falló el filtrado por identifier: " . $identifier);
+                ////error_log("[construirQueryArgs] Error: Falló el filtrado por identifier: " . $identifier);
             }
         }
 
         // Only apply ordenamiento if post_type is social_post AND filtro is not 'rola'
         if ($args['post_type'] === 'social_post' && (!isset($args['filtro']) || $args['filtro'] !== 'rola')) {
-            error_log("[construirQueryArgs] ordenamiento!!");
+            //error_log("[construirQueryArgs] ordenamiento!!");
             $query_args = ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
             if (!$query_args) {
-                //error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
+                ////error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
             }
         }
 
         if ($args['post_type'] === 'colecciones') {
-            error_log("[construirQueryArgs] ordenamiento!! ordenamientoColecciones");
+            //error_log("[construirQueryArgs] ordenamiento!! ordenamientoColecciones");
             $query_args = ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
             if (!$query_args) {
-                //error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
+                ////error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
             }
         }
 
         return $query_args;
     } catch (Exception $e) {
-        //error_log("[construirQueryArgs] Error crítico: " . $e->getMessage());
+        ////error_log("[construirQueryArgs] Error crítico: " . $e->getMessage());
         return false;
     }
 }
@@ -214,14 +214,14 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual, $id
 
         switch ($filtroTiempo) {
             case 1: // Recientes
-                error_log("[ordenamiento] caso reciente!!");
+                //error_log("[ordenamiento] caso reciente!!");
                 $query_args['orderby'] = 'date';
                 $query_args['order'] = 'DESC';
                 break;
 
             case 2: // Top semanal
             case 3: // Top mensual
-                error_log("[ordenamiento] caso mensual!!");
+                //error_log("[ordenamiento] caso mensual!!");
                 $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
 
                 $sql = "
@@ -262,7 +262,7 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual, $id
     //$cached_data = obtenerCache($cache_key);
 
     /* if ($cached_data) {
-        error_log("[ordenamientoColecciones] Retornando datos desde cache: " . $cache_key);
+        //error_log("[ordenamientoColecciones] Retornando datos desde cache: " . $cache_key);
         $query_args['post__in'] = $cached_data;
         $query_args['orderby'] = 'post__in';
         return $query_args;
@@ -331,7 +331,7 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual, $id
     $query_args['orderby'] = 'post__in';
     $query_args['post__not_in'] = $excluded_ids;
 
-    error_log("[ordenamientoColecciones] IDs ordenadas: " . implode(', ', $ordered_ids));
+    //error_log("[ordenamientoColecciones] IDs ordenadas: " . implode(', ', $ordered_ids));
 
     return $query_args;
 }
@@ -459,7 +459,7 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
         }
     }
 
-    error_log("[ordenamiento] aplicando ordenamiento");
+    //error_log("[ordenamiento] aplicando ordenamiento");
 
     try {
         global $wpdb;
@@ -476,14 +476,14 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
 
         switch ($filtroTiempo) {
             case 1: // Recientes
-                error_log("[ordenamiento] caso reciente!!");
+                //error_log("[ordenamiento] caso reciente!!");
                 $query_args['orderby'] = 'date';
                 $query_args['order'] = 'DESC';
                 break;
 
             case 2: // Top semanal
             case 3: // Top mensual
-                error_log("[ordenamiento] caso mensual!!");
+                //error_log("[ordenamiento] caso mensual!!");
                 $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
 
                 $sql = "
@@ -519,7 +519,7 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
                 break;
 
             default: // Feed personalizado
-                error_log("[ordenamiento] caso default!");
+                //error_log("[ordenamiento] caso default!");
 
                 // Si no hay filtros, permitir el caso default solo si filtrosUsuario está vacío
                 if (empty($filtrosUsuario) || $filtrosUsuario === 'a:0:{}') {
