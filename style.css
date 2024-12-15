@@ -2745,13 +2745,13 @@ button.filtro {
 	cursor: pointer;
 }
 input#identifier {
-	all: unset;
 	background: none;
 	border: solid 1px #252525;
 	border-radius: 5px;
 	font-size: 11px;
 	padding: 4px 10px;
 	min-width: 300px;
+	font-size: 10px;
 }
 div#formulariosubirsample {
 	display: none;
@@ -6507,7 +6507,7 @@ li.POST-single.EDYQHV {
 	margin-right: -10px;
 }
 .nologinbotones button {
-    padding: 0px 10px;
+	padding: 0px 10px;
 }
 
 .OFVWLS div {
@@ -7443,6 +7443,7 @@ div#notificacionesModal {
 	box-sizing: border-box;
 	padding: 100px 0px;
 	padding-bottom: 10px;
+	padding-top: 10px;
 }
 
 .OSFED {
@@ -8339,19 +8340,19 @@ button.buttonBI.borde:hover {
 }
 
 .buscadordiv input {
-	border: var(--borde);
-	margin: 0;
-	background: unset;
-	border-radius: 50px;
-	width: 340px;
-	padding: 8px 15px;
+	border: var(--borde) !important;
+	margin: 0 !important;
+	background: unset !important;
+	border-radius: 50px !important;
+	width: 340px !important;
+	padding: 8px 15px !important;
 	height: 38px !important;
-
+	font-size: 12px !important;
 }
-
 .SOKDEOD {
-	min-height: calc(var(--vh, 1vh)* 100);
-	display: flex;
+	min-height: calc(var(--vh, 1vh)* 70);
+	display: flex
+		;
 	background: #050505;
 	justify-content: center;
 	align-items: center;
@@ -8360,6 +8361,7 @@ button.buttonBI.borde:hover {
 	max-width: 600px;
 	margin: auto;
 	gap: 20px;
+	margin-top: 50px;
 }
 
 .SOKDEOD h2 {
@@ -8371,12 +8373,8 @@ button.buttonBI.borde:hover {
 	FONT-WEIGHT: 400;
 }
 
-.buscadordiv input#identifier {
-    all: unset;
-    background: none;
-    border: solid 1px #252525;
-    border-radius: 5px;
-    font-size: 11px;
-    padding: 4px 10px;
-    min-width: 300px;
+.BPLBDE.nologin {
+	max-width: 1250px;
+	margin: auto;
+	padding: 0px;
 }
