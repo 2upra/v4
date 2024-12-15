@@ -1,4 +1,6 @@
+
 <?php
+//single-colecciones.php
 if (! defined('ABSPATH')) {
     exit;
 }
