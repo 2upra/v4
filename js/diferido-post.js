@@ -421,30 +421,59 @@
         cargarMasContenido(listaPublicaciones);
     };
 
-    function configurarEventoBusqueda() {
-        const inputBusqueda = document.getElementById('identifier');
-        if (inputBusqueda) {
-            inputBusqueda.removeEventListener('keypress', manejadorEventoBusqueda);
-            inputBusqueda.addEventListener('keypress', manejadorEventoBusqueda);
-            log('Evento de búsqueda configurado para el input #identifier');
-        } else {
-            log('No se encontró el elemento input de búsqueda');
-        }
-    }
-
     function manejadorEventoBusqueda(e) {
-        if (e.key === 'Enter') {
+        // Verificar si el evento proviene de la tecla Enter (incluyendo teclado Android)
+        const esEnter = e.key === 'Enter' || e.keyCode === 13;
+
+        // Verificar si el evento proviene de un botón
+        const esBoton = e.target.classList.contains('buttonBI') || e.target.classList.contains('buttonBuscar');
+
+        // Ejecutar la lógica solo si es Enter o un botón
+        if (esEnter || esBoton) {
             e.preventDefault();
             const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
             if (!listaPublicaciones) {
                 log('No se encontró .social-post-list para añadir contenido');
                 return;
             }
-            identificador = e.target.value.trim();
+
+            // Obtener el identificador del input de búsqueda
+            const inputBusqueda = document.getElementById('identifier');
+            identificador = inputBusqueda.value.trim();
+
             actualizarUIBusqueda(identificador);
-            log('Enter presionado en búsqueda, valor de identificador:', identificador);
+            log('Búsqueda activada, valor de identificador:', identificador);
             resetearCarga();
             cargarMasContenido(listaPublicaciones);
+        }
+    }
+
+    function configurarEventoBusqueda() {
+        const inputBusqueda = document.getElementById('identifier');
+        const botonesBusqueda = document.querySelectorAll('.buttonBI, .buttonBuscar');
+
+        if (inputBusqueda) {
+            // Evento para la tecla Enter
+            inputBusqueda.removeEventListener('keypress', manejadorEventoBusqueda);
+            inputBusqueda.addEventListener('keypress', manejadorEventoBusqueda);
+
+            // Evento para el teclado virtual de Android (se usa 'keyup' en lugar de 'keypress')
+            inputBusqueda.removeEventListener('keyup', manejadorEventoBusqueda);
+            inputBusqueda.addEventListener('keyup', manejadorEventoBusqueda);
+            log('Evento de búsqueda configurado para el input #identifier');
+        } else {
+            log('No se encontró el elemento input de búsqueda');
+        }
+
+        // Eventos para los botones
+        if (botonesBusqueda.length > 0) {
+            botonesBusqueda.forEach(boton => {
+                boton.removeEventListener('click', manejadorEventoBusqueda);
+                boton.addEventListener('click', manejadorEventoBusqueda);
+            });
+            log('Evento de búsqueda configurado para los botones .buttonBI y .buttonBuscar');
+        } else {
+            log('No se encontraron botones de búsqueda');
         }
     }
 
