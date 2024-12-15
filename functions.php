@@ -660,11 +660,3 @@ EOD;
 }
 add_action('wp_enqueue_scripts', 'innerHeight');
 
-add_filter( 'rest_authentication_errors', function( $result ) {
-    if ( ! empty( $result ) ) {
-        return $result;
-    }
-        return new WP_Error( 'ñoño que haces uwu', array( 'status' => 401 ) );
-
-    return $result;
-});
