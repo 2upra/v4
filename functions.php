@@ -360,7 +360,7 @@ add_action('wp_enqueue_scripts', 'custom_deregister_jquery', 100);
 
 function scriptsOrdenados()
 {
-    $global_version = '0.2.142';
+    $global_version = '0.2.143';
     $dev_mode = defined('LOCAL') && LOCAL;
     //$error_log = [];
 
@@ -393,6 +393,7 @@ function scriptsOrdenados()
         'gloria'            => '1.0.1',
         'ajaxPage'          => '5.0.11',
         'autorows'          => '1.0.1',
+        'busqueda'          => '1.0.1', 
         'fan'               => '1.0.36',
         'stripeAccion'      => '1.0.6',
         'reproductor'       => '2.1.2',

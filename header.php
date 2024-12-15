@@ -245,8 +245,10 @@ if (!defined('ABSPATH')) {
                             </div>
 
                             <div class="iconobusqueda" id="iconobusqueda">
-                                <? echo $GLOBALS['iconobusqueda'];
-                                ?>
+                                <a href="<?php echo home_url('/busqueda'); ?>">
+                                    <? echo $GLOBALS['iconobusqueda'];
+                                    ?>
+                                </a>
                             </div>
 
                             <div class="subiricono" id="subiricono">
@@ -320,7 +322,7 @@ if (!defined('ABSPATH')) {
                     <? echo modalTipoUsuario() ?>
                     <? echo modalGeneros() ?>
                 </div>
-                
+
                 <? echo modalApp() ?>
 
                 <div class="comentariosPost modal no-refresh" style="display: none" id="comentariosPost">

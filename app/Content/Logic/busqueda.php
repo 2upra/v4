@@ -154,7 +154,7 @@ function generar_html_resultados($resultados)
                     <div class="resultado-info">
                         <h3><?php echo esc_html($resultado['titulo']); ?></h3>
                         <p>
-                            <?php 
+                            <?php
                             if ($resultado['tipo'] === 'social post') {
                                 echo 'Post';
                             } else {
@@ -172,9 +172,23 @@ function generar_html_resultados($resultados)
     if ($num_resultados === 0) {
         ?>
         <div class="resultado-item">No se encontraron resultados.</div>
-<?php
+    <?php
     }
 
     return ob_get_clean();
 }
-?>
+
+
+function busqueda()
+{
+
+    ob_start();
+    ?>
+    <div class="buscadorBL bloque">
+        <textarea name="buscadorLocal" id="buscadorLocal"></textarea>
+
+        <div class="resultadosBL"></div>
+    </div>
+<?
+    return ob_get_clean();
+}
