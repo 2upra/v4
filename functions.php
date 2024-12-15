@@ -346,17 +346,7 @@ function postLog($log)
 }
 
 
-function custom_deregister_jquery()
-{
-    // Verifica si es la página de inicio y si el usuario NO está logueado
-    if (is_front_page() && !is_user_logged_in()) {
-        // Desregistrar jQuery para que no se cargue
-        wp_deregister_script('jquery');
-    }
-}
-add_action('wp_enqueue_scripts', 'custom_deregister_jquery', 100);
-
-
+//wave
 
 function scriptsOrdenados()
 {
@@ -484,12 +474,6 @@ function scriptsOrdenados()
     wp_localize_script('ajaxPage', 'ajaxPage', ['logeado' => is_user_logged_in()]);
     //$error_log[] = "Script ajaxPage localizado.";
 
-    // Manejo de scripts externos
-    if (is_front_page() && !is_user_logged_in()) {
-        wp_dequeue_script('jquery');
-
-        //$error_log[] = "jQuery y wavesurfer.js no se cargan en la página de inicio para usuarios no logueados.";
-    }
 
 
     wp_add_inline_script('genericAjax', 'const wpAdminUrl = "' . admin_url() . '";', 'before');
