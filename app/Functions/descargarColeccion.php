@@ -461,7 +461,7 @@ function botonSincronizarColec($postId, $sampleCount)
 
     ?>
         <div class="ZAQIBB">
-            <button class="icon-arrow-down botonprincipal <? echo esc_attr($claseExtra); ?>"
+            <button class="icon-arrow-down botonsecundario <? echo esc_attr($claseExtra); ?>"
                 data-post-id="<? echo esc_attr($postId); ?>"
                 aria-label="Boton Descarga"
                 id="download-button-<? echo esc_attr($postId); ?>"
