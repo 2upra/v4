@@ -185,7 +185,7 @@ function busqueda()
     ob_start();
     ?>
     <div class="buscadorBL bloque">
-        <textarea name="buscadorLocal" id="buscadorLocal"></textarea>
+        <input name="buscadorLocal" id="buscadorLocal" placeholder="Ingresa tu busqueda"></input>
 
         <div class="resultadosBL"></div>
     </div>
