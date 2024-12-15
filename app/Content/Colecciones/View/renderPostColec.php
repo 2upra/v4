@@ -225,7 +225,7 @@ function maybe_unserialize_dos($data)
 
 
 
-function variablesColec($postId)
+function variablesColec($postId = null)
 {
     // Si no se proporciona un postId, usa el ID del post global.
     if ($postId === null) {
@@ -238,11 +238,29 @@ function variablesColec($postId)
     $samplesMeta = get_post_meta($postId, 'samples', true);
     $datosColeccion = get_post_meta($postId, 'datosColeccion', true);
     $sampleCount = 0;
+    $sampleCountReal = 0; // Inicializar la variable
 
     if (!empty($samplesMeta)) {
         $samplesArray = maybe_unserialize_dos($samplesMeta);
+
         if (is_array($samplesArray)) {
             $sampleCount = count($samplesArray);
+
+            // Contar los samples no descargados
+            if ($usuarioActual) {
+                $descargas_anteriores = get_user_meta($usuarioActual, 'descargas', true);
+                $sampleCountReal = 0;
+
+                foreach ($samplesArray as $sampleId) {
+                    // Verificar si el sample actual NO ha sido descargado
+                    if (!isset($descargas_anteriores[$sampleId])) {
+                        $sampleCountReal++;
+                    }
+                }
+            } else {
+                // Si no hay usuario actual (no ha iniciado sesión), el costo es el total de samples
+                $sampleCountReal = $sampleCount;
+            }
         }
     }
 
@@ -252,10 +270,9 @@ function variablesColec($postId)
         'autorId' => $autorId,
         'samples' => $sampleCount . ' samples',
         'datosColeccion' => $datosColeccion,
-        'sampleCount' => $sampleCount,
+        'sampleCount' => $sampleCountReal, // Usar el valor calculado
     ];
 }
-
 
 function imagenColeccion($postId)
 {
@@ -334,7 +351,7 @@ function singleColec($postId)
 
             <div class="AGDEORF">
                 <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
-                <h2 class="tituloColec" data-post-id="<? echo $postId; ?>" ><? echo get_the_title($postId); ?></h2>
+                <h2 class="tituloColec" data-post-id="<? echo $postId; ?>"><? echo get_the_title($postId); ?></h2>
                 <div class="DSEDBE">
                     <? echo $samples ?>
                 </div>
@@ -373,7 +390,7 @@ function masIdeasColeb($postId)
         <? echo publicaciones(['post_type' => 'social_post', 'filtro' => 'sampleList', 'posts' => 12, 'colec' => $postId, 'idea' => true]);  ?>
     </div>
 
-    <?
+<?
     return ob_get_clean();
 }
 
