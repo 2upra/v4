@@ -1,8 +1,7 @@
-async function procesarDescarga(postId, usuarioId, Coleccion = false) {
-    console.log('Iniciando procesarDescarga', postId, usuarioId, Coleccion);
-
+async function procesarDescarga(postId, usuarioId, Coleccion = false, costo = 1) {
+    console.log('Iniciando procesarDescarga', postId, usuarioId, Coleccion, costo);
     const confirmed = await new Promise(resolve => {
-        const confirmBox = confirm('Esta descarga costará 1 Pinky. ¿Deseas continuar?');
+        const confirmBox = confirm(`Esta descarga costará ${costo} Pinky${costo > 1 ? 's' : ''}. ¿Deseas continuar?`);
         resolve(confirmBox);
     });
 
@@ -44,7 +43,7 @@ async function procesarDescarga(postId, usuarioId, Coleccion = false) {
             }
         } else {
             console.log('No hay suficientes pinkys o error en la descarga.');
-            alert(responseData.message || 'No tienes suficientes pinkys');
+            alert(responseData.message || `No tienes suficientes pinkys, necesitas al menos ${costo}`);
         }
     } catch (error) {
         console.error('Error en la solicitud:', error);
@@ -53,4 +52,3 @@ async function procesarDescarga(postId, usuarioId, Coleccion = false) {
 
     return false;
 }
-

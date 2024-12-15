@@ -338,7 +338,7 @@ function singleColec($postId)
                     <? echo $samples ?>
                 </div>
                 <div class="BOTONESCOLEC">
-                    <? echo botonDescargaColec($postId); ?>
+                    <? echo botonDescargaColec($postId, $sampleCount); ?>
                     <? echo like($postId); ?>
                     <? echo opcionesColec($postId, $autorId); ?>
                 </div>
@@ -373,41 +373,6 @@ function masIdeasColeb($postId)
     </div>
 
     <?
-    return ob_get_clean();
-}
-
-function botonDescargaColec($postId)
-{
-    ob_start();
-
-    $userID = get_current_user_id();
-
-    if ($userID) {
-        $descargas_anteriores = get_user_meta($userID, 'descargas', true);
-        $yaDescargado = isset($descargas_anteriores[$postId]);
-        $claseExtra = $yaDescargado ? 'yaDescargado' : '';
-
-    ?>
-        <div class="ZAQIBB">
-            <button class="icon-arrow-down botonprincipal <?php echo esc_attr($claseExtra); ?>"
-                data-post-id="<?php echo esc_attr($postId); ?>"
-                aria-label="Boton Descarga"
-                id="download-button-<?php echo esc_attr($postId); ?>"
-                onclick="return procesarDescarga('<?php echo esc_js($postId); ?>', '<?php echo esc_js($userID); ?>', 'true')">
-                <?php echo $GLOBALS['descargaicono']; ?> Descargar
-            </button>
-        </div>
-    <?php
-    } else {
-    ?>
-        <div class="ZAQIBB">
-            <button onclick="alert('Para descargar el archivo necesitas registrarte e iniciar sesión.');" class="icon-arrow-down" aria-label="Descargar">
-                <?php echo $GLOBALS['descargaicono']; ?>
-            </button>
-        </div>
-<?php
-    }
-
     return ob_get_clean();
 }
 
