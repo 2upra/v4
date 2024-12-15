@@ -198,22 +198,22 @@ function calcularPuntosParaPost(
 
 function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
 {
-
+    
     if ($esAdmin) {
 
         if (!$metaVerificado && $metaPostAut) {
-            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 10;
+            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.5;
         } elseif ($metaVerificado && !$metaPostAut) {
             return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1;
         }
     } else {
         if ($metaVerificado && $metaPostAut) {
-            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 4;
+            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1.5;
         } elseif (!$metaVerificado && $metaPostAut) {
             return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1;
         }
     }
-
+    
     return $puntosUsuario + $puntosIntereses + $puntosLikes;
 }
 
