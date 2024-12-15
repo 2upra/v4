@@ -228,10 +228,6 @@ if (!defined('ABSPATH')) {
                             </div>
                         </div>
 
-
-
-
-
                         <div class="menuArribaLogin">
 
                             <div class="prostatus0" id="btnpro">
@@ -301,6 +297,11 @@ if (!defined('ABSPATH')) {
                         <button><a>Comparativa</a></button>
                         <button><a>Precio</a></button>
 
+                    </div>
+                    <div class="iconRedSocial">
+                        <a class="no-ajax" href="https://www.threads.net/@wandorius">
+                            <? echo $GLOBALS['threads']; ?>
+                        </a>
                     </div>
                     <div class="nologinboton">
                         <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Iniciar sesión</button>
