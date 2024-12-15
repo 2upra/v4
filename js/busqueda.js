@@ -1,22 +1,4 @@
-//
-/*
-esto funciona bien ahora mismo, se entiende que el codigo actual funcioa con identifier y resultado busqueda, pero necesito expandir el mismo funcionamient (y que funcionen correctamente ambos) que cuando se busque en buscadorLocal los resultados aparezcan en resultadosBL, lo que hay que tener en cuenta es que buscadorBL no necesita modal background, ni cambiar la visibilidad ni nada 
-    function busqueda()
-{
-
-    ob_start();
-    ?>
-    <div class="buscadorBL bloque">
-        <textarea name="buscadorLocal" id="buscadorLocal"></textarea>
-
-        <div class="resultadosBL"></div>
-    </div>
-<?
-    return ob_get_clean();
-}
-
-    */
-
+//hay un pequeño detalle, cuando se escribe en inputBusquedaLocal, no deberá crear el background, solo si es inputBusqueda
 const inputBusqueda = document.getElementById('identifier');
 const divResultados = document.getElementById('resultadoBusqueda');
 const inputBusquedaLocal = document.getElementById('buscadorLocal');
@@ -94,12 +76,13 @@ inputBusqueda.addEventListener('input', () => {
         divResultados.style.display = 'flex';
         divResultados.classList.remove('hidden');
         buscar(textoBusqueda, divResultados);
-        mostrarFondoOscuro(); // Mostrar fondo oscuro al empezar a escribir
+        mostrarFondoOscuro(); // Mostrar fondo oscuro al empezar a escribir en inputBusqueda
     } else {
         ocultarFondoYResultados(); // Ocultar si no hay texto
         divResultados.innerHTML = '';
     }
 });
+
 
 async function buscar(texto, divResultados) {
     const data = {
@@ -116,7 +99,8 @@ async function buscar(texto, divResultados) {
 
 function mostrarResultados(html, divResultados) {
     divResultados.innerHTML = html;
-    if (divResultados === divResultados) {
-      mostrarFondoOscuro();
-    }
+    // Elimina la llamada a mostrarFondoOscuro() de aquí
+    // if (divResultados === divResultados) {
+    //   mostrarFondoOscuro();
+    // }
 }
