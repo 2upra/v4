@@ -35,10 +35,10 @@ function socialTabs()
                     </div>
                 </div>
 
-                <div class="tab nologin" id="Samplenologin">
-                    <div class="BPLBDE nologin">
-                        <div class="FOFDV5 nologin">
-                            <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samplenologin', 'posts' => 12, 'tipoUsuario' => 'Arista']); ?>
+                <div class="tab INICIO S4K7I3" id="Samples">
+                    <div class="BPLBDE">
+                        <div class="FOFDV5">
+                            <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Samples', 'posts' => 12, 'tipoUsuario' => 'Artista']); ?>
                         </div>
                     </div>
                 </div>

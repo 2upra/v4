@@ -360,7 +360,7 @@ add_action('wp_enqueue_scripts', 'custom_deregister_jquery', 100);
 
 function scriptsOrdenados()
 {
-    $global_version = '0.2.149';
+    $global_version = '0.2.150';
     $dev_mode = defined('LOCAL') && LOCAL;
     //$error_log = [];
 
@@ -491,9 +491,6 @@ function scriptsOrdenados()
         //$error_log[] = "jQuery y wavesurfer.js no se cargan en la página de inicio para usuarios no logueados.";
     }
 
-
-
-    //$error_log[] = "Script wavesurfer encolado desde unpkg.";
 
     wp_add_inline_script('genericAjax', 'const wpAdminUrl = "' . admin_url() . '";', 'before');
     //$error_log[] = "Script en línea para genericAjax añadido con wpAdminUrl.";

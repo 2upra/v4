@@ -240,7 +240,7 @@ function dev()
 
                     <div class="BPLBDE nologin">
                         <div class="FOFDV5 nologin">
-                            <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Inicio', 'posts' => 12, 'tipoUsuario' => 'Arista']); ?>
+                            <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Inicio', 'posts' => 12, 'tipoUsuario' => 'Artista']); ?>
                         </div>
                     </div>
 

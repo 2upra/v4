@@ -1,8 +1,8 @@
 let currentlyPlayingAudio = null;
 let audioPlayingStatus = false;
 
-//solo hay un pequeño detalle que no se donde arreglar, un pequeño detalle, mientras que hay un audio en reproduccion y pongo el mouse sobre otro audio, no aparece reproducirBtn hasta que terminer de reproducr el audio que se estaba reproduciendo o pausarlo 
 function inicializarWaveforms() {
+    console.log('inicializarWaveforms start');
     const observer = new IntersectionObserver(
         entries => {
             entries.forEach(entry => {
@@ -28,7 +28,7 @@ function inicializarWaveforms() {
                 }
             });
         },
-        { threshold: 0.5 }
+        {threshold: 0.5}
     );
 
     function setupWaveformContainer(container) {
@@ -60,7 +60,7 @@ function inicializarWaveforms() {
             });
             post.dataset.clickListenerAdded = 'true';
         }
-        
+
         // Manejo del mouse para mostrar/ocultar botones
         const reproducirBtn = post.querySelector('.reproducirSL');
         const pausaBtn = post.querySelector('.pausaSL');
@@ -70,7 +70,7 @@ function inicializarWaveforms() {
                 // Obtener el WaveSurfer asociado a este post
                 const postId = post.querySelector('.waveform-container').getAttribute('postIDWave');
                 const wavesurfer = window.wavesurfers[postId];
-    
+
                 if (wavesurfer && wavesurfer.isPlaying()) {
                     // Si el audio de este post se está reproduciendo, mostrar pausa
                     pausaBtn.style.display = 'flex';
@@ -81,12 +81,12 @@ function inicializarWaveforms() {
                     pausaBtn.style.display = 'none';
                 }
             });
-    
+
             post.addEventListener('mouseleave', () => {
                 // Obtener el WaveSurfer asociado a este post
                 const postId = post.querySelector('.waveform-container').getAttribute('postIDWave');
                 const wavesurfer = window.wavesurfers[postId];
-    
+
                 if (!wavesurfer || !wavesurfer.isPlaying()) {
                     // Si no hay audio o no se está reproduciendo en este post, ocultar ambos botones
                     reproducirBtn.style.display = 'none';
@@ -101,7 +101,7 @@ function inicializarWaveforms() {
         if (!postId) return;
 
         if (audioPlayingStatus && currentlyPlayingAudio !== window.wavesurfers[postId]) {
-            if(currentlyPlayingAudio) {
+            if (currentlyPlayingAudio) {
                 currentlyPlayingAudio.pause();
             }
             audioPlayingStatus = false;
@@ -113,11 +113,11 @@ function inicializarWaveforms() {
             currentlyPlayingAudio.pause();
             // Ocultar botones de pausa en el post anterior
             const previousPost = currentlyPlayingAudio.container.closest('.POST-sampleList');
-            if(previousPost) {
+            if (previousPost) {
                 const prevPausaBtn = previousPost.querySelector('.pausaSL');
                 const prevReproducirBtn = previousPost.querySelector('.reproducirSL');
-                if(prevPausaBtn) prevPausaBtn.style.display = 'none';
-                if(prevReproducirBtn) prevReproducirBtn.style.display = 'none';
+                if (prevPausaBtn) prevPausaBtn.style.display = 'none';
+                if (prevReproducirBtn) prevReproducirBtn.style.display = 'none';
             }
         }
 
@@ -131,7 +131,6 @@ function inicializarWaveforms() {
                     wavesurfer.pause();
                     audioPlayingStatus = false;
                     currentlyPlayingAudio = null;
-
                 } else {
                     wavesurfer.play();
                     audioPlayingStatus = true;
@@ -143,13 +142,12 @@ function inicializarWaveforms() {
         // Actualizar botones después de la acción
         const reproducirBtn = post.querySelector('.reproducirSL');
         const pausaBtn = post.querySelector('.pausaSL');
-        
+
         if (window.wavesurfers[postId] && window.wavesurfers[postId].isPlaying()) {
             reproducirBtn.style.display = 'none';
             pausaBtn.style.display = 'flex';
             audioPlayingStatus = true;
             currentlyPlayingAudio = window.wavesurfers[postId];
-
         } else {
             reproducirBtn.style.display = 'none';
             pausaBtn.style.display = 'none';
@@ -159,7 +157,6 @@ function inicializarWaveforms() {
     }
 
     window.stopAllWaveSurferPlayers = function () {
-       
         // Ocultar botones de todos los posts
         document.querySelectorAll('.POST-sampleList').forEach(post => {
             const reproducirBtn = post.querySelector('.reproducirSL');
@@ -167,14 +164,14 @@ function inicializarWaveforms() {
             if (reproducirBtn) reproducirBtn.style.display = 'none';
             if (pausaBtn) pausaBtn.style.display = 'none';
         });
-        
+
         if (currentlyPlayingAudio) {
             currentlyPlayingAudio.pause();
         }
-        
+
         audioPlayingStatus = false;
         currentlyPlayingAudio = null;
-        
+
         for (const postId in window.wavesurfers) {
             if (window.wavesurfers[postId].isPlaying()) {
                 window.wavesurfers[postId].pause();
@@ -190,6 +187,7 @@ function loadAudio(postId, audioUrl, container, playOnLoad) {
 }
 
 window.we = function (postId, audioUrl, container, playOnLoad = false) {
+    console.log('we start');
     if (!window.wavesurfers) window.wavesurfers = {};
     const MAX_RETRIES = 3;
 
@@ -209,89 +207,86 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => {
-            if (!response.ok) throw new Error('Respuesta de red no satisfactoria');
-            return response.blob();
-        })
-        .then(blob => {
-            const audioBlobUrl = URL.createObjectURL(blob);
-            const wavesurfer = initWavesurfer(container);
-            window.wavesurfers[postId] = wavesurfer;
-            wavesurfer.load(audioBlobUrl);
+            .then(response => {
+                if (!response.ok) throw new Error('Respuesta de red no satisfactoria');
+                return response.blob();
+            })
+            .then(blob => {
+                const audioBlobUrl = URL.createObjectURL(blob);
+                const wavesurfer = initWavesurfer(container);
+                window.wavesurfers[postId] = wavesurfer;
+                wavesurfer.load(audioBlobUrl);
 
-            const waveformBackground = container.querySelector('.waveform-background');
-            if (waveformBackground) waveformBackground.style.display = 'none';
+                const waveformBackground = container.querySelector('.waveform-background');
+                if (waveformBackground) waveformBackground.style.display = 'none';
 
-            wavesurfer.on('ready', () => {
-                container.dataset.audioLoaded = 'true';
-                container.querySelector('.waveform-loading').style.display = 'none';
-                const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
-                const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
+                wavesurfer.on('ready', () => {
+                    container.dataset.audioLoaded = 'true';
+                    container.querySelector('.waveform-loading').style.display = 'none';
+                    const waveCargada = container.getAttribute('data-wave-cargada') === 'true';
+                    const isMobile = /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent);
 
-                if (!waveCargada && !isMobile && !container.closest('.LISTWAVESAMPLE')) {
-                    setTimeout(() => {
-                        const image = generateWaveformImage(wavesurfer);
-                        sendImageToServer(image, postId);
-                    }, 1);
-                }
-                if (playOnLoad) {
-                   
-                    if (audioPlayingStatus) {
-                        currentlyPlayingAudio.pause();
+                    if (!waveCargada && !isMobile && !container.closest('.LISTWAVESAMPLE')) {
+                        setTimeout(() => {
+                            const image = generateWaveformImage(wavesurfer);
+                            sendImageToServer(image, postId);
+                        }, 1);
                     }
-                    wavesurfer.play();
-                    audioPlayingStatus = true;
-                    currentlyPlayingAudio = wavesurfer;
-                }
-            });
+                    if (playOnLoad) {
+                        if (audioPlayingStatus) {
+                            currentlyPlayingAudio.pause();
+                        }
+                        wavesurfer.play();
+                        audioPlayingStatus = true;
+                        currentlyPlayingAudio = wavesurfer;
+                    }
+                });
 
-            wavesurfer.on('error', () => {
+                wavesurfer.on('error', () => {
+                    setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
+                });
+
+                wavesurfer.on('finish', () => {
+                    audioPlayingStatus = false;
+                    currentlyPlayingAudio = null;
+                    // Actualizar botones después de finalizar
+                    const post = container.closest('.POST-sampleList');
+                    if (post) {
+                        const reproducirBtn = post.querySelector('.reproducirSL');
+                        const pausaBtn = post.querySelector('.pausaSL');
+                        if (reproducirBtn) reproducirBtn.style.display = 'none';
+                        if (pausaBtn) pausaBtn.style.display = 'none';
+                    }
+                });
+
+                wavesurfer.on('play', () => {
+                    // Actualizar botones al reproducir
+                    const post = container.closest('.POST-sampleList');
+                    if (post) {
+                        const reproducirBtn = post.querySelector('.reproducirSL');
+                        const pausaBtn = post.querySelector('.pausaSL');
+                        if (reproducirBtn) reproducirBtn.style.display = 'none';
+                        if (pausaBtn) pausaBtn.style.display = 'flex';
+                        audioPlayingStatus = true;
+                        currentlyPlayingAudio = wavesurfer;
+                    }
+                });
+
+                wavesurfer.on('pause', () => {
+                    // Actualizar botones al pausar
+                    const post = container.closest('.POST-sampleList');
+                    if (post) {
+                        const reproducirBtn = post.querySelector('.reproducirSL');
+                        const pausaBtn = post.querySelector('.pausaSL');
+                        if (reproducirBtn) reproducirBtn.style.display = 'none';
+                        if (pausaBtn) pausaBtn.style.display = 'none';
+                        audioPlayingStatus = false;
+                    }
+                });
+            })
+            .catch(error => {
                 setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
             });
-
-            wavesurfer.on('finish', () => {
-                audioPlayingStatus = false;
-                currentlyPlayingAudio = null;
-                // Actualizar botones después de finalizar
-                const post = container.closest('.POST-sampleList');
-                if(post){
-                    const reproducirBtn = post.querySelector('.reproducirSL');
-                    const pausaBtn = post.querySelector('.pausaSL');
-                    if (reproducirBtn) reproducirBtn.style.display = 'none';
-                    if (pausaBtn) pausaBtn.style.display = 'none';
-                }
-            });
-
-            wavesurfer.on('play', () => {
-                // Actualizar botones al reproducir
-                const post = container.closest('.POST-sampleList');
-                if(post){
-                    const reproducirBtn = post.querySelector('.reproducirSL');
-                    const pausaBtn = post.querySelector('.pausaSL');
-                    if (reproducirBtn) reproducirBtn.style.display = 'none';
-                    if (pausaBtn) pausaBtn.style.display = 'flex';
-                    audioPlayingStatus = true;
-                    currentlyPlayingAudio = wavesurfer;
-                }
-                
-            });
-
-            wavesurfer.on('pause', () => {
-                // Actualizar botones al pausar
-                const post = container.closest('.POST-sampleList');
-                if(post){
-                    const reproducirBtn = post.querySelector('.reproducirSL');
-                    const pausaBtn = post.querySelector('.pausaSL');
-                    if (reproducirBtn) reproducirBtn.style.display = 'none';
-                    if (pausaBtn) pausaBtn.style.display = 'none';
-                    audioPlayingStatus = false;
-                }
-            });
-
-        })
-        .catch(error => {
-            setTimeout(() => loadAndPlayAudioStream(retryCount + 1), 3000);
-        });
     };
 
     loadAndPlayAudioStream();
