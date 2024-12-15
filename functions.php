@@ -419,7 +419,7 @@ function scriptsOrdenados()
         'ajax-submit'       => '2.1.38',
         'formscript'        => '1.1.11',
         'genericAjax'       => '2.1.13',
-        'wavejs'            => ['2.0.19', ['jquery', 'wavesurfer']],
+        'wavejs'            => ['2.0.20', ['jquery', 'wavesurfer']],
         'inversores'        => '1.0.4',
         'likes'             => '2.0.1',
         'seguir'            => '2.0.1',
@@ -431,7 +431,7 @@ function scriptsOrdenados()
         'colec'             => '1.0.1',
     ];
 
-    wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.7.10', true);
+    wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.8.11', true);
     // Registro de la configuración inicial
     //$error_log[] = "Modo de desarrollo activado: " . ($dev_mode ? 'Sí' : 'No');
     //$error_log[] = "Versión global de scripts: " . $global_version;
