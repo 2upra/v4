@@ -39,8 +39,7 @@ async function procesarDescarga(postId, usuarioId, Coleccion = false, costo = 1,
                     console.error('No se encontró el botón de descarga.');
                 }
             } else {
-                console.error('Error: download_url no está definido en la respuesta.');
-                alert('Hubo un problema obteniendo el enlace de descarga.');
+                alert('Sincronizado.');
             }
         } else {
             console.log('No hay suficientes pinkys o error en la descarga.');
