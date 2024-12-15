@@ -1175,58 +1175,7 @@ function filtrosPost() {
     window.recargarFiltros = recargarFiltros;
 }
 
-window.contadorDeSamples = () => {
-    // Obtener el elemento donde se mostrarán los resultados
-    const resultadosElement = document.getElementById('resultadosPost-sampleList');
 
-    // Función para contar los posts filtrados
-    function contarPostsFiltrados() {
-        // Obtener los parámetros de búsqueda y filtros si existen
-        const urlParams = new URLSearchParams(window.location.search);
-        const searchQuery = urlParams.get('busqueda') || ''; // Cambia 'busqueda' según tu parámetro de URL
-
-        // Obtener el tipo de post del atributo typepost, si existe
-        const postType = resultadosElement.getAttribute('typepost') || 'social_post';
-
-        // Enviar la solicitud AJAX
-        fetch(ajaxUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-            },
-            body: new URLSearchParams({
-                action: 'contarPostsFiltrados', // Nombre de la acción en PHP
-                search: searchQuery,
-                post_type: postType // Agregar el tipo de post a la solicitud
-            })
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Formatear el número de resultados (puntos para miles, etc.)
-                    const totalPosts = data.data.total;
-                    const formattedTotalPosts = totalPosts.toLocaleString('es-ES');
-
-                    // Actualizar el contenido del elemento
-                    resultadosElement.textContent = `${formattedTotalPosts} resultados`;
-                } else {
-                    // Mostrar un mensaje de error si algo salió mal
-                    resultadosElement.textContent = '0 resultados';
-                    console.error(data.data.message || 'Error desconocido.');
-                }
-            })
-            .catch(error => {
-                // Manejar errores de la solicitud
-                resultadosElement.textContent = '0 resultados';
-                console.error('Error en la solicitud AJAX:', error);
-            });
-    }
-
-    // Ejecutar la función al cargar la página
-    if (resultadosElement) {
-        contarPostsFiltrados();
-    }
-};
 
 document.addEventListener('DOMContentLoaded', function () {
     // Verificar si existe el modalTipoUsuario en la página
