@@ -58,7 +58,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
         <? if (!is_user_logged_in()): ?>
             <? echo dev(); ?>
         <? else: ?>
-            <? echo busquedalTabs(); ?>
+            <? echo busquedaTabs(); ?>
         <? endif; ?>
     </div>
 </div>
