@@ -360,7 +360,7 @@ add_action('wp_enqueue_scripts', 'custom_deregister_jquery', 100);
 
 function scriptsOrdenados()
 {
-    $global_version = '0.2.148';
+    $global_version = '0.2.149';
     $dev_mode = defined('LOCAL') && LOCAL;
     //$error_log = [];
 
@@ -393,7 +393,7 @@ function scriptsOrdenados()
         'gloria'            => '1.0.1',
         'ajaxPage'          => '5.0.11',
         'autorows'          => '1.0.1',
-        'busqueda'          => '1.0.1', 
+        'busqueda'          => '1.0.1',
         'fan'               => '1.0.36',
         'stripeAccion'      => '1.0.6',
         'reproductor'       => '2.1.2',
@@ -431,6 +431,7 @@ function scriptsOrdenados()
         'colec'             => '1.0.1',
     ];
 
+    wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.7.10', true);
     // Registro de la configuración inicial
     //$error_log[] = "Modo de desarrollo activado: " . ($dev_mode ? 'Sí' : 'No');
     //$error_log[] = "Versión global de scripts: " . $global_version;
@@ -463,6 +464,7 @@ function scriptsOrdenados()
         //$error_log[] = "Script " . $handle . " encolado correctamente con versión: " . $version;
     }
 
+
     // Scripts adicionales y localizaciones
     if (is_user_logged_in()) {
         $nonce = wp_create_nonce('wp_rest');
@@ -478,18 +480,19 @@ function scriptsOrdenados()
         wp_enqueue_script('chartjs-adapter-date-fns', 'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns', ['chart-js'], null, true);
         //$error_log[] = "Scripts chart-js y chartjs-adapter-date-fns encolados para usuario logueado.";
     }
-    
+
     wp_localize_script('ajaxPage', 'ajaxPage', ['logeado' => is_user_logged_in()]);
     //$error_log[] = "Script ajaxPage localizado.";
 
     // Manejo de scripts externos
     if (is_front_page() && !is_user_logged_in()) {
         wp_dequeue_script('jquery');
-        wp_dequeue_script('wavesurfer');
+
         //$error_log[] = "jQuery y wavesurfer.js no se cargan en la página de inicio para usuarios no logueados.";
     }
 
-    wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.7.10', true);
+
+
     //$error_log[] = "Script wavesurfer encolado desde unpkg.";
 
     wp_add_inline_script('genericAjax', 'const wpAdminUrl = "' . admin_url() . '";', 'before');
