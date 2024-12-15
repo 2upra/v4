@@ -87,7 +87,7 @@ function procesar_notificaciones() {
         $url = $notificacion['url'] ?? '';
         $autor_id = $notificacion['autor_id'];
 
-        if ($autor_id == 1) {
+        if ($autor_id == 9999999999999999) {
             // Enviar a todos los usuarios
             $usuarios = get_users();
             foreach ($usuarios as $usuario) {
