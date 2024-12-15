@@ -1,6 +1,6 @@
 <?
 /*
-Template Name: Inicio
+Template Name: Busqueda
 */
 
 // Función para obtener el idioma preferido del navegador
