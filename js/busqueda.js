@@ -1,10 +1,14 @@
 function inicializarBuscadores() {
+    // Verificar si los elementos existen antes de acceder a ellos
     const inputBusqueda = document.getElementById('identifier');
     const divResultados = document.getElementById('resultadoBusqueda');
     const inputBusquedaLocal = document.getElementById('buscadorLocal');
     const divResultadosBL = document.querySelector('.resultadosBL');
 
     function manejarInputBusquedaLocal() {
+        // Comprobar si los elementos necesarios existen antes de operar sobre ellos
+        if (!inputBusquedaLocal || !divResultadosBL) return;
+
         const textoBusqueda = inputBusquedaLocal.value.trim();
 
         if (textoBusqueda.length > 0) {
@@ -65,11 +69,17 @@ function inicializarBuscadores() {
     // Función para ocultar el fondo oscuro y resultadoBusqueda
     function ocultarFondoYResultados() {
         removeBusquedaDarkBackground();
-        divResultados.style.display = 'none';
-        divResultados.classList.add('hidden');
+        // Comprobar si divResultados existe antes de operar sobre él
+        if (divResultados) {
+            divResultados.style.display = 'none';
+            divResultados.classList.add('hidden');
+        }
     }
 
     function manejarInputBusqueda() {
+        // Comprobar si los elementos necesarios existen antes de operar sobre ellos
+        if (!inputBusqueda || !divResultados) return;
+
         const textoBusqueda = inputBusqueda.value.trim();
 
         if (textoBusqueda.length > 0) {
@@ -84,6 +94,9 @@ function inicializarBuscadores() {
     }
 
     async function buscar(texto, divResultados) {
+        // Comprobar si divResultados existe antes de operar sobre él
+        if (!divResultados) return;
+
         const data = {
             busqueda: texto
         };
@@ -97,14 +110,17 @@ function inicializarBuscadores() {
     }
 
     function mostrarResultados(html, divResultados) {
+        // Comprobar si divResultados existe antes de operar sobre él
+        if (!divResultados) return;
         divResultados.innerHTML = html;
     }
-
-    // Elimina los listeners previos si existen
-    inputBusquedaLocal.removeEventListener('input', manejarInputBusquedaLocal);
-    inputBusqueda.removeEventListener('input', manejarInputBusqueda);
-
-    // Agrega los listeners
-    inputBusquedaLocal.addEventListener('input', manejarInputBusquedaLocal);
-    inputBusqueda.addEventListener('input', manejarInputBusqueda);
+    // Asegurarse de que los elementos existen antes de agregar los listeners
+    if (inputBusquedaLocal) {
+        inputBusquedaLocal.removeEventListener('input', manejarInputBusquedaLocal);
+        inputBusquedaLocal.addEventListener('input', manejarInputBusquedaLocal);
+    }
+    if (inputBusqueda) {
+        inputBusqueda.removeEventListener('input', manejarInputBusqueda);
+        inputBusqueda.addEventListener('input', manejarInputBusqueda);
+    }
 }
