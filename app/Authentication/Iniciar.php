@@ -81,14 +81,6 @@ function iniciar_sesion()
                                     return true;
                                 }
 
-                                // 3. (Opcional) Si tienes la biblioteca 'bowser' instalada, puedes usarla aquí
-                                // import Bowser from 'bowser';
-                                // const browser = Bowser.getParser(ua);
-                                // const platform = browser.getPlatform();
-                                // if (platform.type === 'mobile' && browser.getBrowser().name === 'Threads') {
-                                //     return true;
-                                // }
-
                                 // Registrar el userAgent en el servidor para análisis posterior
                                 logUserAgentToServer(ua, 'deteccion_normal');
 

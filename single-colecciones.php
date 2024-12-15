@@ -1,5 +1,4 @@
-<?
-
+<?php
 if (! defined('ABSPATH')) {
     exit;
 }
@@ -7,53 +6,92 @@ if (! defined('ABSPATH')) {
 $postId = get_the_ID();
 $filtro = 'singleColec';
 
+// Obtener el título de la colección
+$post_title = get_the_title();
+
+// Generar el título SEO
+$seo_title = $post_title;
+add_action('wp_head', function () use ($seo_title) {
+    echo '<title>' . esc_html($seo_title) . '</title>' . "\n";
+}, 1);
+
+// Meta descripción
+$meta_description_full = get_the_content(); // Obtener el contenido completo
+$meta_description = mb_substr(wp_strip_all_tags($meta_description_full), 0, 160);
+$meta_description = esc_attr($meta_description);
+
+// Añadir la meta descripción en el <head>
+add_action('wp_head', function () use ($meta_description) {
+    if (! empty($meta_description)) {
+        echo '<meta name="description" content="' . $meta_description . '">' . "\n";
+    }
+}, 1); // Prioridad baja para que se ejecute temprano en wp_head
+
+// Esquema JSON-LD
+$schema = [
+    "@context"    => "https://schema.org",
+    "@type"       => "CollectionPage", // Tipo de esquema para una colección
+    "name"        => $seo_title,
+    "description" => $meta_description,
+    "datePublished" => get_the_date('c'),
+    "author"      => [
+        "@type" => "Person",
+        "name"  => get_the_author()
+    ]
+];
+
+// Añadir el esquema JSON-LD al <head>
+add_action('wp_head', function () use ($schema) {
+    echo '<script type="application/ld+json">' . wp_json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>' . "\n";
+}, 2); // Se ejecuta después de la meta descripción
 ?>
-<html <? language_attributes(); ?>>
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
 
 <head>
-    <meta charset="<? bloginfo('charset'); ?>">
+    <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="index, follow">
-    <? wp_head(); ?>
+    <?php wp_head(); ?>
 </head>
 
-<body <? body_class(); ?>>
+<body <?php body_class(); ?>>
 
-    <? get_header(); ?>
+    <?php get_header(); ?>
 
     <main id="main">
-        <div id="content" class="<? echo esc_attr(! is_user_logged_in() ? 'nologin' : ''); ?>">
+        <div id="content" class="<?php echo esc_attr(! is_user_logged_in() ? 'nologin' : ''); ?>">
             <div id="menuData" style="display:none;" pestanaActual="">
                 <div data-tab="Colección"></div>
                 <div data-tab="Ideas"></div>
             </div>
 
-            <? if (have_posts()) : while (have_posts()) : the_post(); ?>
-                    <article <? post_class(); ?>>
+            <?php if (have_posts()) : while (have_posts()) : the_post(); ?>
+                    <article <?php post_class(); ?>>
                         <div class="tabs">
                             <div class="tab-content">
 
-                                <div class="tab" id="Colección" colec="<? echo $postId ?>">
+                                <div class="tab" id="Colección" colec="<?php echo $postId ?>">
                                     <div class="SINGLECOLECSGER">
-                                        <? echo singleColec($postId) ?>
+                                        <?php echo singleColec($postId) ?>
                                     </div>
                                 </div>
 
-                                <div class="tab" id="Ideas" colec="<? echo $postId ?>" idea="true">
+                                <div class="tab" id="Ideas" colec="<?php echo $postId ?>" idea="true">
                                     <div>
-                                        <? echo masIdeasColeb($postId) ?>
+                                        <?php echo masIdeasColeb($postId) ?>
                                     </div>
                                 </div>
 
                             </div>
                         </div>
                     </article>
-            <? endwhile;
+            <?php endwhile;
             endif; ?>
         </div>
     </main>
 
-    <? get_footer(); ?>
+    <?php get_footer(); ?>
 
 </body>
 
