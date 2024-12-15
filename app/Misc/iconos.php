@@ -4,6 +4,7 @@
 
 function set_global_iconos()
 {
+	$GLOBALS["iconFlecha"] = '<svg data-testid="geist-icon" height="16" stroke-linejoin="round" style="color:currentColor" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.53033 2.21968L9 1.68935L7.93934 2.75001L8.46967 3.28034L12.4393 7.25001H1.75H1V8.75001H1.75H12.4393L8.46967 12.7197L7.93934 13.25L9 14.3107L9.53033 13.7803L14.6036 8.70711C14.9941 8.31659 14.9941 7.68342 14.6036 7.2929L9.53033 2.21968Z" fill="currentColor"></path></svg>';
 
 	$GLOBALS["iconRandom"] = '<svg width="16" height="16" stroke-linejoin="round" data-testid="geist-icon" style="color:currentColor"><path fill="currentColor" fill-rule="evenodd" d="m10.679 2.054-.862 3.509 3.508.862.863-3.51zM10.383.436a.827.827 0 0 0-1 .606L8.199 5.859a.827.827 0 0 0 .606 1l4.816 1.183a.827.827 0 0 0 1-.605l1.184-4.817a.827.827 0 0 0-.606-1zM9.5 14.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4m0 1.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M2.931 5.148l2.685 2.365L2.257 8.66zm-2.463 4.88a.526.526 0 0 0 .686.596L7.69 8.389a.526.526 0 0 0 .178-.892L2.644 2.896a.526.526 0 0 0-.864.295z" clip-rule="evenodd"/></svg>';
 	

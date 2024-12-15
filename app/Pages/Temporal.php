@@ -225,8 +225,10 @@ function dev()
 
                 <div class="SOKDEOD">
                     <h2>Esta si es la mejor biblioteca de samples del planeta</h2>
-                    <p>Mejor y más inteligente...</p>
-                    <input type="text" placeholder="Encuentra cualquier sonido">
+                    <div class="buscadordiv">
+                        <input class="borde" type="text" placeholder="Encuentra cualquier sonido">
+                        <button class="buttonBI borde"> <? echo $GLOBALS['iconFlecha']; ?>Buscar</button>
+                    </div>
                 </div>
 
                 <div class="resultadosBusquedaInicio" id="resultadosBusquedaInicio">

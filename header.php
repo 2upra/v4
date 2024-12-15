@@ -297,6 +297,10 @@ if (!defined('ABSPATH')) {
                     </div>
                     <div class="nologinbotones">
                         <button><a href="<?php echo home_url('/'); ?>">Inicio</a></button>
+                        <button><a>Caracteristicas</a></button>
+                        <button><a>Comparativa</a></button>
+                        <button><a>Precio</a></button>
+
                     </div>
                     <div class="nologinboton">
                         <button class="botonprincipal<? if (!is_user_logged_in()) echo ' boton-sesion'; ?>">Iniciar sesión</button>
