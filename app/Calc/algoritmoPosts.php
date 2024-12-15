@@ -9,7 +9,7 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
     if (empty($datos)) {
         return [];
     }
-    error_log("TipoUsuario inicial={$tipoUsuario} calcularFeedPersonalizado");
+    //error_log("TipoUsuario inicial={$tipoUsuario} calcularFeedPersonalizado");
     $usuario = get_userdata($userId);
     if (!$usuario || !is_object($usuario)) {
         return [];
@@ -68,7 +68,7 @@ function calcularPuntosPostBatch(
     }
 
     $posts_puntos = [];
-    error_log("TipoUsuario inicial={$tipoUsuario} calcularPuntosPostBatch");
+    //error_log("TipoUsuario inicial={$tipoUsuario} calcularPuntosPostBatch");
 
     foreach ($posts_data as $post_id => $post_data) {
         try {
@@ -419,7 +419,7 @@ function procesarMetaValue($meta_value)
             return [];
         }
     }
-    error_log("meta_value no es un array ni una cadena, es de tipo: " . gettype($meta_value));
+    //error_log("meta_value no es un array ni una cadena, es de tipo: " . gettype($meta_value));
     return [];
 }
 /*

@@ -8,7 +8,7 @@
 function reiniciarFeed($current_user_id)
 {
     $tipoUsuario = get_user_meta($current_user_id, 'tipoUsuario', true);
-    error_log("TipoUsuario inicial={$tipoUsuario} reiniciarFeed");
+    //error_log("TipoUsuario inicial={$tipoUsuario} reiniciarFeed");
     global $wpdb;
     $is_admin = current_user_can('administrator');
     guardarLog("Iniciando reinicio de feed para usuario ID: $current_user_id");
@@ -37,7 +37,7 @@ function reiniciarFeed($current_user_id)
                     guardarLog("Caché eliminada: {$file} para usuario ID: $current_user_id");
 
                     guardarLog("Usuario ID: $current_user_id REcalculando nuevo feed para primera página (sin caché)");
-                    error_log("TipoUsuario inicial={$tipoUsuario} enviado a calcularFeedPersonalizado");
+                    //error_log("TipoUsuario inicial={$tipoUsuario} enviado a calcularFeedPersonalizado");
                     $posts_personalizados = calcularFeedPersonalizado($current_user_id, '', '', $tipoUsuario);
 
                     if (!$posts_personalizados) {
