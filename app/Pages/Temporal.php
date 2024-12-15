@@ -215,23 +215,34 @@ add_filter('wp_check_filetype_and_ext', 'verificar_subida_apk', 10, 4);
 
 function dev()
 {
+
     ob_start();
 
 ?>
 
+    <div id="menuData" style="display:none;" pestanaActual="">
+        <div data-tab="Inicio"></div>
+    </div>
+
     <div class="tabs">
         <div class="tab-content">
-            <div class="tab active GMXSUJ" id="inicio">
+            <div class="tab active GMXSUJ" id="Inicio">
 
                 <div class="SOKDEOD">
                     <h2>Esta si es la mejor biblioteca de samples del planeta</h2>
                     <div class="buscadordiv">
-                        <input class="borde" type="text" placeholder="Encuentra cualquier sonido">
+                        <input class="borde" type="text" placeholder="Encuentra cualquier sonido" id="identifier">
                         <button class="buttonBI borde"> <? echo $GLOBALS['iconFlecha']; ?>Buscar</button>
                     </div>
                 </div>
 
                 <div class="resultadosBusquedaInicio" id="resultadosBusquedaInicio">
+
+                    <div class="BPLBDE nologin">
+                        <div class="FOFDV5 nologin">
+                            <? echo publicaciones(['filtro' => 'sampleList', 'tab_id' => 'Inicio', 'posts' => 12, 'tipoUsuario' => 'Arista']); ?>
+                        </div>
+                    </div>
 
                 </div>
 
