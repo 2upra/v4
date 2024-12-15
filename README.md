@@ -1,28 +1,26 @@
-**Beta 0.2.1**
 
-**Novedades en esta versión beta:**
+# **Beta 0.2.1**
+---
+## **Correcciones de errores:**
 
-2upra ahora es de código abierto y está disponible para que colabores con el proyecto.
+*   💾 **Guardado y creación de colecciones:** Ahora se pueden guardar y crear nuevas colecciones sin problemas.
+*   🔍 **Filtros:** Los filtros ahora funcionan correctamente (o eso creemos 😉).
+*   📱 **Acceso desde navegadores de aplicaciones:** Se corrigió un error que impedía registrarse o iniciar sesión al acceder desde el navegador integrado en aplicaciones como Threads, Instagram, etc.
 
-**Correcciones de errores:**
+## **Nuevas funciones:**
 
-*   Ahora se pueden guardar y crear nuevas colecciones.
-*   Los filtros funcionan correctamente (eso creo).
-*   Se corrigió un error que impedía registrarse o iniciar sesión al acceder desde el navegador de una aplicación como Threads, Instagram, etc.
+*   ⚡ **Buscador en tiempo real (Escritorio):** Encuentra perfiles, samples y colecciones al instante con el nuevo buscador en tiempo real en la versión de escritorio.
+*   🎹 **Buscador de samples atractivo (Inicio):** Los usuarios no registrados ahora pueden disfrutar de un atractivo buscador de samples directamente en la página de inicio.
+*   💡 **Ideas para colecciones:** Descubre más ideas para tus colecciones basándote en su contenido actual. ¡Similar a la función de imágenes de Pinterest!
+*   📥 **Descarga de colecciones completas:** Ahora puedes descargar una colección completa de samples, ya sea tuya o de otros usuarios.
+*   🔄 **Sincronización en Windows:** Sincroniza colecciones o archivos en Windows sin necesidad de descargarlas a través del navegador.
 
-Nuevas funciones:**
+## **Próximas funciones (en desarrollo):**
 
-*   Buscador en tiempo real de perfiles, samples y colecciones en la versión de escritorio.
-*   Se ha agregado un buscador de samples atractivo en el inicio para los usuarios no registrados.
-*   Ahora puedes encontrar más ideas para tus colecciones basándote en el contenido de la misma (similar a la función de imágenes de Pinterest).
-*   Puedes descargar una colección completa de samples, ya sea tuya o de otros usuarios.
-*   Puedes sincronizar colecciones o archivos en Windows sin necesidad de descargarlas en el navegador.
-
-**Próximas funciones (en desarrollo):**
-
-*   Buscador para Android.
-*   Corrección de errores en la sincronización para Windows.
-*   Posibilidad de publicar varios samples al mismo tiempo.
-*   Posibilidad de subir samples directamente a las colecciones.
-*   Posibilidad de vender samples y beats libremente.
-*   Posibilidad de cambiar el nombre de usuario.
+*   🔎 **Buscador para Android:** Estamos trabajando en un buscador para la versión de Android.
+*   🐛 **Corrección de errores de sincronización en Windows:**  Solucionaremos los problemas de sincronización en Windows.
+*   📤 **Publicación múltiple de samples:** Podrás publicar varios samples al mismo tiempo.
+*   ⬆️ **Subida directa a colecciones:**  Pronto podrás subir samples directamente a tus colecciones.
+*   💰 **Venta de samples y beats:** Implementaremos una función para que puedas vender tus samples y beats libremente.
+*   🔀 **Cambio de nombre de usuario:**  Añadiremos la posibilidad de cambiar tu nombre de usuario.
+---
