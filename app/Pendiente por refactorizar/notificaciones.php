@@ -3,6 +3,47 @@
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging;
 
+/*
+
+cual es el problema aca y porque puede que este en bucle (lo veo a cada rato)
+[16-Dec-2024 15:35:58 UTC] Cron wp_enqueue_notifications ejecutado.
+[16-Dec-2024 15:36:02 UTC] [Firebase] Notificación enviada al usuario 49
+[16-Dec-2024 15:36:02 UTC] [crearNotificacion] Notificación push enviada con éxito al usuario ID: 49
+[16-Dec-2024 15:36:02 UTC] [crearNotificacion] Error: Usuario receptor no válido ID: 254
+[16-Dec-2024 15:36:05 UTC] PHP Fatal error:  Uncaught Kreait\Firebase\Exception\Messaging\NotFound: Requested entity was not found. in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php:60
+Stack trace:
+#0 /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/MessagingApiExceptionConverter.php(113): Kreait\Firebase\Exception\Messaging\NotFound->withErrors()
+#1 /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/MessagingApiExceptionConverter.php(121): Kreait\Firebase\Exception\MessagingApiExceptionConverter->convertResponse()
+#2 /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/MessagingApiExceptionConverter.php(44): Kreait\Firebase\Exception\MessagingApiExceptionConverter->convertGuzzleRequestException()
+#3 /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Messaging.php(100): Kreait\Firebase\Exception\MessagingApiExceptionConverter->convertException()
+#4 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/EachPromise.php(183): Kreait\Firebase\Messaging->Kreait\Firebase\{closure}()
+#5 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(209): GuzzleHttp\Promise\EachPromise->GuzzleHttp\Promise\{closure}()
+#6 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(158): GuzzleHttp\Promise\Promise::callHandler()
+#7 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/TaskQueue.php(52): GuzzleHttp\Promise\Promise::GuzzleHttp\Promise\{closure}()
+#8 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/guzzle/src/Handler/CurlMultiHandler.php(167): GuzzleHttp\Promise\TaskQueue->run()
+#9 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/guzzle/src/Handler/CurlMultiHandler.php(206): GuzzleHttp\Handler\CurlMultiHandler->tick()
+#10 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(251): GuzzleHttp\Handler\CurlMultiHandler->execute()
+#11 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(227): GuzzleHttp\Promise\Promise->invokeWaitFn()
+#12 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(272): GuzzleHttp\Promise\Promise->waitIfPending()
+#13 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(229): GuzzleHttp\Promise\Promise->invokeWaitList()
+#14 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(69): GuzzleHttp\Promise\Promise->waitIfPending()
+#15 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/EachPromise.php(109): GuzzleHttp\Promise\Promise->wait()
+#16 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(251): GuzzleHttp\Promise\EachPromise->GuzzleHttp\Promise\{closure}()
+#17 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(227): GuzzleHttp\Promise\Promise->invokeWaitFn()
+#18 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(69): GuzzleHttp\Promise\Promise->waitIfPending()
+#19 /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Messaging.php(106): GuzzleHttp\Promise\Promise->wait()
+#20 /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Messaging.php(55): Kreait\Firebase\Messaging->sendAll()
+#21 /var/www/wordpress/wp-content/themes/2upra3v/app/Pendiente por refactorizar/notificaciones.php(116): Kreait\Firebase\Messaging->send()
+#22 /var/www/wordpress/wp-content/themes/2upra3v/app/Pendiente por refactorizar/notificaciones.php(68): send_push_notification()
+#23 /var/www/wordpress/wp-content/themes/2upra3v/app/Form/Manejar.php(106): crearNotificacion()
+#24 /var/www/wordpress/wp-includes/class-wp-hook.php(324): procesar_notificaciones()
+#25 /var/www/wordpress/wp-includes/class-wp-hook.php(348): WP_Hook->apply_filters()
+#26 /var/www/wordpress/wp-includes/plugin.php(565): WP_Hook->do_action()
+#27 /var/www/wordpress/wp-cron.php(191): do_action_ref_array()
+#28 {main}
+  thrown in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php on line 60
+*/
+
 function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false, $postIdRelacionado = 0, $Titulo = 'Nueva notificación', $url = null, $emisor = null)
 {
     // Verifica que el usuario receptor sea válido
@@ -22,7 +63,7 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
         $emisorId = $emisor;
     }
     // Verificar si el emisor es válido
-    if($emisorId === null){
+    if ($emisorId === null) {
         error_log("[crearNotificacion] Error: No se pudo determinar el emisor de la notificacion.");
         return false;
     }
@@ -66,6 +107,20 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
     $titulo = $Titulo;
     $mensaje = $contenidoSanitizado;
     $resultadoPush = send_push_notification($usuarioReceptor, $titulo, $mensaje, $url);
+    // Registrar en el log el resultado del envío
+    if (is_wp_error($resultadoPush)) {
+        error_log("[crearNotificacion] Error al enviar la notificación push: " . $resultadoPush->get_error_message());
+        // Manejar el error aquí:
+        if ($resultadoPush->get_error_code() === 'no_token' || strpos($resultadoPush->get_error_message(), 'Requested entity was not found') !== false) {
+            // Eliminar el token inválido
+            delete_user_meta($usuarioReceptor, 'firebase_token');
+            error_log("[crearNotificacion] Token de Firebase eliminado para el usuario ID: " . $usuarioReceptor);
+        }
+        // Podrías agregar un meta al post para indicar que falló el envío
+        update_post_meta($postId, 'envio_push_fallido', true);
+    } else {
+        error_log("[crearNotificacion] Notificación push enviada con éxito al usuario ID: " . $usuarioReceptor);
+    }
 
     // Registrar en el log el resultado del envío
     if (is_wp_error($resultadoPush)) {
@@ -77,7 +132,8 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
     return $postId;
 }
 //
-function send_push_notification($user_id, $title, $message, $url) {
+function send_push_notification($user_id, $title, $message, $url)
+{
     $serviceAccountFile = '/var/www/wordpress/private/upra-b6879-firebase-adminsdk-w9xma-5f138a5b75.json';
 
     if (!file_exists($serviceAccountFile)) {
@@ -107,7 +163,7 @@ function send_push_notification($user_id, $title, $message, $url) {
             'body' => $message,
         ],
         'data' => [
-            'url' => $url, 
+            'url' => $url,
             //'userId' => $user_id #aun no es necesario
         ],
     ];
@@ -147,27 +203,27 @@ function listarNotificaciones($pagina = 1)
             $solicitud = get_post_meta(get_the_ID(), 'solicitud', true);
             $postRelacionado = get_post_meta(get_the_ID(), 'post_relacionado', true);
             $fechaPublicacion = get_the_date('Y-m-d H:i:s');
-            $fechaRelativa = tiempoRelativo($fechaPublicacion); 
+            $fechaRelativa = tiempoRelativo($fechaPublicacion);
             if ($emisor) {
                 $avatar_optimizado = imagenPerfil($emisor);
             }
-            ?>
+?>
             <li class="notificacion-item" data-notificacion-id="<? echo get_the_ID(); ?>">
                 <? if (!empty($postRelacionado)) : ?>
                     <a href="<? echo get_permalink($postRelacionado); ?>" class="notificacion-enlace">
-                <? endif; ?>
+                    <? endif; ?>
                     <? if (!empty($avatar_optimizado)) : ?>
                         <img class="avatar" src="<? echo esc_url($avatar_optimizado); ?>" alt="Avatar del emisor">
                     <? endif; ?>
                     <div class="DAEFSE">
                         <p class="notificacion-contenido"><? the_content(); ?></p>
-                        <p class="notificacion-fecha"><? echo $fechaRelativa; ?></p> 
+                        <p class="notificacion-fecha"><? echo $fechaRelativa; ?></p>
                     </div>
-                <? if (!empty($postRelacionado)) : ?>
+                    <? if (!empty($postRelacionado)) : ?>
                     </a>
                 <? endif; ?>
             </li>
-            <?
+<?
         }
         echo '</ul>';
     } else {
@@ -179,14 +235,15 @@ function listarNotificaciones($pagina = 1)
 
 add_action('wp_ajax_marcar_notificacion_vista', 'marcarNotificacionVista');
 
-function marcarNotificacionVista() {
+function marcarNotificacionVista()
+{
     if (!is_user_logged_in()) {
         error_log('Acceso denegado: Usuario no autenticado.');
         wp_send_json_error(['message' => 'No tienes permiso para realizar esta acción.'], 403);
     }
 
     $notificacionId = isset($_POST['notificacionId']) ? intval($_POST['notificacionId']) : 0;
-    
+
     if ($notificacionId <= 0 || !get_post($notificacionId)) {
         error_log("ID no válido o inexistente: $notificacionId");
         wp_send_json_error(['message' => 'El ID de la notificación no es válido.'], 400);
@@ -260,13 +317,13 @@ function iconoNotificaciones()
         'orderby' => 'date', // Ordenar por fecha de creación
         'order' => 'DESC',  // La más reciente primero
     );
-    
+
     // Crear la consulta
     $notificaciones_query = new WP_Query($args);
     $hay_no_vistas = $notificaciones_query->have_posts() ? true : false;
 
     // Cambiar el color del ícono si hay notificaciones no vistas
-    $icon_color = $hay_no_vistas ? '#d43333' : 'currentColor'; 
+    $icon_color = $hay_no_vistas ? '#d43333' : 'currentColor';
 
     // HTML del ícono de notificaciones
     $html_icono_notificaciones = '<div id="icono-notificaciones" class="icono-notificaciones" style="cursor: pointer;">' .
@@ -287,7 +344,8 @@ function iconoNotificaciones()
 // AJAX handler para verificar notificaciones no vistas
 add_action('wp_ajax_verificar_notificaciones', 'verificar_notificaciones');
 
-function verificar_notificaciones() {
+function verificar_notificaciones()
+{
     $user_id = get_current_user_id();
     $timeout = 30; // Mantener la conexión abierta hasta 30 segundos
     $start_time = time();
