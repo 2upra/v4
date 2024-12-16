@@ -1,6 +1,6 @@
 <?
-
-function crearPost($tipoPost = 'social_post', $estadoPost = 'publish') {
+function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
+{
     $contenido = sanitize_textarea_field($_POST['textoNormal'] ?? '');
     $tags = sanitize_text_field($_POST['tags'] ?? '');
 
@@ -36,22 +36,37 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish') {
     // Guardar notificaciones pendientes
     $seguidores = get_user_meta($autor, 'seguidores', true);
     if (!empty($seguidores) && is_array($seguidores)) {
-        $autor_nombre = get_the_author_meta('display_name', $autor);
-        $contenido_corto = wp_trim_words($contenido, 10, '...');
+        $autor_nombre = esc_html(get_the_author_meta('display_name', $autor)); // Sanitizar el nombre del autor
+        $contenido_corto = mb_strimwidth($contenido, 0, 100, "..."); // Usar mb_strimwidth para truncar el contenido
 
         // Obtener la URL del post
         $post_url = get_permalink($postId);
 
         $notificaciones = get_option('notificaciones_pendientes', []);
+        $notificaciones_unicas = []; // Array para evitar duplicados
+
         foreach ($seguidores as $seguidor_id) {
-            $notificaciones[] = [
-                'seguidor_id' => $seguidor_id,
-                'mensaje' => "{$autor_nombre} ha publicado: \"{$contenido_corto}\"",
-                'post_id' => $postId,
-                'titulo' => 'Nueva publicación',
-                'url'  => $post_url, // Agregar la URL del post
-                'autor_id' => $autor // Agregar el ID del autor
-            ];
+            // Validar que el seguidor_id sea un ID de usuario válido
+            if (get_user_by('id', $seguidor_id) === false) {
+                error_log("Error en crearPost: Seguidor ID {$seguidor_id} no es un usuario válido.");
+                continue;
+            }
+
+            // Crear una clave única para la notificación
+            $clave_notificacion = "{$seguidor_id}_{$postId}";
+
+            // Evitar notificaciones duplicadas
+            if (!isset($notificaciones_unicas[$clave_notificacion])) {
+                $notificaciones[] = [
+                    'seguidor_id' => $seguidor_id,
+                    'mensaje' => "{$autor_nombre} ha publicado: \"{$contenido_corto}\"",
+                    'post_id' => $postId,
+                    'titulo' => 'Nueva publicación',
+                    'url'  => $post_url, // Agregar la URL del post
+                    'autor_id' => $autor // Agregar el ID del autor
+                ];
+                $notificaciones_unicas[$clave_notificacion] = true; // Marcar como agregada
+            }
         }
 
         update_option('notificaciones_pendientes', $notificaciones);
@@ -67,16 +82,12 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish') {
     return $postId;
 }
 
-
-
 add_action('wp_enqueue_notifications', 'procesar_notificaciones');
 
 
-
-
-add_filter('cron_schedules', function($schedules) {
+add_filter('cron_schedules', function ($schedules) {
     $schedules['minute'] = [
-        'interval' => 15, 
+        'interval' => 15,
         'display'  => __('Cada minuto')
     ];
     return $schedules;
@@ -93,7 +104,7 @@ function actualizarMetaDatos($postId)
         'rola'         => 'music',
         'fan'          => 'fan',
         'artista'      => 'artista'
-        
+
     ];
 
     foreach ($meta_fields as $meta_key => $post_key) {
