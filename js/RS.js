@@ -44,7 +44,6 @@ function iniciarRS() {
         TagEnTexto();
         selectorformtipo();
         selectorFanArtista();
-
     } else {
         logRS('formRs no existe');
     }
@@ -124,7 +123,7 @@ async function envioRs() {
         const musicCheckbox = document.getElementById('musiccheck');
         const fancheck = document.getElementById('fancheck');
         const artistacheck = document.getElementById('artistacheck');
-        
+
         const fan = fancheck.checked ? fancheck.value : 0;
         const artista = artistacheck.checked ? artistacheck.value : 0;
         const descarga = descargaCheckbox.checked ? descargaCheckbox.value : 0;
@@ -241,7 +240,7 @@ async function envioRs() {
 }
 
 function subidaRs() {
-    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs', 'ppp3'];
+    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs', 'ppp3', 'multiplesAudios'];
     const elements = ids.reduce((acc, id) => {
         const el = document.getElementById(id);
         if (!el) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
@@ -256,16 +255,30 @@ function subidaRs() {
         return;
     }
 
-    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs, ppp3,} = elements;
+    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs, ppp3, multiplesAudios} = elements;
 
     const inicialSubida = event => {
         event.preventDefault();
-        const file = event.dataTransfer?.files[0] || event.target.files[0];
+        const files = event.dataTransfer?.files || event.target.files;
 
-        if (!file) return;
-        if (file.size > 50 * 1024 * 1024) return alert('El archivo no puede superar los 50 MB.');
+        if (!files || files.length === 0) return;
 
-        file.type.startsWith('audio/') ? subidaAudio(file) : file.type.startsWith('image/') ? subidaImagen(file) : subidaArchivo(file);
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+
+            if (file.size > 50 * 1024 * 1024) {
+                alert(`El archivo "${file.name}" no puede superar los 50 MB.`);
+                continue; // Salta al siguiente archivo si el actual es demasiado grande
+            }
+
+            if (file.type.startsWith('audio/')) {
+                subidaAudio(file);
+            } else if (file.type.startsWith('image/')) {
+                subidaImagen(file);
+            } else {
+                subidaArchivo(file);
+            }
+        }
     };
 
     const actualizarFlexDirection = () => {
@@ -273,18 +286,19 @@ function subidaRs() {
 
         if (previewsFormDiv) {
             if (audiosData.length > 1) {
+                multiplesAudios.style.display = 'flex';
                 previewsFormDiv.style.flexDirection = 'column';
             } else {
-                previewsFormDiv.style.flexDirection = ''; 
+                previewsFormDiv.style.flexDirection = '';
             }
         }
     };
 
     const musicCheckbox = document.getElementById('musiccheck');
-    
+
     const actualizarCamposNombre = () => {
         const cantidadAudios = audiosData.length;
-        const mostrarCampos = musicCheckbox.checked && cantidadAudios > 1;
+        const mostrarCampos = musicCheckbox.checked && cantidadAudios > 0;
 
         audiosData.forEach(audio => {
             const inputNombre = document.getElementById(`nombre-${audio.tempId}`);
@@ -293,7 +307,6 @@ function subidaRs() {
             }
         });
     };
-
 
     musicCheckbox.addEventListener('change', actualizarCamposNombre);
 
@@ -388,7 +401,6 @@ function subidaRs() {
             previewAudio.style.display = 'none';
             ppp3.style.display = 'none';
         }
-;
     };
 
     const subidaArchivo = async file => {
@@ -443,10 +455,10 @@ function subidaRs() {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = tipoArchivo;
+        input.multiple = true; // Permite seleccionar múltiples archivos
         input.onchange = inicialSubida;
         input.click();
     };
-
 
     botonArchivo.addEventListener('click', () => abrirSelectorArchivos('*'));
     botonAudio.addEventListener('click', () => abrirSelectorArchivos('audio/*'));
@@ -765,11 +777,3 @@ function selectorFanArtista() {
         updateStyles(artistacheck);
     });
 }
-
-
-
-
-
-
-
-
