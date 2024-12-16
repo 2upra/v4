@@ -8,7 +8,7 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
     // Verifica que el usuario receptor sea válido
     $usuario = get_user_by('ID', $usuarioReceptor);
     if (!$usuario) {
-        error_log("Error: Usuario receptor no válido ID: " . $usuarioReceptor);
+        error_log("[crearNotificacion] Error: Usuario receptor no válido ID: " . $usuarioReceptor);
         return false;
     }
 
@@ -45,7 +45,7 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
 
     // Si hay un error, lo registramos
     if (is_wp_error($postId)) {
-        error_log("Error al crear la notificación: " . $postId->get_error_message());
+        error_log("[crearNotificacion] Error al crear la notificación: " . $postId->get_error_message());
         return false;
     }
 
@@ -69,9 +69,9 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
 
     // Registrar en el log el resultado del envío
     if (is_wp_error($resultadoPush)) {
-        error_log("Error al enviar la notificación push: " . $resultadoPush->get_error_message());
+        error_log("[crearNotificacion] Error al enviar la notificación push: " . $resultadoPush->get_error_message());
     } else {
-        error_log("Notificación push enviada con éxito al usuario ID: " . $usuarioReceptor);
+        error_log("[crearNotificacion] Notificación push enviada con éxito al usuario ID: " . $usuarioReceptor);
     }
 
     return $postId;

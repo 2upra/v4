@@ -27,6 +27,7 @@ function subidaRs()
     procesarURLs($postId);
     #Paso 6
     asignarTags($postId);
+    
     wp_send_json_success(['message' => 'Post creado exitosamente']);
     wp_die();
 }

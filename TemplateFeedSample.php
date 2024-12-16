@@ -1,6 +1,6 @@
 <?
 /*
-Template Name: FeedSample
+Template Name: feedSample
 */
 
 // Función para obtener el idioma preferido del navegador

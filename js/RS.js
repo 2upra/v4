@@ -44,10 +44,12 @@ function iniciarRS() {
         TagEnTexto();
         selectorformtipo();
         selectorFanArtista();
+        selectorTipoPost();
     } else {
         logRS('formRs no existe');
     }
 }
+
 function verificarCamposRs() {
     const textoRsDiv = document.getElementById('textoRs');
     textoRsDiv.setAttribute('placeholder', 'Puedes agregar tags agregando un #');
@@ -88,6 +90,15 @@ function verificarCamposRs() {
             return false;
         }
 
+        if (audiosData.length > 1) {
+            const individualPost = document.getElementById('individualPost');
+            const multiplePost = document.getElementById('multiplePost');
+            if (!individualPost.checked && !multiplePost.checked) {
+                alert('Debe seleccionar al menos una opción: Post individual o multiples, porque estas intentando subir varios audios :)');
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -123,6 +134,8 @@ async function envioRs() {
         const musicCheckbox = document.getElementById('musiccheck');
         const fancheck = document.getElementById('fancheck');
         const artistacheck = document.getElementById('artistacheck');
+        const individualPost = document.getElementById('individualPost');
+        const multiplePost = document.getElementById('multiplePost');
 
         const fan = fancheck.checked ? fancheck.value : 0;
         const artista = artistacheck.checked ? artistacheck.value : 0;
@@ -130,6 +143,9 @@ async function envioRs() {
         const exclusivo = exclusivoCheckbox.checked ? exclusivoCheckbox.value : 0;
         const colab = colabCheckbox.checked ? colabCheckbox.value : 0;
         const music = musicCheckbox.checked ? musicCheckbox.value : 0;
+        const individual = individualPost.checked ? individualPost.value : 0;
+        const multiple = multiplePost.checked ? multiplePost.value : 0;
+
         const uniqueAudioUrls = new Set(); // Para almacenar URLs únicas
         const uniqueAudioIds = new Set();
 
@@ -193,7 +209,9 @@ async function envioRs() {
             artista,
             exclusivo,
             colab,
-            music
+            music,
+            individual,
+            multiple
         };
 
         // Verificación de imagenUrl1 y Music
