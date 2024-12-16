@@ -240,7 +240,7 @@ async function envioRs() {
 }
 
 function subidaRs() {
-    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs', 'ppp3', 'multiplesAudios'];
+    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs', 'ppp3'];
     const elements = ids.reduce((acc, id) => {
         const el = document.getElementById(id);
         if (!el) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
@@ -255,7 +255,7 @@ function subidaRs() {
         return;
     }
 
-    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs, ppp3, multiplesAudios} = elements;
+    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs, ppp3} = elements;
 
     const inicialSubida = event => {
         event.preventDefault();
@@ -286,7 +286,6 @@ function subidaRs() {
 
         if (previewsFormDiv) {
             if (audiosData.length > 1) {
-                multiplesAudios.style.display = 'flex';
                 previewsFormDiv.style.flexDirection = 'column';
             } else {
                 previewsFormDiv.style.flexDirection = '';
@@ -298,7 +297,7 @@ function subidaRs() {
 
     const actualizarCamposNombre = () => {
         const cantidadAudios = audiosData.length;
-        const mostrarCampos = musicCheckbox.checked && cantidadAudios > 0;
+        const mostrarCampos = musicCheckbox.checked && cantidadAudios > 1;
 
         audiosData.forEach(audio => {
             const inputNombre = document.getElementById(`nombre-${audio.tempId}`);
@@ -455,7 +454,6 @@ function subidaRs() {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = tipoArchivo;
-        input.multiple = true; // Permite seleccionar múltiples archivos
         input.onchange = inicialSubida;
         input.click();
     };
