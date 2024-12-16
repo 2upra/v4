@@ -116,8 +116,7 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
             delete_user_meta($usuarioReceptor, 'firebase_token');
             error_log("[crearNotificacion] Token de Firebase eliminado para el usuario ID: " . $usuarioReceptor);
         }
-        // Podrías agregar un meta al post para indicar que falló el envío
-        update_post_meta($postId, 'envio_push_fallido', true);
+
     } else {
         error_log("[crearNotificacion] Notificación push enviada con éxito al usuario ID: " . $usuarioReceptor);
     }
