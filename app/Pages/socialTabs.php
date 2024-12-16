@@ -93,9 +93,7 @@ function socialTabsFEED()
                     </div>
                     <div class="FDGEDF">
                         <p id="resultadosPost-sampleList"></p>
-                        <?
-                        #echo renderFiltro(); 
-                        ?>
+                        <? echo renderFiltroSampleList(); ?>
                     </div>
                 </div>
 
@@ -156,9 +154,7 @@ function socialTabsSAMPLE()
                     </div>
                     <div class="FDGEDF">
                         <p id="resultadosPost-sampleList"></p>
-                        <?
-                        #echo renderFiltro(); 
-                        ?>
+                        <? echo renderFiltroSampleList(); ?>
                     </div>
                 </div>
 

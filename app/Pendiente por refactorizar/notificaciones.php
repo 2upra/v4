@@ -3,21 +3,13 @@
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging;
 
+
 /*
-[16-Dec-2024 16:08:57 UTC] Cron wp_enqueue_notifications ejecutado.
-[16-Dec-2024 16:09:00 UTC] [Firebase] Notificación enviada al usuario 49
-[16-Dec-2024 16:09:00 UTC] [crearNotificacion] Notificación push enviada con éxito al usuario ID: 49
-[16-Dec-2024 16:09:00 UTC] [crearNotificacion] Error: Usuario receptor no válido ID: 254
-[16-Dec-2024 16:09:00 UTC] No se pudo enviar la notificación al seguidor 254 (usuario inválido).
-[16-Dec-2024 15:59:03 UTC] PHP Fatal error:  Uncaught Kreait\Firebase\Exception\Messaging\NotFound: Requested entity was not found. in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php:60
-
-el problema de bucle no se resolvio 
-
-a:6:{i:0;a:6:{s:11:"seguidor_id";i:49;s:7:"mensaje";s:58:"Wandorius ha publicado: "Test subida de varios audios"";s:7:"post_id";i:325143;s:6:"titulo";s:18:"Nueva publicación";s:3:"url";s:54:"https://2upra.com/sample/test-subida-de-varios-audios/";s:8:"autor_id";i:1;}i:1;a:6:{s:11:"seguidor_id";i:254;s:7:"mensaje";s:58:"Wandorius ha publicado: "Test subida de varios audios"";s:7:"post_id";i:325143;s:6:"titulo";s:18:"Nueva publicación";s:3:"url";s:54:"https://2upra.com/sample/test-subida-de-varios-audios/";s:8:"autor_id";i:1;}i:2;a:6:{s:11:"seguidor_id";i:355;s:7:"mensaje";s:58:"Wandorius ha publicado: "Test subida de varios audios"";s:7:"post_id";i:325143;s:6:"titulo";s:18:"Nueva publicación";s:3:"url";s:54:"https://2upra.com/sample/test-subida-de-varios-audios/";s:8:"autor_id";i:1;}i:3;a:6:{s:11:"seguidor_id";i:392;s:7:"mensaje";s:58:"Wandorius ha publicado: "Test subida de varios audios"";s:7:"post_id";i:325143;s:6:"titulo";s:18:"Nueva publicación";s:3:"url";s:54:"https://2upra.com/sample/test-subida-de-varios-audios/";s:8:"autor_id";i:1;}i:4;a:6:{s:11:"seguidor_id";i:403;s:7:"mensaje";s:58:"Wandorius ha publicado: "Test subida de varios audios"";s:7:"post_id";i:325143;s:6:"titulo";s:18:"Nueva publicación";s:3:"url";s:54:"https://2upra.com/sample/test-subida-de-varios-audios/";s:8:"autor_id";i:1;}i:5;a:6:{s:11:"seguidor_id";i:441;s:7:"mensaje";s:58:"Wandorius ha publicado: "Test subida de varios audios"";s:7:"post_id";i:325143;s:6:"titulo";s:18:"Nueva publicación";s:3:"url";s:54:"https://2upra.com/sample/test-subida-de-varios-audios/";s:8:"autor_id";i:1;}}
-
-o sea supongo que no actualiza la meta notificaciones_pendientes y sigue dando error en bucle
+tengo este problema, cuando da error se queda en bucle, en este caso da eror con el usuario 49 
+[16-Dec-2024 17:18:35 UTC] [Firebase] Notificación enviada al usuario 49
+[16-Dec-2024 17:18:35 UTC] [crearNotificacion] Notificación push enviada con éxito al usuario ID: 49
+[16-Dec-2024 17:18:38 UTC] PHP Fatal error:  Uncaught Kreait\Firebase\Exception\Messaging\NotFound: Requested entity was not found. in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php:60
 */
-
 
 function procesar_notificaciones()
 {
@@ -49,11 +41,16 @@ function procesar_notificaciones()
                     $autor_id
                 );
 
+                // **Modificación aquí:**
                 if (is_wp_error($resultado) && $resultado->get_error_code() === 'not_found') {
                     // Token inválido ya eliminado en crearNotificacion.
-                    error_log("No se pudo enviar la notificación al usuario " . $usuario->ID . " (token no encontrado).");
+                    error_log("No se pudo enviar la notificación al usuario " . $usuario->ID . " (token no encontrado). Se elimina la notificación del lote.");
+                    // Eliminar la notificación actual del lote, ya que no se pudo enviar.
+                    unset($lote[$indice]);
                 } else if (is_wp_error($resultado) && $resultado->get_error_code() === 'usuario_invalido') {
                     error_log("No se pudo enviar la notificación al usuario " . $usuario->ID . " (usuario inválido).");
+                    // Eliminar la notificación actual del lote, ya que no se pudo enviar.
+                    unset($lote[$indice]);
                 } else if (is_wp_error($resultado)) {
                     error_log("Error al enviar a usuario " . $usuario->ID . ": " . $resultado->get_error_message());
                 }
@@ -70,19 +67,27 @@ function procesar_notificaciones()
                 $autor_id
             );
 
+            // **Modificación aquí:**
             if (is_wp_error($resultado) && $resultado->get_error_code() === 'not_found') {
                 // Token inválido ya eliminado en crearNotificacion.
-                error_log("No se pudo enviar la notificación al seguidor " . $notificacion['seguidor_id'] . " (token no encontrado).");
+                error_log("No se pudo enviar la notificación al seguidor " . $notificacion['seguidor_id'] . " (token no encontrado). Se elimina la notificación del lote.");
+                // Eliminar la notificación actual del lote, ya que no se pudo enviar.
+                unset($lote[$indice]);
             } else if (is_wp_error($resultado) && $resultado->get_error_code() === 'usuario_invalido') {
                 error_log("No se pudo enviar la notificación al seguidor " . $notificacion['seguidor_id'] . " (usuario inválido).");
+                // Eliminar la notificación actual del lote, ya que no se pudo enviar.
+                unset($lote[$indice]);
             } else if (is_wp_error($resultado)) {
                 error_log("Error al enviar a seguidor " . $notificacion['seguidor_id'] . ": " . $resultado->get_error_message());
             }
         }
     }
 
+    // **Importante: Reindexar $notificaciones_pendientes antes de actualizar la opción.**
+    $notificaciones_pendientes = array_values(array_diff_key($notificaciones_pendientes, $lote));
+
     // Actualizar la lista de notificaciones pendientes, con los valores que quedaron en $notificaciones_pendientes después del array_splice
-    update_option('notificaciones_pendientes', array_values($notificaciones_pendientes));
+    update_option('notificaciones_pendientes', $notificaciones_pendientes);
 
     if (empty($notificaciones_pendientes)) {
         error_log('No quedan notificaciones pendientes. Desactivando el cron.');
