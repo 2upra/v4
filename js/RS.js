@@ -240,7 +240,7 @@ async function envioRs() {
 }
 
 function subidaRs() {
-    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs', 'ppp3'];
+    const ids = ['formRs', 'botonAudio', 'botonImagen', 'previewAudio', 'previewArchivo', 'opciones', 'botonArchivo', 'previewImagen', 'enviarRs', 'ppp3', 'multiplesAudios'];
     const elements = ids.reduce((acc, id) => {
         const el = document.getElementById(id);
         if (!el) console.warn(`Elemento con id="${id}" no encontrado en el DOM.`);
@@ -255,7 +255,7 @@ function subidaRs() {
         return;
     }
 
-    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs, ppp3} = elements;
+    const {formRs, botonAudio, botonImagen, previewAudio, previewArchivo, opciones, botonArchivo, previewImagen, enviarRs, ppp3, multiplesAudios} = elements;
 
     const inicialSubida = event => {
         event.preventDefault();
@@ -286,6 +286,7 @@ function subidaRs() {
 
         if (previewsFormDiv) {
             if (audiosData.length > 1) {
+                multiplesAudios.style.display = 'flex';
                 previewsFormDiv.style.flexDirection = 'column';
             } else {
                 previewsFormDiv.style.flexDirection = '';
@@ -297,7 +298,7 @@ function subidaRs() {
 
     const actualizarCamposNombre = () => {
         const cantidadAudios = audiosData.length;
-        const mostrarCampos = musicCheckbox.checked && cantidadAudios > 1;
+        const mostrarCampos = musicCheckbox.checked && cantidadAudios > 0;
 
         audiosData.forEach(audio => {
             const inputNombre = document.getElementById(`nombre-${audio.tempId}`);
@@ -397,6 +398,7 @@ function subidaRs() {
         }
 
         if (audiosData.length === 0) {
+            multiplesAudios.style.display = 'none';
             previewAudio.style.display = 'none';
             ppp3.style.display = 'none';
         }
@@ -454,6 +456,7 @@ function subidaRs() {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = tipoArchivo;
+        input.multiple = true; // Permite seleccionar múltiples archivos
         input.onchange = inicialSubida;
         input.click();
     };
@@ -646,7 +649,7 @@ window.inicializarWaveform = function (containerId, audioSrc) {
     }
 };
 
-//esto creo que funciona bien
+//necesito que los check individualPost y multiplePost (se agregaron ultimamente), se vean afectado por esto de maximo 2 opciones
 async function selectorformtipo() {
     const descargacheck = document.getElementById('descargacheck');
     const musiccheck = document.getElementById('musiccheck');
@@ -654,9 +657,11 @@ async function selectorformtipo() {
     const colabcheck = document.getElementById('colabcheck');
     const fancheck = document.getElementById('fancheck');
     const artistacheck = document.getElementById('artistacheck');
+    const individualPost = document.getElementById('individualPost');
+    const multiplePost = document.getElementById('multiplePost');
 
     // Verifica si los elementos necesarios existen; si no, retorna
-    if (!descargacheck || !musiccheck || !exclusivocheck || !colabcheck || !fancheck || !artistacheck) return;
+    if (!descargacheck || !musiccheck || !exclusivocheck || !colabcheck || !fancheck || !artistacheck || !individualPost || !multiplePost) return;
 
     descargacheck.checked = true;
     const label = descargacheck.closest('label');
@@ -667,7 +672,9 @@ async function selectorformtipo() {
         if (event.target.matches('.custom-checkbox input[type="checkbox"]')) {
             const checkedCheckboxes = document.querySelectorAll('.custom-checkbox input[type="checkbox"]:checked');
 
+            // Incluye individualPost y multiplePost en la lista de checkboxes que no son fan ni artista
             const nonFanArtistChecked = Array.from(checkedCheckboxes).filter(checkbox => checkbox.id !== 'fancheck' && checkbox.id !== 'artistacheck' && checkbox.id !== 'artistaTipoCheck' && checkbox.id !== 'fanTipoCheck');
+
             if (nonFanArtistChecked.length > 2) {
                 event.target.checked = false;
                 alert('Solo puedes seleccionar un máximo de 2 opciones.');
@@ -773,5 +780,43 @@ function selectorFanArtista() {
             updateStyles(fancheck);
         }
         updateStyles(artistacheck);
+    });
+}
+
+function selectorTipoPost() {
+    const individualPost = document.getElementById('individualPost');
+    const multiplePost = document.getElementById('multiplePost');
+
+    // Verifica si los elementos necesarios existen; si no, retorna
+    if (!individualPost || !multiplePost) return;
+
+    // Función para actualizar estilos (reutilizada de selectorFanArtista)
+    function updateStyles(checkbox) {
+        const label = checkbox.closest('label');
+        if (checkbox.checked) {
+            label.style.color = '#ffffff';
+            label.style.background = '#131313';
+        } else {
+            label.style.color = '#6b6b6b';
+            label.style.background = '';
+        }
+    }
+
+    // Listener para 'individualPost'
+    individualPost.addEventListener('change', function () {
+        if (individualPost.checked) {
+            multiplePost.checked = false;
+            updateStyles(multiplePost);
+        }
+        updateStyles(individualPost);
+    });
+
+    // Listener para 'multiplePost'
+    multiplePost.addEventListener('change', function () {
+        if (multiplePost.checked) {
+            individualPost.checked = false;
+            updateStyles(individualPost);
+        }
+        updateStyles(multiplePost);
     });
 }

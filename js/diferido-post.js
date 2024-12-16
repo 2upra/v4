@@ -3,7 +3,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         reiniciarCargaDiferida();
     });
-    const DEPURAR = true;
+    const DEPURAR = false;
     const log = DEPURAR ? console.log.bind(console) : () => {};
 
     let estaCargando = false;
@@ -19,7 +19,7 @@
         log('Reiniciando carga diferida');
         window.removeEventListener('scroll', manejarScroll);
         estaCargando = false;
-        log('Carga reactivada en reiniciarCargaDiferida');
+        log('Carga reactivada ecn reiniciarCargaDiferida');
         hayMasContenido = true;
         paginaActual = 2;
         publicacionesCargadas.clear();

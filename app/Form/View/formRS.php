@@ -8,6 +8,19 @@ function formRs()
     $urlImagenperfil = imagenPerfil($user->ID);
 
 ?>
+    <style>
+        div#multiplesAudios label {
+            width: 100%;
+            place-content: center;
+            padding: 6px;
+        }
+
+        div#multiplesAudios {
+            width: 100%;
+            gap: 10px;
+            place-content: center;
+        }
+    </style>
     <div class="bloque modal" id="formRs" style="display: none;">
 
         <div class="W8DK25">
@@ -24,6 +37,32 @@ function formRs()
             <textarea id="postContent" name="post_content" rows="2" required placeholder="Escribe aquí" style="display: none;"></textarea>
         </div>
 
+
+
+        <div class="previewsForm NGEESM RS ppp3" id="ppp3" style="display: none;">
+            <div class="previewAreaArchivos" id="previewImagen" style="display: none;">
+                <label></label>
+            </div>
+            <div class="previewAreaArchivos" id="previewAudio" style="display: none;">
+                <label></label>
+                <div class="flew-row" id="multiplesAudios" style="display: none;">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" id="individualPost" name="individualPost" value="1">
+                        <span class="checkmark"></span>
+                        Individual post
+                    </label>
+                    <label class="custom-checkbox">
+                        <input type="checkbox" id="multiplePost" name="multiplePost" value="1">
+                        <span class="checkmark"></span>
+                        Multiples post
+                    </label>
+                </div>
+            </div>
+            <div class="previewAreaArchivos" id="previewArchivo" style="display: none;">
+                <label>Archivo adicional para colab (flp, zip, rar, midi, etc)</label>
+            </div>
+        </div>
+
         <div class="DRHMDE">
             <label class="custom-checkbox">
                 <input type="checkbox" id="fancheck" name="fancheck" value="1">
@@ -37,33 +76,7 @@ function formRs()
             </label>
         </div>
 
-        <div class="previewsForm NGEESM RS ppp3" id="ppp3" style="display: none;">
-            <div class="previewAreaArchivos" id="previewImagen" style="display: none;">
-                <label></label>
-            </div>
-            <div class="previewAreaArchivos" id="previewAudio" style="display: none;">
-                <label></label>
-            </div>
-            <div class="previewAreaArchivos" id="previewArchivo" style="display: none;">
-                <label>Archivo adicional para colab (flp, zip, rar, midi, etc)</label>
-            </div>
-        </div>
-
-        <div class="bloque flew-row" id="multiplesAudios" style="display: none;">
-            <label class="custom-checkbox">
-                <input type="checkbox" id="individualPost" name="individualPost" value="1">
-                <span class="checkmark"></span>
-                Individual post
-            </label>
-            <label class="custom-checkbox">
-                <input type="checkbox" id="multiplePost" name="multiplePost" value="1">
-                <span class="checkmark"></span>
-                Multiples post
-            </label>
-
-        </div>
-
-        <div class="bloque flex-row"" id=" opciones" style="display: none">
+        <div class="bloque flex-row" id="opciones" style="display: none">
             <p>Opciones de post</p>
             <div class="flex flex-row gap-2">
                 <label class="custom-checkbox">

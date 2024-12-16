@@ -2,7 +2,7 @@ let currentlyPlayingAudio = null;
 let audioPlayingStatus = false;
 
 function inicializarWaveforms() {
-    console.log('inicializarWaveforms start');
+    //console.log('inicializarWaveforms start');
     const observer = new IntersectionObserver(
         entries => {
             entries.forEach(entry => {
@@ -187,7 +187,7 @@ function loadAudio(postId, audioUrl, container, playOnLoad) {
 }
 
 window.we = function (postId, audioUrl, container, playOnLoad = false) {
-    console.log('we start');
+    //console.log('we start');
     if (!window.wavesurfers) window.wavesurfers = {};
     const MAX_RETRIES = 3;
 
