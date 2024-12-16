@@ -103,14 +103,16 @@ function actualizarMetaDatos($postId)
         'paraDescarga' => 'descarga',
         'rola'         => 'music',
         'fan'          => 'fan',
-        'artista'      => 'artista'
-
+        'artista'      => 'artista',
+        'individual'   => 'individual',
+        'multiple'     => 'multiple'
+ 
     ];
 
     foreach ($meta_fields as $meta_key => $post_key) {
         $value = isset($_POST[$post_key]) && $_POST[$post_key] == '1' ? 1 : 0;
         if (update_post_meta($postId, $meta_key, $value) === false) {
-            error_log("Error en actualizarMetaDatos: Fallo al actualizar el meta $meta_key para el post ID $postId.");
+            //error_log("Error en actualizarMetaDatos: Fallo al actualizar el meta $meta_key para el post ID $postId.");
         }
     }
 
