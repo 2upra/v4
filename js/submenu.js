@@ -43,7 +43,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         }
 
         submenu.style.position = 'fixed';
-        submenu.style.zIndex = 1003;
+        submenu.style.zIndex = 1006;
 
         submenu.style.display = 'block';
         submenu.style.visibility = 'hidden';

@@ -141,7 +141,7 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
         <div class="CPQBEN" style="display: none;">
             <div class="CPQBAU"><? echo $author_name; ?></div>
             <div class="CPQBCO"><? the_content(); ?></div>
-            <img src="<?= esc_url($optimized_thumbnail_url); ?>"  alt="">
+            <img src="<?= esc_url($optimized_thumbnail_url); ?>" alt="">
         </div>
     </div>
 <?
@@ -239,22 +239,22 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
 ?>
     <div class="NERWFB">
         <div class="YWBIBG">
-
             <? if (!empty($audio_id_lite)) : ?>
-                <? if (has_post_thumbnail($post_id)) : ?>
+                <?
+                $has_post_thumbnail = has_post_thumbnail($post_id);
+                $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true);
+                ?>
+                <? if ($has_post_thumbnail || $imagen_temporal_id) : ?>
                     <div class="MRPDOR">
-                        <div class="post-thumbnail">
-                            <?
-                            $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
-                            $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
-                            ?>
-                            <img src="<? echo esc_url($optimized_thumbnail_url); ?>" alt="<? echo esc_attr(get_the_title($post_id)); ?>">
-                        </div>
-                    </div>
-                <? else : ?>
-                    <div class="MRPDOR">
-                        <? $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true); ?>
-                        <? if ($imagen_temporal_id) : ?>
+                        <? if ($has_post_thumbnail) : ?>
+                            <div class="post-thumbnail">
+                                <?
+                                $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
+                                $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
+                                ?>
+                                <img src="<? echo esc_url($optimized_thumbnail_url); ?>" alt="<? echo esc_attr(get_the_title($post_id)); ?>">
+                            </div>
+                        <? elseif ($imagen_temporal_id) : ?>
                             <div class="temporal-thumbnail">
                                 <?
                                 $temporal_image_url = wp_get_attachment_url($imagen_temporal_id);
