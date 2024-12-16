@@ -4,7 +4,7 @@ use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging;
 
 /*
-
+ayudame a arreglar esto por favor
 cual es el problema aca y porque puede que este en bucle (lo veo a cada rato)
 [16-Dec-2024 15:35:58 UTC] Cron wp_enqueue_notifications ejecutado.
 [16-Dec-2024 15:36:02 UTC] [Firebase] Notificación enviada al usuario 49
@@ -13,36 +13,63 @@ cual es el problema aca y porque puede que este en bucle (lo veo a cada rato)
 [16-Dec-2024 15:36:05 UTC] PHP Fatal error:  Uncaught Kreait\Firebase\Exception\Messaging\NotFound: Requested entity was not found. in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php:60
 Stack trace:
 #0 /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/MessagingApiExceptionConverter.php(113): Kreait\Firebase\Exception\Messaging\NotFound->withErrors()
-#1 /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/MessagingApiExceptionConverter.php(121): Kreait\Firebase\Exception\MessagingApiExceptionConverter->convertResponse()
-#2 /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/MessagingApiExceptionConverter.php(44): Kreait\Firebase\Exception\MessagingApiExceptionConverter->convertGuzzleRequestException()
-#3 /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Messaging.php(100): Kreait\Firebase\Exception\MessagingApiExceptionConverter->convertException()
-#4 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/EachPromise.php(183): Kreait\Firebase\Messaging->Kreait\Firebase\{closure}()
-#5 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(209): GuzzleHttp\Promise\EachPromise->GuzzleHttp\Promise\{closure}()
-#6 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(158): GuzzleHttp\Promise\Promise::callHandler()
-#7 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/TaskQueue.php(52): GuzzleHttp\Promise\Promise::GuzzleHttp\Promise\{closure}()
-#8 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/guzzle/src/Handler/CurlMultiHandler.php(167): GuzzleHttp\Promise\TaskQueue->run()
-#9 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/guzzle/src/Handler/CurlMultiHandler.php(206): GuzzleHttp\Handler\CurlMultiHandler->tick()
-#10 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(251): GuzzleHttp\Handler\CurlMultiHandler->execute()
-#11 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(227): GuzzleHttp\Promise\Promise->invokeWaitFn()
-#12 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(272): GuzzleHttp\Promise\Promise->waitIfPending()
-#13 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(229): GuzzleHttp\Promise\Promise->invokeWaitList()
-#14 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(69): GuzzleHttp\Promise\Promise->waitIfPending()
-#15 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/EachPromise.php(109): GuzzleHttp\Promise\Promise->wait()
-#16 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(251): GuzzleHttp\Promise\EachPromise->GuzzleHttp\Promise\{closure}()
-#17 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(227): GuzzleHttp\Promise\Promise->invokeWaitFn()
-#18 /var/www/wordpress/wp-content/themes/2upra3v/vendor/guzzlehttp/promises/src/Promise.php(69): GuzzleHttp\Promise\Promise->waitIfPending()
-#19 /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Messaging.php(106): GuzzleHttp\Promise\Promise->wait()
-#20 /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Messaging.php(55): Kreait\Firebase\Messaging->sendAll()
-#21 /var/www/wordpress/wp-content/themes/2upra3v/app/Pendiente por refactorizar/notificaciones.php(116): Kreait\Firebase\Messaging->send()
-#22 /var/www/wordpress/wp-content/themes/2upra3v/app/Pendiente por refactorizar/notificaciones.php(68): send_push_notification()
-#23 /var/www/wordpress/wp-content/themes/2upra3v/app/Form/Manejar.php(106): crearNotificacion()
-#24 /var/www/wordpress/wp-includes/class-wp-hook.php(324): procesar_notificaciones()
-#25 /var/www/wordpress/wp-includes/class-wp-hook.php(348): WP_Hook->apply_filters()
-#26 /var/www/wordpress/wp-includes/plugin.php(565): WP_Hook->do_action()
 #27 /var/www/wordpress/wp-cron.php(191): do_action_ref_array()
 #28 {main}
   thrown in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php on line 60
 */
+
+function procesar_notificaciones()
+{
+    error_log('Cron wp_enqueue_notifications ejecutado.');
+
+    $notificaciones_pendientes = get_option('notificaciones_pendientes', []);
+    if (empty($notificaciones_pendientes)) {
+        error_log('No hay notificaciones pendientes.');
+        return;
+    }
+
+    $lote = array_splice($notificaciones_pendientes, 0, 5);
+
+    foreach ($lote as $notificacion) {
+
+        $url = $notificacion['url'] ?? '';
+        $autor_id = $notificacion['autor_id'];
+
+        if ($autor_id == 10000) {
+            // Enviar a todos los usuarios
+            $usuarios = get_users();
+            foreach ($usuarios as $usuario) {
+                crearNotificacion(
+                    $usuario->ID, // Usamos el ID del usuario como seguidor_id
+                    $notificacion['mensaje'],
+                    false,
+                    $notificacion['post_id'],
+                    $notificacion['titulo'],
+                    $url,
+                    $autor_id
+                );
+            }
+        } else {
+            // Comportamiento original - enviar a seguidores
+            crearNotificacion(
+                $notificacion['seguidor_id'],
+                $notificacion['mensaje'],
+                false,
+                $notificacion['post_id'],
+                $notificacion['titulo'],
+                $url,
+                $autor_id
+            );
+        }
+    }
+
+    update_option('notificaciones_pendientes', $notificaciones_pendientes);
+
+    if (empty($notificaciones_pendientes)) {
+        error_log('No quedan notificaciones pendientes. Desactivando el cron.');
+        wp_clear_scheduled_hook('wp_enqueue_notifications');
+    }
+}
 
 function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false, $postIdRelacionado = 0, $Titulo = 'Nueva notificación', $url = null, $emisor = null)
 {
@@ -116,7 +143,6 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
             delete_user_meta($usuarioReceptor, 'firebase_token');
             error_log("[crearNotificacion] Token de Firebase eliminado para el usuario ID: " . $usuarioReceptor);
         }
-
     } else {
         error_log("[crearNotificacion] Notificación push enviada con éxito al usuario ID: " . $usuarioReceptor);
     }
@@ -171,9 +197,12 @@ function send_push_notification($user_id, $title, $message, $url)
         $messaging->send($messageData);
         error_log('[Firebase] Notificación enviada al usuario ' . $user_id);
         return 'Notificación enviada con éxito.';
+    } catch (NotFound $e) {
+        error_log('[Firebase] Error al enviar la notificación (NotFound): ' . $e->getMessage());
+        return new WP_Error('not_found', 'Requested entity was not found.', array('status' => 404));
     } catch (MessagingException $e) {
         error_log('[Firebase] Error al enviar la notificación: ' . $e->getMessage());
-        return 'Error al enviar la notificación: ' . $e->getMessage();
+        return new WP_Error('messaging_error', 'Error al enviar la notificación.', array('status' => 500));
     }
 }
 

@@ -71,57 +71,7 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish') {
 
 add_action('wp_enqueue_notifications', 'procesar_notificaciones');
 
-function procesar_notificaciones() {
-    error_log('Cron wp_enqueue_notifications ejecutado.');
 
-    $notificaciones_pendientes = get_option('notificaciones_pendientes', []);
-    if (empty($notificaciones_pendientes)) {
-        error_log('No hay notificaciones pendientes.');
-        return;
-    }
-
-    $lote = array_splice($notificaciones_pendientes, 0, 5);
-
-    foreach ($lote as $notificacion) {
-
-        $url = $notificacion['url'] ?? '';
-        $autor_id = $notificacion['autor_id'];
-
-        if ($autor_id == 9999999999999999) {
-            // Enviar a todos los usuarios
-            $usuarios = get_users();
-            foreach ($usuarios as $usuario) {
-                crearNotificacion(
-                    $usuario->ID, // Usamos el ID del usuario como seguidor_id
-                    $notificacion['mensaje'],
-                    false,
-                    $notificacion['post_id'],
-                    $notificacion['titulo'],
-                    $url,
-                    $autor_id
-                );
-            }
-        } else {
-            // Comportamiento original - enviar a seguidores
-            crearNotificacion(
-                $notificacion['seguidor_id'],
-                $notificacion['mensaje'],
-                false,
-                $notificacion['post_id'],
-                $notificacion['titulo'],
-                $url,
-                $autor_id
-            );
-        }
-    }
-
-    update_option('notificaciones_pendientes', $notificaciones_pendientes);
-
-    if (empty($notificaciones_pendientes)) {
-        error_log('No quedan notificaciones pendientes. Desactivando el cron.');
-        wp_clear_scheduled_hook('wp_enqueue_notifications');
-    }
-}
 
 
 add_filter('cron_schedules', function($schedules) {
