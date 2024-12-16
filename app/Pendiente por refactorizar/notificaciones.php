@@ -21,11 +21,11 @@ o sea supongo que no actualiza la meta notificaciones_pendientes y sigue dando e
 
 function procesar_notificaciones()
 {
-    error_log('Cron wp_enqueue_notifications ejecutado.');
+    //error_log('Cron wp_enqueue_notifications ejecutado.');
 
     $notificaciones_pendientes = get_option('notificaciones_pendientes', []);
     if (empty($notificaciones_pendientes)) {
-        error_log('No hay notificaciones pendientes.');
+        //error_log('No hay notificaciones pendientes.');
         return;
     }
 
