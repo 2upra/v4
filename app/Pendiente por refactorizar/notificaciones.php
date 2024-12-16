@@ -5,10 +5,12 @@ use Kreait\Firebase\Messaging;
 
 
 /*
-tengo este problema, cuando da error se queda en bucle, en este caso da eror con el usuario 49 
-[16-Dec-2024 17:18:35 UTC] [Firebase] Notificación enviada al usuario 49
-[16-Dec-2024 17:18:35 UTC] [crearNotificacion] Notificación push enviada con éxito al usuario ID: 49
-[16-Dec-2024 17:18:38 UTC] PHP Fatal error:  Uncaught Kreait\Firebase\Exception\Messaging\NotFound: Requested entity was not found. in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php:60
+sigue dando error
+  thrown in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php on line 60
+[16-Dec-2024 17:37:00 UTC] [Firebase] Notificación enviada al usuario 49
+[16-Dec-2024 17:37:00 UTC] [crearNotificacion] Notificación push enviada con éxito al usuario ID: 49
+[16-Dec-2024 17:37:03 UTC] PHP Fatal error:  Uncaught Kreait\Firebase\Exception\Messaging\NotFound: Requested entity was not found. in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php:60
+Stack trace:
 */
 
 function procesar_notificaciones()
@@ -166,11 +168,13 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
             // Eliminar el token inválido
             delete_user_meta($usuarioReceptor, 'firebase_token');
             error_log("[crearNotificacion] Token de Firebase eliminado para el usuario ID: " . $usuarioReceptor);
-            return new WP_Error('not_found', "Token de Firebase no encontrado para el usuario ID: " . $usuarioReceptor);
+            // **Devolver el mismo WP_Error recibido de send_push_notification()**
+            return $resultadoPush;
         }
     } else {
         error_log("[crearNotificacion] Notificación push enviada con éxito al usuario ID: " . $usuarioReceptor);
     }
+
 
     return $postId;
 }
