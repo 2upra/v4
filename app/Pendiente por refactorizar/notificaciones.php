@@ -30,7 +30,7 @@ function procesar_notificaciones()
 
     $lote = array_splice($notificaciones_pendientes, 0, 5);
 
-    foreach ($lote as $notificacion) {
+    foreach ($lote as $index => $notificacion) {
 
         $url = $notificacion['url'] ?? '';
         $autor_id = $notificacion['autor_id'];
@@ -39,7 +39,7 @@ function procesar_notificaciones()
             // Enviar a todos los usuarios
             $usuarios = get_users();
             foreach ($usuarios as $usuario) {
-                crearNotificacion(
+                $resultado = crearNotificacion(
                     $usuario->ID, // Usamos el ID del usuario como seguidor_id
                     $notificacion['mensaje'],
                     false,
@@ -48,10 +48,17 @@ function procesar_notificaciones()
                     $url,
                     $autor_id
                 );
+                if (is_wp_error($resultado) && $resultado->get_error_code() === 'not_found') {
+                    // Si es un error de 'not_found', no hacemos nada aquí, 
+                    // ya que el token ya se eliminó en crearNotificacion
+                } else if (is_wp_error($resultado)) {
+                    //otros errores, se deberia volver a intentar?
+                    error_log("Error al enviar a usuario " . $usuario->ID . ": " . $resultado->get_error_message());
+                }
             }
         } else {
             // Comportamiento original - enviar a seguidores
-            crearNotificacion(
+            $resultado = crearNotificacion(
                 $notificacion['seguidor_id'],
                 $notificacion['mensaje'],
                 false,
@@ -60,8 +67,19 @@ function procesar_notificaciones()
                 $url,
                 $autor_id
             );
+            if (is_wp_error($resultado) && $resultado->get_error_code() === 'not_found') {
+                // Si es un error de 'not_found', no hacemos nada aquí, 
+                // ya que el token ya se eliminó en crearNotificacion
+            } else if (is_wp_error($resultado)) {
+                error_log("Error al enviar a seguidor " . $notificacion['seguidor_id'] . ": " . $resultado->get_error_message());
+            }
         }
+        // Eliminar la notificación actual del lote original, independientemente del resultado
+        unset($lote[$index]);
     }
+
+    // Actualizar 'notificaciones_pendientes' con las notificaciones que no se procesaron (si las hay)
+    $notificaciones_pendientes = array_values($lote); // Resetear indices
 
     update_option('notificaciones_pendientes', $notificaciones_pendientes);
 
