@@ -3,16 +3,6 @@
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging;
 
-/*
-mira sigue falando
-[16-Dec-2024 15:48:22 UTC] Cron wp_enqueue_notifications ejecutado.
-[16-Dec-2024 15:48:26 UTC] [Firebase] Notificación enviada al usuario 49
-[16-Dec-2024 15:48:26 UTC] [crearNotificacion] Notificación push enviada con éxito al usuario ID: 49
-[16-Dec-2024 15:48:26 UTC] [crearNotificacion] Notificación push enviada con éxito al usuario ID: 49
-[16-Dec-2024 15:48:26 UTC] [crearNotificacion] Error: Usuario receptor no válido ID: 254
-[16-Dec-2024 15:48:29 UTC] PHP Fatal error:  Uncaught Kreait\Firebase\Exception\Messaging\NotFound: Requested entity was not found. in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php:60
-*/
-
 function procesar_notificaciones()
 {
     error_log('Cron wp_enqueue_notifications ejecutado.');
@@ -24,9 +14,8 @@ function procesar_notificaciones()
     }
 
     $lote = array_splice($notificaciones_pendientes, 0, 5);
-    $nuevas_notificaciones_pendientes = []; // Nuevo array para las notificaciones que no se procesaron
 
-    foreach ($lote as $notificacion) {
+    foreach ($lote as $indice => $notificacion) {
         $url = $notificacion['url'] ?? '';
         $autor_id = $notificacion['autor_id'];
         $notificacion_procesada = false;
@@ -48,12 +37,15 @@ function procesar_notificaciones()
                 if (is_wp_error($resultado) && $resultado->get_error_code() === 'not_found') {
                     // Token inválido ya eliminado en crearNotificacion.
                     error_log("No se pudo enviar la notificación al usuario " . $usuario->ID . " (token no encontrado).");
+                    $notificacion_procesada = true;
+                } else if (is_wp_error($resultado) && $resultado->get_error_code() === 'usuario_invalido') {
+                    error_log("No se pudo enviar la notificación al usuario " . $usuario->ID . " (usuario inválido).");
+                    $notificacion_procesada = true;
                 } else if (is_wp_error($resultado)) {
                     error_log("Error al enviar a usuario " . $usuario->ID . ": " . $resultado->get_error_message());
-                    // Considera agregar una lógica de reintento aquí si es apropiado
                 }
             }
-            $notificacion_procesada = true;
+            $notificacion_procesada = true; // Se asume procesada, ya que se intentó enviar a todos los usuarios
         } else {
             // Comportamiento original - enviar a seguidores
             $resultado = crearNotificacion(
@@ -69,25 +61,27 @@ function procesar_notificaciones()
             if (is_wp_error($resultado) && $resultado->get_error_code() === 'not_found') {
                 // Token inválido ya eliminado en crearNotificacion.
                 error_log("No se pudo enviar la notificación al seguidor " . $notificacion['seguidor_id'] . " (token no encontrado).");
+                $notificacion_procesada = true;
+            } else if (is_wp_error($resultado) && $resultado->get_error_code() === 'usuario_invalido') {
+                error_log("No se pudo enviar la notificación al seguidor " . $notificacion['seguidor_id'] . " (usuario inválido).");
+                $notificacion_procesada = true;
             } else if (is_wp_error($resultado)) {
                 error_log("Error al enviar a seguidor " . $notificacion['seguidor_id'] . ": " . $resultado->get_error_message());
-                // Considera agregar una lógica de reintento aquí si es apropiado
             }
+
             $notificacion_procesada = true;
         }
 
-        // Si la notificación no se procesó correctamente, agrégala al nuevo array
-        if (!$notificacion_procesada) {
-            $nuevas_notificaciones_pendientes[] = $notificacion;
+        // Eliminar la notificacion del array original si fue procesada (incluso si falló por token no encontrado o usuario inválido)
+        if ($notificacion_procesada) {
+            unset($lote[$indice]);
         }
     }
 
-    // Combina las notificaciones pendientes originales con las que no se procesaron
-    $notificaciones_pendientes = array_merge($notificaciones_pendientes, $nuevas_notificaciones_pendientes);
+    // Actualizar la lista de notificaciones pendientes, eliminando las procesadas
+    update_option('notificaciones_pendientes', array_values($lote));
 
-    update_option('notificaciones_pendientes', $notificaciones_pendientes);
-
-    if (empty($notificaciones_pendientes)) {
+    if (empty($lote)) {
         error_log('No quedan notificaciones pendientes. Desactivando el cron.');
         wp_clear_scheduled_hook('wp_enqueue_notifications');
     }
@@ -99,7 +93,7 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
     $usuario = get_user_by('ID', $usuarioReceptor);
     if (!$usuario) {
         error_log("[crearNotificacion] Error: Usuario receptor no válido ID: " . $usuarioReceptor);
-        return false;
+        return new WP_Error('usuario_invalido', "Usuario receptor no válido ID: " . $usuarioReceptor);
     }
 
     $contenidoSanitizado = wp_kses($contenido, 'post');
@@ -164,14 +158,8 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
             // Eliminar el token inválido
             delete_user_meta($usuarioReceptor, 'firebase_token');
             error_log("[crearNotificacion] Token de Firebase eliminado para el usuario ID: " . $usuarioReceptor);
+            return new WP_Error('not_found', "Token de Firebase no encontrado para el usuario ID: " . $usuarioReceptor);
         }
-    } else {
-        error_log("[crearNotificacion] Notificación push enviada con éxito al usuario ID: " . $usuarioReceptor);
-    }
-
-    // Registrar en el log el resultado del envío
-    if (is_wp_error($resultadoPush)) {
-        error_log("[crearNotificacion] Error al enviar la notificación push: " . $resultadoPush->get_error_message());
     } else {
         error_log("[crearNotificacion] Notificación push enviada con éxito al usuario ID: " . $usuarioReceptor);
     }
