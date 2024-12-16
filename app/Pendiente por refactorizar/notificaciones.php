@@ -23,7 +23,7 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
     }
     // Verificar si el emisor es válido
     if($emisorId === null){
-        error_log("Error: No se pudo determinar el emisor de la notificacion.");
+        error_log("[crearNotificacion] Error: No se pudo determinar el emisor de la notificacion.");
         return false;
     }
 
