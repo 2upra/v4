@@ -4,18 +4,13 @@ use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging;
 
 /*
-ayudame a arreglar esto por favor
-cual es el problema aca y porque puede que este en bucle (lo veo a cada rato)
-[16-Dec-2024 15:35:58 UTC] Cron wp_enqueue_notifications ejecutado.
-[16-Dec-2024 15:36:02 UTC] [Firebase] Notificación enviada al usuario 49
-[16-Dec-2024 15:36:02 UTC] [crearNotificacion] Notificación push enviada con éxito al usuario ID: 49
-[16-Dec-2024 15:36:02 UTC] [crearNotificacion] Error: Usuario receptor no válido ID: 254
-[16-Dec-2024 15:36:05 UTC] PHP Fatal error:  Uncaught Kreait\Firebase\Exception\Messaging\NotFound: Requested entity was not found. in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php:60
-Stack trace:
-#0 /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/MessagingApiExceptionConverter.php(113): Kreait\Firebase\Exception\Messaging\NotFound->withErrors()
-#27 /var/www/wordpress/wp-cron.php(191): do_action_ref_array()
-#28 {main}
-  thrown in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php on line 60
+mira sigue falando
+[16-Dec-2024 15:48:22 UTC] Cron wp_enqueue_notifications ejecutado.
+[16-Dec-2024 15:48:26 UTC] [Firebase] Notificación enviada al usuario 49
+[16-Dec-2024 15:48:26 UTC] [crearNotificacion] Notificación push enviada con éxito al usuario ID: 49
+[16-Dec-2024 15:48:26 UTC] [crearNotificacion] Notificación push enviada con éxito al usuario ID: 49
+[16-Dec-2024 15:48:26 UTC] [crearNotificacion] Error: Usuario receptor no válido ID: 254
+[16-Dec-2024 15:48:29 UTC] PHP Fatal error:  Uncaught Kreait\Firebase\Exception\Messaging\NotFound: Requested entity was not found. in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php:60
 */
 
 function procesar_notificaciones()
@@ -29,18 +24,19 @@ function procesar_notificaciones()
     }
 
     $lote = array_splice($notificaciones_pendientes, 0, 5);
+    $nuevas_notificaciones_pendientes = []; // Nuevo array para las notificaciones que no se procesaron
 
-    foreach ($lote as $index => $notificacion) {
-
+    foreach ($lote as $notificacion) {
         $url = $notificacion['url'] ?? '';
         $autor_id = $notificacion['autor_id'];
+        $notificacion_procesada = false;
 
         if ($autor_id == 10000) {
             // Enviar a todos los usuarios
             $usuarios = get_users();
             foreach ($usuarios as $usuario) {
                 $resultado = crearNotificacion(
-                    $usuario->ID, // Usamos el ID del usuario como seguidor_id
+                    $usuario->ID,
                     $notificacion['mensaje'],
                     false,
                     $notificacion['post_id'],
@@ -48,14 +44,16 @@ function procesar_notificaciones()
                     $url,
                     $autor_id
                 );
+
                 if (is_wp_error($resultado) && $resultado->get_error_code() === 'not_found') {
-                    // Si es un error de 'not_found', no hacemos nada aquí, 
-                    // ya que el token ya se eliminó en crearNotificacion
+                    // Token inválido ya eliminado en crearNotificacion.
+                    error_log("No se pudo enviar la notificación al usuario " . $usuario->ID . " (token no encontrado).");
                 } else if (is_wp_error($resultado)) {
-                    //otros errores, se deberia volver a intentar?
                     error_log("Error al enviar a usuario " . $usuario->ID . ": " . $resultado->get_error_message());
+                    // Considera agregar una lógica de reintento aquí si es apropiado
                 }
             }
+            $notificacion_procesada = true;
         } else {
             // Comportamiento original - enviar a seguidores
             $resultado = crearNotificacion(
@@ -67,19 +65,25 @@ function procesar_notificaciones()
                 $url,
                 $autor_id
             );
+
             if (is_wp_error($resultado) && $resultado->get_error_code() === 'not_found') {
-                // Si es un error de 'not_found', no hacemos nada aquí, 
-                // ya que el token ya se eliminó en crearNotificacion
+                // Token inválido ya eliminado en crearNotificacion.
+                error_log("No se pudo enviar la notificación al seguidor " . $notificacion['seguidor_id'] . " (token no encontrado).");
             } else if (is_wp_error($resultado)) {
                 error_log("Error al enviar a seguidor " . $notificacion['seguidor_id'] . ": " . $resultado->get_error_message());
+                // Considera agregar una lógica de reintento aquí si es apropiado
             }
+            $notificacion_procesada = true;
         }
-        // Eliminar la notificación actual del lote original, independientemente del resultado
-        unset($lote[$index]);
+
+        // Si la notificación no se procesó correctamente, agrégala al nuevo array
+        if (!$notificacion_procesada) {
+            $nuevas_notificaciones_pendientes[] = $notificacion;
+        }
     }
 
-    // Actualizar 'notificaciones_pendientes' con las notificaciones que no se procesaron (si las hay)
-    $notificaciones_pendientes = array_values($lote); // Resetear indices
+    // Combina las notificaciones pendientes originales con las que no se procesaron
+    $notificaciones_pendientes = array_merge($notificaciones_pendientes, $nuevas_notificaciones_pendientes);
 
     update_option('notificaciones_pendientes', $notificaciones_pendientes);
 
