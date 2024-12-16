@@ -5,24 +5,23 @@ use Kreait\Firebase\Messaging;
 
 
 /*
-sigue dando error
-  thrown in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php on line 60
-[16-Dec-2024 17:37:00 UTC] [Firebase] Notificación enviada al usuario 49
-[16-Dec-2024 17:37:00 UTC] [crearNotificacion] Notificación push enviada con éxito al usuario ID: 49
-[16-Dec-2024 17:37:03 UTC] PHP Fatal error:  Uncaught Kreait\Firebase\Exception\Messaging\NotFound: Requested entity was not found. in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php:60
+sigue dando error, se queda en bucle dando error
+[16-Dec-2024 17:46:48 UTC] [Firebase] Notificación enviada al usuario 49
+[16-Dec-2024 17:46:48 UTC] [crearNotificacion] Notificación push enviada con éxito al usuario ID: 49
+[16-Dec-2024 17:46:51 UTC] PHP Fatal error:  Uncaught Kreait\Firebase\Exception\Messaging\NotFound: Requested entity was not found. in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php:60
 Stack trace:
 */
 
 function procesar_notificaciones()
 {
-    //error_log('Cron wp_enqueue_notifications ejecutado.');
-
+    // Obtener las notificaciones pendientes
     $notificaciones_pendientes = get_option('notificaciones_pendientes', []);
     if (empty($notificaciones_pendientes)) {
-        //error_log('No hay notificaciones pendientes.');
+        error_log('No hay notificaciones pendientes.');
         return;
     }
 
+    // Procesar un lote de 5 notificaciones
     $lote = array_splice($notificaciones_pendientes, 0, 5);
 
     foreach ($lote as $indice => $notificacion) {
@@ -43,22 +42,19 @@ function procesar_notificaciones()
                     $autor_id
                 );
 
-                // **Modificación aquí:**
-                if (is_wp_error($resultado) && $resultado->get_error_code() === 'not_found') {
-                    // Token inválido ya eliminado en crearNotificacion.
-                    error_log("No se pudo enviar la notificación al usuario " . $usuario->ID . " (token no encontrado). Se elimina la notificación del lote.");
-                    // Eliminar la notificación actual del lote, ya que no se pudo enviar.
-                    unset($lote[$indice]);
-                } else if (is_wp_error($resultado) && $resultado->get_error_code() === 'usuario_invalido') {
-                    error_log("No se pudo enviar la notificación al usuario " . $usuario->ID . " (usuario inválido).");
-                    // Eliminar la notificación actual del lote, ya que no se pudo enviar.
-                    unset($lote[$indice]);
-                } else if (is_wp_error($resultado)) {
-                    error_log("Error al enviar a usuario " . $usuario->ID . ": " . $resultado->get_error_message());
+                if (is_wp_error($resultado)) {
+                    // Manejo del error según el código proporcionado
+                    if ($resultado->get_error_code() === 'not_found' || $resultado->get_error_code() === 'no_token') {
+                        error_log("No se pudo enviar la notificación al usuario " . $usuario->ID . " (token no encontrado).");
+                    } elseif ($resultado->get_error_code() === 'usuario_invalido') {
+                        error_log("No se pudo enviar la notificación al usuario " . $usuario->ID . " (usuario inválido).");
+                    } else {
+                        error_log("Error al enviar a usuario " . $usuario->ID . ": " . $resultado->get_error_message());
+                    }
                 }
             }
         } else {
-            // Comportamiento original - enviar a seguidores
+            // Enviar a un seguidor específico
             $resultado = crearNotificacion(
                 $notificacion['seguidor_id'],
                 $notificacion['mensaje'],
@@ -69,26 +65,20 @@ function procesar_notificaciones()
                 $autor_id
             );
 
-            // **Modificación aquí:**
-            if (is_wp_error($resultado) && $resultado->get_error_code() === 'not_found') {
-                // Token inválido ya eliminado en crearNotificacion.
-                error_log("No se pudo enviar la notificación al seguidor " . $notificacion['seguidor_id'] . " (token no encontrado). Se elimina la notificación del lote.");
-                // Eliminar la notificación actual del lote, ya que no se pudo enviar.
-                unset($lote[$indice]);
-            } else if (is_wp_error($resultado) && $resultado->get_error_code() === 'usuario_invalido') {
-                error_log("No se pudo enviar la notificación al seguidor " . $notificacion['seguidor_id'] . " (usuario inválido).");
-                // Eliminar la notificación actual del lote, ya que no se pudo enviar.
-                unset($lote[$indice]);
-            } else if (is_wp_error($resultado)) {
-                error_log("Error al enviar a seguidor " . $notificacion['seguidor_id'] . ": " . $resultado->get_error_message());
+            if (is_wp_error($resultado)) {
+                // Manejo del error según el código proporcionado
+                if ($resultado->get_error_code() === 'not_found' || $resultado->get_error_code() === 'no_token') {
+                    error_log("No se pudo enviar la notificación al seguidor " . $notificacion['seguidor_id'] . " (token no encontrado).");
+                } elseif ($resultado->get_error_code() === 'usuario_invalido') {
+                    error_log("No se pudo enviar la notificación al seguidor " . $notificacion['seguidor_id'] . " (usuario inválido).");
+                } else {
+                    error_log("Error al enviar a seguidor " . $notificacion['seguidor_id'] . ": " . $resultado->get_error_message());
+                }
             }
         }
     }
 
-    // **Importante: Reindexar $notificaciones_pendientes antes de actualizar la opción.**
-    $notificaciones_pendientes = array_values(array_diff_key($notificaciones_pendientes, $lote));
-
-    // Actualizar la lista de notificaciones pendientes, con los valores que quedaron en $notificaciones_pendientes después del array_splice
+    // Reindexar y actualizar la lista de notificaciones pendientes
     update_option('notificaciones_pendientes', $notificaciones_pendientes);
 
     if (empty($notificaciones_pendientes)) {
@@ -106,32 +96,17 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
         return new WP_Error('usuario_invalido', "Usuario receptor no válido ID: " . $usuarioReceptor);
     }
 
-    $contenidoSanitizado = wp_kses($contenido, 'post');
-    $metaSolicitud = is_bool($metaSolicitud) ? $metaSolicitud : false;
-    $postIdRelacionado = is_numeric($postIdRelacionado) ? intval($postIdRelacionado) : 0;
-
-    // Determinar el emisor de la notificación
-    $emisorId = get_current_user_id();
-    if ($emisorId === 0 || $emisorId === null) {
-        $emisorId = $emisor;
-    }
-    // Verificar si el emisor es válido
-    if ($emisorId === null) {
-        error_log("[crearNotificacion] Error: No se pudo determinar el emisor de la notificacion.");
-        return false;
-    }
-
     // Crear el post de la notificación
     $nuevoPost = [
         'post_type'   => 'notificaciones',
         'post_title'   => $Titulo,
-        'post_content' => $contenidoSanitizado,
+        'post_content' => wp_kses($contenido, 'post'),
         'post_author'  => $usuarioReceptor,
         'post_status'  => 'publish',
         'meta_input'   => [
-            'emisor' => $emisorId,
+            'emisor' => $emisor ?? get_current_user_id(),
             'solicitud' => $metaSolicitud,
-            'post_relacionado' => $postIdRelacionado
+            'post_relacionado' => intval($postIdRelacionado),
         ]
     ];
 
@@ -140,69 +115,59 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
     // Si hay un error, lo registramos
     if (is_wp_error($postId)) {
         error_log("[crearNotificacion] Error al crear la notificación: " . $postId->get_error_message());
-        return false;
-    }
-
-    // Si la URL no se proporcionó, usar la página de inicio del sitio
-    if ($url === null) {
-        $url = home_url(); // Página de inicio
-    }
-
-    // Obtener el token de Firebase del usuario receptor
-    $firebase_token = get_user_meta($usuarioReceptor, 'firebase_token', true);
-
-    // Verificar si el usuario tiene un token de Firebase
-    if (empty($firebase_token)) {
         return $postId;
     }
 
     // Enviar notificación push
-    $titulo = $Titulo;
-    $mensaje = $contenidoSanitizado;
-    $resultadoPush = send_push_notification($usuarioReceptor, $titulo, $mensaje, $url);
-    // Registrar en el log el resultado del envío
-    if (is_wp_error($resultadoPush)) {
-        error_log("[crearNotificacion] Error al enviar la notificación push: " . $resultadoPush->get_error_message());
-        // Manejar el error aquí:
-        if ($resultadoPush->get_error_code() === 'no_token' || strpos($resultadoPush->get_error_message(), 'Requested entity was not found') !== false) {
-            // Eliminar el token inválido
-            delete_user_meta($usuarioReceptor, 'firebase_token');
-            error_log("[crearNotificacion] Token de Firebase eliminado para el usuario ID: " . $usuarioReceptor);
-            // **Devolver el mismo WP_Error recibido de send_push_notification()**
-            return $resultadoPush;
-        }
-    } else {
-        error_log("[crearNotificacion] Notificación push enviada con éxito al usuario ID: " . $usuarioReceptor);
+    $firebase_token = get_user_meta($usuarioReceptor, 'firebase_token', true);
+    if (empty($firebase_token)) {
+        return $postId; // No hay token, no se envía push
     }
 
+    $resultadoPush = send_push_notification($usuarioReceptor, $Titulo, $contenido, $url ?? home_url());
+    if (is_wp_error($resultadoPush)) {
+        if (in_array($resultadoPush->get_error_code(), ['not_found', 'no_token'])) {
+            delete_user_meta($usuarioReceptor, 'firebase_token');
+            error_log("[crearNotificacion] Token de Firebase eliminado para el usuario ID: " . $usuarioReceptor);
+        }
+        return $resultadoPush; // Devolver el error
+    }
 
+    error_log("[crearNotificacion] Notificación push enviada con éxito al usuario ID: " . $usuarioReceptor);
     return $postId;
 }
 //
 function send_push_notification($user_id, $title, $message, $url)
 {
-    $serviceAccountFile = '/var/www/wordpress/private/upra-b6879-firebase-adminsdk-w9xma-5f138a5b75.json';
+    // Ruta al archivo de credenciales del servicio Firebase
+    $serviceAccountFile = '/var/www/firebase_keys/upra-b6879-firebase-adminsdk-w9xma-5f138a5b75.json';
 
+    // Verificar si el archivo de credenciales existe
     if (!file_exists($serviceAccountFile)) {
         error_log('[Firebase] No se encontró el archivo de credenciales en ' . $serviceAccountFile);
         return new WP_Error('no_service_account', 'No se encontró el archivo de credenciales.', array('status' => 500));
     }
 
     try {
-        $factory = (new Factory)->withServiceAccount($serviceAccountFile);
+        // Inicializar el cliente de Firebase
+        $factory = (new \Kreait\Firebase\Factory)->withServiceAccount($serviceAccountFile);
         $messaging = $factory->createMessaging();
     } catch (\Exception $e) {
+        // Manejar errores durante la inicialización de Firebase
         error_log('[Firebase] Error al inicializar Firebase: ' . $e->getMessage());
         return new WP_Error('firebase_init_failed', 'Error al inicializar Firebase.', array('status' => 500));
     }
 
+    // Obtener el token de Firebase del usuario
     $firebase_token = get_user_meta($user_id, 'firebase_token', true);
 
-    if (!$firebase_token) {
+    // Verificar si el usuario tiene un token
+    if (empty($firebase_token)) {
         error_log('[Firebase] El usuario ' . $user_id . ' no tiene un token de Firebase.');
         return new WP_Error('no_token', 'El usuario no tiene un token de Firebase.', array('status' => 404));
     }
 
+    // Construir el mensaje de notificación
     $messageData = [
         'token' => $firebase_token,
         'notification' => [
@@ -211,23 +176,33 @@ function send_push_notification($user_id, $title, $message, $url)
         ],
         'data' => [
             'url' => $url,
-            //'userId' => $user_id #aun no es necesario
+            // Puedes agregar más datos personalizados aquí si lo deseas
         ],
     ];
 
     try {
-        $messaging->send($messageData);
+        // Enviar la notificación push
+        $response = $messaging->send($messageData);
         error_log('[Firebase] Notificación enviada al usuario ' . $user_id);
         return 'Notificación enviada con éxito.';
-    } catch (NotFound $e) {
+    } catch (\Kreait\Firebase\Exception\Messaging\NotFound $e) {
+        // Manejar el caso donde el token no es válido o no se encuentra
         error_log('[Firebase] Error al enviar la notificación (NotFound): ' . $e->getMessage());
         return new WP_Error('not_found', 'Requested entity was not found.', array('status' => 404));
-    } catch (MessagingException $e) {
+    } catch (\Kreait\Firebase\Exception\Messaging\InvalidMessage $e) {
+        // Manejar el caso donde el mensaje es inválido
+        error_log('[Firebase] Error al enviar la notificación (InvalidMessage): ' . $e->getMessage());
+        return new WP_Error('invalid_message', 'El mensaje enviado es inválido.', array('status' => 400));
+    } catch (\Kreait\Firebase\Exception\Messaging\MessagingException $e) {
+        // Manejar otros errores relacionados con el envío de mensajes
         error_log('[Firebase] Error al enviar la notificación: ' . $e->getMessage());
         return new WP_Error('messaging_error', 'Error al enviar la notificación.', array('status' => 500));
+    } catch (\Exception $e) {
+        // Manejar cualquier otro error
+        error_log('[Firebase] Error desconocido al enviar la notificación: ' . $e->getMessage());
+        return new WP_Error('unknown_error', 'Ocurrió un error desconocido.', array('status' => 500));
     }
 }
-
 
 function listarNotificaciones($pagina = 1)
 {
