@@ -195,10 +195,17 @@ function renderSubscriptionPrompt($author_name, $author_id)
 }
 
 
+
 function renderPostControls($post_id, $colab, $audio_id_lite = null)
 {
-?>
+
+    $mostrarBotonCompra = get_post_meta($post_id, 'tienda', true) === 'true';
+    ?>
     <div class="QSORIW">
+        <? if ($mostrarBotonCompra): ?>
+            <? echo botonCompra($post_id); ?>
+        <? endif; ?>
+
         <? echo like($post_id); ?>
         <? echo botonComentar($post_id, $colab); ?>
         <? if (!empty($audio_id_lite)) : ?>
@@ -207,32 +214,10 @@ function renderPostControls($post_id, $colab, $audio_id_lite = null)
             <? echo botonColeccion($post_id); ?>
         <? endif; ?>
     </div>
-<?
+    <?
 }
-/*
-utiliza 
-function img($url, $quality = 40, $strip = 'all')
-{
-    if ($url === null || $url === '') {
-        return '';
-    }
-    $parsed_url = parse_url($url);
-    if (strpos($url, 'https://i0.wp.com/') === 0) {
-        $cdn_url = $url;
-    } else {
-        $path = isset($parsed_url['host']) ? $parsed_url['host'] . $parsed_url['path'] : ltrim($parsed_url['path'], '/');
-        $cdn_url = 'https://i0.wp.com/' . $path;
-    }
 
-    $query = [
-        'quality' => $quality,
-        'strip' => $strip,
-    ];
 
-    $final_url = add_query_arg($query, $cdn_url);
-    return $final_url;
-}
-*/
 
 function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $audio_id_lite)
 {

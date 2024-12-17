@@ -350,7 +350,7 @@ function postLog($log)
 
 function scriptsOrdenados()
 {
-    $global_version = '0.2.168';
+    $global_version = '0.2.169';
     $dev_mode = defined('LOCAL') && LOCAL;
     //$error_log = [];
 
@@ -376,7 +376,8 @@ function scriptsOrdenados()
         'seguir',
         'inversores',
         'genericAjax',
-        'comentarios'
+        'comentarios',
+        'stripeCompra'
     ];
 
     $script_handles = [
@@ -419,6 +420,7 @@ function scriptsOrdenados()
         'notificaciones'    => '1.0.1',
         'comentarios'       => '1.0.1',
         'colec'             => '1.0.1',
+        'stripeCompra'      => '1.0.1'
     ];
 
     wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.8.11', true);
