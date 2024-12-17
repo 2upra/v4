@@ -55,7 +55,7 @@ function crear_sesion_compra(WP_REST_Request $request)
     try {
         if (!isset($_ENV['STRIPEKEY'])) {
             $error_message = 'La clave de Stripe no está configurada';
-            error_log($error_message);
+            error_log('Error: ' . $error_message);
             return new WP_Error('stripe_key_missing', $error_message, ['status' => 500]);
         }
 
@@ -66,11 +66,24 @@ function crear_sesion_compra(WP_REST_Request $request)
         $postId = sanitize_text_field($data['postId'] ?? '');
         $precio = floatval($data['precio'] ?? 0);
 
-        if (!$userId || $postId || $precio <= 0) {
-            $error_message = 'Parámetros inválidos proporcionados';
-            error_log($error_message);
+        if (!$userId) {
+            $error_message = 'Parámetro userId inválido: debe ser una cadena de texto no vacía.';
+            error_log('Error: ' . $error_message . ' (userId: ' . var_export($userId, true) . ')');
             return new WP_REST_Response(['error' => $error_message], 400);
         }
+
+        if (!$postId) {
+            $error_message = 'Parámetro postId inválido: debe ser una cadena de texto no vacía.';
+            error_log('Error: ' . $error_message . ' (postId: ' . var_export($postId, true) . ')');
+            return new WP_REST_Response(['error' => $error_message], 400);
+        }
+
+        if ($precio <= 0) {
+            $error_message = 'Parámetro precio inválido: debe ser un número mayor que cero.';
+            error_log('Error: ' . $error_message . ' (precio: ' . var_export($precio, true) . ')');
+            return new WP_REST_Response(['error' => $error_message], 400);
+        }
+
 
         $session = \Stripe\Checkout\Session::create([
             'payment_method_types' => ['card'],
@@ -94,9 +107,8 @@ function crear_sesion_compra(WP_REST_Request $request)
         return new WP_REST_Response(['id' => $session->id], 200);
     } catch (Exception $e) {
         $error_message = 'Error al crear sesión de Stripe: ' . $e->getMessage();
-        stripeError($error_message);
+        error_log('Error: ' . $error_message); // Usa error_log para capturar el error de Stripe
         return new WP_REST_Response(['error' => $e->getMessage()], 500);
     }
 }
-
 function stripe_webhook_compra() {}
