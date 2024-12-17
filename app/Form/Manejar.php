@@ -160,7 +160,7 @@ function registrarPrecios($postId)
         }
     }
 }
-?>
+
 
 
 #Paso 3
