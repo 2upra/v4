@@ -3,8 +3,8 @@
 add_action('rest_api_init', function () {
     error_log('rest_api_init ejecutado'); // Añade este log
     $routes = [
-        '/stripe_webhook_compra_test' => 'stripe_webhook_compra',
-        '/crear_sesion_compra_test' => 'crear_sesion_compra'
+        '/stripe_webhook_compra' => 'stripe_webhook_compra',
+        '/crear_sesion_compra' => 'crear_sesion_compra'
     ];
     foreach ($routes as $route => $callback) {
         register_rest_route('stripe/v1', $route, [
