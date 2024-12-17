@@ -569,25 +569,44 @@ function fondoPost($filtro, $block, $es_suscriptor, $postId)
 function wave($audio_url, $audio_id_lite, $postId)
 {
     $wave = get_post_meta($postId, 'waveform_image_url', true);
+
+    // Contar la cantidad de audios disponibles
+    $audio_count = 0;
+    $audio_urls = array();
+
+    // Cargar la URL para post_audio_lite
+    $audio_url_lite = get_post_meta($postId, 'post_audio_lite', true);
+    if (!empty($audio_url_lite)) {
+        $audio_count++;
+        $audio_urls['post_audio_lite'] = $audio_url_lite;
+    }
+
+    // Cargar las URLs para post_audio_lite_2, post_audio_lite_3, ..., post_audio_lite_30
+    for ($i = 2; $i <= 30; $i++) {
+        $meta_key = 'post_audio_lite_' . $i;
+        $audio_url_multiple = get_post_meta($postId, $meta_key, true);
+
+        if (!empty($audio_url_multiple)) {
+            $audio_count++;
+            $audio_urls[$meta_key] = $audio_url_multiple;
+        }
+    }
     ?>
     <div class="waveforms-container-post" id="waveforms-container-<? echo $postId; ?>" data-post-id="<? echo esc_attr($postId); ?>">
-        <div class="botonesWave">
-            <button class="prevWave" data-post-id="<?php echo esc_attr($postId); ?>">Anterior</button>
-            <button class="nextWave" data-post-id="<?php echo esc_attr($postId); ?>">Siguiente</button>
-        </div>
+        <?php
+        // Mostrar los botones solo si hay más de un audio
+        if ($audio_count > 1) : ?>
+            <div class="botonesWave">
+                <button class="prevWave" data-post-id="<?php echo esc_attr($postId); ?>">Anterior</button>
+                <button class="nextWave" data-post-id="<?php echo esc_attr($postId); ?>">Siguiente</button>
+            </div>
+        <?php endif; ?>
         <?
-        // Cargar la wave para post_audio_lite
-        $audio_url_lite = get_post_meta($postId, 'post_audio_lite', true); // Obtener la URL de post_audio_lite
-        generate_wave_html($audio_url_lite, $audio_id_lite, $postId, 'post_audio_lite', $wave, 0);
-
-        // Cargar las waves para post_audio_lite_2, post_audio_lite_3, ..., post_audio_lite_30
-        for ($i = 2; $i <= 30; $i++) {
-            $meta_key = 'post_audio_lite_' . $i;
-            $audio_url_multiple = get_post_meta($postId, $meta_key, true);
-
-            if (!empty($audio_url_multiple)) {
-                generate_wave_html($audio_url_multiple, $audio_id_lite, $postId, $meta_key, $wave, $i);
-            }
+        // Generar el HTML para cada audio
+        $index = 0;
+        foreach ($audio_urls as $meta_key => $audio_url) {
+            generate_wave_html($audio_url, $audio_id_lite, $postId, $meta_key, $wave, $index);
+            $index++;
         }
         ?>
     </div>
