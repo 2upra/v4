@@ -149,7 +149,7 @@ function manejarArchivoFallido($rutaArchivo, $motivo)
 
 function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $carpeta_abuela = null)
 {
-    autLog("automaticAudio end");
+    error_log("automaticAudio start");
     $resultados = procesarArchivoAudioPython($rutaArchivo);
 
     if ($resultados) {
@@ -200,7 +200,7 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
         . " Es crucial determinar si es un loop, un one shot o un sample. Usa tags de una palabra y optimiza el SEO con sugerencias de búsqueda relevantes. Sé muy detallado sin perder precisión. Aunque te pido en español y en ingles, hay algunas palabras que son mejor mantenerlas en ingles cuando en español son muy frecuentes, por ejemplo, kick, snare, cowbell, etc. Ignora '/home/asley01/MEGA/Waw/Kits' no es relevante, el resto de la ruta si.";
 
     $descripcion = generarDescripcionIA($rutaArchivo, $prompt);
-    autLog("Descripcion generada");
+    error_log("Descripcion generada");
     if ($descripcion) {
         // Convertir a UTF-8
         $descripcion_utf8 = mb_convert_encoding($descripcion, 'UTF-8', 'auto');
@@ -259,7 +259,7 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
         //autLog("Descripción del audio guardada para el post ID: {$nombre_archivo}");
     } else {
         // Si no se generó ninguna descripción, retornar false
-        iaLog("Error: No se pudo generar la descripción.");
+        error_log("Error: No se pudo generar la descripción.");
         return false;
     }
 
@@ -280,7 +280,7 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
         'tags_posibles' => $nuevos_datos['tags_posibles'],
         'sugerencia_busqueda' => $nuevos_datos['sugerencia_busqueda']
     ] : [];
-    autLog("automaticAudio end");
+    error_log("automaticAudio end");
     return $nuevos_datos_algoritmo;
 }
 
