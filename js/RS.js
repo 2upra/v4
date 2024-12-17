@@ -288,7 +288,7 @@ async function envioRs() {
                 alert('Cuando seleccionas "Music", es obligatorio incluir una imagen válida');
                 button.innerText = originalText;
                 button.disabled = false;
-                //return; // Asegúrate de detener el flujo si no es válido
+                return; // Asegúrate de detener el flujo si no es válido
             }
 
             // Verificar que todos los nombres de audio tienen al menos 3 caracteres
@@ -304,6 +304,15 @@ async function envioRs() {
                 button.innerText = originalText;
                 button.disabled = false;
                 return;
+            }
+        }
+
+        if (tienda) {
+            if (!data.imagenUrl1 || !isValidUrl(data.imagenUrl1)) {
+                alert('Para vender un sample o beat es obligatorio incluir una imagen válida');
+                button.innerText = originalText;
+                button.disabled = false;
+                return; // Asegúrate de detener el flujo si no es válido
             }
         }
 
