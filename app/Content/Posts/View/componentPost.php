@@ -566,60 +566,50 @@ function fondoPost($filtro, $block, $es_suscriptor, $postId)
     return '';
 }
 
-function wave($postId) {
-    // Patrón para identificar los metadatos de audio
-    $audio_pattern = '/^post_audio_lite(?:_([0-9]+))?$/';
-
-    // Obtener todos los metadatos del post
-    $post_meta = get_post_meta($postId);
-
-    // Array para almacenar los IDs de audio encontrados
-    $audio_ids = [];
-
-    // Iterar sobre los metadatos
-    foreach ($post_meta as $meta_key => $meta_value) {
-        // Comprobar si el metadato coincide con el patrón de audio
-        if (preg_match($audio_pattern, $meta_key, $matches)) {
-            // Extraer el número de audio (si existe)
-            $audio_number = isset($matches[1]) ? intval($matches[1]) : 1;
-            // Usar el primer valor del array (get_post_meta devuelve un array, incluso para valores únicos)
-            $audio_id_lite = $meta_value[0];
-
-            // Agregar el ID del audio al array
-            $audio_ids[$audio_number] = $audio_id_lite;
-        }
-    }
-
-    // Ordenar los IDs de audio por número
-    ksort($audio_ids);
-
-    // Obtener la imagen de la onda (solo se necesita una vez)
+function wave($audio_url, $audio_id_lite, $postId)
+{
     $wave = get_post_meta($postId, 'waveform_image_url', true);
-    $waveCargada = get_post_meta($postId, 'waveCargada', true); //Lo dejo por si a futuro se implementan ondas por cada audio
+    ?>
+    <div class="waveforms-container-post" id="waveforms-container-<? echo $postId; ?>">
+    <?
+    // Cargar la wave para post_audio_lite
+    generate_wave_html($audio_url, $audio_id_lite, $postId, 'post_audio_lite', $wave, 0);
 
-    // Iterar sobre los IDs de audio y generar el HTML
-    foreach ($audio_ids as $audio_number => $audio_id_lite) {
+    // Cargar las waves para post_audio_lite_2, post_audio_lite_3, ..., post_audio_lite_30
+    for ($i = 2; $i <= 30; $i++) {
+        $meta_key = 'post_audio_lite_' . $i;
+        $audio_url_multiple = get_post_meta($postId, $meta_key, true);
 
-        $urlAudioSegura = audioUrlSegura($audio_id_lite);
-
-        if (is_wp_error($urlAudioSegura)) {
-            $urlAudioSegura = '';
+        if (!empty($audio_url_multiple)) {
+            generate_wave_html($audio_url_multiple, $audio_id_lite, $postId, $meta_key, $wave, $i);
         }
-        ?>
-        <div id="waveform-<? echo $postId; ?>-<? echo $audio_number; ?>"
-            class="waveform-container without-image"
-            postIDWave="<? echo $postId; ?>"
-            audioNumber="<? echo $audio_number; ?>"
-            data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
-            data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
-            <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
-            <div class="waveform-message"></div>
-            <div class="waveform-loading" style="display: none;">Cargando...</div>
-        </div>
-        <?
     }
+    ?>
+    </div>
+    <?
 }
 
+function generate_wave_html($audio_url, $audio_id_lite, $postId, $meta_key, $wave, $index) {
+
+    $waveCargada = get_post_meta($postId, 'waveCargada_' . $meta_key, true); // Wave cargada para cada audio
+    $urlAudioSegura = audioUrlSegura($audio_url);
+    $unique_id = $postId . '-' . $meta_key; // ID único para cada waveform
+
+    if (is_wp_error($urlAudioSegura)) {
+        $urlAudioSegura = '';
+    }
+    ?>
+    <div id="waveform-<? echo $unique_id; ?>"
+        class="waveform-container without-image"
+        postIDWave="<? echo $unique_id; ?>"
+        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
+        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
+        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
+        <div class="waveform-message"></div>
+        <div class="waveform-loading" style="display: none;">Cargando...</div>
+    </div>
+    <?
+}
 
 function audioPost($postId)
 {
@@ -633,7 +623,7 @@ function audioPost($postId)
     $urlAudioSegura = audioUrlSegura($audio_id_lite);
 
     ob_start();
-    ?>
+?>
     <div id="audio-container-<? echo $postId; ?>" class="audio-container" data-post-id="<? echo $postId; ?>" artista-id="<? echo $post_author_id; ?>">
 
         <div class="play-pause-sobre-imagen">
