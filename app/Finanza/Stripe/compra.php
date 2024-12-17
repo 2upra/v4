@@ -3,8 +3,8 @@
 add_action('rest_api_init', function () {
     error_log('rest_api_init ejecutado'); // Añade este log
     $routes = [
-        '/stripe_webhook_compra' => 'stripe_webhook_compra',
-        '/crear_sesion_compra' => 'crear_sesion_compra'
+        '/stripe_webhook_compra_test' => 'stripe_webhook_compra_test',
+        '/crear_sesion_compra_test' => 'crear_sesion_compra_test'
     ];
     foreach ($routes as $route => $callback) {
         register_rest_route('avada/v1', $route, [
@@ -15,6 +15,10 @@ add_action('rest_api_init', function () {
         error_log("Ruta registrada: /wp-json/avada/v1" . $route); // Añade este log dentro del bucle
     }
 });
+
+/*
+
+*/
 
 function botonCompra($postId)
 {
@@ -46,7 +50,7 @@ function botonCompra($postId)
 }
 
 
-function stripe_webhook_compra(WP_REST_Request $request)
+function stripe_webhook_compra_test(WP_REST_Request $request)
 {
     try {
         if (!isset($_ENV['STRIPEKEY'])) {
