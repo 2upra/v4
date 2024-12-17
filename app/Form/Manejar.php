@@ -95,6 +95,7 @@ add_filter('cron_schedules', function ($schedules) {
 
 
 #Paso 2
+
 function actualizarMetaDatos($postId)
 {
     $meta_fields = [
@@ -105,8 +106,8 @@ function actualizarMetaDatos($postId)
         'fan'          => 'fan',
         'artista'      => 'artista',
         'individual'   => 'individual',
-        'multiple'     => 'multiple'
- 
+        'multiple'     => 'multiple',
+        'tienda'       => 'tienda'
     ];
 
     foreach ($meta_fields as $meta_key => $post_key) {
@@ -119,9 +120,10 @@ function actualizarMetaDatos($postId)
     if (isset($_POST['music']) && $_POST['music'] == '1') {
         registrarNombreRolas($postId);
     }
+    if (isset($_POST['tienda']) && $_POST['tienda'] == '1') {
+        registrarPrecios($postId);
+    }
 }
-
-
 
 
 #Paso 2.1
@@ -137,6 +139,28 @@ function registrarNombreRolas($postId)
         }
     }
 }
+
+
+function registrarPrecios($postId)
+{
+    for ($i = 1; $i <= 30; $i++) {
+        $precio_key = 'precioBeat' . $i;
+        if (isset($_POST[$precio_key])) {
+            $precio = sanitize_text_field($_POST[$precio_key]);
+
+            // Validar que el valor sea numérico
+            if (is_numeric($precio)) {
+              
+                if (update_post_meta($postId, $precio_key, $precio) === false) {
+                   error_log("Error en registrarPrecios: Fallo al actualizar el meta $precio_key para el post ID $postId.");
+                }
+            } else {
+                error_log("Error en registrarPrecios: El valor para $precio_key no es numérico. Post ID: $postId, valor ingresado: $precio");
+            }
+        }
+    }
+}
+?>
 
 
 #Paso 3
