@@ -58,7 +58,7 @@ function verificarCamposRs() {
         // Verificar si hay alguna subida en progreso
         if (uploadInProgressCount > 0) {
             alert('Espera a que se completen las subidas de archivos.');
-            //return false;
+            return false;
         }
 
         const fanCheck = document.getElementById('fancheck');
@@ -200,6 +200,7 @@ async function envioRs() {
         };
 
         const nombreInputs = document.querySelectorAll('.nombreAudioRs');
+        const precioInputs = document.querySelectorAll('.precioAudioRs');
 
         audiosData.slice(0, maxAudios).forEach((audio, index) => {
             const audioNumber = index + 1;
