@@ -1,27 +1,5 @@
 <?
 
-add_action('rest_api_init', function () {
-    error_log('rest_api_init ejecutado'); // Añade este log
-    $routes = [
-        '/stripe_webhook_compra' => 'stripe_webhook_compra',
-        '/crear_sesion_compra' => 'crear_sesion_compra'
-    ];
-    foreach ($routes as $route => $callback) {
-        register_rest_route('stripe/v1', $route, [
-            'methods' => 'POST',
-            'callback' => $callback,
-            'permission_callback' => '__return_true',
-        ]);
-        error_log("Ruta registrada: /wp-json/avada/v1" . $route); // Añade este log dentro del bucle
-    }
-});
-
-/*
-https://2upra.com/wp-json/avada/v1/crear_sesion_compra_test
-[17-Dec-2024 21:08:45 UTC] Ruta registrada: /wp-json/avada/v1/stripe_webhook_compra_test
-[17-Dec-2024 21:08:45 UTC] Ruta registrada: /wp-json/avada/v1/crear_sesion_compra_test
-*/
-
 function botonCompra($postId)
 {
     // Obtiene el ID del usuario actual
@@ -52,12 +30,32 @@ function botonCompra($postId)
 }
 
 
+add_action('rest_api_init', function () {
+    error_log('rest_api_init ejecutado'); // Añade este log
+    $routes = [
+        '/stripe_webhook_compra' => 'stripe_webhook_compra',
+        '/crear_sesion_compra' => 'crear_sesion_compra'
+    ];
+    foreach ($routes as $route => $callback) {
+        register_rest_route('stripe/v1', $route, [
+            'methods' => 'POST',
+            'callback' => $callback,
+            'permission_callback' => '__return_true',
+        ]);
+        error_log("Ruta registrada: /wp-json/stripe/v1" . $route); // Log corregido
+    }
+});
+
+
+
+
+
 function stripe_webhook_compra_test(WP_REST_Request $request)
 {
     try {
         if (!isset($_ENV['STRIPEKEY'])) {
             $error_message = 'La clave de Stripe no está configurada';
-            stripeError($error_message);
+            error_log($error_message);
             return new WP_Error('stripe_key_missing', $error_message, ['status' => 500]);
         }
 
@@ -70,7 +68,7 @@ function stripe_webhook_compra_test(WP_REST_Request $request)
 
         if (!$userId || $postId || $precio <= 0) {
             $error_message = 'Parámetros inválidos proporcionados';
-            stripeError($error_message);
+            error_log($error_message);
             return new WP_REST_Response(['error' => $error_message], 400);
         }
 
