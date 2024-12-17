@@ -3,7 +3,7 @@
 function generar_publicaciones_multiples()
 {
     // Registro de inicio de la función
-    error_log('[generar_publicaciones_multiples] - Inicio de la función.');
+    //error_log('[generar_publicaciones_multiples] - Inicio de la función.');
 
     // Buscar todos los social_post con multiple en 1 o true
     $args = array(
@@ -20,17 +20,17 @@ function generar_publicaciones_multiples()
     );
     $query = new WP_Query($args);
 
-    error_log('[generar_publicaciones_multiples] - Consulta realizada: ' . var_export($args, true));
+    //error_log('[generar_publicaciones_multiples] - Consulta realizada: ' . var_export($args, true));
 
     if ($query->have_posts()) {
-        error_log('[generar_publicaciones_multiples] - Se encontraron posts con la meta "multiple".');
+        //error_log('[generar_publicaciones_multiples] - Se encontraron posts con la meta "multiple".');
 
         while ($query->have_posts()) {
             $query->the_post();
             $postIdOriginal = get_the_ID();
             $author_id = get_post_field('post_author', $postIdOriginal);
 
-            error_log('[generar_publicaciones_multiples] - Procesando post ID: ' . $postIdOriginal . ', Autor ID: ' . $author_id);
+            //error_log('[generar_publicaciones_multiples] - Procesando post ID: ' . $postIdOriginal . ', Autor ID: ' . $author_id);
 
             // Copiar metas si existen
             $paraColab = get_post_meta($postIdOriginal, 'paraColab', true);
@@ -41,7 +41,7 @@ function generar_publicaciones_multiples()
             $sample = get_post_meta($postIdOriginal, 'sample', true);
             $tagsUsuario = get_post_meta($postIdOriginal, 'tagsUsuario', true);
 
-            error_log('[generar_publicaciones_multiples] - Valores de metas: paraColab: ' . $paraColab . ', paraDescarga: ' . $paraDescarga . ', artista: ' . $artista . ', fan: ' . $fan . ', rola: ' . $rola . ', sample: ' . $sample . ', tagsUsuario: ' . $tagsUsuario);
+            //error_log('[generar_publicaciones_multiples] - Valores de metas: paraColab: ' . $paraColab . ', paraDescarga: ' . $paraDescarga . ', artista: ' . $artista . ', fan: ' . $fan . ', rola: ' . $rola . ', sample: ' . $sample . ', tagsUsuario: ' . $tagsUsuario);
 
             $multiples_audios_encontrados = false;
             $ids_nuevos_posts = array(); // Array para almacenar los IDs de los nuevos posts
@@ -67,61 +67,61 @@ function generar_publicaciones_multiples()
                     $upload_dir = wp_upload_dir();
                     $ruta_servidor = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $ruta_audio_lite);
 
-                    error_log('[generar_publicaciones_multiples] - ID del adjunto de audio lite: ' . $audio_lite_id);
-                    error_log('[generar_publicaciones_multiples] - URL del archivo de audio lite: ' . $ruta_audio_lite);
-                    error_log('[generar_publicaciones_multiples] - Ruta del archivo en el servidor: ' . $ruta_servidor);
+                    //error_log('[generar_publicaciones_multiples] - ID del adjunto de audio lite: ' . $audio_lite_id);
+                    //error_log('[generar_publicaciones_multiples] - URL del archivo de audio lite: ' . $ruta_audio_lite);
+                    //error_log('[generar_publicaciones_multiples] - Ruta del archivo en el servidor: ' . $ruta_servidor);
 
                     $nuevoPost = crearAutPost('', $ruta_servidor, $audio_id_hash, $author_id, $postIdOriginal);
-                    error_log('[generar_publicaciones_multiples] - Resultado de crearAutPost: ' . var_export($nuevoPost, true));
+                    //error_log('[generar_publicaciones_multiples] - Resultado de crearAutPost: ' . var_export($nuevoPost, true));
                     // Copiar metas al nuevo post si existen y se creó el post
                     if (! is_wp_error($nuevoPost) && $nuevoPost) {
                         // Guardar el ID del nuevo post en el array
                         $ids_nuevos_posts[] = $nuevoPost;
-                        error_log('[generar_publicaciones_multiples] - Nuevo post creado con ID: ' . $nuevoPost);
+                        //error_log('[generar_publicaciones_multiples] - Nuevo post creado con ID: ' . $nuevoPost);
 
                         if (! empty($paraColab)) {
                             update_post_meta($nuevoPost, 'paraColab', $paraColab);
-                            error_log('[generar_publicaciones_multiples] - Meta paraColab copiada.');
+                            //error_log('[generar_publicaciones_multiples] - Meta paraColab copiada.');
                         }
                         if (! empty($paraDescarga)) {
                             update_post_meta($nuevoPost, 'paraDescarga', $paraDescarga);
-                            error_log('[generar_publicaciones_multiples] - Meta paraDescarga copiada.');
+                            //error_log('[generar_publicaciones_multiples] - Meta paraDescarga copiada.');
                         }
                         if (! empty($artista)) {
                             update_post_meta($nuevoPost, 'artista', $artista);
-                            error_log('[generar_publicaciones_multiples] - Meta artista copiada.');
+                            //error_log('[generar_publicaciones_multiples] - Meta artista copiada.');
                         }
                         if (! empty($fan)) {
                             update_post_meta($nuevoPost, 'fan', $fan);
-                            error_log('[generar_publicaciones_multiples] - Meta fan copiada.');
+                            //error_log('[generar_publicaciones_multiples] - Meta fan copiada.');
                         }
                         if (! empty($rola)) {
                             update_post_meta($nuevoPost, 'rola', $rola);
-                            error_log('[generar_publicaciones_multiples] - Meta rola copiada.');
+                            //error_log('[generar_publicaciones_multiples] - Meta rola copiada.');
                         }
                         if (! empty($sample)) {
                             update_post_meta($nuevoPost, 'sample', $sample);
-                            error_log('[generar_publicaciones_multiples] - Meta sample copiada.');
+                            //error_log('[generar_publicaciones_multiples] - Meta sample copiada.');
                         }
                         if (! empty($tagsUsuario)) {
                             update_post_meta($nuevoPost, 'tagsUsuario', $tagsUsuario);
-                            error_log('[generar_publicaciones_multiples] - Meta tagsUsuario copiada.');
+                            //error_log('[generar_publicaciones_multiples] - Meta tagsUsuario copiada.');
                         }
                         if (! empty($audio_id)) {
                             update_post_meta($nuevoPost, 'post_audio', $audio_id);
-                            error_log('[generar_publicaciones_multiples] - Meta post_audio copiada.');
+                            //error_log('[generar_publicaciones_multiples] - Meta post_audio copiada.');
                         }
 
                         // Eliminar metas del post original después de procesar cada audio_lite
                         delete_post_meta($postIdOriginal, $audio_lite_meta_key);
                         delete_post_meta($postIdOriginal, $audio_meta_key);
                         delete_post_meta($postIdOriginal, $idHash_audioId_key);
-                        error_log('[generar_publicaciones_multiples] - Metas ' . $audio_lite_meta_key . ', ' . $audio_meta_key . ' y ' . $idHash_audioId_key . ' eliminadas del post original.');
+                        //error_log('[generar_publicaciones_multiples] - Metas ' . $audio_lite_meta_key . ', ' . $audio_meta_key . ' y ' . $idHash_audioId_key . ' eliminadas del post original.');
 
                         // Pausa de 2 segundos entre cada creación de post
                         sleep(2);
                     } else {
-                        error_log('[generar_publicaciones_multiples] - Error al crear el nuevo post.');
+                        //error_log('[generar_publicaciones_multiples] - Error al crear el nuevo post.');
                     }
                 }
             }
@@ -129,11 +129,11 @@ function generar_publicaciones_multiples()
             // Si no se encontraron múltiples audios, eliminar la meta 'multiple'
             if (! $multiples_audios_encontrados) {
                 delete_post_meta($postIdOriginal, 'multiple');
-                error_log('[generar_publicaciones_multiples] - No se encontraron múltiples audios para el post ID: ' . $postIdOriginal . '. Se eliminó la meta "multiple".');
+                //error_log('[generar_publicaciones_multiples] - No se encontraron múltiples audios para el post ID: ' . $postIdOriginal . '. Se eliminó la meta "multiple".');
             } else {
                 // Si se encontraron múltiples audios, guardar los IDs de los nuevos posts en el post original
                 update_post_meta($postIdOriginal, 'posts_generados', $ids_nuevos_posts);
-                error_log('[generar_publicaciones_multiples] - Se encontraron múltiples audios para el post ID: ' . $postIdOriginal . '. IDs de los nuevos posts guardados: ' . implode(', ', $ids_nuevos_posts));
+                //error_log('[generar_publicaciones_multiples] - Se encontraron múltiples audios para el post ID: ' . $postIdOriginal . '. IDs de los nuevos posts guardados: ' . implode(', ', $ids_nuevos_posts));
 
                 // Verificar si aún quedan audios múltiples por procesar
                 $quedan_audios = false;
@@ -147,20 +147,20 @@ function generar_publicaciones_multiples()
                 // Si no quedan audios múltiples, eliminar la meta 'multiple'
                 if (! $quedan_audios) {
                     delete_post_meta($postIdOriginal, 'multiple');
-                    error_log('[generar_publicaciones_multiples] - Ya no quedan audios múltiples para el post ID: ' . $postIdOriginal . '. Se eliminó la meta "multiple".');
+                    //error_log('[generar_publicaciones_multiples] - Ya no quedan audios múltiples para el post ID: ' . $postIdOriginal . '. Se eliminó la meta "multiple".');
                 }
             }
         }
     } else {
-        error_log('[generar_publicaciones_multiples] - No se encontraron posts con la meta "multiple".');
+        //error_log('[generar_publicaciones_multiples] - No se encontraron posts con la meta "multiple".');
     }
     wp_reset_postdata();
-    error_log('[generar_publicaciones_multiples] - Fin de la función.');
+    //error_log('[generar_publicaciones_multiples] - Fin de la función.');
 }
 
 function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null, $autor_id = null, $post_original = null)
 {
-    error_log("[crearAutPost] Inicio crearAutPost con rutaOriginal: " . var_export($rutaOriginal, true) . ", rutaWpLite: " . var_export($rutaWpLite, true) . ", file_id: " . var_export($file_id, true));
+    //error_log("[crearAutPost] Inicio crearAutPost con rutaOriginal: " . var_export($rutaOriginal, true) . ", rutaWpLite: " . var_export($rutaWpLite, true) . ", file_id: " . var_export($file_id, true));
 
     if ($autor_id === null) {
         $autor_id = 44;
@@ -175,7 +175,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
     // Validar y procesar $rutaOriginal si existe
     if (!empty($rutaOriginal)) {
         if (!file_exists($rutaOriginal)) {
-            error_log("[crearAutPost] Error: rutaOriginal $rutaOriginal no existe");
+            //error_log("[crearAutPost] Error: rutaOriginal $rutaOriginal no existe");
             // Puedes decidir si continuar o retornar aquí, dependiendo de si rutaOriginal es obligatoria
         } else {
             $nombre_archivo = pathinfo($rutaOriginal, PATHINFO_FILENAME);
@@ -187,12 +187,12 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
 
     // Validar $rutaWpLite
     if (empty($rutaWpLite)) {
-        error_log("[crearAutPost] Error: rutaWpLite no puede estar vacía.");
+        //error_log("[crearAutPost] Error: rutaWpLite no puede estar vacía.");
         return;
     }
 
     if (!file_exists($rutaWpLite)) {
-        error_log("[crearAutPost] Error: rutaWpLite $rutaWpLite no existe");
+        //error_log("[crearAutPost] Error: rutaWpLite $rutaWpLite no existe");
         return;
     }
 
@@ -200,7 +200,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
     $datosAlgoritmo = automaticAudio($rutaWpLite, $nombre_archivo, $carpeta, $carpeta_abuela);
 
     if (!$datosAlgoritmo) {
-        error_log("[crearAutPost] Error: automaticAudio falló para rutaWpLite: $rutaWpLite");
+        //error_log("[crearAutPost] Error: automaticAudio falló para rutaWpLite: $rutaWpLite");
         eliminarHash($file_id);
         return;
     }
@@ -217,7 +217,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
         $id_unica = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
         $nombre_final = substr($nombre_generado_limpio . '_' . $id_unica . '_2upra', 0, 60);
     } else {
-        error_log("[crearAutPost] Error: nombre_generado está vacío");
+        //error_log("[crearAutPost] Error: nombre_generado está vacío");
         eliminarHash($file_id);
         return;
     }
@@ -226,12 +226,12 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
     if (!empty($rutaOriginal) && file_exists($rutaOriginal)) {
         $nuevaRutaOriginal = dirname($rutaOriginal) . '/' . $nombre_final . '.' . $extension_original;
         if (file_exists($nuevaRutaOriginal) && !unlink($nuevaRutaOriginal)) {
-            error_log("[crearAutPost] Error: No se puede eliminar el archivo existente $nuevaRutaOriginal");
+            //error_log("[crearAutPost] Error: No se puede eliminar el archivo existente $nuevaRutaOriginal");
             eliminarHash($file_id);
             return;
         }
         if (!rename($rutaOriginal, $nuevaRutaOriginal)) {
-            error_log("[crearAutPost] Error: Fallo al renombrar $rutaOriginal a $nuevaRutaOriginal");
+            //error_log("[crearAutPost] Error: Fallo al renombrar $rutaOriginal a $nuevaRutaOriginal");
             eliminarHash($file_id);
             return;
         }
@@ -241,12 +241,12 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
     $extension_lite = pathinfo($rutaWpLite, PATHINFO_EXTENSION);
     $nuevo_nombre_lite = dirname($rutaWpLite) . '/' . $nombre_final . '_lite.' . $extension_lite;
     if (file_exists($nuevo_nombre_lite) && !unlink($nuevo_nombre_lite)) {
-        error_log("[crearAutPost] Error: No se puede eliminar el archivo existente $nuevo_nombre_lite");
+        //error_log("[crearAutPost] Error: No se puede eliminar el archivo existente $nuevo_nombre_lite");
         eliminarHash($file_id);
         return;
     }
     if (!rename($rutaWpLite, $nuevo_nombre_lite)) {
-        error_log("[crearAutPost] Error: Fallo al renombrar $rutaWpLite a $nuevo_nombre_lite");
+        //error_log("[crearAutPost] Error: Fallo al renombrar $rutaWpLite a $nuevo_nombre_lite");
         eliminarHash($file_id);
         return;
     }
@@ -266,7 +266,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
 
     $post_id = wp_insert_post($post_data);
     if (is_wp_error($post_id)) {
-        error_log("[crearAutPost] Error: No se pudo crear el post. Error: " . $post_id->get_error_message());
+        //error_log("[crearAutPost] Error: No se pudo crear el post. Error: " . $post_id->get_error_message());
         wp_delete_post($post_id, true);
         eliminarHash($file_id);
         return;
@@ -285,7 +285,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
     if (!empty($nuevaRutaOriginal)) {
         $audio_original_id = adjuntarArchivoAut($nuevaRutaOriginal, $post_id, $file_id);
         if (is_wp_error($audio_original_id)) {
-            error_log("[crearAutPost] Error: Fallo al adjuntar el archivo original. Error: " . $audio_original_id->get_error_message());
+            //error_log("[crearAutPost] Error: Fallo al adjuntar el archivo original. Error: " . $audio_original_id->get_error_message());
             wp_delete_post($post_id, true);
             eliminarHash($file_id);
             return $audio_original_id;
@@ -297,7 +297,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
 
     $audio_lite_id = adjuntarArchivoAut($nuevo_nombre_lite, $post_id);
     if (is_wp_error($audio_lite_id)) {
-        error_log("[crearAutPost] Error: Fallo al adjuntar el archivo lite. Error: " . $audio_lite_id->get_error_message());
+        //error_log("[crearAutPost] Error: Fallo al adjuntar el archivo lite. Error: " . $audio_lite_id->get_error_message());
         wp_delete_post($post_id, true);
         eliminarHash($file_id);
         return $audio_lite_id;
@@ -344,7 +344,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
         update_post_meta($post_id, 'datosAlgoritmo', json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE));
     }
 
-    error_log("[crearAutPost] crearAutPost end con post_id: " . var_export($post_id, true));
+    //error_log("[crearAutPost] crearAutPost end con post_id: " . var_export($post_id, true));
     return $post_id;
 }
 
@@ -355,9 +355,9 @@ function programar_generacion_publicaciones()
 {
     if (! wp_next_scheduled('generar_publicaciones_multiples_evento')) {
         wp_schedule_event(time(), 'cada_treinta_segundos', 'generar_publicaciones_multiples_evento');
-        error_log('programar_generacion_publicaciones() - Evento programado.');
+        //error_log('programar_generacion_publicaciones() - Evento programado.');
     } else {
-        error_log('programar_generacion_publicaciones() - El evento ya está programado.');
+        //error_log('programar_generacion_publicaciones() - El evento ya está programado.');
     }
 }
 add_action('wp', 'programar_generacion_publicaciones');

@@ -17,7 +17,9 @@ add_action('rest_api_init', function () {
 });
 
 /*
-
+https://2upra.com/wp-json/avada/v1/crear_sesion_compra_test
+[17-Dec-2024 21:08:45 UTC] Ruta registrada: /wp-json/avada/v1/stripe_webhook_compra_test
+[17-Dec-2024 21:08:45 UTC] Ruta registrada: /wp-json/avada/v1/crear_sesion_compra_test
 */
 
 function botonCompra($postId)
