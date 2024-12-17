@@ -571,25 +571,27 @@ function wave($audio_url, $audio_id_lite, $postId)
     $wave = get_post_meta($postId, 'waveform_image_url', true);
     ?>
     <div class="waveforms-container-post" id="waveforms-container-<? echo $postId; ?>">
-    <?
-    // Cargar la wave para post_audio_lite
-    generate_wave_html($audio_url, $audio_id_lite, $postId, 'post_audio_lite', $wave, 0);
+        <?
+        // Cargar la wave para post_audio_lite
+        $audio_url_lite = get_post_meta($postId, 'post_audio_lite', true); // Obtener la URL de post_audio_lite
+        generate_wave_html($audio_url_lite, $audio_id_lite, $postId, 'post_audio_lite', $wave, 0);
 
-    // Cargar las waves para post_audio_lite_2, post_audio_lite_3, ..., post_audio_lite_30
-    for ($i = 2; $i <= 30; $i++) {
-        $meta_key = 'post_audio_lite_' . $i;
-        $audio_url_multiple = get_post_meta($postId, $meta_key, true);
+        // Cargar las waves para post_audio_lite_2, post_audio_lite_3, ..., post_audio_lite_30
+        for ($i = 2; $i <= 30; $i++) {
+            $meta_key = 'post_audio_lite_' . $i;
+            $audio_url_multiple = get_post_meta($postId, $meta_key, true);
 
-        if (!empty($audio_url_multiple)) {
-            generate_wave_html($audio_url_multiple, $audio_id_lite, $postId, $meta_key, $wave, $i);
+            if (!empty($audio_url_multiple)) {
+                generate_wave_html($audio_url_multiple, $audio_id_lite, $postId, $meta_key, $wave, $i);
+            }
         }
-    }
-    ?>
+        ?>
     </div>
-    <?
+<?
 }
 
-function generate_wave_html($audio_url, $audio_id_lite, $postId, $meta_key, $wave, $index) {
+function generate_wave_html($audio_url, $audio_id_lite, $postId, $meta_key, $wave, $index)
+{
 
     $waveCargada = get_post_meta($postId, 'waveCargada_' . $meta_key, true); // Wave cargada para cada audio
     $urlAudioSegura = audioUrlSegura($audio_url);
@@ -598,7 +600,7 @@ function generate_wave_html($audio_url, $audio_id_lite, $postId, $meta_key, $wav
     if (is_wp_error($urlAudioSegura)) {
         $urlAudioSegura = '';
     }
-    ?>
+?>
     <div id="waveform-<? echo $unique_id; ?>"
         class="waveform-container without-image"
         postIDWave="<? echo $unique_id; ?>"
@@ -608,7 +610,7 @@ function generate_wave_html($audio_url, $audio_id_lite, $postId, $meta_key, $wav
         <div class="waveform-message"></div>
         <div class="waveform-loading" style="display: none;">Cargando...</div>
     </div>
-    <?
+<?
 }
 
 function audioPost($postId)
