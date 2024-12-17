@@ -570,12 +570,12 @@ function wave($audio_url, $audio_id_lite, $postId)
 {
     $wave = get_post_meta($postId, 'waveform_image_url', true);
     ?>
-    <div class="waveforms-container-post" id="waveforms-container-<? echo $postId; ?>" data-post-id="<? echo esc_attr($postId); ?>">
+    <div class="waveforms-container-post" id="waveforms-container-<?php echo $postId; ?>" data-post-id="<?php echo esc_attr($postId); ?>">
         <div class="botonesWave">
-            <button id="prevWave" data-post-id="<? echo esc_attr($postId); ?>">Anterior</button>
-            <button id="nextWave" data-post-id="<? echo esc_attr($postId); ?>">Siguiente</button>
+            <button class="prevWave" data-post-id="<?php echo esc_attr($postId); ?>">Anterior</button>
+            <button class="nextWave" data-post-id="<?php echo esc_attr($postId); ?>">Siguiente</button>
         </div>
-        <?
+        <?php
         // Cargar la wave para post_audio_lite
         $audio_url_lite = get_post_meta($postId, 'post_audio_lite', true); // Obtener la URL de post_audio_lite
         generate_wave_html($audio_url_lite, $audio_id_lite, $postId, 'post_audio_lite', $wave, 0);
@@ -591,7 +591,7 @@ function wave($audio_url, $audio_id_lite, $postId)
         }
         ?>
     </div>
-<?
+<?php
 }
 
 function generate_wave_html($audio_url, $audio_id_lite, $postId, $meta_key, $wave, $index)
@@ -605,16 +605,17 @@ function generate_wave_html($audio_url, $audio_id_lite, $postId, $meta_key, $wav
         $urlAudioSegura = '';
     }
 ?>
-    <div id="waveform-<? echo $unique_id; ?>"
+    <div id="waveform-<?php echo $unique_id; ?>"
         class="waveform-container without-image"
-        postIDWave="<? echo $unique_id; ?>"
-        data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
-        data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
-        <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
+        postIDWave="<?php echo $unique_id; ?>"
+        data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
+        data-audio-url="<?php echo esc_url($urlAudioSegura); ?>"
+        style="display: <?php echo $index === 0 ? 'block' : 'none'; ?>;">
+        <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
         <div class="waveform-message"></div>
         <div class="waveform-loading" style="display: none;">Cargando...</div>
     </div>
-<?
+<?php
 }
 
 function audioPost($postId)
