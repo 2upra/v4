@@ -46,13 +46,15 @@ function stripecomprabeat() {
     if (botonesComprar.length > 0) {
         botonesComprar.forEach(boton => {
             boton.addEventListener('click', async e => {
-                // Use async for cleaner error handling
                 e.preventDefault();
 
                 const postId = boton.dataset.post_id;
                 const userId = boton.dataset.user_id;
                 const nonce = boton.dataset.nonce;
-                const precio = boton.parentElement.querySelector('.precioCount')?.textContent; // Use optional chaining to handle cases where '.precioCount' isn't present
+                const precioText = boton.parentElement.querySelector('.precioCount')?.textContent;
+
+                // Convertir precioText a número. Usar 0 si no se puede convertir.
+                const precio = Number(precioText) || 0;
 
                 console.log('postId:', postId);
                 console.log('userId:', userId);
@@ -69,7 +71,7 @@ function stripecomprabeat() {
                             postId: postId,
                             userId: userId,
                             nonce: nonce,
-                            cantidadCompra: precio
+                            precio: precio //  <- CAMBIO: Usar 'precio'
                         })
                     });
                     if (!response.ok) {
