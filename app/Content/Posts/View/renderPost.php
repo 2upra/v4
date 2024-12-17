@@ -199,7 +199,7 @@ function renderSubscriptionPrompt($author_name, $author_id)
 function renderPostControls($post_id, $colab, $audio_id_lite = null)
 {
 
-    $mostrarBotonCompra = get_post_meta($post_id, 'tienda', true) === 'true';
+    $mostrarBotonCompra = get_post_meta($post_id, 'tienda', true) === '1';
     ?>
     <div class="QSORIW">
         <? if ($mostrarBotonCompra): ?>
