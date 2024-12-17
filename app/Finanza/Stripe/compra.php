@@ -6,7 +6,7 @@ add_action('rest_api_init', function () {
         '/crear_sesion_compra' => 'crear_sesion_compra'
     ];
     foreach ($routes as $route => $callback) {
-        register_rest_route('1/v1', $route, [
+        register_rest_route('avada/v1', $route, [
             'methods' => 'POST',
             'callback' => $callback,
             'permission_callback' => '__return_true',
