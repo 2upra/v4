@@ -50,7 +50,7 @@ add_action('rest_api_init', function () {
 
 
 
-function stripe_webhook_compra_test(WP_REST_Request $request)
+function crear_sesion_compra(WP_REST_Request $request)
 {
     try {
         if (!isset($_ENV['STRIPEKEY'])) {
@@ -99,4 +99,4 @@ function stripe_webhook_compra_test(WP_REST_Request $request)
     }
 }
 
-function crear_sesion_compra() {}
+function stripe_webhook_compra() {}

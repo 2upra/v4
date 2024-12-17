@@ -1,3 +1,41 @@
+/*
+function botonCompra($postId)
+{
+    // Obtiene el ID del usuario actual
+    $userId = get_current_user_id();
+    $precio = get_post_meta($postId, 'precioRola1', true);
+    if (empty($precio)) {
+        $precio = get_post_meta($postId, 'precioRola', true);
+    }
+    $precio = is_numeric($precio) ? $precio : '0.00';
+
+    // Inicia el buffer de salida para capturar la salida HTML
+    ob_start();
+?>
+    <div class="TJKQGJ botonCompraDiv">
+        <button
+            class="botonCompra"
+            data-post_id="<?= esc_attr($postId) ?>"
+            data-user_id="<?= esc_attr($userId) ?>"
+            data-nonce="<?= wp_create_nonce('compraNonce') ?>">
+            <?php echo $GLOBALS['dolar']; ?>
+        </button>
+        <span class="precioCount"><? echo esc_html($precio); ?></span>
+    </div>
+<?
+
+    $output = ob_get_clean();
+    return $output;
+}
+
+el error 
+
+stripeCompra.js?ver=0.2.172:49  Error durante la petición: SyntaxError: Failed to execute 'json' on 'Response': Unexpected end of JSON input
+    at HTMLButtonElement.<anonymous> (stripeCompra.js?ver=0.2.172:39:48)
+
+    y el codgo 
+*/
+
 function stripecomprabeat() {
     const botonesComprar = document.querySelectorAll('.botonCompra');
   
