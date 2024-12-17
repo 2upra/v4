@@ -27,19 +27,19 @@ function generar_publicaciones_multiples()
 
         while ($query->have_posts()) {
             $query->the_post();
-            $post_id = get_the_ID();
-            $author_id = get_post_field('post_author', $post_id);
+            $postIdOriginal = get_the_ID();
+            $author_id = get_post_field('post_author', $postIdOriginal);
 
-            error_log('[generar_publicaciones_multiples] - Procesando post ID: ' . $post_id . ', Autor ID: ' . $author_id);
+            error_log('[generar_publicaciones_multiples] - Procesando post ID: ' . $postIdOriginal . ', Autor ID: ' . $author_id);
 
             // Copiar metas si existen
-            $paraColab = get_post_meta($post_id, 'paraColab', true);
-            $paraDescarga = get_post_meta($post_id, 'paraDescarga', true);
-            $artista = get_post_meta($post_id, 'artista', true);
-            $fan = get_post_meta($post_id, 'fan', true);
-            $rola = get_post_meta($post_id, 'rola', true);
-            $sample = get_post_meta($post_id, 'sample', true);
-            $tagsUsuario = get_post_meta($post_id, 'tagsUsuario', true);
+            $paraColab = get_post_meta($postIdOriginal, 'paraColab', true);
+            $paraDescarga = get_post_meta($postIdOriginal, 'paraDescarga', true);
+            $artista = get_post_meta($postIdOriginal, 'artista', true);
+            $fan = get_post_meta($postIdOriginal, 'fan', true);
+            $rola = get_post_meta($postIdOriginal, 'rola', true);
+            $sample = get_post_meta($postIdOriginal, 'sample', true);
+            $tagsUsuario = get_post_meta($postIdOriginal, 'tagsUsuario', true);
 
             error_log('[generar_publicaciones_multiples] - Valores de metas: paraColab: ' . $paraColab . ', paraDescarga: ' . $paraDescarga . ', artista: ' . $artista . ', fan: ' . $fan . ', rola: ' . $rola . ', sample: ' . $sample . ', tagsUsuario: ' . $tagsUsuario);
 
@@ -52,9 +52,9 @@ function generar_publicaciones_multiples()
                 $audio_meta_key = 'post_audio' . $i;
                 $idHash_audioId_key = 'idHash_audioId' . $i;
 
-                $audio_lite_id = get_post_meta($post_id, $audio_lite_meta_key, true); // Obtiene el ID del adjunto
-                $audio_id_hash = get_post_meta($post_id, $idHash_audioId_key, true);
-                $audio_id = get_post_meta($post_id, $audio_meta_key, true);
+                $audio_lite_id = get_post_meta($postIdOriginal, $audio_lite_meta_key, true); // Obtiene el ID del adjunto
+                $audio_id_hash = get_post_meta($postIdOriginal, $idHash_audioId_key, true);
+                $audio_id = get_post_meta($postIdOriginal, $audio_meta_key, true);
 
                 // Si existe el audio lite (ahora usando el ID), generar un nuevo post
                 if (! empty($audio_lite_id) && ! empty($audio_id_hash) && !empty($audio_id)) {
@@ -71,64 +71,84 @@ function generar_publicaciones_multiples()
                     error_log('[generar_publicaciones_multiples] - URL del archivo de audio lite: ' . $ruta_audio_lite);
                     error_log('[generar_publicaciones_multiples] - Ruta del archivo en el servidor: ' . $ruta_servidor);
 
-                    $nuevo_post_id = crearAutPost('', $ruta_servidor, $audio_id_hash, $author_id, $post_id);
-                    error_log('[generar_publicaciones_multiples] - Resultado de crearAutPost: ' . var_export($nuevo_post_id, true));
+                    $nuevoPost = crearAutPost('', $ruta_servidor, $audio_id_hash, $author_id, $postIdOriginal);
+                    error_log('[generar_publicaciones_multiples] - Resultado de crearAutPost: ' . var_export($nuevoPost, true));
                     // Copiar metas al nuevo post si existen y se creó el post
-                    if (! is_wp_error($nuevo_post_id) && $nuevo_post_id) {
+                    if (! is_wp_error($nuevoPost) && $nuevoPost) {
                         // Guardar el ID del nuevo post en el array
-                        $ids_nuevos_posts[] = $nuevo_post_id;
-                        error_log('[generar_publicaciones_multiples] - Nuevo post creado con ID: ' . $nuevo_post_id);
+                        $ids_nuevos_posts[] = $nuevoPost;
+                        error_log('[generar_publicaciones_multiples] - Nuevo post creado con ID: ' . $nuevoPost);
 
                         if (! empty($paraColab)) {
-                            update_post_meta($nuevo_post_id, 'paraColab', $paraColab);
+                            update_post_meta($nuevoPost, 'paraColab', $paraColab);
                             error_log('[generar_publicaciones_multiples] - Meta paraColab copiada.');
                         }
                         if (! empty($paraDescarga)) {
-                            update_post_meta($nuevo_post_id, 'paraDescarga', $paraDescarga);
+                            update_post_meta($nuevoPost, 'paraDescarga', $paraDescarga);
                             error_log('[generar_publicaciones_multiples] - Meta paraDescarga copiada.');
                         }
                         if (! empty($artista)) {
-                            update_post_meta($nuevo_post_id, 'artista', $artista);
+                            update_post_meta($nuevoPost, 'artista', $artista);
                             error_log('[generar_publicaciones_multiples] - Meta artista copiada.');
                         }
                         if (! empty($fan)) {
-                            update_post_meta($nuevo_post_id, 'fan', $fan);
+                            update_post_meta($nuevoPost, 'fan', $fan);
                             error_log('[generar_publicaciones_multiples] - Meta fan copiada.');
                         }
                         if (! empty($rola)) {
-                            update_post_meta($nuevo_post_id, 'rola', $rola);
+                            update_post_meta($nuevoPost, 'rola', $rola);
                             error_log('[generar_publicaciones_multiples] - Meta rola copiada.');
                         }
                         if (! empty($sample)) {
-                            update_post_meta($nuevo_post_id, 'sample', $sample);
+                            update_post_meta($nuevoPost, 'sample', $sample);
                             error_log('[generar_publicaciones_multiples] - Meta sample copiada.');
                         }
                         if (! empty($tagsUsuario)) {
-                            update_post_meta($nuevo_post_id, 'tagsUsuario', $tagsUsuario);
+                            update_post_meta($nuevoPost, 'tagsUsuario', $tagsUsuario);
                             error_log('[generar_publicaciones_multiples] - Meta tagsUsuario copiada.');
                         }
                         if (! empty($audio_id)) {
-                            update_post_meta($nuevo_post_id, 'post_audio', $audio_id);
+                            update_post_meta($nuevoPost, 'post_audio', $audio_id);
                             error_log('[generar_publicaciones_multiples] - Meta post_audio copiada.');
                         }
+
+                        // Eliminar metas del post original después de procesar cada audio_lite
+                        delete_post_meta($postIdOriginal, $audio_lite_meta_key);
+                        delete_post_meta($postIdOriginal, $audio_meta_key);
+                        delete_post_meta($postIdOriginal, $idHash_audioId_key);
+                        error_log('[generar_publicaciones_multiples] - Metas ' . $audio_lite_meta_key . ', ' . $audio_meta_key . ' y ' . $idHash_audioId_key . ' eliminadas del post original.');
 
                         // Pausa de 2 segundos entre cada creación de post
                         sleep(2);
                     } else {
                         error_log('[generar_publicaciones_multiples] - Error al crear el nuevo post.');
                     }
-                } else {
                 }
             }
 
             // Si no se encontraron múltiples audios, eliminar la meta 'multiple'
             if (! $multiples_audios_encontrados) {
-                delete_post_meta($post_id, 'multiple');
-                error_log('[generar_publicaciones_multiples] - No se encontraron múltiples audios para el post ID: ' . $post_id . '. Se eliminó la meta "multiple".');
+                delete_post_meta($postIdOriginal, 'multiple');
+                error_log('[generar_publicaciones_multiples] - No se encontraron múltiples audios para el post ID: ' . $postIdOriginal . '. Se eliminó la meta "multiple".');
             } else {
                 // Si se encontraron múltiples audios, guardar los IDs de los nuevos posts en el post original
-                update_post_meta($post_id, 'posts_generados', $ids_nuevos_posts);
-                error_log('[generar_publicaciones_multiples] - Se encontraron múltiples audios para el post ID: ' . $post_id . '. IDs de los nuevos posts guardados: ' . implode(', ', $ids_nuevos_posts));
+                update_post_meta($postIdOriginal, 'posts_generados', $ids_nuevos_posts);
+                error_log('[generar_publicaciones_multiples] - Se encontraron múltiples audios para el post ID: ' . $postIdOriginal . '. IDs de los nuevos posts guardados: ' . implode(', ', $ids_nuevos_posts));
+
+                // Verificar si aún quedan audios múltiples por procesar
+                $quedan_audios = false;
+                for ($i = 2; $i <= 30; $i++) {
+                    if (get_post_meta($postIdOriginal, 'post_audio_lite_' . $i, true)) {
+                        $quedan_audios = true;
+                        break;
+                    }
+                }
+
+                // Si no quedan audios múltiples, eliminar la meta 'multiple'
+                if (! $quedan_audios) {
+                    delete_post_meta($postIdOriginal, 'multiple');
+                    error_log('[generar_publicaciones_multiples] - Ya no quedan audios múltiples para el post ID: ' . $postIdOriginal . '. Se eliminó la meta "multiple".');
+                }
             }
         }
     } else {
@@ -137,28 +157,6 @@ function generar_publicaciones_multiples()
     wp_reset_postdata();
     error_log('[generar_publicaciones_multiples] - Fin de la función.');
 }
-
-/*
-[17-Dec-2024 14:06:01 UTC] [generar_publicaciones_multiples] - Se encontraron posts con la meta "multiple".
-[17-Dec-2024 14:06:01 UTC] [generar_publicaciones_multiples] - Procesando post ID: 326983, Autor ID: 1
-[17-Dec-2024 14:06:01 UTC] [generar_publicaciones_multiples] - Valores de metas: paraColab: 0, paraDescarga: 1, artista: 0, fan: 1, rola: 0, sample: 1, tagsUsuario: test
-[17-Dec-2024 14:06:01 UTC] [generar_publicaciones_multiples] - ID del adjunto de audio lite: 326987
-[17-Dec-2024 14:06:01 UTC] [generar_publicaciones_multiples] - URL del archivo de audio lite: https://2upra.com/wp-content/uploads/2024/12/2upra_1ndoryu_Multiple-test_61670_128k.mp3
-[17-Dec-2024 14:06:01 UTC] [generar_publicaciones_multiples] - Ruta del archivo en el servidor: /var/www/wordpress/wp-content/uploads/2024/12/2upra_1ndoryu_Multiple-test_61670_128k.mp3
-[17-Dec-2024 14:06:01 UTC] [crearAutPost] Inicio crearAutPost con rutaOriginal: , rutaWpLite: /var/www/wordpress/wp-content/uploads/2024/12/2upra_1ndoryu_Multiple-test_61670_128k.mp3, file_id: 33481
-[17-Dec-2024 14:06:01 UTC] PHP Deprecated:  pathinfo(): Passing null to parameter #1 ($path) of type string is deprecated in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/multiple.php on line 149
-[17-Dec-2024 14:06:01 UTC] PHP Deprecated:  dirname(): Passing null to parameter #1 ($path) of type string is deprecated in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/multiple.php on line 150
-[17-Dec-2024 14:06:01 UTC] PHP Deprecated:  dirname(): Passing null to parameter #1 ($path) of type string is deprecated in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/multiple.php on line 151
-[17-Dec-2024 14:06:01 UTC] automaticAudio start
-[17-Dec-2024 14:06:03 UTC] PHP Warning:  Array to string conversion in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/automaticPost.php on line 160
-[17-Dec-2024 14:06:09 UTC] Descripcion generada
-[17-Dec-2024 14:06:09 UTC] automaticAudio end
-[17-Dec-2024 14:06:09 UTC] PHP Deprecated:  pathinfo(): Passing null to parameter #1 ($path) of type string is deprecated in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/multiple.php on line 177
-[17-Dec-2024 14:06:09 UTC] PHP Deprecated:  dirname(): Passing null to parameter #1 ($path) of type string is deprecated in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/multiple.php on line 178
-[17-Dec-2024 14:06:09 UTC] PHP Deprecated:  file_exists(): Passing null to parameter #1 ($filename) of type string is deprecated in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/multiple.php on line 179
-[17-Dec-2024 14:06:09 UTC] [crearAutPost] Error: No se puede renombrar el archivo original  a /Dark Melody_NzL9_2upra.
-*/
-
 
 function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null, $autor_id = null, $post_original = null)
 {
@@ -350,11 +348,9 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
     return $post_id;
 }
 
-/**
- * Programa la ejecución de la función [generar_publicaciones_multiples] cada 30 segundos.
- *
- * @return void
- */
+
+
+
 function programar_generacion_publicaciones()
 {
     if (! wp_next_scheduled('generar_publicaciones_multiples_evento')) {
