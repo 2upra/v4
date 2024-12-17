@@ -52,25 +52,28 @@ function generar_publicaciones_multiples()
                 $audio_meta_key = 'post_audio' . $i;
                 $idHash_audioId_key = 'idHash_audioId' . $i;
 
-                $ruta_audio_lite = get_post_meta($post_id, $audio_lite_meta_key, true);
+                $audio_lite_id = get_post_meta($post_id, $audio_lite_meta_key, true); // Obtiene el ID del adjunto
                 $audio_id_hash = get_post_meta($post_id, $idHash_audioId_key, true);
                 $audio_id = get_post_meta($post_id, $audio_meta_key, true);
 
-                // Si existe el audio lite, generar un nuevo post
-                if (! empty($ruta_audio_lite) && ! empty($audio_id_hash) && !empty($audio_id)) {
+                // Si existe el audio lite (ahora usando el ID), generar un nuevo post
+                if (! empty($audio_lite_id) && ! empty($audio_id_hash) && !empty($audio_id)) {
                     $multiples_audios_encontrados = true;
+
+                    // Obtener la URL del adjunto usando el ID
+                    $ruta_audio_lite = wp_get_attachment_url($audio_lite_id);
 
                     // Obtener la ruta del archivo en el servidor
                     $upload_dir = wp_upload_dir();
                     $ruta_servidor = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $ruta_audio_lite);
                     $ruta_original = null; //la ruta original se puede omitir
 
+                    error_log('[generar_publicaciones_multiples] - ID del adjunto de audio lite: ' . $audio_lite_id);
+                    error_log('[generar_publicaciones_multiples] - URL del archivo de audio lite: ' . $ruta_audio_lite);
                     error_log('[generar_publicaciones_multiples] - Ruta del archivo en el servidor: ' . $ruta_servidor);
 
-                    // Crear el nuevo post usando crearAutPost
                     $nuevo_post_id = crearAutPost($ruta_original, $ruta_servidor, $audio_id_hash, $author_id, $post_id);
                     error_log('[generar_publicaciones_multiples] - Resultado de crearAutPost: ' . var_export($nuevo_post_id, true));
-
                     // Copiar metas al nuevo post si existen y se creó el post
                     if (! is_wp_error($nuevo_post_id) && $nuevo_post_id) {
                         // Guardar el ID del nuevo post en el array
