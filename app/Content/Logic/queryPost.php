@@ -385,6 +385,7 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
         },
         'sampleList' => [
             ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+            ['key' => 'tienda', 'value' => '1', 'compare' => '='],
             ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
         ],
         'colab' => fn() => $query_args['post_status'] = 'publish',
