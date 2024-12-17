@@ -46,10 +46,6 @@ add_action('rest_api_init', function () {
     }
 });
 
-
-
-
-
 function crear_sesion_compra(WP_REST_Request $request)
 {
     try {
