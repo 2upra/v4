@@ -1,14 +1,3 @@
-/*
-Theme Name: 2upra
-Description: 2upra
-Author: Wandorius
-Theme URI: https://2upra.com
-Author URI: https://facebook.com/asley.phonk
-Version: 0.2
-License: Themeforest Split Licence
-License URI: -
-Text Domain: 2upra
-*/
 
 .firefox * {
 	scrollbar-width: thin;
@@ -286,7 +275,7 @@ form {
 	width: 400px;
 	max-width: 90%;
 	display: flex;
-	z-index: 1002;
+	z-index: 1006;
 	font-size: 11px;
 	flex-direction: column;
 	flex-wrap: nowrap;
@@ -1487,7 +1476,6 @@ li.social-post.rola:hover {
 	width: 100%;
 	height: 200px;
 	margin-top: 20px;
-	margin-bottom: -30px;
 	display: flex;
 	align-items: flex-end;
 	justify-content: center;
@@ -5349,6 +5337,7 @@ button.DZYBQD.MQKUSE {
 
 .OASDEF {
 	width: 100%;
+	position: relative;
 }
 
 .MRPDOR img {
@@ -5447,7 +5436,7 @@ button.botonsecundario.submenucolab {
 	right: 10px;
 	top: 60px;
 	overflow: auto;
-	z-index: 1002 !important;
+	z-index: 1004 !important;
 	max-height: 70%;
 	margin: 10px;
 	margin-left: -10px;
@@ -6293,17 +6282,29 @@ div#cambiarVista {
 	margin: 20px 0px;
 	gap: 5px;
 }
-.nombreAudioRs {
+.nombreAudioRs, .precioAudioRs {
 	order: 1;
 	background: none;
 	border: var(--borde);
 }
+
+label.custom-checkbox {
+    text-align-last: center;
+}
+
+button.delete-waveform svg {
+	height: 14px;
+	width: 14px;
+}
 button.delete-waveform {
 	position: absolute;
 	top: -7px;
-	right: -8px;
+	right: -15px;
 	background: none;
+	opacity: 0.8;
 }
+
+
 
 .previewAreaArchivos img {
 	max-height: 250px;
@@ -6481,6 +6482,7 @@ div#opcionesColec {
 
 .nologin .boton-sesion {
 	border: 0px !important;
+	border-radius: 100px;
 }
 .fullH {
 	min-height: calc(var(--vh, 1vh)* 100);
@@ -7792,8 +7794,9 @@ button.DSQKYW {
 
 div#formRs {
 	width: 600px;
+	max-height: 85%;
+	overflow: auto;
 }
-
 
 
 .post-thumbnail {
@@ -8301,8 +8304,14 @@ div#iconobusqueda {
 	div#iconobusqueda {
 		display: block;
 	}
+	.nologinbotones {
+		display: none;
+	}
 }
 
+.iconRedSocial {
+	margin-left: auto;
+}
 .GSDKRA.DSOE4LS {
 	padding: 20px;
 	width: -webkit-fill-available;
@@ -8358,10 +8367,11 @@ button.buttonBI.borde:hover {
 	align-items: center;
 	align-content: center;
 	flex-direction: column;
-	max-width: 600px;
+	max-width: 640px;
 	margin: auto;
 	gap: 20px;
 	margin-top: 50px;
+	padding: 20px;
 }
 
 .SOKDEOD h2 {
@@ -8374,7 +8384,47 @@ button.buttonBI.borde:hover {
 }
 
 .BPLBDE.nologin {
-	max-width: 1250px;
+	max-width: 1270px;
 	margin: auto;
-	padding: 0px;
+	padding: 20px;
+}
+
+svg#th {
+	height: 16px;
+	width: 16px;
+	fill: white;
+	margin: 0px 15px;
+	cursor: pointer;
+}
+
+.waveforms-container-post {
+	width: 100%;
+	display: flex;
+	overflow: hidden; 
+	flex-direction: row;
+}
+
+.waveforms-container-post div {
+	min-width: 100%;
+	flex-shrink: 0;
+}
+
+.botonesWave {
+	position: absolute;
+	top: 1;
+	right: 1;
+	min-width: unset !important;
+	flex-shrink: unset;
+	display: flex
+		;
+}
+
+.previewAreaArchivos .file-name {
+    display: block !important;
+}
+
+span.usd-label {
+    position: absolute;
+    bottom: 13px;
+    right: 10px;
 }

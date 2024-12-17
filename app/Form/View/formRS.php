@@ -66,13 +66,13 @@ function formRs()
         <div class="DRHMDE">
             <label class="custom-checkbox">
                 <input type="checkbox" id="fancheck" name="fancheck" value="1">
-                <span class="checkmark"></span>
-                Area de fans
+                <span class="checkmark">Area de fans</span>
+
             </label>
             <label class="custom-checkbox">
                 <input type="checkbox" id="artistacheck" name="artistacheck" value="1">
-                <span class="checkmark"></span>
-                Area de artistas
+                <span class="checkmark">Area de artistas</span>
+
             </label>
         </div>
 
@@ -99,11 +99,11 @@ function formRs()
                     <span class="checkmark"></span>
                     <? echo $GLOBALS['iconomusic']; ?>
                 </label>
-                <!--<label class="custom-checkbox">
-                    <input type="checkbox" id="momento" name="momento" value="1">
+                <label class="custom-checkbox">
+                    <input type="checkbox" id="tiendacheck" name="tiendacheck" value="1">
                     <span class="checkmark"></span>
-                    Momento
-                </label> -->
+                    <? echo $GLOBALS['dolar']; ?>
+                </label>
             </div>
         </div>
 

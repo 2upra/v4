@@ -57,13 +57,14 @@ function verificarCamposRs() {
     function verificarCampos() {
         // Verificar si hay alguna subida en progreso
         if (uploadInProgressCount > 0) {
-            alert('Espera a que se completen las subidas de archivos.');
-            return false;
+            //alert('Espera a que se completen las subidas de archivos.');
+            //return false;
         }
         const fanCheck = document.getElementById('fancheck');
         const artistaCheck = document.getElementById('artistacheck');
+        const tiendacheck = document.getElementById('tiendacheck');
 
-        if (!fanCheck.checked && !artistaCheck.checked) {
+        if (!fanCheck.checked && !artistaCheck.checked && !tiendacheck.checked) {
             alert('Debe seleccionar al menos una opción: Área de fans o Área de artistas.');
             return false;
         }
@@ -93,6 +94,7 @@ function verificarCamposRs() {
         if (audiosData.length > 1) {
             const individualPost = document.getElementById('individualPost');
             const multiplePost = document.getElementById('multiplePost');
+
             if (!individualPost.checked && !multiplePost.checked) {
                 alert('Debe seleccionar al menos una opción: Post individual o multiples, porque estas intentando subir varios audios :)');
                 return false;
@@ -136,6 +138,7 @@ async function envioRs() {
         const artistacheck = document.getElementById('artistacheck');
         const individualPost = document.getElementById('individualPost');
         const multiplePost = document.getElementById('multiplePost');
+        const tiendacheck = document.getElementById('tiendacheck');
 
         const fan = fancheck.checked ? fancheck.value : 0;
         const artista = artistacheck.checked ? artistacheck.value : 0;
@@ -145,6 +148,7 @@ async function envioRs() {
         const music = musicCheckbox.checked ? musicCheckbox.value : 0;
         const individual = individualPost.checked ? individualPost.value : 0;
         const multiple = multiplePost.checked ? multiplePost.value : 0;
+        const tienda = tiendacheck.checked ? tiendacheck.value : 0;
 
         const uniqueAudioUrls = new Set(); // Para almacenar URLs únicas
         const uniqueAudioIds = new Set();
@@ -211,7 +215,8 @@ async function envioRs() {
             colab,
             music,
             individual,
-            multiple
+            multiple,
+            tienda
         };
 
         // Verificación de imagenUrl1 y Music
@@ -312,21 +317,35 @@ function subidaRs() {
         }
     };
 
+    // Obtenemos las referencias a los checkbox
     const musicCheckbox = document.getElementById('musiccheck');
+    const tiendaCheckbox = document.getElementById('tiendacheck');
 
     const actualizarCamposNombre = () => {
-        const cantidadAudios = audiosData.length;
-        const mostrarCampos = musicCheckbox.checked && cantidadAudios > 0;
+        setTimeout(() => {
+            const cantidadAudios = audiosData.length;
+            const mostrarCamposNombre = musicCheckbox.checked && cantidadAudios > 0;
 
-        audiosData.forEach(audio => {
-            const inputNombre = document.getElementById(`nombre-${audio.tempId}`);
-            if (inputNombre) {
-                inputNombre.style.display = mostrarCampos ? 'block' : 'none';
-            }
-        });
+            audiosData.forEach(audio => {
+                // Actualizar visibilidad de los campos de nombre
+                const inputNombre = document.getElementById(`nombre-${audio.tempId}`);
+                if (inputNombre) {
+                    inputNombre.style.display = mostrarCamposNombre ? 'block' : 'none';
+                }
+
+                // Actualizar visibilidad de los campos de precio si tiendacheck está activo
+                const mostrarCamposPrecio = tiendaCheckbox.checked;
+                const inputPrecio = document.getElementById(`precio-${audio.tempId}`);
+                if (inputPrecio) {
+                    inputPrecio.style.display = mostrarCamposPrecio ? 'block' : 'none';
+                }
+            });
+        }, 10);
     };
 
+    // Añadimos el listener para el evento 'change' en ambos checkboxes
     musicCheckbox.addEventListener('change', actualizarCamposNombre);
+    tiendaCheckbox.addEventListener('change', actualizarCamposNombre);
 
     const subidaAudio = async file => {
         try {
@@ -356,7 +375,7 @@ function subidaRs() {
             alert('Hubo un problema al cargar el Audio. Inténtalo de nuevo.');
         }
     };
-
+    //como se hace para que el campo precio solo acepte valores numeros y que al final automaticamente aparezca el simbolo
     const waveAudio = (file, tempId) => {
         const reader = new FileReader(),
             audioContainerId = `waveform-container-${Date.now()}`,
@@ -370,17 +389,21 @@ function subidaRs() {
                     <div class="waveform-loading" style="display: none;">Cargando...</div>
                     <audio controls style="width: 100%;"><source src="${e.target.result}" type="${file.type}"></audio>
                     <div class="file-name">${file.name}</div>
-                    <button class="delete-waveform">Eliminar</button>
+                    <button class="delete-waveform"><svg data-testid="geist-icon" height="16" stroke-linejoin="round" viewBox="0 0 16 16" width="16" style="color: currentcolor;"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.75 2.75C6.75 2.05964 7.30964 1.5 8 1.5C8.69036 1.5 9.25 2.05964 9.25 2.75V3H6.75V2.75ZM5.25 3V2.75C5.25 1.23122 6.48122 0 8 0C9.51878 0 10.75 1.23122 10.75 2.75V3H12.9201H14.25H15V4.5H14.25H13.8846L13.1776 13.6917C13.0774 14.9942 11.9913 16 10.6849 16H5.31508C4.00874 16 2.92263 14.9942 2.82244 13.6917L2.11538 4.5H1.75H1V3H1.75H3.07988H5.25ZM4.31802 13.5767L3.61982 4.5H12.3802L11.682 13.5767C11.6419 14.0977 11.2075 14.5 10.6849 14.5H5.31508C4.79254 14.5 4.3581 14.0977 4.31802 13.5767Z" fill="currentColor"></path></svg></button>
                 </div>
                 <div class="progress-bar" style="width: 100%; height: 2px; background-color: #ddd; margin-top: 10px;">
                     <div id="${progressBarId}" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>
                 </div>
                 <!-- Campo de texto para el nombre del audio -->
                 <input type="text" id="nombre-${tempId}" class="nombreAudioRs" placeholder="Titulo" style="display: none; margin-top: 5px; width: 100%;">
+                <!-- Campo de texto para el precio -->
+                <input type="number" id="precio-${tempId}" class="precioAudioRs" placeholder="Precio en USD" style="display: none; margin-top: 5px; width: 100%;" min="5" max="100">
+                <span class="usd-label" style="display: none;"> $ USD</span>
             </div>`;
 
             previewAudio.appendChild(newWaveform);
             inicializarWaveform(audioContainerId, e.target.result);
+
             const deleteButton = newWaveform.querySelector('.delete-waveform');
             deleteButton.addEventListener('click', event => {
                 event.stopPropagation();
@@ -389,6 +412,28 @@ function subidaRs() {
 
             // Actualiza los campos de nombre después de agregar un nuevo audio
             actualizarCamposNombre();
+
+            // --- Código para manejar el input de precio ---
+            const precioInput = newWaveform.querySelector(`.precioAudioRs`);
+            precioInput.addEventListener('input', function () {
+                let valor = parseFloat(this.value);
+
+                if (isNaN(valor)) {
+                    //valor = 5; // Podrías establecer un valor por defecto o dejarlo vacío.
+                    return;
+                }
+
+                // Validar el rango
+                if (valor < 5) {
+                    valor = 5;
+                    this.value = valor;
+                } else if (valor > 100) {
+                    valor = 100;
+                    this.value = valor;
+                }
+                //El span ya se agrega en el HTML, por lo que no es necesario manipularlo mediante JS
+            });
+            // ------------------------------------------------
         };
 
         reader.readAsDataURL(file);
@@ -667,7 +712,6 @@ window.inicializarWaveform = function (containerId, audioSrc) {
     }
 };
 
-//necesito que los check individualPost y multiplePost (se agregaron ultimamente), se vean afectado por esto de maximo 2 opciones
 async function selectorformtipo() {
     const descargacheck = document.getElementById('descargacheck');
     const musiccheck = document.getElementById('musiccheck');
@@ -675,11 +719,14 @@ async function selectorformtipo() {
     const colabcheck = document.getElementById('colabcheck');
     const fancheck = document.getElementById('fancheck');
     const artistacheck = document.getElementById('artistacheck');
+    const tiendacheck = document.getElementById('tiendacheck'); // Nuevo checkbox
     const individualPost = document.getElementById('individualPost');
     const multiplePost = document.getElementById('multiplePost');
+    const fanLabel = fancheck.closest('label'); // Obtener la etiqueta padre de fancheck
+    const artistaLabel = artistacheck.closest('label'); // Obtener la etiqueta padre de artistacheck
 
     // Verifica si los elementos necesarios existen; si no, retorna
-    if (!descargacheck || !musiccheck || !exclusivocheck || !colabcheck || !fancheck || !artistacheck || !individualPost || !multiplePost) return;
+    if (!descargacheck || !musiccheck || !exclusivocheck || !colabcheck || !fancheck || !artistacheck || !tiendacheck || !individualPost || !multiplePost) return;
 
     descargacheck.checked = true;
     const label = descargacheck.closest('label');
@@ -699,42 +746,50 @@ async function selectorformtipo() {
                 return;
             }
 
-            // Si se marca 'musiccheck', desmarca los demás checkboxes y pide confirmación
-            if (event.target.id === 'musiccheck' && event.target.checked) {
-                const confirmacion = await window.confirm('Vas a publicar música en nuestra plataforma y en otras plataformas de stream.');
-                if (!confirmacion) {
-                    event.target.checked = false;
-                    return;
-                }
+            // Si se marca 'tiendacheck', desmarca los demás checkboxes
+            if (event.target.id === 'tiendacheck' && event.target.checked) {
                 descargacheck.checked = false;
+                musiccheck.checked = false;
                 exclusivocheck.checked = false;
                 colabcheck.checked = false;
                 resetStyles();
             }
 
-            // Si se marca 'exclusivocheck', desmarca 'colabcheck' y 'musiccheck'
+            // Si se marca 'musiccheck', desmarca los demás checkboxes excepto 'tiendacheck' y pide confirmación
+            if (event.target.id === 'musiccheck' && event.target.checked) {
+                descargacheck.checked = false;
+                exclusivocheck.checked = false;
+                colabcheck.checked = false;
+                tiendacheck.checked = false;
+                resetStyles();
+            }
+
+            // Si se marca 'exclusivocheck', desmarca 'colabcheck', 'musiccheck' y 'tiendacheck'
             if (event.target.id === 'exclusivocheck' && event.target.checked) {
                 colabcheck.checked = false;
                 musiccheck.checked = false;
+                tiendacheck.checked = false;
                 const colabLabel = colabcheck.closest('label');
                 colabLabel.style.color = '#6b6b6b';
                 colabLabel.style.background = '';
                 resetStyles();
             }
 
-            // Si se marca 'colabcheck', desmarca 'exclusivocheck' y 'musiccheck'
+            // Si se marca 'colabcheck', desmarca 'exclusivocheck', 'musiccheck' y 'tiendacheck'
             if (event.target.id === 'colabcheck' && event.target.checked) {
                 exclusivocheck.checked = false;
                 musiccheck.checked = false;
+                tiendacheck.checked = false;
                 const exclusivocLabel = exclusivocheck.closest('label');
                 exclusivocLabel.style.color = '#6b6b6b';
                 exclusivocLabel.style.background = '';
                 resetStyles();
             }
 
-            // Si se marca 'descargacheck', desmarca 'musiccheck'
+            // Si se marca 'descargacheck', desmarca 'musiccheck' y 'tiendacheck'
             if (event.target.id === 'descargacheck' && event.target.checked) {
                 musiccheck.checked = false;
+                tiendacheck.checked = false;
                 resetStyles();
             }
 
@@ -763,12 +818,16 @@ async function selectorformtipo() {
     }
 }
 
+//aqui necesito algo adicional, <input type="checkbox" id="musiccheck" name="musiccheck" value="1"> no va a inteferir de alguna menera, simplemente cuando pulse va a ocultar fanLabel y artistaLabel o se deslecciona volver a mostrarlos, pero no interfiere en mas nada, solo en eso
 function selectorFanArtista() {
     const fancheck = document.getElementById('fancheck');
     const artistacheck = document.getElementById('artistacheck');
+    const tiendacheck = document.getElementById('tiendacheck');
+    const fanLabel = fancheck.closest('label'); // Obtener la etiqueta padre de fancheck
+    const artistaLabel = artistacheck.closest('label'); // Obtener la etiqueta padre de artistacheck
 
     // Verifica si los elementos necesarios existen; si no, retorna
-    if (!fancheck || !artistacheck) return;
+    if (!fancheck || !artistacheck || !tiendacheck) return;
 
     // Función para actualizar estilos
     function updateStyles(checkbox) {
@@ -782,22 +841,53 @@ function selectorFanArtista() {
         }
     }
 
+    // Función para deseleccionar otros checkboxes y manejar la visibilidad
+    function uncheckOthers(currentCheckbox) {
+        const checkboxes = [fancheck, artistacheck, tiendacheck];
+        checkboxes.forEach(checkbox => {
+            if (checkbox !== currentCheckbox) {
+                checkbox.checked = false;
+                updateStyles(checkbox);
+            }
+        });
+
+        // Si se selecciona 'tiendacheck', oculta 'fancheck' y 'artistacheck'
+        if (currentCheckbox === tiendacheck && tiendacheck.checked) {
+            fanLabel.style.display = 'none';
+            artistaLabel.style.display = 'none';
+        } else {
+            // Si no se selecciona 'tiendacheck', muestra 'fancheck' y 'artistacheck'
+            fanLabel.style.display = 'block'; // o 'inline-block' dependiendo del diseño original
+            artistaLabel.style.display = 'block'; // o 'inline-block' dependiendo del diseño original
+        }
+    }
+
     // Listener para 'fancheck'
     fancheck.addEventListener('change', function () {
-        if (fancheck.checked) {
-            artistacheck.checked = false;
-            updateStyles(artistacheck);
+        if (this.checked) {
+            uncheckOthers(this);
         }
-        updateStyles(fancheck);
+        updateStyles(this);
     });
 
     // Listener para 'artistacheck'
     artistacheck.addEventListener('change', function () {
-        if (artistacheck.checked) {
-            fancheck.checked = false;
-            updateStyles(fancheck);
+        if (this.checked) {
+            uncheckOthers(this);
         }
-        updateStyles(artistacheck);
+        updateStyles(this);
+    });
+
+    // Listener para 'tiendacheck'
+    tiendacheck.addEventListener('change', function () {
+        if (this.checked) {
+            uncheckOthers(this);
+        } else {
+            // Si 'tiendacheck' se desmarca, muestra 'fancheck' y 'artistacheck'
+            fanLabel.style.display = 'block'; // o 'inline-block'
+            artistaLabel.style.display = 'block'; // o 'inline-block'
+        }
+        updateStyles(this);
     });
 }
 
