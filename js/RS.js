@@ -202,6 +202,16 @@ async function envioRs() {
         const nombreInputs = document.querySelectorAll('.nombreAudioRs');
         const precioInputs = document.querySelectorAll('.precioAudioRs');
 
+        let nombreRolaData = {}; // Declaración de nombreRolaData como objeto
+        let precioRolaData = {}; // Declaración de precioRolaData como objeto
+
+        /*
+        RS.js?ver=0.2.165:243  Uncaught (in promise) ReferenceError: precioRolaData is not defined
+        at RS.js?ver=0.2.165:243:25
+        at Array.forEach (<anonymous>)
+        at HTMLButtonElement.<anonymous> (RS.js?ver=0.2.165:205:40)
+        */
+
         audiosData.slice(0, maxAudios).forEach((audio, index) => {
             const audioNumber = index + 1;
 
