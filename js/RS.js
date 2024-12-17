@@ -57,16 +57,52 @@ function verificarCamposRs() {
     function verificarCampos() {
         // Verificar si hay alguna subida en progreso
         if (uploadInProgressCount > 0) {
-            //alert('Espera a que se completen las subidas de archivos.');
+            alert('Espera a que se completen las subidas de archivos.');
             //return false;
         }
+
         const fanCheck = document.getElementById('fancheck');
         const artistaCheck = document.getElementById('artistacheck');
-        const tiendacheck = document.getElementById('tiendacheck');
+        const tiendaCheck = document.getElementById('tiendacheck');
+        const musicCheck = document.getElementById('musiccheck');
 
-        if (!fanCheck.checked && !artistaCheck.checked && !tiendacheck.checked) {
-            alert('Debe seleccionar al menos una opción: Área de fans o Área de artistas.');
-            return false;
+        // Verificar condiciones de checkboxes
+        if (!(musicCheck.checked || tiendaCheck.checked)) {
+            if (!fanCheck.checked && !artistaCheck.checked) {
+                alert('Debe seleccionar al menos una opción: Área de fans o Área de artistas.');
+                return false;
+            }
+        }
+
+        // Validar inputs de texto si musicCheck está marcado
+        if (musicCheck.checked) {
+            const nombreInputs = document.querySelectorAll('input.nombreAudioRs');
+            for (const input of nombreInputs) {
+                const value = input.value.trim();
+                if (value.length < 3) {
+                    alert('Todos los títulos deben tener al menos 3 caracteres.');
+                    input.focus();
+                    return false;
+                }
+                if (value.length > 100) {
+                    alert('Todos los títulos deben tener como máximo 100 caracteres.');
+                    input.focus();
+                    return false;
+                }
+            }
+        }
+
+        // Validar inputs de número si tiendaCheck está marcado
+        if (tiendaCheck.checked) {
+            const precioInputs = document.querySelectorAll('input.precioAudioRs');
+            for (const input of precioInputs) {
+                const value = parseFloat(input.value);
+                if (isNaN(value) || value < 5 || value > 100) {
+                    alert('Todos los precios deben ser numéricos y estar entre 5 y 100 USD.');
+                    input.focus();
+                    return false;
+                }
+            }
         }
 
         // Verificación de texto y tags
@@ -74,29 +110,30 @@ function verificarCamposRs() {
         const textoNormal = window.NormalText || '';
 
         if (textoNormal.length < 3) {
-            alert('El texto debe tener al menos 3 caracteres');
+            alert('El texto debe tener al menos 3 caracteres.');
             return false;
         }
         if (textoNormal.length > 800) {
-            alert('El texto no puede exceder los 800 caracteres');
+            alert('El texto no puede exceder los 800 caracteres.');
             textoRsDiv.innerText = textoNormal.substring(0, 800);
             return false;
         }
         if (tags.length === 0) {
-            alert('Debe incluir al menos un tag');
+            alert('Debe incluir al menos un tag.');
             return false;
         }
         if (tags.some(tag => tag.length < 3)) {
-            alert('Cada tag debe tener al menos 3 caracteres');
+            alert('Cada tag debe tener al menos 3 caracteres.');
             return false;
         }
 
+        // Verificación de audiosData para múltiples posts
         if (audiosData.length > 1) {
             const individualPost = document.getElementById('individualPost');
             const multiplePost = document.getElementById('multiplePost');
 
             if (!individualPost.checked && !multiplePost.checked) {
-                alert('Debe seleccionar al menos una opción: Post individual o multiples, porque estas intentando subir varios audios :)');
+                alert('Debe seleccionar al menos una opción: Post individual o múltiples, porque estás intentando subir varios audios :)');
                 return false;
             }
         }
@@ -181,7 +218,9 @@ async function envioRs() {
 
                 const tempId = audio.tempId; // Asumiendo que cada audio tiene un tempId único
                 const nombreInput = Array.from(nombreInputs).find(input => input.id === `nombre-${tempId}`);
+                const precioInput = Array.from(precioInputs).find(input => input.id === `precio-${tempId}`);
 
+                // Recoger nombre de la canción
                 if (nombreInput) {
                     let nombreRola = nombreInput.value.trim();
 
@@ -194,6 +233,19 @@ async function envioRs() {
                     nombreRolaData[`nombreRola${audioNumber}`] = nombreRola;
                 } else {
                     nombreRolaData[`nombreRola${audioNumber}`] = null;
+                }
+
+                // Recoger precio del audio (si existe)
+                if (precioInput) {
+                    const precioRola = parseFloat(precioInput.value);
+                    if (!isNaN(precioRola) && precioRola >= 5 && precioRola <= 100) {
+                        precioRolaData[`precioRola${audioNumber}`] = precioRola;
+                    } else {
+                        console.warn(`El precio del audio con ID ${audio.audioId} es inválido o fuera de rango (debe ser entre 5 y 100 USD).`);
+                        precioRolaData[`precioRola${audioNumber}`] = null; // O bien, maneja el caso como consideres.
+                    }
+                } else {
+                    precioRolaData[`precioRola${audioNumber}`] = null;
                 }
             }
         });
@@ -711,7 +763,7 @@ window.inicializarWaveform = function (containerId, audioSrc) {
         console.log('Error: No se encontró el contenedor o el audioSrc no es válido.');
     }
 };
-
+//cuando se desmarca musiccheck, no se pone en block fanLabel artistaLabel, siento que tal vez es por la propagacion de eventos porque musiccheck tambien hace algo adicional en otra parte del codigo
 async function selectorformtipo() {
     const descargacheck = document.getElementById('descargacheck');
     const musiccheck = document.getElementById('musiccheck');
@@ -722,6 +774,8 @@ async function selectorformtipo() {
     const tiendacheck = document.getElementById('tiendacheck'); // Nuevo checkbox
     const individualPost = document.getElementById('individualPost');
     const multiplePost = document.getElementById('multiplePost');
+    const namerolas = document.querySelectorAll('nombreAudioRs');
+    const preciosInputs = document.querySelectorAll('precioAudioRs');
     const fanLabel = fancheck.closest('label'); // Obtener la etiqueta padre de fancheck
     const artistaLabel = artistacheck.closest('label'); // Obtener la etiqueta padre de artistacheck
 
@@ -733,12 +787,30 @@ async function selectorformtipo() {
     label.style.color = '#ffffff';
     label.style.background = '#131313';
 
+    // Función específica para manejar la lógica de musiccheck en selectorformtipo
+    function handleMusicCheckChange(isChecked) {
+        if (!isChecked) {
+            if (exclusivocheck.checked || colabcheck.checked || descargacheck.checked) {
+                fanLabel.style.display = 'block';
+                artistaLabel.style.display = 'block';
+            }
+        } else {
+            descargacheck.checked = false;
+            exclusivocheck.checked = false;
+            colabcheck.checked = false;
+            tiendacheck.checked = false;
+            fanLabel.style.display = 'none';
+            artistaLabel.style.display = 'none';
+            resetStyles();
+        }
+    }
+
     document.addEventListener('change', async function (event) {
         if (event.target.matches('.custom-checkbox input[type="checkbox"]')) {
             const checkedCheckboxes = document.querySelectorAll('.custom-checkbox input[type="checkbox"]:checked');
 
             // Incluye individualPost y multiplePost en la lista de checkboxes que no son fan ni artista
-            const nonFanArtistChecked = Array.from(checkedCheckboxes).filter(checkbox => checkbox.id !== 'fancheck' && checkbox.id !== 'artistacheck' && checkbox.id !== 'artistaTipoCheck' && checkbox.id !== 'fanTipoCheck');
+            const nonFanArtistChecked = Array.from(checkedCheckboxes).filter(checkbox => checkbox.id !== 'fancheck' && checkbox.id !== 'artistacheck' && checkbox.id !== 'tiendacheck' && checkbox.id !== 'artistaTipoCheck' && checkbox.id !== 'fanTipoCheck');
 
             if (nonFanArtistChecked.length > 2) {
                 event.target.checked = false;
@@ -752,16 +824,25 @@ async function selectorformtipo() {
                 musiccheck.checked = false;
                 exclusivocheck.checked = false;
                 colabcheck.checked = false;
+
+                fanLabel.style.display = 'none';
+                artistaLabel.style.display = 'none';
                 resetStyles();
             }
 
-            // Si se marca 'musiccheck', desmarca los demás checkboxes excepto 'tiendacheck' y pide confirmación
-            if (event.target.id === 'musiccheck' && event.target.checked) {
-                descargacheck.checked = false;
-                exclusivocheck.checked = false;
-                colabcheck.checked = false;
-                tiendacheck.checked = false;
-                resetStyles();
+            // Si se desmarca 'tiendacheck', muestra fanLabel y artistaLabel si 'exclusivocheck' o 'colabcheck' están marcados,
+            if (event.target.id === 'tiendacheck' && !event.target.checked) {
+                if (exclusivocheck.checked || colabcheck.checked || descargacheck.checked) {
+                    fanLabel.style.display = 'block';
+                    artistaLabel.style.display = 'block';
+                }
+            }
+
+            // Si se marca o desmarca 'musiccheck', retrasa la ejecución de la lógica específica
+            if (event.target.id === 'musiccheck') {
+                setTimeout(() => {
+                    handleMusicCheckChange(event.target.checked);
+                }, 0);
             }
 
             // Si se marca 'exclusivocheck', desmarca 'colabcheck', 'musiccheck' y 'tiendacheck'
@@ -772,6 +853,8 @@ async function selectorformtipo() {
                 const colabLabel = colabcheck.closest('label');
                 colabLabel.style.color = '#6b6b6b';
                 colabLabel.style.background = '';
+                fanLabel.style.display = 'block';
+                artistaLabel.style.display = 'block';
                 resetStyles();
             }
 
@@ -783,6 +866,8 @@ async function selectorformtipo() {
                 const exclusivocLabel = exclusivocheck.closest('label');
                 exclusivocLabel.style.color = '#6b6b6b';
                 exclusivocLabel.style.background = '';
+                fanLabel.style.display = 'block';
+                artistaLabel.style.display = 'block';
                 resetStyles();
             }
 
@@ -790,6 +875,8 @@ async function selectorformtipo() {
             if (event.target.id === 'descargacheck' && event.target.checked) {
                 musiccheck.checked = false;
                 tiendacheck.checked = false;
+                fanLabel.style.display = 'block';
+                artistaLabel.style.display = 'block';
                 resetStyles();
             }
 
@@ -818,13 +905,14 @@ async function selectorformtipo() {
     }
 }
 
-//aqui necesito algo adicional, <input type="checkbox" id="musiccheck" name="musiccheck" value="1"> no va a inteferir de alguna menera, simplemente cuando pulse va a ocultar fanLabel y artistaLabel o se deslecciona volver a mostrarlos, pero no interfiere en mas nada, solo en eso
+//
 function selectorFanArtista() {
     const fancheck = document.getElementById('fancheck');
     const artistacheck = document.getElementById('artistacheck');
     const tiendacheck = document.getElementById('tiendacheck');
     const fanLabel = fancheck.closest('label'); // Obtener la etiqueta padre de fancheck
     const artistaLabel = artistacheck.closest('label'); // Obtener la etiqueta padre de artistacheck
+    const musiccheck = document.getElementById('musiccheck');
 
     // Verifica si los elementos necesarios existen; si no, retorna
     if (!fancheck || !artistacheck || !tiendacheck) return;
@@ -833,8 +921,6 @@ function selectorFanArtista() {
     function updateStyles(checkbox) {
         const label = checkbox.closest('label');
         if (checkbox.checked) {
-            label.style.color = '#ffffff';
-            label.style.background = '#131313';
         } else {
             label.style.color = '#6b6b6b';
             label.style.background = '';
@@ -880,6 +966,17 @@ function selectorFanArtista() {
 
     // Listener para 'tiendacheck'
     tiendacheck.addEventListener('change', function () {
+        if (this.checked) {
+            uncheckOthers(this);
+        } else {
+            // Si 'tiendacheck' se desmarca, muestra 'fancheck' y 'artistacheck'
+            fanLabel.style.display = 'block'; // o 'inline-block'
+            artistaLabel.style.display = 'block'; // o 'inline-block'
+        }
+        updateStyles(this);
+    });
+
+    musiccheck.addEventListener('change', function () {
         if (this.checked) {
             uncheckOthers(this);
         } else {
