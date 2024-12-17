@@ -18,7 +18,7 @@ function stripecomprabeat() {
                 console.log('precio:', precio);
 
                 // Realizar la solicitud fetch si la validación es exitosa
-                fetch('/wp-json/1/v1/crear_sesion_compra', {
+                fetch('/wp-json/stripe/v1/crear_sesion_compra', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
