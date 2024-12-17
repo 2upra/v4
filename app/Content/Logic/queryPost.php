@@ -336,7 +336,6 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual, $id
     return $query_args;
 }
 
-
 function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoUsuario = null)
 {
     if (!empty($userId)) {
@@ -384,9 +383,15 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
             }
         },
         'sampleList' => [
-            ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
-            ['key' => 'tienda', 'value' => '1', 'compare' => '='],
-            ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
+            'relation' => 'OR', // Modificación clave
+            [
+                ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
+                ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
+            ],
+            [
+                ['key' => 'tienda', 'value' => '1', 'compare' => '='],
+                ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
+            ],
         ],
         'colab' => fn() => $query_args['post_status'] = 'publish',
         'colabPendiente' => function () use (&$query_args) {
