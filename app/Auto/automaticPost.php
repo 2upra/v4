@@ -296,9 +296,10 @@ el autor id será el autor original
 y las metas de paraColab, paraDescarga, artista, fan, rola, sample, tagsUsuario del post original necesito que se copien si es que existe
 */
 
+
 function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null, $autor_id = null, $post_original = null)
 {
-    autLog("Inicio crearAutPost con rutaOriginal: $rutaOriginal, rutaWpLite: $rutaWpLite, file_id: $file_id");
+    error_log("Inicio crearAutPost con rutaOriginal: $rutaOriginal, rutaWpLite: $rutaWpLite, file_id: $file_id");
 
     if ($autor_id === null) {
         $autor_id = 44;
@@ -309,7 +310,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
     $datosAlgoritmo = automaticAudio($rutaWpLite, $nombre_archivo, $carpeta, $carpeta_abuela);
 
     if (!$datosAlgoritmo) {
-        autLog("Error: automaticAudio falló para rutaWpLite: $rutaWpLite");
+        error_log("Error: automaticAudio falló para rutaWpLite: $rutaWpLite");
         eliminarHash($file_id);
         return;
     }
@@ -326,7 +327,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
         $id_unica = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
         $nombre_final = substr($nombre_generado_limpio . '_' . $id_unica . '_2upra', 0, 60);
     } else {
-        autLog("Error: nombre_generado está vacío para rutaOriginal: $rutaOriginal");
+        error_log("Error: nombre_generado está vacío para rutaOriginal: $rutaOriginal");
         eliminarHash($file_id);
         return;
     }
@@ -334,29 +335,29 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
     $extension_original = pathinfo($rutaOriginal, PATHINFO_EXTENSION);
     $nuevaRutaOriginal = dirname($rutaOriginal) . '/' . $nombre_final . '.' . $extension_original;
     if (!file_exists($rutaOriginal) || (file_exists($nuevaRutaOriginal) && !unlink($nuevaRutaOriginal))) {
-        autLog("Error: No se puede renombrar el archivo original $rutaOriginal a $nuevaRutaOriginal");
+        error_log("Error: No se puede renombrar el archivo original $rutaOriginal a $nuevaRutaOriginal");
         eliminarHash($file_id);
         return;
     }
     if (!rename($rutaOriginal, $nuevaRutaOriginal)) {
-        autLog("Error: Fallo al renombrar $rutaOriginal a $nuevaRutaOriginal");
+        error_log("Error: Fallo al renombrar $rutaOriginal a $nuevaRutaOriginal");
         eliminarHash($file_id);
         return;
     }
 
     if (!file_exists($rutaWpLite)) {
-        autLog("Error: rutaWpLite $rutaWpLite no existe");
+        error_log("Error: rutaWpLite $rutaWpLite no existe");
         return;
     }
     $extension_lite = pathinfo($rutaWpLite, PATHINFO_EXTENSION);
     $nuevo_nombre_lite = dirname($rutaWpLite) . '/' . $nombre_final . '_lite.' . $extension_lite;
     if (file_exists($nuevo_nombre_lite) && !unlink($nuevo_nombre_lite)) {
-        autLog("Error: No se puede eliminar el archivo existente $nuevo_nombre_lite");
+        error_log("Error: No se puede eliminar el archivo existente $nuevo_nombre_lite");
         eliminarHash($file_id);
         return;
     }
     if (!rename($rutaWpLite, $nuevo_nombre_lite)) {
-        autLog("Error: Fallo al renombrar $rutaWpLite a $nuevo_nombre_lite");
+        error_log("Error: Fallo al renombrar $rutaWpLite a $nuevo_nombre_lite");
         eliminarHash($file_id);
         return;
     }
@@ -376,7 +377,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
 
     $post_id = wp_insert_post($post_data);
     if (is_wp_error($post_id)) {
-        autLog("Error: No se pudo crear el post. Error: " . $post_id->get_error_message());
+        error_log("Error: No se pudo crear el post. Error: " . $post_id->get_error_message());
         wp_delete_post($post_id, true);
         eliminarHash($file_id);
         return;
@@ -388,7 +389,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
 
     $audio_original_id = adjuntarArchivoAut($nuevaRutaOriginal, $post_id, $file_id);
     if (is_wp_error($audio_original_id)) {
-        autLog("Error: Fallo al adjuntar el archivo original. Error: " . $audio_original_id->get_error_message());
+        error_log("Error: Fallo al adjuntar el archivo original. Error: " . $audio_original_id->get_error_message());
         wp_delete_post($post_id, true);
         eliminarHash($file_id);
         return $audio_original_id;
@@ -400,7 +401,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
 
     $audio_lite_id = adjuntarArchivoAut($nuevo_nombre_lite, $post_id);
     if (is_wp_error($audio_lite_id)) {
-        autLog("Error: Fallo al adjuntar el archivo lite. Error: " . $audio_lite_id->get_error_message());
+        error_log("Error: Fallo al adjuntar el archivo lite. Error: " . $audio_lite_id->get_error_message());
         wp_delete_post($post_id, true);
         eliminarHash($file_id);
         return $audio_lite_id;
@@ -440,7 +441,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
         update_post_meta($post_id, 'datosAlgoritmo', json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE));
     }
 
-    autLog("crearAutPost end con post_id: $post_id");
+    error_log("crearAutPost end con post_id: $post_id");
     return $post_id;
 }
 
