@@ -367,7 +367,7 @@ async function sendImageToServer(imageData, postId) {
     }
 }
 
-function initializeWaveformNavigation() {
+function nextWave() {
     const waveformContainers = document.querySelectorAll('.waveforms-container-post');
 
     waveformContainers.forEach(container => {
