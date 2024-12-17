@@ -12,9 +12,9 @@ function autProcesarAudio($rutaOriginalOne)
     if (!file_exists($rutaOriginalOne)) {
         eliminarHash($file_id);
         autLog("Archivo original no encontrado: $rutaOriginalOne");
-        return; 
+        return;
     }
-    
+
     $fileSizeMB = filesize($rutaOriginalOne) / 1048576;
     if ($fileSizeMB < 0.01) {
         $motivoFallo = "Archivo demasiado pequeño o inválido (menos de 0.01 MB)";
@@ -120,7 +120,8 @@ function autProcesarAudio($rutaOriginalOne)
     crearAutPost($rutaOriginalOne, $rutaWpLiteOne, $file_id);
 }
 
-function manejarArchivoFallido($rutaArchivo, $motivo) {
+function manejarArchivoFallido($rutaArchivo, $motivo)
+{
     $directorioVerificar = "/home/asley01/MEGA/Waw/Verificar/";
     if (!file_exists($directorioVerificar)) {
         mkdir($directorioVerificar, 0777, true); // Crear el directorio si no existe
@@ -197,7 +198,7 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
         . "Calidad y Tecnología: Analog, Compressed, Digital, Dynamic, Loud, Range, Female, Funky, Jazzy, Lo Fi, Male, Quiet, Vintage, Vinyl. "
         . "Estado de Ánimo: Aggressive, Angry, Bouncy, Calming, Carefree, Cheerful, Climactic, Cool, Dramatic, Elegant, Epic, Excited, Energetic, Fun, Futuristic, Gentle, Groovy, Happy, Haunting, Hypnotic, Industrial, Manic, Melancholic, Mellow, Mystical, Nervous, Passionate, Peaceful, Playful, Powerful, Rebellious, Reflective, Relaxing, Romantic, Rowdy, Sad, Sentimental, Sexy, Soothing, Sophisticated, Spacey, Suspenseful, Uplifting, Urgent, Weird."
         . " Es crucial determinar si es un loop, un one shot o un sample. Usa tags de una palabra y optimiza el SEO con sugerencias de búsqueda relevantes. Sé muy detallado sin perder precisión. Aunque te pido en español y en ingles, hay algunas palabras que son mejor mantenerlas en ingles cuando en español son muy frecuentes, por ejemplo, kick, snare, cowbell, etc. Ignora '/home/asley01/MEGA/Waw/Kits' no es relevante, el resto de la ruta si.";
-    
+
     $descripcion = generarDescripcionIA($rutaArchivo, $prompt);
     autLog("Descripcion generada");
     if ($descripcion) {
@@ -283,19 +284,32 @@ function automaticAudio($rutaArchivo, $nombre_archivo = null, $carpeta = null, $
     return $nuevos_datos_algoritmo;
 }
 
-function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
-{
-    autLog("Inicio crearAutPost con rutaOriginal: $rutaOriginal, rutaWpLite: $rutaWpLite, file_id: $file_id"); // Inicio del registro
+/*
+esta funcion funciona en otra parte y perfecta, no hay que alterar su funcionamiento original pero creo que puede servir para este nuevo proposito tmambien
 
-    // Configuración de variables iniciales
-    $autor_id = 44;
+La ruta wp lite, necesita la ruta del audo en el serviidor
+la ruta original se puede omitir, el file_id corresponde a idHash_audioId2 o idHash_audioId3 
+es decir que post_audio_lite_2 tendra su idHash_audioId2 y asi sucesivamente por cada audio
+tambien por cada audio hay un post_audio2, post_audio3, se debe conservar
+el autor id será el autor original
+
+y las metas de paraColab, paraDescarga, artista, fan, rola, sample, tagsUsuario del post original necesito que se copien si es que existe
+*/
+
+function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null, $autor_id = null, $post_original = null)
+{
+    autLog("Inicio crearAutPost con rutaOriginal: $rutaOriginal, rutaWpLite: $rutaWpLite, file_id: $file_id");
+
+    if ($autor_id === null) {
+        $autor_id = 44;
+    }
     $nombre_archivo = pathinfo($rutaOriginal, PATHINFO_FILENAME);
     $carpeta = basename(dirname($rutaOriginal));
     $carpeta_abuela = basename(dirname(dirname($rutaOriginal)));
     $datosAlgoritmo = automaticAudio($rutaWpLite, $nombre_archivo, $carpeta, $carpeta_abuela);
 
     if (!$datosAlgoritmo) {
-        autLog("Error: automaticAudio falló para rutaWpLite: $rutaWpLite"); // Registro si falla automaticAudio
+        autLog("Error: automaticAudio falló para rutaWpLite: $rutaWpLite");
         eliminarHash($file_id);
         return;
     }
@@ -303,7 +317,6 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
     $descripcion_corta_es = $datosAlgoritmo['descripcion_corta']['en'] ?? '';
     $nombre_generado = $datosAlgoritmo['nombre_corto']['en'] ?? '';
 
-    // Manejo de arrays en nombre generado
     if (is_array($nombre_generado)) {
         $nombre_generado = $nombre_generado[0] ?? '';
     }
@@ -313,49 +326,45 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
         $id_unica = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
         $nombre_final = substr($nombre_generado_limpio . '_' . $id_unica . '_2upra', 0, 60);
     } else {
-        autLog("Error: nombre_generado está vacío para rutaOriginal: $rutaOriginal"); // Registro si no se genera el nombre
+        autLog("Error: nombre_generado está vacío para rutaOriginal: $rutaOriginal");
         eliminarHash($file_id);
         return;
     }
 
-    // Renombrar archivo original con verificación
     $extension_original = pathinfo($rutaOriginal, PATHINFO_EXTENSION);
     $nuevaRutaOriginal = dirname($rutaOriginal) . '/' . $nombre_final . '.' . $extension_original;
     if (!file_exists($rutaOriginal) || (file_exists($nuevaRutaOriginal) && !unlink($nuevaRutaOriginal))) {
-        autLog("Error: No se puede renombrar el archivo original $rutaOriginal a $nuevaRutaOriginal"); // Registro si falla al renombrar
+        autLog("Error: No se puede renombrar el archivo original $rutaOriginal a $nuevaRutaOriginal");
         eliminarHash($file_id);
         return;
     }
     if (!rename($rutaOriginal, $nuevaRutaOriginal)) {
-        autLog("Error: Fallo al renombrar $rutaOriginal a $nuevaRutaOriginal"); // Otro registro si falla al renombrar
+        autLog("Error: Fallo al renombrar $rutaOriginal a $nuevaRutaOriginal");
         eliminarHash($file_id);
         return;
     }
 
-    // Renombrar archivo lite con verificación
     if (!file_exists($rutaWpLite)) {
-        autLog("Error: rutaWpLite $rutaWpLite no existe"); // Registro si no existe rutaWpLite
+        autLog("Error: rutaWpLite $rutaWpLite no existe");
         return;
     }
     $extension_lite = pathinfo($rutaWpLite, PATHINFO_EXTENSION);
     $nuevo_nombre_lite = dirname($rutaWpLite) . '/' . $nombre_final . '_lite.' . $extension_lite;
     if (file_exists($nuevo_nombre_lite) && !unlink($nuevo_nombre_lite)) {
-        autLog("Error: No se puede eliminar el archivo existente $nuevo_nombre_lite"); // Registro si no se puede eliminar el lite existente
+        autLog("Error: No se puede eliminar el archivo existente $nuevo_nombre_lite");
         eliminarHash($file_id);
         return;
     }
     if (!rename($rutaWpLite, $nuevo_nombre_lite)) {
-        autLog("Error: Fallo al renombrar $rutaWpLite a $nuevo_nombre_lite"); // Registro si falla al renombrar el lite
+        autLog("Error: Fallo al renombrar $rutaWpLite a $nuevo_nombre_lite");
         eliminarHash($file_id);
         return;
     }
 
-    // Asegurar que la descripción es una cadena
     if (is_array($descripcion_corta_es)) {
         $descripcion_corta_es = $descripcion_corta_es[0] ?? '';
     }
 
-    // Crear el post
     $titulo = mb_substr($descripcion_corta_es, 0, 60);
     $post_data = [
         'post_title'    => $titulo,
@@ -367,7 +376,7 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     $post_id = wp_insert_post($post_data);
     if (is_wp_error($post_id)) {
-        autLog("Error: No se pudo crear el post. Error: " . $post_id->get_error_message()); // Registro si falla al crear el post
+        autLog("Error: No se pudo crear el post. Error: " . $post_id->get_error_message());
         wp_delete_post($post_id, true);
         eliminarHash($file_id);
         return;
@@ -379,7 +388,7 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     $audio_original_id = adjuntarArchivoAut($nuevaRutaOriginal, $post_id, $file_id);
     if (is_wp_error($audio_original_id)) {
-        autLog("Error: Fallo al adjuntar el archivo original. Error: " . $audio_original_id->get_error_message()); // Registro si falla al adjuntar el original
+        autLog("Error: Fallo al adjuntar el archivo original. Error: " . $audio_original_id->get_error_message());
         wp_delete_post($post_id, true);
         eliminarHash($file_id);
         return $audio_original_id;
@@ -391,28 +400,49 @@ function crearAutPost($rutaOriginal, $rutaWpLite, $file_id)
 
     $audio_lite_id = adjuntarArchivoAut($nuevo_nombre_lite, $post_id);
     if (is_wp_error($audio_lite_id)) {
-        autLog("Error: Fallo al adjuntar el archivo lite. Error: " . $audio_lite_id->get_error_message()); // Registro si falla al adjuntar el lite
+        autLog("Error: Fallo al adjuntar el archivo lite. Error: " . $audio_lite_id->get_error_message());
         wp_delete_post($post_id, true);
         eliminarHash($file_id);
         return $audio_lite_id;
     }
 
     // Metadatos del post
-    update_post_meta($post_id, 'post_audio', $audio_original_id);
-    update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
-    update_post_meta($post_id, 'paraDescarga', true);
-    update_post_meta($post_id, 'nombreOriginal', $nombre_archivo);
-    update_post_meta($post_id, 'carpetaOriginal', $carpeta);
-    update_post_meta($post_id, 'carpetaAbuelaOriginal', $carpeta_abuela);
-    update_post_meta($post_id, 'audio_bpm', $datosAlgoritmo['bpm'] ?? null);
-    update_post_meta($post_id, 'audio_key', $datosAlgoritmo['key'] ?? null);
-    update_post_meta($post_id, 'audio_scale', $datosAlgoritmo['scale'] ?? null);
-    update_post_meta($post_id, 'datosAlgoritmo', json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE));
+    $existing_meta = get_post_meta($post_id);
 
-    autLog("crearAutPost end con post_id: $post_id"); // Fin del registro
+    if (!isset($existing_meta['post_audio'])) {
+        update_post_meta($post_id, 'post_audio', $audio_original_id);
+    }
+    if (!isset($existing_meta['post_audio_lite'])) {
+        update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
+    }
+    if (!isset($existing_meta['paraDescarga'])) {
+        update_post_meta($post_id, 'paraDescarga', true);
+    }
+    if (!isset($existing_meta['nombreOriginal'])) {
+        update_post_meta($post_id, 'nombreOriginal', $nombre_archivo);
+    }
+    if (!isset($existing_meta['carpetaOriginal'])) {
+        update_post_meta($post_id, 'carpetaOriginal', $carpeta);
+    }
+    if (!isset($existing_meta['carpetaAbuelaOriginal'])) {
+        update_post_meta($post_id, 'carpetaAbuelaOriginal', $carpeta_abuela);
+    }
+    if (!isset($existing_meta['audio_bpm'])) {
+        update_post_meta($post_id, 'audio_bpm', $datosAlgoritmo['bpm'] ?? null);
+    }
+    if (!isset($existing_meta['audio_key'])) {
+        update_post_meta($post_id, 'audio_key', $datosAlgoritmo['key'] ?? null);
+    }
+    if (!isset($existing_meta['audio_scale'])) {
+        update_post_meta($post_id, 'audio_scale', $datosAlgoritmo['scale'] ?? null);
+    }
+    if (!isset($existing_meta['datosAlgoritmo'])) {
+        update_post_meta($post_id, 'datosAlgoritmo', json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE));
+    }
+
+    autLog("crearAutPost end con post_id: $post_id");
     return $post_id;
 }
-
 
 
 function adjuntarArchivoAut($archivo, $post_id, $file_id = null)
