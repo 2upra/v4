@@ -372,13 +372,18 @@ function nextWave() {
 
     containers.forEach(container => {
         const postId = container.dataset.postId;
+
+        // **Obtener el contenedor interno .waveform-container**
+        const innerContainer = container.querySelector('.waveform-container');
+
         // Buscar botones DENTRO del contenedor actual
         const prevButton = container.querySelector('#prevWave');
         const nextButton = container.querySelector('#nextWave');
         let currentDiv = 0;
 
-        // Si no hay botones, no hacer nada para este contenedor
-        if (!prevButton && !nextButton) {
+        // Si no hay botones o no hay contenedor interno, no hacer nada
+        if ((!prevButton && !nextButton) || !innerContainer) {
+            console.warn(`No se encontraron botones o contenedor interno para el post ID: ${postId}`);
             return; // Salir del bucle para este contenedor
         }
 
@@ -390,40 +395,60 @@ function nextWave() {
             nextButton.dataset.postId = postId;
         }
 
+        // **Función para actualizar la visibilidad de los botones**
         function updateButtons() {
+            // innerContainer.children son los divs de las ondas
             if (prevButton) {
                 prevButton.disabled = currentDiv === 0;
+                console.log(`prevButton para post ${postId} está ${prevButton.disabled ? 'deshabilitado' : 'habilitado'}`);
             }
             if (nextButton) {
-                nextButton.disabled = currentDiv === container.children.length - 1;
+                nextButton.disabled = currentDiv === innerContainer.children.length - 1;
+                console.log(`nextButton para post ${postId} está ${nextButton.disabled ? 'deshabilitado' : 'habilitado'}`);
             }
         }
 
+        // **Función para hacer scroll a la onda seleccionada**
         function scrollToDiv(index) {
             currentDiv = index;
-            if (container.children.length > 0) {
-                const divWidth = container.children[0].offsetWidth;
+            if (innerContainer.children.length > 0) {
+                // Asegurarse que el índice esté dentro del rango
+                currentDiv = Math.max(0, Math.min(currentDiv, innerContainer.children.length - 1));
+
+                // Calcula el ancho total visible (considerando margin-right de 10px)
+                const divWidth = innerContainer.children[0].offsetWidth + 10;
                 const scrollPosition = divWidth * currentDiv;
-                container.scrollTo({
+
+                // **Aplicar el scroll al contenedor interno**
+                innerContainer.scrollTo({
                     left: scrollPosition,
                     behavior: 'smooth'
                 });
+                console.log(`Desplazando a la onda ${currentDiv} del post ${postId}, posición: ${scrollPosition}`);
             }
             updateButtons();
         }
 
+        // **Event listeners para los botones (si existen)**
         if (nextButton) {
             nextButton.addEventListener('click', () => {
+                console.log(`Clic en nextButton para el post ${postId}`);
                 scrollToDiv(currentDiv + 1);
             });
         }
 
         if (prevButton) {
             prevButton.addEventListener('click', () => {
+                console.log(`Clic en prevButton para el post ${postId}`);
                 scrollToDiv(currentDiv - 1);
             });
         }
 
+        // **Inicializar los botones**
         updateButtons();
+        // **Inicializar el scroll para que se vea la primera onda, solo si hay más de una**
+        if (innerContainer.children.length > 1) {
+            scrollToDiv(0); // Mostrar la primera onda al inicio
+        }
     });
 }
