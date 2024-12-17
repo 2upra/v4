@@ -144,7 +144,7 @@ function registrarNombreRolas($postId)
 function registrarPrecios($postId)
 {
     for ($i = 1; $i <= 30; $i++) {
-        $precio_key = 'precioBeat' . $i;
+        $precio_key = 'precioRola' . $i;
         if (isset($_POST[$precio_key])) {
             $precio = sanitize_text_field($_POST[$precio_key]);
 

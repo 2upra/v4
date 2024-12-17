@@ -269,6 +269,7 @@ async function envioRs() {
             archivoId1: typeof archivoId !== 'undefined' ? archivoId : null,
             ...audioData,
             ...nombreRolaData,
+            ...precioRolaData,
             tags,
             textoNormal,
             descarga,
