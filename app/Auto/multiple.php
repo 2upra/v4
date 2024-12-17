@@ -66,13 +66,12 @@ function generar_publicaciones_multiples()
                     // Obtener la ruta del archivo en el servidor
                     $upload_dir = wp_upload_dir();
                     $ruta_servidor = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $ruta_audio_lite);
-                    $ruta_original = null; //la ruta original se puede omitir
 
                     error_log('[generar_publicaciones_multiples] - ID del adjunto de audio lite: ' . $audio_lite_id);
                     error_log('[generar_publicaciones_multiples] - URL del archivo de audio lite: ' . $ruta_audio_lite);
                     error_log('[generar_publicaciones_multiples] - Ruta del archivo en el servidor: ' . $ruta_servidor);
 
-                    $nuevo_post_id = crearAutPost($ruta_original, $ruta_servidor, $audio_id_hash, $author_id, $post_id);
+                    $nuevo_post_id = crearAutPost('', $ruta_servidor, $audio_id_hash, $author_id, $post_id);
                     error_log('[generar_publicaciones_multiples] - Resultado de crearAutPost: ' . var_export($nuevo_post_id, true));
                     // Copiar metas al nuevo post si existen y se creó el post
                     if (! is_wp_error($nuevo_post_id) && $nuevo_post_id) {
@@ -139,16 +138,67 @@ function generar_publicaciones_multiples()
     error_log('[generar_publicaciones_multiples] - Fin de la función.');
 }
 
+/*
+[17-Dec-2024 14:06:01 UTC] [generar_publicaciones_multiples] - Se encontraron posts con la meta "multiple".
+[17-Dec-2024 14:06:01 UTC] [generar_publicaciones_multiples] - Procesando post ID: 326983, Autor ID: 1
+[17-Dec-2024 14:06:01 UTC] [generar_publicaciones_multiples] - Valores de metas: paraColab: 0, paraDescarga: 1, artista: 0, fan: 1, rola: 0, sample: 1, tagsUsuario: test
+[17-Dec-2024 14:06:01 UTC] [generar_publicaciones_multiples] - ID del adjunto de audio lite: 326987
+[17-Dec-2024 14:06:01 UTC] [generar_publicaciones_multiples] - URL del archivo de audio lite: https://2upra.com/wp-content/uploads/2024/12/2upra_1ndoryu_Multiple-test_61670_128k.mp3
+[17-Dec-2024 14:06:01 UTC] [generar_publicaciones_multiples] - Ruta del archivo en el servidor: /var/www/wordpress/wp-content/uploads/2024/12/2upra_1ndoryu_Multiple-test_61670_128k.mp3
+[17-Dec-2024 14:06:01 UTC] [crearAutPost] Inicio crearAutPost con rutaOriginal: , rutaWpLite: /var/www/wordpress/wp-content/uploads/2024/12/2upra_1ndoryu_Multiple-test_61670_128k.mp3, file_id: 33481
+[17-Dec-2024 14:06:01 UTC] PHP Deprecated:  pathinfo(): Passing null to parameter #1 ($path) of type string is deprecated in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/multiple.php on line 149
+[17-Dec-2024 14:06:01 UTC] PHP Deprecated:  dirname(): Passing null to parameter #1 ($path) of type string is deprecated in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/multiple.php on line 150
+[17-Dec-2024 14:06:01 UTC] PHP Deprecated:  dirname(): Passing null to parameter #1 ($path) of type string is deprecated in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/multiple.php on line 151
+[17-Dec-2024 14:06:01 UTC] automaticAudio start
+[17-Dec-2024 14:06:03 UTC] PHP Warning:  Array to string conversion in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/automaticPost.php on line 160
+[17-Dec-2024 14:06:09 UTC] Descripcion generada
+[17-Dec-2024 14:06:09 UTC] automaticAudio end
+[17-Dec-2024 14:06:09 UTC] PHP Deprecated:  pathinfo(): Passing null to parameter #1 ($path) of type string is deprecated in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/multiple.php on line 177
+[17-Dec-2024 14:06:09 UTC] PHP Deprecated:  dirname(): Passing null to parameter #1 ($path) of type string is deprecated in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/multiple.php on line 178
+[17-Dec-2024 14:06:09 UTC] PHP Deprecated:  file_exists(): Passing null to parameter #1 ($filename) of type string is deprecated in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/multiple.php on line 179
+[17-Dec-2024 14:06:09 UTC] [crearAutPost] Error: No se puede renombrar el archivo original  a /Dark Melody_NzL9_2upra.
+*/
+
+
 function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null, $autor_id = null, $post_original = null)
 {
-    error_log("[crearAutPost] Inicio crearAutPost con rutaOriginal: $rutaOriginal, rutaWpLite: $rutaWpLite, file_id: $file_id");
+    error_log("[crearAutPost] Inicio crearAutPost con rutaOriginal: " . var_export($rutaOriginal, true) . ", rutaWpLite: " . var_export($rutaWpLite, true) . ", file_id: " . var_export($file_id, true));
 
     if ($autor_id === null) {
         $autor_id = 44;
     }
-    $nombre_archivo = pathinfo($rutaOriginal, PATHINFO_FILENAME);
-    $carpeta = basename(dirname($rutaOriginal));
-    $carpeta_abuela = basename(dirname(dirname($rutaOriginal)));
+
+    $nombre_archivo = null;
+    $carpeta = null;
+    $carpeta_abuela = null;
+    $extension_original = null;
+    $nuevaRutaOriginal = null;
+
+    // Validar y procesar $rutaOriginal si existe
+    if (!empty($rutaOriginal)) {
+        if (!file_exists($rutaOriginal)) {
+            error_log("[crearAutPost] Error: rutaOriginal $rutaOriginal no existe");
+            // Puedes decidir si continuar o retornar aquí, dependiendo de si rutaOriginal es obligatoria
+        } else {
+            $nombre_archivo = pathinfo($rutaOriginal, PATHINFO_FILENAME);
+            $carpeta = basename(dirname($rutaOriginal));
+            $carpeta_abuela = basename(dirname(dirname($rutaOriginal)));
+            $extension_original = pathinfo($rutaOriginal, PATHINFO_EXTENSION);
+        }
+    }
+
+    // Validar $rutaWpLite
+    if (empty($rutaWpLite)) {
+        error_log("[crearAutPost] Error: rutaWpLite no puede estar vacía.");
+        return;
+    }
+
+    if (!file_exists($rutaWpLite)) {
+        error_log("[crearAutPost] Error: rutaWpLite $rutaWpLite no existe");
+        return;
+    }
+
+    //Automatic audio solo necesita la ruta lite para funcionar
     $datosAlgoritmo = automaticAudio($rutaWpLite, $nombre_archivo, $carpeta, $carpeta_abuela);
 
     if (!$datosAlgoritmo) {
@@ -169,28 +219,27 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
         $id_unica = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 4);
         $nombre_final = substr($nombre_generado_limpio . '_' . $id_unica . '_2upra', 0, 60);
     } else {
-        error_log("[crearAutPost] Error: nombre_generado está vacío para rutaOriginal: $rutaOriginal");
+        error_log("[crearAutPost] Error: nombre_generado está vacío");
         eliminarHash($file_id);
         return;
     }
 
-    $extension_original = pathinfo($rutaOriginal, PATHINFO_EXTENSION);
-    $nuevaRutaOriginal = dirname($rutaOriginal) . '/' . $nombre_final . '.' . $extension_original;
-    if (!file_exists($rutaOriginal) || (file_exists($nuevaRutaOriginal) && !unlink($nuevaRutaOriginal))) {
-        error_log("[crearAutPost] Error: No se puede renombrar el archivo original $rutaOriginal a $nuevaRutaOriginal");
-        eliminarHash($file_id);
-        return;
-    }
-    if (!rename($rutaOriginal, $nuevaRutaOriginal)) {
-        error_log("[crearAutPost] Error: Fallo al renombrar $rutaOriginal a $nuevaRutaOriginal");
-        eliminarHash($file_id);
-        return;
+    // Manejo de renombrado de archivos, solo si $rutaOriginal existe
+    if (!empty($rutaOriginal) && file_exists($rutaOriginal)) {
+        $nuevaRutaOriginal = dirname($rutaOriginal) . '/' . $nombre_final . '.' . $extension_original;
+        if (file_exists($nuevaRutaOriginal) && !unlink($nuevaRutaOriginal)) {
+            error_log("[crearAutPost] Error: No se puede eliminar el archivo existente $nuevaRutaOriginal");
+            eliminarHash($file_id);
+            return;
+        }
+        if (!rename($rutaOriginal, $nuevaRutaOriginal)) {
+            error_log("[crearAutPost] Error: Fallo al renombrar $rutaOriginal a $nuevaRutaOriginal");
+            eliminarHash($file_id);
+            return;
+        }
     }
 
-    if (!file_exists($rutaWpLite)) {
-        error_log("[crearAutPost] Error: rutaWpLite $rutaWpLite no existe");
-        return;
-    }
+    // Manejo de renombrado de rutaWpLite
     $extension_lite = pathinfo($rutaWpLite, PATHINFO_EXTENSION);
     $nuevo_nombre_lite = dirname($rutaWpLite) . '/' . $nombre_final . '_lite.' . $extension_lite;
     if (file_exists($nuevo_nombre_lite) && !unlink($nuevo_nombre_lite)) {
@@ -225,20 +274,27 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
         return;
     }
 
-    update_post_meta($post_id, 'rutaOriginal', $nuevaRutaOriginal);
+    // Solo actualiza rutaOriginal si existe
+    if (!empty($nuevaRutaOriginal)) {
+        update_post_meta($post_id, 'rutaOriginal', $nuevaRutaOriginal);
+    }
+
     update_post_meta($post_id, 'rutaLiteOriginal', $nuevo_nombre_lite);
     update_post_meta($post_id, 'postAut', true);
 
-    $audio_original_id = adjuntarArchivoAut($nuevaRutaOriginal, $post_id, $file_id);
-    if (is_wp_error($audio_original_id)) {
-        error_log("[crearAutPost] Error: Fallo al adjuntar el archivo original. Error: " . $audio_original_id->get_error_message());
-        wp_delete_post($post_id, true);
-        eliminarHash($file_id);
-        return $audio_original_id;
-    }
-
-    if (file_exists($nuevaRutaOriginal)) {
-        unlink($nuevaRutaOriginal);
+    // Adjuntar archivo original solo si $rutaOriginal existe
+    $audio_original_id = null; // Inicializar para evitar errores si no se adjunta
+    if (!empty($nuevaRutaOriginal)) {
+        $audio_original_id = adjuntarArchivoAut($nuevaRutaOriginal, $post_id, $file_id);
+        if (is_wp_error($audio_original_id)) {
+            error_log("[crearAutPost] Error: Fallo al adjuntar el archivo original. Error: " . $audio_original_id->get_error_message());
+            wp_delete_post($post_id, true);
+            eliminarHash($file_id);
+            return $audio_original_id;
+        }
+        if (file_exists($nuevaRutaOriginal)) {
+            unlink($nuevaRutaOriginal);
+        }
     }
 
     $audio_lite_id = adjuntarArchivoAut($nuevo_nombre_lite, $post_id);
@@ -252,24 +308,31 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
     // Metadatos del post
     $existing_meta = get_post_meta($post_id);
 
-    if (!isset($existing_meta['post_audio'])) {
+    // Solo actualiza post_audio si se adjuntó un archivo original
+    if (!empty($audio_original_id) && !isset($existing_meta['post_audio'])) {
         update_post_meta($post_id, 'post_audio', $audio_original_id);
     }
+
     if (!isset($existing_meta['post_audio_lite'])) {
         update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
     }
     if (!isset($existing_meta['paraDescarga'])) {
         update_post_meta($post_id, 'paraDescarga', true);
     }
-    if (!isset($existing_meta['nombreOriginal'])) {
-        update_post_meta($post_id, 'nombreOriginal', $nombre_archivo);
+
+    // Solo actualiza estos metadatos si $rutaOriginal existía
+    if (!empty($rutaOriginal)) {
+        if (!isset($existing_meta['nombreOriginal'])) {
+            update_post_meta($post_id, 'nombreOriginal', $nombre_archivo);
+        }
+        if (!isset($existing_meta['carpetaOriginal'])) {
+            update_post_meta($post_id, 'carpetaOriginal', $carpeta);
+        }
+        if (!isset($existing_meta['carpetaAbuelaOriginal'])) {
+            update_post_meta($post_id, 'carpetaAbuelaOriginal', $carpeta_abuela);
+        }
     }
-    if (!isset($existing_meta['carpetaOriginal'])) {
-        update_post_meta($post_id, 'carpetaOriginal', $carpeta);
-    }
-    if (!isset($existing_meta['carpetaAbuelaOriginal'])) {
-        update_post_meta($post_id, 'carpetaAbuelaOriginal', $carpeta_abuela);
-    }
+
     if (!isset($existing_meta['audio_bpm'])) {
         update_post_meta($post_id, 'audio_bpm', $datosAlgoritmo['bpm'] ?? null);
     }
@@ -283,7 +346,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
         update_post_meta($post_id, 'datosAlgoritmo', json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE));
     }
 
-    error_log("[crearAutPost] crearAutPost end con post_id: $post_id");
+    error_log("[crearAutPost] crearAutPost end con post_id: " . var_export($post_id, true));
     return $post_id;
 }
 
