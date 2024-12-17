@@ -2,6 +2,7 @@ let currentlyPlayingAudio = null;
 let audioPlayingStatus = false;
 
 function inicializarWaveforms() {
+    nextWave();
     //console.log('inicializarWaveforms start');
     const observer = new IntersectionObserver(
         entries => {
@@ -366,5 +367,63 @@ async function sendImageToServer(imageData, postId) {
     }
 }
 
-// Inicializa los reproductores de audio cuando el DOM está completamente cargado
-document.addEventListener('DOMContentLoaded', inicializarWaveforms);
+function nextWave() {
+    const containers = document.querySelectorAll('.waveforms-container-post');
+
+    containers.forEach(container => {
+        const postId = container.dataset.postId;
+        // Buscar botones DENTRO del contenedor actual
+        const prevButton = container.querySelector('#prevWave');
+        const nextButton = container.querySelector('#nextWave');
+        let currentDiv = 0;
+
+        // Si no hay botones, no hacer nada para este contenedor
+        if (!prevButton && !nextButton) {
+            return; // Salir del bucle para este contenedor
+        }
+
+        // Agregar el post ID a los botones (si existen)
+        if (prevButton) {
+            prevButton.dataset.postId = postId;
+        }
+        if (nextButton) {
+            nextButton.dataset.postId = postId;
+        }
+
+        function updateButtons() {
+            if (prevButton) {
+                prevButton.disabled = currentDiv === 0;
+            }
+            if (nextButton) {
+                nextButton.disabled = currentDiv === container.children.length - 1;
+            }
+        }
+
+        function scrollToDiv(index) {
+            currentDiv = index;
+            if (container.children.length > 0) {
+                const divWidth = container.children[0].offsetWidth;
+                const scrollPosition = divWidth * currentDiv;
+                container.scrollTo({
+                    left: scrollPosition,
+                    behavior: 'smooth'
+                });
+            }
+            updateButtons();
+        }
+
+        if (nextButton) {
+            nextButton.addEventListener('click', () => {
+                scrollToDiv(currentDiv + 1);
+            });
+        }
+
+        if (prevButton) {
+            prevButton.addEventListener('click', () => {
+                scrollToDiv(currentDiv - 1);
+            });
+        }
+
+        updateButtons();
+    });
+}

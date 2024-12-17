@@ -268,6 +268,7 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
             <? endif; ?>
 
             <div class="OASDEF">
+
                 <div class="thePostContet" data-post-id="<? echo esc_attr($post_id); ?>">
                     <? the_content(); ?>
                     <? if (has_post_thumbnail($post_id) && empty($audio_id_lite)) : ?>

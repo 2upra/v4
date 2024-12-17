@@ -570,7 +570,11 @@ function wave($audio_url, $audio_id_lite, $postId)
 {
     $wave = get_post_meta($postId, 'waveform_image_url', true);
     ?>
-    <div class="waveforms-container-post" id="waveforms-container-<? echo $postId; ?>">
+    <div class="waveforms-container-post" id="waveforms-container-<? echo $postId; ?>" data-post-id="<? echo esc_attr($postId); ?>">
+        <div class="botonesWave">
+            <button id="prevWave" data-post-id="<? echo esc_attr($postId); ?>">Anterior</button>
+            <button id="nextWave" data-post-id="<? echo esc_attr($postId); ?>">Siguiente</button>
+        </div>
         <?
         // Cargar la wave para post_audio_lite
         $audio_url_lite = get_post_meta($postId, 'post_audio_lite', true); // Obtener la URL de post_audio_lite
