@@ -458,13 +458,14 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
     /*
     Dificilmente entiendo o olvido para que sirve esto, 
     si esta activiado entonces cualquier filtro de usuario evita que se use default
+    lo que yo supongo es que el caso default no maneja los filtros del usuaro entonces por eso se aplica un return query_args
     */
     
     // Verificar si los filtros del usuario tienen algún valor diferente a `a:0:{}`
     if (!empty($filtrosUsuario) && $filtrosUsuario !== 'a:0:{}') {
         // No usar el caso default si existen filtros específicos
         if ($filtroTiempo === 0) {
-            //return $query_args; // Si pide default, regresar la query sin modificaciones
+            return $query_args; // Si pide default, regresar la query sin modificaciones
         }
     }
 
