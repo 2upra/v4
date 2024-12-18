@@ -34,7 +34,8 @@ function audioUrlSegura($audio_id)
     return $url;
 }
 
-function bloquear_acceso_directo_archivos() {
+function bloquear_acceso_directo_archivos()
+{
     if (strpos($_SERVER['REQUEST_URI'], '/wp-content/uploads/') !== false) {
         // Check for a valid token, maybe in a query parameter or cookie
         $token = $_GET['token'] ?? $_COOKIE['audio_token'] ?? null;
@@ -65,6 +66,11 @@ function decrementaUsosToken($unique_id)
         }
     }
 }
+
+/*
+el ataque se recibio aca, como se hace para bloquear automaticamente solicitudes repetidas de esta forma 
+172.70.254.90 - - [18/Dec/2024:01:03:18 +0100] "GET /wp-json/1/v1/2?token=dasodnsaodnoasdoasnodnasodnoasndoasdmkasmdoasmdqwei0uohfnwriojfnwerio HTTP/1.1" 401 116 "-" "python-requests/2.32.3"
+*/
 
 add_action('rest_api_init', function () {
     //guardarLog('Registrando rutas REST API');
@@ -103,57 +109,42 @@ add_action('rest_api_init', function () {
     //guardarLog('Rutas REST API registradas');
 });
 
-function tokenAudio($audio_id)
+function verificarAudio($token)
 {
-    //guardarLog("Generando token para audio_id: $audio_id");
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $limit = 10; // Número máximo de intentos fallidos en un período de tiempo
+    $time_window = 10; // Período de tiempo en segundos (60 segundos = 1 minuto)
+    $block_duration = 300; // Tiempo de bloqueo en segundos (300 segundos = 5 minutos)
 
-    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
-        //guardarLog("Error: audio_id inválido: $audio_id");
+    // Obtener el contador de intentos fallidos para la IP actual
+    $attempts_key = 'failed_attempts_' . $ip;
+    $attempts = get_transient($attempts_key);
+
+    if ($attempts === false) {
+        $attempts = 0;
+    }
+
+    // Comprobar si la IP está bloqueada
+    $blocked_key = 'blocked_ip_' . $ip;
+    $is_blocked = get_transient($blocked_key);
+
+    if ($is_blocked !== false) {
+        //guardarLog("Error: IP bloqueada temporalmente debido a múltiples intentos fallidos");
+        header("HTTP/1.1 429 Too Many Requests");
         return false;
     }
 
-    // Si el cacheo del navegador está activado, generamos un token más persistente
-    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
-        // Usar una fecha fija para que el token sea consistente
-        $expiration = strtotime('2030-12-31'); // Fecha lejana fija
-        $user_ip = 'cached'; // No usamos IP para permitir el cacheo
-        $unique_id = md5($audio_id . $_ENV['AUDIOCLAVE']); // ID único pero consistente
-        $max_usos = 999999; // Número alto de usos
-
-        $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
-        $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
-        $token = base64_encode($data . '|' . $max_usos . '|' . $signature);
-
-        // No necesitamos almacenar el contador de usos para tokens cacheados
-        return $token;
-    } else {
-        // Comportamiento original para cuando el cacheo está desactivado
-        $expiration = time() + 3600;
-        $user_ip = $_SERVER['REMOTE_ADDR'];
-        $unique_id = uniqid('', true);
-        $max_usos = 3;
-
-        $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
-        $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
-        $token = base64_encode($data . '|' . $max_usos . '|' . $signature);
-
-        set_transient('audio_token_' . $unique_id, $max_usos, 3600);
-
-        //guardarLog("Token generado exitosamente: $token");
-        return $token;
-    }
-}
-
-
-function verificarAudio($token)
-{
-    //guardarLog("Verificando token: $token");
-    //guardarLog("Iniciando verificación de audio");
-    //guardarLog("Token recibido: " . $token);
-    //guardarLog("Headers recibidos: " . print_r(getallheaders(), true));
-
     if (empty($token)) {
-        //guardarLog("Error: token vacío");
+        // Incrementar el contador de intentos fallidos
+        $attempts++;
+        set_transient($attempts_key, $attempts, $time_window);
+
+        // Bloquear la IP si se excede el límite
+        if ($attempts >= $limit) {
+            set_transient($blocked_key, true, $block_duration);
+            //guardarLog("Bloqueando IP: " . $ip . " por " . $block_duration . " segundos");
+        }
+        header("HTTP/1.1 401 Unauthorized");
         return false;
     }
 
@@ -251,6 +242,50 @@ function verificarAudio($token)
         return false;
     }
 }
+
+function tokenAudio($audio_id)
+{
+    //guardarLog("Generando token para audio_id: $audio_id");
+
+    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $audio_id)) {
+        //guardarLog("Error: audio_id inválido: $audio_id");
+        return false;
+    }
+
+    // Si el cacheo del navegador está activado, generamos un token más persistente
+    if (defined('ENABLE_BROWSER_AUDIO_CACHE') && ENABLE_BROWSER_AUDIO_CACHE) {
+        // Usar una fecha fija para que el token sea consistente
+        $expiration = strtotime('2030-12-31'); // Fecha lejana fija
+        $user_ip = 'cached'; // No usamos IP para permitir el cacheo
+        $unique_id = md5($audio_id . $_ENV['AUDIOCLAVE']); // ID único pero consistente
+        $max_usos = 999999; // Número alto de usos
+
+        $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
+        $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
+        $token = base64_encode($data . '|' . $max_usos . '|' . $signature);
+
+        // No necesitamos almacenar el contador de usos para tokens cacheados
+        return $token;
+    } else {
+        // Comportamiento original para cuando el cacheo está desactivado
+        $expiration = time() + 3600;
+        $user_ip = $_SERVER['REMOTE_ADDR'];
+        $unique_id = uniqid('', true);
+        $max_usos = 3;
+
+        $data = $audio_id . '|' . $expiration . '|' . $user_ip . '|' . $unique_id;
+        $signature = hash_hmac('sha256', $data, $_ENV['AUDIOCLAVE']);
+        $token = base64_encode($data . '|' . $max_usos . '|' . $signature);
+
+        set_transient('audio_token_' . $unique_id, $max_usos, 3600);
+
+        //guardarLog("Token generado exitosamente: $token");
+        return $token;
+    }
+}
+
+
+
 
 
 
