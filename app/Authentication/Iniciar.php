@@ -405,13 +405,7 @@ add_action('rest_api_init', function () {
 });
 
 
-/**
- * Guarda el token de Firebase para un usuario específico y evita duplicados.
- * También guarda la versión de la aplicación.
- *
- * @param WP_REST_Request $request La solicitud REST.
- * @return array|WP_Error Respuesta de éxito o error.
- */
+
 function save_firebase_token($request)
 {
     $user_id = $request->get_param('userId'); // Obtener el userId desde la solicitud
@@ -457,13 +451,6 @@ function save_firebase_token($request)
     }
 }
 
-/**
- * Función auxiliar para guardar la versión de la app.
- * Evita que se creen metas duplicadas.
- *
- * @param int $user_id ID del usuario.
- * @param WP_REST_Request $request La solicitud REST.
- */
 function save_version_meta($user_id, $request)
 {
     // Obtener la versión de la app desde la solicitud
