@@ -456,7 +456,7 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
     $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
 
     /*
-    Dificilmente entiendo esto, 
+    Dificilmente entiendo o olvido para que sirve esto, 
     si esta activiado entonces cualquier filtro de usuario evita que se use default
     */
     
