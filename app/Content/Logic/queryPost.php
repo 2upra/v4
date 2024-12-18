@@ -469,7 +469,7 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
     if (!empty($filtrosUsuario) && $filtrosUsuario !== 'a:0:{}') {
         // No usar el caso default si existen filtros específicos
         if ($filtroTiempo === 0) {
-            return $query_args; // Si pide default, regresar la query sin modificaciones
+            //return $query_args; // Si pide default, regresar la query sin modificaciones
         }
     }
 
