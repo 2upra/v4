@@ -336,7 +336,6 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual, $id
     return $query_args;
 }
 
-
 function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoUsuario = null)
 {
     if (!empty($userId)) {
@@ -464,7 +463,7 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
         }
     }
 
-    //error_log("[ordenamiento] aplicando ordenamiento");
+    error_log("[ordenamiento] aplicando ordenamiento");
 
     try {
         global $wpdb;
