@@ -455,11 +455,16 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
     // Obtener los filtros del usuario
     $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
 
+    /*
+    Dificilmente entiendo esto, 
+    si esta activiado entonces cualquier filtro de usuario evita que se use default
+    */
+    
     // Verificar si los filtros del usuario tienen algún valor diferente a `a:0:{}`
     if (!empty($filtrosUsuario) && $filtrosUsuario !== 'a:0:{}') {
         // No usar el caso default si existen filtros específicos
         if ($filtroTiempo === 0) {
-            return $query_args; // Si pide default, regresar la query sin modificaciones
+            //return $query_args; // Si pide default, regresar la query sin modificaciones
         }
     }
 
