@@ -406,44 +406,65 @@ add_action('rest_api_init', function () {
 
 
 
+
+
 function save_firebase_token($request)
 {
     $user_id = $request->get_param('userId'); // Obtener el userId desde la solicitud
+    error_log("Inicio de la función save_firebase_token. userId recibido: " . $user_id);
 
     // Verificar si el ID de usuario es válido
-    if (!$user_id || !get_userdata($user_id)) {
+    if (!$user_id) {
+        error_log("Error: userId no proporcionado.");
         return new WP_Error('invalid_user', 'El usuario no existe o el ID es inválido.', array('status' => 400));
     }
 
+    if (!get_userdata($user_id)) {
+        error_log("Error: No se encontró un usuario con el ID: " . $user_id);
+        return new WP_Error('invalid_user', 'El usuario no existe o el ID es inválido.', array('status' => 400));
+    }
+    error_log("Usuario válido encontrado con ID: " . $user_id);
+
     $firebase_token = sanitize_text_field($request->get_param('token'));
+    error_log("Token recibido: " . $firebase_token);
 
     // Verificar que el token no esté vacío
     if (!$firebase_token) {
+        error_log("Error: Token no proporcionado.");
         return new WP_Error('no_token', 'El token es requerido.', array('status' => 400));
     }
 
     // Guardar el token, solo si es diferente al actual
     $current_token = get_user_meta($user_id, 'firebase_token', true);
+    error_log("Token actual del usuario: " . $current_token);
 
     if ($current_token !== $firebase_token) {
         // Actualizar el token del usuario
         $updated = update_user_meta($user_id, 'firebase_token', $firebase_token);
+        error_log("Resultado de update_user_meta para firebase_token: " . var_export($updated, true));
 
         if (!$updated) {
+            error_log("Error: No se pudo guardar el token en la base de datos.");
             return new WP_Error('save_failed', 'No se pudo guardar el token.', array('status' => 500));
         }
+        error_log("Token actualizado correctamente.");
+    } else {
+        error_log("El token recibido es igual al token actual. No se actualiza.");
     }
 
     // Guardar la versión de la app
+    error_log("Llamando a la función save_version_meta.");
     save_version_meta($user_id, $request);
 
     // Verificar si el token se guardó correctamente o si ya existía
     if ($current_token === $firebase_token) {
+        error_log("El token ya estaba guardado. Versión de la app actualizada correctamente.");
         return array(
             'success' => true,
             'message' => 'El token ya estaba guardado. Versión de la app actualizada correctamente.',
         );
     } else {
+        error_log("Token y versión de la app guardados correctamente.");
         return array(
             'success' => true,
             'message' => 'Token y versión de la app guardados correctamente.',
@@ -453,22 +474,54 @@ function save_firebase_token($request)
 
 function save_version_meta($user_id, $request)
 {
+    error_log("Inicio de la función save_version_meta para el usuario: " . $user_id);
+
     // Obtener la versión de la app desde la solicitud
     $app_version_name = sanitize_text_field($request->get_param('appVersionName'));
     $app_version_code = intval($request->get_param('appVersionCode')); // Convertir a entero
 
+    error_log("appVersionName recibido: " . $app_version_name);
+    error_log("appVersionCode recibido: " . $app_version_code);
+
     // Guardar la versión de la app solo si están presentes y son diferentes a las actuales
     if ($app_version_name) {
         $current_app_version_name = get_user_meta($user_id, 'app_version_name', true);
+        error_log("appVersionName actual del usuario: " . $current_app_version_name);
+
         if ($current_app_version_name !== $app_version_name) {
-            update_user_meta($user_id, 'app_version_name', $app_version_name);
+            $updated_name = update_user_meta($user_id, 'app_version_name', $app_version_name);
+            error_log("Resultado de update_user_meta para app_version_name: " . var_export($updated_name, true));
+            if ($updated_name) {
+                error_log("appVersionName actualizada correctamente.");
+            } else {
+                error_log("Error al actualizar appVersionName.");
+            }
+        } else {
+            error_log("appVersionName recibido es igual al actual. No se actualiza.");
         }
+    } else {
+        error_log("appVersionName no proporcionado.");
     }
 
     if ($app_version_code) {
         $current_app_version_code = get_user_meta($user_id, 'app_version_code', true);
+        error_log("appVersionCode actual del usuario: " . $current_app_version_code);
+
         if ($current_app_version_code !== $app_version_code) {
-            update_user_meta($user_id, 'app_version_code', $app_version_code);
+            $updated_code = update_user_meta($user_id, 'app_version_code', $app_version_code);
+            error_log("Resultado de update_user_meta para app_version_code: " . var_export($updated_code, true));
+
+            if ($updated_code) {
+                error_log("appVersionCode actualizado correctamente.");
+            } else {
+                error_log("Error al actualizar appVersionCode.");
+            }
+        } else {
+            error_log("appVersionCode recibido es igual al actual. No se actualiza.");
         }
+    } else {
+        error_log("appVersionCode no proporcionado.");
     }
+
+    error_log("Fin de la función save_version_meta.");
 }
