@@ -49,83 +49,85 @@ function modalApp()
             </div>
         </div>
         <script>
-            window.createAppmodalBackground = function() {
-                let darkBackground = document.getElementById('backgroundModalApp');
-                if (!darkBackground) {
-                    darkBackground = document.createElement('div');
-                    darkBackground.id = 'backgroundModalApp';
-                    darkBackground.style.position = 'fixed';
-                    darkBackground.style.top = 0;
-                    darkBackground.style.left = 0;
-                    darkBackground.style.width = '100%';
-                    darkBackground.style.height = '100%';
-                    darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-                    darkBackground.style.zIndex = 1003;
-                    darkBackground.style.display = 'none';
-                    darkBackground.style.pointerEvents = 'none';
-                    darkBackground.style.opacity = '0';
-                    darkBackground.style.transition = 'opacity 0.3s ease';
-                    document.body.appendChild(darkBackground);
-                }
-
-                darkBackground.style.display = 'block';
-                setTimeout(() => {
-                    darkBackground.style.opacity = '1';
-                }, 10);
-                darkBackground.style.pointerEvents = 'auto';
-            };
-
-            window.quitCreateAppmodalBackground = function() {
-                const darkBackground = document.getElementById('backgroundModalApp');
-                if (darkBackground) {
-                    darkBackground.style.opacity = '0';
-                    setTimeout(() => {
+            if (!userAgent.includes('AppAndroid')) {
+                window.createAppmodalBackground = function() {
+                    let darkBackground = document.getElementById('backgroundModalApp');
+                    if (!darkBackground) {
+                        darkBackground = document.createElement('div');
+                        darkBackground.id = 'backgroundModalApp';
+                        darkBackground.style.position = 'fixed';
+                        darkBackground.style.top = 0;
+                        darkBackground.style.left = 0;
+                        darkBackground.style.width = '100%';
+                        darkBackground.style.height = '100%';
+                        darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                        darkBackground.style.zIndex = 1003;
                         darkBackground.style.display = 'none';
                         darkBackground.style.pointerEvents = 'none';
-                    }, 300);
-                }
-            };
+                        darkBackground.style.opacity = '0';
+                        darkBackground.style.transition = 'opacity 0.3s ease';
+                        document.body.appendChild(darkBackground);
+                    }
 
-            document.addEventListener('DOMContentLoaded', function() {
-                const modal = document.querySelector('.mensajeApp');
-                const botonDespues = document.querySelector('.botonAppDespues');
-                const botonDescargar = document.querySelector('.botonDescargar');
-
-                const storageKey = 'appModalStatus';
-
-                const modalStatus = JSON.parse(localStorage.getItem(storageKey)) || {
-                    showCount: 0,
-                    lastHiddenDate: null
+                    darkBackground.style.display = 'block';
+                    setTimeout(() => {
+                        darkBackground.style.opacity = '1';
+                    }, 10);
+                    darkBackground.style.pointerEvents = 'auto';
                 };
 
+                window.quitCreateAppmodalBackground = function() {
+                    const darkBackground = document.getElementById('backgroundModalApp');
+                    if (darkBackground) {
+                        darkBackground.style.opacity = '0';
+                        setTimeout(() => {
+                            darkBackground.style.display = 'none';
+                            darkBackground.style.pointerEvents = 'none';
+                        }, 300);
+                    }
+                };
 
-                function showModal() {
-                    createAppmodalBackground(); // Show the dark background
-                    modal.style.display = 'flex';
-                    modalStatus.showCount++;
-                    localStorage.setItem(storageKey, JSON.stringify(modalStatus));
+                document.addEventListener('DOMContentLoaded', function() {
+                    const modal = document.querySelector('.mensajeApp');
+                    const botonDespues = document.querySelector('.botonAppDespues');
+                    const botonDescargar = document.querySelector('.botonDescargar');
 
-                    //Actualiza la cookie
-                    document.cookie = 'appModalStatus=' + JSON.stringify(modalStatus) + ';path=/';
-                }
+                    const storageKey = 'appModalStatus';
 
-                function hideModalForDay() {
-                    quitCreateAppmodalBackground(); // Hide the dark background
-                    modal.style.display = 'none';
-                    modalStatus.lastHiddenDate = new Date().toISOString();
-                    localStorage.setItem(storageKey, JSON.stringify(modalStatus));
-                    //Actualiza la cookie
-                    document.cookie = 'appModalStatus=' + JSON.stringify(modalStatus) + ';path=/';
-                }
+                    const modalStatus = JSON.parse(localStorage.getItem(storageKey)) || {
+                        showCount: 0,
+                        lastHiddenDate: null
+                    };
 
-                showModal();
 
-                botonDespues.addEventListener('click', hideModalForDay);
-                botonDescargar.addEventListener('click', function() {
-                    window.location.href = "https://2upra.com/wp-content/uploads/2024/12/2upra0.3.apk";
-                    hideModalForDay();
+                    function showModal() {
+                        createAppmodalBackground(); // Show the dark background
+                        modal.style.display = 'flex';
+                        modalStatus.showCount++;
+                        localStorage.setItem(storageKey, JSON.stringify(modalStatus));
+
+                        //Actualiza la cookie
+                        document.cookie = 'appModalStatus=' + JSON.stringify(modalStatus) + ';path=/';
+                    }
+
+                    function hideModalForDay() {
+                        quitCreateAppmodalBackground(); // Hide the dark background
+                        modal.style.display = 'none';
+                        modalStatus.lastHiddenDate = new Date().toISOString();
+                        localStorage.setItem(storageKey, JSON.stringify(modalStatus));
+                        //Actualiza la cookie
+                        document.cookie = 'appModalStatus=' + JSON.stringify(modalStatus) + ';path=/';
+                    }
+
+                    showModal();
+
+                    botonDespues.addEventListener('click', hideModalForDay);
+                    botonDescargar.addEventListener('click', function() {
+                        window.location.href = "https://2upra.com/wp-content/uploads/2024/12/2upra0.3.apk";
+                        hideModalForDay();
+                    });
                 });
-            });
+            }
         </script>
     <?php
     endif;
