@@ -456,11 +456,15 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
     $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
 
     /*
+    1#
     Dificilmente entiendo o olvido para que sirve esto, 
     si esta activiado entonces cualquier filtro de usuario evita que se use default
     lo que yo supongo es que el caso default no maneja los filtros del usuaro entonces por eso se aplica un return query_args
+
+    2#
+    Efectivamente el causo default no entiende los filtros del usuario
     */
-    
+
     // Verificar si los filtros del usuario tienen algún valor diferente a `a:0:{}`
     if (!empty($filtrosUsuario) && $filtrosUsuario !== 'a:0:{}') {
         // No usar el caso default si existen filtros específicos
@@ -531,26 +535,24 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
             default: // Feed personalizado
                 //error_log("[ordenamiento] caso default!");
 
-                // Si no hay filtros, permitir el caso default solo si filtrosUsuario está vacío
-                if (empty($filtrosUsuario) || $filtrosUsuario === 'a:0:{}') {
-                    $feed_result = obtenerFeedPersonalizado($usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts);
+                $feed_result = obtenerFeedPersonalizado($usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario, $filtrosUsuario);
 
-                    if (!empty($feed_result['post_ids'])) {
-                        $query_args['post__in'] = $feed_result['post_ids'];
-                        $query_args['orderby'] = 'post__in';
+                if (!empty($feed_result['post_ids'])) {
+                    $query_args['post__in'] = $feed_result['post_ids'];
+                    $query_args['orderby'] = 'post__in';
 
-                        if (count($feed_result['post_ids']) > POSTINLIMIT) {
-                            $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, POSTINLIMIT);
-                        }
-
-                        if (!empty($feed_result['post_not_in'])) {
-                            $query_args['post__not_in'] = $feed_result['post_not_in'];
-                        }
-                    } else {
-                        $query_args['orderby'] = 'date';
-                        $query_args['order'] = 'DESC';
+                    if (count($feed_result['post_ids']) > POSTINLIMIT) {
+                        $feed_result['post_ids'] = array_slice($feed_result['post_ids'], 0, POSTINLIMIT);
                     }
+
+                    if (!empty($feed_result['post_not_in'])) {
+                        $query_args['post__not_in'] = $feed_result['post_not_in'];
+                    }
+                } else {
+                    $query_args['orderby'] = 'date';
+                    $query_args['order'] = 'DESC';
                 }
+
                 break;
         }
 
