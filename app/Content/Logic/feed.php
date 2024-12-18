@@ -8,7 +8,8 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             guardarLog("Error: ID de usuario no válido al obtener feed personalizado");
             return ['post_ids' => [], 'post_not_in' => []];
         }
-
+        
+        $filtrosUsuario = get_user_meta($current_user_id, 'filtroPost', true);
         error_log("Tipo de Usuario: " . print_r($tipoUsuario, true));
         error_log("Filtros de Usuario: " . print_r($filtrosUsuario, true));
 
