@@ -386,10 +386,8 @@ add_action('wp_head', function () {
     if (is_user_logged_in()) {
         $user_id = get_current_user_id();
         echo "<script>
-    window.userId = {
-        $user_id
-    };
-</script>";
+        window.userId = '" . $user_id . "';
+        </script>";
     }
 });
 
@@ -400,13 +398,9 @@ add_action('rest_api_init', function () {
     register_rest_route('custom/v1', '/save-token', array(
         'methods' => 'POST',
         'callback' => 'save_firebase_token',
-        'permission_callback' => '__return_true', // Permitir acceso sin autenticación
+        'permission_callback' => '__return_true', 
     ));
 });
-
-
-
-
 
 function save_firebase_token($request)
 {
