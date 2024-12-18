@@ -384,14 +384,12 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
             }
         },
         'sampleList' => [
-            'relation' => 'OR', // Modificación clave
+            'relation' => 'AND', // Importante cambiar a AND
+            ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
             [
+                'relation' => 'OR',
                 ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
-                ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
-            ],
-            [
                 ['key' => 'tienda', 'value' => '1', 'compare' => '='],
-                ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
             ],
         ],
         'colab' => fn() => $query_args['post_status'] = 'publish',
