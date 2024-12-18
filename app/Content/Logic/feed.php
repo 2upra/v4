@@ -9,7 +9,8 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             return ['post_ids' => [], 'post_not_in' => []];
         }
 
-        //error_log("Identifier recibido obtenerFeedPersonalizado: " . $identifier);
+        error_log("Tipo de Usuario: " . print_r($tipoUsuario, true));
+        error_log("Filtros de Usuario: " . print_r($filtrosUsuario, true));
 
         if ($similar_to) {
             $resultado_similares = obtenerPostsSimilares($current_user_id, $similar_to);
