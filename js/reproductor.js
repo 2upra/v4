@@ -45,16 +45,16 @@ function inicializarReproductorAudio() {
     
             log06('Updated title and author:', shortTitle, shortAuthor);
     
-            // Envía la información a Android
-            if (typeof Android !== 'undefined') {
+            // Envía la información a Android a través de la interfaz correcta
+            if (typeof AndroidAudioPlayer !== 'undefined') {
                 const audioSrc = container.querySelector('.audio-container audio')?.getAttribute('src');
-                Android.sendAudioInfo(shortTitle, shortAuthor, imageUrl, audioSrc);
+                AndroidAudioPlayer.sendAudioInfo(shortTitle, shortAuthor, imageUrl, audioSrc);
             }
         } else {
             log06('Info div not found');
         }
     }
-
+    
     //VOLUMEN
     const volumeControl = document.querySelector('.volume-control');
     const volumeButton = document.querySelector('.JMFCAI');
