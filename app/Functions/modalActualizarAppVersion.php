@@ -9,7 +9,9 @@ function mostrarModalActualizacionApp()
     if ($version_usuario && $version_usuario !== $version_actual) {
         $mostrar_modal = false;
     }
-
+    if ($usuario_actual->ID = '355') {
+        $mostrar_modal = false;
+    }
     if ($mostrar_modal) :
         echo generarEstilosModalActualizacion();
 ?>
