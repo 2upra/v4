@@ -35,17 +35,29 @@ function stripecomprabeat() {
                 modal.classList.add('modal', 'bloque', 'modalpreCompra');
 
                 const modalContent = document.createElement('div');
+                modalContent.classList.add('modal-content');
 
-                const titleModal = document.createElement('h3');
-                titleModal.textContent = title;
-
+                // Div para la imagen
+                const imageDiv = document.createElement('div');
+                imageDiv.classList.add('modal-image-container');
                 const imageModal = document.createElement('img');
                 imageModal.src = imageUrl;
-                imageModal.style.maxWidth = '100%'; // Opcional: para asegurar que la imagen no sea demasiado grande
+                imageModal.style.maxWidth = '100%';
+                imageDiv.appendChild(imageModal);
 
+                // Div para el título y la descripción
+                const titleDescriptionDiv = document.createElement('div');
+                titleDescriptionDiv.classList.add('modal-text-container');
+                const titleModal = document.createElement('h3');
+                titleModal.textContent = title;
                 const confirmText = document.createElement('p');
                 confirmText.textContent = '¿Deseas comprar este audio?';
+                titleDescriptionDiv.appendChild(titleModal);
+                titleDescriptionDiv.appendChild(confirmText);
 
+                // Div para los botones
+                const buttonsDiv = document.createElement('div');
+                buttonsDiv.classList.add('modal-buttons-container');
                 const confirmButton = document.createElement('button');
                 confirmButton.textContent = 'Confirmar Compra';
                 confirmButton.addEventListener('click', async () => {
@@ -106,12 +118,17 @@ function stripecomprabeat() {
                     // Cerrar el modal
                     document.body.removeChild(modal);
                 });
+                buttonsDiv.appendChild(confirmButton);
+                buttonsDiv.appendChild(cancelButton);
 
-                modalContent.appendChild(titleModal);
-                modalContent.appendChild(imageModal);
-                modalContent.appendChild(confirmText);
-                modalContent.appendChild(confirmButton);
-                modalContent.appendChild(cancelButton);
+                // Div que contiene el titulo/descripcion y los botones
+                const textButtonsDiv = document.createElement('div');
+                textButtonsDiv.classList.add('modal-text-buttons-container');
+                textButtonsDiv.appendChild(titleDescriptionDiv);
+                textButtonsDiv.appendChild(buttonsDiv);
+
+                modalContent.appendChild(imageDiv);
+                modalContent.appendChild(textButtonsDiv);
                 modal.appendChild(modalContent);
 
                 // Agregar el modal al body
