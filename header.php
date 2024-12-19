@@ -366,7 +366,7 @@ if (!defined('ABSPATH')) {
 
                 <? echo config() ?>
                 <? echo formRs() ?>
-                <? //echo mostrarModalActualizacionApp() ?>
+                <? echo mostrarModalActualizacionApp() ?>
 
                 <!-- Enviar mensaje de error -->
                 <div id="formularioError" class="formularioError" style="display:none;">
@@ -386,7 +386,7 @@ if (!defined('ABSPATH')) {
                     <div class="A1806242">
                         <button><a href="<?php echo home_url('/perfil/'); ?>">Perfil</a></button>
                         <button class="reporte">Reportar un error</button>
-                        <button class="no-ajax"><a href="https://2upra.com/wp-content/uploads/2024/12/2upra0.3.apk">App Android</a></button>
+                        <button class="no-ajax"><a href="https://2upra.com/wp-content/uploads/2024/12/2upra-glory.apk">App Android</a></button>
                         <button class="no-ajax"><a href="https://github.com/1ndoryu/sync2upra/releases/download/v1.0.2/Sync-2upra-Setup-1.0.2.exe">Sync Windows</a></button>
 
                         <button class="no-ajax"><a class="no-ajax" href="<?php echo wp_logout_url(home_url()); ?>">Cerrar sesión</a></button>
