@@ -38,7 +38,6 @@ window.removePrecompraBackground = function () {
     }
 };
 
-
 function stripecomprabeat() {
     const botonesCompraDiv = document.querySelectorAll('.botonCompraDiv');
 
@@ -102,6 +101,8 @@ function stripecomprabeat() {
                 buttonsDiv.classList.add('modal-buttons-container');
                 const confirmButton = document.createElement('button');
                 confirmButton.textContent = 'Confirmar Compra';
+                // Añadimos la clase botonprincipal aquí
+                confirmButton.classList.add('botonprincipal');
                 confirmButton.addEventListener('click', async () => {
                     // Cerrar el modal y el background
                     document.body.removeChild(modal);
