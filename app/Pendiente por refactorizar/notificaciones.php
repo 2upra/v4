@@ -87,19 +87,17 @@ function procesar_notificaciones()
     }
 }
 
-function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false, $postIdRelacionado = 0, $Titulo = 'Nueva notificación', $url = null, $emisor = null)
+function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false, $postIdRelacionado = 0, $titulo = 'Nueva notificación', $url = null, $emisor = null)
 {
-    // Verifica que el usuario receptor sea válido
     $usuario = get_user_by('ID', $usuarioReceptor);
     if (!$usuario) {
         error_log("[crearNotificacion] Error: Usuario receptor no válido ID: " . $usuarioReceptor);
         return new WP_Error('usuario_invalido', "Usuario receptor no válido ID: " . $usuarioReceptor);
     }
 
-    // Crear el post de la notificación
-    $nuevoPost = [
+    $postId = wp_insert_post([
         'post_type'   => 'notificaciones',
-        'post_title'   => $Titulo,
+        'post_title'   => $titulo,
         'post_content' => wp_kses($contenido, 'post'),
         'post_author'  => $usuarioReceptor,
         'post_status'  => 'publish',
@@ -108,29 +106,27 @@ function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false,
             'solicitud' => $metaSolicitud,
             'post_relacionado' => intval($postIdRelacionado),
         ]
-    ];
+    ]);
 
-    $postId = wp_insert_post($nuevoPost);
-
-    // Si hay un error, lo registramos
     if (is_wp_error($postId)) {
         error_log("[crearNotificacion] Error al crear la notificación: " . $postId->get_error_message());
         return $postId;
     }
 
-    // Enviar notificación push
+    $url = $url ?? get_permalink($postId);
+
     $firebase_token = get_user_meta($usuarioReceptor, 'firebase_token', true);
     if (empty($firebase_token)) {
-        return $postId; // No hay token, no se envía push
+        return $postId;
     }
 
-    $resultadoPush = send_push_notification($usuarioReceptor, $Titulo, $contenido, $url ?? home_url());
+    $resultadoPush = send_push_notification($usuarioReceptor, $titulo, $contenido, $url);
     if (is_wp_error($resultadoPush)) {
         if (in_array($resultadoPush->get_error_code(), ['not_found', 'no_token'])) {
             delete_user_meta($usuarioReceptor, 'firebase_token');
             error_log("[crearNotificacion] Token de Firebase eliminado para el usuario ID: " . $usuarioReceptor);
         }
-        return $resultadoPush; // Devolver el error
+        return $resultadoPush;
     }
 
     error_log("[crearNotificacion] Notificación push enviada con éxito al usuario ID: " . $usuarioReceptor);

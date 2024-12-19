@@ -366,6 +366,7 @@ if (!defined('ABSPATH')) {
 
                 <? echo config() ?>
                 <? echo formRs() ?>
+                <? echo //mostrarModalActualizacionApp() ?>
 
                 <!-- Enviar mensaje de error -->
                 <div id="formularioError" class="formularioError" style="display:none;">
