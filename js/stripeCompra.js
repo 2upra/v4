@@ -1,3 +1,44 @@
+
+
+window.createPrecompraDarkBackground = function () {
+    let darkBackground = document.getElementById('createPrecompraDarkBackground');
+    if (!darkBackground) {
+        darkBackground = document.createElement('div');
+        darkBackground.id = 'backgroundColeccion';
+        darkBackground.style.position = 'fixed';
+        darkBackground.style.top = 0;
+        darkBackground.style.left = 0;
+        darkBackground.style.width = '100%';
+        darkBackground.style.height = '100%';
+        darkBackground.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        darkBackground.style.zIndex = 1003;
+        darkBackground.style.display = 'none';
+        darkBackground.style.pointerEvents = 'none';
+        darkBackground.style.opacity = '0';
+        darkBackground.style.transition = 'opacity 0.3s ease';
+        document.body.appendChild(darkBackground);
+
+    }
+
+    darkBackground.style.display = 'block';
+    setTimeout(() => {
+        darkBackground.style.opacity = '1';
+    }, 10);
+    darkBackground.style.pointerEvents = 'auto';
+};
+
+window.removePrecompraBackground = function () {
+    const darkBackground = document.getElementById('createPrecompraDarkBackground');
+    if (darkBackground) {
+        darkBackground.style.opacity = '0';
+        setTimeout(() => {
+            darkBackground.style.display = 'none';
+            darkBackground.style.pointerEvents = 'none';
+        }, 300);
+    }
+};
+
+
 function stripecomprabeat() {
     const botonesCompraDiv = document.querySelectorAll('.botonCompraDiv');
 
@@ -33,6 +74,7 @@ function stripecomprabeat() {
                 // Crear el modal
                 const modal = document.createElement('div');
                 modal.classList.add('modal', 'bloque', 'modalpreCompra');
+                modal.style.zIndex = '1004'; // Ensure modal is above the background
 
                 const modalContent = document.createElement('div');
                 modalContent.classList.add('modal-content');
@@ -61,8 +103,9 @@ function stripecomprabeat() {
                 const confirmButton = document.createElement('button');
                 confirmButton.textContent = 'Confirmar Compra';
                 confirmButton.addEventListener('click', async () => {
-                    // Cerrar el modal
+                    // Cerrar el modal y el background
                     document.body.removeChild(modal);
+                    window.removePrecompraBackground();
 
                     const userId = boton.dataset.user_id;
                     const nonce = boton.dataset.nonce;
@@ -115,8 +158,9 @@ function stripecomprabeat() {
                 const cancelButton = document.createElement('button');
                 cancelButton.textContent = 'Cancelar';
                 cancelButton.addEventListener('click', () => {
-                    // Cerrar el modal
+                    // Cerrar el modal y el background
                     document.body.removeChild(modal);
+                    window.removePrecompraBackground();
                 });
                 buttonsDiv.appendChild(confirmButton);
                 buttonsDiv.appendChild(cancelButton);
@@ -133,6 +177,22 @@ function stripecomprabeat() {
 
                 // Agregar el modal al body
                 document.body.appendChild(modal);
+
+                // Mostrar el background
+                window.createPrecompraDarkBackground();
+
+                // Agregar event listener al background para cerrar el modal
+                const darkBackground = document.getElementById('backgroundColeccion');
+                if (darkBackground) {
+                    darkBackground.style.cursor = 'pointer'; // Indicate it's clickable
+                    darkBackground.addEventListener('click', function(event) {
+                        if (event.target === darkBackground) { // Check if the click is on the background itself
+                            document.body.removeChild(modal);
+                            window.removePrecompraBackground();
+                            darkBackground.removeEventListener('click', arguments.callee); // Remove the listener after execution
+                        }
+                    });
+                }
             });
         });
     }
