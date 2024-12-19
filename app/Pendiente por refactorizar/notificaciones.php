@@ -172,7 +172,6 @@ function send_push_notification($user_id, $title, $message, $url)
         ],
         'data' => [
             'url' => $url,
-            // Puedes agregar más datos personalizados aquí si lo deseas
         ],
     ];
 
