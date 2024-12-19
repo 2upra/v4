@@ -4,7 +4,7 @@ window.createPrecompraDarkBackground = function () {
     let darkBackground = document.getElementById('createPrecompraDarkBackground');
     if (!darkBackground) {
         darkBackground = document.createElement('div');
-        darkBackground.id = 'backgroundColeccion';
+        darkBackground.id = 'createPrecompraDarkBackground';
         darkBackground.style.position = 'fixed';
         darkBackground.style.top = 0;
         darkBackground.style.left = 0;
