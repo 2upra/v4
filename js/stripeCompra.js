@@ -1,36 +1,16 @@
-/*
-necesito que cuando se de click al boton, antes de procesar a realizar la compra, se abra un modal para confirmar
-ese modal tiene la clase modal y la clase bloque, no agregues estilo porque no los necesita
-los textos todo van <p> y el titulo en h3
-tambien agrega la clase modalpreCompra
-
-dentro de ese modal va aparecer la imagen, el titulo y el texto de ... deaseas comprar este audio?
-
-la magen la consigue siempre dentro
-
-<div class="post-thumbnail">
-    <img src="https://i0.wp.com/2upra.com/wp-content/uploads/2024/12/8d98ac37-682a-4585-9a4c-d67b11688167.jfif?quality=40&strip=all" alt="test">
-</div>
-
-son muchos post pero consigue la imagen mediante la id,
-
-creo que lo encuentra facil sabiendo que la imagen siempre esta dentro de un
-<li class="POST-nada EDYQHV 327280" filtro="nada" id-post="327280" autor="1"> donde id-post siempre sera el valor de boton.dataset.post_id;
-
-el titulo es el contenido del post que se encuentra siempre en
-
-<div class="thePostContet" data-post-id="327280">
-                    <p>test</p>
-                                    </div>
-
-*/
-
 function stripecomprabeat() {
-    const botonesComprar = document.querySelectorAll('.botonCompra');
+    const botonesCompraDiv = document.querySelectorAll('.botonCompraDiv');
 
-    if (botonesComprar.length > 0) {
-        botonesComprar.forEach(boton => {
-            boton.addEventListener('click', async e => {
+    if (botonesCompraDiv.length > 0) {
+        botonesCompraDiv.forEach(botonDiv => {
+            botonDiv.addEventListener('click', async e => {
+                // Find the button element within the clicked div
+                const boton = botonDiv.querySelector('.botonCompra');
+                if (!boton) {
+                    console.error('No se encontró el botón de compra dentro del div.');
+                    return;
+                }
+
                 e.preventDefault();
 
                 const postId = boton.dataset.post_id;
@@ -74,7 +54,7 @@ function stripecomprabeat() {
 
                     const userId = boton.dataset.user_id;
                     const nonce = boton.dataset.nonce;
-                    const precioText = boton.parentElement.querySelector('.precioCount')?.textContent;
+                    const precioText = botonDiv.querySelector('.precioCount')?.textContent;
 
                     // Convertir precioText a número. Usar 0 si no se puede convertir.
                     const precio = Number(precioText) || 0;
@@ -94,7 +74,7 @@ function stripecomprabeat() {
                                 postId: postId,
                                 userId: userId,
                                 nonce: nonce,
-                                precio: precio 
+                                precio: precio
                             })
                         });
                         if (!response.ok) {
@@ -109,7 +89,7 @@ function stripecomprabeat() {
 
                         if (sessionData && sessionData.id) {
                             const stripe = Stripe('pk_live_51M9uLoCdHJpmDkrr3ZHrVnDdA7pCZ676l1k8dKpNLSiOKG8pvKYYlCI8RaHtNqYERwpZ4qwOhdrPnLW6NgsQyX8H0019HdwAY9');
-                            await stripe.redirectToCheckout({sessionId: sessionData.id});
+                            await stripe.redirectToCheckout({ sessionId: sessionData.id });
                         } else {
                             console.error('Respuesta completa:', sessionData);
                             alert('Hubo un problema al procesar la compra. Por favor, inténtalo de nuevo.');
@@ -139,5 +119,20 @@ function stripecomprabeat() {
             });
         });
     }
-}
 
+    // Also attach the event listener to the button for direct clicks
+    const botonesComprar = document.querySelectorAll('.botonCompra');
+    if (botonesComprar.length > 0) {
+        botonesComprar.forEach(boton => {
+            boton.addEventListener('click', async e => {
+                e.preventDefault();
+                // Find the closest botonCompraDiv
+                const botonDiv = boton.closest('.botonCompraDiv');
+                if (botonDiv) {
+                    // Simulate a click on the parent div
+                    botonDiv.click();
+                }
+            });
+        });
+    }
+}
