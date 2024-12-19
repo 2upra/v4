@@ -3,15 +3,6 @@
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging;
 
-
-/*
-sigue dando error, se queda en bucle dando error
-[16-Dec-2024 17:46:48 UTC] [Firebase] Notificación enviada al usuario 49
-[16-Dec-2024 17:46:48 UTC] [crearNotificacion] Notificación push enviada con éxito al usuario ID: 49
-[16-Dec-2024 17:46:51 UTC] PHP Fatal error:  Uncaught Kreait\Firebase\Exception\Messaging\NotFound: Requested entity was not found. in /var/www/wordpress/wp-content/themes/2upra3v/vendor/kreait/firebase-php/src/Firebase/Exception/Messaging/NotFound.php:60
-Stack trace:
-*/
-
 function procesar_notificaciones()
 {
     // Obtener las notificaciones pendientes
@@ -32,8 +23,38 @@ function procesar_notificaciones()
             // Enviar a todos los usuarios
             $usuarios = get_users();
             foreach ($usuarios as $usuario) {
+                // **Añadido:** Verificar si el usuario actual es el mismo que el autor
+                if ($usuario->ID != $autor_id) {
+                    $resultado = crearNotificacion(
+                        $usuario->ID,
+                        $notificacion['mensaje'],
+                        false,
+                        $notificacion['post_id'],
+                        $notificacion['titulo'],
+                        $url,
+                        $autor_id
+                    );
+
+                    if (is_wp_error($resultado)) {
+                        // Manejo del error según el código proporcionado
+                        if ($resultado->get_error_code() === 'not_found' || $resultado->get_error_code() === 'no_token') {
+                            error_log("No se pudo enviar la notificación al usuario " . $usuario->ID . " (token no encontrado).");
+                        } elseif ($resultado->get_error_code() === 'usuario_invalido') {
+                            error_log("No se pudo enviar la notificación al usuario " . $usuario->ID . " (usuario inválido).");
+                        } else {
+                            error_log("Error al enviar a usuario " . $usuario->ID . ": " . $resultado->get_error_message());
+                        }
+                    }
+                } else {
+                    error_log("Se omitió la notificación al usuario " . $usuario->ID . " porque es el mismo que el autor.");
+                }
+            }
+        } else {
+            // Enviar a un seguidor específico
+            // **Añadido:** Verificar si el seguidor es el mismo que el autor
+            if ($notificacion['seguidor_id'] != $autor_id) {
                 $resultado = crearNotificacion(
-                    $usuario->ID,
+                    $notificacion['seguidor_id'],
                     $notificacion['mensaje'],
                     false,
                     $notificacion['post_id'],
@@ -45,35 +66,15 @@ function procesar_notificaciones()
                 if (is_wp_error($resultado)) {
                     // Manejo del error según el código proporcionado
                     if ($resultado->get_error_code() === 'not_found' || $resultado->get_error_code() === 'no_token') {
-                        error_log("No se pudo enviar la notificación al usuario " . $usuario->ID . " (token no encontrado).");
+                        error_log("No se pudo enviar la notificación al seguidor " . $notificacion['seguidor_id'] . " (token no encontrado).");
                     } elseif ($resultado->get_error_code() === 'usuario_invalido') {
-                        error_log("No se pudo enviar la notificación al usuario " . $usuario->ID . " (usuario inválido).");
+                        error_log("No se pudo enviar la notificación al seguidor " . $notificacion['seguidor_id'] . " (usuario inválido).");
                     } else {
-                        error_log("Error al enviar a usuario " . $usuario->ID . ": " . $resultado->get_error_message());
+                        error_log("Error al enviar a seguidor " . $notificacion['seguidor_id'] . ": " . $resultado->get_error_message());
                     }
                 }
-            }
-        } else {
-            // Enviar a un seguidor específico
-            $resultado = crearNotificacion(
-                $notificacion['seguidor_id'],
-                $notificacion['mensaje'],
-                false,
-                $notificacion['post_id'],
-                $notificacion['titulo'],
-                $url,
-                $autor_id
-            );
-
-            if (is_wp_error($resultado)) {
-                // Manejo del error según el código proporcionado
-                if ($resultado->get_error_code() === 'not_found' || $resultado->get_error_code() === 'no_token') {
-                    error_log("No se pudo enviar la notificación al seguidor " . $notificacion['seguidor_id'] . " (token no encontrado).");
-                } elseif ($resultado->get_error_code() === 'usuario_invalido') {
-                    error_log("No se pudo enviar la notificación al seguidor " . $notificacion['seguidor_id'] . " (usuario inválido).");
-                } else {
-                    error_log("Error al enviar a seguidor " . $notificacion['seguidor_id'] . ": " . $resultado->get_error_message());
-                }
+            } else {
+                error_log("Se omitió la notificación al seguidor " . $notificacion['seguidor_id'] . " porque es el mismo que el autor.");
             }
         }
     }
@@ -86,7 +87,6 @@ function procesar_notificaciones()
         wp_clear_scheduled_hook('wp_enqueue_notifications');
     }
 }
-
 function crearNotificacion($usuarioReceptor, $contenido, $metaSolicitud = false, $postIdRelacionado = 0, $titulo = 'Nueva notificación', $url = null, $emisor = null)
 {
     $usuario = get_user_by('ID', $usuarioReceptor);

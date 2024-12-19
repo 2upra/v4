@@ -2,8 +2,6 @@
 
 function generar_publicaciones_multiples()
 {
-    // Registro de inicio de la función
-
     // Buscar todos los social_post con multiple en 1 o true
     $args = array(
         'post_type'      => 'social_post',
@@ -348,7 +346,7 @@ add_action('generar_publicaciones_multiples_evento', 'generar_publicaciones_mult
 function agregar_intervalo_treinta_segundos($schedules)
 {
     $schedules['cada_treinta_segundos'] = array(
-        'interval' => 30,
+        'interval' => 60,
         'display'  => esc_html__('Cada 30 segundos'),
     );
     return $schedules;

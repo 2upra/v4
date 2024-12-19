@@ -1,21 +1,48 @@
 function registrarVistas() {
-    // Seleccionar todos los posts que aún no se han registrado.
+    const feed = document.querySelector('.social-post-list[data-filtro="sample"][data-tab-id="Feed"]');
     const posts = document.querySelectorAll('.EDYQHV:not([data-registrado="true"])');
 
-    // Añadir el listener de clic para registrar la vista solo cuando se hace clic en el post.
-    posts.forEach((post) => {
-        post.addEventListener('click', (event) => {
-            // Evitar registrar la vista si ya se registró.
-            if (post.getAttribute('data-registrado') === 'true') return;
+    if (feed) {
+        const postsFeed = feed.querySelectorAll('.EDYQHV:not([data-registrado="true"])');
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    let timer = setTimeout(() => {
+                        const post = entry.target;
+                        const postId = post.getAttribute('id-post');
+                        actualizarVistasServidor(postId);
+                        post.setAttribute('data-registrado', 'true');
+                        observer.unobserve(post); // Dejar de observar una vez registrado
+                    }, 5000); // 5 segundos
 
-            const postId = post.getAttribute('id-post');
+                    // Limpiar el timeout si el elemento deja de ser observado antes de 5 segundos
+                    entry.target.dataset.visibilityTimer = timer;
+                } else {
+                    if (entry.target.dataset.visibilityTimer) {
+                        clearTimeout(entry.target.dataset.visibilityTimer);
+                        delete entry.target.dataset.visibilityTimer;
+                    }
+                }
+            });
+        }, { threshold: 0.5 }); // Observar cuando al menos el 50% del elemento es visible
 
-            // Registrar la vista inmediatamente cuando se hace clic.
-            actualizarVistasServidor(postId);
-
-            // Marcar el post como registrado para evitar múltiples registros.
-            post.setAttribute('data-registrado', 'true');
+        postsFeed.forEach(post => {
+            observer.observe(post);
         });
+    }
+
+    // Registrar vistas por clic para posts fuera del feed
+    posts.forEach((post) => {
+        // Verificar si el post no está dentro del feed para evitar doble registro
+        if (!feed || !feed.contains(post)) {
+            post.addEventListener('click', (event) => {
+                if (post.getAttribute('data-registrado') === 'true') return;
+
+                const postId = post.getAttribute('id-post');
+                actualizarVistasServidor(postId);
+                post.setAttribute('data-registrado', 'true');
+            });
+        }
     });
 }
 
@@ -28,6 +55,7 @@ function actualizarVistasServidor(postId) {
         },
         body: 'action=guardar_vistas&id_post=' + postId
     }).then(response => response.json()).then(data => {
-        //console.log('Vistas actualizadas para el post ' + postId);
+        console.log('Vistas actualizadas para el post ' + postId);
     });
 }
+
