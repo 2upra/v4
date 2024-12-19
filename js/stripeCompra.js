@@ -1,5 +1,3 @@
-
-
 window.createPrecompraDarkBackground = function () {
     let darkBackground = document.getElementById('createPrecompraDarkBackground');
     if (!darkBackground) {
@@ -17,7 +15,6 @@ window.createPrecompraDarkBackground = function () {
         darkBackground.style.opacity = '0';
         darkBackground.style.transition = 'opacity 0.3s ease';
         document.body.appendChild(darkBackground);
-
     }
 
     darkBackground.style.display = 'block';
@@ -44,7 +41,6 @@ function stripecomprabeat() {
     if (botonesCompraDiv.length > 0) {
         botonesCompraDiv.forEach(botonDiv => {
             botonDiv.addEventListener('click', async e => {
-                // Find the button element within the clicked div
                 const boton = botonDiv.querySelector('.botonCompra');
                 if (!boton) {
                     console.error('No se encontró el botón de compra dentro del div.');
@@ -54,19 +50,14 @@ function stripecomprabeat() {
                 e.preventDefault();
 
                 const postId = boton.dataset.post_id;
-
-                // Obtener el contenedor del post basado en el id-post
                 const postElement = document.querySelector(`li[id-post="${postId}"]`);
                 if (!postElement) {
                     console.error(`No se encontró el elemento del post con id-post: ${postId}`);
                     return;
                 }
 
-                // Obtener la URL de la imagen
                 const imageElement = postElement.querySelector('.post-thumbnail img');
                 const imageUrl = imageElement ? imageElement.src : '';
-
-                // Obtener el título del post
                 const titleElement = postElement.querySelector(`.thePostContet[data-post-id="${postId}"] p`);
                 const title = titleElement ? titleElement.textContent : '';
 
@@ -101,7 +92,6 @@ function stripecomprabeat() {
                 buttonsDiv.classList.add('modal-buttons-container');
                 const confirmButton = document.createElement('button');
                 confirmButton.textContent = 'Confirmar Compra';
-                // Añadimos la clase botonprincipal aquí
                 confirmButton.classList.add('botonprincipal');
                 confirmButton.addEventListener('click', async () => {
                     // Cerrar el modal y el background
@@ -111,8 +101,6 @@ function stripecomprabeat() {
                     const userId = boton.dataset.user_id;
                     const nonce = boton.dataset.nonce;
                     const precioText = botonDiv.querySelector('.precioCount')?.textContent;
-
-                    // Convertir precioText a número. Usar 0 si no se puede convertir.
                     const precio = Number(precioText) || 0;
 
                     console.log('postId:', postId);
@@ -134,7 +122,6 @@ function stripecomprabeat() {
                             })
                         });
                         if (!response.ok) {
-                            // Check for HTTP error status
                             const errorText = await response.text();
                             console.error('HTTP error:', response.status, errorText);
                             alert(`Hubo un problema con la compra. Error ${response.status}`);
@@ -183,12 +170,15 @@ function stripecomprabeat() {
                 window.createPrecompraDarkBackground();
 
                 // Agregar event listener al background para cerrar el modal
-                const darkBackground = document.getElementById('backgroundColeccion');
+                const darkBackground = document.getElementById('createPrecompraDarkBackground');
                 if (darkBackground) {
                     darkBackground.style.cursor = 'pointer'; // Indicate it's clickable
                     darkBackground.addEventListener('click', function(event) {
                         if (event.target === darkBackground) { // Check if the click is on the background itself
-                            document.body.removeChild(modal);
+                            // Cerrar el modal primero
+                            if (modal.parentNode) {
+                                document.body.removeChild(modal);
+                            }
                             window.removePrecompraBackground();
                             darkBackground.removeEventListener('click', arguments.callee); // Remove the listener after execution
                         }
@@ -214,3 +204,4 @@ function stripecomprabeat() {
         });
     }
 }
+
