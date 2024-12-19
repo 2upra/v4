@@ -24,8 +24,11 @@ function mostrarModalActualizacionApp()
             </div>
         </div>
         <script>
-            if (userAgent.includes('AppAndroid')) {
-                document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function() {
+                // Obtener el userAgent correctamente
+                const userAgent = navigator.userAgent;
+
+                if (userAgent.includes('AppAndroid')) {
                     const modal = document.querySelector('.modalActualizacionApp');
                     const botonDespues = document.querySelector('.botonActualizacionDespues');
                     const botonActualizar = document.querySelector('.botonActualizarAhora');
@@ -47,7 +50,7 @@ function mostrarModalActualizacionApp()
                         window.location.href = "https://2upra.com/wp-content/uploads/2024/12/2upra-glory.apk";
                         ocultarModalActualizacion();
                     });
-                });
+                }
 
                 function crearFondoModal() {
                     let fondoOscuro = document.getElementById('fondoModalApp');
@@ -55,18 +58,18 @@ function mostrarModalActualizacionApp()
                         fondoOscuro = document.createElement('div');
                         fondoOscuro.id = 'fondoModalApp';
                         fondoOscuro.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1003;
-            display: none;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-          `;
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 100%;
+                            background-color: rgba(0, 0, 0, 0.5);
+                            z-index: 1003;
+                            display: none;
+                            pointer-events: none;
+                            opacity: 0;
+                            transition: opacity 0.3s ease;
+                        `;
                         document.body.appendChild(fondoOscuro);
                     }
                     fondoOscuro.style.display = 'block';
@@ -82,11 +85,11 @@ function mostrarModalActualizacionApp()
                         fondoOscuro.style.opacity = '0';
                         setTimeout(() => {
                             fondoOscuro.style.display = 'none';
-                            darkBackground.style.pointerEvents = 'none';
+                            fondoOscuro.style.pointerEvents = 'none'; // Corregido: Usar fondoOscuro en lugar de darkBackground
                         }, 300);
                     }
                 }
-            }
+            }); // Cierre correcto del event listener de DOMContentLoaded
         </script>
     <?php
     endif;
