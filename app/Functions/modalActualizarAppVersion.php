@@ -1,15 +1,12 @@
 <?php
 function mostrarModalActualizacionApp()
 {
-    $version_actual = 'gloria1';
+    $version_actual = 'Gloria1';
     $usuario_actual = wp_get_current_user();
     $mostrar_modal = false;
     $version_usuario = get_user_meta($usuario_actual->ID, 'app_version_name', true);
 
     if ($version_usuario && $version_usuario !== $version_actual) {
-        $mostrar_modal = false;
-    }
-    if ($usuario_actual->ID = '355') {
         $mostrar_modal = true;
     }
     if ($mostrar_modal) :
@@ -49,7 +46,7 @@ function mostrarModalActualizacionApp()
 
                     botonDespues.addEventListener('click', ocultarModalActualizacion);
                     botonActualizar.addEventListener('click', function() {
-                        window.location.href = "https://2upra.com/wp-content/uploads/2024/12/2upra-glory.apk";
+                        window.location.href = "https://2upra.com/wp-content/uploads/2024/12/2upra-gloria.apk";
                         ocultarModalActualizacion();
                     });
                 }
