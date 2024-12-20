@@ -455,16 +455,6 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
     // Obtener los filtros del usuario
     $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
 
-    /*
-    1#
-    Dificilmente entiendo o olvido para que sirve esto, 
-    si esta activiado entonces cualquier filtro de usuario evita que se use default
-    lo que yo supongo es que el caso default no maneja los filtros del usuaro entonces por eso se aplica un return query_args
-
-    2#
-    Efectivamente el causo default no entiende los filtros del usuario
-    */
-
     // Verificar si los filtros del usuario tienen algún valor diferente a `a:0:{}`
     if (!empty($filtrosUsuario) && $filtrosUsuario !== 'a:0:{}') {
         // No usar el caso default si existen filtros específicos
@@ -660,49 +650,115 @@ function aplicarFiltrosUsuario($query_args, $usuarioActual)
     return $query_args;
 }
 
+
 function prefiltrarIdentifier($identifier, $query_args)
 {
     global $wpdb;
 
     $identifier = strtolower(trim($identifier));
-    $terms = explode(' ', $identifier);
-    $normalized_terms = array();
+
+    // Separar términos positivos y negativos
+    $parts = explode('-', $identifier);
+    $positive_terms = array();
+    $negative_terms = array();
+
+    // Primer parte son términos positivos
+    $terms = explode(' ', trim($parts[0]));
     foreach ($terms as $term) {
         $term = trim($term);
         if (empty($term)) continue;
-        $normalized_terms[] = $term;
-        if (substr($term, -1) === 's') {
-            $normalized_terms[] = substr($term, 0, -1);
-        } else {
-            $normalized_terms[] = $term . 's';
+        $positive_terms[] = $term;
+    }
+
+    // Siguientes partes son términos negativos
+    for ($i = 1; $i < count($parts); $i++) {
+        $terms = explode(' ', trim($parts[$i]));
+        foreach ($terms as $term) {
+            $term = trim($term);
+            if (empty($term)) continue;
+            $negative_terms[] = $term;
         }
     }
-    $normalized_terms = array_unique($normalized_terms);
+
+    // Normalizar términos positivos
+    $normalized_positive_terms = array();
+    foreach ($positive_terms as $term) {
+        $normalized_positive_terms[] = $term;
+        if (substr($term, -1) === 's') {
+            $normalized_positive_terms[] = substr($term, 0, -1);
+        } else {
+            $normalized_positive_terms[] = $term . 's';
+        }
+    }
+    $normalized_positive_terms = array_unique($normalized_positive_terms);
+
+    // Normalizar términos negativos
+    $normalized_negative_terms = array();
+    foreach ($negative_terms as $term) {
+        $normalized_negative_terms[] = $term;
+        if (substr($term, -1) === 's') {
+            $normalized_negative_terms[] = substr($term, 0, -1);
+        } else {
+            $normalized_negative_terms[] = $term . 's';
+        }
+    }
+    $normalized_negative_terms = array_unique($normalized_negative_terms);
+
+    // Mantener el valor original en 's'
     $query_args['s'] = $identifier;
-    add_filter('posts_search', function ($search, $wp_query) use ($normalized_terms, $wpdb) {
-        if (empty($normalized_terms)) {
+
+    add_filter('posts_search', function ($search, $wp_query) use ($normalized_positive_terms, $normalized_negative_terms, $wpdb) {
+        if (empty($normalized_positive_terms) && empty($normalized_negative_terms)) {
             return $search;
         }
 
         $search = '';
         $search_conditions = array();
-        $term_conditions = array();
-        foreach ($normalized_terms as $term) {
-            $like_term = '%' . $wpdb->esc_like($term) . '%';
-            $term_conditions[] = $wpdb->prepare("
-                {$wpdb->posts}.post_title LIKE %s OR
-                {$wpdb->posts}.post_content LIKE %s OR
-                EXISTS (
-                    SELECT 1 FROM {$wpdb->postmeta}
-                    WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
-                    AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'
-                    AND {$wpdb->postmeta}.meta_value LIKE %s
-                )
-            ", $like_term, $like_term, $like_term);
+
+        // Condiciones para términos positivos
+        if (!empty($normalized_positive_terms)) {
+            $term_conditions = array();
+            foreach ($normalized_positive_terms as $term) {
+                $like_term = '%' . $wpdb->esc_like($term) . '%';
+                $term_conditions[] = $wpdb->prepare("
+                    (
+                        {$wpdb->posts}.post_title LIKE %s OR
+                        {$wpdb->posts}.post_content LIKE %s OR
+                        EXISTS (
+                            SELECT 1 FROM {$wpdb->postmeta}
+                            WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
+                            AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'
+                            AND {$wpdb->postmeta}.meta_value LIKE %s
+                        )
+                    )
+                ", $like_term, $like_term, $like_term);
+            }
+            $search_conditions[] = '(' . implode(' OR ', $term_conditions) . ')';
         }
 
-        if (!empty($term_conditions)) {
-            $search .= ' AND (' . implode(' OR ', $term_conditions) . ')';
+        // Condiciones para términos negativos
+        if (!empty($normalized_negative_terms)) {
+            $term_conditions = array();
+            foreach ($normalized_negative_terms as $term) {
+                $like_term = '%' . $wpdb->esc_like($term) . '%';
+                $term_conditions[] = $wpdb->prepare("
+                    (
+                        {$wpdb->posts}.post_title NOT LIKE %s AND
+                        {$wpdb->posts}.post_content NOT LIKE %s AND
+                        NOT EXISTS (
+                            SELECT 1 FROM {$wpdb->postmeta}
+                            WHERE {$wpdb->postmeta}.post_id = {$wpdb->posts}.ID
+                            AND {$wpdb->postmeta}.meta_key = 'datosAlgoritmo'
+                            AND {$wpdb->postmeta}.meta_value LIKE %s
+                        )
+                    )
+                ", $like_term, $like_term, $like_term);
+            }
+            $search_conditions[] = '(' . implode(' AND ', $term_conditions) . ')';
+        }
+
+        if (!empty($search_conditions)) {
+            $search .= ' AND ' . implode(' AND ', $search_conditions);
         }
 
         return $search;
