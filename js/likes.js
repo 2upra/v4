@@ -126,25 +126,6 @@ function like() {
         }
     }
 
-    async function enviarAjax(data) {
-        try {
-            const response = await fetch(ajaxurl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-                },
-                body: new URLSearchParams(data)
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.text();
-        } catch (error) {
-            console.error("Error al enviar la solicitud AJAX:", error);
-            throw error;
-        }
-    }
-
     function showHeartAnimation(postContent) {
         if (!postContent) {
             return;
