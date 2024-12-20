@@ -31,19 +31,38 @@ function rehacerJsonPost($post_id, $descripcion)
         error_log("No se encontró el metadato 'post_audio_lite' para el post ID: {$post_id}");
     }
 }
+/*
+tengo este problema aca 
+[20-Dec-2024 10:44:13 UTC] PHP Fatal error:  Uncaught TypeError: json_decode(): Argument #1 ($json) must be of type string, array given in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/reEditarPost.php:51
+Stack trace:
+#0 /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/reEditarPost.php(51): json_decode()
+#1 /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/reEditarPost.php(25): rehacerJson()
+#2 /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Logic/estado.php(144): rehacerJsonPost()
+#3 /var/www/wordpress/wp-includes/class-wp-hook.php(324): corregirTags()
+#4 /var/www/wordpress/wp-includes/class-wp-hook.php(348): WP_Hook->apply_filters()
+#5 /var/www/wordpress/wp-includes/plugin.php(517): WP_Hook->do_action()
+#6 /var/www/wordpress/wp-admin/admin-ajax.php(192): do_action()
+#7 {main}
+  thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/reEditarPost.php on line 51
+*/
 
 function rehacerJson($post_id, $archivo_audio, $descripcion)
 {
     error_log("Iniciando reajusteJson para el post ID: {$post_id}");
 
     // Obtener el contenido del post
-
     error_log("Contenido del post obtenido para el post ID: {$post_id}");
 
     // Obtener los metadatos actuales del post, incluyendo 'datosAlgoritmo'
     $datosAlgoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
     if (!$datosAlgoritmo) {
         error_log("No se encontraron metadatos previos para el post ID: {$post_id}");
+        return;
+    }
+
+    // **Añadir la verificación del tipo de dato**
+    if (!is_string($datosAlgoritmo)) {
+        error_log("rehacerJson: Error: \$datosAlgoritmo no es una cadena JSON para el post ID: {$post_id}. Tipo: " . gettype($datosAlgoritmo));
         return;
     }
 
