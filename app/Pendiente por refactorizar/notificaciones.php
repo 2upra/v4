@@ -317,32 +317,31 @@ function iconoNotificaciones()
 {
     $user_id = get_current_user_id(); // Obtener el ID del usuario actual
 
-    // Argumentos de la consulta
-    $args = array(
+    // Argumentos de la consulta para obtener LA ÚLTIMA notificación
+    $args_latest = array(
         'post_type' => 'notificaciones',
         'posts_per_page' => 1,
-        'meta_query' => array(
-            'relation' => 'OR',
-            array(
-                'key' => 'visto',
-                'compare' => 'NOT EXISTS', // No ha sido visto (meta no existe)
-            ),
-            array(
-                'key' => 'visto',
-                'value' => '1',
-                'compare' => '!=', // No ha sido visto (valor distinto de 1)
-            ),
-        ),
         'author' => $user_id,
-        'orderby' => 'date', // Ordenar por fecha de creación
-        'order' => 'DESC',  // La más reciente primero
+        'orderby' => 'date',
+        'order' => 'DESC',
     );
 
-    // Crear la consulta
-    $notificaciones_query = new WP_Query($args);
-    $hay_no_vistas = $notificaciones_query->have_posts() ? true : false;
+    $latest_notification_query = new WP_Query($args_latest);
+    $hay_no_vistas = false; // Inicializamos a false
 
-    // Cambiar el color del ícono si hay notificaciones no vistas
+    if ($latest_notification_query->have_posts()) {
+        while ($latest_notification_query->have_posts()) {
+            $latest_notification_query->the_post();
+            $visto = get_post_meta(get_the_ID(), 'visto', true);
+            // Verificar si la última notificación NO está marcada como vista
+            if ($visto != '1') {
+                $hay_no_vistas = true;
+            }
+        }
+        wp_reset_postdata(); // Importante restablecer postdata
+    }
+
+    // Cambiar el color del ícono si la última notificación no está vista
     $icon_color = $hay_no_vistas ? '#d43333' : 'currentColor';
 
     // HTML del ícono de notificaciones
