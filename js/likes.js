@@ -1,7 +1,7 @@
 function like() {
     let ultimoDobleClic = 0; // Variable para el doble clic
     const retrasoEntreClics = 500; // 500 ms de retraso
-
+    animacionLike();
     // Delegación de eventos para doble clic en los elementos <li>
     document.addEventListener('dblclick', function (evento) {
         const elementoLi = evento.target.closest('li.EDYQHV');
@@ -156,89 +156,88 @@ function like() {
 
 function animacionLike() {
     const containers = document.querySelectorAll('.botonlike-container');
-  
+
     containers.forEach(container => {
-      const botonesExtras = container.querySelector('.botones-extras');
-      const botonLike = container.querySelector('.post-like-button');
-      let timeoutId = null;
-      let isHoveringContainer = false;
-      let isHoveringExtras = false;
-      let delayHide = 1000; // Tiempo en milisegundos que los botones permanecerán visibles
-  
-      const showExtras = () => {
-        console.log("showExtras: Mostrando botones extras");
-        clearTimeout(timeoutId);
-        container.classList.add('active');
-      };
-  
-      const hideExtras = (delay = 0) => {
-        console.log(`hideExtras: Ocultando botones extras en ${delay}ms`);
-        timeoutId = setTimeout(() => {
-          console.log("hideExtras: Timeout expirado");
-          if (!isHoveringContainer && !isHoveringExtras) {
-            console.log("hideExtras: Ocultando botones extras porque no hay hover en container ni extras");
-            container.classList.remove('active');
-          } else {
-            console.log("hideExtras: No se ocultan los botones extras porque hay hover en container o extras");
-          }
-        }, delay);
-      };
-  
-      const handleMouseEnterContainer = () => {
-        isHoveringContainer = true;
-        console.log("handleMouseEnterContainer: Mouse entró en el contenedor");
-        clearTimeout(timeoutId);
-        showExtras();
-      };
-  
-      const handleMouseLeaveContainer = () => {
-        isHoveringContainer = false;
-        console.log("handleMouseLeaveContainer: Mouse salió del contenedor");
-        hideExtras(delayHide);
-      };
-  
-      const handleMouseEnterExtras = () => {
-        isHoveringExtras = true;
-        console.log("handleMouseEnterExtras: Mouse entró en botones extras");
-        clearTimeout(timeoutId);
-      };
-  
-      const handleMouseLeaveExtras = () => {
-        isHoveringExtras = false;
-        console.log("handleMouseLeaveExtras: Mouse salió de botones extras");
-        hideExtras(delayHide);
-      };
-  
-      container.addEventListener('mouseenter', handleMouseEnterContainer);
-      container.addEventListener('mouseleave', handleMouseLeaveContainer);
-  
-      botonesExtras.addEventListener('mouseenter', handleMouseEnterExtras);
-      botonesExtras.addEventListener('mouseleave', handleMouseLeaveExtras);
-  
-      // Manejo de eventos táctiles (sin cambios significativos aquí)
-      container.addEventListener('touchstart', () => {
-        console.log("touchstart en container");
-        clearTimeout(timeoutId);
-        containers.forEach(c => c !== container && c.classList.remove('active'));
-        timeoutId = setTimeout(showExtras, 500);
-      });
-  
-      container.addEventListener('touchend', () => {
-        console.log("touchend en container");
-        hideExtras(delayHide);
-      });
-  
-      botonesExtras.addEventListener('touchstart', event => {
-        console.log("touchstart en botonesExtras");
-        event.stopPropagation();
-      });
-  
-      botonLike.addEventListener('touchstart', event => {
-        console.log("touchstart en botonLike");
-        if (container.classList.contains('active')) {
-          event.preventDefault();
-        }
-      });
+        const botonesExtras = container.querySelector('.botones-extras');
+        const botonLike = container.querySelector('.post-like-button');
+        let timeoutId = null;
+        let isHoveringContainer = false;
+        let isHoveringExtras = false;
+        let delayHide = 1000; // Tiempo en milisegundos que los botones permanecerán visibles
+
+        const showExtras = () => {
+            console.log('showExtras: Mostrando botones extras');
+            clearTimeout(timeoutId);
+            container.classList.add('active');
+        };
+
+        const hideExtras = (delay = 0) => {
+            console.log(`hideExtras: Ocultando botones extras en ${delay}ms`);
+            timeoutId = setTimeout(() => {
+                console.log('hideExtras: Timeout expirado');
+                if (!isHoveringContainer && !isHoveringExtras) {
+                    console.log('hideExtras: Ocultando botones extras porque no hay hover en container ni extras');
+                    container.classList.remove('active');
+                } else {
+                    console.log('hideExtras: No se ocultan los botones extras porque hay hover en container o extras');
+                }
+            }, delay);
+        };
+
+        const handleMouseEnterContainer = () => {
+            isHoveringContainer = true;
+            console.log('handleMouseEnterContainer: Mouse entró en el contenedor');
+            clearTimeout(timeoutId);
+            showExtras();
+        };
+
+        const handleMouseLeaveContainer = () => {
+            isHoveringContainer = false;
+            console.log('handleMouseLeaveContainer: Mouse salió del contenedor');
+            hideExtras(delayHide);
+        };
+
+        const handleMouseEnterExtras = () => {
+            isHoveringExtras = true;
+            console.log('handleMouseEnterExtras: Mouse entró en botones extras');
+            clearTimeout(timeoutId);
+        };
+
+        const handleMouseLeaveExtras = () => {
+            isHoveringExtras = false;
+            console.log('handleMouseLeaveExtras: Mouse salió de botones extras');
+            hideExtras(delayHide);
+        };
+
+        container.addEventListener('mouseenter', handleMouseEnterContainer);
+        container.addEventListener('mouseleave', handleMouseLeaveContainer);
+
+        botonesExtras.addEventListener('mouseenter', handleMouseEnterExtras);
+        botonesExtras.addEventListener('mouseleave', handleMouseLeaveExtras);
+
+        // Manejo de eventos táctiles (sin cambios significativos aquí)
+        container.addEventListener('touchstart', () => {
+            console.log('touchstart en container');
+            clearTimeout(timeoutId);
+            containers.forEach(c => c !== container && c.classList.remove('active'));
+            timeoutId = setTimeout(showExtras, 500);
+        });
+
+        container.addEventListener('touchend', () => {
+            console.log('touchend en container');
+            hideExtras(delayHide);
+        });
+
+        botonesExtras.addEventListener('touchstart', event => {
+            console.log('touchstart en botonesExtras');
+            event.stopPropagation();
+        });
+
+        botonLike.addEventListener('touchstart', event => {
+            console.log('touchstart en botonLike');
+            if (container.classList.contains('active')) {
+                event.preventDefault();
+            }
+        });
     });
-  }
-  
+}
