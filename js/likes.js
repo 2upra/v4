@@ -19,16 +19,17 @@ function like() {
             if (idPublicacion && botonLike) {
                 console.log('Doble clic en post ID:', idPublicacion);
                 // Simular clic en el botón de like
-                manejarClicEnBoton(evento, botonLike);
+                evento.preventDefault(); // Prevenir acción por defecto del doble clic
+                botonLike.click(); // Simular clic en el botón de like directamente
+            } else {
+                console.log('No se encontró el ID de la publicación o el botón de "Me gusta" en el doble clic.');
             }
         }
     });
-
     // Delegación de eventos para clics en botones de interacción
     document.addEventListener('click', function (evento) {
         const boton = evento.target.closest('[data-like_type][data-post_id]');
-        if (boton && !evento.simulated) {
-            //  <-  Añade la condición !evento.simulated
+        if (boton) {
             manejarClicEnBoton(evento, boton);
         }
     });
@@ -39,12 +40,20 @@ function like() {
         const idPublicacion = parseInt(boton.dataset.post_id, 10);
         const tipoInteraccion = boton.dataset.like_type;
 
-        if (!idPublicacion || !tipoInteraccion || boton.dataset.requestRunning === 'true') {
-            console.log('Datos incompletos o solicitud en curso.');
+        console.log(`Clic en botón: ID de publicación ${idPublicacion}, Tipo de interacción: ${tipoInteraccion}`);
+
+        if (!idPublicacion || !tipoInteraccion) {
+            console.log('Datos incompletos: ID de publicación o tipo de interacción no encontrados.');
+            return;
+        }
+
+        if (boton.dataset.requestRunning === 'true') {
+            console.log('Solicitud en curso, ignorando clic.');
             return;
         }
 
         if (!navigator.onLine) {
+            console.log('No hay conexión a internet.');
             alert('No hay conexión a internet. Verifica tu conexión e inténtalo de nuevo.');
             return;
         }
@@ -54,8 +63,23 @@ function like() {
 
         // Actualización optimista
         const contenedor = boton.closest('.botonlike-container');
-        const contadorActual = parseInt(contenedor.querySelector(`.${tipoInteraccion}-count`).textContent, 10);
+        if (!contenedor) {
+            console.error('No se encontró el contenedor del botón.');
+            boton.dataset.requestRunning = 'false';
+            return;
+        }
+
+        const contadorElement = contenedor.querySelector(`.${tipoInteraccion}-count`);
+        if (!contadorElement) {
+            console.error(`No se encontró el contador para el tipo de interacción: ${tipoInteraccion}`);
+            boton.dataset.requestRunning = 'false';
+            return;
+        }
+
+        const contadorActual = parseInt(contadorElement.textContent, 10);
         const nuevoContador = añadiendoInteraccion ? contadorActual + 1 : contadorActual - 1;
+
+        console.log(`Actualización optimista: ${tipoInteraccion} de ${contadorActual} a ${nuevoContador}`);
         actualizarIUInteraccion(boton, añadiendoInteraccion, tipoInteraccion, nuevoContador);
 
         const datos = {
@@ -66,12 +90,14 @@ function like() {
         };
 
         try {
+            console.log('Enviando solicitud AJAX:', datos);
             const respuesta = await enviarAjax('like', datos);
+            console.log('Respuesta AJAX recibida:', respuesta);
 
             if (respuesta.success) {
                 console.log(`Interacción "${tipoInteraccion}" ${añadiendoInteraccion ? 'añadida' : 'quitada'} en la publicación ${idPublicacion}.`);
                 // Verificar si la respuesta del servidor coincide con la actualización optimista
-                if (respuesta.counts[tipoInteraccion] !== nuevoContador) {
+                if (respuesta.counts && respuesta.counts[tipoInteraccion] !== undefined && respuesta.counts[tipoInteraccion] !== nuevoContador) {
                     console.warn('Desajuste entre la actualización optimista y la respuesta del servidor.');
                     actualizarContador(contenedor, tipoInteraccion, respuesta.counts[tipoInteraccion]);
                 }
@@ -97,29 +123,41 @@ function like() {
             alert('Hubo un error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
         } finally {
             boton.dataset.requestRunning = 'false';
+            console.log('Solicitud finalizada.');
         }
     }
 
     function actualizarIUInteraccion(boton, añadiendo, tipo, contador) {
+        console.log(`Actualizando UI para ${tipo}: añadiendo=${añadiendo}, contador=${contador}`);
         actualizarEstadoBoton(boton, añadiendo, tipo);
         const contenedor = boton.closest('.botonlike-container');
-        actualizarContador(contenedor, tipo, contador);
+        if (contenedor) {
+            actualizarContador(contenedor, tipo, contador);
+        } else {
+            console.error('No se encontró el contenedor para actualizar la UI.');
+        }
     }
 
     function revertirIUInteraccion(boton, añadiendo, tipo, contador) {
+        console.log(`Revirtiendo UI para ${tipo}: añadiendo=${añadiendo}, contador=${contador}`);
         actualizarEstadoBoton(boton, añadiendo, tipo);
         const contenedor = boton.closest('.botonlike-container');
-        actualizarContador(contenedor, tipo, contador);
+        if (contenedor) {
+            actualizarContador(contenedor, tipo, contador);
+        } else {
+            console.error('No se encontró el contenedor para revertir la UI.');
+        }
     }
 
     function actualizarEstadoBoton(boton, activo, tipo) {
+        console.log(`Actualizando estado del botón ${tipo}: activo=${activo}`);
         const claseActivo = tipo + '-active';
         if (activo) {
             boton.classList.add(claseActivo);
-            boton.classList.add('liked'); // Agregar la clase 'liked' al marcar
+            boton.classList.add('liked');
         } else {
             boton.classList.remove(claseActivo);
-            boton.classList.remove('liked'); // Remover la clase 'liked' al desmarcar
+            boton.classList.remove('liked');
         }
     }
 
@@ -135,15 +173,8 @@ function like() {
     }
 
     function actualizarContador(contenedor, tipo, contador) {
-        let claseContador = '';
-        if (tipo === 'like') {
-            claseContador = 'like-count';
-        } else if (tipo === 'favorito') {
-            claseContador = 'favorite-count';
-        } else if (tipo === 'no_me_gusta') {
-            claseContador = 'dislike-count';
-        }
-
+        console.log(`Actualizando contador de ${tipo} a ${contador}`);
+        const claseContador = `${tipo}-count`;
         const spanContador = contenedor.querySelector(`.${claseContador}`);
         if (spanContador) {
             spanContador.textContent = contador;
@@ -152,7 +183,10 @@ function like() {
             console.error(`No se encontró el contador para ${tipo}.`);
         }
     }
+
 }
+
+
 
 function animacionLike() {
     const containers = document.querySelectorAll('.botonlike-container');
