@@ -1,7 +1,7 @@
 function like() {
     let ultimoClic = 0;
     const retrasoEntreClics = 500; // 500 ms de retraso
-
+    animacionLike();
     // Delegación de eventos para clics en botones de interacción
     document.addEventListener('click', function (evento) {
         const boton = evento.target.closest('[data-like_type][data-post_id]');
@@ -140,3 +140,34 @@ function like() {
     }
 }
 
+function animacionLike() {
+    const containers = document.querySelectorAll('.botonlike-container');
+
+    containers.forEach(container => {
+        container.addEventListener('mouseenter', () => {
+            container.querySelector('.botones-extras').style.transform = 'translateX(0)';
+        });
+
+        container.addEventListener('mouseleave', () => {
+            container.querySelector('.botones-extras').style.transform = 'translateX(10px)';
+        });
+
+        // Para dispositivos táctiles (simula el hover)
+        container.addEventListener('touchstart', event => {
+            // Evita la propagación del evento para que no se disparen otros eventos no deseados
+            event.stopPropagation();
+            const botonesExtras = container.querySelector('.botones-extras');
+            botonesExtras.style.opacity = '1';
+            botonesExtras.style.pointerEvents = 'auto';
+            botonesExtras.style.transform = 'translateX(0)';
+
+            // Oculta los botones extras después de un tiempo (simulando el "mouseleave")
+            clearTimeout(container.touchTimeout);
+            container.touchTimeout = setTimeout(() => {
+                botonesExtras.style.opacity = '0';
+                botonesExtras.style.pointerEvents = 'none';
+                botonesExtras.style.transform = 'translateX(10px)';
+            }, 2000); // Ajusta el tiempo de visualización
+        });
+    });
+}

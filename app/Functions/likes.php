@@ -185,14 +185,20 @@ function like($postId)
         <button class="post-like-button <?= esc_attr($liked_class) ?>" data-post_id="<?= esc_attr($postId) ?>" data-like_type="like" data-nonce="<?= wp_create_nonce('like_post_nonce') ?>">
             <? echo $GLOBALS['iconoCorazon']; ?> <span class="like-count"><?= esc_html($contadorLike) ?></span>
         </button>
-        <button class="post-favorite-button <?= esc_attr($favorited_class) ?>" data-post_id="<?= esc_attr($postId) ?>" data-like_type="favorito" data-nonce="<?= wp_create_nonce('like_post_nonce') ?>">
-            <? echo $GLOBALS['estrella']; ?> <span class="favorite-count"><?= esc_html($contadorFavorito) ?></span>
-        </button>
-        <button class="post-dislike-button <?= esc_attr($disliked_class) ?>" data-post_id="<?= esc_attr($postId) ?>" data-like_type="no_me_gusta" data-nonce="<?= wp_create_nonce('like_post_nonce') ?>">
-            <? echo $GLOBALS['dislike']; ?> <span class="dislike-count"><?= esc_html($contadorNoMeGusta) ?></span>
-        </button>
+        <div class="botones-extras">
+            <button class="post-favorite-button <?= esc_attr($favorited_class) ?>" data-post_id="<?= esc_attr($postId) ?>" data-like_type="favorito" data-nonce="<?= wp_create_nonce('like_post_nonce') ?>">
+                <? echo $GLOBALS['estrella']; ?> <span class="favorite-count"><?= esc_html($contadorFavorito) ?></span>
+            </button>
+            <button class="post-dislike-button <?= esc_attr($disliked_class) ?>" data-post_id="<?= esc_attr($postId) ?>" data-like_type="no_me_gusta" data-nonce="<?= wp_create_nonce('like_post_nonce') ?>">
+                <? echo $GLOBALS['dislike']; ?> <span class="dislike-count"><?= esc_html($contadorNoMeGusta) ?></span>
+            </button>
+        </div>
     </div>
 <?
     $output = ob_get_clean();
     return $output;
 }
+?>
+
+
+
