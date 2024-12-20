@@ -3,7 +3,7 @@ function like() {
     const retrasoEntreClics = 500; // 500 ms de retraso
 
     // Delegación de eventos para clics en botones de interacción
-    document.addEventListener('click', function(evento) {
+    document.addEventListener('click', function (evento) {
         const boton = evento.target.closest('[data-like_type][data-post_id]');
         if (boton) {
             manejarClicEnBoton(evento, boton);
@@ -70,7 +70,7 @@ function like() {
                 revertirIUInteraccion(boton, !añadiendoInteraccion, tipoInteraccion);
             }
         } catch (error) {
-            console.error("Error en la solicitud AJAX:", error);
+            console.error('Error en la solicitud AJAX:', error);
             alert('Hubo un error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
             revertirIUInteraccion(boton, !añadiendoInteraccion, tipoInteraccion);
         } finally {
@@ -98,7 +98,7 @@ function like() {
                 actualizarEstadoBoton(otroBoton, false, t);
             }
         });
-        
+
         // Registrar el estado actual de los botones después de la actualización.
         console.log(`Estado actual de los botones para la publicación ${idPublicacion}:`);
         ['like', 'favorito', 'no_me_gusta'].forEach(t => {
@@ -136,7 +136,16 @@ function like() {
     }
 
     function actualizarContador(contenedor, tipo, contador) {
-        const spanContador = contenedor.querySelector(`.${tipo}-count`);
+        let claseContador = '';
+        if (tipo === 'like') {
+            claseContador = 'like-count';
+        } else if (tipo === 'favorito') {
+            claseContador = 'favorite-count';
+        } else if (tipo === 'no_me_gusta') {
+            claseContador = 'dislike-count';
+        }
+
+        const spanContador = contenedor.querySelector(`.${claseContador}`);
         if (spanContador) {
             spanContador.textContent = contador;
             console.log(`Contador de ${tipo} actualizado a ${contador}.`);
@@ -144,5 +153,4 @@ function like() {
             console.error(`No se encontró el contador para ${tipo}.`);
         }
     }
-
 }
