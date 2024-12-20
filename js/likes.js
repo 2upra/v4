@@ -69,7 +69,16 @@ function like() {
             return;
         }
 
-        const contadorElement = contenedor.querySelector(`.${tipoInteraccion}-count`); // Buscar en todo el contenedor
+        // MODIFICACIÓN AQUÍ: Búsqueda específica del contador
+        let contadorElement;
+        if (tipoInteraccion === 'no_me_gusta') {
+            contadorElement = contenedor.querySelector(`.dislike-count`);
+        } else if (tipoInteraccion === 'favorito') {
+            contadorElement = contenedor.querySelector(`.favorite-count`);
+        } else {
+            contadorElement = contenedor.querySelector(`.${tipoInteraccion}-count`);
+        }
+
         if (!contadorElement) {
             console.error(`No se encontró el contador para el tipo de interacción: ${tipoInteraccion}`);
             boton.dataset.requestRunning = 'false';
@@ -175,7 +184,15 @@ function like() {
     function actualizarContador(contenedor, tipo, contador) {
         console.log(`Actualizando contador de ${tipo} a ${contador}`);
         const claseContador = `${tipo}-count`;
-        const spanContador = contenedor.querySelector(`.${claseContador}`); // Buscar en todo el contenedor
+        let spanContador;
+        if (tipo === 'no_me_gusta'){
+            spanContador = contenedor.querySelector(`.dislike-count`);
+        } else if (tipo === 'favorito'){
+            spanContador = contenedor.querySelector(`.favorite-count`);
+        } else {
+            spanContador = contenedor.querySelector(`.${claseContador}`);
+        }
+        
         if (spanContador) {
             spanContador.textContent = contador;
             console.log(`Contador de ${tipo} actualizado a ${contador}.`);
@@ -183,7 +200,6 @@ function like() {
             console.error(`No se encontró el contador para ${tipo}.`);
         }
     }
-
 }
 
 
