@@ -1,3 +1,9 @@
+/*
+2likes.js?ver=0.2.189:70  Error en la solicitud AJAX: SyntaxError: "[object Object]" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at handleLike (likes.js?ver=0.2.189:66:37)
+*/
+
 function like() {
     let lastClickTime = 0;
     const clickDelay = 500; // 500 ms de retraso
@@ -46,25 +52,23 @@ function like() {
         };
 
         try {
-            // Corregido: Pasar 'like' como la acción y 'data' como los datos
             const response = await enviarAjax('like', data);
-
-            if (response === 'not_logged_in') {
-                alert('Debes estar logueado para realizar esta acción.');
-                revertLikeUI(button, !addingLike, likeType); // Revertir al estado anterior
-            } else if (response === 'invalid_nonce') {
-                alert('Nonce inválido. Por favor, recarga la página e inténtalo de nuevo.');
-                revertLikeUI(button, !addingLike, likeType);
-            } else if (response === 'error_like_type') {
-                alert('Tipo de like inválido.');
-                revertLikeUI(button, !addingLike, likeType);
-            } else if (response === 'error' || response === 'missing_post_id') {
-                alert('Hubo un error al procesar tu solicitud.');
-                revertLikeUI(button, !addingLike, likeType);
+    
+            if (response.success) {
+                // The response now contains the updated counters for all types
+                updateAllLikeCounts(postId, response.counts);
             } else {
-                // La respuesta del servidor ahora contiene los contadores actualizados para todos los tipos
-                const counts = JSON.parse(response);
-                updateAllLikeCounts(postId, counts);
+                // Handle specific error messages
+                if (response.error === 'not_logged_in') {
+                    alert('Debes estar logueado para realizar esta acción.');
+                } else if (response.error === 'invalid_nonce') {
+                    alert('Nonce inválido. Por favor, recarga la página e inténtalo de nuevo.');
+                } else if (response.error === 'error_like_type') {
+                    alert('Tipo de like inválido.');
+                } else {
+                    alert('Hubo un error al procesar tu solicitud.');
+                }
+                revertLikeUI(button, !addingLike, likeType);
             }
         } catch (error) {
             console.error("Error en la solicitud AJAX:", error);

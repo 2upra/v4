@@ -1,20 +1,22 @@
 <?
 
 
-
-function manejarLike()
-{
+function manejarLike() {
     error_log('[manejarLike] Iniciando función.');
+
+    $response = array('success' => false); // Initialize a default response
 
     if (!is_user_logged_in()) {
         error_log('[manejarLike] Usuario no autenticado.');
-        echo 'not_logged_in';
+        $response['error'] = 'not_logged_in';
+        echo json_encode($response);
         wp_die();
     }
 
     if (!check_ajax_referer('like_post_nonce', 'nonce', false)) {
         error_log('[manejarLike] Nonce inválido.');
-        echo 'invalid_nonce';
+        $response['error'] = 'invalid_nonce';
+        echo json_encode($response);
         wp_die();
     }
 
@@ -34,13 +36,15 @@ function manejarLike()
     $allowedLikeTypes = ['like', 'favorito', 'no_me_gusta'];
     if (!in_array($likeType, $allowedLikeTypes)) {
         error_log('[manejarLike] Error: Tipo de like no permitido: ' . $likeType);
-        echo 'error_like_type';
+        $response['error'] = 'error_like_type';
+        echo json_encode($response);
         wp_die();
     }
 
     if (empty($postId)) {
         error_log('[manejarLike] Error: Post ID vacío.');
-        echo 'error';
+        $response['error'] = 'missing_post_id';
+        echo json_encode($response);
         wp_die();
     }
 
@@ -57,7 +61,8 @@ function manejarLike()
     error_log('[manejarLike] Contador de no me gusta para el post ' . $postId . ': ' . $contadorNoMeGusta);
 
     // Enviar todos los contadores como JSON
-    $response = array(
+    $response['success'] = true; // Mark as successful
+    $response['counts'] = array(
         'like' => $contadorLike,
         'favorito' => $contadorFavorito,
         'no_me_gusta' => $contadorNoMeGusta,
@@ -68,7 +73,7 @@ function manejarLike()
 }
 
 add_action('wp_ajax_like', 'manejarLike');
-add_action('wp_ajax_nopriv_like', 'manejarLike'); // Permitir a usuarios no logueados (si es necesario)
+
 
 function likeAccion($postId, $userId, $accion, $likeType = 'like')
 {
