@@ -161,29 +161,47 @@ function animacionLike() {
         const botonesExtras = container.querySelector('.botones-extras');
         const botonLike = container.querySelector('.post-like-button');
         let timeoutId = null;
+        let isMouseOverContainerOrExtras = false; // Nueva variable para controlar el estado
 
         // Función para mostrar los botones extras
         const showExtras = () => {
             clearTimeout(timeoutId);
             containers.forEach(c => c !== container && c.classList.remove('active'));
             container.classList.add('active');
+            isMouseOverContainerOrExtras = true;
         };
 
         // Función para ocultar los botones extras
         const hideExtras = () => {
-            clearTimeout(timeoutId);
             timeoutId = setTimeout(() => {
-                container.classList.remove('active');
+                if (!isMouseOverContainerOrExtras) {
+                    container.classList.remove('active');
+                }
             }, 300);
         };
 
-        // Escritorio: mouseenter y mouseleave
+        // Escritorio: mouseenter, mouseleave, mousemove
         container.addEventListener('mouseenter', showExtras);
 
-        // Detectar si el mouse entra en los botones extras
-        botonesExtras.addEventListener('mouseenter', () => clearTimeout(timeoutId));
+        container.addEventListener('mousemove', () => {
+            isMouseOverContainerOrExtras = true;
+            clearTimeout(timeoutId);
+        });
 
-        container.addEventListener('mouseleave', hideExtras);
+        botonesExtras.addEventListener('mouseenter', () => {
+            isMouseOverContainerOrExtras = true;
+            clearTimeout(timeoutId);
+        });
+
+        container.addEventListener('mouseleave', () => {
+            isMouseOverContainerOrExtras = false;
+            hideExtras();
+        });
+
+        botonesExtras.addEventListener('mouseleave', () => {
+            isMouseOverContainerOrExtras = false;
+            hideExtras();
+        });
 
         // Móvil: touchstart, touchend y detectar pulsación larga
         let touchstartTime = 0;
