@@ -163,44 +163,40 @@ function animacionLike() {
         let timeoutId = null;
         let isHoveringContainer = false;
         let isHoveringExtras = false;
+        let delayHide = 1000; // Tiempo en milisegundos que los botones permanecerán visibles
 
         const showExtras = () => {
             clearTimeout(timeoutId);
             container.classList.add('active');
         };
 
-        const startHideExtras = () => {
+        const hideExtras = (delay = 0) => {
             timeoutId = setTimeout(() => {
-                // Solo ocultar si no estamos sobre el container o los botones extras
                 if (!isHoveringContainer && !isHoveringExtras) {
                     container.classList.remove('active');
                 }
-            }, 1000); // Aumenta el tiempo si es necesario
-        };
-
-        const stopHideExtras = () => {
-            clearTimeout(timeoutId);
+            }, delay);
         };
 
         const handleMouseEnterContainer = () => {
             isHoveringContainer = true;
-            stopHideExtras();
+            clearTimeout(timeoutId);
             showExtras();
         };
 
         const handleMouseLeaveContainer = () => {
             isHoveringContainer = false;
-            startHideExtras();
+            hideExtras(delayHide);
         };
 
         const handleMouseEnterExtras = () => {
             isHoveringExtras = true;
-            stopHideExtras();
+            clearTimeout(timeoutId);
         };
 
         const handleMouseLeaveExtras = () => {
             isHoveringExtras = false;
-            startHideExtras();
+            hideExtras(delayHide);
         };
 
         container.addEventListener('mouseenter', handleMouseEnterContainer);
@@ -209,14 +205,15 @@ function animacionLike() {
         botonesExtras.addEventListener('mouseenter', handleMouseEnterExtras);
         botonesExtras.addEventListener('mouseleave', handleMouseLeaveExtras);
 
+        // Manejo de eventos táctiles (sin cambios significativos aquí)
         container.addEventListener('touchstart', () => {
-            stopHideExtras();
+            clearTimeout(timeoutId);
             containers.forEach(c => c !== container && c.classList.remove('active'));
             timeoutId = setTimeout(showExtras, 500);
         });
 
         container.addEventListener('touchend', () => {
-            startHideExtras();
+            hideExtras(delayHide);
         });
 
         botonesExtras.addEventListener('touchstart', event => {
