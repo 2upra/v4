@@ -51,26 +51,35 @@ function like() {
 
         boton.dataset.requestRunning = 'true';
         const añadiendoInteraccion = !boton.classList.contains('liked');
-        actualizarIUInteraccion(boton, añadiendoInteraccion, tipoInteraccion);
+
+        // Actualización optimista
+        const contenedor = boton.closest('.botonlike-container');
+        const contadorActual = parseInt(contenedor.querySelector(`.${tipoInteraccion}-count`).textContent, 10);
+        const nuevoContador = añadiendoInteraccion ? contadorActual + 1 : contadorActual - 1;
+        actualizarIUInteraccion(boton, añadiendoInteraccion, tipoInteraccion, nuevoContador);
 
         const datos = {
             post_id: idPublicacion,
             like_type: tipoInteraccion,
-            like_state: añadiendoInteraccion, // true para añadir, false para quitar
-            nonce: boton.dataset.nonce // Incluye el nonce para validación
+            like_state: añadiendoInteraccion,
+            nonce: boton.dataset.nonce
         };
 
         try {
-            const respuesta = await enviarAjax('like', datos); // Asumiendo que tienes una función enviarAjax
+            const respuesta = await enviarAjax('like', datos);
 
             if (respuesta.success) {
                 console.log(`Interacción "${tipoInteraccion}" ${añadiendoInteraccion ? 'añadida' : 'quitada'} en la publicación ${idPublicacion}.`);
-                const contenedor = boton.closest('.botonlike-container');
-                actualizarTodosLosContadores(contenedor, idPublicacion, respuesta.counts);
-                console.log('Contadores actualizados:', respuesta.counts);
+                // Verificar si la respuesta del servidor coincide con la actualización optimista
+                if (respuesta.counts[tipoInteraccion] !== nuevoContador) {
+                    console.warn('Desajuste entre la actualización optimista y la respuesta del servidor.');
+                    actualizarContador(contenedor, tipoInteraccion, respuesta.counts[tipoInteraccion]);
+                }
             } else {
-                // Manejar errores específicos
+                // Revertir actualización optimista en caso de error
                 console.error('Error al procesar la interacción:', respuesta.error);
+                revertirIUInteraccion(boton, !añadiendoInteraccion, tipoInteraccion, contadorActual);
+                // Mostrar mensajes de error específicos
                 if (respuesta.error === 'not_logged_in') {
                     alert('Debes estar logueado para realizar esta acción.');
                 } else if (respuesta.error === 'invalid_nonce') {
@@ -80,24 +89,27 @@ function like() {
                 } else {
                     alert('Hubo un error al procesar tu solicitud.');
                 }
-                revertirIUInteraccion(boton, !añadiendoInteraccion, tipoInteraccion);
             }
         } catch (error) {
+            // Revertir actualización optimista en caso de error
             console.error('Error en la solicitud AJAX:', error);
+            revertirIUInteraccion(boton, !añadiendoInteraccion, tipoInteraccion, contadorActual);
             alert('Hubo un error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
-            revertirIUInteraccion(boton, !añadiendoInteraccion, tipoInteraccion);
         } finally {
             boton.dataset.requestRunning = 'false';
         }
     }
 
-    function actualizarIUInteraccion(boton, añadiendo, tipo) {
+    function actualizarIUInteraccion(boton, añadiendo, tipo, contador) {
         actualizarEstadoBoton(boton, añadiendo, tipo);
+        const contenedor = boton.closest('.botonlike-container');
+        actualizarContador(contenedor, tipo, contador);
     }
 
-    function revertirIUInteraccion(boton, añadiendo, tipo) {
-        // Revierte el botón actual
+    function revertirIUInteraccion(boton, añadiendo, tipo, contador) {
         actualizarEstadoBoton(boton, añadiendo, tipo);
+        const contenedor = boton.closest('.botonlike-container');
+        actualizarContador(contenedor, tipo, contador);
     }
 
     function actualizarEstadoBoton(boton, activo, tipo) {
