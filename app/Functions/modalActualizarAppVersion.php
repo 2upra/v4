@@ -1,9 +1,14 @@
 <?php
+
 function mostrarModalActualizacionApp()
 {
     $version_actual = 'Gloria1';
     $usuario_actual = wp_get_current_user();
     $mostrar_modal = false;
+
+    // Introducir un retraso de 5 segundos
+    sleep(5);
+
     $version_usuario = get_user_meta($usuario_actual->ID, 'app_version_name', true);
 
     if ($version_usuario && $version_usuario !== $version_actual) {
@@ -84,11 +89,11 @@ function mostrarModalActualizacionApp()
                         fondoOscuro.style.opacity = '0';
                         setTimeout(() => {
                             fondoOscuro.style.display = 'none';
-                            fondoOscuro.style.pointerEvents = 'none'; // Corregido: Usar fondoOscuro en lugar de darkBackground
+                            fondoOscuro.style.pointerEvents = 'none';
                         }, 300);
                     }
                 }
-            }); // Cierre correcto del event listener de DOMContentLoaded
+            });
         </script>
     <?php
     endif;
