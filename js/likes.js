@@ -163,7 +163,7 @@ function animacionLike() {
         let timeoutId = null;
         let isHoveringContainer = false;
         let isHoveringExtras = false;
-        let delayHide = 1000; // Tiempo en milisegundos que los botones permanecerán visibles
+        let delayHide = 200; // Tiempo en milisegundos que los botones permanecerán visibles
 
         const showExtras = () => {
             console.log('showExtras: Mostrando botones extras');
