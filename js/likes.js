@@ -1,4 +1,3 @@
-
 function like() {
     let lastClickTime = 0;
     const clickDelay = 500; // 500 ms de retraso
@@ -40,7 +39,6 @@ function like() {
         updateLikeUI(button, addingLike, likeType);
 
         const data = {
-            action: 'like', // Asegúrate de enviar la acción correcta para WordPress AJAX
             post_id: postId,
             like_type: likeType,
             like_state: addingLike, // true para "dar like", false para "quitar like"
@@ -48,7 +46,8 @@ function like() {
         };
 
         try {
-            const response = await enviarAjax(data); // Envía el objeto data completo
+            // Corregido: Pasar 'like' como la acción y 'data' como los datos
+            const response = await enviarAjax('like', data);
 
             if (response === 'not_logged_in') {
                 alert('Debes estar logueado para realizar esta acción.');
