@@ -1,169 +1,148 @@
 function like() {
-    let lastClickTime = 0;
-    const clickDelay = 500; // 500 ms de retraso
+    let ultimoClic = 0;
+    const retrasoEntreClics = 500; // 500 ms de retraso
 
-    // Usar delegación de eventos para manejar clics en los botones de like
-    document.addEventListener('click', function(event) {
-        const button = event.target.closest('[data-like_type][data-post_id]');
-        if (button) {
-            handleLike(event, button);
+    // Delegación de eventos para clics en botones de interacción
+    document.addEventListener('click', function(evento) {
+        const boton = evento.target.closest('[data-like_type][data-post_id]');
+        if (boton) {
+            manejarClicEnBoton(evento, boton);
         }
     });
 
-    async function handleLike(event, button) {
-        event.preventDefault();
-        const now = Date.now();
-        if (now - lastClickTime < clickDelay) {
+    async function manejarClicEnBoton(evento, boton) {
+        evento.preventDefault();
+        const ahora = Date.now();
+        if (ahora - ultimoClic < retrasoEntreClics) {
+            console.log('Clic ignorado por retraso.');
             return;
         }
-        lastClickTime = now;
+        ultimoClic = ahora;
 
-        const postId = parseInt(button.dataset.post_id, 10);
-        const likeType = button.dataset.like_type;
+        const idPublicacion = parseInt(boton.dataset.post_id, 10);
+        const tipoInteraccion = boton.dataset.like_type;
 
-        if (!postId || !likeType || button.dataset.requestRunning === 'true') {
+        if (!idPublicacion || !tipoInteraccion || boton.dataset.requestRunning === 'true') {
+            console.log('Datos incompletos o solicitud en curso.');
             return;
         }
 
         if (!navigator.onLine) {
-            alert('No hay conexión a internet. Por favor, verifica tu conexión e inténtalo de nuevo.');
+            alert('No hay conexión a internet. Verifica tu conexión e inténtalo de nuevo.');
             return;
         }
 
-        button.dataset.requestRunning = 'true';
+        boton.dataset.requestRunning = 'true';
 
-        // Determinar si se está "dando like" o "quitando like"
-        const addingLike = !button.classList.contains(likeType + '-active');
+        // Determinar si se está añadiendo o quitando la interacción
+        const añadiendoInteraccion = !boton.classList.contains(tipoInteraccion + '-active');
 
         // Actualizar la UI inmediatamente
-        updateLikeUI(button, addingLike, likeType);
+        actualizarIUInteraccion(boton, añadiendoInteraccion, tipoInteraccion);
 
-        const data = {
-            post_id: postId,
-            like_type: likeType,
-            like_state: addingLike, // true para "dar like", false para "quitar like"
-            nonce: button.dataset.nonce // Incluye el nonce para validación
+        const datos = {
+            post_id: idPublicacion,
+            like_type: tipoInteraccion,
+            like_state: añadiendoInteraccion, // true para añadir, false para quitar
+            nonce: boton.dataset.nonce // Incluye el nonce para validación
         };
 
         try {
-            const response = await enviarAjax('like', data);
+            const respuesta = await enviarAjax('like', datos); // Asumiendo que tienes una función enviarAjax
 
-            if (response.success) {
-                // The response now contains the updated counters for all types
-                const container = button.closest('.botonlike-container');
-                updateAllLikeCounts(container, postId, response.counts);
+            if (respuesta.success) {
+                console.log(`Interacción "${tipoInteraccion}" ${añadiendoInteraccion ? 'añadida' : 'quitada'} en la publicación ${idPublicacion}.`);
+                const contenedor = boton.closest('.botonlike-container');
+                actualizarTodosLosContadores(contenedor, idPublicacion, respuesta.counts);
+                console.log('Contadores actualizados:', respuesta.counts);
             } else {
-                // Handle specific error messages
-                if (response.error === 'not_logged_in') {
+                // Manejar errores específicos
+                console.error('Error al procesar la interacción:', respuesta.error);
+                if (respuesta.error === 'not_logged_in') {
                     alert('Debes estar logueado para realizar esta acción.');
-                } else if (response.error === 'invalid_nonce') {
+                } else if (respuesta.error === 'invalid_nonce') {
                     alert('Nonce inválido. Por favor, recarga la página e inténtalo de nuevo.');
-                } else if (response.error === 'error_like_type') {
-                    alert('Tipo de like inválido.');
+                } else if (respuesta.error === 'error_like_type') {
+                    alert('Tipo de interacción inválido.');
                 } else {
                     alert('Hubo un error al procesar tu solicitud.');
                 }
-                revertLikeUI(button, !addingLike, likeType);
+                revertirIUInteraccion(boton, !añadiendoInteraccion, tipoInteraccion);
             }
         } catch (error) {
             console.error("Error en la solicitud AJAX:", error);
             alert('Hubo un error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
-            revertLikeUI(button, !addingLike, likeType);
+            revertirIUInteraccion(boton, !añadiendoInteraccion, tipoInteraccion);
         } finally {
-            button.dataset.requestRunning = 'false';
+            boton.dataset.requestRunning = 'false';
         }
     }
 
-    function updateLikeUI(button, addingLike, likeType) {
-        const container = button.closest('.botonlike-container');
-        if (!container) return;
-
-        const postId = button.dataset.post_id;
-
-        // Actualiza el botón actual
-        updateButtonState(button, addingLike, likeType);
-
-        // Actualiza los otros botones
-        const otherLikeTypes = ['like', 'favorito', 'no_me_gusta'].filter(type => type !== likeType);
-        otherLikeTypes.forEach(type => {
-            const otherButton = container.querySelector(`[data-like_type="${type}"][data-post_id="${postId}"]`);
-            if (otherButton) {
-                updateButtonState(otherButton, false, type);
-            }
-        });
-    }
-
-    function revertLikeUI(button, addingLike, likeType) {
-        const container = button.closest('.botonlike-container');
-        if (!container) return;
-
-        const postId = button.dataset.post_id;
-
-        // Revierte el botón actual
-        updateButtonState(button, addingLike, likeType);
-    }
-
-    function updateButtonState(button, isActive, likeType) {
-        const activeButtonClass = likeType + '-active';
-        if (isActive) {
-            button.classList.add(activeButtonClass);
-        } else {
-            button.classList.remove(activeButtonClass);
-        }
-    }
-
-    function updateAllLikeCounts(container, postId, counts) {
-        if (!container) return;
-
-        updateCount(container, 'like', counts.like);
-        updateCount(container, 'favorito', counts.favorito);
-        updateCount(container, 'no_me_gusta', counts.no_me_gusta);
-    }
-
-    function updateCount(container, likeType, count) {
-        const countSpan = container.querySelector(`.${likeType}-count`);
-        if (countSpan) {
-            countSpan.textContent = count;
-        }
-    }
-
-    function showHeartAnimation(postContent) {
-        if (!postContent) {
+    function actualizarIUInteraccion(boton, añadiendo, tipo) {
+        const contenedor = boton.closest('.botonlike-container');
+        if (!contenedor) {
+            console.error('No se encontró el contenedor del botón.');
             return;
         }
 
-        const heart = document.createElement('div');
-        heart.className = 'heart-animation';
-        heart.textContent = '❤';
-        Object.assign(heart.style, {
-            position: 'absolute',
-            zIndex: '999',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%) scale(1)',
-            fontSize: '4rem',
-            color: 'red',
-            opacity: 0,
-            pointerEvents: 'none'
-        });
+        const idPublicacion = boton.dataset.post_id;
 
-        postContent.style.position = 'relative';
-        postContent.appendChild(heart);
+        // Actualiza el botón actual
+        actualizarEstadoBoton(boton, añadiendo, tipo);
 
-        const animationDuration = 500;
-
-        heart.animate(
-            [
-                {opacity: 1, fontSize: '6rem'},
-                {opacity: 0, fontSize: '4rem'}
-            ],
-            {
-                duration: animationDuration,
-                easing: 'ease-out',
-                fill: 'forwards'
+        // Actualiza los otros botones
+        const otrosTipos = ['like', 'favorito', 'no_me_gusta'].filter(t => t !== tipo);
+        otrosTipos.forEach(t => {
+            const otroBoton = contenedor.querySelector(`[data-like_type="${t}"][data-post_id="${idPublicacion}"]`);
+            if (otroBoton) {
+                actualizarEstadoBoton(otroBoton, false, t);
             }
-        ).onfinish = function () {
-            heart.remove();
-        };
+        });
+        
+        // Registrar el estado actual de los botones después de la actualización.
+        console.log(`Estado actual de los botones para la publicación ${idPublicacion}:`);
+        ['like', 'favorito', 'no_me_gusta'].forEach(t => {
+            const btn = contenedor.querySelector(`[data-like_type="${t}"][data-post_id="${idPublicacion}"]`);
+            console.log(`- ${t}: ${btn ? (btn.classList.contains(t + '-active') ? 'activo' : 'inactivo') : 'no encontrado'}`);
+        });
     }
+
+    function revertirIUInteraccion(boton, añadiendo, tipo) {
+        const contenedor = boton.closest('.botonlike-container');
+        if (!contenedor) return;
+
+        // Revierte el botón actual
+        actualizarEstadoBoton(boton, añadiendo, tipo);
+    }
+
+    function actualizarEstadoBoton(boton, activo, tipo) {
+        const claseActivo = tipo + '-active';
+        if (activo) {
+            boton.classList.add(claseActivo);
+        } else {
+            boton.classList.remove(claseActivo);
+        }
+    }
+
+    function actualizarTodosLosContadores(contenedor, idPublicacion, contadores) {
+        if (!contenedor) {
+            console.error('No se encontró el contenedor para actualizar contadores.');
+            return;
+        }
+        console.log(`Actualizando contadores para la publicación ${idPublicacion}:`, contadores);
+        actualizarContador(contenedor, 'like', contadores.like);
+        actualizarContador(contenedor, 'favorito', contadores.favorito);
+        actualizarContador(contenedor, 'no_me_gusta', contadores.no_me_gusta);
+    }
+
+    function actualizarContador(contenedor, tipo, contador) {
+        const spanContador = contenedor.querySelector(`.${tipo}-count`);
+        if (spanContador) {
+            spanContador.textContent = contador;
+            console.log(`Contador de ${tipo} actualizado a ${contador}.`);
+        } else {
+            console.error(`No se encontró el contador para ${tipo}.`);
+        }
+    }
+
 }
