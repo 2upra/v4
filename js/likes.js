@@ -62,14 +62,14 @@ function like() {
         const añadiendoInteraccion = !boton.classList.contains('liked');
 
         // Actualización optimista
-        const contenedor = boton.closest('.botonlike-container');
+        const contenedor = boton.closest('.TJKQGJ'); // Cambio aquí para seleccionar el contenedor principal
         if (!contenedor) {
             console.error('No se encontró el contenedor del botón.');
             boton.dataset.requestRunning = 'false';
             return;
         }
 
-        const contadorElement = contenedor.querySelector(`.${tipoInteraccion}-count`);
+        const contadorElement = contenedor.querySelector(`.${tipoInteraccion}-count`); // Buscar en todo el contenedor
         if (!contadorElement) {
             console.error(`No se encontró el contador para el tipo de interacción: ${tipoInteraccion}`);
             boton.dataset.requestRunning = 'false';
@@ -130,7 +130,7 @@ function like() {
     function actualizarIUInteraccion(boton, añadiendo, tipo, contador) {
         console.log(`Actualizando UI para ${tipo}: añadiendo=${añadiendo}, contador=${contador}`);
         actualizarEstadoBoton(boton, añadiendo, tipo);
-        const contenedor = boton.closest('.botonlike-container');
+        const contenedor = boton.closest('.TJKQGJ'); // Usar el contenedor correcto
         if (contenedor) {
             actualizarContador(contenedor, tipo, contador);
         } else {
@@ -141,7 +141,7 @@ function like() {
     function revertirIUInteraccion(boton, añadiendo, tipo, contador) {
         console.log(`Revirtiendo UI para ${tipo}: añadiendo=${añadiendo}, contador=${contador}`);
         actualizarEstadoBoton(boton, añadiendo, tipo);
-        const contenedor = boton.closest('.botonlike-container');
+        const contenedor = boton.closest('.TJKQGJ'); // Usar el contenedor correcto
         if (contenedor) {
             actualizarContador(contenedor, tipo, contador);
         } else {
@@ -175,7 +175,7 @@ function like() {
     function actualizarContador(contenedor, tipo, contador) {
         console.log(`Actualizando contador de ${tipo} a ${contador}`);
         const claseContador = `${tipo}-count`;
-        const spanContador = contenedor.querySelector(`.${claseContador}`);
+        const spanContador = contenedor.querySelector(`.${claseContador}`); // Buscar en todo el contenedor
         if (spanContador) {
             spanContador.textContent = contador;
             console.log(`Contador de ${tipo} actualizado a ${contador}.`);
@@ -185,7 +185,6 @@ function like() {
     }
 
 }
-
 
 
 function animacionLike() {
