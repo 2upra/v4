@@ -1,18 +1,17 @@
 function like() {
-    let ultimoClic = 0;
+    let ultimoDobleClic = 0; // Variable para el doble clic
     const retrasoEntreClics = 500; // 500 ms de retraso
-    //animacionLike(); // Si necesitas ejecutar esto al inicio, descomenta esta línea
 
     // Delegación de eventos para doble clic en los elementos <li>
     document.addEventListener('dblclick', function (evento) {
         const elementoLi = evento.target.closest('li.EDYQHV');
         if (elementoLi) {
             const ahora = Date.now();
-            if (ahora - ultimoClic < retrasoEntreClics) {
+            if (ahora - ultimoDobleClic < retrasoEntreClics) {
                 console.log('Doble clic demasiado rápido, ignorado.');
                 return;
             }
-            ultimoClic = ahora;
+            ultimoDobleClic = ahora;
 
             const idPublicacion = elementoLi.getAttribute('id-post');
             const botonLike = elementoLi.querySelector('.post-like-button');
@@ -20,7 +19,7 @@ function like() {
             if (idPublicacion && botonLike) {
                 console.log('Doble clic en post ID:', idPublicacion);
                 // Simular clic en el botón de like
-                botonLike.click();
+                manejarClicEnBoton(evento, botonLike);
             }
         }
     });
@@ -28,19 +27,14 @@ function like() {
     // Delegación de eventos para clics en botones de interacción
     document.addEventListener('click', function (evento) {
         const boton = evento.target.closest('[data-like_type][data-post_id]');
-        if (boton) {
+        if (boton && !evento.simulated) {
+            //  <-  Añade la condición !evento.simulated
             manejarClicEnBoton(evento, boton);
         }
     });
 
     async function manejarClicEnBoton(evento, boton) {
         evento.preventDefault();
-        const ahora = Date.now();
-        if (ahora - ultimoClic < retrasoEntreClics) {
-            console.log('Clic ignorado por retraso.');
-            return;
-        }
-        ultimoClic = ahora;
 
         const idPublicacion = parseInt(boton.dataset.post_id, 10);
         const tipoInteraccion = boton.dataset.like_type;
@@ -98,9 +92,7 @@ function like() {
     }
 
     function actualizarIUInteraccion(boton, añadiendo, tipo) {
-
         actualizarEstadoBoton(boton, añadiendo, tipo);
-
     }
 
     function revertirIUInteraccion(boton, añadiendo, tipo) {
@@ -181,10 +173,9 @@ function animacionLike() {
                 container.classList.remove('active');
             }, 300); // Ajusta el tiempo de retraso según sea necesario
         });
-      
 
         // Móvil: touchstart, touchend y detectar pulsación larga
-        container.addEventListener('touchstart', (event) => {
+        container.addEventListener('touchstart', event => {
             touchstartTime = Date.now();
             clearTimeout(timeoutId);
 
@@ -201,7 +192,7 @@ function animacionLike() {
             }, 500); // Ajusta el tiempo para la pulsación larga (e.g., 500ms)
         });
 
-        container.addEventListener('touchend', (event) => {
+        container.addEventListener('touchend', event => {
             const duration = Date.now() - touchstartTime;
             clearTimeout(timeoutId);
 
@@ -216,18 +207,15 @@ function animacionLike() {
         });
 
         // Evitar que el menú se oculte cuando se toca dentro de él
-        botonesExtras.addEventListener('touchstart', (event) => {
+        botonesExtras.addEventListener('touchstart', event => {
             event.stopPropagation();
         });
-      
-      
-      //Para evitar que active el boton like si ya se activo active
-      botonLike.addEventListener('touchstart', (event) => {
-        if (container.classList.contains('active')) {
-            event.preventDefault();
-        }
-    });
+
+        //Para evitar que active el boton like si ya se activo active
+        botonLike.addEventListener('touchstart', event => {
+            if (container.classList.contains('active')) {
+                event.preventDefault();
+            }
+        });
     });
 }
-
-
