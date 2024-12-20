@@ -174,7 +174,7 @@ function animacionLike() {
             clearTimeout(timeoutId); // Limpia cualquier temporizador previo
             timeoutId = setTimeout(() => {
                 container.classList.remove('active'); // Oculta después de un retraso
-            }, 1000); // Ajusta el tiempo según sea necesario
+            }, 2000); 
         };
 
         // Mostrar botones extras al entrar con el mouse en el contenedor principal
