@@ -144,30 +144,51 @@ function animacionLike() {
     const containers = document.querySelectorAll('.botonlike-container');
 
     containers.forEach(container => {
-        container.addEventListener('mouseenter', () => {
-            container.querySelector('.botones-extras').style.transform = 'translateX(0)';
-        });
+        const botonesExtras = container.querySelector('.botones-extras');
+        let touchStartTime = 0;
+        let isTouching = false;
 
-        container.addEventListener('mouseleave', () => {
-            container.querySelector('.botones-extras').style.transform = 'translateX(10px)';
-        });
+        container.addEventListener('touchstart', (event) => {
+            touchStartTime = Date.now();
+            isTouching = true;
 
-        // Para dispositivos táctiles (simula el hover)
-        container.addEventListener('touchstart', event => {
-            // Evita la propagación del evento para que no se disparen otros eventos no deseados
-            event.stopPropagation();
-            const botonesExtras = container.querySelector('.botones-extras');
+            // Mostrar los botones extras inmediatamente al tocar
             botonesExtras.style.opacity = '1';
             botonesExtras.style.pointerEvents = 'auto';
             botonesExtras.style.transform = 'translateX(0)';
+        });
 
-            // Oculta los botones extras después de un tiempo (simulando el "mouseleave")
-            clearTimeout(container.touchTimeout);
-            container.touchTimeout = setTimeout(() => {
+        container.addEventListener('touchend', () => {
+            isTouching = false;
+            // Ocultar los botones extras al levantar el dedo
+            botonesExtras.style.opacity = '0';
+            botonesExtras.style.pointerEvents = 'none';
+            botonesExtras.style.transform = 'translateX(10px)';
+        });
+
+        // Opcional: Manejar la situación donde el usuario desliza fuera del botón sin levantar el dedo
+        container.addEventListener('touchmove', (event) => {
+            const touch = event.touches[0];
+            const rect = container.getBoundingClientRect();
+            if (touch.clientX < rect.left || touch.clientX > rect.right || touch.clientY < rect.top || touch.clientY > rect.bottom) {
+                // El dedo se movió fuera del botón, ocultar los extras
+                if (isTouching) {
+                    botonesExtras.style.opacity = '0';
+                    botonesExtras.style.pointerEvents = 'none';
+                    botonesExtras.style.transform = 'translateX(10px)';
+                    isTouching = false;
+                }
+            }
+        });
+
+        // Opcional: Cancelar la visualización si el dedo se aleja del contenedor
+        container.addEventListener('touchcancel', () => {
+            if (isTouching) {
                 botonesExtras.style.opacity = '0';
                 botonesExtras.style.pointerEvents = 'none';
                 botonesExtras.style.transform = 'translateX(10px)';
-            }, 500); // Ajusta el tiempo de visualización
+                isTouching = false;
+            }
         });
     });
 }
