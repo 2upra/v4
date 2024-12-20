@@ -142,37 +142,41 @@ function like() {
 
 function animacionLike() {
     const containers = document.querySelectorAll('.botonlike-container');
+    let touchstartTime = 0;
+    let timeoutId = null;
 
     containers.forEach(container => {
         const botonesExtras = container.querySelector('.botones-extras');
-        let hoverTimeout; // Para el retraso en escritorio
-        let touchTimeout; // Para el retraso en móvil
+        const botonLike = container.querySelector('.post-like-button');
 
-        // Eventos para Escritorio (Hover)
+        // Escritorio: mouseenter y mouseleave
         container.addEventListener('mouseenter', () => {
-            clearTimeout(hoverTimeout); // Cancela cualquier intento anterior de ocultar
-            container.classList.add('active');
+            clearTimeout(timeoutId);
+            // Remover la clase 'active' de otros contenedores
+            containers.forEach(c => {
+                if (c !== container) {
+                    c.classList.remove('active');
+                }
+            });
+            // Añadir un retraso para mostrar los botones extras
+            timeoutId = setTimeout(() => {
+                container.classList.add('active');
+            }, 300); // Ajusta el tiempo de retraso según sea necesario
         });
 
         container.addEventListener('mouseleave', () => {
-            hoverTimeout = setTimeout(() => {
+            clearTimeout(timeoutId);
+            // Añadir un retraso para ocultar los botones extras
+            timeoutId = setTimeout(() => {
                 container.classList.remove('active');
-            }, 200); // Retraso de 200ms (ajusta según necesidad)
+            }, 300); // Ajusta el tiempo de retraso según sea necesario
         });
+      
 
-        botonesExtras.addEventListener('mouseenter', () => {
-            clearTimeout(hoverTimeout); // Si el mouse entra en los extras, no ocultar
-        });
-
-        botonesExtras.addEventListener('mouseleave', () => {
-            hoverTimeout = setTimeout(() => {
-                container.classList.remove('active');
-            }, 200); // Retraso al salir de los extras también
-        });
-
-        // Eventos para Móvil (Touch)
-        container.addEventListener('touchstart', event => {
-            event.preventDefault();
+        // Móvil: touchstart, touchend y detectar pulsación larga
+        container.addEventListener('touchstart', (event) => {
+            touchstartTime = Date.now();
+            clearTimeout(timeoutId);
 
             // Remover la clase 'active' de otros contenedores
             containers.forEach(c => {
@@ -181,40 +185,39 @@ function animacionLike() {
                 }
             });
 
-            touchTimeout = setTimeout(() => {
+            // Iniciar un temporizador para la pulsación larga
+            timeoutId = setTimeout(() => {
                 container.classList.add('active');
-                document.addEventListener('touchstart', handleOutsideTouch);
-            }, 300); // Retraso para "mantener presionado" (ajusta según necesidad)
+            }, 500); // Ajusta el tiempo para la pulsación larga (e.g., 500ms)
         });
 
-        container.addEventListener('touchend', () => {
-            clearTimeout(touchTimeout); // Cancelar si se levanta el dedo antes de tiempo
-            if (!container.classList.contains('active')) {
-                // Si no se mostró por mantener presionado, actuar como un clic normal
-                containers.forEach(c => {
-                    if (c !== container) {
-                        c.classList.remove('active');
-                    }
-                });
-                container.classList.toggle('active');
+        container.addEventListener('touchend', (event) => {
+            const duration = Date.now() - touchstartTime;
+            clearTimeout(timeoutId);
+
+            // Si la duración es menor que el tiempo de pulsación larga, es un toque corto
+            if (duration < 500) {
+                // Evitar que se propague el evento de clic al botón de like si ya se ha mostrado el menú
                 if (container.classList.contains('active')) {
-                    document.addEventListener('touchstart', handleOutsideTouch);
-                } else {
-                    document.removeEventListener('touchstart', handleOutsideTouch);
+                    event.preventDefault();
                 }
-            }
-        });
-
-        container.addEventListener('touchmove', () => {
-            clearTimeout(touchTimeout); // Cancelar si se mueve el dedo
-        });
-
-        function handleOutsideTouch(event) {
-            if (!container.contains(event.target)) {
                 container.classList.remove('active');
-                document.removeEventListener('touchstart', handleOutsideTouch);
             }
+        });
+
+        // Evitar que el menú se oculte cuando se toca dentro de él
+        botonesExtras.addEventListener('touchstart', (event) => {
+            event.stopPropagation();
+        });
+      
+      
+      //Para evitar que active el boton like si ya se activo active
+      botonLike.addEventListener('touchstart', (event) => {
+        if (container.classList.contains('active')) {
+            event.preventDefault();
         }
     });
+    });
 }
+
 
