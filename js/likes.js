@@ -174,14 +174,19 @@ function animacionLike() {
             clearTimeout(timeoutId); // Limpia cualquier temporizador previo
             timeoutId = setTimeout(() => {
                 container.classList.remove('active'); // Oculta después de un retraso
-            }, 2000); // Ajusta el tiempo de espera según sea necesario
+            }, 2000); // Tiempo de espera para ocultar
         };
 
         // Mostrar botones extras al entrar con el mouse en el contenedor principal
         container.addEventListener('mouseenter', showExtras);
 
-        // Iniciar el temporizador para ocultar cuando el mouse salga del contenedor principal
-        container.addEventListener('mouseleave', hideExtras);
+        // Iniciar el temporizador para ocultar cuando el mouse salga del contenedor principal,
+        // pero no si el mouse entra en los botones extras
+        container.addEventListener('mouseleave', (event) => {
+            if (!botonesExtras.contains(event.relatedTarget)) {
+                hideExtras();
+            }
+        });
 
         // Cancelar la ocultación si el mouse entra en los botones extras
         botonesExtras.addEventListener('mouseenter', () => {
@@ -189,26 +194,29 @@ function animacionLike() {
         });
 
         // Iniciar el temporizador para ocultar cuando el mouse salga de los botones extras
-        botonesExtras.addEventListener('mouseleave', hideExtras);
+        botonesExtras.addEventListener('mouseleave', (event) => {
+            if (!container.contains(event.relatedTarget)) {
+                hideExtras();
+            }
+        });
 
         // Móvil: touchstart, touchend y detectar pulsación larga
         let touchstartTime = 0;
-        container.addEventListener('touchstart', event => {
+        container.addEventListener('touchstart', () => {
             touchstartTime = Date.now(); // Marca el tiempo de inicio del toque
             clearTimeout(timeoutId); // Limpia cualquier temporizador previo
             containers.forEach(c => c !== container && c.classList.remove('active')); // Oculta otros contenedores activos
 
             timeoutId = setTimeout(() => {
                 showExtras(); // Muestra los extras si es una pulsación larga
-            }, 2000); // Define el tiempo para la pulsación larga
+            }, 500); // Define el tiempo para la pulsación larga
         });
 
-        container.addEventListener('touchend', event => {
+        container.addEventListener('touchend', () => {
             const duration = Date.now() - touchstartTime; // Calcula la duración del toque
             clearTimeout(timeoutId); // Limpia cualquier temporizador previo
 
-            if (duration < 2000 && container.classList.contains('active')) {
-                event.preventDefault();
+            if (duration < 500 && container.classList.contains('active')) {
                 hideExtras(); // Oculta si es un toque corto
             }
         });
