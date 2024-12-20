@@ -26,7 +26,7 @@ function tooltips() {
         tooltip.style.visibility = 'hidden';
     }
 
-    const tooltipElements = document.querySelectorAll('.tooltip');
+    const tooltipElements = document.querySelectorAll('.tooltip-element');
     tooltipElements.forEach(element => {
         element.addEventListener('mouseenter', function (e) {
             showTooltip(e);
