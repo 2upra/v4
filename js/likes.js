@@ -1,21 +1,35 @@
 function like() {
     let ultimoClic = 0;
     const retrasoEntreClics = 500; // 500 ms de retraso
-    animacionLike();
+    //animacionLike(); // Si necesitas ejecutar esto al inicio, descomenta esta línea
+
+    // Delegación de eventos para doble clic en los elementos <li>
+    document.addEventListener('dblclick', function (evento) {
+        const elementoLi = evento.target.closest('li.EDYQHV');
+        if (elementoLi) {
+            const ahora = Date.now();
+            if (ahora - ultimoClic < retrasoEntreClics) {
+                console.log('Doble clic demasiado rápido, ignorado.');
+                return;
+            }
+            ultimoClic = ahora;
+
+            const idPublicacion = elementoLi.getAttribute('id-post');
+            const botonLike = elementoLi.querySelector('.post-like-button');
+
+            if (idPublicacion && botonLike) {
+                console.log('Doble clic en post ID:', idPublicacion);
+                // Simular clic en el botón de like
+                botonLike.click();
+            }
+        }
+    });
 
     // Delegación de eventos para clics en botones de interacción
     document.addEventListener('click', function (evento) {
         const boton = evento.target.closest('[data-like_type][data-post_id]');
         if (boton) {
             manejarClicEnBoton(evento, boton);
-        }
-    });
-
-    // **Delegación de eventos para doble clic en los elementos <li>**
-    document.addEventListener('dblclick', function (evento) {
-        const elementoLi = evento.target.closest('li.POST-nada.EDYQHV');
-        if (elementoLi) {
-            manejarDobleClicEnLi(elementoLi);
         }
     });
 
@@ -83,29 +97,10 @@ function like() {
         }
     }
 
-    // **Función para manejar el doble clic en los elementos <li>**
-    async function manejarDobleClicEnLi(elementoLi) {
-        const idPublicacion = parseInt(elementoLi.getAttribute('id-post'), 10);
-        if (!idPublicacion) {
-            console.log('No se encontró el ID de la publicación en el elemento <li>.');
-            return;
-        }
-
-        // Buscar el botón de "like" dentro del contenedor de la publicación
-        const contenedorPublicacion = elementoLi.closest('.full-width.flex-wrap.flex-column.container-publicacion'); // Ajusta el selector según tu estructura
-        const botonLike = contenedorPublicacion ? contenedorPublicacion.querySelector('[data-like_type="like"][data-post_id="' + idPublicacion + '"]') : null;
-
-        if (!botonLike) {
-            console.log('No se encontró el botón de "like" para la publicación.');
-            return;
-        }
-
-        // Simular un clic en el botón de "like"
-        manejarClicEnBoton(new Event('click'), botonLike);
-    }
-
     function actualizarIUInteraccion(boton, añadiendo, tipo) {
+
         actualizarEstadoBoton(boton, añadiendo, tipo);
+
     }
 
     function revertirIUInteraccion(boton, añadiendo, tipo) {
