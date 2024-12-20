@@ -219,7 +219,8 @@ if (!defined('ABSPATH')) {
 
                     <div class="endmenu MENUDGE">
 
-                        <div class="search-container tooltip-element" id="filtros" data-tooltip="agrega terminos negativos con '-' ejemplo 'Hip hop drum -break-', y eso omitirá resultados que contengan break">
+                        <div class="search-container tooltip-element" id="filtros" data-tooltip="Para excluir palabras de tu búsqueda, usa el signo menos (-) antes del término o encierra frases con ello. Ejemplo: 'Hip hop drum -break drum-' no mostrará resultados que contengan 'break brum'.">
+
                             <input type="text" id="identifier" placeholder="Busqueda">
                             <button id="clearSearch" class="clear-search" style="display: none;">
                                 <? echo $GLOBALS['flechaAtras']; ?>
