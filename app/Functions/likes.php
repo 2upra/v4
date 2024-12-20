@@ -173,11 +173,11 @@ function like($postId)
 
     $contadorFavorito = contarLike($postId, 'favorito');
     $user_has_favorited = chequearLike($postId, $userId, 'favorito');
-    $favorited_class = $user_has_favorited ? 'favorited' : 'not-favorited';
+    $favorited_class = $user_has_favorited ? 'liked' : 'not-liked';
 
     $contadorNoMeGusta = contarLike($postId, 'no_me_gusta');
     $user_has_disliked = chequearLike($postId, $userId, 'no_me_gusta');
-    $disliked_class = $user_has_disliked ? 'disliked' : 'not-disliked';
+    $disliked_class = $user_has_disliked ? 'liked' : 'not-liked';
 
     ob_start();
 ?>
