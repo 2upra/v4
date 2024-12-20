@@ -91,11 +91,12 @@ function SubidaImagenPerfil() {
 }
 
 function IniciadoresConfigPerfil() {
-    SubidaImagenPerfil();  //ignorar
-    selectorFanArtistaTipo(); //ignorar
+    SubidaImagenPerfil();  
+    selectorFanArtistaTipo(); 
     cambiarNombre();
     cambiarDescripcion();
     cambiarEnlace();
+    copiarEnlacePerfil();
     
 }
 
@@ -381,4 +382,29 @@ function selectorFanArtistaTipo() {
     });
 
     applyInitialStyles();
+}
+
+function copiarEnlacePerfil() {
+    const botonesCompartir = document.querySelectorAll('.compartirPerfil');
+
+    botonesCompartir.forEach(boton => {
+        boton.addEventListener('click', function() {
+            const username = this.getAttribute('data-username');
+            const enlacePerfil = `https://2upra.com/perfil/${username}`;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(enlacePerfil)
+                    .then(() => {
+                        alert('Enlace del perfil copiado al portapapeles: ' + enlacePerfil);
+                    })
+                    .catch(err => {
+                        console.error('Error al copiar el enlace: ', err);
+                        alert('No se pudo copiar el enlace al portapapeles.');
+                    });
+            } else {
+                // Ofrecer un método alternativo o informar al usuario que no es compatible
+                alert('La función de copiar al portapapeles no está disponible en este dispositivo.');
+            }
+        });
+    });
 }

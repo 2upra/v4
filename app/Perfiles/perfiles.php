@@ -88,7 +88,7 @@ function perfilBanner($user_id)
 
     ob_start();
     ?>
-    <div class="X522YA FRRVBB" data-iduser="<? echo esc_html($user_id); ?>">
+    <div class="X522YA FRRVBB" data-iduser="<? echo esc_attr($user_id); ?>">
         <div class="JKBZKR">
             <img src="<? echo esc_url($imagen_perfil); ?>" alt="">
             <div class="KFEVRT">
@@ -104,21 +104,22 @@ function perfilBanner($user_id)
         </div>
 
         <div class="R0A915">
-            <? if (!$mismoAutor): ?>
-                <?
+            <?php if (!$mismoAutor): ?>
+                <?php
                 echo botonSeguirPerfilBanner($user_id);
                 ?>
-                <button class="borde PRJWWT mensajeBoton" data-receptor="<? echo esc_html($user_id); ?>">Enviar mensaje</button>
-            <? endif; ?>
-            <? if ($mismoAutor): ?>
+                <button class="borde PRJWWT mensajeBoton" data-receptor="<?php echo esc_attr($user_id); ?>">Enviar mensaje</button>
+            <?php endif; ?>
+            <?php if ($mismoAutor): ?>
                 <button class="botonConfig borde">Configuración</button>
-                <button class="compartirPerfil borde">Compartir perfil</button>
-            <? endif; ?>
+                <button class="compartirPerfil borde" data-username="<?php echo esc_attr($user_info->user_login); ?>">Compartir perfil</button>
+            <?php endif; ?>
         </div>
     </div>
-    <?
+    <?php
     return ob_get_clean();
 }
+
 
 function editar_perfil_usuario_shortcode()
 {
