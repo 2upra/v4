@@ -178,7 +178,11 @@ function animacionLike() {
             }, 300); // Ajusta el tiempo de retraso según sea necesario
         });
 
-        container.addEventListener('mouseleave', () => {
+        container.addEventListener('mouseleave', (event) => {
+            // Verificar si el ratón se movió hacia un elemento hijo del contenedor
+            if (event.relatedTarget && container.contains(event.relatedTarget)) {
+                return; // No ocultar si el ratón está dentro del contenedor
+            }
             clearTimeout(timeoutId);
             // Añadir un retraso para ocultar los botones extras
             timeoutId = setTimeout(() => {
@@ -231,3 +235,4 @@ function animacionLike() {
         });
     });
 }
+
