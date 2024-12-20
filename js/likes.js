@@ -35,7 +35,8 @@ function like() {
         boton.dataset.requestRunning = 'true';
 
         // Determinar si se está añadiendo o quitando la interacción
-        const añadiendoInteraccion = !boton.classList.contains(tipoInteraccion + '-active');
+        // const añadiendoInteraccion = !boton.classList.contains(tipoInteraccion + '-active');
+        const añadiendoInteraccion = !boton.classList.contains('liked');
 
         // Actualizar la UI inmediatamente
         actualizarIUInteraccion(boton, añadiendoInteraccion, tipoInteraccion);
@@ -138,3 +139,4 @@ function like() {
         }
     }
 }
+
