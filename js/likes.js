@@ -173,22 +173,23 @@ function animacionLike() {
         const hideExtras = () => {
             clearTimeout(timeoutId); // Limpia cualquier temporizador previo
             timeoutId = setTimeout(() => {
-                container.classList.remove('active'); // Oculta después de 300ms
-            }, 300); // Ajusta el tiempo según sea necesario
+                container.classList.remove('active'); // Oculta después de un retraso
+            }, 1000); // Ajusta el tiempo según sea necesario
         };
 
-        // Evento para mostrar los botones extras al entrar con el mouse
+        // Mostrar botones extras al entrar con el mouse en el contenedor principal
         container.addEventListener('mouseenter', showExtras);
 
-        // Detectar si el mouse entra en los botones extras (para cancelar el temporizador de ocultar)
+        // Cancelar la ocultación si el mouse entra en los botones extras
         botonesExtras.addEventListener('mouseenter', () => {
             clearTimeout(timeoutId); // Cancela el temporizador de ocultar
         });
 
-        // Detectar si el mouse sale del contenedor completo (incluido botones extras)
-        container.addEventListener('mouseleave', () => {
-            hideExtras(); // Inicia el temporizador para ocultar
-        });
+        // Iniciar el temporizador para ocultar cuando el mouse salga del contenedor principal
+        container.addEventListener('mouseleave', hideExtras);
+
+        // Iniciar el temporizador para ocultar cuando el mouse salga de los botones extras
+        botonesExtras.addEventListener('mouseleave', hideExtras);
 
         // Móvil: touchstart, touchend y detectar pulsación larga
         let touchstartTime = 0;
