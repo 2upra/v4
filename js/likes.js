@@ -1,9 +1,3 @@
-/*
-2likes.js?ver=0.2.189:70  Error en la solicitud AJAX: SyntaxError: "[object Object]" is not valid JSON
-    at JSON.parse (<anonymous>)
-    at handleLike (likes.js?ver=0.2.189:66:37)
-*/
-
 function like() {
     let lastClickTime = 0;
     const clickDelay = 500; // 500 ms de retraso
@@ -53,10 +47,11 @@ function like() {
 
         try {
             const response = await enviarAjax('like', data);
-    
+
             if (response.success) {
                 // The response now contains the updated counters for all types
-                updateAllLikeCounts(postId, response.counts);
+                const container = button.closest('.botonlike-container');
+                updateAllLikeCounts(container, postId, response.counts);
             } else {
                 // Handle specific error messages
                 if (response.error === 'not_logged_in') {
@@ -82,35 +77,32 @@ function like() {
     function updateLikeUI(button, addingLike, likeType) {
         const container = button.closest('.botonlike-container');
         if (!container) return;
-    
+
         const postId = button.dataset.post_id;
-    
+
         // Actualiza el botón actual
         updateButtonState(button, addingLike, likeType);
-    
+
         // Actualiza los otros botones
         const otherLikeTypes = ['like', 'favorito', 'no_me_gusta'].filter(type => type !== likeType);
         otherLikeTypes.forEach(type => {
             const otherButton = container.querySelector(`[data-like_type="${type}"][data-post_id="${postId}"]`);
             if (otherButton) {
-                updateButtonState(otherButton, false, type); // Siempre establece como inactivo
+                updateButtonState(otherButton, false, type);
             }
         });
     }
-    
+
     function revertLikeUI(button, addingLike, likeType) {
         const container = button.closest('.botonlike-container');
         if (!container) return;
-    
+
         const postId = button.dataset.post_id;
-    
+
         // Revierte el botón actual
         updateButtonState(button, addingLike, likeType);
-    
-        // Si se está revirtiendo un like, no es necesario actualizar los otros botones
-        // ya que ya deberían estar en el estado correcto.
     }
-    
+
     function updateButtonState(button, isActive, likeType) {
         const activeButtonClass = likeType + '-active';
         if (isActive) {
@@ -120,8 +112,7 @@ function like() {
         }
     }
 
-    function updateAllLikeCounts(postId, counts) {
-        const container = document.querySelector(`.botonlike-container button[data-post_id="${postId}"]`).closest('.botonlike-container');
+    function updateAllLikeCounts(container, postId, counts) {
         if (!container) return;
 
         updateCount(container, 'like', counts.like);
