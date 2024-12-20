@@ -7,12 +7,12 @@ function rehacerDescripcionAccion($post_id)
         $archivo_audio = get_attached_file($audio_lite_id);
         if ($archivo_audio) {
             rehacerDescripcionAudio($post_id, $archivo_audio);
-            error_log("Descripción del audio actualizada para el post ID: {$post_id} con archivo de audio en la ruta {$archivo_audio}");
+            //error_log("Descripción del audio actualizada para el post ID: {$post_id} con archivo de audio en la ruta {$archivo_audio}");
         } else {
-            error_log("No se pudo obtener la ruta del archivo de audio lite para el post ID: {$post_id}");
+            //error_log("No se pudo obtener la ruta del archivo de audio lite para el post ID: {$post_id}");
         }
     } else {
-        error_log("No se encontró el metadato 'post_audio_lite' para el post ID: {$post_id}");
+        //error_log("No se encontró el metadato 'post_audio_lite' para el post ID: {$post_id}");
     }
 }
 
@@ -23,12 +23,12 @@ function rehacerJsonPost($post_id, $descripcion)
         $archivo_audio = get_attached_file($audio_lite_id);
         if ($archivo_audio) {
             rehacerJson($post_id, $archivo_audio, $descripcion);
-            error_log("Descripción del audio actualizada para el post ID: {$post_id} con archivo de audio en la ruta {$archivo_audio}");
+            //error_log("Descripción del audio actualizada para el post ID: {$post_id} con archivo de audio en la ruta {$archivo_audio}");
         } else {
-            error_log("No se pudo obtener la ruta del archivo de audio lite para el post ID: {$post_id}");
+            //error_log("No se pudo obtener la ruta del archivo de audio lite para el post ID: {$post_id}");
         }
     } else {
-        error_log("No se encontró el metadato 'post_audio_lite' para el post ID: {$post_id}");
+        //error_log("No se encontró el metadato 'post_audio_lite' para el post ID: {$post_id}");
     }
 }
 /*
@@ -38,35 +38,35 @@ como se puede arreglar
 
 function rehacerJson($post_id, $archivo_audio, $descripcion)
 {
-    error_log("Iniciando reajusteJson para el post ID: {$post_id}");
+    //error_log("Iniciando reajusteJson para el post ID: {$post_id}");
 
     // Obtener el contenido del post
-    error_log("Contenido del post obtenido para el post ID: {$post_id}");
+    //error_log("Contenido del post obtenido para el post ID: {$post_id}");
 
     // Obtener los metadatos actuales del post, incluyendo 'datosAlgoritmo'
     $datosAlgoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
     if (!$datosAlgoritmo) {
-        error_log("No se encontraron metadatos previos para el post ID: {$post_id}");
+        //error_log("No se encontraron metadatos previos para el post ID: {$post_id}");
         return;
     }
 
     // **Verificar si es un array y convertirlo a JSON si es necesario**
     if (is_array($datosAlgoritmo)) {
-        error_log("rehacerJson: \$datosAlgoritmo es un array, intentando convertirlo a JSON para el post ID: {$post_id}");
+        //error_log("rehacerJson: \$datosAlgoritmo es un array, intentando convertirlo a JSON para el post ID: {$post_id}");
         $datosAlgoritmo = json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log("rehacerJson: Error al convertir el array a JSON para el post ID: {$post_id}: " . json_last_error_msg());
+            //error_log("rehacerJson: Error al convertir el array a JSON para el post ID: {$post_id}: " . json_last_error_msg());
             return;
         }
     } elseif (!is_string($datosAlgoritmo)) {
-        error_log("rehacerJson: Error: \$datosAlgoritmo no es una cadena JSON ni un array para el post ID: {$post_id}. Tipo: " . gettype($datosAlgoritmo));
+        //error_log("rehacerJson: Error: \$datosAlgoritmo no es una cadena JSON ni un array para el post ID: {$post_id}. Tipo: " . gettype($datosAlgoritmo));
         return;
     }
 
     // Decodificar el JSON de 'datosAlgoritmo'
     $datos_actuales = json_decode($datosAlgoritmo, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
-        error_log("rehacerJson: Error al decodificar el JSON de 'datosAlgoritmo' para el post ID: {$post_id}: " . json_last_error_msg());
+        //error_log("rehacerJson: Error al decodificar el JSON de 'datosAlgoritmo' para el post ID: {$post_id}: " . json_last_error_msg());
         return;
     }
 
@@ -80,7 +80,7 @@ function rehacerJson($post_id, $archivo_audio, $descripcion)
     // Generar la nueva descripción usando la IA
     $descripcion_mejorada = generarDescripcionIA($archivo_audio, $prompt);
     if (!$descripcion_mejorada) {
-        error_log("No se pudo generar la descripción mejorada para el post ID: {$post_id}");
+        //error_log("No se pudo generar la descripción mejorada para el post ID: {$post_id}");
         return;
     }
 
@@ -91,47 +91,47 @@ function rehacerJson($post_id, $archivo_audio, $descripcion)
     // Decodificar la descripción generada por la IA
     $datos_actualizados = json_decode($descripcion_mejorada_limpia, true);
     if (json_last_error() === JSON_ERROR_NONE) {
-        error_log("Nuevos datos generados para el post ID: {$post_id}");
+        //error_log("Nuevos datos generados para el post ID: {$post_id}");
 
         // Guardar los nuevos datos en la meta 'datosAlgoritmo'
         update_post_meta($post_id, 'datosAlgoritmo', json_encode($datos_actualizados, JSON_UNESCAPED_UNICODE));
-        error_log("Metadatos actualizados para el post ID: {$post_id}");
+        //error_log("Metadatos actualizados para el post ID: {$post_id}");
 
         // Actualizar la fecha de la última edición
         $fecha_actual = current_time('mysql');
         update_post_meta($post_id, 'ultimoEdit', $fecha_actual);
-        error_log("Metadato 'ultimoEdit' agregado para el post ID: {$post_id} con fecha {$fecha_actual}");
+        //error_log("Metadato 'ultimoEdit' agregado para el post ID: {$post_id} con fecha {$fecha_actual}");
 
         // Desactivar el procesamiento por IA
         update_post_meta($post_id, 'proIA', false);
     } else {
-        error_log("Error al procesar el JSON de la descripción mejorada generada");
+        //error_log("Error al procesar el JSON de la descripción mejorada generada");
     }
 }
 
 function rehacerDescripcionAudio($post_id, $archivo_audio)
 {
-    error_log("rehacerDescripcionAudio: Iniciando mejora de descripción para el post ID: {$post_id}");
+    //error_log("rehacerDescripcionAudio: Iniciando mejora de descripción para el post ID: {$post_id}");
 
     // Obtener el contenido del post
     $post_content = get_post_field('post_content', $post_id);
     if (!$post_content) {
-        error_log("No se pudo obtener el contenido del post ID: {$post_id}");
+        //error_log("No se pudo obtener el contenido del post ID: {$post_id}");
         return;
     }
-    error_log("Contenido del post obtenido para el post ID: {$post_id}");
+    //error_log("Contenido del post obtenido para el post ID: {$post_id}");
 
     // Obtener los metadatos actuales del post, incluyendo 'datosAlgoritmo'
     $datosAlgoritmo = get_post_meta($post_id, 'datosAlgoritmo', true);
     if (!$datosAlgoritmo) {
-        error_log("No se encontraron metadatos previos para el post ID: {$post_id}");
+        //error_log("No se encontraron metadatos previos para el post ID: {$post_id}");
         return;
     }
 
     // Decodificar el JSON de 'datosAlgoritmo'
     $datos_actuales = json_decode($datosAlgoritmo, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
-        error_log("Error al decodificar el JSON de 'datosAlgoritmo' para el post ID: {$post_id}: " . json_last_error_msg());
+        //error_log("Error al decodificar el JSON de 'datosAlgoritmo' para el post ID: {$post_id}: " . json_last_error_msg());
         return;
     }
 
@@ -145,7 +145,7 @@ function rehacerDescripcionAudio($post_id, $archivo_audio)
     // Generar la nueva descripción usando la IA
     $descripcion_mejorada = generarDescripcionIA($archivo_audio, $prompt);
     if (!$descripcion_mejorada) {
-        error_log("No se pudo generar la descripción mejorada para el post ID: {$post_id}");
+        //error_log("No se pudo generar la descripción mejorada para el post ID: {$post_id}");
         return;
     }
 
@@ -156,21 +156,21 @@ function rehacerDescripcionAudio($post_id, $archivo_audio)
     // Decodificar la descripción generada por la IA
     $datos_actualizados = json_decode($descripcion_mejorada_limpia, true);
     if (json_last_error() === JSON_ERROR_NONE) {
-        error_log("Nuevos datos generados para el post ID: {$post_id}");
+        //error_log("Nuevos datos generados para el post ID: {$post_id}");
 
         // Guardar los nuevos datos en la meta 'datosAlgoritmo'
         update_post_meta($post_id, 'datosAlgoritmo', json_encode($datos_actualizados, JSON_UNESCAPED_UNICODE));
-        error_log("Metadatos actualizados para el post ID: {$post_id}");
+        //error_log("Metadatos actualizados para el post ID: {$post_id}");
 
         // Actualizar la fecha de la última edición
         $fecha_actual = current_time('mysql');
         update_post_meta($post_id, 'ultimoEdit', $fecha_actual);
-        error_log("Metadato 'ultimoEdit' agregado para el post ID: {$post_id} con fecha {$fecha_actual}");
+        //error_log("Metadato 'ultimoEdit' agregado para el post ID: {$post_id} con fecha {$fecha_actual}");
 
         // Desactivar el procesamiento por IA
         update_post_meta($post_id, 'proIA', false);
     } else {
-        error_log("Error al procesar el JSON de la descripción mejorada generada");
+        //error_log("Error al procesar el JSON de la descripción mejorada generada");
     }
 }
 
@@ -178,7 +178,7 @@ function rehacerNombreAudio($post_id, $archivo_audio)
 {
     // Verificar si el archivo de audio existe
     if (!file_exists($archivo_audio)) {
-        error_log("El archivo de audio no existe en la ruta especificada: {$archivo_audio}");
+        //error_log("El archivo de audio no existe en la ruta especificada: {$archivo_audio}");
         return null;
     }
 
@@ -191,9 +191,9 @@ function rehacerNombreAudio($post_id, $archivo_audio)
     // Obtener el contenido del post
     $post_content = get_post_field('post_content', $post_id);
     if (!$post_content) {
-        error_log("No se pudo obtener el contenido del post ID: {$post_id}");
+        //error_log("No se pudo obtener el contenido del post ID: {$post_id}");
     }
-    error_log("Contenido del post obtenido para el post ID: {$post_id}");
+    //error_log("Contenido del post obtenido para el post ID: {$post_id}");
 
     // Obtener el nombre del archivo a partir de la ruta
     $nombre_archivo = pathinfo($archivo_audio, PATHINFO_FILENAME);
@@ -215,7 +215,7 @@ function rehacerNombreAudio($post_id, $archivo_audio)
         $nombre_final_con_id = $nombre_final . '_' . $id_unica;
         $nombre_final_con_id = substr($nombre_final_con_id, 0, 60);
 
-        error_log("Nombre generado: {$nombre_final_con_id}");
+        //error_log("Nombre generado: {$nombre_final_con_id}");
 
         // Obtener los IDs de los adjuntos desde los metadatos del post
         $attachment_id_audio = get_post_meta($post_id, 'post_audio', true);
@@ -223,30 +223,30 @@ function rehacerNombreAudio($post_id, $archivo_audio)
 
         // Verificar que los IDs de adjunto existan
         if (!$attachment_id_audio) {
-            error_log("No se encontró el meta 'post_audio' para el post ID: {$post_id}");
+            //error_log("No se encontró el meta 'post_audio' para el post ID: {$post_id}");
             return null;
         }
 
         if (!$attachment_id_audio_lite) {
-            error_log("No se encontró el meta 'post_audio_lite' para el post ID: {$post_id}");
+            //error_log("No se encontró el meta 'post_audio_lite' para el post ID: {$post_id}");
             return null;
         }
 
         // Renombrar los archivos adjuntos
         $renombrado_audio = renombrar_archivo_adjunto($attachment_id_audio, $nombre_final_con_id, false);
         if (!$renombrado_audio) {
-            error_log("Falló al renombrar el archivo 'post_audio' para el post ID: {$post_id}");
+            //error_log("Falló al renombrar el archivo 'post_audio' para el post ID: {$post_id}");
             return null;
         }
 
         $renombrado_audio_lite = renombrar_archivo_adjunto($attachment_id_audio_lite, $nombre_final_con_id, true);
         if (!$renombrado_audio_lite) {
-            error_log("Falló al renombrar el archivo 'post_audio_lite' para el post ID: {$post_id}");
+            //error_log("Falló al renombrar el archivo 'post_audio_lite' para el post ID: {$post_id}");
             return null;
         }
 
         if (get_post_meta($post_id, 'rutaPerdida', true)) {
-            error_log("No se intentará renombrar, 'rutaPerdida' está marcada como true para el post ID: {$post_id}");
+            //error_log("No se intentará renombrar, 'rutaPerdida' está marcada como true para el post ID: {$post_id}");
             return null;
         }
 
@@ -264,15 +264,15 @@ function rehacerNombreAudio($post_id, $archivo_audio)
 
             if (rename($ruta_original, $nueva_ruta_original)) {
                 update_post_meta($post_id, 'rutaOriginal', $nueva_ruta_original);
-                error_log("Meta 'rutaOriginal' actualizada a: {$nueva_ruta_original}");
+                //error_log("Meta 'rutaOriginal' actualizada a: {$nueva_ruta_original}");
                 guardarLog("Archivo renombrado en el servidor de {$ruta_original} a {$nueva_ruta_original}");
             } else {
                 guardarLog("Error en renombrar archivo en el servidor de {$ruta_original} a {$nueva_ruta_original}");
-                error_log("Error al renombrar el archivo en el servidor de {$ruta_original} a {$nueva_ruta_original}");
+                //error_log("Error al renombrar el archivo en el servidor de {$ruta_original} a {$nueva_ruta_original}");
                 update_post_meta($post_id, 'rutaOriginalPerdida', true);
             }
         } else {
-            error_log("No se encontró 'rutaOriginal' ni en la meta ni en las subcarpetas para el post ID: {$post_id}");
+            //error_log("No se encontró 'rutaOriginal' ni en la meta ni en las subcarpetas para el post ID: {$post_id}");
             update_post_meta($post_id, 'rutaPerdida', true);
         }
 
@@ -282,17 +282,17 @@ function rehacerNombreAudio($post_id, $archivo_audio)
         if ($id_hash_audio) {
             $nueva_url_audio = wp_get_attachment_url($attachment_id_audio);
             actualizarUrlArchivo($id_hash_audio, $nueva_url_audio);
-            error_log("URL de 'post_audio' actualizada para el hash ID: {$id_hash_audio}");
+            //error_log("URL de 'post_audio' actualizada para el hash ID: {$id_hash_audio}");
         } else {
-            error_log("Meta 'idHash_audioId' no existe para el post ID: {$post_id}");
+            //error_log("Meta 'idHash_audioId' no existe para el post ID: {$post_id}");
         }
 
-        error_log("Renombrado completado exitosamente para el post ID: {$post_id}");
+        //error_log("Renombrado completado exitosamente para el post ID: {$post_id}");
         update_post_meta($post_id, 'Verificado', true);
 
         return $nombre_final_con_id;
     } else {
-        error_log("No se recibió una respuesta válida de la IA para el archivo de audio: {$archivo_audio}");
+        //error_log("No se recibió una respuesta válida de la IA para el archivo de audio: {$archivo_audio}");
         return null;
     }
 }
@@ -325,7 +325,7 @@ function renombrar_archivo_adjunto($attachment_id, $nuevo_nombre, $es_lite = fal
     // Obtener el path completo del archivo adjunto
     $ruta_archivo = get_attached_file($attachment_id);
     if (!file_exists($ruta_archivo)) {
-        error_log("El archivo adjunto con ID {$attachment_id} no existe en la ruta: {$ruta_archivo}");
+        //error_log("El archivo adjunto con ID {$attachment_id} no existe en la ruta: {$ruta_archivo}");
         return false;
     }
 
@@ -339,12 +339,12 @@ function renombrar_archivo_adjunto($attachment_id, $nuevo_nombre, $es_lite = fal
 
     // Renombrar el archivo
     if (!rename($ruta_archivo, $nueva_ruta)) {
-        error_log("Error al renombrar el archivo de {$ruta_archivo} a {$nueva_ruta}");
+        //error_log("Error al renombrar el archivo de {$ruta_archivo} a {$nueva_ruta}");
         guardarLog("Error al renombrar el archivo de {$ruta_archivo} a {$nueva_ruta}");
         return false;
     }
 
-    error_log("Archivo renombrado de {$ruta_archivo} a {$nueva_ruta}");
+    //error_log("Archivo renombrado de {$ruta_archivo} a {$nueva_ruta}");
     guardarLog("Archivo renombrado en el servidor de {$ruta_archivo} a {$nueva_ruta}");
 
     // Actualizar la ruta del adjunto en la base de datos
