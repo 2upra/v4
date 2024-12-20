@@ -200,13 +200,14 @@ function renderPostControls($post_id, $colab, $audio_id_lite = null)
 {
 
     $mostrarBotonCompra = get_post_meta($post_id, 'tienda', true) === '1';
-    ?>
+?>
     <div class="QSORIW">
+
+
+        <? echo like($post_id); ?>
         <? if ($mostrarBotonCompra): ?>
             <? echo botonCompra($post_id); ?>
         <? endif; ?>
-
-        <? echo like($post_id); ?>
         <? echo botonComentar($post_id, $colab); ?>
         <? if (!empty($audio_id_lite)) : ?>
             <? echo botonDescarga($post_id); ?>
@@ -214,7 +215,7 @@ function renderPostControls($post_id, $colab, $audio_id_lite = null)
             <? echo botonColeccion($post_id); ?>
         <? endif; ?>
     </div>
-    <?
+<?
 }
 
 
