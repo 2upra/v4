@@ -23,8 +23,8 @@ function procesarComentario()
     $comentario = isset($_POST['comentario']) ? sanitize_textarea_field($_POST['comentario']) : '';
     $imagenUrl = isset($_POST['imagenUrl']) ? esc_url_raw($_POST['imagenUrl']) : '';
     $audioUrl = isset($_POST['audioUrl']) ? esc_url_raw($_POST['audioUrl']) : '';
-    $imagenId = isset($_POST['imagenId']) ? sanitize_text_field($_POST['imagenId']) : ''; // Este es el hashIdImg
-    $audioId = isset($_POST['audioId']) ? sanitize_text_field($_POST['audioId']) : ''; // Este es el hashIdAudio
+    $imagenId = isset($_POST['imagenId']) ? sanitize_text_field($_POST['imagenId']) : '';
+    $audioId = isset($_POST['audioId']) ? sanitize_text_field($_POST['audioId']) : '';
     $postId = isset($_POST['postId']) ? intval($_POST['postId']) : 0;
 
     // Verificar datos obligatorios
@@ -56,7 +56,7 @@ function procesarComentario()
         'post_title'    => $comentario_title,
         'post_content'  => $comentario,
         'post_status'   => 'publish',
-        'post_type'     => 'comentarios', // Asegúrate de que este post type esté registrado
+        'post_type'     => 'comentarios',
         'post_author'   => $user_id,
     ));
 
@@ -80,8 +80,8 @@ function procesarComentario()
 
     // Actualizar metadatos del comentario
     update_post_meta($comentarioId, 'postId', $postId);
-    update_post_meta($comentarioId, 'hashIdImg', $imagenId); 
-    update_post_meta($comentarioId, 'hashIdAudio', $audioId); 
+    update_post_meta($comentarioId, 'hashIdImg', $imagenId);
+    update_post_meta($comentarioId, 'hashIdAudio', $audioId);
 
     if ($attachment_image_id) {
         update_post_meta($comentarioId, 'imagenId', $attachment_image_id);
@@ -100,7 +100,7 @@ function procesarComentario()
 
     $comentarios_ids = get_post_meta($postId, 'comentarios_ids', true);
     if (!is_array($comentarios_ids)) {
-        $comentarios_ids = array(); 
+        $comentarios_ids = array();
     }
 
     $comentarios_ids[] = $comentarioId; // Añadir el nuevo ID
@@ -111,9 +111,9 @@ function procesarComentario()
     $contenido = $user_name . " ha comentado tu post."; // Contenido de la notificación
     $postIdRelacionado = $postId; // Post relacionado
     $Titulo = "Nuevo comentario"; // Título de la notificación
-    $url = null; // URL (en este caso, null)
 
-    crearNotificacion($usuarioReceptor, $contenido, false, $postIdRelacionado, $Titulo, $url);
+    $post_url = get_permalink($postId);
+    crearNotificacion($usuarioReceptor, $contenido, false, $postIdRelacionado, $Titulo, $post_url);
 
     // Incrementar el contador de comentarios recientes y actualizar el transient
     $comentarios_recientes++;
@@ -121,3 +121,34 @@ function procesarComentario()
 
     wp_send_json_success(array('message' => 'Comentario creado con éxito.', 'post_id' => $comentarioId));
 }
+
+/**
+ * Redirige los accesos directos a las entradas de tipo 'comentarios'
+ * a la entrada original a la que pertenecen.
+ */
+function redirigir_comentarios() {
+    // Verifica si estamos en una página individual (singular)
+    if (is_singular('comentarios')) {
+        // Obtiene el ID del comentario actual
+        $comment_id = get_the_ID();
+
+        // Obtiene el ID del post original al que pertenece el comentario
+        $post_id = get_post_meta($comment_id, 'postId', true);
+
+        // Si se encuentra el ID del post original
+        if ($post_id) {
+            // Obtiene la URL del post original
+            $post_url = get_permalink($post_id);
+
+            // Realiza la redirección
+            wp_redirect($post_url);
+            exit; // Asegura que el script se detenga después de la redirección
+        } else {
+            // Si no se encuentra el post original, podrías redirigir a la página de inicio o mostrar un error.
+            // Por ejemplo, redirigir a la página de inicio:
+            wp_redirect(home_url());
+            exit;
+        }
+    }
+}
+add_action('template_redirect', 'redirigir_comentarios');
