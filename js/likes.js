@@ -2,6 +2,7 @@ function like() {
     let ultimoClic = 0;
     const retrasoEntreClics = 500; // 500 ms de retraso
     animacionLike();
+
     // Delegación de eventos para clics en botones de interacción
     document.addEventListener('click', function (evento) {
         const boton = evento.target.closest('[data-like_type][data-post_id]');
@@ -9,6 +10,49 @@ function like() {
             manejarClicEnBoton(evento, boton);
         }
     });
+
+    // Manejar doble clic o doble toque en los elementos <li>
+    let ultimoToque = 0;
+    const retrasoEntreToques = 300; // 300 ms para detectar doble toque
+
+    document.addEventListener('touchstart', function (evento) {
+        const elemento = evento.target.closest('.POST-nada'); // Ajusta el selector según sea necesario
+        if (elemento) {
+            const ahora = Date.now();
+            if (ahora - ultimoToque < retrasoEntreToques) {
+                evento.preventDefault(); // Prevenir el evento de clic
+                manejarDobleToque(elemento);
+            }
+            ultimoToque = ahora;
+        }
+    });
+
+    document.addEventListener('dblclick', function (evento) {
+        const elemento = evento.target.closest('.POST-nada'); // Ajusta el selector según sea necesario
+        if (elemento) {
+            manejarDobleClic(elemento);
+        }
+    });
+
+    function manejarDobleClic(elemento) {
+        const idPost = elemento.getAttribute('id-post');
+        if (idPost) {
+            const botonLike = document.querySelector(`.botonlike[data-post_id="${idPost}"][data-like_type="like"]`);
+            if (botonLike) {
+                manejarClicEnBoton(new Event('dblclick'), botonLike); // Simular un clic en el botón de like
+            }
+        }
+    }
+
+    function manejarDobleToque(elemento) {
+        const idPost = elemento.getAttribute('id-post');
+        if (idPost) {
+            const botonLike = document.querySelector(`.botonlike[data-post_id="${idPost}"][data-like_type="like"]`);
+            if (botonLike) {
+                manejarClicEnBoton(new Event('touchstart'), botonLike); // Simular un clic en el botón de like
+            }
+        }
+    }
 
     async function manejarClicEnBoton(evento, boton) {
         evento.preventDefault();
@@ -33,12 +77,7 @@ function like() {
         }
 
         boton.dataset.requestRunning = 'true';
-
-        // Determinar si se está añadiendo o quitando la interacción
-        // const añadiendoInteraccion = !boton.classList.contains(tipoInteraccion + '-active');
         const añadiendoInteraccion = !boton.classList.contains('liked');
-
-        // Actualizar la UI inmediatamente
         actualizarIUInteraccion(boton, añadiendoInteraccion, tipoInteraccion);
 
         const datos = {
@@ -80,21 +119,10 @@ function like() {
     }
 
     function actualizarIUInteraccion(boton, añadiendo, tipo) {
-        // No necesitas el contenedor aquí, el botón ya es el objetivo.
-
-        // Actualiza el botón actual
         actualizarEstadoBoton(boton, añadiendo, tipo);
-
-        // No necesitamos actualizar otros botones aquí. La clase 'liked'
-        // se maneja directamente en actualizarEstadoBoton.
-
-        // Registrar el estado actual del botón después de la actualización.
-        console.log(`Estado actual del botón para la publicación ${boton.dataset.post_id}, tipo ${tipo}: ${boton.classList.contains(tipo + '-active') ? 'activo' : 'inactivo'}`);
-        console.log(`Clase 'liked' del botón para la publicación ${boton.dataset.post_id}, tipo ${tipo}: ${boton.classList.contains('liked') ? 'presente' : 'ausente'}`);
     }
 
     function revertirIUInteraccion(boton, añadiendo, tipo) {
-        // Revierte el botón actual
         actualizarEstadoBoton(boton, añadiendo, tipo);
     }
 
@@ -102,10 +130,10 @@ function like() {
         const claseActivo = tipo + '-active';
         if (activo) {
             boton.classList.add(claseActivo);
-            boton.classList.add('liked'); // Agregar la clase 'liked' al marcar
+            boton.classList.add('liked');
         } else {
             boton.classList.remove(claseActivo);
-            boton.classList.remove('liked'); // Remover la clase 'liked' al desmarcar
+            boton.classList.remove('liked');
         }
     }
 
@@ -171,10 +199,9 @@ function animacionLike() {
                 container.classList.remove('active');
             }, 300); // Ajusta el tiempo de retraso según sea necesario
         });
-      
 
         // Móvil: touchstart, touchend y detectar pulsación larga
-        container.addEventListener('touchstart', (event) => {
+        container.addEventListener('touchstart', event => {
             touchstartTime = Date.now();
             clearTimeout(timeoutId);
 
@@ -191,7 +218,7 @@ function animacionLike() {
             }, 500); // Ajusta el tiempo para la pulsación larga (e.g., 500ms)
         });
 
-        container.addEventListener('touchend', (event) => {
+        container.addEventListener('touchend', event => {
             const duration = Date.now() - touchstartTime;
             clearTimeout(timeoutId);
 
@@ -206,18 +233,15 @@ function animacionLike() {
         });
 
         // Evitar que el menú se oculte cuando se toca dentro de él
-        botonesExtras.addEventListener('touchstart', (event) => {
+        botonesExtras.addEventListener('touchstart', event => {
             event.stopPropagation();
         });
-      
-      
-      //Para evitar que active el boton like si ya se activo active
-      botonLike.addEventListener('touchstart', (event) => {
-        if (container.classList.contains('active')) {
-            event.preventDefault();
-        }
-    });
+
+        //Para evitar que active el boton like si ya se activo active
+        botonLike.addEventListener('touchstart', event => {
+            if (container.classList.contains('active')) {
+                event.preventDefault();
+            }
+        });
     });
 }
-
-
