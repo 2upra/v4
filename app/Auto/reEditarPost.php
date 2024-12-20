@@ -32,18 +32,8 @@ function rehacerJsonPost($post_id, $descripcion)
     }
 }
 /*
-tengo este problema aca 
-[20-Dec-2024 10:44:13 UTC] PHP Fatal error:  Uncaught TypeError: json_decode(): Argument #1 ($json) must be of type string, array given in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/reEditarPost.php:51
-Stack trace:
-#0 /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/reEditarPost.php(51): json_decode()
-#1 /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/reEditarPost.php(25): rehacerJson()
-#2 /var/www/wordpress/wp-content/themes/2upra3v/app/Content/Logic/estado.php(144): rehacerJsonPost()
-#3 /var/www/wordpress/wp-includes/class-wp-hook.php(324): corregirTags()
-#4 /var/www/wordpress/wp-includes/class-wp-hook.php(348): WP_Hook->apply_filters()
-#5 /var/www/wordpress/wp-includes/plugin.php(517): WP_Hook->do_action()
-#6 /var/www/wordpress/wp-admin/admin-ajax.php(192): do_action()
-#7 {main}
-  thrown in /var/www/wordpress/wp-content/themes/2upra3v/app/Auto/reEditarPost.php on line 51
+como se puede arreglar
+[20-Dec-2024 10:46:55 UTC] rehacerJson: Error: $datosAlgoritmo no es una cadena JSON para el post ID: 242704. Tipo: array[20-Dec-2024 10:46:55 UTC] Descripción del audio actualizada para el post ID: 242704 con archivo de audio en la ruta /var/www/wordpress/wp-content/uploads/2024/10/Bee-Loop_7U3a_2upra_optimizado.mp3
 */
 
 function rehacerJson($post_id, $archivo_audio, $descripcion)
@@ -60,9 +50,16 @@ function rehacerJson($post_id, $archivo_audio, $descripcion)
         return;
     }
 
-    // **Añadir la verificación del tipo de dato**
-    if (!is_string($datosAlgoritmo)) {
-        error_log("rehacerJson: Error: \$datosAlgoritmo no es una cadena JSON para el post ID: {$post_id}. Tipo: " . gettype($datosAlgoritmo));
+    // **Verificar si es un array y convertirlo a JSON si es necesario**
+    if (is_array($datosAlgoritmo)) {
+        error_log("rehacerJson: \$datosAlgoritmo es un array, intentando convertirlo a JSON para el post ID: {$post_id}");
+        $datosAlgoritmo = json_encode($datosAlgoritmo, JSON_UNESCAPED_UNICODE);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log("rehacerJson: Error al convertir el array a JSON para el post ID: {$post_id}: " . json_last_error_msg());
+            return;
+        }
+    } elseif (!is_string($datosAlgoritmo)) {
+        error_log("rehacerJson: Error: \$datosAlgoritmo no es una cadena JSON ni un array para el post ID: {$post_id}. Tipo: " . gettype($datosAlgoritmo));
         return;
     }
 
