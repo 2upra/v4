@@ -142,31 +142,79 @@ function like() {
 
 function animacionLike() {
     const containers = document.querySelectorAll('.botonlike-container');
-  
+
     containers.forEach(container => {
-      const botonesExtras = container.querySelector('.botones-extras');
-  
-      container.addEventListener('touchstart', (event) => {
-        event.preventDefault();
-  
-        // Remover la clase 'active' de otros contenedores
-        containers.forEach(c => {
-          if (c !== container) {
-            c.classList.remove('active');
-          }
+        const botonesExtras = container.querySelector('.botones-extras');
+        let hoverTimeout; // Para el retraso en escritorio
+        let touchTimeout; // Para el retraso en móvil
+
+        // Eventos para Escritorio (Hover)
+        container.addEventListener('mouseenter', () => {
+            clearTimeout(hoverTimeout); // Cancela cualquier intento anterior de ocultar
+            container.classList.add('active');
         });
-  
-        // Alternar la clase 'active' en el contenedor actual
-        container.classList.toggle('active');
-  
-        document.addEventListener('touchstart', handleOutsideTouch);
-      });
-  
-      function handleOutsideTouch(event) {
-        if (!container.contains(event.target)) {
-          container.classList.remove('active');
-          document.removeEventListener('touchstart', handleOutsideTouch);
+
+        container.addEventListener('mouseleave', () => {
+            hoverTimeout = setTimeout(() => {
+                container.classList.remove('active');
+            }, 200); // Retraso de 200ms (ajusta según necesidad)
+        });
+
+        botonesExtras.addEventListener('mouseenter', () => {
+            clearTimeout(hoverTimeout); // Si el mouse entra en los extras, no ocultar
+        });
+
+        botonesExtras.addEventListener('mouseleave', () => {
+            hoverTimeout = setTimeout(() => {
+                container.classList.remove('active');
+            }, 200); // Retraso al salir de los extras también
+        });
+
+        // Eventos para Móvil (Touch)
+        container.addEventListener('touchstart', event => {
+            event.preventDefault();
+
+            // Remover la clase 'active' de otros contenedores
+            containers.forEach(c => {
+                if (c !== container) {
+                    c.classList.remove('active');
+                }
+            });
+
+            touchTimeout = setTimeout(() => {
+                container.classList.add('active');
+                document.addEventListener('touchstart', handleOutsideTouch);
+            }, 300); // Retraso para "mantener presionado" (ajusta según necesidad)
+        });
+
+        container.addEventListener('touchend', () => {
+            clearTimeout(touchTimeout); // Cancelar si se levanta el dedo antes de tiempo
+            if (!container.classList.contains('active')) {
+                // Si no se mostró por mantener presionado, actuar como un clic normal
+                containers.forEach(c => {
+                    if (c !== container) {
+                        c.classList.remove('active');
+                    }
+                });
+                container.classList.toggle('active');
+                if (container.classList.contains('active')) {
+                    document.addEventListener('touchstart', handleOutsideTouch);
+                } else {
+                    document.removeEventListener('touchstart', handleOutsideTouch);
+                }
+            }
+        });
+
+        container.addEventListener('touchmove', () => {
+            clearTimeout(touchTimeout); // Cancelar si se mueve el dedo
+        });
+
+        function handleOutsideTouch(event) {
+            if (!container.contains(event.target)) {
+                container.classList.remove('active');
+                document.removeEventListener('touchstart', handleOutsideTouch);
+            }
         }
-      }
     });
-  }
+}
+
