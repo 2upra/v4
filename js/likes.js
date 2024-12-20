@@ -174,19 +174,19 @@ function animacionLike() {
             clearTimeout(timeoutId); // Limpia cualquier temporizador previo
             timeoutId = setTimeout(() => {
                 container.classList.remove('active'); // Oculta después de un retraso
-            }, 2000); 
+            }, 500); // Ajusta el tiempo de espera según sea necesario
         };
 
         // Mostrar botones extras al entrar con el mouse en el contenedor principal
         container.addEventListener('mouseenter', showExtras);
 
+        // Iniciar el temporizador para ocultar cuando el mouse salga del contenedor principal
+        container.addEventListener('mouseleave', hideExtras);
+
         // Cancelar la ocultación si el mouse entra en los botones extras
         botonesExtras.addEventListener('mouseenter', () => {
             clearTimeout(timeoutId); // Cancela el temporizador de ocultar
         });
-
-        // Iniciar el temporizador para ocultar cuando el mouse salga del contenedor principal
-        container.addEventListener('mouseleave', hideExtras);
 
         // Iniciar el temporizador para ocultar cuando el mouse salga de los botones extras
         botonesExtras.addEventListener('mouseleave', hideExtras);
