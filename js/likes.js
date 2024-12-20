@@ -161,7 +161,8 @@ function animacionLike() {
         const botonesExtras = container.querySelector('.botones-extras');
         const botonLike = container.querySelector('.post-like-button');
         let timeoutId = null;
-        let isHovering = false;
+        let isHoveringContainer = false;
+        let isHoveringExtras = false;
 
         const showExtras = () => {
             clearTimeout(timeoutId);
@@ -170,7 +171,8 @@ function animacionLike() {
 
         const startHideExtras = () => {
             timeoutId = setTimeout(() => {
-                if (!isHovering) {
+                // Solo ocultar si no estamos sobre el container o los botones extras
+                if (!isHoveringContainer && !isHoveringExtras) {
                     container.classList.remove('active');
                 }
             }, 1000); // Aumenta el tiempo si es necesario
@@ -180,22 +182,32 @@ function animacionLike() {
             clearTimeout(timeoutId);
         };
 
-        const handleMouseEnter = () => {
-            isHovering = true;
+        const handleMouseEnterContainer = () => {
+            isHoveringContainer = true;
             stopHideExtras();
             showExtras();
         };
 
-        const handleMouseLeave = () => {
-            isHovering = false;
+        const handleMouseLeaveContainer = () => {
+            isHoveringContainer = false;
             startHideExtras();
         };
 
-        container.addEventListener('mouseenter', handleMouseEnter);
-        container.addEventListener('mouseleave', handleMouseLeave);
+        const handleMouseEnterExtras = () => {
+            isHoveringExtras = true;
+            stopHideExtras();
+        };
 
-        botonesExtras.addEventListener('mouseenter', handleMouseEnter);
-        botonesExtras.addEventListener('mouseleave', handleMouseLeave);
+        const handleMouseLeaveExtras = () => {
+            isHoveringExtras = false;
+            startHideExtras();
+        };
+
+        container.addEventListener('mouseenter', handleMouseEnterContainer);
+        container.addEventListener('mouseleave', handleMouseLeaveContainer);
+
+        botonesExtras.addEventListener('mouseenter', handleMouseEnterExtras);
+        botonesExtras.addEventListener('mouseleave', handleMouseLeaveExtras);
 
         container.addEventListener('touchstart', () => {
             stopHideExtras();
