@@ -201,6 +201,7 @@ function actualizarEstadoArchivo($id, $estado)
     }
 }
 
+//tengo una duda, en el caso de administrador, subo una imagen qeu se llama imagen.jpg, y la url de la imagen es asi https://2upra.com/wp-content/uploads/2024/12/imagen-1.jpg, y en guardo en la tabla de hash asi: https://2upra.com/wp-content/uploads/2024/12/imagen-1.jpg, o sea obviamente hay una diferencia entre imagen.jpg y imagen-1.jpg y a hay que averiguar si sucede en el caso de no administrador. Tambien he visto que en algunas opcaciones se borran las imagenes. 
 function subidaArchivo() {
     $is_admin = current_user_can('administrator');
     $current_user_id = get_current_user_id(); // Obtener ID del usuario actual
@@ -506,7 +507,7 @@ function obtenerFileIDPorURL($url)
 // Ejecutar la función
 
 
-/*
+
 function limpiarArchivosPendientes()
 {
     global $wpdb;
@@ -534,4 +535,3 @@ if (!wp_next_scheduled('limpiar_archivos_pendientes')) {
     wp_schedule_event(time(), 'daily', 'limpiar_archivos_pendientes');
 }
 add_action('limpiar_archivos_pendientes', 'limpiarArchivosPendientes');
-*/
