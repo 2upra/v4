@@ -2,16 +2,11 @@ function like() {
     let lastClickTime = 0;
     const clickDelay = 500; // 500 ms de retraso
 
-    // Usar delegación de eventos
+    // Usar delegación de eventos para manejar clics en los botones de like
     document.addEventListener('click', function(event) {
-        // Verifica si el clic fue en el contenedor del like o en sus hijos
-        const likeContainer = event.target.closest('.TJKQGJ.botonlike');
-        if (likeContainer) {
-            // Busca el botón dentro del contenedor
-            const likeButton = likeContainer.querySelector('.post-like-button');
-            if (likeButton) {
-                handleLike(event, likeButton);
-            }
+        const button = event.target.closest('[data-like_type][data-post_id]');
+        if (button) {
+            handleLike(event, button);
         }
     });
 
@@ -22,72 +17,96 @@ function like() {
             return;
         }
         lastClickTime = now;
-        const post_id = parseInt(button.dataset.post_id, 10);
-        if (!post_id || button.dataset.requestRunning === 'true') {
+
+        const postId = parseInt(button.dataset.post_id, 10);
+        const likeType = button.dataset.like_type;
+
+        if (!postId || !likeType || button.dataset.requestRunning === 'true') {
             return;
         }
-        // Comprobación de conexión
+
         if (!navigator.onLine) {
             alert('No hay conexión a internet. Por favor, verifica tu conexión e inténtalo de nuevo.');
             return;
         }
-    
+
         button.dataset.requestRunning = 'true';
-    
+
+        // Determinar si se está "dando like" o "quitando like"
+        const addingLike = !button.classList.contains(likeType + '-active');
+
+        // Actualizar la UI inmediatamente
+        updateLikeUI(button, addingLike, likeType);
+
         const data = {
-            post_id: post_id,
-            like_state: !button.classList.contains('liked')
+            post_id: postId,
+            like_type: likeType,
+            like_state: addingLike // true para "dar like", false para "quitar like"
         };
 
-        button.classList.toggle('liked');
-    
         try {
             const response = await enviarAjax('like', data);
-    
+
             if (response === 'not_logged_in') {
-                alert('Debes estar logueado para dar like.');
-                button.classList.toggle('liked'); // Revertir cambio visual
-                return;
+                alert('Debes estar logueado para realizar esta acción.');
+                revertLikeUI(button, !addingLike, likeType); // Revertir al estado anterior
             } else if (response === 'invalid_nonce') {
                 alert('Nonce inválido. Por favor, recarga la página e inténtalo de nuevo.');
-                button.classList.toggle('liked'); // Revertir cambio visual
-                return;
-            } else if (response === 'missing_post_id') {
-                alert('Error: no se recibió el ID del post.');
-                button.classList.toggle('liked'); // Revertir cambio visual
-                return;
-            } else if (response === 'error') {
+                revertLikeUI(button, !addingLike, likeType);
+            } else if (response === 'error_like_type') {
+                alert('Tipo de like inválido.');
+                revertLikeUI(button, !addingLike, likeType);
+            } else if (response === 'error' || response === 'missing_post_id') {
                 alert('Hubo un error al procesar tu solicitud.');
-                button.classList.toggle('liked'); // Revertir cambio visual
-                return;
-            }
-    
-            const likes = parseInt(response, 10);
-            if (!isNaN(likes)) {
-                updateLikeUI(button, likes);
-                showHeartAnimation(button.closest('.EDYQHV'));
+                revertLikeUI(button, !addingLike, likeType);
             } else {
-                button.classList.toggle('liked'); // Revertir cambio visual
+                // Si la respuesta del servidor es exitosa, no necesitamos hacer nada con el contador
+                // ya que lo actualizamos inmediatamente.
+                // Aquí podrías procesar alguna información adicional del servidor si fuera necesario.
             }
         } catch (error) {
+            console.error("Error en la solicitud AJAX:", error);
             alert('Hubo un error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
-            button.classList.toggle('liked'); // Revertir cambio visual
+            revertLikeUI(button, !addingLike, likeType);
         } finally {
             button.dataset.requestRunning = 'false';
         }
     }
 
-    function updateLikeUI(button, likes) {
-        const post = button.closest('.TJKQGJ');
-        if (!post) {
-            return;
-        }
-        const likeCount = post.querySelector('.like-count');
-        if (!likeCount) {
-            return;
-        }
+    function updateLikeUI(button, addingLike, likeType) {
+        const container = button.closest('.botonlike-container');
+        if (!container) return;
 
-        likeCount.textContent = likes;
+        const countSpan = container.querySelector(`.${likeType}-count`);
+        if (!countSpan) return;
+
+        const activeButtonClass = likeType + '-active';
+
+        if (addingLike) {
+            button.classList.add(activeButtonClass);
+            countSpan.textContent = parseInt(countSpan.textContent || '0', 10) + 1;
+        } else {
+            button.classList.remove(activeButtonClass);
+            countSpan.textContent = Math.max(0, parseInt(countSpan.textContent || '0', 10) - 1);
+        }
+    }
+
+    function revertLikeUI(button, addingLike, likeType) {
+        const container = button.closest('.botonlike-container');
+        if (!container) return;
+
+        const countSpan = container.querySelector(`.${likeType}-count`);
+        if (!countSpan) return;
+
+        const activeButtonClass = likeType + '-active';
+
+        if (addingLike) {
+            button.classList.add(activeButtonClass);
+            countSpan.textContent = parseInt(countSpan.textContent || '0', 10) + 1;
+        } else {
+            button.classList.remove(activeButtonClass);
+            countSpan.textContent = Math.max(0, parseInt(countSpan.textContent || '0', 10) - 1);
+        }
     }
 
     function showHeartAnimation(postContent) {
