@@ -119,8 +119,10 @@ function like() {
         const claseActivo = tipo + '-active';
         if (activo) {
             boton.classList.add(claseActivo);
+            boton.classList.add('liked'); // Agregar la clase 'liked' al marcar
         } else {
             boton.classList.remove(claseActivo);
+            boton.classList.remove('liked'); // Quitar la clase 'liked' al desmarcar
         }
     }
 
