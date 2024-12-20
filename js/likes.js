@@ -174,7 +174,7 @@ function animacionLike() {
             clearTimeout(timeoutId); // Limpia cualquier temporizador previo
             timeoutId = setTimeout(() => {
                 container.classList.remove('active'); // Oculta después de un retraso
-            }, 500); // Ajusta el tiempo de espera según sea necesario
+            }, 2000); // Ajusta el tiempo de espera según sea necesario
         };
 
         // Mostrar botones extras al entrar con el mouse en el contenedor principal
@@ -200,14 +200,14 @@ function animacionLike() {
 
             timeoutId = setTimeout(() => {
                 showExtras(); // Muestra los extras si es una pulsación larga
-            }, 500); // Define el tiempo para la pulsación larga
+            }, 2000); // Define el tiempo para la pulsación larga
         });
 
         container.addEventListener('touchend', event => {
             const duration = Date.now() - touchstartTime; // Calcula la duración del toque
             clearTimeout(timeoutId); // Limpia cualquier temporizador previo
 
-            if (duration < 500 && container.classList.contains('active')) {
+            if (duration < 2000 && container.classList.contains('active')) {
                 event.preventDefault();
                 hideExtras(); // Oculta si es un toque corto
             }
