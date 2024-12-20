@@ -1,158 +1,113 @@
 <?
 
-
 function manejarLike()
 {
-    error_log('[manejarLike] Iniciando función.');
+    // Log detallado 1: Inicio de la función con información del like (si está disponible)
+    $likeTypeParaLog = $_POST['like_type'] ?? 'like';
+    error_log('[manejarLike] Iniciando función para acción de like tipo: ' . $likeTypeParaLog);
 
-    $response = array('success' => false); // Initialize a default response
+    $response = array('success' => false);
 
     if (!is_user_logged_in()) {
-        error_log('[manejarLike] Usuario no autenticado.');
         $response['error'] = 'not_logged_in';
         echo json_encode($response);
         wp_die();
     }
 
     if (!check_ajax_referer('like_post_nonce', 'nonce', false)) {
-        error_log('[manejarLike] Nonce inválido.');
         $response['error'] = 'invalid_nonce';
         echo json_encode($response);
         wp_die();
     }
 
     $userId = get_current_user_id();
-    error_log('[manejarLike] User ID: ' . $userId);
-
     $postId = $_POST['post_id'] ?? '';
-    error_log('[manejarLike] Post ID recibido: ' . $postId);
-
     $likeEstado = isset($_POST['like_state']) ? filter_var($_POST['like_state'], FILTER_VALIDATE_BOOLEAN) : false;
-    error_log('[manejarLike] Estado del Like recibido: ' . ($likeEstado ? 'true' : 'false'));
+    $likeType = $_POST['like_type'] ?? 'like';
 
-    $likeType = $_POST['like_type'] ?? 'like'; // Obtener el tipo de like, por defecto 'like'
-    error_log('[manejarLike] Tipo de Like recibido: ' . $likeType);
-
-    // Validación del tipo de like (importante para seguridad)
     $allowedLikeTypes = ['like', 'favorito', 'no_me_gusta'];
     if (!in_array($likeType, $allowedLikeTypes)) {
-        error_log('[manejarLike] Error: Tipo de like no permitido: ' . $likeType);
         $response['error'] = 'error_like_type';
         echo json_encode($response);
         wp_die();
     }
 
     if (empty($postId)) {
-        error_log('[manejarLike] Error: Post ID vacío.');
         $response['error'] = 'missing_post_id';
         echo json_encode($response);
         wp_die();
     }
 
-    // La acción ahora depende del estado y el tipo de like
     $accion = $likeEstado ? $likeType : 'unlike';
-    error_log('[manejarLike] Acción a realizar: ' . $accion);
+    likeAccion($postId, $userId, $accion, $likeType);
+    $contadorLike = contarLike($postId, 'like');
+    $contadorFavorito = contarLike($postId, 'favorito');
+    $contadorNoMeGusta = contarLike($postId, 'no_me_gusta');
 
-    likeAccion($postId, $userId, $accion, $likeType); // Pasar el likeType
-    $contadorLike = contarLike($postId, 'like'); // Contar los likes
-    $contadorFavorito = contarLike($postId, 'favorito'); // Contar los favoritos
-    $contadorNoMeGusta = contarLike($postId, 'no_me_gusta'); // Contar los no me gusta
-    error_log('[manejarLike] Contador de likes para el post ' . $postId . ': ' . $contadorLike);
-    error_log('[manejarLike] Contador de favoritos para el post ' . $postId . ': ' . $contadorFavorito);
-    error_log('[manejarLike] Contador de no me gusta para el post ' . $postId . ': ' . $contadorNoMeGusta);
-
-    // Enviar todos los contadores como JSON
-    $response['success'] = true; // Mark as successful
+    $response['success'] = true;
     $response['counts'] = array(
         'like' => $contadorLike,
         'favorito' => $contadorFavorito,
         'no_me_gusta' => $contadorNoMeGusta,
     );
     echo json_encode($response);
-    error_log('[manejarLike] Finalizando función.');
+
+    // Log detallado 2: Finalización exitosa de la función
+    error_log('[manejarLike] Función finalizada exitosamente. Tipo de like procesado: ' . $likeType);
     wp_die();
 }
 
 add_action('wp_ajax_like', 'manejarLike');
 
-
 function likeAccion($postId, $userId, $accion, $likeType = 'like')
 {
-    error_log('[likeAccion] Iniciando función. Post ID: ' . $postId . ', User ID: ' . $userId . ', Acción: ' . $accion . ', Tipo de Like: ' . $likeType);
-
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';
     $like_count = (int) get_user_meta($userId, 'like_count', true);
-    error_log('[likeAccion] Contador de likes actual del usuario ' . $userId . ': ' . $like_count);
 
-    if ($accion === $likeType && $accion !== 'unlike') { // Si la acción es un tipo de like (like, favorito, no_me_gusta)
-        error_log('[likeAccion] La acción es de tipo like (' . $likeType . ').');
-        if (chequearLike($postId, $userId, $likeType)) { // Verificar si ya existe ese tipo de like
-            error_log('[likeAccion] El usuario ' . $userId . ' ya ha dado ' . $likeType . ' al post ' . $postId . '. Cambiando a unlike.');
-            $accion = 'unlike'; // Si ya existe, se convierte en 'unlike'
+    // Log detallado en likeAccion: Información sobre la acción realizada en la base de datos
+    error_log('[likeAccion] Ejecutando acción: ' . $accion . ' de tipo: ' . $likeType . ' para el post ID: ' . $postId . ' por el usuario ID: ' . $userId);
+
+    if ($accion === $likeType && $accion !== 'unlike') {
+        if (chequearLike($postId, $userId, $likeType)) {
+            $accion = 'unlike';
         } else {
-            error_log('[likeAccion] Insertando ' . $likeType . ' para el usuario ' . $userId . ' en el post ' . $postId . '.');
-            $insert_result = $wpdb->insert(
+            $wpdb->insert(
                 $table_name,
                 ['user_id' => $userId, 'post_id' => $postId, 'like_type' => $likeType],
                 ['%d', '%d', '%s']
             );
-            if ($insert_result !== false) {
-                error_log('[likeAccion] Inserción exitosa en la base de datos.');
-                if ($likeType === 'like') { // Solo actualizar el contador 'like_count' para likes tradicionales
-                    $like_count++;
-                    update_user_meta($userId, 'like_count', $like_count);
-                    error_log('[likeAccion] Contador de likes del usuario ' . $userId . ' actualizado a: ' . $like_count);
-                    if ($like_count % 2 === 0) {
-                        error_log('[likeAccion] El contador de likes de ' . $userId . ' es par. Llamando a reiniciarFeed().');
-                        reiniciarFeed($userId);
-                    }
-                    $autorId = get_post_field('post_author', $postId);
-                    if ($autorId != $userId) {
-                        $usuario = get_userdata($userId);
-                        if ($usuario) {
-                            error_log('[likeAccion] Creando notificación para el autor ' . $autorId . ' del post ' . $postId . '.');
-                            crearNotificacion($autorId, $usuario->user_login . ' le ha dado me gusta a tu publicación.', false, $postId);
-                        } else {
-                            error_log('[likeAccion] Error: No se pudo obtener la información del usuario ' . $userId . ' para la notificación.');
-                        }
-                    } else {
-                        error_log('[likeAccion] El usuario ' . $userId . ' es el autor del post ' . $postId . '. No se crea notificación.');
-                    }
-                } else {
-                    error_log('[likeAccion] No se actualiza el contador de likes del usuario porque el tipo de like es: ' . $likeType);
+            if ($likeType === 'like') {
+                $like_count++;
+                update_user_meta($userId, 'like_count', $like_count);
+                if ($like_count % 2 === 0) {
+                    reiniciarFeed($userId);
                 }
-            } else {
-                error_log('[likeAccion] Error al insertar en la base de datos. Error: ' . $wpdb->last_error);
+                $autorId = get_post_field('post_author', $postId);
+                if ($autorId != $userId) {
+                    $usuario = get_userdata($userId);
+                    if ($usuario) {
+                        crearNotificacion($autorId, $usuario->user_login . ' le ha dado me gusta a tu publicación.', false, $postId);
+                    }
+                }
             }
         }
     }
 
     if ($accion === 'unlike') {
-        error_log('[likeAccion] La acción es unlike.');
-        $delete_result = $wpdb->delete(
+        $wpdb->delete(
             $table_name,
             ['user_id' => $userId, 'post_id' => $postId, 'like_type' => $likeType],
             ['%d', '%d', '%s']
         );
-        if ($delete_result !== false) {
-            error_log('[likeAccion] Eliminación exitosa de la base de datos.');
-            if ($likeType === 'like') { // Solo actualizar el contador 'like_count' para likes tradicionales
-                $like_count = max(0, $like_count - 1);
-                update_user_meta($userId, 'like_count', $like_count);
-                error_log('[likeAccion] Contador de likes del usuario ' . $userId . ' actualizado a: ' . $like_count);
-                if ($like_count % 2 === 0 && $like_count > 0) {
-                    error_log('[likeAccion] El contador de likes de ' . $userId . ' es par y mayor que 0. Llamando a reiniciarFeed().');
-                    reiniciarFeed($userId);
-                }
-            } else {
-                error_log('[likeAccion] No se actualiza el contador de likes del usuario porque el tipo de like es: ' . $likeType);
+        if ($likeType === 'like') {
+            $like_count = max(0, $like_count - 1);
+            update_user_meta($userId, 'like_count', $like_count);
+            if ($like_count % 2 === 0 && $like_count > 0) {
+                reiniciarFeed($userId);
             }
-        } else {
-            error_log('[likeAccion] Error al eliminar de la base de datos. Error: ' . $wpdb->last_error);
         }
     }
-    error_log('[likeAccion] Finalizando función.');
 }
 
 function obtenerLikesDelUsuario($userId, $limit = 500)
