@@ -104,11 +104,7 @@ function like() {
             boton.classList.add('liked'); // Agregar la clase 'liked' al marcar
         } else {
             boton.classList.remove(claseActivo);
-            // Mantenemos la clase 'liked' si otro botón de interacción para esta publicación está activo.
-            const contenedor = boton.closest('.botonlike-container');
-            if (contenedor && !contenedor.querySelector('[data-like_type].liked')) {
-                boton.classList.remove('liked');
-            }
+            boton.classList.remove('liked'); // Remover la clase 'liked' al desmarcar
         }
     }
 
