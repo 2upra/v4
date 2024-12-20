@@ -145,13 +145,9 @@ function animacionLike() {
 
     containers.forEach(container => {
         const botonesExtras = container.querySelector('.botones-extras');
-        let touchStartTime = 0;
-        let isTouching = false;
+        let touchTimeout;
 
-        container.addEventListener('touchstart', (event) => {
-            touchStartTime = Date.now();
-            isTouching = true;
-
+        container.addEventListener('touchstart', () => {
             // Mostrar los botones extras inmediatamente al tocar
             botonesExtras.style.opacity = '1';
             botonesExtras.style.pointerEvents = 'auto';
@@ -159,36 +155,32 @@ function animacionLike() {
         });
 
         container.addEventListener('touchend', () => {
-            isTouching = false;
             // Ocultar los botones extras al levantar el dedo
             botonesExtras.style.opacity = '0';
             botonesExtras.style.pointerEvents = 'none';
             botonesExtras.style.transform = 'translateX(10px)';
+            clearTimeout(touchTimeout); // Aseguramos que no haya un timeout pendiente
         });
 
-        // Opcional: Manejar la situación donde el usuario desliza fuera del botón sin levantar el dedo
+        // Para manejar el caso donde el dedo se mueve fuera del botón sin levantar
         container.addEventListener('touchmove', (event) => {
             const touch = event.touches[0];
             const rect = container.getBoundingClientRect();
             if (touch.clientX < rect.left || touch.clientX > rect.right || touch.clientY < rect.top || touch.clientY > rect.bottom) {
                 // El dedo se movió fuera del botón, ocultar los extras
-                if (isTouching) {
-                    botonesExtras.style.opacity = '0';
-                    botonesExtras.style.pointerEvents = 'none';
-                    botonesExtras.style.transform = 'translateX(10px)';
-                    isTouching = false;
-                }
-            }
-        });
-
-        // Opcional: Cancelar la visualización si el dedo se aleja del contenedor
-        container.addEventListener('touchcancel', () => {
-            if (isTouching) {
                 botonesExtras.style.opacity = '0';
                 botonesExtras.style.pointerEvents = 'none';
                 botonesExtras.style.transform = 'translateX(10px)';
-                isTouching = false;
+                clearTimeout(touchTimeout);
             }
+        });
+
+        container.addEventListener('touchcancel', () => {
+            botonesExtras.style.opacity = '0';
+            botonesExtras.style.pointerEvents = 'none';
+            botonesExtras.style.transform = 'translateX(10px)';
+            clearTimeout(touchTimeout);
         });
     });
 }
+
