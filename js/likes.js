@@ -156,69 +156,54 @@ function like() {
 
 function animacionLike() {
     const containers = document.querySelectorAll('.botonlike-container');
-    let touchstartTime = 0;
-    let timeoutId = null;
 
     containers.forEach(container => {
         const botonesExtras = container.querySelector('.botones-extras');
         const botonLike = container.querySelector('.post-like-button');
+        let timeoutId = null;
 
-        // Escritorio: mouseenter y mouseleave
-        container.addEventListener('mouseenter', () => {
+        // Función para mostrar los botones extras
+        const showExtras = () => {
             clearTimeout(timeoutId);
-            // Remover la clase 'active' de otros contenedores
-            containers.forEach(c => {
-                if (c !== container) {
-                    c.classList.remove('active');
-                }
-            });
-            // Añadir un retraso para mostrar los botones extras
-            timeoutId = setTimeout(() => {
-                container.classList.add('active');
-            }, 300); // Ajusta el tiempo de retraso según sea necesario
-        });
+            containers.forEach(c => c !== container && c.classList.remove('active'));
+            container.classList.add('active');
+        };
 
-        container.addEventListener('mouseleave', (event) => {
-            // Verificar si el ratón se movió hacia un elemento hijo del contenedor
-            if (event.relatedTarget && container.contains(event.relatedTarget)) {
-                return; // No ocultar si el ratón está dentro del contenedor
-            }
+        // Función para ocultar los botones extras
+        const hideExtras = () => {
             clearTimeout(timeoutId);
-            // Añadir un retraso para ocultar los botones extras
             timeoutId = setTimeout(() => {
                 container.classList.remove('active');
-            }, 300); // Ajusta el tiempo de retraso según sea necesario
-        });
+            }, 300);
+        };
+
+        // Escritorio: mouseenter y mouseleave
+        container.addEventListener('mouseenter', showExtras);
+
+        // Detectar si el mouse entra en los botones extras
+        botonesExtras.addEventListener('mouseenter', () => clearTimeout(timeoutId));
+
+        container.addEventListener('mouseleave', hideExtras);
 
         // Móvil: touchstart, touchend y detectar pulsación larga
+        let touchstartTime = 0;
         container.addEventListener('touchstart', event => {
             touchstartTime = Date.now();
             clearTimeout(timeoutId);
+            containers.forEach(c => c !== container && c.classList.remove('active'));
 
-            // Remover la clase 'active' de otros contenedores
-            containers.forEach(c => {
-                if (c !== container) {
-                    c.classList.remove('active');
-                }
-            });
-
-            // Iniciar un temporizador para la pulsación larga
             timeoutId = setTimeout(() => {
-                container.classList.add('active');
-            }, 500); // Ajusta el tiempo para la pulsación larga (e.g., 500ms)
+                showExtras();
+            }, 500);
         });
 
         container.addEventListener('touchend', event => {
             const duration = Date.now() - touchstartTime;
             clearTimeout(timeoutId);
 
-            // Si la duración es menor que el tiempo de pulsación larga, es un toque corto
-            if (duration < 500) {
-                // Evitar que se propague el evento de clic al botón de like si ya se ha mostrado el menú
-                if (container.classList.contains('active')) {
-                    event.preventDefault();
-                }
-                container.classList.remove('active');
+            if (duration < 500 && container.classList.contains('active')) {
+                event.preventDefault();
+                hideExtras();
             }
         });
 
@@ -227,7 +212,7 @@ function animacionLike() {
             event.stopPropagation();
         });
 
-        //Para evitar que active el boton like si ya se activo active
+        // Para evitar que active el boton like si ya se activo active
         botonLike.addEventListener('touchstart', event => {
             if (container.classList.contains('active')) {
                 event.preventDefault();
@@ -235,4 +220,3 @@ function animacionLike() {
         });
     });
 }
-
