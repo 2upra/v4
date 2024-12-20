@@ -79,38 +79,20 @@ function like() {
     }
 
     function actualizarIUInteraccion(boton, añadiendo, tipo) {
-        const contenedor = boton.closest('.botonlike-container');
-        if (!contenedor) {
-            console.error('No se encontró el contenedor del botón.');
-            return;
-        }
-
-        const idPublicacion = boton.dataset.post_id;
+        // No necesitas el contenedor aquí, el botón ya es el objetivo.
 
         // Actualiza el botón actual
         actualizarEstadoBoton(boton, añadiendo, tipo);
 
-        // Actualiza los otros botones
-        const otrosTipos = ['like', 'favorito', 'no_me_gusta'].filter(t => t !== tipo);
-        otrosTipos.forEach(t => {
-            const otroBoton = contenedor.querySelector(`[data-like_type="${t}"][data-post_id="${idPublicacion}"]`);
-            if (otroBoton) {
-                actualizarEstadoBoton(otroBoton, false, t);
-            }
-        });
+        // No necesitamos actualizar otros botones aquí. La clase 'liked'
+        // se maneja directamente en actualizarEstadoBoton.
 
-        // Registrar el estado actual de los botones después de la actualización.
-        console.log(`Estado actual de los botones para la publicación ${idPublicacion}:`);
-        ['like', 'favorito', 'no_me_gusta'].forEach(t => {
-            const btn = contenedor.querySelector(`[data-like_type="${t}"][data-post_id="${idPublicacion}"]`);
-            console.log(`- ${t}: ${btn ? (btn.classList.contains(t + '-active') ? 'activo' : 'inactivo') : 'no encontrado'}`);
-        });
+        // Registrar el estado actual del botón después de la actualización.
+        console.log(`Estado actual del botón para la publicación ${boton.dataset.post_id}, tipo ${tipo}: ${boton.classList.contains(tipo + '-active') ? 'activo' : 'inactivo'}`);
+        console.log(`Clase 'liked' del botón para la publicación ${boton.dataset.post_id}, tipo ${tipo}: ${boton.classList.contains('liked') ? 'presente' : 'ausente'}`);
     }
 
     function revertirIUInteraccion(boton, añadiendo, tipo) {
-        const contenedor = boton.closest('.botonlike-container');
-        if (!contenedor) return;
-
         // Revierte el botón actual
         actualizarEstadoBoton(boton, añadiendo, tipo);
     }
@@ -122,7 +104,11 @@ function like() {
             boton.classList.add('liked'); // Agregar la clase 'liked' al marcar
         } else {
             boton.classList.remove(claseActivo);
-            boton.classList.remove('liked'); // Quitar la clase 'liked' al desmarcar
+            // Mantenemos la clase 'liked' si otro botón de interacción para esta publicación está activo.
+            const contenedor = boton.closest('.botonlike-container');
+            if (contenedor && !contenedor.querySelector('[data-like_type].liked')) {
+                boton.classList.remove('liked');
+            }
         }
     }
 
