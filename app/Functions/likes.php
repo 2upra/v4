@@ -40,7 +40,7 @@ function manejarLike()
 
     $accion = $likeEstado ? $likeType : 'unlike';
     likeAccion($postId, $userId, $accion, $likeType);
-    $contadorLike = contarLike($postId, 'like');
+    $contadorLike = contarLike($postId);
     $contadorFavorito = contarLike($postId, 'favorito');
     $contadorNoMeGusta = contarLike($postId, 'no_me_gusta');
 
@@ -134,18 +134,31 @@ function obtenerLikesDelUsuario($userId, $limit = 500)
     return $liked_posts;
 }
 
-function contarLike($postId, $likeType = 'like')
+
+function contarLike($postId, $likeType = null)
 {
     global $wpdb;
     $table_name = $wpdb->prefix . 'post_likes';
-    $contadorLike = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM $table_name WHERE post_id = %d AND like_type = %s",
-        $postId,
-        $likeType
-    ));
 
-    return $contadorLike ? $contadorLike : 0;
+    if ($likeType === null) {
+        // Contar todos los likes (incluyendo 'like' y 'favorito') de forma eficiente
+        $contadorLike = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table_name WHERE post_id = %d AND like_type IN ('like', 'favorito')",
+            $postId
+        ));
+    } else {
+        // Contar likes de un tipo específico
+        $contadorLike = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table_name WHERE post_id = %d AND like_type = %s",
+            $postId,
+            $likeType
+        ));
+    }
+
+    return (int)  $contadorLike ? $contadorLike : 0;
 }
+
+
 
 function chequearLike($postId, $userId, $likeType = 'like')
 {
@@ -167,7 +180,7 @@ function like($postId)
 {
     $userId = get_current_user_id();
 
-    $contadorLike = contarLike($postId, 'like');
+    $contadorLike = contarLike($postId);
     $user_has_liked = chequearLike($postId, $userId, 'like');
     $liked_class = $user_has_liked ? 'liked' : 'not-liked';
 

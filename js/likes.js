@@ -167,7 +167,7 @@ function animacionLike() {
                 botonesExtras.style.opacity = '0';
                 botonesExtras.style.pointerEvents = 'none';
                 botonesExtras.style.transform = 'translateX(10px)';
-            }, 2000); // Ajusta el tiempo de visualización
+            }, 500); // Ajusta el tiempo de visualización
         });
     });
 }
