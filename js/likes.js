@@ -161,79 +161,66 @@ function animacionLike() {
         const botonesExtras = container.querySelector('.botones-extras');
         const botonLike = container.querySelector('.post-like-button');
         let timeoutId = null;
-        let isMouseOverContainerOrExtras = false; // Nueva variable para controlar el estado
 
         // Función para mostrar los botones extras
         const showExtras = () => {
-            clearTimeout(timeoutId);
-            containers.forEach(c => c !== container && c.classList.remove('active'));
-            container.classList.add('active');
-            isMouseOverContainerOrExtras = true;
+            clearTimeout(timeoutId); // Limpia cualquier temporizador previo
+            containers.forEach(c => c !== container && c.classList.remove('active')); // Oculta otros contenedores activos
+            container.classList.add('active'); // Activa el contenedor actual
         };
 
         // Función para ocultar los botones extras
         const hideExtras = () => {
+            clearTimeout(timeoutId); // Limpia cualquier temporizador previo
             timeoutId = setTimeout(() => {
-                if (!isMouseOverContainerOrExtras) {
-                    container.classList.remove('active');
-                }
-            }, 300);
+                container.classList.remove('active'); // Oculta después de 300ms
+            }, 300); // Ajusta el tiempo según sea necesario
         };
 
-        // Escritorio: mouseenter, mouseleave, mousemove
+        // Evento para mostrar los botones extras al entrar con el mouse
         container.addEventListener('mouseenter', showExtras);
 
-        container.addEventListener('mousemove', () => {
-            isMouseOverContainerOrExtras = true;
-            clearTimeout(timeoutId);
-        });
-
+        // Detectar si el mouse entra en los botones extras (para cancelar el temporizador de ocultar)
         botonesExtras.addEventListener('mouseenter', () => {
-            isMouseOverContainerOrExtras = true;
-            clearTimeout(timeoutId);
+            clearTimeout(timeoutId); // Cancela el temporizador de ocultar
         });
 
+        // Detectar si el mouse sale del contenedor completo (incluido botones extras)
         container.addEventListener('mouseleave', () => {
-            isMouseOverContainerOrExtras = false;
-            hideExtras();
-        });
-
-        botonesExtras.addEventListener('mouseleave', () => {
-            isMouseOverContainerOrExtras = false;
-            hideExtras();
+            hideExtras(); // Inicia el temporizador para ocultar
         });
 
         // Móvil: touchstart, touchend y detectar pulsación larga
         let touchstartTime = 0;
         container.addEventListener('touchstart', event => {
-            touchstartTime = Date.now();
-            clearTimeout(timeoutId);
-            containers.forEach(c => c !== container && c.classList.remove('active'));
+            touchstartTime = Date.now(); // Marca el tiempo de inicio del toque
+            clearTimeout(timeoutId); // Limpia cualquier temporizador previo
+            containers.forEach(c => c !== container && c.classList.remove('active')); // Oculta otros contenedores activos
 
             timeoutId = setTimeout(() => {
-                showExtras();
-            }, 500);
+                showExtras(); // Muestra los extras si es una pulsación larga
+            }, 500); // Define el tiempo para la pulsación larga
         });
 
         container.addEventListener('touchend', event => {
-            const duration = Date.now() - touchstartTime;
-            clearTimeout(timeoutId);
+            const duration = Date.now() - touchstartTime; // Calcula la duración del toque
+            clearTimeout(timeoutId); // Limpia cualquier temporizador previo
 
             if (duration < 500 && container.classList.contains('active')) {
                 event.preventDefault();
-                hideExtras();
+                hideExtras(); // Oculta si es un toque corto
             }
         });
 
-        // Evitar que el menú se oculte cuando se toca dentro de él
+        // Evitar que el menú se oculte cuando se toca dentro de los botones extras
         botonesExtras.addEventListener('touchstart', event => {
-            event.stopPropagation();
+            event.stopPropagation(); // Detiene la propagación para evitar conflictos
         });
 
-        // Para evitar que active el boton like si ya se activo active
+        // Evitar que active el botón like si ya está activo
         botonLike.addEventListener('touchstart', event => {
             if (container.classList.contains('active')) {
-                event.preventDefault();
+                event.preventDefault(); // Evita el comportamiento predeterminado
             }
         });
     });
