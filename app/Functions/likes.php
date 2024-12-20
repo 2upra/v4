@@ -90,6 +90,14 @@ function likeAccion($postId, $userId, $accion, $likeType = 'like')
                         crearNotificacion($autorId, $usuario->user_login . ' le ha dado me gusta a tu publicación.', false, $postId);
                     }
                 }
+            } elseif ($likeType === 'favorito') {
+                $autorId = get_post_field('post_author', $postId);
+                if ($autorId != $userId) {
+                    $usuario = get_userdata($userId);
+                    if ($usuario) {
+                        crearNotificacion($autorId, $usuario->user_login . ' le ha encantado tu publicación.', false, $postId);
+                    }
+                }
             }
         }
     }
@@ -178,12 +186,10 @@ function like($postId)
             <? echo $GLOBALS['iconoCorazon']; ?> <span class="like-count"><?= esc_html($contadorLike) ?></span>
         </button>
         <button class="post-favorite-button <?= esc_attr($favorited_class) ?>" data-post_id="<?= esc_attr($postId) ?>" data-like_type="favorito" data-nonce="<?= wp_create_nonce('like_post_nonce') ?>">
-            t1<? // Icono de favorito 
-                ?> <span class="favorite-count"><?= esc_html($contadorFavorito) ?></span>
+            <? echo $GLOBALS['estrella']; ?> <span class="favorite-count"><?= esc_html($contadorFavorito) ?></span>
         </button>
         <button class="post-dislike-button <?= esc_attr($disliked_class) ?>" data-post_id="<?= esc_attr($postId) ?>" data-like_type="no_me_gusta" data-nonce="<?= wp_create_nonce('like_post_nonce') ?>">
-            t2<? // Icono de no me gusta 
-                ?> <span class="dislike-count"><?= esc_html($contadorNoMeGusta) ?></span>
+            <? echo $GLOBALS['dislike']; ?> <span class="dislike-count"><?= esc_html($contadorNoMeGusta) ?></span>
         </button>
     </div>
 <?
