@@ -12,6 +12,12 @@ function manejarLike()
         wp_die();
     }
 
+    if (!check_ajax_referer('like_post_nonce', 'nonce', false)) {
+        error_log('[manejarLike] Nonce inválido.');
+        echo 'invalid_nonce';
+        wp_die();
+    }
+
     $userId = get_current_user_id();
     error_log('[manejarLike] User ID: ' . $userId);
 
@@ -43,14 +49,26 @@ function manejarLike()
     error_log('[manejarLike] Acción a realizar: ' . $accion);
 
     likeAccion($postId, $userId, $accion, $likeType); // Pasar el likeType
-    $contadorLike = contarLike($postId, 'like'); // Contar solo los likes "tradicionales"
+    $contadorLike = contarLike($postId, 'like'); // Contar los likes
+    $contadorFavorito = contarLike($postId, 'favorito'); // Contar los favoritos
+    $contadorNoMeGusta = contarLike($postId, 'no_me_gusta'); // Contar los no me gusta
     error_log('[manejarLike] Contador de likes para el post ' . $postId . ': ' . $contadorLike);
-    echo $contadorLike;
+    error_log('[manejarLike] Contador de favoritos para el post ' . $postId . ': ' . $contadorFavorito);
+    error_log('[manejarLike] Contador de no me gusta para el post ' . $postId . ': ' . $contadorNoMeGusta);
+
+    // Enviar todos los contadores como JSON
+    $response = array(
+        'like' => $contadorLike,
+        'favorito' => $contadorFavorito,
+        'no_me_gusta' => $contadorNoMeGusta,
+    );
+    echo json_encode($response);
     error_log('[manejarLike] Finalizando función.');
     wp_die();
 }
 
 add_action('wp_ajax_like', 'manejarLike');
+add_action('wp_ajax_nopriv_like', 'manejarLike'); // Permitir a usuarios no logueados (si es necesario)
 
 function likeAccion($postId, $userId, $accion, $likeType = 'like')
 {
@@ -130,7 +148,6 @@ function likeAccion($postId, $userId, $accion, $likeType = 'like')
     }
     error_log('[likeAccion] Finalizando función.');
 }
-
 
 function obtenerLikesDelUsuario($userId, $limit = 500)
 {

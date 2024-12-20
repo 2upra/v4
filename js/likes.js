@@ -1,3 +1,4 @@
+
 function like() {
     let lastClickTime = 0;
     const clickDelay = 500; // 500 ms de retraso
@@ -39,13 +40,15 @@ function like() {
         updateLikeUI(button, addingLike, likeType);
 
         const data = {
+            action: 'like', // Asegúrate de enviar la acción correcta para WordPress AJAX
             post_id: postId,
             like_type: likeType,
-            like_state: addingLike // true para "dar like", false para "quitar like"
+            like_state: addingLike, // true para "dar like", false para "quitar like"
+            nonce: button.dataset.nonce // Incluye el nonce para validación
         };
 
         try {
-            const response = await enviarAjax('like', data);
+            const response = await enviarAjax(data); // Envía el objeto data completo
 
             if (response === 'not_logged_in') {
                 alert('Debes estar logueado para realizar esta acción.');
@@ -60,9 +63,9 @@ function like() {
                 alert('Hubo un error al procesar tu solicitud.');
                 revertLikeUI(button, !addingLike, likeType);
             } else {
-                // Si la respuesta del servidor es exitosa, no necesitamos hacer nada con el contador
-                // ya que lo actualizamos inmediatamente.
-                // Aquí podrías procesar alguna información adicional del servidor si fuera necesario.
+                // La respuesta del servidor ahora contiene los contadores actualizados para todos los tipos
+                const counts = JSON.parse(response);
+                updateAllLikeCounts(postId, counts);
             }
         } catch (error) {
             console.error("Error en la solicitud AJAX:", error);
@@ -84,10 +87,10 @@ function like() {
 
         if (addingLike) {
             button.classList.add(activeButtonClass);
-            countSpan.textContent = parseInt(countSpan.textContent || '0', 10) + 1;
+            // No actualices el conteo aquí, se hará con la respuesta del servidor
         } else {
             button.classList.remove(activeButtonClass);
-            countSpan.textContent = Math.max(0, parseInt(countSpan.textContent || '0', 10) - 1);
+            // No actualices el conteo aquí, se hará con la respuesta del servidor
         }
     }
 
@@ -102,10 +105,43 @@ function like() {
 
         if (addingLike) {
             button.classList.add(activeButtonClass);
-            countSpan.textContent = parseInt(countSpan.textContent || '0', 10) + 1;
         } else {
             button.classList.remove(activeButtonClass);
-            countSpan.textContent = Math.max(0, parseInt(countSpan.textContent || '0', 10) - 1);
+        }
+    }
+
+    function updateAllLikeCounts(postId, counts) {
+        const container = document.querySelector(`.botonlike-container button[data-post_id="${postId}"]`).closest('.botonlike-container');
+        if (!container) return;
+
+        updateCount(container, 'like', counts.like);
+        updateCount(container, 'favorito', counts.favorito);
+        updateCount(container, 'no_me_gusta', counts.no_me_gusta);
+    }
+
+    function updateCount(container, likeType, count) {
+        const countSpan = container.querySelector(`.${likeType}-count`);
+        if (countSpan) {
+            countSpan.textContent = count;
+        }
+    }
+
+    async function enviarAjax(data) {
+        try {
+            const response = await fetch(ajaxurl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                },
+                body: new URLSearchParams(data)
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.text();
+        } catch (error) {
+            console.error("Error al enviar la solicitud AJAX:", error);
+            throw error;
         }
     }
 
