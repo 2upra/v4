@@ -82,31 +82,38 @@ function like() {
     function updateLikeUI(button, addingLike, likeType) {
         const container = button.closest('.botonlike-container');
         if (!container) return;
-
-        const countSpan = container.querySelector(`.${likeType}-count`);
-        if (!countSpan) return;
-
-        const activeButtonClass = likeType + '-active';
-
-        if (addingLike) {
-            button.classList.add(activeButtonClass);
-            // No actualices el conteo aquí, se hará con la respuesta del servidor
-        } else {
-            button.classList.remove(activeButtonClass);
-            // No actualices el conteo aquí, se hará con la respuesta del servidor
-        }
+    
+        const postId = button.dataset.post_id;
+    
+        // Actualiza el botón actual
+        updateButtonState(button, addingLike, likeType);
+    
+        // Actualiza los otros botones
+        const otherLikeTypes = ['like', 'favorito', 'no_me_gusta'].filter(type => type !== likeType);
+        otherLikeTypes.forEach(type => {
+            const otherButton = container.querySelector(`[data-like_type="${type}"][data-post_id="${postId}"]`);
+            if (otherButton) {
+                updateButtonState(otherButton, false, type); // Siempre establece como inactivo
+            }
+        });
     }
-
+    
     function revertLikeUI(button, addingLike, likeType) {
         const container = button.closest('.botonlike-container');
         if (!container) return;
-
-        const countSpan = container.querySelector(`.${likeType}-count`);
-        if (!countSpan) return;
-
+    
+        const postId = button.dataset.post_id;
+    
+        // Revierte el botón actual
+        updateButtonState(button, addingLike, likeType);
+    
+        // Si se está revirtiendo un like, no es necesario actualizar los otros botones
+        // ya que ya deberían estar en el estado correcto.
+    }
+    
+    function updateButtonState(button, isActive, likeType) {
         const activeButtonClass = likeType + '-active';
-
-        if (addingLike) {
+        if (isActive) {
             button.classList.add(activeButtonClass);
         } else {
             button.classList.remove(activeButtonClass);
