@@ -25,6 +25,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         'ajax_submit',
         'borrarcomentario',
         'colab',
+        'tooltips',
         'configuser',
         'deletepost',
         'diferidopost',
