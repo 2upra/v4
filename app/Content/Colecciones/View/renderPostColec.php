@@ -54,7 +54,7 @@ function htmlColec($filtro)
             }
             ?>
             <div class="CPQBEN" style="display: none;">
-                <div class="CPQBAU"><? echo $author_name; ?></div>
+                <div class="CPQBAU"><? echo get_the_author_meta('display_name', $autorId); ?></div>
                 <div class="CPQBCO">
                     <?
                     $post_id = $postId; // Use the existing $postId
@@ -347,7 +347,7 @@ function imagenColeccion($postId)
         <? if ($postType !== 'social_post') : ?>
             <a href="<? echo esc_url(get_permalink($postId)); ?>" data-post-id="<? echo $postId; ?>" class="imagenColecS">
             <? endif; ?>
-            <img class="imagenMusic"  src="<? echo esc_url($imagenProcesada); ?>" alt="Post Image" data-post-id="<? echo $postId; ?>" />
+            <img class="imagenMusic" src="<? echo esc_url($imagenProcesada); ?>" alt="Post Image" data-post-id="<? echo $postId; ?>" />
             <div class="KLYJBY">
                 <? echo audioPost($postId); ?>
             </div>
