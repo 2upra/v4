@@ -14,14 +14,14 @@ add_action('init', function () {
 function audioUrlSegura($audio_id)
 {
     //guardarLog("Generando URL segura para audio ID: " . $audio_id);
-
+    /*
     $user_id = get_current_user_id();
     if (usuarioEsAdminOPro($user_id)) {
         $url = site_url("/wp-json/1/v1/audio-pro/{$audio_id}");
         //guardarLog("URL generada para admin/pro: " . $url);
         return $url;
     }
-
+    */
     $token = tokenAudio($audio_id);
     if (!$token) {
         //guardarLog("Error generando token para audio ID: " . $audio_id);
