@@ -806,7 +806,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
 
             if ($tipoPost === 'social_post') {
                 if ($filtro === 'rola') {
-                    echo htmlColab($filtro); // Llama a htmlColab si filtro es rolastatus
+                    echo htmlColec($filtro); // Llama a htmlColab si filtro es rolastatus
                 } else {
                     echo htmlPost($filtro);  // Llama a htmlPost en otros casos
                 }
