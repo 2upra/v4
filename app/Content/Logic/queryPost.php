@@ -805,7 +805,11 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
             $query->the_post();
 
             if ($tipoPost === 'social_post') {
-                echo htmlPost($filtro);
+                if ($filtro === 'rolastatus') {
+                    echo htmlColab($filtro); // Llama a htmlColab si filtro es rolastatus
+                } else {
+                    echo htmlPost($filtro);  // Llama a htmlPost en otros casos
+                }
             } elseif ($tipoPost === 'colab') {
                 echo htmlColab($filtro);
             } elseif ($tipoPost === 'colecciones') {
@@ -816,7 +820,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
                 echo '<p>Tipo de publicación no reconocido.</p>';
             }
         }
-
+        
         if (!wp_doing_ajax()) {
             echo '</ul>';
         }
