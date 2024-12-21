@@ -161,37 +161,61 @@ function renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $a
                     <? echo opcionesRola($post_id, $post_status, $audio_url); ?>
                     <div class="CPQBEN" style="display: none;">
                         <div class="CPQBAU"><? echo $author_name; ?></div>
-                        <div class="CPQBCO"><? the_content(); ?></div>
+                        <div class="CPQBCO">
+
+                            <?php
+                            $post_id = get_the_ID(); // Asegúrate de tener el ID del post actual
+                            $rola_meta = get_post_meta($post_id, 'rola', true);
+
+                            if ($rola_meta === '1') {
+                                $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
+                                if (empty($nombre_rola)) {
+                                    $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
+                                }
+                                if (!empty($nombre_rola)) {
+                                    echo "<p>" . esc_html($nombre_rola) . "</p>";
+                                } else {
+                                }
+                            } else {
+                                the_content();
+                                if (has_post_thumbnail($post_id) && empty($audio_id_lite)) : ?>
+                                    <div class="post-thumbnail">
+                                        <?php echo get_the_post_thumbnail($post_id, 'full'); ?>
+                                    </div>
+                            <?php endif;
+                            }
+                            ?>
+
+                        </div>
                     </div>
+                <? endif; ?>
                 </div>
-            <? endif; ?>
-        </div>
 
-        <div class="YGWCKC">
-            <? if ($block && !$es_suscriptor): ?>
-                <? renderSubscriptionPrompt($author_name, $author_id); ?>
-            <? else: ?>
-                <? renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $audio_id_lite); ?>
-            <? endif; ?>
-        </div>
+                <div class="YGWCKC">
+                    <? if ($block && !$es_suscriptor): ?>
+                        <? renderSubscriptionPrompt($author_name, $author_id); ?>
+                    <? else: ?>
+                        <? renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $audio_id_lite); ?>
+                    <? endif; ?>
+                </div>
 
-        <div class="IZXEPH">
-            <? renderPostControls($post_id, $colab, $audio_id_lite); ?>
+                <div class="IZXEPH">
+                    <? renderPostControls($post_id, $colab, $audio_id_lite); ?>
+                </div>
         </div>
-    </div>
-<?
+    <?
 }
 
 
 
 function renderSubscriptionPrompt($author_name, $author_id)
 {
-?>
-    <div class="ZHNDDD">
-        <p>Suscríbete a <? echo esc_html($author_name); ?> para ver el contenido de este post</p>
-        <? echo botonSuscribir($author_id, $author_name); ?>
-    </div>
-<?
+    ?>
+        <div class="ZHNDDD">
+            <p>Suscríbete a <? echo esc_html($author_name); ?> para ver el contenido de este post</p>
+            <? echo botonSuscribir($author_id, $author_name); ?>
+        </div>
+    <?
 }
 
 
@@ -200,125 +224,124 @@ function renderPostControls($post_id, $colab, $audio_id_lite = null)
 {
 
     $mostrarBotonCompra = get_post_meta($post_id, 'tienda', true) === '1';
-?>
-    <div class="QSORIW">
+    ?>
+        <div class="QSORIW">
 
 
-        <? echo like($post_id); ?>
-        <? if ($mostrarBotonCompra): ?>
-            <? echo botonCompra($post_id); ?>
-        <? endif; ?>
-        <? echo botonComentar($post_id, $colab); ?>
-        <? if (!empty($audio_id_lite)) : ?>
-            <? echo botonDescarga($post_id); ?>
-            <? echo botonColab($post_id, $colab); ?>
-            <? echo botonColeccion($post_id); ?>
-        <? endif; ?>
-    </div>
-<?
+            <? echo like($post_id); ?>
+            <? if ($mostrarBotonCompra): ?>
+                <? echo botonCompra($post_id); ?>
+            <? endif; ?>
+            <? echo botonComentar($post_id, $colab); ?>
+            <? if (!empty($audio_id_lite)) : ?>
+                <? echo botonDescarga($post_id); ?>
+                <? echo botonColab($post_id, $colab); ?>
+                <? echo botonColeccion($post_id); ?>
+            <? endif; ?>
+        </div>
+    <?
 }
 
 
 
 function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $audio_id_lite)
 {
-?>
-    <div class="NERWFB">
-        <div class="YWBIBG">
-            <? if (!empty($audio_id_lite)) : ?>
-                <?
-                $has_post_thumbnail = has_post_thumbnail($post_id);
-                $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true);
-                ?>
-                <? if ($has_post_thumbnail || $imagen_temporal_id) : ?>
-                    <div class="MRPDOR">
-                        <? if ($has_post_thumbnail) : ?>
-                            <div class="post-thumbnail">
-                                <?
-                                $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
-                                $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
-                                ?>
-                                <img src="<? echo esc_url($optimized_thumbnail_url); ?>" alt="<? echo esc_attr(get_the_title($post_id)); ?>">
-                            </div>
-                        <? elseif ($imagen_temporal_id) : ?>
-                            <div class="temporal-thumbnail">
-                                <?
-                                $temporal_image_url = wp_get_attachment_url($imagen_temporal_id);
-                                $optimized_temporal_image_url = img($temporal_image_url, 40, 'all');
-                                ?>
-                                <img src="<? echo esc_url($optimized_temporal_image_url); ?>" alt="Imagen temporal">
-                            </div>
-                        <? endif; ?>
-                    </div>
-                <? endif; ?>
-            <? endif; ?>
-
-            <div class="OASDEF">
-
-                <div class="thePostContet" data-post-id="<? echo esc_attr($post_id); ?>">
-                    <?php
-                    $post_id = get_the_ID(); // Asegúrate de tener el ID del post actual
-                    $rola_meta = get_post_meta($post_id, 'rola', true);
-
-                    if ($rola_meta === '1') {
-                        $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
-                        if (empty($nombre_rola)) {
-                            $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
-                        }
-                        if (!empty($nombre_rola)) {
-                            echo "<p>" . esc_html($nombre_rola) . "</p>";
-                        } else {
-
-                        }
-                    } else {
-                        the_content();
-                        if (has_post_thumbnail($post_id) && empty($audio_id_lite)) : ?>
-                            <div class="post-thumbnail">
-                                <?php echo get_the_post_thumbnail($post_id, 'full'); ?>
-                            </div>
-                    <?php endif;
-                    }
-                    ?>
-                </div>
-                <div>
+    ?>
+        <div class="NERWFB">
+            <div class="YWBIBG">
+                <? if (!empty($audio_id_lite)) : ?>
                     <?
-                    $key_info = $key ? $key : null;
-                    $scale_info = $scale ? $scale : null;
-                    $bpm_info = $bpm ? round($bpm) : null;
-
-                    $info = array_filter([$key_info, $scale_info, $bpm_info]);
-                    if (!empty($info)) {
-                        echo '<p class="TRZPQD">' . implode(' - ', $info) . '</p>';
-                    }
+                    $has_post_thumbnail = has_post_thumbnail($post_id);
+                    $imagen_temporal_id = get_post_meta($post_id, 'imagenTemporal', true);
                     ?>
-                </div>
-                <? if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])) : ?>
-                    <div class="ZQHOQY">
-                        <? if (!empty($audio_id_lite)) : ?>
-                            <? wave($audio_url, $audio_id_lite, $post_id); ?>
-                        <? endif; ?>
-                    </div>
-                <? else : ?>
-                    <div class="KLYJBY">
-                        <? echo audioPost($post_id); ?>
-                    </div>
+                    <? if ($has_post_thumbnail || $imagen_temporal_id) : ?>
+                        <div class="MRPDOR">
+                            <? if ($has_post_thumbnail) : ?>
+                                <div class="post-thumbnail">
+                                    <?
+                                    $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
+                                    $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
+                                    ?>
+                                    <img src="<? echo esc_url($optimized_thumbnail_url); ?>" alt="<? echo esc_attr(get_the_title($post_id)); ?>">
+                                </div>
+                            <? elseif ($imagen_temporal_id) : ?>
+                                <div class="temporal-thumbnail">
+                                    <?
+                                    $temporal_image_url = wp_get_attachment_url($imagen_temporal_id);
+                                    $optimized_temporal_image_url = img($temporal_image_url, 40, 'all');
+                                    ?>
+                                    <img src="<? echo esc_url($optimized_temporal_image_url); ?>" alt="Imagen temporal">
+                                </div>
+                            <? endif; ?>
+                        </div>
+                    <? endif; ?>
                 <? endif; ?>
-            </div>
 
-        </div>
+                <div class="OASDEF">
 
-        <? if (!empty($audio_id_lite)) : ?>
-            <div class="FBKMJD">
-                <div class="UKVPJI">
-                    <div class="tags-container" id="tags-<? echo esc_attr(get_the_ID()); ?>"></div>
-                    <p id-post-algoritmo="<? echo esc_attr(get_the_ID()); ?>" style="display:none;">
-                        <? echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
-                    </p>
+                    <div class="thePostContet" data-post-id="<? echo esc_attr($post_id); ?>">
+                        <?php
+                        $post_id = get_the_ID(); // Asegúrate de tener el ID del post actual
+                        $rola_meta = get_post_meta($post_id, 'rola', true);
+
+                        if ($rola_meta === '1') {
+                            $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
+                            if (empty($nombre_rola)) {
+                                $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
+                            }
+                            if (!empty($nombre_rola)) {
+                                echo "<p>" . esc_html($nombre_rola) . "</p>";
+                            } else {
+                            }
+                        } else {
+                            the_content();
+                            if (has_post_thumbnail($post_id) && empty($audio_id_lite)) : ?>
+                                <div class="post-thumbnail">
+                                    <?php echo get_the_post_thumbnail($post_id, 'full'); ?>
+                                </div>
+                        <?php endif;
+                        }
+                        ?>
+                    </div>
+                    <div>
+                        <?
+                        $key_info = $key ? $key : null;
+                        $scale_info = $scale ? $scale : null;
+                        $bpm_info = $bpm ? round($bpm) : null;
+
+                        $info = array_filter([$key_info, $scale_info, $bpm_info]);
+                        if (!empty($info)) {
+                            echo '<p class="TRZPQD">' . implode(' - ', $info) . '</p>';
+                        }
+                        ?>
+                    </div>
+                    <? if (!in_array($filtro, ['rolastatus', 'rolasEliminadas', 'rolasRechazadas'])) : ?>
+                        <div class="ZQHOQY">
+                            <? if (!empty($audio_id_lite)) : ?>
+                                <? wave($audio_url, $audio_id_lite, $post_id); ?>
+                            <? endif; ?>
+                        </div>
+                    <? else : ?>
+                        <div class="KLYJBY">
+                            <? echo audioPost($post_id); ?>
+                        </div>
+                    <? endif; ?>
                 </div>
+
             </div>
-        <? endif; ?>
-    </div>
-<?
+
+            <? if (!empty($audio_id_lite)) : ?>
+                <div class="FBKMJD">
+                    <div class="UKVPJI">
+                        <div class="tags-container" id="tags-<? echo esc_attr(get_the_ID()); ?>"></div>
+                        <p id-post-algoritmo="<? echo esc_attr(get_the_ID()); ?>" style="display:none;">
+                            <? echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
+                        </p>
+                    </div>
+                </div>
+            <? endif; ?>
+        </div>
+    <?
 }
 
 
@@ -350,22 +373,22 @@ function nohayPost($filtro, $is_ajax)
     }
 
     ob_start();
-?>
+    ?>
 
-    <? if ($filtro === 'momento' || $is_ajax): ?>
-        <div id="no-more-posts"></div>
-        <div id="no-more-posts-two" no-more="<? echo esc_attr($filtro); ?>"></div>
-    <? else: ?>
-        <div class="LNVHED no-<? echo esc_attr($filtro); ?>">
-            <p>Ta vacío, intenta restablecer los filtros o buscar otra cosa :)</p>
-            <? if ($filtro === 'rolastatus'): ?>
-                <p>Cuando publiques tu primera rola, aparecerá aquí</p>
-            <? endif; ?>
-            <button><a href="https://2upra.com/">Volver al inicio</a></button>
-        </div>
-    <? endif; ?>
+        <? if ($filtro === 'momento' || $is_ajax): ?>
+            <div id="no-more-posts"></div>
+            <div id="no-more-posts-two" no-more="<? echo esc_attr($filtro); ?>"></div>
+        <? else: ?>
+            <div class="LNVHED no-<? echo esc_attr($filtro); ?>">
+                <p>Ta vacío, intenta restablecer los filtros o buscar otra cosa :)</p>
+                <? if ($filtro === 'rolastatus'): ?>
+                    <p>Cuando publiques tu primera rola, aparecerá aquí</p>
+                <? endif; ?>
+                <button><a href="https://2upra.com/">Volver al inicio</a></button>
+            </div>
+        <? endif; ?>
 
-<?
+    <?
     return ob_get_clean();
 }
 
