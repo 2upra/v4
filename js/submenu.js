@@ -13,22 +13,22 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     function toggleSubmenu(event) {
         const trigger = event.target.closest(triggerSelector);
         if (!trigger) return;
-        
+
         let submenuId;
-        
+
         if (triggerSelector === '.EDYQHV') {
-           submenuId = `${submenuIdPrefix}-${trigger.getAttribute('id-post')}`;
+            submenuId = `${submenuIdPrefix}-${trigger.getAttribute('id-post')}`;
         } else {
             submenuId = `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || 'default'}`;
         }
 
         const submenu = document.getElementById(submenuId);
-        
+
         if (!submenu) {
-            console.error("Submenu not found:", submenuId);
+            console.error('Submenu not found:', submenuId);
             return;
         }
-        
+
         if (openSubmenu && openSubmenu !== submenu) {
             hideSubmenu(openSubmenu);
         }
@@ -126,47 +126,45 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     triggers.forEach(trigger => {
         if (trigger.dataset.submenuInitialized) return;
 
-        trigger.addEventListener('click', event => {
-            if (window.innerWidth > 640 || !isLongPress) {
-                toggleSubmenu(event);
+        let isTouchEvent = false;
+
+        trigger.addEventListener('pointerdown', event => {
+            if (window.innerWidth <= 640 && event.pointerType === 'touch') {
+                isTouchEvent = true;
+                isLongPress = false;
+                longPressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    toggleSubmenu(event);
+                }, 500);
+            }
+        });
+
+        trigger.addEventListener('pointerup', event => {
+            if (isTouchEvent) {
+                clearTimeout(longPressTimer);
+                if (!isLongPress) {
+                    toggleSubmenu(event); // Abrir con un toque normal si no fue una pulsación larga
+                }
             }
             isLongPress = false;
         });
 
-        if (triggerSelector === '.EDYQHV') {
-            let isTouchEvent = false;
+        trigger.addEventListener('pointermove', event => {
+            if (isTouchEvent) {
+                clearTimeout(longPressTimer);
+                isLongPress = false;
+            }
+        });
 
-            trigger.addEventListener('pointerdown', event => {
-                if (event.pointerType === 'touch') {
-                    isTouchEvent = true;
-                    isLongPress = false;
-                    longPressTimer = setTimeout(() => {
-                        isLongPress = true;
-                        toggleSubmenu(event);
-                    }, 500);
-                }
-            });
-
-            trigger.addEventListener('pointerup', event => {
-                if (isTouchEvent) {
-                    clearTimeout(longPressTimer);
-                }
-            });
-
-            trigger.addEventListener('pointermove', event => {
-                if (isTouchEvent) {
-                    clearTimeout(longPressTimer);
-                    isLongPress = false;
-                }
-            });
-            
-            trigger.addEventListener('click', event => {
-              if (isLongPress) {
+        trigger.addEventListener('click', event => {
+            if (window.innerWidth > 640) {
+                toggleSubmenu(event);
+            }
+            if (isLongPress) {
                 event.preventDefault();
                 event.stopPropagation();
-              }
-            })
-        }
+            }
+        });
 
         trigger.dataset.submenuInitialized = 'true';
     });
