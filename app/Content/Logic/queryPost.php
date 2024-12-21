@@ -805,7 +805,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
             $query->the_post();
 
             if ($tipoPost === 'social_post') {
-                if ($filtro === 'rolastatus') {
+                if ($filtro === 'rola') {
                     echo htmlColab($filtro); // Llama a htmlColab si filtro es rolastatus
                 } else {
                     echo htmlPost($filtro);  // Llama a htmlPost en otros casos
@@ -820,7 +820,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
                 echo '<p>Tipo de publicación no reconocido.</p>';
             }
         }
-        
+
         if (!wp_doing_ajax()) {
             echo '</ul>';
         }
