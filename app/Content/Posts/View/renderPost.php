@@ -135,12 +135,56 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
             <div class="XOKALG">
                 <p><? echo $author_name; ?></p>
                 <p>-</p>
-                <? the_content(); ?>
+                <?php
+                $post_id = get_the_ID(); // Asegúrate de tener el ID del post actual
+                $rola_meta = get_post_meta($post_id, 'rola', true);
+
+                if ($rola_meta === '1') {
+                    $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
+                    if (empty($nombre_rola)) {
+                        $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
+                    }
+                    if (!empty($nombre_rola)) {
+                        echo "<p>" . esc_html($nombre_rola) . "</p>";
+                    } else {
+                    }
+                } else {
+                    the_content();
+                    if (has_post_thumbnail($post_id) && empty($audio_id_lite)) : ?>
+                        <div class="post-thumbnail">
+                            <?php echo get_the_post_thumbnail($post_id, 'full'); ?>
+                        </div>
+                <?php endif;
+                }
+                ?>
             </div>
         </div>
         <div class="CPQBEN" style="display: none;">
             <div class="CPQBAU"><? echo $author_name; ?></div>
-            <div class="CPQBCO"><? the_content(); ?></div>
+            <div class="CPQBCO">
+                <?php
+                $post_id = get_the_ID(); // Asegúrate de tener el ID del post actual
+                $rola_meta = get_post_meta($post_id, 'rola', true);
+
+                if ($rola_meta === '1') {
+                    $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
+                    if (empty($nombre_rola)) {
+                        $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
+                    }
+                    if (!empty($nombre_rola)) {
+                        echo "<p>" . esc_html($nombre_rola) . "</p>";
+                    } else {
+                    }
+                } else {
+                    the_content();
+                    if (has_post_thumbnail($post_id) && empty($audio_id_lite)) : ?>
+                        <div class="post-thumbnail">
+                            <?php echo get_the_post_thumbnail($post_id, 'full'); ?>
+                        </div>
+                <?php endif;
+                }
+                ?>
+            </div>
             <img src="<?= esc_url($optimized_thumbnail_url); ?>" alt="">
         </div>
     </div>
