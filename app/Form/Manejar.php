@@ -131,6 +131,7 @@ function actualizarMetaDatos($postId)
     if (isset($_POST['tienda']) && $_POST['tienda'] == '1') {
         registrarPrecios($postId);
     }
+
 }
 
 #Paso 2.1
@@ -157,9 +158,9 @@ function registrarPrecios($postId)
 
             // Validar que el valor sea numérico
             if (is_numeric($precio)) {
-              
+
                 if (update_post_meta($postId, $precio_key, $precio) === false) {
-                   error_log("Error en registrarPrecios: Fallo al actualizar el meta $precio_key para el post ID $postId.");
+                    error_log("Error en registrarPrecios: Fallo al actualizar el meta $precio_key para el post ID $postId.");
                 }
             } else {
                 error_log("Error en registrarPrecios: El valor para $precio_key no es numérico. Post ID: $postId, valor ingresado: $precio");

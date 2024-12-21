@@ -27,12 +27,13 @@ function subidaRs()
     procesarURLs($postId);
     #Paso 6
     asignarTags($postId);
-    
+
     wp_send_json_success(['message' => 'Post creado exitosamente']);
+    
+    if (isset($_POST['multiple']) && $_POST['multiple'] == '1') {
+        multiplesPost($postId);
+    }
     wp_die();
 }
 
 add_action('wp_ajax_subidaRs', 'subidaRs');
-
-
-

@@ -1,64 +1,57 @@
 <?
-function obtenerPostsMultiples()
+function multiplesPost($postIdOriginal)
 {
-    $args = array(
-        'post_type'      => 'social_post',
-        'posts_per_page' => 1,
-        'meta_query'     => array(
-            array(
-                'key'   => 'multiple',
-                'value' => '1',
-            ),
-        ),
-        'orderby'        => 'ID',
-        'order'          => 'ASC',
-    );
-    return new WP_Query($args);
-}
+    if (!get_post($postIdOriginal)) {
+        error_log("El post con ID: {$postIdOriginal} no existe.");
+        return;
+    }
 
-function multiplesPost()
-{
-    $query = obtenerPostsMultiples();
-    if ($query->have_posts()) {
-        while ($query->have_posts()) {
-            $query->the_post();
-            $postIdOriginal = get_the_ID();
-            $author_id = get_post_field('post_author', $postIdOriginal);
-            $paraColab = get_post_meta($postIdOriginal, 'paraColab', true);
-            $paraDescarga = get_post_meta($postIdOriginal, 'paraDescarga', true);
-            $artista = get_post_meta($postIdOriginal, 'artista', true);
-            $fan = get_post_meta($postIdOriginal, 'fan', true);
-            $rola = get_post_meta($postIdOriginal, 'rola', true);
-            $sample = get_post_meta($postIdOriginal, 'sample', true);
-            $tagsUsuario = get_post_meta($postIdOriginal, 'tagsUsuario', true);
-            $tienda = get_post_meta($postIdOriginal, 'tienda', true);
-            $nombreLanzamiento = get_post_meta($postIdOriginal, 'nombreLanzamiento', true);
+    // Verifica si el post es del tipo 'social_post'
+    if (get_post_type($postIdOriginal) !== 'social_post') {
+        error_log("El post con ID: {$postIdOriginal} no es del tipo 'social_post'.");
+        return;
+    }
 
-            list($multiples_audios_encontrados, $ids_nuevos_posts) = procesarAudiosMultiples($postIdOriginal, $author_id, $paraColab, $paraDescarga, $artista, $fan, $rola, $sample, $tagsUsuario, $tienda, $nombreLanzamiento);
+    // Verifica si el post tiene el meta 'multiple' igual a 1
+    $isMultiple = get_post_meta($postIdOriginal, 'multiple', true);
+    if ($isMultiple !== '1') {
+        error_log("El post con ID: {$postIdOriginal} no tiene el meta 'multiple' igual a 1.");
+        return;
+    }
 
-            if (! $multiples_audios_encontrados) {
-                delete_post_meta($postIdOriginal, 'multiple');
-            } else {
-                // Verifica si hay IDs de nuevos posts antes de actualizar
-                if (!empty($ids_nuevos_posts)) {
-                    update_post_meta($postIdOriginal, 'posts_generados', $ids_nuevos_posts);
-                }
-                $quedan_audios = false;
-                for ($i = 2; $i <= 30; $i++) {
-                    if (get_post_meta($postIdOriginal, 'post_audio_lite_' . $i, true)) {
-                        $quedan_audios = true;
-                        break;
-                    }
-                }
-                if (! $quedan_audios) {
-                    delete_post_meta($postIdOriginal, 'multiple');
-                }
+    $author_id = get_post_field('post_author', $postIdOriginal);
+    $paraColab = get_post_meta($postIdOriginal, 'paraColab', true);
+    $paraDescarga = get_post_meta($postIdOriginal, 'paraDescarga', true);
+    $artista = get_post_meta($postIdOriginal, 'artista', true);
+    $fan = get_post_meta($postIdOriginal, 'fan', true);
+    $rola = get_post_meta($postIdOriginal, 'rola', true);
+    $sample = get_post_meta($postIdOriginal, 'sample', true);
+    $tagsUsuario = get_post_meta($postIdOriginal, 'tagsUsuario', true);
+    $tienda = get_post_meta($postIdOriginal, 'tienda', true);
+    $nombreLanzamiento = get_post_meta($postIdOriginal, 'nombreLanzamiento', true);
+
+    list($multiples_audios_encontrados, $ids_nuevos_posts) = procesarAudiosMultiples($postIdOriginal, $author_id, $paraColab, $paraDescarga, $artista, $fan, $rola, $sample, $tagsUsuario, $tienda, $nombreLanzamiento);
+
+    if (!$multiples_audios_encontrados) {
+        delete_post_meta($postIdOriginal, 'multiple');
+    } else {
+        // Verifica si hay IDs de nuevos posts antes de actualizar
+        if (!empty($ids_nuevos_posts)) {
+            update_post_meta($postIdOriginal, 'posts_generados', $ids_nuevos_posts);
+        }
+        $quedan_audios = false;
+        for ($i = 2; $i <= 30; $i++) {
+            if (get_post_meta($postIdOriginal, 'post_audio_lite_' . $i, true)) {
+                $quedan_audios = true;
+                break;
             }
         }
+        if (!$quedan_audios) {
+            delete_post_meta($postIdOriginal, 'multiple');
+        }
     }
-    wp_reset_postdata();
-}
 
+}
 function procesarAudiosMultiples($postIdOriginal, $author_id, $paraColab, $paraDescarga, $artista, $fan, $rola, $sample, $tagsUsuario, $tienda, $nombreLanzamiento)
 {
     $multiples_audios_encontrados = false;
@@ -333,31 +326,3 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
 }
 
 
-
-
-function programar_generacion_publicaciones()
-{
-    if (! wp_next_scheduled('generar_publicaciones_multiples_evento')) {
-        wp_schedule_event(time(), 'cada_treinta_segundos', 'generar_publicaciones_multiples_evento');
-    } else {
-    }
-}
-add_action('wp', 'programar_generacion_publicaciones');
-add_action('generar_publicaciones_multiples_evento', 'multiplesPost');
-
-/**
- * Define el intervalo personalizado de 30 segundos.
- *
- * @param array $schedules Los intervalos de tiempo programados.
- *
- * @return array Los intervalos de tiempo programados con el nuevo intervalo de 30 segundos.
- */
-function agregar_intervalo_treinta_segundos($schedules)
-{
-    $schedules['cada_treinta_segundos'] = array(
-        'interval' => 60,
-        'display'  => esc_html__('Cada 30 segundos'),
-    );
-    return $schedules;
-}
-add_filter('cron_schedules', 'agregar_intervalo_treinta_segundos');
