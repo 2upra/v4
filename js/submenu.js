@@ -1,10 +1,13 @@
 //hay un pequeño detalle, cuando soy segundo click o dejo presionado sobre EDYQHV, hay un pequeño bug sucede la mitad del tiempo, el background se quita isntataneamente lo cual resulta muy molesto e incomodo, hay alguna forma de evitarlo aca, solo me ocurre un delay que bloque se oculte el background por otros eventos al momento de tocar interfieren, no se es lo que se me ocurre
 
 let submenuIdPrefixes = [];
+let openSubmenu = null;
+let longPressTimer;
+let isLongPress = false;
+let isTouchEvent = false;
 
 function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     const triggers = document.querySelectorAll(triggerSelector);
-    let openSubmenu = null;
 
     registrarIdMenu(submenuIdPrefix);
     triggers.forEach(trigger => {
@@ -26,9 +29,7 @@ function registrarIdMenu(submenuIdPrefix) {
 
 // Función para inicializar los eventos de cada disparador
 function eventosMenu(trigger, triggerSelector, submenuIdPrefix) {
-    let longPressTimer;
-    let isLongPress = false;
-    let isTouchEvent = false;
+
 
     // Manejar el inicio del toque o clic
     trigger.addEventListener('pointerdown', event => {
