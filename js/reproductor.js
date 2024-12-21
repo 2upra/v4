@@ -34,18 +34,25 @@ function inicializarReproductorAudio() {
     */
 
     function moveLikeButton() {
-        const likeButtonContainer = document.querySelector('.CPQBEN .botonlike-container'); // Busca el contenedor del botón de like
-        const destinationContainer = document.querySelector('.SOMGMR'); // Busca el contenedor de destino
-
+        const likeButtonContainer = document.querySelector('.CPQBEN .botonlike-container');
+        const destinationContainer = document.querySelector('.SOMGMR');
+    
         if (likeButtonContainer && destinationContainer) {
-            const likeButton = likeButtonContainer.cloneNode(true); // Clona el botón de like (incluyendo sus hijos y eventos)
-            destinationContainer.appendChild(likeButton); // Mueve el botón clonado al contenedor de destino
+            // Eliminar el botón existente si lo hay
+            const existingLikeButton = destinationContainer.querySelector('.botonlike-container');
+            if (existingLikeButton) {
+                destinationContainer.removeChild(existingLikeButton);
+                log06('Existing like button removed.');
+            }
+    
+            const likeButton = likeButtonContainer.cloneNode(true);
+            destinationContainer.appendChild(likeButton);
             log06('Like button moved successfully.');
         } else {
             log06('Either like button or destination container not found.');
         }
     }
-
+    
     function Info(container, postId = null) {
         const infoDiv = container.querySelector('.CPQBEN');
         if (infoDiv) {
