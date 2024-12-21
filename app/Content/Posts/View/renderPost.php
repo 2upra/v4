@@ -81,6 +81,10 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
                     </a>
                     <div class="CPQBAU"><?php echo get_the_author_meta('display_name', $author_id); ?></div>
                 </div>
+                <div class="MOREINFOLIST" style="display: none;">
+                    aqui va imprimir la siguiente informacion de las siguientes metas 
+                    la duracion en la meta 
+                </div>
                 <div class="CPQBEN" style="display: none;">
                     <?php echo like($post_id); ?>
                     <div class="CPQBAU"><?php echo get_the_author_meta('display_name', $author_id); ?></div>

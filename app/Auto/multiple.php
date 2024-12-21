@@ -116,7 +116,9 @@ function multiplesPost()
             $tagsUsuario = get_post_meta($postIdOriginal, 'tagsUsuario', true);
             $tienda = get_post_meta($postIdOriginal, 'tienda', true);
             $nombreLanzamiento = get_post_meta($postIdOriginal, 'nombreLanzamiento', true);
+            
             list($multiples_audios_encontrados, $ids_nuevos_posts) = procesarAudiosMultiples($postIdOriginal, $author_id, $paraColab, $paraDescarga, $artista, $fan, $rola, $sample, $tagsUsuario, $tienda, $nombreLanzamiento);
+            
             if (! $multiples_audios_encontrados) {
                 delete_post_meta($postIdOriginal, 'multiple');
             } else {
