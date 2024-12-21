@@ -1,5 +1,6 @@
 let submenuIdPrefixes = [];
 
+
 function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     const triggers = document.querySelectorAll(triggerSelector);
     let openSubmenu = null;
@@ -140,13 +141,22 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         });
 
         trigger.addEventListener('pointerup', event => {
-            if (isTouchEvent) {
-                clearTimeout(longPressTimer);
-                if (!isLongPress) {
-                    toggleSubmenu(event); // Abrir con un toque normal si no fue una pulsación larga
-                }
+          if (isTouchEvent && triggerSelector === '.EDYQHV') {
+            clearTimeout(longPressTimer);
+            if (isLongPress) {
+              // No hacer nada en pointerup si fue una pulsación larga en .EDYQHV
+            } else {
+              // Evitar abrir con un toque normal si no fue una pulsación larga en .EDYQHV
+              event.preventDefault();
+              event.stopPropagation();
             }
-            isLongPress = false;
+          } else if (isTouchEvent) {
+            clearTimeout(longPressTimer);
+            if (!isLongPress) {
+              toggleSubmenu(event); // Abrir con un toque normal si no fue una pulsación larga para otros elementos
+            }
+          }
+          isLongPress = false;
         });
 
         trigger.addEventListener('pointermove', event => {
@@ -157,13 +167,21 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
         });
 
         trigger.addEventListener('click', event => {
-            if (window.innerWidth > 640) {
-                toggleSubmenu(event);
-            }
-            if (isLongPress) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
+          if (window.innerWidth > 640 && triggerSelector !== '.EDYQHV') {
+            toggleSubmenu(event);
+          }
+          if (isLongPress) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        });
+
+        // Evento para el clic derecho en escritorio
+        trigger.addEventListener('contextmenu', event => {
+          if (window.innerWidth > 640 && triggerSelector === '.EDYQHV') {
+            event.preventDefault(); // Evita el menú contextual
+            toggleSubmenu(event);
+          }
         });
 
         trigger.dataset.submenuInitialized = 'true';
