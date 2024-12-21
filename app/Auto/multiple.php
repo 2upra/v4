@@ -293,7 +293,7 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
         update_post_meta($post_id, 'post_audio_lite', $audio_lite_id);
     }
 
-    if (!array_key_exists('paraDescarga', $existing_meta) && $autor_id === 44) {
+    if ($autor_id === 44) {
         update_post_meta($post_id, 'paraDescarga', true);
     }
 
