@@ -17,8 +17,58 @@ function htmlColec($filtro)
             <div class="KLYJBY">
                 <? echo audioPost($post_id); ?>
             </div>
-            <h2 class="post-title" data-post-id="<? echo $postId; ?>"><? echo get_the_title($postId); ?></h2>
-            <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
+            <h2 class="post-title" data-post-id="<? echo $postId; ?>">
+                <div class="XOKALG">
+                    <?php
+                    // echo get_the_title($postId); 
+                    $post_id = get_the_ID();
+                    $rola_meta = get_post_meta($post_id, 'rola', true);
+                    $nombre_rola_html = ''; // Variable para almacenar el HTML de nombreRola
+
+                    if ($rola_meta === '1') {
+                        $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
+                        if (empty($nombre_rola)) {
+                            $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
+                        }
+                        if (!empty($nombre_rola)) {
+                            $nombre_rola_html = '<p class="nameRola">' . esc_html($nombre_rola) . '</p>';
+                        }
+                    }
+
+                    // Ahora construimos el HTML de salida
+                    $output = '<p>' . esc_html($author_name) . '</p>';
+                    $output .= '<p>-</p>';
+                    $output .= $nombre_rola_html;
+
+                    echo $output;
+                    ?>
+                </div>
+        </div>
+        <div class="CPQBEN" style="display: none;">
+            <div class="CPQBAU"><? echo $author_name; ?></div>
+            <div class="CPQBCO">
+                <?php
+                $post_id = get_the_ID(); // Asegúrate de tener el ID del post actual
+                $rola_meta = get_post_meta($post_id, 'rola', true);
+
+                if ($rola_meta === '1') {
+                    $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
+                    if (empty($nombre_rola)) {
+                        $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
+                    }
+                    if (!empty($nombre_rola)) {
+                        echo "<p>" . esc_html($nombre_rola) . "</p>";
+                    } else {
+                    }
+                } else {
+                }
+                ?>
+            </div>
+            <img src="<?= esc_url($optimized_thumbnail_url); ?>" alt="">
+        </div>
+
+        </h2>
+        <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
         </div>
     </li>
 <?
@@ -287,20 +337,20 @@ function imagenColeccion($postId)
     $postType = get_post_type($postId);
 
     ob_start();
-    ?>
+?>
     <div class="post-image-container">
         <?php if ($postType !== 'social_post') : ?>
             <a href="<?php echo esc_url(get_permalink($postId)); ?>" data-post-id="<?php echo $postId; ?>" class="imagenColecS">
-        <?php endif; ?>
+            <?php endif; ?>
             <img src="<?php echo esc_url($imagenProcesada); ?>" alt="Post Image" />
             <div class="KLYJBY">
                 <?php echo audioPost($postId); ?>
             </div>
-        <?php if ($postType !== 'social_post') : ?>
+            <?php if ($postType !== 'social_post') : ?>
             </a>
         <?php endif; ?>
     </div>
-    <?php
+<?php
 
     $output = ob_get_clean();
 
