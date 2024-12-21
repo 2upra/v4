@@ -34,7 +34,7 @@ function inicializarReproductorAudio() {
     */
 
     function moveLikeButton() {
-        const likeButtonContainer = document.querySelector('.CPQBEN .post-like-button'); // Busca el contenedor del botón de like
+        const likeButtonContainer = document.querySelector('.CPQBEN .botonlike-container'); // Busca el contenedor del botón de like
         const destinationContainer = document.querySelector('.SOMGMR'); // Busca el contenedor de destino
 
         if (likeButtonContainer && destinationContainer) {
