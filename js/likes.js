@@ -213,6 +213,8 @@ function animacionLike() {
         let isHoveringContainer = false;
         let isHoveringExtras = false;
         let delayHide = 200; // Tiempo en milisegundos que los botones permanecerán visibles
+        let longPressTimer = null; // Temporizador para la pulsación larga
+        const longPressDuration = 500; // Duración de la pulsación larga en milisegundos
 
         const showExtras = () => {
             //console.log('showExtras: Mostrando botones extras');
@@ -258,35 +260,66 @@ function animacionLike() {
             hideExtras(delayHide);
         };
 
+        const startLongPress = () => {
+          //console.log('startLongPress: Iniciando pulsación larga');
+          longPressTimer = setTimeout(() => {
+            //console.log('startLongPress: Pulsación larga detectada');
+            showExtras();
+            // Evita que se active el clic al soltar después de una pulsación larga
+            botonLike.addEventListener('click', preventDefaultOnClick, { once: true });
+          }, longPressDuration);
+        };
+      
+        const cancelLongPress = () => {
+          //console.log('cancelLongPress: Cancelando pulsación larga');
+          clearTimeout(longPressTimer);
+        };
+
+        const preventDefaultOnClick = (event) => {
+          //console.log('preventDefaultOnClick: Previniendo clic después de pulsación larga');
+          event.preventDefault();
+        };
+
         container.addEventListener('mouseenter', handleMouseEnterContainer);
         container.addEventListener('mouseleave', handleMouseLeaveContainer);
 
         botonesExtras.addEventListener('mouseenter', handleMouseEnterExtras);
         botonesExtras.addEventListener('mouseleave', handleMouseLeaveExtras);
 
-        // Manejo de eventos táctiles (sin cambios significativos aquí)
-        container.addEventListener('touchstart', () => {
+        // Manejo de eventos táctiles para pulsación larga
+        container.addEventListener('touchstart', (event) => {
             //console.log('touchstart en container');
+            event.preventDefault(); // Previene el comportamiento por defecto del navegador
             clearTimeout(timeoutId);
             containers.forEach(c => c !== container && c.classList.remove('active'));
-            timeoutId = setTimeout(showExtras, 500);
-        });
+            startLongPress();
+        }, { passive: false }); // Añadido passive: false para permitir preventDefault()
 
         container.addEventListener('touchend', () => {
             //console.log('touchend en container');
+            cancelLongPress();
             hideExtras(delayHide);
         });
 
-        botonesExtras.addEventListener('touchstart', event => {
-            //console.log('touchstart en botonesExtras');
-            //event.stopPropagation();
+        container.addEventListener('touchmove', () => {
+          //console.log('touchmove en container');
+          cancelLongPress();
+          hideExtras(delayHide);
         });
 
-        botonLike.addEventListener('touchstart', event => {
-            console.log('touchstart en botonLike');
-            if (container.classList.contains('active')) {
-                event.preventDefault();
-            }
-        });
+        botonesExtras.addEventListener('touchstart', (event) => {
+            //console.log('touchstart en botonesExtras');
+            // Si los botones extras están visibles, no se necesita detener la propagación
+            //event.stopPropagation();
+        }, { passive: false }); // Añadido passive: false por si se necesita preventDefault()
+
+        botonLike.addEventListener('touchstart', (event) => {
+          console.log('touchstart en botonLike');
+          if (container.classList.contains('active')) {
+            // Si los botones extras están visibles, prevenimos el comportamiento por defecto del like
+            event.preventDefault();
+          }
+        }, { passive: false }); // Añadido passive: false por si se necesita preventDefault()
     });
 }
+
