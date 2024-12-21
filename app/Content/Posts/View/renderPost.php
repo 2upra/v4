@@ -256,12 +256,29 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
             <div class="OASDEF">
 
                 <div class="thePostContet" data-post-id="<? echo esc_attr($post_id); ?>">
-                    <? the_content(); ?>
-                    <? if (has_post_thumbnail($post_id) && empty($audio_id_lite)) : ?>
-                        <div class="post-thumbnail">
-                            <? echo get_the_post_thumbnail($post_id, 'full'); ?>
-                        </div>
-                    <? endif; ?>
+                    <?php
+                    $post_id = get_the_ID(); // Asegúrate de tener el ID del post actual
+                    $rola_meta = get_post_meta($post_id, 'rola', true);
+
+                    if ($rola_meta === 'true') {
+                        $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
+                        if (empty($nombre_rola)) {
+                            $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
+                        }
+                        if (!empty($nombre_rola)) {
+                            echo "<p>" . esc_html($nombre_rola) . "</p>";
+                        } else {
+
+                        }
+                    } else {
+                        the_content();
+                        if (has_post_thumbnail($post_id) && empty($audio_id_lite)) : ?>
+                            <div class="post-thumbnail">
+                                <?php echo get_the_post_thumbnail($post_id, 'full'); ?>
+                            </div>
+                    <?php endif;
+                    }
+                    ?>
                 </div>
                 <div>
                     <?
