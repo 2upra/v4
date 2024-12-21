@@ -122,9 +122,6 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
             <? echo like($post_id); ?>
             <? echo opcionesRola($post_id, $post_status, $audio_url); ?>
         </div>
-        <div class="KLYJBY">
-            <? echo audioPost($post_id); ?>
-        </div>
         <div class="LRKHLC">
             <div class="XOKALG">
                 <?php

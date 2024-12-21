@@ -277,26 +277,36 @@ function variablesColec($postId = null)
     ];
 }
 
+
 function imagenColeccion($postId)
 {
     $imagenSize = 'large';
     $quality = 60;
     $imagenUrl = imagenPost($postId, $imagenSize, $quality, 'all', false, true);
     $imagenProcesada = img($imagenUrl, $quality, 'all');
+    $postType = get_post_type($postId);
 
     ob_start();
-?>
+    ?>
     <div class="post-image-container">
-        <a href="<? echo esc_url(get_permalink($postId)); ?>" data-post-id="<? echo $postId; ?>" class="imagenColecS">
-            <img src="<? echo esc_url($imagenProcesada); ?>" alt="Post Image" />
-        </a>
+        <?php if ($postType !== 'social_post') : ?>
+            <a href="<?php echo esc_url(get_permalink($postId)); ?>" data-post-id="<?php echo $postId; ?>" class="imagenColecS">
+        <?php endif; ?>
+            <img src="<?php echo esc_url($imagenProcesada); ?>" alt="Post Image" />
+            <div class="KLYJBY">
+                <?php echo audioPost($postId); ?>
+            </div>
+        <?php if ($postType !== 'social_post') : ?>
+            </a>
+        <?php endif; ?>
     </div>
-<?
+    <?php
 
     $output = ob_get_clean();
 
     return $output;
 }
+
 
 function imagenPost($postId, $size = 'medium', $quality = 50, $strip = 'all', $pixelated = false, $use_temp = false)
 {
