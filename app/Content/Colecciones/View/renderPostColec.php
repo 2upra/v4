@@ -6,8 +6,6 @@ function htmlColec($filtro)
     $postId = get_the_ID();
     $vars = variablesColec($postId);
     extract($vars);
-    $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
-    $optimized_thumbnail_url = img($thumbnail_url, 40, 'all')
 ?>
     <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV"
         filtro="<? echo esc_attr($filtro); ?>"
@@ -75,7 +73,6 @@ function htmlColec($filtro)
                     }
                     ?>
                 </div>
-                <img src="<?= esc_url($optimized_thumbnail_url); ?>" alt="">
             </div>
             <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
         </div>
@@ -350,7 +347,7 @@ function imagenColeccion($postId)
         <? if ($postType !== 'social_post') : ?>
             <a href="<? echo esc_url(get_permalink($postId)); ?>" data-post-id="<? echo $postId; ?>" class="imagenColecS">
             <? endif; ?>
-            <img src="<? echo esc_url($imagenProcesada); ?>" alt="Post Image" />
+            <img class="imagenMusic"  src="<? echo esc_url($imagenProcesada); ?>" alt="Post Image" data-post-id="<? echo $postId; ?>" />
             <div class="KLYJBY">
                 <? echo audioPost($postId); ?>
             </div>
