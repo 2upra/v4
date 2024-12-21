@@ -75,11 +75,15 @@ function procesarAudiosMultiples($postIdOriginal, $author_id, $paraColab, $paraD
         $name_key = 'nombreRola' . $i;
         $audioUrl_key = 'audioUrl' . $i;
         $audio_duration_key = 'audio_duration_' . $i;
+        
         $audio_lite_id = get_post_meta($postIdOriginal, $audio_lite_meta_key, true);
         $audio_id_hash = get_post_meta($postIdOriginal, $idHash_audioId_key, true);
         $audio_id = get_post_meta($postIdOriginal, $audio_meta_key, true);
         $precio = get_post_meta($postIdOriginal, $precio_key, true);
         $name = get_post_meta($postIdOriginal, $name_key, true);
+        $audioUrl = get_post_meta($postIdOriginal, $audioUrl_key, true);
+        $audio_duration = get_post_meta($postIdOriginal, $audio_duration_key, true);
+
         if (! empty($audio_lite_id) && ! empty($audio_id_hash) && !empty($audio_id)) {
             $multiples_audios_encontrados = true;
             $ruta_audio_lite = wp_get_attachment_url($audio_lite_id);
@@ -96,6 +100,12 @@ function procesarAudiosMultiples($postIdOriginal, $author_id, $paraColab, $paraD
                 }
 
                 // Copiar los demás metadatos
+                if (! empty($audioUrl)) {
+                    update_post_meta($nuevoPost, 'audioUrl', $audioUrl);
+                }
+                if (! empty($audio_duration)) {
+                    update_post_meta($nuevoPost, 'audio_duration_1', $audio_duration);
+                }
                 if (! empty($paraColab)) {
                     update_post_meta($nuevoPost, 'paraColab', $paraColab);
                 }
