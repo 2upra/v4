@@ -49,60 +49,136 @@ function htmlPost($filtro)
 
 
 
+
 function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id, $audio_id_lite = null)
 {
-?>
+    $rola_meta = get_post_meta($post_id, 'rola', true);
+    ?>
     <div class="LISTSAMPLE">
-        <div class="KLYJBY">
-            <? // echo audioPostList($post_id); 
-            ?>
-        </div>
-        <? echo imagenPostList($block, $es_suscriptor, $post_id); ?>
-        <div class="INFOLISTSAMPLE">
-            <div class="CONTENTLISTSAMPLE">
-                <a id-post="<? echo $post_id; ?>">
-                    <?
-                    // Obtener y limpiar el contenido
-                    $content = get_post_field('post_content', $post_id);
-                    $content = wp_trim_words($content, 20, '...');
-                    echo wp_kses_post($content);
-                    ?>
-                </a>
+        <?php if ($rola_meta === '1') : ?>
+            <div class="KLYJBY">
+                <?php echo audioPost($post_id); ?>
             </div>
-            <div class="TAGSLISTSAMPLE">
-                <div class="tags-container" id="tags-<? echo $post_id; ?>"></div>
-                <p id-post-algoritmo="<? echo $post_id; ?>" style="display:none;">
-                    <? echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
-                </p>
-            </div>
-        </div>
-        <div class="INFOTYPELIST">
-            <div class="verificacionPost">
-                <? if ($verificado == '1') : ?>
-                    <? echo $GLOBALS['check']; ?>
-                <? elseif ($postAut == '1' && current_user_can('administrator')) : ?>
-                    <div class="verificarPost" data-post-id="<? echo $post_id; ?>" style="cursor: pointer;">
-                        <? echo $GLOBALS['robot']; ?>
+            <?php echo imagenPostList($block, $es_suscriptor, $post_id); ?>
+            <div class="INFOLISTSAMPLE">
+                <div class="CONTENTLISTSAMPLE">
+                    <a id-post="<?php echo $post_id; ?>">
+                        <div class="LRKHLC">
+                            <div class="XOKALG">
+                                <?php
+                                $nombre_rola_html = '';
+                                $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
+                                if (empty($nombre_rola)) {
+                                    $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
+                                }
+                                if (!empty($nombre_rola)) {
+                                    $nombre_rola_html = '<p class="nameRola">' . esc_html($nombre_rola) . '</p>';
+                                }
+                                echo $nombre_rola_html;
+                                ?>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="CPQBEN" style="display: none;">
+                    <?php echo like($post_id); ?>
+                    <div class="CPQBAU"><?php echo get_the_author_meta('display_name', $author_id); ?></div>
+                    <div class="CPQBCO">
+                        <?php
+                        $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
+                        if (empty($nombre_rola)) {
+                            $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
+                        }
+                        if (!empty($nombre_rola)) {
+                            echo "<p>" . esc_html($nombre_rola) . "</p>";
+                        }
+                        ?>
                     </div>
-                <? endif; ?>
+                </div>
+                <div class="TAGSLISTSAMPLE">
+                    <div class="tags-container" id="tags-<?php echo $post_id; ?>"></div>
+                    <p id-post-algoritmo="<?php echo $post_id; ?>" style="display:none;">
+                        <?php echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
+                    </p>
+                </div>
             </div>
-        </div>
-        <div class="ZQHOQY LISTWAVESAMPLE">
-            <div id="waveform-<? echo $post_id; ?>"
-                class="waveform-container without-image"
-                postIDWave="<? echo $post_id; ?>"
-                data-wave-cargada="<? echo $waveCargada ? 'true' : 'false'; ?>"
-                data-audio-url="<? echo esc_url($urlAudioSegura); ?>">
-                <div class="waveform-background" style="background-image: url('<? echo esc_url($wave); ?>');"></div>
-                <div class="waveform-message"></div>
-                <div class="waveform-loading" style="display: none;">Cargando...</div>
+            <div class="INFOTYPELIST">
+                <div class="verificacionPost">
+                    <?php if ($verificado == '1') : ?>
+                        <?php echo $GLOBALS['check']; ?>
+                    <?php elseif ($postAut == '1' && current_user_can('administrator')) : ?>
+                        <div class="verificarPost" data-post-id="<?php echo $post_id; ?>" style="cursor: pointer;">
+                            <?php echo $GLOBALS['robot']; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
-        </div>
-        <? echo renderPostControls($post_id, $colab, $audio_id_lite); ?>
-        <? echo opcionesPost($post_id, $author_id); ?>
+            <?php echo renderPostControls($post_id, $colab, $audio_id_lite); ?>
+            <?php echo opcionesPost($post_id, $author_id); ?>
+        <?php else : ?>
+            <?php // Original structure when rola is not 1 ?>
+            <?php echo imagenPostList($block, $es_suscriptor, $post_id); ?>
+            <div class="INFOLISTSAMPLE">
+                <div class="CONTENTLISTSAMPLE">
+                    <a id-post="<?php echo $post_id; ?>">
+                        <?php
+                        $content = get_post_field('post_content', $post_id);
+                        $content = wp_trim_words($content, 20, '...');
+                        echo wp_kses_post($content);
+                        ?>
+                    </a>
+                </div>
+                <div class="CPQBEN" style="display: none;">
+                    <?php echo like($post_id); ?>
+                    <div class="CPQBAU"><?php echo get_the_author_meta('display_name', $author_id); ?></div>
+                    <div class="CPQBCO">
+                        <?php
+                        $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
+                        if (empty($nombre_rola)) {
+                            $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
+                        }
+                        if (!empty($nombre_rola)) {
+                            echo "<p>" . esc_html($nombre_rola) . "</p>";
+                        }
+                        ?>
+                    </div>
+                </div>
+                <div class="TAGSLISTSAMPLE">
+                    <div class="tags-container" id="tags-<?php echo $post_id; ?>"></div>
+                    <p id-post-algoritmo="<?php echo $post_id; ?>" style="display:none;">
+                        <?php echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
+                    </p>
+                </div>
+            </div>
+            <div class="INFOTYPELIST">
+                <div class="verificacionPost">
+                    <?php if ($verificado == '1') : ?>
+                        <?php echo $GLOBALS['check']; ?>
+                    <?php elseif ($postAut == '1' && current_user_can('administrator')) : ?>
+                        <div class="verificarPost" data-post-id="<?php echo $post_id; ?>" style="cursor: pointer;">
+                            <?php echo $GLOBALS['robot']; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="ZQHOQY LISTWAVESAMPLE">
+                <div id="waveform-<?php echo $post_id; ?>"
+                    class="waveform-container without-image"
+                    postIDWave="<?php echo $post_id; ?>"
+                    data-wave-cargada="<?php echo $waveCargada ? 'true' : 'false'; ?>"
+                    data-audio-url="<?php echo esc_url($urlAudioSegura); ?>">
+                    <div class="waveform-background" style="background-image: url('<?php echo esc_url($wave); ?>');"></div>
+                    <div class="waveform-message"></div>
+                    <div class="waveform-loading" style="display: none;">Cargando...</div>
+                </div>
+            </div>
+            <?php echo renderPostControls($post_id, $colab, $audio_id_lite); ?>
+            <?php echo opcionesPost($post_id, $author_id); ?>
+        <?php endif; ?>
     </div>
-<?
+    <?php
 }
+
 
 
 
@@ -111,7 +187,7 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
     $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
     $audio_post_id = get_post_meta($post_id, 'post_audio_lite', true);
     if ($thumbnail_url && empty($audio_post_id)) {
-        return ''; 
+        return '';
     }
     $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
     $image_size = ($block && !$es_suscriptor) ? 'thumbnail' : 'large';
