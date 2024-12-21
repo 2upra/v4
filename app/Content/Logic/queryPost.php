@@ -805,7 +805,11 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
             $query->the_post();
 
             if ($tipoPost === 'social_post') {
-                echo htmlPost($filtro);
+                if ($filtro === 'rola') {
+                    echo htmlColec($filtro);
+                } else {
+                    echo htmlPost($filtro); 
+                }
             } elseif ($tipoPost === 'colab') {
                 echo htmlColab($filtro);
             } elseif ($tipoPost === 'colecciones') {
