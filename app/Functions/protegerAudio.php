@@ -132,10 +132,18 @@ function optimizar64kAudios($limite = 10000) {
     $query = new WP_Query(array(
         'post_type' => 'social_post',
         'meta_query' => array(
+            'relation' => 'AND', // Asegurarse de que ambas condiciones se cumplan
             array(
                 'key' => 'audio_optimizado',
                 'compare' => 'NOT EXISTS' // Solo los que no tienen la meta 'audio_optimizado'
+            ),
+            array(
+                'key' => 'rola',
+                'compare' => 'NOT EXISTS', //  No procesar si contiene la meta 'rola' con valor 1 
+                'value' => '1'
+
             )
+            
         ),
         'posts_per_page' => $limite, // Limitar el número de posts a procesar por ciclo
         'fields' => 'ids', // Solo obtener los IDs de los posts
