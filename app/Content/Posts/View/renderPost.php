@@ -53,7 +53,7 @@ function htmlPost($filtro)
 function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id, $audio_id_lite = null)
 {
     $rola_meta = get_post_meta($post_id, 'rola', true);
-    ?>
+?>
     <div class="LISTSAMPLE">
         <?php if ($rola_meta === '1') : ?>
             <div class="KLYJBY">
@@ -79,6 +79,7 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
                             </div>
                         </div>
                     </a>
+                    <div class="CPQBAU"><?php echo get_the_author_meta('display_name', $author_id); ?></div>
                 </div>
                 <div class="CPQBEN" style="display: none;">
                     <?php echo like($post_id); ?>
@@ -100,7 +101,8 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
             <?php echo renderPostControls($post_id, $colab, $audio_id_lite); ?>
             <?php echo opcionesPost($post_id, $author_id); ?>
         <?php else : ?>
-            <?php // Original structure when rola is not 1 ?>
+            <?php // Original structure when rola is not 1 
+            ?>
             <?php echo imagenPostList($block, $es_suscriptor, $post_id); ?>
             <div class="INFOLISTSAMPLE">
                 <div class="CONTENTLISTSAMPLE">
@@ -160,7 +162,7 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
             <?php echo opcionesPost($post_id, $author_id); ?>
         <?php endif; ?>
     </div>
-    <?php
+<?php
 }
 
 
