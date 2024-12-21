@@ -23,6 +23,9 @@ function reproductor()
                     <p class="tituloR"></p>
                     <p class="AutorR"></p>
                 </div>
+                <div class="SOMGMR">
+            
+                </div>
                 <div class="PQWXDA">
                     <button class="prev-btn">
                         <? echo $GLOBALS['anterior']; ?>
@@ -58,7 +61,8 @@ function reproductor()
 }
 add_action('wp_footer', 'reproductor');
 
-function reproducciones(WP_REST_Request $request) {
+function reproducciones(WP_REST_Request $request)
+{
     // Limitar tasa de solicitudes
     if (!limitador()) {
         return new WP_Error('rate_limit_exceeded', 'Límite de solicitudes excedido', array('status' => 429));
@@ -98,7 +102,7 @@ function reproducciones(WP_REST_Request $request) {
         $thirty_days_ago = date('Y-m-d H:i:s', strtotime('-30 days'));
 
         // Limpiar oyentes antiguos
-        $oyentes = array_filter($oyentes, function($last_heard) use ($thirty_days_ago) {
+        $oyentes = array_filter($oyentes, function ($last_heard) use ($thirty_days_ago) {
             return $last_heard >= $thirty_days_ago;
         });
 
@@ -112,11 +116,12 @@ function reproducciones(WP_REST_Request $request) {
 }
 
 // Registrar la ruta de la API
-function reproduccionesAPI() {
+function reproduccionesAPI()
+{
     register_rest_route('miplugin/v1', '/reproducciones-y-oyentes/', array(
         'methods' => 'POST',
         'callback' => 'reproducciones',
-        'permission_callback' => function() {
+        'permission_callback' => function () {
             return true; // Permitir todas las solicitudes sin autenticación
         }
     ));
@@ -124,7 +129,8 @@ function reproduccionesAPI() {
 add_action('rest_api_init', 'reproduccionesAPI');
 
 // Función de limitación de tasa basada en IP
-function limitador() {
+function limitador()
+{
     // Obtener la dirección IP del cliente
     $ip_address = $_SERVER['REMOTE_ADDR'];
     $transient_name = 'rate_limit_' . $ip_address;
@@ -140,6 +146,3 @@ function limitador() {
 
     return true;
 }
-
-
-

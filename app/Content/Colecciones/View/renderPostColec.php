@@ -54,6 +54,9 @@ function htmlColec($filtro)
             }
             ?>
             <div class="CPQBEN" style="display: none;">
+                
+                <? echo like($post_id); 
+                ?>
                 <div class="CPQBAU"><? echo get_the_author_meta('display_name', $autorId); ?></div>
                 <div class="CPQBCO">
                     <?

@@ -29,8 +29,24 @@ function inicializarReproductorAudio() {
             }
         }
     }
+    /*
+    Dentro de CPQBEN hay un elemento con la clase de post-like-button, va a copiarlo, y a moverlo a SOMGMR que esta en el reproductor
+    */
 
-    function Info(container) {
+    function moveLikeButton() {
+        const likeButtonContainer = document.querySelector('.CPQBEN .post-like-button'); // Busca el contenedor del botón de like
+        const destinationContainer = document.querySelector('.SOMGMR'); // Busca el contenedor de destino
+
+        if (likeButtonContainer && destinationContainer) {
+            const likeButton = likeButtonContainer.cloneNode(true); // Clona el botón de like (incluyendo sus hijos y eventos)
+            destinationContainer.appendChild(likeButton); // Mueve el botón clonado al contenedor de destino
+            log06('Like button moved successfully.');
+        } else {
+            log06('Either like button or destination container not found.');
+        }
+    }
+
+    function Info(container, postId = null) {
         const infoDiv = container.querySelector('.CPQBEN');
         if (infoDiv) {
             const author = infoDiv.querySelector('.CPQBAU').textContent.trim();
@@ -53,11 +69,13 @@ function inicializarReproductorAudio() {
                 const audioSrc = container.querySelector('.audio-container audio')?.getAttribute('src');
                 AndroidAudioPlayer.sendAudioInfo(shortTitle, shortAuthor, imageUrl, audioSrc);
             }
+
+            // Llama a la función para mover el botón de like después de actualizar la información
+            moveLikeButton();
         } else {
             log06('Info div not found');
         }
     }
-
     //VOLUMEN
     const volumeControl = document.querySelector('.volume-control');
     const volumeButton = document.querySelector('.JMFCAI');
@@ -137,6 +155,7 @@ function inicializarReproductorAudio() {
     }
 
     document.querySelector('.PCNLEZ').addEventListener('click', function () {
+        //TMLIWT el productor
         document.querySelector('.TMLIWT').style.display = 'none';
         audio.pause();
     });
@@ -209,7 +228,7 @@ function inicializarReproductorAudio() {
                     .play()
                     .then(() => {
                         Cover(element);
-                        Info(element); // Asegúrate de que Info(element) se llama aquí
+                        Info(element, postId);
                         currentAudioIndex = index;
                     })
                     .catch(error => {
