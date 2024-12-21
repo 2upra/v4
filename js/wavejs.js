@@ -67,6 +67,8 @@ function inicializarWaveforms() {
         const pausaBtn = post.querySelector('.pausaSL');
 
         if (reproducirBtn && pausaBtn) {
+            let isRightClick = false; // Variable para rastrear si se hizo click derecho
+
             post.addEventListener('mouseenter', () => {
                 // Obtener el WaveSurfer asociado a este post
                 const postId = post.querySelector('.waveform-container').getAttribute('postIDWave');
@@ -83,7 +85,16 @@ function inicializarWaveforms() {
                 }
             });
 
+            post.addEventListener('contextmenu', event => {
+                isRightClick = true; // Se hizo click derecho
+            });
+
             post.addEventListener('mouseleave', () => {
+                if (isRightClick) {
+                    isRightClick = false; // Resetear la variable
+                    return; // No ejecutar la lógica de mouseleave si fue click derecho
+                }
+
                 // Obtener el WaveSurfer asociado a este post
                 const postId = post.querySelector('.waveform-container').getAttribute('postIDWave');
                 const wavesurfer = window.wavesurfers[postId];
