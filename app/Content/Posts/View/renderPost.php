@@ -260,7 +260,7 @@ function renderContentAndMedia($filtro, $post_id, $audio_url, $scale, $key, $bpm
                     $post_id = get_the_ID(); // Asegúrate de tener el ID del post actual
                     $rola_meta = get_post_meta($post_id, 'rola', true);
 
-                    if ($rola_meta === 'true') {
+                    if ($rola_meta === '1') {
                         $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
                         if (empty($nombre_rola)) {
                             $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
