@@ -10,24 +10,14 @@ function inicializarReproductorAudio() {
         log06('Elemento de audio no encontrado');
         return;
     }
-
+    //aqui esto relentiza demasiado la reproducción intentado cargar la imagen, no entiendo
     function Cover(container) {
-        const backgroundDiv = container.querySelector('.post-background');
         let imageUrl = null;
-
-        if (backgroundDiv && backgroundDiv.style.backgroundImage) {
-            const match = backgroundDiv.style.backgroundImage.match(/url\(['"]?(.*?)['"]?\)/);
-            if (match) {
-                imageUrl = match[1];
-            }
-        }
-
         // Si no se encontró la imagen en el background, busca el elemento img con clase 'imagenMusic'
-        if (!imageUrl) {
-            const imagenMusicElement = container.querySelector('.imagenMusic');
-            if (imagenMusicElement) {
-                imageUrl = imagenMusicElement.src;
-            }
+
+        const imagenMusicElement = container.querySelector('.imagenMusic');
+        if (imagenMusicElement) {
+            imageUrl = imagenMusicElement.src;
         }
 
         // Si se encontró una URL de imagen, actualiza el elemento coverImage
