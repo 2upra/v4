@@ -317,13 +317,13 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
 
 
 function programar_generacion_publicaciones()
-{ //necesito dividir esto en 3 funciones manteniendo 
-    if (! wp_next_scheduled('multiplesPost_evento')) { //necesito dividir esto en 3 funciones manteniendo 
+{ 
+    if (! wp_next_scheduled('multiplesPost_evento')) { 
         wp_schedule_event(time(), 'cada_treinta_segundos', 'multiplesPost_evento');
     } else {
     }
 }
-add_action('wp', 'program//necesito dividir esto en 3 funciones manteniendo ar_generacion_publicacio//necesito dividir esto en 3 funciones manteniendo nes');
+add_action('wp', 'programar_generacion_publicaciones');
 add_action('multiplesPost_evento', 'multiplesPost');
 
 /**
