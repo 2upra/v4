@@ -29,14 +29,12 @@ function inicializarReproductorAudio() {
             }
         }
     }
-    /*
-    Dentro de CPQBEN hay un elemento con la clase de post-like-button, va a copiarlo, y a moverlo a SOMGMR que esta en el reproductor
-    */
 
+    //no borra el boton existente en el reproductor  lo vuelve a poner
     function moveLikeButton() {
         const likeButtonContainer = document.querySelector('.CPQBEN .botonlike-container');
         const destinationContainer = document.querySelector('.SOMGMR');
-    
+
         if (likeButtonContainer && destinationContainer) {
             // Eliminar el botón existente si lo hay
             const existingLikeButton = destinationContainer.querySelector('.botonlike-container');
@@ -44,7 +42,7 @@ function inicializarReproductorAudio() {
                 destinationContainer.removeChild(existingLikeButton);
                 log06('Existing like button removed.');
             }
-    
+
             const likeButton = likeButtonContainer.cloneNode(true);
             destinationContainer.appendChild(likeButton);
             log06('Like button moved successfully.');
@@ -52,7 +50,7 @@ function inicializarReproductorAudio() {
             log06('Either like button or destination container not found.');
         }
     }
-    
+
     function Info(container, postId = null) {
         const infoDiv = container.querySelector('.CPQBEN');
         if (infoDiv) {
@@ -161,39 +159,6 @@ function inicializarReproductorAudio() {
         return excludedClasses.some(className => element.classList.contains(className) || element.closest(`.${className}`) !== null);
     }
 
-    document.querySelector('.PCNLEZ').addEventListener('click', function () {
-        //TMLIWT el productor
-        document.querySelector('.TMLIWT').style.display = 'none';
-        audio.pause();
-    });
-
-    function setupControls() {
-        document.querySelector('.next-btn')?.addEventListener('click', playNextAudio);
-        document.querySelector('.prev-btn')?.addEventListener('click', playPreviousAudio);
-        document.querySelector('.play-btn')?.addEventListener('click', togglePlayPause);
-        document.querySelector('.pause-btn')?.addEventListener('click', togglePlayPause);
-    }
-
-    function setupProgressBar() {
-        const progressContainer = document.querySelector('.progress-container');
-        progressContainer?.addEventListener('click', updateProgress);
-        audio.addEventListener('timeupdate', updateProgressBar);
-    }
-
-    function updateProgress(e) {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const clickedPercentage = (e.clientX - rect.left) / rect.width;
-        audio.currentTime = audio.duration * clickedPercentage;
-    }
-
-    function updateProgressBar() {
-        const progressBar = document.querySelector('.progress-bar');
-        if (progressBar) {
-            const value = audio.currentTime > 0 ? (100 / audio.duration) * audio.currentTime : 0;
-            progressBar.style.width = `${value}%`;
-        }
-    }
-
     async function playAudioFromElement(element, index) {
         const audioContainer = element.querySelector('.audio-container');
         const audioSrc = audioContainer?.querySelector('audio')?.getAttribute('src');
@@ -246,6 +211,40 @@ function inicializarReproductorAudio() {
             }
         }
     }
+
+
+    document.querySelector('.PCNLEZ').addEventListener('click', function () {
+        document.querySelector('.TMLIWT').style.display = 'none';
+        audio.pause();
+    });
+
+    function setupControls() {
+        document.querySelector('.next-btn')?.addEventListener('click', playNextAudio);
+        document.querySelector('.prev-btn')?.addEventListener('click', playPreviousAudio);
+        document.querySelector('.play-btn')?.addEventListener('click', togglePlayPause);
+        document.querySelector('.pause-btn')?.addEventListener('click', togglePlayPause);
+    }
+
+    function setupProgressBar() {
+        const progressContainer = document.querySelector('.progress-container');
+        progressContainer?.addEventListener('click', updateProgress);
+        audio.addEventListener('timeupdate', updateProgressBar);
+    }
+
+    function updateProgress(e) {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const clickedPercentage = (e.clientX - rect.left) / rect.width;
+        audio.currentTime = audio.duration * clickedPercentage;
+    }
+
+    function updateProgressBar() {
+        const progressBar = document.querySelector('.progress-bar');
+        if (progressBar) {
+            const value = audio.currentTime > 0 ? (100 / audio.duration) * audio.currentTime : 0;
+            progressBar.style.width = `${value}%`;
+        }
+    }
+
 
     let isPlayingPromise = null;
 
