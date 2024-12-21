@@ -115,22 +115,41 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     triggers.forEach(trigger => {
         if (trigger.dataset.submenuInitialized) return;
 
+        // Handle clicks for desktop
         trigger.addEventListener('click', toggleSubmenu);
 
-        // Long press for mobile
+        // Handle long press for mobile using pointer events
         if (triggerSelector === '.EDYQHV') {
-            trigger.addEventListener('touchstart', event => {
-                longPressTimer = setTimeout(() => {
-                    toggleSubmenu(event);
-                }, 500); // Adjust the time (in milliseconds) as needed
+            let isTouchEvent = false; // Flag to track if it's a touch event
+
+            trigger.addEventListener('pointerdown', event => {
+                // Check if it's a touch event
+                if (event.pointerType === 'touch') {
+                    isTouchEvent = true;
+                    longPressTimer = setTimeout(() => {
+                        toggleSubmenu(event);
+                    }, 500);
+                }
             });
 
-            trigger.addEventListener('touchend', () => {
-                clearTimeout(longPressTimer);
+            trigger.addEventListener('pointerup', event => {
+                if (isTouchEvent) {
+                    clearTimeout(longPressTimer);
+                    isTouchEvent = false; // Reset the flag
+                }
             });
 
-            trigger.addEventListener('touchmove', () => {
-                clearTimeout(longPressTimer);
+            trigger.addEventListener('pointermove', event => {
+                if (isTouchEvent) {
+                    clearTimeout(longPressTimer);
+                }
+            });
+
+            // Prevent click event after long press on mobile
+            trigger.addEventListener('click', event => {
+                if (isTouchEvent) {
+                    event.preventDefault();
+                }
             });
         }
 
@@ -158,7 +177,7 @@ function submenu() {
     createSubmenu('.HR695R7', 'opcionesrola', 'abajo');
     createSubmenu('.HR695R8', 'opcionespost', 'abajo');
     createSubmenu('.submenucolab', 'opcionescolab', 'abajo');
-    createSubmenu('.EDYQHV', 'opcionespost', 'abajo'); // Añadir el manejador para los posts
+    createSubmenu('.EDYQHV', 'opcionespost', 'abajo');
 }
 
 window.createSubmenuDarkBackground = function () {
