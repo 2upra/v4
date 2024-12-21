@@ -133,11 +133,10 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
         </div>
         <div class="LRKHLC">
             <div class="XOKALG">
-                <p><? echo $author_name; ?></p>
-                <p>-</p>
                 <?php
-                $post_id = get_the_ID(); // Asegúrate de tener el ID del post actual
+                $post_id = get_the_ID();
                 $rola_meta = get_post_meta($post_id, 'rola', true);
+                $nombre_rola_html = ''; // Variable para almacenar el HTML de nombreRola
 
                 if ($rola_meta === '1') {
                     $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
@@ -145,17 +144,16 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
                         $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
                     }
                     if (!empty($nombre_rola)) {
-                        echo "<p>" . esc_html($nombre_rola) . "</p>";
-                    } else {
+                        $nombre_rola_html = '<p class="nameRola">' . esc_html($nombre_rola) . '</p>';
                     }
-                } else {
-                    the_content();
-                    if (has_post_thumbnail($post_id) && empty($audio_id_lite)) : ?>
-                        <div class="post-thumbnail">
-                            <?php echo get_the_post_thumbnail($post_id, 'full'); ?>
-                        </div>
-                <?php endif;
                 }
+
+                // Ahora construimos el HTML de salida
+                $output = '<p>' . esc_html($author_name) . '</p>';
+                $output .= '<p>-</p>';
+                $output .= $nombre_rola_html;
+
+                echo $output;
                 ?>
             </div>
         </div>
@@ -176,12 +174,6 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
                     } else {
                     }
                 } else {
-                    the_content();
-                    if (has_post_thumbnail($post_id) && empty($audio_id_lite)) : ?>
-                        <div class="post-thumbnail">
-                            <?php echo get_the_post_thumbnail($post_id, 'full'); ?>
-                        </div>
-                <?php endif;
                 }
                 ?>
             </div>
