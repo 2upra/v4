@@ -32,7 +32,7 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
             error_log('Error en crearPost: Fallo al actualizar meta tagsUsuario para el post ID ' . $postId);
         }
     }
-
+    /*
     // Guardar notificaciones pendientes
     $seguidores = get_user_meta($autor, 'seguidores', true);
     if (!empty($seguidores) && is_array($seguidores)) {
@@ -78,7 +78,7 @@ function crearPost($tipoPost = 'social_post', $estadoPost = 'publish')
     } else {
         error_log("El usuario $autor no tiene seguidores o la lista de seguidores no es válida.");
     }
-
+    */
     return $postId;
 }
 
