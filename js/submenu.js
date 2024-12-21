@@ -2,7 +2,8 @@ let submenuIdPrefixes = [];
 
 function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     const triggers = document.querySelectorAll(triggerSelector);
-    let openSubmenu = null; // Variable para mantener un registro del submenú abierto
+    let openSubmenu = null;
+    let longPressTimer;
 
     if (!submenuIdPrefixes.includes(submenuIdPrefix)) {
         submenuIdPrefixes.push(submenuIdPrefix);
@@ -17,7 +18,6 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
 
         if (!submenu) return;
 
-        // Cerrar el submenú actualmente abierto si se abre uno nuevo
         if (openSubmenu && openSubmenu !== submenu) {
             hideSubmenu(openSubmenu);
         }
@@ -32,7 +32,7 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             showSubmenu(event, trigger, submenu, submenu._position);
         }
 
-        event.stopPropagation(); // Necesario para evitar conflictos con otros manejadores de eventos
+        event.stopPropagation();
     }
 
     function showSubmenu(event, trigger, submenu, position) {
@@ -74,13 +74,13 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
 
         document.body.classList.add('no-scroll');
 
-        openSubmenu = submenu; // Registrar el submenú abierto
+        openSubmenu = submenu;
     }
 
     function hideSubmenu(submenu) {
         if (submenu) {
             submenu.style.display = 'none';
-            openSubmenu = null; // Restablecer el submenú abierto
+            openSubmenu = null;
         }
 
         removeSubmenuDarkBackground();
@@ -91,13 +91,13 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             document.body.classList.remove('no-scroll');
         }
     }
-    
+
     window.hideAllSubmenus = function () {
         console.log('Ejecutando hideAllSubmenus (versión simplificada)');
-    
+
         submenuIdPrefixes.forEach(prefix => {
             const allSubmenus = document.querySelectorAll(`[id^="${prefix}-"]`);
-    
+
             if (allSubmenus.length === 0) {
                 console.log(`No se encontraron submenús con el prefijo '${prefix}-'.`);
             } else {
@@ -108,19 +108,37 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
                 });
             }
         });
-    
+
         console.log('hideAllSubmenus (versión simplificada) finalizado');
     };
+
     triggers.forEach(trigger => {
         if (trigger.dataset.submenuInitialized) return;
 
         trigger.addEventListener('click', toggleSubmenu);
+
+        // Long press for mobile
+        if (triggerSelector === '.EDYQHV') {
+            trigger.addEventListener('touchstart', event => {
+                longPressTimer = setTimeout(() => {
+                    toggleSubmenu(event);
+                }, 500); // Adjust the time (in milliseconds) as needed
+            });
+
+            trigger.addEventListener('touchend', () => {
+                clearTimeout(longPressTimer);
+            });
+
+            trigger.addEventListener('touchmove', () => {
+                clearTimeout(longPressTimer);
+            });
+        }
+
         trigger.dataset.submenuInitialized = 'true';
     });
 
     document.addEventListener('click', event => {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
-            // Verificar si el submenú está visible antes de intentar ocultarlo
             if (submenu.style.display === 'block' && !submenu.contains(event.target) && !event.target.closest(triggerSelector) && !event.target.closest('a')) {
                 hideSubmenu(submenu);
             }
@@ -135,63 +153,13 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
 }
 
 function submenu() {
-    // Botón clase - submenu id - posición
     createSubmenu('.filtrosboton', 'filtrosMenu', 'abajo');
     createSubmenu('.mipsubmenu', 'submenuperfil', 'abajo');
     createSubmenu('.HR695R7', 'opcionesrola', 'abajo');
-    createSubmenu('.HR695R8', 'opcionespost', 'abajo'); //especialmente este es el qume gustaría cerrar pero debería cerrar todos
+    createSubmenu('.HR695R8', 'opcionespost', 'abajo');
     createSubmenu('.submenucolab', 'opcionescolab', 'abajo');
+    createSubmenu('.EDYQHV', 'opcionespost', 'abajo'); // Añadir el manejador para los posts
 }
-
-/*
-
-por ejemplo cuando lo llamo aca
-
-    function load(url, pushState) {
-        if (!url || /^(javascript|data|vbscript):|#/.test(url.toLowerCase()) || url.includes('descarga_token')) return;
-        if (pageCache[url] && shouldCache(url)) {
-            document.getElementById('content').innerHTML = pageCache[url];
-            if (pushState) history.pushState(null, '', url);
-            reinit();
-            // Llamar a hideAllSubmenus después de reinit si es necesario
-            if (typeof window.hideAllSubmenus === 'function') {
-                window.hideAllSubmenus();
-            } else {
-                error.log('hideAllSubmenus no definido');
-            }
-            return;
-        }
-        document.getElementById('loadingBar').style.cssText = 'width: 70%; opacity: 1; transition: width 0.4s ease';
-        fetch(url)
-            .then(r => r.text())
-            .then(data => {
-                const doc = new DOMParser().parseFromString(data, 'text/html');
-                const content = doc.getElementById('content').innerHTML;
-                document.getElementById('content').innerHTML = content;
-                if (shouldCache(url)) pageCache[url] = content;
-                document.getElementById('loadingBar').style.cssText = 'width: 100%; transition: width 0.1s ease, opacity 0.3s ease';
-                setTimeout(() => (document.getElementById('loadingBar').style.cssText = 'width: 0%; opacity: 0'), 100);
-                if (pushState) history.pushState(null, '', url);
-                doc.querySelectorAll('script').forEach(s => {
-                    if (s.src && !document.querySelector(`script[src="${s.src}"]`)) {
-                        document.body.appendChild(Object.assign(document.createElement('script'), {src: s.src, async: false}));
-                    } else if (!s.src) {
-                        document.body.appendChild(Object.assign(document.createElement('script'), {textContent: s.textContent}));
-                    }
-                });
-                setTimeout(reinit, 100);
-
-                // Llamar a hideAllSubmenus después de reinit y después de que el DOM se haya actualizado
-                setTimeout(() => {
-                    if (typeof window.hideAllSubmenus === 'function') {
-                        window.hideAllSubmenus();
-                    }
-                }, 150); // Ajusta el tiempo de espera según sea necesario
-            })
-            .catch(e => console.error('Load error:', e));
-    }
-
-*/
 
 window.createSubmenuDarkBackground = function () {
     let darkBackground = document.getElementById('submenu-background5322');
