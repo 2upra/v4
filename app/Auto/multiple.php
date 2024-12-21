@@ -16,6 +16,49 @@ function obtenerPostsMultiples()
     return new WP_Query($args);
 }
 
+function multiplesPost()
+{
+    $query = obtenerPostsMultiples();
+    if ($query->have_posts()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+            $postIdOriginal = get_the_ID();
+            $author_id = get_post_field('post_author', $postIdOriginal);
+            $paraColab = get_post_meta($postIdOriginal, 'paraColab', true);
+            $paraDescarga = get_post_meta($postIdOriginal, 'paraDescarga', true);
+            $artista = get_post_meta($postIdOriginal, 'artista', true);
+            $fan = get_post_meta($postIdOriginal, 'fan', true);
+            $rola = get_post_meta($postIdOriginal, 'rola', true);
+            $sample = get_post_meta($postIdOriginal, 'sample', true);
+            $tagsUsuario = get_post_meta($postIdOriginal, 'tagsUsuario', true);
+            $tienda = get_post_meta($postIdOriginal, 'tienda', true);
+            $nombreLanzamiento = get_post_meta($postIdOriginal, 'nombreLanzamiento', true);
+
+            list($multiples_audios_encontrados, $ids_nuevos_posts) = procesarAudiosMultiples($postIdOriginal, $author_id, $paraColab, $paraDescarga, $artista, $fan, $rola, $sample, $tagsUsuario, $tienda, $nombreLanzamiento);
+
+            if (! $multiples_audios_encontrados) {
+                delete_post_meta($postIdOriginal, 'multiple');
+            } else {
+                // Verifica si hay IDs de nuevos posts antes de actualizar
+                if (!empty($ids_nuevos_posts)) {
+                    update_post_meta($postIdOriginal, 'posts_generados', $ids_nuevos_posts);
+                }
+                $quedan_audios = false;
+                for ($i = 2; $i <= 30; $i++) {
+                    if (get_post_meta($postIdOriginal, 'post_audio_lite_' . $i, true)) {
+                        $quedan_audios = true;
+                        break;
+                    }
+                }
+                if (! $quedan_audios) {
+                    delete_post_meta($postIdOriginal, 'multiple');
+                }
+            }
+        }
+    }
+    wp_reset_postdata();
+}
+
 function procesarAudiosMultiples($postIdOriginal, $author_id, $paraColab, $paraDescarga, $artista, $fan, $rola, $sample, $tagsUsuario, $tienda, $nombreLanzamiento)
 {
     $multiples_audios_encontrados = false;
@@ -30,6 +73,8 @@ function procesarAudiosMultiples($postIdOriginal, $author_id, $paraColab, $paraD
         $idHash_audioId_key = 'idHash_audioId' . $i;
         $precio_key = 'precioRola' . $i;
         $name_key = 'nombreRola' . $i;
+        $audioUrl_key = 'audioUrl' . $i;
+        $audio_duration_key = 'audio_duration_' . $i;
         $audio_lite_id = get_post_meta($postIdOriginal, $audio_lite_meta_key, true);
         $audio_id_hash = get_post_meta($postIdOriginal, $idHash_audioId_key, true);
         $audio_id = get_post_meta($postIdOriginal, $audio_meta_key, true);
@@ -92,51 +137,13 @@ function procesarAudiosMultiples($postIdOriginal, $author_id, $paraColab, $paraD
                 delete_post_meta($postIdOriginal, $idHash_audioId_key);
                 delete_post_meta($postIdOriginal, $precio_key);
                 delete_post_meta($postIdOriginal, $name_key);
+                delete_post_meta($postIdOriginal, $audioUrl_key);
+                delete_post_meta($postIdOriginal, $audio_duration_key);
                 sleep(2);
             }
         }
     }
     return array($multiples_audios_encontrados, $ids_nuevos_posts);
-}
-
-function multiplesPost()
-{
-    $query = obtenerPostsMultiples();
-    if ($query->have_posts()) {
-        while ($query->have_posts()) {
-            $query->the_post();
-            $postIdOriginal = get_the_ID();
-            $author_id = get_post_field('post_author', $postIdOriginal);
-            $paraColab = get_post_meta($postIdOriginal, 'paraColab', true);
-            $paraDescarga = get_post_meta($postIdOriginal, 'paraDescarga', true);
-            $artista = get_post_meta($postIdOriginal, 'artista', true);
-            $fan = get_post_meta($postIdOriginal, 'fan', true);
-            $rola = get_post_meta($postIdOriginal, 'rola', true);
-            $sample = get_post_meta($postIdOriginal, 'sample', true);
-            $tagsUsuario = get_post_meta($postIdOriginal, 'tagsUsuario', true);
-            $tienda = get_post_meta($postIdOriginal, 'tienda', true);
-            $nombreLanzamiento = get_post_meta($postIdOriginal, 'nombreLanzamiento', true);
-            
-            list($multiples_audios_encontrados, $ids_nuevos_posts) = procesarAudiosMultiples($postIdOriginal, $author_id, $paraColab, $paraDescarga, $artista, $fan, $rola, $sample, $tagsUsuario, $tienda, $nombreLanzamiento);
-            
-            if (! $multiples_audios_encontrados) {
-                delete_post_meta($postIdOriginal, 'multiple');
-            } else {
-                update_post_meta($postIdOriginal, 'posts_generados', $ids_nuevos_posts);
-                $quedan_audios = false;
-                for ($i = 2; $i <= 30; $i++) {
-                    if (get_post_meta($postIdOriginal, 'post_audio_lite_' . $i, true)) {
-                        $quedan_audios = true;
-                        break;
-                    }
-                }
-                if (! $quedan_audios) {
-                    delete_post_meta($postIdOriginal, 'multiple');
-                }
-            }
-        }
-    }
-    wp_reset_postdata();
 }
 
 function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null, $autor_id = null, $post_original = null)
