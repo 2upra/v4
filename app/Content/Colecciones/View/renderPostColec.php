@@ -14,6 +14,9 @@ function htmlColec($filtro)
 
         <div class="post-content">
             <? echo imagenColeccion($postId); ?>
+            <div class="KLYJBY">
+                <? echo audioPost($post_id); ?>
+            </div>
             <h2 class="post-title" data-post-id="<? echo $postId; ?>"><? echo get_the_title($postId); ?></h2>
             <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
         </div>
