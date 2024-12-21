@@ -53,12 +53,49 @@ function inicializarWaveforms() {
 
     document.querySelectorAll('.POST-sampleList').forEach(post => {
         if (!post.dataset.clickListenerAdded) {
-            post.addEventListener('click', event => {
-                const waveformContainer = post.querySelector('.waveform-container');
-                if (!event.target.closest('.tags-container') && !event.target.closest('.QSORIW') && waveformContainer) {
-                    handleWaveformClick(waveformContainer, post);
+            let isDragging = false; // Variable para detectar si se está arrastrando el dedo
+            let touchStartTime = 0; // Variable para registrar la hora de inicio del toque
+
+            post.addEventListener(
+                'touchstart',
+                event => {
+                    touchStartTime = Date.now();
+                    isDragging = false; // Reiniciar el estado de arrastre al inicio de un toque
+                },
+                {passive: true}
+            );
+
+            post.addEventListener(
+                'touchmove',
+                () => {
+                    isDragging = true; // Si se mueve el dedo, se considera un arrastre
+                },
+                {passive: true}
+            );
+
+            post.addEventListener('touchend', event => {
+                const touchDuration = Date.now() - touchStartTime;
+                const isLongPress = touchDuration > 500; // Define un toque prolongado como >500ms
+
+                // Solo se procesa como click si no es un toque prolongado, no hay arrastre y el objetivo no es un tag o QSORIW
+                if (!isLongPress && !isDragging) {
+                    const waveformContainer = post.querySelector('.waveform-container');
+                    if (!event.target.closest('.tags-container') && !event.target.closest('.QSORIW') && waveformContainer) {
+                        handleWaveformClick(waveformContainer, post);
+                    }
                 }
             });
+
+            post.addEventListener('click', event => {
+                // En dispositivos de escritorio, solo procesar clicks si no es un tag o QSORIW
+                if (!('ontouchstart' in window) || !window.matchMedia('(pointer: coarse)').matches) {
+                    const waveformContainer = post.querySelector('.waveform-container');
+                    if (!event.target.closest('.tags-container') && !event.target.closest('.QSORIW') && waveformContainer) {
+                        handleWaveformClick(waveformContainer, post);
+                    }
+                }
+            });
+
             post.dataset.clickListenerAdded = 'true';
         }
 
@@ -69,42 +106,48 @@ function inicializarWaveforms() {
         if (reproducirBtn && pausaBtn) {
             let isRightClick = false; // Variable para rastrear si se hizo click derecho
 
-            post.addEventListener('mouseenter', () => {
-                // Obtener el WaveSurfer asociado a este post
-                const postId = post.querySelector('.waveform-container').getAttribute('postIDWave');
-                const wavesurfer = window.wavesurfers[postId];
+            // Solo se añade el listener de mouseenter si no es un dispositivo táctil
+            if (!('ontouchstart' in window) || !window.matchMedia('(pointer: coarse)').matches) {
+                post.addEventListener('mouseenter', () => {
+                    // Obtener el WaveSurfer asociado a este post
+                    const postId = post.querySelector('.waveform-container').getAttribute('postIDWave');
+                    const wavesurfer = window.wavesurfers[postId];
 
-                if (wavesurfer && wavesurfer.isPlaying()) {
-                    // Si el audio de este post se está reproduciendo, mostrar pausa
-                    pausaBtn.style.display = 'flex';
-                    reproducirBtn.style.display = 'none';
-                } else {
-                    // Si el audio de este post no se está reproduciendo, mostrar reproducir
-                    reproducirBtn.style.display = 'flex';
-                    pausaBtn.style.display = 'none';
-                }
-            });
+                    if (wavesurfer && wavesurfer.isPlaying()) {
+                        // Si el audio de este post se está reproduciendo, mostrar pausa
+                        pausaBtn.style.display = 'flex';
+                        reproducirBtn.style.display = 'none';
+                    } else {
+                        // Si el audio de este post no se está reproduciendo, mostrar reproducir
+                        reproducirBtn.style.display = 'flex';
+                        pausaBtn.style.display = 'none';
+                    }
+                });
+            }
 
             post.addEventListener('contextmenu', event => {
                 isRightClick = true; // Se hizo click derecho
             });
 
-            post.addEventListener('mouseleave', () => {
-                if (isRightClick) {
-                    isRightClick = false; // Resetear la variable
-                    return; // No ejecutar la lógica de mouseleave si fue click derecho
-                }
+            // Solo se añade el listener de mouseleave si no es un dispositivo táctil
+            if (!('ontouchstart' in window) || !window.matchMedia('(pointer: coarse)').matches) {
+                post.addEventListener('mouseleave', () => {
+                    if (isRightClick) {
+                        isRightClick = false; // Resetear la variable
+                        return; // No ejecutar la lógica de mouseleave si fue click derecho
+                    }
 
-                // Obtener el WaveSurfer asociado a este post
-                const postId = post.querySelector('.waveform-container').getAttribute('postIDWave');
-                const wavesurfer = window.wavesurfers[postId];
+                    // Obtener el WaveSurfer asociado a este post
+                    const postId = post.querySelector('.waveform-container').getAttribute('postIDWave');
+                    const wavesurfer = window.wavesurfers[postId];
 
-                if (!wavesurfer || !wavesurfer.isPlaying()) {
-                    // Si no hay audio o no se está reproduciendo en este post, ocultar ambos botones
-                    reproducirBtn.style.display = 'none';
-                    pausaBtn.style.display = 'none';
-                }
-            });
+                    if (!wavesurfer || !wavesurfer.isPlaying()) {
+                        // Si no hay audio o no se está reproduciendo en este post, ocultar ambos botones
+                        reproducirBtn.style.display = 'none';
+                        pausaBtn.style.display = 'none';
+                    }
+                });
+            }
         }
     });
 
