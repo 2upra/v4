@@ -317,14 +317,14 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
 
 
 function programar_generacion_publicaciones()
-{ 
-    if (! wp_next_scheduled('multiplesPost_evento')) { 
-        wp_schedule_event(time(), 'cada_treinta_segundos', 'multiplesPost_evento');
+{
+    if (! wp_next_scheduled('generar_publicaciones_multiples_evento')) {
+        wp_schedule_event(time(), 'cada_treinta_segundos', 'generar_publicaciones_multiples_evento');
     } else {
     }
 }
 add_action('wp', 'programar_generacion_publicaciones');
-add_action('multiplesPost_evento', 'multiplesPost');
+add_action('generar_publicaciones_multiples_evento', 'multiplesPost');
 
 /**
  * Define el intervalo personalizado de 30 segundos.
