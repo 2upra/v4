@@ -29,20 +29,20 @@ function inicializarReproductorAudio() {
             }
         }
     }
+    //el problema es que siempre mueve el mismo boton y no distingue, creo que lo puede diferenciar por los post id, los botones estan asi <button class="post-like-button liked" data-post_id="328372" data-like_type="like" data-nonce="b279354ff1">, supongo que se pueden diferenciar por la id e info recibe un id
 
-    //no borra el boton existente en el reproductor  lo vuelve a poner
-    function moveLikeButton() {
-        const likeButtonContainer = document.querySelector('.CPQBEN .botonlike-container');
+    function moveLikeButton(likeButtonContainer) {
         const destinationContainer = document.querySelector('.SOMGMR');
 
         if (likeButtonContainer && destinationContainer) {
-            // Eliminar el botón existente si lo hay
+            // Eliminar el botón existente en el destino si lo hay
             const existingLikeButton = destinationContainer.querySelector('.botonlike-container');
             if (existingLikeButton) {
                 destinationContainer.removeChild(existingLikeButton);
                 log06('Existing like button removed.');
             }
 
+            // Clona el botón de like específico pasado como argumento
             const likeButton = likeButtonContainer.cloneNode(true);
             destinationContainer.appendChild(likeButton);
             log06('Like button moved successfully.');
@@ -75,12 +75,21 @@ function inicializarReproductorAudio() {
                 AndroidAudioPlayer.sendAudioInfo(shortTitle, shortAuthor, imageUrl, audioSrc);
             }
 
-            // Llama a la función para mover el botón de like después de actualizar la información
-            moveLikeButton();
+            // Encuentra el contenedor del botón de like DENTRO del contenedor actual
+            const likeButtonContainer = infoDiv.querySelector('.botonlike-container');
+            if (likeButtonContainer) {
+                // Llama a la función para mover el botón de like después de actualizar la información
+                moveLikeButton(likeButtonContainer);
+            } else {
+                log06('Like button container not found within the info div.');
+            }
+
         } else {
             log06('Info div not found');
         }
     }
+
+
     //VOLUMEN
     const volumeControl = document.querySelector('.volume-control');
     const volumeButton = document.querySelector('.JMFCAI');
