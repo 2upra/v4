@@ -261,6 +261,8 @@ async function envioRs() {
             }
         });
 
+        const nombreLanzamientoInput = document.getElementById('nombreLanzamiento');
+
         // Construir el objeto final de datos a enviar
         const data = {
             imagenUrl1: typeof imagenUrl !== 'undefined' ? imagenUrl : null,
@@ -283,13 +285,26 @@ async function envioRs() {
             tienda
         };
 
-        // Verificación de imagenUrl1 y Music
         if (music) {
+            // Verificar la URL de la imagen
             if (!data.imagenUrl1 || !isValidUrl(data.imagenUrl1)) {
                 alert('Cuando seleccionas "Music", es obligatorio incluir una imagen válida');
                 button.innerText = originalText;
                 button.disabled = false;
-                return; // Asegúrate de detener el flujo si no es válido
+                return;
+            }
+
+            // Verificar si el campo nombreLanzamiento está visible y si su valor es válido
+            if (nombreLanzamientoInput.style.display !== 'none') {
+                if (!nombreLanzamientoInput.value || nombreLanzamientoInput.value.length < 3) {
+                    alert('El título de lanzamiento debe tener al menos 3 caracteres.');
+                    button.innerText = originalText;
+                    button.disabled = false;
+                    return;
+                } else {
+                    // Agregar el valor de nombreLanzamiento al objeto data
+                    data.nombreLanzamiento = nombreLanzamientoInput.value;
+                }
             }
 
             // Verificar que todos los nombres de audio tienen al menos 3 caracteres
@@ -393,6 +408,7 @@ function subidaRs() {
     // Obtenemos las referencias a los checkbox
     const musicCheckbox = document.getElementById('musiccheck');
     const tiendaCheckbox = document.getElementById('tiendacheck');
+    const nombreLanzamiento = document.getElementById('nombreLanzamiento');
 
     const actualizarCamposNombre = () => {
         setTimeout(() => {
@@ -404,6 +420,7 @@ function subidaRs() {
                 const inputNombre = document.getElementById(`nombre-${audio.tempId}`);
                 if (inputNombre) {
                     inputNombre.style.display = mostrarCamposNombre ? 'block' : 'none';
+                    nombreLanzamiento.style.display = mostrarCamposNombre ? 'block' : 'none';
                 }
 
                 // Actualizar visibilidad de los campos de precio si tiendacheck está activo
@@ -795,10 +812,7 @@ async function selectorformtipo() {
     const tiendacheck = document.getElementById('tiendacheck'); // Nuevo checkbox
     const individualPost = document.getElementById('individualPost');
     const multiplePost = document.getElementById('multiplePost');
-    const namerolas = document.querySelectorAll('nombreAudioRs');
-    const preciosInputs = document.querySelectorAll('precioAudioRs');
-    const fanLabel = fancheck.closest('label'); // Obtener la etiqueta padre de fancheck
-    const artistaLabel = artistacheck.closest('label'); // Obtener la etiqueta padre de artistacheck
+    const fanartistchecks = document.getElementById('fanartistchecks');
 
     // Verifica si los elementos necesarios existen; si no, retorna
     if (!descargacheck || !musiccheck || !exclusivocheck || !colabcheck || !fancheck || !artistacheck || !tiendacheck || !individualPost || !multiplePost) return;
@@ -812,16 +826,14 @@ async function selectorformtipo() {
     function handleMusicCheckChange(isChecked) {
         if (!isChecked) {
             if (exclusivocheck.checked || colabcheck.checked || descargacheck.checked) {
-                fanLabel.style.display = 'block';
-                artistaLabel.style.display = 'block';
+                fanartistchecks.style.display = 'flex';
             }
         } else {
             descargacheck.checked = false;
             exclusivocheck.checked = false;
             colabcheck.checked = false;
             tiendacheck.checked = false;
-            fanLabel.style.display = 'none';
-            artistaLabel.style.display = 'none';
+            fanartistchecks.style.display = 'none';
             resetStyles();
         }
     }
@@ -845,17 +857,14 @@ async function selectorformtipo() {
                 musiccheck.checked = false;
                 exclusivocheck.checked = false;
                 colabcheck.checked = false;
-
-                fanLabel.style.display = 'none';
-                artistaLabel.style.display = 'none';
+                fanartistchecks.style.display = 'none';
                 resetStyles();
             }
 
             // Si se desmarca 'tiendacheck', muestra fanLabel y artistaLabel si 'exclusivocheck' o 'colabcheck' están marcados,
             if (event.target.id === 'tiendacheck' && !event.target.checked) {
                 if (exclusivocheck.checked || colabcheck.checked || descargacheck.checked) {
-                    fanLabel.style.display = 'block';
-                    artistaLabel.style.display = 'block';
+                    fanartistchecks.style.display = 'flex';
                 }
             }
 
@@ -874,8 +883,7 @@ async function selectorformtipo() {
                 const colabLabel = colabcheck.closest('label');
                 colabLabel.style.color = '#6b6b6b';
                 colabLabel.style.background = '';
-                fanLabel.style.display = 'block';
-                artistaLabel.style.display = 'block';
+                fanartistchecks.style.display = 'flex';
                 resetStyles();
             }
 
@@ -887,8 +895,6 @@ async function selectorformtipo() {
                 const exclusivocLabel = exclusivocheck.closest('label');
                 exclusivocLabel.style.color = '#6b6b6b';
                 exclusivocLabel.style.background = '';
-                fanLabel.style.display = 'block';
-                artistaLabel.style.display = 'block';
                 resetStyles();
             }
 
@@ -896,8 +902,6 @@ async function selectorformtipo() {
             if (event.target.id === 'descargacheck' && event.target.checked) {
                 musiccheck.checked = false;
                 tiendacheck.checked = false;
-                fanLabel.style.display = 'block';
-                artistaLabel.style.display = 'block';
                 resetStyles();
             }
 
@@ -931,9 +935,8 @@ function selectorFanArtista() {
     const fancheck = document.getElementById('fancheck');
     const artistacheck = document.getElementById('artistacheck');
     const tiendacheck = document.getElementById('tiendacheck');
-    const fanLabel = fancheck.closest('label'); // Obtener la etiqueta padre de fancheck
-    const artistaLabel = artistacheck.closest('label'); // Obtener la etiqueta padre de artistacheck
     const musiccheck = document.getElementById('musiccheck');
+    const fanartistchecks = document.getElementById('fanartistchecks');
 
     // Verifica si los elementos necesarios existen; si no, retorna
     if (!fancheck || !artistacheck || !tiendacheck) return;
@@ -960,12 +963,10 @@ function selectorFanArtista() {
 
         // Si se selecciona 'tiendacheck', oculta 'fancheck' y 'artistacheck'
         if (currentCheckbox === tiendacheck && tiendacheck.checked) {
-            fanLabel.style.display = 'none';
-            artistaLabel.style.display = 'none';
+            fanartistchecks.style.display = 'none';
         } else {
             // Si no se selecciona 'tiendacheck', muestra 'fancheck' y 'artistacheck'
-            fanLabel.style.display = 'block'; // o 'inline-block' dependiendo del diseño original
-            artistaLabel.style.display = 'block'; // o 'inline-block' dependiendo del diseño original
+            fanartistchecks.style.display = 'flex';
         }
     }
 
@@ -991,8 +992,7 @@ function selectorFanArtista() {
             uncheckOthers(this);
         } else {
             // Si 'tiendacheck' se desmarca, muestra 'fancheck' y 'artistacheck'
-            fanLabel.style.display = 'block'; // o 'inline-block'
-            artistaLabel.style.display = 'block'; // o 'inline-block'
+            fanartistchecks.style.display = 'flex';
         }
         updateStyles(this);
     });
@@ -1002,8 +1002,7 @@ function selectorFanArtista() {
             uncheckOthers(this);
         } else {
             // Si 'tiendacheck' se desmarca, muestra 'fancheck' y 'artistacheck'
-            fanLabel.style.display = 'block'; // o 'inline-block'
-            artistaLabel.style.display = 'block'; // o 'inline-block'
+            fanartistchecks.style.display = 'flex';
         }
         updateStyles(this);
     });

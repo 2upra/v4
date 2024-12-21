@@ -63,7 +63,7 @@ function formRs()
             </div>
         </div>
 
-        <div class="DRHMDE">
+        <div class="DRHMDE" id="fanartistchecks">
             <label class="custom-checkbox">
                 <input type="checkbox" id="fancheck" name="fancheck" value="1">
                 <span class="checkmark">Area de fans</span>
@@ -76,6 +76,8 @@ function formRs()
             </label>
         </div>
 
+        <input type="text" id="nombreLanzamiento" class="nombreLanzamiento" placeholder="Titulo de lanzamiento" style="background: none;
+    border: var(--borde); display: none;">
 
         <div class="bloque flex-row" id="opciones" style="display: none">
             <p>Opciones de post</p>

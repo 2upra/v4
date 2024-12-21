@@ -1,6 +1,6 @@
 function like() {
     let ultimoDobleClic = 0; // Variable para el doble clic
-    const retrasoEntreClics = 500; // 500 ms de retraso
+    const retrasoEntreClics = 100; 
     animacionLike();
     // Delegación de eventos para doble clic en los elementos <li>
     document.addEventListener('dblclick', function (evento) {

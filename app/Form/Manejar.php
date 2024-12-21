@@ -99,15 +99,16 @@ add_filter('cron_schedules', function ($schedules) {
 function actualizarMetaDatos($postId)
 {
     $meta_fields = [
-        'paraColab'    => 'colab',
-        'esExclusivo'  => 'exclusivo',
-        'paraDescarga' => 'descarga',
-        'rola'         => 'music',
-        'fan'          => 'fan',
-        'artista'      => 'artista',
-        'individual'   => 'individual',
-        'multiple'     => 'multiple',
-        'tienda'       => 'tienda'
+        'paraColab'         => 'colab',
+        'esExclusivo'       => 'exclusivo',
+        'paraDescarga'      => 'descarga',
+        'rola'              => 'music',
+        'fan'               => 'fan',
+        'artista'           => 'artista',
+        'individual'        => 'individual',
+        'multiple'          => 'multiple',
+        'tienda'            => 'tienda',
+        'nombreLanzamiento' => 'nombreLanzamiento',
     ];
 
     foreach ($meta_fields as $meta_key => $post_key) {
