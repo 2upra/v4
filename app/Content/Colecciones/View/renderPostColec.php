@@ -6,6 +6,8 @@ function htmlColec($filtro)
     $postId = get_the_ID();
     $vars = variablesColec($postId);
     extract($vars);
+    $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
+    $optimized_thumbnail_url = img($thumbnail_url, 40, 'all')
 ?>
     <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV"
         filtro="<? echo esc_attr($filtro); ?>"
@@ -44,9 +46,6 @@ function htmlColec($filtro)
                             }
                         }
 
-                        // Ahora construimos el HTML de salida
-                        $output = '<p>' . esc_html($author_name) . '</p>';
-                        $output .= '<p>-</p>';
                         $output .= $nombre_rola_html;
 
                         echo $output;
