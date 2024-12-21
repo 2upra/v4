@@ -13,12 +13,22 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     function toggleSubmenu(event) {
         const trigger = event.target.closest(triggerSelector);
         if (!trigger) return;
+        
+        let submenuId;
+        
+        if (triggerSelector === '.EDYQHV') {
+           submenuId = `${submenuIdPrefix}-${trigger.getAttribute('id-post')}`;
+        } else {
+            submenuId = `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || 'default'}`;
+        }
 
-        const submenuId = `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || 'default'}`;
         const submenu = document.getElementById(submenuId);
-
-        if (!submenu) return;
-
+        
+        if (!submenu) {
+            console.error("Submenu not found:", submenuId);
+            return;
+        }
+        
         if (openSubmenu && openSubmenu !== submenu) {
             hideSubmenu(openSubmenu);
         }
@@ -116,23 +126,20 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     triggers.forEach(trigger => {
         if (trigger.dataset.submenuInitialized) return;
 
-        // Manejar clics para escritorio
         trigger.addEventListener('click', event => {
-            // Solo abrir en escritorio si no fue una pulsación larga en móvil
             if (window.innerWidth > 640 || !isLongPress) {
                 toggleSubmenu(event);
             }
-            isLongPress = false; // Resetear el flag después del clic
+            isLongPress = false;
         });
 
-        // Manejar la pulsación larga para móvil usando eventos de puntero
         if (triggerSelector === '.EDYQHV') {
             let isTouchEvent = false;
 
             trigger.addEventListener('pointerdown', event => {
                 if (event.pointerType === 'touch') {
                     isTouchEvent = true;
-                    isLongPress = false; // Resetear en cada pointerdown
+                    isLongPress = false;
                     longPressTimer = setTimeout(() => {
                         isLongPress = true;
                         toggleSubmenu(event);
@@ -143,21 +150,16 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             trigger.addEventListener('pointerup', event => {
                 if (isTouchEvent) {
                     clearTimeout(longPressTimer);
-                    // Si fue un toque rápido y no una pulsación larga, prevenir acciones
-                    if (!isLongPress) {
-                        event.preventDefault();
-                    }
-                    isTouchEvent = false;
                 }
             });
 
             trigger.addEventListener('pointermove', event => {
                 if (isTouchEvent) {
                     clearTimeout(longPressTimer);
-                    isLongPress = false; // Cancelar pulsación larga si se mueve
+                    isLongPress = false;
                 }
             });
-
+            
             trigger.addEventListener('click', event => {
               if (isLongPress) {
                 event.preventDefault();
