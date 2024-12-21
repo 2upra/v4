@@ -95,24 +95,8 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
                         ?>
                     </div>
                 </div>
-                <div class="TAGSLISTSAMPLE">
-                    <div class="tags-container" id="tags-<?php echo $post_id; ?>"></div>
-                    <p id-post-algoritmo="<?php echo $post_id; ?>" style="display:none;">
-                        <?php echo esc_html(limpiarJSON($datosAlgoritmo)); ?>
-                    </p>
-                </div>
             </div>
-            <div class="INFOTYPELIST">
-                <div class="verificacionPost">
-                    <?php if ($verificado == '1') : ?>
-                        <?php echo $GLOBALS['check']; ?>
-                    <?php elseif ($postAut == '1' && current_user_can('administrator')) : ?>
-                        <div class="verificarPost" data-post-id="<?php echo $post_id; ?>" style="cursor: pointer;">
-                            <?php echo $GLOBALS['robot']; ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
+
             <?php echo renderPostControls($post_id, $colab, $audio_id_lite); ?>
             <?php echo opcionesPost($post_id, $author_id); ?>
         <?php else : ?>
