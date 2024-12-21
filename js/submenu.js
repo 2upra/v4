@@ -1,192 +1,186 @@
-let submenuIdPrefixes = [];
+//hay un pequeño detalle, cuando soy segundo click o dejo presionado sobre EDYQHV, hay un pequeño bug sucede la mitad del tiempo, el background se quita isntataneamente lo cual resulta muy molesto e incomodo, hay alguna forma de evitarlo aca, solo me ocurre un delay que bloque se oculte el background por otros eventos al momento de tocar interfieren, no se es lo que se me ocurre
 
+let submenuIdPrefixes = [];
 
 function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     const triggers = document.querySelectorAll(triggerSelector);
     let openSubmenu = null;
-    let longPressTimer;
-    let isLongPress = false; // Flag para saber si fue una pulsación larga
 
-    if (!submenuIdPrefixes.includes(submenuIdPrefix)) {
-        submenuIdPrefixes.push(submenuIdPrefix);
-    }
-
-    function toggleSubmenu(event) {
-        const trigger = event.target.closest(triggerSelector);
-        if (!trigger) return;
-
-        let submenuId;
-
-        if (triggerSelector === '.EDYQHV') {
-            submenuId = `${submenuIdPrefix}-${trigger.getAttribute('id-post')}`;
-        } else {
-            submenuId = `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || 'default'}`;
-        }
-
-        const submenu = document.getElementById(submenuId);
-
-        if (!submenu) {
-            console.error('Submenu not found:', submenuId);
-            return;
-        }
-
-        if (openSubmenu && openSubmenu !== submenu) {
-            hideSubmenu(openSubmenu);
-        }
-
-        submenu._position = position;
-
-        submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
-
-        if (submenu.style.display === 'block') {
-            hideSubmenu(submenu);
-        } else {
-            showSubmenu(event, trigger, submenu, submenu._position);
-        }
-
-        event.stopPropagation();
-    }
-
-    function showSubmenu(event, trigger, submenu, position) {
-        const {innerWidth: vw, innerHeight: vh} = window;
-
-        if (submenu.parentNode !== document.body) {
-            document.body.appendChild(submenu);
-        }
-
-        submenu.style.position = 'fixed';
-        submenu.style.zIndex = 1006;
-
-        submenu.style.display = 'block';
-        submenu.style.visibility = 'hidden';
-
-        let submenuWidth = submenu.offsetWidth;
-        let submenuHeight = submenu.offsetHeight;
-
-        const rect = trigger.getBoundingClientRect();
-
-        if (vw <= 640) {
-            submenu.style.top = `${(vh - submenuHeight) / 2}px`;
-            submenu.style.left = `${(vw - submenuWidth) / 2}px`;
-        } else {
-            let {top, left} = calculatePosition(rect, submenuWidth, submenuHeight, position);
-
-            if (top + submenuHeight > vh) top = vh - submenuHeight;
-            if (left + submenuWidth > vw) left = vw - submenuWidth;
-            if (top < 0) top = 0;
-            if (left < 0) left = 0;
-
-            submenu.style.top = `${top}px`;
-            submenu.style.left = `${left}px`;
-        }
-
-        submenu.style.visibility = 'visible';
-
-        createSubmenuDarkBackground();
-
-        document.body.classList.add('no-scroll');
-
-        openSubmenu = submenu;
-    }
-
-    function hideSubmenu(submenu) {
-        if (submenu) {
-            submenu.style.display = 'none';
-            openSubmenu = null;
-        }
-
-        removeSubmenuDarkBackground();
-
-        const activeSubmenus = Array.from(document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`)).filter(menu => menu.style.display === 'block');
-
-        if (activeSubmenus.length === 0) {
-            document.body.classList.remove('no-scroll');
-        }
-    }
-
-    window.hideAllSubmenus = function () {
-        console.log('Ejecutando hideAllSubmenus (versión simplificada)');
-
-        submenuIdPrefixes.forEach(prefix => {
-            const allSubmenus = document.querySelectorAll(`[id^="${prefix}-"]`);
-
-            if (allSubmenus.length === 0) {
-                console.log(`No se encontraron submenús con el prefijo '${prefix}-'.`);
-            } else {
-                console.log(`Se encontraron ${allSubmenus.length} submenús con el prefijo '${prefix}-':`, allSubmenus);
-                allSubmenus.forEach((submenu, index) => {
-                    console.log(`Ocultando submenú ${index + 1} con prefijo '${prefix}-':`, submenu);
-                    hideSubmenu(submenu);
-                });
-            }
-        });
-
-        console.log('hideAllSubmenus (versión simplificada) finalizado');
-    };
-
+    registrarIdMenu(submenuIdPrefix);
     triggers.forEach(trigger => {
         if (trigger.dataset.submenuInitialized) return;
-
-        let isTouchEvent = false;
-
-        trigger.addEventListener('pointerdown', event => {
-            if (window.innerWidth <= 640 && event.pointerType === 'touch') {
-                isTouchEvent = true;
-                isLongPress = false;
-                longPressTimer = setTimeout(() => {
-                    isLongPress = true;
-                    toggleSubmenu(event);
-                }, 500);
-            }
-        });
-
-        trigger.addEventListener('pointerup', event => {
-          if (isTouchEvent && triggerSelector === '.EDYQHV') {
-            clearTimeout(longPressTimer);
-            if (isLongPress) {
-              // No hacer nada en pointerup si fue una pulsación larga en .EDYQHV
-            } else {
-              // Evitar abrir con un toque normal si no fue una pulsación larga en .EDYQHV
-              event.preventDefault();
-              event.stopPropagation();
-            }
-          } else if (isTouchEvent) {
-            clearTimeout(longPressTimer);
-            if (!isLongPress) {
-              toggleSubmenu(event); // Abrir con un toque normal si no fue una pulsación larga para otros elementos
-            }
-          }
-          isLongPress = false;
-        });
-
-        trigger.addEventListener('pointermove', event => {
-            if (isTouchEvent) {
-                clearTimeout(longPressTimer);
-                isLongPress = false;
-            }
-        });
-
-        trigger.addEventListener('click', event => {
-          if (window.innerWidth > 640 && triggerSelector !== '.EDYQHV') {
-            toggleSubmenu(event);
-          }
-          if (isLongPress) {
-            event.preventDefault();
-            event.stopPropagation();
-          }
-        });
-
-        // Evento para el clic derecho en escritorio
-        trigger.addEventListener('contextmenu', event => {
-          if (window.innerWidth > 640 && triggerSelector === '.EDYQHV') {
-            event.preventDefault(); // Evita el menú contextual
-            toggleSubmenu(event);
-          }
-        });
-
+        eventosMenu(trigger, triggerSelector, submenuIdPrefix);
         trigger.dataset.submenuInitialized = 'true';
     });
 
+    cerrarMenu(triggerSelector, submenuIdPrefix);
+    resizeMovilMenu(submenuIdPrefix);
+}
+
+// Función para registrar el prefijo del ID del submenú
+function registrarIdMenu(submenuIdPrefix) {
+    if (!submenuIdPrefixes.includes(submenuIdPrefix)) {
+        submenuIdPrefixes.push(submenuIdPrefix);
+    }
+}
+
+// Función para inicializar los eventos de cada disparador
+function eventosMenu(trigger, triggerSelector, submenuIdPrefix) {
+    let longPressTimer;
+    let isLongPress = false;
+    let isTouchEvent = false;
+
+    // Manejar el inicio del toque o clic
+    trigger.addEventListener('pointerdown', event => {
+        if (window.innerWidth <= 640 && event.pointerType === 'touch') {
+            isTouchEvent = true;
+            isLongPress = false;
+            longPressTimer = setTimeout(() => {
+                isLongPress = true;
+                handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix);
+            }, 500);
+        }
+    });
+
+    // Manejar el final del toque o clic
+    trigger.addEventListener('pointerup', event => {
+        if (isTouchEvent && triggerSelector === '.EDYQHV') {
+            clearTimeout(longPressTimer);
+            if (!isLongPress) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        } else if (isTouchEvent) {
+            clearTimeout(longPressTimer);
+            if (!isLongPress) {
+                handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix);
+            }
+        }
+        isLongPress = false;
+    });
+
+    // Manejar el movimiento durante el toque
+    trigger.addEventListener('pointermove', event => {
+        if (isTouchEvent) {
+            clearTimeout(longPressTimer);
+            isLongPress = false;
+        }
+    });
+
+    // Manejar clics en dispositivos de escritorio
+    trigger.addEventListener('click', event => {
+        if (window.innerWidth > 640 && triggerSelector !== '.EDYQHV') {
+            handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix);
+        }
+        if (isLongPress) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+    });
+
+    // Manejar el clic derecho en dispositivos de escritorio
+    trigger.addEventListener('contextmenu', event => {
+        if (window.innerWidth > 640 && triggerSelector === '.EDYQHV') {
+            event.preventDefault();
+            handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix);
+        }
+    });
+}
+
+// Función para manejar la alternancia del submenú
+function handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix) {
+    const submenuId = getSubmenuId(trigger, triggerSelector, submenuIdPrefix);
+    const submenu = document.getElementById(submenuId);
+
+    if (!submenu) {
+        console.error('Submenu not found:', submenuId);
+        return;
+    }
+
+    if (openSubmenu && openSubmenu !== submenu) {
+        hideSubmenu(openSubmenu);
+    }
+
+    submenu._position = position;
+    submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
+
+    if (submenu.style.display === 'block') {
+        hideSubmenu(submenu);
+    } else {
+        showSubmenu(event, trigger, submenu, submenu._position);
+    }
+
+    event.stopPropagation();
+}
+
+// Función para obtener el ID del submenú
+function getSubmenuId(trigger, triggerSelector, submenuIdPrefix) {
+    if (triggerSelector === '.EDYQHV') {
+        return `${submenuIdPrefix}-${trigger.getAttribute('id-post')}`;
+    } else {
+        return `${submenuIdPrefix}-${trigger.dataset.postId || trigger.id || 'default'}`;
+    }
+}
+
+// Función para mostrar el submenú
+function showSubmenu(event, trigger, submenu, position) {
+    const {innerWidth: vw, innerHeight: vh} = window;
+
+    if (submenu.parentNode !== document.body) {
+        document.body.appendChild(submenu);
+    }
+
+    submenu.style.position = 'fixed';
+    submenu.style.zIndex = 1006;
+    submenu.style.display = 'block';
+    submenu.style.visibility = 'hidden';
+
+    let submenuWidth = submenu.offsetWidth;
+    let submenuHeight = submenu.offsetHeight;
+
+    const rect = trigger.getBoundingClientRect();
+
+    // Calcular la posición del submenú
+    if (vw <= 640) {
+        submenu.style.top = `${(vh - submenuHeight) / 2}px`;
+        submenu.style.left = `${(vw - submenuWidth) / 2}px`;
+    } else {
+        let {top, left} = calculatePosition(rect, submenuWidth, submenuHeight, position);
+
+        if (top + submenuHeight > vh) top = vh - submenuHeight;
+        if (left + submenuWidth > vw) left = vw - submenuWidth;
+        if (top < 0) top = 0;
+        if (left < 0) left = 0;
+
+        submenu.style.top = `${top}px`;
+        submenu.style.left = `${left}px`;
+    }
+
+    submenu.style.visibility = 'visible';
+
+    createSubmenuDarkBackground();
+    document.body.classList.add('no-scroll');
+    openSubmenu = submenu;
+}
+
+// Función para ocultar el submenú
+function hideSubmenu(submenu) {
+    if (submenu) {
+        submenu.style.display = 'none';
+        openSubmenu = null;
+    }
+
+    removeSubmenuDarkBackground();
+
+    const activeSubmenus = Array.from(document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`)).filter(menu => menu.style.display === 'block');
+
+    if (activeSubmenus.length === 0) {
+        document.body.classList.remove('no-scroll');
+    }
+}
+
+// Función para configurar el listener de clics fuera del submenú
+function cerrarMenu(triggerSelector, submenuIdPrefix) {
     document.addEventListener('click', event => {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
             if (submenu.style.display === 'block' && !submenu.contains(event.target) && !event.target.closest(triggerSelector) && !event.target.closest('a')) {
@@ -194,13 +188,37 @@ function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
             }
         });
     });
+}
 
+// Función para configurar el listener de redimensionamiento de la ventana
+function resizeMovilMenu(submenuIdPrefix) {
     window.addEventListener('resize', () => {
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
             submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
         });
     });
 }
+
+// Función para ocultar todos los submenús (versión simplificada)
+window.hideAllSubmenus = function () {
+    console.log('Ejecutando hideAllSubmenus (versión simplificada)');
+
+    submenuIdPrefixes.forEach(prefix => {
+        const allSubmenus = document.querySelectorAll(`[id^="${prefix}-"]`);
+
+        if (allSubmenus.length === 0) {
+            console.log(`No se encontraron submenús con el prefijo '${prefix}-'.`);
+        } else {
+            console.log(`Se encontraron ${allSubmenus.length} submenús con el prefijo '${prefix}-':`, allSubmenus);
+            allSubmenus.forEach((submenu, index) => {
+                console.log(`Ocultando submenú ${index + 1} con prefijo '${prefix}-':`, submenu);
+                hideSubmenu(submenu);
+            });
+        }
+    });
+
+    console.log('hideAllSubmenus (versión simplificada) finalizado');
+};
 
 function submenu() {
     createSubmenu('.filtrosboton', 'filtrosMenu', 'abajo');
