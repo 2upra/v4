@@ -10,6 +10,7 @@ function htmlPost($filtro)
         $filtro = 'rolastatus';
     }
     $sampleList = $filtro === 'sampleList';
+    $rolaList = $filtro === 'rolaListLike';
     //llevar sample list
     $wave = get_post_meta($post_id, 'waveform_image_url', true);
     $waveCargada = get_post_meta($post_id, 'waveCargada', true);
@@ -27,7 +28,7 @@ function htmlPost($filtro)
         id-post="<? echo get_the_ID(); ?>"
         autor="<? echo esc_attr($author_id); ?>">
 
-        <? if ($sampleList): ?>
+        <? if ($sampleList || $rolaList): ?>
             <? sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id, $audio_id_lite); ?>
         <? else: ?>
             <? echo fondoPost($filtro, $block, $es_suscriptor, $post_id); ?>

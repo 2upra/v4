@@ -354,6 +354,8 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
         $query_args['author'] = $usuarioActual;
     }
 
+
+
     $meta_query_conditions = [
         'rolasEliminadas' => fn() => $query_args['post_status'] = 'pending_deletion',
         'rolasRechazadas' => fn() => $query_args['post_status'] = 'rejected',
@@ -381,6 +383,32 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
                     ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
                 ]);
             }
+        },
+        'rolaListLike' => function () use ($usuarioActual, &$query_args) {
+            // Obtener los IDs de los posts que le gustan al usuario actual.
+            $userLikedPostIds = obtenerLikesDelUsuario($usuarioActual);
+
+            // Si el usuario no ha dado like a ningún post, mostramos una página vacía.
+            if (empty($userLikedPostIds)) {
+                $query_args['posts_per_page'] = 0;
+                return; // Importante salir de la función si no hay likes.
+            }
+
+            $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], [
+                'relation' => 'AND', // Asegurarse de que se cumplan ambas condiciones.
+                [
+                    'key'     => 'rola',
+                    'value'   => '1',
+                    'compare' => '=',
+                ],
+                [
+                    'key'     => 'post_audio_lite',
+                    'compare' => 'EXISTS',
+                ],
+
+            ]);
+
+            $query_args['post__in'] = $userLikedPostIds;
         },
         'sampleList' => [
             'relation' => 'AND', // Importante cambiar a AND
@@ -808,7 +836,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
                 if ($filtro === 'rola') {
                     echo htmlColec($filtro);
                 } else {
-                    echo htmlPost($filtro); 
+                    echo htmlPost($filtro);
                 }
             } elseif ($tipoPost === 'colab') {
                 echo htmlColab($filtro);

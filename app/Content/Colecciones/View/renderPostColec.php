@@ -7,7 +7,7 @@ function htmlColec($filtro)
     $vars = variablesColec($postId);
     extract($vars);
 ?>
-    <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV"
+    <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV no-refresh"
         filtro="<? echo esc_attr($filtro); ?>"
         id-post="<? echo esc_attr($postId); ?>"
         autor="<? echo esc_attr($autorId); ?>">

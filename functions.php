@@ -108,6 +108,10 @@ function paginasIniciales1()
             'plantilla' => 'TemplateT&Q.php',
             'contenido' => ''
         ),
+        'Biblioteca' => array(
+            'plantilla' => 'TemplateBiblioteca.php',
+            'contenido' => ''
+        )
     );
 
     // Recorrer el array y crear las páginas
