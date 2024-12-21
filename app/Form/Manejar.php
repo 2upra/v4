@@ -108,13 +108,20 @@ function actualizarMetaDatos($postId)
         'individual'        => 'individual',
         'multiple'          => 'multiple',
         'tienda'            => 'tienda',
-        'nombreLanzamiento' => 'nombreLanzamiento',
     ];
 
     foreach ($meta_fields as $meta_key => $post_key) {
         $value = isset($_POST[$post_key]) && $_POST[$post_key] == '1' ? 1 : 0;
         if (update_post_meta($postId, $meta_key, $value) === false) {
             //error_log("Error en actualizarMetaDatos: Fallo al actualizar el meta $meta_key para el post ID $postId.");
+        }
+    }
+
+    // Manejo de nombreLanzamiento
+    if (isset($_POST['nombreLanzamiento'])) {
+        $nombreLanzamiento = sanitize_text_field($_POST['nombreLanzamiento']); // Sanitize the input
+        if (update_post_meta($postId, 'nombreLanzamiento', $nombreLanzamiento) === false) {
+            //error_log("Error en actualizarMetaDatos: Fallo al actualizar el meta nombreLanzamiento para el post ID $postId.");
         }
     }
 
@@ -125,7 +132,6 @@ function actualizarMetaDatos($postId)
         registrarPrecios($postId);
     }
 }
-
 
 #Paso 2.1
 function registrarNombreRolas($postId)

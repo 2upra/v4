@@ -1,32 +1,112 @@
 <?
-
-function generar_publicaciones_multiples()
+function obtenerPostsMultiples()
 {
-    // Buscar todos los social_post con multiple en 1 o true
     $args = array(
         'post_type'      => 'social_post',
-        'posts_per_page' => 1, // Procesar solo 1 post por ejecución
+        'posts_per_page' => 1,
         'meta_query'     => array(
             array(
                 'key'   => 'multiple',
                 'value' => '1',
             ),
         ),
-        'orderby'        => 'ID',  // Ordenar por ID ascendente
+        'orderby'        => 'ID',
         'order'          => 'ASC',
     );
-    $query = new WP_Query($args);
+    return new WP_Query($args);
+}
 
+function procesarAudios($postIdOriginal, $author_id, $paraColab, $paraDescarga, $artista, $fan, $rola, $sample, $tagsUsuario, $tienda, $nombreLanzamiento)
+{
+    $multiples_audios_encontrados = false;
+    $ids_nuevos_posts = array();
 
+    // Obtener el ID de la imagen destacada (foto de portada)
+    $imagen_destacada_id = get_post_thumbnail_id($postIdOriginal);
+
+    for ($i = 2; $i <= 30; $i++) {
+        $audio_lite_meta_key = 'post_audio_lite_' . $i;
+        $audio_meta_key = 'post_audio' . $i;
+        $idHash_audioId_key = 'idHash_audioId' . $i;
+        $precio_key = 'precioRola' . $i;
+        $name_key = 'nombreRola' . $i;
+        $audio_lite_id = get_post_meta($postIdOriginal, $audio_lite_meta_key, true);
+        $audio_id_hash = get_post_meta($postIdOriginal, $idHash_audioId_key, true);
+        $audio_id = get_post_meta($postIdOriginal, $audio_meta_key, true);
+        $precio = get_post_meta($postIdOriginal, $precio_key, true);
+        $name = get_post_meta($postIdOriginal, $name_key, true);
+        if (! empty($audio_lite_id) && ! empty($audio_id_hash) && !empty($audio_id)) {
+            $multiples_audios_encontrados = true;
+            $ruta_audio_lite = wp_get_attachment_url($audio_lite_id);
+            $upload_dir = wp_upload_dir();
+            $ruta_servidor = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $ruta_audio_lite);
+            $nuevoPost = crearAutPost('', $ruta_servidor, $audio_id_hash, $author_id, $postIdOriginal);
+
+            if (! is_wp_error($nuevoPost) && $nuevoPost) {
+                $ids_nuevos_posts[] = $nuevoPost;
+
+                // Copiar la imagen destacada al nuevo post
+                if (!empty($imagen_destacada_id)) {
+                    set_post_thumbnail($nuevoPost, $imagen_destacada_id);
+                }
+
+                // Copiar los demás metadatos
+                if (! empty($paraColab)) {
+                    update_post_meta($nuevoPost, 'paraColab', $paraColab);
+                }
+                if (! empty($paraDescarga)) {
+                    update_post_meta($nuevoPost, 'paraDescarga', $paraDescarga);
+                }
+                if (! empty($artista)) {
+                    update_post_meta($nuevoPost, 'artista', $artista);
+                }
+                if (! empty($fan)) {
+                    update_post_meta($nuevoPost, 'fan', $fan);
+                }
+                if (! empty($rola)) {
+                    update_post_meta($nuevoPost, 'rola', $rola);
+                }
+                if (! empty($tienda)) {
+                    update_post_meta($nuevoPost, 'tienda', $sample);
+                }
+                if (! empty($sample)) {
+                    update_post_meta($nuevoPost, 'sample', $sample);
+                }
+                if (! empty($tagsUsuario)) {
+                    update_post_meta($nuevoPost, 'tagsUsuario', $tagsUsuario);
+                }
+                if (! empty($audio_id)) {
+                    update_post_meta($nuevoPost, 'post_audio', $audio_id);
+                }
+                if (! empty($precio)) {
+                    update_post_meta($nuevoPost, 'precioRola', $precio);
+                }
+                if (! empty($name)) {
+                    update_post_meta($nuevoPost, 'nombreRola', $name);
+                }
+                if (! empty($nombreLanzamiento)) {
+                    update_post_meta($nuevoPost, 'nombreLanzamiento', $nombreLanzamiento);
+                }
+                delete_post_meta($postIdOriginal, $audio_lite_meta_key);
+                delete_post_meta($postIdOriginal, $audio_meta_key);
+                delete_post_meta($postIdOriginal, $idHash_audioId_key);
+                delete_post_meta($postIdOriginal, $precio_key);
+                delete_post_meta($postIdOriginal, $name_key);
+                sleep(2);
+            }
+        }
+    }
+    return array($multiples_audios_encontrados, $ids_nuevos_posts);
+}
+
+function multiplesPost()
+{
+    $query = obtenerPostsMultiples();
     if ($query->have_posts()) {
-
         while ($query->have_posts()) {
             $query->the_post();
             $postIdOriginal = get_the_ID();
             $author_id = get_post_field('post_author', $postIdOriginal);
-
-
-            // Copiar metas si existen
             $paraColab = get_post_meta($postIdOriginal, 'paraColab', true);
             $paraDescarga = get_post_meta($postIdOriginal, 'paraDescarga', true);
             $artista = get_post_meta($postIdOriginal, 'artista', true);
@@ -35,99 +115,12 @@ function generar_publicaciones_multiples()
             $sample = get_post_meta($postIdOriginal, 'sample', true);
             $tagsUsuario = get_post_meta($postIdOriginal, 'tagsUsuario', true);
             $tienda = get_post_meta($postIdOriginal, 'tienda', true);
-
-
-            $multiples_audios_encontrados = false;
-            $ids_nuevos_posts = array(); // Array para almacenar los IDs de los nuevos posts
-
-            // Iterar sobre los posibles audios múltiples
-            for ($i = 2; $i <= 30; $i++) {
-                $audio_lite_meta_key = 'post_audio_lite_' . $i;
-                $audio_meta_key = 'post_audio' . $i;
-                $idHash_audioId_key = 'idHash_audioId' . $i;
-                $precio_key = 'precioRola' . $i;
-                $name_key = 'nombreRola' . $i;
-
-                $audio_lite_id = get_post_meta($postIdOriginal, $audio_lite_meta_key, true); // Obtiene el ID del adjunto
-                $audio_id_hash = get_post_meta($postIdOriginal, $idHash_audioId_key, true);
-                $audio_id = get_post_meta($postIdOriginal, $audio_meta_key, true);
-                $precio = get_post_meta($postIdOriginal, $precio_key, true);
-                $name = get_post_meta($postIdOriginal, $name_key, true);
-
-                // Si existe el audio lite (ahora usando el ID), generar un nuevo post
-                if (! empty($audio_lite_id) && ! empty($audio_id_hash) && !empty($audio_id)) {
-                    $multiples_audios_encontrados = true;
-
-                    // Obtener la URL del adjunto usando el ID
-                    $ruta_audio_lite = wp_get_attachment_url($audio_lite_id);
-
-                    // Obtener la ruta del archivo en el servidor
-                    $upload_dir = wp_upload_dir();
-                    $ruta_servidor = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $ruta_audio_lite);
-
-                    $nuevoPost = crearAutPost('', $ruta_servidor, $audio_id_hash, $author_id, $postIdOriginal);
-                    // Copiar metas al nuevo post si existen y se creó el post
-                    if (! is_wp_error($nuevoPost) && $nuevoPost) {
-                        // Guardar el ID del nuevo post en el array
-                        $ids_nuevos_posts[] = $nuevoPost;
-
-                        if (! empty($paraColab)) {
-                            update_post_meta($nuevoPost, 'paraColab', $paraColab);
-                        }
-                        if (! empty($paraDescarga)) {
-                            update_post_meta($nuevoPost, 'paraDescarga', $paraDescarga);
-                        }
-                        if (! empty($artista)) {
-                            update_post_meta($nuevoPost, 'artista', $artista);
-                        }
-                        if (! empty($fan)) {
-                            update_post_meta($nuevoPost, 'fan', $fan);
-                        }
-                        if (! empty($rola)) {
-                            update_post_meta($nuevoPost, 'rola', $rola);
-                        }
-                        if (! empty($tienda)) {
-                            update_post_meta($nuevoPost, 'tienda', $sample);
-                        }
-                        if (! empty($sample)) {
-                            update_post_meta($nuevoPost, 'sample', $sample);
-                        }
-                        if (! empty($tagsUsuario)) {
-                            update_post_meta($nuevoPost, 'tagsUsuario', $tagsUsuario);
-                        }
-                        if (! empty($audio_id)) {
-                            update_post_meta($nuevoPost, 'post_audio', $audio_id);
-                        }
-                        // Aquí se añaden las líneas para guardar precio y nombre
-                        if (! empty($precio)) {
-                            update_post_meta($nuevoPost, 'precioRola', $precio);
-                        }
-                        if (! empty($name)) {
-                            update_post_meta($nuevoPost, 'nombreRola', $name);
-                        }
-
-                        // Eliminar metas del post original después de procesar cada audio_lite
-                        delete_post_meta($postIdOriginal, $audio_lite_meta_key);
-                        delete_post_meta($postIdOriginal, $audio_meta_key);
-                        delete_post_meta($postIdOriginal, $idHash_audioId_key);
-                        delete_post_meta($postIdOriginal, $precio_key);
-                        delete_post_meta($postIdOriginal, $name_key);
-
-                        // Pausa de 2 segundos entre cada creación de post
-                        sleep(2);
-                    } else {
-                    }
-                }
-            }
-
-            // Si no se encontraron múltiples audios, eliminar la meta 'multiple'
+            $nombreLanzamiento = get_post_meta($postIdOriginal, 'nombreLanzamiento', true);
+            list($multiples_audios_encontrados, $ids_nuevos_posts) = procesarAudios($postIdOriginal, $author_id, $paraColab, $paraDescarga, $artista, $fan, $rola, $sample, $tagsUsuario, $tienda, $nombreLanzamiento);
             if (! $multiples_audios_encontrados) {
                 delete_post_meta($postIdOriginal, 'multiple');
             } else {
-                // Si se encontraron múltiples audios, guardar los IDs de los nuevos posts en el post original
                 update_post_meta($postIdOriginal, 'posts_generados', $ids_nuevos_posts);
-
-                // Verificar si aún quedan audios múltiples por procesar
                 $quedan_audios = false;
                 for ($i = 2; $i <= 30; $i++) {
                     if (get_post_meta($postIdOriginal, 'post_audio_lite_' . $i, true)) {
@@ -135,14 +128,11 @@ function generar_publicaciones_multiples()
                         break;
                     }
                 }
-
-                // Si no quedan audios múltiples, eliminar la meta 'multiple'
                 if (! $quedan_audios) {
                     delete_post_meta($postIdOriginal, 'multiple');
                 }
             }
         }
-    } else {
     }
     wp_reset_postdata();
 }
@@ -327,14 +317,14 @@ function crearAutPost($rutaOriginal = null, $rutaWpLite = null, $file_id = null,
 
 
 function programar_generacion_publicaciones()
-{
-    if (! wp_next_scheduled('generar_publicaciones_multiples_evento')) {
-        wp_schedule_event(time(), 'cada_treinta_segundos', 'generar_publicaciones_multiples_evento');
+{ //necesito dividir esto en 3 funciones manteniendo 
+    if (! wp_next_scheduled('multiplesPost_evento')) { //necesito dividir esto en 3 funciones manteniendo 
+        wp_schedule_event(time(), 'cada_treinta_segundos', 'multiplesPost_evento');
     } else {
     }
 }
-add_action('wp', 'programar_generacion_publicaciones');
-add_action('generar_publicaciones_multiples_evento', 'generar_publicaciones_multiples');
+add_action('wp', 'program//necesito dividir esto en 3 funciones manteniendo ar_generacion_publicacio//necesito dividir esto en 3 funciones manteniendo nes');
+add_action('multiplesPost_evento', 'multiplesPost');
 
 /**
  * Define el intervalo personalizado de 30 segundos.
