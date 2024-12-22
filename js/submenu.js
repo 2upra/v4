@@ -1,8 +1,17 @@
+
+/*
+tengo este problema, como paso el prefijo a createSubmenuDarkBackground
+🖱️ createSubmenuDarkBackground: Clic en el fondo oscuro
+submenu.js?ver=0.2.274:214   🙈 createSubmenuDarkBackground: Ocultando submenús con prefijo undefined-
+*/
+
+
 let submenuIdPrefixes = [];
 let openSubmenu = null;
 let longPressTimer;
 let isLongPress = false;
 let isTouchEvent = false;
+
 
 function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     const triggers = document.querySelectorAll(triggerSelector);
@@ -21,6 +30,7 @@ function registrarIdMenu(submenuIdPrefix) {
         submenuIdPrefixes.push(submenuIdPrefix);
     }
 }
+
 
 function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
     trigger.addEventListener('pointerdown', event => {
@@ -86,7 +96,7 @@ function handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, p
     if (submenu.style.display === 'block') {
         hideSubmenu(submenu);
     } else {
-        showSubmenu(event, trigger, submenu, position);
+        showSubmenu(event, trigger, submenu, position, submenuIdPrefix); 
     }
     event.stopPropagation();
 }
@@ -124,7 +134,7 @@ function showSubmenu(event, trigger, submenu, position) {
         submenu.style.left = `${left}px`;
     }
     submenu.style.visibility = 'visible';
-    createSubmenuDarkBackground();
+    createSubmenuDarkBackground(submenuIdPrefix);
     document.body.classList.add('no-scroll');
     openSubmenu = submenu;
 }
