@@ -15,7 +15,7 @@ function htmlColec($filtro)
         <div class="post-content">
             <? echo imagenColeccion($postId); ?>
             <div class="KLYJBY">
-                <? echo audioPost($post_id); ?>
+                <? echo audioPost($postId); ?>
             </div>
             <?
             $post_type = get_post_type($postId);
@@ -26,13 +26,13 @@ function htmlColec($filtro)
                 </h2>
             <?
             } else {
-                $rola_meta = get_post_meta($post_id, 'rola', true);
-                $tienda_meta = get_post_meta($post_id, 'tienda', true);
+                $rola_meta = get_post_meta($postId, 'rola', true);
+                $tienda_meta = get_post_meta($postId, 'tienda', true);
                 $nombre_rola = '';
 
                 if ($rola_meta === '1' || $tienda_meta === '1') {
 
-                    $nombre_rola = get_post_meta($post_id, 'nombreRola', true) ?? get_post_meta($post_id, 'nombreRola1', true) ?? get_the_title($postId);
+                    $nombre_rola = get_post_meta($postId, 'nombreRola', true) ?? get_post_meta($postId, 'nombreRola1', true) ?? get_the_title($postId);
                 }
 
                 if (!empty($nombre_rola)) {
@@ -48,14 +48,14 @@ function htmlColec($filtro)
             ?>
             <div class="CPQBEN" style="display: none;">
 
-                <? echo like($post_id);
+                <? echo like($postId);
                 ?>
                 <div class="CPQBAU"><? echo get_the_author_meta('display_name', $autorId); ?></div>
                 <div class="CPQBCO">
                     <?
                     if ($rola_meta === '1' || $tienda_meta === '1') {
                         // Usa la misma lógica que arriba para obtener el nombre de la rola
-                        $nombre_rola = get_post_meta($post_id, 'nombreRola', true) ?? get_post_meta($post_id, 'nombreRola1', true) ?? get_the_title($postId);
+                        $nombre_rola = get_post_meta($postId, 'nombreRola', true) ?? get_post_meta($postId, 'nombreRola1', true) ?? get_the_title($postId);
 
                         if (!empty($nombre_rola)) {
                             echo "<p>" . esc_html($nombre_rola) . "</p>";
