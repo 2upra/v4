@@ -23,13 +23,6 @@ function generarMetaDeIntereses($user_id) {
         return false;
     }
 
-    // Verificar cache
-    $cache_key = 'meta_intereses_' . $user_id;
-    $cached_result = get_transient($cache_key);
-    if ($cached_result !== false) {
-        return $cached_result;
-    }
-
     global $wpdb;
     $likePost = obtenerLikesDelUsuario($user_id, 500);
     if (empty($likePost) || !is_array($likePost)) {
@@ -138,10 +131,6 @@ function generarMetaDeIntereses($user_id) {
         $tag_intensidad = array_slice($tag_intensidad, 0, 200, true);
 
         $result = actualizarIntereses($user_id, $tag_intensidad, $interesesActuales);
-        
-        if ($result !== false) {
-            set_transient($cache_key, $result, HOUR_IN_SECONDS);
-        }
 
         return $result;
 
