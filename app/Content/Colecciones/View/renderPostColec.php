@@ -31,9 +31,10 @@ function htmlColec($filtro)
                     <div class="XOKALG">
                         <?
                         $rola_meta = get_post_meta($postId, 'rola', true);
+                        $tienda_meta = get_post_meta($postId, 'tienda', true);
                         $nombre_rola_html = '';
 
-                        if ($rola_meta === '1') {
+                        if ($rola_meta === '1' || $tienda_meta === '1') {
                             $nombre_rola = get_post_meta($postId, 'nombreRola', true);
                             if (empty($nombre_rola)) {
                                 $nombre_rola = get_post_meta($postId, 'nombreRola1', true);
@@ -62,9 +63,8 @@ function htmlColec($filtro)
                 <div class="CPQBAU"><? echo get_the_author_meta('display_name', $autorId); ?></div>
                 <div class="CPQBCO">
                     <?
-                    $rola_meta = get_post_meta($postId, 'rola', true);
 
-                    if ($rola_meta === '1') {
+                    if ($rola_meta === '1' || $tienda_meta === '1') {
                         $nombre_rola = get_post_meta($postId, 'nombreRola', true);
                         if (empty($nombre_rola)) {
                             $nombre_rola = get_post_meta($postId, 'nombreRola1', true);
