@@ -118,21 +118,7 @@ function likeAccion($postId, $userId, $accion, $likeType = 'like')
     }
 }
 
-function obtenerLikesDelUsuario($userId, $limit = 500)
-{
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'post_likes';
-    $query = $wpdb->prepare(
-        "SELECT post_id FROM $table_name WHERE user_id = %d ORDER BY like_date DESC LIMIT %d",
-        $userId,
-        $limit
-    );
-    $liked_posts = $wpdb->get_col($query);
-    if (empty($liked_posts)) {
-        return [];
-    }
-    return $liked_posts;
-}
+
 
 
 function contarLike($postId, $likeType = null)

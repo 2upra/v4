@@ -196,9 +196,64 @@ function calcularPuntosParaPost(
     return $puntosFinal;
 }
 
+function calcularPuntosIntereses($post_id, $datos)
+{
+    $puntosIntereses = 0;
+
+    // Verificar si existen los índices necesarios
+    if (
+        !isset($datos['datosAlgoritmo'][$post_id]) ||
+        !isset($datos['datosAlgoritmo'][$post_id]->meta_value)
+    ) {
+        return $puntosIntereses;
+    }
+
+    $datosAlgoritmo = json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true);
+
+    // Verificar si el json_decode fue exitoso
+    if (json_last_error() !== JSON_ERROR_NONE || !is_array($datosAlgoritmo)) {
+        return $puntosIntereses;
+    }
+
+    $oneshot = ['one shot', 'one-shot', 'oneshot'];
+    $esOneShot = false;
+    $metaValue = $datos['datosAlgoritmo'][$post_id]->meta_value;
+
+    if (!empty($metaValue)) {
+        foreach ($oneshot as $palabra) {
+            if (stripos($metaValue, $palabra) !== false) {
+                $esOneShot = true;
+                break;
+            }
+        }
+    }
+
+    foreach ($datosAlgoritmo as $key => $value) {
+        if (is_array($value)) {
+            foreach (['es', 'en'] as $lang) {
+                if (isset($value[$lang]) && is_array($value[$lang])) {
+                    foreach ($value[$lang] as $item) {
+                        if (isset($datos['interesesUsuario'][$item])) {
+                            $puntosIntereses += 10 + $datos['interesesUsuario'][$item]->intensity;
+                        }
+                    }
+                }
+            }
+        } elseif (!empty($value) && isset($datos['interesesUsuario'][$value])) {
+            $puntosIntereses += 10 + $datos['interesesUsuario'][$value]->intensity;
+        }
+    }
+
+    if ($esOneShot) {
+        $puntosIntereses *= 1;
+    }
+
+    return $puntosIntereses;
+}
+
 function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
 {
-    
+
     if ($esAdmin) {
 
         if (!$metaVerificado && $metaPostAut) {

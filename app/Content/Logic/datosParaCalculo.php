@@ -88,8 +88,6 @@ function obtenerDatosFeed($userId)
             ];
         }
 
-        // Agregar un log para verificar el contenido de $meta_roles
-        //error_log("[obtenerDatosFeed] Debug: meta_roles generado: " . print_r($meta_roles, true));
 
         // Obtener likes
         $sql_likes = "
@@ -134,7 +132,7 @@ function obtenerDatosFeed($userId)
             'posts_ids'        => $posts_ids,
             'likes_by_post'    => $likes_by_post,
             'meta_data'        => $meta_data,
-            'meta_roles'       => $meta_roles,  // Roles adicionales (artista/fan)
+            'meta_roles'       => $meta_roles,  
             'author_results'   => $posts_results,
             'post_content'     => $post_content,
         ];
