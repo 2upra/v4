@@ -55,7 +55,7 @@ function galle() {
         colabResumenItems.forEach(function (item) {
             item.addEventListener('click', function () {
                 // Cierra todos los modales abiertos antes de abrir uno nuevo
-                const openModals = document.querySelectorAll('li.modal.POST-colab[style*="display: block"]');
+                const openModals = document.querySelectorAll('li.modal.POST-colab[style*="display: flex"]');
                 openModals.forEach(function (modal) {
                     modal.style.display = 'none';
                 });
@@ -71,11 +71,11 @@ function galle() {
                 const targetModal = document.querySelector(selector);
 
                 if (targetModal) {
-                    // Muestra el modal estableciendo display a 'block'
-                    targetModal.style.display = 'block';
+                    // Muestra el modal estableciendo display a 'flex'
+                    targetModal.style.display = 'flex';
 
                     // Muestra el fondo modal
-                    modalBackground.style.display = 'block';
+                    modalBackground.style.display = 'flex';
                 } else {
                     console.warn(`No se encontró una conversación con id-post="${postId}"`);
                 }
@@ -99,7 +99,7 @@ function galle() {
                     targetModal.style.display = 'none';
 
                     // Oculta el fondo modal si no hay otros modales abiertos
-                    const anyVisibleModal = document.querySelector('li.modal.POST-colab[style*="display: block"]');
+                    const anyVisibleModal = document.querySelector('li.modal.POST-colab[style*="display: flex"]');
                     if (!anyVisibleModal) {
                         modalBackground.style.display = 'none';
                     }
@@ -112,7 +112,7 @@ function galle() {
         // Opcional: Cerrar el modal al  clic en el fondo modal
         modalBackground.addEventListener('click', function () {
             // Selecciona el modal actualmente visible
-            const visibleModal = document.querySelector('li.modal.POST-colab[style*="display: block"]');
+            const visibleModal = document.querySelector('li.modal.POST-colab[style*="display: flex"]');
 
             if (visibleModal) {
                 // Oculta el modal
@@ -440,7 +440,7 @@ function galle() {
                 bloqueChat.setAttribute('data-user-id', receptor);
                 bloqueChat.querySelector('.imagenMensaje img').src = imagenPerfil;
                 bloqueChat.querySelector('.nombreConversacion p').textContent = nombreUsuario;
-                bloqueChat.style.display = 'block';
+                bloqueChat.style.display = 'flex';
                 maximizarChatDirectamente();
                 manejarScroll(data.data.conversacion, bloqueChat);
                 const listaMensajes = bloqueChat.querySelector('.listaMensajes');
@@ -862,8 +862,8 @@ function galle() {
 
             try {
                 //console.log('Cargando archivo de audio...');
-                previewChatAudio.style.display = 'block';
-                cancelUploadButton.style.display = 'block';
+                previewChatAudio.style.display = 'flex';
+                cancelUploadButton.style.display = 'flex';
                 const progressBarId = waveAudio(file);
                 //console.log('Barra de progreso creada con ID:', progressBarId);
 
@@ -887,8 +887,8 @@ function galle() {
 
             try {
                 //console.log('Cargando archivo de imagen...');
-                previewChatImagen.style.display = 'block';
-                cancelUploadButton.style.display = 'block';
+                previewChatImagen.style.display = 'flex';
+                cancelUploadButton.style.display = 'flex';
                 const progressBarId = `progress-${Date.now()}`;
                 //console.log('Barra de progreso creada con ID:', progressBarId);
 
@@ -908,9 +908,9 @@ function galle() {
         const subidaChatArchivo = async file => {
             //console.log('Iniciando subida de archivo:', file.name, 'tamaño:', file.size, 'tipo:', file.type);
             subidaChatProgreso = true;
-            cancelUploadButton.style.display = 'block';
+            cancelUploadButton.style.display = 'flex';
             ocultarPreviews(chatContainer); // Ocultar otros previews
-            previewChatArchivo.style.display = 'block';
+            previewChatArchivo.style.display = 'flex';
             previewChatArchivo.innerHTML = `
                 <div class="file-name">${file.name}</div>
                 <div id="barraProgresoFile" class="progress" style="width: 0%; height: 100%; background-color: #4CAF50; transition: width 0.3s;"></div>`;
@@ -958,7 +958,7 @@ function galle() {
             const reader = new FileReader();
             reader.onload = e => {
                 previewChatImagen.innerHTML = `<img src="${e.target.result}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">`;
-                previewChatImagen.style.display = 'block';
+                previewChatImagen.style.display = 'flex';
             };
             reader.readAsDataURL(file);
         };
@@ -1118,7 +1118,7 @@ function galle() {
 
                 let fechaAnterior = null;
 
-                const primerMensajeMostrado = listaMensajes.querySelector('.messageBlock');
+                const primerMensajeMostrado = listaMensajes.querySelector('.messageflex');
                 let nextRemitente = null;
 
                 if (primerMensajeMostrado) {
@@ -1350,7 +1350,7 @@ function galle() {
         const esUsuarioActual = msgEmisor === emisor;
         const esColabPrimerMensaje = tipoMensaje === 'Colab' && isFirstMessageOfThread && userInfo && !esUsuarioActual;
 
-        const messageBlock = crearElemento('div', 'messageBlock');
+        const messageflex = crearElemento('div', 'messageflex');
         const messageContainer = crearElemento('div', 'messageContainer');
 
         const mensajeElem = crearElemento('div', ['mensajeText', clase], {
@@ -1363,15 +1363,15 @@ function galle() {
         if (temp_id) mensajeElem.classList.add('mensajePendiente');
 
         if (esColabPrimerMensaje) {
-            // Añadimos una clase identificadora al messageBlock
-            messageBlock.classList.add('firstMessageOfThread');
+            // Añadimos una clase identificadora al messageflex
+            messageflex.classList.add('firstMessageOfThread');
 
             const userNameElem = crearElemento('span', 'userName', {textContent: userInfo.nombreUsuario});
             const avatarImg = crearElemento('img', 'avatarImage', {
                 src: userInfo.imagenPerfil,
                 alt: userInfo.nombreUsuario
             });
-            messageBlock.appendChild(userNameElem);
+            messageflex.appendChild(userNameElem);
             messageContainer.appendChild(avatarImg);
         } else if (tipoMensaje === 'Colab') {
             // Si es un mensaje de tipo Colab pero no es el primer mensaje, agregamos un div vacío
@@ -1384,12 +1384,12 @@ function galle() {
         manejarAdjunto(adjunto, mensajeElem);
 
         messageContainer.appendChild(mensajeElem);
-        messageBlock.appendChild(messageContainer);
+        messageflex.appendChild(messageContainer);
 
         if (insertAtTop) {
-            listaMensajes.insertBefore(messageBlock, listaMensajes.firstChild);
+            listaMensajes.insertBefore(messageflex, listaMensajes.firstChild);
         } else {
-            listaMensajes.appendChild(messageBlock);
+            listaMensajes.appendChild(messageflex);
             listaMensajes.scrollTop = listaMensajes.scrollHeight;
         }
     }
