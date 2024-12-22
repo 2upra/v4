@@ -144,22 +144,12 @@ function obtenerDatosFeed($userId)
 
 function obtenerDatosFeedConCache($userId)
 {
-    $cache_key = 'feed_datos_' . $userId;
-    $datos = obtenerCache($cache_key);
-
-    if (false === $datos) {
-        guardarLog("Usuario ID: $userId - Caché no encontrada, calculando nuevos datos de feed");
-        $datos = obtenerDatosFeed($userId);
-        guardarCache($cache_key, $datos, 43200); // Guarda en caché por 12 horas
-        guardarLog("Usuario ID: $userId - Nuevos datos de feed guardados en caché por 12 horas");
-    } else {
-        guardarLog("Usuario ID: $userId - Usando datos de feed desde caché");
-    }
-
-    if (!isset($datos['author_results']) || !is_array($datos['author_results'])) {
-        //guardarLog("Usuario ID: $userId - Error: Datos de feed inválidos o vacíos");
+    $datos = obtenerDatosFeed($userId);
+    if (empty($datos)) {
         return [];
     }
+
+
 
     return $datos;
 }
