@@ -340,6 +340,20 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
 {
     if (!empty($userId)) {
         $query_args['author'] = $userId;
+        // Mover las condiciones específicas de los nuevos filtros aquí
+        $filtro = $args['filtro'] ?? 'nada';
+        if ($filtro === 'imagenesPerfil') {
+            $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], [
+                ['key' => '_thumbnail_id', 'compare' => 'EXISTS'],
+                ['key' => 'post_audio_lite', 'compare' => 'NOT EXISTS'],
+            ]);
+        } elseif ($filtro === 'tiendaPerfil') {
+            $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], [
+                ['key' => 'tienda', 'value' => '1', 'compare' => '='],
+                ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
+            ]);
+        }
+
         return $query_args;
     }
 
@@ -385,13 +399,10 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
             }
         },
         'rolaListLike' => function () use ($usuarioActual, &$query_args) {
-            // Obtener los IDs de los posts que le gustan al usuario actual.
             $userLikedPostIds = obtenerLikesDelUsuario($usuarioActual);
-
-            // Si el usuario no ha dado like a ningún post, mostramos una página vacía.
             if (empty($userLikedPostIds)) {
                 $query_args['posts_per_page'] = 0;
-                return; // Importante salir de la función si no hay likes.
+                return;
             }
 
             $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], [
@@ -428,6 +439,7 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
             ['key' => 'rola', 'value' => '1', 'compare' => '='],
             ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
         ],
+        // No se agregan aquí 'imagenesPerfil' y 'tiendaPerfil'
     ];
 
     if (isset($meta_query_conditions[$filtro])) {

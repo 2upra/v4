@@ -31,35 +31,7 @@ function obtener_seguidores_o_siguiendo($user_id, $metadato)
     return is_array($datos) ? $datos : array();
 }
 
-function perfil()
-{
-    $url_path = trim(parse_url(add_query_arg([]), PHP_URL_PATH), '/');
-    $url_segments = explode('/', $url_path);
-    $user_slug = end($url_segments);
-    $user = get_user_by('slug', $user_slug);
-    $user_id = $user->ID;
 
-    ob_start();
-?>
-    <div class="tabs">
-        <div class="tab-content">
-
-            <div id="perfil" class="tab active">
-                <div class="YRGFQO">
-                    <div class="LRFPKL">
-                        <? echo perfilBanner($user_id); ?>
-                    </div>
-                    <div class="JNDKWD">
-                        <? echo publicaciones(['filtro' => 'nada', 'tab_id' => 'perfil', 'posts' => 12, 'user_id' => $user_id]);?>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-<?
-    return ob_get_clean();
-}
 
 function perfilBanner($user_id)
 {
@@ -87,7 +59,7 @@ function perfilBanner($user_id)
     $descripcion = get_user_meta($user_id, 'profile_description', true);
 
     ob_start();
-    ?>
+?>
     <div class="X522YA FRRVBB" data-iduser="<? echo esc_attr($user_id); ?>">
         <div class="JKBZKR">
             <img src="<? echo esc_url($imagen_perfil); ?>" alt="">
@@ -116,7 +88,7 @@ function perfilBanner($user_id)
             <?php endif; ?>
         </div>
     </div>
-    <?php
+<?php
     return ob_get_clean();
 }
 
@@ -274,5 +246,3 @@ function save_profile_description_ajax()
     wp_die();
 }
 add_action('wp_ajax_save_profile_description', 'save_profile_description_ajax');
-
-
