@@ -26,31 +26,20 @@ function htmlColec($filtro)
                 </h2>
             <?
             } else {
+                $rola_meta = get_post_meta($post_id, 'rola', true);
+                $nombre_rola = '';
+
+                if ($rola_meta === '1') {
+
+                    $nombre_rola = get_post_meta($post_id, 'nombreRola', true) ?? get_post_meta($post_id, 'nombreRola1', true) ?? get_the_title($postId);
+                }
+
+                if (!empty($nombre_rola)) {
+                    echo '<h2 class="post-title">' . esc_html($nombre_rola) . '</h2>';
+                }
             ?>
                 <div class="LRKHLC">
                     <div class="XOKALG">
-                        <?
-                        $post_id = $postId;
-                        $rola_meta = get_post_meta($post_id, 'rola', true);
-                        $nombre_rola_html = '';
-
-                        if ($rola_meta === '1') {
-                            $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
-                            if (empty($nombre_rola)) {
-                                $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
-                            }
-                            if (empty($nombre_rola)) {
-                                $nombre_rola =  get_the_title($postId);
-                            }
-                            if (!empty($nombre_rola)) {
-                                $nombre_rola_html = '<p class="nameRola">' . esc_html($nombre_rola) . '</p>';
-                            }
-                        }
-
-                        $output .= $nombre_rola_html;
-
-                        echo $output;
-                        ?>
                     </div>
                 </div>
             <?
@@ -63,22 +52,15 @@ function htmlColec($filtro)
                 <div class="CPQBAU"><? echo get_the_author_meta('display_name', $autorId); ?></div>
                 <div class="CPQBCO">
                     <?
-                    $post_id = $postId; // Use the existing $postId
                     $rola_meta = get_post_meta($post_id, 'rola', true);
 
                     if ($rola_meta === '1') {
-                        $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
-                        if (empty($nombre_rola)) {
-                            $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
-                        }
-                        if (empty($nombre_rola)) {
-                            $nombre_rola =  get_the_title($postId);
-                        }
+                        // Usa la misma lógica que arriba para obtener el nombre de la rola
+                        $nombre_rola = get_post_meta($post_id, 'nombreRola', true) ?? get_post_meta($post_id, 'nombreRola1', true) ?? get_the_title($postId);
+
                         if (!empty($nombre_rola)) {
                             echo "<p>" . esc_html($nombre_rola) . "</p>";
-                        } else {
                         }
-                    } else {
                     }
                     ?>
                 </div>
