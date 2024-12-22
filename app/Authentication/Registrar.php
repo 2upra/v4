@@ -66,17 +66,3 @@ function registrar_usuario() {
     return ob_get_clean();
 }
 
-function redirect_profile_spaces()
-{
-    if ($_SERVER['REQUEST_METHOD'] === 'GET' && strpos($_SERVER['REQUEST_URI'], '/perfil/') !== false) {
-        $request_uri = $_SERVER['REQUEST_URI'];
-        $new_uri = str_replace(' ', '', $request_uri);
-        $new_uri = str_replace('+', '', $new_uri);
-
-        if ($new_uri !== $request_uri) {
-            wp_redirect(home_url($new_uri), 301);
-            exit;
-        }
-    }
-}
-add_action('init', 'redirect_profile_spaces');
