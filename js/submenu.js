@@ -1,36 +1,4 @@
-/*
 
-Mira, esto es un toque en la version movil, el problema es que cuando toco un submenu que no es EDYQHV, en version movil, debería abrirse sin problema, pero se abre y se cierra al instante cualquier submenu, y solo funciona si lo mantengo presionado
-
-no se cual es el problema
-👇 eventosMenu: Evento 'pointerdown' detectado
-submenu.js?ver=0.2.267:36 📱 eventosMenu: Dispositivo móvil detectado
-submenu.js?ver=0.2.267:51 ☝️ eventosMenu: Evento 'pointerup' detectado
-submenu.js?ver=0.2.267:54 ⏱️ eventosMenu: Temporizador de presionar prolongado limpiado
-submenu.js?ver=0.2.267:64 ➡️ eventosMenu: Manejando 'pointerup' para otros submenús
-submenu.js?ver=0.2.267:103 🔄 handleSubmenuToggle: Iniciando manejo de toggle de submenú
-submenu.js?ver=0.2.267:135 🔑 getSubmenuId: Obteniendo ID de submenú
-submenu.js?ver=0.2.267:142 🆔 getSubmenuId: ID de submenú para otros: submenuperfil-default
-submenu.js?ver=0.2.267:105 🆔 handleSubmenuToggle: ID de submenú obtenido: submenuperfil-default
-submenu.js?ver=0.2.267:111 🔍 handleSubmenuToggle: Submenú encontrado: <div class=​"A1806241 mobile-submenu" id=​"submenuperfil-default" style=​"position:​ fixed;​ z-index:​ 1006;​ display:​ none;​ visibility:​ visible;​ top:​ 174px;​ left:​ 35.5px;​">​…​</div>​
-submenu.js?ver=0.2.267:119 📍 handleSubmenuToggle: Posición del submenú establecida: abajo
-submenu.js?ver=0.2.267:122 📱 handleSubmenuToggle: Clase 'mobile-submenu' alternada
-submenu.js?ver=0.2.267:128 👁️ handleSubmenuToggle: Mostrando submenú
-submenu.js?ver=0.2.267:148 👁️ showSubmenu: Mostrando submenú
-submenu.js?ver=0.2.267:150 📏 showSubmenu: Ancho de la ventana: 356, Alto de la ventana: 566
-submenu.js?ver=0.2.267:161 ⚙️ showSubmenu: Estilos iniciales aplicados al submenú
-submenu.js?ver=0.2.267:165 📏 showSubmenu: Ancho del submenú: 285, Alto del submenú: 218
-submenu.js?ver=0.2.267:168 📐 showSubmenu: Rectángulo del disparador: DOMRect {x: 294.09375, y: 517.5, width: 26, height: 39, top: 517.5, …}
-submenu.js?ver=0.2.267:171 📱 showSubmenu: Posicionando submenú en móvil
-submenu.js?ver=0.2.267:190 ✅ showSubmenu: Submenú visible
-submenu.js?ver=0.2.267:193 🆔 showSubmenu: Prefijo de ID de submenú: submenuperfil
-submenu.js?ver=0.2.267:196 🌓 showSubmenu: Fondo oscuro creado
-submenu.js?ver=0.2.267:199 🚫 showSubmenu: Scroll deshabilitado
-submenu.js?ver=0.2.267:202 👁️ showSubmenu: Submenú establecido como abierto: <div class=​"A1806241 mobile-submenu" id=​"submenuperfil-default" style=​"position:​ fixed;​ z-index:​ 1006;​ display:​ none;​ visibility:​ visible;​ top:​ 174px;​ left:​ 35.5px;​">​…​</div>​
-submenu.js?ver=0.2.267:206 🙈 hideSubmenu: Ocultando submenú
-submenu.js?ver=0.2.267:209 ✅ hideSubmenu: Submenú ocultado: <div class=​"A1806241 mobile-submenu" id=​"submenuperfil-default" style=​"position:​ fixed;​ z-index:​ 1006;​ display:​ none;​ visibility:​ visible;​ top:​ 174px;​ left:​ 35.5px;​">​…​</div>​
-submenu.js?ver=0.2.267:211 🚫 hideSubmenu: Variable openSubmenu reseteada
-*/
 
 let submenuIdPrefixes = [];
 let openSubmenu = null;
@@ -60,6 +28,34 @@ function registrarIdMenu(submenuIdPrefix) {
         console.log(`❗ registrarIdMenu: '${submenuIdPrefix}' ya existe en la lista de prefijos`);
     }
 }
+/*
+mira sigue fallando, al dar click en la version movil se cierra instaneamente
+👇 eventosMenu: Evento 'pointerdown' detectado
+submenu.js?ver=0.2.268:70 📱 eventosMenu: Dispositivo móvil detectado
+submenu.js?ver=0.2.268:85 ☝️ eventosMenu: Evento 'touchend' detectado
+submenu.js?ver=0.2.268:88 ⏱️ eventosMenu: Temporizador de presionar prolongado limpiado
+submenu.js?ver=0.2.268:91 ➡️ eventosMenu: Manejando 'touchend' para otros submenús
+submenu.js?ver=0.2.268:121 🔄 handleSubmenuToggle: Iniciando manejo de toggle de submenú
+submenu.js?ver=0.2.268:155 🔑 getSubmenuId: Obteniendo ID de submenú
+submenu.js?ver=0.2.268:162 🆔 getSubmenuId: ID de submenú para otros: submenuperfil-default
+submenu.js?ver=0.2.268:123 🆔 handleSubmenuToggle: ID de submenú obtenido: submenuperfil-default
+submenu.js?ver=0.2.268:129 🔍 handleSubmenuToggle: Submenú encontrado: <div class=​"A1806241 mobile-submenu" id=​"submenuperfil-default" style=​"position:​ fixed;​ z-index:​ 1006;​ display:​ none;​ visibility:​ visible;​ top:​ 182px;​ left:​ 33px;​">​…​</div>​
+submenu.js?ver=0.2.268:137 📍 handleSubmenuToggle: Posición del submenú establecida: abajo
+submenu.js?ver=0.2.268:140 📱 handleSubmenuToggle: Clase 'mobile-submenu' alternada
+submenu.js?ver=0.2.268:146 👁️ handleSubmenuToggle: Mostrando submenú
+submenu.js?ver=0.2.268:168 👁️ showSubmenu: Mostrando submenú
+submenu.js?ver=0.2.268:170 📏 showSubmenu: Ancho de la ventana: 328, Alto de la ventana: 582
+submenu.js?ver=0.2.268:181 ⚙️ showSubmenu: Estilos iniciales aplicados al submenú
+submenu.js?ver=0.2.268:185 📏 showSubmenu: Ancho del submenú: 262, Alto del submenú: 218
+submenu.js?ver=0.2.268:188 📐 showSubmenu: Rectángulo del disparador: DOMRect {x: 270.09375, y: 533.5, width: 26, height: 39, top: 533.5, …}
+submenu.js?ver=0.2.268:191 📱 showSubmenu: Posicionando submenú en móvil
+submenu.js?ver=0.2.268:210 ✅ showSubmenu: Submenú visible
+submenu.js?ver=0.2.268:213 🆔 showSubmenu: Prefijo de ID de submenú: submenuperfil
+submenu.js?ver=0.2.268:216 🌓 showSubmenu: Fondo oscuro creado
+submenu.js?ver=0.2.268:219 🚫 showSubmenu: Scroll deshabilitado
+submenu.js?ver=0.2.268:222 👁️ showSubmenu: Submenú establecido como abierto: <div class=​"A1806241 mobile-submenu" id=​"submenuperfil-default" style=​"position:​ fixed;​ z-index:​ 1006;​ display:​ none;​ visibility:​ visible;​ top:​ 182px;​ left:​ 33px;​">​…​</div>​
+submenu.js?ver=0.2.268:226 🙈 hideSubmenu: Ocultando submenú
+*/
 
 function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
     console.log('👂 eventosMenu: Configurando eventos para el disparador', trigger);
@@ -247,9 +243,25 @@ function cerrarMenu(triggerSelector, submenuIdPrefix) {
     console.log('🚪 cerrarMenu: Configurando evento para cerrar menús');
     document.addEventListener('click', event => {
         console.log("🖱️ cerrarMenu: Evento 'click' detectado en el documento");
+
+        // Comprobar si el clic proviene de un trigger en un dispositivo móvil
+        let isClickFromMobileTrigger = false;
+        if (window.innerWidth <= 640) {
+            const clickedElement = event.target;
+            const isTrigger = clickedElement.closest(triggerSelector) !== null;
+            if (isTrigger) {
+                isClickFromMobileTrigger = true;
+            }
+        }
+
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
             console.log('🔍 cerrarMenu: Revisando submenú:', submenu);
-            if (submenu.style.display === 'block' && !submenu.contains(event.target) && !event.target.closest(triggerSelector) && !event.target.closest('a')) {
+            // Solo ocultar si el submenú está visible, el clic no está dentro del submenú, 
+            // el clic no está en un enlace y el clic no proviene de un trigger en móvil
+            if (submenu.style.display === 'block' && 
+                !submenu.contains(event.target) && 
+                !event.target.closest('a') && 
+                !isClickFromMobileTrigger) {
                 console.log('🙈 cerrarMenu: Ocultando submenú:', submenu);
                 hideSubmenu(submenu);
             }
