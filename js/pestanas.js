@@ -35,6 +35,11 @@ function mostrarPestana(id) {
     if (menuData) {
         menuData.setAttribute('pestanaActual', id.replace('#', ''));
     }
+
+    // Actualizar la URL y el título de la página
+    window.location.hash = id;
+    const tabName = id.substring(1); // Eliminar el #
+    document.title = tabName.charAt(0).toUpperCase() + tabName.slice(1);
 }
 
 function inicializarPestanas() {
@@ -48,6 +53,8 @@ function inicializarPestanas() {
         targetId = hash;
     } else if (pestañasExistentes.length > 0) {
         targetId = '#' + pestañasExistentes[0].id;
+        // Actualizar la URL si no hay hash pero hay pestañas
+        window.location.hash = targetId;
     }
 
     if (targetId) {
@@ -59,7 +66,6 @@ function inicializarPestanas() {
         enlaces.forEach(a => {
             a.addEventListener('click', function(e) {
                 e.preventDefault();
-                //detenerCarga(); // Se supone que debería evitar que se cargue contenido no correspondiente en la pestaña que se acaba de abrir pero no. 
                 mostrarPestana(this.getAttribute('href'));
             });
         });
@@ -96,3 +102,4 @@ function asignarPestanas() {
         console.warn('Elementos #menuData o #adaptableTabs no encontrados en el DOM.');
     }
 }
+
