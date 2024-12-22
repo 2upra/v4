@@ -27,6 +27,7 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
         if (window.innerWidth <= 640 && event.pointerType === 'touch') {
             isTouchEvent = true;
             isLongPress = false;
+
             if (triggerSelector === '.EDYQHV') {
                 // Solo iniciar el temporizador de "presionar prolongado" para .EDYQHV
                 longPressTimer = setTimeout(() => {
@@ -39,19 +40,22 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
 
     trigger.addEventListener('pointerup', event => {
         if (isTouchEvent) {
+            // Cancelamos cualquier temporizador de "presionar prolongado"
             clearTimeout(longPressTimer);
 
             if (triggerSelector === '.EDYQHV') {
-                // Para .EDYQHV, evitar acción normal si no fue un presionar prolongado
+                // Para .EDYQHV, evitar cualquier acción si no fue un presionar prolongado
                 if (!isLongPress) {
                     event.preventDefault();
                     event.stopPropagation();
                 }
             } else {
-                // Para otros submenús, abrir normalmente con un toque
+                // Para otros selectores, abrir con un toque
+                event.preventDefault(); // Prevenir clic duplicado
                 handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
             }
         }
+
         isLongPress = false;
     });
 
@@ -68,7 +72,7 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
             // Comportamiento normal en escritorio
             handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
         } else if (triggerSelector === '.EDYQHV' && isLongPress) {
-            // Prevenir clics en .EDYQHV si fue un presionar prolongado
+            // Prevenir clic si ya manejamos el presionar prolongado
             event.preventDefault();
             event.stopPropagation();
         }
@@ -85,20 +89,27 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
 function handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position) {
     const submenuId = getSubmenuId(trigger, triggerSelector, submenuIdPrefix);
     const submenu = document.getElementById(submenuId);
+
     if (!submenu) {
         console.error('Submenu not found:', submenuId);
         return;
     }
+
+    // Ocultar cualquier submenú abierto previamente
     if (openSubmenu && openSubmenu !== submenu) {
         hideSubmenu(openSubmenu);
     }
+
+    // Alternar la visibilidad del submenú actual
     submenu._position = position;
     submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
+
     if (submenu.style.display === 'block') {
         hideSubmenu(submenu);
     } else {
         showSubmenu(event, trigger, submenu, position);
     }
+
     event.stopPropagation();
 }
 
