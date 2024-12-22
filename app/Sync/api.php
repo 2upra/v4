@@ -193,12 +193,7 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
     return rest_ensure_response($downloads);
 }
 
-/**
- * Función para obtener la URL optimizada de la imagen (portada o imagen temporal).
- *
- * @param int $post_id ID del post.
- * @return string|null URL optimizada o null si no hay imagen.
- */
+
 function obtenerImagenOptimizada($post_id)
 {
     // Intentar obtener la imagen de portada
@@ -222,13 +217,6 @@ function obtenerImagenOptimizada($post_id)
     // Si no hay imagen, devolver null
     return null;
 }
-
-/*
-pasa esto con los wav que se descarga, tenia ese problema antes pero no recuerdo como lo resolvi en otro codigo
-File: C:\Users\1u\Documents\test\Sync 2upra (1)\samples-hip-hop-soul\Vintage-Loop-70BPM_qH4j_2upra.wav
-Code: -1 (FFFFFFFF)
-Message: Decoder was not found for this format.
-*/
 
 function descargarAudiosSync(WP_REST_Request $request)
 {

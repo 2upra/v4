@@ -3,6 +3,7 @@ let openSubmenu = null;
 let longPressTimer;
 let isLongPress = false;
 let isTouchEvent = false;
+let isClosing = false; // Nueva variable para controlar el cierre
 
 function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     const triggers = document.querySelectorAll(triggerSelector);
@@ -26,6 +27,7 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
     trigger.addEventListener('pointerdown', event => {
         if (window.innerWidth <= 640 && event.pointerType === 'touch') {
             isTouchEvent = true;
+            isClosing = false; // Restablecer isClosing al iniciar un nuevo toque
             if (triggerSelector === '.EDYQHV') {
                 // Solo iniciar el temporizador para .EDYQHV en móvil
                 isLongPress = false;
@@ -108,7 +110,6 @@ function handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, p
     event.stopPropagation();
 }
 
-
 function getSubmenuId(trigger, triggerSelector, submenuIdPrefix) {
     if (triggerSelector === '.EDYQHV') {
         return `${submenuIdPrefix}-${trigger.getAttribute('id-post')}`;
@@ -149,6 +150,8 @@ function showSubmenu(event, trigger, submenu, position) {
 
 function hideSubmenu(submenu) {
     if (submenu) {
+        isClosing = true; // Indicar que se está cerrando un submenú
+        setTimeout(() => { isClosing = false; }, 100); // Restablecer isClosing después de un breve retardo
         submenu.style.display = 'none';
         openSubmenu = null;
     }
@@ -161,6 +164,7 @@ function hideSubmenu(submenu) {
 
 function cerrarMenu(triggerSelector, submenuIdPrefix) {
     document.addEventListener('click', event => {
+        if (window.innerWidth <= 640 && isClosing) return; // Ignorar clics durante el cierre en móvil
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
             if (submenu.style.display === 'block' && !submenu.contains(event.target) && !event.target.closest(triggerSelector) && !event.target.closest('a')) {
                 hideSubmenu(submenu);
@@ -170,10 +174,20 @@ function cerrarMenu(triggerSelector, submenuIdPrefix) {
 }
 
 function resizeMovilMenu(submenuIdPrefix) {
+    let resizeTimeout;
     window.addEventListener('resize', () => {
-        document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
-            submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
-        });
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (window.innerWidth <= 640 && isClosing) return; // Ignorar resize durante el cierre en móvil
+            document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
+                submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
+                if (window.innerWidth > 640 && submenu.style.display === 'block') {
+                    // Recolocar submenús abiertos en escritorio al redimensionar
+                    const position = submenu._position; // Usar la posición almacenada
+                    showSubmenu(null, submenu.previousElementSibling, submenu, position);
+                }
+            });
+        }, 100); // Pequeño retardo para evitar ejecuciones excesivas
     });
 }
 
@@ -193,7 +207,6 @@ window.hideAllSubmenus = function () {
     });
     console.log('hideAllSubmenus (versión simplificada) finalizado');
 };
-
 
 function submenu() {
     createSubmenu('.filtrosboton', 'filtrosMenu', 'abajo');
