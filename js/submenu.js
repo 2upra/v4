@@ -4,7 +4,6 @@ let longPressTimer;
 let isLongPress = false;
 let isTouchEvent = false;
 
-
 function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     const triggers = document.querySelectorAll(triggerSelector);
     registrarIdMenu(submenuIdPrefix);
@@ -22,7 +21,6 @@ function registrarIdMenu(submenuIdPrefix) {
         submenuIdPrefixes.push(submenuIdPrefix);
     }
 }
-
 
 function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
     trigger.addEventListener('pointerdown', event => {
@@ -88,7 +86,7 @@ function handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, p
     if (submenu.style.display === 'block') {
         hideSubmenu(submenu);
     } else {
-        showSubmenu(event, trigger, submenu, position, submenuIdPrefix)
+        showSubmenu(event, trigger, submenu, position, submenuIdPrefix);
     }
     event.stopPropagation();
 }
@@ -178,7 +176,6 @@ window.hideAllSubmenus = function () {
     console.log('hideAllSubmenus (versión simplificada) finalizado');
 };
 
-
 function submenu() {
     createSubmenu('.filtrosboton', 'filtrosMenu', 'abajo');
     createSubmenu('.mipsubmenu', 'submenuperfil', 'abajo');
@@ -209,14 +206,12 @@ window.createSubmenuDarkBackground = function (submenuIdPrefix) {
         document.body.appendChild(darkBackground);
 
         // Agregar evento para cerrar submenús al hacer clic en el fondo oscuro
-        darkBackground.addEventListener('click', (event) => {
+        darkBackground.addEventListener('click', event => {
             console.log('  🖱️ createSubmenuDarkBackground: Clic en el fondo oscuro');
             // Evitar que el clic en el fondo oscuro se propague al documento
             event.stopPropagation();
             console.log(`  🙈 createSubmenuDarkBackground: Ocultando submenús con prefijo ${submenuIdPrefix}-`);
-            document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
-                hideSubmenu(submenu);
-            });
+            window.hideAllSubmenus();
         });
         console.log('  ✅ createSubmenuDarkBackground: Fondo oscuro creado y evento click agregado');
     }
@@ -232,7 +227,7 @@ window.createSubmenuDarkBackground = function (submenuIdPrefix) {
         console.log('  ✅ createSubmenuDarkBackground: Fondo oscuro visible');
         // Habilitar los eventos de puntero después de un breve retraso
         setTimeout(() => {
-             darkBackground.style.pointerEvents = 'auto';
+            darkBackground.style.pointerEvents = 'auto';
             console.log('  🖱️ createSubmenuDarkBackground: Eventos de puntero habilitados después de un retraso');
         }, 50);
     }, 10);
