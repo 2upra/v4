@@ -27,9 +27,10 @@ function htmlColec($filtro)
             <?
             } else {
                 $rola_meta = get_post_meta($post_id, 'rola', true);
+                $tienda_meta = get_post_meta($post_id, 'meta', true);
                 $nombre_rola = '';
 
-                if ($rola_meta === '1') {
+                if ($rola_meta === '1' || $tienda_meta === '1') {
 
                     $nombre_rola = get_post_meta($post_id, 'nombreRola', true) ?? get_post_meta($post_id, 'nombreRola1', true) ?? get_the_title($postId);
                 }
@@ -54,7 +55,7 @@ function htmlColec($filtro)
                     <?
                     $rola_meta = get_post_meta($post_id, 'rola', true);
 
-                    if ($rola_meta === '1') {
+                    if ($rola_meta === '1' || $tienda_meta === '1') {
                         // Usa la misma lógica que arriba para obtener el nombre de la rola
                         $nombre_rola = get_post_meta($post_id, 'nombreRola', true) ?? get_post_meta($post_id, 'nombreRola1', true) ?? get_the_title($postId);
 
