@@ -845,7 +845,7 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
             $query->the_post();
 
             if ($tipoPost === 'social_post') {
-                if ($filtro === 'rola') {
+                if ($filtro === 'rola' || 'tiendaPerfil') {
                     echo htmlColec($filtro);
                 } else {
                     echo htmlPost($filtro);
