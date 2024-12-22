@@ -33,6 +33,9 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
                     isLongPress = true;
                     handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
                 }, 500);
+            } else if (triggerSelector !== '.EDYQHV') {
+                // Para los demás submenús en móvil, abrir directamente
+                handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
             }
         }
     });
@@ -40,12 +43,15 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
     trigger.addEventListener('pointerup', event => {
         if (isTouchEvent) {
             clearTimeout(longPressTimer);
-            if (!isLongPress && triggerSelector !== '.EDYQHV') {
-                // Abrir con un toque si no es .EDYQHV o no es una pulsación larga
-                handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
+            if (isLongPress && triggerSelector === '.EDYQHV') {
+                // Si es .EDYQHV y fue una pulsación larga, ya se manejó en pointerdown
+                isLongPress = false;
+            } else if (!isLongPress && triggerSelector !== '.EDYQHV') {
+                // Si no es .EDYQHV y no fue una pulsación larga, evitar duplicidad
+                event.preventDefault();
+                event.stopPropagation();
             }
         }
-        isLongPress = false;
         isTouchEvent = false;
     });
 
@@ -61,8 +67,8 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
         if (window.innerWidth > 640) {
             // Comportamiento normal en escritorio
             handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
-        } else if (triggerSelector === '.EDYQHV' && !isLongPress) {
-            // Evitar la acción de clic para .EDYQHV en móvil si no fue una pulsación larga
+        } else {
+            // Evitar cualquier acción de clic en móvil
             event.preventDefault();
             event.stopPropagation();
         }
