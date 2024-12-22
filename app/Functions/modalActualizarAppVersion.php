@@ -7,8 +7,6 @@ function mostrarModalActualizacionApp()
     $mostrar_modal = false;
 
     // Introducir un retraso de 5 segundos
-    sleep(5);
-
     $version_usuario = get_user_meta($usuario_actual->ID, 'app_version_name', true);
 
     if ($version_usuario && $version_usuario !== $version_actual) {
