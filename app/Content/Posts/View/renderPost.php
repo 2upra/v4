@@ -88,7 +88,7 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
 
 
                     if (!empty($nombre_lanzamiento)) {
-                        echo '<p class="duration"><span class="lanzamiento">' . esc_html($nombre_lanzamiento) . '</span></p>';
+                        echo '<p class="lanzamiento"><span>' . esc_html($nombre_lanzamiento) . '</span></p>';
                     }
                     if (!empty($audio_duration)) {
                         echo '<p class="duration"><span >' . esc_html($audio_duration) . '</span></p>';
