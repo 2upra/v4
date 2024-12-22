@@ -1,9 +1,9 @@
 <?
 
-
 function tagsFrecuentes() {
     $cache_key = 'tagsFrecuentes12';
-    $tags_frecuentes = get_transient($cache_key);
+    $tags_frecuentes = obtenerCache($cache_key);
+    $cache_time = 43200;
 
     if ($tags_frecuentes !== false) {
         // Mezclar aleatoriamente las etiquetas almacenadas en caché y seleccionar 32
@@ -15,15 +15,18 @@ function tagsFrecuentes() {
 
     global $wpdb;
 
-    $query = "
-        SELECT pm.meta_value 
+    // Limit to the last month, and only posts with meta_key datosAlgoritmo
+    $query = $wpdb->prepare(
+        "SELECT pm.meta_value 
         FROM {$wpdb->postmeta} pm
         INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
         WHERE pm.meta_key = 'datosAlgoritmo'
         AND p.post_type = 'social_post'
-        LIMIT 50000
-    ";
-
+        AND p.post_date >= %s
+        LIMIT 20000",
+        date('Y-m-d', strtotime('-1 month')) 
+    );
+    
     $resultados = $wpdb->get_col($query);
     $tags_conteo = [];
 
@@ -53,19 +56,19 @@ function tagsFrecuentes() {
     // Ordenar los tags por frecuencia
     arsort($tags_conteo);
 
-    // Tomar los 64 más frecuentes
-    $top_64_tags = array_slice($tags_conteo, 0, 70, true);
+    // Tomar los 70 más frecuentes
+    $top_70_tags = array_slice($tags_conteo, 0, 70, true);
 
-    // Seleccionar aleatoriamente 32 tags de los 64 más frecuentes
-    $keys = array_keys($top_64_tags);
+    // Seleccionar aleatoriamente 32 tags de los 70 más frecuentes
+    $keys = array_keys($top_70_tags);
     shuffle($keys);
     $selected_keys = array_slice($keys, 0, 32);
 
     // Solo las etiquetas sin conteo
     $tags_frecuentes = array_values($selected_keys);
 
-    // Guardar en caché los 64 tags más frecuentes
-    set_transient($cache_key, $top_64_tags, 12 * HOUR_IN_SECONDS);
+    // Guardar en caché los 70 tags más frecuentes
+    guardarCache($cache_key, $top_70_tags, $cache_time);
 
     return $tags_frecuentes;
 }
