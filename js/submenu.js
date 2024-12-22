@@ -26,10 +26,9 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
     trigger.addEventListener('pointerdown', event => {
         if (window.innerWidth <= 640 && event.pointerType === 'touch') {
             isTouchEvent = true;
-            isLongPress = false;
-
             if (triggerSelector === '.EDYQHV') {
-                // Solo iniciar el temporizador de "presionar prolongado" para .EDYQHV
+                // Solo iniciar el temporizador para .EDYQHV en móvil
+                isLongPress = false;
                 longPressTimer = setTimeout(() => {
                     isLongPress = true;
                     handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
@@ -40,28 +39,19 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
 
     trigger.addEventListener('pointerup', event => {
         if (isTouchEvent) {
-            // Cancelamos cualquier temporizador de "presionar prolongado"
             clearTimeout(longPressTimer);
-
-            if (triggerSelector === '.EDYQHV') {
-                // Para .EDYQHV, evitar cualquier acción si no fue un presionar prolongado
-                if (!isLongPress) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-            } else {
-                // Para otros selectores, abrir con un toque
-                event.preventDefault(); // Prevenir clic duplicado
+            if (!isLongPress && triggerSelector !== '.EDYQHV') {
+                // Abrir con un toque si no es .EDYQHV o no es una pulsación larga
                 handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
             }
         }
-
         isLongPress = false;
+        isTouchEvent = false;
     });
 
     trigger.addEventListener('pointermove', event => {
-        if (isTouchEvent && triggerSelector === '.EDYQHV') {
-            // Cancelar presionar prolongado si hay movimiento en pantalla
+        if (isTouchEvent && isLongPress) {
+            // Cancelar la pulsación larga si hay movimiento
             clearTimeout(longPressTimer);
             isLongPress = false;
         }
@@ -71,8 +61,8 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
         if (window.innerWidth > 640) {
             // Comportamiento normal en escritorio
             handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
-        } else if (triggerSelector === '.EDYQHV' && isLongPress) {
-            // Prevenir clic si ya manejamos el presionar prolongado
+        } else if (triggerSelector === '.EDYQHV' && !isLongPress) {
+            // Evitar la acción de clic para .EDYQHV en móvil si no fue una pulsación larga
             event.preventDefault();
             event.stopPropagation();
         }
@@ -80,6 +70,7 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
 
     trigger.addEventListener('contextmenu', event => {
         if (window.innerWidth > 640 && triggerSelector === '.EDYQHV') {
+            // Mantener el comportamiento del clic derecho en .EDYQHV en escritorio
             event.preventDefault();
             handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
         }
@@ -95,12 +86,10 @@ function handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, p
         return;
     }
 
-    // Ocultar cualquier submenú abierto previamente
     if (openSubmenu && openSubmenu !== submenu) {
         hideSubmenu(openSubmenu);
     }
 
-    // Alternar la visibilidad del submenú actual
     submenu._position = position;
     submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
 
@@ -112,6 +101,7 @@ function handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, p
 
     event.stopPropagation();
 }
+
 
 function getSubmenuId(trigger, triggerSelector, submenuIdPrefix) {
     if (triggerSelector === '.EDYQHV') {
