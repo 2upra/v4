@@ -141,13 +141,11 @@ function contarLike($postId, $likeType = null)
     $table_name = $wpdb->prefix . 'post_likes';
 
     if ($likeType === null) {
-        // Contar todos los likes (incluyendo 'like' y 'favorito') de forma eficiente
         $contadorLike = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM $table_name WHERE post_id = %d AND like_type IN ('like', 'favorito')",
             $postId
         ));
     } else {
-        // Contar likes de un tipo específico
         $contadorLike = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM $table_name WHERE post_id = %d AND like_type = %s",
             $postId,

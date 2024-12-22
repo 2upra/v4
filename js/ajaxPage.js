@@ -151,6 +151,21 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
             .catch(e => console.error('Load error:', e));
     }
 
+    /*
+    porque al abrir una notificacion no funciona esto 
+
+    <li class="notificacion-item" data-notificacion-id="328409" data-observado="true">
+    <a href="https://2upra.com/?post_type=social_post&amp;p=328372" class="notificacion-enlace">
+    <img class="avatar" src="https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&amp;strip=all" alt="Avatar del emisor">
+    <div class="DAEFSE">
+    <p class="notificacion-contenido"></p><p>Asley Phonk le ha dado me gusta a tu publicación.</p>
+    <p></p>
+    <p class="notificacion-fecha">21 horas</p>
+    </div>
+    </a>
+    </li>
+    */
+
     document.addEventListener('DOMContentLoaded', () => {
         if (!window.location.href.includes('?fb-edit=1')) {
             reinit();
@@ -163,7 +178,6 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
 
         function handleLoad(e, url, el) {
             if (typeof window.hideAllSubmenus === 'function') {
-                
             }
             if (el.classList.contains('no-ajax') || el.closest('.no-ajax')) return true;
             if (typeof url !== 'string' || !url) return console.warn('Invalid URL:', url), true;
@@ -201,14 +215,25 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
                     url = el.getAttribute('href');
                 }
 
-                // Prioridad 3: data-href en cualquier elemento (incluyendo botones)
                 if (!url) {
                     url = el.getAttribute('data-href');
                 }
 
-                // Si encontramos una URL, manejamos la carga
                 if (url) {
                     handleLoad(e, url, el);
+                }
+            }
+        });
+
+        // **NUEVO CÓDIGO PARA MANEJAR CLICS EN NOTIFICACIONES**
+        document.body.addEventListener('click', function (e) {
+            const notificacionItem = e.target.closest('.notificacion-item');
+            if (notificacionItem) {
+                const enlace = notificacionItem.querySelector('.notificacion-enlace');
+                if (enlace && enlace.href) {
+                    e.preventDefault(); // Prevenir la recarga de la página
+                    const url = enlace.href;
+                    handleLoad(e, url, enlace); // Usar la función handleLoad existente
                 }
             }
         });

@@ -30,9 +30,9 @@ function htmlColec($filtro)
                 <div class="LRKHLC">
                     <div class="XOKALG">
                         <?
-                        $post_id = $postId; // Use the existing $postId
+                        $post_id = $postId; 
                         $rola_meta = get_post_meta($post_id, 'rola', true);
-                        $nombre_rola_html = ''; // Variable para almacenar el HTML de nombreRola
+                        $nombre_rola_html = '';
 
                         if ($rola_meta === '1') {
                             $nombre_rola = get_post_meta($post_id, 'nombreRola', true);

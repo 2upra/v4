@@ -712,6 +712,7 @@ function placeholderRs() {
     });
 }
 
+
 function limpiarCamposRs() {
     // Limpiar variables globales
     imagenUrl = null;
@@ -769,6 +770,13 @@ function limpiarCamposRs() {
 
     const colabCheckbox = document.getElementById('colab');
     if (colabCheckbox) colabCheckbox.checked = false;
+
+    // Ocultar y limpiar el campo nombreLanzamiento
+    const nombreLanzamientoInput = document.getElementById('nombreLanzamiento');
+    if (nombreLanzamientoInput) {
+        nombreLanzamientoInput.style.display = 'none';
+        nombreLanzamientoInput.value = ''; // Limpiar el valor del campo
+    }
 }
 
 window.inicializarWaveform = function (containerId, audioSrc) {
@@ -801,7 +809,8 @@ window.inicializarWaveform = function (containerId, audioSrc) {
         console.log('Error: No se encontró el contenedor o el audioSrc no es válido.');
     }
 };
-//cuando se desmarca musiccheck, no se pone en block fanLabel artistaLabel, siento que tal vez es por la propagacion de eventos porque musiccheck tambien hace algo adicional en otra parte del codigo
+
+
 async function selectorformtipo() {
     const descargacheck = document.getElementById('descargacheck');
     const musiccheck = document.getElementById('musiccheck');
@@ -809,13 +818,13 @@ async function selectorformtipo() {
     const colabcheck = document.getElementById('colabcheck');
     const fancheck = document.getElementById('fancheck');
     const artistacheck = document.getElementById('artistacheck');
-    const tiendacheck = document.getElementById('tiendacheck'); // Nuevo checkbox
+    const tiendacheck = document.getElementById('tiendacheck'); 
     const individualPost = document.getElementById('individualPost');
     const multiplePost = document.getElementById('multiplePost');
     const fanartistchecks = document.getElementById('fanartistchecks');
 
     // Verifica si los elementos necesarios existen; si no, retorna
-    if (!descargacheck || !musiccheck || !exclusivocheck || !colabcheck || !fancheck || !artistacheck || !tiendacheck || !individualPost || !multiplePost) return;
+    if (!descargacheck || !musiccheck || !exclusivocheck || !colabcheck || !fancheck || !artistacheck || !tiendacheck || !individualPost || !multiplePost || !fanartistchecks) return;
 
     descargacheck.checked = true;
     const label = descargacheck.closest('label');
@@ -843,7 +852,15 @@ async function selectorformtipo() {
             const checkedCheckboxes = document.querySelectorAll('.custom-checkbox input[type="checkbox"]:checked');
 
             // Incluye individualPost y multiplePost en la lista de checkboxes que no son fan ni artista
-            const nonFanArtistChecked = Array.from(checkedCheckboxes).filter(checkbox => checkbox.id !== 'fancheck' && checkbox.id !== 'artistacheck' && checkbox.id !== 'tiendacheck' && checkbox.id !== 'artistaTipoCheck' && checkbox.id !== 'fanTipoCheck');
+            const nonFanArtistChecked = Array.from(checkedCheckboxes).filter(checkbox => 
+                checkbox.id !== 'fancheck' && 
+                checkbox.id !== 'artistacheck' && 
+                checkbox.id !== 'tiendacheck' && 
+                checkbox.id !== 'artistaTipoCheck' && 
+                checkbox.id !== 'fanTipoCheck' &&
+                checkbox.id !== 'individualPost' && 
+                checkbox.id !== 'multiplePost' 
+            );
 
             if (nonFanArtistChecked.length > 2) {
                 event.target.checked = false;

@@ -24,45 +24,54 @@ function registrarIdMenu(submenuIdPrefix) {
 
 function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
     trigger.addEventListener('pointerdown', event => {
-        if (window.innerWidth <= 640 && event.pointerType === 'touch') {
+        if (window.innerWidth <= 640 && event.pointerType === 'touch' && triggerSelector === '.EDYQHV') {
             isTouchEvent = true;
             isLongPress = false;
             longPressTimer = setTimeout(() => {
                 isLongPress = true;
                 handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
             }, 500);
+        } else if (window.innerWidth <= 640 && event.pointerType === 'touch') {
+            isTouchEvent = true;
         }
     });
+
     trigger.addEventListener('pointerup', event => {
-        if (isTouchEvent && triggerSelector === '.EDYQHV') {
-            clearTimeout(longPressTimer);
-            if (!isLongPress) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        } else if (isTouchEvent) {
-            clearTimeout(longPressTimer);
-            if (!isLongPress) {
-                handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
+        if (window.innerWidth <= 640 && event.pointerType === 'touch') {
+            if (triggerSelector === '.EDYQHV') {
+                clearTimeout(longPressTimer);
+                if (!isLongPress) {
+                    // No hacer nada, el submenu se abre solo con long press
+                }
+            } else {
+                if (!isLongPress) {
+                    handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
+                }
             }
         }
         isLongPress = false;
+        isTouchEvent = false;
     });
+
     trigger.addEventListener('pointermove', event => {
-        if (isTouchEvent) {
+        if (isTouchEvent && triggerSelector === '.EDYQHV') {
             clearTimeout(longPressTimer);
             isLongPress = false;
         }
     });
+
     trigger.addEventListener('click', event => {
         if (window.innerWidth > 640 && triggerSelector !== '.EDYQHV') {
             handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
+        } else if (window.innerWidth > 640 && triggerSelector === '.EDYQHV') {
+            handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position); // Permitir click en desktop
         }
         if (isLongPress) {
             event.preventDefault();
             event.stopPropagation();
         }
     });
+
     trigger.addEventListener('contextmenu', event => {
         if (window.innerWidth > 640 && triggerSelector === '.EDYQHV') {
             event.preventDefault();
@@ -176,7 +185,6 @@ window.hideAllSubmenus = function () {
     console.log('hideAllSubmenus (versión simplificada) finalizado');
 };
 
-
 function submenu() {
     createSubmenu('.filtrosboton', 'filtrosMenu', 'abajo');
     createSubmenu('.mipsubmenu', 'submenuperfil', 'abajo');
@@ -185,7 +193,6 @@ function submenu() {
     createSubmenu('.submenucolab', 'opcionescolab', 'abajo');
     createSubmenu('.EDYQHV', 'opcionespost', 'abajo');
 }
-
 window.createSubmenuDarkBackground = function () {
     let darkBackground = document.getElementById('submenu-background5322');
     if (!darkBackground) {
