@@ -29,32 +29,33 @@ function registrarIdMenu(submenuIdPrefix) {
     }
 }
 /*
-mira sigue fallando, al dar click en la version movil se cierra instaneamente
+realmente sigue fallando, falla al dar toque en la version movil, se abre y cierra automaticamente
 👇 eventosMenu: Evento 'pointerdown' detectado
-submenu.js?ver=0.2.268:70 📱 eventosMenu: Dispositivo móvil detectado
-submenu.js?ver=0.2.268:85 ☝️ eventosMenu: Evento 'touchend' detectado
-submenu.js?ver=0.2.268:88 ⏱️ eventosMenu: Temporizador de presionar prolongado limpiado
-submenu.js?ver=0.2.268:91 ➡️ eventosMenu: Manejando 'touchend' para otros submenús
-submenu.js?ver=0.2.268:121 🔄 handleSubmenuToggle: Iniciando manejo de toggle de submenú
-submenu.js?ver=0.2.268:155 🔑 getSubmenuId: Obteniendo ID de submenú
-submenu.js?ver=0.2.268:162 🆔 getSubmenuId: ID de submenú para otros: submenuperfil-default
-submenu.js?ver=0.2.268:123 🆔 handleSubmenuToggle: ID de submenú obtenido: submenuperfil-default
-submenu.js?ver=0.2.268:129 🔍 handleSubmenuToggle: Submenú encontrado: <div class=​"A1806241 mobile-submenu" id=​"submenuperfil-default" style=​"position:​ fixed;​ z-index:​ 1006;​ display:​ none;​ visibility:​ visible;​ top:​ 182px;​ left:​ 33px;​">​…​</div>​
-submenu.js?ver=0.2.268:137 📍 handleSubmenuToggle: Posición del submenú establecida: abajo
-submenu.js?ver=0.2.268:140 📱 handleSubmenuToggle: Clase 'mobile-submenu' alternada
-submenu.js?ver=0.2.268:146 👁️ handleSubmenuToggle: Mostrando submenú
-submenu.js?ver=0.2.268:168 👁️ showSubmenu: Mostrando submenú
-submenu.js?ver=0.2.268:170 📏 showSubmenu: Ancho de la ventana: 328, Alto de la ventana: 582
-submenu.js?ver=0.2.268:181 ⚙️ showSubmenu: Estilos iniciales aplicados al submenú
-submenu.js?ver=0.2.268:185 📏 showSubmenu: Ancho del submenú: 262, Alto del submenú: 218
-submenu.js?ver=0.2.268:188 📐 showSubmenu: Rectángulo del disparador: DOMRect {x: 270.09375, y: 533.5, width: 26, height: 39, top: 533.5, …}
-submenu.js?ver=0.2.268:191 📱 showSubmenu: Posicionando submenú en móvil
-submenu.js?ver=0.2.268:210 ✅ showSubmenu: Submenú visible
-submenu.js?ver=0.2.268:213 🆔 showSubmenu: Prefijo de ID de submenú: submenuperfil
-submenu.js?ver=0.2.268:216 🌓 showSubmenu: Fondo oscuro creado
-submenu.js?ver=0.2.268:219 🚫 showSubmenu: Scroll deshabilitado
-submenu.js?ver=0.2.268:222 👁️ showSubmenu: Submenú establecido como abierto: <div class=​"A1806241 mobile-submenu" id=​"submenuperfil-default" style=​"position:​ fixed;​ z-index:​ 1006;​ display:​ none;​ visibility:​ visible;​ top:​ 182px;​ left:​ 33px;​">​…​</div>​
-submenu.js?ver=0.2.268:226 🙈 hideSubmenu: Ocultando submenú
+submenu.js?ver=0.2.269:66 📱 eventosMenu: Dispositivo móvil detectado
+submenu.js?ver=0.2.269:81 ☝️ eventosMenu: Evento 'touchend' detectado
+submenu.js?ver=0.2.269:84 ⏱️ eventosMenu: Temporizador de presionar prolongado limpiado
+submenu.js?ver=0.2.269:87 ➡️ eventosMenu: Manejando 'touchend' para otros submenús
+submenu.js?ver=0.2.269:117 🔄 handleSubmenuToggle: Iniciando manejo de toggle de submenú
+submenu.js?ver=0.2.269:151 🔑 getSubmenuId: Obteniendo ID de submenú
+submenu.js?ver=0.2.269:158 🆔 getSubmenuId: ID de submenú para otros: submenuperfil-default
+submenu.js?ver=0.2.269:119 🆔 handleSubmenuToggle: ID de submenú obtenido: submenuperfil-default
+submenu.js?ver=0.2.269:125 🔍 handleSubmenuToggle: Submenú encontrado: <div class=​"A1806241 mobile-submenu" id=​"submenuperfil-default">​…​</div>​
+submenu.js?ver=0.2.269:133 📍 handleSubmenuToggle: Posición del submenú establecida: abajo
+submenu.js?ver=0.2.269:136 📱 handleSubmenuToggle: Clase 'mobile-submenu' alternada
+submenu.js?ver=0.2.269:142 👁️ handleSubmenuToggle: Mostrando submenú
+submenu.js?ver=0.2.269:164 👁️ showSubmenu: Mostrando submenú
+submenu.js?ver=0.2.269:166 📏 showSubmenu: Ancho de la ventana: 328, Alto de la ventana: 582
+submenu.js?ver=0.2.269:169 🔄 showSubmenu: Moviendo submenú al body
+submenu.js?ver=0.2.269:177 ⚙️ showSubmenu: Estilos iniciales aplicados al submenú
+submenu.js?ver=0.2.269:181 📏 showSubmenu: Ancho del submenú: 262, Alto del submenú: 218
+submenu.js?ver=0.2.269:184 📐 showSubmenu: Rectángulo del disparador: DOMRect {x: 270.09375, y: 533.5, width: 26, height: 39, top: 533.5, …}
+submenu.js?ver=0.2.269:187 📱 showSubmenu: Posicionando submenú en móvil
+submenu.js?ver=0.2.269:206 ✅ showSubmenu: Submenú visible
+submenu.js?ver=0.2.269:209 🆔 showSubmenu: Prefijo de ID de submenú: submenuperfil
+submenu.js?ver=0.2.269:212 🌓 showSubmenu: Fondo oscuro creado
+submenu.js?ver=0.2.269:215 🚫 showSubmenu: Scroll deshabilitado
+submenu.js?ver=0.2.269:218 👁️ showSubmenu: Submenú establecido como abierto: <div class=​"A1806241 mobile-submenu" id=​"submenuperfil-default">​…​</div>​
+submenu.js?ver=0.2.269:222 🙈 hideSubmenu: Ocultando submenú
 */
 
 function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
@@ -308,10 +309,10 @@ function submenu() {
 }
 
 window.createSubmenuDarkBackground = function (submenuIdPrefix) {
-    // Añade el parámetro submenuIdPrefix
+    console.log('🌓 createSubmenuDarkBackground: Creando fondo oscuro');
     let darkBackground = document.getElementById('submenu-background5322');
     if (!darkBackground) {
-        // Crear el fondo oscuro si no existe
+        console.log('  ✅ createSubmenuDarkBackground: Fondo oscuro no existe, creando...');
         darkBackground = document.createElement('div');
         darkBackground.id = 'submenu-background5322';
         darkBackground.style.position = 'fixed';
@@ -328,30 +329,41 @@ window.createSubmenuDarkBackground = function (submenuIdPrefix) {
         document.body.appendChild(darkBackground);
 
         // Agregar evento para cerrar submenús al hacer clic en el fondo oscuro
-        darkBackground.addEventListener('click', () => {
-            // Ahora submenuIdPrefix está disponible aquí
+        darkBackground.addEventListener('click', (event) => {
+            console.log('  🖱️ createSubmenuDarkBackground: Clic en el fondo oscuro');
+            // Evitar que el clic en el fondo oscuro se propague al documento
+            event.stopPropagation();
+            console.log(`  🙈 createSubmenuDarkBackground: Ocultando submenús con prefijo ${submenuIdPrefix}-`);
             document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
                 hideSubmenu(submenu);
             });
         });
+        console.log('  ✅ createSubmenuDarkBackground: Fondo oscuro creado y evento click agregado');
     }
 
     darkBackground.style.display = 'block';
+    console.log('  ⏳ createSubmenuDarkBackground: Mostrando fondo oscuro');
     setTimeout(() => {
         darkBackground.style.opacity = '1';
+        console.log('  ✅ createSubmenuDarkBackground: Fondo oscuro visible');
     }, 10);
     darkBackground.style.pointerEvents = 'auto';
+    console.log('  🖱️ createSubmenuDarkBackground: Eventos de puntero habilitados en el fondo oscuro');
 };
 
-// Eliminar el fondo oscuro
 window.removeSubmenuDarkBackground = function () {
+    console.log('⚪ removeSubmenuDarkBackground: Eliminando fondo oscuro');
     const darkBackground = document.getElementById('submenu-background5322');
     if (darkBackground) {
         darkBackground.style.opacity = '0';
+        console.log('  ⏳ removeSubmenuDarkBackground: Ocultando fondo oscuro');
         setTimeout(() => {
             darkBackground.style.display = 'none';
             darkBackground.style.pointerEvents = 'none';
+            console.log('  ✅ removeSubmenuDarkBackground: Fondo oscuro ocultado y eventos de puntero deshabilitados');
         }, 300);
+    } else {
+        console.log('  ❌ removeSubmenuDarkBackground: Fondo oscuro no encontrado');
     }
 };
 

@@ -354,7 +354,7 @@ function postLog($log)
 
 function scriptsOrdenados()
 {
-    $global_version = '0.2.269';
+    $global_version = '0.2.270';
     $dev_mode = defined('LOCAL') && LOCAL;
     //$error_log = [];
 
