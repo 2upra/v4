@@ -58,7 +58,7 @@ function htmlColec($filtro)
             ?>
             <div class="CPQBEN" style="display: none;">
 
-                <? echo like($postId);?>
+                <? echo like($postId); ?>
                 <? echo botonCompra($postId); ?>
                 <div class="CPQBAU"><? echo get_the_author_meta('display_name', $autorId); ?></div>
                 <div class="CPQBCO">
@@ -79,6 +79,7 @@ function htmlColec($filtro)
                 </div>
             </div>
             <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
+            <!-- no imprimir este boton en rolas -->
             <? echo botonCompra($postId); ?>
         </div>
     </li>

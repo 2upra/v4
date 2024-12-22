@@ -354,7 +354,7 @@ function postLog($log)
 
 function scriptsOrdenados()
 {
-    $global_version = '0.2.280';
+    $global_version = '0.2.281';
     $dev_mode = defined('LOCAL') && LOCAL;
     //$error_log = [];
 
@@ -426,6 +426,7 @@ function scriptsOrdenados()
         'colec'             => '1.0.1',
         'stripeCompra'      => '1.0.1',
         'tooltips'          => '1.0.1',
+        'masonary'          => '1.0.1',
     ];
 
     wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.8.11', true);
