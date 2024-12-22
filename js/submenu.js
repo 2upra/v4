@@ -3,7 +3,6 @@ let openSubmenu = null;
 let longPressTimer;
 let isLongPress = false;
 let isTouchEvent = false;
-let isClosing = false; // Nueva variable para controlar el cierre
 
 function createSubmenu(triggerSelector, submenuIdPrefix, position = 'auto') {
     const triggers = document.querySelectorAll(triggerSelector);
@@ -27,17 +26,13 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
     trigger.addEventListener('pointerdown', event => {
         if (window.innerWidth <= 640 && event.pointerType === 'touch') {
             isTouchEvent = true;
-            isClosing = false; // Restablecer isClosing al iniciar un nuevo toque
+            isLongPress = false;
             if (triggerSelector === '.EDYQHV') {
-                // Solo iniciar el temporizador para .EDYQHV en móvil
-                isLongPress = false;
+                // Solo iniciar el temporizador de "presionar prolongado" para .EDYQHV
                 longPressTimer = setTimeout(() => {
                     isLongPress = true;
                     handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
                 }, 500);
-            } else if (triggerSelector !== '.EDYQHV') {
-                // Para los demás submenús en móvil, abrir directamente
-                handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
             }
         }
     });
@@ -45,21 +40,24 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
     trigger.addEventListener('pointerup', event => {
         if (isTouchEvent) {
             clearTimeout(longPressTimer);
-            if (isLongPress && triggerSelector === '.EDYQHV') {
-                // Si es .EDYQHV y fue una pulsación larga, ya se manejó en pointerdown
-                isLongPress = false;
-            } else if (!isLongPress && triggerSelector !== '.EDYQHV') {
-                // Si no es .EDYQHV y no fue una pulsación larga, evitar duplicidad
-                event.preventDefault();
-                event.stopPropagation();
+
+            if (triggerSelector === '.EDYQHV') {
+                // Para .EDYQHV, evitar acción normal si no fue un presionar prolongado
+                if (!isLongPress) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+            } else {
+                // Para otros submenús, abrir normalmente con un toque
+                handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
             }
         }
-        isTouchEvent = false;
+        isLongPress = false;
     });
 
     trigger.addEventListener('pointermove', event => {
-        if (isTouchEvent && isLongPress) {
-            // Cancelar la pulsación larga si hay movimiento
+        if (isTouchEvent && triggerSelector === '.EDYQHV') {
+            // Cancelar presionar prolongado si hay movimiento en pantalla
             clearTimeout(longPressTimer);
             isLongPress = false;
         }
@@ -69,8 +67,8 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
         if (window.innerWidth > 640) {
             // Comportamiento normal en escritorio
             handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
-        } else {
-            // Evitar cualquier acción de clic en móvil
+        } else if (triggerSelector === '.EDYQHV' && isLongPress) {
+            // Prevenir clics en .EDYQHV si fue un presionar prolongado
             event.preventDefault();
             event.stopPropagation();
         }
@@ -78,7 +76,6 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
 
     trigger.addEventListener('contextmenu', event => {
         if (window.innerWidth > 640 && triggerSelector === '.EDYQHV') {
-            // Mantener el comportamiento del clic derecho en .EDYQHV en escritorio
             event.preventDefault();
             handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
         }
@@ -88,25 +85,20 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
 function handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position) {
     const submenuId = getSubmenuId(trigger, triggerSelector, submenuIdPrefix);
     const submenu = document.getElementById(submenuId);
-
     if (!submenu) {
         console.error('Submenu not found:', submenuId);
         return;
     }
-
     if (openSubmenu && openSubmenu !== submenu) {
         hideSubmenu(openSubmenu);
     }
-
     submenu._position = position;
     submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
-
     if (submenu.style.display === 'block') {
         hideSubmenu(submenu);
     } else {
         showSubmenu(event, trigger, submenu, position);
     }
-
     event.stopPropagation();
 }
 
@@ -143,15 +135,15 @@ function showSubmenu(event, trigger, submenu, position) {
         submenu.style.left = `${left}px`;
     }
     submenu.style.visibility = 'visible';
-    createSubmenuDarkBackground();
+
+    const submenuIdPrefix = submenu.id.split('-')[0]; 
+    createSubmenuDarkBackground(submenuIdPrefix);
     document.body.classList.add('no-scroll');
     openSubmenu = submenu;
 }
 
 function hideSubmenu(submenu) {
     if (submenu) {
-        isClosing = true; // Indicar que se está cerrando un submenú
-        setTimeout(() => { isClosing = false; }, 100); // Restablecer isClosing después de un breve retardo
         submenu.style.display = 'none';
         openSubmenu = null;
     }
@@ -164,7 +156,6 @@ function hideSubmenu(submenu) {
 
 function cerrarMenu(triggerSelector, submenuIdPrefix) {
     document.addEventListener('click', event => {
-        if (window.innerWidth <= 640 && isClosing) return; // Ignorar clics durante el cierre en móvil
         document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
             if (submenu.style.display === 'block' && !submenu.contains(event.target) && !event.target.closest(triggerSelector) && !event.target.closest('a')) {
                 hideSubmenu(submenu);
@@ -174,20 +165,10 @@ function cerrarMenu(triggerSelector, submenuIdPrefix) {
 }
 
 function resizeMovilMenu(submenuIdPrefix) {
-    let resizeTimeout;
     window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            if (window.innerWidth <= 640 && isClosing) return; // Ignorar resize durante el cierre en móvil
-            document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
-                submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
-                if (window.innerWidth > 640 && submenu.style.display === 'block') {
-                    // Recolocar submenús abiertos en escritorio al redimensionar
-                    const position = submenu._position; // Usar la posición almacenada
-                    showSubmenu(null, submenu.previousElementSibling, submenu, position);
-                }
-            });
-        }, 100); // Pequeño retardo para evitar ejecuciones excesivas
+        document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
+            submenu.classList.toggle('mobile-submenu', window.innerWidth <= 640);
+        });
     });
 }
 
@@ -208,6 +189,7 @@ window.hideAllSubmenus = function () {
     console.log('hideAllSubmenus (versión simplificada) finalizado');
 };
 
+
 function submenu() {
     createSubmenu('.filtrosboton', 'filtrosMenu', 'abajo');
     createSubmenu('.mipsubmenu', 'submenuperfil', 'abajo');
@@ -217,7 +199,7 @@ function submenu() {
     createSubmenu('.EDYQHV', 'opcionespost', 'abajo');
 }
 
-window.createSubmenuDarkBackground = function () {
+window.createSubmenuDarkBackground = function (submenuIdPrefix) { // Añade el parámetro submenuIdPrefix
     let darkBackground = document.getElementById('submenu-background5322');
     if (!darkBackground) {
         // Crear el fondo oscuro si no existe
@@ -238,6 +220,7 @@ window.createSubmenuDarkBackground = function () {
 
         // Agregar evento para cerrar submenús al hacer clic en el fondo oscuro
         darkBackground.addEventListener('click', () => {
+            // Ahora submenuIdPrefix está disponible aquí
             document.querySelectorAll(`[id^="${submenuIdPrefix}-"]`).forEach(submenu => {
                 hideSubmenu(submenu);
             });
