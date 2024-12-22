@@ -177,8 +177,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         }
 
         function handleLoad(e, url, el) {
-            if (typeof window.hideAllSubmenus === 'function') {
-            }
+
             if (el.classList.contains('no-ajax') || el.closest('.no-ajax')) return true;
             if (typeof url !== 'string' || !url) return console.warn('Invalid URL:', url), true;
             const lowerUrl = url.trim().toLowerCase();
@@ -186,9 +185,9 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
             e.preventDefault();
 
             // Cerrar submenús
-
             // Usar setTimeout para retrasar la ejecución de load
             setTimeout(() => {
+                window.hideAllSubmenus();
                 load(url, true);
             }, 0); // Un retraso de 0 milisegundos es suficiente
 
@@ -201,7 +200,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
 
             if (el) {
                 let url;
-                window.hideAllSubmenus();
+                
 
                 // Prioridad 1: ajaxUrl dentro de button.iralpost
                 const buttonIralpost = el.closest('button.iralpost');
