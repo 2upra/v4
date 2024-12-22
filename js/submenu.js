@@ -24,49 +24,51 @@ function registrarIdMenu(submenuIdPrefix) {
 
 function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
     trigger.addEventListener('pointerdown', event => {
-        if (window.innerWidth <= 640 && event.pointerType === 'touch' && triggerSelector === '.EDYQHV') {
+        if (window.innerWidth <= 640 && event.pointerType === 'touch') {
             isTouchEvent = true;
             isLongPress = false;
-            longPressTimer = setTimeout(() => {
-                isLongPress = true;
-                handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
-            }, 500);
-        } else if (window.innerWidth <= 640 && event.pointerType === 'touch') {
-            isTouchEvent = true;
+            if (triggerSelector === '.EDYQHV') {
+                // Solo iniciar el temporizador de "presionar prolongado" para .EDYQHV
+                longPressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
+                }, 500);
+            }
         }
     });
 
     trigger.addEventListener('pointerup', event => {
-        if (window.innerWidth <= 640 && event.pointerType === 'touch') {
+        if (isTouchEvent) {
+            clearTimeout(longPressTimer);
+
             if (triggerSelector === '.EDYQHV') {
-                clearTimeout(longPressTimer);
+                // Para .EDYQHV, evitar acción normal si no fue un presionar prolongado
                 if (!isLongPress) {
-                    // No hacer nada, el submenu se abre solo con long press
+                    event.preventDefault();
+                    event.stopPropagation();
                 }
             } else {
-                if (!isLongPress) {
-                    handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
-                }
+                // Para otros submenús, abrir normalmente con un toque
+                handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
             }
         }
         isLongPress = false;
-        isTouchEvent = false;
     });
 
     trigger.addEventListener('pointermove', event => {
         if (isTouchEvent && triggerSelector === '.EDYQHV') {
+            // Cancelar presionar prolongado si hay movimiento en pantalla
             clearTimeout(longPressTimer);
             isLongPress = false;
         }
     });
 
     trigger.addEventListener('click', event => {
-        if (window.innerWidth > 640 && triggerSelector !== '.EDYQHV') {
+        if (window.innerWidth > 640) {
+            // Comportamiento normal en escritorio
             handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
-        } else if (window.innerWidth > 640 && triggerSelector === '.EDYQHV') {
-            handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position); // Permitir click en desktop
-        }
-        if (isLongPress) {
+        } else if (triggerSelector === '.EDYQHV' && isLongPress) {
+            // Prevenir clics en .EDYQHV si fue un presionar prolongado
             event.preventDefault();
             event.stopPropagation();
         }
@@ -185,6 +187,7 @@ window.hideAllSubmenus = function () {
     console.log('hideAllSubmenus (versión simplificada) finalizado');
 };
 
+
 function submenu() {
     createSubmenu('.filtrosboton', 'filtrosMenu', 'abajo');
     createSubmenu('.mipsubmenu', 'submenuperfil', 'abajo');
@@ -193,6 +196,7 @@ function submenu() {
     createSubmenu('.submenucolab', 'opcionescolab', 'abajo');
     createSubmenu('.EDYQHV', 'opcionespost', 'abajo');
 }
+
 window.createSubmenuDarkBackground = function () {
     let darkBackground = document.getElementById('submenu-background5322');
     if (!darkBackground) {
