@@ -31,7 +31,7 @@ function perfilTabs()
             </div>
 
             <div id="Tienda" class="tab">
-                <div class="YRGFQO">
+                <div class="YRGFQO tiendaTab">
                     <div class="JNDKWD">
                         <? echo publicaciones(['filtro' => 'tiendaPerfil', 'Tienda' => 'perfil', 'posts' => 12, 'user_id' => $user_id]); ?>
                     </div>
@@ -39,7 +39,7 @@ function perfilTabs()
             </div>
 
             <div id="Imagenes" class="tab">
-                <div class="YRGFQO">
+                <div class="YRGFQO ImagenesTab">
                     <div class="JNDKWD">
                         <? echo publicaciones(['filtro' => 'imagenesPerfil', 'Imagenes' => 'perfil', 'posts' => 12, 'user_id' => $user_id]); ?>
                     </div>
