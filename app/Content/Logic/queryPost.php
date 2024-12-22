@@ -844,20 +844,25 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
         while ($query->have_posts()) {
             $query->the_post();
 
-            if ($tipoPost === 'social_post') {
-                if ($filtro === 'rola' || 'tiendaPerfil') {
+            switch ($tipoPost) {
+                case 'social_post':
+                    if ($filtro === 'rola' || $filtro === 'tiendaPerfil') {
+                        echo htmlColec($filtro);
+                    } else {
+                        echo htmlPost($filtro);
+                    }
+                    break;
+                case 'colab':
+                    echo htmlColab($filtro);
+                    break;
+                case 'colecciones':
                     echo htmlColec($filtro);
-                } else {
-                    echo htmlPost($filtro);
-                }
-            } elseif ($tipoPost === 'colab') {
-                echo htmlColab($filtro);
-            } elseif ($tipoPost === 'colecciones') {
-                echo htmlColec($filtro);
-            } elseif ($tipoPost === 'post') {
-                echo htmlArticulo($filtro);
-            } else {
-                echo '<p>Tipo de publicación no reconocido.</p>';
+                    break;
+                case 'post':
+                    echo htmlArticulo($filtro);
+                    break;
+                default:
+                    echo '<p>Tipo de publicación no reconocido.</p>';
             }
         }
 
