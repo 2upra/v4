@@ -1,3 +1,37 @@
+/*
+
+Mira, esto es un toque en la version movil, el problema es que cuando toco un submenu que no es EDYQHV, en version movil, debería abrirse sin problema, pero se abre y se cierra al instante cualquier submenu, y solo funciona si lo mantengo presionado
+
+no se cual es el problema
+👇 eventosMenu: Evento 'pointerdown' detectado
+submenu.js?ver=0.2.267:36 📱 eventosMenu: Dispositivo móvil detectado
+submenu.js?ver=0.2.267:51 ☝️ eventosMenu: Evento 'pointerup' detectado
+submenu.js?ver=0.2.267:54 ⏱️ eventosMenu: Temporizador de presionar prolongado limpiado
+submenu.js?ver=0.2.267:64 ➡️ eventosMenu: Manejando 'pointerup' para otros submenús
+submenu.js?ver=0.2.267:103 🔄 handleSubmenuToggle: Iniciando manejo de toggle de submenú
+submenu.js?ver=0.2.267:135 🔑 getSubmenuId: Obteniendo ID de submenú
+submenu.js?ver=0.2.267:142 🆔 getSubmenuId: ID de submenú para otros: submenuperfil-default
+submenu.js?ver=0.2.267:105 🆔 handleSubmenuToggle: ID de submenú obtenido: submenuperfil-default
+submenu.js?ver=0.2.267:111 🔍 handleSubmenuToggle: Submenú encontrado: <div class=​"A1806241 mobile-submenu" id=​"submenuperfil-default" style=​"position:​ fixed;​ z-index:​ 1006;​ display:​ none;​ visibility:​ visible;​ top:​ 174px;​ left:​ 35.5px;​">​…​</div>​
+submenu.js?ver=0.2.267:119 📍 handleSubmenuToggle: Posición del submenú establecida: abajo
+submenu.js?ver=0.2.267:122 📱 handleSubmenuToggle: Clase 'mobile-submenu' alternada
+submenu.js?ver=0.2.267:128 👁️ handleSubmenuToggle: Mostrando submenú
+submenu.js?ver=0.2.267:148 👁️ showSubmenu: Mostrando submenú
+submenu.js?ver=0.2.267:150 📏 showSubmenu: Ancho de la ventana: 356, Alto de la ventana: 566
+submenu.js?ver=0.2.267:161 ⚙️ showSubmenu: Estilos iniciales aplicados al submenú
+submenu.js?ver=0.2.267:165 📏 showSubmenu: Ancho del submenú: 285, Alto del submenú: 218
+submenu.js?ver=0.2.267:168 📐 showSubmenu: Rectángulo del disparador: DOMRect {x: 294.09375, y: 517.5, width: 26, height: 39, top: 517.5, …}
+submenu.js?ver=0.2.267:171 📱 showSubmenu: Posicionando submenú en móvil
+submenu.js?ver=0.2.267:190 ✅ showSubmenu: Submenú visible
+submenu.js?ver=0.2.267:193 🆔 showSubmenu: Prefijo de ID de submenú: submenuperfil
+submenu.js?ver=0.2.267:196 🌓 showSubmenu: Fondo oscuro creado
+submenu.js?ver=0.2.267:199 🚫 showSubmenu: Scroll deshabilitado
+submenu.js?ver=0.2.267:202 👁️ showSubmenu: Submenú establecido como abierto: <div class=​"A1806241 mobile-submenu" id=​"submenuperfil-default" style=​"position:​ fixed;​ z-index:​ 1006;​ display:​ none;​ visibility:​ visible;​ top:​ 174px;​ left:​ 35.5px;​">​…​</div>​
+submenu.js?ver=0.2.267:206 🙈 hideSubmenu: Ocultando submenú
+submenu.js?ver=0.2.267:209 ✅ hideSubmenu: Submenú ocultado: <div class=​"A1806241 mobile-submenu" id=​"submenuperfil-default" style=​"position:​ fixed;​ z-index:​ 1006;​ display:​ none;​ visibility:​ visible;​ top:​ 174px;​ left:​ 35.5px;​">​…​</div>​
+submenu.js?ver=0.2.267:211 🚫 hideSubmenu: Variable openSubmenu reseteada
+*/
+
 let submenuIdPrefixes = [];
 let openSubmenu = null;
 let longPressTimer;
@@ -47,34 +81,18 @@ function eventosMenu(trigger, triggerSelector, submenuIdPrefix, position) {
         }
     });
 
-    trigger.addEventListener('pointerup', event => {
-        console.log("☝️ eventosMenu: Evento 'pointerup' detectado");
+    trigger.addEventListener('touchend', event => {
+        console.log("☝️ eventosMenu: Evento 'touchend' detectado");
         if (isTouchEvent) {
             clearTimeout(longPressTimer);
             console.log('⏱️ eventosMenu: Temporizador de presionar prolongado limpiado');
 
-            if (triggerSelector === '.EDYQHV') {
-                console.log("✋ eventosMenu: Manejando 'pointerup' para .EDYQHV");
-                if (!isLongPress) {
-                    console.log('❌ eventosMenu: Previniendo acción normal en .EDYQHV (no fue presionar prolongado)');
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-            } else {
-                console.log("➡️ eventosMenu: Manejando 'pointerup' para otros submenús");
+            if (triggerSelector !== '.EDYQHV') {
+                console.log("➡️ eventosMenu: Manejando 'touchend' para otros submenús");
                 handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, position);
             }
         }
         isLongPress = false;
-    });
-
-    trigger.addEventListener('pointermove', event => {
-        console.log("🖱️ eventosMenu: Evento 'pointermove' detectado");
-        if (isTouchEvent && triggerSelector === '.EDYQHV') {
-            console.log('🚫 eventosMenu: Cancelando presionar prolongado en .EDYQHV debido a movimiento');
-            clearTimeout(longPressTimer);
-            isLongPress = false;
-        }
     });
 
     trigger.addEventListener('click', event => {
@@ -128,7 +146,9 @@ function handleSubmenuToggle(event, trigger, triggerSelector, submenuIdPrefix, p
         console.log('👁️ handleSubmenuToggle: Mostrando submenú');
         showSubmenu(event, trigger, submenu, position);
     }
-    event.stopPropagation();
+    if (window.innerWidth <= 640) {
+        event.stopPropagation(); // Evita que el evento 'click' se propague en móviles
+    }
 }
 
 function getSubmenuId(trigger, triggerSelector, submenuIdPrefix) {
