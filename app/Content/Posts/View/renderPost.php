@@ -81,9 +81,26 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
                     </a>
                     <div class="CPQBAU"><?php echo get_the_author_meta('display_name', $author_id); ?></div>
                 </div>
-                <div class="MOREINFOLIST" style="display: none;">
-                    aqui va imprimir la siguiente informacion de las siguientes metas 
-                    la duracion en la meta 
+                <div class="MOREINFOLIST">
+                    <?php
+                    // Obtener la duración del audio
+                    $audio_duration = get_post_meta($post_id, 'audio_duration_1', true);
+
+                    // Obtener el título del lanzamiento
+                    $nombre_lanzamiento = get_post_meta($post_id, 'nombreLanzamiento', true);
+
+                    // Imprimir la información solo si existe
+                    if (!empty($audio_duration) || !empty($nombre_lanzamiento)) {
+                        echo '<div class="METADATA">';
+                        if (!empty($audio_duration)) {
+                            echo '<p><span class="duration">' . esc_html($audio_duration) . '</span></p>';
+                        }
+                        if (!empty($nombre_lanzamiento)) {
+                            echo '<p><span class="lanzamiento">' . esc_html($nombre_lanzamiento) . '</span></p>';
+                        }
+                        echo '</div>';
+                    }
+                    ?>
                 </div>
                 <div class="CPQBEN" style="display: none;">
                     <?php echo like($post_id); ?>
