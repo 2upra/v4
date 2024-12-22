@@ -3,7 +3,7 @@ let audioPlayingStatus = false;
 
 function inicializarWaveforms() {
     nextWave();
-    //console.log('inicializarWaveforms start');
+    ////console.log('inicializarWaveforms start');
     const observer = new IntersectionObserver(
         entries => {
             entries.forEach(entry => {
@@ -242,7 +242,7 @@ function loadAudio(postId, audioUrl, container, playOnLoad) {
 }
 
 window.we = function (postId, audioUrl, container, playOnLoad = false) {
-    //console.log('we start');
+    ////console.log('we start');
     if (!window.wavesurfers) window.wavesurfers = {};
     const MAX_RETRIES = 3;
 
@@ -426,7 +426,7 @@ function nextWave() {
 
     waveformContainers.forEach(container => {
         const postId = container.dataset.postId;
-        console.log(`Inicializando el contenedor para el post ID: ${postId}`);
+        ////console.log(`Inicializando el contenedor para el post ID: ${postId}`);
 
         // **Usar clases para los botones en lugar de IDs**
         const prevButton = container.querySelector('.prevWave');
@@ -438,18 +438,18 @@ function nextWave() {
 
         // Si no hay botones o no hay ondas, no hacer nada
         if ((!prevButton && !nextButton) || waveDivs.length === 0) {
-            console.warn(`No se encontraron botones o no hay ondas para el post ID: ${postId}`);
+            //console.warn(`No se encontraron botones o no hay ondas para el post ID: ${postId}`);
             return;
         }
 
         function updateButtonStates() {
             if (prevButton) {
                 prevButton.disabled = currentWave === 0;
-                console.log(`prevButton para post ${postId} está ${prevButton.disabled ? 'deshabilitado' : 'habilitado'}`);
+                //console.log(`prevButton para post ${postId} está ${prevButton.disabled ? 'deshabilitado' : 'habilitado'}`);
             }
             if (nextButton) {
                 nextButton.disabled = currentWave === waveDivs.length - 1;
-                console.log(`nextButton para post ${postId} está ${nextButton.disabled ? 'deshabilitado' : 'habilitado'}`);
+                //console.log(`nextButton para post ${postId} está ${nextButton.disabled ? 'deshabilitado' : 'habilitado'}`);
             }
         }
 
@@ -462,7 +462,7 @@ function nextWave() {
 
             // Mostrar solo la onda seleccionada
             waveDivs[currentWave].style.display = 'block';
-            console.log(`Mostrando onda ${currentWave} del post ${postId}`);
+            //console.log(`Mostrando onda ${currentWave} del post ${postId}`);
 
             updateButtonStates();
         }
@@ -470,14 +470,14 @@ function nextWave() {
         // Event listeners para los botones
         if (nextButton) {
             nextButton.addEventListener('click', () => {
-                console.log(`Clic en nextButton para el post ${postId}`);
+                //console.log(`Clic en nextButton para el post ${postId}`);
                 showWave(currentWave + 1);
             });
         }
 
         if (prevButton) {
             prevButton.addEventListener('click', () => {
-                console.log(`Clic en prevButton para el post ${postId}`);
+                //console.log(`Clic en prevButton para el post ${postId}`);
                 showWave(currentWave - 1);
             });
         }
