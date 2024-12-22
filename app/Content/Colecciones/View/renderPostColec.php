@@ -30,7 +30,7 @@ function htmlColec($filtro)
                 <div class="LRKHLC">
                     <div class="XOKALG">
                         <?
-                        $post_id = $postId; 
+                        $post_id = $postId;
                         $rola_meta = get_post_meta($post_id, 'rola', true);
                         $nombre_rola_html = '';
 
@@ -38,6 +38,9 @@ function htmlColec($filtro)
                             $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
                             if (empty($nombre_rola)) {
                                 $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
+                            }
+                            if (empty($nombre_rola)) {
+                                $nombre_rola =  get_the_title($postId);
                             }
                             if (!empty($nombre_rola)) {
                                 $nombre_rola_html = '<p class="nameRola">' . esc_html($nombre_rola) . '</p>';
@@ -54,8 +57,8 @@ function htmlColec($filtro)
             }
             ?>
             <div class="CPQBEN" style="display: none;">
-                
-                <? echo like($post_id); 
+
+                <? echo like($post_id);
                 ?>
                 <div class="CPQBAU"><? echo get_the_author_meta('display_name', $autorId); ?></div>
                 <div class="CPQBCO">
@@ -67,6 +70,9 @@ function htmlColec($filtro)
                         $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
                         if (empty($nombre_rola)) {
                             $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
+                        }
+                        if (empty($nombre_rola)) {
+                            $nombre_rola =  get_the_title($postId);
                         }
                         if (!empty($nombre_rola)) {
                             echo "<p>" . esc_html($nombre_rola) . "</p>";
