@@ -341,14 +341,21 @@ window.createSubmenuDarkBackground = function (submenuIdPrefix) {
         console.log('  ✅ createSubmenuDarkBackground: Fondo oscuro creado y evento click agregado');
     }
 
+    // Evitar clics fantasma justo después de mostrar el fondo
+    darkBackground.style.pointerEvents = 'none'; // Deshabilitar temporalmente los eventos de puntero
+    console.log('  🚫 createSubmenuDarkBackground: Eventos de puntero temporalmente deshabilitados');
+
     darkBackground.style.display = 'block';
     console.log('  ⏳ createSubmenuDarkBackground: Mostrando fondo oscuro');
     setTimeout(() => {
         darkBackground.style.opacity = '1';
         console.log('  ✅ createSubmenuDarkBackground: Fondo oscuro visible');
+        // Habilitar los eventos de puntero después de un breve retraso
+        setTimeout(() => {
+             darkBackground.style.pointerEvents = 'auto';
+            console.log('  🖱️ createSubmenuDarkBackground: Eventos de puntero habilitados después de un retraso');
+        }, 50);
     }, 10);
-    darkBackground.style.pointerEvents = 'auto';
-    console.log('  🖱️ createSubmenuDarkBackground: Eventos de puntero habilitados en el fondo oscuro');
 };
 
 window.removeSubmenuDarkBackground = function () {
