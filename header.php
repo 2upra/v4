@@ -159,6 +159,11 @@ if (!defined('ABSPATH')) {
                                     <? echo $GLOBALS['iconRandom']; ?>
                                 </a>
                             </div>
+                            <div class="menu-item iconoBiblioteca">
+                                <a href="<?php echo home_url('/biblioteca'); ?>">
+                                    <? echo $GLOBALS['biblioteca']; ?>
+                                </a>
+                            </div>
                         <? endif; ?>
                         <? if ($usuarioTipo === 'Artista'):  ?>
                             <div class="menu-item iconoFeedSocial">
@@ -171,12 +176,13 @@ if (!defined('ABSPATH')) {
                                     <? echo $GLOBALS['iconoColec']; ?>
                                 </a>
                             </div>
+                            <div class="menu-item iconoBiblioteca iconoBibliotecaArt">
+                                <a href="<?php echo home_url('/biblioteca'); ?>">
+                                    <? echo $GLOBALS['biblioteca']; ?>
+                                </a>
+                            </div>
                         <? endif; ?>
-                        <div class="menu-item iconoBiblioteca">
-                            <a href="<?php echo home_url('/biblioteca'); ?>">
-                                <? echo $GLOBALS['biblioteca']; ?>
-                            </a>
-                        </div>
+
 
 
                         <div class="menu-item iconoInver">
