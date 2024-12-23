@@ -232,7 +232,6 @@ if (!defined('ABSPATH')) {
                     <div class="endmenu MENUDGE">
 
                         <div class="search-container " id="filtros">
-
                             <input type="text" id="identifier" class="inputBusquedaRs" placeholder="Busqueda">
                             <button id="clearSearch" class="clear-search" style="display: none;">
                                 <? echo $GLOBALS['flechaAtras']; ?>
