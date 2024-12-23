@@ -24,7 +24,8 @@ function socialTabs()
     <div class="tabs">
         <div class="tab-content">
             <? if ($usuarioTipo === 'Artista'):
-            ?> <div class="divmomento">
+            ?>
+                <div class="divmomento artista">
                     <? echo momentos(); ?>
                 </div>
                 <div class="BPLBDE UP">
@@ -48,6 +49,9 @@ function socialTabs()
 
             <? if ($usuarioTipo === 'Fan'): // Mostrar solo si el usuario es fan 
             ?>
+                <div class="divmomento fan">
+                    <? echo momentos(); ?>
+                </div>
                 <div class="tab INICIO S4K7I3" id="Feed">
                     <div class="OXMGLZ">
                         <div class="OAXRVB">
