@@ -230,18 +230,19 @@ if (!defined('ABSPATH')) {
                     </ul>
 
                     <div class="endmenu MENUDGE">
-
-                        <div class="search-container " id="filtros">
-                            <input type="text" id="identifier" class="inputBusquedaRs" placeholder="Busqueda">
-                            <button id="clearSearch" class="clear-search" style="display: none;">
-                                <? echo $GLOBALS['flechaAtras']; ?>
-                            </button>
-                            <button id="estrellitasTooltip" class="tooltip-element" data-tooltip="Para excluir palabras de tu búsqueda, usa el signo menos (-) antes del término o encierra frases con ello. Ejemplo: 'Hip hop drum -break drum-' no mostrará resultados que contengan 'break brum'.">
-                                <? echo $GLOBALS['iconoestrellitas']; ?>
-                            </button>
-                            <div class="resultadosBusqueda modal" id="resultadoBusqueda" style="display: none;">
+                        <?php if (! wp_is_mobile()) : ?>
+                            <div class="search-container " id="filtros">
+                                <input type="text" id="identifier" class="inputBusquedaRs" placeholder="Busqueda">
+                                <button id="clearSearch" class="clear-search" style="display: none;">
+                                    <?php echo $GLOBALS['flechaAtras']; ?>
+                                </button>
+                                <button id="estrellitasTooltip" class="tooltip-element" data-tooltip="Para excluir palabras de tu búsqueda, usa el signo menos (-) antes del término o encierra frases con ello. Ejemplo: 'Hip hop drum -break drum-' no mostrará resultados que contengan 'break brum'.">
+                                    <?php echo $GLOBALS['iconoestrellitas']; ?>
+                                </button>
+                                <div class="resultadosBusqueda modal" id="resultadoBusqueda" style="display: none;">
+                                </div>
                             </div>
-                        </div>
+                        <?php endif; ?>
 
                         <div class="menuArribaLogin">
 

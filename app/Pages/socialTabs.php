@@ -35,20 +35,21 @@ function socialTabs()
                     <div class="FDGEDF">
                         <p id="resultadosPost-sampleList"></p>
                         <? echo renderFiltroSampleList(); ?>
-
+                    </div>
+                    <?php if (wp_is_mobile()) : ?>
                         <div class="search-container SSmovil" id="filtros">
                             <input type="text" id="identifier" class="inputBusquedaRs" placeholder="Busqueda">
                             <button id="clearSearch" class="clear-search" style="display: none;">
-                                <? echo $GLOBALS['flechaAtras']; ?>
+                                <?php echo $GLOBALS['flechaAtras']; ?>
                             </button>
                             <button id="estrellitasTooltip" class="tooltip-element" data-tooltip="Para excluir palabras de tu búsqueda, usa el signo menos (-) antes del término o encierra frases con ello. Ejemplo: 'Hip hop drum -break drum-' no mostrará resultados que contengan 'break brum'.">
-                                <? echo $GLOBALS['iconoestrellitas']; ?>
+                                <?php echo $GLOBALS['iconoestrellitas']; ?>
                             </button>
                             <div class="resultadosBusqueda modal" id="resultadoBusqueda" style="display: none;">
                             </div>
                         </div>
-
-                    </div>
+                    <?php else : ?>
+                    <?php endif; ?>
                 </div>
 
                 <div class="tab INICIO S4K7I3" id="Samples">
