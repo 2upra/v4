@@ -18,7 +18,7 @@ function perfilTabs()
 
     <div class="tabs">
         <div class="tab-content">
-            <ul class="tab-links" id="adaptableTabsPerfil">
+            <ul class="tab-linksPerfil" id="adaptableTabsPerfil">
             </ul>
             <div id="Perfil" class="tab active">
                 <div class="YRGFQO">
