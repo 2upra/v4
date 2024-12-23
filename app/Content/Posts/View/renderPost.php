@@ -197,7 +197,7 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
     $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
 
     $momento = get_post_meta($post_id, 'momento', true);
-    $ultimaModificacion = get_post_meta($post_id, 'ultimaModificacion', true);
+    $datosColeccion = get_post_meta($post_id, 'datosColeccion', true);
 
     $post_type = get_post_type($post_id);
 ?>
@@ -209,10 +209,17 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
         <div class="KLYJBY">
             <? echo audioPost($post_id); ?>
         </div>
-        test
-        <?php if (!empty($momento) || !empty($ultimaModificacion)) : ?>
+
+        <?php if (!empty($momento) || !empty($datosColeccion)) : ?>
             <div class="contentMoment">
-                <?php echo get_the_content(); ?>
+                <?php
+                $content = get_the_content();
+                if (!empty($content)) {
+                    echo $content;
+                } else {
+                    echo '<h2>' . get_the_title() . '</h2>';
+                }
+                ?>
             </div>
         <?php else : ?>
             <div class="LRKHLC">
