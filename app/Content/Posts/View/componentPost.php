@@ -536,28 +536,18 @@ function botonComentar($postId)
 
 function fondoPost($filtro, $block, $es_suscriptor, $postId)
 {
-    if (!in_array($filtro, ['rolastatus1', 'rolasEliminadas1', 'rolasRechazadas1',])) {
-        $thumbnail_url = get_the_post_thumbnail_url($postId, 'full');
-        $audio_post_id = get_post_meta($postId, 'post_audio_lite', true);
-        if ($thumbnail_url && empty($audio_post_id)) {
-            //return '';
-        }
-        $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
-        $image_size = ($block && !$es_suscriptor) ? 'thumbnail' : 'large';
-        $quality = ($block && !$es_suscriptor) ? 20 : 80;
-        $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
+    $thumbnail_url = get_the_post_thumbnail_url($postId, 'full');
+    $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
+    $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
 
-        ob_start();
+    ob_start();
     ?>
-        <div class="post-background <?= $blurred_class ?>"
-            style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<?php echo esc_url($optimized_thumbnail_url); ?>);">
-        </div>
+    <div class="post-background <?= $blurred_class ?>"
+        style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<?php echo esc_url($optimized_thumbnail_url); ?>);">
+    </div>
     <?php
-        $output = ob_get_clean();
-        return $output;
-    }
-
-    return '';
+    $output = ob_get_clean();
+    return $output;
 }
 
 function wave($audio_url, $audio_id_lite, $postId)
