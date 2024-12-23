@@ -83,7 +83,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
 
         $colecciones_output = '';
         if ($args['filtro'] === 'momento') {
-            // Fetch the latest 2 'colecciones' posts
+
             $colecciones_query_args = [
                 'post_type' => 'colecciones',
                 'posts_per_page' => 2,
@@ -113,6 +113,90 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
     } catch (Exception $e) {
         return false;
     }
+}
+
+function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
+{
+    global $wpdb;
+    $likes_table = $wpdb->prefix . 'post_likes';
+
+    // 1. Cache Key
+    $cache_key = 'colecciones_ordenadas_' . $usuarioActual . '_' . $filtroTiempo;
+    $cached_data = obtenerCache($cache_key);
+
+    if ($cached_data) {
+        //error_log("[ordenamientoColecciones] Retornando datos desde cache: " . $cache_key);
+        $query_args['post__in'] = $cached_data;
+        $query_args['orderby'] = 'post__in';
+        return $query_args;
+    } 
+
+    // 2. Filtrar "Usar más tarde" y "Favoritos" (a menos que sean del usuario actual)
+    $excluded_titles = ['Usar más tarde', 'Favoritos'];
+    $excluded_ids = [];
+
+    if ($usuarioActual) {
+        $excluded_ids = $wpdb->get_col($wpdb->prepare(
+            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND (post_title LIKE '%%%s%%' OR post_title LIKE '%%%s%%') AND post_author != %d",
+            $excluded_titles[0],
+            $excluded_titles[1],
+            $usuarioActual
+        ));
+    } else {
+        $excluded_ids = $wpdb->get_col($wpdb->prepare(
+            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND (post_title LIKE '%%%s%%' OR post_title LIKE '%%%s%%')",
+            $excluded_titles[0],
+            $excluded_titles[1]
+        ));
+    }
+
+    // 3. Obtener IDs de colecciones con más likes en los últimos 30 días
+    $interval = 30;
+    $popular_ids = $wpdb->get_results(
+        "SELECT p.ID, COUNT(pl.post_id) as like_count 
+        FROM {$wpdb->posts} p 
+        LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
+        WHERE p.post_type = 'colecciones' 
+        AND p.post_status = 'publish'
+        AND pl.like_date >= DATE_SUB(NOW(), INTERVAL {$interval} DAY)
+        GROUP BY p.ID
+        ORDER BY like_count DESC, p.post_date DESC",
+        ARRAY_A // Get results as an associative array
+    );
+
+    // 4. Combinar y aleatorizar
+    $all_ids = [];
+    $popular_ids_list = [];
+
+    foreach ($popular_ids as $post) {
+        $popular_ids_list[] = $post['ID'];
+    }
+
+    $all_ids = array_unique(array_merge($popular_ids_list, $wpdb->get_col(
+        $wpdb->prepare(
+            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND ID NOT IN (%s)",
+            implode(',', array_merge($excluded_ids, $popular_ids_list ? $popular_ids_list : [0]))
+        )
+    )));
+
+    // Mezclar las IDs que no son populares para agregar aleatoriedad.
+    $non_popular_ids = array_diff($all_ids, $popular_ids_list);
+    shuffle($non_popular_ids);
+
+    // Combinar IDs populares con IDs no populares mezcladas.
+    $ordered_ids = array_merge($popular_ids_list, $non_popular_ids);
+
+    // 5. Guardar en caché
+    guardarCache($cache_key, $ordered_ids, 3600); // 1 hora
+
+    // 6. Actualizar $query_args
+    $query_args['post__in'] = $ordered_ids;
+    $query_args['orderby'] = 'post__in';
+    $query_args['post__not_in'] = $excluded_ids;
+
+    //error_log("[ordenamientoColecciones] IDs ordenadas: " . implode(', ', $ordered_ids));
+
+    return $query_args;
 }
 
 function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsuario)
@@ -214,148 +298,7 @@ function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $isAdmin
     }
 }
 
-function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario = null)
-{
-    global $wpdb;
-    $likes_table = $wpdb->prefix . 'post_likes';
 
-    /*
-      try {
-        global $wpdb;
-        if (!$wpdb) {
-            return false;
-        }
-
-        $likes_table = $wpdb->prefix . 'post_likes';
-
-        // Validación de query_args
-        if (!is_array($query_args)) {
-            $query_args = array();
-        }
-
-        switch ($filtroTiempo) {
-            case 1: // Recientes
-                //error_log("[ordenamiento] caso reciente!!");
-                $query_args['orderby'] = 'date';
-                $query_args['order'] = 'DESC';
-                break;
-
-            case 2: // Top semanal
-            case 3: // Top mensual
-                //error_log("[ordenamiento] caso mensual!!");
-                $interval = ($filtroTiempo === 2) ? '1 WEEK' : '1 MONTH';
-
-                $sql = "
-                    SELECT p.ID, 
-                           COUNT(pl.post_id) as like_count 
-                    FROM {$wpdb->posts} p 
-                    LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
-                    WHERE p.post_type = 'social_post' 
-                    AND p.post_status = 'publish'
-                    AND p.post_date >= DATE_SUB(NOW(), INTERVAL $interval)  
-                    AND pl.like_date >= DATE_SUB(NOW(), INTERVAL $interval) 
-                    GROUP BY p.ID
-                    HAVING like_count > 0
-                    ORDER BY like_count DESC, p.post_date DESC
-                ";
-
-                $posts_with_likes = $wpdb->get_results($sql, ARRAY_A);
-
-                if ($wpdb->last_error) {
-                    // Log de error si es necesario
-                }
-
-                if (!empty($posts_with_likes)) {
-                    $post_ids = wp_list_pluck($posts_with_likes, 'ID');
-                    if (!empty($post_ids)) {
-                        $query_args['post__in'] = $post_ids;
-                        $query_args['orderby'] = 'post__in';
-                    }
-                } else {
-                    $query_args['orderby'] = 'date';
-                    $query_args['order'] = 'DESC';
-                }
-                break;
-    */
-
-    // 1. Cache Key
-    $cache_key = 'colecciones_ordenadas_' . $usuarioActual . '_' . $filtroTiempo;
-    //$cached_data = obtenerCache($cache_key);
-
-    /* if ($cached_data) {
-        //error_log("[ordenamientoColecciones] Retornando datos desde cache: " . $cache_key);
-        $query_args['post__in'] = $cached_data;
-        $query_args['orderby'] = 'post__in';
-        return $query_args;
-    } */
-
-    // 2. Filtrar "Usar más tarde" y "Favoritos" (a menos que sean del usuario actual)
-    $excluded_titles = ['Usar más tarde', 'Favoritos'];
-    $excluded_ids = [];
-
-    if ($usuarioActual) {
-        $excluded_ids = $wpdb->get_col($wpdb->prepare(
-            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND (post_title LIKE '%%%s%%' OR post_title LIKE '%%%s%%') AND post_author != %d",
-            $excluded_titles[0],
-            $excluded_titles[1],
-            $usuarioActual
-        ));
-    } else {
-        $excluded_ids = $wpdb->get_col($wpdb->prepare(
-            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND (post_title LIKE '%%%s%%' OR post_title LIKE '%%%s%%')",
-            $excluded_titles[0],
-            $excluded_titles[1]
-        ));
-    }
-
-    // 3. Obtener IDs de colecciones con más likes en los últimos 30 días
-    $interval = 30;
-    $popular_ids = $wpdb->get_results(
-        "SELECT p.ID, COUNT(pl.post_id) as like_count 
-        FROM {$wpdb->posts} p 
-        LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
-        WHERE p.post_type = 'colecciones' 
-        AND p.post_status = 'publish'
-        AND pl.like_date >= DATE_SUB(NOW(), INTERVAL {$interval} DAY)
-        GROUP BY p.ID
-        ORDER BY like_count DESC, p.post_date DESC",
-        ARRAY_A // Get results as an associative array
-    );
-
-    // 4. Combinar y aleatorizar
-    $all_ids = [];
-    $popular_ids_list = [];
-
-    foreach ($popular_ids as $post) {
-        $popular_ids_list[] = $post['ID'];
-    }
-
-    $all_ids = array_unique(array_merge($popular_ids_list, $wpdb->get_col(
-        $wpdb->prepare(
-            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND ID NOT IN (%s)",
-            implode(',', array_merge($excluded_ids, $popular_ids_list ? $popular_ids_list : [0]))
-        )
-    )));
-
-    // Mezclar las IDs que no son populares para agregar aleatoriedad.
-    $non_popular_ids = array_diff($all_ids, $popular_ids_list);
-    shuffle($non_popular_ids);
-
-    // Combinar IDs populares con IDs no populares mezcladas.
-    $ordered_ids = array_merge($popular_ids_list, $non_popular_ids);
-
-    // 5. Guardar en caché
-    //guardarCache($cache_key, $ordered_ids, 3600); // 1 hora
-
-    // 6. Actualizar $query_args
-    $query_args['post__in'] = $ordered_ids;
-    $query_args['orderby'] = 'post__in';
-    $query_args['post__not_in'] = $excluded_ids;
-
-    //error_log("[ordenamientoColecciones] IDs ordenadas: " . implode(', ', $ordered_ids));
-
-    return $query_args;
-}
 
 function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoUsuario = null)
 {
