@@ -61,7 +61,8 @@ function inicializarPestanas() {
         mostrarPestana(targetId);
     }
 
-    const enlaces = document.querySelectorAll('.tab-links a');
+    // Modificación: Seleccionar los enlaces de ambos contenedores
+    const enlaces = document.querySelectorAll('#adaptableTabs a, #adaptableTabsPerfil a');
     if (enlaces.length > 0) {
         enlaces.forEach(a => {
             a.addEventListener('click', function(e) {
@@ -75,31 +76,40 @@ function inicializarPestanas() {
 function asignarPestanas() {
     const menuData = document.getElementById('menuData');
     const adaptableTabs = document.getElementById('adaptableTabs');
+    const adaptableTabsPerfil = document.getElementById('adaptableTabsPerfil');
+    const perfilTab = document.querySelector('[data-tab="Perfil"]');
 
-    if (menuData && adaptableTabs) {
-        adaptableTabs.innerHTML = '';
+    if (menuData) {
+        // Modificación: Determinar qué contenedor usar
+        const targetContainer = perfilTab ? adaptableTabsPerfil : adaptableTabs;
 
-        const tabs = menuData.querySelectorAll('[data-tab]');
-        if (tabs.length === 0) {
-            console.warn('No se encontraron elementos con [data-tab] para asignar pestañas.');
-            return;
+        if (targetContainer) {
+            targetContainer.innerHTML = '';
+
+            const tabs = menuData.querySelectorAll('[data-tab]');
+            if (tabs.length === 0) {
+                console.warn('No se encontraron elementos con [data-tab] para asignar pestañas.');
+                return;
+            }
+
+            tabs.forEach((tab, index) => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                const tabName = tab.getAttribute('data-tab');
+
+                a.href = '#' + tabName;
+                a.textContent = tabName.charAt(0).toUpperCase() + tabName.slice(1);
+
+                if (index === 0) li.classList.add('active');
+
+                li.appendChild(a);
+                targetContainer.appendChild(li);
+            });
+        } else {
+            console.warn('Contenedor de pestañas no encontrado en el DOM.');
         }
-
-        tabs.forEach((tab, index) => {
-            const li = document.createElement('li');
-            const a = document.createElement('a');
-            const tabName = tab.getAttribute('data-tab');
-
-            a.href = '#' + tabName;
-            a.textContent = tabName.charAt(0).toUpperCase() + tabName.slice(1);
-
-            if (index === 0) li.classList.add('active');
-
-            li.appendChild(a);
-            adaptableTabs.appendChild(li);
-        });
     } else {
-        console.warn('Elementos #menuData o #adaptableTabs no encontrados en el DOM.');
+        console.warn('Elemento #menuData no encontrado en el DOM.');
     }
 }
 

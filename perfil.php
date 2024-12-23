@@ -59,6 +59,7 @@ $nologin_class = !is_user_logged_in() ? ' nologin' : '';
 
 <div id="main">
     <div id="content">
+
         <input type="hidden" id="pagina_actual" name="pagina_actual" value="<? echo esc_attr(get_the_title()); ?>">
         <? echo perfilTabs() ?>
     </div>

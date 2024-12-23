@@ -18,7 +18,8 @@ function perfilTabs()
 
     <div class="tabs">
         <div class="tab-content">
-
+            <ul class="tab-links" id="adaptableTabsPerfil">
+            </ul>
             <div id="Perfil" class="tab active">
                 <div class="YRGFQO">
                     <div class="LRFPKL">
