@@ -82,41 +82,32 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         }
 
         $colecciones_output = '';
-        //esta parte de aqui solo esta enfocada en agregar 2 publicaciones colecciones a la consulta filtro momento, todo funciona bien,
-        if ($args['filtro'] === 'momento') {
-            // Aplicar el ordenamiento de colecciones para obtener las IDs ordenadas
+
+        if ($args['filtro'] === 'momento' && $tipoUsuario !== 'Fan') {
             $colecciones_query_args_for_ordering = [
                 'post_type' => 'colecciones',
-                'posts_per_page' => -1, // Obtener todas las colecciones para que el ordenamiento funcione
+                'posts_per_page' => -1,
                 'post_status' => 'publish',
             ];
             $ordered_colecciones_args = ordenamientoColecciones($colecciones_query_args_for_ordering, 'momento', $usuarioActual);
 
             $colecciones_output_array = [];
             if (!empty($ordered_colecciones_args['post__in'])) {
-                // Tomar solo las primeras 2 IDs ordenadas
+
                 $top_two_colecciones_ids = array_slice($ordered_colecciones_args['post__in'], 0, 2);
 
                 if (!empty($top_two_colecciones_ids)) {
                     $colecciones_query_args = [
                         'post_type' => 'colecciones',
                         'post__in' => $top_two_colecciones_ids,
-                        'orderby' => 'post__in', // Mantener el orden obtenido por ordenamientoColecciones
-                        'order' => 'ASC', // No importa realmente ya que 'orderby' es 'post__in'
+                        'orderby' => 'post__in',
+                        'order' => 'ASC',
                         'post_status' => 'publish',
-                        'posts_per_page' => 2, // Limitar a 2 para seguridad
+                        'posts_per_page' => 2,
                     ];
                     $colecciones_output = procesarPublicaciones($colecciones_query_args, $args, $is_ajax);
                 }
             }
-
-            guardarLog("valor de query_args: " . print_r($query_args, true));
-            $query = new WP_Query($query_args);
-            guardarLog("Query SQL generada: " . $query->request);
-        } else {
-            guardarLog("valor de query_args: " . print_r($query_args, true));
-            $query = new WP_Query($query_args);
-            guardarLog("Query SQL generada: " . $query->request);
         }
 
         $output = procesarPublicaciones($query_args, $args, $is_ajax); //esto siempre tiene que procesar query_args
