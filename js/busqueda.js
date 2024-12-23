@@ -1,14 +1,12 @@
 function inicializarBuscadores() {
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent) || userAgent.includes('AppAndroid');
 
     const inputBusqueda = document.getElementById('identifier');
     const divResultados = document.getElementById('resultadoBusqueda');
     const inputBusquedaLocal = document.getElementById('buscadorLocal');
     const divResultadosBL = document.querySelector('.resultadosBL');
 
-    // Función para manejar la búsqueda en el buscador local
     function manejarInputBusquedaLocal() {
+        // Comprobar si los elementos necesarios existen antes de operar sobre ellos
         if (!inputBusquedaLocal || !divResultadosBL) return;
 
         const textoBusqueda = inputBusquedaLocal.value.trim();
@@ -22,7 +20,6 @@ function inicializarBuscadores() {
         }
     }
 
-    // Función para crear fondo oscuro al buscar
     function createBusquedaDarkBackground() {
         let darkBackground = document.getElementById('busquedaBackground');
         if (!darkBackground) {
@@ -53,7 +50,6 @@ function inicializarBuscadores() {
         darkBackground.style.pointerEvents = 'auto';
     }
 
-    // Función para remover el fondo oscuro
     function removeBusquedaDarkBackground() {
         const darkBackground = document.getElementById('busquedaBackground');
         if (darkBackground) {
@@ -70,17 +66,18 @@ function inicializarBuscadores() {
         createBusquedaDarkBackground();
     }
 
-    // Función para ocultar el fondo oscuro y los resultados de búsqueda
+    // Función para ocultar el fondo oscuro y resultadoBusqueda
     function ocultarFondoYResultados() {
         removeBusquedaDarkBackground();
+        // Comprobar si divResultados existe antes de operar sobre él
         if (divResultados) {
             divResultados.style.display = 'none';
             divResultados.classList.add('hidden');
         }
     }
 
-    // Función para manejar la búsqueda en el input principal
     function manejarInputBusqueda() {
+        // Comprobar si los elementos necesarios existen antes de operar sobre ellos
         if (!inputBusqueda || !divResultados) return;
 
         const textoBusqueda = inputBusqueda.value.trim();
@@ -89,15 +86,15 @@ function inicializarBuscadores() {
             divResultados.style.display = 'flex';
             divResultados.classList.remove('hidden');
             buscar(textoBusqueda, divResultados);
-            mostrarFondoOscuro();
+            mostrarFondoOscuro(); // Mostrar fondo oscuro al empezar a escribir en inputBusqueda
         } else {
-            ocultarFondoYResultados();
+            ocultarFondoYResultados(); // Ocultar si no hay texto
             divResultados.innerHTML = '';
         }
     }
 
-    // Función para realizar la búsqueda (simulación de búsqueda AJAX)
     async function buscar(texto, divResultados) {
+        // Comprobar si divResultados existe antes de operar sobre él
         if (!divResultados) return;
 
         const data = {
@@ -112,26 +109,18 @@ function inicializarBuscadores() {
         }
     }
 
-    // Función para mostrar los resultados de búsqueda
     function mostrarResultados(html, divResultados) {
+        // Comprobar si divResultados existe antes de operar sobre él
         if (!divResultados) return;
         divResultados.innerHTML = html;
     }
-
-    // Agregar listeners solo si no estamos en móvil o en la app Android
-    if (!isMobile) {
-        if (inputBusqueda) {
-            inputBusqueda.removeEventListener('input', manejarInputBusqueda);
-            inputBusqueda.addEventListener('input', manejarInputBusqueda);
-        }
-        if (divResultados) {
-            // Asegúrate de manejar cualquier configuración adicional en desktop
-        }
-    }
-
-    // Siempre habilitar el buscador local independientemente del dispositivo
+    // Asegurarse de que los elementos existen antes de agregar los listeners
     if (inputBusquedaLocal) {
         inputBusquedaLocal.removeEventListener('input', manejarInputBusquedaLocal);
         inputBusquedaLocal.addEventListener('input', manejarInputBusquedaLocal);
+    }
+    if (inputBusqueda) {
+        inputBusqueda.removeEventListener('input', manejarInputBusqueda);
+        inputBusqueda.addEventListener('input', manejarInputBusqueda);
     }
 }
