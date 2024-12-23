@@ -230,6 +230,10 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
                     ?>
                 </div>
             </div>
+        <? else: ?>
+            <div class="contentMoment">
+                <? echo the_content(); ?>
+            </div>
         <?php endif; ?>
         <div class="CPQBEN" style="display: none;">
             <div class="CPQBAU"><? echo $author_name; ?></div>
