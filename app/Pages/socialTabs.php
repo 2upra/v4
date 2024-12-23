@@ -24,7 +24,9 @@ function socialTabs()
     <div class="tabs">
         <div class="tab-content">
             <? if ($usuarioTipo === 'Artista'):
-            ?>
+            ?> <div class="divmomento">
+                    <? echo momentos(); ?>
+                </div>
                 <div class="BPLBDE UP">
                     <div class="DHRDTAG">
                         <? echo tagsPosts(); ?>
