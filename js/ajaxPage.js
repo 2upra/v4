@@ -121,11 +121,13 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         return !/https:\/\/2upra\.com\/nocache/.test(url);
     }
 
-    //puedes hacer que cuando se ejecute load, el scroll este al tope arriba automaticamente, el de content
     function load(url, pushState) {
         if (!url || /^(javascript|data|vbscript):|#/.test(url.toLowerCase()) || url.includes('descarga_token')) return;
         if (pageCache[url] && shouldCache(url)) {
             document.getElementById('content').innerHTML = pageCache[url];
+            requestAnimationFrame(() => {
+                document.getElementById('content').scrollTop = 0;
+            });
             if (pushState) history.pushState(null, '', url);
             return reinit();
         }
@@ -140,7 +142,9 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
                 document.getElementById('loadingBar').style.cssText = 'width: 100%; transition: width 0.1s ease, opacity 0.3s ease';
                 setTimeout(() => (document.getElementById('loadingBar').style.cssText = 'width: 0%; opacity: 0'), 100);
                 if (pushState) history.pushState(null, '', url);
-                document.getElementById('content').scrollTop = 0; 
+                requestAnimationFrame(() => {
+                    document.getElementById('content').scrollTop = 0;
+                });
                 doc.querySelectorAll('script').forEach(s => {
                     if (s.src && !document.querySelector(`script[src="${s.src}"]`)) {
                         document.body.appendChild(Object.assign(document.createElement('script'), {src: s.src, async: false}));
@@ -148,7 +152,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
                         document.body.appendChild(Object.assign(document.createElement('script'), {textContent: s.textContent}));
                     }
                 });
-                setTimeout(reinit, 100);
+                setTimeout(reinit, 200);
             })
             .catch(e => console.error('Load error:', e));
     }
