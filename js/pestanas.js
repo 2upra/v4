@@ -74,10 +74,17 @@ function inicializarPestanas() {
 
 function asignarPestanas() {
     const menuData = document.getElementById('menuData');
-    const adaptableTabs = document.getElementById(estaEnPerfil() ? 'adaptableTabsPerfil' : 'adaptableTabs');
+    const adaptableTabs = document.getElementById('adaptableTabs');
+    const adaptableTabsPerfil = document.getElementById('adaptableTabsPerfil');
 
-    if (menuData && adaptableTabs) {
-        adaptableTabs.innerHTML = '';
+    // Limpiar ambos contenedores
+    if (adaptableTabs) adaptableTabs.innerHTML = '';
+    if (adaptableTabsPerfil) adaptableTabsPerfil.innerHTML = '';
+
+    // Seleccionar el contenedor activo
+    const contenedorActivo = estaEnPerfil() ? adaptableTabsPerfil : adaptableTabs;
+
+    if (menuData && contenedorActivo) {
 
         const tabs = menuData.querySelectorAll('[data-tab]');
         if (tabs.length === 0) {
@@ -96,7 +103,7 @@ function asignarPestanas() {
             if (index === 0) li.classList.add('active');
 
             li.appendChild(a);
-            adaptableTabs.appendChild(li);
+            contenedorActivo.appendChild(li);
         });
     } else {
         console.warn('Elementos #menuData o #adaptableTabs/#adaptableTabsPerfil no encontrados en el DOM.');
