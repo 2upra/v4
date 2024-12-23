@@ -197,7 +197,7 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
     $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
 
     $momento = get_post_meta($post_id, 'momento', true);
-    $datosColeccion = get_post_meta($post_id, 'datosColeccion', true);
+    $ultimaModificacion = get_post_meta($post_id, 'ultimaModificacion', true);
 
     $post_type = get_post_type($post_id);
 ?>
@@ -210,7 +210,7 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
             <? echo audioPost($post_id); ?>
         </div>
         test
-        <?php if (!empty($momento) || !empty($datosColeccion)) : ?>
+        <?php if (!empty($momento) || !empty($ultimaModificacion)) : ?>
             <div class="contentMoment">
                 <?php echo get_the_content(); ?>
             </div>
