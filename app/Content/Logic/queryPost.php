@@ -89,13 +89,6 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
                 'post_type' => 'colecciones',
                 'posts_per_page' => 2,
                 'post_status' => 'publish',
-                'meta_query' => [
-                    [
-                        'key' => 'momento',
-                        'value' => 1,
-                        'compare' => '=',
-                    ],
-                ],
             ];
             $colecciones_query = new WP_Query($colecciones_args);
             guardarLog("Query SQL generada para colecciones: " . $colecciones_query->request);
