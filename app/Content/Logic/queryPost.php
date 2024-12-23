@@ -81,40 +81,28 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             $query_args = configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsuario);
         }
 
-        // Agregar publicaciones de colecciones al inicio si el filtro es 'momento'
+        $colecciones_output = '';
         if ($args['filtro'] === 'momento') {
-            $colecciones_args = [
+            // Fetch the latest 2 'colecciones' posts
+            $colecciones_query_args = [
                 'post_type' => 'colecciones',
                 'posts_per_page' => 2,
+                'orderby' => 'date',
+                'order' => 'DESC',
                 'post_status' => 'publish',
-
             ];
-            
-            $colecciones_query = new WP_Query($colecciones_args);
-            
-            if ( $colecciones_query->have_posts() ) {
-                $colecciones_ids = wp_list_pluck( $colecciones_query->posts, 'ID' );
-              
-                // Si ya hay post__in, fusionamos, sino, creamos
-                if (isset($query_args['post__in'])) {
-                    $query_args['post__in'] = array_merge($colecciones_ids, $query_args['post__in']);
-                } else {
-                    $query_args['post__in'] = $colecciones_ids;
-                }
+            $colecciones_output = procesarPublicaciones($colecciones_query_args, $args, $is_ajax);
 
-                // Asegurarnos de que se muestren PRIMERO los de colecciones
-                $query_args['orderby'] = 'post__in'; 
-            }
-            
-            //Eliminar duplicados, manteniendo las colecciones
-            $query_args['post__in'] = array_unique($query_args['post__in']);
-
-            //guardarLog("valor de query_args: " . print_r($query_args, true));
-            //$query = new WP_Query($query_args);
-            //guardarLog("Query SQL generada: " . $query->request);
+            guardarLog("valor de query_args: " . print_r($query_args, true));
+            $query = new WP_Query($query_args);
+            guardarLog("Query SQL generada: " . $query->request);
         }
-        
+
         $output = procesarPublicaciones($query_args, $args, $is_ajax);
+
+        if ($args['filtro'] === 'momento') {
+            $output = $colecciones_output . $output;
+        }
 
         if ($is_ajax) {
             echo $output;
