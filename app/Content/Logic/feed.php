@@ -5,7 +5,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
 {
     try {
         if (!$current_user_id) {
-            guardarLog("Error: ID de usuario no válido al obtener feed personalizado");
+            //guardarLog("Error: ID de usuario no válido al obtener feed personalizado");
             return ['post_ids' => [], 'post_not_in' => []];
         }
         
@@ -33,16 +33,16 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             if ($cache_data) {
                 error_log("Cache utilizada: " . $cache_key);
 
-                guardarLog("Usuario ID: $current_user_id usando caché para feed personalizado");
+                //guardarLog("Usuario ID: $current_user_id usando caché para feed personalizado");
                 $posts_personalizados = $cache_data['posts'];
             } else {
                 if ($paged === 1) {
-                    guardarLog("Usuario ID: $current_user_id calculando nuevo feed para primera página (sin caché)");
+                    //guardarLog("Usuario ID: $current_user_id calculando nuevo feed para primera página (sin caché)");
 
                     $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, '', $tipoUsuario, $filtrosUsuario);
 
                     if (!$posts_personalizados) {
-                        guardarLog("Error: Fallo al calcular feed personalizado para usuario ID: $current_user_id");
+                        //guardarLog("Error: Fallo al calcular feed personalizado para usuario ID: $current_user_id");
                         return ['post_ids' => [], 'post_not_in' => []];
                     }
 
@@ -50,13 +50,13 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
                     guardarCache($cache_key, $cache_content, $cache_time);
                 } else {
                     if (empty($posts_personalizados)) {
-                        guardarLog("Usuario ID: $current_user_id backup no encontrado, calculando nuevo feed (sin caché)");
+                        //guardarLog("Usuario ID: $current_user_id backup no encontrado, calculando nuevo feed (sin caché)");
 
                         $posts_personalizados = calcularFeedPersonalizado($current_user_id, $identifier, '', $tipoUsuario, $filtrosUsuario);
                     }
 
                     if (!$posts_personalizados) {
-                        guardarLog("Error: Fallo al calcular feed personalizado para usuario ID: $current_user_id");
+                        //guardarLog("Error: Fallo al calcular feed personalizado para usuario ID: $current_user_id");
                         return ['post_ids' => [], 'post_not_in' => []];
                     }
 
@@ -75,7 +75,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
         }
 
         if (count($post_ids) > POSTINLIMIT) {
-            guardarLog("Usuario ID: $current_user_id - Limitando resultados a " . POSTINLIMIT . " posts");
+            //guardarLog("Usuario ID: $current_user_id - Limitando resultados a " . POSTINLIMIT . " posts");
             $post_ids = array_slice($post_ids, 0, POSTINLIMIT);
         }
 
@@ -85,7 +85,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             });
 
             if (empty($post_ids)) {
-                guardarLog("Usuario ID: $current_user_id - No se encontraron posts similares para ID: $similar_to");
+                //guardarLog("Usuario ID: $current_user_id - No se encontraron posts similares para ID: $similar_to");
             }
         }
 
@@ -94,7 +94,7 @@ function obtenerFeedPersonalizado($current_user_id, $identifier, $similar_to, $p
             'post_not_in' => $post_not_in,
         ];
     } catch (Exception $e) {
-        guardarLog("Error crítico para usuario ID: $current_user_id - " . $e->getMessage());
+        //guardarLog("Error crítico para usuario ID: $current_user_id - " . $e->getMessage());
         return ['post_ids' => [], 'post_not_in' => []];
     }
 }
@@ -110,17 +110,17 @@ function obtenerPostsSimilares($current_user_id, $similar_to)
         $cached_data = obtenerCache($similar_to_cache_key);
 
         if ($cached_data) {
-            guardarLog("Usuario ID: $current_user_id usando caché global para posts similares a $similar_to");
+            //guardarLog("Usuario ID: $current_user_id usando caché global para posts similares a $similar_to");
             return [
                 'posts_personalizados' => $cached_data,
                 'post_not_in' => $post_not_in,
             ];
         } else {
-            guardarLog("Usuario ID: $current_user_id calculando nuevo feed similar para post ID: $similar_to");
+            //guardarLog("Usuario ID: $current_user_id calculando nuevo feed similar para post ID: $similar_to");
             $posts_personalizados = calcularFeedPersonalizado(44, '', $similar_to);
 
             if (!$posts_personalizados) {
-                guardarLog("Error: Fallo al calcular posts similares para post ID: $similar_to");
+                //guardarLog("Error: Fallo al calcular posts similares para post ID: $similar_to");
                 return ['posts_personalizados' => [], 'post_not_in' => $post_not_in];
             }
 

@@ -601,13 +601,13 @@ function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $
 
 function aplicarFiltrosUsuario($query_args, $usuarioActual)
 {
-    //guardarLog("Iniciando aplicarFiltrosUsuario para el usuario $usuarioActual");
+    ////guardarLog("Iniciando aplicarFiltrosUsuario para el usuario $usuarioActual");
     $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
 
-    //guardarLog("Filtros del usuario: " . print_r($filtrosUsuario, true));
+    ////guardarLog("Filtros del usuario: " . print_r($filtrosUsuario, true));
 
     if (empty($filtrosUsuario) || !is_array($filtrosUsuario)) {
-        //guardarLog("No hay filtros aplicables o el formato es incorrecto.");
+        ////guardarLog("No hay filtros aplicables o el formato es incorrecto.");
         return $query_args;
     }
 
@@ -618,34 +618,34 @@ function aplicarFiltrosUsuario($query_args, $usuarioActual)
     // Filtro para ocultar posts descargados
     if (in_array('ocultarDescargados', $filtrosUsuario)) {
         $descargasAnteriores = get_user_meta($usuarioActual, 'descargas', true) ?: [];
-        //guardarLog("Descargas anteriores: " . print_r($descargasAnteriores, true));
+        ////guardarLog("Descargas anteriores: " . print_r($descargasAnteriores, true));
         if (!empty($descargasAnteriores)) {
             $post_not_in = array_merge(
                 $post_not_in,
                 array_keys($descargasAnteriores)
             );
-            //guardarLog("Post__not_in después de ocultar descargados: " . print_r($post_not_in, true));
+            ////guardarLog("Post__not_in después de ocultar descargados: " . print_r($post_not_in, true));
         }
     }
 
     // Filtro para ocultar posts en colección
     if (in_array('ocultarEnColeccion', $filtrosUsuario)) {
         $samplesGuardados = get_user_meta($usuarioActual, 'samplesGuardados', true) ?: [];
-        //guardarLog("Samples guardados: " . print_r($samplesGuardados, true));
+        ////guardarLog("Samples guardados: " . print_r($samplesGuardados, true));
         if (!empty($samplesGuardados)) {
             $guardadosIDs = array_keys($samplesGuardados);
             $post_not_in = array_merge(
                 $post_not_in,
                 $guardadosIDs
             );
-            //guardarLog("Post__not_in después de ocultar en colección: " . print_r($post_not_in, true));
+            ////guardarLog("Post__not_in después de ocultar en colección: " . print_r($post_not_in, true));
         }
     }
 
     // Filtro para mostrar solo los posts que le han gustado al usuario
     if (in_array('mostrarMeGustan', $filtrosUsuario)) {
         $userLikedPostIds = obtenerLikesDelUsuario($usuarioActual);
-        //guardarLog("Post IDs que le gustan al usuario: " . print_r($userLikedPostIds, true));
+        ////guardarLog("Post IDs que le gustan al usuario: " . print_r($userLikedPostIds, true));
         if (!empty($userLikedPostIds)) {
             if (!empty($post_in)) {
                 $post_in = array_intersect($post_in, $userLikedPostIds);
@@ -653,26 +653,26 @@ function aplicarFiltrosUsuario($query_args, $usuarioActual)
                 $post_in = $userLikedPostIds;
             }
 
-            //guardarLog("Post__in después de aplicar mostrarMeGustan: " . print_r($post_in, true));
+            ////guardarLog("Post__in después de aplicar mostrarMeGustan: " . print_r($post_in, true));
 
             if (empty($post_in)) {
                 $query_args['posts_per_page'] = 0;
-                //guardarLog("No hay posts que mostrar después de aplicar mostrarMeGustan.");
+                ////guardarLog("No hay posts que mostrar después de aplicar mostrarMeGustan.");
             }
         } else {
             $query_args['posts_per_page'] = 0;
-            //guardarLog("No hay posts que le gusten al usuario, posts_per_page se establece en 0.");
+            ////guardarLog("No hay posts que le gusten al usuario, posts_per_page se establece en 0.");
         }
     }
 
     // Eliminar los IDs en post_not_in de post_in para evitar conflictos
     if (!empty($post_in) && !empty($post_not_in)) {
         $post_in = array_diff($post_in, $post_not_in);
-        //guardarLog("Post__in después de eliminar IDs en post__not_in: " . print_r($post_in, true));
+        ////guardarLog("Post__in después de eliminar IDs en post__not_in: " . print_r($post_in, true));
 
         if (empty($post_in)) {
             $query_args['posts_per_page'] = 0;
-            //guardarLog("No hay posts que mostrar después de aplicar los filtros.");
+            ////guardarLog("No hay posts que mostrar después de aplicar los filtros.");
         }
     }
 
