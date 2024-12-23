@@ -37,8 +37,8 @@ function socialTabs()
                         <? echo renderFiltroSampleList(); ?>
                     </div>
                     <?php if (wp_is_mobile()) : ?>
-                        <div class="search-container SSmovil" id="filtros">
-                            <input type="text" id="identifier" class="inputBusquedaRs" placeholder="Busqueda">
+                        <div class="search-container SSmovil" id="filtros" style="display: flex;">
+                            <input type="text" id="identifier" class="inputBusquedaRs" placeholder="Busqueda" style="display: flex;">
                             <button id="clearSearch" class="clear-search" style="display: none;">
                                 <?php echo $GLOBALS['flechaAtras']; ?>
                             </button>
