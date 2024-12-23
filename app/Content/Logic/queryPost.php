@@ -81,6 +81,38 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             $query_args = configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsuario);
         }
 
+        // Modificación para 'filtro' => 'momento'
+        if ($args['filtro'] === 'momento') {
+            // Obtener las 2 primeras publicaciones de tipo 'colecciones'
+            $colecciones_args = [
+                'post_type'      => 'colecciones',
+                'posts_per_page' => 2,
+                'fields'         => 'ids', // Solo obtener IDs para mejor rendimiento
+            ];
+            $colecciones_query = new WP_Query($colecciones_args);
+            $colecciones_ids = $colecciones_query->posts;
+
+            // Si hay al menos 2 colecciones
+            if (count($colecciones_ids) >= 2) {
+                // Agregar las IDs de las colecciones al principio de 'post__in' (si existe)
+                if (isset($query_args['post__in'])) {
+                    $query_args['post__in'] = array_merge($colecciones_ids, $query_args['post__in']);
+                } else {
+                    $query_args['post__in'] = $colecciones_ids;
+                }
+
+                // Excluir las IDs de las colecciones de la consulta principal para evitar duplicados
+                if (isset($query_args['post__not_in'])) {
+                    $query_args['post__not_in'] = array_merge($colecciones_ids, $query_args['post__not_in']);
+                } else {
+                    $query_args['post__not_in'] = $colecciones_ids;
+                }
+
+                // Forzar que la consulta ordene por 'post__in'
+                $query_args['orderby'] = 'post__in';
+            }
+        }
+
         $output = procesarPublicaciones($query_args, $args, $is_ajax);
 
         if ($is_ajax) {
@@ -834,7 +866,6 @@ function procesarPublicaciones($query_args, $args, $is_ajax)
             if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
                 $clase_extra = 'clase-rolastatus';
             }
-
             echo '<ul class="social-post-list ' . esc_attr($clase_extra) . '" 
                   data-filtro="' . esc_attr($filtro) . '" 
                   data-posttype="' . esc_attr($tipoPost) . '" 
