@@ -189,7 +189,7 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
     $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
     $audio_post_id = get_post_meta($post_id, 'post_audio_lite', true);
     if ($thumbnail_url && empty($audio_post_id)) {
-        return '';
+        //return '';
     }
     $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
     $image_size = ($block && !$es_suscriptor) ? 'thumbnail' : 'large';
