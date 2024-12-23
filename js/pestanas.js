@@ -37,24 +37,33 @@ function mostrarPestana(id) {
     }
 
     // Actualizar la URL y el título de la página
-    window.location.hash = id;
+    //window.location.hash = id;
     const tabName = id.substring(1); // Eliminar el #
-    document.title = tabName.charAt(0).toUpperCase() + tabName.slice(1);
+    const newUrl = window.location.pathname + id; // Mantener la ruta actual y agregar el hash
+    history.replaceState({ tab: tabName }, tabName, newUrl);
+    requestAnimationFrame(() => {
+        document.getElementById('content').scrollTop = 0;
+    });
 }
 
 function inicializarPestanas() {
     asignarPestanas();
 
     const pestañasExistentes = document.querySelectorAll('.tab-content .tab');
-    const hash = window.location.hash;
+    const menuData = document.getElementById('menuData');
     let targetId = '';
+    
+    // Obtener la pestaña activa desde el atributo data-active-tab
+    let activeTab = menuData ? menuData.getAttribute('data-active-tab') : null;
 
-    if (hash && document.querySelector(hash)) {
-        targetId = hash;
+    if (activeTab && document.getElementById(activeTab)) {
+        targetId = '#' + activeTab;
     } else if (pestañasExistentes.length > 0) {
         targetId = '#' + pestañasExistentes[0].id;
-        // Actualizar la URL si no hay hash pero hay pestañas
-        window.location.hash = targetId;
+        // Actualizar data-active-tab si no hay una pestaña activa
+        if (menuData) {
+            menuData.setAttribute('data-active-tab', pestañasExistentes[0].id);
+        }
     }
 
     if (targetId) {
@@ -66,7 +75,12 @@ function inicializarPestanas() {
         enlaces.forEach(a => {
             a.addEventListener('click', function(e) {
                 e.preventDefault();
+                const targetTabId = this.getAttribute('href').substring(1);
                 mostrarPestana(this.getAttribute('href'));
+                // Actualizar data-active-tab al hacer clic
+                if (menuData) {
+                    menuData.setAttribute('data-active-tab', targetTabId);
+                }
             });
         });
     }
