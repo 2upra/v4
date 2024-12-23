@@ -29,11 +29,11 @@ function htmlPost($filtro)
         id-post="<? echo get_the_ID(); ?>"
         autor="<? echo esc_attr($author_id); ?>">
 
-        <? if ($sampleList || $rolaList || $momento): ?>
+        <? if ($sampleList || $rolaList ): ?>
             <? sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id, $audio_id_lite); ?>
         <? else: ?>
             <? echo fondoPost($filtro, $block, $es_suscriptor, $post_id); ?>
-            <? if ($music): ?>
+            <? if ($music || $momento): ?>
                 <? renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscriptor, $post_status, $audio_url); ?>
             <? else: ?>
                 <? renderNonMusicContent($filtro, $post_id, $author_id, $author_avatar, $author_name, $post_date, $block, $colab, $es_suscriptor, $audio_url, $scale, $key, $bpm, $datosAlgoritmo, $post_status, $audio_id_lite); ?>
