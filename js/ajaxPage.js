@@ -126,7 +126,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         if (pageCache[url] && shouldCache(url)) {
             document.getElementById('content').innerHTML = pageCache[url];
             requestAnimationFrame(() => {
-                document.getElementById('content').scrollTop = 0;
+                document.getElementById('main').scrollTop = 0;
             });
             if (pushState) history.pushState(null, '', url);
             return reinit();
@@ -143,7 +143,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
                 setTimeout(() => (document.getElementById('loadingBar').style.cssText = 'width: 0%; opacity: 0'), 100);
                 if (pushState) history.pushState(null, '', url);
                 requestAnimationFrame(() => {
-                    document.getElementById('content').scrollTop = 0;
+                    document.getElementById('main').scrollTop = 0;
                 });
                 doc.querySelectorAll('script').forEach(s => {
                     if (s.src && !document.querySelector(`script[src="${s.src}"]`)) {
