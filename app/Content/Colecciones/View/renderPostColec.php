@@ -17,6 +17,7 @@ function htmlColec($filtro)
             <div class="KLYJBY">
                 <? echo audioPost($postId); ?>
             </div>
+            test
             <?
             $post_type = get_post_type($postId);
             if ($post_type !== 'social_post') {
