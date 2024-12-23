@@ -82,23 +82,44 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         }
 
         $colecciones_output = '';
+        //esta parte de aqui solo esta enfocada en agregar 2 publicaciones colecciones a la consulta filtro momento, todo funciona bien,
         if ($args['filtro'] === 'momento') {
-
-            $colecciones_query_args = [
+            // Aplicar el ordenamiento de colecciones para obtener las IDs ordenadas
+            $colecciones_query_args_for_ordering = [
                 'post_type' => 'colecciones',
-                'posts_per_page' => 2,
-                'orderby' => 'date',
-                'order' => 'DESC',
+                'posts_per_page' => -1, // Obtener todas las colecciones para que el ordenamiento funcione
                 'post_status' => 'publish',
             ];
-            $colecciones_output = procesarPublicaciones($colecciones_query_args, $args, $is_ajax);
+            $ordered_colecciones_args = ordenamientoColecciones($colecciones_query_args_for_ordering, 'momento', $usuarioActual);
 
+            $colecciones_output_array = [];
+            if (!empty($ordered_colecciones_args['post__in'])) {
+                // Tomar solo las primeras 2 IDs ordenadas
+                $top_two_colecciones_ids = array_slice($ordered_colecciones_args['post__in'], 0, 2);
+
+                if (!empty($top_two_colecciones_ids)) {
+                    $colecciones_query_args = [
+                        'post_type' => 'colecciones',
+                        'post__in' => $top_two_colecciones_ids,
+                        'orderby' => 'post__in', // Mantener el orden obtenido por ordenamientoColecciones
+                        'order' => 'ASC', // No importa realmente ya que 'orderby' es 'post__in'
+                        'post_status' => 'publish',
+                        'posts_per_page' => 2, // Limitar a 2 para seguridad
+                    ];
+                    $colecciones_output = procesarPublicaciones($colecciones_query_args, $args, $is_ajax);
+                }
+            }
+
+            guardarLog("valor de query_args: " . print_r($query_args, true));
+            $query = new WP_Query($query_args);
+            guardarLog("Query SQL generada: " . $query->request);
+        } else {
             guardarLog("valor de query_args: " . print_r($query_args, true));
             $query = new WP_Query($query_args);
             guardarLog("Query SQL generada: " . $query->request);
         }
 
-        $output = procesarPublicaciones($query_args, $args, $is_ajax);
+        $output = procesarPublicaciones($query_args, $args, $is_ajax); //esto siempre tiene que procesar query_args
 
         if ($args['filtro'] === 'momento') {
             $output = $colecciones_output . $output;
@@ -129,7 +150,7 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
         $query_args['post__in'] = $cached_data;
         $query_args['orderby'] = 'post__in';
         return $query_args;
-    } 
+    }
 
     // 2. Filtrar "Usar más tarde" y "Favoritos" (a menos que sean del usuario actual)
     $excluded_titles = ['Usar más tarde', 'Favoritos'];
@@ -153,10 +174,10 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
     // 3. Obtener IDs de colecciones con más likes en los últimos 30 días
     $interval = 30;
     $popular_ids = $wpdb->get_results(
-        "SELECT p.ID, COUNT(pl.post_id) as like_count 
-        FROM {$wpdb->posts} p 
-        LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id 
-        WHERE p.post_type = 'colecciones' 
+        "SELECT p.ID, COUNT(pl.post_id) as like_count
+        FROM {$wpdb->posts} p
+        LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id
+        WHERE p.post_type = 'colecciones'
         AND p.post_status = 'publish'
         AND pl.like_date >= DATE_SUB(NOW(), INTERVAL {$interval} DAY)
         GROUP BY p.ID
