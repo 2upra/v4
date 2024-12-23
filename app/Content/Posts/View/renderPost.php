@@ -207,7 +207,7 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
         <div class="KLYJBY">
             <? echo audioPost($post_id); ?>
         </div>
-        <?php if (!empty($momento) && $post_type !== 'colecciones') : ?>
+        <?php if (!empty($momento) || $post_type === 'colecciones') : ?>
             <div class="contentMoment">
                 <?php echo get_the_content(); ?>
             </div>
