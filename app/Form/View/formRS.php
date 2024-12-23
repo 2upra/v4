@@ -107,6 +107,11 @@ function formRs()
                     <span class="checkmark"></span>
                     <?php echo $GLOBALS['dolar']; ?>
                 </label>
+                <label class="custom-checkbox tooltip-element" data-tooltip="Publicación Efimera">
+                    <input type="checkbox" id="momentocheck" name="momentocheck" value="1">
+                    <span class="checkmark"></span>
+                    <?php echo $GLOBALS['momentoIcon']; ?>
+                </label>
             </div>
         </div>
 

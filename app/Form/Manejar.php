@@ -108,6 +108,7 @@ function actualizarMetaDatos($postId)
         'individual'        => 'individual',
         'multiple'          => 'multiple',
         'tienda'            => 'tienda',
+        'momento'           => 'momento'
     ];
 
     foreach ($meta_fields as $meta_key => $post_key) {

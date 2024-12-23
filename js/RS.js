@@ -176,6 +176,7 @@ async function envioRs() {
         const individualPost = document.getElementById('individualPost');
         const multiplePost = document.getElementById('multiplePost');
         const tiendacheck = document.getElementById('tiendacheck');
+        const momentocheck = document.getElementById('momentocheck');
 
         const fan = fancheck.checked ? fancheck.value : 0;
         const artista = artistacheck.checked ? artistacheck.value : 0;
@@ -186,6 +187,7 @@ async function envioRs() {
         const individual = individualPost.checked ? individualPost.value : 0;
         const multiple = multiplePost.checked ? multiplePost.value : 0;
         const tienda = tiendacheck.checked ? tiendacheck.value : 0;
+        const momento = momentocheck.checked ? momentocheck : 0;
 
         const uniqueAudioUrls = new Set(); // Para almacenar URLs únicas
         const uniqueAudioIds = new Set();
@@ -204,13 +206,6 @@ async function envioRs() {
 
         let nombreRolaData = {}; // Declaración de nombreRolaData como objeto
         let precioRolaData = {}; // Declaración de precioRolaData como objeto
-
-        /*
-        RS.js?ver=0.2.165:243  Uncaught (in promise) ReferenceError: precioRolaData is not defined
-        at RS.js?ver=0.2.165:243:25
-        at Array.forEach (<anonymous>)
-        at HTMLButtonElement.<anonymous> (RS.js?ver=0.2.165:205:40)
-        */
 
         audiosData.slice(0, maxAudios).forEach((audio, index) => {
             const audioNumber = index + 1;
@@ -282,7 +277,8 @@ async function envioRs() {
             music,
             individual,
             multiple,
-            tienda
+            tienda,
+            momento
         };
 
         if (music) {
@@ -822,6 +818,7 @@ async function selectorformtipo() {
     const individualPost = document.getElementById('individualPost');
     const multiplePost = document.getElementById('multiplePost');
     const fanartistchecks = document.getElementById('fanartistchecks');
+    const momentocheck = document.getElementById('momentocheck')
 
     // Verifica si los elementos necesarios existen; si no, retorna
     if (!descargacheck || !musiccheck || !exclusivocheck || !colabcheck || !fancheck || !artistacheck || !tiendacheck || !individualPost || !multiplePost || !fanartistchecks) return;
@@ -921,6 +918,14 @@ async function selectorformtipo() {
                 tiendacheck.checked = false;
                 resetStyles();
             }
+
+            if (event.target.id === 'momentocheck' && event.target.checked) {
+                musiccheck.checked = false;
+                tiendacheck.checked = false;
+                exclusivocheck.checked = false;
+                resetStyles();
+            }
+
 
             // Estilo al checkbox seleccionado
             const label = event.target.closest('label');

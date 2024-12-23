@@ -439,7 +439,7 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
             ['key' => 'rola', 'value' => '1', 'compare' => '='],
             ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
         ],
-        // No se agregan aquí 'imagenesPerfil' y 'tiendaPerfil'
+
     ];
 
     if (isset($meta_query_conditions[$filtro])) {
