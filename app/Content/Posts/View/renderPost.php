@@ -197,6 +197,7 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
     $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
 
     $momento = get_post_meta($post_id, 'momento', true);
+    $post_type = get_post_type($post_id);
 ?>
     <div class="post-content">
         <div class="MFQOYC">
@@ -206,7 +207,7 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
         <div class="KLYJBY">
             <? echo audioPost($post_id); ?>
         </div>
-        <?php if (empty($momento)) : ?>
+        <?php if (empty($momento) || $post_type === 'colecciones') : ?>
             <div class="LRKHLC">
                 <div class="XOKALG">
                     <?php
