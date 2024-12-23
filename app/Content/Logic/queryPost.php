@@ -80,8 +80,12 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         } else {
             $query_args = configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsuario);
         }
-
-        guardarLog("valor " . print_r($query_args, true));
+        
+        if ($args['filtro'] === 'momento') {
+            guardarLog("valor de query_args: " . print_r($query_args, true));
+            $query = new WP_Query($query_args);
+            guardarLog("Query SQL generada: " . $query->request);
+        }
         
         $output = procesarPublicaciones($query_args, $args, $is_ajax);
 
