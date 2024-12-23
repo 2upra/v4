@@ -536,7 +536,7 @@ function botonComentar($postId)
 
 function fondoPost($filtro, $block, $es_suscriptor, $postId)
 {
-    if (!in_array($filtro, ['rolastatus1', 'rolasEliminadas1', 'rolasRechazadas1'])) {
+    if (!in_array($filtro, ['rolastatus1', 'rolasEliminadas1', 'rolasRechazadas1', 'momento'])) {
         // Verificar si el post tiene una foto de portada
         $thumbnail_url = get_the_post_thumbnail_url($postId, 'full');
         // Verificar si el post tiene la meta 'audio_post_id'

@@ -29,7 +29,7 @@ function htmlPost($filtro)
         id-post="<? echo get_the_ID(); ?>"
         autor="<? echo esc_attr($author_id); ?>">
 
-        <? if ($sampleList || $rolaList ): ?>
+        <? if ($sampleList || $rolaList): ?>
             <? sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $verificado, $postAut, $urlAudioSegura, $wave, $waveCargada, $colab, $author_id, $audio_id_lite); ?>
         <? else: ?>
             <? echo fondoPost($filtro, $block, $es_suscriptor, $post_id); ?>
