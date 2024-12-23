@@ -126,18 +126,26 @@ function verificarCamposRs() {
             alert('Cada tag debe tener al menos 3 caracteres.');
             return false;
         }
-
+        const momentocheck = document.getElementById('momentocheck');
+        const exclusivoCheckbox = document.getElementById('exclusivocheck');
+        const colabCheckbox = document.getElementById('colabcheck');
+        
         // Verificación de audiosData para múltiples posts
         if (audiosData.length > 1) {
             const individualPost = document.getElementById('individualPost');
             const multiplePost = document.getElementById('multiplePost');
-
+        
             if (!individualPost.checked && !multiplePost.checked) {
                 alert('Debe seleccionar al menos una opción: Post individual o múltiples, porque estás intentando subir varios audios :)');
                 return false;
             }
+        
+            if (multiplePost.checked && (momentocheck.checked || exclusivoCheckbox.checked || colabCheckbox.checked)) {
+                alert('No puedes seleccionar "Múltiples" si también has seleccionado "Momento", "Exclusivo" o "Colaboración".');
+                return false;
+            }
         }
-
+        
         return true;
     }
 
@@ -187,7 +195,7 @@ async function envioRs() {
         const individual = individualPost.checked ? individualPost.value : 0;
         const multiple = multiplePost.checked ? multiplePost.value : 0;
         const tienda = tiendacheck.checked ? tiendacheck.value : 0;
-        const momento = momentocheck.checked ? momentocheck : 0;
+        const momento = momentocheck.checked ? tiendacheck.value : 0;
 
         const uniqueAudioUrls = new Set(); // Para almacenar URLs únicas
         const uniqueAudioIds = new Set();
@@ -708,7 +716,6 @@ function placeholderRs() {
     });
 }
 
-
 function limpiarCamposRs() {
     // Limpiar variables globales
     imagenUrl = null;
@@ -806,6 +813,16 @@ window.inicializarWaveform = function (containerId, audioSrc) {
     }
 };
 
+function ocultarElementos() {
+    const clases = ['nombreAudioRs', 'nombreLanzamiento', 'precioAudioRs'];
+
+    clases.forEach(clase => {
+        const elementos = document.getElementsByClassName(clase);
+        h.Array.from(elementos).forEach(elemento => {
+            elemento.style.display = 'none';
+        });
+    });
+}
 
 async function selectorformtipo() {
     const descargacheck = document.getElementById('descargacheck');
@@ -814,11 +831,11 @@ async function selectorformtipo() {
     const colabcheck = document.getElementById('colabcheck');
     const fancheck = document.getElementById('fancheck');
     const artistacheck = document.getElementById('artistacheck');
-    const tiendacheck = document.getElementById('tiendacheck'); 
+    const tiendacheck = document.getElementById('tiendacheck');
     const individualPost = document.getElementById('individualPost');
     const multiplePost = document.getElementById('multiplePost');
     const fanartistchecks = document.getElementById('fanartistchecks');
-    const momentocheck = document.getElementById('momentocheck')
+    const momentocheck = document.getElementById('momentocheck');
 
     // Verifica si los elementos necesarios existen; si no, retorna
     if (!descargacheck || !musiccheck || !exclusivocheck || !colabcheck || !fancheck || !artistacheck || !tiendacheck || !individualPost || !multiplePost || !fanartistchecks) return;
@@ -836,9 +853,11 @@ async function selectorformtipo() {
             }
         } else {
             descargacheck.checked = false;
+            
             exclusivocheck.checked = false;
             colabcheck.checked = false;
             tiendacheck.checked = false;
+            momentocheck.checked = false;
             fanartistchecks.style.display = 'none';
             resetStyles();
         }
@@ -849,15 +868,7 @@ async function selectorformtipo() {
             const checkedCheckboxes = document.querySelectorAll('.custom-checkbox input[type="checkbox"]:checked');
 
             // Incluye individualPost y multiplePost en la lista de checkboxes que no son fan ni artista
-            const nonFanArtistChecked = Array.from(checkedCheckboxes).filter(checkbox => 
-                checkbox.id !== 'fancheck' && 
-                checkbox.id !== 'artistacheck' && 
-                checkbox.id !== 'tiendacheck' && 
-                checkbox.id !== 'artistaTipoCheck' && 
-                checkbox.id !== 'fanTipoCheck' &&
-                checkbox.id !== 'individualPost' && 
-                checkbox.id !== 'multiplePost' 
-            );
+            const nonFanArtistChecked = Array.from(checkedCheckboxes).filter(checkbox => checkbox.id !== 'fancheck' && checkbox.id !== 'artistacheck' && checkbox.id !== 'tiendacheck' && checkbox.id !== 'artistaTipoCheck' && checkbox.id !== 'fanTipoCheck' && checkbox.id !== 'individualPost' && checkbox.id !== 'multiplePost');
 
             if (nonFanArtistChecked.length > 2) {
                 event.target.checked = false;
@@ -872,6 +883,7 @@ async function selectorformtipo() {
                 exclusivocheck.checked = false;
                 colabcheck.checked = false;
                 fanartistchecks.style.display = 'none';
+                momentocheck.checked = false;
                 resetStyles();
             }
 
@@ -898,6 +910,8 @@ async function selectorformtipo() {
                 colabLabel.style.color = '#6b6b6b';
                 colabLabel.style.background = '';
                 fanartistchecks.style.display = 'flex';
+                momentocheck.checked = false;
+                ocultarElementos();
                 resetStyles();
             }
 
@@ -909,6 +923,8 @@ async function selectorformtipo() {
                 const exclusivocLabel = exclusivocheck.closest('label');
                 exclusivocLabel.style.color = '#6b6b6b';
                 exclusivocLabel.style.background = '';
+                momentocheck.checked = false;
+                ocultarElementos();
                 resetStyles();
             }
 
@@ -916,6 +932,8 @@ async function selectorformtipo() {
             if (event.target.id === 'descargacheck' && event.target.checked) {
                 musiccheck.checked = false;
                 tiendacheck.checked = false;
+                momentocheck.checked = false;
+                ocultarElementos();
                 resetStyles();
             }
 
@@ -923,9 +941,9 @@ async function selectorformtipo() {
                 musiccheck.checked = false;
                 tiendacheck.checked = false;
                 exclusivocheck.checked = false;
+                ocultarElementos();
                 resetStyles();
             }
-
 
             // Estilo al checkbox seleccionado
             const label = event.target.closest('label');

@@ -438,7 +438,7 @@
             }
 
             // Obtener el identificador del input de búsqueda
-            const inputBusqueda = document.getElementById('identifier');
+            const inputBusqueda = document.querySelectorAll('.inputBusquedaRs');
             identificador = inputBusqueda.value.trim();
 
             actualizarUIBusqueda(identificador);
@@ -449,7 +449,7 @@
     }
 
     function configurarEventoBusqueda() {
-        const inputBusqueda = document.getElementById('identifier');
+        const inputBusqueda = document.querySelectorAll('.inputBusquedaRs');
         const botonesBusqueda = document.querySelectorAll('.buttonBI, .buttonBuscar');
 
         if (inputBusqueda) {
@@ -533,7 +533,7 @@
 
     // Modificar la función actualizarUIBusqueda
     function actualizarUIBusqueda(valor) {
-        const inputBusqueda = document.getElementById('identifier');
+        const inputBusqueda = document.querySelectorAll('.inputBusquedaRs');
         const botonLimpiar = document.getElementById('clearSearch');
 
         if (inputBusqueda) {
@@ -548,7 +548,7 @@
     }
 
     window.actualizarUIBusquedaNoURL = function () {
-        const inputBusqueda = document.getElementById('identifier');
+        const inputBusqueda = document.querySelectorAll('.inputBusquedaRs');
         const botonLimpiar = document.getElementById('clearSearch');
 
         if (inputBusqueda) {
