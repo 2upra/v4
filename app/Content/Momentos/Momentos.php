@@ -6,7 +6,7 @@ function momentos()
 ?>
 
     <? echo publicarMomento() ?>
-    <? echo publicaciones(['filtro' => 'momento', 'posts' => 12]); ?>
+    <? echo publicaciones(['filtro' => 'momento', 'tab_id' => 'Samples', 'posts' => 12]); ?>
 <?
     return ob_get_clean();
 }
