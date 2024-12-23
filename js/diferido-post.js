@@ -422,7 +422,7 @@
     };
 
     function manejadorEventoBusqueda(e) {
-        // Verificar si el evento proviene de la tecla Enter (incluyendo teclado Android)
+        // Verificar si el evento es de la tecla Enter
         const esEnter = e.key === 'Enter' || e.keyCode === 13;
 
         // Verificar si el evento proviene de un botón
@@ -431,6 +431,7 @@
         // Ejecutar la lógica solo si es Enter o un botón
         if (esEnter || esBoton) {
             e.preventDefault();
+
             const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
             if (!listaPublicaciones) {
                 log('No se encontró .social-post-list para añadir contenido');
@@ -438,8 +439,13 @@
             }
 
             // Obtener el identificador del input de búsqueda
-            const inputBusqueda = document.querySelectorAll('.inputBusquedaRs');
-            identificador = inputBusqueda.value.trim();
+            const inputBusqueda = document.querySelector('.inputBusquedaRs'); // Selecciona el primer input
+            if (!inputBusqueda) {
+                log('No se encontró el input de búsqueda');
+                return;
+            }
+
+            const identificador = inputBusqueda.value.trim();
 
             actualizarUIBusqueda(identificador);
             log('Búsqueda activada, valor de identificador:', identificador);
@@ -449,23 +455,24 @@
     }
 
     function configurarEventoBusqueda() {
-        const inputBusqueda = document.querySelectorAll('.inputBusquedaRs');
+        const inputBusqueda = document.querySelector('.inputBusquedaRs'); // Selecciona un solo input
         const botonesBusqueda = document.querySelectorAll('.buttonBI, .buttonBuscar');
 
         if (inputBusqueda) {
-            // Evento para la tecla Enter
-            inputBusqueda.removeEventListener('keypress', manejadorEventoBusqueda);
-            inputBusqueda.addEventListener('keypress', manejadorEventoBusqueda);
+            // Elimina eventos previos y asegura que se capture "keydown"
+            inputBusqueda.removeEventListener('keydown', manejadorEventoBusqueda);
+            inputBusqueda.addEventListener('keydown', manejadorEventoBusqueda);
 
-            // Evento para el teclado virtual de Android (se usa 'keyup' en lugar de 'keypress')
+            // También configura keyup por compatibilidad (opcional)
             inputBusqueda.removeEventListener('keyup', manejadorEventoBusqueda);
             inputBusqueda.addEventListener('keyup', manejadorEventoBusqueda);
-            log('Evento de búsqueda configurado para el input #identifier');
+
+            log('Evento de búsqueda configurado para el input .inputBusquedaRs');
         } else {
             log('No se encontró el elemento input de búsqueda');
         }
 
-        // Eventos para los botones
+        // Configuración de eventos para los botones
         if (botonesBusqueda.length > 0) {
             botonesBusqueda.forEach(boton => {
                 boton.removeEventListener('click', manejadorEventoBusqueda);
