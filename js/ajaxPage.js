@@ -121,6 +121,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         return !/https:\/\/2upra\.com\/nocache/.test(url);
     }
 
+    //puedes hacer que cuando se ejecute load, el scroll este al tope arriba automaticamente, el de content
     function load(url, pushState) {
         if (!url || /^(javascript|data|vbscript):|#/.test(url.toLowerCase()) || url.includes('descarga_token')) return;
         if (pageCache[url] && shouldCache(url)) {
@@ -139,6 +140,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
                 document.getElementById('loadingBar').style.cssText = 'width: 100%; transition: width 0.1s ease, opacity 0.3s ease';
                 setTimeout(() => (document.getElementById('loadingBar').style.cssText = 'width: 0%; opacity: 0'), 100);
                 if (pushState) history.pushState(null, '', url);
+                document.getElementById('content').scrollTop = 0; 
                 doc.querySelectorAll('script').forEach(s => {
                     if (s.src && !document.querySelector(`script[src="${s.src}"]`)) {
                         document.body.appendChild(Object.assign(document.createElement('script'), {src: s.src, async: false}));
@@ -150,21 +152,6 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
             })
             .catch(e => console.error('Load error:', e));
     }
-
-    /*
-    porque al abrir una notificacion no funciona esto 
-
-    <li class="notificacion-item" data-notificacion-id="328409" data-observado="true">
-    <a href="https://2upra.com/?post_type=social_post&amp;p=328372" class="notificacion-enlace">
-    <img class="avatar" src="https://i0.wp.com/2upra.com/wp-content/uploads/2024/05/perfildefault.jpg?quality=40&amp;strip=all" alt="Avatar del emisor">
-    <div class="DAEFSE">
-    <p class="notificacion-contenido"></p><p>Asley Phonk le ha dado me gusta a tu publicación.</p>
-    <p></p>
-    <p class="notificacion-fecha">21 horas</p>
-    </div>
-    </a>
-    </li>
-    */
 
     document.addEventListener('DOMContentLoaded', () => {
         if (!window.location.href.includes('?fb-edit=1')) {
