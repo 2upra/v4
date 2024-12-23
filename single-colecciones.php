@@ -64,7 +64,7 @@ add_action('wp_head', function () use ($schema) {
     <main id="main">
         <div id="content" class="<?php echo esc_attr(! is_user_logged_in() ? 'nologin' : ''); ?>">
             <div id="menuData" style="display:none;" pestanaActual="">
-                <div data-tab="Colección"></div>
+                <div data-tab="Coleccion"></div>
                 <div data-tab="Ideas"></div>
             </div>
 
@@ -73,7 +73,7 @@ add_action('wp_head', function () use ($schema) {
                         <div class="tabs">
                             <div class="tab-content">
 
-                                <div class="tab" id="Colección" colec="<?php echo $postId ?>">
+                                <div class="tab active" id="Coleccion" colec="<?php echo $postId ?>">
                                     <div class="SINGLECOLECSGER">
                                         <?php echo singleColec($postId) ?>
                                     </div>
