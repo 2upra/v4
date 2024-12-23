@@ -537,6 +537,15 @@ function botonComentar($postId)
 function fondoPost($filtro, $block, $es_suscriptor, $postId)
 {
     $thumbnail_url = get_the_post_thumbnail_url($postId, 'full');
+
+    // Si la URL de la portada no está disponible, intenta obtener la URL de la meta 'imagenTemporal'
+    if (!$thumbnail_url) {
+        $imagen_temporal_id = get_post_meta($postId, 'imagenTemporal', true);
+        if ($imagen_temporal_id) {
+            $thumbnail_url = wp_get_attachment_url($imagen_temporal_id);
+        }
+    }
+
     $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
     $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
 
