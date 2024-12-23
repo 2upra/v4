@@ -143,7 +143,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
                 setTimeout(() => (document.getElementById('loadingBar').style.cssText = 'width: 0%; opacity: 0'), 100);
                 if (pushState) history.pushState(null, '', url);
                 requestAnimationFrame(() => {
-                    document.getElementById('main').scrollTop = 0;
+                    document.getElementById('content').scrollTop = 0;
                 });
                 doc.querySelectorAll('script').forEach(s => {
                     if (s.src && !document.querySelector(`script[src="${s.src}"]`)) {
@@ -180,7 +180,11 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
             setTimeout(() => {
                 window.hideAllSubmenus();
                 load(url, true);
-            }, 0); // Un retraso de 0 milisegundos es suficiente
+            }, 0);
+
+            requestAnimationFrame(() => {
+                document.getElementById('content').scrollTop = 0;
+            });
 
             e.stopImmediatePropagation(); // Asegurarse de que no se propague a otros listeners después del setTimeout
         }
