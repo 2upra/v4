@@ -217,7 +217,7 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
                 if (!empty($content)) {
                     echo $content;
                 } else {
-                    echo '<h2>' . get_the_title() . '</h2>';
+                    echo '<p>' . get_the_title() . '</p>';
                 }
                 ?>
             </div>
