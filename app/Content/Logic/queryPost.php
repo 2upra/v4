@@ -81,56 +81,39 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             $query_args = configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsuario);
         }
 
-        // Modificación para el filtro 'momento'
+        // Agregar publicaciones de colecciones al inicio si el filtro es 'momento'
         if ($args['filtro'] === 'momento') {
-            guardarLog("valor de query_args antes de la modificación: " . print_r($query_args, true));
-            // Crear una consulta separada para las colecciones
             $colecciones_args = [
                 'post_type' => 'colecciones',
                 'posts_per_page' => 2,
                 'post_status' => 'publish',
+
             ];
+            
             $colecciones_query = new WP_Query($colecciones_args);
-            guardarLog("Query SQL generada para colecciones: " . $colecciones_query->request);
-
-            // Añadir los IDs de las colecciones encontradas a un array
-            $colecciones_ids = [];
-            if ($colecciones_query->have_posts()) {
-                while ($colecciones_query->have_posts()) {
-                    $colecciones_query->the_post();
-                    $colecciones_ids[] = get_the_ID();
-                }
-            }
-            wp_reset_postdata();
-
-            // Modificar $query_args para incluir las colecciones
-            if (!empty($colecciones_ids)) {
-                // Excluir las colecciones de la consulta principal
-                if(isset($query_args['post__not_in'])){
-                    $query_args['post__not_in'] = array_merge($query_args['post__not_in'], $colecciones_ids);
-                } else {
-                    $query_args['post__not_in'] = $colecciones_ids;
-                }
-
-                // Reducir el número de posts de la consulta principal
-                $query_args['posts_per_page'] -= count($colecciones_ids);
-
-                 // Añadir las colecciones a la consulta principal al inicio
-                if(isset($query_args['post__in'])){
+            
+            if ( $colecciones_query->have_posts() ) {
+                $colecciones_ids = wp_list_pluck( $colecciones_query->posts, 'ID' );
+              
+                // Si ya hay post__in, fusionamos, sino, creamos
+                if (isset($query_args['post__in'])) {
                     $query_args['post__in'] = array_merge($colecciones_ids, $query_args['post__in']);
-                } else{
+                } else {
                     $query_args['post__in'] = $colecciones_ids;
                 }
 
-                // Asegurar que se muestren primero las colecciones
-                $query_args['orderby'] = 'post__in';
+                // Asegurarnos de que se muestren PRIMERO los de colecciones
+                $query_args['orderby'] = 'post__in'; 
             }
+            
+            //Eliminar duplicados, manteniendo las colecciones
+            $query_args['post__in'] = array_unique($query_args['post__in']);
 
-            guardarLog("valor de query_args después de la modificación: " . print_r($query_args, true));
-            $query = new WP_Query($query_args);
-            guardarLog("Query SQL generada después de la modificación: " . $query->request);
+            //guardarLog("valor de query_args: " . print_r($query_args, true));
+            //$query = new WP_Query($query_args);
+            //guardarLog("Query SQL generada: " . $query->request);
         }
-
+        
         $output = procesarPublicaciones($query_args, $args, $is_ajax);
 
         if ($is_ajax) {
@@ -143,6 +126,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
         return false;
     }
 }
+
 function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsuario)
 {
     try {
