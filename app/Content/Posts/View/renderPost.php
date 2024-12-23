@@ -187,46 +187,65 @@ function sampleListHtml($block, $es_suscriptor, $post_id, $datosAlgoritmo, $veri
 function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscriptor, $post_status, $audio_url)
 {
     $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
-    $audio_post_id = get_post_meta($post_id, 'post_audio_lite', true);
-    if ($thumbnail_url && empty($audio_post_id)) {
-        //return '';
-    }
-    $blurred_class = ($block && !$es_suscriptor) ? 'blurred' : '';
-    $image_size = ($block && !$es_suscriptor) ? 'thumbnail' : 'large';
-    $quality = ($block && !$es_suscriptor) ? 20 : 80;
     $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
-
     $momento = get_post_meta($post_id, 'momento', true);
     $datosColeccion = get_post_meta($post_id, 'datosColeccion', true);
+    $permalink = get_permalink($post_id);
 
-    $post_type = get_post_type($post_id);
 ?>
-    <div class="post-content">
-        <div class="MFQOYC">
-            <? echo like($post_id); ?>
-            <? echo opcionesRola($post_id, $post_status, $audio_url); ?>
-        </div>
-        <div class="KLYJBY">
-            <? echo audioPost($post_id); ?>
-        </div>
-
-        <?php if (!empty($momento) || !empty($datosColeccion)) : ?>
-            <div class="contentMoment">
-                <?php
-                $content = get_the_content();
-                if (!empty($content)) {
-                    echo $content;
-                } else {
-                    echo '<p>' . get_the_title() . '</p>';
-                }
-                ?>
+    <?php if (!empty($momento) || !empty($datosColeccion)) : ?>
+        <a href="<?php echo esc_url($permalink); ?>">
+        <?php endif; ?>
+        <div class="post-content">
+            <div class="MFQOYC">
+                <? echo like($post_id); ?>
+                <? echo opcionesRola($post_id, $post_status, $audio_url); ?>
             </div>
-        <?php else : ?>
-            <div class="LRKHLC">
-                <div class="XOKALG">
+            <div class="KLYJBY">
+                <? echo audioPost($post_id); ?>
+            </div>
+
+            <?php if (!empty($momento) || !empty($datosColeccion)) : ?>
+                <div class="contentMoment">
+                    <?php
+                    $content = get_the_content();
+                    if (!empty($content)) {
+                        echo $content;
+                    } else {
+                        echo '<p>' . get_the_title() . '</p>';
+                    }
+                    ?>
+                </div>
+            <?php else : ?>
+                <div class="LRKHLC">
+                    <div class="XOKALG">
+                        <?php
+                        $rola_meta = get_post_meta($post_id, 'rola', true);
+                        $nombre_rola_html = ''; // Variable para almacenar el HTML de nombreRola
+
+                        if ($rola_meta === '1') {
+                            $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
+                            if (empty($nombre_rola)) {
+                                $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
+                            }
+                            if (!empty($nombre_rola)) {
+                                $nombre_rola_html = '<p class="nameRola">' . esc_html($nombre_rola) . '</p>';
+                            }
+                        }
+                        $output = '<p>' . esc_html($author_name) . '</p>';
+                        $output .= '<p>-</p>';
+                        $output .= $nombre_rola_html;
+
+                        echo $output;
+                        ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+            <div class="CPQBEN" style="display: none;">
+                <div class="CPQBAU"><? echo $author_name; ?></div>
+                <div class="CPQBCO">
                     <?php
                     $rola_meta = get_post_meta($post_id, 'rola', true);
-                    $nombre_rola_html = ''; // Variable para almacenar el HTML de nombreRola
 
                     if ($rola_meta === '1') {
                         $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
@@ -234,40 +253,19 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
                             $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
                         }
                         if (!empty($nombre_rola)) {
-                            $nombre_rola_html = '<p class="nameRola">' . esc_html($nombre_rola) . '</p>';
+                            echo "<p>" . esc_html($nombre_rola) . "</p>";
+                        } else {
                         }
-                    }
-                    $output = '<p>' . esc_html($author_name) . '</p>';
-                    $output .= '<p>-</p>';
-                    $output .= $nombre_rola_html;
-
-                    echo $output;
-                    ?>
-                </div>
-            </div>
-        <?php endif; ?>
-        <div class="CPQBEN" style="display: none;">
-            <div class="CPQBAU"><? echo $author_name; ?></div>
-            <div class="CPQBCO">
-                <?php
-                $rola_meta = get_post_meta($post_id, 'rola', true);
-
-                if ($rola_meta === '1') {
-                    $nombre_rola = get_post_meta($post_id, 'nombreRola', true);
-                    if (empty($nombre_rola)) {
-                        $nombre_rola = get_post_meta($post_id, 'nombreRola1', true);
-                    }
-                    if (!empty($nombre_rola)) {
-                        echo "<p>" . esc_html($nombre_rola) . "</p>";
                     } else {
                     }
-                } else {
-                }
-                ?>
+                    ?>
+                </div>
+                <img src="<?= esc_url($optimized_thumbnail_url); ?>" alt="">
             </div>
-            <img src="<?= esc_url($optimized_thumbnail_url); ?>" alt="">
         </div>
-    </div>
+        <?php if (!empty($momento) || !empty($datosColeccion)) : ?>
+        </a>
+    <?php endif; ?>
 <?
 }
 
