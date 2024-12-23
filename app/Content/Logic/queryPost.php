@@ -295,9 +295,7 @@ function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $isAdmin
             }
         }
 
-        // Only apply ordenamiento if post_type is social_post AND filtro is not 'rola'
-        if ($args['post_type'] === 'social_post' && (!isset($args['filtro']) || $args['filtro'] !== 'rola')) {
-            //error_log("[construirQueryArgs] ordenamiento!!");
+        if ($args['post_type'] === 'social_post' && (!isset($args['filtro']) || !in_array($args['filtro'], ['rola', 'momento', 'tiendaPerfil', 'rolaListLike']))) {
             $query_args = ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
             if (!$query_args) {
                 ////error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
@@ -305,10 +303,8 @@ function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $isAdmin
         }
 
         if ($args['post_type'] === 'colecciones') {
-            //error_log("[construirQueryArgs] ordenamiento!! ordenamientoColecciones");
             $query_args = ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
             if (!$query_args) {
-                ////error_log("[construirQueryArgs] Error: Falló el ordenamiento de la consulta para post_type social_post");
             }
         }
 
