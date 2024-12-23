@@ -81,7 +81,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             $query_args = configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsuario);
         }
 
-        guardarLog("valor $query_args");
+        guardarLog("valor " . print_r($query_args, true));
         
         $output = procesarPublicaciones($query_args, $args, $is_ajax);
 
