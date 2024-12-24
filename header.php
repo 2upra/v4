@@ -308,9 +308,9 @@ if (!defined('ABSPATH')) {
                         <? echo $GLOBALS['iconologo']; ?>
                     </div>
                     <div class="nologinbotones">
-                        <button><a onclick="goToHomeAndScroll('inicioDiv')">Inicio</a></button>
-                        <button><a onclick="goToHomeAndScroll('caracteristicas')">Características</a></button>
-                        <button><a onclick="goToHomeAndScroll('comparativa')">Comparativa</a></button>
+                        <button><a onclick="scrollToSection('inicioDiv')">Inicio</a></button>
+                        <button><a onclick="scrollToSection('caracteristicas')">Características</a></button>
+                        <button><a onclick="scrollToSection('comparativa')">Comparativa</a></button>
                         <button style="display: none;"><a>Precio</a></button>
 
                     </div>
