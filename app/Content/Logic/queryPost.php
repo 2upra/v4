@@ -133,33 +133,34 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
     $likes_table = $wpdb->prefix . 'post_likes';
 
     // 1. Cache Key
-    $cache_key = 'colecciones_ordenadas_' . $usuarioActual . '_' . $filtroTiempo . '_' . mt_rand(); // Añade un número aleatorio a la clave de caché
+    $cache_key = 'colecciones_ordenadas_' . $usuarioActual . '_' . $filtroTiempo . '_' . mt_rand();
     $cached_data = obtenerCache($cache_key);
 
     if ($cached_data) {
-        //error_log("[ordenamientoColecciones] Retornando datos desde cache: " . $cache_key);
         $query_args['post__in'] = $cached_data;
         $query_args['orderby'] = 'post__in';
         return $query_args;
     }
 
-    // 2. Filtrar "Usar más tarde" y "Favoritos" (a menos que sean del usuario actual)
-    $excluded_titles = ['Usar más tarde', 'Favoritos'];
+    // 2. Filtrar "Usar más tarde", "Favoritos" y "test" (a menos que sean del usuario actual)
+    $excluded_titles = ['Usar más tarde', 'Favoritos', 'test'];
     $excluded_ids = [];
 
+    // Construye la parte del WHERE para excluir títulos dinámicamente
+    $title_conditions = [];
+    foreach ($excluded_titles as $title) {
+        $title_conditions[] = $wpdb->prepare("post_title LIKE '%%%s%%'", $title);
+    }
+    $where_title = implode(' OR ', $title_conditions);
+
     if ($usuarioActual) {
-        $excluded_ids = $wpdb->get_col($wpdb->prepare(
-            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND (post_title LIKE '%%%s%%' OR post_title LIKE '%%%s%%') AND post_author != %d",
-            $excluded_titles[0],
-            $excluded_titles[1],
-            $usuarioActual
-        ));
+        $excluded_ids = $wpdb->get_col(
+            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND ({$where_title}) AND post_author != {$usuarioActual}"
+        );
     } else {
-        $excluded_ids = $wpdb->get_col($wpdb->prepare(
-            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND (post_title LIKE '%%%s%%' OR post_title LIKE '%%%s%%')",
-            $excluded_titles[0],
-            $excluded_titles[1]
-        ));
+        $excluded_ids = $wpdb->get_col(
+            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND ({$where_title})"
+        );
     }
 
     // 3. Obtener IDs de colecciones con más likes en los últimos 30 días
@@ -173,7 +174,7 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
         AND pl.like_date >= DATE_SUB(NOW(), INTERVAL {$interval} DAY)
         GROUP BY p.ID
         ORDER BY like_count DESC, p.post_date DESC",
-        ARRAY_A // Get results as an associative array
+        ARRAY_A
     );
 
     // 4. Combinar y aleatorizar con pesos
@@ -183,26 +184,34 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
 
     foreach ($popular_ids as $post) {
         $popular_ids_list[] = $post['ID'];
-        // Asigna un peso basado en la cantidad de likes. 
-        // Puedes ajustar la fórmula para dar más o menos importancia a los likes.
-        $weights[$post['ID']] = $post['like_count'] * 2; // Ejemplo: Doble peso por cada like
+        $weights[$post['ID']] = $post['like_count'] * 2;
     }
 
-    $all_ids = array_unique(array_merge($popular_ids_list, $wpdb->get_col(
-        $wpdb->prepare(
-            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND ID NOT IN (%s)",
-            implode(',', array_merge($excluded_ids, $popular_ids_list ? $popular_ids_list : [0]))
-        )
-    )));
+    // Asegurar que $excluded_ids y $popular_ids_list sean arrays antes de intentar unirlos
+    $excluded_ids = is_array($excluded_ids) ? $excluded_ids : [];
+    $popular_ids_list = is_array($popular_ids_list) ? $popular_ids_list : [];
 
-    // Añade un peso base a las colecciones no populares para que tengan posibilidad de aparecer antes.
+    // Incluye aquí el manejo de si $excluded_ids está vacío
+    if (empty($excluded_ids) && empty($popular_ids_list)) {
+        $all_ids = $wpdb->get_col(
+            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish'"
+        );
+    } else {
+        // Si $excluded_ids está vacío pero $popular_ids_list no, o viceversa, asegúrate de que la consulta SQL se construya correctamente
+        $all_ids = array_unique(array_merge($popular_ids_list, $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND ID NOT IN (" . implode(',', array_merge($excluded_ids, $popular_ids_list)) . ")",
+                [] // $wpdb->prepare no necesita un segundo argumento si no hay placeholders para variables
+            )
+        )));
+    }
+
     foreach ($all_ids as $id) {
         if (!isset($weights[$id])) {
-            $weights[$id] = 1; // Peso base para colecciones no populares
+            $weights[$id] = 1;
         }
     }
 
-    // Función para seleccionar un ID basado en pesos
     function weighted_random_select($weighted_items) {
         $sum_of_weights = array_sum($weighted_items);
         $random = mt_rand(1, $sum_of_weights);
@@ -215,24 +224,21 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
         }
     }
 
-    // Ordenar las colecciones usando pesos
     $ordered_ids = [];
     $temp_weights = $weights;
     while (count($ordered_ids) < count($all_ids)) {
         $selected_id = weighted_random_select($temp_weights);
         $ordered_ids[] = $selected_id;
-        unset($temp_weights[$selected_id]); // Elimina el ID seleccionado para evitar duplicados
+        unset($temp_weights[$selected_id]);
     }
 
     // 5. Guardar en caché
-    guardarCache($cache_key, $ordered_ids, 3600); // 1 hora
+    guardarCache($cache_key, $ordered_ids, 3600);
 
     // 6. Actualizar $query_args
     $query_args['post__in'] = $ordered_ids;
     $query_args['orderby'] = 'post__in';
     $query_args['post__not_in'] = $excluded_ids;
-
-    //error_log("[ordenamientoColecciones] IDs ordenadas: " . implode(', ', $ordered_ids));
 
     return $query_args;
 }
