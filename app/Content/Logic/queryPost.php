@@ -94,7 +94,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
             $colecciones_output_array = [];
             if (!empty($ordered_colecciones_args['post__in'])) {
 
-                $top_two_colecciones_ids = array_slice($ordered_colecciones_args['post__in'], 0, 2);
+                $top_two_colecciones_ids = array_slice($ordered_colecciones_args['post__in'], 0, 6);
 
                 if (!empty($top_two_colecciones_ids)) {
                     $colecciones_query_args = [
@@ -103,7 +103,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
                         'orderby' => 'post__in',
                         'order' => 'ASC',
                         'post_status' => 'publish',
-                        'posts_per_page' => 5,
+                        'posts_per_page' => 6,
                     ];
                     $colecciones_output = procesarPublicaciones($colecciones_query_args, $args, $is_ajax);
                 }
