@@ -228,7 +228,7 @@ function dev()
         <div class="tab-content">
             <div class="tab active GMXSUJ" id="Inicio" ajax="no">
 
-                <div class="SOKDEOD">
+                <div class="SOKDEOD" id="inicioDiv">
                     <h2>Esta si es la mejor biblioteca de samples del planeta</h2>
                     <div class="buscadordiv">
                         <input class="borde" type="text" placeholder="Encuentra cualquier sonido" id="identifier">
@@ -266,7 +266,7 @@ function dev()
                         </div>
 
                     </div>
-                    <div class="OSFED">
+                    <div class="OSFED" id="caracteristicas">
                         <div class="ADEEDE">
                             <div class="div1 bloque svg-container">
                                 <div class="tinfo" style="display: none;">
@@ -334,7 +334,7 @@ function dev()
                             <div class="div10 bloquesvg-container" style="display: none">
                             </div>
                         </div>
-                        <div class="table_component" role="region" tabindex="0">
+                        <div class="table_component" role="region" tabindex="0" id="comparativa">
                             <table>
                                 <thead>
                                     <tr>

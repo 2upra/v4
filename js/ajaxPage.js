@@ -19,6 +19,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         'actualizarUIBusquedaNoURL',
         'stopAllWaveSurferPlayers',
         'inicializarPestanas',
+        'scrollToSection',
         'inicializarWaveforms',
         'inicializarReproductorAudio',
         'minimizarform',
@@ -168,7 +169,6 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         }
 
         function handleLoad(e, url, el) {
-
             if (el.classList.contains('no-ajax') || el.closest('.no-ajax')) return true;
             if (typeof url !== 'string' || !url) return console.warn('Invalid URL:', url), true;
             const lowerUrl = url.trim().toLowerCase();
@@ -195,7 +195,6 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
 
             if (el) {
                 let url;
-                
 
                 // Prioridad 1: ajaxUrl dentro de button.iralpost
                 const buttonIralpost = el.closest('button.iralpost');
@@ -235,3 +234,11 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         window.addEventListener('popstate', () => load(location.href, false));
     });
 })();
+
+function scrollToSection(sectionId) {
+    const element = document.getElementById(sectionId);
+
+    if (element) {
+        element.scrollIntoView({behavior: 'smooth'}); // Puedes usar 'auto' para scroll instantáneo
+    }
+}
