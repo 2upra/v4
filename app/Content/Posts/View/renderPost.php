@@ -503,7 +503,7 @@ function nohayPost($filtro, $is_ajax)
         <? else: ?>
             <div class="LNVHED no-<? echo esc_attr($filtro); ?>">
                 <? echo $GLOBALS['emptystate']; ?>
-                <p>Aún esto esta vacío</p>
+                <p>Ñoño aqui no han puesto nada aún</p>
                 <? if ($filtro === 'rolastatus'): ?>
                     <p>Cuando publiques tu primera rola, aparecerá aquí</p>
                 <? endif; ?>
