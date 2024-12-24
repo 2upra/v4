@@ -103,7 +103,7 @@ function publicaciones($args = [], $is_ajax = false, $paged = 1)
                         'orderby' => 'post__in',
                         'order' => 'ASC',
                         'post_status' => 'publish',
-                        'posts_per_page' => 2,
+                        'posts_per_page' => 5,
                     ];
                     $colecciones_output = procesarPublicaciones($colecciones_query_args, $args, $is_ajax);
                 }
@@ -133,7 +133,7 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
     $likes_table = $wpdb->prefix . 'post_likes';
 
     // 1. Cache Key
-    $cache_key = 'colecciones_ordenadas_' . $usuarioActual . '_' . $filtroTiempo;
+    $cache_key = 'colecciones_ordenadas_' . $usuarioActual . '_' . $filtroTiempo . '_' . mt_rand(); // Añade un número aleatorio a la clave de caché
     $cached_data = obtenerCache($cache_key);
 
     if ($cached_data) {
@@ -176,12 +176,16 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
         ARRAY_A // Get results as an associative array
     );
 
-    // 4. Combinar y aleatorizar
+    // 4. Combinar y aleatorizar con pesos
     $all_ids = [];
     $popular_ids_list = [];
+    $weights = [];
 
     foreach ($popular_ids as $post) {
         $popular_ids_list[] = $post['ID'];
+        // Asigna un peso basado en la cantidad de likes. 
+        // Puedes ajustar la fórmula para dar más o menos importancia a los likes.
+        $weights[$post['ID']] = $post['like_count'] * 2; // Ejemplo: Doble peso por cada like
     }
 
     $all_ids = array_unique(array_merge($popular_ids_list, $wpdb->get_col(
@@ -191,12 +195,34 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
         )
     )));
 
-    // Mezclar las IDs que no son populares para agregar aleatoriedad.
-    $non_popular_ids = array_diff($all_ids, $popular_ids_list);
-    shuffle($non_popular_ids);
+    // Añade un peso base a las colecciones no populares para que tengan posibilidad de aparecer antes.
+    foreach ($all_ids as $id) {
+        if (!isset($weights[$id])) {
+            $weights[$id] = 1; // Peso base para colecciones no populares
+        }
+    }
 
-    // Combinar IDs populares con IDs no populares mezcladas.
-    $ordered_ids = array_merge($popular_ids_list, $non_popular_ids);
+    // Función para seleccionar un ID basado en pesos
+    function weighted_random_select($weighted_items) {
+        $sum_of_weights = array_sum($weighted_items);
+        $random = mt_rand(1, $sum_of_weights);
+        $cumulative_weight = 0;
+        foreach ($weighted_items as $item => $weight) {
+            $cumulative_weight += $weight;
+            if ($random <= $cumulative_weight) {
+                return $item;
+            }
+        }
+    }
+
+    // Ordenar las colecciones usando pesos
+    $ordered_ids = [];
+    $temp_weights = $weights;
+    while (count($ordered_ids) < count($all_ids)) {
+        $selected_id = weighted_random_select($temp_weights);
+        $ordered_ids[] = $selected_id;
+        unset($temp_weights[$selected_id]); // Elimina el ID seleccionado para evitar duplicados
+    }
 
     // 5. Guardar en caché
     guardarCache($cache_key, $ordered_ids, 3600); // 1 hora
