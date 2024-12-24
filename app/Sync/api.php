@@ -135,7 +135,6 @@ function actualizarTimestampSamplesGuardados($user_id)
     update_user_meta($user_id, 'samplesGuardados_modificado', time());
 }
 add_action('samples_guardados_actualizados', 'actualizarTimestampSamplesGuardados', 10, 2);
-
 function obtenerAudiosUsuario(WP_REST_Request $request)
 {
     $user_id = $request->get_param('user_id');
@@ -143,7 +142,7 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
     if ($user_id == 355) {
         $user_id = 1;
     }
-    
+
     error_log("obtenerAudiosUsuario: User ID: $user_id"); // Log al inicio
 
     $post_id = $request->get_param('post_id'); // Nuevo parámetro opcional
@@ -152,10 +151,33 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
     $downloads = [];
 
     if (is_array($descargas)) {
-        foreach ($descargas as $current_post_id => $count) {
-            // Si se proporciona post_id, solo procesar ese post
-            if ($post_id !== null && $current_post_id != $post_id) continue;
+        // 1. Obtener todos los post_ids en una sola consulta.
+        $post_ids = array_keys($descargas);
 
+        // 2. Si se ha proporcionado un post_id, filtrar el array.
+        if ($post_id !== null) {
+            $post_ids = array_intersect($post_ids, [$post_id]);
+        }
+
+        // 3. Verificar "favoritos" en una sola consulta.
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'post_likes';
+        $post_ids_str = implode(',', $post_ids); // Convertir el array de post_ids a una cadena separada por comas
+
+        $favoritos = [];
+        if (!empty($post_ids_str)) {
+            $favoritos_results = $wpdb->get_results($wpdb->prepare(
+                "SELECT post_id FROM $table_name WHERE user_id = %d AND like_type = 'favorito' AND post_id IN ($post_ids_str)",
+                $user_id
+            ));
+
+            foreach ($favoritos_results as $result) {
+                $favoritos[$result->post_id] = true;
+            }
+        }
+
+        // 4. Iterar sobre los post_ids y construir la respuesta.
+        foreach ($post_ids as $current_post_id) {
             $attachment_id = get_post_meta($current_post_id, 'post_audio', true);
             if ($attachment_id && get_post($attachment_id)) {
                 $file_path = get_attached_file($attachment_id);
@@ -177,7 +199,8 @@ function obtenerAudiosUsuario(WP_REST_Request $request)
                             'collection' => $collection_name,
                             'download_url' => home_url("/wp-json/sync/v1/download/?token=$token&nonce=$nonce"),
                             'audio_filename' => get_the_title($attachment_id) . '.' . pathinfo($file_path, PATHINFO_EXTENSION),
-                            'image' => $optimized_image_url, // Añadimos la URL de la imagen
+                            'image' => $optimized_image_url,
+                            'es_favorito' => isset($favoritos[$current_post_id]) // Indicador de si es favorito
                         ];
                     }
                 } else {
