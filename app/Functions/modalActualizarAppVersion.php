@@ -2,7 +2,7 @@
 
 function mostrarModalActualizacionApp()
 {
-    $version_actual = '0301';
+    $version_actual = '24122024a';
     $usuario_actual = wp_get_current_user();
     $mostrar_modal = false;
 
