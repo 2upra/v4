@@ -440,7 +440,7 @@
             }
 
             // Obtener el identificador del input de búsqueda
-            inputBusqueda = document.getElementById('identifier');
+            const inputBusqueda = document.getElementById('identifier');
             identificador = inputBusqueda.value.trim();
 
             if (identificador === '') {
