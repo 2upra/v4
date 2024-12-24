@@ -502,11 +502,12 @@ function nohayPost($filtro, $is_ajax)
             <div id="no-more-posts-two" no-more="<? echo esc_attr($filtro); ?>"></div>
         <? else: ?>
             <div class="LNVHED no-<? echo esc_attr($filtro); ?>">
+                <? echo $GLOBALS['emptystate']; ?>
                 <p>Aún esto esta vacío</p>
                 <? if ($filtro === 'rolastatus'): ?>
                     <p>Cuando publiques tu primera rola, aparecerá aquí</p>
                 <? endif; ?>
-                <button><a href="https://2upra.com/">Volver al inicio</a></button>
+                <button class="borde"><a href="https://2upra.com/">Volver al inicio</a></button>
             </div>
         <? endif; ?>
 
