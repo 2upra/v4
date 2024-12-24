@@ -189,11 +189,14 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
     $thumbnail_url = get_the_post_thumbnail_url($post_id, 'full');
     $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
     $momento = get_post_meta($post_id, 'momento', true);
-    $datosColeccion = get_post_meta($post_id, 'datosColeccion', true);
+    $esColeccion = get_post_meta($post_id, 'datosColeccion', true);
+    if (!$esColeccion) {
+        $esColeccion = get_post_meta($post_id, 'ultimaModificacion', true);
+    }
     $permalink = get_permalink($post_id);
 
 ?>
-    <?php if (!empty($momento) || !empty($datosColeccion)) : ?>
+    <?php if (!empty($momento) || !empty($esColeccion)) : ?>
         <a href="<?php echo esc_url($permalink); ?>">
         <?php endif; ?>
         <div class="post-content">
@@ -205,7 +208,7 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
                 <? echo audioPost($post_id); ?>
             </div>
 
-            <?php if (!empty($momento) || !empty($datosColeccion)) : ?>
+            <?php if (!empty($momento) || !empty($esColeccion)) : ?>
                 <div class="contentMoment">
                     <?php
                     $content = get_the_content();
@@ -263,7 +266,7 @@ function renderMusicContent($filtro, $post_id, $author_name, $block, $es_suscrip
                 <img src="<?= esc_url($optimized_thumbnail_url); ?>" alt="">
             </div>
         </div>
-        <?php if (!empty($momento) || !empty($datosColeccion)) : ?>
+        <?php if (!empty($momento) || !empty($esColeccion)) : ?>
         </a>
     <?php endif; ?>
 <?
