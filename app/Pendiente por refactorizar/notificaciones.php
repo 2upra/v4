@@ -169,11 +169,14 @@ function send_push_notification($user_id, $title, $message, $url)
         'notification' => [
             'title' => $title,
             'body' => $message,
+            'click_action' => 'FLUTTER_NOTIFICATION_CLICK', // Acción para manejar el clic
+            'icon' => 'https://example.com/icon.png', // Icono personalizado
         ],
         'data' => [
-            'url' => $url,
+            'url' => $url, // Información adicional (la URL)
         ],
     ];
+    
 
     try {
         // Enviar la notificación push

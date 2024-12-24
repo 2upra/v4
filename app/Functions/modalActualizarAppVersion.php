@@ -49,7 +49,7 @@ function mostrarModalActualizacionApp()
 
                     botonDespues.addEventListener('click', ocultarModalActualizacion);
                     botonActualizar.addEventListener('click', function() {
-                        window.location.href = "https://2upra.com/wp-content/uploads/2024/12/2upra24122024.apk";
+                        window.location.href = "https://2upra.com/wp-content/uploads/2024/12/2upra24122024a.apk";
                         ocultarModalActualizacion();
                     });
                 }

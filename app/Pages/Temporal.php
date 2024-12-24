@@ -235,7 +235,7 @@ function dev()
                         <button class="buttonBI borde"> <? echo $GLOBALS['iconFlecha']; ?>Buscar</button>
                     </div>
                     <div >
-                        <button><a href="https://2upra.com/wp-content/uploads/2024/12/2upra24122024.apk"></a></button>
+                        <button><a href="https://2upra.com/wp-content/uploads/2024/12/2upra24122024a.apk"></a></button>
                         <button><a href="https://github.com/1ndoryu/sync2upra/releases/download/v1.0.2/Sync-2upra-Setup-1.0.2.exe"></a></button>
                     </div>
                 </div>
