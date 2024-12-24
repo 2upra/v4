@@ -445,7 +445,12 @@ function infoPost($autorId, $author_avatar, $author_name, $post_date, $postId, $
 ?>
     <div class="SOVHBY <? echo ($is_current_user ? 'miContenido' : ''); ?>">
         <div class="CBZNGK">
-            <a href="<? echo esc_url(get_author_posts_url($autorId)); ?>"></a>
+            <?php
+            // Verificar si el usuario es PRO, administrador o tiene la meta 'Verificado'
+            if (get_user_meta($autorId, 'pro', true) || user_can($autorId, 'administrator') || get_user_meta($autorId, 'Verificado', true)) : ?>
+                <a href="<? echo esc_url(get_author_posts_url($autorId)); ?>"><? echo $GLOBALS['verificado']; ?></a>
+            <?php endif; ?>
+            <a href="<? echo esc_url(get_author_posts_url($autorId)); ?>"> </a>
             <img src="<? echo esc_url($author_avatar); ?>">
             <? echo botonseguir($autorId); ?>
         </div>
@@ -493,7 +498,6 @@ function infoPost($autorId, $author_avatar, $author_name, $post_date, $postId, $
     return ob_get_clean();
 }
 
-
 //BOTON PARA SUSCRIBIRSE
 function botonSuscribir($autorId, $author_name, $subscription_price_id = 'price_1OqGjlCdHJpmDkrryMzL0BCK')
 {
@@ -530,7 +534,7 @@ function botonComentar($postId)
     </div>
 
 
-    <?
+<?
     return ob_get_clean();
 }
 
@@ -550,11 +554,11 @@ function fondoPost($filtro, $block, $es_suscriptor, $postId)
     $optimized_thumbnail_url = img($thumbnail_url, 40, 'all');
 
     ob_start();
-    ?>
+?>
     <div class="post-background <?= $blurred_class ?>"
         style="background-image: linear-gradient(to top, rgba(9, 9, 9, 10), rgba(0, 0, 0, 0) 100%), url(<?php echo esc_url($optimized_thumbnail_url); ?>);">
     </div>
-    <?php
+<?php
     $output = ob_get_clean();
     return $output;
 }
@@ -584,7 +588,7 @@ function wave($audio_url, $audio_id_lite, $postId)
             $audio_urls[$meta_key] = $audio_url_multiple;
         }
     }
-    ?>
+?>
     <div class="waveforms-container-post" id="waveforms-container-<? echo $postId; ?>" data-post-id="<? echo esc_attr($postId); ?>">
         <?php
         // Mostrar los botones solo si hay más de un audio
