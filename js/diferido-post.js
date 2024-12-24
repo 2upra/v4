@@ -421,6 +421,7 @@
         cargarMasContenido(listaPublicaciones);
     };
 
+    //pasa algo, en la version escritorio, cuando se hace la busqueda, el valor de la busqueda se pasa correctamente, o sea, la busqueda se realiza y aparece los resultado seugn la busqueda, pero en la version movil, si se hace la busqueda pero parece que no se esta pasando el valor del identificador, no puedo comprobar que no se esta pasando porque no estoy viendo los logs en la app, pero si deduzco que es eso 
     function manejadorEventoBusqueda(e) {
         // Verificar si el evento proviene de la tecla Enter (keydown es más confiable)
         const esEnter = e.type === 'keydown' && (e.key === 'Enter' || e.keyCode === 13);
@@ -439,8 +440,8 @@
             }
 
             // Obtener el identificador del input de búsqueda
-            const inputBusqueda = document.getElementById('identifier');
-            const identificador = inputBusqueda.value.trim();
+            inputBusqueda = document.getElementById('identifier');
+            identificador = inputBusqueda.value.trim();
 
             if (identificador === '') {
                 log('El campo de búsqueda está vacío');
