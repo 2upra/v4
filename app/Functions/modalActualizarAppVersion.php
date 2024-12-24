@@ -2,7 +2,7 @@
 
 function mostrarModalActualizacionApp()
 {
-    $version_actual = 'Gloria1';
+    $version_actual = '0301';
     $usuario_actual = wp_get_current_user();
     $mostrar_modal = false;
 
@@ -49,7 +49,7 @@ function mostrarModalActualizacionApp()
 
                     botonDespues.addEventListener('click', ocultarModalActualizacion);
                     botonActualizar.addEventListener('click', function() {
-                        window.location.href = "https://2upra.com/wp-content/uploads/2024/12/2upra-gloria.apk";
+                        window.location.href = "https://2upra.com/wp-content/uploads/2024/12/2upra24122024.apk";
                         ocultarModalActualizacion();
                     });
                 }
