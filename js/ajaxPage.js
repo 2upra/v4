@@ -239,6 +239,35 @@ function scrollToSection(sectionId) {
     const element = document.getElementById(sectionId);
 
     if (element) {
-        element.scrollIntoView({behavior: 'smooth'}); // Puedes usar 'auto' para scroll instantáneo
+        element.scrollIntoView({behavior: 'smooth'});
+    }
+}
+
+// Función para obtener el valor de un parámetro de la URL
+function getParameterByName(name, url = window.location.href) {
+    name = name.replace(/[\[\]]/g, '\\$&');
+    const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+    const results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
+window.onload = function () {
+    const scrollTo = getParameterByName('scrollTo');
+    if (scrollTo) {
+        scrollToSection(scrollTo);
+    }
+};
+
+function goToHomeAndScroll(sectionId) {
+    const currentUrl = window.location.href;
+
+    const homeUrl = "<?php echo home_url('/'); ?>";
+
+    if (currentUrl !== homeUrl) {
+        window.location.href = homeUrl + '?scrollTo=' + sectionId;
+    } else {
+        scrollToSection(sectionId);
     }
 }
