@@ -445,11 +445,6 @@ function infoPost($autorId, $author_avatar, $author_name, $post_date, $postId, $
 ?>
     <div class="SOVHBY <? echo ($is_current_user ? 'miContenido' : ''); ?>">
         <div class="CBZNGK">
-            <?php
-            // Verificar si el usuario es PRO, administrador o tiene la meta 'Verificado'
-            if (get_user_meta($autorId, 'pro', true) || user_can($autorId, 'administrator') || get_user_meta($autorId, 'Verificado', true)) : ?>
-                <a href="<? echo esc_url(get_author_posts_url($autorId)); ?>"><? echo $GLOBALS['verificado']; ?></a>
-            <?php endif; ?>
             <a href="<? echo esc_url(get_author_posts_url($autorId)); ?>"> </a>
             <img src="<? echo esc_url($author_avatar); ?>">
             <? echo botonseguir($autorId); ?>
@@ -458,6 +453,11 @@ function infoPost($autorId, $author_avatar, $author_name, $post_date, $postId, $
             <div class="JHVSFW">
                 <a href="<? echo esc_url(get_author_posts_url($autorId)); ?>" class="profile-link">
                     <? echo esc_html($author_name); ?>
+                    <?php 
+                    // Verificar si el usuario es PRO, administrador o tiene la meta 'Verificado'
+                    if (get_user_meta($autorId, 'pro', true) || user_can($autorId, 'administrator') || get_user_meta($autorId, 'Verificado', true)) : ?>
+                        <? echo $GLOBALS['verificado']; ?>
+                    <?php endif; ?>
                 </a>
             </div>
             <div class="HQLXWD">
@@ -467,8 +467,6 @@ function infoPost($autorId, $author_avatar, $author_name, $post_date, $postId, $
             </div>
         </div>
     </div>
-
-
 
     <div class="verificacionPost">
         <? if ($verificado == '1') : ?>
