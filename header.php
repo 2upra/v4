@@ -256,7 +256,7 @@ if (!defined('ABSPATH')) {
                                 ?>
                             </div>
 
-                            <div class="iconobusqueda" id="iconobusqueda">
+                            <div class="iconobusqueda" id="iconobusqueda" style="display: none;">
                                 <a href="<?php echo home_url('/busqueda'); ?>">
                                     <? echo $GLOBALS['iconobusqueda'];
                                     ?>
