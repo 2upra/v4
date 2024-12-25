@@ -82,6 +82,7 @@ function buscarUnAudioValido($directorio, $intentos = 0)
 {
     $max_intentos = 100;
     $max_intentos_hash = 3;
+    $carpeta_protegida = '/home/asley01/MEGA/Waw/Kits/'; // Ruta de la carpeta que no se debe borrar
 
     if ($intentos >= $max_intentos) {
         autLog("Error: Se alcanzó el número máximo de intentos ($max_intentos) en buscarUnAudioValido.");
@@ -110,11 +111,11 @@ function buscarUnAudioValido($directorio, $intentos = 0)
         if (empty($subcarpetas)) {
             $subcarpetas[] = $directorio;
         }
-        
+
         $carpeta_seleccionada = $subcarpetas[array_rand($subcarpetas)];
         $archivos = [];
         $dir_iterator = new DirectoryIterator($carpeta_seleccionada);
-        
+
         foreach ($dir_iterator as $file) {
             if ($file->isFile()) {
                 $ext = strtolower($file->getExtension());
@@ -130,16 +131,17 @@ function buscarUnAudioValido($directorio, $intentos = 0)
                 }
             }
         }
-
-        // Borrar carpeta si está vacía
+        
         foreach ($subcarpetas as $subcarpeta) {
+          if ($subcarpeta !== $carpeta_protegida) { // Verificar si la carpeta es la protegida
             $carpeta_vacia = !(new FilesystemIterator($subcarpeta))->valid();
-            if ($carpeta_vacia) {
-                try {
-                    rmdir($subcarpeta);
-                    autLog("Carpeta vacía eliminada: " . $subcarpeta);
-                } catch (Exception $e) {
-                    autLog("Error al eliminar carpeta vacía: " . $e->getMessage());
+                if ($carpeta_vacia) {
+                    try {
+                        rmdir($subcarpeta);
+                        autLog("Carpeta vacía eliminada: " . $subcarpeta);
+                    } catch (Exception $e) {
+                        autLog("Error al eliminar carpeta vacía: " . $e->getMessage());
+                    }
                 }
             }
         }
