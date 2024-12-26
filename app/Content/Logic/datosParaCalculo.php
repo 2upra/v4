@@ -89,12 +89,12 @@ function obtenerDatosFeed($userId)
             GROUP BY post_id, like_type
         ";
 
-        $likesResultados = $wpdb->get_results($wpdb->prepare($sqlLikes, $postsIds));
+        $args = array_merge([$sqlLikes], $postsIds);
+        $likesResultados = $wpdb->get_results(call_user_func_array([$wpdb, 'prepare'], $args));
 
         if ($wpdb->last_error) {
             guardarLog("[obtenerDatosFeed] Error: Fallo al obtener likes: " . $wpdb->last_error);
         }
-
         $likesPorPost = [];
         foreach ($likesResultados as $like) {
             if (!isset($likesPorPost[$like->post_id])) {
