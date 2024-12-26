@@ -182,12 +182,12 @@ function calcularPuntosParaPost(
         $v = $vistasPosts[$postId]['count'];
     
         // Se calcula la reducción de puntos en función del número de vistas.
-        $rPuntos = $v * 5; 
+        $rPuntos = $v * 10; 
     
         // Se resta la reducción de puntos al puntaje final.
         $pFinal -= $rPuntos;
     }
-    
+
     // Adjust randomness outside tight loops if possible
     $aleatoriedad = mt_rand(0, 20);
     $ajusteExtra = mt_rand(-50, 50);
