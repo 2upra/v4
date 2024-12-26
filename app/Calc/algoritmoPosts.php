@@ -160,7 +160,7 @@ function calcularPuntosParaPost(
         if ($tipoUsuario === 'Fan') {
             $pArtistaFan = $postParaFans ? 999 : 0;
         } elseif ($tipoUsuario === 'Artista') {
-            $pArtistaFan = $postParaFans ? -50 : 0; 
+            $pArtistaFan = $postParaFans ? -50 : 0;
         }
     }
 
@@ -178,12 +178,16 @@ function calcularPuntosParaPost(
 
     // Apply reduction based on views
     if (isset($vistasPosts[$postId])) {
-        $vistas = $vistasPosts[$postId]['count'];
-        $rVista = 0.01;
-        $factorReduccion = pow(1 - $rVista, $vistas);
-        $pFinal *= $factorReduccion;
+        // Si el ID del post actual existe en el array $vistasPosts, se obtiene el número de vistas.
+        $v = $vistasPosts[$postId]['count'];
+    
+        // Se calcula la reducción de puntos en función del número de vistas.
+        $rPuntos = $v * 5; 
+    
+        // Se resta la reducción de puntos al puntaje final.
+        $pFinal -= $rPuntos;
     }
-
+    
     // Adjust randomness outside tight loops if possible
     $aleatoriedad = mt_rand(0, 20);
     $ajusteExtra = mt_rand(-50, 50);
@@ -268,9 +272,6 @@ function calcularPuntosFinales($pUsuario, $pIntereses, $puntosLikes, $metaVerifi
 
     return $pUsuario + $pIntereses + $puntosLikes;
 }
-
-
-// Helper function for decay factors
 
 function getDecayFactor($days, $useDecay = false)
 {
