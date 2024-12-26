@@ -202,7 +202,7 @@ function like() {
     }
 }
 
-
+//lo que pasa con esto es que cuando pongo el mouse, y muevo hacia los botones extras, desaparece, o sea, hay un espacio entre botonlike y botones extras y supongo que al pasar por ahi
 function animacionLike() {
     const containers = document.querySelectorAll('.botonlike-container');
 
@@ -212,7 +212,7 @@ function animacionLike() {
         let timeoutId = null;
         let isHoveringContainer = false;
         let isHoveringExtras = false;
-        let delayHide = 200; // Tiempo en milisegundos que los botones permanecerán visibles
+        let delayHide = 600; // Tiempo en milisegundos que los botones permanecerán visibles
 
         const showExtras = () => {
             //console.log('showExtras: Mostrando botones extras');
