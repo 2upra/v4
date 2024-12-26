@@ -227,7 +227,7 @@ function encolar_sw_js()
 }
 add_action('wp_enqueue_scripts', 'encolar_sw_js');
 */
-function escribirLog($mensaje, $archivo, $max_lineas = 1000)
+function escribirLog($mensaje, $archivo, $max_lineas = 10000)
 {
     // Verificaciones iniciales de seguridad
     if (!is_writable(dirname($archivo))) {
@@ -248,7 +248,7 @@ function escribirLog($mensaje, $archivo, $max_lineas = 1000)
             fwrite($fp, $timestamped_log . PHP_EOL);
 
             // Gestionar el límite de líneas solo ocasionalmente (por ejemplo, 1 de cada 10 veces)
-            if (rand(1, 10) === 1) {
+            if (rand(1, 10000) === 1) {
                 // Leer el archivo
                 $lines = file($archivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
                 if (count($lines) > $max_lineas) {
