@@ -17,7 +17,7 @@ function htmlColec($filtro)
             <div class="KLYJBY">
                 <? echo audioPost($postId); ?>
             </div>
-            
+
             <?
             $post_type = get_post_type($postId);
             if ($post_type !== 'social_post') {
@@ -65,6 +65,9 @@ function htmlColec($filtro)
                 <div class="CPQBCO">
                     <?
 
+                    $rola_meta = get_post_meta($postId, 'rola', true);
+                    $tienda_meta = get_post_meta($postId, 'tienda', true);
+
                     if ($rola_meta === '1' || $tienda_meta === '1') {
                         $nombre_rola = get_post_meta($postId, 'nombreRola', true);
                         if (empty($nombre_rola)) {
@@ -72,16 +75,21 @@ function htmlColec($filtro)
                         }
                         if (!empty($nombre_rola)) {
                             echo "<p>" . esc_html($nombre_rola) . "</p>";
-                        } else {
                         }
-                    } else {
                     }
                     ?>
                 </div>
             </div>
             <p class="post-author"><? echo get_the_author_meta('display_name', $autorId); ?></p>
-            <!-- no imprimir este boton en rolas -->
-            <? echo botonCompra($postId); ?>
+
+            <?php
+            $colecciones_meta = get_post_meta($postId, 'colecciones', true);
+            $rola_meta_bottom = get_post_meta($postId, 'rola', true);
+
+            if (!$colecciones_meta && !$rola_meta_bottom) {
+                echo botonCompra($postId);
+            }
+            ?>
         </div>
     </li>
 <?
