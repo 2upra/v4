@@ -140,7 +140,7 @@ function calcularPuntosParaPost(
     // Calculate puntosLikes
     $likesPorPost = $datos['likes_by_post'];
     $likesData = $likesPorPost[$postId] ?? ['like' => 0, 'favorito' => 0, 'no_me_gusta' => 0];
-    $puntosLikes = 30 + $likesData['like'] + ($likesData['favorito'] * 50) - ($likesData['no_me_gusta'] * 30);
+    $puntosLikes = 30 + $likesData['like'] + 50 * $likesData['favorito'] - ($likesData['no_me_gusta'] * 30);
 
     // Access meta data
     $meta_data = $datos['meta_data'];
