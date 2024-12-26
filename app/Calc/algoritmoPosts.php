@@ -135,8 +135,14 @@ function calcularPuntosParaPost(
     if (!empty($similarTo)) {
         $pSimilarTo = calcularPuntosSimilarTo($postId, $similarTo, $datos);
     }
-    // Calculate puntosLikes
+
     $likesPorPost = $datos['likes_by_post'];
+
+    if (!is_array($likesPorPost)) {
+        $likesPorPost = [];
+        guardarLog("likesPorPost no era un array, se ha forzado a serlo, en calcularPuntosParaPost. postId: $postId");
+    }
+
     $likesData = $likesPorPost[$postId] ?? ['like' => 0, 'favorito' => 0, 'no_me_gusta' => 0];
     $puntosLikes = 5 + $likesData['like'] + 10 * $likesData['favorito'] - ($likesData['no_me_gusta'] * 10);
 
@@ -180,10 +186,10 @@ function calcularPuntosParaPost(
     if (isset($vistasPosts[$postId])) {
         // Si el ID del post actual existe en el array $vistasPosts, se obtiene el número de vistas.
         $v = $vistasPosts[$postId]['count'];
-    
+
         // Se calcula la reducción de puntos en función del número de vistas.
-        $rPuntos = $v * 10; 
-    
+        $rPuntos = $v * 10;
+
         // Se resta la reducción de puntos al puntaje final.
         $pFinal -= $rPuntos;
     }
