@@ -37,102 +37,11 @@ function publicacionAjax()
 add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
 add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
 
-function publicaciones($args = [], $is_ajax = false, $paged = 1)
-{
-    try {
-        //$userId = obtenerUserId($is_ajax);
-        $usuarioActual = get_current_user_id();
-
-        $defaults = [
-            'filtro' => '',
-            'tab_id' => '',
-            'posts' => 12,
-            'exclude' => [],
-            'post_type' => 'social_post',
-            'similar_to' => null,
-            'colec' => null,
-            'idea' => null,
-            'user_id' => null,
-            'identifier' => '',
-            'tipoUsuario' => '',
-        ];
-
-        if (!$is_ajax && isset($_GET['busqueda'])) {
-            $args['identifier'] = sanitize_text_field($_GET['busqueda']);
-        }
-
-        $userId = isset($args['user_id']) ? $args['user_id'] : '';
-        $tipoUsuario = isset($args['tipoUsuario']) && !empty($args['tipoUsuario'])
-            ? $args['tipoUsuario']
-            : get_user_meta($usuarioActual, 'tipoUsuario', true);
-        $args = array_merge($defaults, $args);
-
-        if (filter_var($args['idea'], FILTER_VALIDATE_BOOLEAN)) {
-            $query_args = manejarIdea($args, $paged);
-            if (!$query_args) {
-                return false;
-            }
-        } else if (!empty($args['colec']) && is_numeric($args['colec'])) {
-            $query_args = manejarColeccion($args, $paged);
-            if (!$query_args) {
-                return false;
-            }
-        } else {
-            $query_args = configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsuario);
-        }
-
-        $colecciones_output = '';
-
-        if ($args['filtro'] === 'momento' && $tipoUsuario !== 'Fan') {
-            $colecciones_query_args_for_ordering = [
-                'post_type' => 'colecciones',
-                'posts_per_page' => -1,
-                'post_status' => 'publish',
-            ];
-            $ordered_colecciones_args = ordenamientoColecciones($colecciones_query_args_for_ordering, 'momento', $usuarioActual);
-
-            $colecciones_output_array = [];
-            if (!empty($ordered_colecciones_args['post__in'])) {
-
-                $top_two_colecciones_ids = array_slice($ordered_colecciones_args['post__in'], 0, 6);
-
-                if (!empty($top_two_colecciones_ids)) {
-                    $colecciones_query_args = [
-                        'post_type' => 'colecciones',
-                        'post__in' => $top_two_colecciones_ids,
-                        'orderby' => 'post__in',
-                        'order' => 'ASC',
-                        'post_status' => 'publish',
-                        'posts_per_page' => 6,
-                    ];
-                    $colecciones_output = procesarPublicaciones($colecciones_query_args, $args, $is_ajax);
-                }
-            }
-        }
-
-        $output = procesarPublicaciones($query_args, $args, $is_ajax); //esto siempre tiene que procesar query_args
-
-        if ($args['filtro'] === 'momento') {
-            $output = $colecciones_output . $output;
-        }
-
-        if ($is_ajax) {
-            echo $output;
-            wp_die();
-        }
-
-        return $output;
-    } catch (Exception $e) {
-        return false;
-    }
-}
-
 function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
 {
     global $wpdb;
     $likes_table = $wpdb->prefix . 'post_likes';
 
-    // 1. Cache Key
     $cache_key = 'colecciones_ordenadas_' . $usuarioActual . '_' . $filtroTiempo . '_' . mt_rand();
     $cached_data = obtenerCache($cache_key);
 
@@ -142,20 +51,20 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
         return $query_args;
     }
 
-    // 2. Filtrar "Usar más tarde", "Favoritos" y "test" (a menos que sean del usuario actual)
     $excluded_titles = ['Usar más tarde', 'Favoritos', 'test'];
     $excluded_ids = [];
 
-    // Construye la parte del WHERE para excluir títulos dinámicamente
-    $title_conditions = [];
-    foreach ($excluded_titles as $title) {
-        $title_conditions[] = $wpdb->prepare("post_title LIKE '%%%s%%'", $title);
-    }
+    $title_conditions = array_map(function ($title) use ($wpdb) {
+        return $wpdb->prepare("post_title LIKE %s", '%' . $wpdb->esc_like($title) . '%');
+    }, $excluded_titles);
     $where_title = implode(' OR ', $title_conditions);
 
     if ($usuarioActual) {
         $excluded_ids = $wpdb->get_col(
-            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND ({$where_title}) AND post_author != {$usuarioActual}"
+            $wpdb->prepare(
+                "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND ({$where_title}) AND post_author != %d",
+                $usuarioActual
+            )
         );
     } else {
         $excluded_ids = $wpdb->get_col(
@@ -163,21 +72,22 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
         );
     }
 
-    // 3. Obtener IDs de colecciones con más likes en los últimos 30 días
     $interval = 30;
     $popular_ids = $wpdb->get_results(
-        "SELECT p.ID, COUNT(pl.post_id) as like_count
-        FROM {$wpdb->posts} p
-        LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id
-        WHERE p.post_type = 'colecciones'
-        AND p.post_status = 'publish'
-        AND pl.like_date >= DATE_SUB(NOW(), INTERVAL {$interval} DAY)
-        GROUP BY p.ID
-        ORDER BY like_count DESC, p.post_date DESC",
+        $wpdb->prepare(
+            "SELECT p.ID, COUNT(pl.post_id) as like_count
+            FROM {$wpdb->posts} p
+            LEFT JOIN {$likes_table} pl ON p.ID = pl.post_id
+            WHERE p.post_type = 'colecciones'
+            AND p.post_status = 'publish'
+            AND pl.like_date >= DATE_SUB(NOW(), INTERVAL %d DAY)
+            GROUP BY p.ID
+            ORDER BY like_count DESC, p.post_date DESC",
+            $interval
+        ),
         ARRAY_A
     );
 
-    // 4. Combinar y aleatorizar con pesos
     $all_ids = [];
     $popular_ids_list = [];
     $weights = [];
@@ -187,23 +97,22 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
         $weights[$post['ID']] = $post['like_count'] * 2;
     }
 
-    // Asegurar que $excluded_ids y $popular_ids_list sean arrays antes de intentar unirlos
     $excluded_ids = is_array($excluded_ids) ? $excluded_ids : [];
     $popular_ids_list = is_array($popular_ids_list) ? $popular_ids_list : [];
 
-    // Incluye aquí el manejo de si $excluded_ids está vacío
     if (empty($excluded_ids) && empty($popular_ids_list)) {
         $all_ids = $wpdb->get_col(
             "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish'"
         );
     } else {
-        // Si $excluded_ids está vacío pero $popular_ids_list no, o viceversa, asegúrate de que la consulta SQL se construya correctamente
-        $all_ids = array_unique(array_merge($popular_ids_list, $wpdb->get_col(
+        $placeholder = implode(',', array_fill(0, count(array_merge($excluded_ids, $popular_ids_list)), '%d'));
+        $all_ids = $wpdb->get_col(
             $wpdb->prepare(
-                "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND ID NOT IN (" . implode(',', array_merge($excluded_ids, $popular_ids_list)) . ")",
-                [] // $wpdb->prepare no necesita un segundo argumento si no hay placeholders para variables
+                "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'colecciones' AND post_status = 'publish' AND ID NOT IN ({$placeholder})",
+                array_merge($excluded_ids, $popular_ids_list)
             )
-        )));
+        );
+        $all_ids = array_unique(array_merge($popular_ids_list, $all_ids));
     }
 
     foreach ($all_ids as $id) {
@@ -212,13 +121,14 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
         }
     }
 
-    function weighted_random_select($weighted_items) {
-        $sum_of_weights = array_sum($weighted_items);
-        $random = mt_rand(1, $sum_of_weights);
-        $cumulative_weight = 0;
-        foreach ($weighted_items as $item => $weight) {
-            $cumulative_weight += $weight;
-            if ($random <= $cumulative_weight) {
+    function weighted_random_select($weighted_items)
+    {
+        $suma = array_sum($weighted_items);
+        $rand = mt_rand(1, $suma);
+        $acumulado = 0;
+        foreach ($weighted_items as $item => $peso) {
+            $acumulado += $peso;
+            if ($rand <= $acumulado) {
                 return $item;
             }
         }
@@ -232,10 +142,8 @@ function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
         unset($temp_weights[$selected_id]);
     }
 
-    // 5. Guardar en caché
     guardarCache($cache_key, $ordered_ids, 3600);
 
-    // 6. Actualizar $query_args
     $query_args['post__in'] = $ordered_ids;
     $query_args['orderby'] = 'post__in';
     $query_args['post__not_in'] = $excluded_ids;
