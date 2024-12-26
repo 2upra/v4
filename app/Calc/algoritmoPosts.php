@@ -15,17 +15,17 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similarTo = null,
         return [];
     }
     $posts_personalizados = [];
-    $current_timestamp = current_time('timestamp');
-    $vistas_posts_processed = obtenerYProcesarVistasPosts($userId);
+    $actualTimestamp = current_time('timestamp');
+    $vistasPosts = obtenerYProcesarVistasPosts($userId);
     $esAdmin = in_array('administrator', (array)$usuario->roles);
-    $decay_factors = [];
+    $decaimientoF = [];
 
     foreach ($datos['author_results'] as $post_data) {
-        $post_date = $post_data->post_date;
-        $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date;
-        $diasDesdePublicacion = floor(($current_timestamp - $post_timestamp) / (3600 * 24));
-        if (!isset($decay_factors[$diasDesdePublicacion])) {
-            $decay_factors[$diasDesdePublicacion] = getDecayFactor($diasDesdePublicacion);
+        $postDate = $post_data->post_date;
+        $postTimestamp = is_string($postDate) ? strtotime($postDate) : $postDate;
+        $diasPubli = floor(($actualTimestamp - $postTimestamp) / (3600 * 24));
+        if (!isset($decaimientoF[$diasPubli])) {
+            $decaimientoF[$diasPubli] = getDecayFactor($diasPubli);
         }
     }
 
@@ -34,12 +34,12 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similarTo = null,
         $posts_data,
         $datos,
         $esAdmin,
-        $vistas_posts_processed,
+        $vistasPosts,
         $identifier,
         $similarTo,
-        $current_timestamp,
+        $actualTimestamp,
         $userId,
-        $decay_factors,
+        $decaimientoF,
         $tipoUsuario
     );
 
@@ -55,16 +55,16 @@ function calcularPuntosPostBatch(
     $posts_data,
     $datos,
     $esAdmin,
-    $vistas_posts_processed,
+    $vistasPosts,
     $identifier = '',
     $similarTo = null,
-    $current_timestamp = null,
+    $actualTimestamp = null,
     $user_id = null,
-    $decay_factors = [],
+    $decaimientoF = [],
     $tipoUsuario = null
 ) {
-    if ($current_timestamp === null) {
-        $current_timestamp = current_time('timestamp');
+    if ($actualTimestamp === null) {
+        $actualTimestamp = current_time('timestamp');
     }
 
     $posts_puntos = [];
@@ -72,21 +72,21 @@ function calcularPuntosPostBatch(
 
     foreach ($posts_data as $postId => $post_data) {
         try {
-            $puntosFinal = calcularPuntosParaPost(
+            $pFinal = calcularPuntosParaPost(
                 $postId,
                 $post_data,
                 $datos,
                 $esAdmin,
-                $vistas_posts_processed,
+                $vistasPosts,
                 $identifier,
                 $similarTo,
-                $current_timestamp,
-                $decay_factors,
+                $actualTimestamp,
+                $decaimientoF,
                 $tipoUsuario
             );
 
-            if (is_numeric($puntosFinal) && $puntosFinal > 0) {
-                $posts_puntos[$postId] = max($puntosFinal, 0);
+            if (is_numeric($pFinal) && $pFinal > 0) {
+                $posts_puntos[$postId] = max($pFinal, 0);
             }
         } catch (Exception $e) {
             continue;
@@ -95,52 +95,50 @@ function calcularPuntosPostBatch(
 
     return $posts_puntos;
 }
-//aqui en esta parte dice [05-Dec-2024 02:05:36 UTC] PHP Warning:  Undefined variable $puntosArtistaFan in /var/www/wordpress/wp-content/themes/2upra3v/app/Calc/algoritmoPosts.php
+
 function calcularPuntosParaPost(
     $postId,
     $post_data,
     $datos,
     $esAdmin,
-    $vistas_posts_processed,
+    $vistasPosts,
     $identifier,
     $similarTo,
-    $current_timestamp,
-    $decay_factors,
+    $actualTimestamp,
+    $decaimientoF,
     $tipoUsuario = null
 ) {
-    $autor_id = $post_data->post_author;
-    $post_date = $post_data->post_date;
+    $autorId = $post_data->post_author;
+    $postDate = $post_data->post_date;
 
-    $post_timestamp = is_string($post_date) ? strtotime($post_date) : $post_date;
+    $postTimestamp = is_string($postDate) ? strtotime($postDate) : $postDate;
 
-    $diasDesdePublicacion = floor(($current_timestamp - $post_timestamp) / (3600 * 24));
-    $factorTiempo = $decay_factors[$diasDesdePublicacion] ?? getDecayFactor($diasDesdePublicacion);
+    $diasPubli = floor(($actualTimestamp - $postTimestamp) / (3600 * 24));
+    $factorTiempo = $decaimientoF[$diasPubli] ?? getDecayFactor($diasPubli);
 
     // Calculate puntosUsuario
     $siguiendo = $datos['siguiendo'];
-    $puntosUsuario = in_array($autor_id, $siguiendo) ? 20 : 0;
+    $pUsuario = in_array($autorId, $siguiendo) ? 20 : 0;
 
-    // Calculate puntosIntereses
-    $puntosIntereses = calcularPuntosIntereses($postId, $datos);
+    $pIntereses = calcularPuntosIntereses($postId, $datos);
 
     // Calculate puntosIdentifier
-    $puntosIdentifier = 0;
+    $pIdentifier = 0;
     if (!empty($identifier)) {
-        $puntosIdentifier = calcularPuntosIdentifier($postId, $identifier, $datos);
+        $pIdentifier = calcularPuntosIdentifier($postId, $identifier, $datos);
     }
     $pesoIdentifier = 1.0;
-    $puntosIdentifier *= $pesoIdentifier;
+    $pIdentifier *= $pesoIdentifier;
 
     // Calculate puntosSimilarTo
-    $puntosSimilarTo = 0;
+    $pSimilarTo = 0;
     if (!empty($similarTo)) {
-        $puntosSimilarTo = calcularPuntosSimilarTo($postId, $similarTo, $datos);
+        $pSimilarTo = calcularPuntosSimilarTo($postId, $similarTo, $datos);
     }
-
     // Calculate puntosLikes
     $likesPorPost = $datos['likes_by_post'];
     $likesData = $likesPorPost[$postId] ?? ['like' => 0, 'favorito' => 0, 'no_me_gusta' => 0];
-    $puntosLikes = 30 + $likesData['like'] + 50 * $likesData['favorito'] - ($likesData['no_me_gusta'] * 30);
+    $puntosLikes = 5 + $likesData['like'] + 10 * $likesData['favorito'] - ($likesData['no_me_gusta'] * 10);
 
     // Access meta data
     $meta_data = $datos['meta_data'];
@@ -153,65 +151,65 @@ function calcularPuntosParaPost(
         $meta_roles[$postId] = ['artista' => false, 'fan' => false];
     }
 
-    $puntosArtistaFan = 0;
+    $pArtistaFan = 0;
 
     if (empty($similarTo)) {
         $postParaArtistas = !empty($meta_roles[$postId]['artista']);
         $postParaFans = !empty($meta_roles[$postId]['fan']);
 
         if ($tipoUsuario === 'Fan') {
-            $puntosArtistaFan = $postParaFans ? 999 : 0;
+            $pArtistaFan = $postParaFans ? 999 : 0;
         } elseif ($tipoUsuario === 'Artista') {
-            $puntosArtistaFan = $postParaFans ? -50 : 0; 
+            $pArtistaFan = $postParaFans ? -50 : 0; 
         }
     }
 
     // Calculate puntosFinal
-    $puntosFinal = calcularPuntosFinales(
-        $puntosUsuario,
-        $puntosIntereses + $puntosSimilarTo + $puntosArtistaFan,
+    $pFinal = calcularPuntosFinales(
+        $pUsuario,
+        $pIntereses + $pSimilarTo + $pArtistaFan,
         $puntosLikes,
         $metaVerificado,
         $metaPostAut,
         $esAdmin
     );
 
-    $puntosFinal += $puntosIdentifier;
+    $pFinal += $pIdentifier;
 
     // Apply reduction based on views
-    if (isset($vistas_posts_processed[$postId])) {
-        $vistas = $vistas_posts_processed[$postId]['count'];
-        $reduccion_por_vista = 0.01;
-        $factorReduccion = pow(1 - $reduccion_por_vista, $vistas);
-        $puntosFinal *= $factorReduccion;
+    if (isset($vistasPosts[$postId])) {
+        $vistas = $vistasPosts[$postId]['count'];
+        $rVista = 0.01;
+        $factorReduccion = pow(1 - $rVista, $vistas);
+        $pFinal *= $factorReduccion;
     }
 
     // Adjust randomness outside tight loops if possible
     $aleatoriedad = mt_rand(0, 20);
     $ajusteExtra = mt_rand(-50, 50);
-    $puntosFinal = ($puntosFinal * (1 + ($aleatoriedad / 100))) * $factorTiempo;
-    $puntosFinal += $ajusteExtra;
+    $pFinal = ($pFinal * (1 + ($aleatoriedad / 100))) * $factorTiempo;
+    $pFinal += $ajusteExtra;
 
-    return $puntosFinal;
+    return $pFinal;
 }
 
 function calcularPuntosIntereses($postId, $datos)
 {
-    $puntosIntereses = 0;
+    $pIntereses = 0;
 
     // Verificar si existen los índices necesarios
     if (
         !isset($datos['datosAlgoritmo'][$postId]) ||
         !isset($datos['datosAlgoritmo'][$postId]->meta_value)
     ) {
-        return $puntosIntereses;
+        return $pIntereses;
     }
 
     $datosAlgoritmo = json_decode($datos['datosAlgoritmo'][$postId]->meta_value, true);
 
     // Verificar si el json_decode fue exitoso
     if (json_last_error() !== JSON_ERROR_NONE || !is_array($datosAlgoritmo)) {
-        return $puntosIntereses;
+        return $pIntereses;
     }
 
     $oneshot = ['one shot', 'one-shot', 'oneshot'];
@@ -233,42 +231,42 @@ function calcularPuntosIntereses($postId, $datos)
                 if (isset($value[$lang]) && is_array($value[$lang])) {
                     foreach ($value[$lang] as $item) {
                         if (isset($datos['interesesUsuario'][$item])) {
-                            $puntosIntereses += 10 + $datos['interesesUsuario'][$item]->intensity;
+                            $pIntereses += 10 + $datos['interesesUsuario'][$item]->intensity;
                         }
                     }
                 }
             }
         } elseif (!empty($value) && isset($datos['interesesUsuario'][$value])) {
-            $puntosIntereses += 10 + $datos['interesesUsuario'][$value]->intensity;
+            $pIntereses += 10 + $datos['interesesUsuario'][$value]->intensity;
         }
     }
 
     if ($esOneShot) {
-        $puntosIntereses *= 1;
+        $pIntereses *= 1;
     }
 
-    return $puntosIntereses;
+    return $pIntereses;
 }
 
-function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
+function calcularPuntosFinales($pUsuario, $pIntereses, $puntosLikes, $metaVerificado, $metaPostAut, $esAdmin)
 {
 
     if ($esAdmin) {
 
         if (!$metaVerificado && $metaPostAut) {
-            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1;
+            return ($pUsuario + $pIntereses + $puntosLikes) * 1;
         } elseif ($metaVerificado && !$metaPostAut) {
-            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1;
+            return ($pUsuario + $pIntereses + $puntosLikes) * 1;
         }
     } else {
         if ($metaVerificado && $metaPostAut) {
-            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 4;
+            return ($pUsuario + $pIntereses + $puntosLikes) * 4;
         } elseif (!$metaVerificado && $metaPostAut) {
-            return ($puntosUsuario + $puntosIntereses + $puntosLikes) * 1;
+            return ($pUsuario + $pIntereses + $puntosLikes) * 1;
         }
     }
 
-    return $puntosUsuario + $puntosIntereses + $puntosLikes;
+    return $pUsuario + $pIntereses + $puntosLikes;
 }
 
 
@@ -276,7 +274,7 @@ function calcularPuntosFinales($puntosUsuario, $puntosIntereses, $puntosLikes, $
 
 function getDecayFactor($days, $useDecay = false)
 {
-    static $decay_factors = [];
+    static $decaimientoF = [];
     static $use_decay = false;
 
     if (func_num_args() > 1) {
@@ -287,15 +285,15 @@ function getDecayFactor($days, $useDecay = false)
         return 1;
     }
 
-    if (empty($decay_factors)) {
+    if (empty($decaimientoF)) {
         for ($d = 0; $d <= 365; $d++) {
-            $decay_factors[$d] = pow(0.99, $d);
+            $decaimientoF[$d] = pow(0.99, $d);
         }
     }
 
     $days = min(max(0, (int) $days), 365);
 
-    return $decay_factors[$days];
+    return $decaimientoF[$days];
 }
 
 function calcularPuntosIdentifier($postId, $identifier, $datos)
@@ -450,8 +448,8 @@ function calcularPuntosSimilarTo($postId, $similarTo, $datos)
     $contentWeight = 1.5;
     $contenidoMatches = count(array_intersect(extractWordsFromContent($contenido_post_1), extractWordsFromContent($contenido_post_2)));
     $similarity = (count($intersection) + $contenidoMatches * $contentWeight) / count($union);
-    $puntosSimilarTo = $similarity * 150;
-    return $puntosSimilarTo;
+    $pSimilarTo = $similarity * 150;
+    return $pSimilarTo;
 }
 
 
@@ -531,16 +529,16 @@ function stemWord($word)
 function obtenerYProcesarVistasPosts($userId)
 {
     $vistas_posts = obtenerVistasPosts($userId);
-    $vistas_posts_processed = [];
+    $vistasPosts = [];
 
     if (!empty($vistas_posts)) {
         foreach ($vistas_posts as $postId => $view_data) {
-            $vistas_posts_processed[$postId] = [
+            $vistasPosts[$postId] = [
                 'count'     => $view_data['count'],
                 'last_view' => date('Y-m-d H:i:s', $view_data['last_view']),
             ];
         }
     }
 
-    return $vistas_posts_processed;
+    return $vistasPosts;
 }
