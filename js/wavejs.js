@@ -1,5 +1,5 @@
-let currentlyPlayingAudio = null;
-let audioPlayingStatus = false;
+let audioActual = null;
+let estadoAudio = false;
 
 function inicializarWaveforms() {
     nextWave();
@@ -51,16 +51,28 @@ function inicializarWaveforms() {
 
     document.querySelectorAll('.waveform-container').forEach(setupWaveformContainer);
 
+    /*
+    a veces pasa esto 
+
+    wavejs.js?ver=0.2.309:114  Uncaught TypeError: Cannot read properties of undefined (reading '252181')
+    at HTMLLIElement.<anonymous> (wavejs.js?ver=0.2.309:114:58)
+        wavejs.js?ver=0.2.309:142  Uncaught TypeError: Cannot read properties of undefined (reading '252181')
+            at HTMLLIElement.<anonymous> (wavejs.js?ver=0.2.309:142:58)
+        5wavejs.js?ver=0.2.309:198  Uncaught TypeError: Cannot read properties of undefined (reading 'querySelector')
+            at handleWaveformClick (wavejs.js?ver=0.2.309:198:36)
+            at HTMLDivElement.<anonymous> (wavejs.js?ver=0.2.309:47:55)
+    */
+
     document.querySelectorAll('.POST-sampleList').forEach(post => {
         if (!post.dataset.clickListenerAdded) {
-            let isDragging = false; // Variable para detectar si se está arrastrando el dedo
-            let touchStartTime = 0; // Variable para registrar la hora de inicio del toque
+            let arrastrando = false;
+            let inicioToque = 0;
 
             post.addEventListener(
                 'touchstart',
                 event => {
-                    touchStartTime = Date.now();
-                    isDragging = false; // Reiniciar el estado de arrastre al inicio de un toque
+                    inicioToque = Date.now();
+                    arrastrando = false;
                 },
                 {passive: true}
             );
@@ -68,30 +80,28 @@ function inicializarWaveforms() {
             post.addEventListener(
                 'touchmove',
                 () => {
-                    isDragging = true; // Si se mueve el dedo, se considera un arrastre
+                    arrastrando = true;
                 },
                 {passive: true}
             );
 
             post.addEventListener('touchend', event => {
-                const touchDuration = Date.now() - touchStartTime;
-                const isLongPress = touchDuration > 500; // Define un toque prolongado como >500ms
+                const duracionToque = Date.now() - inicioToque;
+                const toqueLargo = duracionToque > 500;
 
-                // Solo se procesa como click si no es un toque prolongado, no hay arrastre y el objetivo no es un tag o QSORIW
-                if (!isLongPress && !isDragging) {
-                    const waveformContainer = post.querySelector('.waveform-container');
-                    if (!event.target.closest('.tags-container') && !event.target.closest('.QSORIW') && waveformContainer) {
-                        handleWaveformClick(waveformContainer, post);
+                if (!toqueLargo && !arrastrando) {
+                    const contWave = post.querySelector('.waveform-container');
+                    if (!event.target.closest('.tags-container') && !event.target.closest('.QSORIW') && contWave) {
+                        handleWaveformClick(contWave, post);
                     }
                 }
             });
 
             post.addEventListener('click', event => {
-                // En dispositivos de escritorio, solo procesar clicks si no es un tag o QSORIW
                 if (!('ontouchstart' in window) || !window.matchMedia('(pointer: coarse)').matches) {
-                    const waveformContainer = post.querySelector('.waveform-container');
-                    if (!event.target.closest('.tags-container') && !event.target.closest('.QSORIW') && waveformContainer) {
-                        handleWaveformClick(waveformContainer, post);
+                    const contWave = post.querySelector('.waveform-container');
+                    if (!event.target.closest('.tags-container') && !event.target.closest('.QSORIW') && contWave) {
+                        handleWaveformClick(contWave, post);
                     }
                 }
             });
@@ -99,75 +109,131 @@ function inicializarWaveforms() {
             post.dataset.clickListenerAdded = 'true';
         }
 
-        // Manejo del mouse para mostrar/ocultar botones
-        const reproducirBtn = post.querySelector('.reproducirSL');
-        const pausaBtn = post.querySelector('.pausaSL');
+        const repBtn = post.querySelector('.reproducirSL');
+        const pauseBtn = post.querySelector('.pausaSL');
 
-        if (reproducirBtn && pausaBtn) {
-            let isRightClick = false; // Variable para rastrear si se hizo click derecho
+        if (repBtn && pauseBtn) {
+            let derechoClick = false;
 
-            // Solo se añade el listener de mouseenter si no es un dispositivo táctil
             if (!('ontouchstart' in window) || !window.matchMedia('(pointer: coarse)').matches) {
                 post.addEventListener('mouseenter', () => {
-                    // Obtener el WaveSurfer asociado a este post
                     const postId = post.querySelector('.waveform-container').getAttribute('postIDWave');
                     const wavesurfer = window.wavesurfers[postId];
 
                     if (wavesurfer && wavesurfer.isPlaying()) {
-                        // Si el audio de este post se está reproduciendo, mostrar pausa
-                        pausaBtn.style.display = 'flex';
-                        reproducirBtn.style.display = 'none';
+                        pauseBtn.style.display = 'flex';
+                        repBtn.style.display = 'none';
                     } else {
-                        // Si el audio de este post no se está reproduciendo, mostrar reproducir
-                        reproducirBtn.style.display = 'flex';
-                        pausaBtn.style.display = 'none';
+                        repBtn.style.display = 'flex';
+                        pauseBtn.style.display = 'none';
                     }
                 });
             }
 
             post.addEventListener('contextmenu', event => {
-                isRightClick = true; // Se hizo click derecho
+                derechoClick = true;
             });
 
-            // Solo se añade el listener de mouseleave si no es un dispositivo táctil
             if (!('ontouchstart' in window) || !window.matchMedia('(pointer: coarse)').matches) {
                 post.addEventListener('mouseleave', () => {
-                    if (isRightClick) {
-                        isRightClick = false; // Resetear la variable
-                        return; // No ejecutar la lógica de mouseleave si fue click derecho
+                    if (derechoClick) {
+                        derechoClick = false;
+                        return;
                     }
 
-                    // Obtener el WaveSurfer asociado a este post
                     const postId = post.querySelector('.waveform-container').getAttribute('postIDWave');
                     const wavesurfer = window.wavesurfers[postId];
 
                     if (!wavesurfer || !wavesurfer.isPlaying()) {
-                        // Si no hay audio o no se está reproduciendo en este post, ocultar ambos botones
-                        reproducirBtn.style.display = 'none';
-                        pausaBtn.style.display = 'none';
+                        repBtn.style.display = 'none';
+                        pauseBtn.style.display = 'none';
                     }
                 });
             }
         }
     });
 
+    function handleWaveformClick(cont, post) {
+        const id = cont.getAttribute('postIDWave');
+        if (!id) {
+            return;
+        }
+
+        const wavesurfer = window.wavesurfers[id];
+
+        if (estadoAudio && audioActual !== wavesurfer) {
+            if (audioActual) {
+                audioActual.pause();
+            }
+            estadoAudio = false;
+            audioActual = null;
+        }
+
+        if (audioActual && audioActual !== wavesurfer) {
+            audioActual.pause();
+            const prevPost = audioActual.container.closest('.POST-sampleList');
+            if (prevPost) {
+                const prevPauseBtn = prevPost.querySelector('.pausaSL');
+                const prevRepBtn = prevPost.querySelector('.reproducirSL');
+                if (prevPauseBtn) {
+                    prevPauseBtn.style.display = 'none';
+                }
+                if (prevRepBtn) {
+                    prevRepBtn.style.display = 'none';
+                }
+            }
+        }
+
+        if (!cont.dataset.audioLoaded) {
+            const url = cont.getAttribute('data-audio-url');
+            loadAudio(id, url, cont, true);
+        } else {
+            if (wavesurfer) {
+                if (wavesurfer.isPlaying()) {
+                    wavesurfer.pause();
+                    estadoAudio = false;
+                    audioActual = null;
+                } else {
+                    wavesurfer.play();
+                    estadoAudio = true;
+                    audioActual = wavesurfer;
+                }
+            }
+        }
+
+        const repBtn = post.querySelector('.reproducirSL');
+        const pauseBtn = post.querySelector('.pausaSL');
+
+        if (wavesurfer && wavesurfer.isPlaying()) {
+            repBtn.style.display = 'none';
+            pauseBtn.style.display = 'flex';
+            estadoAudio = true;
+            audioActual = wavesurfer;
+        } else {
+            repBtn.style.display = 'none';
+            pauseBtn.style.display = 'none';
+            estadoAudio = false;
+            audioActual = null;
+        }
+    }
+
     function handleWaveformClick(container, post) {
         const postId = container.getAttribute('postIDWave');
         if (!postId) return;
 
-        if (audioPlayingStatus && currentlyPlayingAudio !== window.wavesurfers[postId]) {
-            if (currentlyPlayingAudio) {
-                currentlyPlayingAudio.pause();
+        if (estadoAudio && audioActual !== window.wavesurfers[postId]) {
+            if (audioActual) {
+                audioActual.pause();
             }
-            audioPlayingStatus = false;
-            currentlyPlayingAudio = null;
+            estadoAudio = false;
+            audioActual = null;
         }
 
         // Pausar cualquier audio que se esté reproduciendo
-        if (currentlyPlayingAudio && currentlyPlayingAudio !== window.wavesurfers[postId]) {
-            currentlyPlayingAudio.pause();
+        if (audioActual && audioActual !== window.wavesurfers[postId]) {
+            audioActual.pause();
             // Ocultar botones de pausa en el post anterior
-            const previousPost = currentlyPlayingAudio.container.closest('.POST-sampleList');
+            const previousPost = audioActual.container.closest('.POST-sampleList');
             if (previousPost) {
                 const prevPausaBtn = previousPost.querySelector('.pausaSL');
                 const prevReproducirBtn = previousPost.querySelector('.reproducirSL');
@@ -184,12 +250,12 @@ function inicializarWaveforms() {
             if (wavesurfer) {
                 if (wavesurfer.isPlaying()) {
                     wavesurfer.pause();
-                    audioPlayingStatus = false;
-                    currentlyPlayingAudio = null;
+                    estadoAudio = false;
+                    audioActual = null;
                 } else {
                     wavesurfer.play();
-                    audioPlayingStatus = true;
-                    currentlyPlayingAudio = wavesurfer;
+                    estadoAudio = true;
+                    audioActual = wavesurfer;
                 }
             }
         }
@@ -201,13 +267,13 @@ function inicializarWaveforms() {
         if (window.wavesurfers[postId] && window.wavesurfers[postId].isPlaying()) {
             reproducirBtn.style.display = 'none';
             pausaBtn.style.display = 'flex';
-            audioPlayingStatus = true;
-            currentlyPlayingAudio = window.wavesurfers[postId];
+            estadoAudio = true;
+            audioActual = window.wavesurfers[postId];
         } else {
             reproducirBtn.style.display = 'none';
             pausaBtn.style.display = 'none';
-            audioPlayingStatus = false;
-            currentlyPlayingAudio = null;
+            estadoAudio = false;
+            audioActual = null;
         }
     }
 
@@ -220,12 +286,12 @@ function inicializarWaveforms() {
             if (pausaBtn) pausaBtn.style.display = 'none';
         });
 
-        if (currentlyPlayingAudio) {
-            currentlyPlayingAudio.pause();
+        if (audioActual) {
+            audioActual.pause();
         }
 
-        audioPlayingStatus = false;
-        currentlyPlayingAudio = null;
+        estadoAudio = false;
+        audioActual = null;
 
         for (const postId in window.wavesurfers) {
             if (window.wavesurfers[postId].isPlaying()) {
@@ -288,12 +354,12 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                         }, 1);
                     }
                     if (playOnLoad) {
-                        if (audioPlayingStatus) {
-                            currentlyPlayingAudio.pause();
+                        if (estadoAudio) {
+                            audioActual.pause();
                         }
                         wavesurfer.play();
-                        audioPlayingStatus = true;
-                        currentlyPlayingAudio = wavesurfer;
+                        estadoAudio = true;
+                        audioActual = wavesurfer;
                     }
                 });
 
@@ -302,8 +368,8 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                 });
 
                 wavesurfer.on('finish', () => {
-                    audioPlayingStatus = false;
-                    currentlyPlayingAudio = null;
+                    estadoAudio = false;
+                    audioActual = null;
                     // Actualizar botones después de finalizar
                     const post = container.closest('.POST-sampleList');
                     if (post) {
@@ -322,8 +388,8 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                         const pausaBtn = post.querySelector('.pausaSL');
                         if (reproducirBtn) reproducirBtn.style.display = 'none';
                         if (pausaBtn) pausaBtn.style.display = 'flex';
-                        audioPlayingStatus = true;
-                        currentlyPlayingAudio = wavesurfer;
+                        estadoAudio = true;
+                        audioActual = wavesurfer;
                     }
                 });
 
@@ -335,7 +401,7 @@ window.we = function (postId, audioUrl, container, playOnLoad = false) {
                         const pausaBtn = post.querySelector('.pausaSL');
                         if (reproducirBtn) reproducirBtn.style.display = 'none';
                         if (pausaBtn) pausaBtn.style.display = 'none';
-                        audioPlayingStatus = false;
+                        estadoAudio = false;
                     }
                 });
             })
