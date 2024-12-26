@@ -1,96 +1,75 @@
 <?
-
-// Función para guardar datos en caché en archivos con compresión y serialización
-function guardarCache($cache_key, $data, $expiration) {
-    $cache_dir = WP_CONTENT_DIR . '/cache/feed/';
-    //error_log("Intentando guardar caché. Directorio: " . $cache_dir);
-    if (!file_exists($cache_dir)) {
-        mkdir($cache_dir, 0755, true);
-        //error_log("Directorio de caché creado: " . $cache_dir);
+function guardarCache($cacheKey, $data, $exp) {
+    $cacheDir = WP_CONTENT_DIR . '/cache/feed/';
+    if (!file_exists($cacheDir)) {
+        mkdir($cacheDir, 0755, true);
     }
-    $file_path = $cache_dir . $cache_key . '.cache';
-    //error_log("Ruta completa del archivo de caché: " . $file_path);
-
-    $data_to_store = [
-        'expiration' => time() + $expiration,
+    $ruta = $cacheDir . $cacheKey . '.cache';
+    $alm = [
+        'exp' => time() + $exp,
         'data' => $data,
     ];
-    ////error_log("Datos a guardar en caché: " . print_r($data_to_store, true));
-    $serialized_data = serialize($data_to_store);
-    //error_log("Datos serializados");
-    $compressed_data = gzcompress($serialized_data);
-    //error_log("Datos comprimidos");
-    if (file_put_contents($file_path, $compressed_data)) {
-        //error_log("Caché guardada exitosamente. Nombre de la caché: " . $cache_key . ".cache");
-    } else {
-        //error_log("Error al guardar la caché. Nombre de la caché: " . $cache_key . ".cache");
+    $sData = serialize($alm);
+    $cData = gzcompress($sData);
+    if (file_put_contents($ruta, $cData)) {
+      guardarLog("guardarCache: Cache creada $cacheKey");
     }
 }
-function obtenerCache($cache_key) {
-    $file_path = WP_CONTENT_DIR . '/cache/feed/' . $cache_key . '.cache';
-    if (file_exists($file_path)) {
-        $compressed_content = file_get_contents($file_path);
-        $serialized_data = gzuncompress($compressed_content);
-        if ($serialized_data === false) {
-            unlink($file_path);
+
+function obtenerCache($cacheKey) {
+    $ruta = WP_CONTENT_DIR . '/cache/feed/' . $cacheKey . '.cache';
+    guardarLog("obtenerCache: Buscando $cacheKey");
+    if (file_exists($ruta)) {
+        $cData = file_get_contents($ruta);
+        $sData = gzuncompress($cData);
+        if ($sData === false) {
+            unlink($ruta);
             return false;
         }
-        $data = unserialize($serialized_data);
-        if ($data['expiration'] > time()) {
+        $data = unserialize($sData);
+        if ($data['exp'] > time()) {
+            guardarLog("obtenerCache: Cache encontrada $cacheKey");
             return $data['data'];
         } else {
-            unlink($file_path);
+            unlink($ruta);
         }
     }
     return false;
 }
 
-
-function borrarCache($cache_key) {
-    $file_path = WP_CONTENT_DIR . '/cache/feed/' . $cache_key . '.cache';
-    
-    if (file_exists($file_path)) {
-        // Intentar eliminar el archivo, y manejar posibles errores
-        if (!unlink($file_path)) {
-            //error_log("[borrarCache] No se pudo eliminar el archivo de caché: " . $file_path);
-        } else {
-            guardarLog("Archivo de caché eliminado: " . $file_path);
+function borrarCache($cacheKey) {
+    $ruta = WP_CONTENT_DIR . '/cache/feed/' . $cacheKey . '.cache';
+    if (file_exists($ruta)) {
+        if (unlink($ruta)) {
+            guardarLog("borrarCache: Cache eliminada $cacheKey");
         }
-    } else {
-        //error_log("[borrarCache] Archivo de caché no encontrado: " . $file_path);
     }
 }
 
-function borrarCacheIdeasParaUsuario($user_id)
+function borrarCacheIdeasUsuario($userId)
 {
-    // Recuperar la lista de claves de caché asociadas al usuario
-    $cache_master_key = 'cache_idea_user_' . $user_id;
-    $cache_keys = obtenerCache($cache_master_key);
-
-    if ($cache_keys) {
-        // Eliminar todas las claves de la caché
-        foreach ($cache_keys as $cache_key) {
-            borrarCache($cache_key); // Suponiendo que tienes una función eliminarCache
+    $cacheMasterKey = 'cache_idea_user_' . $userId;
+    $cacheKeys = obtenerCache($cacheMasterKey);
+    if ($cacheKeys) {
+        foreach ($cacheKeys as $cacheKey) {
+            borrarCache($cacheKey);
         }
-        // Eliminar también la clave maestra
-        borrarCache($cache_master_key);
+        borrarCache($cacheMasterKey);
     }
+    guardarLog("borrarCacheIdeasUsuario: Eliminando cache de usuario $userId");
 }
 
-function borrarCacheColeccion($colec_id)
+function borrarCacheColeccion($colecId)
 {
-    // Recuperar la lista de claves de caché asociadas a la colección
-    $user_id = get_current_user_id();
-    $cache_master_key = 'cache_colec_' . $colec_id;
-    $cache_keys = obtenerCache($cache_master_key);
-
-    if ($cache_keys) {
-        // Eliminar todas las claves de la caché
-        foreach ($cache_keys as $cache_key) {
-            borrarCache($cache_key); // Suponiendo que tienes una función eliminarCache
+    $userId = get_current_user_id();
+    $cacheMasterKey = 'cache_colec_' . $colecId;
+    $cacheKeys = obtenerCache($cacheMasterKey);
+    if ($cacheKeys) {
+        foreach ($cacheKeys as $cacheKey) {
+            borrarCache($cacheKey);
         }
-        // Eliminar también la clave maestra
-        borrarCache($cache_master_key);
-        borrarCacheIdeasParaUsuario($user_id);
+        borrarCache($cacheMasterKey);
+        borrarCacheIdeasUsuario($userId);
     }
+    guardarLog("borrarCacheColeccion: Eliminando cache de coleccion $colecId");
 }
