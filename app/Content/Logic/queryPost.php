@@ -37,6 +37,97 @@ function publicacionAjax()
 add_action('wp_ajax_cargar_mas_publicaciones', 'publicacionAjax');
 add_action('wp_ajax_nopriv_cargar_mas_publicaciones', 'publicacionAjax');
 
+function publicaciones($args = [], $is_ajax = false, $paged = 1)
+{
+    try {
+        //$userId = obtenerUserId($is_ajax);
+        $usuarioActual = get_current_user_id();
+
+        $defaults = [
+            'filtro' => '',
+            'tab_id' => '',
+            'posts' => 12,
+            'exclude' => [],
+            'post_type' => 'social_post',
+            'similar_to' => null,
+            'colec' => null,
+            'idea' => null,
+            'user_id' => null,
+            'identifier' => '',
+            'tipoUsuario' => '',
+        ];
+
+        if (!$is_ajax && isset($_GET['busqueda'])) {
+            $args['identifier'] = sanitize_text_field($_GET['busqueda']);
+        }
+
+        $userId = isset($args['user_id']) ? $args['user_id'] : '';
+        $tipoUsuario = isset($args['tipoUsuario']) && !empty($args['tipoUsuario'])
+            ? $args['tipoUsuario']
+            : get_user_meta($usuarioActual, 'tipoUsuario', true);
+        $args = array_merge($defaults, $args);
+
+        if (filter_var($args['idea'], FILTER_VALIDATE_BOOLEAN)) {
+            $query_args = manejarIdea($args, $paged);
+            if (!$query_args) {
+                return false;
+            }
+        } else if (!empty($args['colec']) && is_numeric($args['colec'])) {
+            $query_args = manejarColeccion($args, $paged);
+            if (!$query_args) {
+                return false;
+            }
+        } else {
+            $query_args = configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsuario);
+        }
+
+        $colecciones_output = '';
+
+        if ($args['filtro'] === 'momento' && $tipoUsuario !== 'Fan') {
+            $colecciones_query_args_for_ordering = [
+                'post_type' => 'colecciones',
+                'posts_per_page' => -1,
+                'post_status' => 'publish',
+            ];
+            $ordered_colecciones_args = ordenamientoColecciones($colecciones_query_args_for_ordering, 'momento', $usuarioActual);
+
+            $colecciones_output_array = [];
+            if (!empty($ordered_colecciones_args['post__in'])) {
+
+                $top_two_colecciones_ids = array_slice($ordered_colecciones_args['post__in'], 0, 6);
+
+                if (!empty($top_two_colecciones_ids)) {
+                    $colecciones_query_args = [
+                        'post_type' => 'colecciones',
+                        'post__in' => $top_two_colecciones_ids,
+                        'orderby' => 'post__in',
+                        'order' => 'ASC',
+                        'post_status' => 'publish',
+                        'posts_per_page' => 6,
+                    ];
+                    $colecciones_output = procesarPublicaciones($colecciones_query_args, $args, $is_ajax);
+                }
+            }
+        }
+
+        $output = procesarPublicaciones($query_args, $args, $is_ajax); //esto siempre tiene que procesar query_args
+
+        if ($args['filtro'] === 'momento') {
+            $output = $colecciones_output . $output;
+        }
+
+        if ($is_ajax) {
+            echo $output;
+            wp_die();
+        }
+
+        return $output;
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
+
 function ordenamientoColecciones($query_args, $filtroTiempo, $usuarioActual)
 {
     global $wpdb;
