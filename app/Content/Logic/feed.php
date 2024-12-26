@@ -25,7 +25,7 @@ function obtenerFeedPersonalizado($idUsuario, $identificador, $similar, $pagina,
             $cacheData = obtenerCache($cacheKey);
 
             if ($cacheData) {
-                guardarLog("obtenerFeedPersonalizado - Usuario ID: $idUsuario usando caché para feed personalizado");
+                //guardarLog("obtenerFeedPersonalizado - Usuario ID: $idUsuario usando caché para feed personalizado");
                 $posts = $cacheData['posts'];
             } else {
                 if ($pagina === 1) {
@@ -71,7 +71,7 @@ function obtenerFeedPersonalizado($idUsuario, $identificador, $similar, $pagina,
             'post_not_in' => $postNotIn,
         ];
     } catch (Exception $e) {
-        guardarLog("obtenerFeedPersonalizado - Error crítico para usuario ID: $idUsuario - " . $e->getMessage());
+        //guardarLog("obtenerFeedPersonalizado - Error crítico para usuario ID: $idUsuario - " . $e->getMessage());
         return ['post_ids' => [], 'post_not_in' => []];
     }
 }
@@ -87,17 +87,17 @@ function obtenerPostsSimilares($current_user_id, $similar_to)
         $cached_data = obtenerCache($similar_to_cache_key);
 
         if ($cached_data) {
-            //guardarLog("Usuario ID: $current_user_id usando caché global para posts similares a $similar_to");
+            ////guardarLog("Usuario ID: $current_user_id usando caché global para posts similares a $similar_to");
             return [
                 'posts_personalizados' => $cached_data,
                 'post_not_in' => $post_not_in,
             ];
         } else {
-            //guardarLog("Usuario ID: $current_user_id calculando nuevo feed similar para post ID: $similar_to");
+            ////guardarLog("Usuario ID: $current_user_id calculando nuevo feed similar para post ID: $similar_to");
             $posts_personalizados = calcularFeedPersonalizado(44, '', $similar_to);
 
             if (!$posts_personalizados) {
-                //guardarLog("Error: Fallo al calcular posts similares para post ID: $similar_to");
+                ////guardarLog("Error: Fallo al calcular posts similares para post ID: $similar_to");
                 return ['posts_personalizados' => [], 'post_not_in' => $post_not_in];
             }
 
