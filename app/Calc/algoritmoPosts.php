@@ -3,7 +3,7 @@
 
 global $wpdb;
 
-function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null, $tipoUsuario = null)
+function calcularFeedPersonalizado($userId, $identifier = '', $similarTo = null, $tipoUsuario = null)
 {
     $datos = obtenerDatosFeedConCache($userId);
     if (empty($datos)) {
@@ -36,7 +36,7 @@ function calcularFeedPersonalizado($userId, $identifier = '', $similar_to = null
         $esAdmin,
         $vistas_posts_processed,
         $identifier,
-        $similar_to,
+        $similarTo,
         $current_timestamp,
         $userId,
         $decay_factors,
@@ -57,7 +57,7 @@ function calcularPuntosPostBatch(
     $esAdmin,
     $vistas_posts_processed,
     $identifier = '',
-    $similar_to = null,
+    $similarTo = null,
     $current_timestamp = null,
     $user_id = null,
     $decay_factors = [],
@@ -70,23 +70,23 @@ function calcularPuntosPostBatch(
     $posts_puntos = [];
     //error_log("TipoUsuario inicial={$tipoUsuario} calcularPuntosPostBatch");
 
-    foreach ($posts_data as $post_id => $post_data) {
+    foreach ($posts_data as $postId => $post_data) {
         try {
             $puntosFinal = calcularPuntosParaPost(
-                $post_id,
+                $postId,
                 $post_data,
                 $datos,
                 $esAdmin,
                 $vistas_posts_processed,
                 $identifier,
-                $similar_to,
+                $similarTo,
                 $current_timestamp,
                 $decay_factors,
                 $tipoUsuario
             );
 
             if (is_numeric($puntosFinal) && $puntosFinal > 0) {
-                $posts_puntos[$post_id] = max($puntosFinal, 0);
+                $posts_puntos[$postId] = max($puntosFinal, 0);
             }
         } catch (Exception $e) {
             continue;
@@ -97,13 +97,13 @@ function calcularPuntosPostBatch(
 }
 //aqui en esta parte dice [05-Dec-2024 02:05:36 UTC] PHP Warning:  Undefined variable $puntosArtistaFan in /var/www/wordpress/wp-content/themes/2upra3v/app/Calc/algoritmoPosts.php
 function calcularPuntosParaPost(
-    $post_id,
+    $postId,
     $post_data,
     $datos,
     $esAdmin,
     $vistas_posts_processed,
     $identifier,
-    $similar_to,
+    $similarTo,
     $current_timestamp,
     $decay_factors,
     $tipoUsuario = null
@@ -121,49 +121,48 @@ function calcularPuntosParaPost(
     $puntosUsuario = in_array($autor_id, $siguiendo) ? 20 : 0;
 
     // Calculate puntosIntereses
-    $puntosIntereses = calcularPuntosIntereses($post_id, $datos);
+    $puntosIntereses = calcularPuntosIntereses($postId, $datos);
 
     // Calculate puntosIdentifier
     $puntosIdentifier = 0;
     if (!empty($identifier)) {
-        $puntosIdentifier = calcularPuntosIdentifier($post_id, $identifier, $datos);
+        $puntosIdentifier = calcularPuntosIdentifier($postId, $identifier, $datos);
     }
     $pesoIdentifier = 1.0;
     $puntosIdentifier *= $pesoIdentifier;
 
     // Calculate puntosSimilarTo
     $puntosSimilarTo = 0;
-    if (!empty($similar_to)) {
-        $puntosSimilarTo = calcularPuntosSimilarTo($post_id, $similar_to, $datos);
+    if (!empty($similarTo)) {
+        $puntosSimilarTo = calcularPuntosSimilarTo($postId, $similarTo, $datos);
     }
 
     // Calculate puntosLikes
-    $likes_by_post = $datos['likes_by_post'];
-    $likes = $likes_by_post[$post_id] ?? 0;
-    $puntosLikes = 30 + $likes;
+    $likesPorPost = $datos['likes_by_post'];
+    $likesData = $likesPorPost[$postId] ?? ['like' => 0, 'favorito' => 0, 'no_me_gusta' => 0];
+    $puntosLikes = 30 + $likesData['like'] + ($likesData['favorito'] * 50) - ($likesData['no_me_gusta'] * 30);
 
     // Access meta data
     $meta_data = $datos['meta_data'];
-    $metaVerificado = isset($meta_data[$post_id]['Verificado']) && ($meta_data[$post_id]['Verificado'] === '1');
-    $metaPostAut = isset($meta_data[$post_id]['postAut']) && ($meta_data[$post_id]['postAut'] === '1');
+    $metaVerificado = isset($meta_data[$postId]['Verificado']) && ($meta_data[$postId]['Verificado'] === '1');
+    $metaPostAut = isset($meta_data[$postId]['postAut']) && ($meta_data[$postId]['postAut'] === '1');
 
     $meta_roles = $datos['meta_roles'];
 
-    if (!isset($meta_roles[$post_id]) || !is_array($meta_roles[$post_id])) {
-        $meta_roles[$post_id] = ['artista' => false, 'fan' => false];
+    if (!isset($meta_roles[$postId]) || !is_array($meta_roles[$postId])) {
+        $meta_roles[$postId] = ['artista' => false, 'fan' => false];
     }
 
     $puntosArtistaFan = 0;
 
-    // Si similarTo no es null, entonces esto de tipo usuario no se tenga en cuenta para nada
-    if (empty($similar_to)) {
-        $postParaArtistas = !empty($meta_roles[$post_id]['artista']);
-        $postParaFans = !empty($meta_roles[$post_id]['fan']);
+    if (empty($similarTo)) {
+        $postParaArtistas = !empty($meta_roles[$postId]['artista']);
+        $postParaFans = !empty($meta_roles[$postId]['fan']);
 
         if ($tipoUsuario === 'Fan') {
             $puntosArtistaFan = $postParaFans ? 999 : 0;
         } elseif ($tipoUsuario === 'Artista') {
-            $puntosArtistaFan = $postParaFans ? -50 : 0; // Penaliza a los artistas si el post es para fans.
+            $puntosArtistaFan = $postParaFans ? -50 : 0; 
         }
     }
 
@@ -180,8 +179,8 @@ function calcularPuntosParaPost(
     $puntosFinal += $puntosIdentifier;
 
     // Apply reduction based on views
-    if (isset($vistas_posts_processed[$post_id])) {
-        $vistas = $vistas_posts_processed[$post_id]['count'];
+    if (isset($vistas_posts_processed[$postId])) {
+        $vistas = $vistas_posts_processed[$postId]['count'];
         $reduccion_por_vista = 0.01;
         $factorReduccion = pow(1 - $reduccion_por_vista, $vistas);
         $puntosFinal *= $factorReduccion;
@@ -196,19 +195,19 @@ function calcularPuntosParaPost(
     return $puntosFinal;
 }
 
-function calcularPuntosIntereses($post_id, $datos)
+function calcularPuntosIntereses($postId, $datos)
 {
     $puntosIntereses = 0;
 
     // Verificar si existen los índices necesarios
     if (
-        !isset($datos['datosAlgoritmo'][$post_id]) ||
-        !isset($datos['datosAlgoritmo'][$post_id]->meta_value)
+        !isset($datos['datosAlgoritmo'][$postId]) ||
+        !isset($datos['datosAlgoritmo'][$postId]->meta_value)
     ) {
         return $puntosIntereses;
     }
 
-    $datosAlgoritmo = json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true);
+    $datosAlgoritmo = json_decode($datos['datosAlgoritmo'][$postId]->meta_value, true);
 
     // Verificar si el json_decode fue exitoso
     if (json_last_error() !== JSON_ERROR_NONE || !is_array($datosAlgoritmo)) {
@@ -217,7 +216,7 @@ function calcularPuntosIntereses($post_id, $datos)
 
     $oneshot = ['one shot', 'one-shot', 'oneshot'];
     $esOneShot = false;
-    $metaValue = $datos['datosAlgoritmo'][$post_id]->meta_value;
+    $metaValue = $datos['datosAlgoritmo'][$postId]->meta_value;
 
     if (!empty($metaValue)) {
         foreach ($oneshot as $palabra) {
@@ -280,33 +279,29 @@ function getDecayFactor($days, $useDecay = false)
     static $decay_factors = [];
     static $use_decay = false;
 
-    // Configura la opción de usar el factor de decaimiento
     if (func_num_args() > 1) {
         $use_decay = $useDecay;
     }
 
-    // Si no se utiliza el factor de decaimiento, devuelve 1
     if (!$use_decay) {
         return 1;
     }
 
-    // Populate the decay factors up to 365 days
     if (empty($decay_factors)) {
         for ($d = 0; $d <= 365; $d++) {
             $decay_factors[$d] = pow(0.99, $d);
         }
     }
 
-    // Cap days to 365 to prevent undefined index
     $days = min(max(0, (int) $days), 365);
 
     return $decay_factors[$days];
 }
 
-function calcularPuntosIdentifier($post_id, $identifier, $datos)
+function calcularPuntosIdentifier($postId, $identifier, $datos)
 {
     $resumen = [
-        'post_id' => $post_id,
+        'post_id' => $postId,
         'identifiers' => [],
         'matches' => [
             'content' => 0,
@@ -334,12 +329,12 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos)
     }
 
     // Obtener contenido y datos
-    $post_content = !empty($datos['post_content'][$post_id])
-        ? strtolower($datos['post_content'][$post_id])
+    $post_content = !empty($datos['post_content'][$postId])
+        ? strtolower($datos['post_content'][$postId])
         : '';
 
-    $datosAlgoritmo = !empty($datos['datosAlgoritmo'][$post_id]->meta_value)
-        ? json_decode($datos['datosAlgoritmo'][$post_id]->meta_value, true)
+    $datosAlgoritmo = !empty($datos['datosAlgoritmo'][$postId]->meta_value)
+        ? json_decode($datos['datosAlgoritmo'][$postId]->meta_value, true)
         : [];
 
     // Inicializar arrays para tracking de coincidencias
@@ -420,19 +415,19 @@ function calcularPuntosIdentifier($post_id, $identifier, $datos)
     return $resumen['puntos']['total'];
 }
 
-function calcularPuntosSimilarTo($post_id, $similar_to, $datos)
+function calcularPuntosSimilarTo($postId, $similarTo, $datos)
 {
 
-    $contenido_post_1 = isset($datos['post_content'][$post_id]) ? strtolower($datos['post_content'][$post_id]) : '';
-    $contenido_post_2 = isset($datos['post_content'][$similar_to]) ? strtolower($datos['post_content'][$similar_to]) : '';
+    $contenido_post_1 = isset($datos['post_content'][$postId]) ? strtolower($datos['post_content'][$postId]) : '';
+    $contenido_post_2 = isset($datos['post_content'][$similarTo]) ? strtolower($datos['post_content'][$similarTo]) : '';
 
-    $datosAlgoritmo_1 = isset($datos['datosAlgoritmo'][$post_id]->meta_value)
-        ? procesarMetaValue($datos['datosAlgoritmo'][$post_id]->meta_value)
+    $datosAlgoritmo_1 = isset($datos['datosAlgoritmo'][$postId]->meta_value)
+        ? procesarMetaValue($datos['datosAlgoritmo'][$postId]->meta_value)
         : [];
 
-    $datosAlgoritmo_2 = isset($datos['datosAlgoritmo'][$similar_to]->meta_value)
-        ? procesarMetaValue($datos['datosAlgoritmo'][$similar_to]->meta_value)
-        : procesarMetaValue(get_post_meta($similar_to, 'datosAlgoritmo', true));
+    $datosAlgoritmo_2 = isset($datos['datosAlgoritmo'][$similarTo]->meta_value)
+        ? procesarMetaValue($datos['datosAlgoritmo'][$similarTo]->meta_value)
+        : procesarMetaValue(get_post_meta($similarTo, 'datosAlgoritmo', true));
 
 
     $words_in_post_1 = array_merge(
@@ -539,8 +534,8 @@ function obtenerYProcesarVistasPosts($userId)
     $vistas_posts_processed = [];
 
     if (!empty($vistas_posts)) {
-        foreach ($vistas_posts as $post_id => $view_data) {
-            $vistas_posts_processed[$post_id] = [
+        foreach ($vistas_posts as $postId => $view_data) {
+            $vistas_posts_processed[$postId] = [
                 'count'     => $view_data['count'],
                 'last_view' => date('Y-m-d H:i:s', $view_data['last_view']),
             ];
