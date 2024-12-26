@@ -82,7 +82,7 @@ function generarMetaDeIntereses($user_id) {
             if (!empty($post->meta_value)) {
                 $datosAlgoritmo = json_decode($post->meta_value, true);
                 if (json_last_error() !== JSON_ERROR_NONE) {
-                    error_log("Error al decodificar JSON para post ID " . $post->ID . ": " . json_last_error_msg());
+                    //error_log("Error al decodificar JSON para post ID " . $post->ID . ": " . json_last_error_msg());
                     continue;
                 }
 
