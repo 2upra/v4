@@ -202,75 +202,91 @@ function like() {
     }
 }
 
+//esto funcona bien al inicio, y se llama cuando se cargan mas post, pero no funciona bien con esos nuevos post que cargan, lo puedes ajustar, por favor 
 function animacionLike() {
-    document.body.addEventListener('click', e => {
-        const cont = e.target.closest('.botonlike-container');
-        if (cont) {
-            const extras = cont.querySelector('.botones-extras');
-            const like = cont.querySelector('.post-like-button');
-            let timeout;
-            let hoverCont = false;
-            let hoverExtras = false;
-            let delay = 600;
+    const containers = document.querySelectorAll('.botonlike-container');
 
-            const mostrar = () => {
-                clearTimeout(timeout);
-                cont.classList.add('active');
-            };
+    containers.forEach(container => {
+        const botonesExtras = container.querySelector('.botones-extras');
+        const botonLike = container.querySelector('.post-like-button');
+        let timeoutId = null;
+        let isHoveringContainer = false;
+        let isHoveringExtras = false;
+        let delayHide = 600; // Tiempo en milisegundos que los botones permanecerán visibles
 
-            const ocultar = (retraso = 0) => {
-                timeout = setTimeout(() => {
-                    if (!hoverCont && !hoverExtras) {
-                        cont.classList.remove('active');
-                    }
-                }, retraso);
-            };
+        const showExtras = () => {
+            //console.log('showExtras: Mostrando botones extras');
+            clearTimeout(timeoutId);
+            container.classList.add('active');
+        };
 
-            const entraCont = () => {
-                hoverCont = true;
-                clearTimeout(timeout);
-                mostrar();
-            };
-
-            const saleCont = () => {
-                hoverCont = false;
-                ocultar(delay);
-            };
-
-            const entraExtras = () => {
-                hoverExtras = true;
-                clearTimeout(timeout);
-            };
-
-            const saleExtras = () => {
-                hoverExtras = false;
-                ocultar(delay);
-            };
-
-            cont.addEventListener('mouseenter', entraCont);
-            cont.addEventListener('mouseleave', saleCont);
-
-            extras.addEventListener('mouseenter', entraExtras);
-            extras.addEventListener('mouseleave', saleExtras);
-
-            cont.addEventListener('touchstart', () => {
-                clearTimeout(timeout);
-                document.querySelectorAll('.botonlike-container').forEach(c => c !== cont && c.classList.remove('active'));
-                timeout = setTimeout(mostrar, 500);
-            });
-
-            cont.addEventListener('touchend', () => {
-                ocultar(delay);
-            });
-
-            extras.addEventListener('touchstart', ev => {
-            });
-
-            like.addEventListener('touchstart', ev => {
-                if (cont.classList.contains('active')) {
-                    ev.preventDefault();
+        const hideExtras = (delay = 0) => {
+            //console.log(`hideExtras: Ocultando botones extras en ${delay}ms`);
+            timeoutId = setTimeout(() => {
+                //console.log('hideExtras: Timeout expirado');
+                if (!isHoveringContainer && !isHoveringExtras) {
+                    //console.log('hideExtras: Ocultando botones extras porque no hay hover en container ni extras');
+                    container.classList.remove('active');
+                } else {
+                    //console.log('hideExtras: No se ocultan los botones extras porque hay hover en container o extras');
                 }
-            });
-        }
+            }, delay);
+        };
+
+        const handleMouseEnterContainer = () => {
+            isHoveringContainer = true;
+            //console.log('handleMouseEnterContainer: Mouse entró en el contenedor');
+            clearTimeout(timeoutId);
+            showExtras();
+        };
+
+        const handleMouseLeaveContainer = () => {
+            isHoveringContainer = false;
+            //console.log('handleMouseLeaveContainer: Mouse salió del contenedor');
+            hideExtras(delayHide);
+        };
+
+        const handleMouseEnterExtras = () => {
+            isHoveringExtras = true;
+            //console.log('handleMouseEnterExtras: Mouse entró en botones extras');
+            clearTimeout(timeoutId);
+        };
+
+        const handleMouseLeaveExtras = () => {
+            isHoveringExtras = false;
+            //console.log('handleMouseLeaveExtras: Mouse salió de botones extras');
+            hideExtras(delayHide);
+        };
+
+        container.addEventListener('mouseenter', handleMouseEnterContainer);
+        container.addEventListener('mouseleave', handleMouseLeaveContainer);
+
+        botonesExtras.addEventListener('mouseenter', handleMouseEnterExtras);
+        botonesExtras.addEventListener('mouseleave', handleMouseLeaveExtras);
+
+        // Manejo de eventos táctiles (sin cambios significativos aquí)
+        container.addEventListener('touchstart', () => {
+            //console.log('touchstart en container');
+            clearTimeout(timeoutId);
+            containers.forEach(c => c !== container && c.classList.remove('active'));
+            timeoutId = setTimeout(showExtras, 500);
+        });
+
+        container.addEventListener('touchend', () => {
+            //console.log('touchend en container');
+            hideExtras(delayHide);
+        });
+
+        botonesExtras.addEventListener('touchstart', event => {
+            //console.log('touchstart en botonesExtras');
+            //event.stopPropagation();
+        });
+
+        botonLike.addEventListener('touchstart', event => {
+            console.log('touchstart en botonLike');
+            if (container.classList.contains('active')) {
+                event.preventDefault();
+            }
+        });
     });
 }
