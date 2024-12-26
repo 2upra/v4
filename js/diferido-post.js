@@ -358,7 +358,7 @@
             }
 
             // Inicializar funciones necesarias
-            ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec'].forEach(funcion => {
+            ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec', 'animacionLike'].forEach(funcion => {
                 if (typeof window[funcion] === 'function') window[funcion]();
             });
 
