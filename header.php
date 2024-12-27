@@ -191,6 +191,15 @@ if (!defined('ABSPATH')) {
                             </a>
                         </div>
 
+                        <? if (current_user_can('administrator')) : ?>
+                            <div class="menu-item iconoTareas">
+                                <a href="<?php echo home_url('/tareas'); ?>">
+                                    <? echo $GLOBALS['objetivo']; ?>
+                                </a>
+                            </div>
+                        <? endif; ?>
+
+
                         <div class="menuColabs">
                             <? // echo colabsResumen() 
                             ?>

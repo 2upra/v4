@@ -1,7 +1,8 @@
 <?
 
 // Registrar estado de publicación: Rechazado y Pendiente de Eliminación
-function register_custom_post_statuses() {
+function register_custom_post_statuses()
+{
     register_post_status('rejected', [
         'label' => _x('Rejected', 'post status'),
         'public' => true,
@@ -23,17 +24,18 @@ function register_custom_post_statuses() {
 add_action('init', 'register_custom_post_statuses');
 
 // Registrar tipos de post: Samples, Álbums, Momentos y Colaboraciones
-function register_custom_post_types() {
+function register_custom_post_types()
+{
     $post_types = [
         'social_post' => ['Samples', 'Sample', 'sample', 'dashicons-images-alt2'],
         'albums' => ['Albums', 'Album', 'album', 'dashicons-format-audio'],
         'stories' => ['Momentos', 'Momento', 'momentos', 'dashicons-camera'],
         'colab' => ['Colaboraciones', 'Colaboración', 'colab', 'dashicons-share-alt2'],
         'colecciones' =>  ['Colecciones', 'Colección', 'colecciones', 'dashicons-book'],
-        'notificaciones' => ['Notificaciones', 'Notificación', 'notificacion', 'dashicons-bell'],  
+        'notificaciones' => ['Notificaciones', 'Notificación', 'notificacion', 'dashicons-bell'],
         'comentarios' => ['Comentarios', 'Comentario', 'comentario', 'dashicons-admin-comments'],
         'reporte' => ['Reportes', 'Reporte', 'reporte', 'dashicons-flag'],
-        
+        'tarea' => ['Tareas', 'Tarea', 'tarea', 'dashicons-list-check'],
 
     ];
 
@@ -42,7 +44,7 @@ function register_custom_post_types() {
         $name = $type[0];
         $singular = $type[1];
         $slug = $type[2];
-        $icon = isset($type[3]) ? $type[3] : null; 
+        $icon = isset($type[3]) ? $type[3] : null;
 
         $args = [
             'labels' => [
@@ -53,7 +55,7 @@ function register_custom_post_types() {
             'has_archive' => true,
             'supports' => ['title', 'editor', 'thumbnail', 'custom-fields'],
             'rewrite' => ['slug' => $slug],
-            'show_in_rest' => true, 
+            'show_in_rest' => true,
             'menu_icon' => $icon
         ];
 
@@ -63,7 +65,8 @@ function register_custom_post_types() {
 add_action('init', 'register_custom_post_types');
 
 // Registrar meta para publicaciones de Colaboración
-function register_colab_meta() {
+function register_colab_meta()
+{
     register_post_meta('colab', 'paraColab', [
         'show_in_rest' => true,
         'single' => true,

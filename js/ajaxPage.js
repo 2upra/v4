@@ -89,7 +89,8 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         'busquedaMenuMovil',
         'iniciarcm',
         'inicializarBuscadores',
-        'stripecomprabeat'
+        'stripecomprabeat',
+        'initTareas',
     ];
 
     function initScripts() {

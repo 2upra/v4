@@ -183,6 +183,8 @@ function submenu() {
     createSubmenu('.HR695R8', 'opcionespost', 'abajo');
     createSubmenu('.submenucolab', 'opcionescolab', 'abajo');
     createSubmenu('.EDYQHV', 'opcionespost', 'abajo');
+    createSubmenu('.sImportancia', 'sImportancia', 'abajo');
+    createSubmenu('.sTipo', 'sTipo', 'abajo');
 }
 
 window.createSubmenuDarkBackground = function (submenuIdPrefix) {

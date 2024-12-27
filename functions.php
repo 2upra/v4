@@ -427,6 +427,7 @@ function scriptsOrdenados()
         'stripeCompra'      => '1.0.1',
         'tooltips'          => '1.0.1',
         'masonary'          => '1.0.1',
+        'task'              => '1.0.1',
     ];
 
     wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.8.11', true);
