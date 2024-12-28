@@ -171,3 +171,26 @@ function modificarTarea()
 }
 
 add_action('wp_ajax_modificarTarea', 'modificarTarea');
+
+function completarTarea() {
+    if (!current_user_can('edit_posts')) {
+        wp_send_json_error('No tienes permisos.');
+    }
+
+    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+    $estado = isset($_POST['estado']) ? sanitize_text_field($_POST['estado']) : 'pendiente';
+
+    $tarea = get_post($id);
+
+    if (empty($tarea) || $tarea->post_type != 'tarea') {
+        guardarLog("completarTarea - Error: No se encontró la tarea con ID $id");
+        wp_send_json_error('Tarea no encontrada.');
+    }
+
+    update_post_meta($id, 'estado', $estado);
+
+    guardarLog("completarTarea - Tarea $id actualizada a estado: $estado");
+    wp_send_json_success();
+}
+
+add_action('wp_ajax_completarTarea', 'completarTarea');

@@ -338,49 +338,59 @@ function construirQueryArgs($args, $paged, $usuarioActual, $identifier, $isAdmin
 
 
 
-function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoUsuario = null)
+function aplicarFiltroGlobal($queryArgs, $args, $usuarioActual, $userId, $tipoUsuario = null)
 {
     if (!empty($userId)) {
-        $query_args['author'] = $userId;
+        $queryArgs['author'] = $userId;
         $filtro = $args['filtro'] ?? 'nada';
         if ($filtro === 'imagenesPerfil') {
-            $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], [
+            $queryArgs['meta_query'] = array_merge($queryArgs['meta_query'] ?? [], [
                 ['key' => '_thumbnail_id', 'compare' => 'EXISTS'],
                 ['key' => 'post_audio_lite', 'compare' => 'NOT EXISTS'],
             ]);
         } elseif ($filtro === 'tiendaPerfil') {
-            $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], [
+            $queryArgs['meta_query'] = array_merge($queryArgs['meta_query'] ?? [], [
                 ['key' => 'tienda', 'value' => '1', 'compare' => '='],
                 ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
             ]);
         }
 
-        return $query_args;
+        return $queryArgs;
     }
 
     $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
     $filtro = $args['filtro'] ?? 'nada';
 
     if ($filtro === 'sampleList' && is_array($filtrosUsuario) && in_array('misPost', $filtrosUsuario)) {
-        $query_args['author'] = $usuarioActual;
+        $queryArgs['author'] = $usuarioActual;
     }
 
     if ($filtro === 'colecciones' && is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
-        $query_args['author'] = $usuarioActual;
+        $queryArgs['author'] = $usuarioActual;
     }
 
     if ($filtro === 'tarea') {
-        $query_args['author'] = $usuarioActual;
+        $queryArgs['author'] = $usuarioActual;
+        if (is_array($filtrosUsuario) && in_array('ocultarCompletadas', $filtrosUsuario)) {
+            $queryArgs['meta_query'] = array_merge($queryArgs['meta_query'] ?? [], [
+                [
+                    'key' => 'estado',
+                    'value' => 'completada',
+                    'compare' => '!=',
+                ]
+            ]);
+            guardarLog("aplicarFiltroGlobal: Se agregaron condiciones para ocultar completadas en el filtro tarea para el usuario $usuarioActual");
+        }
     }
 
-    $meta_query_conditions = [
-        'rolasEliminadas' => fn() => $query_args['post_status'] = 'pending_deletion',
-        'rolasRechazadas' => fn() => $query_args['post_status'] = 'rejected',
-        'rolasPendiente' => fn() => $query_args['post_status'] = 'pending',
+    $metaQueryConditions = [
+        'rolasEliminadas' => fn() => $queryArgs['post_status'] = 'pending_deletion',
+        'rolasRechazadas' => fn() => $queryArgs['post_status'] = 'rejected',
+        'rolasPendiente' => fn() => $queryArgs['post_status'] = 'pending',
         'likesRolas' => fn() => ($userLikedPostIds = obtenerLikesDelUsuario($usuarioActual))
-            ? $query_args['post__in'] = $userLikedPostIds
-            : $query_args['posts_per_page'] = 0,
-        'nada' => fn() => $query_args['post_status'] = 'publish',
+            ? $queryArgs['post__in'] = $userLikedPostIds
+            : $queryArgs['posts_per_page'] = 0,
+        'nada' => fn() => $queryArgs['post_status'] = 'publish',
         'colabs' => ['key' => 'paraColab', 'value' => '1', 'compare' => '='],
         'libres' => [
             ['key' => 'esExclusivo', 'value' => '0', 'compare' => '='],
@@ -391,25 +401,25 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
             ['key' => 'momento', 'value' => '1', 'compare' => '='],
             ['key' => '_thumbnail_id', 'compare' => 'EXISTS'],
         ],
-        'sample' => function () use ($tipoUsuario, &$query_args) {
+        'sample' => function () use ($tipoUsuario, &$queryArgs) {
             if ($tipoUsuario === 'Fan') {
-                $query_args['post_status'] = 'publish';
+                $queryArgs['post_status'] = 'publish';
             } else {
-                $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], [
+                $queryArgs['meta_query'] = array_merge($queryArgs['meta_query'] ?? [], [
                     ['key' => 'paraDescarga', 'value' => '1', 'compare' => '='],
                     ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
                 ]);
             }
         },
-        'rolaListLike' => function () use ($usuarioActual, &$query_args) {
+        'rolaListLike' => function () use ($usuarioActual, &$queryArgs) {
             $userLikedPostIds = obtenerLikesDelUsuario($usuarioActual);
             if (empty($userLikedPostIds)) {
-                $query_args['posts_per_page'] = 0;
+                $queryArgs['posts_per_page'] = 0;
                 return;
             }
 
-            $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], [
-                'relation' => 'AND', // Asegurarse de que se cumplan ambas condiciones.
+            $queryArgs['meta_query'] = array_merge($queryArgs['meta_query'] ?? [], [
+                'relation' => 'AND',
                 [
                     'key'     => 'rola',
                     'value'   => '1',
@@ -422,10 +432,10 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
 
             ]);
 
-            $query_args['post__in'] = $userLikedPostIds;
+            $queryArgs['post__in'] = $userLikedPostIds;
         },
         'sampleList' => [
-            'relation' => 'AND', // Importante cambiar a AND
+            'relation' => 'AND',
             ['key' => 'post_audio_lite', 'compare' => 'EXISTS'],
             [
                 'relation' => 'OR',
@@ -433,10 +443,10 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
                 ['key' => 'tienda', 'value' => '1', 'compare' => '='],
             ],
         ],
-        'colab' => fn() => $query_args['post_status'] = 'publish',
-        'colabPendiente' => function () use (&$query_args) {
-            $query_args['author'] = get_current_user_id();
-            $query_args['post_status'] = 'pending';
+        'colab' => fn() => $queryArgs['post_status'] = 'publish',
+        'colabPendiente' => function () use (&$queryArgs) {
+            $queryArgs['author'] = get_current_user_id();
+            $queryArgs['post_status'] = 'pending';
         },
         'rola' => [
             ['key' => 'rola', 'value' => '1', 'compare' => '='],
@@ -445,18 +455,18 @@ function aplicarFiltroGlobal($query_args, $args, $usuarioActual, $userId, $tipoU
         ],
     ];
 
-    if (isset($meta_query_conditions[$filtro])) {
-        $result = $meta_query_conditions[$filtro];
+    if (isset($metaQueryConditions[$filtro])) {
+        $result = $metaQueryConditions[$filtro];
 
         if (is_callable($result)) {
             $result();
         } else {
-            $query_args['post_status'] = 'publish';
-            $query_args['meta_query'] = array_merge($query_args['meta_query'] ?? [], $result);
+            $queryArgs['post_status'] = 'publish';
+            $queryArgs['meta_query'] = array_merge($queryArgs['meta_query'] ?? [], $result);
         }
     }
 
-    return $query_args;
+    return $queryArgs;
 }
 
 function ordenamiento($query_args, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario = null)

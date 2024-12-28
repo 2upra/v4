@@ -1,4 +1,3 @@
-
 //GENERIC FETCH (NO SE PUEDE CAMBIAR O ALTERAR )
 async function enviarAjax(action, data = {}) {
     try {
@@ -1027,155 +1026,117 @@ async function cambiarFiltroTiempo() {
     });
 }
 
-/*
-Respuesta de obtenerFiltros: 
-{success: true, data: {…}}
-data
-: 
-filtros
-: 
-(2) ['misColecciones', 'mostrarMeGustan']
-[[Prototype]]
-: 
-Object
-success
-: 
-true
-[[Prototype]]
-: 
-Object
-console.error("Error: La respuesta no es un objeto JSON válido o está vacía.");
-*/
-
 function filtrosPost() {
-    const filtrosPost = document.getElementById('filtrosPost');
-    if (!filtrosPost) {
+    window.filtrosGlobales = [];
+    const elem = document.getElementById('filtrosPost');
+    if (!elem) {
         console.error("Error: No se encontró el elemento 'filtrosPost'.");
         return;
     }
+    let act = [];
+    const checks = elem.querySelectorAll('input[type="checkbox"]');
 
-    let filtrosActivos = [];
-    const checkboxes = filtrosPost.querySelectorAll('input[type="checkbox"]');
-
-    async function cargarFiltrosGuardados() {
+    async function cargar() {
         try {
-            const respuesta = await enviarAjax('obtenerFiltros');
-            console.log('Respuesta de obtenerFiltros:', respuesta);
-
-            if (respuesta.success && respuesta.data && respuesta.data.filtros) {
-                filtrosActivos = respuesta.data.filtros;
+            const r = await enviarAjax('obtenerFiltros');
+            if (r.success && r.data && r.data.filtros) {
+                act = r.data.filtros;
             } else {
-                console.warn('Advertencia: No se encontraron filtros guardados o la respuesta no fue exitosa.');
-                filtrosActivos = [];
+                act = [];
             }
-
-            if (Array.isArray(filtrosActivos)) {
-                // No es necesario el timeout aquí, la asignación debe ser síncrona
-                filtrosActivos.forEach(filtro => {
-                    const checkbox = document.querySelector(`input[name="${filtro}"]`);
-                    if (checkbox) {
-                        checkbox.checked = true;
-                    } else {
-                        console.warn(`Advertencia: No se encontró el checkbox con el nombre '${filtro}'.`);
+            if (Array.isArray(act)) {
+                act.forEach(f => {
+                    const c = document.querySelector(`input[name="${f}"]`);
+                    if (c) {
+                        c.checked = true;
                     }
                 });
             }
         } catch (error) {
-            console.error('Error al cargar filtros:', error);
-            filtrosActivos = [];
+            act = [];
         }
+        window.filtrosGlobales = act;
     }
 
-    function reiniciarCheckboxes() {
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = filtrosActivos.includes(checkbox.name);
+    function reiniciar() {
+        checks.forEach(c => {
+            c.checked = act.includes(c.name);
         });
     }
-    // Nueva función para recargar filtros
-    async function recargarFiltros() {
-        await cargarFiltrosGuardados();
-        reiniciarCheckboxes();
-        console.log('Filtros recargados y checkboxes reiniciados.');
+
+    async function recargar() {
+        await cargar();
+        reiniciar();
+        window.filtrosGlobales = act;
     }
 
-    // Evento para cada checkbox
-    if (!checkboxes.length) {
+    if (!checks.length) {
         console.error("Error: No se encontraron checkboxes dentro de 'filtrosPost'.");
         return;
     }
 
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function () {
-            if (!Array.isArray(filtrosActivos)) {
-                filtrosActivos = [];
+    checks.forEach(c => {
+        c.addEventListener('change', function () {
+            if (!Array.isArray(act)) {
+                act = [];
             }
-
             if (this.checked) {
-                if (!filtrosActivos.includes(this.name)) {
-                    filtrosActivos.push(this.name);
+                if (!act.includes(this.name)) {
+                    act.push(this.name);
                 }
             } else {
-                filtrosActivos = filtrosActivos.filter(filtro => filtro !== this.name);
+                act = act.filter(f => f !== this.name);
             }
-            console.log('Filtros activos después del cambio:', filtrosActivos);
+            window.filtrosGlobales = act;
         });
     });
 
-    // Evento para el botón de guardar
-    const botonGuardar = filtrosPost.querySelector('.botonprincipal');
-    if (!botonGuardar) {
+    const btnG = elem.querySelector('.botonprincipal');
+    if (!btnG) {
         console.error("Error: No se encontró el botón con la clase 'botonprincipal'.");
         return;
     }
 
-    botonGuardar.addEventListener('click', async function () {
-        const filtrosParaGuardar = Array.isArray(filtrosActivos) ? filtrosActivos : [];
-        console.log('Filtros a guardar:', filtrosParaGuardar);
-        const respuesta = await enviarAjax('guardarFiltroPost', {
-            filtros: JSON.stringify(filtrosParaGuardar)
+    btnG.addEventListener('click', async function () {
+        const g = Array.isArray(act) ? act : [];
+        const r = await enviarAjax('guardarFiltroPost', {
+            filtros: JSON.stringify(g)
         });
-        console.log('Respuesta de guardarFiltroPost:', respuesta);
-
-        if (respuesta.success) {
+        if (r.success) {
             window.limpiarBusqueda();
             establecerFiltros();
         } else {
             console.error('Error al guardar los filtros.');
         }
+        window.filtrosGlobales = act;
     });
 
-    // Evento para el botón de restablecer
-    const botonRestablecer = filtrosPost.querySelector('.botonsecundario');
-    if (!botonRestablecer) {
+    const btnR = elem.querySelector('.botonsecundario');
+    if (!btnR) {
         console.error("Error: No se encontró el botón con la clase 'botonsecundario'.");
         return;
     }
 
-    botonRestablecer.addEventListener('click', async function () {
-        filtrosActivos = [];
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = false;
+    btnR.addEventListener('click', async function () {
+        act = [];
+        checks.forEach(c => {
+            c.checked = false;
         });
-        console.log('Restableciendo filtros...');
-        const respuesta = await enviarAjax('guardarFiltroPost', {
+        const r = await enviarAjax('guardarFiltroPost', {
             filtros: JSON.stringify([])
         });
-        console.log('Respuesta de guardarFiltroPost (restablecer):', respuesta);
-
-        if (respuesta.success) {
+        if (r.success) {
             window.limpiarBusqueda();
             establecerFiltros();
         } else {
             console.error('Error al restablecer los filtros.');
         }
+        window.filtrosGlobales = act;
     });
 
-    // Cargar los filtros al inicio
-    cargarFiltrosGuardados();
-    window.recargarFiltros = recargarFiltros;
+    cargar();
+    window.recargarFiltros = recargar;
 }
-
-
 
 document.addEventListener('DOMContentLoaded', function () {
     // Verificar si existe el modalTipoUsuario en la página

@@ -9086,6 +9086,8 @@ p.tituloTarea {
     min-width: 45px;
 }
 
+
+
 ul.social-post-list.clase-tarea {
     padding: 10px 0px;
     background: unset;
@@ -9096,4 +9098,37 @@ ul.social-post-list.clase-tarea {
 
 svg#musicIcono, svg#inicioIcono {
     fill: white;
+}
+/*esto necesito que sea asi */
+
+
+.clase-tarea .draggable-element.dragging {
+    cursor: grabbing !important;
+    opacity: 0.8;
+}
+
+
+body.dragging-active { 
+    cursor: grabbing !important;
+    user-select: none;
+}
+
+.completada {
+    opacity: 0.4;
+}
+
+svg#emptystate path {
+    fill: white;
+}
+
+.LNVHED.no-tarea {
+    padding: 80px;
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+    align-items: center;
+}
+
+.clase-tarea .HR695R8 {
+    display: none;
 }

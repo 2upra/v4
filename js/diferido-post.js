@@ -3,7 +3,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         reiniciarCargaDiferida();
     });
-    const DEPURAR = false;
+    const DEPURAR = true;
     const log = DEPURAR ? console.log.bind(console) : () => {};
 
     let estaCargando = false;
@@ -124,26 +124,26 @@
         }
     });
 
-    async function cargarMasContenido(listaPublicaciones, ajax = null, colec = null, idea = null) {
+    async function cargarMasContenido(listaPublicaciones, ajax = null, colec = null, idea = null, arriba = false) {
         if (estaCargando) {
             return;
         }
+        const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
+
         establecerIdUsuarioDesdeInput();
         estaCargando = true;
-        insertarMarcadorCarga(listaPublicaciones);
+        insertarMarcadorCarga(listaPublicaciones, filtro);
         log('Iniciando carga de más contenido');
 
         let intentos = 0;
         const maxIntentos = 5;
-        const intervalo = 1000; // Intervalo de 1 segundo
+        const intervalo = 1000;
         log('[cargarMasContenido] idea:', {idea}, 'colec:', {colec});
         const buscarPestañaActiva = setInterval(async () => {
             if (listaPublicaciones) {
                 log('Pestaña activa encontrada');
                 clearInterval(buscarPestañaActiva);
 
-                // Parámetros de carga
-                const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
                 const idUsuario = window.idUsuarioActual;
 
                 log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual, colec, idea});
@@ -172,7 +172,7 @@
                     }
 
                     const textoRespuesta = await respuesta.text();
-                    await procesarRespuesta(textoRespuesta, listaPublicaciones);
+                    await procesarRespuesta(textoRespuesta, listaPublicaciones, arriba);
                 } catch (error) {
                     log('Error en la petición AJAX:', error);
                 } finally {
@@ -192,112 +192,73 @@
 
     const MAX_POSTS = 50;
 
-    // Función principal procesar respuesta
-    async function procesarRespuesta(respuesta, listaPublicaciones) {
-        // Mostrar el mensaje de "Cargando posts" antes de procesar
-
+    async function procesarRespuesta(respuesta, listaPublicaciones, arriba = false) {
         const doc = validarRespuesta(respuesta);
         if (!doc) {
-            // Si la respuesta no es válida, eliminar el mensaje de carga
             eliminarMarcadorCarga(listaPublicaciones);
             return;
         }
 
         const publicacionesValidas = procesarPublicaciones(doc);
-        manejarContenido(publicacionesValidas, listaPublicaciones);
-
-        // Eliminar el mensaje de carga después de manejar el contenido
+        manejarContenido(publicacionesValidas, listaPublicaciones, arriba);
         eliminarMarcadorCarga(listaPublicaciones);
     }
-    // Función para insertar el marcador de carga
-    /*
-    remplaza y añade esto
-    <div role="status" class="loading-placeholder">
-        <div class="loading-bar"></div>
-        <span class="sr-only">Loading...</span>
-    </div>
-    */
-    let intervalId; // Variable para almacenar el ID del intervalo
-    let loadingCount = 0; // Contador de barras de carga
 
-    // Función para insertar el marcador de carga con barras dinámicas
-    function insertarMarcadorCarga(listaPublicaciones) {
-        if (!listaPublicaciones) return;
+    let intervalId;
+    let loadingCount = 0;
 
-        // Crear un elemento div para el marcador de carga
-        const marcadorCarga = document.createElement('div');
-        marcadorCarga.setAttribute('role', 'status'); // Añadir el atributo role="status"
-        marcadorCarga.className = 'loading-placeholder'; // Asignar la clase loading-placeholder
-
-        // Crear el span con la clase sr-only para el texto "Loading..."
-        const srOnlyText = document.createElement('span');
-        srOnlyText.className = 'sr-only'; // Asignar la clase sr-only
-        srOnlyText.textContent = 'Loading...'; // El texto que será accesible solo para lectores de pantalla
-
-        // Añadir el texto al marcador de carga
-        marcadorCarga.appendChild(srOnlyText);
-
-        // Insertar el marcador de carga al final de la lista de publicaciones
-        listaPublicaciones.insertAdjacentElement('beforeend', marcadorCarga);
-
-        // Iniciar el intervalo para añadir una barra de carga cada 0.5 segundos
+    function insertarMarcadorCarga(lista, filtro) {
+        if (filtro !== 'sampleList' || !lista) return;
+        const marca = document.createElement('div');
+        marca.setAttribute('role', 'status');
+        marca.className = 'loading-placeholder';
+        const texto = document.createElement('span');
+        texto.className = 'sr-only';
+        texto.textContent = 'Loading...';
+        marca.appendChild(texto);
+        lista.insertAdjacentElement('beforeend', marca);
         intervalId = setInterval(() => {
             if (loadingCount < 12) {
-                // Crear una nueva barra de carga
-                const loadingBar = document.createElement('div');
-                loadingBar.className = 'loading-bar'; // Asignar la clase loading-bar
-
-                // Añadir la barra de carga al marcador
-                marcadorCarga.appendChild(loadingBar);
-
-                loadingCount++; // Incrementar el contador
+                const barra = document.createElement('div');
+                barra.className = 'loading-bar';
+                marca.appendChild(barra);
+                loadingCount++;
             } else {
-                // Si ya hay 12 barras, detener el intervalo
                 clearInterval(intervalId);
             }
-        }, 1); // 500 ms = 0.5 segundos
+        }, 1);
     }
 
-    // Función para eliminar el marcador de carga
     function eliminarMarcadorCarga(listaPublicaciones) {
         if (!listaPublicaciones) return;
-
-        // Buscar el marcador de carga y eliminarlo
         const marcadorCarga = listaPublicaciones.querySelector('.loading-placeholder');
         if (marcadorCarga) {
             marcadorCarga.remove();
         }
-
-        // Detener el intervalo si está activo
         clearInterval(intervalId);
-        intervalId = null; // Limpiar el ID del intervalo
-
-        // Reiniciar el contador para la próxima vez
+        intervalId = null;
         loadingCount = 0;
     }
-    // Parte 1: Validar y preparar la respuesta
+
     function validarRespuesta(respuesta) {
         log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
 
         const respuestaLimpia = respuesta.trim();
-
         if (respuestaLimpia === '<div id="no-more-posts"></div>') {
             log('No hay más publicaciones');
             detenerCarga();
             return null;
         }
-
         if (!respuestaLimpia) {
             log('Respuesta vacía recibida');
             detenerCarga();
             return null;
         }
-
         return new DOMParser().parseFromString(respuesta, 'text/html');
     }
-    // Parte 2: Actualizar datos y filtrar publicaciones válidas
+
     function procesarPublicaciones(doc) {
-        // Actualizar el campo total-posts-sampleList
+
         const totalPostsInputFromResponse = doc.querySelector('.total-posts-sampleList');
         if (totalPostsInputFromResponse) {
             const totalPostsValue = totalPostsInputFromResponse.getAttribute('value');
@@ -309,7 +270,6 @@
             }
         }
 
-        // Filtrar publicaciones duplicadas
         const publicacionesNuevas = doc.querySelectorAll('.EDYQHV');
         const publicacionesValidas = [];
 
@@ -334,38 +294,34 @@
         contadorDeSamples();
         return publicacionesValidas;
     }
-    // Parte 3: Insertar y manejar contenido en el DOM
-    function manejarContenido(publicacionesValidas, listaPublicaciones) {
-        if (publicacionesValidas.length > 0) {
-            // Insertar publicaciones válidas en el DOM
-            listaPublicaciones.insertAdjacentHTML('beforeend', publicacionesValidas.join(''));
-            log('Contenido añadido');
-            paginaActual++;
 
-            // Limitar el número de publicaciones en el DOM
-            const publicacionesEnDOM = listaPublicaciones.querySelectorAll('.EDYQHV');
-            if (publicacionesEnDOM.length > MAX_POSTS) {
-                const exceso = publicacionesEnDOM.length - MAX_POSTS;
+    // Parte 3: Insertar y manejar contenido en el DOM
+
+    function manejarContenido(publiValidas, listaPubli, arriba = false) {
+        if (publiValidas.length > 0) {
+            const pos = arriba ? 'afterbegin' : 'beforeend';
+            listaPubli.insertAdjacentHTML(pos, publiValidas.join(''));
+            paginaActual++;
+    
+            const publiEnDOM = listaPubli.querySelectorAll('.EDYQHV');
+            if (publiEnDOM.length > MAX_POSTS) {
+                const exceso = publiEnDOM.length - MAX_POSTS;
                 for (let i = 0; i < exceso; i++) {
-                    const elementoAEliminar = publicacionesEnDOM[i];
-                    const idPublicacion = elementoAEliminar.getAttribute('id-post')?.trim();
-                    if (idPublicacion) {
-                        publicacionesCargadas.delete(idPublicacion);
+                    const elim = publiEnDOM[i];
+                    const idPubli = elim.getAttribute('id-post')?.trim();
+                    if (idPubli) {
+                        publicacionesCargadas.delete(idPubli);
                     }
-                    listaPublicaciones.removeChild(elementoAEliminar);
-                    log('Publicación eliminada para mantener el límite:', idPublicacion);
+                    listaPubli.removeChild(elim);
                 }
             }
-
-            // Inicializar funciones necesarias
-            ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec', 'animacionLike'].forEach(funcion => {
-                if (typeof window[funcion] === 'function') window[funcion]();
+    
+            ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec', 'animacionLike', 'initTareas'].forEach(func => {
+                if (typeof window[func] === 'function') window[func]();
             });
-
-            // Actualiza los eventos de delegación si es necesario
+    
             reiniciarEventosPostTag();
         } else {
-            log('No hay publicaciones válidas para añadir');
             detenerCarga();
         }
     }
@@ -408,22 +364,34 @@
         }
     }
 
-    window.limpiarBusqueda = function () {
-        const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
-        if (!listaPublicaciones) {
-            log('No se encontró .social-post-list para añadir contenido');
+    window.limpiarBusqueda = function (limpiar = true, arriba = false) {
+        const lista = document.querySelector('.tab.active .social-post-list');
+        if (!lista) {
             return;
         }
         publicacionesCargadas.clear();
         identificador = '';
+
+        if (limpiar) {
+            lista.innerHTML = '';
+        }
+
         actualizarUIBusqueda('');
         resetearCarga();
-        cargarMasContenido(listaPublicaciones);
+        cargarMasContenido(lista, null, null, null, arriba);
     };
 
-    //pasa algo, en la version escritorio, cuando se hace la busqueda, el valor de la busqueda se pasa correctamente, o sea, la busqueda se realiza y aparece los resultado seugn la busqueda, pero en la version movil, si se hace la busqueda pero parece que no se esta pasando el valor del identificador, no puedo comprobar que no se esta pasando porque no estoy viendo los logs en la app, pero si deduzco que es eso 
+    function resetearCarga() {
+        log('Ejecutando resetearCarga');
+        paginaActual = 1;
+        publicacionesCargadas.clear();
+        log('Carga reactivada en resetearCarga');
+        hayMasContenido = true;
+        // Opcional: Scroll hacia la parte superior
+        window.scrollTo(0, 0);
+    }
+
     function manejadorEventoBusqueda(e) {
-        // Verificar si el evento proviene de la tecla Enter (keydown es más confiable)
         const esEnter = e.type === 'keydown' && (e.key === 'Enter' || e.keyCode === 13);
 
         // Verificar si el evento proviene de un botón
@@ -479,23 +447,6 @@
         } else {
             log('No se encontraron botones de búsqueda');
         }
-    }
-    function resetearCarga() {
-        log('Ejecutando resetearCarga');
-        paginaActual = 1;
-        publicacionesCargadas.clear();
-        log('Carga reactivada en resetearCarga');
-        hayMasContenido = true;
-
-        const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
-        if (listaPublicaciones) {
-            listaPublicaciones.innerHTML = '';
-        } else {
-            log('No se encontró .social-post-list para limpiar contenido');
-        }
-
-        // Opcional: Scroll hacia la parte superior
-        window.scrollTo(0, 0);
     }
 
     window.detenerCarga = function () {
