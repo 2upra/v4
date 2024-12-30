@@ -446,7 +446,7 @@ function cargarComentarios() {
     let cargando = false;
     const comentariosList = document.querySelector('.listComentarios');
     
-    console.log('Función cargarComentarios iniciada.');
+    //console.log('Función cargarComentarios iniciada.');
 
     function cargarPaginaComentario() {
         console.log(`Cargando página de comentarios: ${paginaActual}`);
@@ -536,7 +536,7 @@ function abrirComentario() {
         return;
     }
 
-    console.log('Función abrirComentario iniciada.');
+    //console.log('Función abrirComentario iniciada.');
 
     document.body.addEventListener('click', event => {
         const boton = event.target.closest('.WNLOFT');

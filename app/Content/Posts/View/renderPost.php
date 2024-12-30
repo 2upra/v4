@@ -489,10 +489,15 @@ function limpiarJSON($json_data)
 
 function nohayPost($filtro, $is_ajax)
 {
+    if ($filtro === 'notas') {
+        return; 
+    }
+
     $post_id = get_the_ID();
     $vars = variablesPosts($post_id);
     extract($vars);
     $music = ($filtro === 'rola' || $filtro === 'likes');
+
     if (in_array($filtro, ['rolasEliminadas', 'rolasRechazadas', 'rola', 'likes'])) {
         $filtro = 'rolastatus';
     }
@@ -517,8 +522,6 @@ function nohayPost($filtro, $is_ajax)
     <?
     return ob_get_clean();
 }
-
-
 
 
 

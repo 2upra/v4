@@ -36,6 +36,7 @@ function register_custom_post_types()
         'comentarios' => ['Comentarios', 'Comentario', 'comentario', 'dashicons-admin-comments'],
         'reporte' => ['Reportes', 'Reporte', 'reporte', 'dashicons-flag'],
         'tarea' => ['Tareas', 'Tarea', 'tarea', 'dashicons-list-check'],
+        'notas' => ['Notas', 'Nota', 'notas', 'dashicons-admin-notes'],
 
     ];
 

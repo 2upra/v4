@@ -112,7 +112,6 @@ async function accionClick(selector, action, confirmMessage, successCallback, el
 
                 if (!post_id) {
                     console.error('No se pudo obtener el post_id');
-                    return;
                 }
 
                 const tipoContenido = event.currentTarget.dataset.tipoContenido;
@@ -565,6 +564,7 @@ async function handleAllRequests() {
         await verificarPost();
         await corregirTags();
         await cambiarTitulo();
+
         inicializarCambiarImagen();
     } catch (error) {
         console.error('Ocurrió un error al procesar las solicitudes:', error);
@@ -831,7 +831,7 @@ async function establecerFiltros() {
                             //console.log('establecerFiltros: Respuesta de restablecerFiltros', restablecerResponse);
                             if (restablecerResponse.success) {
                                 alert(restablecerResponse.data.message);
-                                window.limpiarBusqueda(); // Llamar a limpiarBusqueda después del restablecimiento
+                                window.reiniciarContenido(); // Llamar a reiniciarContenido después del restablecimiento
                                 window.recargarFiltros();
 
                                 if (botonPostRestablecer) {
@@ -1017,7 +1017,7 @@ async function cambiarFiltroTiempo() {
                 filtroButtons.forEach(btn => btn.classList.remove('filtroSelec'));
                 button.classList.add('filtroSelec');
                 await actualizarBotonFiltro(); // Actualizar el botón después de cambiar el filtro
-                window.limpiarBusqueda();
+                window.reiniciarContenido();
                 establecerFiltros();
             } else {
                 console.error('Error al guardar el filtro:', resultado.message);
@@ -1103,7 +1103,7 @@ function filtrosPost() {
             filtros: JSON.stringify(g)
         });
         if (r.success) {
-            window.limpiarBusqueda();
+            window.reiniciarContenido();
             establecerFiltros();
         } else {
             console.error('Error al guardar los filtros.');
@@ -1126,7 +1126,7 @@ function filtrosPost() {
             filtros: JSON.stringify([])
         });
         if (r.success) {
-            window.limpiarBusqueda();
+            window.reiniciarContenido();
             establecerFiltros();
         } else {
             console.error('Error al restablecer los filtros.');

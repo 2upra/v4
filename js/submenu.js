@@ -160,20 +160,20 @@ function resizeMovilMenu(submenuIdPrefix) {
 }
 
 window.hideAllSubmenus = function () {
-    console.log('Ejecutando hideAllSubmenus (versión simplificada)');
+    //console.log('Ejecutando hideAllSubmenus (versión simplificada)');
     submenuIdPrefixes.forEach(prefix => {
         const allSubmenus = document.querySelectorAll(`[id^="${prefix}-"]`);
         if (allSubmenus.length === 0) {
-            console.log(`No se encontraron submenús con el prefijo '${prefix}-'.`);
+            //console.log(`No se encontraron submenús con el prefijo '${prefix}-'.`);
         } else {
-            console.log(`Se encontraron ${allSubmenus.length} submenús con el prefijo '${prefix}-':`, allSubmenus);
+            //console.log(`Se encontraron ${allSubmenus.length} submenús con el prefijo '${prefix}-':`, allSubmenus);
             allSubmenus.forEach((submenu, index) => {
-                console.log(`Ocultando submenú ${index + 1} con prefijo '${prefix}-':`, submenu);
+                //console.log(`Ocultando submenú ${index + 1} con prefijo '${prefix}-':`, submenu);
                 hideSubmenu(submenu);
             });
         }
     });
-    console.log('hideAllSubmenus (versión simplificada) finalizado');
+    //console.log('hideAllSubmenus (versión simplificada) finalizado');
 };
 
 function submenu() {
@@ -188,10 +188,10 @@ function submenu() {
 }
 
 window.createSubmenuDarkBackground = function (submenuIdPrefix) {
-    console.log('🌓 createSubmenuDarkBackground: Creando fondo oscuro');
+    //console.log('🌓 createSubmenuDarkBackground: Creando fondo oscuro');
     let darkBackground = document.getElementById('submenu-background5322');
     if (!darkBackground) {
-        console.log('  ✅ createSubmenuDarkBackground: Fondo oscuro no existe, creando...');
+        //console.log('  ✅ createSubmenuDarkBackground: Fondo oscuro no existe, creando...');
         darkBackground = document.createElement('div');
         darkBackground.id = 'submenu-background5322';
         darkBackground.style.position = 'fixed';
@@ -209,45 +209,45 @@ window.createSubmenuDarkBackground = function (submenuIdPrefix) {
 
         // Agregar evento para cerrar submenús al hacer clic en el fondo oscuro
         darkBackground.addEventListener('click', event => {
-            console.log('  🖱️ createSubmenuDarkBackground: Clic en el fondo oscuro');
+            //console.log('  🖱️ createSubmenuDarkBackground: Clic en el fondo oscuro');
             // Evitar que el clic en el fondo oscuro se propague al documento
             event.stopPropagation();
-            console.log(`  🙈 createSubmenuDarkBackground: Ocultando submenús con prefijo ${submenuIdPrefix}-`);
+            //console.log(`  🙈 createSubmenuDarkBackground: Ocultando submenús con prefijo ${submenuIdPrefix}-`);
             window.hideAllSubmenus();
         });
-        console.log('  ✅ createSubmenuDarkBackground: Fondo oscuro creado y evento click agregado');
+        //console.log('  ✅ createSubmenuDarkBackground: Fondo oscuro creado y evento click agregado');
     }
 
     // Evitar clics fantasma justo después de mostrar el fondo
     darkBackground.style.pointerEvents = 'none'; // Deshabilitar temporalmente los eventos de puntero
-    console.log('  🚫 createSubmenuDarkBackground: Eventos de puntero temporalmente deshabilitados');
+    //console.log('  🚫 createSubmenuDarkBackground: Eventos de puntero temporalmente deshabilitados');
 
     darkBackground.style.display = 'block';
-    console.log('  ⏳ createSubmenuDarkBackground: Mostrando fondo oscuro');
+    //console.log('  ⏳ createSubmenuDarkBackground: Mostrando fondo oscuro');
     setTimeout(() => {
         darkBackground.style.opacity = '1';
-        console.log('  ✅ createSubmenuDarkBackground: Fondo oscuro visible');
+        //console.log('  ✅ createSubmenuDarkBackground: Fondo oscuro visible');
         // Habilitar los eventos de puntero después de un breve retraso
         setTimeout(() => {
             darkBackground.style.pointerEvents = 'auto';
-            console.log('  🖱️ createSubmenuDarkBackground: Eventos de puntero habilitados después de un retraso');
+            //console.log('  🖱️ createSubmenuDarkBackground: Eventos de puntero habilitados después de un retraso');
         }, 50);
     }, 10);
 };
 
 window.removeSubmenuDarkBackground = function () {
-    console.log('⚪ removeSubmenuDarkBackground: Eliminando fondo oscuro');
+    //console.log('⚪ removeSubmenuDarkBackground: Eliminando fondo oscuro');
     const darkBackground = document.getElementById('submenu-background5322');
     if (darkBackground) {
         darkBackground.style.opacity = '0';
-        console.log('  ⏳ removeSubmenuDarkBackground: Ocultando fondo oscuro');
+        //console.log('  ⏳ removeSubmenuDarkBackground: Ocultando fondo oscuro');
         setTimeout(() => {
             darkBackground.style.display = 'none';
             darkBackground.style.pointerEvents = 'none';
-            console.log('  ✅ removeSubmenuDarkBackground: Fondo oscuro ocultado y eventos de puntero deshabilitados');
+            //console.log('  ✅ removeSubmenuDarkBackground: Fondo oscuro ocultado y eventos de puntero deshabilitados');
         }, 300);
     } else {
-        console.log('  ❌ removeSubmenuDarkBackground: Fondo oscuro no encontrado');
+        //console.log('  ❌ removeSubmenuDarkBackground: Fondo oscuro no encontrado');
     }
 };
 

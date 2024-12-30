@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Obtener el elemento que contiene el JSON
     const dataElement = document.getElementById('dataColec');
     if (!dataElement) {
-        console.error("Elemento con id 'dataColec' no encontrado.");
+        //console.error("Elemento con id 'dataColec' no encontrado.");
         return;
     }
 

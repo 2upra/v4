@@ -3,7 +3,9 @@
 function modalApp()
 {
     ob_start();
-
+    if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === true)) {
+        return;
+    }
     $current_user = wp_get_current_user();
     $show_modal = false;
 

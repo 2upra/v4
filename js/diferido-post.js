@@ -3,8 +3,8 @@
     document.addEventListener('DOMContentLoaded', function () {
         reiniciarCargaDiferida();
     });
-    const DEPURAR = true;
-    const log = DEPURAR ? console.log.bind(console) : () => {};
+    const DEPURAR = false;
+    const log = DEPURAR ? //console.log.bind(console) : () => {};
 
     let estaCargando = false;
     log('Carga reactivada en diferido start');
@@ -14,10 +14,14 @@
     let identificador = '';
     let eventoBusquedaConfigurado = false;
     let scrollTimeout = null;
+    const MAX_POSTS = 50;
+    let intervalId;
+    let loadingCount = 0;
 
     function reiniciarCargaDiferida() {
         log('Reiniciando carga diferida');
-        window.removeEventListener('scroll', manejarScroll);
+        window.removeEventListener('scroll', manejarScrollGlobal);
+        window.removeEventListener('scroll', manejarScrollLista);
         estaCargando = false;
         log('Carga reactivada ecn reiniciarCargaDiferida');
         hayMasContenido = true;
@@ -40,7 +44,7 @@
         if (botonLimpiar) {
             botonLimpiar.addEventListener('click', e => {
                 e.preventDefault();
-                limpiarBusqueda();
+                reiniciarContenido();
             });
         }
         const busquedaInicial = obtenerBusquedaDeURL();
@@ -55,19 +59,12 @@
     }
 
     function establecerIdUsuarioDesdeInput() {
-        // Busca el div que contiene el atributo `data-iduser`
         const divConIdUsuario = document.querySelector('div.X522YA.FRRVBB[data-iduser]');
-
         if (divConIdUsuario) {
-            // Extrae el valor del atributo `data-iduser`
             const idUsuario = divConIdUsuario.getAttribute('data-iduser');
-
             if (idUsuario) {
-                // Busca el contenedor de perfil y establece el atributo `data-author-id`
                 const contenedorPerfil = document.querySelector('.custom-uprofile-container');
                 contenedorPerfil?.setAttribute('data-author-id', idUsuario);
-
-                // Guarda el ID de usuario en una variable global (opcional)
                 window.idUsuarioActual = idUsuario;
             } else {
             }
@@ -75,48 +72,87 @@
         }
     }
 
-    function manejarScroll() {
+    function habilitarCargaPorScroll() {
+        log('Configurando evento de scroll');
+        window.addEventListener('scroll', manejarScrollGlobal);
+
+        const listas = document.querySelectorAll('.social-post-list');
+        listas.forEach(lista => {
+            lista.addEventListener('scroll', manejarScrollLista);
+        });
+    }
+
+    function manejarScrollGlobal() {
         if (scrollTimeout) return;
-        const listaPublicaciones = document.querySelector('.tab.active .social-post-list');
-        if (!listaPublicaciones) {
-            log('No se encontró .social-post-list para añadir contenido');
-            return;
-        }
+
         scrollTimeout = setTimeout(() => {
             scrollTimeout = null;
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            const alturaVentana = window.innerHeight;
-            const alturaDocumento = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
 
-            //log('Evento de scroll detectado:', {scrollTop, alturaVentana, alturaDocumento, estaCargando});
+            const tabActivo = document.querySelector('.tab.active');
+            if (!tabActivo) return;
 
-            if (scrollTop + alturaVentana > alturaDocumento - 100 && !estaCargando && hayMasContenido) {
-                log('Condiciones para cargar más contenido cumplidas estaCargando', 'estaCargando:', {estaCargando}, 'hayMasContenido:', {hayMasContenido});
-                const elementoPestañaActiva = document.querySelector('.tab.active');
-                if (elementoPestañaActiva?.getAttribute('ajax') === 'no') {
-                    log('ajax no carga detenido');
-                    estaCargando = false;
-                    return;
-                }
+            const listas = tabActivo.querySelectorAll('.social-post-list');
 
-                let colec = null;
-                if (elementoPestañaActiva?.getAttribute('colec')) {
-                    colec = elementoPestañaActiva.getAttribute('colec');
-                }
-
-                let idea = false;
-                if (elementoPestañaActiva?.getAttribute('idea') === 'true') {
-                    idea = true;
-                }
-                log('[manejarScroll] idea:', {idea}, 'colec:', {colec});
-                cargarMasContenido(listaPublicaciones, null, colec, idea);
-            } else {
-                log('Condiciones para cargar más contenido no cumplidas');
+            if (listas.length === 1) {
+                //console.log('Caso 1: Una sola lista');
+                manejarScrollVentana(tabActivo, listas[0]);
             }
         }, 20);
     }
 
-    // Inicializar con publicaciones existentes
+    function manejarScrollLista(event) {
+        const lista = event.target;
+        const tabActivo = document.querySelector('.tab.active');
+        if (!tabActivo || !hayMasContenido || estaCargando) return;
+
+        const scrollTop = lista.scrollTop;
+        const alturaLista = lista.scrollHeight;
+        const alturaVisible = lista.clientHeight;
+
+        if (scrollTop + alturaVisible >= alturaLista - 100) {
+            //console.log('Cargando contenido en lista:', lista.id);
+            precargarContenido(lista, tabActivo);
+        }
+    }
+
+    function manejarScrollVentana(tabActivo, lista) {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const alturaVentana = window.innerHeight;
+        const alturaDocumento = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
+
+        if (scrollTop + alturaVentana > alturaDocumento - 100 && !estaCargando && hayMasContenido) {
+            //console.log('Cargando contenido en caso 1');
+            precargarContenido(lista, tabActivo);
+        }
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    function precargarContenido(lista, tabActivo) {
+        if (tabActivo.getAttribute('ajax') === 'no') {
+            estaCargando = false;
+            return;
+        }
+
+        let colec = null;
+        if (tabActivo.getAttribute('colec')) {
+            colec = tabActivo.getAttribute('colec');
+        }
+
+        let idea = false;
+        if (tabActivo.getAttribute('idea') === 'true') {
+            idea = true;
+        }
+
+        cargarMasContenido(lista, null, colec, idea);
+    }
+
     document.querySelectorAll('.social-post-list .EDYQHV').forEach(publicacion => {
         const idPublicacion = publicacion.getAttribute('id-post')?.trim();
         if (idPublicacion) {
@@ -124,88 +160,191 @@
         }
     });
 
-    async function cargarMasContenido(listaPublicaciones, ajax = null, colec = null, idea = null, arriba = false) {
+    async function cargarMasContenido(listaPublicaciones, ajax = null, colec = null, idea = null, arriba = false, prioridad = false, id = null) {
+        let log = '';
         if (estaCargando) {
+            log += 'La función ya está en ejecución.\n';
+            //console.log(log);
             return;
         }
-        const {filtro = '', tabId = '', posttype = ''} = listaPublicaciones.dataset;
 
+        let {filtro = '', tabId = '', posttype = ''} = listaPublicaciones ? listaPublicaciones.dataset : {};
+        log += `Datos iniciales: filtro=${filtro}, tabId=${tabId}, posttype=${posttype}\n`;
         establecerIdUsuarioDesdeInput();
         estaCargando = true;
-        insertarMarcadorCarga(listaPublicaciones, filtro);
-        log('Iniciando carga de más contenido');
 
-        let intentos = 0;
+        if (listaPublicaciones) {
+            insertarMarcadorCarga(listaPublicaciones, filtro);
+        }
+
+        if (prioridad && filtro === 'tarea') {
+            filtro = 'tareaPrioridad';
+            log += 'Se cambió el filtro a tareaPrioridad.\n';
+        }
+
         const maxIntentos = 5;
-        const intervalo = 1000;
-        log('[cargarMasContenido] idea:', {idea}, 'colec:', {colec});
-        const buscarPestañaActiva = setInterval(async () => {
-            if (listaPublicaciones) {
-                log('Pestaña activa encontrada');
-                clearInterval(buscarPestañaActiva);
+        let intentos = 0;
 
-                const idUsuario = window.idUsuarioActual;
+        while (!listaPublicaciones && intentos < maxIntentos) {
+            intentos++;
+            log += `No se encontró listaPublicaciones, intento: ${intentos}.\n`;
+            //console.log(log);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Espera 1 segundo
+            listaPublicaciones = document.querySelector(`.tab.active .social-post-list.clase-${posttype}`);
+            ({filtro = '', tabId = '', posttype = ''} = listaPublicaciones ? listaPublicaciones.dataset : {});
+        }
 
-                log('Parámetros de carga:', {filtro, tabId, identificador, idUsuario, paginaActual, colec, idea});
+        if (!listaPublicaciones) {
+            log += 'No se encontró listaPublicaciones después de varios intentos.\n';
+            //console.log(log);
+            estaCargando = false;
+            return;
+        }
 
-                try {
-                    log('[fetch] idea:', {idea}, 'colec:', {colec}, 'identifier:', {identificador});
-                    const respuesta = await fetch(ajaxUrl, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                        body: new URLSearchParams({
-                            action: 'cargar_mas_publicaciones',
-                            paged: paginaActual,
-                            filtro: filtro || '',
-                            posttype: posttype || '',
-                            identifier: identificador,
-                            tab_id: tabId || '',
-                            user_id: idUsuario || '',
-                            cargadas: Array.from(publicacionesCargadas).join(',') || '',
-                            colec: colec || '',
-                            idea: idea ? 'true' : 'false'
-                        })
-                    });
+        const idUsuario = window.idUsuarioActual;
+        log += `ID de usuario actual: ${idUsuario}.\n`;
 
-                    if (!respuesta.ok) {
-                        throw new Error(`HTTP error! status: ${respuesta.status}`);
-                    }
+        try {
+            const data = new URLSearchParams({
+                action: 'cargar_mas_publicaciones',
+                paged: paginaActual,
+                filtro: filtro || '',
+                posttype: posttype || '',
+                identifier: identificador,
+                tab_id: tabId || '',
+                user_id: idUsuario || '',
+                cargadas: Array.from(publicacionesCargadas).join(',') || '',
+                colec: colec || '',
+                idea: idea ? 'true' : 'false',
+                id: id || ''
+            });
+            log += `Datos enviados en la petición: ${data.toString()}.\n`;
 
-                    const textoRespuesta = await respuesta.text();
-                    await procesarRespuesta(textoRespuesta, listaPublicaciones, arriba);
-                } catch (error) {
-                    log('Error en la petición AJAX:', error);
-                } finally {
-                    estaCargando = false;
-                }
-            } else {
-                intentos++;
-                log('No se encontró una pestaña activa, intento:', intentos);
-                if (intentos >= maxIntentos) {
-                    clearInterval(buscarPestañaActiva);
-                    log('No se encontró una pestaña activa después de varios intentos');
-                    estaCargando = false;
-                }
+            const respuesta = await fetch(ajaxUrl, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: data
+            });
+            log += `Respuesta recibida: ${respuesta.status} ${respuesta.statusText}.\n`;
+
+            if (!respuesta.ok) {
+                throw new Error(`HTTP error! status: ${respuesta.status}`);
             }
-        }, intervalo);
+
+            const textoRespuesta = await respuesta.text();
+            log += `Texto de la respuesta: ${textoRespuesta.substring(0, 200)}... (truncado).\n`;
+            await procesarRespuesta(textoRespuesta, listaPublicaciones, arriba, id);
+        } catch (error) {
+            log += `Error en la petición AJAX: ${error}.\n`;
+            console.error(log);
+        } finally {
+            estaCargando = false;
+            log += 'La función ha finalizado.\n';
+            //console.log(log);
+        }
     }
 
-    const MAX_POSTS = 50;
-
-    async function procesarRespuesta(respuesta, listaPublicaciones, arriba = false) {
+    async function procesarRespuesta(respuesta, listaPublicaciones, arriba = false, id = null) {
         const doc = validarRespuesta(respuesta);
         if (!doc) {
             eliminarMarcadorCarga(listaPublicaciones);
             return;
         }
 
-        const publicacionesValidas = procesarPublicaciones(doc);
-        manejarContenido(publicacionesValidas, listaPublicaciones, arriba);
+        let force = false;
+
+        if (id !== null) {
+            force = true;
+        }
+
+        const publicacionesValidas = procesarPublicaciones(doc, force);
+        manejarContenido(publicacionesValidas, listaPublicaciones, arriba, id);
         eliminarMarcadorCarga(listaPublicaciones);
     }
 
-    let intervalId;
-    let loadingCount = 0;
+    /*
+    manejarContenido:  Se recibió la ID: 381 para reemplazar la publicación. Se encontró un elemento con la clase .EDYQHV y el atributo id-post="381". Hay 1 publicación(es) válida(s) para reemplazar. Publicación con ID 381 encontrada y hay publicaciones válidas. Reemplazando contenido. 
+    porque no reinicia las funciones y eventos cuando se recibe una id 
+    */
+
+    function manejarContenido(publiValidas, listaPubli, arriba = false, id = null) {
+        let log = '';
+        if (id) {
+            log += `Se recibió la ID: ${id} para reemplazar la publicación. `;
+            const postExistente = listaPubli.querySelector(`.EDYQHV[id-post="${id}"]`);
+
+            if (postExistente) {
+                log += `Se encontró un elemento con la clase .EDYQHV y el atributo id-post="${id}". `;
+            } else {
+                log += `No se encontró ningún elemento con la clase .EDYQHV y el atributo id-post="${id}". `;
+            }
+
+            if (publiValidas.length > 0) {
+                log += `Hay ${publiValidas.length} publicación(es) válida(s) para reemplazar. `;
+            } else {
+                log += `No hay publicaciones válidas para reemplazar. `;
+            }
+
+            if (postExistente && publiValidas.length > 0) {
+                log += `Publicación con ID ${id} encontrada y hay publicaciones válidas. Reemplazando contenido. `;
+                postExistente.outerHTML = publiValidas[0];
+
+                // Reinicializar funciones y eventos después de reemplazar la publicación
+                log += `Reinicializando funciones y eventos después de reemplazar publicación. `;
+                const funciones = ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec', 'animacionLike', 'initTareas', 'initNotas'];
+                funciones.forEach(func => {
+                    if (typeof window[func] === 'function') {
+                        window[func]();
+                        log += `Función ${func} reinicializada. `;
+                    }
+                });
+                reiniciarEventosPostTag();
+            } else {
+                log += `No se puede reemplazar la publicación con ID ${id}. `;
+                if (!postExistente) {
+                    log += `La publicación no existe en el DOM. `;
+                }
+                if (publiValidas.length === 0) {
+                    log += `No hay publicaciones válidas para reemplazar. `;
+                }
+            }
+        } else if (publiValidas.length > 0) {
+            log += `Insertando ${publiValidas.length} nuevas publicaciones. `;
+            const pos = arriba ? 'afterbegin' : 'beforeend';
+            listaPubli.insertAdjacentHTML(pos, publiValidas.join(''));
+            paginaActual++;
+
+            const publiEnDOM = listaPubli.querySelectorAll('.EDYQHV');
+            const exceso = publiEnDOM.length - MAX_POSTS;
+            if (exceso > 0) {
+                log += `Excedido el límite de publicaciones en ${exceso}. Eliminando publicaciones antiguas. `;
+                for (let i = 0; i < exceso; i++) {
+                    const elim = publiEnDOM[i];
+                    const idPubli = elim.getAttribute('id-post')?.trim();
+                    if (idPubli) {
+                        publicacionesCargadas.delete(idPubli);
+                        log += `Eliminada publicación con ID ${idPubli}. `;
+                    }
+                    elim.remove();
+                }
+            }
+
+            log += `Reinicializando funciones y eventos. `;
+            const funciones = ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec', 'animacionLike', 'initTareas', 'initNotas'];
+            funciones.forEach(func => {
+                if (typeof window[func] === 'function') {
+                    window[func]();
+                    log += `Función ${func} reinicializada. `;
+                }
+            });
+
+            reiniciarEventosPostTag();
+        } else {
+            log += `No hay publicaciones válidas. Deteniendo carga. `;
+            detenerCarga();
+        }
+        //console.log('manejarContenido: ', log);
+    }
 
     function insertarMarcadorCarga(lista, filtro) {
         if (filtro !== 'sampleList' || !lista) return;
@@ -241,31 +380,36 @@
     }
 
     function validarRespuesta(respuesta) {
-        log('Respuesta recibida:', respuesta.substring(0, 100) + '...');
+        let log = '';
+        log += `Respuesta recibida: ${respuesta.substring(0, 100)}... `;
 
         const respuestaLimpia = respuesta.trim();
         if (respuestaLimpia === '<div id="no-more-posts"></div>') {
-            log('No hay más publicaciones');
+            log += `No hay más publicaciones. `;
             detenerCarga();
+            //console.log('validarRespuesta: ', log);
             return null;
         }
         if (!respuestaLimpia) {
-            log('Respuesta vacía recibida');
+            log += `Respuesta vacía recibida. `;
             detenerCarga();
+            //console.log('validarRespuesta: ', log);
             return null;
         }
+        log += `Respuesta válida. Parseando a DOM. `;
+        //console.log('validarRespuesta: ', log);
         return new DOMParser().parseFromString(respuesta, 'text/html');
     }
 
-    function procesarPublicaciones(doc) {
-
+    function procesarPublicaciones(doc, force = false) {
+        let log = '';
         const totalPostsInputFromResponse = doc.querySelector('.total-posts-sampleList');
         if (totalPostsInputFromResponse) {
             const totalPostsValue = totalPostsInputFromResponse.getAttribute('value');
             const totalPostsInputInDOM = document.querySelector('.total-posts-sampleList');
             if (totalPostsInputInDOM) {
                 totalPostsInputInDOM.value = totalPostsValue;
-                log('Campo total-posts-sampleList actualizado desde la respuesta:', totalPostsValue);
+                log += `Campo total-posts-sampleList actualizado desde la respuesta: ${totalPostsValue}. `;
                 contadorDeSamples();
             }
         }
@@ -274,8 +418,9 @@
         const publicacionesValidas = [];
 
         if (publicacionesNuevas.length === 0) {
-            log('No se encontraron publicaciones nuevas en la respuesta');
+            log += `No se encontraron publicaciones nuevas en la respuesta. `;
             detenerCarga();
+            //console.log('procesarPublicaciones: ', log);
             return [];
         }
 
@@ -283,57 +428,48 @@
             const idPublicacion = publicacion.getAttribute('id-post')?.trim();
             const existeEnDOM = document.querySelector(`.social-post-list .EDYQHV[id-post="${idPublicacion}"]`);
 
-            if (idPublicacion && !publicacionesCargadas.has(idPublicacion) && !existeEnDOM) {
-                publicacionesCargadas.add(idPublicacion);
-                publicacionesValidas.push(publicacion.outerHTML);
-                log('Publicación añadida:', idPublicacion);
+            if (idPublicacion) {
+                log += `Procesando publicación con ID: ${idPublicacion}. `;
+
+                if (!force) {
+                    if (!publicacionesCargadas.has(idPublicacion)) {
+                        log += `La publicación con ID ${idPublicacion} no está en el conjunto de publicaciones cargadas. `;
+                    } else {
+                        log += `La publicación con ID ${idPublicacion} ya está en el conjunto de publicaciones cargadas. `;
+                    }
+
+                    if (!existeEnDOM) {
+                        log += `La publicación con ID ${idPublicacion} no existe en el DOM. `;
+                    } else {
+                        log += `La publicación con ID ${idPublicacion} existe en el DOM. `;
+                    }
+                }
+
+                if (idPublicacion && (force || (!publicacionesCargadas.has(idPublicacion) && !existeEnDOM))) {
+                    if (!force && (publicacionesCargadas.has(idPublicacion) || existeEnDOM)) {
+                        log += `Aunque la publicación con ID ${idPublicacion} ya fue procesada o existe en el DOM, se procesará de nuevo debido a que force es true. `;
+                    }
+
+                    publicacionesCargadas.add(idPublicacion);
+                    publicacionesValidas.push(publicacion.outerHTML);
+                    log += `Publicación válida añadida: ${idPublicacion}. `;
+                } else {
+                    log += `Publicación duplicada o ya existente omitida: ${idPublicacion}. `;
+                }
             } else {
-                log('Publicación duplicada omitida:', idPublicacion);
+                log += `Publicación sin ID, no se procesa. `;
             }
         });
         contadorDeSamples();
+        //console.log('procesarPublicaciones: ', log);
         return publicacionesValidas;
     }
 
     // Parte 3: Insertar y manejar contenido en el DOM
 
-    function manejarContenido(publiValidas, listaPubli, arriba = false) {
-        if (publiValidas.length > 0) {
-            const pos = arriba ? 'afterbegin' : 'beforeend';
-            listaPubli.insertAdjacentHTML(pos, publiValidas.join(''));
-            paginaActual++;
-    
-            const publiEnDOM = listaPubli.querySelectorAll('.EDYQHV');
-            if (publiEnDOM.length > MAX_POSTS) {
-                const exceso = publiEnDOM.length - MAX_POSTS;
-                for (let i = 0; i < exceso; i++) {
-                    const elim = publiEnDOM[i];
-                    const idPubli = elim.getAttribute('id-post')?.trim();
-                    if (idPubli) {
-                        publicacionesCargadas.delete(idPubli);
-                    }
-                    listaPubli.removeChild(elim);
-                }
-            }
-    
-            ['inicializarWaveforms', 'empezarcolab', 'submenu', 'seguir', 'modalDetallesIA', 'tagsPosts', 'handleAllRequests', 'registrarVistas', 'colec', 'animacionLike', 'initTareas'].forEach(func => {
-                if (typeof window[func] === 'function') window[func]();
-            });
-    
-            reiniciarEventosPostTag();
-        } else {
-            detenerCarga();
-        }
-    }
-
     function reiniciarEventosPostTag() {
         log('Reiniciando eventos de clic mediante delegación en <span class="postTag">');
         configurarDelegacionEventosPostTag();
-    }
-
-    function habilitarCargaPorScroll() {
-        log('Configurando evento de scroll');
-        window.addEventListener('scroll', manejarScroll);
     }
 
     function configurarDelegacionEventosPostTag() {
@@ -364,30 +500,37 @@
         }
     }
 
-    window.limpiarBusqueda = function (limpiar = true, arriba = false) {
-        const lista = document.querySelector('.tab.active .social-post-list');
+    window.reiniciarPost = function (id, clase) {
+        window.reiniciarContenido(false, false, clase, false, null, id);
+    };
+
+    //Recordatiorio: prioridad simplmente para las tareas - cambia el filtro de tareas a tareasPrioridad
+    window.reiniciarContenido = function (limpiar = true, arriba = false, clase = null, prioridad = false, callback = null, id = null) {
+        let classClase = clase ? `clase-${clase}` : '';
+        const lista = document.querySelector(`.tab.active .social-post-list.${classClase}`);
         if (!lista) {
             return;
         }
+
         publicacionesCargadas.clear();
         identificador = '';
 
         if (limpiar) {
             lista.innerHTML = '';
         }
-
         actualizarUIBusqueda('');
         resetearCarga();
-        cargarMasContenido(lista, null, null, null, arriba);
+        cargarMasContenido(lista, null, null, null, arriba, prioridad, id).then(() => {
+            if (typeof callback === 'function') {
+                callback();
+            }
+        });
     };
-
     function resetearCarga() {
         log('Ejecutando resetearCarga');
         paginaActual = 1;
         publicacionesCargadas.clear();
         log('Carga reactivada en resetearCarga');
-        hayMasContenido = true;
-        // Opcional: Scroll hacia la parte superior
         window.scrollTo(0, 0);
     }
 
@@ -452,7 +595,8 @@
     window.detenerCarga = function () {
         log('Carga detenida');
         hayMasContenido = false;
-        window.removeEventListener('scroll', manejarScroll);
+        window.removeEventListener('scroll', manejarScrollGlobal);
+        window.removeEventListener('scroll', manejarScrollLista);
     };
     /*
     function ajustarAlturaMaxima() {

@@ -16,6 +16,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
     }
 
     const funcs = [
+        'iniciarMasonry',
         'actualizarUIBusquedaNoURL',
         'stopAllWaveSurferPlayers',
         'inicializarPestanas',
@@ -91,6 +92,7 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         'inicializarBuscadores',
         'stripecomprabeat',
         'initTareas',
+        'initNotas',
     ];
 
     function initScripts() {

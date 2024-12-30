@@ -208,6 +208,9 @@ add_action('wp_head', 'headGeneric');
 
 function preload_fonts()
 {
+    if (!defined('LOCAL') || (defined('LOCAL') && LOCAL === true)) {
+        return;
+    }
     echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Regular.woff2" as="font" type="font/woff2" crossorigin>';
     echo '<link rel="preload" href="https://2upra.com/wp-content/themes/2upra3v/assets/Fonts/SourceSans3-Bold.woff2" as="font" type="font/woff2" crossorigin>';
 }
@@ -227,49 +230,62 @@ function encolar_sw_js()
 }
 add_action('wp_enqueue_scripts', 'encolar_sw_js');
 */
-function escribirLog($mensaje, $archivo, $max_lineas = 10000)
-{
-    // Verificaciones iniciales de seguridad
-    if (!is_writable(dirname($archivo))) {
-        return false;
+
+//esto funciona cuando es local, tiene que sar el rror log de wp pro defecto spara todos los archivos 
+function escribirLog($mensaje, $archivo = '', $maxlineas = 10000) {
+    
+    // Intentar usar el error_log de WordPress por defecto
+    if (is_object($mensaje) || is_array($mensaje)) {
+        error_log(print_r($mensaje, true));
+    } else {
+        error_log($mensaje);
     }
 
-    try {
-        // Formatear el mensaje
-        if (is_object($mensaje) || is_array($mensaje)) {
-            $mensaje = print_r($mensaje, true); // Más legible que json_encode
-        }
-
-        $timestamped_log = date('Y-m-d H:i:s') . ' - ' . $mensaje;
-
-        // Usar un bloqueo de archivo para evitar problemas de concurrencia
-        $fp = fopen($archivo, 'a');
-        if (flock($fp, LOCK_EX)) {
-            fwrite($fp, $timestamped_log . PHP_EOL);
-
-            // Gestionar el límite de líneas solo ocasionalmente (por ejemplo, 1 de cada 10 veces)
-            if (rand(1, 10000) === 1) {
-                // Leer el archivo
-                $lines = file($archivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-                if (count($lines) > $max_lineas) {
-                    // Mantener solo las últimas líneas
-                    $lines = array_slice($lines, -$max_lineas);
-
-                    // Reescribir el archivo
-                    file_put_contents($archivo, implode(PHP_EOL, $lines) . PHP_EOL);
-                }
+    // Si se especificó un archivo y no estamos en local, intentamos escribir en el
+    if (!empty($archivo) && (!defined('LOCAL') || !LOCAL)) {
+        try {
+            if (!is_writable(dirname($archivo))) {
+                error_log("escribirLog: No se puede escribir en el directorio: " . dirname($archivo));
+                return false;
             }
 
-            flock($fp, LOCK_UN);
-        }
-        fclose($fp);
-        return true;
-    } catch (Exception $e) {
-        error_log("Error escribiendo log: " . $e->getMessage());
-        return false;
-    }
-}
+            if (is_object($mensaje) || is_array($mensaje)) {
+                $mensaje = print_r($mensaje, true);
+            }
 
+            $log = date('Y-m-d H:i:s') . ' - ' . $mensaje;
+
+            $fp = fopen($archivo, 'a');
+            if ($fp) {
+                if (flock($fp, LOCK_EX)) {
+                    fwrite($fp, $log . PHP_EOL);
+
+                    // Limitar el tamaño del archivo, pero solo si se especificó un archivo
+                    if (rand(1, 10000) === 1) {
+                        $lineas = file($archivo, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                        if (count($lineas) > $maxlineas) {
+                            $lineas = array_slice($lineas, -$maxlineas);
+                            file_put_contents($archivo, implode(PHP_EOL, $lineas) . PHP_EOL);
+                        }
+                    }
+
+                    flock($fp, LOCK_UN);
+                } else {
+                    error_log("escribirLog: No se pudo obtener el bloqueo del archivo: $archivo");
+                }
+                fclose($fp);
+            } else {
+                error_log("escribirLog: No se pudo abrir el archivo: $archivo");
+            }
+            
+        } catch (Exception $e) {
+            error_log("escribirLog: Excepción capturada: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    return true;
+}
 // sudo touch /var/www/wordpress/wp-content/themes/streamLog.log && sudo chown www-data:www-data /var/www/wordpress/wp-content/themes/streamLog.log && sudo chmod 664 /var/www/wordpress/wp-content/themes/streamLog.log
 
 function streamLog($log)
@@ -348,6 +364,12 @@ function postLog($log)
         escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt');
     }
 }
+function remove_default_jquery() {
+    if (!is_admin()) { 
+        wp_deregister_script('jquery'); 
+    }
+}
+add_action('wp_enqueue_scripts', 'remove_default_jquery');
 
 
 //wave
@@ -381,7 +403,9 @@ function scriptsOrdenados()
         'inversores',
         'genericAjax',
         'comentarios',
-        'stripeCompra'
+        'stripeCompra',
+        'task',
+        'notas',
     ];
 
     $script_handles = [
@@ -428,6 +452,8 @@ function scriptsOrdenados()
         'tooltips'          => '1.0.1',
         'masonary'          => '1.0.1',
         'task'              => '1.0.1',
+        'icons'             => '1.0.1',
+        'notas'             => '1.0.1',
     ];
 
     wp_enqueue_script('wavesurfer', 'https://unpkg.com/wavesurfer.js', [], '7.8.11', true);
@@ -668,4 +694,3 @@ EOD;
     wp_add_inline_script('script-base', $script_inline);
 }
 add_action('wp_enqueue_scripts', 'innerHeight');
-

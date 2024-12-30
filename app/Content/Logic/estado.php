@@ -95,7 +95,8 @@ function verificarPost()
     wp_die();
 }
 
-//hay una nueva accion verificarPost que lo que tiene que hacer es simplemente agregar la meta de Verificado true en el post (comprobar si el usuario es admin para esta accion)
+
+
 add_action('wp_ajax_verificarPost', 'verificarPost');
 add_action('wp_ajax_permitirDescarga', 'cambioDeEstado');
 add_action('wp_ajax_aceptarcolab', 'cambioDeEstado');
