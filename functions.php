@@ -376,7 +376,7 @@ add_action('wp_enqueue_scripts', 'remove_default_jquery');
 
 function scriptsOrdenados()
 {
-    $global_version = '0.2.311';
+    $global_version = '0.2.312';
     $dev_mode = defined('LOCAL') && LOCAL;
     //$error_log = [];
 
@@ -384,7 +384,6 @@ function scriptsOrdenados()
         'galleV2',
         'likes',
         'descargas',
-        'fan',
         'RS',
         'progreso',
         'configPerfil',
@@ -413,7 +412,6 @@ function scriptsOrdenados()
         'ajaxPage'          => '5.0.11',
         'autorows'          => '1.0.1',
         'busqueda'          => '1.0.1',
-        'fan'               => '1.0.36',
         'stripeAccion'      => '1.0.6',
         'reproductor'       => '2.1.2',
         'stripepro'         => '1.0.8',
