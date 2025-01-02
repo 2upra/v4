@@ -364,12 +364,6 @@ function postLog($log)
         escribirLog($log, '/var/www/wordpress/wp-content/themes/wanlog.txt');
     }
 }
-function remove_default_jquery() {
-    if (!is_admin()) { 
-        wp_deregister_script('jquery'); 
-    }
-}
-add_action('wp_enqueue_scripts', 'remove_default_jquery');
 
 
 //wave
