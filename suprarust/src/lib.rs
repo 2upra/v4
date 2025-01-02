@@ -1,5 +1,6 @@
+//lib.rs
 use ext_php_rs::prelude::*;
-use ext_php_rs::module::ModuleEntry;
+use ext_php_rs::builders::ModuleBuilder;
 
 #[php_function]
 pub fn calcular_suma(a: i32, b: i32) -> i32 {
@@ -15,14 +16,16 @@ pub fn calcular_multiplicacion(a: i32, b: i32) -> i32 {
 pub fn operaciones_combinadas(x: i32) -> String {
     let suma = calcular_suma(x, 5);
     let multiplicacion = calcular_multiplicacion(suma, 2);
-    format!("El resultado de la suma es: {}, y el de la multiplicación es: {}", suma, multiplicacion)
+    format!(
+        "El resultado de la suma es: {}, y el de la multiplicación es: {}",
+        suma, multiplicacion
+    )
 }
 
 #[php_module]
-pub fn get_module() -> ModuleEntry {
-    ModuleEntry::default()
-        .with_function(php_fn!(calcular_suma))
-        .with_function(php_fn!(calcular_multiplicacion))
-        .with_function(php_fn!(operaciones_combinadas))
-        .build()
+pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
+    module
+        .function("calcular_suma", calcular_suma)
+        .function("calcular_multiplicacion", calcular_multiplicacion)
+        .function("operaciones_combinadas", operaciones_combinadas)
 }
