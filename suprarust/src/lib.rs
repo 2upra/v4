@@ -1,12 +1,14 @@
 #![allow(non_snake_case)]
+use chrono::prelude::*;
+use dotenv::dotenv;
+use ext_php_rs::builders::ModuleBuilder;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
-use ext_php_rs::builders::ModuleBuilder;
-use mysql::*;
+use ext_php_rs::zend::Zval;
 use mysql::prelude::*;
-use chrono::prelude::*;
+use mysql::*;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use dotenv::dotenv;
 use std::env;
 
 // Estructuras para los datos de los posts y likes
@@ -45,7 +47,10 @@ fn obtenerConexion() -> Result<PooledConn> {
     let db_name = env::var("DB_NAME").expect("Variable DB_NAME no encontrada en .env");
     let db_port = env::var("DB_PORT").unwrap_or_else(|_| "3306".to_string()); // Puerto 3306 por defecto
 
-    let url = format!("mysql://{}:{}@{}:{}/{}", db_user, db_password, db_host, db_port, db_name);
+    let url = format!(
+        "mysql://{}:{}@{}:{}/{}",
+        db_user, db_password, db_host, db_port, db_name
+    );
 
     let pool = Pool::new(url.as_str())?; // Convertir la String a &str
     pool.get_conn()
@@ -56,31 +61,47 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     let mut conn = obtenerConexion().unwrap();
 
     // --- Obtener 'siguiendo' ---
-    let siguiendo: Vec<i64> = conn.query_map(
-        format!("SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'siguiendo'", usu),
-        |meta_value: String| {
-            meta_value.parse().unwrap_or(0)
-        },
-    ).unwrap_or_else(|_| {
-        vec![]
-    });
+    let siguiendo: Vec<i64> = conn
+        .query_map(
+            format!(
+                "SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'siguiendo'",
+                usu
+            ),
+            |meta_value: String| meta_value.parse().unwrap_or(0),
+        )
+        .unwrap_or_else(|_| vec![]);
 
     // --- Obtener 'intereses' ---
-    let intereses: HashMap<String, i32> = conn.query_map(
-        format!("SELECT interest, intensity FROM {} WHERE user_id = {}", "INTERES_TABLE", usu),
-        |(interest, intensity)| (interest, intensity),
-    ).unwrap_or_default().into_iter().collect();
+    let intereses: HashMap<String, i32> = conn
+        .query_map(
+            format!(
+                "SELECT interest, intensity FROM {} WHERE user_id = {}",
+                "INTERES_TABLE", usu
+            ),
+            |(interest, intensity)| (interest, intensity),
+        )
+        .unwrap_or_default()
+        .into_iter()
+        .collect();
 
-// --- Obtener 'vistas' REALMENTE ---
-let vistas: Vec<i64> = conn.query_map(
+    // --- Obtener 'vistas' (deserializando datos serializados de PHP) ---
+    #[derive(Debug, Deserialize, Serialize)]
+    struct Vista {
+        count: i64,
+        last_view: i64,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    struct VistasData(HashMap<i64, Vista>);
+
+    let vistas: Vec<i64> = conn.query_map(
     format!("SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
     |meta_value: String| {
-        // Suponiendo que 'vistas_posts' es una cadena JSON que contiene un array de números
-        let parsed_vistas: Result<Vec<i64>, _> = serde_json::from_str(&meta_value);
+        let parsed_vistas: Result<VistasData, _> = serde_php::from_str(&meta_value);
         match parsed_vistas {
-            Ok(vistas_vec) => vistas_vec,
-            Err(_) => {
-                // Manejar el error, por ejemplo, loguearlo o devolver un valor por defecto
+            Ok(vistas_data) => vistas_data.0.keys().cloned().collect(),
+            Err(err) => {
+                eprintln!("Error al deserializar vistas_posts: {}", err);
                 vec![]
             },
         }
@@ -90,17 +111,28 @@ let vistas: Vec<i64> = conn.query_map(
 });
 
     // --- Obtener IDs de posts en los últimos 365 días ---
-    let fechaLimite = (Utc::now() - chrono::Duration::days(365)).format("%Y-%m-%d").to_string();
-    let postsIds: Vec<u64> = conn.query_map(
-        format!("SELECT ID FROM wp_posts WHERE post_type = 'social_post' AND post_date > '{}'", fechaLimite),
-        |id: u64| id,
-    ).unwrap_or_default();
+    let fechaLimite = (Utc::now() - chrono::Duration::days(365))
+        .format("%Y-%m-%d")
+        .to_string();
+    let postsIds: Vec<u64> = conn
+        .query_map(
+            format!(
+                "SELECT ID FROM wp_posts WHERE post_type = 'social_post' AND post_date > '{}'",
+                fechaLimite
+            ),
+            |id: u64| id,
+        )
+        .unwrap_or_default();
 
     // --- Obtener metadata de los posts ---
     let metaData: HashMap<u64, MetaData> = {
         let mut meta = HashMap::new();
         if !postsIds.is_empty() {
-            let postsIdsStr = postsIds.iter().map(|id| id.to_string()).collect::<Vec<String>>().join(",");
+            let postsIdsStr = postsIds
+                .iter()
+                .map(|id| id.to_string())
+                .collect::<Vec<String>>()
+                .join(",");
             let metaRes: Vec<(u64, String, String)> = conn.query_map(
                 format!("SELECT post_id, meta_key, meta_value FROM wp_postmeta WHERE post_id IN ({}) AND meta_key IN ('datosAlgoritmo', 'Verificado', 'postAut', 'artista', 'fan')", postsIdsStr),
                 |(post_id, meta_key, meta_value)| (post_id, meta_key, meta_value),
@@ -125,7 +157,11 @@ let vistas: Vec<i64> = conn.query_map(
     let likesPorPost: HashMap<u64, LikeData> = {
         let mut likes = HashMap::new();
         if !postsIds.is_empty() {
-            let postsIdsStr = postsIds.iter().map(|id| id.to_string()).collect::<Vec<String>>().join(",");
+            let postsIdsStr = postsIds
+                .iter()
+                .map(|id| id.to_string())
+                .collect::<Vec<String>>()
+                .join(",");
             let likesRes: Vec<(u64, String, u32)> = conn.query_map(
                 format!("SELECT post_id, like_type, COUNT(*) as cantidad FROM wp_post_likes WHERE post_id IN ({}) GROUP BY post_id, like_type", postsIdsStr),
                 |(post_id, like_type, cantidad)| (post_id, like_type, cantidad),
@@ -148,11 +184,20 @@ let vistas: Vec<i64> = conn.query_map(
     let postContenido: HashMap<u64, String> = {
         let mut contenido = HashMap::new();
         if !postsIds.is_empty() {
-            let postsIdsStr = postsIds.iter().map(|id| id.to_string()).collect::<Vec<String>>().join(",");
-            let postsRes: Vec<(u64, String)> = conn.query_map(
-                format!("SELECT ID, post_content FROM wp_posts WHERE ID IN ({})", postsIdsStr),
-                |(id, post_content)| (id, post_content),
-            ).unwrap_or_default();
+            let postsIdsStr = postsIds
+                .iter()
+                .map(|id| id.to_string())
+                .collect::<Vec<String>>()
+                .join(",");
+            let postsRes: Vec<(u64, String)> = conn
+                .query_map(
+                    format!(
+                        "SELECT ID, post_content FROM wp_posts WHERE ID IN ({})",
+                        postsIdsStr
+                    ),
+                    |(id, post_content)| (id, post_content),
+                )
+                .unwrap_or_default();
 
             for (id, post_content) in postsRes {
                 contenido.insert(id, post_content);
