@@ -11,7 +11,8 @@ use std::collections::HashMap;
 use std::env;
 use serde_json;
 use ext_php_rs::convert::IntoZval;
-use ext_php_rs::zend::ZendHashTable;
+use ext_php_rs::types::ZendHashTable;
+use ext_php_rs::error::Result;
 
 // Estructuras para los datos de los posts y likes
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
@@ -27,7 +28,7 @@ struct LikeData {
     post_id: u64,
     like: u32,
     favorito: u32,
-    no_me_gusta: u32,
+    nome_gusta: u32,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
@@ -40,7 +41,7 @@ struct MetaData {
 }
 
 impl IntoZval for MetaData {
-    fn into_zval(self, persistent: bool) -> ext_php_rs::Result<Zval> {
+    fn into_zval(self, persistent: bool) -> Result<Zval> {
         let mut arr = ZendHashTable::new();
         if let Some(datosAlgoritmo) = self.datosAlgoritmo {
             arr.insert("datosAlgoritmo", datosAlgoritmo)?;
@@ -59,18 +60,18 @@ impl IntoZval for MetaData {
 }
 
 impl IntoZval for LikeData {
-    fn into_zval(self, persistent: bool) -> ext_php_rs::Result<Zval> {
+    fn into_zval(self, persistent: bool) -> Result<Zval> {
         let mut arr = ZendHashTable::new();
         arr.insert("post_id", self.post_id)?;
         arr.insert("like", self.like)?;
         arr.insert("favorito", self.favorito)?;
-        arr.insert("no_me_gusta", self.no_me_gusta)?;
+        arr.insert("no_me_gusta", self.nome_gusta)?;
         Ok(arr.into_zval(persistent)?)
     }
 }
 
 // Función para obtener la conexión a la base de datos
-fn obtenerConexion() -> Result<PooledConn> {
+fn obtenerConexion() -> std::result::Result<PooledConn, mysql::Error> {
     dotenv().ok(); // Carga las variables de entorno desde .env
 
     let db_user = env::var("DB_USER").expect("Variable DB_USER no encontrada en .env");
@@ -127,20 +128,20 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     struct VistasData(HashMap<i64, Vista>);
 
     let vistas: Vec<i64> = conn.query_map(
-    format!("SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
-    |meta_value: String| {
-        let parsed_vistas: Result<VistasData, _> = serde_json::from_str(&meta_value);
-        match parsed_vistas {
-            Ok(vistas_data) => vistas_data.0.keys().cloned().collect(),
-            Err(err) => {
-                eprintln!("Error al deserializar vistas_posts: {}", err);
-                vec![]
-            },
-        }
-    },
-).unwrap_or_else(|_| {
-    vec![]
-});
+        format!("SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
+        |meta_value: String| {
+            let parsed_vistas: std::result::Result<VistasData, _> = serde_json::from_str(&meta_value);
+            match parsed_vistas {
+                Ok(vistas_data) => vistas_data.0.keys().cloned().collect(),
+                Err(err) => {
+                    eprintln!("Error al deserializar vistas_posts: {}", err);
+                    vec![]
+                },
+            }
+        },
+    ).unwrap_or_else(|_| {
+        vec![]
+    });
 
     // --- Obtener IDs de posts en los últimos 365 días ---
     let fechaLimite = (Utc::now() - chrono::Duration::days(365))
@@ -204,7 +205,7 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
                 match like_type.as_str() {
                     "like" => entry.like = cantidad,
                     "favorito" => entry.favorito = cantidad,
-                    "no_me_gusta" => entry.no_me_gusta = cantidad,
+                    "no_me_gusta" => entry.nome_gusta = cantidad,
                     _ => {}
                 }
             }
@@ -242,7 +243,7 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     let mut resultado: Vec<Zval> = vec![];
     for id in postsIds {
         let mut datos = vec![];
-        datos.push(Zval::from(id));
+        datos.push(id.into_zval(false).unwrap());
         datos.push(siguiendo.into_zval(false).unwrap());
         datos.push(intereses.into_zval(false).unwrap());
         datos.push(vistas.into_zval(false).unwrap());
