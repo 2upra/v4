@@ -23,3 +23,30 @@ build/
 tmp/
 *.tmp
 *.txt
+
+# Dependencias de Rust
+/target/
+
+# Archivos de caché de Cargo
+.cargo/
+.cargo/registry/
+.cargo/git/
+.cargo/config.toml
+.cargo/credentials.toml
+.rustup/
+.rust-toolchain
+
+# Archivos generados por Cargo
+Cargo.lock
+
+# Archivos de compilación y artefactos
+*.rlib
+*.so
+*.dylib
+*.dll
+*.wasm
+*.out
+*.bc
+*.rmeta
+*.o
+*.d
