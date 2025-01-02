@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::env;
 use serde_json;
 use ext_php_rs::convert::IntoZval;
-use ext_php_rs::types::{ZendHashTable};
+use ext_php_rs::zend::HashTable;
 
 // Estructuras para los datos de los posts y likes
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
@@ -39,29 +39,32 @@ struct MetaData {
     fan: Option<bool>,
 }
 
+// Implementación correcta de IntoZval
 impl IntoZval for MetaData {
-    const TYPE: ext_php_rs::types::DataType = ext_php_rs::types::DataType::Array; // Añadido
-    fn set_zval(self, zv: &mut ext_php_rs::zend::ExecuteData, persistent: bool) -> std::result::Result<(), ext_php_rs::error::Error>
+    const TYPE: DataType = DataType::Array; // Usar DataType directamente desde ext_php_rs::prelude::*
+
+    fn set_zval(self, zv: &mut Zval, persistent: bool) -> Result<(), ext_php_rs::error::Error>
     where
         Self: Sized,
     {
-        let mut arr = ZendHashTable::new();
+        let mut arr = HashTable::new(); // Usar HashTable en lugar de ZendHashTable
         if let Some(datosAlgoritmo) = self.datosAlgoritmo {
-            arr.insert("datosAlgoritmo", datosAlgoritmo)?;
+            arr.insert("datosAlgoritmo", datosAlgoritmo, persistent)?;
         }
         if let Some(verificado) = self.Verificado {
-            arr.insert("Verificado", verificado)?;
+            arr.insert("Verificado", verificado, persistent)?;
         }
         if let Some(postAut) = self.postAut {
-            arr.insert("postAut", postAut)?;
+            arr.insert("postAut", postAut, persistent)?;
         }
-        arr.insert("artista", self.artista.unwrap_or(false))?;
-        arr.insert("fan", self.fan.unwrap_or(false))?;
+        arr.insert("artista", self.artista.unwrap_or(false), persistent)?;
+        arr.insert("fan", self.fan.unwrap_or(false), persistent)?;
 
-        arr.set_zval(zv, persistent)
+        zv.set_hashtable(arr); // Usar set_hashtable en lugar de set_zval
+        Ok(())
     }
 
-    fn into_zval(self, persistent: bool) -> ext_php_rs::error::Result<Zval>
+    fn into_zval(self, persistent: bool) -> Result<Zval>
     where
         Self: Sized,
     {
@@ -72,21 +75,23 @@ impl IntoZval for MetaData {
 }
 
 impl IntoZval for LikeData {
-    const TYPE: ext_php_rs::types::DataType = ext_php_rs::types::DataType::Array; // Añadido
-    fn set_zval(self, zv: &mut ext_php_rs::zend::ExecuteData, persistent: bool) -> std::result::Result<(), ext_php_rs::error::Error>
+    const TYPE: DataType = DataType::Array; // Usar DataType directamente desde ext_php_rs::prelude::*
+
+    fn set_zval(self, zv: &mut Zval, persistent: bool) -> Result<(), ext_php_rs::error::Error>
     where
         Self: Sized,
     {
-        let mut arr = ZendHashTable::new();
-        arr.insert("post_id", self.post_id)?;
-        arr.insert("like", self.like)?;
-        arr.insert("favorito", self.favorito)?;
-        arr.insert("no_me_gusta", self.nome_gusta)?;
-        
-        arr.set_zval(zv, persistent)
+        let mut arr = HashTable::new(); // Usar HashTable en lugar de ZendHashTable
+        arr.insert("post_id", self.post_id, persistent)?;
+        arr.insert("like", self.like, persistent)?;
+        arr.insert("favorito", self.favorito, persistent)?;
+        arr.insert("no_me_gusta", self.nome_gusta, persistent)?;
+
+        zv.set_hashtable(arr); // Usar set_hashtable en lugar de set_zval
+        Ok(())
     }
 
-    fn into_zval(self, persistent: bool) -> ext_php_rs::error::Result<Zval>
+    fn into_zval(self, persistent: bool) -> Result<Zval>
     where
         Self: Sized,
     {
@@ -153,12 +158,13 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     #[derive(Debug, Deserialize, Serialize)]
     struct VistasData(HashMap<i64, Vista>);
 
+    // --- Modificación aquí: Extraer los valores de VistasData correctamente ---
     let vistas: Vec<i64> = conn.query_map(
         format!("SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
         |meta_value: String| {
             let parsed_vistas: std::result::Result<VistasData, serde_json::Error> = serde_json::from_str(&meta_value);
             match parsed_vistas {
-                Ok(vistas_data) => vistas_data.0.keys().cloned().collect(),
+                Ok(vistas_data) => vistas_data.0.into_iter().map(|(_, vista)| vista.count).collect(), // Extraer los valores de 'count'
                 Err(err) => {
                     eprintln!("Error al deserializar vistas_posts: {}", err);
                     vec![]
