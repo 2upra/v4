@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
 use serde_json;
-use ext_php_rs::types::ZendHashTable;
-use ext_php_rs::zend::ExecuteData;
+use ext_php_rs::convert::IntoZval;
+use ext_php_rs::zend::ZendHashTable;
 
 // Estructuras para los datos de los posts y likes
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
@@ -37,6 +37,36 @@ struct MetaData {
     postAut: Option<String>,
     artista: Option<bool>,
     fan: Option<bool>,
+}
+
+impl IntoZval for MetaData {
+    fn into_zval(self, persistent: bool) -> ext_php_rs::Result<Zval> {
+        let mut arr = ZendHashTable::new();
+        if let Some(datosAlgoritmo) = self.datosAlgoritmo {
+            arr.insert("datosAlgoritmo", datosAlgoritmo)?;
+        }
+        if let Some(verificado) = self.Verificado {
+            arr.insert("Verificado", verificado)?;
+        }
+        if let Some(postAut) = self.postAut {
+            arr.insert("postAut", postAut)?;
+        }
+        arr.insert("artista", self.artista.unwrap_or(false))?;
+        arr.insert("fan", self.fan.unwrap_or(false))?;
+
+        Ok(arr.into_zval(persistent)?)
+    }
+}
+
+impl IntoZval for LikeData {
+    fn into_zval(self, persistent: bool) -> ext_php_rs::Result<Zval> {
+        let mut arr = ZendHashTable::new();
+        arr.insert("post_id", self.post_id)?;
+        arr.insert("like", self.like)?;
+        arr.insert("favorito", self.favorito)?;
+        arr.insert("no_me_gusta", self.no_me_gusta)?;
+        Ok(arr.into_zval(persistent)?)
+    }
 }
 
 // Función para obtener la conexión a la base de datos
@@ -213,9 +243,9 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     for id in postsIds {
         let mut datos = vec![];
         datos.push(Zval::from(id));
-        datos.push(Zval::from(siguiendo.clone()));
-        datos.push(Zval::from(intereses.clone()));
-        datos.push(Zval::from(vistas.clone()));
+        datos.push(siguiendo.into_zval(false).unwrap());
+        datos.push(intereses.into_zval(false).unwrap());
+        datos.push(vistas.into_zval(false).unwrap());
         datos.push(match metaData.get(&id).cloned() {
             Some(meta_data) => meta_data.into_zval(false).unwrap_or_default(),
             None => Zval::new(),
@@ -230,7 +260,7 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
             Some(content) => content.into_zval(false).unwrap_or_default(),
             None => Zval::new(),
         });
-        resultado.push(Zval::from(datos));
+        resultado.push(datos.into_zval(false).unwrap());
     }
 
     Ok(resultado)
