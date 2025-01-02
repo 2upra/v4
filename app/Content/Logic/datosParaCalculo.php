@@ -161,7 +161,8 @@ function obtenerDatosFeedConCache($userId)
 {
     $cache_key = 'feed_datos_' . $userId;
     //$datos = obtenerCache($cache_key);
-    $datos = obtenerDatosFeed($userId);
+    //$datos = obtenerDatosFeed($userId);
+    $datos = obtenerDatosFeedRust($userId); 
     /* if (false === $datos) {
         guardarLog("Usuario ID: $userId - Caché no encontrada, calculando nuevos datos de feed");
         $datos = obtenerDatosFeed($userId);
