@@ -5,9 +5,7 @@ const lista = document.querySelector('.social-post-list.clase-tarea');
 
 window.dividirTareas = async function () {
     if (!lista) return;
-    organizarSecciones();
-    crearSesionFront();
-    hacerDivisoresEditables();
+
     window.addEventListener('reiniciar', organizarSecciones);
 };
 

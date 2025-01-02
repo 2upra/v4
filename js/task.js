@@ -23,6 +23,11 @@ function initTareas() {
         cambiarFrecuencia();
         archivarTarea();
         ocultarBotones();
+        borrarTareaVacia();
+        crearTareaEnter();
+        organizarSecciones();
+        crearSesionFront();
+        hacerDivisoresEditables();
         window.dividirTareas();
     }
 }
@@ -47,6 +52,7 @@ function enviarTarea() {
     const tit = document.getElementById('tituloTarea');
     tit.removeEventListener('keyup', enviarTareaHandler);
     tit.addEventListener('keyup', enviarTareaHandler);
+    tit.removeEventListener('paste', pegarTareaHandler);
     tit.addEventListener('paste', pegarTareaHandler);
     tit.addEventListener('input', () => {
         tit.value = tit.value.replace(/[\r\n\v]+/g, '');
@@ -190,8 +196,147 @@ function selectorTipoTarea() {
     actSel(tipoTarea, 'una vez');
 }
 
+/*
+esto funciona bien pero, cada vez que se crea una tarea, supongo que se reinicia, cosa que no esta mal, pero, la tarea se duplica visualmente por cada reinicio o mejor dichi por cada tarea creada
+*/
+
+function crearTareaEnter() {
+    const contenedor = document.querySelector('.clase-tarea'); // Asumiendo que hay un contenedor para tus tareas
+
+    contenedor.addEventListener('keydown', ev => {
+        if (ev.target.classList.contains('tituloTarea') && ev.key === 'Enter' && ev.target.contentEditable === 'true') {
+            ev.preventDefault();
+            const tarea = ev.target.closest('.POST-tarea');
+            const nuevaTarea = tarea.cloneNode(true);
+            const nuevoTitulo = nuevaTarea.querySelector('.tituloTarea');
+            nuevoTitulo.textContent = '';
+            nuevoTitulo.dataset.tarea = 0;
+            nuevaTarea.id = '';
+            tarea.after(nuevaTarea);
+
+            let valorAntiguo = '';
+            let seCancelo = false;
+
+            nuevoTitulo.contentEditable = true;
+            nuevoTitulo.spellcheck = false;
+            nuevoTitulo.focus();
+            nuevoTitulo.setAttribute('placeholder', 'Nueva tarea');
+
+            const rango = document.createRange();
+            const seleccion = window.getSelection();
+            rango.selectNodeContents(nuevoTitulo);
+            rango.collapse(false);
+            seleccion.removeAllRanges();
+            seleccion.addRange(rango);
+
+            const borrarTarea = () => {
+                if (nuevaTarea && nuevaTarea.parentNode) {
+                    nuevaTarea.remove();
+                    seCancelo = true;
+                }
+            };
+
+            nuevoTitulo.addEventListener('keydown', ev => {
+                if (ev.key === 'Backspace' && nuevoTitulo.textContent === '') {
+                    borrarTarea();
+                }
+            });
+
+            const guardarNuevaTarea = titulo => {
+                if (seCancelo) return;
+
+                const valorNuevo = titulo.textContent.trim();
+
+                if (valorAntiguo !== valorNuevo && valorNuevo !== '') {
+                    titulo.contentEditable = false;
+                    titulo.removeAttribute('placeholder');
+                    const dat = { id: 0, titulo: valorNuevo };
+
+                    enviarAjax('modificarTarea', dat)
+                        .then(rta => {
+                            let log = '';
+                            if (rta.success) {
+                                log = 'Tarea creada con éxito. ID: ' + rta.data.id;
+                                valorAntiguo = valorNuevo;
+
+                                const nuevaTareaCreada = titulo.closest('.POST-tarea');
+                                nuevaTareaCreada.id = 'tarea-' + rta.data.id;
+                                titulo.dataset.tarea = rta.data.id;
+
+                                editarTarea();
+                            } else {
+                                titulo.textContent = valorAntiguo;
+                                log = 'Error al crear tarea.';
+                                if (rta.data) log += ' Detalles: ' + rta.data;
+                            }
+                            console.log(log);
+                        })
+                        .catch(err => {
+                            titulo.textContent = valorAntiguo;
+                            console.log('Error al crear tarea.');
+                        });
+                } else if (valorNuevo === '') {
+                    borrarTarea();
+                }
+            };
+
+            nuevoTitulo.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (!nuevoTitulo.matches(':focus')) {
+                        guardarNuevaTarea(nuevoTitulo);
+                    }
+                }, 100);
+            });
+        }
+    });
+}
+
+function borrarTareaVacia() {
+    const tareas = document.querySelectorAll('.tituloTarea');
+
+    tareas.forEach(tarea => {
+        let borrar = false;
+
+        tarea.addEventListener('keydown', ev => {
+            if (ev.key === 'Backspace' && tarea.textContent.trim() === '') {
+                if (borrar) {
+                    const id = tarea.dataset.tarea;
+                    const tareaCompleta = tarea.closest('.POST-tarea');
+
+                    // Eliminar event listeners antes de remover la tarea
+                    tarea.removeEventListener('input', tarea.onInput);
+                    tarea.removeEventListener('blur', tarea.onBlur);
+                    tarea.removeEventListener('paste', tarea.onPaste);
+
+                    tareaCompleta.remove();
+
+                    let log = 'Se borró la tarea con ID: ' + id;
+
+                    const data = {
+                        id: id
+                    };
+                    enviarAjax('borrarTarea', data)
+                        .then(resp => {
+                            log += ', \n  Respuesta recibida: ' + resp;
+                            console.log(log);
+                        })
+                        .catch(error => {
+                            log += ', \n  Error: ' + error;
+                            console.error(log);
+                        });
+                } else {
+                    borrar = true;
+                }
+            } else {
+                borrar = false;
+            }
+        });
+    });
+}
+
 function editarTarea() {
     const tareas = document.querySelectorAll('.tituloTarea');
+    let timeoutId = null;
 
     tareas.forEach(t => {
         t.addEventListener('click', ev => {
@@ -200,40 +345,56 @@ function editarTarea() {
             let valorAnt = t.textContent.trim();
             t.contentEditable = true;
             t.spellcheck = false;
+            t.focus();
 
             const off = calcularPosicionCursor(ev, t);
             setCursorPos(t, off);
-
-            const presionarEnter = ev => {
-                if (ev.key === 'Enter') {
-                    ev.preventDefault();
-                    if (t.textContent.trim().length > 140) {
-                        alert('El título no puede superar los 140 caracteres.');
-                        t.textContent = valorAnt;
-                        return;
-                    }
-                    guardarEdicion(t, id, valorAnt);
-                }
-            };
 
             const salirEdicion = () => {
                 if (t.textContent.trim().length > 140) {
                     alert('El título no puede superar los 140 caracteres.');
                     t.textContent = valorAnt;
-                } else {
+                    t.contentEditable = false;
+                    t.removeEventListener('input', t.onInput);
+                    t.removeEventListener('blur', t.onBlur);
+                } else if (t.textContent.trim() !== '' && t.textContent.trim() !== valorAnt) {
+                    // Condición adicional
                     guardarEdicion(t, id, valorAnt);
+                    t.contentEditable = false;
+                    t.removeEventListener('input', t.onInput);
+                    t.removeEventListener('blur', t.onBlur);
+                } else {
+                    t.contentEditable = false;
+                    t.removeEventListener('input', t.onInput);
+                    t.removeEventListener('blur', t.onBlur);
                 }
             };
 
-            t.addEventListener('keydown', presionarEnter);
-            t.addEventListener('blur', salirEdicion);
+            t.onInput = () => {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    salirEdicion();
+                }, 6000);
+            };
 
-            t.addEventListener('paste', ev => {
+            t.onBlur = () => {
+                setTimeout(() => {
+                    if (!t.matches(':focus')) {
+                        salirEdicion();
+                    }
+                }, 100);
+            };
+
+            t.onPaste = ev => {
                 ev.preventDefault();
                 const texto = ev.clipboardData.getData('text/plain').trim();
                 const nuevoTexto = texto.substring(0, 140 - t.textContent.trim().length);
                 document.execCommand('insertText', false, nuevoTexto);
-            });
+            };
+
+            t.addEventListener('input', t.onInput);
+            t.addEventListener('blur', t.onBlur);
+            t.addEventListener('paste', t.onPaste);
         });
     });
 }
@@ -270,7 +431,6 @@ function guardarEdicion(t, id, valorAnt) {
         t.style.boxShadow = 'none';
     }
 }
-
 function calcularPosicionCursor(ev, el) {
     const sel = window.getSelection();
     sel.removeAllRanges();
@@ -317,12 +477,15 @@ function prioridadTarea() {
     });
 }
 
+//necesito que cuando se archive una tarea, no elimine del dom, simplemente se mueva al final del ul donde se encuentra, que suele ser <ul class="social-post-list clase-tarea" data-filtro="tarea" data-posttype="tarea" data-tab-id="tareas">, y cuando se desarchiva, la coloca abajo siempre de <p data-valor="General" class="divisorTarea General" style="font-weight: bold; cursor: pointer; padding: 5px 20px; margin-right: auto; display: flex; width: 100%; align-items: center;">
 function archivarTarea() {
-    document.querySelectorAll('.elementOculto').forEach(div => {
+    document.querySelectorAll('.divArchivado').forEach(div => {
         div.addEventListener('click', async function () {
             const divClicado = this;
             const tarea = divClicado.closest('.draggable-element');
             const tareaId = divClicado.dataset.tarea;
+            const ul = document.querySelector('.social-post-list.clase-tarea');
+            const pGeneral = document.querySelector('p.divisorTarea.General');
             let data = {id: tareaId};
             let logs = '';
 
@@ -337,12 +500,20 @@ function archivarTarea() {
                     if (data.desarchivar) {
                         tarea.classList.remove('archivado');
                         tarea.setAttribute('estado', '');
-                        logs += `Tarea ${tareaId} desarchivada. `;
+                        if (pGeneral) {
+                            pGeneral.after(tarea);
+                        }
+
+                        logs += `Tarea ${tareaId} desarchivada y movida. `;
                     } else {
-                        tarea.style.display = 'none';
-                        logs += `Tarea ${tareaId} archivada y eliminada del DOM. `;
+                        tarea.classList.add('archivado');
+                        tarea.setAttribute('estado', 'archivado');
+                        if (ul) {
+                            ul.appendChild(tarea);
+                        }
+                        logs += `Tarea ${tareaId} archivada y movida al final del ul. `;
                     }
-                    //console.log(logs);
+                    console.log(logs);
                 } else {
                     let mensaje = 'Error al archivar la tarea.';
                     if (respuesta.data) mensaje += ' Detalles: ' + respuesta.data;
@@ -584,13 +755,6 @@ async function borrarTareasCompletadas() {
     boton.addEventListener('click', handleClick);
     boton.listener = handleClick;
 }
-
-/*
-si funciona pero falta actuilizar un atributo, el data-seccion
-
-<li class="POST-tarea EDYQHV 471 draggable-element archivado" filtro="tarea" tipo-tarea="una vez" id-post="471" autor="1" draggable="true" sesion="pendiente" estado="archivado" data-submenu-initialized="true" data-seccion="pendiente">
-
-*/
 
 function moverTarea() {
     const lista = document.querySelector('.clase-tarea');

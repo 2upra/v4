@@ -102,15 +102,115 @@ function formTareaEstilo()
 }
 
 
-function crearTarea()
-{
+
+function borrarTarea() {
+    $log = '';
+    if (!current_user_can('edit_posts')) {
+        $log .= 'No tienes permisos.';
+        guardarLog("borrarTarea: \n $log");
+        wp_send_json_error('No tienes permisos.');
+    }
+
+    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+
+    if ($id === 0) {
+        $log .= 'ID de tarea inválido.';
+        guardarLog("borrarTarea: \n $log");
+        wp_send_json_error('ID de tarea inválido.');
+    }
+
+    $tarea = get_post($id);
+
+    if (empty($tarea) || $tarea->post_type != 'tarea') {
+        $log .= 'Tarea no encontrada.';
+        guardarLog("borrarTarea: \n $log");
+        wp_send_json_error('Tarea no encontrada.');
+    }
+
+    $res = wp_delete_post($id, true); 
+
+    if (is_wp_error($res)) {
+        $msg = $res->get_error_message();
+        $log .= "Error al borrar tarea: $msg";
+        guardarLog("borrarTarea: \n $log");
+        wp_send_json_error($msg);
+    }
+
+    $log .= "Tarea con ID $id borrada exitosamente.";
+    guardarLog("borrarTarea: \n $log");
+    wp_send_json_success();
+}
+
+add_action('wp_ajax_borrarTarea', 'borrarTarea');
+
+
+function modificarTarea() {
+    $log = '';
+    if (!current_user_can('edit_posts')) {
+        $log .= 'No tienes permisos.';
+        guardarLog("modificarTarea: \n $log");
+        wp_send_json_error('No tienes permisos.');
+    }
+
+    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+    $tit = isset($_POST['titulo']) ? sanitize_text_field($_POST['titulo']) : '';
+
+    if (empty($tit)) {
+        $log .= 'Título vacío.';
+        guardarLog("modificarTarea: \n $log");
+        wp_send_json_error('Título vacío.');
+    }
+
+    if ($id === 0) {
+        $tareaId = crearTarea(); // Captura el ID devuelto por crearTarea()
+
+        if (is_wp_error($tareaId)) {
+            wp_send_json_error($tareaId->get_error_message());
+        } else {
+            wp_send_json_success(array('id' => $tareaId)); // Envía el ID en la respuesta
+        }
+
+        return;
+    }
+
+    $tarea = get_post($id);
+
+    if (empty($tarea) || $tarea->post_type != 'tarea') {
+        $log .= 'Tarea no encontrada.';
+        guardarLog("modificarTarea: \n $log");
+        wp_send_json_error('Tarea no encontrada.');
+    }
+
+    $args = array(
+        'ID' => $id,
+        'post_title' => $tit
+    );
+
+    $res = wp_update_post($args, true);
+
+    if (is_wp_error($res)) {
+        $msg = $res->get_error_message();
+        $log .= "Error al modificar tarea: $msg \n";
+        guardarLog("modificarTarea: \n $log");
+        wp_send_json_error($msg);
+    }
+
+    $log .= "Tarea modificada con id $id";
+    guardarLog("modificarTarea: \n $log");
+    wp_send_json_success();
+}
+
+add_action('wp_ajax_modificarTarea', 'modificarTarea');
+
+
+function crearTarea() {
     $log = '';
     if (!current_user_can('edit_posts')) {
         wp_send_json_error('No tienes permisos.');
     }
 
     $tit = isset($_POST['titulo']) ? sanitize_text_field($_POST['titulo']) : '';
-    $imp = isset($_POST['importancia']) ? sanitize_text_field($_POST['importancia']) : '';
+    $imp = isset($_POST['importancia']) ? sanitize_text_field($_POST['importancia']) : 'media';
     $tip = isset($_POST['tipo']) ? sanitize_text_field($_POST['tipo']) : 'una vez';
     $frec = isset($_POST['frecuencia']) ? (int) sanitize_text_field($_POST['frecuencia']) : 1;
 
@@ -166,72 +266,20 @@ function crearTarea()
         $msg = $tareaId->get_error_message();
         $log .= "Error al crear tarea: $msg \n";
         guardarLog("crearTarea:  \n $log");
-        wp_send_json_error($msg);
+        return $tareaId; // Devuelve el objeto WP_Error
     }
 
     $log .= "Tarea creada con id $tareaId";
     guardarLog("crearTarea:  \n $log");
-    wp_send_json_success(array('tareaId' => $tareaId));
+    return $tareaId; // Devuelve el ID de la tarea creada
 }
+
 
 add_action('wp_ajax_crearTarea', 'crearTarea');
 
-function modificarTarea()
-{
-    if (!current_user_can('edit_posts')) {
-        wp_send_json_error('No tienes permisos.');
-    }
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
-    $tit = isset($_POST['titulo']) ? sanitize_text_field($_POST['titulo']) : '';
-
-    if (empty($tit)) {
-        wp_send_json_error('Título vacío.');
-    }
-
-    $tarea = get_post($id);
-
-    if (empty($tarea) || $tarea->post_type != 'tarea') {
-        wp_send_json_error('Tarea no encontrada.');
-    }
-
-    $args = array(
-        'ID' => $id,
-        'post_title' => $tit
-    );
-
-    $res = wp_update_post($args, true);
-
-    if (is_wp_error($res)) {
-        $msg = $res->get_error_message();
-        wp_send_json_error($msg);
-    }
-
-    wp_send_json_success();
-}
-
-add_action('wp_ajax_modificarTarea', 'modificarTarea');
-
-/*
-
-Tengo 2 tipos de habitos. Habitos flexibles y habitos rigidos. 
-
-Hay 3 valores en los habitos.
-Fecha: la fecha que se creo la tarea. 
-fechaProxima: la fecha+frecuencia.
-Y la frecuencia que es la cantidad de dias que se tiene que hacer el habito.
-
-Los habitos flexible simplemente deben actualizar la fechaProxima a la fecha en que se completan, por ejemplo si hoy es día 7 y la frecuencia es de 7 dias, entonces la proxima fecha es el dia 14, no importa nada más, no importa si se completo antes, o si pasaron 20 días, la fecha proxima será hoy+frecuencia..
-
-En los habitos rigidos en cambio si la fecha(meta) es 1 y la frecuencia es 7, entonces, eso quiere decir que la fechaproxima es 7, y hoy es 13, y completo la tarea, la fecha proxima será el 14. Porque no importa el día que la complete, siempre será, proxima+frecuencia.
-
-Así de sencillo proxima+frecuencia para los habitos rigidos.
-Y hoy+frecuencia para los habitos flexibles.
-
-Formarmato de fecha en las metas: 2024-12-30 
-metas involuncradas: fecha, fechaProxima, frecuencia (un valor numerico entre 1 a 365), y la meta tipo, con 3 valores posibles: habito flexible, habito rigido, tarea.
 
 
-*/
+
 function completarTarea()
 {
     if (!current_user_can('edit_posts')) {
@@ -295,7 +343,6 @@ function completarTarea()
 add_action('wp_ajax_completarTarea', 'completarTarea');
 
 
-//si esto recibe una tarea que ya esta archivada, la pasa a estado pendiente
 function archivarTarea()
 {
     if (!current_user_can('edit_posts')) {
@@ -314,10 +361,13 @@ function archivarTarea()
     $usu = get_current_user_id();
     $orden = get_user_meta($usu, 'ordenTareas', true);
     $estadoActual = get_post_meta($id, 'estado', true);
+    
+    $log .= "Estado inicial de la tarea: $estadoActual. \n";
 
     if ($estadoActual == 'archivado') {
         update_post_meta($id, 'estado', 'pendiente');
-        $log .= "Se cambio el estado de la tarea $id a pendiente.";
+        update_post_meta($id, 'sesion', 'General');
+        $log .= "Se cambio el estado de la tarea $id a pendiente y la sesion a General.";
     } else {
         if (is_array($orden) && in_array($id, $orden)) {
             $pos = array_search($id, $orden);
@@ -328,7 +378,7 @@ function archivarTarea()
         }
 
         update_post_meta($id, 'estado', 'archivado');
-        $log .= "Se actualizo el estado de la tarea $id a archivado.";
+        $log .= "Se cambio el estado de la tarea $id a archivado.";
     }
 
     guardarLog($log);
