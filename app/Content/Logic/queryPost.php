@@ -109,6 +109,7 @@ function publicaciones($args = [], $isAjax = false, $paged = 1)
     }
 }
 
+
 function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsuario)
 {
     try {
@@ -160,6 +161,130 @@ function configuracionQueryArgs($args, $paged, $userId, $usuarioActual, $tipoUsu
     }
 }
 
+function preOrdenamiento($args, $paged, $usuarioActual, $identifier, $isAdmin, $posts, $filtroTiempo, $similarTo, $tipoUsuario = null)
+{
+    try {
+        global $wpdb;
+        if (!$wpdb) {
+            return false;
+        }
+        $queryArgs = [
+            'post_type' => $args['post_type'],
+            'posts_per_page' => $posts,
+            'paged' => $paged,
+            'ignore_sticky_posts' => true,
+            'suppress_filters' => false,
+        ];
+
+        if (!empty($identifier)) {
+            $queryArgs = prefiltrarIdentifier($identifier, $queryArgs);
+        }
+
+        if ($args['post_type'] === 'social_post' && (!isset($args['filtro']) || !in_array($args['filtro'], ['rola', 'momento', 'tiendaPerfil', 'rolaListLike']))) {
+            $queryArgs = ordenamiento($queryArgs, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
+        }
+
+        if ($args['post_type'] === 'colecciones') {
+            $queryArgs = ordenamientoColecciones($queryArgs, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
+        }
+
+        if ($args['post_type'] === 'tarea') {
+            if ($args['filtro'] === 'tareaPrioridad') {
+                //esto hay que optimizarlo
+                $queryArgs = ordenamientoTareasPorPrioridad($queryArgs, $usuarioActual);
+                $queryArgs = ordenamientoTareas($queryArgs, $usuarioActual, $args);
+            } else {
+                $queryArgs = ordenamientoTareas($queryArgs, $usuarioActual, $args);
+            }
+        }
+
+
+        return $queryArgs;
+    } catch (Exception $e) {
+
+        return false;
+    }
+}
+
+
+function ordenamientoTareas($queryArgs, $usu, $args)
+{
+    $orden = get_user_meta($usu, 'ordenTareas', true);
+    $log = "Funcion ordenamientoTareas \n";
+    if (!is_array($orden)) {
+        $orden = [];
+    }
+
+    $todasTareasArgs = [
+        'post_type'      => 'tarea',
+        'author'         => $usu,
+        'posts_per_page' => -1,
+        'fields'         => 'ids',
+    ];
+    $todasTareas = get_posts($todasTareasArgs);
+
+    if (!empty($todasTareas) && is_array($todasTareas)) {
+        $nuevasTareas = array_diff($todasTareas, $orden);
+
+        if (!empty($nuevasTareas)) {
+            $orden = array_merge($nuevasTareas, $orden);
+        }
+
+        $validas = [];
+        $completadas = [];
+        $incompletas = [];
+        $archivadas = [];
+        $gruposSesion = [];
+
+        foreach ($orden as $id) {
+            $post = get_post($id);
+
+            if (!empty($post)) {
+                $estado = get_post_meta($id, 'estado', true);
+                $metaSesion = get_post_meta($id, 'sesion', true);
+
+                if ($post->post_status !== 'publish' || $estado === 'completada') {
+                    $completadas[] = $id;
+                } elseif ($estado === 'archivado') {
+                    $archivadas[] = $id;
+                } else {
+                    if (!empty($metaSesion)) {
+                        $gruposSesion[$metaSesion][] = $id;
+                    } else {
+                        $incompletas[] = $id;
+                    }
+                }
+                $validas[] = $id;
+            } else {
+                $completadas[] = $id;
+            }
+        }
+
+        $incompletasConSesion = [];
+        foreach ($gruposSesion as $sesion => $tareas) {
+            $incompletasConSesion = array_merge($incompletasConSesion, $tareas);
+        }
+
+        $incompletas = array_diff($incompletas, $incompletasConSesion);
+        $ordenIncompletas = array_merge($incompletasConSesion, $incompletas);
+        $ordenFinal = array_merge($ordenIncompletas, $completadas, $archivadas);
+
+        if ($ordenFinal !== $orden) {
+            $log .= "Se actualizara el orden de las tareas \n";
+            update_user_meta($usu, 'ordenTareas', $ordenFinal);
+            $orden = $ordenFinal;
+        }
+
+        $queryArgs['post__in'] = $orden;
+        $queryArgs['orderby'] = 'post__in';
+        $log .= "Retornando \$queryArgs";
+        guardarLog($log);
+    }
+
+    return $queryArgs;
+}
+
+
 function obtenerColeccionesParaMomento($args, $usuarioActual)
 {
     $coleccionesOutput = '';
@@ -190,49 +315,76 @@ function obtenerColeccionesParaMomento($args, $usuarioActual)
     return $coleccionesOutput;
 }
 
-function preOrdenamiento($args, $paged, $usuarioActual, $identifier, $isAdmin, $posts, $filtroTiempo, $similarTo, $tipoUsuario = null)
+
+
+function ordenamientoTareasPorPrioridad($queryArgs, $usu)
 {
-    try {
-        global $wpdb;
-        if (!$wpdb) {
-            return false;
-        }
-        $queryArgs = [
-            'post_type' => $args['post_type'],
-            'posts_per_page' => $posts,
-            'paged' => $paged,
-            'ignore_sticky_posts' => true,
-            'suppress_filters' => false,
-        ];
+    global $wpdb;
+    $tareasPend = [];
+    $tareasNoPend = [];
+    $ordenActual = get_user_meta($usu, 'ordenTareas', true);
+    $log = "ordenamientoTareasPorPrioridad, \n ";
+    $todasTareasArgs = [
+        'post_type'      => 'tarea',
+        'author'         => $usu,
+        'posts_per_page' => -1,
+        'fields'         => 'ids',
+    ];
 
-        if (!empty($identifier)) {
-            $queryArgs = prefiltrarIdentifier($identifier, $queryArgs);
-        }
+    $todasTareas = get_posts($todasTareasArgs);
 
-        if ($args['post_type'] === 'social_post' && (!isset($args['filtro']) || !in_array($args['filtro'], ['rola', 'momento', 'tiendaPerfil', 'rolaListLike']))) {
-            $queryArgs = ordenamiento($queryArgs, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
-        }
-
-        if ($args['post_type'] === 'colecciones') {
-            $queryArgs = ordenamientoColecciones($queryArgs, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario);
-        }
-
-        if ($args['post_type'] === 'tarea') {
-            if ($args['filtro'] === 'tareaPrioridad') {
-                $queryArgs = ordenamientoTareasPorPrioridad($queryArgs, $usuarioActual);
-            } else {
-                $queryArgs = ordenamientoTareas($queryArgs, $usuarioActual, $args);
-            }
-        }
-
+    if (empty($todasTareas) || !is_array($todasTareas)) {
+        $log .= "No se encontraron tareas para el usuario $usu";
+        guardarLog($log);
         return $queryArgs;
-    } catch (Exception $e) {
-        guardarLog("preOrdenamiento: Error" . $e->getMessage());
-        return false;
     }
+
+    foreach ($todasTareas as $tareaId) {
+        $estado = get_post_meta($tareaId, 'estado', true);
+        if ($estado === 'pendiente') {
+            $tareasPend[] = $tareaId;
+        } else {
+            $tareasNoPend[] = $tareaId;
+        }
+    }
+
+    if (!is_array($ordenActual)) {
+        $ordenActual = [];
+    }
+
+    $tareasPendOrdenadas = [];
+    foreach ($ordenActual as $tareaId) {
+        if (in_array($tareaId, $tareasPend)) {
+            $tareasPendOrdenadas[] = $tareaId;
+        }
+    }
+
+    $tareasPendNoOrdenadas = array_diff($tareasPend, $tareasPendOrdenadas);
+
+    usort($tareasPendNoOrdenadas, function ($a, $b) use ($wpdb) {
+        $impnumA = get_post_meta($a, 'impnum', true);
+        $impnumB = get_post_meta($b, 'impnum', true);
+        return $impnumB - $impnumA;
+    });
+
+    $tareasPend = array_merge($tareasPendOrdenadas, $tareasPendNoOrdenadas);
+
+    $tareasOrd = array_merge($tareasPend, $tareasNoPend);
+
+    update_user_meta($usu, 'ordenTareas', $tareasOrd);
+    $log .= "Se actualizaron las IDs de ordenTareas para el usuario $usu";
+    guardarLog($log);
+
+    $queryArgs['post__in'] = $tareasOrd;
+    $queryArgs['orderby'] = 'post__in';
+    unset($queryArgs['meta_key']);
+    unset($queryArgs['meta_query']);
+    unset($queryArgs['order']);
+    unset($queryArgs['meta_key']);
+    unset($queryArgs['orderby']);
+
+    return $queryArgs;
 }
-
-
 
 function ordenamientoColecciones($queryArgs, $filtroTiempo, $usuarioActual)
 {
@@ -348,150 +500,9 @@ function ordenamientoColecciones($queryArgs, $filtroTiempo, $usuarioActual)
     return $queryArgs;
 }
 
-function ordenamientoTareasPorPrioridad($queryArgs, $usu)
-{
-    global $wpdb;
-    $tareasPendientes = [];
-    $tareasNoPendientes = [];
-    $log = "ordenamientoTareasPorPrioridad: \n";
-    
-    $todasTareasArgs = [
-        'post_type'      => 'tarea',
-        'author'         => $usu,
-        'posts_per_page' => -1,
-        'fields'         => 'ids',
-    ];
 
-    $todasTareas = get_posts($todasTareasArgs);
 
-    if (empty($todasTareas) || !is_array($todasTareas)) {
-        $log .= "No hay tareas para actualizar el orden del usuario $usu";
-        guardarLog($log);
-        return $queryArgs;
-    }
 
-    foreach ($todasTareas as $tareaId) {
-        $estado = get_post_meta($tareaId, 'estado', true);
-        if ($estado === 'pendiente') {
-            $tareasPendientes[] = $tareaId;
-        } else {
-            $tareasNoPendientes[] = $tareaId;
-        }
-    }
-
-    usort($tareasPendientes, function ($a, $b) use ($wpdb) {
-        $impnumA = get_post_meta($a, 'impnum', true);
-        $impnumB = get_post_meta($b, 'impnum', true);
-        return $impnumB - $impnumA; // Ordenar de mayor a menor
-    });
-
-    $tareasOrdenadas = array_merge($tareasPendientes, $tareasNoPendientes);
-
-    update_user_meta($usu, 'ordenTareas', $tareasOrdenadas);
-    $log .= "Se ha actualizado el orden de todas las tareas del usuario $usu \n";
-    $log .= "Nuevo orden de todas las tareas: " . implode(", ", $tareasOrdenadas);
-
-    $queryArgs['post__in'] = $tareasOrdenadas;
-    $queryArgs['orderby'] = 'post__in'; 
-    unset($queryArgs['meta_key']);
-    unset($queryArgs['meta_query']);
-    unset($queryArgs['order']);
-    unset($queryArgs['meta_key']);
-    unset($queryArgs['orderby']);
-    
-    guardarLog($log);
-    return $queryArgs;
-}
-
-function ordenamientoTareas($queryArgs, $usu, $args)
-{
-    $orden = get_user_meta($usu, 'ordenTareas', true);
-
-    if (!is_array($orden)) {
-        $orden = [];
-    }
-
-    $todasTareasArgs = [
-        'post_type'      => 'tarea',
-        'author'         => $usu,
-        'posts_per_page' => -1,
-        'fields'         => 'ids',
-    ];
-    $todasTareas = get_posts($todasTareasArgs);
-
-    $log = "ordenamientoTareas: \n";
-    $log .= "  Usuario: $usu, \n";
-    $log .= "  Orden actual: " . (empty($orden) ? "Vacío" : implode(", ", $orden)) . ", \n";
-    $log .= "  IDs de todas las tareas: " . (empty($todasTareas) ? "Ninguna" : implode(", ", $todasTareas));
-
-    if (!empty($todasTareas) && is_array($todasTareas)) {
-        $nuevasTareas = array_diff($todasTareas, $orden);
-
-        if (!empty($nuevasTareas)) {
-            $orden = array_merge($nuevasTareas, $orden);
-
-            $log .= ", \n  Nuevas tareas: " . implode(", ", $nuevasTareas);
-        }
-
-        $validas = [];
-        $completadas = [];
-        $incompletas = [];
-        $archivadas = [];
-
-        foreach ($orden as $id) {
-            $post = get_post($id);
-
-            $log .= ", \n  Tarea ID: $id";
-
-            if (!empty($post)) {
-                $estado = get_post_meta($id, 'estado', true);
-                $log .= ", Estado: " . (empty($estado) ? "Vacío" : $estado) . ", Post Status: " . $post->post_status;
-
-                if ($post->post_status !== 'publish' || $estado === 'completada') {
-                    $completadas[] = $id;
-                    $log .= " (Agregada a completadas)";
-                } elseif ($estado === 'archivado') {
-                    $archivadas[] = $id;
-                    $log .= " (Agregada a archivadas)";
-                } else {
-                    $incompletas[] = $id;
-                    $log .= " (Agregada a incompletas)";
-                }
-                $validas[] = $id;
-            } else {
-                $log .= ", Post no encontrado (Agregada a completadas)";
-                $completadas[] = $id;
-            }
-        }
-
-        $log .= ", \n  Incompletas: " . (empty($incompletas) ? "Ninguna" : implode(", ", $incompletas));
-        $log .= ", \n  Completadas: " . (empty($completadas) ? "Ninguna" : implode(", ", $completadas));
-        $log .= ", \n  Archivadas: " . (empty($archivadas) ? "Ninguna" : implode(", ", $archivadas));
-
-        $ordenFinal = array_merge($incompletas, $completadas, $archivadas);
-
-        $log .= ", \n  Orden propuesto: " . implode(", ", $ordenFinal);
-
-        if ($ordenFinal !== $orden) {
-            update_user_meta($usu, 'ordenTareas', $ordenFinal);
-            $log .= ", \n  Se actualizaron las IDs de ordenTareas para el usuario $usu,  Nuevo orden: " . implode(", ", $ordenFinal);
-        } else {
-            $log .= ", \n  El orden de las tareas no ha cambiado";
-        }
-
-        if (count($validas) !== count($orden)) {
-            $log .= ", \n  IDs inválidas encontradas en el orden, \n  Nuevo orden válido: " . implode(", ", $validas);
-        }
-
-        $queryArgs['post__in'] = $validas;
-        $queryArgs['orderby'] = 'post__in';
-    } else {
-        $log .= ", \n  No hay tareas para el usuario $usu";
-    }
-
-    //guardarLog($log);
-    return $queryArgs;
-}
 
 function ordenamiento($queryArgs, $filtroTiempo, $usuarioActual, $identifier, $similarTo, $paged, $isAdmin, $posts, $tipoUsuario = null)
 {

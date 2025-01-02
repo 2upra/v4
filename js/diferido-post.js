@@ -4,7 +4,7 @@
         reiniciarCargaDiferida();
     });
     const DEPURAR = false;
-    const log = DEPURAR ? //console.log.bind(console) : () => {};
+    const log = DEPURAR ? console.log.bind(console) : () => {};
 
     let estaCargando = false;
     log('Carga reactivada en diferido start');
@@ -94,7 +94,7 @@
             const listas = tabActivo.querySelectorAll('.social-post-list');
 
             if (listas.length === 1) {
-                //console.log('Caso 1: Una sola lista');
+                console.log('Caso 1: Una sola lista');
                 manejarScrollVentana(tabActivo, listas[0]);
             }
         }, 20);
@@ -110,7 +110,7 @@
         const alturaVisible = lista.clientHeight;
 
         if (scrollTop + alturaVisible >= alturaLista - 100) {
-            //console.log('Cargando contenido en lista:', lista.id);
+            console.log('Cargando contenido en lista:', lista.id);
             precargarContenido(lista, tabActivo);
         }
     }
@@ -121,7 +121,7 @@
         const alturaDocumento = Math.max(document.body.scrollHeight, document.body.offsetHeight, document.documentElement.clientHeight, document.documentElement.scrollHeight, document.documentElement.offsetHeight);
 
         if (scrollTop + alturaVentana > alturaDocumento - 100 && !estaCargando && hayMasContenido) {
-            //console.log('Cargando contenido en caso 1');
+            console.log('Cargando contenido en caso 1');
             precargarContenido(lista, tabActivo);
         }
     }
@@ -164,7 +164,7 @@
         let log = '';
         if (estaCargando) {
             log += 'La función ya está en ejecución.\n';
-            //console.log(log);
+            console.log(log);
             return;
         }
 
@@ -188,7 +188,7 @@
         while (!listaPublicaciones && intentos < maxIntentos) {
             intentos++;
             log += `No se encontró listaPublicaciones, intento: ${intentos}.\n`;
-            //console.log(log);
+            console.log(log);
             await new Promise(resolve => setTimeout(resolve, 1000)); // Espera 1 segundo
             listaPublicaciones = document.querySelector(`.tab.active .social-post-list.clase-${posttype}`);
             ({filtro = '', tabId = '', posttype = ''} = listaPublicaciones ? listaPublicaciones.dataset : {});
@@ -196,7 +196,7 @@
 
         if (!listaPublicaciones) {
             log += 'No se encontró listaPublicaciones después de varios intentos.\n';
-            //console.log(log);
+            console.log(log);
             estaCargando = false;
             return;
         }
@@ -240,7 +240,7 @@
         } finally {
             estaCargando = false;
             log += 'La función ha finalizado.\n';
-            //console.log(log);
+            console.log(log);
         }
     }
 
@@ -343,7 +343,7 @@
             log += `No hay publicaciones válidas. Deteniendo carga. `;
             detenerCarga();
         }
-        //console.log('manejarContenido: ', log);
+        console.log('manejarContenido: ', log);
     }
 
     function insertarMarcadorCarga(lista, filtro) {
@@ -387,17 +387,17 @@
         if (respuestaLimpia === '<div id="no-more-posts"></div>') {
             log += `No hay más publicaciones. `;
             detenerCarga();
-            //console.log('validarRespuesta: ', log);
+            console.log('validarRespuesta: ', log);
             return null;
         }
         if (!respuestaLimpia) {
             log += `Respuesta vacía recibida. `;
             detenerCarga();
-            //console.log('validarRespuesta: ', log);
+            console.log('validarRespuesta: ', log);
             return null;
         }
         log += `Respuesta válida. Parseando a DOM. `;
-        //console.log('validarRespuesta: ', log);
+        console.log('validarRespuesta: ', log);
         return new DOMParser().parseFromString(respuesta, 'text/html');
     }
 
@@ -420,7 +420,7 @@
         if (publicacionesNuevas.length === 0) {
             log += `No se encontraron publicaciones nuevas en la respuesta. `;
             detenerCarga();
-            //console.log('procesarPublicaciones: ', log);
+            console.log('procesarPublicaciones: ', log);
             return [];
         }
 
@@ -461,7 +461,7 @@
             }
         });
         contadorDeSamples();
-        //console.log('procesarPublicaciones: ', log);
+        console.log('procesarPublicaciones: ', log);
         return publicacionesValidas;
     }
 

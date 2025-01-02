@@ -5,7 +5,6 @@ function initNotas() {
     editarNota();
 }
 
-
 function crearNota() {
     const ul = document.querySelector('.clase-notas'); // Contenedor de las notas
 
@@ -99,10 +98,10 @@ function crearNota() {
     }
 }
 
-//cada vez que esto se llama la alerta aparece varias veces, tiene que reiniciarse por los cambios dinamicos pero el cada vez que lo hace la elerta parece muchas veces 
 async function borrarLasNotas() {
     const ul = document.querySelector('.clase-notas');
     let limpiar = true;
+    let log = '';
 
     if (!ul.dataset.eventRegistered) {
         ul.dataset.eventRegistered = 'true'; // Marca el evento como registrado
@@ -118,8 +117,15 @@ async function borrarLasNotas() {
 
                     try {
                         await enviarAjax('borrarLasNotas', data);
-                        console.log('Notas borradas exitosamente.');
-                        await window.reiniciarContenido(limpiar, '', 'notas');
+                        log += 'Notas borradas exitosamente. ';
+
+                        // Borrar visualmente las notas (todos los li dentro de ul excepto el primero)
+                        const lis = ul.querySelectorAll('li');
+                        for (let i = 1; i < lis.length; i++) {
+                            ul.removeChild(lis[i]);
+                        }
+                        log += 'Notas eliminadas visualmente de la lista.';
+                        console.log(log);
                     } catch (error) {
                         console.error('Error al borrar notas:', error);
                     }
@@ -129,23 +135,20 @@ async function borrarLasNotas() {
     }
 }
 
-
 function editarNota() {
     const notas = document.querySelectorAll('.notaPublicada');
 
     notas.forEach(nota => {
+        const parrafo = nota.querySelector('.contenidoNotaP');
         let valorAnt = '';
         let id = '';
 
+        // Define presionarEnter y pegarTexto como variables asignadas a funciones anónimas
         const presionarEnter = ev => {
             if (ev.key === 'Enter') {
                 ev.preventDefault();
-                guardarEdicionNota(nota.querySelector('.contenidoNotaP'), id, valorAnt);
+                guardarEdicionNota(parrafo, id, valorAnt, presionarEnter, pegarTexto); // Pasa las funciones como argumentos
             }
-        };
-
-        const salirEdicion = () => {
-            guardarEdicionNota(nota.querySelector('.contenidoNotaP'), id, valorAnt);
         };
 
         const pegarTexto = ev => {
@@ -154,54 +157,56 @@ function editarNota() {
             document.execCommand('insertText', false, texto);
         };
 
-        nota.addEventListener('click', ev => {
-            const parrafo = nota.querySelector('.contenidoNotaP');
-
+        const activarEdicion = ev => {
             if (!parrafo.isContentEditable) {
                 ev.preventDefault();
                 id = nota.getAttribute('id-post');
                 valorAnt = parrafo.textContent.trim();
                 parrafo.contentEditable = true;
                 parrafo.spellcheck = false;
+                parrafo.focus();
 
                 const off = calcularPosicionCursor(ev, parrafo);
                 setCursorPos(parrafo, off);
-            }
-        });
 
-        nota.addEventListener('keydown', presionarEnter);
-        nota.addEventListener('blur', salirEdicion);
-        nota.querySelector('.contenidoNotaP').addEventListener('paste', pegarTexto);
+                parrafo.addEventListener('keydown', presionarEnter);
+                parrafo.addEventListener('paste', pegarTexto);
+            }
+        };
+
+        nota.removeEventListener('click', activarEdicion);
+        parrafo.removeEventListener('keydown', presionarEnter);
+        parrafo.removeEventListener('paste', pegarTexto);
+
+        nota.addEventListener('click', activarEdicion);
     });
 }
 
-function guardarEdicionNota(n, id, valorAnt) {
+async function guardarEdicionNota(n, id, valorAnt, presionarEnter, pegarTexto) { // Recibe las funciones como argumentos
     const valorNuevo = n.textContent.trim();
+    n.contentEditable = false;
+    n.style.outline = 'none';
+
+    // Ahora puedes usar removeEventListener con las funciones recibidas
+    n.removeEventListener('keydown', presionarEnter);
+    n.removeEventListener('paste', pegarTexto);
 
     if (valorAnt !== valorNuevo) {
-        n.contentEditable = false;
-        n.style.outline = 'none';
-
-        const data = {id, contenido: valorNuevo};
-        enviarAjax('modificarNota', data)
-            .then(rta => {
-                if (!rta.success) {
-                    n.textContent = valorAnt;
-                    let m = 'Error al modificar.';
-                    if (rta.data) m += ' Detalles: ' + rta.data;
-                    alert(m);
-                } else {
-                    alert('Nota modificada con éxito.');
-                    valorAnt = valorNuevo;
-                }
-            })
-            .catch(err => {
+        const data = { id, contenido: valorNuevo };
+        try {
+            const rta = await enviarAjax('modificarNota', data);
+            if (!rta.success) {
                 n.textContent = valorAnt;
-                alert('Error al modificar.');
-            });
-    } else {
-        n.contentEditable = false;
-        n.style.outline = 'none';
+                let m = 'Error al modificar.';
+                if (rta.data) m += ' Detalles: ' + rta.data;
+                alert(m);
+            } else {
+                alert('Nota modificada con éxito.');
+                valorAnt = valorNuevo;
+            }
+        } catch (err) {
+            n.textContent = valorAnt;
+            alert('Error al modificar.');
+        }
     }
 }
-

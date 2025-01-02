@@ -1,4 +1,4 @@
-<? 
+<?
 
 function aplicarFiltroPorAutor($queryArgs, $userId, $filtro)
 {
@@ -21,28 +21,32 @@ function aplicarFiltroPorAutor($queryArgs, $userId, $filtro)
     return $queryArgs;
 }
 
-function aplicarFiltrosDeUsuario($queryArgs, $usuarioActual, $filtro)
+function aplicarFiltrosDeUsuario($queryArgs, $usu, $filtro)
 {
-    $filtrosUsuario = get_user_meta($usuarioActual, 'filtroPost', true);
+    $filtrosUsuario = get_user_meta($usu, 'filtroPost', true);
 
     if (in_array($filtro, ['sampleList', 'notas', 'colecciones'])) {
         if ($filtro === 'sampleList' && is_array($filtrosUsuario) && in_array('misPost', $filtrosUsuario)) {
-            $queryArgs['author'] = $usuarioActual;
+            $queryArgs['author'] = $usu;
         } elseif ($filtro === 'notas') {
-            $queryArgs['author'] = $usuarioActual;
+            $queryArgs['author'] = $usu;
         } elseif ($filtro === 'colecciones' && is_array($filtrosUsuario) && in_array('misColecciones', $filtrosUsuario)) {
-            $queryArgs['author'] = $usuarioActual;
+            $queryArgs['author'] = $usu;
         }
     }
-
     if (($filtro === 'tarea' || $filtro === 'tareaPrioridad') && is_array($filtrosUsuario) && in_array('ocultarCompletadas', $filtrosUsuario)) {
-        $queryArgs['author'] = $usuarioActual;
+        $queryArgs['author'] = $usu;
         $queryArgs['meta_query'] = array_merge($queryArgs['meta_query'] ?? [], [
             [
                 'key' => 'estado',
                 'value' => 'completada',
                 'compare' => '!=',
-            ]
+            ],
+           /* [
+                'key' => 'estado',
+                'value' => 'archivado',
+                'compare' => '!=',
+            ] */
         ]);
     }
 

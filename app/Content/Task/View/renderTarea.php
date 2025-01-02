@@ -11,6 +11,7 @@ function htmlTareas($filtro)
     $estado = $estado ? $estado : 'pendiente';
     $autorId = get_post_field('post_author', $tareaId);
     $proxima = get_post_meta($tareaId, 'fechaProxima', true);
+    $sesion = get_post_meta($tareaId, 'sesion', true);
 
     if ($filtro === 'tareaPrioridad') {
         $filtro = 'tarea';
@@ -57,7 +58,7 @@ function htmlTareas($filtro)
             $tipoIcono = '';
     }
 
-    return generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $frecuencia, $estado, $autorId, $tipo, $proxima);
+    return generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $frecuencia, $estado, $autorId, $tipo, $proxima, $sesion);
 }
 
 
@@ -117,7 +118,7 @@ function botonesHabitos($tareaId, $frecuencia, $proxima)
     return ob_get_clean();
 }
 
-function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $frecuencia, $estado, $autorId, $tipo, $proxima)
+function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcono, $frecuencia, $estado, $autorId, $tipo, $proxima, $sesion)
 {
     $clase = ($estado === 'completada') ? 'completada' : '';
     $estilo = ($estado === 'completada') ? 'style="text-decoration: line-through;"' : '';
@@ -125,7 +126,16 @@ function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcon
 
     ob_start();
 ?>
-    <li class="POST-<? echo esc_attr($filtro); ?> EDYQHV <? echo $tareaId; ?> <? echo $clase; ?> draggable-element" filtro="<? echo esc_attr($filtro); ?>" tipo-tarea="<? echo esc_attr($tipo); ?>" id-post="<? echo $tareaId; ?>" autor="<? echo esc_attr($autorId); ?>" draggable="true" <? echo $estilo; ?>>
+
+    <li
+        class="POST-<? echo esc_attr($filtro); ?> EDYQHV <? echo $tareaId; ?> <? echo $clase; ?> draggable-element <? echo $estado; ?>"
+        filtro="<? echo esc_attr($filtro); ?>"
+        tipo-tarea="<? echo esc_attr($tipo); ?>"
+        id-post="<? echo $tareaId; ?>"
+        autor="<? echo esc_attr($autorId); ?>"
+        draggable="true" <? echo $estilo; ?>
+        sesion="<? echo esc_attr($sesion) ?>"
+        estado="<? echo esc_attr($estado) ?>">
 
         <button class="completaTarea <? if ($esHabito) echo 'habito'; ?>" data-tarea="<? echo $tareaId; ?>">
             <? echo $GLOBALS['verificadoCirculo']; ?>
@@ -138,6 +148,12 @@ function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcon
         <? if ($esHabito) {
             echo botonesHabitos($tareaId, $frecuencia, $proxima);
         } ?>
+   
+        <div class="divSesion" data-tarea="<? echo $tareaId; ?>"  style="display: none; cursor: pointer;">
+            <p class="sesionTarea">
+                <? echo $GLOBALS['carpetaIcon']; ?>
+            </p>
+        </div>
 
         <div class="divImportancia" data-tarea="<? echo $tareaId; ?>">
             <p class="importanciaTarea svgtask">
@@ -148,8 +164,8 @@ function generarHtmlTarea($tareaId, $filtro, $titulo, $impIcono, $imp, $tipoIcon
         <p class="tipoTarea svgtask" style="display: none;"><? echo $tipoIcono; ?></p>
         <p class="estadoTarea" style="display: none;"><? echo $estado; ?></p>
         <? echo opcionesPost($tareaId, $autorId) ?>
-        
-        <div class="divArchivado" data-tarea="<? echo $tareaId; ?>">
+
+        <div class="divArchivado ocultadoAutomatico" data-tarea="<? echo $tareaId; ?>" style="display: none;">
             <p class="archivadoTarea" style="cursor: pointer;">
                 <? echo $GLOBALS['archivadoIcon']; ?>
             </p>

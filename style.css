@@ -9051,7 +9051,7 @@ button.completaTarea {
 
 p.tituloTarea {
     margin-right: auto;
-    max-width: 300px;
+    max-width: 400px;
     width: 100%;
 }
 
@@ -9081,11 +9081,14 @@ p.tituloTarea {
     gap: 5px;
     /* border: var(--borde); */
     border-radius: 100px;
-    padding: 2px 5px;
+    padding: 2px 0px;
     min-height: 24px;
-    min-width: 20px;
+    /* min-width: 20px; */
 }
 
+span.tituloImportancia {
+    display: none;
+}
 
 
 ul.social-post-list.clase-tarea {
@@ -9337,4 +9340,29 @@ span.textoProxima.diaNegativo {
 p.contenidoNotaP {
     font-size: 11px;
     line-height: 17px;
+}
+
+.archivado {
+    opacity: 0.4;
+}
+
+.sesionTarea {
+    margin-right: auto;
+    /* padding: 5px 20px; */
+    width: 100%;
+}
+
+.sesionTarea.oculto > *:not(p) {
+    display: none;
+}
+
+.divisorTarea {
+	font-weight: bold;
+    cursor: pointer;
+    padding: 5px 20px;
+    margin-right: auto;
+    display: flex;
+    width: 100%;
+    align-items: center;
+	outline: none !important;
 }

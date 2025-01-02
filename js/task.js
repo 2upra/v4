@@ -8,6 +8,109 @@ let tipoTarea = {
     valor: 'una vez'
 };
 
+function initTareas() {
+    const tit = document.getElementById('tituloTarea');
+
+    if (tit) {
+        selectorTipoTarea();
+        enviarTarea();
+        editarTarea();
+        moverTarea();
+        completarTarea();
+        cambiarPrioridad();
+        prioridadTarea();
+        borrarTareasCompletadas();
+        cambiarFrecuencia();
+        archivarTarea();
+        ocultarBotones();
+        window.dividirTareas();
+    }
+}
+
+function ocultarBotones() {
+    const elementosLi = document.querySelectorAll('.draggable-element');
+
+    elementosLi.forEach(li => {
+        const elementOculto = li.querySelector('.ocultadoAutomatico');
+
+        li.addEventListener('mouseover', () => {
+            elementOculto.style.display = 'block';
+        });
+
+        li.addEventListener('mouseout', () => {
+            elementOculto.style.display = 'none';
+        });
+    });
+}
+
+function enviarTarea() {
+    const tit = document.getElementById('tituloTarea');
+    tit.removeEventListener('keyup', enviarTareaHandler);
+    tit.addEventListener('keyup', enviarTareaHandler);
+    tit.addEventListener('paste', pegarTareaHandler);
+    tit.addEventListener('input', () => {
+        tit.value = tit.value.replace(/[\r\n\v]+/g, '');
+    });
+}
+
+function pegarTareaHandler(ev) {
+    ev.preventDefault();
+    const textoPegado = (ev.clipboardData || window.clipboardData).getData('text');
+    const lineas = textoPegado.split('\n');
+    const maxTareas = 30;
+    const lineasProcesadas = lineas.slice(0, maxTareas);
+    const tit = document.getElementById('tituloTarea');
+    let enviando = false;
+
+    const promesas = lineasProcesadas.map(linea => {
+        const titulo = linea.trim();
+        if (titulo.length > 140) {
+            alert('El título no puede superar los 140 caracteres.');
+            return;
+        }
+        if (titulo) {
+            return enviarAjax('crearTarea', {
+                titulo: titulo,
+                importancia: importancia.valor,
+                tipo: tipoTarea.valor
+            });
+        }
+        return Promise.resolve(null);
+    });
+
+    enviando = true;
+    Promise.all(promesas)
+        .then(respuestas => {
+            let todasExitosas = true;
+            let mensajeError = '';
+
+            respuestas.forEach(rta => {
+                if (rta && !rta.success) {
+                    todasExitosas = false;
+                    mensajeError += rta.data ? ' Detalles: ' + rta.data : '';
+                }
+            });
+
+            if (todasExitosas) {
+                alert(`Tareas creadas. Se procesaron ${lineasProcesadas.length} tareas.`);
+                tit.value = '';
+                limpiar = false;
+                arriba = true;
+                window.reiniciarContenido(limpiar, arriba, 'tarea');
+                initTareas();
+            } else {
+                alert('Error al crear algunas tareas.' + mensajeError);
+            }
+        })
+        .catch(err => {
+            alert('Error al crear. Revisa la consola.');
+            console.error(err);
+        })
+        .finally(() => {
+            enviando = false;
+        });
+}
+
 function enviarTareaHandler(ev) {
     const tit = document.getElementById('tituloTarea');
     let enviando = false;
@@ -33,6 +136,7 @@ function enviarTareaHandler(ev) {
                     limpiar = false;
                     arriba = true;
                     window.reiniciarContenido(limpiar, arriba, 'tarea');
+                    initTareas();
                 } else {
                     let m = 'Error al crear tarea.';
                     if (rta.data) {
@@ -49,28 +153,6 @@ function enviarTareaHandler(ev) {
                 enviando = false;
             });
     }
-}
-
-function initTareas() {
-    const tit = document.getElementById('tituloTarea');
-
-    if (tit) {
-        selectorTipoTarea();
-        enviarTarea();
-        editarTarea();
-        moverTarea();
-        completarTarea();
-        cambiarPrioridad();
-        prioridadTarea();
-        borrarTareasCompletadas();
-        cambiarFrecuencia();
-        archivarTarea();
-    }
-}
-function enviarTarea() {
-    const tit = document.getElementById('tituloTarea');
-    tit.removeEventListener('keyup', enviarTareaHandler);
-    tit.addEventListener('keyup', enviarTareaHandler);
 }
 
 function selectorTipoTarea() {
@@ -223,135 +305,6 @@ function setCursorPos(el, off) {
     sel.addRange(rango);
 }
 
-function moverTarea() {
-    const lista = document.querySelector('.clase-tarea');
-    if (!lista) return;
-
-    if (lista.listenersAdded) return;
-    lista.listenersAdded = true;
-
-    let arrastrandoElem = null;
-    let ordenViejo = [];
-    let idTareaArrastrada = null;
-    let posInicialY = null;
-    const tolerancia = 10; // Ajusta este valor según sea necesario, es la sensibilidad
-    let movimientoRealizado = false; // para verificar si se realizó un movimiento real
-
-    const iniciarArrastre = ev => {
-        const elem = ev.target.closest('.draggable-element');
-        if (!elem) return;
-
-        arrastrandoElem = elem;
-        idTareaArrastrada = elem.getAttribute('id-post');
-        ordenViejo = Array.from(lista.querySelectorAll('.draggable-element')).map(tarea => tarea.getAttribute('id-post'));
-        posInicialY = ev.clientY;
-        movimientoRealizado = false;
-
-        arrastrandoElem.classList.add('dragging');
-        document.body.classList.add('dragging-active');
-
-        lista.addEventListener('mousemove', duranteArrastre);
-        lista.addEventListener('mouseup', terminarArrastre);
-    };
-
-    const duranteArrastre = ev => {
-        if (!arrastrandoElem) return;
-        ev.preventDefault();
-
-        const mouseY = ev.clientY;
-
-        // Verificar si el movimiento supera la tolerancia
-        if (!movimientoRealizado && Math.abs(mouseY - posInicialY) > tolerancia) {
-            movimientoRealizado = true;
-        }
-
-        let anterior = arrastrandoElem.previousElementSibling;
-        let siguiente = arrastrandoElem.nextElementSibling;
-
-        while (anterior && !anterior.classList.contains('draggable-element')) {
-            anterior = anterior.previousElementSibling;
-        }
-
-        while (siguiente && !siguiente.classList.contains('draggable-element')) {
-            siguiente = siguiente.nextElementSibling;
-        }
-
-        if (anterior) {
-            const rectAnt = anterior.getBoundingClientRect();
-            if (mouseY < rectAnt.top + rectAnt.height / 2) {
-                lista.insertBefore(arrastrandoElem, anterior);
-                return;
-            }
-        }
-
-        if (siguiente) {
-            const rectSig = siguiente.getBoundingClientRect();
-            if (mouseY > rectSig.top + rectSig.height / 2) {
-                lista.insertBefore(arrastrandoElem, siguiente.nextSibling);
-                return;
-            }
-        }
-    };
-
-    const terminarArrastre = () => {
-        if (!arrastrandoElem) return;
-
-        const ordenNuevo = Array.from(lista.querySelectorAll('.draggable-element')).map(tarea => tarea.getAttribute('id-post'));
-        const nuevaPosicion = ordenNuevo.indexOf(idTareaArrastrada);
-
-        // Guardar el orden solo si se realizó un movimiento real
-        if (movimientoRealizado && ordenViejo.join(',') !== ordenNuevo.join(',')) {
-            let log = 'Guardando orden:';
-            log += `\n  Tarea movida: ${idTareaArrastrada}`;
-            log += `\n  Nueva posición: ${nuevaPosicion}`;
-            log += `\n  Orden nuevo: ${ordenNuevo}`;
-            console.log(log);
-
-            guardarOrdenTareas({
-                idTareaMovida: idTareaArrastrada,
-                nuevaPosicion: nuevaPosicion,
-                ordenNuevo: ordenNuevo
-            });
-        }
-
-        arrastrandoElem.classList.remove('dragging');
-        document.body.classList.remove('dragging-active');
-        lista.removeEventListener('mousemove', duranteArrastre);
-        lista.removeEventListener('mouseup', terminarArrastre);
-
-        arrastrandoElem = null;
-        idTareaArrastrada = null;
-        ordenViejo = [];
-        posInicialY = null;
-        movimientoRealizado = false;
-    };
-
-    lista.addEventListener('mousedown', ev => {
-        if (ev.target.closest('.draggable-element')) iniciarArrastre(ev);
-    });
-
-    lista.addEventListener('dragstart', ev => {
-        ev.preventDefault();
-    });
-}
-
-function guardarOrdenTareas({idTareaMovida, nuevaPosicion, ordenNuevo}) {
-    const log = `Guardando orden:\n  Tarea movida: ${idTareaMovida}\n  Nueva posición: ${nuevaPosicion}\n  Orden nuevo: ${ordenNuevo}`;
-    console.log(log);
-
-    enviarAjax('actualizarOrdenTareas', {tareaMovida: idTareaMovida, nuevaPosicion, ordenNuevo})
-        .then(res => {
-            if (res && res.success) {
-                console.log('Orden de tareas actualizado exitosamente.');
-            } else {
-                console.error('Error al actualizar el orden de tareas:', res ? res.data.error : 'Respuesta vacía o success: false');
-            }
-        })
-        .catch(err => {
-            console.error('Error en la petición AJAX:', err);
-        });
-}
-
 function prioridadTarea() {
     const botonPrioridad = document.querySelector('.prioridadTareas');
 
@@ -365,18 +318,31 @@ function prioridadTarea() {
 }
 
 function archivarTarea() {
-    document.querySelectorAll('.divArchivado').forEach(div => {
-        div.addEventListener('click', async function() {
+    document.querySelectorAll('.elementOculto').forEach(div => {
+        div.addEventListener('click', async function () {
             const divClicado = this;
+            const tarea = divClicado.closest('.draggable-element');
             const tareaId = divClicado.dataset.tarea;
-            const data = { id: tareaId };
+            let data = {id: tareaId};
+            let logs = '';
+
+            if (tarea.classList.contains('archivado')) {
+                data.desarchivar = true;
+                logs += `Tarea ${tareaId} estaba archivada. Se va a desarchivar. `;
+            }
 
             try {
                 const respuesta = await enviarAjax('archivarTarea', data);
                 if (respuesta.success) {
-                    const tarea = divClicado.closest('.draggable-element'); 
-                    tarea.style.display = 'none';
-                    console.log(`Tarea ${tareaId} archivada y eliminada del DOM.`);
+                    if (data.desarchivar) {
+                        tarea.classList.remove('archivado');
+                        tarea.setAttribute('estado', '');
+                        logs += `Tarea ${tareaId} desarchivada. `;
+                    } else {
+                        tarea.style.display = 'none';
+                        logs += `Tarea ${tareaId} archivada y eliminada del DOM. `;
+                    }
+                    //console.log(logs);
                 } else {
                     let mensaje = 'Error al archivar la tarea.';
                     if (respuesta.data) mensaje += ' Detalles: ' + respuesta.data;
@@ -398,7 +364,7 @@ function completarTarea() {
             const botonClicado = this;
             const tarea = botonClicado.closest('.draggable-element');
             const tareaId = botonClicado.dataset.tarea;
-            const dat = { id: tareaId };
+            const dat = {id: tareaId};
             const estado = tarea.classList.contains('completada') ? 'pendiente' : 'completada';
             dat.estado = estado;
             const esHabito = botonClicado.classList.contains('habito');
@@ -603,7 +569,7 @@ async function borrarTareasCompletadas() {
 
             try {
                 await enviarAjax('borrarTareasCompletadas', data);
-                console.log('Tareas completadas borradas exitosamente');
+                //console.log('Tareas completadas borradas exitosamente');
                 window.reiniciarContenido(limpiar, '', 'tarea');
             } catch (error) {
                 console.error('Error al borrar tareas:', error);
@@ -619,4 +585,177 @@ async function borrarTareasCompletadas() {
     boton.listener = handleClick;
 }
 
+/*
+si funciona pero falta actuilizar un atributo, el data-seccion
 
+<li class="POST-tarea EDYQHV 471 draggable-element archivado" filtro="tarea" tipo-tarea="una vez" id-post="471" autor="1" draggable="true" sesion="pendiente" estado="archivado" data-submenu-initialized="true" data-seccion="pendiente">
+
+*/
+
+function moverTarea() {
+    const lista = document.querySelector('.clase-tarea');
+    if (!lista) return;
+
+    if (lista.listenersAdded) return;
+    lista.listenersAdded = true;
+
+    let arrastrandoElem = null;
+    let ordenViejo = [];
+    let idTareaArrastrada = null;
+    let posInicialY = null;
+    const tolerancia = 10;
+    let movimientoRealizado = false;
+
+    const iniciarArrastre = ev => {
+        const elem = ev.target.closest('.draggable-element');
+        if (!elem) return;
+
+        arrastrandoElem = elem;
+        idTareaArrastrada = elem.getAttribute('id-post');
+        ordenViejo = Array.from(lista.querySelectorAll('.draggable-element')).map(tarea => tarea.getAttribute('id-post'));
+        posInicialY = ev.clientY;
+        movimientoRealizado = false;
+
+        arrastrandoElem.classList.add('dragging');
+        document.body.classList.add('dragging-active');
+
+        lista.addEventListener('mousemove', duranteArrastre);
+        lista.addEventListener('mouseup', terminarArrastre);
+    };
+
+    const duranteArrastre = ev => {
+        if (!arrastrandoElem) return;
+        ev.preventDefault();
+
+        const mouseY = ev.clientY;
+
+        if (!movimientoRealizado && Math.abs(mouseY - posInicialY) > tolerancia) {
+            movimientoRealizado = true;
+        }
+
+        let anterior = arrastrandoElem.previousElementSibling;
+        let siguiente = arrastrandoElem.nextElementSibling;
+        let encontradoAnterior = false;
+        let encontradoSiguiente = false;
+
+        while (anterior || siguiente) {
+            if (anterior && !encontradoAnterior) {
+                const rectAnt = anterior.getBoundingClientRect();
+                if (mouseY < rectAnt.top + rectAnt.height / 2) {
+                    lista.insertBefore(arrastrandoElem, anterior);
+                    encontradoAnterior = true;
+                } else {
+                    anterior = anterior.previousElementSibling;
+                }
+            }
+
+            if (siguiente && !encontradoSiguiente) {
+                const rectSig = siguiente.getBoundingClientRect();
+                if (mouseY > rectSig.top + rectSig.height / 2) {
+                    lista.insertBefore(arrastrandoElem, siguiente.nextSibling);
+                    encontradoSiguiente = true;
+                } else {
+                    siguiente = siguiente.nextElementSibling;
+                }
+            }
+
+            if (encontradoAnterior || encontradoSiguiente) {
+                return;
+            }
+        }
+    };
+
+    const obtenerSesionYDataSeccionArriba = () => {
+        let sesionArriba = null;
+        let dataSeccionArriba = null;
+        let anterior = arrastrandoElem.previousElementSibling;
+        while (anterior) {
+            if (anterior.classList.contains('POST-tarea')) {
+                if (sesionArriba === null) {
+                    sesionArriba = anterior.getAttribute('sesion');
+                }
+                if (dataSeccionArriba === null) {
+                    dataSeccionArriba = anterior.getAttribute('data-seccion');
+                }
+                if (sesionArriba !== null && dataSeccionArriba !== null) break;
+            } else if (anterior.classList.contains('divisorTarea')) {
+                if (dataSeccionArriba === null) {
+                    dataSeccionArriba = anterior.getAttribute('data-valor');
+                }
+                if (sesionArriba !== null && dataSeccionArriba !== null) break;
+            }
+            anterior = anterior.previousElementSibling;
+        }
+        return {sesionArriba, dataSeccionArriba};
+    };
+
+    const terminarArrastre = () => {
+        if (!arrastrandoElem) return;
+
+        const ordenNuevo = Array.from(lista.querySelectorAll('.draggable-element')).map(tarea => tarea.getAttribute('id-post'));
+        const nuevaPosicion = ordenNuevo.indexOf(idTareaArrastrada);
+        const {sesionArriba, dataSeccionArriba} = obtenerSesionYDataSeccionArriba();
+
+        if (movimientoRealizado) {
+            // Actualizar atributos en el elemento HTML
+            if (dataSeccionArriba) {
+                arrastrandoElem.setAttribute('data-seccion', dataSeccionArriba);
+            }
+            if (sesionArriba) {
+                arrastrandoElem.setAttribute('sesion', sesionArriba);
+            }
+
+            let log = 'Guardando orden:';
+            log += `\n  Tarea movida: ${idTareaArrastrada}`;
+            log += `\n  Nueva posición: ${nuevaPosicion}`;
+            log += `\n  Orden nuevo: ${ordenNuevo}`;
+            log += `\n  Sesión de la tarea de arriba: ${sesionArriba}`;
+            log += `\n  Data-seccion de la tarea de arriba: ${dataSeccionArriba}`;
+            console.log(log);
+
+            guardarOrdenTareas({
+                idTareaMovida: idTareaArrastrada,
+                nuevaPosicion: nuevaPosicion,
+                ordenNuevo: ordenNuevo,
+                sesionArriba: sesionArriba,
+                dataSeccionArriba: dataSeccionArriba
+            });
+        }
+
+        arrastrandoElem.classList.remove('dragging');
+        document.body.classList.remove('dragging-active');
+        lista.removeEventListener('mousemove', duranteArrastre);
+        lista.removeEventListener('mouseup', terminarArrastre);
+
+        arrastrandoElem = null;
+        idTareaArrastrada = null;
+        ordenViejo = [];
+        posInicialY = null;
+        movimientoRealizado = false;
+    };
+
+    lista.addEventListener('mousedown', ev => {
+        if (ev.target.closest('.draggable-element')) iniciarArrastre(ev);
+    });
+
+    lista.addEventListener('dragstart', ev => {
+        ev.preventDefault();
+    });
+}
+
+function guardarOrdenTareas({idTareaMovida, nuevaPosicion, ordenNuevo, sesionArriba}) {
+    let log = `Guardando orden:\n  Tarea movida: ${idTareaMovida}\n  Nueva posición: ${nuevaPosicion}\n  Orden nuevo: ${ordenNuevo}\n SesionArriba: ${sesionArriba}`;
+    console.log(log);
+
+    enviarAjax('actualizarOrdenTareas', {tareaMovida: idTareaMovida, nuevaPosicion, ordenNuevo, sesionArriba})
+        .then(res => {
+            if (res && res.success) {
+                //console.log('Orden de tareas actualizado exitosamente.');
+            } else {
+                console.error('Error al actualizar el orden de tareas:', res ? res.data.error : 'Respuesta vacía o success: false');
+            }
+        })
+        .catch(err => {
+            console.error('Error en la petición AJAX:', err);
+        });
+}
