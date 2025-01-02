@@ -19,5 +19,5 @@ pub fn operaciones_combinadas(x: i32) -> String {
 
 #[php_module]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
-    module.build().expect("Error al construir el módulo PHP")
+    module.build().unwrap()
 }
