@@ -287,8 +287,8 @@ function escribirLog($mensaje, $archivo = '', $maxlineas = 10000) {
 
     return true;
 }
-// sudo touch /var/www/wordpress/wp-content/themes/streamLog.log && sudo chown www-data:www-data /var/www/wordpress/wp-content/themes/streamLog.log && sudo chmod 664 /var/www/wordpress/wp-content/themes/streamLog.log
-
+// sudo touch /var/www/wordpress/wp-content/themes/streamLog.log && sudo chown www-data:www-data /var/www/wordpress/wp-content/themes/rendimiento.log && sudo chmod 664 /var/www/wordpress/wp-content/themes/rendimiento.log
+// tail -f /var/www/wordpress/wp-content/themes/rendimiento.log
 function streamLog($log)
 {
     if (STREAM_LOG_ENABLED) {
@@ -314,7 +314,7 @@ function logAudio($log)
 
 function rendimientolog($log)
 {
-    if (rendimiento_ENABLED) {
+    if (RENDIMIENTO_ENABLED) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/rendimiento.log');
     }
 }
