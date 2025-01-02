@@ -30,6 +30,7 @@ define('GUARDAR_LOG_ENABLED', true);
 
 //
 define('LOG_AUDIO_ENABLED', false);
+define('RENDIMIENTO_ENABLED', true);
 define('CHAT_LOG_ENABLED', false);
 define('AUT_LOG_ENABLED', true);
 define('LOG_ALGORITMO_ENABLED', false);
@@ -308,6 +309,13 @@ function logAudio($log)
 {
     if (LOG_AUDIO_ENABLED) {
         escribirLog($log, '/var/www/wordpress/wp-content/themes/logAudio.log');
+    }
+}
+
+function rendimientolog($log)
+{
+    if (rendimiento_ENABLED) {
+        escribirLog($log, '/var/www/wordpress/wp-content/themes/rendimiento.log');
     }
 }
 
