@@ -9,11 +9,6 @@ use std::collections::HashMap;
 use dotenv::dotenv;
 use std::env;
 
-// ... (resto de tus estructuras y funciones) ...
-
-fn obtenerConexion() -> Result<PooledConn> {
-     dotenv().ok(); // Carga las variables de entorno desde .env
-
 // Estructuras para los datos de los posts y likes
 #[derive(Debug, Default, Clone, PartialEq)]
 struct PostData {
@@ -42,19 +37,19 @@ struct MetaData {
 
 // Función para obtener la conexión a la base de datos
 fn obtenerConexion() -> Result<PooledConn> {
-     dotenv().ok(); // Carga las variables de entorno desde .env
+    dotenv().ok(); // Carga las variables de entorno desde .env
 
-     let db_user = env::var("DB_USER").expect("Variable DB_USER no encontrada en .env");
-     let db_password = env::var("DB_PASSWORD").expect("Variable DB_PASSWORD no encontrada en .env");
-     let db_host = env::var("DB_HOST").expect("Variable DB_HOST no encontrada en .env");
-     let db_name = env::var("DB_NAME").expect("Variable DB_NAME no encontrada en .env");
-     let db_port = env::var("DB_PORT").unwrap_or_else(|_| "3306".to_string()); // Puerto 3306 por defecto
+    let db_user = env::var("DB_USER").expect("Variable DB_USER no encontrada en .env");
+    let db_password = env::var("DB_PASSWORD").expect("Variable DB_PASSWORD no encontrada en .env");
+    let db_host = env::var("DB_HOST").expect("Variable DB_HOST no encontrada en .env");
+    let db_name = env::var("DB_NAME").expect("Variable DB_NAME no encontrada en .env");
+    let db_port = env::var("DB_PORT").unwrap_or_else(|_| "3306".to_string()); // Puerto 3306 por defecto
 
-     let url = format!("mysql://{}:{}@{}:{}/{}", db_user, db_password, db_host, db_port, db_name);
+    let url = format!("mysql://{}:{}@{}:{}/{}", db_user, db_password, db_host, db_port, db_name);
 
-     let pool = Pool::new(url.as_str())?; // Convertir la String a &str
-     pool.get_conn()
- }
+    let pool = Pool::new(url.as_str())?; // Convertir la String a &str
+    pool.get_conn()
+}
 
 #[php_function]
 pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
@@ -76,8 +71,23 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
         |(interest, intensity)| (interest, intensity),
     ).unwrap_or_default().into_iter().collect();
 
-    // --- Obtener 'vistas' (simulado, ya que no hay acceso directo a user_meta desde Rust) ---
-    let vistas: Vec<i64> = Vec::new(); 
+// --- Obtener 'vistas' REALMENTE ---
+let vistas: Vec<i64> = conn.query_map(
+    format!("SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
+    |meta_value: String| {
+        // Suponiendo que 'vistas_posts' es una cadena JSON que contiene un array de números
+        let parsed_vistas: Result<Vec<i64>, _> = serde_json::from_str(&meta_value);
+        match parsed_vistas {
+            Ok(vistas_vec) => vistas_vec,
+            Err(_) => {
+                // Manejar el error, por ejemplo, loguearlo o devolver un valor por defecto
+                vec![]
+            },
+        }
+    },
+).unwrap_or_else(|_| {
+    vec![]
+});
 
     // --- Obtener IDs de posts en los últimos 365 días ---
     let fechaLimite = (Utc::now() - chrono::Duration::days(365)).format("%Y-%m-%d").to_string();
