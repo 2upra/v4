@@ -1,5 +1,5 @@
 use ext_php_rs::prelude::*;
-use ext_php_rs::zend::Module;
+use ext_php_rs::module::ModuleEntry;
 
 #[php_function]
 pub fn calcular_suma(a: i32, b: i32) -> i32 {
@@ -19,10 +19,10 @@ pub fn operaciones_combinadas(x: i32) -> String {
 }
 
 #[php_module]
-pub fn get_module() -> Module {
-    Module::default()
-        .with_function(wrap_php_function!(calcular_suma))
-        .with_function(wrap_php_function!(calcular_multiplicacion))
-        .with_function(wrap_php_function!(operaciones_combinadas))
+pub fn get_module() -> ModuleEntry {
+    ModuleEntry::default()
+        .with_function(php_fn!(calcular_suma))
+        .with_function(php_fn!(calcular_multiplicacion))
+        .with_function(php_fn!(operaciones_combinadas))
         .build()
 }
