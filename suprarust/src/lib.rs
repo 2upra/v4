@@ -4,15 +4,17 @@ use dotenv::dotenv;
 use ext_php_rs::builders::ModuleBuilder;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
-use ext_php_rs::zend::Zval;
 use mysql::prelude::*;
 use mysql::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
+use serde_json;
+use ext_php_rs::types::ZendHashTable;
+use ext_php_rs::zend::ExecuteData;
 
 // Estructuras para los datos de los posts y likes
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 struct PostData {
     id: u64,
     autor: u64,
@@ -20,7 +22,7 @@ struct PostData {
     contenido: String,
 }
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 struct LikeData {
     post_id: u64,
     like: u32,
@@ -28,7 +30,7 @@ struct LikeData {
     no_me_gusta: u32,
 }
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 struct MetaData {
     datosAlgoritmo: Option<String>,
     Verificado: Option<String>,
@@ -97,7 +99,7 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     let vistas: Vec<i64> = conn.query_map(
     format!("SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
     |meta_value: String| {
-        let parsed_vistas: Result<VistasData, _> = serde_php::from_str(&meta_value);
+        let parsed_vistas: Result<VistasData, _> = serde_json::from_str(&meta_value);
         match parsed_vistas {
             Ok(vistas_data) => vistas_data.0.keys().cloned().collect(),
             Err(err) => {
@@ -207,17 +209,28 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     };
 
     // --- Preparar los resultados para PHP ---
-    let mut resultado = vec![];
+    let mut resultado: Vec<Zval> = vec![];
     for id in postsIds {
         let mut datos = vec![];
-        datos.push(zval!(id));
-        datos.push(zval!(siguiendo.clone()));
-        datos.push(zval!(intereses.clone()));
-        datos.push(zval!(vistas.clone()));
-        datos.push(zval!(metaData.get(&id).cloned().unwrap_or_default()));
-        datos.push(zval!(likesPorPost.get(&id).cloned().unwrap_or_default()));
-        datos.push(zval!(postContenido.get(&id).cloned().unwrap_or_default()));
-        resultado.push(zval!(datos));
+        datos.push(Zval::from(id));
+        datos.push(Zval::from(siguiendo.clone()));
+        datos.push(Zval::from(intereses.clone()));
+        datos.push(Zval::from(vistas.clone()));
+        datos.push(match metaData.get(&id).cloned() {
+            Some(meta_data) => meta_data.into_zval(false).unwrap_or_default(),
+            None => Zval::new(),
+        });
+
+        datos.push(match likesPorPost.get(&id).cloned() {
+            Some(likes_data) => likes_data.into_zval(false).unwrap_or_default(),
+            None => Zval::new(),
+        });
+
+        datos.push(match postContenido.get(&id).cloned() {
+            Some(content) => content.into_zval(false).unwrap_or_default(),
+            None => Zval::new(),
+        });
+        resultado.push(Zval::from(datos));
     }
 
     Ok(resultado)
