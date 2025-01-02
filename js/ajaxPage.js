@@ -92,7 +92,6 @@ const ajaxUrl = typeof ajax_params !== 'undefined' && ajax_params.ajax_url ? aja
         'inicializarBuscadores',
         'stripecomprabeat',
         'initTareas',
-        'initNotas',
     ];
 
     function initScripts() {

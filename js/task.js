@@ -29,6 +29,7 @@ function initTareas() {
         crearSesionFront();
         hacerDivisoresEditables();
         window.dividirTareas();
+        initNotas();
     }
 }
 

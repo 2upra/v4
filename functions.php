@@ -376,7 +376,7 @@ add_action('wp_enqueue_scripts', 'remove_default_jquery');
 
 function scriptsOrdenados()
 {
-    $global_version = '0.2.312';
+    $global_version = '0.2.313';
     $dev_mode = defined('LOCAL') && LOCAL;
     //$error_log = [];
 
