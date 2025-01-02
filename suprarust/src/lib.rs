@@ -2,16 +2,18 @@
 use chrono::prelude::*;
 use dotenv::dotenv;
 use ext_php_rs::builders::ModuleBuilder;
+use ext_php_rs::convert::IntoZval;
+use ext_php_rs::flags::DataType;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
+use ext_php_rs::zend::HashTable;
 use mysql::prelude::*;
 use mysql::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::convert::Infallible;
 use std::env;
 use serde_json;
-use ext_php_rs::convert::IntoZval;
-use ext_php_rs::zend::HashTable;
 
 // Estructuras para los datos de los posts y likes
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
@@ -39,15 +41,15 @@ struct MetaData {
     fan: Option<bool>,
 }
 
-// Implementación correcta de IntoZval
+// Implementación correcta de IntoZval con manejo de errores
 impl IntoZval for MetaData {
-    const TYPE: DataType = DataType::Array; // Usar DataType directamente desde ext_php_rs::prelude::*
+    const TYPE: DataType = DataType::Array;
 
     fn set_zval(self, zv: &mut Zval, persistent: bool) -> Result<(), ext_php_rs::error::Error>
     where
         Self: Sized,
     {
-        let mut arr = HashTable::new(); // Usar HashTable en lugar de ZendHashTable
+        let mut arr = HashTable::new();
         if let Some(datosAlgoritmo) = self.datosAlgoritmo {
             arr.insert("datosAlgoritmo", datosAlgoritmo, persistent)?;
         }
@@ -60,11 +62,11 @@ impl IntoZval for MetaData {
         arr.insert("artista", self.artista.unwrap_or(false), persistent)?;
         arr.insert("fan", self.fan.unwrap_or(false), persistent)?;
 
-        zv.set_hashtable(arr); // Usar set_hashtable en lugar de set_zval
+        zv.set_hashtable(arr);
         Ok(())
     }
 
-    fn into_zval(self, persistent: bool) -> Result<Zval>
+    fn into_zval(self, persistent: bool) -> Result<Zval, ext_php_rs::error::Error>
     where
         Self: Sized,
     {
@@ -75,23 +77,23 @@ impl IntoZval for MetaData {
 }
 
 impl IntoZval for LikeData {
-    const TYPE: DataType = DataType::Array; // Usar DataType directamente desde ext_php_rs::prelude::*
+    const TYPE: DataType = DataType::Array;
 
     fn set_zval(self, zv: &mut Zval, persistent: bool) -> Result<(), ext_php_rs::error::Error>
     where
         Self: Sized,
     {
-        let mut arr = HashTable::new(); // Usar HashTable en lugar de ZendHashTable
+        let mut arr = HashTable::new();
         arr.insert("post_id", self.post_id, persistent)?;
         arr.insert("like", self.like, persistent)?;
         arr.insert("favorito", self.favorito, persistent)?;
         arr.insert("no_me_gusta", self.nome_gusta, persistent)?;
 
-        zv.set_hashtable(arr); // Usar set_hashtable en lugar de set_zval
+        zv.set_hashtable(arr);
         Ok(())
     }
 
-    fn into_zval(self, persistent: bool) -> Result<Zval>
+    fn into_zval(self, persistent: bool) -> Result<Zval, ext_php_rs::error::Error>
     where
         Self: Sized,
     {
@@ -158,20 +160,23 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     #[derive(Debug, Deserialize, Serialize)]
     struct VistasData(HashMap<i64, Vista>);
 
-    // --- Modificación aquí: Extraer los valores de VistasData correctamente ---
+    // --- Corrección en 'vistas' ---
     let vistas: Vec<i64> = conn.query_map(
         format!("SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
         |meta_value: String| {
             let parsed_vistas: std::result::Result<VistasData, serde_json::Error> = serde_json::from_str(&meta_value);
             match parsed_vistas {
-                Ok(vistas_data) => vistas_data.0.into_iter().map(|(_, vista)| vista.count).collect(), // Extraer los valores de 'count'
+                Ok(vistas_data) => vistas_data.0.into_iter().map(|(_, vista)| vista.count).collect(),
                 Err(err) => {
                     eprintln!("Error al deserializar vistas_posts: {}", err);
-                    vec![]
+                    vec![] // Devuelve un vector vacío en caso de error
                 },
             }
         },
-    ).unwrap_or_else(|_| vec![]);
+    ).unwrap_or_else(|err| {
+        eprintln!("Error al obtener vistas_posts de la base de datos: {}", err);
+        vec![] // Devuelve un vector vacío en caso de error en la consulta
+    });
 
     // --- Obtener IDs de posts en los últimos 365 días ---
     let fechaLimite = (Utc::now() - chrono::Duration::days(365))
@@ -298,6 +303,6 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
 }
 
 #[php_module]
-pub fn module(module: ModuleBuilder) -> ModuleBuilder {
+pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     module
 }
