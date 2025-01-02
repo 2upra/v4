@@ -170,6 +170,6 @@ function aplicarFiltroGlobal($queryArgs, $args, $usuarioActual, $userId, $tipoUs
         $log .= "Aplicando condiciones de meta query, filtro: $filtro, tipoUsuario: $tipoUsuario \n";
         $queryArgs = aplicarCondicionesDeMetaQuery($queryArgs, $filtro, $usuarioActual, $tipoUsuario);
     }
-    guardarLog("aplicarFiltroGlobal, $log, queryArgs resultantes: " . print_r($queryArgs, true));
+    //guardarLog("aplicarFiltroGlobal, $log, queryArgs resultantes: " . print_r($queryArgs, true));
     return $queryArgs;
 }
