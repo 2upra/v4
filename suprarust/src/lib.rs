@@ -3,7 +3,7 @@ use chrono::prelude::*;
 use dotenv::dotenv;
 use ext_php_rs::builders::ModuleBuilder;
 use ext_php_rs::convert::IntoZval;
-use ext_php_rs::ffi::HashTable; // Importar HashTable correctamente
+use ext_php_rs::ffi::HashTable;
 use ext_php_rs::flags::DataType;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
@@ -11,7 +11,6 @@ use mysql::prelude::*;
 use mysql::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-// use std::convert::Infallible;  Eliminar esta línea, ya que no se usa
 use serde_json;
 use std::env;
 
@@ -51,16 +50,16 @@ impl IntoZval for MetaData {
     {
         let mut arr = HashTable::new();
         if let Some(datosAlgoritmo) = self.datosAlgoritmo {
-            arr.insert("datosAlgoritmo", datosAlgoritmo, persistent)?;
+            arr.insert("datosAlgoritmo", datosAlgoritmo)?; // Sin persistent
         }
         if let Some(verificado) = self.Verificado {
-            arr.insert("Verificado", verificado, persistent)?;
+            arr.insert("Verificado", verificado)?; // Sin persistent
         }
         if let Some(postAut) = self.postAut {
-            arr.insert("postAut", postAut, persistent)?;
+            arr.insert("postAut", postAut)?; // Sin persistent
         }
-        arr.insert("artista", self.artista.unwrap_or(false), persistent)?;
-        arr.insert("fan", self.fan.unwrap_or(false), persistent)?;
+        arr.insert("artista", self.artista.unwrap_or(false))?; // Sin persistent
+        arr.insert("fan", self.fan.unwrap_or(false))?; // Sin persistent
 
         zv.set_hashtable(arr);
         Ok(())
@@ -84,10 +83,10 @@ impl IntoZval for LikeData {
         Self: Sized,
     {
         let mut arr = HashTable::new();
-        arr.insert("post_id", self.post_id, persistent)?;
-        arr.insert("like", self.like, persistent)?;
-        arr.insert("favorito", self.favorito, persistent)?;
-        arr.insert("no_me_gusta", self.nome_gusta, persistent)?;
+        arr.insert("post_id", self.post_id)?; // Sin persistent
+        arr.insert("like", self.like)?; // Sin persistent
+        arr.insert("favorito", self.favorito)?; // Sin persistent
+        arr.insert("no_me_gusta", self.nome_gusta)?; // Sin persistent
 
         zv.set_hashtable(arr);
         Ok(())
@@ -160,7 +159,7 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     #[derive(Debug, Deserialize, Serialize)]
     struct VistasData(HashMap<i64, Vista>);
 
-    // --- Corrección final en 'vistas' ---
+    // --- Obtener 'vistas' ---
     let vistas: Vec<i64> = conn.query_map(
      format!("SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
      |meta_value: String| {
@@ -169,13 +168,13 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
              Ok(vistas_data) => vistas_data.0.into_iter().map(|(_, vista)| vista.count).collect(),
              Err(err) => {
                  eprintln!("Error al deserializar vistas_posts: {}", err);
-                 vec![] // Devuelve un vector vacío en caso de error
+                 vec![]
              },
          }
      },
  ).unwrap_or_else(|err| {
      eprintln!("Error al obtener vistas_posts de la base de datos: {}", err);
-     vec![] // Corrección aquí: Devolver directamente el vector vacío
+     vec![]
  });
 
     // --- Obtener IDs de posts en los últimos 365 días ---
