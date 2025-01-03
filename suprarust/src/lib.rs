@@ -5,6 +5,7 @@ use ext_php_rs::types::Zval;
 use mysql::prelude::Queryable;
 use mysql::Pool;
 use mysql::*;
+use mysql::Value as GenericValue; // Import GenericValue
 use std::collections::HashMap;
 use std::env;
 use std::path::Path;
@@ -119,17 +120,17 @@ fn ejecutar_consulta(
 
     let params_vec: Vec<GenericValue> = meta_keys
         .iter()
-        .map(|s| GenericValue::from(*s))
-        .chain(posts_ids.iter().map(|id| GenericValue::from(*id)))
+        .map(|s| GenericValue::Text(s.to_string()))
+        .chain(posts_ids.iter().map(|id| GenericValue::Int((*id).into())))
         .collect();
 
-    let meta_resultados: Result<Vec<Row>, mysql::Error> = conn.exec_iter(sql_meta, params_vec).collect();
+    let meta_resultados = conn.exec_iter(sql_meta, params_vec);
 
     let mut meta_data: HashMap<i64, HashMap<String, String>> = HashMap::new();
 
     match meta_resultados {
-        Ok(rows) => {
-            for row_result in rows {
+        Ok(result) => {
+            for row_result in result {
                 match row_result {
                     Ok(row) => {
                         let post_id: i64 = row.get("post_id").unwrap_or(0);
