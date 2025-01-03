@@ -4,23 +4,16 @@ version = "0.1.1"
 edition = "2021"
 
 [dependencies]
-ext-php-rs = "0.12.0"  # Especifica la versión completa
-mysql_async = "0.35.0" # Usar mysql_async para operaciones asíncronas
-tokio = { version = "1.42.0", features = ["full"] } # Necesario para mysql_async
-lazy_static = "1.5.0" # Para inicializar el pool de conexiones una sola vez
-log = "0.4.22"
-env_logger = "0.11.6"
+ext-php-rs = "0.12.0"  # Actualizado
+mysql = "25.0.1" # Añadida la dependencia mysql síncrona
+lazy_static = "1.5.0" # Actualizado
 dotenv = "0.15.0"
-chrono = { version = "0.4.39", features = ["serde"] } # Especifica la versión y habilita la característica serde
-serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.134"
-# serde_php = "0.5.0"  # Comentado porque no parece ser necesario para este caso específico
 
 [lib]
 crate-type = ["cdylib"]
 
 [profile.release]
-lto = true # Activa la optimización en tiempo de enlace para la versión de release
+lto = true
 
 [profile.dev]
-debug = true # Habilita la información de depuración para la versión de desarrollo
+debug = true
