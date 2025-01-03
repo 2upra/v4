@@ -40,26 +40,26 @@ struct MetaData {
     fan: Option<bool>,
 }
 
-// Implementación correcta de IntoZval con manejo de errores
+// Implementación correcta de IntoZval (sin usar persistent)
 impl IntoZval for MetaData {
     const TYPE: DataType = DataType::Array;
 
-    fn set_zval(self, zv: &mut Zval, persistent: bool) -> Result<(), ext_php_rs::error::Error>
+    fn set_zval(self, zv: &mut Zval, _persistent: bool) -> Result<(), ext_php_rs::error::Error>
     where
         Self: Sized,
     {
         let mut arr = HashTable::new();
         if let Some(datosAlgoritmo) = self.datosAlgoritmo {
-            arr.insert("datosAlgoritmo", datosAlgoritmo)?; // Sin persistent
+            arr.insert("datosAlgoritmo", datosAlgoritmo)?;
         }
         if let Some(verificado) = self.Verificado {
-            arr.insert("Verificado", verificado)?; // Sin persistent
+            arr.insert("Verificado", verificado)?;
         }
         if let Some(postAut) = self.postAut {
-            arr.insert("postAut", postAut)?; // Sin persistent
+            arr.insert("postAut", postAut)?;
         }
-        arr.insert("artista", self.artista.unwrap_or(false))?; // Sin persistent
-        arr.insert("fan", self.fan.unwrap_or(false))?; // Sin persistent
+        arr.insert("artista", self.artista.unwrap_or(false))?;
+        arr.insert("fan", self.fan.unwrap_or(false))?;
 
         zv.set_hashtable(arr);
         Ok(())
@@ -70,7 +70,7 @@ impl IntoZval for MetaData {
         Self: Sized,
     {
         let mut zv = Zval::new();
-        self.set_zval(&mut zv, persistent)?;
+        self.set_zval(&mut zv, persistent)?; // Aquí se puede usar persistent o no, según tu lógica
         Ok(zv)
     }
 }
@@ -78,15 +78,15 @@ impl IntoZval for MetaData {
 impl IntoZval for LikeData {
     const TYPE: DataType = DataType::Array;
 
-    fn set_zval(self, zv: &mut Zval, persistent: bool) -> Result<(), ext_php_rs::error::Error>
+    fn set_zval(self, zv: &mut Zval, _persistent: bool) -> Result<(), ext_php_rs::error::Error>
     where
         Self: Sized,
     {
         let mut arr = HashTable::new();
-        arr.insert("post_id", self.post_id)?; // Sin persistent
-        arr.insert("like", self.like)?; // Sin persistent
-        arr.insert("favorito", self.favorito)?; // Sin persistent
-        arr.insert("no_me_gusta", self.nome_gusta)?; // Sin persistent
+        arr.insert("post_id", self.post_id)?;
+        arr.insert("like", self.like)?;
+        arr.insert("favorito", self.favorito)?;
+        arr.insert("no_me_gusta", self.nome_gusta)?;
 
         zv.set_hashtable(arr);
         Ok(())
@@ -97,7 +97,7 @@ impl IntoZval for LikeData {
         Self: Sized,
     {
         let mut zv = Zval::new();
-        self.set_zval(&mut zv, persistent)?;
+        self.set_zval(&mut zv, persistent)?; // Aquí se puede usar persistent o no, según tu lógica
         Ok(zv)
     }
 }
@@ -159,23 +159,21 @@ pub fn obtenerDatosFeedRust(usu: i64) -> PhpResult<Vec<Zval>> {
     #[derive(Debug, Deserialize, Serialize)]
     struct VistasData(HashMap<i64, Vista>);
 
-    // --- Obtener 'vistas' ---
+    // --- Corrección definitiva para 'vistas' ---
     let vistas: Vec<i64> = conn.query_map(
-     format!("SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
-     |meta_value: String| {
-         let parsed_vistas: std::result::Result<VistasData, serde_json::Error> = serde_json::from_str(&meta_value);
-         match parsed_vistas {
-             Ok(vistas_data) => vistas_data.0.into_iter().map(|(_, vista)| vista.count).collect(),
-             Err(err) => {
-                 eprintln!("Error al deserializar vistas_posts: {}", err);
-                 vec![]
-             },
-         }
-     },
- ).unwrap_or_else(|err| {
-     eprintln!("Error al obtener vistas_posts de la base de datos: {}", err);
-     vec![]
- });
+        format!("SELECT meta_value FROM wp_usermeta WHERE user_id = {} AND meta_key = 'vistas_posts'", usu),
+        |meta_value: String| {
+            serde_json::from_str::<VistasData>(&meta_value)
+                .map(|vistas_data| vistas_data.0.into_iter().map(|(_, vista)| vista.count).collect())
+                .unwrap_or_else(|err| {
+                    eprintln!("Error al deserializar vistas_posts: {}", err);
+                    vec![]
+                })
+        },
+    ).unwrap_or_else(|err| {
+        eprintln!("Error al obtener vistas_posts de la base de datos: {}", err);
+        vec![]
+    });
 
     // --- Obtener IDs de posts en los últimos 365 días ---
     let fechaLimite = (Utc::now() - chrono::Duration::days(365))
